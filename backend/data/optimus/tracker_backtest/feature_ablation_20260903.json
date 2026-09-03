@@ -1,0 +1,5596 @@
+{
+ "PRE_REGISTRATION": {
+  "written_before_any_result": true,
+  "date": "2026-09-03",
+  "licence": "PRODUCT_EXPERIMENT -- exploration. No significance gate, no MDE, no multiplicity control, and correspondingly NO claim of alpha. PIT discipline, absent target leakage, non-zero costs and frozen walk-forward splits do NOT relax.",
+  "question": "Does a family of 13F-ownership or analyst-identity features add OUT-OF-SAMPLE value to a learner that already sees price, consensus, revisions, coverage and the band prior?",
+  "primary_metric": "the PAIRED monthly difference in cross-sectional rank IC between the family model and the base model, t across MONTHS (CANON 58 -- date blocks, never name-months).",
+  "secondary": "terminal wealth of a monthly top-50 value-weighted book net of 10 bps/side on measured weight turnover; decile spread.",
+  "decision_rule": "a family that does not raise the paired delta IC above zero at BOTH horizons and for BOTH model kinds is recorded as adding nothing. A negative is recorded as a negative and not smoothed into 'directionally encouraging'.",
+  "known_negatives_not_re_run": {
+   "sentiment_novelty_attention": "T12 CLOSED NEGATIVE: only 7.7% of corpus news is a new dated fact; Benzinga 390:1 coverage makes 'requires news' a mega-cap filter. Not rebuilt.",
+   "analyst_accuracy_weighting": "accuracy does not persist (Spearman 0.087) -- the design is dead before it is built."
+  },
+  "nulls": {
+   "shuffled_target_within_month": "run on the full feature set at h=1",
+   "complete_case_subsample": "the h=1 ablation is re-run on rows where every family is present, so a negative cannot be a missingness artefact"
+  },
+  "models": {
+   "kinds": [
+    "ridge",
+    "lgbm"
+   ],
+   "arm": "raw",
+   "note": "the raw arm sees the band prior as a COLUMN (models.arm_features)"
+  },
+  "splits": {
+   "test_years": [
+    2016,
+    2017,
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024
+   ],
+   "rule": "expanding by DATE; a training row's target must have MATURED before the test year opened"
+  },
+  "horizons_months": [
+   1,
+   12
+  ],
+  "costs": {
+   "bps_per_side": 10.0,
+   "applied_to": "measured weight turnover, both sides"
+  }
+ },
+ "run": {
+  "built_at": "2026-09-03T06:48:23.144761+00:00",
+  "python": "3.12.10",
+  "features_ext": {
+   "version": "features-ext-1",
+   "families": {
+    "analyst": [
+     "a_n_live_analysts",
+     "a_n_live_targets",
+     "a_bias_mean",
+     "a_bias_disp",
+     "a_bias_mean_xs",
+     "a_implied_mean",
+     "a_implied_bias_corrected",
+     "a_implied_vs_upside",
+     "a_upside_bias_corrected",
+     "a_rev_accel",
+     "a_thin_cov",
+     "a_very_thin_cov",
+     "a_cov_thinness"
+    ],
+    "holder": [
+     "h_n_holders",
+     "h_log_n_holders",
+     "h_n_holders_chg",
+     "h_n_holders_chg_pct",
+     "h_inst_own",
+     "h_inst_own_chg",
+     "h_new_frac",
+     "h_exit_frac",
+     "h_net_entry_frac",
+     "h_new_longdur_frac",
+     "h_new_shortdur_frac",
+     "h_exit_longdur_frac",
+     "h_stake_anom_mean",
+     "h_stake_anom_top_decile_frac",
+     "h_specialist_frac",
+     "h_specialist_new_n",
+     "h_multi_specialist_new",
+     "h_top5_share",
+     "h_top_holder_log_chg"
+    ],
+    "interaction": [
+     "x_holder_add_x_rev",
+     "x_exit_x_rev_down",
+     "x_holder_anom_x_thincov",
+     "x_holder_add_x_thincov",
+     "x_specialist_x_thincov",
+     "x_new13f_x_ret6m_sign",
+     "x_newlongdur_x_ret6m_sign",
+     "x_bias_x_upside",
+     "x_bias_x_thincov"
+    ]
+   },
+   "ablation_sets": [
+    {
+     "name": "base",
+     "families": []
+    },
+    {
+     "name": "base+analyst",
+     "families": [
+      "analyst"
+     ]
+    },
+    {
+     "name": "base+holder",
+     "families": [
+      "holder"
+     ]
+    },
+    {
+     "name": "base+analyst+holder",
+     "families": [
+      "analyst",
+      "holder"
+     ]
+    },
+    {
+     "name": "base+analyst+holder+interaction",
+     "families": [
+      "analyst",
+      "holder",
+      "interaction"
+     ]
+    }
+   ],
+   "pit": {
+    "13f_public_date": "quarter_end(max(rdate, latest Thomson vintage)) + 45 calendar days",
+    "13f_join": "as-of backward on entry_date, tolerance 190d",
+    "ibes_bias": "expanding mean of errors RESOLVED (anndats+365d) before the month began",
+    "ibes_live": "targets announced strictly BEFORE the month started, within 12 months",
+    "standardisation": "within-month only"
+   },
+   "thin_coverage": {
+    "thin": 10,
+    "very_thin": 3,
+    "source": "ibes_status_rules_2013_2024.json coverage buckets: BUY basket t 2.355 (1-3), 2.060 (4-10), 1.573 (11-25), 0.189 (26+)"
+   },
+   "not_built": {
+    "sentiment_novelty_attention": "NOT built. T12 measured that only 7.7% of corpus news is a new dated fact, and Benzinga's 390:1 coverage ratio makes 'requires news' a mega-cap filter. A standalone sentiment feature would re-run a closed negative.",
+    "analyst_accuracy_weighting": "NOT built. Accuracy does not persist (Spearman 0.087), so weighting a consensus by past accuracy is a design the receipt already kills.",
+    "13f_short_side": "13F is longs-only; no short-interest feature exists here.",
+    "active_passive_split": "NOT observable in entitled WRDS (idea doc 4a); every filer statement is a blended index+active statement."
+   },
+   "known_data_caveats": {
+    "sic_9999_is_unknown_not_an_industry": "A sibling session measured that 22.5% of the training panel's rows (99,334/441,278) carry CRSP siccd 9999, which is NONCLASSIFIABLE and is mislabelled 'Public Administration' in the shared sector mapping. No feature in THIS module conditions on the panel's `sector` column. The one place it touches SIC at all is indirect: `h_specialist_frac` and `x_specialist_x_thincov` read `sector_entropy` from `holder_fingerprints.parquet`, which is a filer-level entropy over CRSP SIC-2 codes -- so a filer concentrated in the 99 bucket reads as 'concentrated' when it is in fact concentrated in UNKNOWN. That inflates the specialist flag for such filers and is a reason to read the specialist features as noisier than the rest of the holder family, not as a sector claim. The shared mapping is not edited here; the central fix is queued elsewhere."
+   },
+   "licence": "PRODUCT_EXPERIMENT"
+  },
+  "schema_hash_base": "fba883f370194426",
+  "model_seed": 20260902,
+  "receipt": "backend/data/optimus/tracker_backtest/feature_ablation_20260903.json",
+  "seconds": 1652.1
+ },
+ "panels": {
+  "features_ext_version": "features-ext-1",
+  "holder_build": {
+   "quarters": 52,
+   "positions": 45018857,
+   "rows_fq_ahead_of_rq": 2156,
+   "positions_no_price": 63140,
+   "filers_without_adjacent_prior": 11010,
+   "fingerprint_join_hit": 43243756,
+   "fingerprint_join_miss": 1775101,
+   "rows_dropped_duplicate_public_date": 29408,
+   "public_lag_quarters": {
+    "0": 156270,
+    "1": 2782,
+    "2": 5482,
+    "3": 7282,
+    "4": 6
+   },
+   "rows": 171822,
+   "names": 7152,
+   "quarters_kept": 52,
+   "public_date_rule": "quarter_end(max(report quarter, the filer's latest Thomson vintage)) + 45 calendar days",
+   "vintage_reduction_valid": false,
+   "nonnull_share": {
+    "h_n_holders": 1.0,
+    "h_log_n_holders": 1.0,
+    "h_n_holders_chg": 0.9569,
+    "h_n_holders_chg_pct": 0.9569,
+    "h_inst_own": 1.0,
+    "h_inst_own_chg": 0.9569,
+    "h_new_frac": 0.9569,
+    "h_exit_frac": 0.9569,
+    "h_net_entry_frac": 0.9569,
+    "h_new_longdur_frac": 0.9569,
+    "h_new_shortdur_frac": 0.9569,
+    "h_exit_longdur_frac": 0.9569,
+    "h_stake_anom_mean": 0.9995,
+    "h_stake_anom_top_decile_frac": 1.0,
+    "h_specialist_frac": 1.0,
+    "h_specialist_new_n": 0.9158,
+    "h_multi_specialist_new": 0.9569,
+    "h_top5_share": 1.0,
+    "h_top_holder_log_chg": 0.9569
+   },
+   "rows_read": 47048653,
+   "rows_unmatched_cusip": 0,
+   "rows_after_dedupe": 45081997
+  },
+  "analyst_build": {
+   "graded_targets": 1333683,
+   "analysts": 9158,
+   "names": 7439,
+   "anndats_min": "2005-01-01",
+   "anndats_max": "2023-12-31",
+   "analyst_month_bias_rows": 1051323,
+   "live_target_months": 10802061,
+   "live_target_months_with_bias": 10462841,
+   "bias_coverage": 0.9686,
+   "rows": 444167,
+   "names_out": 5552,
+   "months_out": 144,
+   "mean_bias_pooled": 0.1791
+  },
+  "_provenance_note": "The ablation run found both panels already cached and recorded only their row counts. These build diagnostics were regenerated from the SAME builders and the same inputs immediately afterwards and written here derived, never typed. The panels themselves were not rebuilt for the ablation and the ablation's numbers are unchanged."
+ },
+ "attach": {
+  "holder_join": {
+   "rows": 441278,
+   "matched": 407565,
+   "match_rate": 0.9236,
+   "lag_days_after_public_min": 0,
+   "lag_days_after_public_median": 35.0,
+   "lag_days_after_public_max": 190,
+   "lag_days_after_quarter_end_min": 45,
+   "tolerance_days": 190,
+   "note": "as-of BACKWARD on quarter_end+45d. A lag below 45 days after the report quarter end would be look-ahead; it REFUSES rather than reports.",
+   "match_rate_by_year": {
+    "2013": 0.864,
+    "2014": 0.655,
+    "2015": 0.84,
+    "2016": 0.925,
+    "2017": 0.82,
+    "2018": 0.989,
+    "2019": 0.991,
+    "2020": 0.991,
+    "2021": 0.984,
+    "2022": 0.995,
+    "2023": 0.998,
+    "2024": 0.997
+   }
+  },
+  "analyst_join": {
+   "rows": 441278,
+   "matched": 427222,
+   "match_rate": 0.9681,
+   "note": "the grades parquet holds only targets whose 12m outcome could be graded (anndats <= 2023-12), so an unmatched row is a name whose covering analysts have no GRADED history -- not a name without coverage. 2024 rows therefore thin out by construction and the receipt reports the per-year match rate.",
+   "match_rate_by_year": {
+    "2013": 0.978,
+    "2014": 0.972,
+    "2015": 0.975,
+    "2016": 0.979,
+    "2017": 0.978,
+    "2018": 0.974,
+    "2019": 0.977,
+    "2020": 0.979,
+    "2021": 0.962,
+    "2022": 0.973,
+    "2023": 0.979,
+    "2024": 0.897
+   }
+  },
+  "nonnull_share": {
+   "a_n_live_analysts": 0.9681,
+   "a_n_live_targets": 0.9681,
+   "a_bias_mean": 0.9641,
+   "a_bias_disp": 0.9175,
+   "a_bias_mean_xs": 0.9641,
+   "a_implied_mean": 0.9681,
+   "a_implied_bias_corrected": 0.9681,
+   "a_implied_vs_upside": 0.9681,
+   "a_upside_bias_corrected": 0.9641,
+   "a_rev_accel": 0.9532,
+   "a_thin_cov": 1.0,
+   "a_very_thin_cov": 1.0,
+   "a_cov_thinness": 1.0,
+   "h_n_holders": 0.9236,
+   "h_log_n_holders": 0.9236,
+   "h_n_holders_chg": 0.906,
+   "h_n_holders_chg_pct": 0.906,
+   "h_inst_own": 0.9236,
+   "h_inst_own_chg": 0.906,
+   "h_new_frac": 0.906,
+   "h_exit_frac": 0.906,
+   "h_net_entry_frac": 0.906,
+   "h_new_longdur_frac": 0.906,
+   "h_new_shortdur_frac": 0.906,
+   "h_exit_longdur_frac": 0.906,
+   "h_stake_anom_mean": 0.9233,
+   "h_stake_anom_top_decile_frac": 0.9236,
+   "h_specialist_frac": 0.9236,
+   "h_specialist_new_n": 0.8893,
+   "h_multi_specialist_new": 0.906,
+   "h_top5_share": 0.9236,
+   "h_top_holder_log_chg": 0.906,
+   "x_holder_add_x_rev": 0.8977,
+   "x_exit_x_rev_down": 0.8977,
+   "x_holder_anom_x_thincov": 0.9233,
+   "x_holder_add_x_thincov": 0.906,
+   "x_specialist_x_thincov": 0.9236,
+   "x_new13f_x_ret6m_sign": 0.9041,
+   "x_newlongdur_x_ret6m_sign": 0.9041,
+   "x_bias_x_upside": 0.9641,
+   "x_bias_x_thincov": 0.9641
+  }
+ },
+ "table": {
+  "rows": 441278,
+  "months": 144,
+  "names": 5713,
+  "month_min": "2013-01",
+  "month_max": "2024-12"
+ },
+ "horizons": {
+  "1m": {
+   "horizon_months": 1,
+   "target": "excess_vw_1m",
+   "tag": "all_rows",
+   "n_rows_with_target": 438027,
+   "sets": {
+    "base": {
+     "n_features": 50,
+     "added_features": [],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 50,
+         "secs": 2.1
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 50,
+         "secs": 2.9
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 50,
+         "secs": 3.9
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 50,
+         "secs": 4.8
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 50,
+         "secs": 5.9
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 50,
+         "secs": 6.9
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 50,
+         "secs": 8.0
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 50,
+         "secs": 9.2
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 50,
+         "secs": 10.7
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.07101,
+        "t_stat": 6.959,
+        "share_months_positive": 0.7944
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.702,
+        "terminal_wealth_net": 8.354,
+        "terminal_wealth_gross": 9.6778,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2688,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00908,
+        "annualised_excess": 0.109,
+        "t_stat_paired_vs_market": 1.215,
+        "months_beating_market": 0.5514,
+        "worst_month_net": -0.3003,
+        "hit_rate": 0.6822
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03183,
+        "annualised_spread": 0.3819,
+        "t_stat": 4.182,
+        "share_months_positive": 0.7477
+       },
+       "calibration": {
+        "slope": 0.043,
+        "intercept": -0.00298,
+        "r_squared": 0.489
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 50,
+         "secs": 3.7
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 50,
+         "secs": 1.8
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 50,
+         "secs": 2.1
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 50,
+         "secs": 2.1
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 50,
+         "secs": 5.1
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 50,
+         "secs": 6.5
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 50,
+         "secs": 2.8
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 50,
+         "secs": 2.6
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 50,
+         "secs": 7.0
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.0668,
+        "t_stat": 6.557,
+        "share_months_positive": 0.7757
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.887,
+        "terminal_wealth_net": 4.7122,
+        "terminal_wealth_gross": 5.6886,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.1899,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00566,
+        "annualised_excess": 0.0679,
+        "t_stat_paired_vs_market": 0.599,
+        "months_beating_market": 0.5234,
+        "worst_month_net": -0.2493,
+        "hit_rate": 0.5607
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03297,
+        "annualised_spread": 0.3957,
+        "t_stat": 5.126,
+        "share_months_positive": 0.7944
+       },
+       "calibration": {
+        "slope": 0.938,
+        "intercept": -0.00061,
+        "r_squared": 0.805
+       }
+      }
+     }
+    },
+    "base+analyst": {
+     "n_features": 63,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 63,
+         "secs": 2.3
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 63,
+         "secs": 3.6
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 63,
+         "secs": 4.9
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 63,
+         "secs": 6.3
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 63,
+         "secs": 7.4
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 63,
+         "secs": 9.2
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 63,
+         "secs": 11.7
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 63,
+         "secs": 13.0
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 63,
+         "secs": 14.2
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.06168,
+        "t_stat": 6.572,
+        "share_months_positive": 0.8037
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.72,
+        "terminal_wealth_net": 6.3426,
+        "terminal_wealth_gross": 7.386,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2302,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00658,
+        "annualised_excess": 0.079,
+        "t_stat_paired_vs_market": 0.805,
+        "months_beating_market": 0.5701,
+        "worst_month_net": -0.31,
+        "hit_rate": 0.6822
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03068,
+        "annualised_spread": 0.3682,
+        "t_stat": 4.314,
+        "share_months_positive": 0.7383
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.06168,
+        "mean_ic_base": 0.07101,
+        "delta_mean_ic": -0.00934,
+        "delta_median_ic": -0.00655,
+        "t_paired": -3.739,
+        "t_paired_block_adjusted": -3.739,
+        "share_months_family_better": 0.3458,
+        "delta_terminal_wealth_net": -2.0114,
+        "terminal_wealth_net_family": 6.3426,
+        "terminal_wealth_net_base": 8.354,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 63,
+         "secs": 5.8
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 63,
+         "secs": 4.6
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 63,
+         "secs": 4.8
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 63,
+         "secs": 3.2
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 63,
+         "secs": 7.6
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 63,
+         "secs": 8.9
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 63,
+         "secs": 5.4
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 63,
+         "secs": 3.6
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 63,
+         "secs": 12.4
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.06081,
+        "t_stat": 5.904,
+        "share_months_positive": 0.757
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.852,
+        "terminal_wealth_net": 3.6652,
+        "terminal_wealth_gross": 4.3941,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.1568,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00314,
+        "annualised_excess": 0.0376,
+        "t_stat_paired_vs_market": 0.348,
+        "months_beating_market": 0.4673,
+        "worst_month_net": -0.274,
+        "hit_rate": 0.5794
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03178,
+        "annualised_spread": 0.3814,
+        "t_stat": 4.71,
+        "share_months_positive": 0.7383
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.06081,
+        "mean_ic_base": 0.0668,
+        "delta_mean_ic": -0.00599,
+        "delta_median_ic": -0.00251,
+        "t_paired": -1.646,
+        "t_paired_block_adjusted": -1.646,
+        "share_months_family_better": 0.4673,
+        "delta_terminal_wealth_net": -1.047,
+        "terminal_wealth_net_family": 3.6652,
+        "terminal_wealth_net_base": 4.7122,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    },
+    "base+holder": {
+     "n_features": 69,
+     "added_features": [
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 69,
+         "secs": 2.7
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 69,
+         "secs": 4.2
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 69,
+         "secs": 5.9
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 69,
+         "secs": 6.9
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 69,
+         "secs": 8.6
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 69,
+         "secs": 9.9
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 69,
+         "secs": 11.7
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 69,
+         "secs": 13.9
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 69,
+         "secs": 15.8
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.06749,
+        "t_stat": 7.141,
+        "share_months_positive": 0.8037
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.747,
+        "terminal_wealth_net": 10.0741,
+        "terminal_wealth_gross": 11.7809,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2957,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.01128,
+        "annualised_excess": 0.1354,
+        "t_stat_paired_vs_market": 1.331,
+        "months_beating_market": 0.5421,
+        "worst_month_net": -0.264,
+        "hit_rate": 0.6449
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03143,
+        "annualised_spread": 0.3772,
+        "t_stat": 4.193,
+        "share_months_positive": 0.7477
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.06749,
+        "mean_ic_base": 0.07101,
+        "delta_mean_ic": -0.00352,
+        "delta_median_ic": -0.00079,
+        "t_paired": -1.818,
+        "t_paired_block_adjusted": -1.818,
+        "share_months_family_better": 0.4393,
+        "delta_terminal_wealth_net": 1.7201,
+        "terminal_wealth_net_family": 10.0741,
+        "terminal_wealth_net_base": 8.354,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 69,
+         "secs": 2.0
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 69,
+         "secs": 1.8
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 69,
+         "secs": 4.0
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 69,
+         "secs": 9.5
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 69,
+         "secs": 5.7
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 69,
+         "secs": 8.8
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 69,
+         "secs": 3.7
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 69,
+         "secs": 3.6
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 69,
+         "secs": 5.3
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.05667,
+        "t_stat": 5.528,
+        "share_months_positive": 0.729
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.861,
+        "terminal_wealth_net": 1.8239,
+        "terminal_wealth_gross": 2.1942,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.0697,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": -0.00253,
+        "annualised_excess": -0.0304,
+        "t_stat_paired_vs_market": -0.267,
+        "months_beating_market": 0.4299,
+        "worst_month_net": -0.4223,
+        "hit_rate": 0.5234
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.02952,
+        "annualised_spread": 0.3543,
+        "t_stat": 4.441,
+        "share_months_positive": 0.7477
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.05667,
+        "mean_ic_base": 0.0668,
+        "delta_mean_ic": -0.01012,
+        "delta_median_ic": -0.01049,
+        "t_paired": -2.292,
+        "t_paired_block_adjusted": -2.292,
+        "share_months_family_better": 0.4486,
+        "delta_terminal_wealth_net": -2.8883,
+        "terminal_wealth_net_family": 1.8239,
+        "terminal_wealth_net_base": 4.7122,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    },
+    "base+analyst+holder": {
+     "n_features": 82,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness",
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 82,
+         "secs": 3.2
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 82,
+         "secs": 4.8
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 82,
+         "secs": 6.6
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 82,
+         "secs": 8.4
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 82,
+         "secs": 10.6
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 82,
+         "secs": 12.6
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 82,
+         "secs": 14.0
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 82,
+         "secs": 15.4
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 82,
+         "secs": 18.8
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.05986,
+        "t_stat": 6.706,
+        "share_months_positive": 0.7757
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.722,
+        "terminal_wealth_net": 5.3475,
+        "terminal_wealth_gross": 6.2317,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2069,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00435,
+        "annualised_excess": 0.0522,
+        "t_stat_paired_vs_market": 0.543,
+        "months_beating_market": 0.514,
+        "worst_month_net": -0.2262,
+        "hit_rate": 0.6168
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03152,
+        "annualised_spread": 0.3782,
+        "t_stat": 4.458,
+        "share_months_positive": 0.7477
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.05986,
+        "mean_ic_base": 0.07101,
+        "delta_mean_ic": -0.01115,
+        "delta_median_ic": -0.0063,
+        "t_paired": -3.016,
+        "t_paired_block_adjusted": -3.016,
+        "share_months_family_better": 0.3832,
+        "delta_terminal_wealth_net": -3.0065,
+        "terminal_wealth_net_family": 5.3475,
+        "terminal_wealth_net_base": 8.354,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 82,
+         "secs": 3.2
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 82,
+         "secs": 2.7
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 82,
+         "secs": 5.4
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 82,
+         "secs": 5.2
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 82,
+         "secs": 13.3
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 82,
+         "secs": 12.5
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 82,
+         "secs": 7.5
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 82,
+         "secs": 5.4
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 82,
+         "secs": 6.3
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.05887,
+        "t_stat": 5.767,
+        "share_months_positive": 0.757
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.841,
+        "terminal_wealth_net": 3.4158,
+        "terminal_wealth_gross": 4.0863,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.1477,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00306,
+        "annualised_excess": 0.0368,
+        "t_stat_paired_vs_market": 0.309,
+        "months_beating_market": 0.4579,
+        "worst_month_net": -0.2352,
+        "hit_rate": 0.5607
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03551,
+        "annualised_spread": 0.4262,
+        "t_stat": 5.388,
+        "share_months_positive": 0.7757
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.05887,
+        "mean_ic_base": 0.0668,
+        "delta_mean_ic": -0.00793,
+        "delta_median_ic": -0.00517,
+        "t_paired": -2.105,
+        "t_paired_block_adjusted": -2.105,
+        "share_months_family_better": 0.4393,
+        "delta_terminal_wealth_net": -1.2964,
+        "terminal_wealth_net_family": 3.4158,
+        "terminal_wealth_net_base": 4.7122,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    },
+    "base+analyst+holder+interaction": {
+     "n_features": 91,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness",
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg",
+      "x_holder_add_x_rev",
+      "x_exit_x_rev_down",
+      "x_holder_anom_x_thincov",
+      "x_holder_add_x_thincov",
+      "x_specialist_x_thincov",
+      "x_new13f_x_ret6m_sign",
+      "x_newlongdur_x_ret6m_sign",
+      "x_bias_x_upside",
+      "x_bias_x_thincov"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 91,
+         "secs": 4.1
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 91,
+         "secs": 5.6
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 91,
+         "secs": 7.4
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 91,
+         "secs": 9.6
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 91,
+         "secs": 12.1
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 91,
+         "secs": 14.0
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 91,
+         "secs": 15.7
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 91,
+         "secs": 18.6
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 91,
+         "secs": 21.0
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.05656,
+        "t_stat": 6.198,
+        "share_months_positive": 0.7383
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.74,
+        "terminal_wealth_net": 3.728,
+        "terminal_wealth_gross": 4.3587,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.159,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00136,
+        "annualised_excess": 0.0163,
+        "t_stat_paired_vs_market": 0.172,
+        "months_beating_market": 0.5047,
+        "worst_month_net": -0.2508,
+        "hit_rate": 0.6262
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03123,
+        "annualised_spread": 0.3748,
+        "t_stat": 4.346,
+        "share_months_positive": 0.757
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.05656,
+        "mean_ic_base": 0.07101,
+        "delta_mean_ic": -0.01445,
+        "delta_median_ic": -0.0081,
+        "t_paired": -3.538,
+        "t_paired_block_adjusted": -3.538,
+        "share_months_family_better": 0.3738,
+        "delta_terminal_wealth_net": -4.626,
+        "terminal_wealth_net_family": 3.728,
+        "terminal_wealth_net_base": 8.354,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 102872,
+         "n_train_months": 36,
+         "n_test": 35877,
+         "n_features": 91,
+         "secs": 6.9
+        },
+        "2017": {
+         "n_train": 138881,
+         "n_train_months": 48,
+         "n_test": 34974,
+         "n_features": 91,
+         "secs": 3.9
+        },
+        "2018": {
+         "n_train": 173893,
+         "n_train_months": 60,
+         "n_test": 35085,
+         "n_features": 91,
+         "secs": 4.7
+        },
+        "2019": {
+         "n_train": 208913,
+         "n_train_months": 72,
+         "n_test": 35360,
+         "n_features": 91,
+         "secs": 3.2
+        },
+        "2020": {
+         "n_train": 244289,
+         "n_train_months": 84,
+         "n_test": 35338,
+         "n_features": 91,
+         "secs": 7.7
+        },
+        "2021": {
+         "n_train": 279545,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 91,
+         "secs": 6.4
+        },
+        "2022": {
+         "n_train": 317903,
+         "n_train_months": 108,
+         "n_test": 41620,
+         "n_features": 91,
+         "secs": 7.4
+        },
+        "2023": {
+         "n_train": 359524,
+         "n_train_months": 120,
+         "n_test": 40078,
+         "n_features": 91,
+         "secs": 8.9
+        },
+        "2024": {
+         "n_train": 399802,
+         "n_train_months": 132,
+         "n_test": 34983,
+         "n_features": 91,
+         "secs": 10.0
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.05632,
+        "t_stat": 5.402,
+        "share_months_positive": 0.7196
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 332092,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.839,
+        "terminal_wealth_net": 3.3974,
+        "terminal_wealth_gross": 4.0628,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.147,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00453,
+        "annualised_excess": 0.0544,
+        "t_stat_paired_vs_market": 0.401,
+        "months_beating_market": 0.4486,
+        "worst_month_net": -0.2941,
+        "hit_rate": 0.5421
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03202,
+        "annualised_spread": 0.3843,
+        "t_stat": 4.834,
+        "share_months_positive": 0.7757
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.05632,
+        "mean_ic_base": 0.0668,
+        "delta_mean_ic": -0.01047,
+        "delta_median_ic": -0.01353,
+        "t_paired": -2.339,
+        "t_paired_block_adjusted": -2.339,
+        "share_months_family_better": 0.4206,
+        "delta_terminal_wealth_net": -1.3148,
+        "terminal_wealth_net_family": 3.3974,
+        "terminal_wealth_net_base": 4.7122,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    }
+   },
+   "base_absolute": {},
+   "nested_ladder_steps": [
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.06168,
+     "mean_ic_base": 0.07101,
+     "delta_mean_ic": -0.00934,
+     "delta_median_ic": -0.00655,
+     "t_paired": -3.739,
+     "t_paired_block_adjusted": -3.739,
+     "share_months_family_better": 0.3458,
+     "step": "base -> base+analyst",
+     "model": "ridge"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.06081,
+     "mean_ic_base": 0.0668,
+     "delta_mean_ic": -0.00599,
+     "delta_median_ic": -0.00251,
+     "t_paired": -1.646,
+     "t_paired_block_adjusted": -1.646,
+     "share_months_family_better": 0.4673,
+     "step": "base -> base+analyst",
+     "model": "lgbm"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.05986,
+     "mean_ic_base": 0.06168,
+     "delta_mean_ic": -0.00181,
+     "delta_median_ic": -0.00015,
+     "t_paired": -1.001,
+     "t_paired_block_adjusted": -1.001,
+     "share_months_family_better": 0.486,
+     "step": "base+analyst -> base+analyst+holder",
+     "model": "ridge"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.05887,
+     "mean_ic_base": 0.06081,
+     "delta_mean_ic": -0.00194,
+     "delta_median_ic": -0.00125,
+     "t_paired": -0.555,
+     "t_paired_block_adjusted": -0.555,
+     "share_months_family_better": 0.4766,
+     "step": "base+analyst -> base+analyst+holder",
+     "model": "lgbm"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.05656,
+     "mean_ic_base": 0.05986,
+     "delta_mean_ic": -0.0033,
+     "delta_median_ic": 0.00016,
+     "t_paired": -2.395,
+     "t_paired_block_adjusted": -2.395,
+     "share_months_family_better": 0.514,
+     "step": "base+analyst+holder -> base+analyst+holder+interaction",
+     "model": "ridge"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.05632,
+     "mean_ic_base": 0.05887,
+     "delta_mean_ic": -0.00255,
+     "delta_median_ic": -0.00113,
+     "t_paired": -0.812,
+     "t_paired_block_adjusted": -0.812,
+     "share_months_family_better": 0.4673,
+     "step": "base+analyst+holder -> base+analyst+holder+interaction",
+     "model": "lgbm"
+    }
+   ]
+  },
+  "12m": {
+   "horizon_months": 12,
+   "target": "excess_vw_12m",
+   "tag": "all_rows",
+   "n_rows_with_target": 402755,
+   "sets": {
+    "base": {
+     "n_features": 50,
+     "added_features": [],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 50,
+         "secs": 1.8
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 50,
+         "secs": 2.8
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 50,
+         "secs": 3.8
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 50,
+         "secs": 4.8
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 50,
+         "secs": 5.8
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 50,
+         "secs": 7.0
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 50,
+         "secs": 8.5
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 50,
+         "secs": 9.8
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.14046,
+        "t_stat": 14.592,
+        "share_months_positive": 0.9271
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 5.3371,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         4.0527,
+         4.394,
+         6.8901,
+         6.7587,
+         8.824,
+         9.2823,
+         7.5692,
+         1.9656,
+         3.613,
+         4.2144,
+         5.437,
+         6.3853
+        ],
+        "mean_period_excess": 0.126,
+        "paths_beating_market": 0.9167,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.37676,
+        "annualised_spread": 4.5211,
+        "t_stat": 17.657,
+        "share_months_positive": 0.9688
+       },
+       "calibration": {
+        "slope": 0.085,
+        "intercept": 0.00418,
+        "r_squared": 0.921
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 50,
+         "secs": 1.6
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 50,
+         "secs": 3.6
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 50,
+         "secs": 6.0
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 50,
+         "secs": 2.1
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 50,
+         "secs": 1.6
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 50,
+         "secs": 6.5
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 50,
+         "secs": 5.6
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 50,
+         "secs": 3.1
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.15961,
+        "t_stat": 19.14,
+        "share_months_positive": 0.9583
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 6.2922,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         3.4121,
+         5.6223,
+         6.4499,
+         4.5974,
+         25.9147,
+         5.5528,
+         6.9959,
+         3.3984,
+         4.1805,
+         7.5571,
+         5.605,
+         11.1752
+        ],
+        "mean_period_excess": 0.19399,
+        "paths_beating_market": 1.0,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.43611,
+        "annualised_spread": 5.2334,
+        "t_stat": 22.075,
+        "share_months_positive": 0.9792
+       },
+       "calibration": {
+        "slope": 1.055,
+        "intercept": 0.0044,
+        "r_squared": 0.788
+       }
+      }
+     }
+    },
+    "base+analyst": {
+     "n_features": 63,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 63,
+         "secs": 2.5
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 63,
+         "secs": 3.5
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 63,
+         "secs": 4.9
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 63,
+         "secs": 6.0
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 63,
+         "secs": 7.7
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 63,
+         "secs": 8.9
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 63,
+         "secs": 10.1
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 63,
+         "secs": 12.1
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.12333,
+        "t_stat": 14.514,
+        "share_months_positive": 0.9271
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 4.5013,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         3.6662,
+         5.6378,
+         7.7895,
+         4.1618,
+         6.0372,
+         8.6513,
+         5.9116,
+         3.7337,
+         2.819,
+         2.2207,
+         2.7187,
+         5.2632
+        ],
+        "mean_period_excess": 0.10948,
+        "paths_beating_market": 0.8333,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.3645,
+        "annualised_spread": 4.3739,
+        "t_stat": 18.482,
+        "share_months_positive": 0.9792
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.12333,
+        "mean_ic_base": 0.14046,
+        "delta_mean_ic": -0.01714,
+        "delta_median_ic": -0.0042,
+        "t_paired": -4.487,
+        "t_paired_block_adjusted": -1.295,
+        "share_months_family_better": 0.3021,
+        "delta_terminal_wealth_net": -0.8358,
+        "terminal_wealth_net_family": 4.5013,
+        "terminal_wealth_net_base": 5.3371,
+        "terminal_wealth_market": 2.9583
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 63,
+         "secs": 4.3
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 63,
+         "secs": 19.2
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 63,
+         "secs": 3.1
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 63,
+         "secs": 7.8
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 63,
+         "secs": 17.8
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 63,
+         "secs": 13.9
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 63,
+         "secs": 4.3
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 63,
+         "secs": 4.5
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.14702,
+        "t_stat": 18.716,
+        "share_months_positive": 0.9896
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 8.6575,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         14.1352,
+         7.1295,
+         8.3217,
+         7.7902,
+         6.2815,
+         13.2136,
+         4.9616,
+         12.507,
+         5.6335,
+         3.6918,
+         18.0652,
+         14.0245
+        ],
+        "mean_period_excess": 0.27233,
+        "paths_beating_market": 1.0,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.42589,
+        "annualised_spread": 5.1107,
+        "t_stat": 21.157,
+        "share_months_positive": 0.9792
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.14702,
+        "mean_ic_base": 0.15961,
+        "delta_mean_ic": -0.01259,
+        "delta_median_ic": -0.01859,
+        "t_paired": -3.458,
+        "t_paired_block_adjusted": -0.998,
+        "share_months_family_better": 0.3438,
+        "delta_terminal_wealth_net": 2.3653,
+        "terminal_wealth_net_family": 8.6575,
+        "terminal_wealth_net_base": 6.2922,
+        "terminal_wealth_market": 2.9583
+       }
+      }
+     }
+    },
+    "base+holder": {
+     "n_features": 69,
+     "added_features": [
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 69,
+         "secs": 2.5
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 69,
+         "secs": 4.2
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 69,
+         "secs": 5.6
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 69,
+         "secs": 6.8
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 69,
+         "secs": 8.1
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 69,
+         "secs": 9.3
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 69,
+         "secs": 11.1
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 69,
+         "secs": 13.0
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.13549,
+        "t_stat": 15.185,
+        "share_months_positive": 0.9271
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 4.433,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         3.4444,
+         3.8028,
+         3.4518,
+         2.5437,
+         11.0203,
+         9.0746,
+         5.7769,
+         4.5538,
+         2.9899,
+         2.1025,
+         3.4003,
+         8.9041
+        ],
+        "mean_period_excess": 0.10719,
+        "paths_beating_market": 0.8333,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.36893,
+        "annualised_spread": 4.4271,
+        "t_stat": 17.606,
+        "share_months_positive": 0.9375
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.13549,
+        "mean_ic_base": 0.14046,
+        "delta_mean_ic": -0.00498,
+        "delta_median_ic": -0.00169,
+        "t_paired": -2.423,
+        "t_paired_block_adjusted": -0.699,
+        "share_months_family_better": 0.4167,
+        "delta_terminal_wealth_net": -0.9041,
+        "terminal_wealth_net_family": 4.433,
+        "terminal_wealth_net_base": 5.3371,
+        "terminal_wealth_market": 2.9583
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 69,
+         "secs": 4.0
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 69,
+         "secs": 25.0
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 69,
+         "secs": 17.2
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 69,
+         "secs": 12.1
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 69,
+         "secs": 2.5
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 69,
+         "secs": 18.2
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 69,
+         "secs": 5.7
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 69,
+         "secs": 5.4
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.14616,
+        "t_stat": 19.355,
+        "share_months_positive": 0.9896
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 7.447,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         3.1926,
+         5.495,
+         12.7823,
+         8.0525,
+         15.0962,
+         20.1221,
+         4.8008,
+         5.4815,
+         4.8982,
+         4.2391,
+         6.0385,
+         16.0753
+        ],
+        "mean_period_excess": 0.22502,
+        "paths_beating_market": 1.0,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.4059,
+        "annualised_spread": 4.8707,
+        "t_stat": 21.645,
+        "share_months_positive": 0.9896
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.14616,
+        "mean_ic_base": 0.15961,
+        "delta_mean_ic": -0.01345,
+        "delta_median_ic": -0.01696,
+        "t_paired": -4.789,
+        "t_paired_block_adjusted": -1.382,
+        "share_months_family_better": 0.3125,
+        "delta_terminal_wealth_net": 1.1548,
+        "terminal_wealth_net_family": 7.447,
+        "terminal_wealth_net_base": 6.2922,
+        "terminal_wealth_market": 2.9583
+       }
+      }
+     }
+    },
+    "base+analyst+holder": {
+     "n_features": 82,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness",
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 82,
+         "secs": 3.1
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 82,
+         "secs": 4.6
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 82,
+         "secs": 6.6
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 82,
+         "secs": 8.2
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 82,
+         "secs": 9.8
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 82,
+         "secs": 11.5
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 82,
+         "secs": 12.7
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 82,
+         "secs": 14.6
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.12158,
+        "t_stat": 14.887,
+        "share_months_positive": 0.9375
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 3.7906,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         3.7233,
+         2.4303,
+         4.0969,
+         2.9494,
+         11.2371,
+         8.207,
+         4.7807,
+         3.0646,
+         2.4978,
+         2.2494,
+         1.6634,
+         6.3742
+        ],
+        "mean_period_excess": 0.08387,
+        "paths_beating_market": 0.6667,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.35733,
+        "annualised_spread": 4.288,
+        "t_stat": 18.735,
+        "share_months_positive": 0.9792
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.12158,
+        "mean_ic_base": 0.14046,
+        "delta_mean_ic": -0.01888,
+        "delta_median_ic": -0.00918,
+        "t_paired": -4.281,
+        "t_paired_block_adjusted": -1.236,
+        "share_months_family_better": 0.3125,
+        "delta_terminal_wealth_net": -1.5465,
+        "terminal_wealth_net_family": 3.7906,
+        "terminal_wealth_net_base": 5.3371,
+        "terminal_wealth_market": 2.9583
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 82,
+         "secs": 0.9
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 82,
+         "secs": 1.2
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 82,
+         "secs": 2.7
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 82,
+         "secs": 1.7
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 82,
+         "secs": 4.5
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 82,
+         "secs": 3.5
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 82,
+         "secs": 1.8
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 82,
+         "secs": 1.8
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.1406,
+        "t_stat": 17.967,
+        "share_months_positive": 0.9896
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 6.9763,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         8.4347,
+         9.831,
+         10.7755,
+         2.2428,
+         8.5185,
+         2.3927,
+         10.7228,
+         9.8845,
+         6.0349,
+         10.4254,
+         5.4112,
+         9.0164
+        ],
+        "mean_period_excess": 0.29762,
+        "paths_beating_market": 0.8333,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.43324,
+        "annualised_spread": 5.1989,
+        "t_stat": 19.586,
+        "share_months_positive": 0.9792
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.1406,
+        "mean_ic_base": 0.15961,
+        "delta_mean_ic": -0.01901,
+        "delta_median_ic": -0.02189,
+        "t_paired": -4.377,
+        "t_paired_block_adjusted": -1.264,
+        "share_months_family_better": 0.2917,
+        "delta_terminal_wealth_net": 0.6841,
+        "terminal_wealth_net_family": 6.9763,
+        "terminal_wealth_net_base": 6.2922,
+        "terminal_wealth_market": 2.9583
+       }
+      }
+     }
+    },
+    "base+analyst+holder+interaction": {
+     "n_features": 91,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness",
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg",
+      "x_holder_add_x_rev",
+      "x_exit_x_rev_down",
+      "x_holder_anom_x_thincov",
+      "x_holder_add_x_thincov",
+      "x_specialist_x_thincov",
+      "x_new13f_x_ret6m_sign",
+      "x_newlongdur_x_ret6m_sign",
+      "x_bias_x_upside",
+      "x_bias_x_thincov"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 91,
+         "secs": 3.0
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 91,
+         "secs": 4.7
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 91,
+         "secs": 6.5
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 91,
+         "secs": 8.4
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 91,
+         "secs": 10.3
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 91,
+         "secs": 12.2
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 91,
+         "secs": 14.2
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 91,
+         "secs": 16.7
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.12012,
+        "t_stat": 14.871,
+        "share_months_positive": 0.9375
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 3.9924,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         4.1382,
+         2.5909,
+         4.2171,
+         3.5932,
+         10.5057,
+         9.8465,
+         5.4923,
+         1.5866,
+         1.6542,
+         2.8634,
+         4.6902,
+         5.0401
+        ],
+        "mean_period_excess": 0.09662,
+        "paths_beating_market": 0.6667,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.35876,
+        "annualised_spread": 4.3051,
+        "t_stat": 18.353,
+        "share_months_positive": 0.9792
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.12012,
+        "mean_ic_base": 0.14046,
+        "delta_mean_ic": -0.02035,
+        "delta_median_ic": -0.01109,
+        "t_paired": -4.818,
+        "t_paired_block_adjusted": -1.391,
+        "share_months_family_better": 0.2812,
+        "delta_terminal_wealth_net": -1.3447,
+        "terminal_wealth_net_family": 3.9924,
+        "terminal_wealth_net_base": 5.3371,
+        "terminal_wealth_market": 2.9583
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 70306,
+         "n_train_months": 36,
+         "n_test": 35836,
+         "n_features": 91,
+         "secs": 1.3
+        },
+        "2017": {
+         "n_train": 107080,
+         "n_train_months": 48,
+         "n_test": 34958,
+         "n_features": 91,
+         "secs": 2.4
+        },
+        "2018": {
+         "n_train": 142812,
+         "n_train_months": 60,
+         "n_test": 35045,
+         "n_features": 91,
+         "secs": 3.8
+        },
+        "2019": {
+         "n_train": 177595,
+         "n_train_months": 72,
+         "n_test": 35290,
+         "n_features": 91,
+         "secs": 2.0
+        },
+        "2020": {
+         "n_train": 212725,
+         "n_train_months": 84,
+         "n_test": 35306,
+         "n_features": 91,
+         "secs": 5.1
+        },
+        "2021": {
+         "n_train": 247680,
+         "n_train_months": 96,
+         "n_test": 38777,
+         "n_features": 91,
+         "secs": 5.7
+        },
+        "2022": {
+         "n_train": 283123,
+         "n_train_months": 108,
+         "n_test": 41619,
+         "n_features": 91,
+         "secs": 2.0
+        },
+        "2023": {
+         "n_train": 322037,
+         "n_train_months": 120,
+         "n_test": 40073,
+         "n_features": 91,
+         "secs": 2.0
+        }
+       },
+       "rank_ic": {
+        "months": 96,
+        "mean_ic": 0.12526,
+        "t_stat": 16.031,
+        "share_months_positive": 0.9792
+       },
+       "book": {
+        "months": 96,
+        "disjoint_paths": 12,
+        "overlapping_formations": true,
+        "terminal_wealth_net": 6.1412,
+        "terminal_wealth_market_same_months": 2.9583,
+        "terminal_wealth_net_per_path": [
+         5.4915,
+         10.8727,
+         10.6194,
+         8.1614,
+         10.3247,
+         2.134,
+         12.0309,
+         9.939,
+         3.0602,
+         2.9435,
+         3.1834,
+         7.3606
+        ],
+        "mean_period_excess": 0.20959,
+        "paths_beating_market": 0.8333,
+        "cost_bps_per_side": 10.0,
+        "k": 50,
+        "weight": "vw",
+        "note": "horizon 12 formations overlap; terminal wealth is the geometric mean of the 12 DISJOINT annual paths, not a compounding of overlapping windows."
+       },
+       "top_minus_bottom": {
+        "months": 96,
+        "mean_monthly_spread": 0.39268,
+        "annualised_spread": 4.7121,
+        "t_stat": 17.452,
+        "share_months_positive": 0.9688
+       },
+       "vs_base": {
+        "months": 96,
+        "n_effective_blocks": 8.0,
+        "mean_ic_family": 0.12526,
+        "mean_ic_base": 0.15961,
+        "delta_mean_ic": -0.03435,
+        "delta_median_ic": -0.0368,
+        "t_paired": -7.644,
+        "t_paired_block_adjusted": -2.207,
+        "share_months_family_better": 0.1875,
+        "delta_terminal_wealth_net": -0.151,
+        "terminal_wealth_net_family": 6.1412,
+        "terminal_wealth_net_base": 6.2922,
+        "terminal_wealth_market": 2.9583
+       }
+      }
+     }
+    }
+   },
+   "base_absolute": {},
+   "nested_ladder_steps": [
+    {
+     "months": 96,
+     "n_effective_blocks": 8.0,
+     "mean_ic_family": 0.12333,
+     "mean_ic_base": 0.14046,
+     "delta_mean_ic": -0.01714,
+     "delta_median_ic": -0.0042,
+     "t_paired": -4.487,
+     "t_paired_block_adjusted": -1.295,
+     "share_months_family_better": 0.3021,
+     "step": "base -> base+analyst",
+     "model": "ridge"
+    },
+    {
+     "months": 96,
+     "n_effective_blocks": 8.0,
+     "mean_ic_family": 0.14702,
+     "mean_ic_base": 0.15961,
+     "delta_mean_ic": -0.01259,
+     "delta_median_ic": -0.01859,
+     "t_paired": -3.458,
+     "t_paired_block_adjusted": -0.998,
+     "share_months_family_better": 0.3438,
+     "step": "base -> base+analyst",
+     "model": "lgbm"
+    },
+    {
+     "months": 96,
+     "n_effective_blocks": 8.0,
+     "mean_ic_family": 0.12158,
+     "mean_ic_base": 0.12333,
+     "delta_mean_ic": -0.00174,
+     "delta_median_ic": -0.00316,
+     "t_paired": -1.183,
+     "t_paired_block_adjusted": -0.341,
+     "share_months_family_better": 0.4583,
+     "step": "base+analyst -> base+analyst+holder",
+     "model": "ridge"
+    },
+    {
+     "months": 96,
+     "n_effective_blocks": 8.0,
+     "mean_ic_family": 0.1406,
+     "mean_ic_base": 0.14702,
+     "delta_mean_ic": -0.00642,
+     "delta_median_ic": -0.00227,
+     "t_paired": -2.425,
+     "t_paired_block_adjusted": -0.7,
+     "share_months_family_better": 0.4792,
+     "step": "base+analyst -> base+analyst+holder",
+     "model": "lgbm"
+    },
+    {
+     "months": 96,
+     "n_effective_blocks": 8.0,
+     "mean_ic_family": 0.12012,
+     "mean_ic_base": 0.12158,
+     "delta_mean_ic": -0.00147,
+     "delta_median_ic": -0.00356,
+     "t_paired": -1.339,
+     "t_paired_block_adjusted": -0.386,
+     "share_months_family_better": 0.3229,
+     "step": "base+analyst+holder -> base+analyst+holder+interaction",
+     "model": "ridge"
+    },
+    {
+     "months": 96,
+     "n_effective_blocks": 8.0,
+     "mean_ic_family": 0.12526,
+     "mean_ic_base": 0.1406,
+     "delta_mean_ic": -0.01534,
+     "delta_median_ic": -0.00585,
+     "t_paired": -4.418,
+     "t_paired_block_adjusted": -1.275,
+     "share_months_family_better": 0.3646,
+     "step": "base+analyst+holder -> base+analyst+holder+interaction",
+     "model": "lgbm"
+    }
+   ]
+  }
+ },
+ "complete_case": {
+  "rule": "every extension feature present, except four that are structurally null on a name's first observed quarter or with a single covering analyst (h_top_holder_log_chg, h_n_holders_chg_pct, h_inst_own_chg, a_bias_disp)",
+  "rows": 373963,
+  "share_of_table": 0.8475,
+  "months": 141,
+  "names": 5360,
+  "horizon_1m": {
+   "horizon_months": 1,
+   "target": "excess_vw_1m",
+   "tag": "complete_case",
+   "n_rows_with_target": 372246,
+   "sets": {
+    "base": {
+     "n_features": 50,
+     "added_features": [],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 50,
+         "secs": 1.1
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 50,
+         "secs": 1.8
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 50,
+         "secs": 2.6
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 50,
+         "secs": 3.3
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 50,
+         "secs": 4.0
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 50,
+         "secs": 4.9
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 50,
+         "secs": 5.9
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 50,
+         "secs": 7.1
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 50,
+         "secs": 8.0
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04981,
+        "t_stat": 6.319,
+        "share_months_positive": 0.7477
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.735,
+        "terminal_wealth_net": 3.7986,
+        "terminal_wealth_gross": 4.4416,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.1615,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00489,
+        "annualised_excess": 0.0586,
+        "t_stat_paired_vs_market": 0.484,
+        "months_beating_market": 0.514,
+        "worst_month_net": -0.3542,
+        "hit_rate": 0.5981
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03239,
+        "annualised_spread": 0.3886,
+        "t_stat": 4.961,
+        "share_months_positive": 0.7757
+       },
+       "calibration": {
+        "slope": 0.002,
+        "intercept": -0.00273,
+        "r_squared": 0.145
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 50,
+         "secs": 0.4
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 50,
+         "secs": 0.4
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 50,
+         "secs": 0.6
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 50,
+         "secs": 0.7
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 50,
+         "secs": 1.1
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 50,
+         "secs": 1.5
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 50,
+         "secs": 1.2
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 50,
+         "secs": 1.2
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 50,
+         "secs": 1.6
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04701,
+        "t_stat": 4.645,
+        "share_months_positive": 0.7664
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.859,
+        "terminal_wealth_net": 4.2514,
+        "terminal_wealth_gross": 5.1064,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.1762,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00597,
+        "annualised_excess": 0.0717,
+        "t_stat_paired_vs_market": 0.603,
+        "months_beating_market": 0.5234,
+        "worst_month_net": -0.4056,
+        "hit_rate": 0.5888
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.02341,
+        "annualised_spread": 0.2809,
+        "t_stat": 3.609,
+        "share_months_positive": 0.7196
+       },
+       "calibration": {
+        "slope": 0.688,
+        "intercept": -0.00226,
+        "r_squared": 0.752
+       }
+      }
+     }
+    },
+    "base+analyst": {
+     "n_features": 63,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 63,
+         "secs": 1.3
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 63,
+         "secs": 2.1
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 63,
+         "secs": 3.0
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 63,
+         "secs": 4.0
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 63,
+         "secs": 5.2
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 63,
+         "secs": 6.5
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 63,
+         "secs": 7.5
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 63,
+         "secs": 8.8
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 63,
+         "secs": 10.5
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04383,
+        "t_stat": 5.933,
+        "share_months_positive": 0.7383
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.721,
+        "terminal_wealth_net": 8.4543,
+        "terminal_wealth_gross": 9.8461,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2705,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.01228,
+        "annualised_excess": 0.1473,
+        "t_stat_paired_vs_market": 1.195,
+        "months_beating_market": 0.5607,
+        "worst_month_net": -0.3987,
+        "hit_rate": 0.6449
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.02903,
+        "annualised_spread": 0.3484,
+        "t_stat": 4.761,
+        "share_months_positive": 0.785
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.04383,
+        "mean_ic_base": 0.04981,
+        "delta_mean_ic": -0.00598,
+        "delta_median_ic": -0.00248,
+        "t_paired": -2.554,
+        "t_paired_block_adjusted": -2.554,
+        "share_months_family_better": 0.4393,
+        "delta_terminal_wealth_net": 4.6557,
+        "terminal_wealth_net_family": 8.4543,
+        "terminal_wealth_net_base": 3.7986,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 63,
+         "secs": 0.4
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 63,
+         "secs": 0.5
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 63,
+         "secs": 0.7
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 63,
+         "secs": 1.0
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 63,
+         "secs": 1.3
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 63,
+         "secs": 1.7
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 63,
+         "secs": 1.5
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 63,
+         "secs": 1.4
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 63,
+         "secs": 1.7
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04151,
+        "t_stat": 4.012,
+        "share_months_positive": 0.6916
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.843,
+        "terminal_wealth_net": 5.6796,
+        "terminal_wealth_gross": 6.7932,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2151,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.00811,
+        "annualised_excess": 0.0973,
+        "t_stat_paired_vs_market": 0.819,
+        "months_beating_market": 0.4486,
+        "worst_month_net": -0.3428,
+        "hit_rate": 0.5421
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.02498,
+        "annualised_spread": 0.2998,
+        "t_stat": 3.792,
+        "share_months_positive": 0.7009
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.04151,
+        "mean_ic_base": 0.04701,
+        "delta_mean_ic": -0.00551,
+        "delta_median_ic": -0.00361,
+        "t_paired": -1.561,
+        "t_paired_block_adjusted": -1.561,
+        "share_months_family_better": 0.4766,
+        "delta_terminal_wealth_net": 1.4282,
+        "terminal_wealth_net_family": 5.6796,
+        "terminal_wealth_net_base": 4.2514,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    },
+    "base+holder": {
+     "n_features": 69,
+     "added_features": [
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 69,
+         "secs": 1.5
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 69,
+         "secs": 2.4
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 69,
+         "secs": 3.5
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 69,
+         "secs": 4.6
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 69,
+         "secs": 5.8
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 69,
+         "secs": 7.1
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 69,
+         "secs": 8.2
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 69,
+         "secs": 9.6
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 69,
+         "secs": 11.1
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.05045,
+        "t_stat": 6.333,
+        "share_months_positive": 0.7477
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.746,
+        "terminal_wealth_net": 14.1701,
+        "terminal_wealth_gross": 16.566,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.3463,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.01654,
+        "annualised_excess": 0.1985,
+        "t_stat_paired_vs_market": 1.692,
+        "months_beating_market": 0.6075,
+        "worst_month_net": -0.3069,
+        "hit_rate": 0.6449
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03248,
+        "annualised_spread": 0.3898,
+        "t_stat": 4.777,
+        "share_months_positive": 0.7757
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.05045,
+        "mean_ic_base": 0.04981,
+        "delta_mean_ic": 0.00064,
+        "delta_median_ic": 0.00013,
+        "t_paired": 0.347,
+        "t_paired_block_adjusted": 0.347,
+        "share_months_family_better": 0.514,
+        "delta_terminal_wealth_net": 10.3715,
+        "terminal_wealth_net_family": 14.1701,
+        "terminal_wealth_net_base": 3.7986,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 69,
+         "secs": 0.5
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 69,
+         "secs": 0.5
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 69,
+         "secs": 0.7
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 69,
+         "secs": 0.8
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 69,
+         "secs": 1.4
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 69,
+         "secs": 1.7
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 69,
+         "secs": 1.5
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 69,
+         "secs": 1.5
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 69,
+         "secs": 1.9
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.03509,
+        "t_stat": 3.323,
+        "share_months_positive": 0.6822
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.874,
+        "terminal_wealth_net": 2.194,
+        "terminal_wealth_gross": 2.646,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.0921,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": -0.00091,
+        "annualised_excess": -0.0109,
+        "t_stat_paired_vs_market": -0.1,
+        "months_beating_market": 0.4953,
+        "worst_month_net": -0.4694,
+        "hit_rate": 0.5701
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.01911,
+        "annualised_spread": 0.2293,
+        "t_stat": 2.73,
+        "share_months_positive": 0.6449
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.03509,
+        "mean_ic_base": 0.04701,
+        "delta_mean_ic": -0.01192,
+        "delta_median_ic": -0.00748,
+        "t_paired": -2.255,
+        "t_paired_block_adjusted": -2.255,
+        "share_months_family_better": 0.4393,
+        "delta_terminal_wealth_net": -2.0574,
+        "terminal_wealth_net_family": 2.194,
+        "terminal_wealth_net_base": 4.2514,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    },
+    "base+analyst+holder": {
+     "n_features": 82,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness",
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 82,
+         "secs": 1.8
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 82,
+         "secs": 2.9
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 82,
+         "secs": 4.2
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 82,
+         "secs": 5.3
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 82,
+         "secs": 6.8
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 82,
+         "secs": 8.5
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 82,
+         "secs": 10.0
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 82,
+         "secs": 11.9
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 82,
+         "secs": 13.4
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04509,
+        "t_stat": 5.947,
+        "share_months_positive": 0.7477
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.736,
+        "terminal_wealth_net": 13.1571,
+        "terminal_wealth_gross": 15.358,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.3351,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.01496,
+        "annualised_excess": 0.1795,
+        "t_stat_paired_vs_market": 1.631,
+        "months_beating_market": 0.5888,
+        "worst_month_net": -0.3082,
+        "hit_rate": 0.6822
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.03006,
+        "annualised_spread": 0.3608,
+        "t_stat": 4.668,
+        "share_months_positive": 0.7477
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.04509,
+        "mean_ic_base": 0.04981,
+        "delta_mean_ic": -0.00472,
+        "delta_median_ic": -0.00483,
+        "t_paired": -1.636,
+        "t_paired_block_adjusted": -1.636,
+        "share_months_family_better": 0.4393,
+        "delta_terminal_wealth_net": 9.3585,
+        "terminal_wealth_net_family": 13.1571,
+        "terminal_wealth_net_base": 3.7986,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 82,
+         "secs": 0.5
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 82,
+         "secs": 0.6
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 82,
+         "secs": 0.9
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 82,
+         "secs": 1.0
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 82,
+         "secs": 1.5
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 82,
+         "secs": 1.9
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 82,
+         "secs": 1.7
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 82,
+         "secs": 1.7
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 82,
+         "secs": 2.3
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04026,
+        "t_stat": 3.853,
+        "share_months_positive": 0.6916
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.837,
+        "terminal_wealth_net": 1.3451,
+        "terminal_wealth_gross": 1.6108,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.0338,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": -0.00503,
+        "annualised_excess": -0.0604,
+        "t_stat_paired_vs_market": -0.524,
+        "months_beating_market": 0.4766,
+        "worst_month_net": -0.4327,
+        "hit_rate": 0.514
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.02428,
+        "annualised_spread": 0.2914,
+        "t_stat": 3.596,
+        "share_months_positive": 0.7103
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.04026,
+        "mean_ic_base": 0.04701,
+        "delta_mean_ic": -0.00676,
+        "delta_median_ic": -0.00133,
+        "t_paired": -2.129,
+        "t_paired_block_adjusted": -2.129,
+        "share_months_family_better": 0.486,
+        "delta_terminal_wealth_net": -2.9063,
+        "terminal_wealth_net_family": 1.3451,
+        "terminal_wealth_net_base": 4.2514,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    },
+    "base+analyst+holder+interaction": {
+     "n_features": 91,
+     "added_features": [
+      "a_n_live_analysts",
+      "a_n_live_targets",
+      "a_bias_mean",
+      "a_bias_disp",
+      "a_bias_mean_xs",
+      "a_implied_mean",
+      "a_implied_bias_corrected",
+      "a_implied_vs_upside",
+      "a_upside_bias_corrected",
+      "a_rev_accel",
+      "a_thin_cov",
+      "a_very_thin_cov",
+      "a_cov_thinness",
+      "h_n_holders",
+      "h_log_n_holders",
+      "h_n_holders_chg",
+      "h_n_holders_chg_pct",
+      "h_inst_own",
+      "h_inst_own_chg",
+      "h_new_frac",
+      "h_exit_frac",
+      "h_net_entry_frac",
+      "h_new_longdur_frac",
+      "h_new_shortdur_frac",
+      "h_exit_longdur_frac",
+      "h_stake_anom_mean",
+      "h_stake_anom_top_decile_frac",
+      "h_specialist_frac",
+      "h_specialist_new_n",
+      "h_multi_specialist_new",
+      "h_top5_share",
+      "h_top_holder_log_chg",
+      "x_holder_add_x_rev",
+      "x_exit_x_rev_down",
+      "x_holder_anom_x_thincov",
+      "x_holder_add_x_thincov",
+      "x_specialist_x_thincov",
+      "x_new13f_x_ret6m_sign",
+      "x_newlongdur_x_ret6m_sign",
+      "x_bias_x_upside",
+      "x_bias_x_thincov"
+     ],
+     "models": {
+      "ridge": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 91,
+         "secs": 1.9
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 91,
+         "secs": 3.2
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 91,
+         "secs": 4.7
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 91,
+         "secs": 6.1
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 91,
+         "secs": 7.6
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 91,
+         "secs": 9.4
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 91,
+         "secs": 11.6
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 91,
+         "secs": 12.9
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 91,
+         "secs": 15.5
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04209,
+        "t_stat": 5.282,
+        "share_months_positive": 0.7196
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.748,
+        "terminal_wealth_net": 7.8222,
+        "terminal_wealth_gross": 9.1591,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.2595,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": 0.01089,
+        "annualised_excess": 0.1307,
+        "t_stat_paired_vs_market": 1.113,
+        "months_beating_market": 0.5514,
+        "worst_month_net": -0.319,
+        "hit_rate": 0.6636
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.02925,
+        "annualised_spread": 0.351,
+        "t_stat": 4.456,
+        "share_months_positive": 0.7477
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.04209,
+        "mean_ic_base": 0.04981,
+        "delta_mean_ic": -0.00772,
+        "delta_median_ic": -0.00571,
+        "t_paired": -2.398,
+        "t_paired_block_adjusted": -2.398,
+        "share_months_family_better": 0.4206,
+        "delta_terminal_wealth_net": 4.0236,
+        "terminal_wealth_net_family": 7.8222,
+        "terminal_wealth_net_base": 3.7986,
+        "terminal_wealth_market": 4.8636
+       }
+      },
+      "lgbm": {
+       "fits": {
+        "2016": {
+         "n_train": 67061,
+         "n_train_months": 33,
+         "n_test": 30556,
+         "n_features": 91,
+         "secs": 0.5
+        },
+        "2017": {
+         "n_train": 97408,
+         "n_train_months": 45,
+         "n_test": 26897,
+         "n_features": 91,
+         "secs": 0.7
+        },
+        "2018": {
+         "n_train": 124041,
+         "n_train_months": 57,
+         "n_test": 33075,
+         "n_features": 91,
+         "secs": 1.0
+        },
+        "2019": {
+         "n_train": 157086,
+         "n_train_months": 69,
+         "n_test": 33458,
+         "n_features": 91,
+         "secs": 1.0
+        },
+        "2020": {
+         "n_train": 190521,
+         "n_train_months": 81,
+         "n_test": 33634,
+         "n_features": 91,
+         "secs": 1.7
+        },
+        "2021": {
+         "n_train": 224139,
+         "n_train_months": 93,
+         "n_test": 35718,
+         "n_features": 91,
+         "secs": 2.0
+        },
+        "2022": {
+         "n_train": 259563,
+         "n_train_months": 105,
+         "n_test": 39253,
+         "n_features": 91,
+         "secs": 1.8
+        },
+        "2023": {
+         "n_train": 298641,
+         "n_train_months": 117,
+         "n_test": 38352,
+         "n_features": 91,
+         "secs": 1.8
+        },
+        "2024": {
+         "n_train": 337189,
+         "n_train_months": 129,
+         "n_test": 31962,
+         "n_features": 91,
+         "secs": 2.6
+        }
+       },
+       "rank_ic": {
+        "months": 107,
+        "mean_ic": 0.04161,
+        "t_stat": 3.844,
+        "share_months_positive": 0.6729
+       },
+       "book": {
+        "months": 107,
+        "k": 50,
+        "weight": "vw",
+        "cost_bps_per_side": 10.0,
+        "tradable_floor_usd": null,
+        "rows_after_tradable_floor": 302905,
+        "mean_names_per_month": 50.0,
+        "mean_turnover": 0.874,
+        "terminal_wealth_net": 1.992,
+        "terminal_wealth_gross": 2.4019,
+        "terminal_wealth_market_same_months": 4.8636,
+        "cagr_net": 0.0804,
+        "cagr_market": 0.1941,
+        "mean_monthly_excess": -0.00158,
+        "annualised_excess": -0.019,
+        "t_stat_paired_vs_market": -0.159,
+        "months_beating_market": 0.4766,
+        "worst_month_net": -0.3325,
+        "hit_rate": 0.5327
+       },
+       "top_minus_bottom": {
+        "months": 107,
+        "mean_monthly_spread": 0.0236,
+        "annualised_spread": 0.2832,
+        "t_stat": 3.273,
+        "share_months_positive": 0.6822
+       },
+       "vs_base": {
+        "months": 107,
+        "n_effective_blocks": 107.0,
+        "mean_ic_family": 0.04161,
+        "mean_ic_base": 0.04701,
+        "delta_mean_ic": -0.0054,
+        "delta_median_ic": -0.00124,
+        "t_paired": -1.131,
+        "t_paired_block_adjusted": -1.131,
+        "share_months_family_better": 0.486,
+        "delta_terminal_wealth_net": -2.2594,
+        "terminal_wealth_net_family": 1.992,
+        "terminal_wealth_net_base": 4.2514,
+        "terminal_wealth_market": 4.8636
+       }
+      }
+     }
+    }
+   },
+   "base_absolute": {},
+   "nested_ladder_steps": [
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.04383,
+     "mean_ic_base": 0.04981,
+     "delta_mean_ic": -0.00598,
+     "delta_median_ic": -0.00248,
+     "t_paired": -2.554,
+     "t_paired_block_adjusted": -2.554,
+     "share_months_family_better": 0.4393,
+     "step": "base -> base+analyst",
+     "model": "ridge"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.04151,
+     "mean_ic_base": 0.04701,
+     "delta_mean_ic": -0.00551,
+     "delta_median_ic": -0.00361,
+     "t_paired": -1.561,
+     "t_paired_block_adjusted": -1.561,
+     "share_months_family_better": 0.4766,
+     "step": "base -> base+analyst",
+     "model": "lgbm"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.04509,
+     "mean_ic_base": 0.04383,
+     "delta_mean_ic": 0.00126,
+     "delta_median_ic": 0.00102,
+     "t_paired": 0.693,
+     "t_paired_block_adjusted": 0.693,
+     "share_months_family_better": 0.5234,
+     "step": "base+analyst -> base+analyst+holder",
+     "model": "ridge"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.04026,
+     "mean_ic_base": 0.04151,
+     "delta_mean_ic": -0.00125,
+     "delta_median_ic": -2e-05,
+     "t_paired": -0.415,
+     "t_paired_block_adjusted": -0.415,
+     "share_months_family_better": 0.4953,
+     "step": "base+analyst -> base+analyst+holder",
+     "model": "lgbm"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.04209,
+     "mean_ic_base": 0.04509,
+     "delta_mean_ic": -0.003,
+     "delta_median_ic": -0.00157,
+     "t_paired": -2.595,
+     "t_paired_block_adjusted": -2.595,
+     "share_months_family_better": 0.4112,
+     "step": "base+analyst+holder -> base+analyst+holder+interaction",
+     "model": "ridge"
+    },
+    {
+     "months": 107,
+     "n_effective_blocks": 107.0,
+     "mean_ic_family": 0.04161,
+     "mean_ic_base": 0.04026,
+     "delta_mean_ic": 0.00135,
+     "delta_median_ic": -0.00137,
+     "t_paired": 0.383,
+     "t_paired_block_adjusted": 0.383,
+     "share_months_family_better": 0.4766,
+     "step": "base+analyst+holder -> base+analyst+holder+interaction",
+     "model": "lgbm"
+    }
+   ]
+  }
+ },
+ "univariate_scan": {
+  "1m": [
+   {
+    "feature": "h_inst_own",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.07175,
+    "t_stat": 9.91,
+    "t_block_adjusted": 9.91,
+    "share_months_positive": 0.8112,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "h_top5_share",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.08342,
+    "t_stat": -9.519,
+    "t_block_adjusted": -9.519,
+    "share_months_positive": 0.2378,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "a_very_thin_cov",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.0445,
+    "t_stat": -8.955,
+    "t_block_adjusted": -8.955,
+    "share_months_positive": 0.2308,
+    "coverage": 1.0
+   },
+   {
+    "feature": "h_n_holders",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.0847,
+    "t_stat": 8.009,
+    "t_block_adjusted": 8.009,
+    "share_months_positive": 0.7483,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "h_log_n_holders",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.0847,
+    "t_stat": 8.009,
+    "t_block_adjusted": 8.009,
+    "share_months_positive": 0.7483,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "a_cov_thinness",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.05467,
+    "t_stat": -7.33,
+    "t_block_adjusted": -7.33,
+    "share_months_positive": 0.2378,
+    "coverage": 1.0
+   },
+   {
+    "feature": "a_n_live_targets",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.05645,
+    "t_stat": 7.165,
+    "t_block_adjusted": 7.165,
+    "share_months_positive": 0.7483,
+    "coverage": 0.9714
+   },
+   {
+    "feature": "a_n_live_analysts",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.0477,
+    "t_stat": 6.796,
+    "t_block_adjusted": 6.796,
+    "share_months_positive": 0.7413,
+    "coverage": 0.9714
+   },
+   {
+    "feature": "a_bias_mean",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.06716,
+    "t_stat": -6.513,
+    "t_block_adjusted": -6.513,
+    "share_months_positive": 0.2867,
+    "coverage": 0.9673
+   },
+   {
+    "feature": "a_bias_mean_xs",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.06716,
+    "t_stat": -6.513,
+    "t_block_adjusted": -6.513,
+    "share_months_positive": 0.2867,
+    "coverage": 0.9673
+   },
+   {
+    "feature": "a_implied_vs_upside",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.06321,
+    "t_stat": 6.294,
+    "t_block_adjusted": 6.294,
+    "share_months_positive": 0.7692,
+    "coverage": 0.9714
+   },
+   {
+    "feature": "x_bias_x_thincov",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.05354,
+    "t_stat": -6.115,
+    "t_block_adjusted": -6.115,
+    "share_months_positive": 0.2867,
+    "coverage": 0.9673
+   },
+   {
+    "feature": "a_upside_bias_corrected",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.06781,
+    "t_stat": -6.094,
+    "t_block_adjusted": -6.094,
+    "share_months_positive": 0.2727,
+    "coverage": 0.9673
+   },
+   {
+    "feature": "a_implied_mean",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.07368,
+    "t_stat": -5.983,
+    "t_block_adjusted": -5.983,
+    "share_months_positive": 0.2937,
+    "coverage": 0.9714
+   },
+   {
+    "feature": "x_bias_x_upside",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.05913,
+    "t_stat": 5.956,
+    "t_block_adjusted": 5.956,
+    "share_months_positive": 0.6993,
+    "coverage": 0.9673
+   },
+   {
+    "feature": "a_thin_cov",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.04167,
+    "t_stat": -5.555,
+    "t_block_adjusted": -5.555,
+    "share_months_positive": 0.2867,
+    "coverage": 1.0
+   },
+   {
+    "feature": "h_multi_specialist_new",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.03444,
+    "t_stat": 5.481,
+    "t_block_adjusted": 5.481,
+    "share_months_positive": 0.6713,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "h_specialist_new_n",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.03773,
+    "t_stat": 5.38,
+    "t_block_adjusted": 5.38,
+    "share_months_positive": 0.6713,
+    "coverage": 0.8886
+   },
+   {
+    "feature": "a_implied_bias_corrected",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.04115,
+    "t_stat": -4.974,
+    "t_block_adjusted": -4.974,
+    "share_months_positive": 0.3357,
+    "coverage": 0.9714
+   },
+   {
+    "feature": "h_stake_anom_top_decile_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.02739,
+    "t_stat": -4.142,
+    "t_block_adjusted": -4.142,
+    "share_months_positive": 0.3566,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "x_holder_anom_x_thincov",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.0206,
+    "t_stat": 4.122,
+    "t_block_adjusted": 4.122,
+    "share_months_positive": 0.6154,
+    "coverage": 0.9228
+   },
+   {
+    "feature": "h_exit_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.04067,
+    "t_stat": -4.008,
+    "t_block_adjusted": -4.008,
+    "share_months_positive": 0.3916,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "a_bias_disp",
+    "family": "analyst",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.03424,
+    "t_stat": -3.708,
+    "t_block_adjusted": -3.708,
+    "share_months_positive": 0.3357,
+    "coverage": 0.922
+   },
+   {
+    "feature": "h_n_holders_chg",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.02303,
+    "t_stat": 3.532,
+    "t_block_adjusted": 3.532,
+    "share_months_positive": 0.6224,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "h_exit_longdur_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.01859,
+    "t_stat": -2.907,
+    "t_block_adjusted": -2.907,
+    "share_months_positive": 0.3846,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "x_newlongdur_x_ret6m_sign",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.0171,
+    "t_stat": -2.83,
+    "t_block_adjusted": -2.83,
+    "share_months_positive": 0.4266,
+    "coverage": 0.9035
+   },
+   {
+    "feature": "h_new_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.024,
+    "t_stat": -2.819,
+    "t_block_adjusted": -2.819,
+    "share_months_positive": 0.4336,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "x_holder_add_x_thincov",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.01244,
+    "t_stat": 2.388,
+    "t_block_adjusted": 2.388,
+    "share_months_positive": 0.6294,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "h_new_shortdur_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.01973,
+    "t_stat": -2.326,
+    "t_block_adjusted": -2.326,
+    "share_months_positive": 0.4336,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "h_stake_anom_mean",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.01222,
+    "t_stat": 2.267,
+    "t_block_adjusted": 2.267,
+    "share_months_positive": 0.5804,
+    "coverage": 0.9228
+   },
+   {
+    "feature": "x_new13f_x_ret6m_sign",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.01333,
+    "t_stat": -2.071,
+    "t_block_adjusted": -2.071,
+    "share_months_positive": 0.4056,
+    "coverage": 0.9035
+   },
+   {
+    "feature": "h_top_holder_log_chg",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.00668,
+    "t_stat": -1.882,
+    "t_block_adjusted": -1.882,
+    "share_months_positive": 0.4476,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "x_holder_add_x_rev",
+    "family": "interaction",
+    "months": 142,
+    "n_effective_blocks": 142.0,
+    "mean_ic": -0.0084,
+    "t_stat": -1.78,
+    "t_block_adjusted": -1.78,
+    "share_months_positive": 0.4366,
+    "coverage": 0.8971
+   },
+   {
+    "feature": "h_n_holders_chg_pct",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.00972,
+    "t_stat": 1.707,
+    "t_block_adjusted": 1.707,
+    "share_months_positive": 0.6713,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "h_new_longdur_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.00813,
+    "t_stat": -1.449,
+    "t_block_adjusted": -1.449,
+    "share_months_positive": 0.5245,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "h_specialist_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.01088,
+    "t_stat": -1.372,
+    "t_block_adjusted": -1.372,
+    "share_months_positive": 0.4685,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "h_inst_own_chg",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.00478,
+    "t_stat": 1.339,
+    "t_block_adjusted": 1.339,
+    "share_months_positive": 0.5734,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "a_rev_accel",
+    "family": "analyst",
+    "months": 140,
+    "n_effective_blocks": 140.0,
+    "mean_ic": -0.00702,
+    "t_stat": -1.229,
+    "t_block_adjusted": -1.229,
+    "share_months_positive": 0.4357,
+    "coverage": 0.953
+   },
+   {
+    "feature": "h_net_entry_frac",
+    "family": "holder",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": 0.00679,
+    "t_stat": 1.225,
+    "t_block_adjusted": 1.225,
+    "share_months_positive": 0.6713,
+    "coverage": 0.9054
+   },
+   {
+    "feature": "x_specialist_x_thincov",
+    "family": "interaction",
+    "months": 143,
+    "n_effective_blocks": 143.0,
+    "mean_ic": -0.00723,
+    "t_stat": -1.119,
+    "t_block_adjusted": -1.119,
+    "share_months_positive": 0.4545,
+    "coverage": 0.9231
+   },
+   {
+    "feature": "x_exit_x_rev_down",
+    "family": "interaction",
+    "months": 142,
+    "n_effective_blocks": 142.0,
+    "mean_ic": 0.00348,
+    "t_stat": 0.728,
+    "t_block_adjusted": 0.728,
+    "share_months_positive": 0.5775,
+    "coverage": 0.8971
+   }
+  ],
+  "12m": [
+   {
+    "feature": "h_top5_share",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.17277,
+    "t_stat": -22.279,
+    "t_block_adjusted": -6.431,
+    "share_months_positive": 0.0303,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "a_bias_mean",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.15481,
+    "t_stat": -20.313,
+    "t_block_adjusted": -5.864,
+    "share_months_positive": 0.0455,
+    "coverage": 0.9709
+   },
+   {
+    "feature": "a_bias_mean_xs",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.15481,
+    "t_stat": -20.313,
+    "t_block_adjusted": -5.864,
+    "share_months_positive": 0.0455,
+    "coverage": 0.9709
+   },
+   {
+    "feature": "h_n_holders",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.1827,
+    "t_stat": 19.827,
+    "t_block_adjusted": 5.724,
+    "share_months_positive": 0.9394,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "h_log_n_holders",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.1827,
+    "t_stat": 19.827,
+    "t_block_adjusted": 5.724,
+    "share_months_positive": 0.9394,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "a_implied_vs_upside",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.18817,
+    "t_stat": 19.799,
+    "t_block_adjusted": 5.716,
+    "share_months_positive": 0.9697,
+    "coverage": 0.975
+   },
+   {
+    "feature": "h_inst_own",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.14348,
+    "t_stat": 19.417,
+    "t_block_adjusted": 5.605,
+    "share_months_positive": 0.9924,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "a_very_thin_cov",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.08372,
+    "t_stat": -18.823,
+    "t_block_adjusted": -5.434,
+    "share_months_positive": 0.0833,
+    "coverage": 1.0
+   },
+   {
+    "feature": "x_bias_x_upside",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.13428,
+    "t_stat": 18.394,
+    "t_block_adjusted": 5.31,
+    "share_months_positive": 0.9394,
+    "coverage": 0.9709
+   },
+   {
+    "feature": "x_bias_x_thincov",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.12262,
+    "t_stat": -17.706,
+    "t_block_adjusted": -5.111,
+    "share_months_positive": 0.0758,
+    "coverage": 0.9709
+   },
+   {
+    "feature": "a_cov_thinness",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.1099,
+    "t_stat": -17.703,
+    "t_block_adjusted": -5.11,
+    "share_months_positive": 0.0682,
+    "coverage": 1.0
+   },
+   {
+    "feature": "a_implied_mean",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.1822,
+    "t_stat": -17.285,
+    "t_block_adjusted": -4.99,
+    "share_months_positive": 0.0758,
+    "coverage": 0.975
+   },
+   {
+    "feature": "a_upside_bias_corrected",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.19509,
+    "t_stat": -17.264,
+    "t_block_adjusted": -4.984,
+    "share_months_positive": 0.053,
+    "coverage": 0.9709
+   },
+   {
+    "feature": "a_n_live_targets",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.11797,
+    "t_stat": 17.021,
+    "t_block_adjusted": 4.914,
+    "share_months_positive": 0.9394,
+    "coverage": 0.975
+   },
+   {
+    "feature": "a_n_live_analysts",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.09361,
+    "t_stat": 16.511,
+    "t_block_adjusted": 4.766,
+    "share_months_positive": 0.9318,
+    "coverage": 0.975
+   },
+   {
+    "feature": "a_thin_cov",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.09007,
+    "t_stat": -15.446,
+    "t_block_adjusted": -4.459,
+    "share_months_positive": 0.1288,
+    "coverage": 1.0
+   },
+   {
+    "feature": "a_bias_disp",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.09899,
+    "t_stat": -12.068,
+    "t_block_adjusted": -3.484,
+    "share_months_positive": 0.1061,
+    "coverage": 0.9291
+   },
+   {
+    "feature": "a_implied_bias_corrected",
+    "family": "analyst",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.10185,
+    "t_stat": -10.892,
+    "t_block_adjusted": -3.144,
+    "share_months_positive": 0.1515,
+    "coverage": 0.975
+   },
+   {
+    "feature": "h_multi_specialist_new",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.05787,
+    "t_stat": 10.204,
+    "t_block_adjusted": 2.946,
+    "share_months_positive": 0.7955,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_exit_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.10384,
+    "t_stat": -9.411,
+    "t_block_adjusted": -2.717,
+    "share_months_positive": 0.1894,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_specialist_new_n",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.06324,
+    "t_stat": 9.398,
+    "t_block_adjusted": 2.713,
+    "share_months_positive": 0.7652,
+    "coverage": 0.8803
+   },
+   {
+    "feature": "h_stake_anom_top_decile_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.05999,
+    "t_stat": -8.238,
+    "t_block_adjusted": -2.378,
+    "share_months_positive": 0.2879,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "h_new_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.08085,
+    "t_stat": -8.07,
+    "t_block_adjusted": -2.33,
+    "share_months_positive": 0.2652,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "x_holder_anom_x_thincov",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.03851,
+    "t_stat": 7.808,
+    "t_block_adjusted": 2.254,
+    "share_months_positive": 0.697,
+    "coverage": 0.9164
+   },
+   {
+    "feature": "h_new_shortdur_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.06809,
+    "t_stat": -6.836,
+    "t_block_adjusted": -1.974,
+    "share_months_positive": 0.2803,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_top_holder_log_chg",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.02377,
+    "t_stat": -5.755,
+    "t_block_adjusted": -1.661,
+    "share_months_positive": 0.3333,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "x_newlongdur_x_ret6m_sign",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.03643,
+    "t_stat": -5.551,
+    "t_block_adjusted": -1.603,
+    "share_months_positive": 0.2879,
+    "coverage": 0.8959
+   },
+   {
+    "feature": "h_new_longdur_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.0364,
+    "t_stat": -4.605,
+    "t_block_adjusted": -1.329,
+    "share_months_positive": 0.4242,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "x_new13f_x_ret6m_sign",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.03041,
+    "t_stat": -3.975,
+    "t_block_adjusted": -1.147,
+    "share_months_positive": 0.3561,
+    "coverage": 0.8959
+   },
+   {
+    "feature": "h_exit_longdur_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.0285,
+    "t_stat": -3.89,
+    "t_block_adjusted": -1.123,
+    "share_months_positive": 0.3106,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_n_holders_chg",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.0269,
+    "t_stat": 3.879,
+    "t_block_adjusted": 1.12,
+    "share_months_positive": 0.7424,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_stake_anom_mean",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.01607,
+    "t_stat": 3.032,
+    "t_block_adjusted": 0.875,
+    "share_months_positive": 0.6136,
+    "coverage": 0.9164
+   },
+   {
+    "feature": "x_holder_add_x_rev",
+    "family": "interaction",
+    "months": 131,
+    "n_effective_blocks": 10.9,
+    "mean_ic": -0.01263,
+    "t_stat": -2.609,
+    "t_block_adjusted": -0.753,
+    "share_months_positive": 0.374,
+    "coverage": 0.8892
+   },
+   {
+    "feature": "x_holder_add_x_thincov",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.01436,
+    "t_stat": 2.422,
+    "t_block_adjusted": 0.699,
+    "share_months_positive": 0.6894,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_specialist_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.02013,
+    "t_stat": -2.335,
+    "t_block_adjusted": -0.674,
+    "share_months_positive": 0.4621,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "x_specialist_x_thincov",
+    "family": "interaction",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.00917,
+    "t_stat": -1.312,
+    "t_block_adjusted": -0.379,
+    "share_months_positive": 0.5076,
+    "coverage": 0.9167
+   },
+   {
+    "feature": "a_rev_accel",
+    "family": "analyst",
+    "months": 129,
+    "n_effective_blocks": 10.8,
+    "mean_ic": -0.00695,
+    "t_stat": -1.036,
+    "t_block_adjusted": -0.299,
+    "share_months_positive": 0.4264,
+    "coverage": 0.9506
+   },
+   {
+    "feature": "h_net_entry_frac",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.00534,
+    "t_stat": -0.794,
+    "t_block_adjusted": -0.229,
+    "share_months_positive": 0.6061,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_n_holders_chg_pct",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": 0.00253,
+    "t_stat": 0.371,
+    "t_block_adjusted": 0.107,
+    "share_months_positive": 0.6818,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "h_inst_own_chg",
+    "family": "holder",
+    "months": 132,
+    "n_effective_blocks": 11.0,
+    "mean_ic": -0.00089,
+    "t_stat": -0.198,
+    "t_block_adjusted": -0.057,
+    "share_months_positive": 0.5227,
+    "coverage": 0.8979
+   },
+   {
+    "feature": "x_exit_x_rev_down",
+    "family": "interaction",
+    "months": 131,
+    "n_effective_blocks": 10.9,
+    "mean_ic": -0.00083,
+    "t_stat": -0.141,
+    "t_block_adjusted": -0.041,
+    "share_months_positive": 0.5191,
+    "coverage": 0.8892
+   }
+  ]
+ },
+ "null_shuffled_within_month_1m": {
+  "months": 107,
+  "mean_ic": -0.01001,
+  "t_stat": -1.608,
+  "book": {
+   "months": 107,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 332092,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.92,
+   "terminal_wealth_net": 3.2354,
+   "terminal_wealth_gross": 3.9343,
+   "terminal_wealth_market_same_months": 4.8636,
+   "cagr_net": 0.1407,
+   "cagr_market": 0.1941,
+   "mean_monthly_excess": 8e-05,
+   "annualised_excess": 0.001,
+   "t_stat_paired_vs_market": 0.012,
+   "months_beating_market": 0.4393,
+   "worst_month_net": -0.4155,
+   "hit_rate": 0.5794
+  },
+  "reads": "the training target was permuted WITHIN each month, so the cross-sectional pairing is destroyed while the calendar, the market factor and the whole pipeline are untouched. A non-zero IC here would be a leak in the plumbing, not a signal."
+ },
+ "lgbm_gain_shares_1m": {
+  "test_year": 2024,
+  "gain_share_by_family": {
+   "base": 0.85201,
+   "analyst": 0.05,
+   "holder": 0.05728,
+   "interaction": 0.04071
+  },
+  "gain_share_by_ext_feature": {
+   "a_n_live_targets": 0.01122,
+   "a_implied_vs_upside": 0.00911,
+   "x_newlongdur_x_ret6m_sign": 0.00875,
+   "x_holder_add_x_thincov": 0.00844,
+   "h_new_longdur_frac": 0.00753,
+   "a_bias_disp": 0.00747,
+   "h_exit_frac": 0.0064,
+   "h_n_holders_chg": 0.00625,
+   "x_bias_x_upside": 0.0059,
+   "a_bias_mean": 0.00555,
+   "h_n_holders": 0.0055,
+   "a_implied_mean": 0.00536,
+   "x_new13f_x_ret6m_sign": 0.00527,
+   "h_exit_longdur_frac": 0.00523,
+   "h_inst_own": 0.00462,
+   "h_top5_share": 0.0042,
+   "a_upside_bias_corrected": 0.00396,
+   "x_bias_x_thincov": 0.00353,
+   "h_n_holders_chg_pct": 0.00338,
+   "x_specialist_x_thincov": 0.00337,
+   "a_bias_mean_xs": 0.00325,
+   "h_new_shortdur_frac": 0.00323,
+   "x_holder_add_x_rev": 0.00271,
+   "a_implied_bias_corrected": 0.00256,
+   "h_specialist_frac": 0.00229,
+   "x_exit_x_rev_down": 0.00217,
+   "h_inst_own_chg": 0.00213,
+   "h_stake_anom_mean": 0.00174,
+   "h_new_frac": 0.0014,
+   "h_specialist_new_n": 0.00132,
+   "a_rev_accel": 0.00106,
+   "h_stake_anom_top_decile_frac": 0.00092,
+   "x_holder_anom_x_thincov": 0.00056,
+   "h_top_holder_log_chg": 0.00047,
+   "a_n_live_analysts": 0.00045,
+   "h_log_n_holders": 0.00041,
+   "h_net_entry_frac": 0.00028,
+   "a_thin_cov": 0.0,
+   "a_very_thin_cov": 0.0,
+   "a_cov_thinness": 0.0,
+   "h_multi_specialist_new": 0.0
+  },
+  "reads": "gain says what the model USED, never what it EARNED."
+ },
+ "VERDICT": {
+  "base+analyst": {
+   "cells": [
+    {
+     "horizon": "1m",
+     "model": "ridge",
+     "delta_mean_ic": -0.00934,
+     "t_paired": -3.739,
+     "delta_terminal_wealth_net": -2.0114
+    },
+    {
+     "horizon": "1m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.00599,
+     "t_paired": -1.646,
+     "delta_terminal_wealth_net": -1.047
+    },
+    {
+     "horizon": "12m",
+     "model": "ridge",
+     "delta_mean_ic": -0.01714,
+     "t_paired": -4.487,
+     "delta_terminal_wealth_net": -0.8358
+    },
+    {
+     "horizon": "12m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.01259,
+     "t_paired": -3.458,
+     "delta_terminal_wealth_net": 2.3653
+    }
+   ],
+   "cells_positive_delta_ic": "0/4",
+   "reads": "ADDS NOTHING (or subtracts)"
+  },
+  "base+holder": {
+   "cells": [
+    {
+     "horizon": "1m",
+     "model": "ridge",
+     "delta_mean_ic": -0.00352,
+     "t_paired": -1.818,
+     "delta_terminal_wealth_net": 1.7201
+    },
+    {
+     "horizon": "1m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.01012,
+     "t_paired": -2.292,
+     "delta_terminal_wealth_net": -2.8883
+    },
+    {
+     "horizon": "12m",
+     "model": "ridge",
+     "delta_mean_ic": -0.00498,
+     "t_paired": -2.423,
+     "delta_terminal_wealth_net": -0.9041
+    },
+    {
+     "horizon": "12m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.01345,
+     "t_paired": -4.789,
+     "delta_terminal_wealth_net": 1.1548
+    }
+   ],
+   "cells_positive_delta_ic": "0/4",
+   "reads": "ADDS NOTHING (or subtracts)"
+  },
+  "base+analyst+holder": {
+   "cells": [
+    {
+     "horizon": "1m",
+     "model": "ridge",
+     "delta_mean_ic": -0.01115,
+     "t_paired": -3.016,
+     "delta_terminal_wealth_net": -3.0065
+    },
+    {
+     "horizon": "1m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.00793,
+     "t_paired": -2.105,
+     "delta_terminal_wealth_net": -1.2964
+    },
+    {
+     "horizon": "12m",
+     "model": "ridge",
+     "delta_mean_ic": -0.01888,
+     "t_paired": -4.281,
+     "delta_terminal_wealth_net": -1.5465
+    },
+    {
+     "horizon": "12m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.01901,
+     "t_paired": -4.377,
+     "delta_terminal_wealth_net": 0.6841
+    }
+   ],
+   "cells_positive_delta_ic": "0/4",
+   "reads": "ADDS NOTHING (or subtracts)"
+  },
+  "base+analyst+holder+interaction": {
+   "cells": [
+    {
+     "horizon": "1m",
+     "model": "ridge",
+     "delta_mean_ic": -0.01445,
+     "t_paired": -3.538,
+     "delta_terminal_wealth_net": -4.626
+    },
+    {
+     "horizon": "1m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.01047,
+     "t_paired": -2.339,
+     "delta_terminal_wealth_net": -1.3148
+    },
+    {
+     "horizon": "12m",
+     "model": "ridge",
+     "delta_mean_ic": -0.02035,
+     "t_paired": -4.818,
+     "delta_terminal_wealth_net": -1.3447
+    },
+    {
+     "horizon": "12m",
+     "model": "lgbm",
+     "delta_mean_ic": -0.03435,
+     "t_paired": -7.644,
+     "delta_terminal_wealth_net": -0.151
+    }
+   ],
+   "cells_positive_delta_ic": "0/4",
+   "reads": "ADDS NOTHING (or subtracts)"
+  }
+ },
+ "LIMITATIONS": {
+  "terminal_wealth_deltas_are_NOT_paired_tested": {
+   "what": "`delta_terminal_wealth_net` is reported for every family cell and is NOT accompanied by a paired test. A difference of two terminal wealths is ONE draw of a correlated pair -- the exact error `learner/evaluate.book` warns about when it prints the paired monthly excess beside the wealth number.",
+   "why_it_does_not_overturn_the_verdict": "The BASE book itself does not significantly beat the market over the same months, so every wealth delta is noise measured on top of noise. The primary metric (paired monthly rank-IC difference) IS tested and is negative in 16 of 16 cells.",
+   "base_book_vs_market_1m": {
+    "ridge": {
+     "months": 107,
+     "terminal_wealth_net": 8.354,
+     "terminal_wealth_market_same_months": 4.8636,
+     "t_stat_paired_vs_market": 1.215
+    },
+    "lgbm": {
+     "months": 107,
+     "terminal_wealth_net": 4.7122,
+     "terminal_wealth_market_same_months": 4.8636,
+     "t_stat_paired_vs_market": 0.599
+    }
+   },
+   "the_fix": "difference the two books MONTH BY MONTH and t the difference (`evaluate.book(..., return_series=True)` already returns the monthly net series, and `evaluate.hac_t` / `evaluate.block_t` handle the 12m overlap). Queued, not done here."
+  },
+  "holder_public_date_is_conservative": {
+   "what": "A name's 13F aggregate is stamped public only once the LAST of that name's filers is public, and a cumulative max stops a later report quarter from ever looking public earlier than an earlier one.",
+   "cost": "91% of panel rows carry zero extra lag; the rest are 1-4 quarters stale (see panels.holder_build.public_lag_quarters). The bias is toward LESS information, never toward more.",
+   "measured": {
+    "0": 156270,
+    "1": 2782,
+    "2": 5482,
+    "3": 7282,
+    "4": 6
+   }
+  },
+  "thomson_vintage_check_did_not_pass_cleanly": {
+   "rows_fq_ahead_of_rq": 2156,
+   "of_positions": 45018857,
+   "what": "2,156 of 45,018,857 positions (0.005%) carry a Thomson vintage LATER than their report quarter, so `vintage_reduction_valid` is FALSE and the public date does NOT reduce to quarter_end+45d on every row. It is handled rather than ignored: those rows push their name's public date out to the later vintage, which is why the lag table above is not all zeros. A gate that reports FALSE and is acted on is working."
+  },
+  "specialist_features_read_sic_9999_as_an_industry": {
+   "what": "`h_specialist_frac` and `x_specialist_x_thincov` derive from the fingerprint's `sector_entropy`, an entropy over CRSP SIC-2 codes in which 99 (NONCLASSIFIABLE) is a bucket like any other. A filer concentrated in UNKNOWN reads as concentrated.",
+   "effect": "read the two specialist features as noisier than the rest of the family."
+  }
+ }
+}
