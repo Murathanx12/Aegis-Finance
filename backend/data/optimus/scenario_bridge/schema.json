@@ -1,0 +1,373 @@
+{
+  "schema_version": "scenario-bridge-1",
+  "licence": "PRODUCT_EXPERIMENT",
+  "purpose": "A structured causal scenario an LLM may invent. It carries NO prices, NO returns, NO dates and NO company names -- only causal structure and observable state. Outcomes are attached ONLY by retrieving real (permno, month) rows from the point-in-time panel.",
+  "prompt_rule": "No number may appear in the prompt that generates one of these. Every quantile that turns an ordinal word into a filter lives in scripts/scenario_bridge._BANDS, which the model never sees. A bound the model can see is an anchor (house rule, 2026-08-30).",
+  "fields": [
+    {
+      "name": "scenario_id",
+      "required": true,
+      "kind": "str",
+      "values": null
+    },
+    {
+      "name": "event_type",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "capacity_bottleneck",
+        "input_substitution",
+        "regulatory_shift",
+        "customer_switch",
+        "input_cost_shock",
+        "installed_base_obsolescence",
+        "channel_disruption",
+        "new_entrant_price_war",
+        "demand_pull_forward",
+        "supply_chain_relocation",
+        "exclusivity_expiry",
+        "labour_constraint",
+        "energy_cost_step",
+        "currency_competitiveness",
+        "liability_shock",
+        "standards_replacement_cycle",
+        "consolidation",
+        "preference_shift",
+        "credit_tightening",
+        "physical_supply_disruption",
+        "other"
+      ]
+    },
+    {
+      "name": "actors",
+      "required": true,
+      "kind": "list[str]",
+      "values": null
+    },
+    {
+      "name": "company_role",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "incumbent_supplier",
+        "new_entrant",
+        "customer",
+        "substitute_provider",
+        "bottleneck_holder",
+        "commodity_producer",
+        "distributor",
+        "service_provider",
+        "unaffected_peer"
+      ]
+    },
+    {
+      "name": "sector_theme",
+      "required": true,
+      "kind": "str",
+      "values": null
+    },
+    {
+      "name": "sic_division_hint",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "Agriculture",
+        "Mining",
+        "Construction",
+        "Manufacturing",
+        "Transport & Utilities",
+        "Wholesale",
+        "Retail",
+        "Finance & Real Estate",
+        "Services"
+      ]
+    },
+    {
+      "name": "demand_change",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "surge",
+        "rising",
+        "flat",
+        "falling",
+        "collapse",
+        "unknown"
+      ]
+    },
+    {
+      "name": "supply_change",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "surge",
+        "rising",
+        "flat",
+        "falling",
+        "collapse",
+        "unknown"
+      ]
+    },
+    {
+      "name": "capacity_constraint",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "binding",
+        "tightening",
+        "loosening",
+        "none",
+        "unknown"
+      ]
+    },
+    {
+      "name": "holder_action",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "institutional_accumulation",
+        "institutional_distribution",
+        "activist_stake",
+        "insider_buying",
+        "insider_selling",
+        "none",
+        "unknown"
+      ]
+    },
+    {
+      "name": "analyst_change",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "targets_raised",
+        "targets_cut",
+        "upgrades",
+        "downgrades",
+        "coverage_initiated",
+        "coverage_dropped",
+        "none",
+        "unknown"
+      ]
+    },
+    {
+      "name": "price_state",
+      "required": true,
+      "kind": "nested",
+      "values": null
+    },
+    {
+      "name": "attention_state",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "spiking",
+        "elevated",
+        "normal",
+        "neglected",
+        "unknown"
+      ]
+    },
+    {
+      "name": "expected_horizon_months",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "1",
+        "3",
+        "6",
+        "12"
+      ]
+    },
+    {
+      "name": "direction",
+      "required": true,
+      "kind": "enum",
+      "values": [
+        "long",
+        "short"
+      ]
+    },
+    {
+      "name": "falsifier",
+      "required": true,
+      "kind": "str",
+      "values": null
+    },
+    {
+      "name": "mechanism",
+      "required": false,
+      "kind": "str",
+      "values": null
+    }
+  ],
+  "price_state": {
+    "drawdown_state": [
+      "at_highs",
+      "mild_pullback",
+      "deep_drawdown",
+      "near_lows",
+      "unknown"
+    ],
+    "momentum_12_1_sign": [
+      "positive",
+      "negative",
+      "unknown"
+    ]
+  },
+  "field_map": {
+    "price_state.drawdown_state": {
+      "grade": "DIRECT",
+      "panel": "drawdown_60d__xs (within-month percentile)",
+      "note": "the panel holds the quantity itself"
+    },
+    "price_state.momentum_12_1_sign": {
+      "grade": "DIRECT",
+      "panel": "sign(mom_12_1)",
+      "note": "the house's own 12-1 definition"
+    },
+    "analyst_change": {
+      "grade": "DIRECT",
+      "panel": "target_rev_1m__xs / net_rev_4w__xs / coverage_rev_1m",
+      "note": "IBES revisions and coverage changes are in the panel"
+    },
+    "expected_horizon_months": {
+      "grade": "DIRECT",
+      "panel": "selects excess_vw_{h}m",
+      "note": "a control on the grading, not a retrieval filter"
+    },
+    "direction": {
+      "grade": "DIRECT",
+      "panel": "sign applied to the realised spread",
+      "note": "the ONLY place the model's opinion touches the number, and it only flips a sign computed from real returns"
+    },
+    "sic_division_hint": {
+      "grade": "COARSE",
+      "panel": "sector (10 SIC divisions)",
+      "note": "'semiconductor capex cycle' and 'office furniture' are both Manufacturing; a sector THEME does not survive this"
+    },
+    "attention_state": {
+      "grade": "PROXY",
+      "panel": "coverage__xs (analyst coverage percentile)",
+      "note": "analyst attention stands in for attention. No news counts, no search volume, no filing counts exist before 2026-08-30 (learner/dataset.company_state_schema)"
+    },
+    "holder_action": {
+      "grade": "PROXY",
+      "panel": "13F holder_events aggregate, quarterly, +45d filing lag",
+      "note": "NEW_POSITION+LARGE_ADD minus LARGE_TRIM+COMPLETE_EXIT, ranked within month. Covers accumulation/distribution ONLY: activist_stake, insider_buying and insider_selling are UNMAPPABLE (no 13D/G, no Form 4)"
+    },
+    "event_type": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "no dated event tape covers 2013-2024 in this repo"
+    },
+    "actors": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "no entity graph links a named actor to a permno"
+    },
+    "company_role": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "supplier / customer / substitute is a SUPPLY-CHAIN RELATION; the panel has no customer-supplier edges"
+    },
+    "demand_change": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "needs revenue/unit fundamentals (Compustat fundq is on disk but is NOT joined to permno here)"
+    },
+    "supply_change": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "needs industry capacity/utilisation series"
+    },
+    "capacity_constraint": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "needs utilisation, backlog or lead-time data"
+    },
+    "sector_theme": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "the free-text theme itself; only its division hint maps"
+    },
+    "falsifier": {
+      "grade": "UNMAPPABLE",
+      "panel": "-",
+      "note": "not a retrieval field -- it is what a future test would look for, recorded so the scenario is refutable at all"
+    }
+  },
+  "retrieval_bands": {
+    "note": "The quantile cut-points that turn each ordinal word into a panel predicate. Recorded so the receipt is reproducible; NEVER placed in a prompt.",
+    "bands": {
+      "drawdown_state": {
+        "at_highs": [
+          0.8,
+          1.01
+        ],
+        "mild_pullback": [
+          0.4,
+          0.8
+        ],
+        "deep_drawdown": [
+          0.1,
+          0.4
+        ],
+        "near_lows": [
+          -0.01,
+          0.1
+        ]
+      },
+      "attention_state": {
+        "spiking": [
+          0.85,
+          1.01
+        ],
+        "elevated": [
+          0.7,
+          1.01
+        ],
+        "normal": [
+          0.3,
+          0.7
+        ],
+        "neglected": [
+          -0.01,
+          0.3
+        ]
+      },
+      "analyst_change": {
+        "targets_raised": [
+          0.7,
+          1.01
+        ],
+        "targets_cut": [
+          -0.01,
+          0.3
+        ],
+        "upgrades": [
+          0.7,
+          1.01
+        ],
+        "downgrades": [
+          -0.01,
+          0.3
+        ]
+      },
+      "holder_action": {
+        "institutional_accumulation": [
+          0.7,
+          1.01
+        ],
+        "institutional_distribution": [
+          -0.01,
+          0.3
+        ]
+      }
+    }
+  },
+  "cost_convention": {
+    "bps_round_trip_per_leg": 25.0,
+    "legs_charged": 2,
+    "why": "a treated-minus-control spread is a two-legged position if it is ever traded; the panel's targets are gross"
+  }
+}
