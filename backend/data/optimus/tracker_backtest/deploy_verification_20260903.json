@@ -1,0 +1,20 @@
+{
+ "generated_utc": "2026-09-03T13:59:16+00:00",
+ "check": "verify-prod-after-deploy (handoff queue #3, S36)",
+ "expected": "Railway deploy of finance main completes; commit flips; nav.all_fresh; '15 past due' false positive gone from degraded_reasons",
+ "observed": {
+  "deploy_commit": "e52020d306428eb154d6bc2ace1a0ba0fd57a355 (newer than the 019b5b5 named in the handoff -- the handoff commit itself)",
+  "deploy_started_at": "2026-09-03T12:46:31+00:00",
+  "status": "ok",
+  "degraded_reasons": [],
+  "nav_all_fresh": true,
+  "nav_expected_date": "2026-09-02",
+  "past_due_false_positive": "GONE: prediction_ledger reports n_overdue_actionable=0, 25 quarantined by design (campaign copies), and degraded_reasons is empty under the new predicate",
+  "residual_warnings": [
+   "GET /api/health/full takes 13-21s (SLOW REQUEST) -- pre-existing, not a fault flag",
+   "GDELT fetch ConnectionReset x2 -- transient upstream",
+   "Google Trends 429 cooldown 6h -- disclosed as unavailable, by design"
+  ]
+ },
+ "verdict": "PASS -- queue item #3 closed 2026-09-03 ~13:20 UTC via optimus aegis_verified_state (live deploy)"
+}
