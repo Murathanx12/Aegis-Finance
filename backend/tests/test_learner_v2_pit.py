@@ -367,6 +367,131 @@ def test_monthly_ic_series_is_one_number_per_month(panel):
     assert ((s >= -1.0) & (s <= 1.0)).all()
 
 
+# ------- 4c. the null METHODOLOGY: the lesson that cost this session a headline
+
+def test_the_contamination_filter_removes_stale_split_targets_and_nothing_else():
+    """`ratio >= 50` is a stale analyst target across a split, not an opinion.
+
+    The filter must be a statement about the DATA, not a convenient way to drop
+    rows an arm dislikes: it is applied identically to every arm, so the test
+    is that it keeps every ordinary row and drops only the absurd ones.
+    """
+    from scripts import learner_v2_run as R
+
+    df = pd.DataFrame({"ratio": [0.5, 1.0, 4.9, 49.9, 50.0, 900.0, np.nan],
+                       "x": range(7)})
+    out = R._clean(df)
+    assert list(out["x"]) == [0, 1, 2, 3], (
+        "the contamination filter did not cut exactly at ratio >= 50")
+    assert R.RATIO_CAP == 50.0
+
+
+def test_a_shuffled_target_model_is_not_a_random_ranking():
+    """The distinction the whole null investigation turned on.
+
+    A random ranking is redrawn every month, so its factor tilts wash out. A
+    model fitted on permuted targets emits ONE smooth ranking applied to every
+    month, so its book holds a persistent tilt. Asserted on the property that
+    separates them: month-to-month rank stability.
+    """
+    rng = np.random.default_rng(17)
+    n_names, n_months = 200, 60
+    feat = rng.normal(size=n_names)                 # a fixed per-name feature
+    rows = []
+    for m in range(n_months):
+        for i in range(n_names):
+            rows.append({"month": f"m{m:03d}", "name": i,
+                         "model_like": feat[i],                       # smooth in features
+                         "random_like": rng.uniform()})               # redrawn every month
+    d = pd.DataFrame(rows)
+
+    def mean_adjacent_rank_corr(col):
+        cors = []
+        prev = None
+        for _m, ch in d.groupby("month", sort=True):
+            cur = ch.set_index("name")[col].rank()
+            if prev is not None:
+                cors.append(float(cur.corr(prev, method="spearman")))
+            prev = cur
+        return float(np.mean(cors))
+
+    model_like = mean_adjacent_rank_corr("model_like")
+    random_like = mean_adjacent_rank_corr("random_like")
+    assert model_like > 0.9, "the model-like ranking is not persistent month to month"
+    assert abs(random_like) < 0.2, "the random-like ranking is persistent -- bad fixture"
+    assert model_like > random_like + 0.5, (
+        "a random ranking and a model-fitted-on-noise ranking look the same in this "
+        "fixture, which is exactly the confusion that made a random-ranking null look "
+        "like an adequate control when it is not")
+
+
+def test_a_persistent_ranking_inflates_the_naive_across_months_t():
+    """WHY the pre-registered `|IC t| < 2` bar was close to a coin flip.
+
+    A fitted model applies one ranking to every month, so its monthly ICs are
+    serially correlated and the naive t -- which divides by sqrt(months) as if
+    they were independent -- is inflated. Constructed, not asserted from a fit.
+    """
+    rng = np.random.default_rng(23)
+    n = 120
+    # A persistent tilt: monthly ICs share a common draw plus small noise.
+    common = rng.normal(0.0, 0.03)
+    persistent = pd.Series(common + rng.normal(0.0, 0.01, n))
+    independent = pd.Series(rng.normal(0.0, 0.03, n))
+    from learner.evaluate import _t_from_series
+    t_persistent = abs(_t_from_series(persistent))
+    t_independent = abs(_t_from_series(independent))
+    assert t_persistent > 3 * t_independent or t_persistent > 8, (
+        "a persistent-tilt IC series did not produce an inflated naive t -- the "
+        "fixture no longer demonstrates the mechanism the null investigation found")
+
+
+def test_effective_breadth_of_a_top_k_value_weighted_book_is_reported_not_assumed():
+    """A "top-50" VW book on this universe runs 6-11 effective names.
+
+    The guard is on the ARITHMETIC that made that visible, so nobody re-derives
+    "50 names" from the k parameter again.
+    """
+    w = pd.Series([0.34, 0.20, 0.15, 0.10, 0.08, 0.05, 0.04, 0.03, 0.01])
+    n_eff = 1.0 / float((w ** 2).sum())
+    assert 4.0 < n_eff < 6.5, "the effective-breadth formula changed"
+    equal = pd.Series([1 / 50] * 50)
+    assert 1.0 / float((equal ** 2).sum()) == pytest.approx(50.0), (
+        "an equally weighted 50-name book must have an effective breadth of 50")
+
+
+def test_every_receipt_block_has_a_committed_entry_point_that_regenerates_it():
+    """A receipt key produced by a throwaway script is not reproducible.
+
+    Each of these blocks is in `learner_v2_20260903.json`. Each must have BOTH a
+    committed function and a CLI flag, or the next session cannot rebuild the
+    number and has to trust it.
+    """
+    import pathlib
+    from scripts import learner_v2_run as R
+
+    src = (pathlib.Path(__file__).resolve().parents[2]
+           / "scripts" / "learner_v2_run.py").read_text(encoding="utf-8")
+    for fn, flag in (("append_overlap_correction", "--overlap-correction"),
+                     ("append_contamination_control", "--contamination-control"),
+                     ("append_model_null", "--model-null"),
+                     ("append_empirical_book_null", "--empirical-book-null")):
+        assert callable(getattr(R, fn, None)), f"{fn} is missing from the runner"
+        assert flag in src, f"{flag} is not wired into the runner's CLI"
+    assert R.NULL_DRAW_SEED0 == 20260910
+
+
+def test_a_pass_that_would_have_to_refit_REFUSES_instead_of_refitting(tmp_path, monkeypatch):
+    """The append passes read saved predictions. If those are gone, the honest
+    answer is a refusal -- a "correction" that silently re-fits is a different
+    run wearing the same receipt's name."""
+    from scripts import learner_v2_run as R
+
+    monkeypatch.setattr(R, "PRED_DIR", tmp_path)
+    with pytest.raises(SystemExit, match="REFUSED"):
+        R._load_predictions()
+
+
 # ------------------------------------------ 5. the v1 surface did not move
 
 def test_v1_book_still_returns_exactly_the_keys_v1_recorded(panel):

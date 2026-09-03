@@ -908,18 +908,281 @@ def append_overlap_correction(horizons=HORIZONS, verbose: bool = True) -> int:
     return 0
 
 
+# ------------------------------------------- the contamination / null passes
+
+RATIO_CAP = 50.0
+NULL_DRAW_SEED0 = 20260910
+
+
+def _load_receipt() -> dict:
+    if not RECEIPT.exists():
+        raise SystemExit(f"REFUSED: {RECEIPT.name} does not exist -- run the main pass first")
+    return json.loads(RECEIPT.read_text(encoding="utf-8"))
+
+
+def _save_receipt(receipt: dict) -> None:
+    RECEIPT.write_text(json.dumps(receipt, indent=2, default=str), encoding="utf-8")
+    print(f"  -> {RECEIPT.name}")
+
+
+def _load_predictions() -> tuple[pd.DataFrame, pd.DataFrame]:
+    path = PRED_DIR / "oos_predictions_v2.parquet"
+    if not path.exists():
+        raise SystemExit(f"REFUSED: {path.name} is missing -- this pass would have to re-fit, "
+                         "and a pass that re-fits is a different run")
+    return pd.read_parquet(path), D.load()
+
+
+def _clean(df: pd.DataFrame) -> pd.DataFrame:
+    """The contamination control, in one place.
+
+    `ratio = mean_target / close >= 50` is a STALE ANALYST TARGET ACROSS A STOCK
+    SPLIT, not an opinion (S30b). The trained arms exclude those rows on their
+    own -- 0.00-0.04% of their holdings -- and the shuffled-target nulls, having
+    no reason to, hold 8-13% of their book in them. Comparing an arm that
+    excludes them against a null that does not is comparing two universes, so
+    the filter is applied IDENTICALLY to every arm, nulls included.
+    """
+    return df[df["ratio"] < RATIO_CAP]
+
+
+def _grade_one(sub: pd.DataFrame, col: str, horizon: int, with_series: bool = False) -> dict:
+    """IC (overlap-corrected) + the book at one horizon. Shared by every pass."""
+    y = f"excess_vw_{horizon}m"
+    ics = E.monthly_ic_series(sub, col, y)
+    bk = (E.book(sub, col, k=BOOK_K, weight="vw", with_risk=True, return_series=with_series)
+          if horizon == 1 else
+          E.overlapping_book(sub, col, horizon, k=BOOK_K, weight="vw", with_risk=True,
+                             return_series=with_series))
+    s = bk.pop("_series", None)
+    out = {"mean_ic": (round(float(ics.mean()), 5) if len(ics) else None),
+           "rank_ic_overlap_corrected": (E.overlap_corrected(ics, horizon) if len(ics) else None),
+           "book": bk}
+    if s is not None:
+        out["paired_excess_hac"] = E.overlap_corrected((s["net"] - s["market"]).dropna(), horizon)
+    return out
+
+
+def append_contamination_control(horizons=HORIZONS, verbose: bool = True) -> int:
+    """Re-grade every saved arm on the clean universe. Fits nothing."""
+    receipt = _load_receipt()
+    preds, df = _load_predictions()
+    out = {"rule": f"drop name-months with ratio >= {RATIO_CAP}",
+           "why": "a mean analyst target 50x the price is a stale target across a split, not "
+                  "an opinion (S30b). Applied IDENTICALLY to every arm, nulls included.",
+           "rows_dropped_pct": round(float(100 * (df["ratio"] >= RATIO_CAP).mean()), 3),
+           "horizons": {}}
+    drop = [c for c in ("permno", "month", "entry_date") if c in preds.columns]
+    j = df.join(preds.drop(columns=drop))
+    for h in horizons:
+        y = f"excess_vw_{h}m"
+        base = _clean(j[j[y].notna()])
+        blk = {}
+        for c in [c for c in preds.columns if c.endswith(f"__{h}m")]:
+            sub = base[base[c].notna()]
+            if sub.empty:
+                continue
+            blk[c[: -len(f"__{h}m")]] = _grade_one(sub, c, h, with_series=True)
+        out["horizons"][f"{h}m"] = blk
+        if verbose:
+            print(f"  {h}m: {len(blk)} arms on {len(base):,} clean rows")
+    receipt["contamination_control"] = out
+    _save_receipt(receipt)
+    return 0
+
+
+def append_model_null(n_seeds: int = 16, horizons=HORIZONS, verbose: bool = True) -> int:
+    """THE null this receipt needs: the encoder fitted on PERMUTED targets, many times.
+
+    The pre-registered bar was `|rank IC t| < 2.0` on ONE draw. Measured here,
+    |t| > 2 occurs in 34-62% of legitimate null draws -- because a fitted model
+    applies ONE ranking to every month, its monthly ICs are serially correlated,
+    and the naive across-months t assumes they are not. A random RANKING cannot
+    substitute (200 of those reached a max paired t of 1.72 at 1m) because a
+    random ranking re-randomises monthly and its factor tilts wash out, while a
+    model fitted on noise holds one persistent tilt for the whole window in a
+    book whose effective breadth is 6-11 names.
+    """
+    receipt = _load_receipt()
+    if not EN.torch_available():
+        raise SystemExit("REFUSED: torch is absent; the model null IS the encoder")
+    df = D.load()
+    feature_cols = D.feature_columns()
+    rows = []
+    for i in range(n_seeds):
+        seed = NULL_DRAW_SEED0 + i
+        t0 = time.time()
+        cols = {(a, hd, h): pd.Series(np.nan, index=df.index, dtype="float64")
+                for a in EN.ARMS for hd in ("reg", "clf") for h in horizons}
+        for _y, tr, te, masks in EN.multi_horizon_splits(df, TEST_YEARS, horizons):
+            for arm in EN.ARMS:
+                enc = EN.MultiHorizonEncoder(arm, feature_cols, horizons=horizons, seed=seed)
+                enc.fit(df.loc[tr], masks, search_grid=False, shuffle_target=True)
+                pr = enc.predict(df.loc[te])
+                for hd in ("reg", "clf"):
+                    for h in horizons:
+                        cols[(arm, hd, h)].loc[te] = pr[(hd, h)]
+        for (arm, hd, h), s in cols.items():
+            y = f"excess_vw_{h}m"
+            sub = df.assign(_p=s)
+            sub = _clean(sub[sub[y].notna() & sub["_p"].notna()])
+            g = _grade_one(sub, "_p", h)
+            rows.append({"seed": seed, "arm": arm, "head": hd, "h": h,
+                         "mean_ic": g["mean_ic"],
+                         "ic_t_naive": (g["rank_ic_overlap_corrected"] or {}).get("t_naive"),
+                         "exc": g["book"].get("annualised_excess"),
+                         "pair_t": g["book"].get("t_stat_paired_vs_market"),
+                         "tw": g["book"].get("terminal_wealth_net")})
+        if verbose:
+            print(f"  null draw seed {seed} ({time.time() - t0:.0f}s)")
+    d = pd.DataFrame(rows)
+    clean = (receipt.get("contamination_control") or {}).get("horizons", {})
+    out = {"n_seeds": n_seeds,
+           "construction": "the SAME encoder architecture fitted on targets permuted WITHIN "
+                           "each month; one draw = one (seed, arm, head)",
+           "why_not_a_random_ranking": (
+               "a random RANKING re-randomises every month so its factor tilts wash out -- "
+               "200 random top-50 VW books reached a max paired t of 1.72 at 1m. A MODEL "
+               "fitted on noise emits a SMOOTH ranking and holds ONE persistent tilt for the "
+               "whole window."),
+           "why_the_prereg_bar_was_wrong": (
+               "the declared bar was |rank IC t| < 2.0 on ONE draw using the naive "
+               "across-months t. The null statistic's own sd is ~2-3, so the bar was close "
+               "to a coin flip. Replaced by this distribution."),
+           "horizons": {}}
+    for h in horizons:
+        s = d[d.h == h]
+        if s.empty:
+            continue
+        nt = s["pair_t"].to_numpy(dtype="float64")
+        ntw = s["tw"].to_numpy(dtype="float64")
+        nic = s["ic_t_naive"].to_numpy(dtype="float64")
+        blk = {
+            "n_draws": int(len(s)),
+            "null_paired_t": {"p50": round(float(np.median(nt)), 3),
+                              "p95": round(float(np.quantile(nt, .95)), 3),
+                              "min": round(float(nt.min()), 3), "max": round(float(nt.max()), 3),
+                              "sd": round(float(nt.std(ddof=1)), 3)},
+            "null_terminal_wealth": {"p50": round(float(np.median(ntw)), 3),
+                                     "max": round(float(ntw.max()), 3)},
+            "null_rank_ic_t_naive": {"p50": round(float(np.median(nic)), 3),
+                                     "min": round(float(nic.min()), 3),
+                                     "max": round(float(nic.max()), 3),
+                                     "sd": round(float(nic.std(ddof=1)), 3),
+                                     "share_abs_gt_2": round(float((np.abs(nic) > 2).mean()), 3)},
+            "arms": {},
+        }
+        for a, r in (clean.get(f"{h}m") or {}).items():
+            if a.startswith("NULL_"):
+                continue
+            bk = r.get("book") or {}
+            pt, tw = bk.get("t_stat_paired_vs_market"), bk.get("terminal_wealth_net")
+            blk["arms"][a] = {
+                "paired_t": pt, "terminal_wealth_net": tw,
+                "annualised_excess": bk.get("annualised_excess"),
+                "p_vs_model_null_paired_t": (
+                    None if pt is None
+                    else round(float(((nt >= pt).sum() + 1) / (len(nt) + 1)), 4)),
+                "p_vs_model_null_terminal_wealth": (
+                    None if tw is None
+                    else round(float(((ntw >= tw).sum() + 1) / (len(ntw) + 1)), 4)),
+            }
+        if blk["arms"]:
+            best = max(blk["arms"].items(), key=lambda kv: (kv[1]["paired_t"] or -9))
+            blk["best_arm_by_paired_t"] = {"arm": best[0], **best[1]}
+            if verbose:
+                b = blk["best_arm_by_paired_t"]
+                print(f"  {h}m null t max {blk['null_paired_t']['max']:+.2f}  "
+                      f"|ICt|>2 in {blk['null_rank_ic_t_naive']['share_abs_gt_2']:.0%} of draws"
+                      f"  | best {b['arm']} t={b['paired_t']} "
+                      f"p={b['p_vs_model_null_paired_t']}")
+        out["horizons"][f"{h}m"] = blk
+    receipt["model_null_distribution"] = out
+    _save_receipt(receipt)
+    return 0
+
+
+def append_empirical_book_null(n_seeds: int = 200, horizons=HORIZONS,
+                               verbose: bool = True) -> int:
+    """The RANDOM-RANKING null: how noisy is a top-50 VW book on this universe?
+
+    Kept although it is the WEAKER null, because the comparison between the two
+    is itself the finding: a random ranking never reaches t 2 and a model fitted
+    on noise does.
+    """
+    receipt = _load_receipt()
+    df = D.load()
+    out = {"n_seeds": n_seeds, "ratio_cap": RATIO_CAP,
+           "what": "a top-50 VW book on a RANDOM ranking of the same rows, same costs",
+           "why_it_is_not_enough": "a random ranking re-randomises every month, so its "
+                                   "factor tilts wash out. See model_null_distribution.",
+           "horizons": {}}
+    for h in horizons:
+        y = f"excess_vw_{h}m"
+        base = _clean(df[df[y].notna()]).copy()
+        mo = base["month"].astype(str).str.replace("-", "", regex=False).astype("int64").to_numpy()
+        pn = base["permno"].astype("int64").to_numpy()
+        e, t, w = [], [], []
+        for sd in range(n_seeds):
+            hh = (pn * 6_364_136_223_846_793_005 + mo * 1_442_695_040_888_963_407
+                  + (sd + 1) * 2_654_435_761)
+            hh = hh ^ (hh >> np.int64(29))
+            base["_r"] = (hh % np.int64(1_000_003)).astype("float64") / 1_000_003.0
+            bk = (E.book(base, "_r", k=BOOK_K, weight="vw") if h == 1
+                  else E.overlapping_book(base, "_r", h, k=BOOK_K, weight="vw", with_risk=False))
+            e.append(bk.get("annualised_excess"))
+            t.append(bk.get("t_stat_paired_vs_market"))
+            w.append(bk.get("terminal_wealth_net"))
+        e, t, w = (pd.Series([x for x in v if x is not None]) for v in (e, t, w))
+        out["horizons"][f"{h}m"] = {
+            "annualised_excess": {"mean": round(float(e.mean()), 4),
+                                  "sd": round(float(e.std()), 4),
+                                  "p95": round(float(e.quantile(.95)), 4)},
+            "paired_t_vs_market": {"mean": round(float(t.mean()), 3),
+                                   "sd": round(float(t.std()), 3),
+                                   "p95": round(float(t.quantile(.95)), 3),
+                                   "max": round(float(t.max()), 3),
+                                   "share_above_2": round(float((t >= 2).mean()), 4)},
+            "terminal_wealth_net": {"p50": round(float(w.median()), 3),
+                                    "p95": round(float(w.quantile(.95)), 3)},
+        }
+        if verbose:
+            o = out["horizons"][f"{h}m"]
+            print(f"  {h}m random book: exc {o['annualised_excess']['mean']:+.4f} "
+                  f"sd {o['annualised_excess']['sd']:.4f}  t max "
+                  f"{o['paired_t_vs_market']['max']:+.2f}  "
+                  f"P(t>=2)={o['paired_t_vs_market']['share_above_2']}")
+    receipt["empirical_book_null"] = out
+    _save_receipt(receipt)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--smoke", action="store_true",
                     help="2 test years, ridge+lgbm only -- plumbing, not a result")
     ap.add_argument("--horizons", type=int, nargs="*", default=list(HORIZONS))
+    ap.add_argument("--contamination-control", action="store_true",
+                    help="re-grade every saved arm on the clean universe (ratio < 50)")
+    ap.add_argument("--model-null", type=int, metavar="N",
+                    help="fit the encoder on PERMUTED targets N times and append the "
+                         "empirical null distribution of every headline statistic")
+    ap.add_argument("--empirical-book-null", type=int, metavar="N",
+                    help="N random-ranking books, for the sampling noise of the metric")
     ap.add_argument("--overlap-correction", action="store_true",
                     help="append the overlap-corrected t block to an existing receipt "
                          "from the saved OOS predictions; fits nothing")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args(argv)
+    hz = tuple(a.horizons)
     if a.overlap_correction:
-        return append_overlap_correction(tuple(a.horizons), verbose=not a.quiet)
+        return append_overlap_correction(hz, verbose=not a.quiet)
+    if a.contamination_control:
+        return append_contamination_control(hz, verbose=not a.quiet)
+    if a.empirical_book_null:
+        return append_empirical_book_null(a.empirical_book_null, hz, verbose=not a.quiet)
+    if a.model_null:
+        return append_model_null(a.model_null, hz, verbose=not a.quiet)
     years = (2016, 2017) if a.smoke else TEST_YEARS
     return run(horizons=tuple(a.horizons), test_years=years, smoke=a.smoke,
                verbose=not a.quiet)
