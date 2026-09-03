@@ -785,12 +785,24 @@ def _extract_json(text: str) -> dict:
     if t.startswith("```"):
         t = re.sub(r"^```(?:json)?\s*|\s*```$", "", t, flags=re.S)
     try:
-        return json.loads(t)
+        out = json.loads(t)
     except json.JSONDecodeError:
         m = re.search(r"\{.*\}", t, re.S)
         if not m:
             raise
-        return json.loads(m.group(0))
+        out = json.loads(m.group(0))
+    # THE ANNOTATION IS NOW ENFORCED. `json.loads` returns a str for a JSON
+    # string literal, a list for an array, an int for a number — all of which
+    # parsed "successfully" and were handed to `parse_hypotheses`, which does
+    # `raw.get(...)`. Double-encoded JSON (a string whose content is the
+    # object) is a known DeepSeek json_object failure mode, so this was a live
+    # route to `'str' object has no attribute 'get'` escaping the lens, the
+    # orchestrator and the nightly job. Raising here puts it where the caller
+    # already handles a model that produced no object: a counted rejection.
+    if not isinstance(out, dict):
+        raise ValueError(
+            f"model returned a JSON {type(out).__name__}, not an object")
+    return out
 
 
 def _parse_corroboration(raw: Any, allowed: set[str]) -> tuple[Corroboration | None, str | None]:
@@ -881,6 +893,17 @@ def parse_hypotheses(lens: str, raw: dict, *, allowed_assets: set[str],
     """
     kept: list[Hypothesis] = []
     rejected: list[dict] = []
+    # `_extract_json` is `json.loads`, so a reply that is a JSON string literal,
+    # array or number PARSES CLEANLY into a non-dict and sails past the
+    # JSONDecodeError guard at the call site. Double-encoded JSON (a string
+    # whose content is the object) is a known DeepSeek json_object failure
+    # mode. Counted as a rejection like any other ungradeable output — the one
+    # thing it must not do is raise, because `run_lens` calls this OUTSIDE its
+    # parse guard and the exception escapes all the way to the scheduler.
+    if not isinstance(raw, dict):
+        return [], [{"lens": lens, "hypothesis_id": None,
+                     "reason": (f"response parsed to {type(raw).__name__}, "
+                                f"not an object")}]
     items = raw.get("hypotheses")
     if not isinstance(items, list):
         return [], [{"lens": lens, "hypothesis_id": None,

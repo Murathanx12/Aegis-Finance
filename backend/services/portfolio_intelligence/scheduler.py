@@ -1311,8 +1311,18 @@ async def _why_moved_nightly():
             return
         minted = result.get("n_predictions_minted", 0)
         n_hyp = len(result.get("hypotheses") or [])
+        # `run_why_moved` returns `lenses` as a DICT keyed by lens name
+        # (why_moved.py, `out["lenses"] = by_lens`). Iterating it bare yields
+        # the KEYS — strings — and `l.get(...)` then raises "'str' object has
+        # no attribute 'get'", which is what killed this job in prod on
+        # 2026-09-02 AFTER it had already minted and written 23 forecasts.
+        # `.values()` is the fix; the list branch keeps the older shape (and
+        # the `attribution_only` / `already_written` paths, which return [])
+        # working rather than trading one shape crash for another.
+        _lenses = result.get("lenses") or {}
+        _lens_rows = _lenses.values() if isinstance(_lenses, dict) else _lenses
         rejected = sum(len(l.get("rejections") or [])
-                       for l in (result.get("lenses") or []))
+                       for l in _lens_rows if isinstance(l, dict))
         attrib = result.get("attribution") or {}
         msg = ("WHY-MOVED %s: pnl=%s (%s%%) hypotheses=%d rejected=%d minted=%d "
                "status=%s")

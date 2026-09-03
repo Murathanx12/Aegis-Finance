@@ -233,6 +233,61 @@ class TestWhyMovedNightly:
         assert not any(r.levelno >= logging.WARNING for r in caplog.records)
         assert any("already minted" in r.getMessage() for r in caplog.records)
 
+    def test_nightly_summary_survives_the_real_lenses_dict_shape(
+            self, monkeypatch, caplog):
+        """`run_why_moved` returns `lenses` as a DICT keyed by lens name, and
+        the summary line iterated it as a list of dicts — so every element was
+        a lens NAME (a str) and `l.get("rejections")` raised
+        `'str' object has no attribute 'get'`.
+
+        This fired in prod on 2026-09-02T21:16:32Z AFTER the job had already
+        done all of its work: the 21:15 pass ran 92s, minted 23 forecasts and
+        wrote them to the ledger, then died formatting its own log line. The
+        receipt recorded `status: "ran", exception: null` — because the crash
+        was swallowed by the job's own try/except — so the failure was visible
+        only as one ERROR line, and only the summary was lost.
+
+        The old fakes all returned `"lenses": []`, which is why nine tests over
+        this job never touched the real shape. This one uses the shape
+        `test_unparseable_json_...` already pins on the producer side.
+        """
+        import logging
+
+        from backend.services import why_moved as wm
+        from backend.services.portfolio_intelligence import scheduler as sched
+
+        def fake_run_why_moved(positions, requested_date, **kw):
+            return {
+                "status": "ok", "as_of": requested_date,
+                "n_predictions_minted": 23,
+                "hypotheses": [{"id": "h1"}],
+                # THE REAL SHAPE — a dict keyed by lens name.
+                "lenses": {
+                    "macro_rates": {"status": "ok", "n_rejected": 2,
+                                    "rejections": [{"reason": "a"},
+                                                   {"reason": "b"}]},
+                    "geopolitical": {"status": "ok", "n_rejected": 1,
+                                     "rejections": [{"reason": "c"}]},
+                    "skeptic": {"status": "degraded", "rejections": []},
+                },
+                "attribution": {"pnl_usd": -400.0, "pnl_pct": -0.4},
+            }
+
+        monkeypatch.setattr(wm, "run_why_moved", fake_run_why_moved)
+        monkeypatch.setattr(wm, "book_positions", lambda: [("AAPL", 10.0)])
+        with caplog.at_level(logging.INFO, logger=sched.logger.name):
+            asyncio.run(sched._why_moved_nightly())
+
+        assert not any("Nightly WHY-MOVED failed" in r.getMessage()
+                       for r in caplog.records), (
+            "the summary line crashed on the shape run_why_moved actually "
+            "returns")
+        msg = next(r.getMessage() for r in caplog.records
+                   if "minted=" in r.getMessage())
+        assert "minted=23" in msg
+        assert "rejected=3" in msg, (
+            "rejections must be summed across the lens VALUES, not the keys")
+
     def test_trigger_has_day_guard_and_catch_up_slots(self):
         """ORDER 27 carry-over, pinned: without mon-fri a weekend firing
         walks back to Friday and re-mints Friday's records; without the

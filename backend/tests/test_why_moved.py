@@ -514,6 +514,30 @@ def test_unparseable_json_is_a_counted_rejection_not_a_crash(panel, positions):
     assert out["hypotheses"] == []
 
 
+def test_json_that_parses_to_a_non_dict_is_a_rejection_not_a_crash(panel, positions):
+    """A reply that FAILS to parse is already a counted rejection. A reply that
+    PARSES INTO A NON-DICT was not: `_extract_json` is `json.loads`, which
+    returns a str for a JSON string literal and a list for an array, and
+    `parse_hypotheses` went straight to `raw.get("hypotheses")`.
+
+    That raises the same `'str' object has no attribute 'get'` that killed the
+    nightly job on 2026-09-02 by a different route, and the call site at
+    `run_lens` is OUTSIDE the try/except that guards parsing — so it would
+    escape the lens, the orchestrator and the job. Double-encoded JSON (a
+    string whose content is the object) is a known DeepSeek json_object
+    failure mode, so this is reachable in production, not hypothetical.
+    """
+    for payload in ('"I think it was the vol sellers."',   # str
+                    '[{"hypothesis_id": "h1"}]',           # list
+                    '42'):                                 # int
+        out = wm.run_why_moved(positions, "2026-08-10", panel=panel,
+                               lenses=["options_vol"],
+                               llm_call=_fake_llm(payload))
+        assert out["status"] == "degraded_no_hypotheses", payload
+        assert out["lenses"]["options_vol"]["n_rejected"] == 1, payload
+        assert out["hypotheses"] == [], payload
+
+
 def test_attribution_only_never_calls_the_model(panel, positions):
     def boom(system, user):                     # pragma: no cover - must not run
         raise AssertionError("with_hypotheses=False must not call the model")
