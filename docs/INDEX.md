@@ -29,6 +29,8 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 - `../CLAUDE.md` — operating rules + `CLAUDE_LESSONS_2026-08.md` — long-form lessons, farm findings, layout and tests.
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
+
+- **ADDENDUM (2026-09-03):** `SESSION_2026-09-03_SCOREBOARD_AND_ROADMAP_ADDENDUM.md` - eight-agent wave: band prior re-adjudicated (exclusion rule, 21-session clock), AEGIS-HORIZON-1 policy, learner v2 calibrated head, the null-bar defect, four OOS states, health episode root-caused. Read it WITH the TIER 1 roadmap.
 - **`ROADMAP_2026-08-31_COMPETITION_WEEK_WORLD_MODEL.md` — ACTIVE:** Mon 31 Aug → Fri 4 Sep. Exact sealed-portfolio→runner P0; hard-vs-experimental boundary taxonomy; world sensor mesh; canonical event compression; text→numeric CompanyState; whole-market candidate generators; opportunity recall; continuous experiment factory; NVIDIA QSD/NeMo/Data Designer roles; learning-loop/NN promotion order; competition-week scoreboard.
 - `ROADMAP_2026-08-26_HUMAN_HEURISTICS_AND_FAST_RESEARCH.md` — standing lane inventory/gates. It supplies research lanes to the active roadmap; it is not a competing execution plan.
 - `ROADMAP_2026-08-29_WEEKEND_TO_MONDAY.md` — **SUPERSEDED 2026-08-31** by the active roadmap above. Keep as the receipt for Friday attribution and weekend build decisions.

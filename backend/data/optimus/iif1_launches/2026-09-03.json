@@ -1,0 +1,251 @@
+{
+  "trial": "INTERNET-INVESTIGATOR-FWD-1",
+  "session_date": "2026-09-03",
+  "evaluated_at_utc": "2026-09-03T09:00:00+00:00",
+  "may_launch": false,
+  "refusals": [
+    {
+      "code": "PAST_LATEST_SAFE_LAUNCH",
+      "detail": "launching now leaves -10.0 min of margin. The run needs 235 min (MEASURED_DURATION_BOUND) and assembly needs up to 45 min (CAP_BINDS) BEFORE the run's own guard is even reached, so the latest safe launch is 2026-09-03T08:50+00:00, not the latest safe run start of 2026-09-03T09:35+00:00."
+    }
+  ],
+  "derived": {
+    "now_utc": "2026-09-03T09:00:00+00:00",
+    "next_open_utc": "2026-09-03T13:30+00:00",
+    "session_date": "2026-09-03",
+    "hours_until_open": 4.5,
+    "decision_date_ny": "2026-09-03",
+    "k": 40,
+    "n_arms": 5,
+    "calls_per_cell": {
+      "value": 7.12,
+      "basis": "MEASURED_MAX_OVER_COMPLETED_NIGHTS",
+      "n_nights": 8,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "calls_per_cell": 7.085
+        },
+        {
+          "night": "2026-08-18",
+          "calls_per_cell": 7.09
+        },
+        {
+          "night": "2026-08-19",
+          "calls_per_cell": 7.07
+        },
+        {
+          "night": "2026-08-21",
+          "calls_per_cell": 7.085
+        },
+        {
+          "night": "2026-08-24",
+          "calls_per_cell": 7.085
+        },
+        {
+          "night": "2026-08-25",
+          "calls_per_cell": 7.12
+        },
+        {
+          "night": "2026-08-26",
+          "calls_per_cell": 7.07
+        },
+        {
+          "night": "2026-08-27",
+          "calls_per_cell": 7.005
+        }
+      ],
+      "declared": 4.8
+    },
+    "duration_bound": {
+      "value": 235.0,
+      "basis": "MEASURED_WORST_COMPLETED_NIGHT_X_DECLARED_FACTOR",
+      "n_nights": 8,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "minutes": 115.36,
+          "projected_minutes": 69.6,
+          "projection_error_minutes": 45.8,
+          "projection_ratio": 1.658
+        },
+        {
+          "night": "2026-08-18",
+          "minutes": 113.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -117.2,
+          "projection_ratio": 0.492
+        },
+        {
+          "night": "2026-08-19",
+          "minutes": 109.7,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -121.0,
+          "projection_ratio": 0.475
+        },
+        {
+          "night": "2026-08-21",
+          "minutes": 108.53,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -122.2,
+          "projection_ratio": 0.47
+        },
+        {
+          "night": "2026-08-24",
+          "minutes": 112.64,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -118.1,
+          "projection_ratio": 0.488
+        },
+        {
+          "night": "2026-08-25",
+          "minutes": 106.26,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -124.4,
+          "projection_ratio": 0.461
+        },
+        {
+          "night": "2026-08-26",
+          "minutes": 108.17,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -122.5,
+          "projection_ratio": 0.469
+        },
+        {
+          "night": "2026-08-27",
+          "minutes": 117.48,
+          "projected_minutes": 230.7,
+          "projection_error_minutes": -113.2,
+          "projection_ratio": 0.509
+        }
+      ],
+      "worst_minutes": 117.48,
+      "safety_factor": 2.0,
+      "clock": "run_night_elapsed"
+    },
+    "assembly_allowance": {
+      "value": 45.0,
+      "basis": "CAP_BINDS",
+      "cap": 45.0,
+      "worst_minutes": 25.11,
+      "scaled_minutes": 50.2,
+      "n_nights": 8,
+      "observed": [
+        {
+          "night": "2026-08-17",
+          "assembly_minutes": 18.22
+        },
+        {
+          "night": "2026-08-18",
+          "assembly_minutes": 18.61
+        },
+        {
+          "night": "2026-08-19",
+          "assembly_minutes": 18.13
+        },
+        {
+          "night": "2026-08-21",
+          "assembly_minutes": 18.87
+        },
+        {
+          "night": "2026-08-24",
+          "assembly_minutes": 18.54
+        },
+        {
+          "night": "2026-08-25",
+          "assembly_minutes": 12.02
+        },
+        {
+          "night": "2026-08-26",
+          "assembly_minutes": 12.83
+        },
+        {
+          "night": "2026-08-27",
+          "assembly_minutes": 25.11
+        }
+      ],
+      "safety_factor": 2.0
+    },
+    "decision_minutes": 235.0,
+    "decision_basis": "MEASURED_DURATION_BOUND",
+    "modelled_serial_minutes": 206.5,
+    "latest_safe_run_start_utc": "2026-09-03T09:35:00+00:00",
+    "latest_safe_launch_utc": "2026-09-03T08:50:00+00:00",
+    "launch_margin_minutes": -10.0,
+    "nights_attempted": 9,
+    "graded_nights_completed": 8,
+    "graded_nights_required": 40,
+    "prereg_fields_verified": 15
+  },
+  "verdict": "REFUSED",
+  "written_at_utc": "2026-09-03T09:00:03+00:00",
+  "git_commit": "eb7f75ddfcbf3c98fa0f2bec41daaa4476d1c9a8",
+  "git_dirty": true,
+  "git_dirty_including_night_outputs": true,
+  "git_dirty_excluded_paths": [
+    "backend/data/optimus/iif1_launches",
+    "backend/data/optimus/iif1_features",
+    "backend/data/optimus/iif1_nights",
+    "backend/data/optimus/llm_calls.jsonl"
+  ],
+  "invocation_mode": "scheduled",
+  "stdin_isatty": false,
+  "contradicted": false,
+  "launch_manifest": {
+    "manifest_version": 1,
+    "built_at_utc": "2026-09-03T09:00:03+00:00",
+    "python": "3.12.10",
+    "prereg_path": "C:\\Users\\mrthn\\Aegis module\\scripts\\iif1_config.py",
+    "prereg_hash": "441d098c1f8074ea",
+    "frozen_surface": {
+      "ARMS": [
+        "A_snapshot",
+        "B_tools",
+        "C_tools_only",
+        "D_all",
+        "B_anon"
+      ],
+      "BENCHMARK": "SPY",
+      "DECLARED_CONCURRENCY_EFFICIENCY": 2.0,
+      "EXECUTION_MODE": "cells_sequential_arms_concurrent",
+      "MAX_ARM_CONCURRENCY": 5,
+      "MAX_PREOPEN_LEAD_HOURS": 18,
+      "MAX_TOKENS": 12000,
+      "MIN_DOLLAR_VOLUME_20D": 5000000.0,
+      "MIN_PRICE": 5.0,
+      "NIGHTLY_MAX_CALLS": 3000,
+      "NIGHTLY_MAX_USD": 12.0,
+      "REQUEST_MODEL": "deepseek-v4-flash",
+      "TEMPERATURE": 0.0,
+      "TRIGGERS_PER_NIGHT": 40,
+      "TRIGGER_WEIGHTS": {
+        "abs_resid_return_z_1d": 1.0,
+        "volume_z_20d": 1.0,
+        "earnings_within_5d": 1.5,
+        "filing_within_2d": 1.0
+      }
+    },
+    "module_hashes": {
+      "backend.services.investigator_night": "389ab9e4e38cea81",
+      "backend.services.investigator_agent": "19461700cec485a6",
+      "backend.services.investigator_tools": "61781b971f2e3c0a",
+      "backend.services.investigator_triggers": "7445d8823ab0977a",
+      "backend.services.iif1_features": "071baa380dbf35d1",
+      "backend.services.iif1_run": "e37318faa17bc200",
+      "backend.services.iif1_prereg": "619ecc3266b95c0a"
+    },
+    "implementation_version": 2,
+    "arm_implementation_fingerprint": "19461700cec485a6",
+    "git_commit": "eb7f75ddfcbf3c98fa0f2bec41daaa4476d1c9a8",
+    "git_dirty": true,
+    "git_dirty_including_night_outputs": true,
+    "git_dirty_excluded_paths": [
+      "backend/data/optimus/iif1_launches",
+      "backend/data/optimus/iif1_features",
+      "backend/data/optimus/iif1_nights",
+      "backend/data/optimus/llm_calls.jsonl"
+    ]
+  },
+  "implementation_version": 2,
+  "arm_implementation_fingerprint": "19461700cec485a6"
+}
