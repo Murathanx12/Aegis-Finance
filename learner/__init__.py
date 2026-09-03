@@ -6,8 +6,11 @@
     models.py     ridge / LightGBM / MLP, each in a raw and a residual arm
     evaluate.py   rank IC, calibration, decile spread, terminal wealth
     shadow.py     scores today's tracker and writes a file. Places NOTHING.
+    potential_universe.py   one scorecard per observable company-vintage --
+                  named refusals over imputation; the Capital Allocator's input
 
-    entrypoints:  scripts/learner_run.py, scripts/learner_shadow_seal.py
+    entrypoints:  scripts/learner_run.py, scripts/learner_shadow_seal.py,
+                  scripts/potential_universe_run.py
 
 This package lives in `aegis-finance` on purpose: ML dependencies (torch,
 LightGBM, sklearn) stay OUT of the execution repo. Nothing here imports a
