@@ -185,7 +185,16 @@
   "verification": {
     "suite_command": "AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/ -m 'not slow' -q",
     "baseline_before_changes": {"passed": 6074, "failed": 0, "skipped": 14, "seconds": 383.4},
-    "dotenv_moved": false
+    "after_all_changes": {"passed": 6113, "failed": 0, "skipped": 14, "seconds": 607.8},
+    "dotenv_moved": false,
+    "transient_failure_investigated": {
+      "test": "backend/tests/test_learner_states.py::test_the_planted_structure_is_recovered_and_beats_its_own_shuffle",
+      "seen_in": "one intermediate run",
+      "cause": "another local process was rewriting learner/evaluate.py (+270 lines) while pytest imported it; 11 concurrent python processes were active in the repo",
+      "attributable_to_this_pass": false,
+      "resolution": "passes in isolation and in the final full run; learner/ is touched by none of these commits",
+      "note": "the intermediate run reported `exited with code 0` despite the failure because the command was piped to tail, which eats the exit code - the text, not the status, is what caught it"
+    }
   },
 
   "commits": [

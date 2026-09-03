@@ -332,8 +332,23 @@ requires `["date", "ticker", "dollar_vol", "eligible"]`.
 | `9b6cca8` | F2 — exclusive-end fetch window | 3 | yes; the e2e test reproduces the one-session lag |
 | `2908a06` | F1 — overdue predicate, + naming actionable overdue records | 2 | yes |
 
-Fast suite baseline before changes: **6074 passed, 14 skipped, 0 failed** (383 s).
+| suite | result |
+|---|---|
+| baseline, before any change | 6074 passed, 14 skipped, **0 failed** (383 s) |
+| after all four commits | **6113 passed, 14 skipped, 0 failed** (608 s) |
+
 `.env` was never moved; `AEGIS_IGNORE_DOTENV=1` throughout.
+
+One intermediate run showed a single failure in
+`test_learner_states.py::test_the_planted_structure_is_recovered_and_beats_its_own_shuffle`.
+It is **not attributable to this pass**: another local process was rewriting
+`learner/evaluate.py` (+270 lines) while pytest imported it — eleven concurrent
+python processes were active in the repo — and `learner/` is touched by none of
+these commits. It passes in isolation and in the final full run.
+
+Worth noting how it was nearly missed: that run reported `exited with code 0`
+despite the failure, because the command was piped to `tail`, which eats the exit
+code. The text caught it; the status would not have.
 
 ---
 
