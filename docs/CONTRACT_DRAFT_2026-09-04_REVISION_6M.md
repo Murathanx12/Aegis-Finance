@@ -15,6 +15,20 @@ a hash stamped before the final text is a forgery of a commitment.
 | evidence base | `backend/data/optimus/tracker_backtest/holding_period_policy_20260903.json` (parent) and `backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json` (this study) |
 | backtest code | `scripts/revision_6m_cohorts_run.py` (engines tested in `backend/tests/test_revision_6m_cohorts.py`) |
 
+## 0. WHAT THIS EXPERIMENT IS ACTUALLY TESTING (read this before the pooled numbers)
+
+**The adverse era leads, deliberately** (review note, aegis-finance-51,
+2026-09-04): in **2022–2024 the revision cohort book LOSES to the VW market
+— excess CAGR −4.3pp/yr (t −0.25)** — the same years the band prior died.
+The full-window edge (+1.67pp/yr, TW 3.766 best variant) is **concentrated
+pre-2022**. So this PRODUCT_EXPERIMENT does not test "a strategy that beats
+the market"; it tests **whether the pre-2022 revision edge returns**, with
+the pooled backtest as prior and the forward paper record as the only
+admissible evidence either way. Falsifier §7.4 (regime) is therefore the
+contract's most important clause, not a footnote. Selling the pooled number
+without this paragraph would be exactly the overlap-flattery shape S36
+corrected in the band.
+
 ## 1. Objective (declared, not implied)
 
 Maximise **terminal wealth net of costs** against the **value-weighted
