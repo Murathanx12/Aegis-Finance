@@ -94,6 +94,30 @@ traded unattended. The session's three headline events:
 - `.env.bak.2026-08-27` contained LIVE keys and was un-ignored; now
   ignored, verified never committed.
 
+## INCIDENT FOUND AFTER THE FIRST PUSH (09-03 open) — READ BEFORE THE QUEUE
+
+The authority's first solo seal was VALID and EMPTY: `portfolios[hack4]` =
+0 names. Root cause: `days_to_catalyst` derives from the observation corpus
+(`state/corpus/` — laptop-only, never on the authority's volume), so
+`d_catalyst` was UNREADABLE on all 810 candidates and hack4
+(`requires_catalyst=True`) sealed empty; hack6's coverage-calibration
+refusal is the same class of suspect. The exit pass then treated "dropped
+out of the book" as SELL — **a data gap became a sell decision** — and the
+books drifted to ~15-30% deployed on competition eve (safe: fail-closed,
+stops resting, remaining positions held; tomorrow's 10:45 liquidation
+unaffected). Full write-up + fix direction: terminal `docs/HANDOFF.md` S36.
+
+This adds a P0 to the build queue (post-judging): (a) whole-universe
+UNREADABLE must carry holdings forward with a staleness flag or mark the
+book DEGRADED — never trim; (b) ship the corpus/coverage inputs to the
+authority so a solo seal has laptop-grade information; (c) fleet_health
+alarms on an empty enabled book AT SEAL TIME.
+
+Extra research question for GPT: **8.** When a sealed book is empty because
+of a DATA GAP (not a market opinion), what is the correct standing policy —
+hold yesterday's book with a declared staleness penalty, degrade to the
+benchmark, or go to cash? Cash is what implicitly happened; argue for one.
+
 ## TODOS — ATTENDED (Murat, cannot be delegated)
 
 1. **Mint new Alpaca paper keys** for the finance mirror + arena accounts
