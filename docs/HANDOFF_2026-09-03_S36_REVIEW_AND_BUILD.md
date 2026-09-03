@@ -94,7 +94,24 @@ traded unattended. The session's three headline events:
 - `.env.bak.2026-08-27` contained LIVE keys and was un-ignored; now
   ignored, verified never committed.
 
-## INCIDENT FOUND AFTER THE FIRST PUSH (09-03 open) — READ BEFORE THE QUEUE
+## INCIDENT — CORRECTED SCOPE (09-03 afternoon; supersedes the paragraph below it)
+
+Venue-verified: the starvation hit **hack4 only** (book 0 names via its
+`requires_catalyst=True` against a corpus that exists only on the laptop).
+hack3 sealed TEN names and hack6 FIFTEEN — the "empty books" plural below
+is wrong, and the hack6 coverage suspicion is withdrawn (hack6 traded its
+book through the day). Two NEW items instead:
+1. **hack3 entered NONE of its ten sealed names** and ended holding only
+   two out-of-book legacy positions — its pass declined only non-book
+   symbols with "refusals: none", consistent with the sealed names never
+   entering the runner's forecast universe (reachability, the S30 shape).
+   Night-watch item: verify the runner's forecast-universe source covers
+   the sealed book's names, or a sealed name is silently unbuyable.
+2. **Stop-id collision**: hack6's BUR protective stop is refused every
+   pass (HTTP 422 client_order_id must be unique) — deterministic stop ids
+   collide on re-entered names; position rests unprotected. Fix-train.
+
+## INCIDENT FOUND AFTER THE FIRST PUSH (09-03 open) — ORIGINAL REPORT (scope corrected above)
 
 The authority's first solo seal was VALID and EMPTY: `portfolios[hack4]` =
 0 names. Root cause: `days_to_catalyst` derives from the observation corpus
