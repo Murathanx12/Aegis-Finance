@@ -157,3 +157,20 @@ backend/data/optimus/aegis_panel/panel2_planted_cache/
 backend/data/optimus/aegis_panel/panel2_planted.log
 backend/data/optimus/aegis_panel/panel2_planted.err
 backend/data/optimus/aegis_panel/panel2_planted.done
+
+# ---------------------------------------------------------------------------
+# Bulk WRDS pulls that exceed the 20MB "commit the receipt, not the raw data"
+# line (added 2026-09-03). These are RAW SUBSTRATE, regenerable from WRDS by
+# their own pull scripts; the derived RECEIPTS in
+# backend/data/optimus/tracker_backtest/ are the committed evidence.
+# Every ignored artefact is catalogued in docs/DATA_MANIFEST.md with its size,
+# its producer and how to rebuild it -- an untracked file that is not in the
+# manifest is a file nobody can find again.
+backend/data/optimus/wrds/crsp_monthly_panel_2013_2024.json
+backend/data/optimus/wrds/tr13f_quarterly.json
+
+# Key backups. `.env.hidden` above covers the CI-mimic recipe; this covers the
+# dated hand-made backups. They contain LIVE keys. Never staged, never moved
+# by a session -- if one needs to leave the tree, a human moves it.
+.env.bak
+.env.bak.*

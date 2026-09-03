@@ -1,0 +1,32 @@
+{
+  "receipt": "COPY-LAB engine run",
+  "engine_version": "copy_lab_engine@v1",
+  "execution_policy": {
+    "policy_id": "next_session_open_after_public_at@v1",
+    "price_point": "open",
+    "same_session_fills": false,
+    "retroactive_fills": false
+  },
+  "lane_id": "CORPORATE_INSIDER_CLUSTER",
+  "config_hash": "697ddd4e000560ffd87c61fce31e61de281cc0ebfdbb4c4f406920ed9b30933d",
+  "seeded_at": "2026-08-14T12:46:47+00:00",
+  "run_at": "2026-08-27T19:51:20+00:00",
+  "as_of": "2026-08-28",
+  "label": "PRODUCT_LANE",
+  "validation_status": "PRODUCT_EXPERIMENT",
+  "paper_only": true,
+  "events_considered": 92,
+  "signals_new": 9,
+  "signals_ineligible": 9,
+  "ineligible_reasons": {
+    "public_at 2026-08-12 is not after the lane's inception 2026-08-14 \u2014 historical events are research material, never forward paper performance": 9
+  },
+  "fills": 0,
+  "expired_unfilled": 0,
+  "open_positions": 0,
+  "closed_positions": 0,
+  "cash": 100000.0,
+  "nav": 100000.0,
+  "nav_rows_written": 10,
+  "note": "PRODUCT_EXPERIMENT / NOT VALIDATED ALPHA. No hypothesis was evaluated and no historical fill was written."
+}
