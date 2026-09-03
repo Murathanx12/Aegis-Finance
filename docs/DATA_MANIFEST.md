@@ -35,6 +35,7 @@ schema + every headline number is committed.
 | Path | Size | Produced by | Rebuild |
 |---|---:|---|---|
 | `backend/data/optimus/learner/train_table.parquet` | ~200 MB | `python -m scripts.learner_run` | rerun the script |
+| `backend/data/optimus/learner/beta_panel.parquet` | ~104 MB | `python -m scripts.band_horizon_run --build-betas` | rerun the script (~18 s from the CRSP daily files) |
 | `backend/data/optimus/learner/beta_panel.parquet` | ~104 MB | `python -m scripts.band_horizon_run` | rerun the script |
 | `backend/data/optimus/learner/oos_predictions_1m.parquet` | ~21.9 MB | `python -m scripts.learner_run` | rerun the script |
 | `backend/data/optimus/actor_corpus/ibes_graded.parquet` (row-level analyst target grades) | varies | `scripts/tracker_ibes_backtest.py` | rerun the script |
