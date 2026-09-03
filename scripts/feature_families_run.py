@@ -196,17 +196,23 @@ def book_for_horizon(df: pd.DataFrame, pred: str, horizon: int) -> dict:
 # ------------------------------------------------------------- the ablation
 
 def walk_forward_preds(df: pd.DataFrame, cols: list[str], kind: str, horizon: int,
-                       shuffle: bool = False, verbose: bool = True) -> tuple[pd.Series, dict]:
+                       shuffle: bool = False, verbose: bool = True,
+                       shuffle_seed: int | None = None) -> tuple[pd.Series, dict]:
     """OOS predictions for one (feature set, model, horizon). Every prediction
     was made by a model that saw only rows whose targets had already MATURED
     before its test year opened -- `D.walk_forward_splits` enforces that and is
-    imported, not re-implemented."""
+    imported, not re-implemented.
+
+    `shuffle_seed` exists so a MODEL NULL (>= 64 fitted-on-shuffled draws,
+    learner/nullbar.py) can vary the permutation per draw;
+    `scripts/model_null_64_run.py` is the driver. Default None keeps the
+    historical single-draw seed, so the sealed receipt stays reproducible."""
     pred = pd.Series(np.nan, index=df.index, dtype="float64")
     meta: dict = {}
     for year, tr, te in D.walk_forward_splits(df, TEST_YEARS, horizon):
         t0 = time.time()
         p, mt = M.fit_predict(kind, ARM, df.loc[tr], df.loc[te], cols, horizon,
-                              shuffle_target=shuffle)
+                              shuffle_target=shuffle, shuffle_seed=shuffle_seed)
         pred.loc[te] = p
         meta[str(year)] = {"n_train": mt["n_train"],
                            "n_train_months": mt["n_train_months"],

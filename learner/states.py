@@ -78,6 +78,14 @@ preserving the month, the per-month state sizes and therefore the calendar --
 and recomputes the same spread statistic. The observed spread is reported as a
 percentile of that null. A state structure that does not clear its own shuffle
 has discovered nothing, and the receipt says so in those words.
+
+S36 amendment: that shuffle re-randomises every draw, so it cannot represent
+a PERSISTENT random partition -- and the real assignments are persistent by
+construction. `persistent_shuffled_null` is the honest bar: it circularly
+shifts each name's own state sequence in time, so every draw keeps the
+observed partition's persistence and only the alignment with returns is
+destroyed. `shuffled_null` stays for leak-checking and for comparability
+with sealed receipts, stamped LEGACY in its own output.
 """
 
 from __future__ import annotations
@@ -767,9 +775,11 @@ def shuffled_null(df: pd.DataFrame, state_col: str, target: str,
     as a virtue by `transition_matrix`). A random-but-persistent partition
     could hold one tilt for the whole window and beat this null the same way
     a model fitted on noise beats a random ranking (learner/nullbar.py). The
-    honest null here would permute the name -> state map while preserving
-    each name's transition structure; until that is built, `beats_random_
-    partition` reads "beats a random NON-persistent partition" and no more.
+    honest null is `persistent_shuffled_null` (built 2026-09-04): it shifts
+    each name's own sequence in time, preserving the transition structure.
+    This one stays for leak-checks and sealed-receipt comparability;
+    `beats_random_partition` reads "beats a random NON-persistent partition"
+    and no more.
     """
     rng = np.random.default_rng(seed)
     sub = df[[state_col, "month", target]].dropna(subset=[target]).reset_index(drop=True)
@@ -800,6 +810,110 @@ def shuffled_null(df: pd.DataFrame, state_col: str, target: str,
         # noise beat every random ranking. Stamped so no reader trusts it as
         # more than "beats a random non-persistent partition".
         "null_bar": NB.LEGACY_SHUFFLED_RANKING,
+    }
+
+
+def circular_shift_labels(df: pd.DataFrame, state_col: str, rng) -> np.ndarray:
+    """One persistent-null draw: each name's chronological state sequence,
+    circularly shifted by a random non-zero offset. Aligned to df's row order.
+
+    What one draw PRESERVES, exactly and per name: the state composition, the
+    run-length structure and the cyclic transition multiset -- i.e. all the
+    persistence the real assignment carries. What it DESTROYS: the alignment
+    of those states with the calendar and therefore with returns. That is the
+    null a persistent partition owes (see `persistent_shuffled_null`); the
+    same construction the repo already trusts for treatment masks
+    (`research_gym.null_invariance.circular_block_shift`, and N9's
+    block-shifted transfer null).
+
+    A name observed once (or with a constant state) shifts onto itself --
+    deliberately: such a name contributes no persistence evidence, so its
+    draw contributes no variance. Requires `permno` and `month` columns and
+    REFUSES without them: a guard derives its inputs or refuses.
+    """
+    for c in ("permno", "month", state_col):
+        if c not in df.columns:
+            raise ValueError(f"circular_shift_labels: REFUSED -- column {c!r} is "
+                             "missing; shifting needs the name and the clock")
+    order = np.lexsort((df["month"].to_numpy(), df["permno"].to_numpy()))
+    labels = df[state_col].to_numpy()[order].copy()
+    pn = df["permno"].to_numpy()[order]
+    starts = np.flatnonzero(np.r_[True, pn[1:] != pn[:-1]])
+    ends = np.r_[starts[1:], len(pn)]
+    for s, e in zip(starts, ends):
+        n = e - s
+        if n > 1:
+            k = int(rng.integers(1, n))          # never the identity shift
+            labels[s:e] = np.roll(labels[s:e], k)
+    out = np.empty_like(labels)
+    out[order] = labels
+    return out
+
+
+def persistent_shuffled_null(df: pd.DataFrame, state_col: str, target: str,
+                             n_shuffles: int = 200, seed: int = SEED) -> dict:
+    """The null `shuffled_null` cannot be: one that keeps the persistence.
+
+    S36 (learner/nullbar.py): a null that re-randomises every draw lets its
+    tilts wash out, so it cannot represent a PERSISTENT random partition --
+    and the real state assignments are persistent by construction (the
+    transition diagonal is graded as a virtue). This null shifts each name's
+    own state sequence in time (`circular_shift_labels`), so every draw is a
+    partition exactly as persistent as the observed one, with only the
+    alignment to outcomes destroyed. The observed spread is then a percentile
+    of draws that share its persistence, not of confetti.
+
+    Two readings this construction gets RIGHT that the within-month shuffle
+    got wrong:
+
+    * a constant-per-name partition (every name keeps one state forever)
+      shifts onto itself, every draw equals the observed, and the p-value is
+      ~1 -- "a fixed random grouping of persistent name effects" is correctly
+      not a discovery. The within-month shuffle CLEARS that partition
+      whenever the target has persistent name effects, which is the S36
+      false positive wearing state labels.
+    * a partition whose states genuinely time a name's returns keeps its
+      spread only when aligned, so shifting kills it and the observed clears.
+
+    The verdict refuses below `nullbar.MIN_DRAWS` draws rather than quoting
+    a p-value it cannot resolve. Statistic, keys and seed discipline mirror
+    `shuffled_null` so receipts can carry both side by side; the invocation
+    on a sealed study is one call per (k, grouping) with the SAME df/columns
+    the LEGACY block used, e.g.
+
+        S.persistent_shuffled_null(g, "state_k4", "excess_vw_1m",
+                                   n_shuffles=200)
+    """
+    rng = np.random.default_rng(seed)
+    sub = (df[["permno", state_col, "month", target]]
+           .dropna(subset=[target]).reset_index(drop=True))
+    obs = spread_statistic(sub, state_col, target)
+    draws = []
+    for _ in range(n_shuffles):
+        sub["_sh"] = circular_shift_labels(sub, state_col, rng)
+        draws.append(spread_statistic(sub, "_sh", target))
+    a = np.asarray([d for d in draws if d == d])
+    n_ok = int(len(a))
+    if n_ok >= NB.MIN_DRAWS:
+        beats: bool | str = bool((a >= obs).mean() < 0.05)
+    else:
+        beats = (f"{NB.CANNOT_DETERMINE} (usable draws {n_ok} < {NB.MIN_DRAWS}; "
+                 "a p-value from fewer draws would be quoted as if it resolved "
+                 "what it cannot)")
+    return {
+        "statistic": "max-minus-min of per-state mean monthly excess",
+        "target": target,
+        "observed": round(obs, 6),
+        "null_shuffles": n_ok,
+        "null_mean": round(float(a.mean()), 6) if n_ok else None,
+        "null_p95": round(float(np.quantile(a, 0.95)), 6) if n_ok else None,
+        "null_max": round(float(a.max()), 6) if n_ok else None,
+        "percentile_of_observed_in_null": round(float((a < obs).mean()), 4) if n_ok else None,
+        "p_value_one_sided": round(float((a >= obs).mean()), 4) if n_ok else None,
+        "beats_persistent_relabelling": beats,
+        "null_bar": ("PERSISTENCE_PRESERVING_CIRCULAR_SHIFT "
+                     "(learner/states.persistent_shuffled_null; supersedes the "
+                     "LEGACY within-month shuffle)"),
     }
 
 
@@ -897,6 +1011,7 @@ __all__ = [
     "match_states", "centroids_in_reference_space", "stabilise_block_labels",
     "market_month_features", "run_market_states",
     "monthly_ic", "conditional_table", "state_ic_table", "spread_statistic",
-    "shuffled_null", "transition_matrix", "name_states",
+    "shuffled_null", "circular_shift_labels", "persistent_shuffled_null",
+    "transition_matrix", "name_states",
     "mixture_of_experts_summary",
 ]
