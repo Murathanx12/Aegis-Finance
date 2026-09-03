@@ -1,0 +1,206 @@
+{
+  "receipt": "health_forensics_20260903",
+  "generated_at": "2026-09-03T06:30:00+00:00",
+  "generated_by": "health forensic pass, aegis-finance",
+  "licence": "not applicable - operational forensics, no claim about alpha",
+  "deployed_commit_investigated": "6c52680f43665e4c719d2827ba773f7ab003d096",
+  "local_head_after": "2908a06",
+  "note_on_commit_distance": "local main was already 3 commits ahead of the deployed commit before this pass (dd8d73b, 42dec9d, c9f4ea1); the deploy freeze is why",
+
+  "deploy_freeze": {
+    "active": true,
+    "until": "after 2026-09-04 judging",
+    "pushed": false,
+    "railway_config_changed": false,
+    "broker_orders_submitted_or_cancelled": 0
+  },
+
+  "trading_or_account_state_involved": {
+    "verdict": "NO for every fault except the Alpaca 401, which is a mirror/paper-broker credential outage that placed no orders",
+    "detail": "No lane strategy, weight, position or order was changed by this pass. The one write was a NAV catch-up mark through the existing allowlisted run_job endpoint, appending one row per lane for a session that had already closed. execution_ledger remained ABSENT - no external order has ever been submitted."
+  },
+
+  "faults": {
+    "F1_ledger_15_overdue": {
+      "reported": "forecast population live_forward: 15 forecast(s) past due and unresolved",
+      "verdict": "FALSE POSITIVE - a measurement artefact, not a resolver failure",
+      "root_cause": "ledger_health counted overdue on `today >= resolves_after`, the same predicate resolve_due uses to pick what to GRADE. The resolver is a 16:30 ET cron (20:30 UTC); the canary is a clock. Every record maturing on date D reads as past due from 00:00 UTC on D until the resolver's slot at 20:30 UTC - 20.5 of every 24 hours.",
+      "the_15": {
+        "identification": "precisely the live_forward records whose resolves_after == 2026-09-03",
+        "prediction_ids_available": false,
+        "why_not": "no read-only prod surface names ACTIONABLE overdue records - the health row carried a bare integer while naming the QUARANTINED ids. Fixed in commit 2908a06 (ledger_health now emits `overdue_actionable`); the ids become readable on the next deploy.",
+        "derivation": "the ledger file did not change between the two observations: n_records 237, n_resolved 42, n_void 6, last_written 2026-09-02 in both. Only `today` advanced. n_overdue went 25 -> 40; 40 - 25 = 15 crossed the threshold at 00:00 UTC on 2026-09-03, so all 15 have resolves_after == 2026-09-03."
+      },
+      "resolver_is_healthy": {
+        "receipts_examined": 15,
+        "receipts_span": "2026-08-14 .. 2026-09-02",
+        "n_receipts_with_actionable_overdue_gt_zero": 0,
+        "largest_single_pass": {"ran_at": "2026-09-01T08:06:57+00:00", "due": 42, "newly_resolved": 42},
+        "last_pass": {
+          "ran_at": "2026-09-02T23:32:21+00:00", "due": 0, "newly_resolved": 0, "pending": 83,
+          "n_overdue": 25, "n_overdue_actionable": 0, "provenance_sha256_prefix": "43cfd12e16"
+        },
+        "unpriceable_tickers_ever": [],
+        "delisted_or_dark_symbols": "none - `unpriceable` is empty in every receipt"
+      },
+      "eliminated_causes": [
+        "missing price", "delisted symbol", "maturity semantics error",
+        "resolver never eligible", "population quarantine refusal", "ledger persistence"
+      ],
+      "quarantined_25": {
+        "status": "correctly refused on purpose; disposition is attended",
+        "ref": "docs/LEDGER_DIVERGENCE_ADJUDICATION_2026-08-15.md"
+      },
+      "secondary_finding": "/api/optimus/calibration reports the SAME file as n_overdue_actionable 40, n_overdue_quarantined 0, because calibration_report calls ledger_health without quarantined_hashes. Two health surfaces disagree on one file. Not repaired here.",
+      "fix_commit": "2908a06",
+      "code_fault": true,
+      "data_loss": false
+    },
+
+    "F2_nav_not_fresh": {
+      "reported": "nav not fresh - all 10 lanes last_nav_date 2026-09-01, expected 2026-09-02, last_mtm ran 2026-09-02T23:30",
+      "verdict": "REAL FAULT, structural and chronic - repaired in data and in code",
+      "root_cause": "_get_current_prices and _get_latest_bar_date both set end = datetime.now().strftime('%Y-%m-%d'). yfinance's `end` is EXCLUSIVE, so the newest bar either can return is YESTERDAY'S. mark_lane_to_market stamps the NAV row with that bar's date (P-day-2026-08-19a), so every close mark landed on the PREVIOUS session - the exact outcome that change set out to prevent.",
+      "why_it_looked_green": "mark_lane_to_market returned a float for all 10 lanes, so the MTM receipt read status marked, n_marked 10, n_failed 0. The receipt PRINTS expected_nav_date but never compares the written row against it, so it cannot detect the fault it exists to detect.",
+      "duty_cycle": "_expected_nav_date rolls to today at 17:00 ET while the mark writes D-1, so nav.all_fresh could only be true between the 16:30 mark and 17:00 ET - about 30 minutes a day.",
+      "mtm_runs_on_2026_09_02": [
+        {"ran_at": "2026-09-02T20:32:21+00:00", "status": "marked", "n_marked": 10, "n_failed": 0, "expected_nav_date": "2026-09-01"},
+        {"ran_at": "2026-09-02T21:32:19+00:00", "status": "marked", "n_marked": 10, "n_failed": 0, "expected_nav_date": "2026-09-02"},
+        {"ran_at": "2026-09-02T22:32:19+00:00", "status": "marked", "n_marked": 10, "n_failed": 0, "expected_nav_date": "2026-09-02"},
+        {"ran_at": "2026-09-02T23:32:19+00:00", "status": "marked", "n_marked": 10, "n_failed": 0, "expected_nav_date": "2026-09-02"}
+      ],
+      "data_repair": {
+        "action": "POST /api/optimus/run_job/pi_hourly_mtm (existing allowlisted idempotent job)",
+        "ran_at": "2026-09-03T06:18:58+00:00",
+        "http": 200,
+        "duration_seconds": 126.6,
+        "result": {"status": "marked", "n_marked": 10, "n_failed": 0, "expected_nav_date": "2026-09-02"},
+        "nav_all_fresh_before": false,
+        "nav_all_fresh_after": true,
+        "lanes_advanced_to": "2026-09-02",
+        "n_lanes": 10,
+        "doubles_as_proof": "running the UNMODIFIED job one calendar day later produced the 2026-09-02 bar. Same code, same lanes; the fetch window was the only variable."
+      },
+      "lane_integrity_check": {
+        "run": "before and after, per .claude/skills/lane-integrity-check",
+        "lane_yamls_modified": 0,
+        "lane_set_identical": true,
+        "rows_added_per_lane": ["2026-09-02"],
+        "rows_removed": 0,
+        "historical_rows_mutated": 0,
+        "new_config_version_segments": 0,
+        "registry_cumulative_trials": "18 -> 18",
+        "registry_trials_changed": 0,
+        "registry_only_delta": "effective_independent_trials.n_obs 21 -> 22 (the added observation)",
+        "verdict": "PASS"
+      },
+      "fix_commit": "9b6cca8",
+      "deploy_caveat": "post-fix the 16:30 mark writes D instead of D-1, so D-1 must already be marked or it is skipped permanently. Trigger pi_hourly_mtm on the CURRENT code before deploying. Done for 2026-09-02 by this pass.",
+      "code_fault": true,
+      "data_loss": "none - no session row was lost"
+    },
+
+    "F3_alpaca_401": {
+      "reported": "Alpaca mirror sync failed: 401 /v2/positions (from 2026-09-02T20:33:49Z); Paper broker submit failed: 401 (21:46, 22:45, 23:45)",
+      "verdict": "REAL - credentials revoked at Alpaca. NOT repairable from this repo. ATTENDED.",
+      "env_vars_used": {
+        "lane:mirror": ["ALPACA_API_KEY_ID", "ALPACA_API_SECRET_KEY"],
+        "arena": ["ALPACA_ARENA_API_KEY_ID", "ALPACA_ARENA_API_SECRET_KEY"]
+      },
+      "probe": {
+        "method": "read-only GET https://paper-api.alpaca.markets/v2/account, no orders",
+        "local_lane_keys": "HTTP 401 unauthorized",
+        "local_arena_keys": "HTTP 401 unauthorized"
+      },
+      "key_shapes_no_secrets": {
+        "ALPACA_API_KEY_ID": {"len": 26, "prefix": "PKJ3"},
+        "ALPACA_API_SECRET_KEY": {"len": 44, "prefix": "DQtM"},
+        "ALPACA_ARENA_API_KEY_ID": {"len": 26, "prefix": "PKLL"},
+        "ALPACA_ARENA_API_SECRET_KEY": {"len": 44, "prefix": "Gkgp"},
+        "vs_env_bak_2026_08_27": "identical prefixes and lengths - no local rotation since 08-27"
+      },
+      "conclusion": "BOTH local pairs are also 401, so copying local keys to Railway would NOT fix this. The keys were revoked or reset at Alpaca's end around 2026-09-02T20:33Z. New paper keys must be generated in the Alpaca dashboard.",
+      "health_surface_defect": "/api/health/full paper_broker reports status ok, credentials present, credential_error null for both targets while every call 401s - presence is checked, authentication never is.",
+      "orders_placed_or_cancelled_by_this_pass": 0,
+      "code_fault": false,
+      "attended": true
+    },
+
+    "F4_why_moved_crash": {
+      "reported": "Nightly WHY-MOVED failed: 'str' object has no attribute 'get' at 2026-09-02T21:16:32Z",
+      "verdict": "REAL crash - but AFTER the job had completed all of its work. Repaired.",
+      "root_cause": "scheduler.py:1314 summed l.get('rejections') over result['lenses'], which run_why_moved returns as a DICT keyed by lens name. Iterating it bare yields lens NAMES (str).",
+      "work_was_not_lost": {
+        "job_duration_seconds": 92.041,
+        "ledger_records_before": 214,
+        "ledger_records_after": 237,
+        "forecasts_minted": 23,
+        "ledger_last_record_at": "2026-09-02T21:16:32+00:00",
+        "note": "the last record was written in the same second the error was logged",
+        "catch_up_slots": [
+          {"at": "2026-09-02T22:15:00+00:00", "duration_seconds": 0.043},
+          {"at": "2026-09-02T23:15:00+00:00", "duration_seconds": 1.081}
+        ],
+        "catch_up_behaviour": "correctly no-opped via skip_if_minted"
+      },
+      "what_was_lost": "only the summary log line - including the minted == 0 NOTHING GRADEABLE WAS WRITTEN warning, which cannot fire from a line that raises first",
+      "receipt_defect": "the job receipt recorded status ran, exception null, because the crash was swallowed by the job's own try/except - a green receipt over a crashed job",
+      "test_gap": "9 tests cover this job; every fake returned lenses: [] so none ever saw the real shape, while test_why_moved.py asserted out['lenses']['options_vol'] on the producer side",
+      "second_route_same_error": "why_moved._extract_json is annotated -> dict but is json.loads, which returns str for a JSON string literal and list for an array. Those parse cleanly, bypass the JSONDecodeError guard and reach parse_hypotheses' raw.get(). Double-encoded JSON is a known DeepSeek json_object failure mode. Also fixed.",
+      "same_class_unaudited": [
+        "backend/services/llm_swarm.py:349 _extract_json -> dict",
+        "backend/services/optimus_specialists.py:157 _extract_json -> dict"
+      ],
+      "prior_occurrence": "the 2026-08-31T22:15 run also took 92.5s - same shape, same silent crash",
+      "fix_commit": "7932c6d",
+      "code_fault": true,
+      "data_loss": false
+    },
+
+    "F5_arena_scan_source_absent": {
+      "reported": "ARENA: no scan source at /data/optimus/crsp_pit/crsp_pit_monthly_v1.parquet - DISCOVERY runs over the core universe only",
+      "verdict": "REAL and long-standing. Not repairable by deploy. Proposal only.",
+      "reader": "backend/services/arena/discovery.py:179-213 (SCAN_SOURCE, scan_universe)",
+      "path_construction": "config.OPTIMUS_LEDGER_DIR / 'crsp_pit' / SCAN_SOURCE; DATA_DIR=/data on Railway",
+      "fallback": "returns [] and CACHES the empty list in _SCAN_CACHE for the process lifetime; the scan is deliberately excluded from the priced_fraction denominator, so no guard can fire. Pinned as intended behaviour by test_arena_brain.py::test_scan_universe_absent_source_is_loud_and_empty.",
+      "consequence": "no name outside the watchlist can reach any book - engine.py:442 says so explicitly: the scan is the only route by which a name the watchlist never contained can reach a book",
+      "producer": "scripts/crsp_pit_universe_pull.py:117 (requires live WRDS Postgres)",
+      "why_absent_on_the_volume": "the producer writes into the repo at backend/data/optimus/crsp_pit/, and .gitignore:63 excludes *.parquet - so no deploy has ever carried it, and there is no volume-seeding script for it",
+      "local_copy": {
+        "path": "backend/data/optimus/crsp_pit/crsp_pit_monthly_v1.parquet",
+        "bytes": 14036809,
+        "modified": "2026-08-19T12:33",
+        "rows": 545478,
+        "complete_and_correct": true
+      },
+      "required_columns": ["date", "ticker", "dollar_vol", "eligible"],
+      "full_schema": ["permno", "date", "prc", "ret", "dollar_vol", "ticker", "comnam", "dlret", "dlstcd", "eligible", "ret_incl_delist"],
+      "cheapest_ship": "upload the existing 13.4 MB local file to the Railway volume at /data/optimus/crsp_pit/. No rebuild, no WRDS pull, no code change. Requires a process restart (or _SCAN_CACHE.clear()) because the empty scan is cached for the process lifetime.",
+      "rejected_alternative": "converting backend/data/optimus/wrds/crsp_monthly_panel_2013_2024.json - it has no ticker column at all (keyed on permno, and the mapping is time-varying), no eligible flag, and its dollar-volume column is a MEDIAN DAILY figure from crsp.dsf rather than the monthly crsp.msf quantity, with a 100x unit convention between them",
+      "code_fault": false,
+      "attended": true
+    }
+  },
+
+  "verification": {
+    "suite_command": "AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/ -m 'not slow' -q",
+    "baseline_before_changes": {"passed": 6074, "failed": 0, "skipped": 14, "seconds": 383.4},
+    "dotenv_moved": false
+  },
+
+  "commits": [
+    {"sha": "7932c6d", "fault": "F4", "tests_added": 2},
+    {"sha": "9b6cca8", "fault": "F2", "tests_added": 3},
+    {"sha": "2908a06", "fault": "F1", "tests_added": 2}
+  ],
+
+  "remaining_attended": [
+    "F3: generate new Alpaca PAPER keys and set ALPACA_API_KEY_ID / ALPACA_API_SECRET_KEY (and the ALPACA_ARENA_* pair) on Railway. The local copies are dead too, so there is nothing to copy.",
+    "F5: upload backend/data/optimus/crsp_pit/crsp_pit_monthly_v1.parquet to the Railway volume at /data/optimus/crsp_pit/, then restart the service.",
+    "F2: deploy ordering - trigger pi_hourly_mtm on the CURRENT code before deploying 9b6cca8, or the transition day is skipped permanently.",
+    "F1 secondary: calibration_report calls ledger_health without quarantined_hashes, so it reports 40 actionable where the population surface reports 15.",
+    "F4 same-class: audit llm_swarm._extract_json and optimus_specialists._extract_json for the same non-dict parse.",
+    "paper_broker health checks credential PRESENCE, never authentication.",
+    "the MTM receipt prints expected_nav_date but never compares the written row against it."
+  ]
+}
