@@ -1,0 +1,4225 @@
+{
+  "artefact": "TOXIC_BAND_SHORT_V1",
+  "written_at_utc": "2026-09-03T15:58:42.491468+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "question": "can the toxic_ge_5 exclusion be monetised on the short side, or do borrow costs and the distribution's own violence erase it?",
+  "parent_receipts": [
+    "backend/data/optimus/tracker_backtest/band_horizon_20260903.json",
+    "backend/data/optimus/tracker_backtest/upside_band_decontamination.json"
+  ],
+  "dataset": {
+    "table": "backend\\data\\optimus\\learner\\train_table.parquet",
+    "rows": 441278,
+    "months": 144,
+    "window": "2013-2024",
+    "universe": "PRIMARY: split_prior_year == False (S30b), band labelled by learner.prior.effective_band (hygiene close>=$2, coverage>=2 already applied)",
+    "investable": "matured fwd target + market leg + pre-period beta (cohort_frame, PREREG_BAND_IS_BETA_1 convention)"
+  },
+  "conventions": {
+    "short_accounting": "$1 short notional, fully collateralised, no leverage; gross = -(EW cohort fwd); hedged adds k x mkt_vw long",
+    "trade_cost_bps_per_side": 10.0,
+    "trade_cost_sensitivity_bps": 25.0,
+    "hedge_cost_bps_per_side": 1.0,
+    "borrow_tiers_pct_per_year": [
+      0.0,
+      2.0,
+      5.0,
+      10.0,
+      20.0,
+      50.0
+    ],
+    "borrow_note": "NO borrow-rate data exists in this repo. Tiers are assumptions; the BREAKEVEN borrow rate is the honest headline. Hard-to-borrow small caps live at 20-100%+/yr.",
+    "rebate_note": "short rebate / collateral interest NOT credited (rf~0 convention of the parent study); conservative in 2022-24.",
+    "benchmark": "short-the-VW-market over the same months -- a short book's alternative is shorting SPY, not cash. The unit-hedged construction IS the paired difference vs that benchmark.",
+    "ruin": "a phase chain passing through wealth <= 0 reports RUIN and stays at 0; it does not compound back.",
+    "zero_cost_diagnostic": false
+  },
+  "population_realism": {
+    "note": "borrow availability is NOT observed in this repo; these are structural proxies. Sub-$2 names are widely unborrowable; sub-$3m/day dollar volume is the S29 universe floor below which the panel's own edge band was declared UNOBSERVED and a short of size is fictional.",
+    "raw_ratio_ge_5_population": {
+      "name_months": 55564,
+      "share_close_below_2": 0.4522,
+      "share_close_below_3": 0.5821,
+      "share_close_below_5": 0.7304,
+      "share_dollar_vol_below_1m": 0.612,
+      "share_dollar_vol_below_3m": 0.7833,
+      "share_market_cap_below_100m": 0.5207,
+      "share_market_cap_below_300m": 0.7634
+    },
+    "band_cohort_split_free_matured_1m": {
+      "name_months": 24450,
+      "share_close_below_2_STRUCTURALLY_ZERO": 0.0,
+      "share_close_below_3": 0.2121,
+      "share_close_below_5": 0.4674,
+      "share_dollar_vol_below_1m": 0.3648,
+      "share_dollar_vol_below_3m": 0.599,
+      "share_market_cap_below_100m": 0.1935,
+      "share_market_cap_below_300m": 0.5313,
+      "share_passing_3m_liquidity_floor": 0.4009
+    }
+  },
+  "squeeze_table_worst_name_months_1m": [
+    {
+      "permno": 15431,
+      "month": "2020-07",
+      "fwd_1m_pct": 476.2,
+      "ratio": 37.22,
+      "market_cap_musd": 341.1
+    },
+    {
+      "permno": 18195,
+      "month": "2020-06",
+      "fwd_1m_pct": 365.2,
+      "ratio": 6.23,
+      "market_cap_musd": 48.3
+    },
+    {
+      "permno": 10258,
+      "month": "2020-05",
+      "fwd_1m_pct": 353.5,
+      "ratio": 5.31,
+      "market_cap_musd": 42.8
+    },
+    {
+      "permno": 14305,
+      "month": "2016-02",
+      "fwd_1m_pct": 345.4,
+      "ratio": 8.26,
+      "market_cap_musd": 76.2
+    },
+    {
+      "permno": 18780,
+      "month": "2021-08",
+      "fwd_1m_pct": 317.3,
+      "ratio": 70.88,
+      "market_cap_musd": 111.3
+    },
+    {
+      "permno": 15831,
+      "month": "2018-12",
+      "fwd_1m_pct": 279.1,
+      "ratio": 8.64,
+      "market_cap_musd": 65.6
+    },
+    {
+      "permno": 19568,
+      "month": "2024-11",
+      "fwd_1m_pct": 244.2,
+      "ratio": 5.43,
+      "market_cap_musd": 269.0
+    },
+    {
+      "permno": 21729,
+      "month": "2022-11",
+      "fwd_1m_pct": 242.8,
+      "ratio": 10.07,
+      "market_cap_musd": 110.9
+    },
+    {
+      "permno": 14555,
+      "month": "2020-03",
+      "fwd_1m_pct": 242.0,
+      "ratio": 7.83,
+      "market_cap_musd": 54.7
+    },
+    {
+      "permno": 17000,
+      "month": "2022-06",
+      "fwd_1m_pct": 235.3,
+      "ratio": 5.39,
+      "market_cap_musd": 198.6
+    }
+  ],
+  "contamination_clause": {
+    "excluded_months": [
+      "2020-11",
+      "2020-12"
+    ],
+    "n_excluded": 2,
+    "worst_month_missing_share": 0.0585,
+    "median_missing_share": 0.0183
+  },
+  "constructions": {
+    "naive_short": {
+      "1m": {
+        "label": "naive_short@1m",
+        "n_periods": 141,
+        "median_names_per_month": 168,
+        "mean_beta_pre": 1.2688,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.2719,
+        "trade_cost_annualised_pct": 0.407,
+        "gross": {
+          "label": "gross",
+          "n_months": 141,
+          "mean_per_period_pct": 2.363,
+          "annualised_pct": 32.348,
+          "annualised_linear_pct_incumbent_convention": 28.357,
+          "t_naive_OVERSTATED": 2.828,
+          "t_newey_west": 2.838,
+          "t_block": 2.828,
+          "t_block_range": [
+            2.828,
+            2.828
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.6241
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 141,
+          "mean_per_period_pct": 3.7806,
+          "annualised_pct": 56.097,
+          "annualised_linear_pct_incumbent_convention": 45.367,
+          "t_naive_OVERSTATED": 6.253,
+          "t_newey_west": 6.275,
+          "t_block": 6.253,
+          "t_block_range": [
+            6.253,
+            6.253
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7163
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 141,
+          "mean_per_period_pct": 2.3291,
+          "annualised_pct": 31.823,
+          "annualised_linear_pct_incumbent_convention": 27.949,
+          "t_naive_OVERSTATED": 2.786,
+          "t_newey_west": 2.796,
+          "t_block": 2.786,
+          "t_block_range": [
+            2.786,
+            2.786
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.6241
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 31.823,
+            "t_block": 2.786,
+            "terminal_wealth_median": 13.0641,
+            "terminal_wealth_min": 13.0641,
+            "max_drawdown_worst": -0.5914,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 29.269,
+            "t_block": 2.587,
+            "terminal_wealth_median": 10.358,
+            "terminal_wealth_min": 10.358,
+            "max_drawdown_worst": -0.5982,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 25.524,
+            "t_block": 2.288,
+            "terminal_wealth_median": 7.3074,
+            "terminal_wealth_min": 7.3074,
+            "max_drawdown_worst": -0.6082,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 19.502,
+            "t_block": 1.789,
+            "terminal_wealth_median": 4.0775,
+            "terminal_wealth_min": 4.0775,
+            "max_drawdown_worst": -0.6243,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 8.245,
+            "t_block": 0.793,
+            "terminal_wealth_median": 1.2602,
+            "terminal_wealth_min": 1.2602,
+            "max_drawdown_worst": -0.6548,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -19.953,
+            "t_block": -2.198,
+            "terminal_wealth_median": 0.035,
+            "terminal_wealth_min": 0.035,
+            "max_drawdown_worst": -0.9638,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 27.95,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -27.47
+        },
+        "best_period": {
+          "month": "2020-02",
+          "net_of_trading_pct": 38.94
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 141,
+              "terminal_wealth": 13.7015,
+              "max_drawdown": -0.5897,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 13.7015,
+          "terminal_wealth_min": 13.7015,
+          "terminal_wealth_max": 13.7015,
+          "max_drawdown_worst": -0.5897,
+          "n_ruined_phases": 0,
+          "n_phases": 1
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 22.748,
+            "t_block": 2.199
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 35.743,
+            "t_block": 0.787
+          },
+          "2022_2024": {
+            "n_months": 35,
+            "annualised_pct": 53.351,
+            "t_block": 1.873
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 20.67,
+          "2020_2021": 30.95,
+          "2022_2024": 43.53
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 27.34
+      },
+      "3m": {
+        "label": "naive_short@3m",
+        "n_periods": 139,
+        "median_names_per_month": 169,
+        "mean_beta_pre": 1.2669,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.4921,
+        "trade_cost_annualised_pct": 0.227,
+        "gross": {
+          "label": "gross",
+          "n_months": 139,
+          "mean_per_period_pct": 7.0564,
+          "annualised_pct": 31.356,
+          "annualised_linear_pct_incumbent_convention": 28.226,
+          "t_naive_OVERSTATED": 5.183,
+          "t_newey_west": 3.878,
+          "t_block": 3.088,
+          "t_block_range": [
+            2.441,
+            3.671
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.7122
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 139,
+          "mean_per_period_pct": 10.6828,
+          "annualised_pct": 50.079,
+          "annualised_linear_pct_incumbent_convention": 42.731,
+          "t_naive_OVERSTATED": 10.898,
+          "t_newey_west": 7.847,
+          "t_block": 6.376,
+          "t_block_range": [
+            5.38,
+            7.311
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8273
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 139,
+          "mean_per_period_pct": 6.9996,
+          "annualised_pct": 31.078,
+          "annualised_linear_pct_incumbent_convention": 27.998,
+          "t_naive_OVERSTATED": 5.141,
+          "t_newey_west": 3.847,
+          "t_block": 3.064,
+          "t_block_range": [
+            2.42,
+            3.642
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.705
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 31.078,
+            "t_block": 3.064,
+            "terminal_wealth_median": 15.3389,
+            "terminal_wealth_min": 7.7837,
+            "max_drawdown_worst": -0.7241,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 28.645,
+            "t_block": 2.845,
+            "terminal_wealth_median": 12.2465,
+            "terminal_wealth_min": 6.1956,
+            "max_drawdown_worst": -0.7313,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 25.059,
+            "t_block": 2.517,
+            "terminal_wealth_median": 8.7182,
+            "terminal_wealth_min": 4.3891,
+            "max_drawdown_worst": -0.7419,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 19.25,
+            "t_block": 1.97,
+            "terminal_wealth_median": 4.9201,
+            "terminal_wealth_min": 2.4548,
+            "max_drawdown_worst": -0.759,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 8.241,
+            "t_block": 0.876,
+            "terminal_wealth_median": 1.533,
+            "terminal_wealth_min": 0.7483,
+            "max_drawdown_worst": -0.7912,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -20.252,
+            "t_block": -2.405,
+            "terminal_wealth_median": 0.0383,
+            "terminal_wealth_min": 0.0168,
+            "max_drawdown_worst": -0.9807,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 28.0,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -67.45
+        },
+        "best_period": {
+          "month": "2018-09",
+          "net_of_trading_pct": 40.56
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 47,
+              "terminal_wealth": 15.735,
+              "max_drawdown": -0.542,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 46,
+              "terminal_wealth": 15.8612,
+              "max_drawdown": -0.3205,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 46,
+              "terminal_wealth": 7.9961,
+              "max_drawdown": -0.723,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 15.735,
+          "terminal_wealth_min": 7.9961,
+          "terminal_wealth_max": 15.8612,
+          "max_drawdown_worst": -0.723,
+          "n_ruined_phases": 0,
+          "n_phases": 3
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 23.889,
+            "t_block": 2.519
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 24.227,
+            "t_block": 0.715
+          },
+          "2022_2024": {
+            "n_months": 33,
+            "annualised_pct": 56.031,
+            "t_block": 2.283
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 22.01,
+          "2020_2021": 22.29,
+          "2022_2024": 47.06
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 27.66
+      },
+      "6m": {
+        "label": "naive_short@6m",
+        "n_periods": 136,
+        "median_names_per_month": 170,
+        "mean_beta_pre": 1.262,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.6943,
+        "trade_cost_annualised_pct": 0.156,
+        "gross": {
+          "label": "gross",
+          "n_months": 136,
+          "mean_per_period_pct": 12.6385,
+          "annualised_pct": 26.874,
+          "annualised_linear_pct_incumbent_convention": 25.277,
+          "t_naive_OVERSTATED": 7.322,
+          "t_newey_west": 3.837,
+          "t_block": 3.138,
+          "t_block_range": [
+            1.833,
+            4.37
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.7353
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 136,
+          "mean_per_period_pct": 19.7052,
+          "annualised_pct": 43.293,
+          "annualised_linear_pct_incumbent_convention": 39.41,
+          "t_naive_OVERSTATED": 15.553,
+          "t_newey_west": 8.108,
+          "t_block": 6.352,
+          "t_block_range": [
+            4.85,
+            7.132
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 136,
+          "mean_per_period_pct": 12.5604,
+          "annualised_pct": 26.698,
+          "annualised_linear_pct_incumbent_convention": 25.121,
+          "t_naive_OVERSTATED": 7.277,
+          "t_newey_west": 3.814,
+          "t_block": 3.12,
+          "t_block_range": [
+            1.819,
+            4.348
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.7353
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 26.698,
+            "t_block": 3.12,
+            "terminal_wealth_median": 13.0015,
+            "terminal_wealth_min": 3.5253,
+            "max_drawdown_worst": -0.7962,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 24.457,
+            "t_block": 2.876,
+            "terminal_wealth_median": 10.6003,
+            "terminal_wealth_min": 2.7841,
+            "max_drawdown_worst": -0.806,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 21.133,
+            "t_block": 2.511,
+            "terminal_wealth_median": 7.7647,
+            "terminal_wealth_min": 1.9422,
+            "max_drawdown_worst": -0.8203,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 15.692,
+            "t_block": 1.901,
+            "terminal_wealth_median": 4.5215,
+            "terminal_wealth_min": 1.0474,
+            "max_drawdown_worst": -0.8432,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 5.186,
+            "t_block": 0.683,
+            "terminal_wealth_median": 1.4714,
+            "terminal_wealth_min": 0.2826,
+            "max_drawdown_worst": -0.8852,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -23.332,
+            "t_block": -2.973,
+            "terminal_wealth_median": 0.0343,
+            "terminal_wealth_min": 0.0017,
+            "max_drawdown_worst": -0.9978,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 25.12,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -70.78
+        },
+        "best_period": {
+          "month": "2021-11",
+          "net_of_trading_pct": 57.09
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 23,
+              "terminal_wealth": 14.5946,
+              "max_drawdown": -0.2156,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 23,
+              "terminal_wealth": 5.7495,
+              "max_drawdown": -0.4023,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 23,
+              "terminal_wealth": 3.5942,
+              "max_drawdown": -0.7952,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 23,
+              "terminal_wealth": 12.1664,
+              "max_drawdown": -0.3658,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 22,
+              "terminal_wealth": 15.7127,
+              "max_drawdown": -0.2522,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 22,
+              "terminal_wealth": 14.2503,
+              "max_drawdown": -0.1978,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 13.2083,
+          "terminal_wealth_min": 3.5942,
+          "terminal_wealth_max": 15.7127,
+          "max_drawdown_worst": -0.7952,
+          "n_ruined_phases": 0,
+          "n_phases": 6
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 21.864,
+            "t_block": 2.749
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 21.685,
+            "t_block": 0.619
+          },
+          "2022_2024": {
+            "n_months": 30,
+            "annualised_pct": 44.675,
+            "t_block": 3.632
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 20.78,
+          "2020_2021": 20.62,
+          "2022_2024": 40.56
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 24.89
+      },
+      "12m": {
+        "label": "naive_short@12m",
+        "n_periods": 130,
+        "median_names_per_month": 171,
+        "mean_beta_pre": 1.2469,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.9905,
+        "trade_cost_annualised_pct": 0.105,
+        "gross": {
+          "label": "gross",
+          "n_months": 130,
+          "mean_per_period_pct": 22.0514,
+          "annualised_pct": 22.051,
+          "annualised_linear_pct_incumbent_convention": 22.051,
+          "t_naive_OVERSTATED": 9.108,
+          "t_newey_west": 3.731,
+          "t_block": 2.897,
+          "t_block_range": [
+            1.035,
+            4.829
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.8385
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 130,
+          "mean_per_period_pct": 36.2848,
+          "annualised_pct": 36.285,
+          "annualised_linear_pct_incumbent_convention": 36.285,
+          "t_naive_OVERSTATED": 22.896,
+          "t_newey_west": 9.194,
+          "t_block": 6.735,
+          "t_block_range": [
+            3.829,
+            9.635
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 130,
+          "mean_per_period_pct": 21.9467,
+          "annualised_pct": 21.947,
+          "annualised_linear_pct_incumbent_convention": 21.947,
+          "t_naive_OVERSTATED": 9.066,
+          "t_newey_west": 3.714,
+          "t_block": 2.884,
+          "t_block_range": [
+            1.028,
+            4.813
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.8385
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 21.947,
+            "t_block": 2.884,
+            "terminal_wealth_median": 6.7114,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.4648,
+            "n_ruined_phases": 1
+          },
+          "2": {
+            "annualised_pct": 19.947,
+            "t_block": 2.629,
+            "terminal_wealth_median": 5.5433,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.4848,
+            "n_ruined_phases": 1
+          },
+          "5": {
+            "annualised_pct": 16.947,
+            "t_block": 2.246,
+            "terminal_wealth_median": 4.1332,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.5148,
+            "n_ruined_phases": 1
+          },
+          "10": {
+            "annualised_pct": 11.947,
+            "t_block": 1.609,
+            "terminal_wealth_median": 2.4859,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.5648,
+            "n_ruined_phases": 1
+          },
+          "20": {
+            "annualised_pct": 1.947,
+            "t_block": 0.333,
+            "terminal_wealth_median": 0.8287,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.6648,
+            "n_ruined_phases": 1
+          },
+          "50": {
+            "annualised_pct": -28.053,
+            "t_block": -3.494,
+            "terminal_wealth_median": 0.0115,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.996,
+            "n_ruined_phases": 1
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 21.95,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -118.0
+        },
+        "best_period": {
+          "month": "2021-06",
+          "net_of_trading_pct": 70.81
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 11,
+              "terminal_wealth": 7.0565,
+              "max_drawdown": -0.1441,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 11,
+              "terminal_wealth": 5.1843,
+              "max_drawdown": -0.3822,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 11,
+              "terminal_wealth": 0.0,
+              "max_drawdown": 0.0,
+              "ruined": true
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 11,
+              "terminal_wealth": 5.0834,
+              "max_drawdown": -0.4637,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 11,
+              "terminal_wealth": 5.9179,
+              "max_drawdown": -0.4413,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 11,
+              "terminal_wealth": 6.4971,
+              "max_drawdown": -0.2127,
+              "ruined": false
+            },
+            {
+              "phase": 6,
+              "n_rebalances": 11,
+              "terminal_wealth": 9.0988,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 7,
+              "n_rebalances": 11,
+              "terminal_wealth": 5.0429,
+              "max_drawdown": -0.2456,
+              "ruined": false
+            },
+            {
+              "phase": 8,
+              "n_rebalances": 11,
+              "terminal_wealth": 9.3978,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 9,
+              "n_rebalances": 11,
+              "terminal_wealth": 10.705,
+              "max_drawdown": -0.0968,
+              "ruined": false
+            },
+            {
+              "phase": 10,
+              "n_rebalances": 10,
+              "terminal_wealth": 9.9096,
+              "max_drawdown": -0.1373,
+              "ruined": false
+            },
+            {
+              "phase": 11,
+              "n_rebalances": 10,
+              "terminal_wealth": 7.2105,
+              "max_drawdown": -0.3107,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 6.7768,
+          "terminal_wealth_min": 0.0,
+          "terminal_wealth_max": 10.705,
+          "max_drawdown_worst": -0.4637,
+          "n_ruined_phases": 1,
+          "n_phases": 12
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 18.329,
+            "t_block": 2.68
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 22.256,
+            "t_block": null
+          },
+          "2022_2024": {
+            "n_months": 24,
+            "annualised_pct": 34.325,
+            "t_block": null
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 18.33,
+          "2020_2021": 22.26,
+          "2022_2024": 34.32
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 21.79
+      }
+    },
+    "hedged_unit": {
+      "1m": {
+        "label": "hedged_unit@1m",
+        "n_periods": 141,
+        "median_names_per_month": 168,
+        "mean_beta_pre": 1.2688,
+        "mean_hedge_k": 1.0,
+        "turnover_sum_abs_dw_median": 0.2719,
+        "trade_cost_annualised_pct": 0.407,
+        "gross": {
+          "label": "gross",
+          "n_months": 141,
+          "mean_per_period_pct": 3.7806,
+          "annualised_pct": 56.097,
+          "annualised_linear_pct_incumbent_convention": 45.367,
+          "t_naive_OVERSTATED": 6.253,
+          "t_newey_west": 6.275,
+          "t_block": 6.253,
+          "t_block_range": [
+            6.253,
+            6.253
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7163
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 141,
+          "mean_per_period_pct": 3.7806,
+          "annualised_pct": 56.097,
+          "annualised_linear_pct_incumbent_convention": 45.367,
+          "t_naive_OVERSTATED": 6.253,
+          "t_newey_west": 6.275,
+          "t_block": 6.253,
+          "t_block_range": [
+            6.253,
+            6.253
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7163
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 141,
+          "mean_per_period_pct": 3.7267,
+          "annualised_pct": 55.126,
+          "annualised_linear_pct_incumbent_convention": 44.72,
+          "t_naive_OVERSTATED": 6.162,
+          "t_newey_west": 6.184,
+          "t_block": 6.162,
+          "t_block_range": [
+            6.162,
+            6.162
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7163
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 55.126,
+            "t_block": 6.162,
+            "terminal_wealth_median": 123.5324,
+            "terminal_wealth_min": 123.5324,
+            "max_drawdown_worst": -0.2608,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 52.161,
+            "t_block": 5.887,
+            "terminal_wealth_median": 98.361,
+            "terminal_wealth_min": 98.361,
+            "max_drawdown_worst": -0.2768,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 47.812,
+            "t_block": 5.473,
+            "terminal_wealth_median": 69.8367,
+            "terminal_wealth_min": 69.8367,
+            "max_drawdown_worst": -0.3006,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 40.814,
+            "t_block": 4.784,
+            "terminal_wealth_median": 39.389,
+            "terminal_wealth_min": 39.389,
+            "max_drawdown_worst": -0.3387,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 27.722,
+            "t_block": 3.406,
+            "terminal_wealth_median": 12.442,
+            "terminal_wealth_min": 12.442,
+            "max_drawdown_worst": -0.4091,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -5.154,
+            "t_block": -0.728,
+            "terminal_wealth_median": 0.3701,
+            "terminal_wealth_min": 0.3701,
+            "max_drawdown_worst": -0.827,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 44.72,
+        "worst_period": {
+          "month": "2021-01",
+          "net_of_trading_pct": -17.92
+        },
+        "best_period": {
+          "month": "2021-03",
+          "net_of_trading_pct": 26.44
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 141,
+              "terminal_wealth": 132.9999,
+              "max_drawdown": -0.2568,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 132.9999,
+          "terminal_wealth_min": 132.9999,
+          "terminal_wealth_max": 132.9999,
+          "max_drawdown_worst": -0.2568,
+          "n_ruined_phases": 0,
+          "n_phases": 1
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 42.373,
+            "t_block": 5.165
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 63.652,
+            "t_block": 1.9
+          },
+          "2022_2024": {
+            "n_months": 35,
+            "annualised_pct": 83.914,
+            "t_block": 3.584
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 35.85,
+          "2020_2021": 50.28,
+          "2022_2024": 62.5
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 44.11
+      },
+      "3m": {
+        "label": "hedged_unit@3m",
+        "n_periods": 139,
+        "median_names_per_month": 169,
+        "mean_beta_pre": 1.2669,
+        "mean_hedge_k": 1.0,
+        "turnover_sum_abs_dw_median": 0.4921,
+        "trade_cost_annualised_pct": 0.227,
+        "gross": {
+          "label": "gross",
+          "n_months": 139,
+          "mean_per_period_pct": 10.6828,
+          "annualised_pct": 50.079,
+          "annualised_linear_pct_incumbent_convention": 42.731,
+          "t_naive_OVERSTATED": 10.898,
+          "t_newey_west": 7.847,
+          "t_block": 6.376,
+          "t_block_range": [
+            5.38,
+            7.311
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8273
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 139,
+          "mean_per_period_pct": 10.6828,
+          "annualised_pct": 50.079,
+          "annualised_linear_pct_incumbent_convention": 42.731,
+          "t_naive_OVERSTATED": 10.898,
+          "t_newey_west": 7.847,
+          "t_block": 6.376,
+          "t_block_range": [
+            5.38,
+            7.311
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8273
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 139,
+          "mean_per_period_pct": 10.6059,
+          "annualised_pct": 49.663,
+          "annualised_linear_pct_incumbent_convention": 42.424,
+          "t_naive_OVERSTATED": 10.822,
+          "t_newey_west": 7.793,
+          "t_block": 6.332,
+          "t_block_range": [
+            5.339,
+            7.261
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8273
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 49.663,
+            "t_block": 6.332,
+            "terminal_wealth_median": 86.5818,
+            "terminal_wealth_min": 65.1983,
+            "max_drawdown_worst": -0.2972,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 46.975,
+            "t_block": 6.033,
+            "terminal_wealth_median": 70.1768,
+            "terminal_wealth_min": 52.726,
+            "max_drawdown_worst": -0.3022,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 43.011,
+            "t_block": 5.586,
+            "terminal_wealth_median": 51.1153,
+            "terminal_wealth_min": 38.2727,
+            "max_drawdown_worst": -0.3097,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 36.583,
+            "t_block": 4.841,
+            "terminal_wealth_median": 29.9917,
+            "terminal_wealth_min": 22.3243,
+            "max_drawdown_worst": -0.3258,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 24.381,
+            "t_block": 3.349,
+            "terminal_wealth_median": 10.1302,
+            "terminal_wealth_min": 7.447,
+            "max_drawdown_worst": -0.4038,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -7.364,
+            "t_block": -1.124,
+            "terminal_wealth_median": 0.3241,
+            "terminal_wealth_min": 0.2331,
+            "max_drawdown_worst": -0.8643,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 42.42,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -29.72
+        },
+        "best_period": {
+          "month": "2021-02",
+          "net_of_trading_pct": 34.06
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 47,
+              "terminal_wealth": 100.0222,
+              "max_drawdown": -0.2618,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 46,
+              "terminal_wealth": 89.3677,
+              "max_drawdown": -0.1418,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 46,
+              "terminal_wealth": 67.3891,
+              "max_drawdown": -0.2962,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 89.3677,
+          "terminal_wealth_min": 67.3891,
+          "terminal_wealth_max": 100.0222,
+          "max_drawdown_worst": -0.2962,
+          "n_ruined_phases": 0,
+          "n_phases": 3
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 39.192,
+            "t_block": 5.598
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 55.072,
+            "t_block": 1.843
+          },
+          "2022_2024": {
+            "n_months": 33,
+            "annualised_pct": 74.945,
+            "t_block": 3.979
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 34.47,
+          "2020_2021": 46.37,
+          "2022_2024": 60.03
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 42.08
+      },
+      "6m": {
+        "label": "hedged_unit@6m",
+        "n_periods": 136,
+        "median_names_per_month": 170,
+        "mean_beta_pre": 1.262,
+        "mean_hedge_k": 1.0,
+        "turnover_sum_abs_dw_median": 0.6943,
+        "trade_cost_annualised_pct": 0.156,
+        "gross": {
+          "label": "gross",
+          "n_months": 136,
+          "mean_per_period_pct": 19.7052,
+          "annualised_pct": 43.293,
+          "annualised_linear_pct_incumbent_convention": 39.41,
+          "t_naive_OVERSTATED": 15.553,
+          "t_newey_west": 8.108,
+          "t_block": 6.352,
+          "t_block_range": [
+            4.85,
+            7.132
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 136,
+          "mean_per_period_pct": 19.7052,
+          "annualised_pct": 43.293,
+          "annualised_linear_pct_incumbent_convention": 39.41,
+          "t_naive_OVERSTATED": 15.553,
+          "t_newey_west": 8.108,
+          "t_block": 6.352,
+          "t_block_range": [
+            4.85,
+            7.132
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 136,
+          "mean_per_period_pct": 19.6071,
+          "annualised_pct": 43.059,
+          "annualised_linear_pct_incumbent_convention": 39.214,
+          "t_naive_OVERSTATED": 15.481,
+          "t_newey_west": 8.072,
+          "t_block": 6.324,
+          "t_block_range": [
+            4.822,
+            7.103
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 43.059,
+            "t_block": 6.324,
+            "terminal_wealth_median": 57.3549,
+            "terminal_wealth_min": 31.0978,
+            "max_drawdown_worst": -0.2675,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 40.676,
+            "t_block": 6.002,
+            "terminal_wealth_median": 47.6659,
+            "terminal_wealth_min": 25.4501,
+            "max_drawdown_worst": -0.2846,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 37.141,
+            "t_block": 5.52,
+            "terminal_wealth_median": 35.9406,
+            "terminal_wealth_min": 18.7787,
+            "max_drawdown_worst": -0.3098,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 31.348,
+            "t_block": 4.716,
+            "terminal_wealth_median": 22.0502,
+            "terminal_wealth_min": 11.2101,
+            "max_drawdown_worst": -0.3509,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 20.137,
+            "t_block": 3.109,
+            "terminal_wealth_median": 8.03,
+            "terminal_wealth_min": 3.8508,
+            "max_drawdown_worst": -0.4293,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -10.495,
+            "t_block": -1.714,
+            "terminal_wealth_median": 0.2785,
+            "terminal_wealth_min": 0.1103,
+            "max_drawdown_worst": -0.8845,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 39.21,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -21.42
+        },
+        "best_period": {
+          "month": "2024-03",
+          "net_of_trading_pct": 53.95
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 23,
+              "terminal_wealth": 70.1105,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 23,
+              "terminal_wealth": 31.7117,
+              "max_drawdown": -0.1665,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 23,
+              "terminal_wealth": 32.5024,
+              "max_drawdown": -0.2654,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 23,
+              "terminal_wealth": 60.0535,
+              "max_drawdown": -0.0393,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 22,
+              "terminal_wealth": 58.6868,
+              "max_drawdown": -0.0848,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 22,
+              "terminal_wealth": 58.0587,
+              "max_drawdown": -0.0518,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 58.3727,
+          "terminal_wealth_min": 31.7117,
+          "terminal_wealth_max": 70.1105,
+          "max_drawdown_worst": -0.2654,
+          "n_ruined_phases": 0,
+          "n_phases": 6
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 35.388,
+            "t_block": 5.815
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 46.394,
+            "t_block": 1.755
+          },
+          "2022_2024": {
+            "n_months": 30,
+            "annualised_pct": 63.055,
+            "t_block": 4.954
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 32.71,
+          "2020_2021": 41.99,
+          "2022_2024": 55.39
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 38.98
+      },
+      "12m": {
+        "label": "hedged_unit@12m",
+        "n_periods": 130,
+        "median_names_per_month": 171,
+        "mean_beta_pre": 1.2469,
+        "mean_hedge_k": 1.0,
+        "turnover_sum_abs_dw_median": 0.9905,
+        "trade_cost_annualised_pct": 0.105,
+        "gross": {
+          "label": "gross",
+          "n_months": 130,
+          "mean_per_period_pct": 36.2848,
+          "annualised_pct": 36.285,
+          "annualised_linear_pct_incumbent_convention": 36.285,
+          "t_naive_OVERSTATED": 22.896,
+          "t_newey_west": 9.194,
+          "t_block": 6.735,
+          "t_block_range": [
+            3.829,
+            9.635
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 130,
+          "mean_per_period_pct": 36.2848,
+          "annualised_pct": 36.285,
+          "annualised_linear_pct_incumbent_convention": 36.285,
+          "t_naive_OVERSTATED": 22.896,
+          "t_newey_west": 9.194,
+          "t_block": 6.735,
+          "t_block_range": [
+            3.829,
+            9.635
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 130,
+          "mean_per_period_pct": 36.1602,
+          "annualised_pct": 36.16,
+          "annualised_linear_pct_incumbent_convention": 36.16,
+          "t_naive_OVERSTATED": 22.829,
+          "t_newey_west": 9.171,
+          "t_block": 6.717,
+          "t_block_range": [
+            3.814,
+            9.613
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 36.16,
+            "t_block": 6.717,
+            "terminal_wealth_median": 25.9656,
+            "terminal_wealth_min": 15.0845,
+            "max_drawdown_worst": -0.3354,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 34.16,
+            "t_block": 6.348,
+            "terminal_wealth_median": 22.2061,
+            "terminal_wealth_min": 12.6119,
+            "max_drawdown_worst": -0.3554,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 31.16,
+            "t_block": 5.794,
+            "terminal_wealth_median": 17.4863,
+            "terminal_wealth_min": 9.5831,
+            "max_drawdown_worst": -0.3854,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 26.16,
+            "t_block": 4.871,
+            "terminal_wealth_median": 11.4207,
+            "terminal_wealth_min": 5.9586,
+            "max_drawdown_worst": -0.4354,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 16.16,
+            "t_block": 3.026,
+            "terminal_wealth_median": 4.5118,
+            "terminal_wealth_min": 2.1373,
+            "max_drawdown_worst": -0.5354,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -13.84,
+            "t_block": -2.509,
+            "terminal_wealth_median": 0.1623,
+            "terminal_wealth_min": 0.0369,
+            "max_drawdown_worst": -0.953,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 36.16,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -33.54
+        },
+        "best_period": {
+          "month": "2023-06",
+          "net_of_trading_pct": 81.67
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 11,
+              "terminal_wealth": 29.0781,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 11,
+              "terminal_wealth": 20.9787,
+              "max_drawdown": -0.1301,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 11,
+              "terminal_wealth": 15.2555,
+              "max_drawdown": -0.334,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 11,
+              "terminal_wealth": 25.6514,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 11,
+              "terminal_wealth": 27.6575,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 11,
+              "terminal_wealth": 26.6033,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 6,
+              "n_rebalances": 11,
+              "terminal_wealth": 31.5277,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 7,
+              "n_rebalances": 11,
+              "terminal_wealth": 23.825,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 8,
+              "n_rebalances": 11,
+              "terminal_wealth": 31.7211,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 9,
+              "n_rebalances": 11,
+              "terminal_wealth": 37.497,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 10,
+              "n_rebalances": 10,
+              "terminal_wealth": 25.8232,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 11,
+              "n_rebalances": 10,
+              "terminal_wealth": 22.1325,
+              "max_drawdown": 0.0,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 26.2133,
+          "terminal_wealth_min": 15.2555,
+          "terminal_wealth_max": 37.497,
+          "max_drawdown_worst": -0.334,
+          "n_ruined_phases": 0,
+          "n_phases": 12
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 31.149,
+            "t_block": 7.028
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 37.48,
+            "t_block": null
+          },
+          "2022_2024": {
+            "n_months": 24,
+            "annualised_pct": 52.488,
+            "t_block": null
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 31.15,
+          "2020_2021": 37.48,
+          "2022_2024": 52.49
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 36.0
+      }
+    },
+    "hedged_beta": {
+      "1m": {
+        "label": "hedged_beta@1m",
+        "n_periods": 141,
+        "median_names_per_month": 168,
+        "mean_beta_pre": 1.2688,
+        "mean_hedge_k": 1.2688,
+        "turnover_sum_abs_dw_median": 0.2719,
+        "trade_cost_annualised_pct": 0.407,
+        "gross": {
+          "label": "gross",
+          "n_months": 141,
+          "mean_per_period_pct": 4.0991,
+          "annualised_pct": 61.944,
+          "annualised_linear_pct_incumbent_convention": 49.19,
+          "t_naive_OVERSTATED": 6.845,
+          "t_newey_west": 6.869,
+          "t_block": 6.845,
+          "t_block_range": [
+            6.845,
+            6.845
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7447
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 141,
+          "mean_per_period_pct": 3.7806,
+          "annualised_pct": 56.097,
+          "annualised_linear_pct_incumbent_convention": 45.367,
+          "t_naive_OVERSTATED": 6.253,
+          "t_newey_west": 6.275,
+          "t_block": 6.253,
+          "t_block_range": [
+            6.253,
+            6.253
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7163
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 141,
+          "mean_per_period_pct": 4.0398,
+          "annualised_pct": 60.84,
+          "annualised_linear_pct_incumbent_convention": 48.478,
+          "t_naive_OVERSTATED": 6.746,
+          "t_newey_west": 6.77,
+          "t_block": 6.746,
+          "t_block_range": [
+            6.746,
+            6.746
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7447
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 60.84,
+            "t_block": 6.746,
+            "terminal_wealth_median": 190.7014,
+            "terminal_wealth_min": 190.7014,
+            "max_drawdown_worst": -0.3605,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 57.776,
+            "t_block": 6.467,
+            "terminal_wealth_median": 151.9523,
+            "terminal_wealth_min": 151.9523,
+            "max_drawdown_worst": -0.3748,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 53.279,
+            "t_block": 6.05,
+            "terminal_wealth_median": 108.0034,
+            "terminal_wealth_min": 108.0034,
+            "max_drawdown_worst": -0.3956,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 46.044,
+            "t_block": 5.354,
+            "terminal_wealth_median": 61.0262,
+            "terminal_wealth_min": 61.0262,
+            "max_drawdown_worst": -0.4288,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 32.505,
+            "t_block": 3.963,
+            "terminal_wealth_median": 19.3476,
+            "terminal_wealth_min": 19.3476,
+            "max_drawdown_worst": -0.4904,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -1.512,
+            "t_block": -0.212,
+            "terminal_wealth_median": 0.5821,
+            "terminal_wealth_min": 0.5821,
+            "max_drawdown_worst": -0.8004,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 48.48,
+        "worst_period": {
+          "month": "2021-01",
+          "net_of_trading_pct": -18.56
+        },
+        "best_period": {
+          "month": "2021-03",
+          "net_of_trading_pct": 27.6
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 141,
+              "terminal_wealth": 206.7525,
+              "max_drawdown": -0.3554,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 206.7525,
+          "terminal_wealth_min": 206.7525,
+          "terminal_wealth_max": 206.7525,
+          "max_drawdown_worst": -0.3554,
+          "n_ruined_phases": 0,
+          "n_phases": 1
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 48.663,
+            "t_block": 6.006
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 54.641,
+            "t_block": 1.568
+          },
+          "2022_2024": {
+            "n_months": 35,
+            "annualised_pct": 98.65,
+            "t_block": 4.363
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 40.31,
+          "2020_2021": 44.4,
+          "2022_2024": 70.64
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 47.87
+      },
+      "3m": {
+        "label": "hedged_beta@3m",
+        "n_periods": 139,
+        "median_names_per_month": 169,
+        "mean_beta_pre": 1.2669,
+        "mean_hedge_k": 1.2669,
+        "turnover_sum_abs_dw_median": 0.4921,
+        "trade_cost_annualised_pct": 0.227,
+        "gross": {
+          "label": "gross",
+          "n_months": 139,
+          "mean_per_period_pct": 11.4817,
+          "annualised_pct": 54.459,
+          "annualised_linear_pct_incumbent_convention": 45.927,
+          "t_naive_OVERSTATED": 11.408,
+          "t_newey_west": 7.985,
+          "t_block": 6.703,
+          "t_block_range": [
+            5.54,
+            7.824
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8489
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 139,
+          "mean_per_period_pct": 10.6828,
+          "annualised_pct": 50.079,
+          "annualised_linear_pct_incumbent_convention": 42.731,
+          "t_naive_OVERSTATED": 10.898,
+          "t_newey_west": 7.847,
+          "t_block": 6.376,
+          "t_block_range": [
+            5.38,
+            7.311
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8273
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 139,
+          "mean_per_period_pct": 11.3995,
+          "annualised_pct": 54.004,
+          "annualised_linear_pct_incumbent_convention": 45.598,
+          "t_naive_OVERSTATED": 11.33,
+          "t_newey_west": 7.931,
+          "t_block": 6.658,
+          "t_block_range": [
+            5.499,
+            7.773
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8489
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 54.004,
+            "t_block": 6.658,
+            "terminal_wealth_median": 124.8761,
+            "terminal_wealth_min": 84.326,
+            "max_drawdown_worst": -0.3782,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 51.258,
+            "t_block": 6.366,
+            "terminal_wealth_median": 101.383,
+            "terminal_wealth_min": 68.2559,
+            "max_drawdown_worst": -0.3844,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 47.208,
+            "t_block": 5.929,
+            "terminal_wealth_median": 74.031,
+            "terminal_wealth_min": 49.6127,
+            "max_drawdown_worst": -0.3964,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 40.638,
+            "t_block": 5.2,
+            "terminal_wealth_median": 43.6229,
+            "terminal_wealth_min": 29.0047,
+            "max_drawdown_worst": -0.4207,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 28.162,
+            "t_block": 3.743,
+            "terminal_wealth_median": 14.865,
+            "terminal_wealth_min": 9.7202,
+            "max_drawdown_worst": -0.4728,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -4.33,
+            "t_block": -0.63,
+            "terminal_wealth_median": 0.464,
+            "terminal_wealth_min": 0.3086,
+            "max_drawdown_worst": -0.8361,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 45.6,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -37.82
+        },
+        "best_period": {
+          "month": "2024-03",
+          "net_of_trading_pct": 35.53
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 47,
+              "terminal_wealth": 138.0381,
+              "max_drawdown": -0.3088,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 46,
+              "terminal_wealth": 129.1408,
+              "max_drawdown": -0.1747,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 46,
+              "terminal_wealth": 87.3365,
+              "max_drawdown": -0.3773,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 129.1408,
+          "terminal_wealth_min": 87.3365,
+          "terminal_wealth_max": 138.0381,
+          "max_drawdown_worst": -0.3773,
+          "n_ruined_phases": 0,
+          "n_phases": 3
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 44.723,
+            "t_block": 6.372
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 50.543,
+            "t_block": 1.562
+          },
+          "2022_2024": {
+            "n_months": 33,
+            "annualised_pct": 82.27,
+            "t_block": 4.339
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 38.73,
+          "2020_2021": 43.07,
+          "2022_2024": 64.77
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 45.26
+      },
+      "6m": {
+        "label": "hedged_beta@6m",
+        "n_periods": 136,
+        "median_names_per_month": 170,
+        "mean_beta_pre": 1.262,
+        "mean_hedge_k": 1.262,
+        "turnover_sum_abs_dw_median": 0.6943,
+        "trade_cost_annualised_pct": 0.156,
+        "gross": {
+          "label": "gross",
+          "n_months": 136,
+          "mean_per_period_pct": 21.4334,
+          "annualised_pct": 47.461,
+          "annualised_linear_pct_incumbent_convention": 42.867,
+          "t_naive_OVERSTATED": 15.891,
+          "t_newey_west": 8.123,
+          "t_block": 6.536,
+          "t_block_range": [
+            4.71,
+            7.449
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 136,
+          "mean_per_period_pct": 19.7052,
+          "annualised_pct": 43.293,
+          "annualised_linear_pct_incumbent_convention": 39.41,
+          "t_naive_OVERSTATED": 15.553,
+          "t_newey_west": 8.108,
+          "t_block": 6.352,
+          "t_block_range": [
+            4.85,
+            7.132
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 136,
+          "mean_per_period_pct": 21.3301,
+          "annualised_pct": 47.21,
+          "annualised_linear_pct_incumbent_convention": 42.66,
+          "t_naive_OVERSTATED": 15.821,
+          "t_newey_west": 8.09,
+          "t_block": 6.508,
+          "t_block_range": [
+            4.684,
+            7.42
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9338
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 47.21,
+            "t_block": 6.508,
+            "terminal_wealth_median": 77.2287,
+            "terminal_wealth_min": 38.6596,
+            "max_drawdown_worst": -0.38,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 44.793,
+            "t_block": 6.204,
+            "terminal_wealth_median": 64.0018,
+            "terminal_wealth_min": 31.6445,
+            "max_drawdown_worst": -0.3958,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 41.206,
+            "t_block": 5.748,
+            "terminal_wealth_median": 48.1414,
+            "terminal_wealth_min": 23.3543,
+            "max_drawdown_worst": -0.4192,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 35.327,
+            "t_block": 4.988,
+            "terminal_wealth_median": 29.7061,
+            "terminal_wealth_min": 13.9436,
+            "max_drawdown_worst": -0.4571,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 23.944,
+            "t_block": 3.469,
+            "terminal_wealth_median": 10.9509,
+            "terminal_wealth_min": 4.7867,
+            "max_drawdown_worst": -0.5292,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -7.205,
+            "t_block": -1.091,
+            "terminal_wealth_median": 0.4069,
+            "terminal_wealth_min": 0.1358,
+            "max_drawdown_worst": -0.8715,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 42.66,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -32.02
+        },
+        "best_period": {
+          "month": "2024-03",
+          "net_of_trading_pct": 59.82
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 23,
+              "terminal_wealth": 100.4198,
+              "max_drawdown": -0.036,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 23,
+              "terminal_wealth": 45.6761,
+              "max_drawdown": -0.2119,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 23,
+              "terminal_wealth": 39.4776,
+              "max_drawdown": -0.3782,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 23,
+              "terminal_wealth": 80.6367,
+              "max_drawdown": -0.1005,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 22,
+              "terminal_wealth": 76.8084,
+              "max_drawdown": -0.1002,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 22,
+              "terminal_wealth": 80.7135,
+              "max_drawdown": -0.0532,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 78.7226,
+          "terminal_wealth_min": 39.4776,
+          "terminal_wealth_max": 100.4198,
+          "max_drawdown_worst": -0.3782,
+          "n_ruined_phases": 0,
+          "n_phases": 6
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 40.705,
+            "t_block": 6.718
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 42.624,
+            "t_block": 1.439
+          },
+          "2022_2024": {
+            "n_months": 30,
+            "annualised_pct": 69.826,
+            "t_block": 4.531
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 37.24,
+          "2020_2021": 38.85,
+          "2022_2024": 60.63
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 42.43
+      },
+      "12m": {
+        "label": "hedged_beta@12m",
+        "n_periods": 130,
+        "median_names_per_month": 171,
+        "mean_beta_pre": 1.2469,
+        "mean_hedge_k": 1.2469,
+        "turnover_sum_abs_dw_median": 0.9905,
+        "trade_cost_annualised_pct": 0.105,
+        "gross": {
+          "label": "gross",
+          "n_months": 130,
+          "mean_per_period_pct": 39.2115,
+          "annualised_pct": 39.212,
+          "annualised_linear_pct_incumbent_convention": 39.212,
+          "t_naive_OVERSTATED": 23.193,
+          "t_newey_west": 9.275,
+          "t_block": 7.075,
+          "t_block_range": [
+            3.384,
+            9.925
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9692
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 130,
+          "mean_per_period_pct": 36.2848,
+          "annualised_pct": 36.285,
+          "annualised_linear_pct_incumbent_convention": 36.285,
+          "t_naive_OVERSTATED": 22.896,
+          "t_newey_west": 9.194,
+          "t_block": 6.735,
+          "t_block_range": [
+            3.829,
+            9.635
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 130,
+          "mean_per_period_pct": 39.0819,
+          "annualised_pct": 39.082,
+          "annualised_linear_pct_incumbent_convention": 39.082,
+          "t_naive_OVERSTATED": 23.127,
+          "t_newey_west": 9.251,
+          "t_block": 7.056,
+          "t_block_range": [
+            3.371,
+            9.902
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9692
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 39.082,
+            "t_block": 7.056,
+            "terminal_wealth_median": 31.8672,
+            "terminal_wealth_min": 14.6927,
+            "max_drawdown_worst": -0.5169,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 37.082,
+            "t_block": 6.697,
+            "terminal_wealth_median": 27.3192,
+            "terminal_wealth_min": 12.1952,
+            "max_drawdown_worst": -0.5369,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 34.082,
+            "t_block": 6.159,
+            "terminal_wealth_median": 21.5932,
+            "terminal_wealth_min": 9.1523,
+            "max_drawdown_worst": -0.5669,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 29.082,
+            "t_block": 5.262,
+            "terminal_wealth_median": 14.4184,
+            "terminal_wealth_min": 5.5474,
+            "max_drawdown_worst": -0.6169,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 19.082,
+            "t_block": 3.469,
+            "terminal_wealth_median": 5.8923,
+            "terminal_wealth_min": 1.8375,
+            "max_drawdown_worst": -0.7169,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -10.918,
+            "t_block": -1.912,
+            "terminal_wealth_median": 0.2517,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.8227,
+            "n_ruined_phases": 1
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 39.08,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -51.69
+        },
+        "best_period": {
+          "month": "2023-06",
+          "net_of_trading_pct": 90.38
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 11,
+              "terminal_wealth": 40.2935,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 11,
+              "terminal_wealth": 29.2271,
+              "max_drawdown": -0.0882,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 11,
+              "terminal_wealth": 14.8728,
+              "max_drawdown": -0.5155,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 11,
+              "terminal_wealth": 30.6075,
+              "max_drawdown": -0.044,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 11,
+              "terminal_wealth": 33.5634,
+              "max_drawdown": -0.0316,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 11,
+              "terminal_wealth": 34.7456,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 6,
+              "n_rebalances": 11,
+              "terminal_wealth": 39.1326,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 7,
+              "n_rebalances": 11,
+              "terminal_wealth": 30.6424,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 8,
+              "n_rebalances": 11,
+              "terminal_wealth": 38.7951,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 9,
+              "n_rebalances": 11,
+              "terminal_wealth": 46.9608,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 10,
+              "n_rebalances": 10,
+              "terminal_wealth": 30.7913,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 11,
+              "n_rebalances": 10,
+              "terminal_wealth": 27.3485,
+              "max_drawdown": 0.0,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 32.1774,
+          "terminal_wealth_min": 14.8728,
+          "terminal_wealth_max": 46.9608,
+          "max_drawdown_worst": -0.5155,
+          "n_ruined_phases": 0,
+          "n_phases": 12
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 35.434,
+            "t_block": 8.623
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 32.884,
+            "t_block": null
+          },
+          "2022_2024": {
+            "n_months": 24,
+            "annualised_pct": 57.532,
+            "t_block": null
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 35.43,
+          "2020_2021": 32.88,
+          "2022_2024": 57.53
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 38.92
+      }
+    },
+    "liq_floored_naive": {
+      "1m": {
+        "label": "liq_floored_naive@1m",
+        "n_periods": 141,
+        "median_names_per_month": 63,
+        "mean_beta_pre": 1.4774,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.4047,
+        "trade_cost_annualised_pct": 0.541,
+        "gross": {
+          "label": "gross",
+          "n_months": 141,
+          "mean_per_period_pct": 2.8527,
+          "annualised_pct": 40.148,
+          "annualised_linear_pct_incumbent_convention": 34.232,
+          "t_naive_OVERSTATED": 3.136,
+          "t_newey_west": 3.147,
+          "t_block": 3.136,
+          "t_block_range": [
+            3.136,
+            3.136
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.6312
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 141,
+          "mean_per_period_pct": 4.2702,
+          "annualised_pct": 65.168,
+          "annualised_linear_pct_incumbent_convention": 51.243,
+          "t_naive_OVERSTATED": 6.216,
+          "t_newey_west": 6.239,
+          "t_block": 6.216,
+          "t_block_range": [
+            6.216,
+            6.216
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7234
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 141,
+          "mean_per_period_pct": 2.8076,
+          "annualised_pct": 39.413,
+          "annualised_linear_pct_incumbent_convention": 33.691,
+          "t_naive_OVERSTATED": 3.085,
+          "t_newey_west": 3.096,
+          "t_block": 3.085,
+          "t_block_range": [
+            3.085,
+            3.085
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.6312
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 39.413,
+            "t_block": 3.085,
+            "terminal_wealth_median": 22.0875,
+            "terminal_wealth_min": 22.0875,
+            "max_drawdown_worst": -0.6219,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 36.725,
+            "t_block": 2.902,
+            "terminal_wealth_median": 17.523,
+            "terminal_wealth_min": 17.523,
+            "max_drawdown_worst": -0.6283,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 32.782,
+            "t_block": 2.628,
+            "terminal_wealth_median": 12.3734,
+            "terminal_wealth_min": 12.3734,
+            "max_drawdown_worst": -0.6376,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 26.441,
+            "t_block": 2.17,
+            "terminal_wealth_median": 6.9148,
+            "terminal_wealth_min": 6.9148,
+            "max_drawdown_worst": -0.6527,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 14.584,
+            "t_block": 1.254,
+            "terminal_wealth_median": 2.1437,
+            "terminal_wealth_min": 2.1437,
+            "max_drawdown_worst": -0.6813,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -15.143,
+            "t_block": -1.494,
+            "terminal_wealth_median": 0.0601,
+            "terminal_wealth_min": 0.0601,
+            "max_drawdown_worst": -0.9625,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 33.69,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -35.06
+        },
+        "best_period": {
+          "month": "2020-02",
+          "net_of_trading_pct": 32.05
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 141,
+              "terminal_wealth": 23.5269,
+              "max_drawdown": -0.6193,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 23.5269,
+          "terminal_wealth_min": 23.5269,
+          "terminal_wealth_max": 23.5269,
+          "max_drawdown_worst": -0.6193,
+          "n_ruined_phases": 0,
+          "n_phases": 1
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 27.064,
+            "t_block": 2.503
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 28.278,
+            "t_block": 0.612
+          },
+          "2022_2024": {
+            "n_months": 35,
+            "annualised_pct": 82.772,
+            "t_block": 2.268
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 24.19,
+          "2020_2021": 25.16,
+          "2022_2024": 61.85
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 32.88
+      },
+      "3m": {
+        "label": "liq_floored_naive@3m",
+        "n_periods": 139,
+        "median_names_per_month": 63,
+        "mean_beta_pre": 1.4755,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.6462,
+        "trade_cost_annualised_pct": 0.27,
+        "gross": {
+          "label": "gross",
+          "n_months": 139,
+          "mean_per_period_pct": 8.5243,
+          "annualised_pct": 38.71,
+          "annualised_linear_pct_incumbent_convention": 34.097,
+          "t_naive_OVERSTATED": 5.99,
+          "t_newey_west": 4.424,
+          "t_block": 3.517,
+          "t_block_range": [
+            3.14,
+            3.779
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.7194
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 139,
+          "mean_per_period_pct": 12.1506,
+          "annualised_pct": 58.2,
+          "annualised_linear_pct_incumbent_convention": 48.602,
+          "t_naive_OVERSTATED": 11.442,
+          "t_newey_west": 8.029,
+          "t_block": 6.614,
+          "t_block_range": [
+            6.4,
+            6.953
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8849
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 139,
+          "mean_per_period_pct": 8.4568,
+          "annualised_pct": 38.365,
+          "annualised_linear_pct_incumbent_convention": 33.827,
+          "t_naive_OVERSTATED": 5.943,
+          "t_newey_west": 4.39,
+          "t_block": 3.489,
+          "t_block_range": [
+            3.117,
+            3.745
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.7194
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 38.365,
+            "t_block": 3.489,
+            "terminal_wealth_median": 19.5364,
+            "terminal_wealth_min": 15.3356,
+            "max_drawdown_worst": -0.8205,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 35.832,
+            "t_block": 3.28,
+            "terminal_wealth_median": 15.7123,
+            "terminal_wealth_min": 12.1538,
+            "max_drawdown_worst": -0.827,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 32.096,
+            "t_block": 2.966,
+            "terminal_wealth_median": 11.3102,
+            "terminal_wealth_min": 8.548,
+            "max_drawdown_worst": -0.8364,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 26.042,
+            "t_block": 2.444,
+            "terminal_wealth_median": 6.5042,
+            "terminal_wealth_min": 4.7129,
+            "max_drawdown_worst": -0.8517,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 14.561,
+            "t_block": 1.4,
+            "terminal_wealth_median": 2.1069,
+            "terminal_wealth_min": 1.3814,
+            "max_drawdown_worst": -0.8803,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -15.218,
+            "t_block": -1.733,
+            "terminal_wealth_median": 0.0599,
+            "terminal_wealth_min": 0.0228,
+            "max_drawdown_worst": -0.9897,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 33.83,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -80.65
+        },
+        "best_period": {
+          "month": "2023-07",
+          "net_of_trading_pct": 45.8
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 47,
+              "terminal_wealth": 29.0671,
+              "max_drawdown": -0.5448,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 46,
+              "terminal_wealth": 20.1185,
+              "max_drawdown": -0.2403,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 46,
+              "terminal_wealth": 15.8375,
+              "max_drawdown": -0.8192,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 20.1185,
+          "terminal_wealth_min": 15.8375,
+          "terminal_wealth_max": 29.0671,
+          "max_drawdown_worst": -0.8192,
+          "n_ruined_phases": 0,
+          "n_phases": 3
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 27.198,
+            "t_block": 2.778
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 22.91,
+            "t_block": 0.683
+          },
+          "2022_2024": {
+            "n_months": 33,
+            "annualised_pct": 83.032,
+            "t_block": 3.496
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 24.8,
+          "2020_2021": 21.17,
+          "2022_2024": 65.26
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 33.42
+      },
+      "6m": {
+        "label": "liq_floored_naive@6m",
+        "n_periods": 136,
+        "median_names_per_month": 64,
+        "mean_beta_pre": 1.4744,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 0.8125,
+        "trade_cost_annualised_pct": 0.175,
+        "gross": {
+          "label": "gross",
+          "n_months": 136,
+          "mean_per_period_pct": 15.4191,
+          "annualised_pct": 33.216,
+          "annualised_linear_pct_incumbent_convention": 30.838,
+          "t_naive_OVERSTATED": 8.212,
+          "t_newey_west": 4.368,
+          "t_block": 3.609,
+          "t_block_range": [
+            1.824,
+            4.887
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.7647
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 136,
+          "mean_per_period_pct": 22.4858,
+          "annualised_pct": 50.028,
+          "annualised_linear_pct_incumbent_convention": 44.972,
+          "t_naive_OVERSTATED": 15.391,
+          "t_newey_west": 8.094,
+          "t_block": 6.496,
+          "t_block_range": [
+            4.002,
+            8.249
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9559
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 136,
+          "mean_per_period_pct": 15.3315,
+          "annualised_pct": 33.013,
+          "annualised_linear_pct_incumbent_convention": 30.663,
+          "t_naive_OVERSTATED": 8.166,
+          "t_newey_west": 4.344,
+          "t_block": 3.59,
+          "t_block_range": [
+            1.808,
+            4.863
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.7647
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 33.013,
+            "t_block": 3.59,
+            "terminal_wealth_median": 22.0266,
+            "terminal_wealth_min": 4.2179,
+            "max_drawdown_worst": -0.8613,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 30.717,
+            "t_block": 3.361,
+            "terminal_wealth_median": 18.1406,
+            "terminal_wealth_min": 3.3625,
+            "max_drawdown_worst": -0.8713,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 27.309,
+            "t_block": 3.018,
+            "terminal_wealth_median": 13.5135,
+            "terminal_wealth_min": 2.3821,
+            "max_drawdown_worst": -0.8859,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 21.73,
+            "t_block": 2.446,
+            "terminal_wealth_median": 8.197,
+            "terminal_wealth_min": 1.3234,
+            "max_drawdown_worst": -0.9092,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 10.947,
+            "t_block": 1.301,
+            "terminal_wealth_median": 2.8325,
+            "terminal_wealth_min": 0.3056,
+            "max_drawdown_worst": -0.952,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -18.402,
+            "t_block": -2.132,
+            "terminal_wealth_median": 0.0811,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.992,
+            "n_ruined_phases": 1
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 30.66,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -83.54
+        },
+        "best_period": {
+          "month": "2021-11",
+          "net_of_trading_pct": 56.95
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 23,
+              "terminal_wealth": 25.6905,
+              "max_drawdown": -0.1665,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 23,
+              "terminal_wealth": 4.3072,
+              "max_drawdown": -0.5862,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 23,
+              "terminal_wealth": 5.8125,
+              "max_drawdown": -0.86,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 23,
+              "terminal_wealth": 33.949,
+              "max_drawdown": -0.1938,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 22,
+              "terminal_wealth": 24.0906,
+              "max_drawdown": -0.2037,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 22,
+              "terminal_wealth": 20.6773,
+              "max_drawdown": -0.0879,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 22.3839,
+          "terminal_wealth_min": 4.3072,
+          "terminal_wealth_max": 33.949,
+          "max_drawdown_worst": -0.86,
+          "n_ruined_phases": 0,
+          "n_phases": 6
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 25.535,
+            "t_block": 3.073
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 25.754,
+            "t_block": 0.783
+          },
+          "2022_2024": {
+            "n_months": 30,
+            "annualised_pct": 60.989,
+            "t_block": 5.274
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 24.08,
+          "2020_2021": 24.28,
+          "2022_2024": 53.76
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 30.4
+      },
+      "12m": {
+        "label": "liq_floored_naive@12m",
+        "n_periods": 130,
+        "median_names_per_month": 66,
+        "mean_beta_pre": 1.4578,
+        "mean_hedge_k": 0.0,
+        "turnover_sum_abs_dw_median": 1.0584,
+        "trade_cost_annualised_pct": 0.113,
+        "gross": {
+          "label": "gross",
+          "n_months": 130,
+          "mean_per_period_pct": 27.1465,
+          "annualised_pct": 27.147,
+          "annualised_linear_pct_incumbent_convention": 27.147,
+          "t_naive_OVERSTATED": 10.418,
+          "t_newey_west": 4.344,
+          "t_block": 3.538,
+          "t_block_range": [
+            1.17,
+            7.15
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.8692
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 130,
+          "mean_per_period_pct": 41.38,
+          "annualised_pct": 41.38,
+          "annualised_linear_pct_incumbent_convention": 41.38,
+          "t_naive_OVERSTATED": 21.704,
+          "t_newey_west": 8.896,
+          "t_block": 6.677,
+          "t_block_range": [
+            3.52,
+            10.035
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9769
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 130,
+          "mean_per_period_pct": 27.0337,
+          "annualised_pct": 27.034,
+          "annualised_linear_pct_incumbent_convention": 27.034,
+          "t_naive_OVERSTATED": 10.377,
+          "t_newey_west": 4.328,
+          "t_block": 3.526,
+          "t_block_range": [
+            1.163,
+            7.136
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.8692
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 27.034,
+            "t_block": 3.526,
+            "terminal_wealth_median": 10.7741,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.5178,
+            "n_ruined_phases": 1
+          },
+          "2": {
+            "annualised_pct": 25.034,
+            "t_block": 3.277,
+            "terminal_wealth_median": 8.9738,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.5378,
+            "n_ruined_phases": 1
+          },
+          "5": {
+            "annualised_pct": 22.034,
+            "t_block": 2.902,
+            "terminal_wealth_median": 6.7797,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.5678,
+            "n_ruined_phases": 1
+          },
+          "10": {
+            "annualised_pct": 17.034,
+            "t_block": 2.279,
+            "terminal_wealth_median": 4.1759,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.6178,
+            "n_ruined_phases": 1
+          },
+          "20": {
+            "annualised_pct": 7.034,
+            "t_block": 1.031,
+            "terminal_wealth_median": 1.4694,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.7178,
+            "n_ruined_phases": 1
+          },
+          "50": {
+            "annualised_pct": -22.966,
+            "t_block": -2.712,
+            "terminal_wealth_median": 0.0255,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.9946,
+            "n_ruined_phases": 2
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 27.03,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -130.26
+        },
+        "best_period": {
+          "month": "2021-06",
+          "net_of_trading_pct": 73.41
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 11,
+              "terminal_wealth": 11.5181,
+              "max_drawdown": -0.0508,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 11,
+              "terminal_wealth": 7.1089,
+              "max_drawdown": -0.4582,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 11,
+              "terminal_wealth": 0.0,
+              "max_drawdown": 0.0,
+              "ruined": true
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 11,
+              "terminal_wealth": 10.5072,
+              "max_drawdown": -0.2236,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 11,
+              "terminal_wealth": 8.6697,
+              "max_drawdown": -0.3687,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 11,
+              "terminal_wealth": 7.591,
+              "max_drawdown": -0.1212,
+              "ruined": false
+            },
+            {
+              "phase": 6,
+              "n_rebalances": 11,
+              "terminal_wealth": 11.2612,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 7,
+              "n_rebalances": 11,
+              "terminal_wealth": 4.7307,
+              "max_drawdown": -0.5162,
+              "ruined": false
+            },
+            {
+              "phase": 8,
+              "n_rebalances": 11,
+              "terminal_wealth": 18.2453,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 9,
+              "n_rebalances": 11,
+              "terminal_wealth": 18.9024,
+              "max_drawdown": -0.0042,
+              "ruined": false
+            },
+            {
+              "phase": 10,
+              "n_rebalances": 10,
+              "terminal_wealth": 17.6091,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 11,
+              "n_rebalances": 10,
+              "terminal_wealth": 15.4613,
+              "max_drawdown": 0.0,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 10.8842,
+          "terminal_wealth_min": 0.0,
+          "terminal_wealth_max": 18.9024,
+          "max_drawdown_worst": -0.5162,
+          "n_ruined_phases": 1,
+          "n_phases": 12
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 21.757,
+            "t_block": 3.69
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 25.458,
+            "t_block": null
+          },
+          "2022_2024": {
+            "n_months": 24,
+            "annualised_pct": 46.948,
+            "t_block": null
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 21.76,
+          "2020_2021": 25.46,
+          "2022_2024": 46.95
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 26.86
+      }
+    },
+    "liq_floored_hedged_beta": {
+      "1m": {
+        "label": "liq_floored_hedged_beta@1m",
+        "n_periods": 141,
+        "median_names_per_month": 63,
+        "mean_beta_pre": 1.4774,
+        "mean_hedge_k": 1.4774,
+        "turnover_sum_abs_dw_median": 0.4047,
+        "trade_cost_annualised_pct": 0.541,
+        "gross": {
+          "label": "gross",
+          "n_months": 141,
+          "mean_per_period_pct": 4.8547,
+          "annualised_pct": 76.627,
+          "annualised_linear_pct_incumbent_convention": 58.257,
+          "t_naive_OVERSTATED": 7.244,
+          "t_newey_west": 7.27,
+          "t_block": 7.244,
+          "t_block_range": [
+            7.244,
+            7.244
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.766
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 141,
+          "mean_per_period_pct": 4.2702,
+          "annualised_pct": 65.168,
+          "annualised_linear_pct_incumbent_convention": 51.243,
+          "t_naive_OVERSTATED": 6.216,
+          "t_newey_west": 6.239,
+          "t_block": 6.216,
+          "t_block_range": [
+            6.216,
+            6.216
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7234
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 141,
+          "mean_per_period_pct": 4.7801,
+          "annualised_pct": 75.124,
+          "annualised_linear_pct_incumbent_convention": 57.361,
+          "t_naive_OVERSTATED": 7.133,
+          "t_newey_west": 7.158,
+          "t_block": 7.133,
+          "t_block_range": [
+            7.133,
+            7.133
+          ],
+          "n_effective_date_blocks": 141,
+          "share_periods_positive": 0.7589
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 75.124,
+            "t_block": 7.133,
+            "terminal_wealth_median": 479.4201,
+            "terminal_wealth_min": 479.4201,
+            "max_drawdown_worst": -0.4331,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 71.811,
+            "t_block": 6.884,
+            "terminal_wealth_median": 382.5226,
+            "terminal_wealth_min": 382.5226,
+            "max_drawdown_worst": -0.4384,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 66.948,
+            "t_block": 6.511,
+            "terminal_wealth_median": 272.4403,
+            "terminal_wealth_min": 272.4403,
+            "max_drawdown_worst": -0.4481,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 59.123,
+            "t_block": 5.889,
+            "terminal_wealth_median": 154.4659,
+            "terminal_wealth_min": 154.4659,
+            "max_drawdown_worst": -0.4809,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 44.472,
+            "t_block": 4.646,
+            "terminal_wealth_median": 49.3107,
+            "terminal_wealth_min": 49.3107,
+            "max_drawdown_worst": -0.5411,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": 7.615,
+            "t_block": 0.915,
+            "terminal_wealth_median": 1.5155,
+            "terminal_wealth_min": 1.5155,
+            "max_drawdown_worst": -0.7395,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 57.36,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -19.13
+        },
+        "best_period": {
+          "month": "2021-03",
+          "net_of_trading_pct": 27.6
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 141,
+              "terminal_wealth": 530.4123,
+              "max_drawdown": -0.4302,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 530.4123,
+          "terminal_wealth_min": 530.4123,
+          "terminal_wealth_max": 530.4123,
+          "max_drawdown_worst": -0.4302,
+          "n_ruined_phases": 0,
+          "n_phases": 1
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 58.466,
+            "t_block": 7.431
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 43.95,
+            "t_block": 1.129
+          },
+          "2022_2024": {
+            "n_months": 35,
+            "annualised_pct": 149.955,
+            "t_block": 4.981
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 46.93,
+          "2020_2021": 36.99,
+          "2022_2024": 95.2
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 56.55
+      },
+      "3m": {
+        "label": "liq_floored_hedged_beta@3m",
+        "n_periods": 139,
+        "median_names_per_month": 63,
+        "mean_beta_pre": 1.4755,
+        "mean_hedge_k": 1.4755,
+        "turnover_sum_abs_dw_median": 0.6462,
+        "trade_cost_annualised_pct": 0.27,
+        "gross": {
+          "label": "gross",
+          "n_months": 139,
+          "mean_per_period_pct": 13.643,
+          "annualised_pct": 66.79,
+          "annualised_linear_pct_incumbent_convention": 54.572,
+          "t_naive_OVERSTATED": 12.437,
+          "t_newey_west": 8.347,
+          "t_block": 7.265,
+          "t_block_range": [
+            6.692,
+            8.145
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.9424
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 139,
+          "mean_per_period_pct": 12.1506,
+          "annualised_pct": 58.2,
+          "annualised_linear_pct_incumbent_convention": 48.602,
+          "t_naive_OVERSTATED": 11.442,
+          "t_newey_west": 8.029,
+          "t_block": 6.614,
+          "t_block_range": [
+            6.4,
+            6.953
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.8849
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 139,
+          "mean_per_period_pct": 13.5461,
+          "annualised_pct": 66.222,
+          "annualised_linear_pct_incumbent_convention": 54.184,
+          "t_naive_OVERSTATED": 12.354,
+          "t_newey_west": 8.292,
+          "t_block": 7.216,
+          "t_block_range": [
+            6.648,
+            8.086
+          ],
+          "n_effective_date_blocks": 46,
+          "share_periods_positive": 0.9424
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 66.222,
+            "t_block": 7.216,
+            "terminal_wealth_median": 260.8646,
+            "terminal_wealth_min": 204.6641,
+            "max_drawdown_worst": -0.4916,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 63.314,
+            "t_block": 6.948,
+            "terminal_wealth_median": 212.1008,
+            "terminal_wealth_min": 166.5051,
+            "max_drawdown_worst": -0.4966,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 59.023,
+            "t_block": 6.547,
+            "terminal_wealth_median": 155.2174,
+            "terminal_wealth_min": 121.9663,
+            "max_drawdown_worst": -0.5041,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 52.059,
+            "t_block": 5.877,
+            "terminal_wealth_median": 91.7882,
+            "terminal_wealth_min": 72.2523,
+            "max_drawdown_worst": -0.5166,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 38.822,
+            "t_block": 4.538,
+            "terminal_wealth_median": 31.4894,
+            "terminal_wealth_min": 24.8926,
+            "max_drawdown_worst": -0.5497,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": 4.251,
+            "t_block": 0.522,
+            "terminal_wealth_median": 1.0768,
+            "terminal_wealth_min": 0.8686,
+            "max_drawdown_worst": -0.7829,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 54.18,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -49.16
+        },
+        "best_period": {
+          "month": "2024-02",
+          "net_of_trading_pct": 44.84
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 47,
+              "terminal_wealth": 334.7752,
+              "max_drawdown": -0.2903,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 46,
+              "terminal_wealth": 212.9599,
+              "max_drawdown": -0.2321,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 46,
+              "terminal_wealth": 271.4899,
+              "max_drawdown": -0.4905,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 271.4899,
+          "terminal_wealth_min": 212.9599,
+          "terminal_wealth_max": 334.7752,
+          "max_drawdown_worst": -0.4905,
+          "n_ruined_phases": 0,
+          "n_phases": 3
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 51.916,
+            "t_block": 8.003
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 50.182,
+            "t_block": 1.323
+          },
+          "2022_2024": {
+            "n_months": 33,
+            "annualised_pct": 120.608,
+            "t_block": 5.475
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 44.08,
+          "2020_2021": 42.81,
+          "2022_2024": 87.49
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 53.78
+      },
+      "6m": {
+        "label": "liq_floored_hedged_beta@6m",
+        "n_periods": 136,
+        "median_names_per_month": 64,
+        "mean_beta_pre": 1.4744,
+        "mean_hedge_k": 1.4744,
+        "turnover_sum_abs_dw_median": 0.8125,
+        "trade_cost_annualised_pct": 0.175,
+        "gross": {
+          "label": "gross",
+          "n_months": 136,
+          "mean_per_period_pct": 25.6993,
+          "annualised_pct": 58.003,
+          "annualised_linear_pct_incumbent_convention": 51.399,
+          "t_naive_OVERSTATED": 16.607,
+          "t_newey_west": 8.366,
+          "t_block": 6.895,
+          "t_block_range": [
+            5.23,
+            8.243
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9632
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 136,
+          "mean_per_period_pct": 22.4858,
+          "annualised_pct": 50.028,
+          "annualised_linear_pct_incumbent_convention": 44.972,
+          "t_naive_OVERSTATED": 15.391,
+          "t_newey_west": 8.094,
+          "t_block": 6.496,
+          "t_block_range": [
+            4.002,
+            8.249
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9559
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 136,
+          "mean_per_period_pct": 25.5822,
+          "annualised_pct": 57.709,
+          "annualised_linear_pct_incumbent_convention": 51.164,
+          "t_naive_OVERSTATED": 16.538,
+          "t_newey_west": 8.333,
+          "t_block": 6.867,
+          "t_block_range": [
+            5.2,
+            8.211
+          ],
+          "n_effective_date_blocks": 22,
+          "share_periods_positive": 0.9632
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 57.709,
+            "t_block": 6.867,
+            "terminal_wealth_median": 145.2477,
+            "terminal_wealth_min": 57.2132,
+            "max_drawdown_worst": -0.4235,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 55.207,
+            "t_block": 6.599,
+            "terminal_wealth_median": 121.6497,
+            "terminal_wealth_min": 47.0126,
+            "max_drawdown_worst": -0.4335,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 51.492,
+            "t_block": 6.198,
+            "terminal_wealth_median": 92.9873,
+            "terminal_wealth_min": 34.9036,
+            "max_drawdown_worst": -0.4485,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 45.401,
+            "t_block": 5.529,
+            "terminal_wealth_median": 58.9762,
+            "terminal_wealth_min": 21.0564,
+            "max_drawdown_worst": -0.4735,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 33.592,
+            "t_block": 4.19,
+            "terminal_wealth_median": 23.0296,
+            "terminal_wealth_min": 7.3941,
+            "max_drawdown_worst": -0.5356,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": 1.168,
+            "t_block": 0.175,
+            "terminal_wealth_median": 1.0437,
+            "terminal_wealth_min": 0.2293,
+            "max_drawdown_worst": -0.8105,
+            "n_ruined_phases": 0
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 51.16,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -42.35
+        },
+        "best_period": {
+          "month": "2023-12",
+          "net_of_trading_pct": 85.36
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 23,
+              "terminal_wealth": 213.6804,
+              "max_drawdown": -0.0883,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 23,
+              "terminal_wealth": 58.5791,
+              "max_drawdown": -0.236,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 23,
+              "terminal_wealth": 105.2106,
+              "max_drawdown": -0.4221,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 23,
+              "terminal_wealth": 260.6236,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 22,
+              "terminal_wealth": 150.5651,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 22,
+              "terminal_wealth": 145.7648,
+              "max_drawdown": 0.0,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 148.165,
+          "terminal_wealth_min": 58.5791,
+          "terminal_wealth_max": 260.6236,
+          "max_drawdown_worst": -0.4221,
+          "n_ruined_phases": 0,
+          "n_phases": 6
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 47.52,
+            "t_block": 7.86
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 48.255,
+            "t_block": 1.736
+          },
+          "2022_2024": {
+            "n_months": 30,
+            "annualised_pct": 95.814,
+            "t_block": 4.546
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 42.92,
+          "2020_2021": 43.52,
+          "2022_2024": 79.87
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 50.9
+      },
+      "12m": {
+        "label": "liq_floored_hedged_beta@12m",
+        "n_periods": 130,
+        "median_names_per_month": 66,
+        "mean_beta_pre": 1.4578,
+        "mean_hedge_k": 1.4578,
+        "turnover_sum_abs_dw_median": 1.0584,
+        "trade_cost_annualised_pct": 0.113,
+        "gross": {
+          "label": "gross",
+          "n_months": 130,
+          "mean_per_period_pct": 47.4224,
+          "annualised_pct": 47.422,
+          "annualised_linear_pct_incumbent_convention": 47.422,
+          "t_naive_OVERSTATED": 22.208,
+          "t_newey_west": 8.915,
+          "t_block": 6.961,
+          "t_block_range": [
+            3.275,
+            9.743
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "vs_short_market_paired": {
+          "label": "paired",
+          "n_months": 130,
+          "mean_per_period_pct": 41.38,
+          "annualised_pct": 41.38,
+          "annualised_linear_pct_incumbent_convention": 41.38,
+          "t_naive_OVERSTATED": 21.704,
+          "t_newey_west": 8.896,
+          "t_block": 6.677,
+          "t_block_range": [
+            3.52,
+            10.035
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9769
+        },
+        "net_of_trading_10bps": {
+          "label": "net_of_trading",
+          "n_months": 130,
+          "mean_per_period_pct": 47.2804,
+          "annualised_pct": 47.28,
+          "annualised_linear_pct_incumbent_convention": 47.28,
+          "t_naive_OVERSTATED": 22.153,
+          "t_newey_west": 8.896,
+          "t_block": 6.945,
+          "t_block_range": [
+            3.264,
+            9.726
+          ],
+          "n_effective_date_blocks": 10,
+          "share_periods_positive": 0.9846
+        },
+        "net_by_borrow_tier_pct": {
+          "0": {
+            "annualised_pct": 47.28,
+            "t_block": 6.945,
+            "terminal_wealth_median": 57.9142,
+            "terminal_wealth_min": 19.8304,
+            "max_drawdown_worst": -0.5978,
+            "n_ruined_phases": 0
+          },
+          "2": {
+            "annualised_pct": 45.28,
+            "t_block": 6.652,
+            "terminal_wealth_median": 50.5906,
+            "terminal_wealth_min": 16.4238,
+            "max_drawdown_worst": -0.6178,
+            "n_ruined_phases": 0
+          },
+          "5": {
+            "annualised_pct": 42.28,
+            "t_block": 6.212,
+            "terminal_wealth_median": 41.1583,
+            "terminal_wealth_min": 12.2695,
+            "max_drawdown_worst": -0.6478,
+            "n_ruined_phases": 0
+          },
+          "10": {
+            "annualised_pct": 37.28,
+            "t_block": 5.479,
+            "terminal_wealth_median": 28.4599,
+            "terminal_wealth_min": 7.3446,
+            "max_drawdown_worst": -0.6978,
+            "n_ruined_phases": 0
+          },
+          "20": {
+            "annualised_pct": 27.28,
+            "t_block": 4.014,
+            "terminal_wealth_median": 12.1503,
+            "terminal_wealth_min": 2.2933,
+            "max_drawdown_worst": -0.7978,
+            "n_ruined_phases": 0
+          },
+          "50": {
+            "annualised_pct": -2.72,
+            "t_block": -0.383,
+            "terminal_wealth_median": 0.575,
+            "terminal_wealth_min": 0.0,
+            "max_drawdown_worst": -0.7402,
+            "n_ruined_phases": 1
+          }
+        },
+        "breakeven_borrow_rate_pct_after_10bps_trading": 47.28,
+        "worst_period": {
+          "month": "2020-03",
+          "net_of_trading_pct": -59.78
+        },
+        "best_period": {
+          "month": "2023-12",
+          "net_of_trading_pct": 125.82
+        },
+        "terminal_wealth_gross": {
+          "phases": [
+            {
+              "phase": 0,
+              "n_rebalances": 11,
+              "terminal_wealth": 72.4938,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 1,
+              "n_rebalances": 11,
+              "terminal_wealth": 49.5647,
+              "max_drawdown": -0.1132,
+              "ruined": false
+            },
+            {
+              "phase": 2,
+              "n_rebalances": 11,
+              "terminal_wealth": 20.0968,
+              "max_drawdown": -0.5963,
+              "ruined": false
+            },
+            {
+              "phase": 3,
+              "n_rebalances": 11,
+              "terminal_wealth": 63.8017,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 4,
+              "n_rebalances": 11,
+              "terminal_wealth": 56.2118,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 5,
+              "n_rebalances": 11,
+              "terminal_wealth": 49.0473,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 6,
+              "n_rebalances": 11,
+              "terminal_wealth": 62.8591,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 7,
+              "n_rebalances": 11,
+              "terminal_wealth": 47.115,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 8,
+              "n_rebalances": 11,
+              "terminal_wealth": 92.5116,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 9,
+              "n_rebalances": 11,
+              "terminal_wealth": 99.9405,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 10,
+              "n_rebalances": 10,
+              "terminal_wealth": 58.9008,
+              "max_drawdown": 0.0,
+              "ruined": false
+            },
+            {
+              "phase": 11,
+              "n_rebalances": 10,
+              "terminal_wealth": 57.9899,
+              "max_drawdown": 0.0,
+              "ruined": false
+            }
+          ],
+          "terminal_wealth_median": 58.4453,
+          "terminal_wealth_min": 20.0968,
+          "terminal_wealth_max": 99.9405,
+          "max_drawdown_worst": -0.5963,
+          "n_ruined_phases": 0,
+          "n_phases": 12
+        },
+        "era_splits_net_of_trading": {
+          "2013_2019": {
+            "n_months": 84,
+            "annualised_pct": 41.256,
+            "t_block": 10.494
+          },
+          "2020_2021": {
+            "n_months": 22,
+            "annualised_pct": 36.904,
+            "t_block": null
+          },
+          "2022_2024": {
+            "n_months": 24,
+            "annualised_pct": 77.878,
+            "t_block": null
+          }
+        },
+        "era_breakeven_borrow_rate_pct": {
+          "2013_2019": 41.26,
+          "2020_2021": 36.9,
+          "2022_2024": 77.88
+        },
+        "breakeven_borrow_rate_pct_after_25bps_trading": 47.11
+      }
+    }
+  },
+  "short_market_control": {
+    "1m": {
+      "short_market_return": {
+        "label": "short_mkt",
+        "n_months": 141,
+        "mean_per_period_pct": -1.4176,
+        "annualised_pct": -15.745,
+        "annualised_linear_pct_incumbent_convention": -17.011,
+        "t_naive_OVERSTATED": -3.472,
+        "t_newey_west": -3.484,
+        "t_block": -3.472,
+        "t_block_range": [
+          -3.472,
+          -3.472
+        ],
+        "n_effective_date_blocks": 141,
+        "share_periods_positive": 0.3191
+      },
+      "terminal_wealth_short_market": {
+        "phases": [
+          {
+            "phase": 0,
+            "n_rebalances": 141,
+            "terminal_wealth": 0.1138,
+            "max_drawdown": -0.8838,
+            "ruined": false
+          }
+        ],
+        "terminal_wealth_median": 0.1138,
+        "terminal_wealth_min": 0.1138,
+        "terminal_wealth_max": 0.1138,
+        "max_drawdown_worst": -0.8838,
+        "n_ruined_phases": 0,
+        "n_phases": 1
+      }
+    },
+    "3m": {
+      "short_market_return": {
+        "label": "short_mkt",
+        "n_months": 139,
+        "mean_per_period_pct": -3.6263,
+        "annualised_pct": -13.735,
+        "annualised_linear_pct_incumbent_convention": -14.505,
+        "t_naive_OVERSTATED": -5.774,
+        "t_newey_west": -4.481,
+        "t_block": -3.455,
+        "t_block_range": [
+          -4.104,
+          -2.642
+        ],
+        "n_effective_date_blocks": 46,
+        "share_periods_positive": 0.1727
+      },
+      "terminal_wealth_short_market": {
+        "phases": [
+          {
+            "phase": 0,
+            "n_rebalances": 47,
+            "terminal_wealth": 0.1556,
+            "max_drawdown": -0.8353,
+            "ruined": false
+          },
+          {
+            "phase": 1,
+            "n_rebalances": 46,
+            "terminal_wealth": 0.1605,
+            "max_drawdown": -0.8212,
+            "ruined": false
+          },
+          {
+            "phase": 2,
+            "n_rebalances": 46,
+            "terminal_wealth": 0.1563,
+            "max_drawdown": -0.8357,
+            "ruined": false
+          }
+        ],
+        "terminal_wealth_median": 0.1563,
+        "terminal_wealth_min": 0.1556,
+        "terminal_wealth_max": 0.1605,
+        "max_drawdown_worst": -0.8357,
+        "n_ruined_phases": 0,
+        "n_phases": 3
+      }
+    },
+    "6m": {
+      "short_market_return": {
+        "label": "short_mkt",
+        "n_months": 136,
+        "mean_per_period_pct": -7.0667,
+        "annualised_pct": -13.634,
+        "annualised_linear_pct_incumbent_convention": -14.133,
+        "t_naive_OVERSTATED": -8.402,
+        "t_newey_west": -4.531,
+        "t_block": -3.546,
+        "t_block_range": [
+          -4.073,
+          -2.48
+        ],
+        "n_effective_date_blocks": 22,
+        "share_periods_positive": 0.1838
+      },
+      "terminal_wealth_short_market": {
+        "phases": [
+          {
+            "phase": 0,
+            "n_rebalances": 23,
+            "terminal_wealth": 0.1605,
+            "max_drawdown": -0.8082,
+            "ruined": false
+          },
+          {
+            "phase": 1,
+            "n_rebalances": 23,
+            "terminal_wealth": 0.1627,
+            "max_drawdown": -0.8166,
+            "ruined": false
+          },
+          {
+            "phase": 2,
+            "n_rebalances": 23,
+            "terminal_wealth": 0.1328,
+            "max_drawdown": -0.8514,
+            "ruined": false
+          },
+          {
+            "phase": 3,
+            "n_rebalances": 23,
+            "terminal_wealth": 0.1602,
+            "max_drawdown": -0.8119,
+            "ruined": false
+          },
+          {
+            "phase": 4,
+            "n_rebalances": 22,
+            "terminal_wealth": 0.2009,
+            "max_drawdown": -0.777,
+            "ruined": false
+          },
+          {
+            "phase": 5,
+            "n_rebalances": 22,
+            "terminal_wealth": 0.1922,
+            "max_drawdown": -0.7706,
+            "ruined": false
+          }
+        ],
+        "terminal_wealth_median": 0.1616,
+        "terminal_wealth_min": 0.1328,
+        "terminal_wealth_max": 0.2009,
+        "max_drawdown_worst": -0.8514,
+        "n_ruined_phases": 0,
+        "n_phases": 6
+      }
+    },
+    "12m": {
+      "short_market_return": {
+        "label": "short_mkt",
+        "n_months": 130,
+        "mean_per_period_pct": -14.2334,
+        "annualised_pct": -14.233,
+        "annualised_linear_pct_incumbent_convention": -14.233,
+        "t_naive_OVERSTATED": -10.421,
+        "t_newey_west": -4.216,
+        "t_block": -3.087,
+        "t_block_range": [
+          -3.921,
+          -1.943
+        ],
+        "n_effective_date_blocks": 10,
+        "share_periods_positive": 0.1692
+      },
+      "terminal_wealth_short_market": {
+        "phases": [
+          {
+            "phase": 0,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.1447,
+            "max_drawdown": -0.7951,
+            "ruined": false
+          },
+          {
+            "phase": 1,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.173,
+            "max_drawdown": -0.7665,
+            "ruined": false
+          },
+          {
+            "phase": 2,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.0548,
+            "max_drawdown": -0.928,
+            "ruined": false
+          },
+          {
+            "phase": 3,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.1302,
+            "max_drawdown": -0.8275,
+            "ruined": false
+          },
+          {
+            "phase": 4,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.1396,
+            "max_drawdown": -0.834,
+            "ruined": false
+          },
+          {
+            "phase": 5,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.1551,
+            "max_drawdown": -0.789,
+            "ruined": false
+          },
+          {
+            "phase": 6,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.176,
+            "max_drawdown": -0.784,
+            "ruined": false
+          },
+          {
+            "phase": 7,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.1311,
+            "max_drawdown": -0.8347,
+            "ruined": false
+          },
+          {
+            "phase": 8,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.175,
+            "max_drawdown": -0.788,
+            "ruined": false
+          },
+          {
+            "phase": 9,
+            "n_rebalances": 11,
+            "terminal_wealth": 0.1606,
+            "max_drawdown": -0.8226,
+            "ruined": false
+          },
+          {
+            "phase": 10,
+            "n_rebalances": 10,
+            "terminal_wealth": 0.2529,
+            "max_drawdown": -0.7052,
+            "ruined": false
+          },
+          {
+            "phase": 11,
+            "n_rebalances": 10,
+            "terminal_wealth": 0.2238,
+            "max_drawdown": -0.7415,
+            "ruined": false
+          }
+        ],
+        "terminal_wealth_median": 0.1578,
+        "terminal_wealth_min": 0.0548,
+        "terminal_wealth_max": 0.2529,
+        "max_drawdown_worst": -0.928,
+        "n_ruined_phases": 0,
+        "n_phases": 12
+      }
+    }
+  },
+  "verdict_headline_1m": {
+    "naive_short": {
+      "gross_annualised_pct": 32.348,
+      "gross_t_block": 2.828,
+      "breakeven_borrow_pct_10bps": 27.95,
+      "breakeven_borrow_pct_25bps": 27.34,
+      "net_at_20pct_borrow_annualised_pct": 8.245,
+      "net_at_50pct_borrow_annualised_pct": -19.953,
+      "worst_period_pct": -27.47,
+      "era_2022_2024_annualised_pct": 53.351
+    },
+    "hedged_unit": {
+      "gross_annualised_pct": 56.097,
+      "gross_t_block": 6.253,
+      "breakeven_borrow_pct_10bps": 44.72,
+      "breakeven_borrow_pct_25bps": 44.11,
+      "net_at_20pct_borrow_annualised_pct": 27.722,
+      "net_at_50pct_borrow_annualised_pct": -5.154,
+      "worst_period_pct": -17.92,
+      "era_2022_2024_annualised_pct": 83.914
+    },
+    "hedged_beta": {
+      "gross_annualised_pct": 61.944,
+      "gross_t_block": 6.845,
+      "breakeven_borrow_pct_10bps": 48.48,
+      "breakeven_borrow_pct_25bps": 47.87,
+      "net_at_20pct_borrow_annualised_pct": 32.505,
+      "net_at_50pct_borrow_annualised_pct": -1.512,
+      "worst_period_pct": -18.56,
+      "era_2022_2024_annualised_pct": 98.65
+    },
+    "liq_floored_naive": {
+      "gross_annualised_pct": 40.148,
+      "gross_t_block": 3.136,
+      "breakeven_borrow_pct_10bps": 33.69,
+      "breakeven_borrow_pct_25bps": 32.88,
+      "net_at_20pct_borrow_annualised_pct": 14.584,
+      "net_at_50pct_borrow_annualised_pct": -15.143,
+      "worst_period_pct": -35.06,
+      "era_2022_2024_annualised_pct": 82.772
+    },
+    "liq_floored_hedged_beta": {
+      "gross_annualised_pct": 76.627,
+      "gross_t_block": 7.244,
+      "breakeven_borrow_pct_10bps": 57.36,
+      "breakeven_borrow_pct_25bps": 56.55,
+      "net_at_20pct_borrow_annualised_pct": 44.472,
+      "net_at_50pct_borrow_annualised_pct": 7.615,
+      "worst_period_pct": -19.13,
+      "era_2022_2024_annualised_pct": 149.955
+    }
+  },
+  "runtime_seconds": 11.1
+}
