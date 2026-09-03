@@ -1,0 +1,491 @@
+{
+ "artefact": "AEGIS_DECISION_ARTIFACT",
+ "version": "capital_allocator_v0/2026-09-04",
+ "licence": "PRODUCT_EXPERIMENT (shadow)",
+ "authority": "SHADOW_ONLY \u2014 this artifact places nothing and nothing reads it for execution",
+ "day": "2026-09-02",
+ "generated_at_utc": "2026-09-03T22:12:54+00:00",
+ "personality": "balanced",
+ "lambdas": {
+  "l1": 0.25,
+  "l2": 1.0,
+  "l3": 1.0,
+  "max_sleeve_weight": 0.4,
+  "basis": "PRIOR_ONLY -- declared, uncalibrated; v1 derives them from the four declared utility functions and calibrates on replayed farm histories",
+  "objective": "U_i = E[R_i - R_bench] - l1*CVaR_i - l2*Costs_i - l3*Uncertainty_i"
+ },
+ "universe": {
+  "status": "OK",
+  "day": "2026-09-02",
+  "version": "potential_universe_v1/2026-09-03",
+  "n_scorecards": 3056,
+  "by_engine_verdict": {
+   "unreadable": 109,
+   "no_opinion": 2,
+   "toxic_ge_5": 7,
+   "sub_floor": 2355,
+   "admitted_shadow": 583
+  },
+  "by_capacity_tier": {
+   "CANNOT_DETERMINE": 0,
+   "NONE": 0,
+   "OBSERVE_ONLY": 0,
+   "FULL": 3056
+  },
+  "d_catalyst_unreadable": 455,
+  "whole_universe_refusals": {
+   "learner_v2": {
+    "refused_on": 3056,
+    "of": 3056
+   },
+   "state": {
+    "refused_on": 3056,
+    "of": 3056
+   }
+  },
+  "note": "verdict counts bound sleeve capacity in NAMES; dollar capacity per sleeve is a v1 gap (listed below)",
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\potential_universe\\2026-09-02.jsonl"
+ },
+ "allocations": [
+  {
+   "sleeve": "revision_6m",
+   "gate": "DEPLOYABLE",
+   "u_components": {
+    "e_excess": {
+     "value": 0.01745,
+     "unit": "annualised decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#arms.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.excess_cagr",
+     "note": "NET of 25bps/side; pooled 2015-02..2024-12; the contract's \u00a70 forbids quoting this row alone"
+    },
+    "e_excess_2022_2024": {
+     "value": -0.014,
+     "unit": "annualised decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#subwindow_2022_2024.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.excess_cagr",
+     "note": "the ADVERSE era leads (contract \u00a70): 2022-24 the book LOSES to the VW market -- the pooled edge is concentrated pre-2022"
+    },
+    "t_paired_pooled": {
+     "value": 0.73,
+     "unit": "t-stat",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#arms.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.t_paired_vs_vw"
+    },
+    "t_paired_2022_2024": {
+     "value": -0.047,
+     "unit": "t-stat",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#subwindow_2022_2024.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.t_paired_vs_vw"
+    },
+    "cvar": {
+     "value": -0.3903,
+     "unit": "max drawdown, decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#arms.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.max_drawdown",
+     "note": "|maxDD| as tail-loss proxy (v0 convention)"
+    },
+    "costs": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "E is NET of 25bps/side already; charging the measured drag again would double-count. Drag carried beside it."
+    },
+    "cost_drag_information": {
+     "value": 0.951,
+     "unit": "pct/yr",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#arms.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.implied_annual_cost_drag_pct",
+     "note": "measured drag at 25bps/side -- INFORMATION ONLY: E is already net of it"
+    },
+    "uncertainty": {
+     "value": 0.055354,
+     "unit": "annualised decimal",
+     "basis": "derived",
+     "summed": [
+      "stderr_from_paired_t",
+      "era_dispersion"
+     ],
+     "missing": [],
+     "sub_components": {
+      "stderr_from_paired_t": {
+       "value": 0.023904,
+       "unit": "annualised decimal",
+       "basis": "derived",
+       "note": "|E|/t from the two cited numbers above (t 0.73-shaped: the excess does not clear any significance bar and the uncertainty term says so)"
+      },
+      "era_dispersion": {
+       "value": 0.03145,
+       "unit": "annualised decimal",
+       "basis": "derived",
+       "note": "pooled minus 2022-24 excess: the S36 overlap-flattery lesson as a number"
+      }
+     },
+     "note": "sum of |sub-components|; derived from cited/PRIOR_ONLY inputs, each carrying its own basis"
+    },
+    "null_evidence": {
+     "value": 0.0154,
+     "unit": "p, one-sided",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#null_vs_random_from_pool.metrics.monthly_excess_mean_pct.p_one_sided",
+     "note": "ranking-vs-own-pool null (64 draws); the pool-vs-market question remains the t above"
+    }
+   },
+   "U": -0.135479,
+   "u_margin_vs_benchmark": -0.052104,
+   "weight": 0.0,
+   "binding_constraint": "U_BELOW_BENCHMARK: does not beat the parking orbit under balanced lambdas (margin -0.0521)",
+   "notes": [
+    "contract draft docs/CONTRACT_DRAFT_2026-09-04_REVISION_6M.md, NOT frozen; arm = cohort_H6m_falsifier_toxic_leftband_mktpark_25bps (draft default variant)",
+    "this experiment tests whether the pre-2022 revision edge RETURNS; forward paper is the only admissible evidence either way"
+   ]
+  },
+  {
+   "sleeve": "learner_v2_monthly",
+   "gate": "DEPLOYABLE",
+   "u_components": {
+    "e_excess": {
+     "value": 0.18,
+     "unit": "annualised decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v2_20260903.json#champions.1m.tradable_floor_variant.annualised_excess",
+     "note": "frozen champion encoder_clf__residual, 1m, NET of 10bps/side, $3.0m/day tradable floor applied"
+    },
+    "e_excess_2022_2024": {
+     "value": null,
+     "unit": null,
+     "basis": "REFUSED",
+     "reason": "no 2022-24 sub-window in learner_v2_20260903.json; era dispersion borrowed as PRIOR_ONLY inside uncertainty"
+    },
+    "t_paired_pooled": {
+     "value": 2.866,
+     "unit": "t-stat",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v2_20260903.json#champions.1m.tradable_floor_variant.t_stat_paired_vs_market"
+    },
+    "cvar": {
+     "value": -0.2899,
+     "unit": "max drawdown, decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v2_20260903.json#champions.1m.tradable_floor_variant.risk.max_drawdown_net",
+     "note": "|maxDD| as tail-loss proxy (v0 convention); cvar_05_monthly also in receipt"
+    },
+    "cvar_05_monthly_information": {
+     "value": -0.1455,
+     "unit": "monthly decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v2_20260903.json#champions.1m.tradable_floor_variant.risk.cvar_05_monthly",
+     "note": "INFORMATION: monthly CVaR(5%), not yet the U term"
+    },
+    "costs": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "E is NET of 10bps/side on measured turnover already; not charged twice."
+    },
+    "uncertainty": {
+     "value": 0.094255,
+     "unit": "annualised decimal",
+     "basis": "derived",
+     "summed": [
+      "stderr_from_paired_t",
+      "era_dispersion"
+     ],
+     "missing": [],
+     "sub_components": {
+      "stderr_from_paired_t": {
+       "value": 0.062805,
+       "unit": "annualised decimal",
+       "basis": "derived",
+       "note": "|E|/t from the two cited numbers above"
+      },
+      "era_dispersion": {
+       "value": 0.03145,
+       "unit": "annualised decimal",
+       "basis": "PRIOR_ONLY",
+       "note": "MISSING from the v2 receipt (no 2022-24 sub-window); borrowed from the revision sleeve's measured dispersion as a conservative prior. v1 must compute v2's own era split."
+      }
+     },
+     "note": "sum of |sub-components|; derived from cited/PRIOR_ONLY inputs, each carrying its own basis"
+    },
+    "null_evidence": {
+     "value": 0.0154,
+     "unit": "p, one-sided",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v2_20260903.json#model_null_distribution.horizons.1m.arms.encoder_clf__residual.p_vs_model_null_paired_t",
+     "note": "64 fitted-on-shuffled draws; dev bar per review Q1 -- capital-authoritative wants >=256 + family-max"
+    },
+    "v1_family_money_caveat": {
+     "value": "CLEARS_MODEL_NULL",
+     "unit": "verdict",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v1_model_null_64_20260904.json#model_null_64_20260904.arms.lgbm_clf.verdict_paired_t.verdict",
+     "note": "among v1 arms, on MONEY only lgbm_clf clears the model null -- the v1 family's money evidence is thinner than its IC evidence"
+    }
+   },
+   "U": 0.01327,
+   "u_margin_vs_benchmark": 0.096645,
+   "weight": 0.4,
+   "binding_constraint": "MAX_SLEEVE_WEIGHT_0.40 (uncapped share would be 1.0000)",
+   "notes": [
+    "frozen champion (review PART A Q3: ONE champion, one metric, forward shadow accrual only; no re-picking)",
+    "historical t 2.64-2.87 earns a serious forward experiment, not production-alpha status",
+    "today's PotentialUniverse REFUSES v2 on 3056/3056 names (day-file schema gap): this sleeve trades MONTHLY panel vintages, not the daily tracker file, and the refusal is the receipt that says why"
+   ]
+  },
+  {
+   "sleeve": "toxic_band_short",
+   "gate": "NOT_DEPLOYABLE_NO_BORROW_DATA",
+   "u_components": {
+    "e_excess": {
+     "value": null,
+     "unit": null,
+     "basis": "REFUSED",
+     "reason": "NO borrow-rate data exists in this repo (receipt's own words); net expectancy is a function of an unobserved rate -- hard-to-borrow small caps live at 20-100%+/yr, bracketing the ~27-28% breakeven. Not computable, not guessed."
+    },
+    "gross_information": {
+     "value": 32.348,
+     "unit": "pct/yr, GROSS",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/toxic_band_short_20260904.json#verdict_headline_1m.naive_short.gross_annualised_pct",
+     "note": "gross of borrow; the honest headline is the breakeven borrow rate, not this"
+    },
+    "breakeven_borrow_information": {
+     "value": 27.34,
+     "unit": "pct/yr borrow rate",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/toxic_band_short_20260904.json#verdict_headline_1m.naive_short.breakeven_borrow_pct_25bps"
+    },
+    "borrow_note": {
+     "value": "NO borrow-rate data exists in this repo. Tiers are assumptions; the BREAKEVEN borrow rate is the honest headline. Hard-to-borrow small caps live at 20-100%+/yr.",
+     "unit": "text",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/toxic_band_short_20260904.json#conventions.borrow_note"
+    },
+    "cvar": {
+     "value": null,
+     "unit": null,
+     "basis": "REFUSED",
+     "reason": "tail of a short book is unbounded above the collateral convention; squeeze table in receipt (worst name-month +476% in one month)"
+    },
+    "costs": {
+     "value": null,
+     "unit": null,
+     "basis": "REFUSED",
+     "reason": "borrow IS the cost in question"
+    },
+    "uncertainty": {
+     "value": null,
+     "unit": null,
+     "basis": "REFUSED",
+     "reason": "not computed for a gated sleeve"
+    }
+   },
+   "U": null,
+   "u_margin_vs_benchmark": null,
+   "weight": 0.0,
+   "binding_constraint": "GATE:NOT_DEPLOYABLE_NO_BORROW_DATA",
+   "notes": [
+    "appears at weight 0 BY DESIGN: a gated sleeve that vanished from the table would be the invisible-ceiling shape",
+    "gate lifts when a borrow-rate feed exists; either monetisable or already eaten by borrow -- either answer is a finding"
+   ]
+  },
+  {
+   "sleeve": "benchmark_SPY",
+   "gate": "DEPLOYABLE",
+   "u_components": {
+    "e_excess": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "E[R_bench - R_bench] = 0 by definition"
+    },
+    "cvar": {
+     "value": -0.3331,
+     "unit": "max drawdown, decimal",
+     "basis": "cited",
+     "source": "backend/data/optimus/tracker_backtest/learner_v2_20260903.json#champions.1m.tradable_floor_variant.risk.max_drawdown_market_same_months",
+     "note": "VW market maxDD over the same 107 months the champion was graded on"
+    },
+    "costs": {
+     "value": 0.0001,
+     "unit": "annualised decimal",
+     "basis": "PRIOR_ONLY",
+     "note": "one ETF trade ~1bp; no receipt measures it yet"
+    },
+    "uncertainty": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "the benchmark is its own reference; excess-vs-self has no estimation error"
+    }
+   },
+   "U": -0.083375,
+   "u_margin_vs_benchmark": 0.0,
+   "weight": 0.0,
+   "binding_constraint": "PARKING_ORBIT_DEFAULT: receives the residual because no sleeve claim (or thesis-backed cash claim) beat it",
+   "notes": [
+    "the parking orbit: receives the residual row by default (S36 stop-side rule -- proceeds park in SPY, never cash)"
+   ]
+  },
+  {
+   "sleeve": "cash",
+   "gate": "DEPLOYABLE",
+   "u_components": {
+    "e_excess": {
+     "value": -0.12647,
+     "unit": "annualised decimal",
+     "basis": "PRIOR_ONLY",
+     "note": "cash's expected excess is MINUS the expected benchmark return. No forward nowcast exists; anchored to the trailing CAGR at backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260904.json#arms.cohort_H6m_falsifier_toxic_leftband_mktpark_25bps.market_cagr and therefore PRIOR_ONLY -- v1 must supply a real benchmark nowcast."
+    },
+    "cvar": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "nominal cash does not draw down (inflation is outside v0's ledger)"
+    },
+    "costs": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "holding cash costs nothing to trade"
+    },
+    "uncertainty": {
+     "value": 0.0,
+     "unit": "annualised decimal",
+     "basis": "DEFINITION",
+     "note": "the cash return is known; the uncertainty lives in the benchmark leg and is already the E term's burden"
+    }
+   },
+   "U": -0.12647,
+   "u_margin_vs_benchmark": -0.043095,
+   "weight": 0.0,
+   "binding_constraint": "NO_THESIS: cash requires a thesis and none was supplied",
+   "notes": [
+    "cash must EARN its slot: a positive margin alone never funds it -- an explicit bearish/deleveraging thesis is required (see cash_policy)"
+   ]
+  }
+ ],
+ "residual": {
+  "sleeve": "__residual__",
+  "weight": 0.6,
+  "destination": "benchmark_SPY",
+  "thesis": null,
+  "rationale": "every unused dollar gets a documented competing allocation; this row IS that documentation. Residual = gross cap 1.00 minus the 0.4000 the sleeves claimed."
+ },
+ "cash_policy": {
+  "rule": "cash requires a thesis; the benchmark is the parking orbit. A positive cash margin WITHOUT a thesis is recorded, not funded (an allocator that drifts into cash by arithmetic is the itsang89 mirror).",
+  "thesis_supplied": null,
+  "cash_margin_vs_benchmark": -0.043095,
+  "cash_wins_numerically": false,
+  "outcome": "no thesis; residual parks in the benchmark"
+ },
+ "binding_constraints": [
+  {
+   "sleeve": "revision_6m",
+   "constraint": "U_BELOW_BENCHMARK: does not beat the parking orbit under balanced lambdas (margin -0.0521)"
+  },
+  {
+   "sleeve": "learner_v2_monthly",
+   "constraint": "MAX_SLEEVE_WEIGHT_0.40 (uncapped share would be 1.0000)"
+  },
+  {
+   "sleeve": "toxic_band_short",
+   "constraint": "GATE:NOT_DEPLOYABLE_NO_BORROW_DATA"
+  },
+  {
+   "sleeve": "benchmark_SPY",
+   "constraint": "PARKING_ORBIT_DEFAULT: receives the residual because no sleeve claim (or thesis-backed cash claim) beat it"
+  },
+  {
+   "sleeve": "cash",
+   "constraint": "NO_THESIS: cash requires a thesis and none was supplied"
+  },
+  {
+   "sleeve": "__gross__",
+   "constraint": "GROSS_CAP_1.00 -- no leverage in v0; the ladder is a later frozen contract"
+  }
+ ],
+ "worst_case": {
+  "equity_usd_assumed": 100000.0,
+  "gross": 1.0,
+  "worst_case_fraction": 0.31582,
+  "worst_case_usd": -31582.0,
+  "terms": [
+   {
+    "sleeve": "learner_v2_monthly",
+    "weight": 0.4,
+    "maxdd_proxy": 0.2899
+   },
+   {
+    "sleeve": "benchmark_SPY",
+    "weight": 0.6,
+    "maxdd_proxy": 0.3331
+   }
+  ],
+  "unpriceable": [],
+  "convention": "sum(weight x |maxDD proxy|); maxDD is a full-window proxy, not a same-day bound -- printed anyway because an unprinted worst case is how -9% became -24%"
+ },
+ "regret_decomposition_spec": {
+  "identity": "total_regret = realised_book_return - realised_benchmark_return = selection_alpha + beta_gap + sizing + timing + cash_drag + execution + risk_interventions + residual_unexplained (grader must print residual_unexplained; a decomposition that always sums exactly is fitting, not measuring)",
+  "inputs_required": {
+   "artifact_weights": "this artifact's allocation + residual rows",
+   "realised_sleeve_returns": "per sleeve, close-to-close, same day span",
+   "realised_benchmark_return": "SPY close-to-close, named span",
+   "actual_book_weights": "what the (future, non-shadow) book held",
+   "sleeve_betas": "MISSING today -- no per-sleeve beta receipt exists; v1 gap",
+   "fill_records": "actual fills vs the marks used above",
+   "intervention_log": "every stop/gate/cap that fired, with the position and dollar delta"
+  },
+  "components": {
+   "selection_alpha": "sum_i w_i * (r_i - beta_i * r_bench): did the names chosen beat their market exposure",
+   "beta_gap": "(sum_i w_i * beta_i - 1) * r_bench: exposure above/below one benchmark unit",
+   "sizing": "sum_i (w_actual_i - w_artifact_i) * r_i: the cost of not holding the decided weights",
+   "timing": "entry/exit price vs the close convention the artifact was priced at",
+   "cash_drag": "w_cash_actual * (r_bench - r_cash): the disease this allocator exists to make visible",
+   "execution": "fills vs marks (spread, partial fills, venue refusals -- the opg 13/15 shape)",
+   "risk_interventions": "dollar delta of stops/gates that fired vs the artifact's intent (S34: stops fired on BETA; this line is where that shows)"
+  }
+ },
+ "missing_inputs_v1_must_replace": [
+  "lambdas: declared priors, uncalibrated -- derive from the four declared utility functions and calibrate on farm replays",
+  "cash e_excess: anchored to trailing 2015-24 VW CAGR; needs a real benchmark nowcast",
+  "learner_v2 era_dispersion: no 2022-24 sub-window in its receipt; borrowed from revision_6m as PRIOR_ONLY",
+  "benchmark costs: ~1bp PRIOR_ONLY, unmeasured",
+  "toxic_band_short: gated entirely on absent borrow-rate data",
+  "sleeve_betas: required by the regret spec, no receipt exists",
+  "cvar: |maxDD| is a full-window proxy -- v1 wires states-based tail estimates (review Q7: sizing is the states' first consumer)",
+  "sleeve dollar capacity: PU gives per-name max_usd, not yet aggregated per sleeve"
+ ],
+ "schema": {
+  "artifact_keys": [
+   "artefact",
+   "version",
+   "licence",
+   "authority",
+   "day",
+   "generated_at_utc",
+   "personality",
+   "lambdas",
+   "universe",
+   "allocations",
+   "residual",
+   "cash_policy",
+   "binding_constraints",
+   "worst_case",
+   "regret_decomposition_spec",
+   "missing_inputs_v1_must_replace",
+   "schema"
+  ],
+  "row_keys": [
+   "sleeve",
+   "gate",
+   "u_components",
+   "U",
+   "u_margin_vs_benchmark",
+   "weight",
+   "binding_constraint",
+   "notes"
+  ],
+  "schema_hash": "2f0fb6d3a7aaa329"
+ }
+}
