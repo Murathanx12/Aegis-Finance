@@ -1,0 +1,71 @@
+{
+ "question": "does the mirror lane hold what it was seeded with?",
+ "family_id": "night-lab-L12-mirror-reconcile",
+ "cells_looked_at": 1,
+ "verdict": "INVENTORY",
+ "lanes": [
+  {
+   "lane": "mirror",
+   "n_positions": 12,
+   "n_rebalance_events": 5,
+   "excluded_no_prices": [],
+   "equity_at_last_close": 82772.16,
+   "nav_latest": 83440.86,
+   "equity_vs_nav_gap_pct": -0.8,
+   "gap_note": "gap includes CASH the positions table does not carry \u2014 a stable small gap is cash; a LARGE or drifting gap is the finding",
+   "daily_return_corr_lag0": -0.1519,
+   "daily_return_corr_lag1_aligned": 0.6063,
+   "nav_stamp_flip_date": "2026-08-23",
+   "corr_note": "rows before 2026-08-23 lag closes one day (lag1 is their aligned read, measured 0.974 conviction / 0.78 mirror on 08-19); rows from 2026-08-23 are bar-dated (lag0 aligned) \u2014 expect lag0 to overtake lag1 as post-flip history accumulates",
+   "within_declared_tolerance": true
+  },
+  {
+   "lane": "conviction",
+   "n_positions": 12,
+   "n_rebalance_events": 2,
+   "excluded_no_prices": [],
+   "equity_at_last_close": 95856.88,
+   "nav_latest": 96734.41,
+   "equity_vs_nav_gap_pct": -0.91,
+   "gap_note": "gap includes CASH the positions table does not carry \u2014 a stable small gap is cash; a LARGE or drifting gap is the finding",
+   "daily_return_corr_lag0": -0.2667,
+   "daily_return_corr_lag1_aligned": 0.8236,
+   "nav_stamp_flip_date": "2026-08-23",
+   "corr_note": "rows before 2026-08-23 lag closes one day (lag1 is their aligned read, measured 0.974 conviction / 0.78 mirror on 08-19); rows from 2026-08-23 are bar-dated (lag0 aligned) \u2014 expect lag0 to overtake lag1 as post-flip history accumulates",
+   "within_declared_tolerance": true
+  }
+ ],
+ "summary": [
+  {
+   "lane": "mirror",
+   "n_positions": 12,
+   "n_rebalance_events": 5,
+   "equity_at_last_close": 82772.16,
+   "nav_latest": 83440.86,
+   "equity_vs_nav_gap_pct": -0.8,
+   "within_declared_tolerance": true,
+   "daily_return_corr_lag0": -0.1519,
+   "daily_return_corr_lag1_aligned": 0.6063
+  },
+  {
+   "lane": "conviction",
+   "n_positions": 12,
+   "n_rebalance_events": 2,
+   "equity_at_last_close": 95856.88,
+   "nav_latest": 96734.41,
+   "equity_vs_nav_gap_pct": -0.91,
+   "within_declared_tolerance": true,
+   "daily_return_corr_lag0": -0.2667,
+   "daily_return_corr_lag1_aligned": 0.8236
+  }
+ ],
+ "errors": {},
+ "headline": "mirror: 12 positions, equity 82772.16 vs NAV 83440.86 (-0.8%, within tolerance=True); conviction: 12 positions, equity 95856.88 vs NAV 96734.41 (-0.91%, within tolerance=True)",
+ "note": "READ-ONLY GETs against the public lane API. Nothing in the lane, the registry or the NAV table was written; repairing a track record is attended by rule.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "L12_mirror_reconcile",
+ "run": 1,
+ "written_utc": "2026-09-04T17:55:16+00:00",
+ "elapsed_s": 5.4,
+ "exit_code": 0
+}

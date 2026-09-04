@@ -1,0 +1,196 @@
+{
+ "question": "what did the sealed books predict, and has any of it matured?",
+ "family_id": "night-lab-L8-sealed-book-grade",
+ "cells_looked_at": 10,
+ "n_books": 10,
+ "n_prediction_rows": 6550,
+ "n_holdings_rows": 104,
+ "books": [
+  {
+   "file": "2026-08-30.json",
+   "day": "2026-08-30",
+   "schema": "prediction-book-1",
+   "sealed_at_utc": "2026-08-30T04:17:10.560904+00:00",
+   "content_sha256": "c24e247bf5493c70",
+   "n_predictions": 151,
+   "n_claims": 0,
+   "books": {},
+   "n_holdings": 0,
+   "carries_contract": null
+  },
+  {
+   "file": "2026-08-30.resealed_084144.json",
+   "day": "2026-08-30",
+   "schema": "prediction-book-2",
+   "sealed_at_utc": "2026-08-30T08:41:44.482650+00:00",
+   "content_sha256": "85decd2e78e0a2f4",
+   "n_predictions": 302,
+   "n_claims": 1,
+   "books": {},
+   "n_holdings": 0,
+   "carries_contract": null
+  },
+  {
+   "file": "2026-08-30.resealed_132212.json",
+   "day": "2026-08-30",
+   "schema": "prediction-book-2",
+   "sealed_at_utc": "2026-08-30T13:22:12.667146+00:00",
+   "content_sha256": "f779a5cf9df64e12",
+   "n_predictions": 749,
+   "n_claims": 10,
+   "books": {},
+   "n_holdings": 0,
+   "carries_contract": null
+  },
+  {
+   "file": "2026-08-30.resealed_140416.json",
+   "day": "2026-08-30",
+   "schema": "prediction-book-2",
+   "sealed_at_utc": "2026-08-30T14:04:16.537214+00:00",
+   "content_sha256": "fe93635fbd36c441",
+   "n_predictions": 749,
+   "n_claims": 10,
+   "books": {},
+   "n_holdings": 0,
+   "carries_contract": null
+  },
+  {
+   "file": "2026-08-30.resealed_151848.json",
+   "day": "2026-08-30",
+   "schema": "prediction-book-2",
+   "sealed_at_utc": "2026-08-30T15:18:48.082316+00:00",
+   "content_sha256": "7b862c1e1585db3a",
+   "n_predictions": 749,
+   "n_claims": 10,
+   "books": {},
+   "n_holdings": 0,
+   "carries_contract": null
+  },
+  {
+   "file": "2026-08-31.json",
+   "day": "2026-08-31",
+   "schema": "prediction-book-3",
+   "sealed_at_utc": "2026-08-31T11:56:59.540320+00:00",
+   "content_sha256": "e0a749c3d8a7c0d5",
+   "n_predictions": 734,
+   "n_claims": 10,
+   "books": {
+    "hack3": 0,
+    "hack4": 5,
+    "hack6": 0
+   },
+   "n_holdings": 5,
+   "carries_contract": false
+  },
+  {
+   "file": "2026-08-31.resealed_120350.json",
+   "day": "2026-08-31",
+   "schema": "prediction-book-3",
+   "sealed_at_utc": "2026-08-31T12:03:50.540232+00:00",
+   "content_sha256": "e6f967a62863131c",
+   "n_predictions": 734,
+   "n_claims": 10,
+   "books": {
+    "hack3": 10,
+    "hack4": 5,
+    "hack6": 15
+   },
+   "n_holdings": 30,
+   "carries_contract": false
+  },
+  {
+   "file": "2026-09-01.json",
+   "day": "2026-09-01",
+   "schema": "prediction-book-3",
+   "sealed_at_utc": "2026-09-01T09:59:02.690590+00:00",
+   "content_sha256": "ffcc74092174f1c2",
+   "n_predictions": 766,
+   "n_claims": 11,
+   "books": {
+    "hack3": 9,
+    "hack4": 5,
+    "hack6": 0
+   },
+   "n_holdings": 14,
+   "carries_contract": false
+  },
+  {
+   "file": "2026-09-02.json",
+   "day": "2026-09-02",
+   "schema": "prediction-book-3",
+   "sealed_at_utc": "2026-09-02T07:05:01.804830+00:00",
+   "content_sha256": "6e69c0af80a7ad5f",
+   "n_predictions": 806,
+   "n_claims": 11,
+   "books": {
+    "hack3": 10,
+    "hack4": 5,
+    "hack6": 15
+   },
+   "n_holdings": 30,
+   "carries_contract": false
+  },
+  {
+   "file": "2026-09-03.json",
+   "day": "2026-09-03",
+   "schema": "prediction-book-3",
+   "sealed_at_utc": "2026-09-03T05:19:08.388104+00:00",
+   "content_sha256": "4fdc008f12d3b769",
+   "n_predictions": 810,
+   "n_claims": 0,
+   "books": {
+    "hack3": 10,
+    "hack4": 0,
+    "hack6": 15
+   },
+   "n_holdings": 25,
+   "carries_contract": false
+  }
+ ],
+ "maturity": [
+  {
+   "day": "2026-08-30",
+   "sessions_elapsed": 5,
+   "matured_1m_21s": false,
+   "matured_5s": true
+  },
+  {
+   "day": "2026-08-31",
+   "sessions_elapsed": 4,
+   "matured_1m_21s": false,
+   "matured_5s": false
+  },
+  {
+   "day": "2026-09-01",
+   "sessions_elapsed": 3,
+   "matured_1m_21s": false,
+   "matured_5s": false
+  },
+  {
+   "day": "2026-09-02",
+   "sessions_elapsed": 2,
+   "matured_1m_21s": false,
+   "matured_5s": false
+  },
+  {
+   "day": "2026-09-03",
+   "sessions_elapsed": 1,
+   "matured_1m_21s": false,
+   "matured_5s": false
+  }
+ ],
+ "headline": "10 sealed books, 6550 prediction rows, 104 holdings; 0 of 5 book-days have reached 21 sessions",
+ "verdict": "CANNOT DETERMINE",
+ "why": "a 21-session thesis sealed within the last month has not resolved. Grading it on five sessions grades the noise and would set a precedent for reading a book early whenever the number looked good.",
+ "schedule": {
+  "grade_when": "21 sessions after each sealed day",
+  "primary_metric": "hit rate and Brier vs the analyst consensus on the same names, per book",
+  "comparator": "IBES consensus target direction on the same name-days"
+ },
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "L8_grade_sealed_books",
+ "run": 1,
+ "written_utc": "2026-09-04T17:54:29+00:00",
+ "elapsed_s": 0.5,
+ "exit_code": 0
+}

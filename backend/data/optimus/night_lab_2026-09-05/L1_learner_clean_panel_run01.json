@@ -1,0 +1,38 @@
+{
+ "verdict": "CANNOT DETERMINE",
+ "cells_looked_at": 8,
+ "question": "does the learner beat the market on the clean panel?",
+ "headline": "no arm produced a usable paired series",
+ "cells": {
+  "ridge|1m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "ridge|3m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "ridge|6m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "ridge|12m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "lgbm|1m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "lgbm|3m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "lgbm|6m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  },
+  "lgbm|12m|fit": {
+   "error": "ValueError: unknown arm 'excess'"
+  }
+ },
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "L1_learner_clean_panel",
+ "run": 1,
+ "written_utc": "2026-09-04T18:00:20+00:00",
+ "elapsed_s": 12.5,
+ "exit_code": 0
+}

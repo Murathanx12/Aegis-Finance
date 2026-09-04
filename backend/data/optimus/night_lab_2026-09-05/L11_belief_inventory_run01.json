@@ -1,0 +1,128 @@
+{
+ "question": "how much history does the belief series actually hold, per event?",
+ "family_id": "night-lab-L11-belief-inventory",
+ "cells_looked_at": 397,
+ "n_rows": 14669,
+ "unreadable_lines": 1,
+ "sources": {
+  "polymarket": 7592,
+  "kalshi": 7077
+ },
+ "n_events": 397,
+ "n_events_with_a_price": 396,
+ "days_covered": [
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27"
+ ],
+ "n_events_with_60_plus_days": 0,
+ "max_days_on_any_event": 3,
+ "longest_events": [
+  {
+   "source": "polymarket",
+   "id": "will-the-us-invade-iran-before-2027",
+   "n_obs": 42,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 41
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-26DEC-T4.00",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-26DEC-T4.25",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-26DEC-T4.50",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-26DEC-T4.75",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-26DEC-T5.00",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-26DEC-T5.25",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-27APR-T0.00",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-27APR-T0.25",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  },
+  {
+   "source": "kalshi",
+   "id": "KXFED-27APR-T0.50",
+   "n_obs": 40,
+   "n_days": 3,
+   "first": "2026-08-25",
+   "last": "2026-08-27",
+   "p_yes_seen": 40
+  }
+ ],
+ "headline": "397 events, 14669 rows, longest history 3 DAYS; 0 events reach 60 days",
+ "verdict": "INVENTORY",
+ "test_design_when_it_matures": {
+  "hypothesis": "a move in an event's implied probability leads the return of the names whose cash flows the event names -- tariffs/rates/approvals",
+  "unit": "event-day, paired with a mapped basket of permnos",
+  "primary_metric": "next-5-session excess over beta*market of the mapped basket",
+  "earliest_decision_date": "when >= 20 distinct EVENTS carry >= 60 observations each",
+  "why_not_now": "n_effective counts DATE BLOCKS (CANON 58) and this series spans days, not blocks: every event's observations are one regime",
+  "pre_registration_required": true
+ },
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "L11_belief_inventory",
+ "run": 1,
+ "written_utc": "2026-09-04T17:54:05+00:00",
+ "elapsed_s": 0.6,
+ "exit_code": 0
+}

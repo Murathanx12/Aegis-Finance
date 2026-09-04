@@ -1,0 +1,714 @@
+{
+ "question": "what would move to Railway, how big is it, and what would it cost?",
+ "family_id": "night-lab-L13-corpus-railway",
+ "cells_looked_at": 189,
+ "corpus_rows_local": 332065,
+ "corpus_mib_local": 218.16,
+ "files": {
+  "A.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "AARD.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "ABSI.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "ADSK.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "AFRM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "AG.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "AGX.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "AMD.jsonl": {
+   "rows": 250,
+   "mib": 0.37
+  },
+  "AMPX.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "AMSC.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "ANF.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "ARRY.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "AVGO.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BBWI.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "BBY.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BE.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BEAM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BHVN.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BILI.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "BOX.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BRC.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "BURL.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "BWXT.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "CAL.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "CDE.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "CHA.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "CIEN.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "CPB.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "CPRT.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "CRDO.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "CRM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "CRWD.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "CSIQ.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "DCI.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "DELL.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "DG.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "DKNG.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "DLTR.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "DNN.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "DOCU.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "DY.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "ENPH.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "EOSE.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "ESTC.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "FCEL.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "FIVE.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "FLNC.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "FRO.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "FSLR.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "GAP.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "GCO.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "GES.jsonl": {
+   "rows": 99,
+   "mib": 0.13
+  },
+  "GIII.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "GOLD.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "GTLB.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "GWRE.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "HEI.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "HL.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "HPE.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "HPQ.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "HQY.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "HRL.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "HUBS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "INTU.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "IONQ.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "IOT.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "IWM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "JKS.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "JOYY.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "KFY.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "KSS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "KTOS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "KYTX.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "LE.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "LEU.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "LUCK.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "LULU.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "M.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "MBUU.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "MDB.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "MDT.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "MMED.jsonl": {
+   "rows": 122,
+   "mib": 0.17
+  },
+  "MOMO.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "MP.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "MRVL.jsonl": {
+   "rows": 250,
+   "mib": 0.37
+  },
+  "MTRX.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "MU.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "NIO.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "NTAP.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "NTLA.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "NTNX.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "NVDA.jsonl": {
+   "rows": 250,
+   "mib": 0.37
+  },
+  "NX.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "NXE.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "NXT.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "OKLO.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "OKTA.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "OLLI.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "OLMA.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "ONDS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "OUST.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "P.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "PAHC.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "PANW.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "PATH.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "PLCE.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "PLUG.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "POWL.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "PRCH.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "PSNY.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "QBTS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "QQQ.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "QS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "QUBT.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "RBRK.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "RCAT.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "RGTI.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "RUN.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "S.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SAIC.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "SHLS.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "SJM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SLDP.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "SLNO.jsonl": {
+   "rows": 178,
+   "mib": 0.26
+  },
+  "SMR.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SMTC.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SNBR.jsonl": {
+   "rows": 202,
+   "mib": 0.28
+  },
+  "SNOW.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SNPS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SOC.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SPWH.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "SPY.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SRRK.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "SYM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "TER.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "TITN.jsonl": {
+   "rows": 250,
+   "mib": 0.33
+  },
+  "TSM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "TTC.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "UEC.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "ULTA.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "URBN.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "USAR.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "UUUU.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "VEEV.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "VFS.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "WDAY.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "WLY.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "WOOF.jsonl": {
+   "rows": 250,
+   "mib": 0.35
+  },
+  "WSM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "ZGN.jsonl": {
+   "rows": 250,
+   "mib": 0.34
+  },
+  "ZM.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "ZS.jsonl": {
+   "rows": 250,
+   "mib": 0.36
+  },
+  "2022-09.jsonl": {
+   "rows": 1,
+   "mib": 0.0
+  },
+  "2025-06.jsonl": {
+   "rows": 4,
+   "mib": 0.0
+  },
+  "2025-08.jsonl": {
+   "rows": 4104,
+   "mib": 1.26
+  },
+  "2025-09.jsonl": {
+   "rows": 4771,
+   "mib": 1.47
+  },
+  "2025-10.jsonl": {
+   "rows": 4924,
+   "mib": 1.52
+  },
+  "2025-11.jsonl": {
+   "rows": 5507,
+   "mib": 1.7
+  },
+  "2025-12.jsonl": {
+   "rows": 4757,
+   "mib": 1.47
+  },
+  "2026-01.jsonl": {
+   "rows": 3933,
+   "mib": 1.21
+  },
+  "2026-02.jsonl": {
+   "rows": 4652,
+   "mib": 1.43
+  },
+  "2026-03.jsonl": {
+   "rows": 5255,
+   "mib": 1.62
+  },
+  "2026-04.jsonl": {
+   "rows": 4226,
+   "mib": 1.3
+  },
+  "2026-05.jsonl": {
+   "rows": 5886,
+   "mib": 1.81
+  },
+  "2026-06.jsonl": {
+   "rows": 5191,
+   "mib": 1.6
+  },
+  "2026-07.jsonl": {
+   "rows": 5104,
+   "mib": 1.58
+  },
+  "2026-08.jsonl": {
+   "rows": 5483,
+   "mib": 1.69
+  },
+  "2026-09.jsonl": {
+   "rows": 475,
+   "mib": 0.23
+  },
+  "2026-10.jsonl": {
+   "rows": 1572,
+   "mib": 0.77
+  },
+  "2026-11.jsonl": {
+   "rows": 3166,
+   "mib": 1.55
+  },
+  "2026-12.jsonl": {
+   "rows": 375,
+   "mib": 0.18
+  },
+  "2027-01.jsonl": {
+   "rows": 788,
+   "mib": 0.39
+  },
+  "2027-02.jsonl": {
+   "rows": 2147,
+   "mib": 1.06
+  },
+  "purges.jsonl": {
+   "rows": 5,
+   "mib": 0.0
+  }
+ },
+ "design_doc": "backend\\data\\optimus\\night_lab_2026-09-05\\DESIGN_corpus_to_railway.md",
+ "headline": "332,065 corpus rows / 218.2 MiB in 189 file(s) live only on the laptop; design written, no Railway change made",
+ "verdict": "INVENTORY",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "L13_corpus_railway_design",
+ "run": 1,
+ "written_utc": "2026-09-04T17:54:24+00:00",
+ "elapsed_s": 0.9,
+ "exit_code": 0
+}
