@@ -13,8 +13,8 @@ engine over 2020-01 → 2025-06 (66 monthly signals).
 
 | Metric | Strategy | Buy-and-hold |
 |---|---|---|
-| Total return | **+250.9%** | **+740.0%** |
-| Sharpe | **0.675** | **0.921** |
+| Total return | ~~+250.9%~~ WITHDRAWN 2026-09-04 | ~~+740.0%~~ WITHDRAWN (was the `^GSPC` price index with 66 overlapping 3-month windows compounded as sequential; the VW market incl. dividends was +96.7%) |
+| Sharpe | ~~0.675~~ withdrawn | ~~0.921~~ withdrawn |
 | Sell-signal 3M hit-rate | **28.6%** | (target was >55%) |
 
 **Plainly: as a market-*timing* tool, the signal engine loses to doing nothing —

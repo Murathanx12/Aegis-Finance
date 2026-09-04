@@ -361,8 +361,8 @@ of what might happen."
 
 | Historical experiment (2020-01 → 2025-06) | Aegis | Benchmark | What we learned |
 |---|---:|---:|---|
-| Signal-engine timing strategy, total return | **+250.9%** | **+740.0%** (buy & hold) | Stress detection ≠ market timing |
-| Sharpe ratio | 0.675 | 0.921 | Sitting out rebounds costs more than dodging drawdowns saved |
+| Signal-engine timing strategy, total return | **WITHDRAWN 2026-09-04** | **WITHDRAWN** (was `^GSPC` price index, overlapping windows triple-compounded — see `backend/BACKTEST_RESULTS.md` correction) | Stress detection ≠ market timing (direction pending re-measurement) |
+| Sharpe ratio | withdrawn | withdrawn | Sitting out rebounds costs more than dodging drawdowns saved (pending re-measurement) |
 | Buy-signal 3-month hit rate | **67.4%** | target >60% ✓ | Some real directional information on entries |
 | Sell-signal 3-month hit rate | **28.6%** | target >55% ✗ | Sell signals fired at VIX>25 — historically the *best buying opportunities* |
 

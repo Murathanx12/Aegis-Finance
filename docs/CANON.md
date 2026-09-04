@@ -117,7 +117,7 @@ only adoptions is lying to itself.
 ### 7. Crash timing is closed; fragility is the surviving form
 Short-horizon crash *timing* has ≈0 IC; false-positive de-risking exits
 compounding bull runs and costs more than the crashes (canon A5, verified
-2026-06-14; our own signal engine: +251% vs buy-and-hold +740%,
+2026-06-14; our own signal engine: ~~+251% vs buy-and-hold +740%~~ (figures withdrawn 2026-09-04 — overlapping-window triple compounding; direction pending re-measurement),
 NEGATIVE_RESULTS §1). LPPLS predictive skill: refuted twice. The answerable
 question is "how fragile is the system, and is fragility rising" — a
 descriptive composite that may one day *scale exposure*, never a "crash
@@ -401,7 +401,7 @@ anything, and the original gate result is reported unamended.
 
 | Closed | Verdict | Where |
 |---|---|---|
-| Market-timing strategy vs buy-and-hold | Loses (+251% vs +740%) | NEGATIVE_RESULTS §1 |
+| Market-timing strategy vs buy-and-hold | Loses (figures withdrawn 2026-09-04, pending regeneration) | NEGATIVE_RESULTS §1 |
 | 12-month crash prediction | ≈ base rate, no skill | NEGATIVE_RESULTS §2 |
 | LPPLS as a predictor | Refuted twice → descriptive flag | NEGATIVE_RESULTS §3 |
 | Thematic-momentum selection (TRIAL-THEME) | REJECT: −0.08 Sharpe vs controls, PBO 0.66 | postmortem 2026-06-15 |

@@ -1,4 +1,4 @@
-# docs/INDEX.md — what to read, in what order (2026-09-03)
+# docs/INDEX.md — what to read, in what order (2026-09-04)
 
 268+ markdown files live here; many are roadmaps or handoffs. A new session must
 NOT read them all. Tiers below; Optimus should embed TIER 2 and ARCHIVE for
@@ -30,8 +30,26 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
+- **`ROADMAP_2026-09-04_PROFIT_ENGINE.md` — ACTIVE (adopted 2026-09-04).** Ten
+  gate-ordered blocks (B1 truth → B2 hold → B3 loop → B4 inference → B5 graph →
+  B6 autopsy → B7 era replay v2 → B8 evolution → B9 allocator → B10 learner v3)
+  plus standing lanes; §6 is the live status table. Read WITH
+  `REVIEW_2026-09-04_FABLE51_VERDICTS.md` (what is void and why: the IBES
+  share-basis defect, the +740% triple-compounding, the exit machinery, the
+  states null, the champion's multiplicity) and the builder contract
+  `HANDOFF_2026-09-04_FABLE51_TO_OPUS5_BUILDER.md`.
+- **VOID until re-issued on the rebuilt panel (B1):** `band_horizon_20260903`,
+  `toxic_band_short_20260904`, `holding_period_policy_20260903`,
+  `revision_6m_cohorts_20260904`, `exp_return_cross_section`,
+  `upside_band_decontamination`, `ibes_status_rules_2013_2024`,
+  `time_machine_arena`, and every `ratio`-bearing feature set. Quote none of
+  them as evidence. `unsupervised_states_20260903` is CANNOT DETERMINE.
+- `ROADMAP_2026-08-31_COMPETITION_WEEK_WORLD_MODEL.md` and
+  `SESSION_2026-09-03_SCOREBOARD_AND_ROADMAP_ADDENDUM.md` — **SUPERSEDED
+  2026-09-04**; kept as competition-week receipts.
+
 - **ADDENDUM (2026-09-03):** `SESSION_2026-09-03_SCOREBOARD_AND_ROADMAP_ADDENDUM.md` - eight-agent wave: band prior re-adjudicated (exclusion rule, 21-session clock), AEGIS-HORIZON-1 policy, learner v2 calibrated head, the null-bar defect, four OOS states, health episode root-caused. Read it WITH the TIER 1 roadmap.
-- **`ROADMAP_2026-08-31_COMPETITION_WEEK_WORLD_MODEL.md` — ACTIVE:** Mon 31 Aug → Fri 4 Sep. Exact sealed-portfolio→runner P0; hard-vs-experimental boundary taxonomy; world sensor mesh; canonical event compression; text→numeric CompanyState; whole-market candidate generators; opportunity recall; continuous experiment factory; NVIDIA QSD/NeMo/Data Designer roles; learning-loop/NN promotion order; competition-week scoreboard.
+- `ROADMAP_2026-08-31_COMPETITION_WEEK_WORLD_MODEL.md` — (superseded, see above): Mon 31 Aug → Fri 4 Sep. Exact sealed-portfolio→runner P0; hard-vs-experimental boundary taxonomy; world sensor mesh; canonical event compression; text→numeric CompanyState; whole-market candidate generators; opportunity recall; continuous experiment factory; NVIDIA QSD/NeMo/Data Designer roles; learning-loop/NN promotion order; competition-week scoreboard.
 - `ROADMAP_2026-08-26_HUMAN_HEURISTICS_AND_FAST_RESEARCH.md` — standing lane inventory/gates. It supplies research lanes to the active roadmap; it is not a competing execution plan.
 - `ROADMAP_2026-08-29_WEEKEND_TO_MONDAY.md` — **SUPERSEDED 2026-08-31** by the active roadmap above. Keep as the receipt for Friday attribution and weekend build decisions.
 - Competition execution lives in the OTHER repo. Enter it through **`aegis-alpha-terminal/docs/INDEX.md`** (TIER 0 + the MAP), then its `docs/HANDOFF.md` top block (which now carries a 6-line SKIM LAYER) and the newest `NEXT_SESSION_*.md`. Those are implementation handoffs, not strategic authority.

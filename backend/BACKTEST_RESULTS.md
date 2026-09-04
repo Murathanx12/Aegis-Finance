@@ -1,3 +1,19 @@
+> **CORRECTION 2026-09-04 — the headline figures below are WITHDRAWN.**
+> The "+250.9% strategy / +740.0% buy-and-hold" table was produced on
+> 2026-03-30 by a version of `backend/services/backtest.py` that compounded
+> all 66 OVERLAPPING 3-month forward windows as if they were sequential
+> (each month counted ~3 times). The comparator was the S&P 500 PRICE index
+> (`^GSPC`, no dividends) — never SPY, never a basket. The compounding bug
+> was fixed 2026-04-15 (`726c7bf`) and this file was never regenerated. The
+> dividend-inclusive CRSP value-weighted market over 2020-01-02 → 2025-05-30
+> is +96.7% (`backend/data/ff_daily_pinned.csv.gz`). Both the strategy and
+> the buy-and-hold numbers, and both Sharpes, are wrong by the same
+> mechanism; the DIRECTION of §1's verdict (timing loses to holding) is
+> plausible and NOT yet re-measured. Regeneration against the canonical
+> benchmark module is roadmap block B1
+> (`docs/ROADMAP_2026-09-04_PROFIT_ENGINE.md`); forensic in
+> `docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md` §3.1.
+
 # Signal Engine Backtest Results
 
 Period: 2020-01-01 to 2025-06-01 (66 monthly signals)
