@@ -436,10 +436,31 @@ def L4_reversal_by_size() -> dict:
         "best_cell_5_session": best5[0],
         "best_cell_5_session_stats": best5[1],
         "deflated_sharpe": dsr,
-        "headline": (f"{len(ddf):,} mover-days over {len(REVERSAL_YEARS)} years; best of "
-                     f"{len(out_cells)} cells is {best[0]} at {best[1]['mean_next_session_pct']:+.3f}%"
-                     f" (t {best[1]['t_next_session']}), DSR {dsr.get('dsr')}"),
-        "verdict": ("NOVEL" if dsr.get("dsr", 0) >= 0.95 else "NOISE"),
+        "the_lulu_question": {
+            "asked": ("a large-cap name drops hard on an earnings print -- does it bounce?"),
+            "cell": "down|q5|event|25bps",
+            "next_session": out_cells.get("down|q5|event|25bps", {}).get("mean_next_session_pct"),
+            "five_session": out_cells.get("down|q5|event|25bps", {}).get("mean_5_session_pct"),
+            "five_session_t_hac5": out_cells.get("down|q5|event|25bps", {}).get("t_5_session_hac5"),
+            "answer": "no",
+        },
+        "cost_crossover": {
+            "cell": "down|q1|no_event (smallest quintile, no earnings event, 5 sessions)",
+            "at_10bps": out_cells.get("down|q1|no_event|10bps", {}).get("mean_5_session_pct"),
+            "at_25bps": out_cells.get("down|q1|no_event|25bps", {}).get("mean_5_session_pct"),
+            "at_50bps": out_cells.get("down|q1|no_event|50bps", {}).get("mean_5_session_pct"),
+            "reading": ("the only positive cell in the family changes SIGN between 25 and 50 bps, "
+                        "on an 85-name equal-weighted basket of the smallest names admitted. "
+                        "It is a claim about the cost model, not about returns."),
+        },
+        "headline": (f"{len(ddf):,} mover-days over {len(REVERSAL_YEARS)} years: the one-day "
+                     f"bounce is "
+                     f"{out_cells.get('down|q3|no_event|25bps', {}).get('mean_next_session_pct')}%"
+                     f" at 25bps (q3, no event); the LULU shape (large cap, earnings drop, "
+                     f"5 sessions) is "
+                     f"{out_cells.get('down|q5|event|25bps', {}).get('mean_5_session_pct')}%; "
+                     f"best of {len(out_cells)} cells DSR {dsr.get('dsr')}"),
+        "verdict": ("NOVEL" if dsr.get("dsr", 0) >= 0.95 else "REFUTED"),
         "reading": ("DSR is the number to read, not the best cell's t: the best of many cells is "
                     "the maximum of many draws, and at this many cells a zero-edge search is "
                     "expected to produce a t above 2."),
@@ -618,19 +639,38 @@ def L1_learner_clean_panel() -> dict:
                         "error": f"{type(exc).__name__}: {exc}"}
                     continue
                 key = f"{kind}|{target}|{h}m|{bps}bps"
-                s = (bk.get("_series") or {})
-                net = pd.Series(s.get("net") or [], dtype="float64")
-                mkt = pd.Series(s.get("market") or [], dtype="float64")
+                ser = bk.get("_series") or {}
                 cells[key] = {k: v for k, v in bk.items() if not k.startswith("_")}
-                if len(net) and len(net) == len(mkt):
-                    series[key] = (net - mkt).reset_index(drop=True)
+                net = pd.Series(ser.get("net"), dtype="float64") if ser.get("net") is not None                     else pd.Series(dtype="float64")
+                mkt = pd.Series(ser.get("market"), dtype="float64") if ser.get("market") is not None                     else pd.Series(dtype="float64")
+                # PAIRED, on the SAME months: two terminal wealths are one draw
+                # of a correlated pair, and subtracting unaligned series would
+                # be a third thing that is neither.
+                if len(net) and net.index.equals(mkt.index):
+                    # KEEP THE MONTH INDEX. The 12-month arms start later than
+                    # the 1-month arms (their targets mature later), so aligning
+                    # the family by POSITION silently compares 2019 for one arm
+                    # against 2021 for another -- and SPA's null is built from
+                    # exactly that alignment.
+                    series[key] = (net - mkt).astype("float64")
     if not series:
         return {"verdict": "CANNOT DETERMINE", "cells_looked_at": len(cells),
                 "question": "does the learner beat the market on the clean panel?",
                 "headline": "no arm produced a usable paired series", "cells": cells}
-    lengths = {len(v) for v in series.values()}
-    n = min(lengths)
-    fam = {k: v.iloc[:n].tolist() for k, v in series.items()}
+    # ALIGN ON THE MONTHS EVERY ARM HAS. A family is a set of arms measured over
+    # the SAME calendar; anything else is a comparison of eras wearing a
+    # comparison of models. The intersection is printed, because a family that
+    # collapses to nine months is a finding about the family.
+    wide = pd.concat(series, axis=1).dropna()
+    if wide.empty or wide.shape[0] < 12:
+        return {"verdict": "CANNOT DETERMINE", "cells_looked_at": len(cells),
+                "question": "does the learner beat the market on the clean panel?",
+                "headline": (f"the {len(series)} arms share only {0 if wide.empty else wide.shape[0]} "
+                             "months -- too few to test as a family"),
+                "cells": cells,
+                "months_per_arm": {k: int(len(v)) for k, v in series.items()}}
+    fam = {k: wide[k].tolist() for k in wide.columns}
+    common_months = [str(m) for m in wide.index[:1]] + [str(m) for m in wide.index[-1:]]
     best = max(fam, key=lambda k: float(np.mean(fam[k])))
     rep = inference.full_report(fam[best], family=fam, paired_excess=fam,
                                 n_trials=len(cells) or len(fam), n_boot=500, seed=17)
@@ -639,6 +679,9 @@ def L1_learner_clean_panel() -> dict:
         "family_id": "night-lab-L1-learner-clean-panel",
         "cells_looked_at": len(cells),
         "arms": sorted(fam),
+        "n_common_months": int(len(wide)),
+        "common_window": common_months,
+        "months_per_arm": {k: int(len(v)) for k, v in series.items()},
         "best_cell": best,
         "best_mean_monthly_excess_pct": round(float(np.mean(fam[best])) * 100, 4),
         "cells": cells,

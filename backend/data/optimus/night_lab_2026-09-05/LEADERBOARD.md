@@ -17,3 +17,7 @@ quoting a single-cell number as if it were one.
 | L4_reversal_by_size | 1 | 1,799,289 mover-days over 12 years; best of 60 cells is up|q2|event|10bps at +0.527% (t 3.511), DSR 0.8843 | -- | -- | NOISE |
 | L4_reversal_by_size | 1 | 1,799,289 mover-days over 12 years; best of 60 cells is up|q2|event|10bps at +0.527% (t 3.511), DSR 0.8843 | -- | -- | NOISE |
 | L1_learner_clean_panel | 1 | no arm produced a usable paired series | -- | -- | CANNOT DETERMINE |
+| L1_learner_clean_panel | 1 | raised -- traceback IS the receipt | -- | -- | FAILED |
+| L1_learner_clean_panel | 1 | best of 32 cells is lgbm|raw|3m|10bps at +1.553%/month paired excess; DSR 0.1968, SPA p 0.2914, PBO 0.2857 | -- | 0.1968 | NOISE |
+| L1_learner_clean_panel | 1 | best of 32 cells is lgbm|raw|3m|10bps at +1.553%/month paired excess; DSR 0.1968, SPA p 0.2914, PBO 0.2857 | -- | 0.1968 | NOISE |
+| L4_reversal_by_size | 1 | 1,799,289 mover-days over 12 years: the one-day bounce is -0.5223% at 25bps (q3, no event); the LULU shape (la | -- | -- | REFUTED |

@@ -768,13 +768,28 @@
   "verdict": "WITHIN_SELECTION_NOISE",
   "reading": "after 60 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.070; this arm's is 0.105."
  },
- "headline": "1,799,289 mover-days over 12 years; best of 60 cells is up|q2|event|10bps at +0.527% (t 3.511), DSR 0.8843",
- "verdict": "NOISE",
+ "the_lulu_question": {
+  "asked": "a large-cap name drops hard on an earnings print -- does it bounce?",
+  "cell": "down|q5|event|25bps",
+  "next_session": -0.2889,
+  "five_session": -0.047,
+  "five_session_t_hac5": -0.294,
+  "answer": "no"
+ },
+ "cost_crossover": {
+  "cell": "down|q1|no_event (smallest quintile, no earnings event, 5 sessions)",
+  "at_10bps": 0.579,
+  "at_25bps": 0.279,
+  "at_50bps": -0.221,
+  "reading": "the only positive cell in the family changes SIGN between 25 and 50 bps, on an 85-name equal-weighted basket of the smallest names admitted. It is a claim about the cost model, not about returns."
+ },
+ "headline": "1,799,289 mover-days over 12 years: the one-day bounce is -0.5223% at 25bps (q3, no event); the LULU shape (large cap, earnings drop, 5 sessions) is -0.047%; best of 60 cells DSR 0.8843",
+ "verdict": "REFUTED",
  "reading": "DSR is the number to read, not the best cell's t: the best of many cells is the maximum of many draws, and at this many cells a zero-edge search is expected to produce a t above 2.",
  "licence": "PRODUCT_EXPERIMENT",
  "job": "L4_reversal_by_size",
  "run": 1,
- "written_utc": "2026-09-04T17:59:51+00:00",
- "elapsed_s": 51.9,
+ "written_utc": "2026-09-04T18:21:37+00:00",
+ "elapsed_s": 54.0,
  "exit_code": 0
 }
