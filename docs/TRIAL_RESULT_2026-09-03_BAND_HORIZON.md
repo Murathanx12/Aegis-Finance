@@ -1,5 +1,26 @@
 # TRIAL RESULT 2026-09-03 — BAND HORIZON / SELF-ATTACK
 
+> ## ⚠ VOID — SUPERSEDED 2026-09-05 (roadmap B1 task 4)
+>
+> **Every number below was computed on a corrupted tape and none of them should
+> be quoted.** `learner-train-table-1` divided the SPLIT-ADJUSTED IBES consensus
+> (`ptgsum`) by the RAW CRSP close, so `toxic_ge_5` was largely a
+> future-reverse-split detector (74.4% of its 26,199 name-months carried one).
+>
+> Re-issued on the point-in-time panel:
+> **`backend/data/optimus/tracker_backtest/band_horizon_20260905.json`**.
+> At one month the four bands move from −0.82 / +3.80 / +18.93 / −37.03 pp/yr to
+> **−2.17 / −6.82 / −5.26 / +40.07**, and the BH-FDR screen goes from **8
+> survivors (all the toxic cell) to ZERO** over a 32-cell family (max p 0.808,
+> min p 0.0517). The `toxic_ge_5` cell is **not a long either**: 84% of it trades
+> under $5 at a median close of $3.08 and a $5 price floor flips its sign to
+> −34.29%/yr.
+>
+> **The defensible statement is the negative one: under a point-in-time ratio no
+> band premium survives.** The individual tables below have NOT been rewritten —
+> read the new receipt, and `docs/FINDING_2026-09-04_THE_TAPE_REBUILT.md` §2d.
+
+
 **Licence:** `PRODUCT_EXPERIMENT`. Nothing here trades, sizes, seals or orders.
 The beta-neutralised series is a MEASUREMENT, not a book.
 

@@ -10,7 +10,8 @@ of the result was verified (or noted pending — see INTEGRITY).
 passes, GPT, DeepSeek. Verified every concrete claim with Explore agents + git.
 Output: `docs/REVIEW_VALIDATION_2026-06-14.md` (real/stale/noise ledger),
 `docs/BACKLOG.md` (master tracker), `NEGATIVE_RESULTS.md` (surfaces the
-+250.9% vs +740% buy-and-hold underperformance honestly), `CAPABILITY_MATRIX.md`
++250.9% vs +740% buy-and-hold underperformance honestly -- those two figures
+were themselves void; [VOID 2026-09-04 — the +250.9/+740.0 pair was measured against ^GSPC (price index) with 66 OVERLAPPING windows compounded as if sequential. Regenerated on SPY total return, non-overlapping: **+28.3% net vs +114.8% buy-and-hold**, Sharpe 0.432 vs 0.837, sell hit rate 0.0% of 5. The DIRECTION below stands; the magnitudes do not. See `backend/BACKTEST_RESULTS.md` and `docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md` §3.1]), `CAPABILITY_MATRIX.md`
 (first pass), `V3_DATA_LAYER_DESIGN.md`. CLAUDE.md counts refreshed.
 
 **Phase B — deep research (107 agents, 25 claims verified, 0 refuted).**

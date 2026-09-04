@@ -23,12 +23,19 @@ from scripts.toxic_band_short_run import (
 
 
 def _cohort(months, names_per_month=3, fwd=-0.10, mkt=0.01, beta=1.3):
-    """A minimal cohort frame: same names every month, constant returns."""
+    """A minimal cohort frame: same names every month, constant returns.
+
+    `resid` is computed the SAME way `band_horizon_run.cohort_frame` computes it
+    -- `fwd - beta_pre x mkt_vw`, per name. It is not decoration: since the B1
+    re-issue the short book's HEADLINE is `-resid` on Reg-T capital, so a fixture
+    without it would be testing a construction the receipt no longer reports.
+    """
     rows = []
     for m in months:
         for i in range(names_per_month):
             rows.append({"month": m, "permno": 10000 + i, "fwd": fwd,
-                         "mkt_vw": mkt, "beta_pre": beta})
+                         "mkt_vw": mkt, "beta_pre": beta,
+                         "resid": fwd - beta * mkt})
     return pd.DataFrame(rows)
 
 
@@ -125,10 +132,43 @@ def test_trade_cost_charged_on_measured_turnover():
     for i, m in enumerate(["2020-01", "2020-02"]):
         for p in ([1, 2] if i == 0 else [1, 3]):
             rows.append({"month": m, "permno": p, "fwd": 0.0,
-                         "mkt_vw": 0.0, "beta_pre": 1.0})
+                         "mkt_vw": 0.0, "beta_pre": 1.0, "resid": 0.0})
     bk = short_book(pd.DataFrame(rows), 1, trade_cost_bps=10.0)
     assert bk["turnover"].iloc[1] == pytest.approx(1.0)
     assert bk["trade_cost"].iloc[1] == pytest.approx(10.0 / 10_000.0)
+
+
+# ------------------------------------- the B1 re-issue: -resid on Reg-T capital
+
+def test_minus_resid_is_the_per_name_beta_hedge_not_the_cohort_mean_hedge():
+    """`-resid` removes each name's OWN beta leg; `hedged_beta` removes the
+    cohort mean's. On a constant-beta cohort they coincide, which is what makes
+    the identity checkable at all."""
+    c = _cohort(["2020-01"], fwd=-0.10, mkt=0.01, beta=1.5)
+    bk = short_book(c, 1, trade_cost_bps=0.0, hedge="beta")
+    # resid = -0.10 - 1.5 x 0.01 = -0.115, so -resid = +0.115
+    assert bk["minus_resid"].iloc[0] == pytest.approx(0.115)
+    # and it equals the cohort-mean beta hedge here, by construction
+    assert bk["gross"].iloc[0] == pytest.approx(0.115)
+    # the leverage-only leg is quoted separately and is NOT part of -resid
+    assert bk["beta_matched_leg"].iloc[0] == pytest.approx(1.5 * 0.01)
+
+
+def test_the_short_is_divided_by_regt_capital_not_by_one_dollar():
+    """The void receipt's denominator was $1 of short notional. Reg-T wants
+    0.5 x short + 0.5 x long, so a beta-1.5 hedge needs 1.25 of equity and the
+    reported return is 0.8x the per-notional one."""
+    c = _cohort(["2020-01"], fwd=-0.10, mkt=0.01, beta=1.5)
+    bk = short_book(c, 1, trade_cost_bps=0.0, hedge="beta")
+    assert bk["regt_capital"].iloc[0] == pytest.approx(1.25)
+    assert bk["maint_capital"].iloc[0] == pytest.approx(0.30 + 0.25 * 1.5)
+    per_notional = bk["minus_resid_net_of_trading"].iloc[0]
+    assert bk["minus_resid_net_on_regt"].iloc[0] == pytest.approx(per_notional / 1.25)
+    # the capital-normalised number is SMALLER whenever the hedge is levered
+    assert abs(bk["minus_resid_net_on_regt"].iloc[0]) < abs(per_notional)
+    # maintenance margin is a leverage BOUND, so it flatters -- and must never be
+    # the headline
+    assert abs(bk["minus_resid_net_on_maint"].iloc[0]) > abs(per_notional)
 
 
 # -------------------------------------------------------------------- ruin

@@ -36,7 +36,12 @@
 ## II. What does NOT work (measured/refuted — do not relearn)
 
 1. **Short-horizon market timing loses to buy-and-hold** — our own signal
-   engine: +251% vs +740% over 2020-25; all 7 sell signals fired at VIX>25 and
+   engine: +28.3% net vs +114.8% buy-and-hold over 2020-25 (regenerated
+   2026-09-04 on SPY total return with non-overlapping compounding; the
+   originally published +251% vs +740% pair was measured against ^GSPC, a
+   price index, with 66 overlapping windows compounded as if sequential --
+   the lesson is unchanged and the magnitudes are corrected). All sell
+   signals fired at VIX>25 and
    forward-3m returns after them were mostly POSITIVE. Risk-awareness ≠ return
    forecasting. *(NEGATIVE_RESULTS §1)*
 2. **Crash timing has ≈0 IC**; false-positive de-risking exits compounding

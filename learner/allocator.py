@@ -194,6 +194,24 @@ def refused(reason: str) -> dict:
     return {"value": None, "unit": None, "basis": "REFUSED", "reason": reason}
 
 
+def _refusal_gate(*components: dict) -> str:
+    """The gate label for a refused sleeve, naming WHY it is unpriceable.
+
+    Two refusals look identical in a weight column and are not the same finding:
+    a receipt we cannot READ is an operational problem (wrong path, absent file,
+    corrupt JSON), while a receipt that has been SUPERSEDED is an evidence
+    problem — the file is fine and the number in it is wrong. Printing
+    "RECEIPT_UNREADABLE" for the second sends the reader to look for a missing
+    file that is sitting right there.
+    """
+    reasons = [c.get("reason") or "" for c in components
+               if c.get("basis") == "REFUSED"]
+    if any("VOID" in r for r in reasons):
+        return "NOT_DEPLOYABLE_RECEIPT_VOID_SUPERSEDED"
+    if any("key absent" in r for r in reasons):
+        return "NOT_DEPLOYABLE_RECEIPT_KEY_ABSENT"
+    return "NOT_DEPLOYABLE_RECEIPT_UNREADABLE"
+
 def _dig(obj: Any, keypath: str):
     """(ok, value) down a dotted keypath. ok=False on ANY missing step --
     absence of a key is not a value of zero (the docs-move that disarmed the
@@ -206,11 +224,31 @@ def _dig(obj: Any, keypath: str):
     return True, cur
 
 
+#: Marker `load_receipts` substitutes for a receipt that has been superseded.
+#: A dict rather than None so the reason travels to the refusal.
+VOID_SENTINEL = "__VOID_SUPERSEDED__"
+
+
 def _extract(receipts: dict, receipt_key: str, keypath: str, *,
              unit: str = "annualised decimal", note: str | None = None) -> dict:
     """A cited component, or a REFUSED one naming exactly what is missing."""
     if receipt_key not in receipts or receipts[receipt_key] is None:
         return refused(f"receipt unreadable: {RECEIPT_PATHS[receipt_key]}")
+    void = receipts[receipt_key].get(VOID_SENTINEL) \
+        if isinstance(receipts[receipt_key], dict) else None
+    if void:
+        # A superseded receipt is not a degraded input, it is a WRONG one. The
+        # allocator refuses rather than reading it, and refuses rather than
+        # silently following the sidecar to the replacement: which arm to cite
+        # from a re-issued receipt is a research decision, and on 2026-09-05 the
+        # answer changed sign (REV_ARM went +1.745pp t +0.73 -> -7.71pp t -1.19).
+        # Substituting the new number here would have re-derived a sleeve weight
+        # from evidence that refutes the sleeve.
+        return refused(
+            f"receipt VOID -- superseded: {RECEIPT_PATHS[receipt_key]} "
+            f"-> {void.get('superseded_by')} ({void.get('reason', 'no reason recorded')}). "
+            "Repoint RECEIPT_PATHS and re-choose the arm deliberately; do not "
+            "assume the same arm survives.")
     ok, v = _dig(receipts[receipt_key], keypath)
     if not ok or v is None:
         return refused(f"key absent from receipt: "
@@ -226,9 +264,31 @@ def load_receipts(repo: Path | None = None) -> dict[str, dict | None]:
     for key, rel in RECEIPT_PATHS.items():
         p = repo / rel
         try:
-            out[key] = json.loads(p.read_text(encoding="utf-8"))
+            payload = json.loads(p.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             out[key] = None
+            continue
+        # DERIVE supersession from the filesystem rather than from a hand-kept
+        # list here. B1 re-issued four tape receipts on 2026-09-05 and wrote a
+        # `<name>.SUPERSEDED_BY.json` sidecar beside each sealed original; two of
+        # those four are cited above. A consumer that reads a void receipt and
+        # reports a number is worse than one that refuses, because the number
+        # looks fresh. Sealed receipts are never edited, so the sidecar is the
+        # only place this fact can live.
+        sidecar = p.with_name(p.name + ".SUPERSEDED_BY.json")
+        if sidecar.exists() and isinstance(payload, dict):
+            try:
+                meta = json.loads(sidecar.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                meta = {"reason": "sidecar present but unreadable"}
+            payload = dict(payload)
+            payload[VOID_SENTINEL] = {
+                "sidecar": sidecar.name,
+                "superseded_by": meta.get("superseded_by"),
+                "reason": meta.get("reason"),
+                "status": meta.get("status"),
+            }
+        out[key] = payload
     return out
 
 
@@ -356,7 +416,7 @@ def _sleeve_revision_6m(receipts: dict) -> dict:
 
     gate = "DEPLOYABLE"
     if e_pooled["basis"] == "REFUSED" or cvar["basis"] == "REFUSED":
-        gate = "NOT_DEPLOYABLE_RECEIPT_UNREADABLE"
+        gate = _refusal_gate(e_pooled, cvar)
     return {
         "name": "revision_6m",
         "gate": gate,
@@ -441,7 +501,7 @@ def _sleeve_learner_v2(receipts: dict, pu: dict | None) -> dict:
 
     gate = "DEPLOYABLE"
     if e["basis"] == "REFUSED" or cvar["basis"] == "REFUSED":
-        gate = "NOT_DEPLOYABLE_RECEIPT_UNREADABLE"
+        gate = _refusal_gate(e, cvar)
     notes = [
         "frozen champion (review PART A Q3: ONE champion, one metric, "
         "forward shadow accrual only; no re-picking)",

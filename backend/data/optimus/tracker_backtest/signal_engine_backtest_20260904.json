@@ -1,0 +1,68 @@
+{
+  "artefact": "signal_engine_backtest_20260904",
+  "licence": "PRODUCT_EXPERIMENT",
+  "written_at_utc": "2026-09-04T15:30:58.461770+00:00",
+  "question": "Does the website signal engine's monthly Buy/Hold/Sell call beat buying and holding the market, measured on a TOTAL-RETURN instrument with non-overlapping compounding?",
+  "scope": "2020-01-01..2025-06-01 eval dates (66 monthly signals); realised price span 2019-12-31..2025-09-02 because each signal carries a 3-month forward window. SPY adjusted close. Costs: 32.0 bps per round trip.",
+  "supersedes": "backend/BACKTEST_RESULTS.md as generated 2026-03-30 (commit 074e229), which published +250.9% strategy vs +740.0% buy-and-hold. That run used ^GSPC (price index, no dividends) AND compounded all 66 overlapping 3-month windows as if sequential (~3.12x log inflation). Compounding fixed 2026-04-15 in 726c7bf; the document was never regenerated. Benchmark fixed 2026-09-04 (roadmap B1).",
+  "code_path": "backend/services/backtest.py::backtest_signal_engine + evaluate_backtest",
+  "reproduce": "python -c \"from backend.services.backtest import *; print(evaluate_backtest(backtest_signal_engine()))\" (needs network)",
+  "market_benchmark": {
+    "schema": 1,
+    "module": "learner.benchmark",
+    "benchmark_id": "spy_tr_yf_adjclose",
+    "freq": "D",
+    "overlapping": false,
+    "provenance": {
+      "construction": "yfinance auto_adjust=True Close (dividend- and split-adjusted) -> total return of a tradeable fund",
+      "declared_only": true,
+      "instrument": "SPY",
+      "dividends_included": true,
+      "network": true,
+      "retired": "^GSPC price index, used as 'the market' until 2026-09-04 (roadmap B1)",
+      "compounding": {
+        "convention": "non-overlapping quarterly (every 3rd monthly window)",
+        "n_monthly_windows": 66,
+        "n_compounded_windows": 22,
+        "why": "3-month forward windows sampled monthly overlap; compounding all of them counts each month ~3x and inflates the log return ~3.12x (the 2026-03-30 defect, fixed in 726c7bf)"
+      }
+    },
+    "provenance_sha256": "88137fb56888e40e372a74afc2619fc9254e88f80de07a6354da7b8820bb4c5e",
+    "span": [
+      "2019-12-31",
+      "2025-09-02"
+    ],
+    "n_periods": 22
+  },
+  "cross_check": {
+    "independent_re_derivation": "learner.benchmark.pinned_market_total_return on the hash-gated Fama-French daily vintage gives the CRSP value-weighted market total return 2020-01-02..2025-05-30 = +96.67% plain buy-and-hold, and +112.2% over the every-3rd quarterly chain's own span. SPY's +114.79% here is the same object measured on a tradeable fund -- the two rulers agree to ~2.6pp.",
+    "the_void_number_reproduced": "compounding all 66 overlapping windows on the pinned market gives +949.0%; the ratio of log returns all-66 / every-3rd is 3.123."
+  },
+  "results": {
+    "total_signals": 66,
+    "buy_signals": 34,
+    "sell_signals": 5,
+    "hold_signals": 27,
+    "buy_hit_rate_3m": 76.5,
+    "sell_hit_rate_3m": 0.0,
+    "avg_return_on_buy_3m": 3.05,
+    "avg_return_on_sell_3m": 13.93,
+    "avg_return_on_hold_3m": 3.25,
+    "overall_avg_3m": 3.95,
+    "strategy_total_return_gross": 31.6,
+    "strategy_total_return": 28.3,
+    "buy_hold_total_return": 114.79,
+    "strategy_sharpe_gross": 0.47,
+    "strategy_sharpe": 0.432,
+    "buy_hold_sharpe": 0.837,
+    "execution_costs": {
+      "total_trades": 23,
+      "cost_per_trade_bps": 32.0,
+      "total_cost_drag_pct": 7.36,
+      "gross_minus_net_pct": 3.29
+    }
+  },
+  "verdict": "The signal engine's timing LOSES to holding, and by a wider relative margin than the void figures suggested: +28.3% net vs +114.79% buy-and-hold (ratio 0.247, versus 0.339 under the void numbers). The DIRECTION of NEGATIVE_RESULTS section 1 is therefore CONFIRMED on a correct ruler; its magnitudes are replaced.",
+  "caveat": "The signal distribution itself changed (buy 43->34, hold 16->27, sell 7->5) because the signal engine reads the same price series it is scored on, and that series changed from ^GSPC to SPY adjusted. This is not a like-for-like re-scoring of the same 66 calls; it is the engine re-run on a total-return instrument. Both runs are on ONE instrument, so this is a market-timing result and says nothing about stock selection.",
+  "not_a_claim": "PRODUCT_EXPERIMENT licence: no significance gate, no multiplicity control, single window, n=22 independent quarters. A negative of this size does not need them; a positive would."
+}

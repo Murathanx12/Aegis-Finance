@@ -1,0 +1,354 @@
+{
+  "receipt": "panel_rebuild_20260904",
+  "written_at_utc": "2026-09-04T15:55:57+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "licence_note": "This is a DATA-PROVENANCE receipt: it re-issues the substrate, not a claim. No return, alpha or ranking is asserted anywhere in this file. Any claim measured on the rebuilt panel needs its own receipt under its own licence.",
+  "question": "Does the learner panel compute its analyst-target ratio on ONE share basis, count a dead name's delisting return, apply its hygiene inside the table, and cover the universe it claims to?",
+  "scope": {
+    "window": "2013-2024",
+    "universe": "CRSP shrcd 10/11, exchcd 1/2/3, monthly IBES statpers cuts",
+    "rows": 441797,
+    "months": 144,
+    "names": 5721,
+    "what_this_does_NOT_do": [
+      "re-derive BAND_PRIOR (B1.5, attended; the four v2 constants stay VOID)",
+      "re-issue the four tape receipts (B1.4)",
+      "re-run scripts/tracker_ibes_backtest.py's own monthly receipts",
+      "apply the delisting return inside tracker_ibes_backtest.build_monthly (that script's fwd_1m needs a NEXT monthly row, so a dying name's final month is absent rather than flattered -- named, not fixed here)",
+      "re-pull any WRDS data"
+    ]
+  },
+  "supersedes": {
+    "artifact": "backend/data/optimus/learner/train_table.parquet (schema learner-train-table-1)",
+    "its_receipt": "backend/data/optimus/learner/train_table_schema_learner-train-table-1_SUPERSEDED.json (moved aside, not overwritten)",
+    "defect": "learner/dataset.py read ibes__ptgsum (SPLIT-ADJUSTED, end-of-sample share terms) and divided meanptg by the RAW CRSP close, so ratio_used = true_ratio / cfacpr(t) with cfacpr(t) a FUTURE quantity; 74.35% of the resulting toxic_ge_5 rows carry a future reverse split against 0.09% of lt_1_5. crsp__dsedelist was never joined. Hygiene lived in the callers.",
+    "evidence": "docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md \u00a72",
+    "roadmap_block": "docs/ROADMAP_2026-09-04_PROFIT_ENGINE.md \u00a7B1 task 3",
+    "receipts_this_does_not_touch": "the S38 void list (band_horizon_20260903, toxic_band_short_20260904, holding_period_policy_20260903, revision_6m_cohorts_20260904, exp_return_cross_section, upside_band_decontamination, ibes_status_rules_2013_2024, time_machine_arena, learner_v1/v2) is sealed and untouched; B1.4 re-issues them under new names."
+  },
+  "code_path": {
+    "git_head_at_write": "4ae55a95523d77d566b13b0d9fbaf890a38bb1ea",
+    "builder": "learner.dataset.build(2013, 2024) -> learner.dataset.save",
+    "changed": {
+      "learner/dataset.py": "reads BULK/'ibes__ptgsumu.parquet' as the ratio numerator; adds mean_target_adj + ratio_adj_check + ratio_check_agrees; adds hygiene() (prior.has_opinion + ratio>=50 + split-year) and NULLs ratio/upside/log_ratio where it fails; adds assert_universe_coverage(); passes delisting factors into daily_panel(); SCHEMA_VERSION -> learner-train-table-2",
+      "scripts/tracker_ibes_backtest.py": "load_ibes reads ibes__ptgsumu and carries meanptg_adj; adds delist_category / resolve_delisting_return / load_delistings / delisting_factors; imports SHUMWAY_FILL from learner.benchmark; the three false or hedged comments about dsf.ret being delisting-inclusive and about the target being 'quoted in today's dollars' are corrected",
+      "backend/tests/test_ibes_target_share_basis.py": "xfail(strict) marker DELETED -- it passes green",
+      "backend/tests/test_panel_share_basis_and_delisting.py": "new: 36 checks over the loader file, the hygiene rules, the Shumway fill branch by branch, the delisting compounding, and the numbers in this receipt"
+    },
+    "schema_hash": "f083d1c154dce270",
+    "schema_hash_shadow": "7f01cbe49f85286d",
+    "schema_version": "learner-train-table-2",
+    "prior_version": "band_prior_v2/2026-09-01"
+  },
+  "share_basis": {
+    "pit_source": "ibes__ptgsumu.parquet (UNADJUSTED -- the numerator)",
+    "adjusted_source": "ibes__ptgsum.parquet (diagnostic only)",
+    "denominator": "raw CRSP dsf.prc (abs; negative prc is the bid/ask flag)",
+    "check_definition": "ratio_adj_check = mean_target_adj * cfacpr(t) / close",
+    "tolerance_relative": 0.01,
+    "rows_with_both": 441223,
+    "agree_rows": 410367,
+    "agree_rate": 0.930067,
+    "disagree_rate": 0.069933,
+    "why_the_check_cannot_be_the_fix": "cfacpr(t) is the cumulative factor to the END of the sample, so the rescale multiplies by the same future quantity it is trying to remove",
+    "hand_verified_row": {
+      "name": "AAPL",
+      "permno": 14593,
+      "statpers": "2013-06-20",
+      "meanptg_adjusted": 19.323,
+      "meanptg_unadjusted": 541.04,
+      "cfacpr": 28.0,
+      "note": "cfacpr 28 = the 7:1 of 2014 times the 4:1 of 2020"
+    }
+  },
+  "share_basis_headline": {
+    "disagreement_rate": 0.069933,
+    "agreement_rate": 0.930067,
+    "rows_compared": 441223,
+    "reading": "ratio_adj_check = mean_target_adj * cfacpr(t) / close reproduces the PIT ratio on 93.01% of rows and fails on 6.99%. That is why the RESCALE IS NOT THE FIX: cfacpr(t) is the cumulative factor to the end of the sample, so the correction multiplies by the same future quantity it removes (a verified re-derivation left the rescaled toxic cell at -20.3%/yr t -2.70, i.e. still contaminated). The fix is to read the unadjusted file.",
+    "hand_check": "AAPL permno 14593, statpers 2013-06-20: adjusted 19.323, unadjusted 541.04, cfacpr 28.0, panel close 413.50 -> the rebuilt panel row carries ratio 1.30844 where the old tape carried 0.0467"
+  },
+  "delistings": {
+    "window": [
+      2013,
+      2024
+    ],
+    "events": 3089,
+    "by_category": {
+      "liquidation": {
+        "events": 223,
+        "with_crsp_dlret": 216,
+        "mean_dlret": -0.007392,
+        "mean_dlret_used": -0.007392
+      },
+      "merger_or_exchange": {
+        "events": 1975,
+        "with_crsp_dlret": 1909,
+        "mean_dlret": 0.009073,
+        "mean_dlret_used": 0.009073
+      },
+      "other": {
+        "events": 25,
+        "with_crsp_dlret": 22,
+        "mean_dlret": -0.176364,
+        "mean_dlret_used": -0.176364
+      },
+      "performance": {
+        "events": 866,
+        "with_crsp_dlret": 813,
+        "mean_dlret": -0.246276,
+        "mean_dlret_used": -0.260823
+      }
+    },
+    "shumway_filled": {
+      "shumway_nasdaq": 39,
+      "shumway_nyse_amex": 14
+    },
+    "performance_codes": {
+      "definition": "dlstcd in {500} u [520, 584]",
+      "why_not_400_591": "400-591 counts liquidations (450) and administrative codes and dilutes the mean from -24.63% to -19.57%"
+    }
+  },
+  "delisting_return_merge": {
+    "permnos_with_a_factor": 3089,
+    "permnos_applied": 2683,
+    "permnos_event_out_of_range": 0,
+    "mean_factor_applied": 0.92079,
+    "source": "crsp__dsedelist via tracker_ibes_backtest.delisting_factors"
+  },
+  "delisting_notes": {
+    "why": "crsp.dsf.ret is NOT delisting-inclusive. Of the 1,114 events coded 400-591 in 2013-24, 1,103 have a dsf bar on dlstdt and exactly 4 carry ret == dlret; mean dsf.ret on those bars is -9.2% against mean dlret -19.6%.",
+    "performance_definition": "dlstcd in {500} u [520, 584]",
+    "performance_events": 866,
+    "performance_mean_dlret": -0.246276,
+    "why_not_400_591": "the review's stated 400-591 range gives n=1,114 and mean -19.57% because code 450 (liquidation, n=216, mean -0.74%) dilutes it. 400-489 is kept as its own documented category and is NOT Shumway-filled.",
+    "shumway_fill": {
+      "NYSE_AMEX (exchcd/hexcd 1-2)": -0.3,
+      "NASDAQ (exchcd/hexcd 3)": -0.55,
+      "source": "learner.benchmark.SHUMWAY_FILL, imported",
+      "events_filled": {
+        "shumway_nasdaq": 39,
+        "shumway_nyse_amex": 14
+      }
+    },
+    "unfilled_on_purpose": "a merger / exchange / liquidation with no CRSP dlret gets dl_factor 1.0 and dlret_source 'none'. That is 'not measured', not 'the holder got their money back'; inventing a wind-up return would be a fabrication and the count is in by_category.with_crsp_dlret.",
+    "effect_on_the_panel": {
+      "1m": {
+        "rows": 1830,
+        "share": 0.00414,
+        "mean_fwd_return_of_filled_rows": -0.0965,
+        "mean_fwd_return_of_other_rows": 0.0117
+      },
+      "3m": {
+        "rows": 5629,
+        "share": 0.01274,
+        "mean_fwd_return_of_filled_rows": -0.0493,
+        "mean_fwd_return_of_other_rows": 0.0255
+      },
+      "6m": {
+        "rows": 11410,
+        "share": 0.02583,
+        "mean_fwd_return_of_filled_rows": 0.019,
+        "mean_fwd_return_of_other_rows": 0.048
+      },
+      "12m": {
+        "rows": 22957,
+        "share": 0.05196,
+        "mean_fwd_return_of_filled_rows": 0.0738,
+        "mean_fwd_return_of_other_rows": 0.1061
+      }
+    }
+  },
+  "universe_coverage": {
+    "window": "2013-2024",
+    "dsf_pull_permnos": 6894,
+    "screen_permnos": 6909,
+    "screen_definition": "shrcd in (10, 11) and exchcd in (1, 2, 3), name window overlaps",
+    "coverage": 0.997829,
+    "pulled_outside_the_screen": 0,
+    "missing_from_the_pull": 15,
+    "missing_permnos": [
+      11993,
+      12014,
+      64864,
+      75773,
+      79712,
+      80774,
+      83558,
+      83699,
+      84330,
+      84584,
+      85234,
+      85590,
+      90896,
+      91667,
+      91801
+    ],
+    "verdict": "a complete SUBSET of the screen, not a superset"
+  },
+  "universe_verdict": "The dsf pull holds 6,894 distinct permnos over 2013-2024; a full shrcd in (10,11) / exchcd in (1,2,3) screen of the same window holds 6,909. ZERO pulled permnos fall outside the screen and 15 screened permnos (0.22%) are absent from the pull. So the earlier '6,894-permno screened superset' characterisation is REFUTED: it is a 99.7829%-complete SUBSET, materially all 10/11, and a re-pull is not warranted. assert_universe_coverage() now REFUSES below 99% and names the missing permnos rather than describing them.",
+  "hygiene": {
+    "rules": {
+      "min_price": 2.0,
+      "min_coverage": 2,
+      "ratio_unreadable_at": 50.0,
+      "split_prior_year_is_unreadable": true,
+      "one_definition": "close/coverage floors are learner.prior.has_opinion, imported not re-implemented"
+    },
+    "rows": 441797,
+    "has_opinion": 378996,
+    "target_readable": 425798,
+    "hygiene_ok": 368119,
+    "failed_price_or_coverage": 62801,
+    "failed_ratio_ge_50": 275,
+    "failed_ratio_nonpositive_or_null": 0,
+    "failed_split_prior_year": 15919,
+    "on_failure": "the row is KEPT (deleting it is survivorship bias) but ratio/upside/log_ratio are NULL and band is no_opinion"
+  },
+  "rebucketing_census": {
+    "rows": "old band (adjusted target / raw close) -> new band (PIT)",
+    "table": {
+      "b_1_5_3": {
+        "b_1_5_3": 48144,
+        "b_3_5": 5,
+        "lt_1_5": 283,
+        "no_opinion": 1608,
+        "toxic_ge_5": 0
+      },
+      "b_3_5": {
+        "b_1_5_3": 30,
+        "b_3_5": 5144,
+        "lt_1_5": 681,
+        "no_opinion": 652,
+        "toxic_ge_5": 0
+      },
+      "lt_1_5": {
+        "b_1_5_3": 432,
+        "b_3_5": 10,
+        "lt_1_5": 288773,
+        "no_opinion": 6892,
+        "toxic_ge_5": 0
+      },
+      "no_opinion": {
+        "b_1_5_3": 87,
+        "b_3_5": 22,
+        "lt_1_5": 15,
+        "no_opinion": 62819,
+        "toxic_ge_5": 1
+      },
+      "toxic_ge_5": {
+        "b_1_5_3": 10683,
+        "b_3_5": 3083,
+        "lt_1_5": 8604,
+        "no_opinion": 1707,
+        "toxic_ge_5": 2122
+      }
+    },
+    "old_band_counts": {
+      "lt_1_5": 296107,
+      "no_opinion": 62944,
+      "b_1_5_3": 50040,
+      "toxic_ge_5": 26199,
+      "b_3_5": 6507
+    },
+    "new_band_counts": {
+      "lt_1_5": 298356,
+      "no_opinion": 73678,
+      "b_1_5_3": 59376,
+      "b_3_5": 8264,
+      "toxic_ge_5": 2123
+    }
+  },
+  "rebucketing_reconciliation": {
+    "note": "The census above applies the FULL new hygiene (price, coverage, ratio>=50, split-year). Re-running the same crosstab with the price/coverage floors ONLY reproduces the review's numbers exactly, which is the cross-check that the two derivations agree.",
+    "review_numbers_reproduced": {
+      "old_toxic_rows": 26199,
+      "stay_toxic_ge_5": 2965,
+      "move_to_b_1_5_3": 11072,
+      "move_to_b_3_5": 3339,
+      "move_to_lt_1_5": 8823
+    },
+    "with_full_hygiene": {
+      "b_1_5_3": 10683,
+      "b_3_5": 3083,
+      "lt_1_5": 8604,
+      "no_opinion": 1707,
+      "toxic_ge_5": 2122
+    }
+  },
+  "prior_status": {
+    "prior_version": "band_prior_v2/2026-09-01",
+    "status": "VOID ON THIS PANEL -- constants fitted on the corrupted tape",
+    "meaning": "prior_*/resid_* columns are carried for schema continuity. They are NOT expectations until B1.5 re-derives BAND_PRIOR from this panel; nothing may read them as an expected excess return.",
+    "corrected_toxic_cell_is_not_a_signal": "the corrected toxic_ge_5 cell measures +37.4%/yr t 1.94 on ~7 names/month, but 84.1% of it trades under $5 (median close $3.08), a $5 floor flips it to -31.6%/yr t -1.41, its median monthly excess is -0.86% against a mean of +2.69%, 2022-24 is +0.7%/yr t 0.03, and 27.6% still carries a future reverse split (+56pp when those are dropped). A right-tail cell in a thin, cheap corner is not a location shift and must not be carried as a long."
+  },
+  "sector_labels": {
+    "unclassified_label": "Unclassified",
+    "counts": {
+      "Manufacturing": 128430,
+      "Unclassified": 99352,
+      "Services": 63820,
+      "Finance & Real Estate": 63237,
+      "Transport & Utilities": 29009,
+      "Retail": 22070,
+      "Mining": 17289,
+      "Wholesale": 11387,
+      "Construction": 5044,
+      "_UNKNOWN": 1076,
+      "Agriculture": 881,
+      "Public Administration": 202
+    }
+  },
+  "market_benchmark": {
+    "schema": 1,
+    "module": "learner.benchmark",
+    "benchmark_id": "vw_crsp_common_main",
+    "freq": "D",
+    "overlapping": false,
+    "provenance": {
+      "source": "learner.dataset.market_indices (same pass as the panel)",
+      "construction": "value-weight daily total return, CRSP common stock / main exchange, membership resolved per (permno, date), weights on the previous session's market cap",
+      "dividends_included": true,
+      "network": false
+    },
+    "provenance_sha256": "a4ef19107826d2f852ae9bbf34c6d121e9c772766fc47fd957049809a45c3d82",
+    "span": [
+      "2012-01-04",
+      "2024-12-31"
+    ],
+    "n_periods": 3269
+  },
+  "market_benchmark_note": "This receipt quotes NO market-relative return. The stamp is present because the panel's excess_vw_* / excess_ew_* columns are computed against this leg, so the substrate must name the ruler it was measured with (learner/benchmark.py, gated by backend/tests/test_benchmark_canonical.py).",
+  "open_items": [
+    "B1.4: re-issue band_horizon / toxic_short / revision / holding-period on this panel with calendar-time overlapping cohorts + Newey-West(h-1).",
+    "B1.5: re-derive BAND_PRIOR from this panel (attended). Expected outcome per the review: hygiene only.",
+    "The 15 permnos missing from the dsf pull are named here; if a future question needs them, they are a 15-name top-up, not a re-pull.",
+    "tracker_ibes_backtest.build_monthly still drops a dying name's final month (no next monthly row). Fixing it means synthesising a terminal row and re-issuing that script's receipts -- a separate task."
+  ],
+  "target_maturity": {
+    "1m": {
+      "rows_with_target": 438546,
+      "rows_null_not_matured": 3251
+    },
+    "3m": {
+      "rows_with_target": 432205,
+      "rows_null_not_matured": 9592
+    },
+    "6m": {
+      "rows_with_target": 422644,
+      "rows_null_not_matured": 19153
+    },
+    "12m": {
+      "rows_with_target": 403264,
+      "rows_null_not_matured": 38533
+    }
+  },
+  "volume_units": {
+    "median_of_top_100_daily_vol": 785471595.0,
+    "read_as": "shares"
+  },
+  "ibes_loader_pin": {
+    "name_months": 605410,
+    "agrees_with": "scripts.tracker_ibes_backtest.load_ibes"
+  }
+}

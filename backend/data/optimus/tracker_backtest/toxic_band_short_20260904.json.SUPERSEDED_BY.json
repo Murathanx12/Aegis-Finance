@@ -1,0 +1,16 @@
+{
+  "artefact": "SUPERSEDED_BY_SIDECAR",
+  "written_at_utc": "2026-09-04T16:36:04.288235+00:00",
+  "sealed_receipt": "toxic_band_short_20260904.json",
+  "sealed_receipt_sha256": "a2c5447aa0f2422ba909fc0bd154fda004a1f9d42f4f643a50c421fdaadb8c8a",
+  "sealed_receipt_bytes": 133110,
+  "superseded_by": "toxic_band_short_20260905.json",
+  "superseded_by_sha256": "d003dde832941e46f2529bf6752ae3388a937ece9a37595b469ec16855ed904d",
+  "status": "VOID -- DO NOT QUOTE ANY NUMBER FROM THE SEALED RECEIPT",
+  "reason": "Void twice over. (1) Same corrupted-ratio panel: the short it priced was a short of names that were about to reverse-split. (2) Its headline numbers were 'hedged gross' -- a P&L per $1 of SHORT notional against an unfunded LONG index leg of beta dollars. Its best line, `liq_floored_hedged_beta` at +76.63%/yr with a block t of 7.24 (and `hedged_beta` at +61.94%/yr, t 6.85), embedded the equity premium that long leg earned, and the capital the pair requires never entered the denominator. The new receipt reports `-resid` (the per-name beta leg already subtracted) on Reg-T capital (0.5 x short + 0.5 x long) and quotes the `beta_matched` leg beside it. On the rebuilt panel those two constructions are -29.25%/yr (t_b -0.88) and -32.29%/yr (t_b -2.07), against beta_matched legs of +34.89%/yr and +18.78%/yr respectively: the population the old receipt wanted to SHORT is a population whose corrected return is POSITIVE. Shorting it loses.",
+  "authority": "roadmap B1 task 4 (docs/ROADMAP_2026-09-04_PROFIT_ENGINE.md) and docs/VERIFICATION_2026-09-04_OPUS5_ON_FABLE51.md",
+  "panel_rebuild_receipt": "panel_rebuild_20260904.json",
+  "written_by": "scripts/write_superseded_sidecars.py",
+  "never_edit": "the sealed receipt is NOT edited and NOT deleted. Repairing a tamper-evident artefact is the tampering. Both sha256s are recorded here so a later reader can tell whether either file moved after this link was made.",
+  "no_return_fields_here_on_purpose": "this sidecar quotes no return numbers in any KEY. test_benchmark_canonical.py scans every *.json in this directory, and a sidecar carrying an old excess figure would need a canonical benchmark stamp for a number whose whole purpose is to be void."
+}

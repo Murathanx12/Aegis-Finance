@@ -127,7 +127,7 @@ Every row is a pre-registered, one-shot run. Full text in
 
 | # | What was tested | Result |
 |---|---|---|
-| 1 | Signal-engine market timing, 2020-2025 | **+250.9% vs +740.0% buy-and-hold**; Sharpe 0.675 vs 0.921; sell-signal 3M hit rate **28.6%** (target >55%). All 7 sells fired at VIX>25 — the best buying opportunities |
+| 1 | Signal-engine market timing, 2020-2025 | **+250.9% vs +740.0% buy-and-hold**; Sharpe 0.675 vs 0.921; sell-signal 3M hit rate **28.6%** (target >55%). All 7 sells fired at VIX>25 — the best buying opportunities. [VOID 2026-09-04 — the +250.9/+740.0 pair was measured against ^GSPC (price index) with 66 OVERLAPPING windows compounded as if sequential. Regenerated on SPY total return, non-overlapping: **+28.3% net vs +114.8% buy-and-hold**, Sharpe 0.432 vs 0.837, sell hit rate 0.0% of 5. The DIRECTION below stands; the magnitudes do not. See `backend/BACKTEST_RESULTS.md` and `docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md` §3.1] |
 | 2 | 12-month crash prediction | ≈ climatological base rate, **no skill** |
 | 3 | LPPLS bubble timing | predictive skill **refuted twice**; ships descriptive-only |
 | 4 | Survivorship-free universe on free data | **1 of 20** delisted names usable on yfinance; 4 returned a *different* company on a recycled ticker |

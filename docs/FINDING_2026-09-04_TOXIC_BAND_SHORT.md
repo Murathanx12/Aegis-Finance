@@ -1,5 +1,30 @@
 # FINDING 2026-09-04 — The toxic band on the SHORT side
 
+> ## ⚠ VOID — SUPERSEDED 2026-09-05 (roadmap B1 task 4)
+>
+> **Void twice over, and the second reason is a reporting error, not a data one.**
+>
+> 1. Same corrupted tape: `toxic_ge_5` was largely a future-reverse-split
+>    detector, so the short priced here was a short of names about to
+>    reverse-split.
+> 2. Its headline numbers were **"hedged gross"** — a P&L per $1 of SHORT
+>    notional against an *unfunded* LONG index leg of beta dollars. The best line
+>    quoted, `liq_floored_hedged_beta` at **+76.63%/yr (t_b 7.24)**, embedded the
+>    equity premium that long leg earned, and the capital the pair requires never
+>    entered the denominator.
+>
+> Re-issued: **`backend/data/optimus/tracker_backtest/toxic_band_short_20260905.json`**,
+> which reports **`−resid`** (each name's own beta leg already subtracted) on
+> **Reg-T capital** (0.5 × short + 0.5 × long) and quotes the `beta_matched` leg
+> beside it. On the rebuilt panel `hedged_beta` is **−32.29%/yr (t_b −2.07)** and
+> `liq_floored_hedged_beta` **−29.25%/yr (t_b −0.88)**, against beta_matched legs
+> of +18.78%/yr and +34.89%/yr.
+>
+> **The population this document wanted to short has a POSITIVE corrected return.
+> Shorting it loses.** Read the new receipt as a refusal to monetise the band on
+> either side. The tables below have NOT been rewritten.
+
+
 **Question** (from `docs/REVIEW_2026-09-03_GPT_VERDICTS_AND_CAPITAL_ALLOCATOR.md`
 PART B): can the `toxic_ge_5` exclusion — the only band effect that survives
 BH-FDR in S36 — be monetised as a short, or do borrow costs and the

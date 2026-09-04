@@ -117,7 +117,11 @@ only adoptions is lying to itself.
 ### 7. Crash timing is closed; fragility is the surviving form
 Short-horizon crash *timing* has ≈0 IC; false-positive de-risking exits
 compounding bull runs and costs more than the crashes (canon A5, verified
-2026-06-14; our own signal engine: ~~+251% vs buy-and-hold +740%~~ (figures withdrawn 2026-09-04 — overlapping-window triple compounding; direction pending re-measurement),
+2026-06-14; our own signal engine: **+28.3% net vs buy-and-hold +114.8%** on SPY total
+return with non-overlapping compounding, re-measured 2026-09-04 (the previously
+quoted ~~+251% vs +740%~~ pair was the `^GSPC` price index with overlapping
+windows triple-compounded; the direction survived the correction and the gap
+widened),
 NEGATIVE_RESULTS §1). LPPLS predictive skill: refuted twice. The answerable
 question is "how fragile is the system, and is fragility rising" — a
 descriptive composite that may one day *scale exposure*, never a "crash

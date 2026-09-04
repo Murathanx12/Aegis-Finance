@@ -361,10 +361,18 @@ of what might happen."
 
 | Historical experiment (2020-01 → 2025-06) | Aegis | Benchmark | What we learned |
 |---|---:|---:|---|
-| Signal-engine timing strategy, total return | **WITHDRAWN 2026-09-04** | **WITHDRAWN** (was `^GSPC` price index, overlapping windows triple-compounded — see `backend/BACKTEST_RESULTS.md` correction) | Stress detection ≠ market timing (direction pending re-measurement) |
-| Sharpe ratio | withdrawn | withdrawn | Sitting out rebounds costs more than dodging drawdowns saved (pending re-measurement) |
-| Buy-signal 3-month hit rate | **67.4%** | target >60% ✓ | Some real directional information on entries |
-| Sell-signal 3-month hit rate | **28.6%** | target >55% ✗ | Sell signals fired at VIX>25 — historically the *best buying opportunities* |
+| Signal-engine timing strategy, total return | **+28.3%** net | **+114.8%** (SPY total return) | Stress detection ≠ market timing — the strategy keeps a quarter of the market |
+| Sharpe ratio | **0.432** | **0.837** | Sitting out rebounds costs more than dodging drawdowns saved |
+| Buy-signal 3-month hit rate | **76.5%** | target >60% ✓ | Some real directional information on entries — and accuracy is not the objective |
+| Sell-signal 3-month hit rate | **0.0%** of 5 | target >55% ✗ | Sell signals fired at VIX>25 — historically the *best buying opportunities* |
+
+*Re-measured 2026-09-04.* The figures published between 2026-03-30 and
+2026-09-04 (**+250.9% vs +740.0%**, Sharpe 0.675 vs 0.921) were void twice over:
+the benchmark was `^GSPC`, the S&P 500 **price** index — no dividends, not
+tradeable — and all 66 overlapping 3-month windows were compounded as if
+sequential (~3.12× log inflation). The arithmetic was fixed on 2026-04-15
+(`726c7bf`) but the document was never regenerated. The correction made the
+finding **stronger**, not weaker. Ruler: [`learner/benchmark.py`](learner/benchmark.py).
 
 The mechanism of the failure is the interesting part. The engine was
 genuinely good at detecting that the market was under stress — and then made

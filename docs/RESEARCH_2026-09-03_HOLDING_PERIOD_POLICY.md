@@ -1,5 +1,26 @@
 # Holding-period policy: how long should the engine hold what it admits?
 
+> ## ⚠ VOID — SUPERSEDED 2026-09-05 (roadmap B1 task 4)
+>
+> **Every number below was computed on a corrupted tape.** Each arm selects
+> inside `in_admissible`, which is a threshold on `ratio` — and `ratio` divided a
+> SPLIT-ADJUSTED IBES consensus by a RAW close, so the arms were buying a
+> different set of names than this document says. The instrument (holding the
+> admission signal constant and varying only the horizon) was sound; its
+> opportunity set was not.
+>
+> Re-issued: **`backend/data/optimus/tracker_backtest/holding_period_policy_20260905.json`**.
+> The conclusion **REVERSES**: at 25bps per side **no arm of 150 has a positive
+> excess CAGR** over the value-weighted market (the best is −6.33pp/yr), and the
+> champion quoted here — `rev_top50/fixed_H6m_25bps` — goes from terminal wealth
+> **3.743** (excess +1.674pp/yr, t +0.69) to **1.284** (excess −10.08pp/yr,
+> t −1.00) against an **unchanged** market terminal wealth of 3.41. The market
+> leg did not move; the selection did.
+>
+> The tables below have NOT been rewritten. See
+> `docs/FINDING_2026-09-04_THE_TAPE_REBUILT.md` §2d.
+
+
 **Date** 2026-09-03 · **Licence** `PRODUCT_EXPERIMENT` · **Receipt**
 `backend/data/optimus/tracker_backtest/holding_period_policy_20260903.json`
 (every number below is in it) · **Code** `scripts/holding_period_policy.py`

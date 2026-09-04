@@ -1,0 +1,16 @@
+{
+  "artefact": "SUPERSEDED_BY_SIDECAR",
+  "written_at_utc": "2026-09-04T16:36:04.296741+00:00",
+  "sealed_receipt": "revision_6m_cohorts_20260904.json",
+  "sealed_receipt_sha256": "1464ebbff1b010355800f8b264439e7aa6883fc35af4d21c90bb1b18a61d35ae",
+  "sealed_receipt_bytes": 245565,
+  "superseded_by": "revision_6m_cohorts_20260905.json",
+  "superseded_by_sha256": "734dabfb11d48aac35c609d60bac88d0dd1bee7d7d9f446ce1aa6fcb65174afc",
+  "status": "VOID -- DO NOT QUOTE ANY NUMBER FROM THE SEALED RECEIPT",
+  "reason": "Void for a reason stronger than the panel defect: every arm selected inside `in_admissible`, which is a RATIO threshold, so the revision mechanism was measured inside a pool carved by the corrupted split-adjusted ratio. A revision result measured in a contaminated pool is not a revision result. The new receipt runs the same engine over the FULL PIT HYGIENE universe (363,684 name-months against 66,821 -- 5.4x wider) and reports TWO independent definitions of a revision, `target_rev_1m` (a pct change of the consensus price TARGET, derived from the same level whose share basis was the defect) and `net_rev_1m` (a count of UP minus DOWN analyst revisions, which touches no price at all), each with its own >=64-draw permutation null. Neither beats the value-weighted market (terminal wealth 2.937 and 3.102 against 3.236 at 25bps per side); both beat ALL 64 draws from their own pool. Ranking skill and money are separate questions and the old receipt could not tell them apart.",
+  "authority": "roadmap B1 task 4 (docs/ROADMAP_2026-09-04_PROFIT_ENGINE.md) and docs/VERIFICATION_2026-09-04_OPUS5_ON_FABLE51.md",
+  "panel_rebuild_receipt": "panel_rebuild_20260904.json",
+  "written_by": "scripts/write_superseded_sidecars.py",
+  "never_edit": "the sealed receipt is NOT edited and NOT deleted. Repairing a tamper-evident artefact is the tampering. Both sha256s are recorded here so a later reader can tell whether either file moved after this link was made.",
+  "no_return_fields_here_on_purpose": "this sidecar quotes no return numbers in any KEY. test_benchmark_canonical.py scans every *.json in this directory, and a sidecar carrying an old excess figure would need a canonical benchmark stamp for a number whose whole purpose is to be void."
+}

@@ -1,5 +1,34 @@
 # STRATEGY CONTRACT — Revision-6M (monthly overlapping cohorts)
 
+> ## ⚠ DO NOT FREEZE — EVIDENCE BASE VOID, ARM REFUTED (2026-09-05)
+>
+> **This draft must not be sealed on the evidence it cites.** Its evidence
+> receipt (`revision_6m_cohorts_20260904.json`) measured the mechanism inside
+> `in_admissible` — a threshold on a `ratio` that divided a SPLIT-ADJUSTED IBES
+> consensus by a RAW close. A revision result measured in a pool carved by the
+> broken quantity is not a revision result.
+>
+> Re-issued: **`backend/data/optimus/tracker_backtest/revision_6m_cohorts_20260905.json`**.
+> Two things change:
+>
+> - **The arm this contract selects is refuted.**
+>   `cohort_H6m_falsifier_toxic_leftband_mktpark_25bps` goes from terminal wealth
+>   **3.766** (excess **+1.745pp/yr**, t +0.73) to **1.609** (excess
+>   **−7.71pp/yr**, t −1.19).
+> - **The mechanism, re-measured honestly, is not a market-beater.** Over the
+>   FULL PIT hygiene universe (363,684 name-months, 5.4× the old pool),
+>   `target_rev_1m` gives TW **2.937** and `net_rev_1m` **3.102** against a market
+>   **3.236** at 25bps — excess CAGR −1.10pp and −0.48pp, t_NW(5) 0.19 and 0.07.
+>   Both definitions *agree*, and both beat **all 64** permutation draws from
+>   their own pool (percentile 1.000; p = 1/65 is the add-one **floor**, a
+>   censored bound). So the **ranking** carries information while the **pool**
+>   carries no premium — which is a reason to keep studying the signal and not a
+>   reason to fund a sleeve.
+>
+> Rewriting this contract on the clean evidence is a separate, attended task.
+> See `docs/FINDING_2026-09-04_THE_TAPE_REBUILT.md` §2d.
+
+
 **STATUS: DRAFT / NOT YET FROZEN.** This document freezes only when the book
 goes live (post-judging, attended, via the `seed-a-lane` discipline — Murat
 flips the flag; sessions never improvise a seed). Until then every field is

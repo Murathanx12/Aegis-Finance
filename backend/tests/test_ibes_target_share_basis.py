@@ -12,9 +12,14 @@ opinion. Every band-prior receipt inherited it.
 This test pins the FACT on the FILE THE BUILDER READS, not a path: it parses
 which `ibes__ptgsum*` parquet `learner/dataset.py` opens, reads AAPL's
 2013-06-20 row from that file, and asserts the target sits within a
-plausible multiple of the raw CRSP close. It is xfail(strict) until B1
-switches the loader to the unadjusted file; when it flips to XPASS the
-marker must be deleted in the same commit (that is the lifecycle).
+plausible multiple of the raw CRSP close.
+
+It was `xfail(strict=True)` until B1 switched the loader to `ibes__ptgsumu`
+(2026-09-04). The marker was deleted in the commit that made it pass, which
+is the lifecycle: an xfail that survives its own fix becomes a green line
+that means nothing. `learner/dataset.py` now holds the adjusted file behind
+`_ADJUSTED_PTG_FILE` so the only `BULK / "ibes__ptgsum*"` LITERAL in that
+module is the PIT one and this parser cannot match the diagnostic read.
 
 Skips when the local WRDS parquet is absent (CI) — a skip is printed, never
 a silent pass.
@@ -44,11 +49,6 @@ def _loader_file() -> Path:
     return BULK / m.group(1)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="B1 not yet done: dataset.py reads the split-ADJUSTED ibes__ptgsum; "
-           "delete this marker when it reads ibes__ptgsumu (verdicts doc §2)",
-)
 def test_target_and_price_share_the_same_share_basis():
     pd = pytest.importorskip("pandas")
     f = _loader_file()

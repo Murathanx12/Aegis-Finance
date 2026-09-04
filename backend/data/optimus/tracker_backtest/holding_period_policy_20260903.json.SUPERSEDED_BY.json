@@ -1,0 +1,16 @@
+{
+  "artefact": "SUPERSEDED_BY_SIDECAR",
+  "written_at_utc": "2026-09-04T16:41:51.641944+00:00",
+  "sealed_receipt": "holding_period_policy_20260903.json",
+  "sealed_receipt_sha256": "7c225dbf36034367a34e819eb060613f67c01d75b4047ed2d575e2dac5d8cecd",
+  "sealed_receipt_bytes": 1546699,
+  "superseded_by": "holding_period_policy_20260905.json",
+  "superseded_by_sha256": "bb84bd3cc0860685f9a1b8ed8e73a478e1415611477f28916ca430301a695fea",
+  "status": "VOID -- DO NOT QUOTE ANY NUMBER FROM THE SEALED RECEIPT",
+  "reason": "Same corrupted-ratio panel, and every arm selects inside `in_admissible` -- so the arms were buying a different set of names than the receipt said. The instrument (the horizon sweep) was sound; its opportunity set was not. Re-run on `learner-train-table-2` the conclusion REVERSES: at 25bps per side no arm in the receipt has a positive excess CAGR over the value-weighted market, and the S36 champion `rev_top50/fixed_H6m_25bps` goes from terminal wealth 3.743 (excess +1.674pp/yr, t +0.69) to 1.284 (excess -10.08pp/yr, t -1.00) against an unchanged market terminal wealth of 3.41. The market leg did not move; the selection did, which is exactly what a share-basis defect in an admission threshold does.",
+  "authority": "roadmap B1 task 4 (docs/ROADMAP_2026-09-04_PROFIT_ENGINE.md) and docs/VERIFICATION_2026-09-04_OPUS5_ON_FABLE51.md",
+  "panel_rebuild_receipt": "panel_rebuild_20260904.json",
+  "written_by": "scripts/write_superseded_sidecars.py",
+  "never_edit": "the sealed receipt is NOT edited and NOT deleted. Repairing a tamper-evident artefact is the tampering. Both sha256s are recorded here so a later reader can tell whether either file moved after this link was made.",
+  "no_return_fields_here_on_purpose": "this sidecar quotes no return numbers in any KEY. test_benchmark_canonical.py scans every *.json in this directory, and a sidecar carrying an old excess figure would need a canonical benchmark stamp for a number whose whole purpose is to be void."
+}

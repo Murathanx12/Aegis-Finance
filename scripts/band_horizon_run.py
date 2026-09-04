@@ -82,12 +82,23 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from learner import benchmark as BM     # noqa: E402
 from learner import beta as B           # noqa: E402
 from learner import dataset as D        # noqa: E402
 from learner import prior as P          # noqa: E402
 
 RECEIPT = (REPO / "backend" / "data" / "optimus" / "tracker_backtest"
-           / "band_horizon_20260903.json")
+           / "band_horizon_20260905.json")
+#: The receipt this one REPLACES. `band_horizon_20260903.json` was computed on
+#: `learner-train-table-1`, whose `ratio` divided a split-ADJUSTED IBES consensus
+#: (`ptgsum`) by a RAW CRSP close -- so `toxic_ge_5` was largely a
+#: future-reverse-split detector (74.4% of its 26,199 name-months carried one).
+#: The old file is sealed and is NEVER edited; it gets a SUPERSEDED_BY sidecar.
+SUPERSEDES = "band_horizon_20260903.json"
+#: Price floors the toxic cell MUST be reported at. VERIFICATION_2026-09-04 SS4:
+#: the corrected toxic cell earns everything below $5, where a 10bps round trip
+#: is fiction. A receipt that quotes the cell without this table is misleading.
+PRICE_FLOORS = (0.0, 2.0, 5.0, 10.0)
 
 HORIZONS = (1, 3, 6, 12)
 BANDS = ("lt_1_5", "b_1_5_3", "b_3_5", "toxic_ge_5")
@@ -198,9 +209,16 @@ def cohort_frame(df: pd.DataFrame, h: int, panel_ew: pd.Series) -> pd.DataFrame:
     never from one (PREREG_BAND_IS_BETA_1)."""
     need = [f"fwd_{h}m", f"mkt_vw_{h}m", f"mkt_ew_{h}m", "beta_pre"]
     ok = df[need].notna().all(axis=1)
-    c = df.loc[ok, ["month", "permno", "band", "ratio", "consensus", "market_cap",
-                    "beta_pre", "in_admissible", "split_prior_year",
-                    f"fwd_{h}m", f"mkt_vw_{h}m", f"mkt_ew_{h}m", f"prior_{h}m"]].copy()
+    keep = ["month", "permno", "band", "ratio", "consensus", "market_cap",
+            "beta_pre", "in_admissible", "split_prior_year",
+            f"fwd_{h}m", f"mkt_vw_{h}m", f"mkt_ew_{h}m", f"prior_{h}m"]
+    # `close` and `log_dollar_vol_20d` are carried so the receipt can report the
+    # PRICE-FLOOR variant of every band beside the headline. Without them a
+    # sub-$5 cell reads as a signal (VERIFICATION_2026-09-04 SS4).
+    for extra in ("close", "log_dollar_vol_20d"):
+        if extra in df.columns and extra not in keep:
+            keep.append(extra)
+    c = df.loc[ok, keep].copy()
     c = c.rename(columns={f"fwd_{h}m": "fwd", f"mkt_vw_{h}m": "mkt_vw",
                           f"mkt_ew_{h}m": "mkt_ew", f"prior_{h}m": "prior"})
     c["mkt_panel"] = c["month"].map(panel_ew)
@@ -326,6 +344,109 @@ def by_year(bk: pd.DataFrame, h: int, col: str) -> dict:
     yr = _years(bk)
     return {str(y): round(100.0 * annualise(float(bk.loc[yr == y, col].mean()), h), 2)
             for y in sorted(yr.unique())}
+
+
+def price_floor_table(c: pd.DataFrame, h: int, band: str, cost_bps: float,
+                      excluded_months: list | None = None) -> dict:
+    """The band's excess AT A LADDER OF PRICE FLOORS -- mandatory for any cell
+    whose mass sits under $5.
+
+    WHY THIS IS NOT OPTIONAL. On the point-in-time panel the `toxic_ge_5` cell
+    measures +37.4%/yr t 1.94 on ~7 names a month, and 84% of those name-months
+    trade under $5 (median close $3.08). Restrict to close >= $5 and the SIGN
+    FLIPS to about -32%/yr. A 10bps round trip on a $3 microcap is fiction: the
+    realistic spread is 50-200bps, so the headline is earned exactly where the
+    cost model is least believable. Reporting the ladder is the difference
+    between a finding and a misleading one (VERIFICATION_2026-09-04 SS4).
+    """
+    out = {"_clause": ("the SAME PREREG_BAND_IS_BETA_1 contamination clause as the "
+                       "headline is applied (months with >5% missing beta excluded from "
+                       "both arms), so the `close_ge_0` row is the headline row and the "
+                       "ladder is a like-for-like comparison rather than two universes"),
+           "_excluded_months": len(excluded_months or [])}
+    if "close" not in c.columns:
+        return {"status": "CANNOT DETERMINE (panel carries no close column)"}
+    g0 = c[c["band"] == band]
+    if excluded_months:
+        g0 = g0[~g0["month"].isin(excluded_months)]
+    for f in PRICE_FLOORS:
+        g = g0 if f <= 0 else g0[g0["close"] >= f]
+        if g["month"].nunique() < 6:
+            out[f"close_ge_{f:g}"] = {"status": "TOO_FEW_MONTHS",
+                                      "months": int(g["month"].nunique()),
+                                      "name_months": int(len(g))}
+            continue
+        bk = ew_book(g, h, cost_bps)["book"]
+        ex = series_stats(bk["excess_vw"], h, f"excess_vw_close_ge_{f:g}")
+        rs = series_stats(bk["resid"], h, f"resid_close_ge_{f:g}")
+        out[f"close_ge_{f:g}"] = {
+            "name_months": int(len(g)),
+            "n_months": int(len(bk)),
+            "median_names_per_month": int(bk["n_names"].median()),
+            "excess_vw_annualised_pct": ex.get("annualised_pct"),
+            "excess_vw_t_block": ex.get("t_block"),
+            "excess_vw_median_monthly_pct": round(
+                100.0 * float(bk["excess_vw"].median()), 4),
+            "excess_vw_mean_monthly_pct": round(
+                100.0 * float(bk["excess_vw"].mean()), 4),
+            "beta_neutral_resid_annualised_pct": rs.get("annualised_pct"),
+            "beta_neutral_resid_t_block": rs.get("t_block"),
+            "era_splits_excess_vw": era_split(bk, h, "excess_vw"),
+        }
+    prices = g0["close"].dropna()
+    dv = (np.expm1(g0["log_dollar_vol_20d"]) if "log_dollar_vol_20d" in g0.columns
+          else pd.Series(dtype=float))
+    out["_population"] = {
+        "name_months": int(len(g0)),
+        "median_close": round(float(prices.median()), 3) if len(prices) else None,
+        "share_close_below_5": round(float((prices < 5.0).mean()), 4) if len(prices) else None,
+        "share_close_below_2": round(float((prices < 2.0).mean()), 4) if len(prices) else None,
+        "median_dollar_vol_20d_usd": (round(float(dv.median()), 0)
+                                      if len(dv.dropna()) else None),
+        "share_dollar_vol_below_3m": (round(float((dv < 3e6).mean()), 4)
+                                      if len(dv.dropna()) else None),
+        "cost_realism": (
+            "the headline row (no floor) is quoted at "
+            f"{cost_bps:g}bps per side. On a sub-$5 name that is FICTION: a "
+            "realistic round trip on a $3 microcap is 50-200bps. Any row whose "
+            "population is mostly sub-$5 is therefore an UPPER BOUND on what a "
+            "book could have earned, and is labelled as such rather than netted "
+            "at a rate the tape does not offer."),
+    }
+    return out
+
+
+def family_block(p_screen: dict, p_export: dict, extra_cells: int = 0) -> dict:
+    """How many cells were looked at, and the family MAXIMUM p.
+
+    Canon: quote the family size or do not quote the p. B4 (CPCV / DSR / SPA)
+    does not exist yet, so the family-adjusted verdict is PENDING and is SAID to
+    be pending -- an uncorrected p on a 32-cell family is not a significance
+    claim.
+    """
+    allp = {**p_screen, **p_export}
+    fin = {k: v for k, v in allp.items() if np.isfinite(v)}
+    return {
+        "cells_examined_screen": len(p_screen),
+        "cells_examined_export": len(p_export),
+        "cells_examined_additional_reported_uncorrected": extra_cells,
+        "family_size_total": len(p_screen) + len(p_export) + extra_cells,
+        "family_max_p": (round(max(fin.values()), 6) if fin else None),
+        "family_min_p": (round(min(fin.values()), 6) if fin else None),
+        "family_argmin": (min(fin, key=fin.get) if fin else None),
+        "family_correction_status": (
+            "PENDING -- BH-FDR (screen) and Holm (export) are computed below over "
+            "the t_block p-values, but the roadmap's B4 block (CPCV / Deflated "
+            "Sharpe / SPA) does not exist yet. No cell in this receipt is claimed "
+            "significant on a family-adjusted basis."),
+        "model_null_percentile": None,
+        "model_null_status": (
+            "NOT AVAILABLE for this receipt: a band is a fixed threshold rule "
+            "with no fitted parameters, so there is no model to re-fit on shuffled "
+            "labels. The >=64-draw model-null bar applies to the learner arms "
+            "(learner/nullbar.py); the analogue here is the random-ordering arm in "
+            "`ordering_arena_h1m` and the beta/cap-matched control, both reported."),
+    }
 
 
 # --------------------------------------------------- multiplicity control
@@ -567,6 +688,31 @@ def one_variant(df: pd.DataFrame, tag: str, note: str) -> tuple[dict, dict, dict
             leg = series_stats(bk["beta_leg"], h, "beta_leg")
             entry = {
                 "contamination_clause": contam,
+                "cost_status": {
+                    "gross_rows_zero_cost_diagnostic": True,
+                    "gross_rows": ["raw_return", "market_vw_same_months", "excess_vw",
+                                   "excess_ew_CRSP_COMPARISON_ONLY",
+                                   "excess_panel_INCUMBENT_BENCHMARK",
+                                   "beta_neutral_resid", "beta_leg_raw_minus_neutral",
+                                   "terminal_wealth_gross", "era_splits_excess_vw",
+                                   "era_splits_resid", "leave_one_year_out_excess_vw",
+                                   "by_year_excess_vw_annualised_pct",
+                                   "by_year_resid_annualised_pct"],
+                    "net_rows": ["net_10bps", "net_25bps",
+                                 "terminal_wealth_net_10bps"],
+                    "why_it_is_on_the_row": (
+                        "the header used to carry one `zero_cost_diagnostic: False` for "
+                        "the whole receipt, which was true of the intent and false of "
+                        "most of the rows: `excess_vw` and `resid` are GROSS, and they "
+                        "are the rows every downstream document quotes. The flag now "
+                        "travels with the row, so a gross number cannot be read as a net "
+                        "one by a reader who never opened the header."),
+                    "turnover_note": (
+                        f"measured turnover (sum|dw|, old weights drifted by their "
+                        f"realised holding-period return) is "
+                        f"{round(res['median_turnover'], 4)} per rebalance at this "
+                        "horizon; the net rows charge it at 10 and 25 bps per side."),
+                },
                 "n_months": int(len(bk)),
                 "name_months": int(len(g)),
                 "median_names_per_month": int(bk["n_names"].median()),
@@ -655,10 +801,40 @@ def run() -> dict:
     df["beta_pre"] = B.attach(df, B.load())
     print(f"  beta present on {df['beta_pre'].notna().mean():.4f} of rows")
 
+    schema_hash = (str(df["schema_hash"].iloc[0])
+                   if "schema_hash" in df.columns and len(df) else None)
     receipt: dict = {
         "artefact": "BAND_HORIZON_SELF_ATTACK",
         "written_at_utc": t0.isoformat(),
         "licence": "PRODUCT_EXPERIMENT",
+        "supersedes": SUPERSEDES,
+        "supersedes_reason": (
+            "the superseded receipt was computed on `learner-train-table-1`, whose "
+            "`ratio` divided the SPLIT-ADJUSTED IBES consensus (`ptgsum`) by the RAW "
+            "CRSP close. `toxic_ge_5` was therefore largely a FUTURE-REVERSE-SPLIT "
+            "detector: 74.4% of its 26,199 name-months carried one, and splitting the "
+            "old cell on `cfacpr` gave -13.4%/yr for the clean half against -48.9%/yr "
+            "for the contaminated half -- the lookahead WAS the effect. This receipt "
+            "re-runs the identical code path on `learner-train-table-2`, which reads "
+            "the UNADJUSTED consensus `ibes__ptgsumu` over the same raw close. The old "
+            "file is sealed and unedited; it carries a SUPERSEDED_BY sidecar."),
+        "panel": {
+            "table": "backend/data/optimus/learner/train_table.parquet",
+            "schema_version": "learner-train-table-2",
+            "schema_hash": schema_hash,
+            "rebuild_receipt": "backend/data/optimus/tracker_backtest/panel_rebuild_20260904.json",
+            "numerator": "ibes__ptgsumu (UNADJUSTED IBES consensus mean target)",
+            "denominator": "raw CRSP dsf close (prc), same share basis",
+            "known_open_limitation": (
+                "`build_monthly` drops a dying name's FINAL month because `fwd_1m` "
+                "needs a next monthly row. Deliberately not fixed in the loader change "
+                "and named in the panel receipt. Effect on this receipt: the four bands "
+                "lose the last observation of every name that leaves the panel, which "
+                "removes some -100%-ish terminal months. It biases every band UPWARD by "
+                "the same mechanism, so BAND CONTRASTS are close to unaffected while "
+                "LEVELS are mildly generous; the delisting-incidence rows below are what "
+                "size it per band."),
+        },
         "executes": ["TRIAL-BAND-IS-BETA-1 (primary)",
                      "TRIAL-RANK-VS-EXPRETURN-1 (random-order control arm, horizon 1m)"],
         "not_executed": {
@@ -678,6 +854,44 @@ def run() -> dict:
                                       "equal-weighted analyst-covered panel (the "
                                       "incumbent's own, and the one +16.55 is quoted against)"],
         },
+        BM.STAMP_KEY: BM.declare(
+            "vw_crsp_common_main",
+            construction=(
+                "value-weighted daily total return of the CRSP common-stock / "
+                "main-exchange universe, weights on the previous session's market cap, "
+                "membership resolved per (permno, date) against the CRSP name windows "
+                "(learner.dataset.market_indices); compounded over each name's h-month "
+                "forward window and carried on the panel as `mkt_vw_{h}m`. Identical "
+                "construction to learner.benchmark.vw_universe -- declared rather than "
+                "re-derived because this receipt reads the panel column, not the series."),
+            span=[str(min(df["month"])), str(max(df["month"]))],
+            n_periods=int(df["month"].nunique()),
+            freq="M",
+            secondary_legs={
+                "ew_crsp_common_main": "panel column mkt_ew_{h}m, reported as "
+                                       "excess_ew_CRSP_COMPARISON_ONLY",
+                "matched:analyst_covered_panel_ew": "the INCUMBENT's benchmark -- the "
+                    "equal-weighted mean forward return of the analyst-covered panel "
+                    "itself, reproduced so the published +16.55%/yr can be seen for "
+                    "what it is: an excess over the covered panel, not over the market",
+                "beta_matched": "per-name beta_pre x mkt_vw is subtracted in the "
+                                "`beta_neutral_resid` leg of every band",
+            }),
+        "void_columns": {
+            "columns": ["prior_1m", "prior_3m", "prior_6m", "prior_12m",
+                        "resid_vw_*", "resid_ew_*"],
+            "status": "VOID",
+            "why": (
+                "the panel's `prior_*` columns are BAND_PRIOR v2 expectations, and v2's "
+                "constants were fitted on the corrupted split-adjusted ratio. An attended "
+                "proposal retires them (roadmap B1 task 5: BAND_PRIOR becomes hygiene "
+                "only). Nothing in this receipt reads a `prior_*` column as an "
+                "EXPECTATION. Two blocks still touch it as an ORDERING and are labelled "
+                "VOID in place: `ordering_arena_h1m`'s `exp` arm and "
+                "`prior_rank_ic_by_horizon`. The `resid` reported per band is NOT the "
+                "panel's `resid_vw_*`: it is recomputed here as "
+                "fwd - beta_pre x mkt_vw, a beta residual with no prior in it."),
+        },
         "beta": {"panel": "backend/data/optimus/learner/beta_panel.parquet",
                  "estimator": "OLS of daily return on daily VW market return",
                  "window_sessions": B.BETA_WINDOW, "min_obs": B.BETA_MIN_OBS,
@@ -688,6 +902,18 @@ def run() -> dict:
                  "coverage_share_of_rows": round(float(df["beta_pre"].notna().mean()), 4)},
         "costs": {"primary_bps_per_side": COST_BPS_PRIMARY,
                   "sensitivity_bps_per_side": COST_BPS_SENSITIVITY,
+                  "zero_cost_rows_exist_and_are_flagged_per_row": (
+                      "this receipt reports GROSS and NET side by side. The gross rows "
+                      "are decompositions and each band entry carries a `cost_status` "
+                      "block naming exactly which of its rows are which. Do not read a "
+                      "gross row as a result."),
+                  "cost_realism": (
+                      "10bps and 25bps per side are defensible for the large bands "
+                      "(`lt_1_5` median close is well above $5). They are NOT defensible "
+                      "for `toxic_ge_5`, whose population has a median close of $3.08 "
+                      "with 84% under $5 and 86% below $3m/day of dollar volume: a "
+                      "realistic round trip there is 50-200bps, and every toxic row is "
+                      "an UPPER BOUND. The price-floor ladder is where that is quantified."),
                   "convention": "cost = sum|dw| x bps/side, where the old weights are DRIFTED "
                                 "by their realised holding-period return before the diff; "
                                 "sum|dw| counts the sell leg and the buy leg",
@@ -738,6 +964,26 @@ def run() -> dict:
         "excluded rather than a matter of taste.")
     receipt["primary_split_readable"] = primary
     receipt["sensitivity_splits_kept"] = sens
+    _sp = df["split_prior_year"].astype(bool)
+    _bands_in_split = sorted(df.loc[_sp, "band"].unique().tolist())
+    receipt["sensitivity_splits_kept_IS_NOW_DEGENERATE"] = {
+        "finding": ("on `learner-train-table-2` the splits-kept arm is IDENTICAL to the "
+                    "primary arm, cell for cell, and that is a STRUCTURAL fact, not a "
+                    "coincidence: the panel rebuild moved split-year hygiene INTO "
+                    "learner/dataset.py, so every split_prior_year row is now labelled "
+                    "`no_opinion` and cannot appear in any of the four bands."),
+        "split_prior_year_rows": int(_sp.sum()),
+        "bands_those_rows_carry": _bands_in_split,
+        "consequence": ("this arm no longer measures anything and is kept only so the "
+                        "superseded receipt's corresponding block has a counterpart. The "
+                        "old receipt's '3-5 headline falls ~3pp/yr when splits are kept' "
+                        "is NOT re-testable on this panel; the question moved upstream to "
+                        "the dataset and is answered there."),
+        "how_to_re_ask_it": ("read `ratio_unhygienic` (the raw value the dataset keeps) "
+                             "and re-band from it -- deliberately NOT done here, because "
+                             "re-admitting rows the hygiene gate refused is a different "
+                             "study and needs its own receipt."),
+    }
 
     receipt["decision_rules_PREREG_BAND_IS_BETA_1"] = resolve_band_is_beta(primary)
 
@@ -785,6 +1031,12 @@ def run() -> dict:
     print("ordering arena on the admitted set (h=1m) ...")
     c1 = cohort_frame(df[split_free], 1, panel_ew_benchmark(df, 1))
     receipt["ordering_arena_h1m"] = ordering_arena(c1, np.random.default_rng(SEED + 1))
+    receipt["ordering_arena_h1m"]["exp_arm_status"] = (
+        "VOID -- the `exp` arm orders on the panel's `prior_1m`, a BAND_PRIOR v2 "
+        "expectation fitted on the corrupted split-adjusted ratio. Kept only because "
+        "the arm's RANDOM control and the score/exp slot overlap are still informative "
+        "about how little the ordering matters. Do not read the `exp` arm as an "
+        "expected return.")
 
     print("prior rank IC by horizon ...")
     ic = {}
@@ -812,6 +1064,63 @@ def run() -> dict:
               f"inside-3-5 IC {ic[f'{h}m']['ratio_inside_b_3_5']['mean_ic']} "
               f"t_block {ic[f'{h}m']['ratio_inside_b_3_5']['t_block']}")
     receipt["prior_rank_ic_by_horizon"] = ic
+    receipt["prior_rank_ic_by_horizon"]["status"] = (
+        "the `prior_vs_excess_vw_WHOLE_PANEL` rows are VOID (BAND_PRIOR v2 column). "
+        "The `ratio_inside_*` rows are LIVE: they rank on the point-in-time ratio "
+        "itself, which this panel rebuilt.")
+
+    # ---- PRICE-FLOOR LADDER. Mandatory for every band, because the corrected
+    # toxic cell earns everything it earns below $5 and reporting it without the
+    # floor is what VERIFICATION_2026-09-04 SS4 forbids.
+    print("price-floor ladder per band ...")
+    floors: dict = {}
+    for h in HORIZONS:
+        c = cohort_frame(df[split_free], h, panel_ew_benchmark(df, h))
+        floors[f"{h}m"] = {
+            b: price_floor_table(
+                c, h, b, COST_BPS_PRIMARY,
+                contamination_months(df[split_free], df["band"] == b, h)["excluded_months"])
+            for b in BANDS}
+        tox = floors[f"{h}m"]["toxic_ge_5"]
+        base = tox.get("close_ge_0", {})
+        f5 = tox.get("close_ge_5", {})
+        print(f"    {h:2d}m toxic  no floor {base.get('excess_vw_annualised_pct')}"
+              f"%/yr t_b {base.get('excess_vw_t_block')}  |  close>=$5 "
+              f"{f5.get('excess_vw_annualised_pct')}%/yr t_b {f5.get('excess_vw_t_block')}"
+              f" (names/mo {f5.get('median_names_per_month')})")
+    receipt["price_floor_ladder_by_band"] = floors
+
+    t1 = floors["1m"]["toxic_ge_5"]
+    receipt["MANDATORY_TOXIC_BAND_DISCLOSURE"] = {
+        "rule": ("VERIFICATION_2026-09-04 SS4: the corrected toxic_ge_5 cell MUST NOT be "
+                 "presented as a long. Every receipt that reports it reports the $5 "
+                 "price-floor variant and the era split beside it."),
+        "headline_no_floor_1m": {
+            "excess_vw_annualised_pct": t1.get("close_ge_0", {}).get("excess_vw_annualised_pct"),
+            "t_block": t1.get("close_ge_0", {}).get("excess_vw_t_block"),
+            "median_names_per_month": t1.get("close_ge_0", {}).get("median_names_per_month"),
+            "median_monthly_excess_pct": t1.get("close_ge_0", {}).get("excess_vw_median_monthly_pct"),
+            "mean_monthly_excess_pct": t1.get("close_ge_0", {}).get("excess_vw_mean_monthly_pct"),
+        },
+        "close_ge_5_variant_1m": {
+            "excess_vw_annualised_pct": t1.get("close_ge_5", {}).get("excess_vw_annualised_pct"),
+            "t_block": t1.get("close_ge_5", {}).get("excess_vw_t_block"),
+            "median_names_per_month": t1.get("close_ge_5", {}).get("median_names_per_month"),
+        },
+        "era_splits_no_floor_1m": t1.get("close_ge_0", {}).get("era_splits_excess_vw"),
+        "population_1m": t1.get("_population"),
+        "verdict": ("NOT A SIGNAL AND NOT A LONG. A cell whose sign depends on a $5 "
+                    "price floor, whose median monthly excess is negative against a "
+                    "positive mean (a right tail, not a location shift), and which holds "
+                    "single-digit names a month is a hygiene exclusion at best. The "
+                    "defensible statement from this receipt is the NEGATIVE one: under a "
+                    "point-in-time ratio no band premium survives."),
+    }
+
+    receipt["family"] = family_block(
+        {**ps, **ps2}, pe,
+        extra_cells=sum(len([k for k in floors[f"{h}m"][b] if not k.startswith("_")])
+                        for h in HORIZONS for b in BANDS))
 
     # ---- the four answers the session was asked for, computed rather than argued
     b35 = {h: primary["per_horizon"][f"{h}m"]["bands"]["b_3_5"] for h in HORIZONS}
@@ -853,6 +1162,7 @@ def run() -> dict:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--build-betas", action="store_true")
+    ap.add_argument("--out", default=str(RECEIPT))
     a = ap.parse_args(argv)
     if a.build_betas:
         df = pd.read_parquet(D.TRAIN_TABLE, columns=["permno"])
@@ -861,9 +1171,10 @@ def main(argv=None) -> int:
         print(json.dumps(rec, indent=2))
         return 0
     rep = run()
-    RECEIPT.parent.mkdir(parents=True, exist_ok=True)
-    RECEIPT.write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
-    print(f"\nreceipt -> {RECEIPT}")
+    out = Path(a.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(rep, indent=2, default=str), encoding="utf-8")
+    print(f"\nreceipt -> {out}")
     return 0
 
 

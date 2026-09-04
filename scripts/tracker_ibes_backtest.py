@@ -11,14 +11,29 @@ selects from holds several thousand names and is one day old, so it cannot
 produce a base rate of its own: a forward rate needs forward returns and there
 are none yet.
 
-IBES can. `ibes__ptgsum` carries consensus PRICE TARGETS and `ibes__recdsum`
-carries recommendation counts, both monthly, both point-in-time, for the whole
-US market from 2013. Joined to CRSP daily prices that is eleven years of the
-same screen on names nobody curated -- which is the only instrument that can
-answer Murat's two hypotheses:
+IBES can. `ibes__ptgsumu` carries consensus PRICE TARGETS **in the share terms
+that existed at `statpers`** and `ibes__recdsum` carries recommendation counts,
+both monthly, both point-in-time, for the whole US market from 2013. Joined to
+CRSP daily prices that is eleven years of the same screen on names nobody
+curated -- which is the only instrument that can answer Murat's two hypotheses:
 
     "thin coverage has more upside"     -> split every result by coverage bucket
     "do not buy last year's winner"     -> split every result by past_winner
+
+THE SHARE-BASIS TRAP, WHICH THIS FILE FELL INTO FOR A YEAR
+==========================================================
+IBES ships the price-target summary twice: `ibes__ptgsum` is SPLIT-ADJUSTED
+(every historical target restated in END-OF-SAMPLE share terms) and
+`ibes__ptgsumu` is UNADJUSTED (the target as it was quoted). Until 2026-09-04
+this file read the ADJUSTED file and divided by the RAW CRSP close, which is not
+a ratio at all: `ratio_used = true_ratio / cfacpr(t)`, and `cfacpr(t)` is a
+FUTURE quantity. AAPL 2013-06-20: adjusted 19.323, unadjusted 541.04, raw close
+413.50, `cfacpr` 28.0 -- the tape said 0.047, the truth was 1.308. A name that
+LATER reverse-split had its ratio inflated into the "toxic" band, so that label
+was a future-collapse detector (74.35% of toxic rows carry a future reverse
+split, against 0.09% of the below-1.5 band).
+See `docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md` §2. Pinned by
+`backend/tests/test_ibes_target_share_basis.py`.
 
 THE SCALE TRAP, NAMED BECAUSE IT WOULD NOT LOOK LIKE AN ERROR
 =============================================================
@@ -64,6 +79,15 @@ import numpy as np
 import pandas as pd
 
 REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+# The Shumway (1997) delisting fills are IMPORTED, never retyped: the panel and
+# the benchmark must count a dead name's last return the same way. `learner
+# .benchmark` imports `learner.dataset` only inside a function, so this cannot
+# close a cycle with `learner.dataset`'s top-level import of this module.
+from learner.benchmark import SHUMWAY_FILL                       # noqa: E402
+
 WRDS = REPO / "backend" / "data" / "optimus" / "wrds"
 BULK = WRDS / "bulk"
 OUT = REPO / "backend" / "data" / "optimus" / "tracker_backtest"
@@ -71,6 +95,26 @@ OUT = REPO / "backend" / "data" / "optimus" / "tracker_backtest"
 #: The other repository. The rules live there and are imported, not copied.
 TERMINAL = Path(r"C:\Users\mrthn\aegis-alpha-terminal")
 TRACKER_PY = TERMINAL / "alpha" / "tracker.py"
+
+#: The SPLIT-ADJUSTED IBES summary. Held behind a name, never written as a
+#: `BULK / <adjusted-file-name>` literal, so that
+#: `backend/tests/test_ibes_target_share_basis.py` -- which parses the loader
+#: source for the file it opens -- can only ever match the PIT file.
+_ADJUSTED_PTG_FILE = "ibes__ptgsum.parquet"
+
+#: DELISTING CODES. CRSP `dlstcd`:
+#:   100      still trading (not a delisting at all)
+#:   200-399  merger / exchange -- the holder receives something
+#:   400-489  liquidation (450, n=216 in 2013-24, mean dlret -0.74%)
+#:   {500} u [520, 584]  PERFORMANCE-CODED: dropped by the exchange, moved to
+#:            OTC, price/market-cap/assets deficient. 866 events 2013-24, mean
+#:            `dlret` -24.63%. Shumway (1997) fills a MISSING dlret here.
+#: The wider 400-591 range is NOT the performance set: it dilutes the mean to
+#: -19.57% by counting liquidations, and 585/587/591 are administrative.
+DELIST_PERF_CODES = (500,)
+DELIST_PERF_RANGE = (520, 584)
+DELIST_LIQUIDATION_RANGE = (400, 489)
+DELIST_MERGER_RANGE = (200, 399)
 
 #: CRSP share codes 10 and 11 are US COMMON STOCK. Everything else -- ADRs,
 #: closed-end funds, REITs with other codes, units -- is a different instrument
@@ -193,15 +237,168 @@ def load_names() -> pd.DataFrame:
     return df.dropna(subset=["namedt", "nameenddt"])
 
 
-def load_ibes(start: int, end: int) -> pd.DataFrame:
-    """Consensus targets joined to recommendation counts, monthly, US firms."""
-    ptg = pd.read_parquet(BULK / "ibes__ptgsum.parquet",
-                          columns=["cusip", "statpers", "meanptg", "numest", "usfirm",
-                                   "measure", "curr"])
+# ------------------------------------------------------- delisting returns
+
+def delist_category(dlstcd) -> str:
+    """`dlstcd` -> one of active / merger / liquidation / performance / other.
+
+    Named categories rather than one range, because the categories have
+    different means and pooling them is how -24.63% became -19.57%.
+    """
+    try:
+        c = int(dlstcd)
+    except (TypeError, ValueError):
+        return "unknown"
+    if c < 200:
+        return "active"
+    if DELIST_MERGER_RANGE[0] <= c <= DELIST_MERGER_RANGE[1]:
+        return "merger_or_exchange"
+    if DELIST_LIQUIDATION_RANGE[0] <= c <= DELIST_LIQUIDATION_RANGE[1]:
+        return "liquidation"
+    if c in DELIST_PERF_CODES or DELIST_PERF_RANGE[0] <= c <= DELIST_PERF_RANGE[1]:
+        return "performance"
+    return "other"
+
+
+def resolve_delisting_return(d: pd.DataFrame) -> pd.DataFrame:
+    """Add `dlret_used` / `dlret_source` / `dl_factor` to a delisting frame.
+
+    Input columns: `category` (from `delist_category`), `dlret`, `hexcd`.
+    Separated from `load_delistings` so the FILL RULE can be tested on a
+    synthetic frame offline -- a fill that only runs against a 19k-row parquet
+    is a fill nobody checks.
+
+    The Shumway (1997) fill applies to PERFORMANCE codes only, and only where
+    CRSP has no `dlret`: -30% on NYSE/AMEX (`hexcd` 1-2), -55% on NASDAQ
+    (`hexcd` 3). A merger or a liquidation with no `dlret` gets NO fill -- a
+    made-up number for a wind-up whose proceeds are unknown is a fabrication,
+    and `dlret_source == "none"` says so in the census.
+    """
+    d = d.copy()
+    d["dlret"] = pd.to_numeric(d["dlret"], errors="coerce")
+    perf = d["category"] == "performance"
+    missing = perf & d["dlret"].isna()
+    # `hexcd` is CRSP's header exchange code on the delisting record itself and
+    # uses the same 1=NYSE / 2=AMEX / 3=NASDAQ vocabulary as `exchcd`. Anything
+    # else gets no fill rather than the wrong one.
+    nasdaq = d["hexcd"] == 3
+    nyse_amex = d["hexcd"].isin((1, 2))
+    d["dlret_used"] = d["dlret"]
+    d["dlret_source"] = np.where(d["dlret"].notna(), "crsp", "none")
+    fill_na = missing & nyse_amex
+    fill_nd = missing & nasdaq
+    d.loc[fill_na, "dlret_used"] = SHUMWAY_FILL["NYSE_AMEX"]
+    d.loc[fill_na, "dlret_source"] = "shumway_nyse_amex"
+    d.loc[fill_nd, "dlret_used"] = SHUMWAY_FILL["NASDAQ"]
+    d.loc[fill_nd, "dlret_source"] = "shumway_nasdaq"
+    # A delisting return below -100% is not a return. CRSP does not emit one,
+    # but a clip is cheaper than discovering a negative wealth factor later.
+    d["dl_factor"] = (1.0 + d["dlret_used"].clip(lower=-1.0)).fillna(1.0)
+    return d
+
+
+def load_delistings() -> pd.DataFrame:
+    """`crsp__dsedelist` with the delisting return resolved per permno.
+
+    Columns: permno, dlstdt, dlstcd, category, dlret, dlret_used, dlret_source,
+    dl_factor. `dlret_source` is one of `crsp` / `shumway_nyse_amex` /
+    `shumway_nasdaq` / `none` -- so a receipt can say how many dead names were
+    counted on a FILL rather than on a measurement.
+
+    WHY THIS IS NEEDED AT ALL: `crsp.dsf.ret` is not delisting-inclusive.
+    Measured 2026-09-04, 1,103 of the 1,114 events coded 400-591 in 2013-24 have
+    a `dsf` bar on `dlstdt` and only FOUR carry `ret == dlret`.
+    """
+    d = pd.read_parquet(BULK / "crsp__dsedelist.parquet",
+                        columns=["permno", "dlstdt", "dlstcd", "dlret", "hexcd"])
+    d["dlstdt"] = pd.to_datetime(d["dlstdt"], errors="coerce")
+    d = d[d["dlstdt"].notna()].copy()
+    d["category"] = d["dlstcd"].map(delist_category)
+    # `dlstcd` under 200 means the name was still trading; it is not a delisting
+    # and must not be counted as one.
+    d = d[d["category"] != "active"]
+    d = resolve_delisting_return(d)
+    # One row per permno: the LAST delisting event (CRSP normally has exactly
+    # one; a permno with two is a reissue and the final one is what killed it).
+    d = d.sort_values(["permno", "dlstdt"]).drop_duplicates("permno", keep="last")
+    return d.reset_index(drop=True)
+
+
+def delisting_factors(start: int | None = None,
+                      end: int | None = None) -> tuple[pd.DataFrame, dict]:
+    """(`load_delistings()` restricted to the window, census dict).
+
+    The census is what goes in the receipt: events and mean `dlret` per
+    category, plus how many performance events had to be Shumway-filled.
+    """
+    d = load_delistings()
+    if start is not None:
+        d = d[d["dlstdt"] >= pd.Timestamp(f"{start}-01-01")]
+    if end is not None:
+        d = d[d["dlstdt"] <= pd.Timestamp(f"{end}-12-31")]
+    d = d.reset_index(drop=True)
+    census: dict = {"window": [start, end], "events": int(len(d)), "by_category": {}}
+    for cat, chunk in d.groupby("category"):
+        census["by_category"][str(cat)] = {
+            "events": int(len(chunk)),
+            "with_crsp_dlret": int(chunk["dlret"].notna().sum()),
+            "mean_dlret": (round(float(chunk["dlret"].mean()), 6)
+                           if chunk["dlret"].notna().any() else None),
+            "mean_dlret_used": round(float(chunk["dlret_used"].mean()), 6)
+                               if chunk["dlret_used"].notna().any() else None,
+        }
+    census["shumway_filled"] = (
+        d.loc[d["dlret_source"].str.startswith("shumway"), "dlret_source"]
+        .value_counts().to_dict())
+    census["performance_codes"] = {
+        "definition": "dlstcd in {500} u [520, 584]",
+        "why_not_400_591": ("400-591 counts liquidations (450) and administrative "
+                            "codes and dilutes the mean from -24.63% to -19.57%"),
+    }
+    return d, census
+
+
+def _filter_ptg(ptg: pd.DataFrame, start: int, end: int) -> pd.DataFrame:
+    """The universe filters both IBES summary files share. ONE definition."""
     ptg = ptg[(ptg["usfirm"] == 1) & (ptg["measure"] == "PTG")]
     ptg = ptg[ptg["curr"].isin(["USD"]) | ptg["curr"].isna()]
+    ptg = ptg.copy()
     ptg["statpers"] = pd.to_datetime(ptg["statpers"])
-    ptg = ptg[(ptg["statpers"].dt.year >= start) & (ptg["statpers"].dt.year <= end)]
+    return ptg[(ptg["statpers"].dt.year >= start) & (ptg["statpers"].dt.year <= end)]
+
+
+def load_ptg_adjusted(start: int, end: int) -> pd.DataFrame:
+    """The SPLIT-ADJUSTED consensus, for the cross-check column ONLY.
+
+    `meanptg_adj * cfacpr(t) / prc` should reproduce the PIT ratio and mostly
+    does; it disagrees on ~7% of rows because `cfacpr(t)` is itself a future
+    quantity. That is why the rescale is a DIAGNOSTIC and the unadjusted file is
+    the source. Named `_ADJUSTED_PTG_FILE` rather than written as a literal so
+    `test_ibes_target_share_basis` finds exactly one `BULK / "ibes__ptgsum*"`
+    literal in each loader and cannot match the wrong one.
+    """
+    d = pd.read_parquet(BULK / _ADJUSTED_PTG_FILE,
+                        columns=["cusip", "statpers", "meanptg", "usfirm",
+                                 "measure", "curr"])
+    d = _filter_ptg(d, start, end)
+    return (d[["cusip", "statpers", "meanptg"]]
+            .rename(columns={"meanptg": "meanptg_adj"})
+            .drop_duplicates(["cusip", "statpers"]))
+
+
+def load_ibes(start: int, end: int) -> pd.DataFrame:
+    """Consensus targets joined to recommendation counts, monthly, US firms.
+
+    `meanptg` is the UNADJUSTED consensus (`ibes__ptgsumu`) -- the target in the
+    share terms that existed at `statpers`, which is the only basis on which
+    `meanptg / prc` against a raw CRSP close is a ratio. `meanptg_adj` carries
+    the split-adjusted number under a name that says what it is.
+    """
+    ptg = pd.read_parquet(BULK / "ibes__ptgsumu.parquet",
+                          columns=["cusip", "statpers", "meanptg", "numest", "usfirm",
+                                   "measure", "curr"])
+    ptg = _filter_ptg(ptg, start, end)
+    ptg = ptg.merge(load_ptg_adjusted(start, end), on=["cusip", "statpers"], how="left")
 
     rec = pd.read_parquet(BULK / "ibes__recdsum.parquet",
                           columns=["cusip", "statpers", "meanrec", "numrec", "usfirm"])
@@ -214,7 +411,8 @@ def load_ibes(start: int, end: int) -> pd.DataFrame:
     # THE CONVERSION. IBES 1 = strong buy; the tracker's scale is 5 = strong buy.
     df["consensus"] = 6.0 - df["meanrec"]
     df["coverage"] = df["numrec"].fillna(0).astype(int)
-    return df[["cusip", "statpers", "meanptg", "numest", "consensus", "coverage"]]
+    return df[["cusip", "statpers", "meanptg", "meanptg_adj", "numest",
+               "consensus", "coverage"]]
 
 
 _VOLUME_UNITS: dict = {"read_as": "not checked"}
@@ -253,9 +451,15 @@ def load_prices(start: int, end: int) -> pd.DataFrame:
     #
     # `cfacpr` is CRSP's cumulative price adjustment factor: `prc / cfacpr` is a
     # split-consistent series. `ret` is CRSP's own total return, already net of
-    # splits and inclusive of dividends and of the delisting return where one
-    # exists, so REALISED performance is compounded from `ret` and never from a
-    # price ratio.
+    # splits and inclusive of dividends, so REALISED performance is compounded
+    # from `ret` and never from a price ratio.
+    #
+    # `ret` does NOT carry the DELISTING return. This comment used to say "and
+    # of the delisting return where one exists", which is a hedge that reads as
+    # a reassurance: measured 2026-09-04, 1,103 of the 1,114 events coded
+    # 400-591 in 2013-24 have a bar on `dlstdt` and exactly FOUR of them carry
+    # `ret == dlret` (mean `dsf.ret` -9.2% vs mean `dlret` -19.6%). The wind-up
+    # comes from `crsp__dsedelist` and is applied by `delisting_factors()`.
     cf = px["cfacpr"].where(px["cfacpr"].notna() & (px["cfacpr"] != 0), 1.0)
     px["adj_prc"] = px["prc"] / cf
     return px.sort_values(["permno", "date"])
@@ -264,18 +468,34 @@ def load_prices(start: int, end: int) -> pd.DataFrame:
 def price_panel(px: pd.DataFrame) -> pd.DataFrame:
     """Per (permno, date): raw close, adjusted 60-session high, 12m total return.
 
-    `prc` stays RAW because the analyst target is quoted in today's dollars and
-    `meanptg / prc` is the ratio a desk would actually see. Everything that
-    compares a price to its own past -- the 60-day high, the twelve-month
-    return -- uses the ADJUSTED series, and realised performance uses the
-    total-return index.
+    `prc` stays RAW because `load_ibes` now reads the UNADJUSTED IBES summary
+    (`ibes__ptgsumu`), whose `meanptg` is quoted in the share terms that existed
+    at `statpers` -- so `meanptg / prc` is the ratio a desk would actually have
+    seen that morning, both legs on ONE basis.
+
+    The premise this docstring used to state -- "the analyst target is quoted in
+    today's dollars" -- was FALSE for the file it was reading: `ibes__ptgsum` is
+    split-ADJUSTED, restated in end-of-sample share terms, so the old ratio was
+    `true_ratio / cfacpr(t)` and a future reverse split inflated it. That is the
+    defect in `docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md` §2, and it is why the
+    file name matters more than the comment.
+
+    Everything that compares a price to its own past -- the 60-day high, the
+    twelve-month return -- uses the ADJUSTED series, and realised performance
+    uses the total-return index.
     """
     px = px.copy()
     g = px.groupby("permno", sort=False)
     px["high_60d"] = g["adj_prc"].transform(lambda s: s.rolling(60, min_periods=20).max())
     px["adj_252"] = g["adj_prc"].transform(lambda s: s.shift(252))
     px["ret_12m"] = px["adj_prc"] / px["adj_252"] - 1.0
-    # Total-return index: dividends in, splits out, delisting return included.
+    # Total-return index: dividends in, splits out. THE DELISTING RETURN IS NOT
+    # IN HERE -- `dsf.ret` does not carry it (see `load_prices`). This script's
+    # monthly `fwd_1m` needs a NEXT monthly row for the same permno, so a name's
+    # final, dying month is DROPPED rather than mis-measured; that is a known
+    # limitation of this script and the reason `learner/dataset.py` -- which owns
+    # the panel every claim is now measured on -- compounds
+    # `delisting_factors()` into the final index value instead.
     px["tri"] = g["ret"].transform(lambda s: (1.0 + s.fillna(0.0)).cumprod())
     # Did the share basis change in the prior year? `cfacpr` moves only on a
     # split or similar adjustment. A stale IBES target across such a change
@@ -358,7 +578,9 @@ def build_monthly(start: int, end: int, lag_days: int) -> pd.DataFrame:
     # "one-month" return would silently be a one-year return.
     merged = merged[(gap >= 20) & (gap <= 45)]
     # From the TOTAL RETURN INDEX, never from a price ratio: splits out,
-    # dividends in, delisting return included.
+    # dividends in. The DELISTING return is not in `dsf.ret` and a dying name
+    # has no next monthly row, so its final month is absent here rather than
+    # flattered -- `learner/dataset.py` is where the wind-up is compounded in.
     merged["fwd_1m"] = merged["tri_next"] / merged["tri"] - 1.0
     merged = merged[merged["fwd_1m"].notna()]
     merged["month"] = merged["statpers"].dt.to_period("M").astype(str)

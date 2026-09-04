@@ -62,6 +62,14 @@ def estimate_execution_cost(
     }
 
 
+#: The market instrument. SPY with `auto_adjust=True` is a TOTAL-RETURN series
+#: for a tradeable fund; `^GSPC` (used until 2026-09-04) is a price index that
+#: pays no dividends and cannot be bought. `learner.benchmark` is the canonical
+#: definition of "the market" for research receipts; this constant is the live
+#: web-service equivalent and the two must not drift apart silently.
+MARKET_INSTRUMENT = "SPY"
+
+
 def backtest_signal_engine(
     start_date: str = "2020-01-01",
     end_date: str = "2025-06-01",
@@ -75,7 +83,7 @@ def backtest_signal_engine(
     Args:
         start_date: Backtest start (YYYY-MM-DD)
         end_date: Backtest end (YYYY-MM-DD)
-        tickers: Tickers to test (default: ["SPY"])
+        tickers: Market instrument to test (default: ["SPY"], total return)
 
     Returns:
         DataFrame with columns: date, signal_action, confidence, composite_score,
@@ -85,15 +93,31 @@ def backtest_signal_engine(
     from backend.services.signal_engine import get_market_signal
 
     if tickers is None:
-        tickers = ["SPY"]
+        tickers = [MARKET_INSTRUMENT]
+    instrument = tickers[0]
 
-    # Download all data we need upfront (S&P 500 + VIX for the full period + forward window)
+    # Download all data we need upfront (market instrument + VIX for the full
+    # period + forward window).
+    #
+    # WHY THIS IS SPY-ADJUSTED AND NOT `^GSPC` (changed 2026-09-04, roadmap B1):
+    # this function used to download `^GSPC`, the S&P 500 PRICE index. A price
+    # index pays no dividends, so every "buy-and-hold" and every forward return
+    # measured on it understates what an investor actually earned -- and it is
+    # not an instrument anybody can buy. Combined with a compounding defect
+    # (fixed 2026-04-15, `726c7bf`) it published "+740% buy-and-hold" for a
+    # window whose true dividend-inclusive market return was +96.7%.
+    # `auto_adjust=True` on SPY gives a dividend- and split-adjusted close, so
+    # the percentage change IS the total return of a tradeable instrument. The
+    # `tickers` argument is now live rather than dead.
     buffer_end = (pd.Timestamp(end_date) + pd.DateOffset(months=14)).strftime("%Y-%m-%d")
     data_start = (pd.Timestamp(start_date) - pd.DateOffset(years=2)).strftime("%Y-%m-%d")
 
-    logger.info("Downloading backtest data %s to %s", data_start, buffer_end)
-    sp500 = yf.download("^GSPC", start=data_start, end=buffer_end, progress=False)["Close"]
-    vix = yf.download("^VIX", start=data_start, end=buffer_end, progress=False)["Close"]
+    logger.info("Downloading backtest data (%s total return) %s to %s",
+                instrument, data_start, buffer_end)
+    sp500 = yf.download(instrument, start=data_start, end=buffer_end,
+                        progress=False, auto_adjust=True)["Close"]
+    vix = yf.download("^VIX", start=data_start, end=buffer_end,
+                      progress=False, auto_adjust=True)["Close"]
 
     if isinstance(sp500, pd.DataFrame):
         sp500 = sp500.squeeze()
@@ -101,7 +125,11 @@ def backtest_signal_engine(
         vix = vix.squeeze()
 
     if sp500.empty:
-        raise ValueError("Could not download S&P 500 data")
+        raise ValueError(
+            f"Could not download {instrument} data -- refusing to substitute a "
+            "price index for a total-return series (see roadmap B1)")
+
+    sp500.attrs["aegis_instrument"] = instrument
 
     # Generate monthly evaluation dates
     eval_dates = pd.date_range(start=start_date, end=end_date, freq="MS")
@@ -291,7 +319,34 @@ def evaluate_backtest(df: pd.DataFrame) -> dict:
                     "regime": row["regime"],
                 })
 
+    # The market leg's provenance, stamped so a reader cannot mistake which
+    # instrument and which compounding convention produced these numbers. This
+    # is the same stamp shape `learner.benchmark` writes into research receipts;
+    # the two rulers are kept declared side by side rather than assumed equal.
+    from learner import benchmark as _bm
+
+    market_stamp = _bm.declare(
+        "spy_tr_yf_adjclose",
+        construction="yfinance auto_adjust=True Close (dividend- and "
+                     "split-adjusted) -> total return of a tradeable fund",
+        n_periods=int(len(bh_q)),
+        instrument=MARKET_INSTRUMENT,
+        dividends_included=True,
+        network=True,
+        retired="^GSPC price index, used as 'the market' until 2026-09-04 "
+                "(roadmap B1)",
+        compounding={
+            "convention": "non-overlapping quarterly (every 3rd monthly window)",
+            "n_monthly_windows": int(len(bh_arr)),
+            "n_compounded_windows": int(len(bh_q)),
+            "why": "3-month forward windows sampled monthly overlap; compounding "
+                   "all of them counts each month ~3x and inflates the log "
+                   "return ~3.12x (the 2026-03-30 defect, fixed in 726c7bf)",
+        },
+    )
+
     return {
+        "market_benchmark": market_stamp,
         "total_signals": len(df),
         "buy_signals": len(bullish),
         "sell_signals": len(bearish),

@@ -83,6 +83,20 @@ band's positive claim is dead in 2022-2024. So the engine verdicts here are
 exclusion-shaped: `toxic_ge_5` and `sub_floor` EXCLUDE, `unreadable` and
 `no_opinion` name why no opinion exists, and `admitted_shadow` explicitly
 says the admission is a SHADOW/CONTROL statement, not an alpha claim.
+
+UPDATE 2026-09-05 -- THAT RECEIPT IS VOID, AND THE CONCLUSION GOT STRONGER
+=========================================================================
+`band_horizon_20260903.json` was computed on a tape whose `ratio` divided the
+SPLIT-ADJUSTED IBES consensus by the RAW close, so `toxic_ge_5` was largely a
+FUTURE-REVERSE-SPLIT detector. Re-issued point-in-time
+(`band_horizon_20260905.json`), the four bands are -2.17 / -6.82 / -5.26 /
++40.07 pp/yr at one month and **ZERO** survive BH-FDR over a 32-cell screen
+(family max p 0.808, min p 0.0517). The exclusion-shaped verdicts below are
+therefore MORE right than when they were written, and for a different reason:
+not "one band is reliably terrible" but "no band premium exists at all, so the
+only defensible content is hygiene". The `toxic_ge_5` reason string has been
+corrected in place; retiring `learner/prior.py`'s constants to hygiene-only is
+roadmap B1 task 5 and is ATTENDED, so the THRESHOLDS here are unchanged.
 """
 
 from __future__ import annotations
@@ -297,10 +311,27 @@ def engine_verdict(ratio, close, coverage) -> dict:
         return {"verdict": "no_opinion", "band": "no_opinion", "reasons": why}
     band = str(P.band_label([r]).iloc[0])
     if band == "toxic_ge_5":
+        # The exclusion STANDS; the reason it used to give is void. On the
+        # corrupted split-adjusted tape this cell measured -37.77%/yr t -7.75 and
+        # was the only band surviving BH-FDR. On the point-in-time panel
+        # (`band_horizon_20260905.json`) it measures **+40.07%/yr t_b +1.97** and
+        # ZERO bands survive BH-FDR -- the old number was a future-reverse-split
+        # detector (74.4% of its rows carried one). The exclusion is now
+        # HYGIENE-shaped, and it is a better-supported exclusion for that: the
+        # cell holds ~7 names a month at a median close of $3.08, 84% of it under
+        # $5, 86% below $3m/day, and its sign FLIPS to -34.29%/yr under a $5
+        # floor. Retiring the band prior to hygiene-only is roadmap B1 task 5 and
+        # is ATTENDED; this string is corrected now so a live surface stops
+        # printing a withdrawn number.
         return {"verdict": "toxic_ge_5", "band": band,
-                "reasons": [f"ratio {r:.2f} >= 5: the toxic band, -37.77%/yr t -7.75, "
-                            "the only band surviving BH-FDR (band_horizon_20260903.json). "
-                            "EXCLUDED."]}
+                "reasons": [f"ratio {r:.2f} >= 5: EXCLUDED on HYGIENE. ~7 names/month, "
+                            "median close $3.08, 84% under $5, 86% below $3m/day, and "
+                            "27.6% still carry a future reverse split "
+                            "(band_horizon_20260905.json). The old rationale "
+                            "(-37.77%/yr t -7.75, 'the only band surviving BH-FDR') is "
+                            "VOID: on a point-in-time ratio the cell is +40.07%/yr "
+                            "t_b +1.97 and NO band survives BH-FDR. Not a short either -- "
+                            "see toxic_band_short_20260905.json."]}
     if band == "lt_1_5":
         return {"verdict": "sub_floor", "band": band,
                 "reasons": [f"ratio {r:.2f} < {P.ADMISSIBLE_RATIO_LO}: below the admission "
@@ -502,8 +533,13 @@ def build_potential_universe(day: str | None = None, *,
                     "never substituted for n_analysts_yf (the numest analogue, ~1.8x)",
         "consensus": "rebuilt from the histogram on the 5=STRONG-BUY scale",
         "unit": "ratio = mean_target / close; upside = ratio - 1",
-        "band_status": "S36: the band is an EXCLUSION rule; only toxic_ge_5 survives FDR; "
-                       "admission is shadow/control (band_horizon_20260903.json)",
+        "band_status": "the band is an EXCLUSION rule and now a HYGIENE one: on the "
+                       "point-in-time panel NO band survives BH-FDR (0 of 32 cells, "
+                       "family max p 0.808, min p 0.0517; band_horizon_20260905.json). "
+                       "The S36 rationale (only toxic_ge_5 survives FDR, -37.77%/yr) is "
+                       "VOID -- it was measured on a split-adjusted numerator over a raw "
+                       "close. Admission remains shadow/control; thresholds unchanged "
+                       "pending the attended B1 task 5 retirement of learner/prior.py",
     }
 
     if not rows:

@@ -1,15 +1,225 @@
 {
   "build": {
-    "schema_version": "learner-train-table-1",
+    "schema_version": "learner-train-table-2",
     "window": "2013-2024",
     "lag_days": 1,
     "ibes_loader_pin": {
-      "name_months": 604811,
+      "name_months": 605410,
       "agrees_with": "scripts.tracker_ibes_backtest.load_ibes"
+    },
+    "universe_coverage": {
+      "window": "2013-2024",
+      "dsf_pull_permnos": 6894,
+      "screen_permnos": 6909,
+      "screen_definition": "shrcd in (10, 11) and exchcd in (1, 2, 3), name window overlaps",
+      "coverage": 0.997829,
+      "pulled_outside_the_screen": 0,
+      "missing_from_the_pull": 15,
+      "missing_permnos": [
+        11993,
+        12014,
+        64864,
+        75773,
+        79712,
+        80774,
+        83558,
+        83699,
+        84330,
+        84584,
+        85234,
+        85590,
+        90896,
+        91667,
+        91801
+      ],
+      "verdict": "a complete SUBSET of the screen, not a superset"
+    },
+    "delistings": {
+      "window": [
+        2013,
+        2024
+      ],
+      "events": 3089,
+      "by_category": {
+        "liquidation": {
+          "events": 223,
+          "with_crsp_dlret": 216,
+          "mean_dlret": -0.007392,
+          "mean_dlret_used": -0.007392
+        },
+        "merger_or_exchange": {
+          "events": 1975,
+          "with_crsp_dlret": 1909,
+          "mean_dlret": 0.009073,
+          "mean_dlret_used": 0.009073
+        },
+        "other": {
+          "events": 25,
+          "with_crsp_dlret": 22,
+          "mean_dlret": -0.176364,
+          "mean_dlret_used": -0.176364
+        },
+        "performance": {
+          "events": 866,
+          "with_crsp_dlret": 813,
+          "mean_dlret": -0.246276,
+          "mean_dlret_used": -0.260823
+        }
+      },
+      "shumway_filled": {
+        "shumway_nasdaq": 39,
+        "shumway_nyse_amex": 14
+      },
+      "performance_codes": {
+        "definition": "dlstcd in {500} u [520, 584]",
+        "why_not_400_591": "400-591 counts liquidations (450) and administrative codes and dilutes the mean from -24.63% to -19.57%"
+      }
     },
     "volume_units": {
       "median_of_top_100_daily_vol": 785471595.0,
       "read_as": "shares"
+    },
+    "delisting_return_merge": {
+      "permnos_with_a_factor": 3089,
+      "permnos_applied": 2683,
+      "permnos_event_out_of_range": 0,
+      "mean_factor_applied": 0.92079,
+      "source": "crsp__dsedelist via tracker_ibes_backtest.delisting_factors"
+    },
+    "market_benchmark": {
+      "schema": 1,
+      "module": "learner.benchmark",
+      "benchmark_id": "vw_crsp_common_main",
+      "freq": "D",
+      "overlapping": false,
+      "provenance": {
+        "source": "learner.dataset.market_indices (same pass as the panel)",
+        "construction": "value-weight daily total return, CRSP common stock / main exchange, membership resolved per (permno, date), weights on the previous session's market cap",
+        "dividends_included": true,
+        "network": false
+      },
+      "provenance_sha256": "a4ef19107826d2f852ae9bbf34c6d121e9c772766fc47fd957049809a45c3d82",
+      "span": [
+        "2012-01-04",
+        "2024-12-31"
+      ],
+      "n_periods": 3269
+    },
+    "share_basis": {
+      "pit_source": "ibes__ptgsumu.parquet (UNADJUSTED -- the numerator)",
+      "adjusted_source": "ibes__ptgsum.parquet (diagnostic only)",
+      "denominator": "raw CRSP dsf.prc (abs; negative prc is the bid/ask flag)",
+      "check_definition": "ratio_adj_check = mean_target_adj * cfacpr(t) / close",
+      "tolerance_relative": 0.01,
+      "rows_with_both": 441223,
+      "agree_rows": 410367,
+      "agree_rate": 0.930067,
+      "disagree_rate": 0.069933,
+      "why_the_check_cannot_be_the_fix": "cfacpr(t) is the cumulative factor to the END of the sample, so the rescale multiplies by the same future quantity it is trying to remove",
+      "hand_verified_row": {
+        "name": "AAPL",
+        "permno": 14593,
+        "statpers": "2013-06-20",
+        "meanptg_adjusted": 19.323,
+        "meanptg_unadjusted": 541.04,
+        "cfacpr": 28.0,
+        "note": "cfacpr 28 = the 7:1 of 2014 times the 4:1 of 2020"
+      }
+    },
+    "hygiene": {
+      "rules": {
+        "min_price": 2.0,
+        "min_coverage": 2,
+        "ratio_unreadable_at": 50.0,
+        "split_prior_year_is_unreadable": true,
+        "one_definition": "close/coverage floors are learner.prior.has_opinion, imported not re-implemented"
+      },
+      "rows": 441797,
+      "has_opinion": 378996,
+      "target_readable": 425798,
+      "hygiene_ok": 368119,
+      "failed_price_or_coverage": 62801,
+      "failed_ratio_ge_50": 275,
+      "failed_ratio_nonpositive_or_null": 0,
+      "failed_split_prior_year": 15919,
+      "on_failure": "the row is KEPT (deleting it is survivorship bias) but ratio/upside/log_ratio are NULL and band is no_opinion"
+    },
+    "sector_labels": {
+      "unclassified_label": "Unclassified",
+      "counts": {
+        "Manufacturing": 128430,
+        "Unclassified": 99352,
+        "Services": 63820,
+        "Finance & Real Estate": 63237,
+        "Transport & Utilities": 29009,
+        "Retail": 22070,
+        "Mining": 17289,
+        "Wholesale": 11387,
+        "Construction": 5044,
+        "_UNKNOWN": 1076,
+        "Agriculture": 881,
+        "Public Administration": 202
+      }
+    },
+    "rebucketing_census": {
+      "rows": "old band (adjusted target / raw close) -> new band (PIT)",
+      "table": {
+        "b_1_5_3": {
+          "b_1_5_3": 48144,
+          "b_3_5": 5,
+          "lt_1_5": 283,
+          "no_opinion": 1608,
+          "toxic_ge_5": 0
+        },
+        "b_3_5": {
+          "b_1_5_3": 30,
+          "b_3_5": 5144,
+          "lt_1_5": 681,
+          "no_opinion": 652,
+          "toxic_ge_5": 0
+        },
+        "lt_1_5": {
+          "b_1_5_3": 432,
+          "b_3_5": 10,
+          "lt_1_5": 288773,
+          "no_opinion": 6892,
+          "toxic_ge_5": 0
+        },
+        "no_opinion": {
+          "b_1_5_3": 87,
+          "b_3_5": 22,
+          "lt_1_5": 15,
+          "no_opinion": 62819,
+          "toxic_ge_5": 1
+        },
+        "toxic_ge_5": {
+          "b_1_5_3": 10683,
+          "b_3_5": 3083,
+          "lt_1_5": 8604,
+          "no_opinion": 1707,
+          "toxic_ge_5": 2122
+        }
+      },
+      "old_band_counts": {
+        "lt_1_5": 296107,
+        "no_opinion": 62944,
+        "b_1_5_3": 50040,
+        "toxic_ge_5": 26199,
+        "b_3_5": 6507
+      },
+      "new_band_counts": {
+        "lt_1_5": 298356,
+        "no_opinion": 73678,
+        "b_1_5_3": 59376,
+        "b_3_5": 8264,
+        "toxic_ge_5": 2123
+      }
+    },
+    "prior_status": {
+      "prior_version": "band_prior_v2/2026-09-01",
+      "status": "VOID ON THIS PANEL -- constants fitted on the corrupted tape",
+      "meaning": "prior_*/resid_* columns are carried for schema continuity. They are NOT expectations until B1.5 re-derives BAND_PRIOR from this panel; nothing may read them as an expected excess return.",
+      "corrected_toxic_cell_is_not_a_signal": "the corrected toxic_ge_5 cell measures +37.4%/yr t 1.94 on ~7 names/month, but 84.1% of it trades under $5 (median close $3.08), a $5 floor flips it to -31.6%/yr t -1.41, its median monthly excess is -0.86% against a mean of +2.69%, 2022-24 is +0.7%/yr t 0.03, and 27.6% still carries a future reverse split (+56pp when those are dropped). A right-tail cell in a thin, cheap corner is not a location shift and must not be carried as a long."
     },
     "categorical_maps": {
       "sector": {
@@ -22,8 +232,9 @@
         "Retail": 6,
         "Services": 7,
         "Transport & Utilities": 8,
-        "Wholesale": 9,
-        "_UNKNOWN": 10
+        "Unclassified": 9,
+        "Wholesale": 10,
+        "_UNKNOWN": 11
       },
       "band": {
         "b_1_5_3": 0,
@@ -33,37 +244,40 @@
         "toxic_ge_5": 4
       }
     },
-    "rows": 441278,
+    "rows": 441797,
     "months": 144,
-    "names": 5713,
-    "schema_hash": "fba883f370194426",
-    "schema_hash_shadow": "fd48dbc7c7535262",
+    "names": 5721,
+    "schema_hash": "f083d1c154dce270",
+    "schema_hash_shadow": "7f01cbe49f85286d",
     "target_maturity": {
       "1m": {
-        "rows_with_target": 438027,
+        "rows_with_target": 438546,
         "rows_null_not_matured": 3251
       },
       "3m": {
-        "rows_with_target": 431686,
+        "rows_with_target": 432205,
         "rows_null_not_matured": 9592
       },
       "6m": {
-        "rows_with_target": 422125,
+        "rows_with_target": 422644,
         "rows_null_not_matured": 19153
       },
       "12m": {
-        "rows_with_target": 402755,
-        "rows_null_not_matured": 38523
+        "rows_with_target": 403264,
+        "rows_null_not_matured": 38533
       }
     },
     "missingness_top": {
-      "miss__dispersion": 0.1064,
-      "miss__mom_12_1": 0.0501,
-      "miss__ret_12m": 0.0501,
-      "miss__target_rev_3m": 0.0468,
-      "miss__ret_6m": 0.0217,
-      "miss__coverage_rev_1m": 0.0158,
+      "miss__ratio": 0.1668,
+      "miss__upside": 0.1668,
+      "miss__log_ratio": 0.1668,
+      "miss__dispersion": 0.1068,
+      "miss__ret_12m": 0.0503,
+      "miss__mom_12_1": 0.0503,
+      "miss__target_rev_3m": 0.0469,
+      "miss__ret_6m": 0.0218,
       "miss__target_rev_1m": 0.0158,
+      "miss__coverage_rev_1m": 0.0158,
       "miss__consensus_rev_1m": 0.0158,
       "miss__ret_3m": 0.0088,
       "miss__vol_60d": 0.0026,
@@ -71,13 +285,10 @@
       "miss__drawdown_60d": 0.0007,
       "miss__vol_20d": 0.0003,
       "miss__log_dollar_vol_20d": 0.0001,
-      "miss__disagreement": 0.0001,
-      "miss__log_ratio": 0.0,
-      "miss__ratio": 0.0,
-      "miss__upside": 0.0,
-      "miss__net_rev_4w": 0.0,
-      "miss__numest": 0.0,
       "miss__coverage": 0.0,
+      "miss__net_rev_4w": 0.0,
+      "miss__disagreement": 0.0,
+      "miss__numest": 0.0,
       "miss__log_coverage": 0.0,
       "miss__consensus": 0.0,
       "miss__net_rev_1m": 0.0,
@@ -85,11 +296,11 @@
       "miss__log_close": 0.0
     },
     "band_counts": {
-      "lt_1_5": 296107,
-      "no_opinion": 62425,
-      "b_1_5_3": 50040,
-      "toxic_ge_5": 26199,
-      "b_3_5": 6507
+      "lt_1_5": 298356,
+      "no_opinion": 73678,
+      "b_1_5_3": 59376,
+      "b_3_5": 8264,
+      "toxic_ge_5": 2123
     },
     "horizon_window_guard": {
       "rule": "the realised maturity gap must be 0.6x-1.5x the horizon in calendar days (a delisted name may mature early but never late). shift(-n) moves n ROWS, and a thinly-traded name advances years in 21 rows.",
@@ -97,38 +308,38 @@
         "1m": 3251,
         "3m": 9537,
         "6m": 18908,
-        "12m": 37438
+        "12m": 37448
       }
     },
     "delisting_filled_rows": {
       "1m": {
         "rows": 1830,
-        "share": 0.00415,
-        "mean_fwd_return_of_filled_rows": -0.0598,
-        "mean_fwd_return_of_other_rows": 0.0118
+        "share": 0.00414,
+        "mean_fwd_return_of_filled_rows": -0.0965,
+        "mean_fwd_return_of_other_rows": 0.0117
       },
       "3m": {
         "rows": 5629,
-        "share": 0.01276,
-        "mean_fwd_return_of_filled_rows": -0.0195,
-        "mean_fwd_return_of_other_rows": 0.0258
+        "share": 0.01274,
+        "mean_fwd_return_of_filled_rows": -0.0493,
+        "mean_fwd_return_of_other_rows": 0.0255
       },
       "6m": {
-        "rows": 11409,
-        "share": 0.02585,
-        "mean_fwd_return_of_filled_rows": 0.0426,
-        "mean_fwd_return_of_other_rows": 0.0486
+        "rows": 11410,
+        "share": 0.02583,
+        "mean_fwd_return_of_filled_rows": 0.019,
+        "mean_fwd_return_of_other_rows": 0.048
       },
       "12m": {
-        "rows": 22950,
-        "share": 0.05201,
-        "mean_fwd_return_of_filled_rows": 0.0905,
-        "mean_fwd_return_of_other_rows": 0.107
+        "rows": 22957,
+        "share": 0.05196,
+        "mean_fwd_return_of_filled_rows": 0.0738,
+        "mean_fwd_return_of_other_rows": 0.1061
       }
     }
   },
   "schema": {
-    "schema_version": "learner-train-table-1",
+    "schema_version": "learner-train-table-2",
     "prior_version": "band_prior_v2/2026-09-01",
     "row_key": [
       "permno",
@@ -257,11 +468,24 @@
       "12": 252
     },
     "primary_benchmark": "value_weighted",
-    "unit_note": "ratio = mean_target / close ; upside = ratio - 1",
+    "unit_note": "ratio = mean_target / close ; upside = ratio - 1. mean_target is the UNADJUSTED IBES consensus (ibes__ptgsumu) and close is the raw CRSP close -- ONE share basis. mean_target_adj is the split-adjusted number, kept only for the ratio_adj_check diagnostic.",
+    "hygiene": {
+      "min_price": 2.0,
+      "min_coverage": 2,
+      "ratio_unreadable_at": 50.0,
+      "split_prior_year_is_unreadable": true,
+      "columns": [
+        "has_opinion",
+        "target_readable",
+        "hygiene_ok"
+      ],
+      "on_failure": "ratio/upside/log_ratio NULL, band no_opinion, row kept"
+    },
+    "delisting": "crsp__dsedelist.dlret compounded into the final index value; Shumway fill (-30% NYSE/AMEX, -55% NASDAQ) for performance codes {500} u [520,584] with no dlret. dsf.ret is NOT delisting-inclusive.",
     "missing_policy": "NaN is preserved and mirrored in miss__<feature>. fillna(0) is BANNED; imputation happens inside a model pipeline (median) or not at all (LightGBM)."
   },
   "schema_shadow": {
-    "schema_version": "learner-train-table-1",
+    "schema_version": "learner-train-table-2",
     "prior_version": "band_prior_v2/2026-09-01",
     "row_key": [
       "permno",
@@ -367,7 +591,20 @@
       "12": 252
     },
     "primary_benchmark": "value_weighted",
-    "unit_note": "ratio = mean_target / close ; upside = ratio - 1",
+    "unit_note": "ratio = mean_target / close ; upside = ratio - 1. mean_target is the UNADJUSTED IBES consensus (ibes__ptgsumu) and close is the raw CRSP close -- ONE share basis. mean_target_adj is the split-adjusted number, kept only for the ratio_adj_check diagnostic.",
+    "hygiene": {
+      "min_price": 2.0,
+      "min_coverage": 2,
+      "ratio_unreadable_at": 50.0,
+      "split_prior_year_is_unreadable": true,
+      "columns": [
+        "has_opinion",
+        "target_readable",
+        "hygiene_ok"
+      ],
+      "on_failure": "ratio/upside/log_ratio NULL, band no_opinion, row kept"
+    },
+    "delisting": "crsp__dsedelist.dlret compounded into the final index value; Shumway fill (-30% NYSE/AMEX, -55% NASDAQ) for performance codes {500} u [520,584] with no dlret. dsf.ret is NOT delisting-inclusive.",
     "missing_policy": "NaN is preserved and mirrored in miss__<feature>. fillna(0) is BANNED; imputation happens inside a model pipeline (median) or not at all (LightGBM)."
   },
   "prior": {

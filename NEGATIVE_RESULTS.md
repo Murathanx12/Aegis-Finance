@@ -8,14 +8,26 @@
 
 ## 1. The timing strategy underperforms buy-and-hold
 
-Source: [`backend/BACKTEST_RESULTS.md`](./backend/BACKTEST_RESULTS.md), signal
-engine over 2020-01 → 2025-06 (66 monthly signals).
+Source: [`backend/BACKTEST_RESULTS.md`](./backend/BACKTEST_RESULTS.md),
+**regenerated 2026-09-04** on SPY total return with non-overlapping quarterly
+compounding. Receipt:
+`backend/data/optimus/tracker_backtest/signal_engine_backtest_20260904.json`.
+Eval dates 2020-01 → 2025-06 (66 monthly signals); realised span 2019-12-31 →
+2025-09-02; 22 independent quarters; 32 bps per round trip.
 
-| Metric | Strategy | Buy-and-hold |
+| Metric | Strategy (net) | Buy-and-hold |
 |---|---|---|
-| Total return | ~~+250.9%~~ WITHDRAWN 2026-09-04 | ~~+740.0%~~ WITHDRAWN (was the `^GSPC` price index with 66 overlapping 3-month windows compounded as sequential; the VW market incl. dividends was +96.7%) |
-| Sharpe | ~~0.675~~ withdrawn | ~~0.921~~ withdrawn |
-| Sell-signal 3M hit-rate | **28.6%** | (target was >55%) |
+| Total return | **+28.3%** (~~+250.9%~~ void) | **+114.8%** (~~+740.0%~~ void) |
+| Sharpe | **0.432** (~~0.675~~ void) | **0.837** (~~0.921~~ void) |
+| Sell-signal 3M hit-rate | **0.0%** of 5 (~~28.6%~~ of 7, void) | (target was >55%) |
+
+The void pair was measured against `^GSPC` — the S&P 500 PRICE index, which pays
+no dividends and cannot be bought — with all 66 OVERLAPPING 3-month windows
+compounded as if sequential (~3.12x log inflation; fixed 2026-04-15 in `726c7bf`,
+document never regenerated). The verdict below is **unchanged in direction and
+stronger in size**: the strategy keeps 24.7% of the market's return, where the
+void figures implied 33.9%. Note the signal distribution also changed (the engine
+reads the series it is scored on), so this is a re-run rather than a re-scoring.
 
 **Plainly: as a market-*timing* tool, the signal engine loses to doing nothing —
 on both absolute and risk-adjusted return.** It is not buried, spun, or framed

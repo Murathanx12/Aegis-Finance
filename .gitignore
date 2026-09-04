@@ -178,3 +178,9 @@ backend/data/optimus/wrds/tr13f_quarterly.json
 # learner/states: the sweep cache that `--reuse-assignments` reads. Derived
 # from the parquets above and duplicated inside the receipt.
 backend/data/optimus/learner/states/sweep_meta*.json
+
+# EDGAR 8-K item-code TAPE (87 MB, 293,619 rows). A DERIVED tape, rebuilt by
+# `scripts/edgar_8k_items.py` from filings we already have; the RECEIPT beside
+# it is committed. GitHub warns above 50 MB and rejects above 100 MB, and this
+# repo is public. Data manifest: docs/DATA_MANIFEST.md.
+backend/data/optimus/edgar_8k/*.jsonl

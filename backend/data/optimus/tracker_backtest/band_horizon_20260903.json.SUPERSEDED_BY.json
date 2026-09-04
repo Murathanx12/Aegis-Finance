@@ -1,0 +1,16 @@
+{
+  "artefact": "SUPERSEDED_BY_SIDECAR",
+  "written_at_utc": "2026-09-04T16:36:04.279725+00:00",
+  "sealed_receipt": "band_horizon_20260903.json",
+  "sealed_receipt_sha256": "b9bd359903fb8ee6da919bc14d16e423e58615d8ce9bfce2a791cbd297fb374e",
+  "sealed_receipt_bytes": 531216,
+  "superseded_by": "band_horizon_20260905.json",
+  "superseded_by_sha256": "7d3d2deb7ded952ca36b17d4a655b025349c67ca64a465318b7e485d47c0937f",
+  "status": "VOID -- DO NOT QUOTE ANY NUMBER FROM THE SEALED RECEIPT",
+  "reason": "Computed on `learner-train-table-1`, whose `ratio` divided the SPLIT-ADJUSTED IBES consensus (`ptgsum`) by the RAW CRSP close. The `toxic_ge_5` cell was therefore largely a FUTURE-REVERSE-SPLIT detector: 74.4% of its 26,199 name-months carried one, and splitting that cell on `cfacpr` gives -13.4%/yr for the clean half against -48.9%/yr for the contaminated half -- the lookahead WAS the effect. Re-run on `learner-train-table-2` (`ibes__ptgsumu` over the same raw close), the four bands land at -2.2 / -6.8 / -5.3 / +40.1 pp/yr at one month against -0.8 / +3.8 / +18.9 / -37.0, the BH-FDR screen goes from 8 survivors (all of them the toxic cell) to ZERO, and the +40.1 toxic cell flips sign to -34.3%/yr under a $5 price floor. The defensible statement from the new receipt is the NEGATIVE one: under a point-in-time ratio no band premium survives.",
+  "authority": "roadmap B1 task 4 (docs/ROADMAP_2026-09-04_PROFIT_ENGINE.md) and docs/VERIFICATION_2026-09-04_OPUS5_ON_FABLE51.md",
+  "panel_rebuild_receipt": "panel_rebuild_20260904.json",
+  "written_by": "scripts/write_superseded_sidecars.py",
+  "never_edit": "the sealed receipt is NOT edited and NOT deleted. Repairing a tamper-evident artefact is the tampering. Both sha256s are recorded here so a later reader can tell whether either file moved after this link was made.",
+  "no_return_fields_here_on_purpose": "this sidecar quotes no return numbers in any KEY. test_benchmark_canonical.py scans every *.json in this directory, and a sidecar carrying an old excess figure would need a canonical benchmark stamp for a number whose whole purpose is to be void."
+}
