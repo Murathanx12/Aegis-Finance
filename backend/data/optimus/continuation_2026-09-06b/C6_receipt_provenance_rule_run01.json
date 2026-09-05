@@ -1,0 +1,310 @@
+{
+ "job": "C6_receipt_provenance_rule",
+ "licence": "PRODUCT_EXPERIMENT",
+ "mandate": "review 2026-09-06 claim 8: turn the local W4b fix into a class-closing rule -- every receipt writer records sys.argv, the resolved config and the SHA-256 of every input file the loader actually opened, and a test compares the stamped input paths against the paths actually opened.",
+ "source_path": "backend/data/optimus/continuation_2026-09-06/S3_graph_receipt_provenance_run01.json",
+ "what_shipped": {
+  "module": "backend/services/receipt_provenance.py",
+  "api": {
+   "InputTracker.opened(path, note=None)": "hashes (streamed, CHUNK_BYTES = 1 MiB), caches per normalised path so a 50 MB panel opened five times is hashed once, and records {path, sha256, bytes, opened_utc}. A file that is not there records {'error': 'MISSING'} and does NOT raise.",
+   "InputTracker.read_text / read_bytes": "record-then-open convenience, so the describing line and the opening line cannot drift apart.",
+   "provenance_block(argv, resolved_config, tracker, git_commit=None)": "the fixed schema {sys_argv, resolved_config, _inputs_opened, git_commit, generated_utc}; git_commit is read off .git directly, no subprocess.",
+   "attach(receipt, argv, resolved_config, tracker)": "stamps `_provenance` onto a finished payload -- the shape that keeps there being ONE call site.",
+   "resolve_config(namespace, module_defaults, argv=, env_overrides=)": "the merged view of what ACTUALLY ran, each key tagged arg / env / default. Positional arguments are matched by value so `job` is not stamped `default`.",
+   "check_receipt(receipt, require_inputs=True, verify_hashes=False)": "returns NAMED findings, never raises: MISSING_PROVENANCE, MALFORMED_PROVENANCE, EMPTY_INPUTS, UNOPENED_PATH_STAMPED, DEFAULT_SOURCE_BUT_PASSED, and the two soft ones STALE_OR_CHANGED / NO_INPUTS_TRACKED.",
+   "hard_failures(findings)": "drops the soft ones. An input that legitimately changed is not a defective receipt."
+  },
+  "applied_to": {
+   "file": "scripts/weekend_lab_jobs.py",
+   "choke_point": "main() -- one attach(payload, ...) call, asserted to be exactly one by test",
+   "loaders_instrumented": [
+    "_load_long() -> records learner.long_panel.LONG_TABLE, the 50 MB+ parquet every job's numbers rest on and that no receipt had ever named",
+    "W1 -> LONG_RECEIPT (the panel's build receipt)",
+    "the prediction-cell cache read",
+    "the two WL.OUT receipt globs (W11 writeback and the inventory)"
+   ],
+   "unchanged": "era_sign_table and verdict_from keep their signatures and behaviour -- scripts/w3_neural_floored.py imports both READ-ONLY. No number any existing receipt reports was touched: the block is additive."
+  }
+ },
+ "proved_red": {
+  "assertion": "backend/tests/test_receipt_provenance.py::test_the_w4b_bug_in_miniature_is_rejected",
+  "fixture": "_w4b_fixture() -- two temp parquets. The loader opens graph/companyworld_v1.parquet; the receipt stamps MARKET-GRAPH-1/edge_instances.parquet (the module default) with source_rows 2020 beside it, exactly as the three W4b arms did on 2026-09-05.",
+  "what_fails": "check_receipt returns UNOPENED_PATH_STAMPED: `graph_receipt.edges_path` names '.../edge_instances.parquet', which is not among the 1 path(s) the loader opened -- and hard_failures() keeps it.",
+  "the_other_half": "the same receipt with the ARGUMENT stamped returns []. Without that half, a checker that always failed would pass the first half.",
+  "the_sweep_also_went_red_for_real": "at 22:34 on 2026-09-05 the session sweep failed on a peer's C4_hold_rule_declaration.json (MISSING_PROVENANCE). That is what produced the declaration exemption -- and the exemption is keyed on the file's own freeze stamp, not on its name, so it cannot be claimed by renaming. test_the_declaration_exemption_is_not_a_free_pass pins that."
+ },
+ "at_risk_survey": {
+  "question": "which other receipt writers stamp a module default in place of an argument?",
+  "method": "three AST detectors over scripts/, learner/, backend/services/, alpha/ and engine/. A: a module constant that is the `default=` of an argparse argument and is ALSO read bare in a function body. B: a function with a path-ish PARAMETER that stamps an input-named receipt field from a module constant or a no-argument module-level call -- the W4b shape exactly. C: a receipt field whose key names an input and whose value is a bare module constant.",
+  "detector_positive_control": "the pre-fix `build(edges_path)` / `\"source\": str(edge_source())` pair, rebuilt in a scratch file, IS flagged by detector B; the fixed line in learner/features_graph.py is not. A survey that found zero hits without this control would be indistinguishable from a broken survey.",
+  "counted": {
+   "pattern_A_candidates_before_triage": 30,
+   "after_excluding_def_parameter_defaults": 15,
+   "pattern_B_hits_repo_wide": 2,
+   "AT_RISK": 1,
+   "SAFE": 13,
+   "ALREADY_FIXED": 2
+  },
+  "why_most_are_safe": "the common shape `def run(cost_bps: float = DEFAULT_COST_BPS)` with `add_argument('--cost-bps', default=DEFAULT_COST_BPS)` is SAFE by construction: the caller passes the parsed value and the parameter default is never reached. That is what cut 30 candidate files to 15, and it is why the pattern that actually bit -- a constant read INSIDE a body that also writes the receipt -- is worth naming separately.",
+  "table": [
+   {
+    "where": "learner/features_graph.py:461",
+    "pattern": "B",
+    "verdict": "ALREADY_FIXED",
+    "why": "the archetype. `build(edges_path=...)` used to stamp `str(edge_source())`; it now stamps the argument and carries `source_is_the_module_default`. The detector finds the pre-fix line in a positive-control fixture and does NOT flag the fixed line, which is how the survey is known not to be decorative."
+   },
+   {
+    "where": "scripts/weekend_lab_jobs.py:3213",
+    "pattern": "-",
+    "verdict": "ALREADY_FIXED",
+    "why": "this item: `_provenance` is now stamped at ONE choke point in `main()`, from a tracker the loaders append to."
+   },
+   {
+    "where": "scripts/investment_committee.py:41",
+    "pattern": "A",
+    "verdict": "AT_RISK",
+    "why": "`DEFAULT_OUT = DEFAULT_FUNNEL.parent` is computed at module level from the DEFAULT funnel, and is the default of `--out`. `--funnel elsewhere/f.json` with no `--out` writes beside the module default, not beside the argument. Output routing rather than a false provenance line, but the same defect."
+   },
+   {
+    "where": "scripts/lane_autopsy_run.py:143",
+    "pattern": "A",
+    "verdict": "SAFE",
+    "why": "`INCEPTION` is both the default of `--start` and a distinct fact (the lane's inception). The receipt records `a.start` and `a.end` beside it, so both are true and neither stands in for the other."
+   },
+   {
+    "where": "scripts/c6b_counterparty_bias.py:516",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`\"source\": str(PANEL)` with arguments --seed/--sample-n/--out only: there is no panel argument, so the constant IS what ran. Becomes AT_RISK the day a `--panel` flag is added. (File owned by a sibling agent this session; read-only here.)"
+   },
+   {
+    "where": "scripts/scenario_bridge.py:658",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`\"train_table\": str(TRAIN_TABLE)`; arguments are --write-schema/--generate/--second-opinion, none of them a path."
+   },
+   {
+    "where": "scripts/scenario_bridge.py:694",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`\"source\": str(HOLDER_EVENTS)`; same reasoning."
+   },
+   {
+    "where": "scripts/edgar_8k_items.py:323",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`\"source\": COMPANY_TICKERS_URL` -- a URL constant with no argument that can override it."
+   },
+   {
+    "where": "scripts/era_replay_v2.py:645",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`price_table` / `price_source` are constants with no `--price-table` argument. (Their CORRECTNESS is a separate open item: S4 found the ledger priced 56% of the charge. That is a price-table defect, not a provenance one.) File owned by a sibling agent this session; read-only here."
+   },
+   {
+    "where": "scripts/g4_collect_earnings.py:505",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`AFTER_HOURS_FROM` has no argument."
+   },
+   {
+    "where": "scripts/n6_moments.py:368",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`UNIVERSE` is a hardcoded ETF ticker list, not a path, and has no override argument. Same verdict and same reason at n11_vol_baseline_ladder.py:287, n20_conditional_mu_rest.py:516, n4b_coverage_equivalence.py:281 and wm0_train.py:330."
+   },
+   {
+    "where": "scripts/wrds_pull_everything.py:251",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`MAX_ROWS` has no argument; `--max-tables` is a different quantity."
+   },
+   {
+    "where": "scripts/wrds_repull_finratio_early.py:288",
+    "pattern": "C",
+    "verdict": "SAFE",
+    "why": "`DATASET` is a dataset NAME constant, not a path."
+   },
+   {
+    "where": "backend/services/net_dataset.py:346",
+    "pattern": "B",
+    "verdict": "SAFE",
+    "why": "`build_labels(panel)` stamps `dataset` from `DATASET = \"AEGIS-NET-DATASET-1\"` -- a name, not a path, and `panel` is a DataFrame, not a file."
+   },
+   {
+    "where": "backend/services/portfolio_intelligence/nav_reconstruction.py:208",
+    "pattern": "B",
+    "verdict": "SAFE",
+    "why": "`reconstruct_nav_history(db_path)` stamps `archive_table` from `ARCHIVE_TABLE = \"paper_nav_archive_20260726\"` -- a table name, not the db_path it was handed."
+   }
+  ],
+  "not_fixed_reported_only": "the one AT_RISK row (investment_committee.py:41) is not mine to change this session and is an output-routing defect rather than a false provenance line. Naming it is the deliverable; the fix is a one-liner for its owner: derive DEFAULT_OUT from `a.funnel`, not from DEFAULT_FUNNEL."
+ },
+ "tests": {
+  "file": "backend/tests/test_receipt_provenance.py",
+  "counts": "17 tests, 1 skipped (the C6-receipt self-check, which skips until this file exists and then binds)",
+  "run": "AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/test_receipt_provenance.py backend/tests/test_guard_missing_input_contract.py backend/tests/test_signal_reachability.py -q --timeout=300",
+  "sweep_behaviour": "SKIPS naming the directory when it is empty; FAILS naming the file when a receipt exists and lacks the block; tolerates a peer's half-written JSON as a race rather than a defect."
+ },
+ "house_rules_checked": {
+  "guard_contract": "the module defines NO custom exception -- both its recorders would lose the receipt they were writing if they raised -- so it is not a missing-input guard and needs no CASES entry. test_guard_missing_input_contract passes untouched.",
+  "signal_reachability": "reached from scripts/weekend_lab_jobs.py, so it lands in the tooling closure; audit()['unclassified'] is empty and no CLASSIFIED row was needed."
+ },
+ "llm_spend_usd": 0.0,
+ "verdict": "RULE_SHIPPED",
+ "headline": "receipt_provenance: sys.argv + resolved config + SHA-256 of every opened input, one choke point in weekend_lab_jobs, proved red on the W4b bug in miniature; survey finds 1 AT_RISK, 13 SAFE, 2 ALREADY_FIXED",
+ "_provenance": {
+  "sys_argv": [
+   "scripts/c6_write_receipt",
+   "--out",
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06b\\C6_receipt_provenance_rule_run01.json"
+  ],
+  "resolved_config": {
+   "out": {
+    "value": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06b\\C6_receipt_provenance_rule_run01.json",
+    "source": "arg"
+   },
+   "run": {
+    "value": 1,
+    "source": "default"
+   }
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/learner/features_graph.py",
+    "sha256": "831de88ab9f0145ade6dbf57ff4ec999ab6a50408d49acd88836cf187e655287",
+    "bytes": 42290,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "the rule and the writer it was applied to"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/weekend_lab_jobs.py",
+    "sha256": "b042441da67286a8a50ce20fb6f0c3db6d44645724c8ee064ba4a720641dd667",
+    "bytes": 177562,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "the rule and the writer it was applied to"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/services/receipt_provenance.py",
+    "sha256": "1eacd3712e6570d25ecf4886a8f209d44fdf7f2035c6b7901a86f6da19ed031a",
+    "bytes": 22981,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "the rule and the writer it was applied to"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/tests/test_receipt_provenance.py",
+    "sha256": "b67aa7bafb1d854d4c7cd8a158a8a8adb95b03b31c505e27936981caa91fcdbc",
+    "bytes": 18097,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "the rule and the writer it was applied to"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/continuation_2026-09-06/s3_graph_receipt_provenance_run01.json",
+    "sha256": "4d187c1426540cc1d399638eda026ee03f1c1302f4a14a4dc4518da1439567b4",
+    "bytes": 2554,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "the local fix this rule generalises"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/docs/review_2026-09-06_fable51_on_the_continuation.md",
+    "sha256": "0a0f53fc194f1dd5358796ea4c10f2cf7e39d8eb1495d8ad6761940272c43d2f",
+    "bytes": 8003,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "review claim 8, the instruction"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/investment_committee.py",
+    "sha256": "d6501238071080091274b00cc1499b876950d9e99635c140ee32c42ec9206887",
+    "bytes": 7820,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/lane_autopsy_run.py",
+    "sha256": "9ef572d998faeb76a77edfb6f69b12ad853998a6f97bb595409c7b037805f813",
+    "bytes": 6588,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/c6b_counterparty_bias.py",
+    "sha256": "fde42c37b6e377a66d68c65c435e46356e719f581f2b3e0001ad6d48ad545adf",
+    "bytes": 53218,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/scenario_bridge.py",
+    "sha256": "705677306ebac5807c4cafa55700bfb853f61459468a3dfb0a829a2da7c4fa5b",
+    "bytes": 75251,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/edgar_8k_items.py",
+    "sha256": "1086c5757053032e05bb243cb113f147fb4f3bed574ba2fc6678196a403693ba",
+    "bytes": 24050,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/era_replay_v2.py",
+    "sha256": "8b98dd088c48157c516e5f6bc16a6a881713174fdc0977fa03e068fa7e9f7d3e",
+    "bytes": 106629,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/g4_collect_earnings.py",
+    "sha256": "87ce97fc1850fbb48660931a833c544887c3dd0ae7235b4be327b34a6b76e815",
+    "bytes": 25321,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/n6_moments.py",
+    "sha256": "658ff667ef1b42bdb04e330c837738ade377f1f7c8bb160aa68672e68f825259",
+    "bytes": 17829,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/wrds_pull_everything.py",
+    "sha256": "63d051cb2914f0f199f5589742f0cf82788f19c7678fe7b8cb36a0ca1ce7e106",
+    "bytes": 17449,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/scripts/wrds_repull_finratio_early.py",
+    "sha256": "75d9c77556cda843566ddb6b261893b5507dd7dec273b68d327bdbaf879e3a8d",
+    "bytes": 13669,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/services/net_dataset.py",
+    "sha256": "6107682c612515b73e114bae46590933b93ef43be080d0d19b8d33e4bdf34cc1",
+    "bytes": 16858,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/services/portfolio_intelligence/nav_reconstruction.py",
+    "sha256": "3143ce053c8ddf841de257a18ce45a457a2f4bc89a834522fa63b30035160a5e",
+    "bytes": 9312,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "surveyed for the module-default-in-place-of-an-argument shape"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/continuation_2026-09-06b/c4_hold_rule_declaration.json",
+    "sha256": "37cc5f7359f4cce52a55229f9abaefcddc500d8e66f7e95f6154e3a8565499f1",
+    "bytes": 4805,
+    "opened_utc": "2026-09-05T14:38:17+00:00",
+    "note": "the peer receipt the sweep went red on"
+   }
+  ],
+  "git_commit": "59ace19079c8",
+  "generated_utc": "2026-09-05T14:38:17+00:00"
+ }
+}

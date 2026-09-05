@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
@@ -32,6 +33,55 @@ import numpy as np
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:                       # so `python scripts/...` works too
+    sys.path.insert(0, str(ROOT))
+
+from backend.services.receipt_provenance import (InputTracker,  # noqa: E402
+                                                 attach, resolve_config)
+
+#: THE PROVENANCE RECORDER, and why it is a module-level singleton.
+#:
+#: W4b ran three arms over three different edge files and all three receipts
+#: named the same one, because the line that DESCRIBED the input was written by
+#: hand next to the line that READ it, and only one of the two was updated
+#: (review 2026-09-06 claim 8;
+#: `continuation_2026-09-06/S3_graph_receipt_provenance_run01.json`).
+#:
+#: The rule that closes the class is that the recording happens where the file
+#: is opened, not where the receipt is written, and that the receipt is written
+#: in exactly ONE place. `main()` is that place: it stamps `_provenance` onto
+#: whatever the job returned, so a new job inherits provenance by existing.
+#: What a job owes is one `RUN_INPUTS.opened(p)` at each open -- see `_track`.
+RUN_INPUTS = InputTracker()
+
+#: The module constants a caller can override, named explicitly so
+#: `resolve_config` can mark each key `arg` / `env` / `default`. Passing the
+#: constants rather than letting the helper import them is deliberate: the
+#: claim "this is the default I overrode" has to be made out loud.
+_MODULE_DEFAULTS = {"run": 1, "variant": 0}
+
+
+def _track(path, *, note: str | None = None):
+    """Record an input at the point of opening, and return the path unchanged.
+
+    Deliberately returns its argument so a call site becomes
+    `read_text(_track(p))` rather than two statements that can drift apart --
+    drifting apart is the whole defect this exists to prevent.
+    """
+    RUN_INPUTS.opened(path, note=note)
+    return path
+
+
+def _load_long():
+    """`LP.load_long()`, with the parquet it reads recorded.
+
+    The panel is the input every job's numbers rest on and no receipt has ever
+    named it. It is also 50 MB+, which is why the tracker streams its hash and
+    caches it per path: the panel is opened by three jobs and hashed once.
+    """
+    from learner import long_panel as LP
+    _track(LP.LONG_TABLE, note="the long panel every job's numbers rest on")
+    return LP.load_long()
 
 
 def _now() -> str:
@@ -213,8 +263,7 @@ def verdict_from(inf: dict, eras: dict) -> str:
 
 
 def _panel():
-    from learner import long_panel as LP
-    return LP.load_long()
+    return _load_long()
 
 
 def floor_check(df, col: str, cost_bps: float = 10.0, label: str = "") -> dict:
@@ -276,8 +325,10 @@ def W1_long_panel_inventory(variant: int = 0) -> dict:
     result rather than in the inventory of the input.
     """
     from learner import long_panel as LP
-    df = LP.load_long()
-    rec = json.loads(LP.LONG_RECEIPT.read_text(encoding="utf-8"))["build"]
+    df = _load_long()
+    rec = json.loads(
+        _track(LP.LONG_RECEIPT, note="the panel's build receipt")
+        .read_text(encoding="utf-8"))["build"]
     gate = rec.get("share_basis_gate_early_era", {})
     cov = rec.get("coverage_by_year", [])
     matured = {}
@@ -426,7 +477,9 @@ def _w2_grid(df, feature_cols, kinds, targets, horizons, costs, hold_k=None,
                 ck = _cache_key(tag, kind, target, h)
                 if ck.exists():
                     try:
-                        blob = json.loads(ck.read_text(encoding="utf-8"))
+                        blob = json.loads(
+                            _track(ck, note="cached prediction cell")
+                            .read_text(encoding="utf-8"))
                         s = pd.Series(blob["values"], index=[int(i) for i in blob["index"]])
                         df[col] = np.nan
                         df.loc[s.index, col] = s.values
@@ -859,7 +912,7 @@ def _neural_floor_check(payload: dict) -> dict:
             break
     if seed is None:
         return {"note": f"could not recover a seed from best_cell {best!r}"}
-    df = LP.load_long()
+    df = _load_long()
     preds, _ = N.run_neural(df, list(range(LP.FIRST_TEST_YEAR, 2025)),
                             seeds=[seed], verbose=False)
     key = next((k for k in preds if k.endswith(f"s{seed}") or k == f"s{seed}"), None)
@@ -2319,7 +2372,7 @@ def W9_survivor_books(variant: int = 0) -> dict:
     examined: set[tuple] = set()
     for p in sorted(WL.OUT.glob("W*_run*_v*.json")):
         try:
-            r = json.loads(p.read_text(encoding="utf-8"))
+            r = json.loads(_track(p).read_text(encoding="utf-8"))
         except Exception:                                               # noqa: BLE001
             continue
         _jv = (r.get("job"), r.get("variant"))
@@ -3117,7 +3170,7 @@ def W11_evidence_writeback(variant: int = 0) -> dict:
     folded, files, errors = 0, 0, []
     for p in sorted(WL.OUT.glob("W*_run*_v*.json")):
         try:
-            payload = json.loads(p.read_text(encoding="utf-8"))
+            payload = json.loads(_track(p).read_text(encoding="utf-8"))
         except Exception as exc:                                        # noqa: BLE001
             errors.append(f"{p.name}: {type(exc).__name__}: {exc}")
             continue
@@ -3172,6 +3225,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--run", type=int, default=1)
     ap.add_argument("--variant", type=int, default=0)
     args = ap.parse_args(argv)
+    cmdline = list(sys.argv) if argv is None else ["weekend_lab_jobs", *argv]
     try:
         payload = JOBS[args.job](args.variant)
     except Exception:                                                   # noqa: BLE001
@@ -3183,6 +3237,12 @@ def main(argv: list[str] | None = None) -> int:
     payload["run"] = args.run
     payload["variant"] = args.variant
     payload["written_utc"] = _now()
+    # THE ONE PLACE PROVENANCE IS WRITTEN. A failed job gets the block too:
+    # what a crashed run opened before it crashed is the most useful half of a
+    # traceback receipt, and stamping it only on success would make the block
+    # absent exactly when it is wanted.
+    attach(payload, cmdline,
+           resolve_config(args, _MODULE_DEFAULTS, argv=cmdline), RUN_INPUTS)
     p = Path(args.out)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
