@@ -348,5 +348,5 @@
   },
   "pit_note": "the surface at date t is an END-OF-DAY object (the pull manifest says treat it as known at t+1 open); `attach` therefore joins BACKWARD with allow_exact_matches=False, so a surface dated the same day the money moved is refused rather than used",
   "not_used_note": "the month-end extraction at 'Aegis module/data/wrds_raw/optionm_vsurf_me' (2002-2024, 12 dates a year) is NOT the source here; month-end is a property of that pull's WHERE clause, not of OptionMetrics",
-  "built_utc": "2026-09-05T04:17:00+00:00"
+  "built_utc": "2026-09-05T04:22:58+00:00"
 }

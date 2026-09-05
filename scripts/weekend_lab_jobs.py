@@ -513,7 +513,14 @@ def W4_graph_momentum(variant: int = 0) -> dict:
 
 
 def W5_options_iv(variant: int = 0) -> dict:
-    return _deferred("W5_options_iv", "OptionMetrics link pending")
+    """Implied-vol surface features. The import stays INSIDE the body.
+
+    `features_options.job` imports `era_sign_table` from this module -- the era
+    boundaries are imported, never re-derived -- so a module-level import on this
+    side would close the cycle.
+    """
+    from learner.features_options import job as _w5
+    return _w5(variant)
 
 
 def W6_behavioural(variant: int = 0) -> dict:
@@ -639,6 +646,137 @@ def _residualise(g: pd.DataFrame, ycol: str, on: list[str]) -> pd.Series:
     return pd.Series(y - X @ coef, index=d.index)
 
 
+def W5b_options_book(variant: int = 0) -> dict:
+    """DOES THE OPTIONS COEFFICIENT SURVIVE BECOMING MONEY?
+
+    W5 reports two survivors on 26 years with controls in the same monthly
+    regression: the call-minus-put IV spread (Cremers-Weinbaum, HAC t +4.15,
+    positive in 3 of 3 eras) and the 25-delta skew (Xing-Zhang-Zhao, HAC t -5.37,
+    negative in 3 of 3). Both carry the literature's sign.
+
+    A Fama-MacBeth coefficient is NOT a strategy. It has no k, no weighting, no
+    turnover and no spread, and this repo has watched several coefficients die
+    between 10 and 25 bps. So this job does the only thing that settles it:
+    builds the actual top-50 value-weighted book, pays the measured turnover, and
+    puts the result through the same DSR / SPA / PBO / power machinery every
+    other cell here goes through.
+
+    "BETTER THAN WHAT?" -- AND WHY THE OBVIOUS BENCHMARK IS THE WRONG ONE.
+    Only 72.9% of panel rows carry a listed 30-day surface, and the missing 27%
+    are systematically the small and the illiquid. So a book drawn from the
+    option-covered subuniverse and measured against the FULL CRSP market is
+    partly measuring *having listed options*, which is a size and liquidity
+    statement, not a skill one. The book is therefore scored against BOTH:
+
+      * `mkt_vw_1m`  -- the full CRSP common-stock value-weighted market, and
+      * the value-weighted return of the OPTION-COVERED universe itself,
+
+    and the second is the one that can be believed. If a cell beats the market
+    and does not beat its own universe, the edge is coverage.
+    """
+    from learner import evaluate, inference, features_options as FO
+    if not FO.available():
+        return _deferred("W5b_options_book", "features_options.parquet not built")
+    df = _panel()
+    df, join_note = FO.attach(df)
+    sigs = {
+        "cp_iv_spread_30d": +1.0,      # calls rich -> long
+        "skew_25d_30d": -1.0,          # dear crash insurance -> avoid
+    }
+    have = {s: k for s, k in sigs.items() if s in df.columns}
+    if not have:
+        return {"verdict": "FAILED", "headline": "neither options signal is on the joined panel"}
+    for s, k in have.items():
+        df[f"sig_{s}"] = df[s] * k
+    if len(have) == 2:
+        # The combination, as RANKS: the two features are on different scales
+        # (an IV difference and an IV difference) but with different dispersions,
+        # and a raw sum would silently weight by variance.
+        z = None
+        for s in have:
+            r = df.groupby("month")[f"sig_{s}"].rank(pct=True)
+            z = r if z is None else z + r
+        df["sig_combined"] = z
+
+    # THE UNIVERSE'S OWN MARKET LEG. Value-weighted over exactly the rows that
+    # carry a surface in that month -- the "better than what?" control.
+    cov = df[df[list(have)[0]].notna() & df["fwd_1m"].notna() & df["market_cap"].notna()]
+    uni = (cov.assign(_w=cov["market_cap"].clip(lower=0))
+              .groupby("month")
+              .apply(lambda g: float((g["_w"] * g["fwd_1m"]).sum() / g["_w"].sum())
+                     if g["_w"].sum() > 0 else np.nan, include_groups=False))
+    uni.name = "mkt_covered_1m"
+    df = df.merge(uni.reset_index(), on="month", how="left")
+
+    series, cells = {}, {}
+    cols = [f"sig_{s}" for s in have] + (["sig_combined"] if len(have) == 2 else [])
+    for col in cols:
+        for bps in (10, 25):
+            for hold in (None, 100):
+                for mkt in ("mkt_vw_1m", "mkt_covered_1m"):
+                    key = (f"{col}|{bps}bps|{'hyst' if hold else 'rebuild'}|"
+                           f"{'full_mkt' if mkt == 'mkt_vw_1m' else 'covered_univ'}")
+                    try:
+                        bk = evaluate.book(df, col, k=50, weight="vw", cost_bps=bps,
+                                           ret_col="fwd_1m", mkt_col=mkt,
+                                           hold_k=hold, return_series=True)
+                    except Exception as exc:                            # noqa: BLE001
+                        cells[key] = {"error": f"{type(exc).__name__}: {exc}"}
+                        continue
+                    ser = bk.get("_series") or {}
+                    cells[key] = {k: v for k, v in bk.items() if not k.startswith("_")}
+                    net, m = ser.get("net"), ser.get("market")
+                    if net is not None and m is not None and len(net) and net.index.equals(m.index):
+                        series[key] = (net - m).astype("float64")
+    if not series:
+        return {"verdict": "CANNOT DETERMINE", "cells": cells,
+                "headline": "no options cell produced a usable paired series"}
+    wide = pd.concat(series, axis=1).dropna()
+    fam = {k: wide[k].tolist() for k in wide.columns}
+    # THE CHAMPION IS CHOSEN AMONG THE CELLS MEASURED AGAINST THE COVERED
+    # UNIVERSE. Ranking over both benchmarks would let a coverage artefact win.
+    covered = {k: v for k, v in fam.items() if k.endswith("covered_univ")}
+    pool = covered or fam
+    best = max(pool, key=lambda k: float(np.mean(pool[k])))
+    inf = inference.full_report(fam[best], family=fam, paired_excess=fam,
+                                n_trials=len(cells) or len(fam), n_boot=500, seed=17)
+    eras = era_sign_table(wide[best])
+    twin = best.replace("covered_univ", "full_mkt")
+    pw = inf.get("power", {})
+    return {
+        "question": ("do the two surviving options coefficients survive becoming a "
+                     "cost-bearing top-50 book, against their OWN universe?"),
+        "family_id": "weekend-W5b-options-book",
+        "join": join_note,
+        "signals": {s: ("long high" if k > 0 else "long low") for s, k in have.items()},
+        "benchmarks": {
+            "mkt_vw_1m": "full CRSP common-stock value-weighted market",
+            "mkt_covered_1m": ("value-weighted return of the option-covered universe -- "
+                               "the honest comparison, because only 72.9% of panel rows "
+                               "carry a surface and the missing 27% are the small and "
+                               "illiquid"),
+        },
+        "cells_looked_at": len(cells),
+        "cells": cells,
+        "n_common_months": int(len(wide)),
+        "best_cell": best,
+        "best_vs_full_market_twin": {"cell": twin,
+                                     "mean_monthly_excess_pct": (
+                                         round(float(np.mean(fam[twin])) * 100, 4)
+                                         if twin in fam else None)},
+        "best_mean_monthly_excess_pct": round(float(np.mean(fam[best])) * 100, 4),
+        "inference": inf,
+        "era_sign_table": eras,
+        "headline": (f"best of {len(cells)} options-book cells is {best} at "
+                     f"{np.mean(fam[best]) * 100:+.3f}%/month over {len(wide)} months; "
+                     f"DSR {(inf.get('deflated_sharpe') or {}).get('dsr')}, "
+                     f"SPA p {(inf.get('spa') or {}).get('p_spa_consistent')}, "
+                     f"PBO {(inf.get('pbo') or {}).get('pbo')}, t2 needs "
+                     f"{pw.get('years_needed_for_t2')}y vs {pw.get('years_observed')}y"),
+        "verdict": verdict_from(inf, eras),
+    }
+
+
 def W7_matched_loser(variant: int = 0) -> dict:
     """THE INFORMATIVE UNIT IS WINNER VS MATCHED LOSER, NEVER A GALLERY.
 
@@ -672,9 +810,23 @@ def W7_matched_loser(variant: int = 0) -> dict:
     apart.
     """
     from learner import dataset as DS, inference, long_panel as LP
-    TOP_N, N_MATCH = 50, 5
+    # THE VARIANTS ARE A ROBUSTNESS TEST, NOT FOUR CHANCES TO FIND SOMETHING.
+    # An archetype that only exists at top-50 on a 12-month outcome is an
+    # artefact of two arbitrary constants. The same three ideas surviving a
+    # doubled winner set, a halved control count and a different horizon is the
+    # nearest thing this panel offers to a replication -- and the evidence
+    # memory needs a SECOND agreeing pass before it will promote anything.
+    W7_VARIANTS = [
+        {"top_n": 50, "n_match": 5, "outcome": "excess_vw_12m"},   # 0 -- the reference
+        {"top_n": 100, "n_match": 3, "outcome": "excess_vw_12m"},  # 1 -- wider tail
+        {"top_n": 50, "n_match": 5, "outcome": "excess_vw_6m"},    # 2 -- shorter horizon
+        {"top_n": 25, "n_match": 8, "outcome": "excess_vw_12m"},   # 3 -- narrower tail
+    ]
+    cfg = W7_VARIANTS[variant % len(W7_VARIANTS)]
+    TOP_N, N_MATCH = cfg["top_n"], cfg["n_match"]
     df = _panel()
-    ycol = "excess_vw_12m"
+    ycol = cfg["outcome"]
+    horizon_months = int(ycol.rsplit("_", 1)[-1].rstrip("m"))
     if ycol not in df.columns:
         return {"verdict": "FAILED", "headline": f"{ycol} absent from the panel"}
     on = [c for c in ("log_market_cap", "mom_12_1", "vol_60d") if c in df.columns]
@@ -760,7 +912,7 @@ def W7_matched_loser(variant: int = 0) -> dict:
             if len(vals) < 24:
                 continue
             s = pd.Series(vals, index=pd.Index(months_used[:len(vals)], name="month"))
-            oc = EV.overlap_corrected(s, 12)
+            oc = EV.overlap_corrected(s, horizon_months)
             # THE KEY NAMES ARE `t_newey_west` AND `block_t_block`, and asking for
             # `t_hac`/`t_block` returns None for every feature -- which made the
             # archetype bar unreachable and printed "0 candidates" as if it were
@@ -778,7 +930,8 @@ def W7_matched_loser(variant: int = 0) -> dict:
                         "t_hac": oc.get("t_newey_west"),
                         "t_block_non_overlapping": oc.get("block_t_block"),
                         "n_effective": oc.get("block_n_effective"),
-                        "overlap_note": ("the outcome is a 12-month return sampled monthly; "
+                        "overlap_note": (f"the outcome is a {horizon_months}-month return "
+                                         "sampled monthly; "
                                          "the naive t divides by sqrt(months) when the "
                                          "independent draws number about months/12"),
                         "era_sign_table": era_sign_table(s),
@@ -876,6 +1029,7 @@ def W7_matched_loser(variant: int = 0) -> dict:
         "question": ("what was observable BEFOREHAND that separated a 12-month residual "
                      "winner from the names that looked exactly like it?"),
         "family_id": "weekend-W7-matched-loser",
+        "variant_config": cfg,
         "design": {"top_n": TOP_N, "controls_per_name": N_MATCH,
                    "residualised_on": on,
                    "match_on": ["sector (exact where available)"] + on,
@@ -1157,6 +1311,7 @@ JOBS = {
     "W3_neural_long": W3_neural_long,
     "W4_graph_momentum": W4_graph_momentum,
     "W5_options_iv": W5_options_iv,
+    "W5b_options_book": W5b_options_book,
     "W6_behavioural": W6_behavioural,
     "W7_matched_loser": W7_matched_loser,
     "W8_states_three_nulls": W8_states_three_nulls,

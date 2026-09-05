@@ -261,16 +261,36 @@ def test_periods_per_year_scales_the_years_and_never_the_t():
 def test_degenerate_input_says_cannot_determine_and_does_not_crash(bad):
     """Fewer than two usable periods, or zero variance: CANNOT DETERMINE.
 
-    NOTE FOR THE READER OF THIS FILE: on this branch the returned dict carries
-    ONLY `n_periods` and `verdict`. It does NOT carry `powered`, so a caller
-    that writes `power_note(x)["powered"]` raises KeyError on a degenerate arm
-    rather than reading False. That asymmetry is asserted here so it cannot
-    change silently, and it is reported as an API finding rather than fixed.
+    THE DEGENERATE BRANCH RETURNS THE FULL KEY SET. It originally returned only
+    `n_periods` and `verdict`, so `power_note(x)["powered"]` raised KeyError on a
+    degenerate arm instead of reading False -- a caller indexing the flag would
+    crash exactly where the evidence is thinnest. This test was written to pin
+    that asymmetry as a finding; the branch was then fixed, and the test now pins
+    the fix: every key a healthy call returns is present here too, with the
+    numeric ones None and `powered` False.
     """
     res = INF.power_note(bad, periods_per_year=PPY)
     assert INF.CANNOT_DETERMINE in res["verdict"]
-    assert "powered" not in res
-    assert "years_needed_for_t2" not in res
+    assert res["powered"] is False
+    assert res["years_needed_for_t2"] is None
+    assert res["sharpe_per_period"] is None
+    assert res["t_observed"] is None
+    # The key set must MATCH a healthy call's, or a consumer that indexes any
+    # other field just moves the KeyError one line down.
+    healthy = INF.power_note(_series_with_exact_sample_sharpe(0.25, 120, seed=3),
+                             periods_per_year=PPY)
+    missing = set(healthy) - set(res) - {"years_needed_for_t2_exact"}
+    assert not missing, f"degenerate branch is missing {sorted(missing)}"
+
+
+def test_the_degenerate_branch_names_the_right_cause():
+    """A 50-element CONSTANT series is zero-variance, not a short sample. Naming
+    the wrong cause sends the reader looking for missing data that is all
+    present."""
+    res = INF.power_note([2.0] * 50, periods_per_year=PPY)
+    assert res["n_periods"] == 50
+    assert "identical" in res["verdict"] or "variance" in res["verdict"]
+    assert "fewer than 2" not in res["verdict"]
 
 
 def test_nan_rows_are_dropped_not_counted():

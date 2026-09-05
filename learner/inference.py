@@ -532,7 +532,30 @@ def power_note(returns: Sequence[float], periods_per_year: int = 12,
     a = _clean(returns)
     T = int(a.size)
     if T < 2 or a.std(ddof=1) == 0:
-        return {"n_periods": T, "verdict": f"{CANNOT_DETERMINE} (fewer than 2 usable periods)"}
+        # THE DEGENERATE BRANCH RETURNS THE FULL KEY SET, and it says which of
+        # the two causes it was. The first version returned two keys, so
+        # `power_note(x)["powered"]` raised KeyError on a short arm instead of
+        # reading False -- a caller that indexes the flag would crash exactly
+        # where the evidence is thinnest. And "fewer than 2 usable periods" is
+        # the wrong sentence for a 50-period CONSTANT series; naming the wrong
+        # cause sends the reader to look for missing data that is all present.
+        why = ("fewer than 2 usable periods" if T < 2
+               else f"all {T} periods are identical, so the Sharpe is undefined "
+                    "(zero variance, not a short sample)")
+        return {
+            "n_periods": T,
+            "periods_per_year": periods_per_year,
+            "n_oos_months": T if periods_per_year == 12 else None,
+            "sharpe_per_period": None,
+            "t_observed": None,
+            "years_observed": round(T / float(periods_per_year), 2),
+            "t_target": t_target,
+            "periods_needed_for_t_target": None,
+            "years_needed_for_t2": None,
+            "powered": False,
+            "verdict": f"{CANNOT_DETERMINE} ({why})",
+            "reading": f"{CANNOT_DETERMINE}: {why}",
+        }
     sr = float(a.mean() / a.std(ddof=1))
     t_obs = sr * math.sqrt(T)
     years_obs = T / float(periods_per_year)
@@ -559,6 +582,13 @@ def power_note(returns: Sequence[float], periods_per_year: int = 12,
                                         if needed_periods is not None else None),
         "years_needed_for_t2": (round(float(needed_years), 1)
                                 if needed_years is not None else None),
+        # `powered` is decided on the UNROUNDED requirement, so at the boundary a
+        # receipt can print `years_needed_for_t2 == years_observed` beside
+        # `powered: false`. The flag is the correct one; the printed number lost
+        # the information to rounding, so the exact value is carried too rather
+        # than leaving a reader to reconcile two numbers that look contradictory.
+        "years_needed_for_t2_exact": (float(needed_years)
+                                      if needed_years is not None else None),
         "powered": (bool(needed_years is not None and needed_years <= years_obs)),
         "reading": reading,
     }

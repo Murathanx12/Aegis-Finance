@@ -13,3 +13,4 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 |---|---|---|---|---|---|---|---|---|---|
 | W1_long_panel_inventory | 1 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
 | W1_long_panel_inventory | 1 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 2 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |

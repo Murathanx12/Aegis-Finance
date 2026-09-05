@@ -193,12 +193,31 @@ def _fit_lgbm(Xf, yf, Xv, yv, classifier: bool = False,
             "the quantile objective. Returning the mean head under a q-labelled name "
             "would publish three identical cells as a tail finding.")
     cb = [lgb.early_stopping(40, verbose=False), lgb.log_evaluation(0)]
+    # The constructor check above only proves the kwarg was STORED. What proves
+    # the booster trained under pinball loss is the fitted booster's own
+    # objective string, checked after `fit` below.
     if len(yv):
         m.fit(Xf, yf, eval_set=[(Xv, yv)], callbacks=cb)
         best_it = int(getattr(m, "best_iteration_", 0) or params["n_estimators"])
     else:
         m.fit(Xf, yf)
         best_it = params["n_estimators"]
+    if quantile is not None:
+        # THE FITTED BOOSTER'S OWN OBJECTIVE, not the constructor's kwarg. A
+        # lightgbm that accepted `objective="quantile"` into the estimator but
+        # trained under l2 would pass the pre-fit guard and hand back the mean
+        # head wearing a q label -- exactly the failure the pre-fit guard was
+        # written to stop, one level deeper.
+        trained = ""
+        try:
+            trained = str(m.booster_.dump_model().get("objective", ""))
+        except Exception:                                                # noqa: BLE001
+            trained = str(getattr(m, "objective_", "") or "")
+        if "quantile" not in trained:
+            raise RuntimeError(
+                f"REFUSED: a q={quantile} head was requested but the FITTED booster's "
+                f"objective is {trained!r}, not quantile. The pre-fit check passed, so "
+                "this lightgbm stores the kwarg and trains something else.")
     return m, {"best_iteration": best_it, "objective": params.get("objective", "l2"),
                "quantile_alpha": params.get("alpha")}
 
@@ -296,6 +315,15 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
     `shuffle_seed=None` keeps the historical fixed seed, so v1's single null
     arm stays reproducible.
     """
+    # ARGUMENT VALIDITY FIRST, before any data is touched. Placed after the data
+    # prep it fired only if the frame happened to survive that far, so a caller
+    # asking ridge for a quantile got whatever the data raised instead of the
+    # sentence saying why the request is meaningless.
+    if quantile is not None and kind != "lgbm":
+        raise ValueError(
+            f"a quantile head is only defined for lgbm here; got {kind!r}. Ridge has one "
+            "conditional mean and no pinball loss, and returning its mean under a "
+            "q-labelled name is the failure the quantile guard exists to prevent.")
     cols = arm_features(feature_cols, arm, horizon_months)
     y = arm_target(train, arm, horizon_months, benchmark)
     keep = np.isfinite(y)
@@ -314,8 +342,6 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
     Xv, yv = Xall[val_m], yw[val_m]
     Xte = test[cols].to_numpy(dtype="float64")
 
-    if quantile is not None and kind != "lgbm":
-        raise ValueError(f"a quantile head is only defined for lgbm here; got {kind!r}")
     if kind == "ridge":
         model, meta = _fit_ridge(Xf, yf, Xv, yv)
         raw = model.predict(Xte)

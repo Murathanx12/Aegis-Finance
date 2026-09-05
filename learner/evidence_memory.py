@@ -270,13 +270,110 @@ def snapshot() -> dict:
 def record_receipt(payload: dict) -> int:
     """Fold one weekend-lab receipt into the memory. Returns rows written.
 
-    Reads the receipt's OWN cells where it has them, so a grid of 32 cells
-    contributes 32 observations rather than one -- the family is the unit the
-    multiplicity tests already work in, and the memory has to agree with them.
+    THE LAB DOES NOT PRODUCE ONE SHAPE OF RECEIPT, AND PRETENDING IT DOES COSTS
+    EVERYTHING. The first version of this function read only `payload["cells"]`
+    -- the grid shape W2 produces -- so W6's `features`, W7's
+    `archetype_candidates` and W8's single family result all folded to ZERO
+    observations, and the memory reported "0 cells tracked" while sitting on
+    four real receipts. A memory that silently ignores three quarters of the
+    evidence is worse than no memory, because the loop then reads its own
+    emptiness as "nothing has been found yet".
+
+    So the shape is DETECTED, and a receipt whose shape is not recognised
+    records one FAMILY-LEVEL observation rather than nothing -- the fact that a
+    family was tested is itself evidence, and losing it is the failure this
+    docstring exists to prevent.
     """
     fam = payload.get("family_id")
     if not fam:
         return 0
+    written = _record_cells(payload, fam)
+    written += _record_features(payload, fam)
+    if written == 0:
+        # Not a recognised shape. Record that the family was TESTED, with
+        # whatever inference it carries, rather than dropping it silently.
+        inf = payload.get("inference") or {}
+        power = inf.get("power") or {}
+        observe(fam, "__family__",
+                n_months=payload.get("n_common_months") or payload.get("months"),
+                dsr=(inf.get("deflated_sharpe") or {}).get("dsr"),
+                spa_p=(inf.get("spa") or {}).get("p_spa_consistent"),
+                pbo=(inf.get("pbo") or {}).get("pbo"),
+                verdict=payload.get("verdict"),
+                powered=power.get("powered"),
+                years_needed_for_t2=power.get("years_needed_for_t2"),
+                years_observed=power.get("years_observed"),
+                eras=payload.get("era_sign_table"),
+                job=payload.get("job"), run=payload.get("run"),
+                variant=payload.get("variant"),
+                note="family-level observation: this receipt carries no per-cell grid")
+        written = 1
+    return written
+
+
+def _record_features(payload: dict, fam: str) -> int:
+    """The FEATURE shape: W6/W4/W5's `features` list, and W7's candidates.
+
+    A feature is graded on its CONTROLLED t and its era sign, not on a DSR --
+    there is no book and therefore no Sharpe. `_clears` reads the era table and
+    the verdict, so a feature cell is comparable to a strategy cell in the one
+    respect the memory cares about: did this pass clear its own bar.
+    """
+    written = 0
+    for r in payload.get("features") or []:
+        if not isinstance(r, dict) or "feature" not in r:
+            continue
+        t = r.get("t_fm_beta_controlled")
+        eras = r.get("era_sign_table") or {}
+        power = r.get("power") or {}
+        cleared = bool(isinstance(t, (int, float)) and abs(t) >= 2.0
+                       and eras.get("same_sign_in_2_of_3"))
+        observe(fam, f"feature::{r['feature']}",
+                n_months=r.get("months"),
+                # A controlled t on a monthly coefficient series IS t = SR*sqrt(T),
+                # so the Sharpe it implies is recoverable and comparable.
+                sharpe=(round(float(t) / (float(r["months"]) ** 0.5), 5)
+                        if isinstance(t, (int, float)) and r.get("months") else None),
+                dsr=(0.99 if cleared else 0.10),
+                spa_p=(0.01 if cleared else 0.90),
+                pbo=None,
+                verdict=("CLEARS" if cleared else "does not clear"),
+                powered=power.get("powered"),
+                years_needed_for_t2=power.get("years_needed_for_t2"),
+                years_observed=power.get("years_observed"),
+                eras=eras,
+                job=payload.get("job"), run=payload.get("run"),
+                variant=payload.get("variant"),
+                note=(f"controlled t {t}; graded on the controlled coefficient and the "
+                      "era sign, not on a DSR -- a feature has no book"))
+        written += 1
+    for a in payload.get("archetype_candidates") or []:
+        if not isinstance(a, dict) or "feature" not in a:
+            continue
+        holm = a.get("holm_p")
+        bh = a.get("bh_fdr_q")
+        cleared = bool(isinstance(holm, (int, float)) and holm <= 0.05)
+        observe(fam, f"archetype::{a['feature']}",
+                n_months=a.get("months"),
+                dsr=(0.99 if cleared else (0.90 if isinstance(bh, (int, float))
+                                           and bh <= 0.10 else 0.10)),
+                spa_p=(holm if isinstance(holm, (int, float)) else 0.90),
+                pbo=None,
+                verdict=("SURVIVES_HOLM" if cleared else "screen only"),
+                powered=(a.get("power") or {}).get("powered"),
+                years_needed_for_t2=(a.get("power") or {}).get("years_needed_for_t2"),
+                years_observed=(a.get("power") or {}).get("years_observed"),
+                eras=a.get("era_sign_table"),
+                job=payload.get("job"), run=payload.get("run"),
+                variant=payload.get("variant"),
+                note=(f"winner-minus-matched-control; non-overlapping t "
+                      f"{a.get('t_block_non_overlapping')}, BH q {bh}, Holm {holm}"))
+        written += 1
+    return written
+
+
+def _record_cells(payload: dict, fam: str) -> int:
+    """The GRID shape: W2's `cells`, one book per (arm, target, horizon, cost)."""
     inf = payload.get("inference") or {}
     power = inf.get("power") or {}
     eras = payload.get("era_sign_table")

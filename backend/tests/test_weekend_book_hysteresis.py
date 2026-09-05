@@ -137,8 +137,16 @@ def test_hold_k_none_reproduces_the_v1_rule_number_for_number():
                 "terminal_wealth_gross", "terminal_wealth_market_same_months",
                 "mean_monthly_excess", "worst_month_net", "hit_rate"):
         assert got[key] == want[key], f"{key}: book gave {got[key]}, the v1 rule gives {want[key]}"
-    assert got["hold_k"] is None
-    assert got["selection_rule"] == f"top-{K} rebuilt every month"
+    # THE DEFAULT KEY SET IS UNTOUCHED, which is stronger than `hold_k is None`.
+    # `book`'s docstring promises v1's receipt is reproduced byte for byte, and a
+    # sealed receipt is sealed at its key set too: emitting `hold_k: null` on the
+    # default path already broke `test_v1_book_still_returns_exactly_the_keys_v1_
+    # recorded` once. The keys exist only on the path that gives them meaning.
+    assert "hold_k" not in got
+    assert "selection_rule" not in got
+    with_hyst = E.book(df, "pred", k=K, weight="vw", hold_k=2 * K)
+    assert with_hyst["hold_k"] == 2 * K
+    assert "hold until rank >" in with_hyst["selection_rule"]
     assert got["mean_names_per_month"] == float(K)
 
 

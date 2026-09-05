@@ -307,9 +307,6 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
     res = {
         "months": int(len(net)),
         "k": k, "weight": weight,
-        "hold_k": hold_k,
-        "selection_rule": (f"top-{k} rebuilt every month" if hold_k is None
-                           else f"buy at rank <= {k}, hold until rank > {hold_k}"),
         "cost_bps_per_side": cost_bps,
         "tradable_floor_usd": tradable_floor,
         "rows_after_tradable_floor": int(len(d)),
@@ -327,6 +324,16 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
         "worst_month_net": round(float(net.min()), 4),
         "hit_rate": round(float((net > 0).mean()), 4),
     }
+    if hold_k is not None:
+        # ONLY WHEN HYSTERESIS IS ON. Adding these unconditionally changed the
+        # DEFAULT key set and broke `test_v1_book_still_returns_exactly_the_keys_
+        # v1_recorded`: this function's docstring promises v1's receipt is
+        # reproduced byte for byte, and a SCHEMA change breaks that promise even
+        # though every v1 NUMBER was identical (verified). A sealed receipt is
+        # sealed at its key set too, so the new keys appear only on the path that
+        # gives them meaning.
+        res["hold_k"] = hold_k
+        res["selection_rule"] = f"buy at rank <= {k}, hold until rank > {hold_k}"
     if with_risk:
         res["risk"] = risk_stats(net, market)
     if return_series:
