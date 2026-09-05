@@ -93,14 +93,39 @@ seed-mean ensemble is reported as its own cell and is not exempt. Variants are
 separate families with separate `family_id`s; cross-variant multiplicity is the
 leaderboard's to carry, and the receipt says so rather than quietly netting it.
 
+THE THIRD LEG, ADDED AFTER THE FIRST FULL PASS (2026-09-06)
+===========================================================
+The first 2004-2024 pass returned a champion cell with **terminal wealth 561x
+against the market's 14.4x**, DSR 0.98, SPA p 0.016, PBO 0.09 and a positive
+mean in all three eras. It cleared every statistical bar this repo owns, and it
+was not a model result. `robustness()` was written to say what it was made of,
+and said it in four numbers:
+
+* the book's MEDIAN holding traded **$1.07m a day** and cost **$6.51 a share**;
+  **50% of the book sat below the house's own $3m/day execution floor** and 40%
+  below $5 a share;
+* imposing that floor cut the champion from **561x to 93x** -- and *raised*
+  LightGBM from **16.8x to 59.8x**. The 33x lead became 1.6x, and the seed-mean
+  ensemble (42.8x) went from ahead of lgbm to **behind** it;
+* **43% of the entire 251-month excess came from FIVE months**;
+* 25 bps rather than 10 halved it again.
+
+So the verdict has a third leg: a cell that clears every bar on a book the desk
+could not have filled is `NOISE (clears every bar, dies at the $3m/day execution
+floor)`. That block runs on every receipt now, because the pass that produced
+561x would otherwise have published it in good faith -- `evaluate.book`'s
+default output contains nothing that would have contradicted it.
+
 WHAT FAILURE THIS PREVENTS
 ==========================
 The specific one this repo has already paid for twice: a champion published on a
 single seed, against the market, with no incumbent in the comparison and no
-`years_needed_for_t2` beside its t. Every one of those four is structurally
-impossible to omit here -- the seed loop is not optional, the LightGBM leg is
-computed in the same pass on the same folds, `full_report` returns the power
-block, and `job()` refuses to emit a verdict that did not consult both blocks.
+`years_needed_for_t2` beside its t -- and now a third, a champion published on a
+book half of which is untradable. Every one of those is structurally impossible
+to omit here: the seed loop is not optional, the LightGBM leg is computed in the
+same pass on the same folds, `full_report` returns the power block, `robustness`
+re-grades under the execution floor, and `job()` refuses to emit a verdict that
+did not consult all of them.
 """
 
 from __future__ import annotations
@@ -577,6 +602,104 @@ def _grade(df: pd.DataFrame, col: str, bps: float) -> dict:
                          return_series=True)
 
 
+#: The house's own execution floor (`evaluate.TRADABLE_DOLLAR_VOL`). Below it a
+#: name is OBSERVE_ONLY and a book holding it is a backtest of something
+#: unbuyable. IMPORTED, not restated -- one floor, one place.
+TRADABLE_FLOOR_USD = evaluate.TRADABLE_DOLLAR_VOL
+
+
+def robustness(df: pd.DataFrame, col: str, bps: float = 10.0) -> dict:
+    """ASK WHAT IT BOUGHT, AND CHECK THE TAIL BEFORE THE MEAN.
+
+    THIS BLOCK EXISTS BECAUSE THE FIRST FULL PASS PRODUCED A 561x TERMINAL
+    WEALTH AND THE RECEIPT HAD NO WAY TO SAY WHAT THAT WAS MADE OF. Measured
+    2026-09-06 on the champion cell of variant 0: the book's MEDIAN holding
+    traded $1.07m a day and cost $6.51 a share, 50% of it sat below the house's
+    own $3m/day execution floor, 43% of the whole 251-month excess came from
+    FIVE months, and imposing the floor cut terminal wealth from 561 to 93 while
+    RAISING LightGBM's from 16.8 to 59.8. The headline number was not a model
+    result; it was a microcap-liquidity result with a fat tail.
+
+    None of that is visible in `evaluate.book`'s default output, so a pass that
+    did not compute it would publish 561x in good faith. Four questions, every
+    pass, on every cell the receipt names:
+
+      * does it survive the tradable floor, and what does the INCUMBENT do under
+        the same floor? (the second half matters: a floor that helps lgbm and
+        hurts the challenger reverses the comparison)
+      * does it survive 25 bps?
+      * how much of the excess is the five best months, and what is terminal
+        wealth without them -- beside the MARKET's terminal wealth without those
+        same months, so the reader is comparing like with like?
+      * what did it actually hold -- median cap, price and dollar volume, and
+        the share of the book below $5 and below $1m/day?
+    """
+    out: dict = {"cost_bps": bps, "tradable_floor_usd": TRADABLE_FLOOR_USD}
+    plain = evaluate.book(df, col, k=50, weight="vw", cost_bps=bps,
+                          ret_col="fwd_1m", mkt_col="mkt_vw_1m", return_series=True)
+    ser = plain.pop("_series", {}) or {}
+    out["plain"] = {k: plain.get(k) for k in
+                    ("months", "terminal_wealth_net", "terminal_wealth_market_same_months",
+                     "annualised_excess", "t_stat_paired_vs_market", "mean_turnover")}
+    for label, kw in (("tradable_floor", {"tradable_floor": TRADABLE_FLOOR_USD}),
+                      ("at_25bps", {"cost_bps": 25.0})):
+        kw = dict(kw)
+        kw.setdefault("cost_bps", bps)
+        try:
+            bk = evaluate.book(df, col, k=50, weight="vw", ret_col="fwd_1m",
+                               mkt_col="mkt_vw_1m", **kw)
+        except SystemExit as exc:            # the floor REFUSES without a dv column
+            out[label] = {"error": str(exc)}
+            continue
+        out[label] = {k: bk.get(k) for k in
+                      ("months", "terminal_wealth_net",
+                       "terminal_wealth_market_same_months", "annualised_excess",
+                       "t_stat_paired_vs_market", "rows_after_tradable_floor")}
+
+    net, mkt = ser.get("net"), ser.get("market")
+    if net is not None and mkt is not None and len(net) > 5:
+        top5 = net.sort_values(ascending=False).head(5).index
+        ex = (net - mkt).dropna()
+        tot = float(ex.sum())
+        out["tail"] = {
+            "best_5_months": {str(i): round(float(net.loc[i]), 4) for i in top5},
+            "share_of_total_excess_from_those_5": (
+                round(float(ex.reindex(top5).dropna().sum() / tot), 4) if tot else None),
+            "terminal_wealth_without_them": round(float((1 + net.drop(top5)).prod()), 3),
+            "market_terminal_wealth_without_them": round(
+                float((1 + mkt.drop(top5)).prod()), 3),
+            "note": "35 rows of 46,361 once carried 81% of a result in this repo; "
+                    "a fat right tail is a finding about the tail, not about the mean",
+        }
+
+    need = ["month", col, "fwd_1m", "mkt_vw_1m", "market_cap", "close",
+            "log_dollar_vol_20d"]
+    have = [c for c in need if c in df.columns]
+    if set(("market_cap", "close", "log_dollar_vol_20d")).issubset(have):
+        d = df[have].dropna(subset=[col, "fwd_1m", "mkt_vw_1m"])
+        rows = []
+        for _m, g in d.groupby("month", sort=True):
+            sel = g.nlargest(50, col)
+            dv = np.expm1(sel["log_dollar_vol_20d"])
+            rows.append((float(sel["market_cap"].median()) / 1e6,
+                         float(sel["close"].median()), float(dv.median()),
+                         float((sel["close"] < 5).mean()), float((dv < 1e6).mean())))
+        if rows:
+            a = np.asarray(rows, dtype="float64")
+            out["holdings"] = {
+                "median_market_cap_musd": round(float(np.median(a[:, 0])), 1),
+                "median_close_usd": round(float(np.median(a[:, 1])), 2),
+                "median_dollar_volume_usd": round(float(np.median(a[:, 2])), 0),
+                "share_of_book_under_5_dollars": round(float(np.median(a[:, 3])), 3),
+                "share_of_book_under_1m_dollar_volume": round(float(np.median(a[:, 4])), 3),
+                "note": "medians ACROSS MONTHS of the within-month median holding",
+            }
+    else:
+        out["holdings"] = {"verdict": "CANNOT DETERMINE",
+                           "why": f"missing {sorted(set(need) - set(have))}"}
+    return out
+
+
 def _spread(series_by_cell: dict) -> dict:
     """min / median / max / sd of a per-seed statistic. The headline, not the max."""
     v = [x for x in series_by_cell.values() if x is not None and np.isfinite(x)]
@@ -778,11 +901,52 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
                     },
                 }
 
+    # ---- WHAT THE HEADLINE NUMBER IS MADE OF. Computed on the cells the
+    # receipt actually names, never on all of them: it is a few seconds each and
+    # the point is that no quoted terminal wealth goes out without it.
+    rob_cols = {best.rsplit("|", 1)[0]}
+    if best_vs_lgbm:
+        rob_cols.add(best_vs_lgbm.rsplit("|", 1)[0])
+    rob_cols |= {c for c in pred_cols if c.endswith("seedmean")
+                 or "_seedmean_q" in c}
+    rob_cols.add("lgbm_raw")
+    rob = {c: robustness(df, c) for c in sorted(rob_cols) if c in df.columns}
+
+    # THE COMPARISON THAT MATTERS IS THE ONE UNDER THE FLOOR. A neural arm that
+    # is 33x the incumbent on paper and behind it once every name has to trade
+    # $3m a day has not beaten the incumbent; it has held names the incumbent
+    # could not have bought.
+    def _tw(c, block):
+        return ((rob.get(c) or {}).get(block) or {}).get("terminal_wealth_net")
+    bc = best.rsplit("|", 1)[0]
+    tw_pl, tw_fl = _tw(bc, "plain"), _tw(bc, "tradable_floor")
+    lg_pl, lg_fl = _tw("lgbm_raw", "plain"), _tw("lgbm_raw", "tradable_floor")
+    survives = (isinstance(tw_fl, (int, float)) and isinstance(lg_fl, (int, float))
+                and tw_fl > lg_fl)
+    liq = {
+        "best_cell": bc,
+        "terminal_wealth_plain": tw_pl,
+        "terminal_wealth_under_floor": tw_fl,
+        "lgbm_terminal_wealth_plain": lg_pl,
+        "lgbm_terminal_wealth_under_floor": lg_fl,
+        "still_ahead_of_lgbm_under_the_floor": bool(survives),
+        "floor_usd_per_day": TRADABLE_FLOOR_USD,
+        "reading": ("the best cell is still ahead of lgbm once every holding must "
+                    "trade $3m a day" if survives else
+                    "the best cell's lead over lgbm does NOT survive the $3m/day "
+                    "execution floor -- the edge is in names the incumbent could "
+                    "not have bought"),
+    }
+
     # ---- the verdict. BOTH legs, or it is not a finding.
     base_verdict = verdict_from(inf_mkt, eras)
     beat = _beats_incumbent(inf_lgbm)
     if base_verdict == "NOVEL" and not beat["clears"]:
         verdict = "NOISE (clears the market bar, does NOT beat lgbm)"
+    elif base_verdict == "NOVEL" and not survives:
+        # Clearing every statistical bar on a book the desk could not have
+        # filled is not a finding, and must not be printed as one.
+        verdict = "NOISE (clears every bar, dies at the $3m/day execution floor)"
     elif base_verdict == "NOVEL":
         verdict = "NOVEL"
     else:
@@ -791,6 +955,11 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
     pw = inf_mkt.get("power", {}) or {}
     lg10 = cells.get("lgbm_raw|10bps") or {}
     bestc = cells.get(best) or {}
+    _tail = (rob.get(bc) or {}).get("tail") or {}
+    _hold = (rob.get(bc) or {}).get("holdings") or {}
+    _tail5 = _tail.get("share_of_total_excess_from_those_5")
+    _medv = _hold.get("median_dollar_volume_usd")
+    _sub1m = _hold.get("share_of_book_under_1m_dollar_volume")
     headline = (
         f"[{dev_info['device_actually_used']}] best of {len(cells)} cells is {best} "
         f"at {np.mean(fam[best]) * 100:+.3f}%/month vs market over {len(wide)} months "
@@ -803,7 +972,10 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
         f"vs LGBM (TW {lg10.get('terminal_wealth_net')} @10bps): best neural arm is "
         f"{(diff_cells.get(best_vs_lgbm) or {}).get('annualised_vs_lgbm_pct')}%/yr "
         f"(t {(diff_cells.get(best_vs_lgbm) or {}).get('t_paired_vs_lgbm')}), "
-        f"DSR {(inf_lgbm.get('deflated_sharpe') or {}).get('dsr')} -- {beat['reading']}")
+        f"DSR {(inf_lgbm.get('deflated_sharpe') or {}).get('dsr')} -- {beat['reading']}. "
+        f"UNDER THE $3m/day FLOOR: best {tw_fl} vs lgbm {lg_fl} (plain {tw_pl} vs "
+        f"{lg_pl}); {_tail5} of the excess is 5 months; median holding trades "
+        f"${_medv}/day, {_sub1m} of the book under $1m/day")
 
     return {
         "question": ("does a GPU neural encoder on the 1999-2024 panel beat "
@@ -837,6 +1009,8 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
                      "wealths are ONE draw of a correlated pair."),
         },
         "era_sign_table": eras,
+        "robustness": rob,
+        "execution_floor": liq,
         "runs": run_receipts,
         "lgbm": lgbm_rec,
         "leakage_statement": _leakage_statement(),
@@ -928,7 +1102,16 @@ def describe() -> dict:
         "quantiles": list(QUANTILES),
         "bar": ("the four-part weekend bar against the MARKET (DSR > 0.95, SPA p < 0.10, "
                 "PBO < 0.5, sign in >= 2 of 3 eras) AND the same DSR/SPA/PBO bar on the "
-                "neural-minus-lgbm paired monthly series"),
+                "neural-minus-lgbm paired monthly series AND still ahead of lgbm once "
+                f"every holding must trade ${TRADABLE_FLOOR_USD:,.0f} a day"),
+        "robustness_block": (
+            "every receipt re-grades the cells it names under the house execution floor "
+            "and at 25 bps, prints the five best months' share of the total excess, and "
+            "prints what the book HELD (median cap, price, dollar volume). Added after "
+            "the first full pass produced a 561x terminal wealth whose median holding "
+            "traded $1.07m a day: 50% of that book sat below the $3m/day floor, 43% of "
+            "its excess was five months, and imposing the floor cut it to 93x while "
+            "RAISING lgbm's from 16.8 to 59.8."),
         "leakage": _leakage_statement(),
         "torch_available": _TORCH,
     }
@@ -936,8 +1119,9 @@ def describe() -> dict:
 
 __all__ = ["job", "describe", "run_neural", "run_lgbm", "resolve_device",
            "make_pipeline", "feature_cols", "pretrain", "train_head", "TrunkNet",
-           "VARIANTS", "QUANTILES", "WIDTHS", "SEED_BASE", "N_SEEDS", "COSTS",
-           "HORIZON", "TARGET_CLIP_SD", "CLIP_SD", "FIRST_TEST_YEAR", "LAST_TEST_YEAR"]
+           "robustness", "VARIANTS", "QUANTILES", "WIDTHS", "SEED_BASE", "N_SEEDS",
+           "COSTS", "HORIZON", "TARGET_CLIP_SD", "CLIP_SD", "TRADABLE_FLOOR_USD",
+           "FIRST_TEST_YEAR", "LAST_TEST_YEAR"]
 
 
 def main(argv=None) -> int:                        # pragma: no cover - CLI

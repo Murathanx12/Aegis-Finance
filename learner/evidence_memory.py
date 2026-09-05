@@ -101,9 +101,12 @@ def observe(family_id: str, cell: str, *, n_months, sharpe=None, dsr=None,
             spa_p=None, pbo=None, verdict=None, powered=None,
             years_needed_for_t2=None, years_observed=None,
             eras=None, gross_beats_market=None, net_beats_market=None,
-            job=None, run=None, variant=None, note=None) -> dict:
+            job=None, run=None, variant=None, note=None,
+            screen_cleared=None, controlled_t=None, holm_p=None) -> dict:
     """Append ONE observation. Never updates, never dedupes, never overwrites."""
     row = {
+        "screen_cleared": screen_cleared, "controlled_t": controlled_t,
+        "holm_p": holm_p,
         "utc": _now(), "version": VERSION,
         "family_id": family_id, "cell": cell,
         "job": job, "run": run, "variant": variant,
@@ -142,7 +145,22 @@ def read_all() -> list[dict]:
 # ------------------------------------------------------------------- scoring
 
 def _clears(r: dict) -> bool:
-    """Would this ONE pass have been called NOVEL on its own?"""
+    """Would this ONE observation have been called a result on its own?
+
+    TWO KINDS OF ROW, TWO BARS, AND NEITHER PRETENDS TO BE THE OTHER. A BOOK row
+    carries a Deflated Sharpe, an SPA p and a PBO, and clears on those. A SCREEN
+    row (a Fama-MacBeth coefficient, a matched-control difference) has no book
+    and therefore no Sharpe to deflate; it clears on its own controlled t, its
+    era sign, and -- where the job computed one -- a Holm-corrected p. Stamping a
+    fake DSR on a screen row, as the first version did, made this function
+    re-read the number that produced it and report the agreement as evidence.
+    """
+    if r.get("screen_cleared") is not None:
+        if not bool(r["screen_cleared"]):
+            return False
+        holm = r.get("holm_p")
+        # Where the job corrected for multiplicity, the correction is the bar.
+        return bool(holm is None or (isinstance(holm, (int, float)) and holm <= 0.05))
     dsr, spa_p, pbo = r.get("dsr"), r.get("spa_p"), r.get("pbo")
     if not isinstance(dsr, (int, float)) or not isinstance(spa_p, (int, float)):
         return False
@@ -189,7 +207,8 @@ def evidence_key(r: dict) -> tuple:
         return round(float(x), n) if isinstance(x, (int, float)) else None
     return (r.get("variant"), _r(r.get("dsr")), _r(r.get("spa_p")),
             _r(r.get("pbo")), r.get("n_months"), _r(r.get("sharpe"), 6),
-            r.get("verdict"))
+            _r(r.get("controlled_t")), _r(r.get("holm_p"), 6),
+            r.get("screen_cleared"), r.get("verdict"))
 
 
 def distinct_evidence(rows: list[dict]) -> list[dict]:
@@ -394,9 +413,18 @@ def _record_features(payload: dict, fam: str) -> int:
                 # so the Sharpe it implies is recoverable and comparable.
                 sharpe=(round(float(t) / (float(r["months"]) ** 0.5), 5)
                         if isinstance(t, (int, float)) and r.get("months") else None),
-                dsr=(0.99 if cleared else 0.10),
-                spa_p=(0.01 if cleared else 0.90),
-                pbo=None,
+                # NO FABRICATED DSR. The first version stamped dsr=0.99 / spa_p=0.01
+                # when the t cleared and 0.10 / 0.90 when it did not, which made
+                # `_clears` algebraically identical to the t-test that fed it --
+                # a bar that re-reads its own input and reports agreement as
+                # corroboration. It also made every SUPPORTED cell carry
+                # `best_dsr` exactly 0.99, and `snapshot()` SORTS on that.
+                # A feature screen has no book, so it has no Sharpe to deflate:
+                # the honest record is the t and the era sign, and `_clears`
+                # reads `screen_cleared` for these rows.
+                dsr=None, spa_p=None, pbo=None,
+                screen_cleared=cleared,
+                controlled_t=(round(float(t), 4) if isinstance(t, (int, float)) else None),
                 verdict=("CLEARS" if cleared else "does not clear"),
                 powered=power.get("powered"),
                 years_needed_for_t2=power.get("years_needed_for_t2"),
@@ -415,10 +443,10 @@ def _record_features(payload: dict, fam: str) -> int:
         cleared = bool(isinstance(holm, (int, float)) and holm <= 0.05)
         observe(fam, f"archetype::{a['feature']}",
                 n_months=a.get("months"),
-                dsr=(0.99 if cleared else (0.90 if isinstance(bh, (int, float))
-                                           and bh <= 0.10 else 0.10)),
-                spa_p=(holm if isinstance(holm, (int, float)) else 0.90),
-                pbo=None,
+                dsr=None, spa_p=None, pbo=None,
+                screen_cleared=cleared,
+                holm_p=(holm if isinstance(holm, (int, float)) else None),
+                controlled_t=a.get("t_block_non_overlapping"),
                 verdict=("SURVIVES_HOLM" if cleared else "screen only"),
                 powered=(a.get("power") or {}).get("powered"),
                 years_needed_for_t2=(a.get("power") or {}).get("years_needed_for_t2"),

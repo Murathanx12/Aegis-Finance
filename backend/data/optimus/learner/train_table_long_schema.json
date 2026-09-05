@@ -682,6 +682,10 @@
       }
     ],
     "share_basis_gate_early_era": {
+      "PRIMARY_in_band_rate_whole_early_era": 0.9783,
+      "primary_floor": 0.95,
+      "primary_passes": true,
+      "why_the_level_and_not_the_difference": "the corruption is driven by cfacpr(t), a FORWARD cumulative factor, while `split_prior_year` is a BACKWARD flag -- 84.1% of distorted rows land in the CONTROL arm, so both rates fall together and a difference test cancels the very shift it is looking for. Proven by injection; see `injection_self_test`.",
       "window": "1999-2004",
       "band": [
         0.3,
@@ -698,6 +702,15 @@
       "median_ratio_split_names": 1.2149,
       "median_ratio_other_names": 1.2439,
       "what_would_fail": "a split-adjusted numerator over a raw denominator would push the post-change rows out of the band by roughly the split factor, so the split-name in-band rate would collapse relative to the matched control",
+      "injection_self_test": {
+        "injected_defect": "ratio / cfacpr(t) -- a split-ADJUSTED numerator over a raw close",
+        "rows_injected": 167170,
+        "in_band_rate_REAL_panel": 0.9783,
+        "in_band_rate_INJECTED_panel": 0.8545,
+        "floor": 0.95,
+        "gate_detects_the_defect": true,
+        "reading": "the real panel scores 0.9783 and the same panel with the 2026-09-04 defect injected scores 0.8545; the 0.95 floor separates them"
+      },
       "verdict": "PASS"
     },
     "share_basis_hand_rows_early_era": [
@@ -786,6 +799,16 @@
     "regated": [
       {
         "utc": "2026-09-05T03:53:43+00:00",
+        "sections": [
+          "coverage_by_year",
+          "share_basis_gate_early_era",
+          "share_basis_hand_rows_early_era",
+          "by_era"
+        ],
+        "why": "the first early-era gate read `ratio`, which `hygiene` NULLS on exactly the split-flagged rows the gate exists to inspect, so it could only ever return nan and FAIL"
+      },
+      {
+        "utc": "2026-09-05T05:20:51+00:00",
         "sections": [
           "coverage_by_year",
           "share_basis_gate_early_era",

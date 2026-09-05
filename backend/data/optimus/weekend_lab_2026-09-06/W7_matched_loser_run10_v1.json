@@ -1,0 +1,2940 @@
+{
+ "question": "what was observable BEFOREHAND that separated a 12-month residual winner from the names that looked exactly like it?",
+ "family_id": "weekend-W7-matched-loser",
+ "variant_config": {
+  "top_n": 100,
+  "n_match": 3,
+  "outcome": "excess_vw_12m"
+ },
+ "design": {
+  "top_n": 100,
+  "controls_per_name": 3,
+  "residualised_on": [
+   "log_market_cap",
+   "mom_12_1",
+   "vol_60d"
+  ],
+  "match_on": [
+   "sector (exact where available)",
+   "log_market_cap",
+   "mom_12_1",
+   "vol_60d"
+  ],
+  "outcome": "excess_vw_12m",
+  "formation_months": 297,
+  "window": [
+   "1999-04",
+   "2023-12"
+  ]
+ },
+ "features_tested": 49,
+ "winner_side": [
+  {
+   "feature": "vol_60d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.035239,
+   "t_naive": 45.184,
+   "t_hac": 18.684,
+   "t_block_non_overlapping": 18.862,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 3.1667,
+     "t": 19.815,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 3.8023,
+     "t": 30.844,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 3.6364,
+     "t": 35.591,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 2.6218,
+    "t_observed": 45.1837,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 0.6,
+    "years_needed_for_t2": 0.0,
+    "years_needed_for_t2_exact": 0.04849223884618343,
+    "powered": true,
+    "reading": "t = 45.18 on 24.8 years; t = 2 would need 0.0 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "vol_20d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.036549,
+   "t_naive": 26.614,
+   "t_hac": 14.303,
+   "t_block_non_overlapping": 14.876,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 2.9323,
+     "t": 12.661,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 3.9501,
+     "t": 15.823,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 4.15,
+     "t": 19.403,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.5443,
+    "t_observed": 26.6135,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1.7,
+    "years_needed_for_t2": 0.1,
+    "years_needed_for_t2_exact": 0.13977535552482165,
+    "powered": true,
+    "reading": "t = 26.61 on 24.8 years; t = 2 would need 0.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "dispersion__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.056725,
+   "t_naive": 26.127,
+   "t_hac": 13.883,
+   "t_block_non_overlapping": 13.061,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 4.406,
+     "t": 12.517,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 6.5038,
+     "t": 15.746,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 6.2264,
+     "t": 19.083,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.516,
+    "t_observed": 26.1267,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1.7,
+    "years_needed_for_t2": 0.1,
+    "years_needed_for_t2_exact": 0.14503316091617416,
+    "powered": true,
+    "reading": "t = 26.13 on 24.8 years; t = 2 would need 0.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_market_cap__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.027839,
+   "t_naive": -30.495,
+   "t_hac": -12.491,
+   "t_block_non_overlapping": -12.361,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.7977,
+     "t": -17.336,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.017,
+     "t": -24.488,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -2.5357,
+     "t": -14.012,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.7695,
+    "t_observed": -30.495,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.7695); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_market_cap",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.196719,
+   "t_naive": -28.753,
+   "t_hac": -11.553,
+   "t_block_non_overlapping": -11.497,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -19.6052,
+     "t": -16.658,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -20.0978,
+     "t": -20.803,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -19.319,
+     "t": -13.954,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.6684,
+    "t_observed": -28.7533,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.6684); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_close__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.057852,
+   "t_naive": -29.638,
+   "t_hac": -11.453,
+   "t_block_non_overlapping": -11.385,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -5.1173,
+     "t": -13.129,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -7.0061,
+     "t": -22.16,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -5.2949,
+     "t": -21.252,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.7197,
+    "t_observed": -29.6375,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.7197); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_close",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.291491,
+   "t_naive": -26.185,
+   "t_hac": -9.668,
+   "t_block_non_overlapping": -9.718,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -24.3154,
+     "t": -11.959,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -33.3711,
+     "t": -17.862,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -30.214,
+     "t": -17.341,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.5194,
+    "t_observed": -26.1853,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.5194); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "dispersion",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.037632,
+   "t_naive": 20.904,
+   "t_hac": 9.236,
+   "t_block_non_overlapping": 9.606,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 3.342,
+     "t": 9.903,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 4.092,
+     "t": 12.452,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 3.8953,
+     "t": 15.315,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.213,
+    "t_observed": 20.9038,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2.7,
+    "years_needed_for_t2": 0.2,
+    "years_needed_for_t2_exact": 0.22655991972447953,
+    "powered": true,
+    "reading": "t = 20.90 on 24.8 years; t = 2 would need 0.2 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "vol_60d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.056932,
+   "t_naive": 21.544,
+   "t_hac": 8.557,
+   "t_block_non_overlapping": 8.967,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 4.9264,
+     "t": 11.838,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 6.375,
+     "t": 11.675,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.8499,
+     "t": 14.825,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.2501,
+    "t_observed": 21.5439,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2.6,
+    "years_needed_for_t2": 0.2,
+    "years_needed_for_t2_exact": 0.2132983075497937,
+    "powered": true,
+    "reading": "t = 21.54 on 24.8 years; t = 2 would need 0.2 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "vol_20d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.053677,
+   "t_naive": 16.304,
+   "t_hac": 8.357,
+   "t_block_non_overlapping": 8.565,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 4.4918,
+     "t": 9.488,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 6.1277,
+     "t": 9.201,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.5655,
+     "t": 9.876,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.946,
+    "t_observed": 16.3036,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 4.5,
+    "years_needed_for_t2": 0.4,
+    "years_needed_for_t2_exact": 0.37245063210860624,
+    "powered": true,
+    "reading": "t = 16.30 on 24.8 years; t = 2 would need 0.4 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "disagreement",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.06175,
+   "t_naive": 16.263,
+   "t_hac": 7.515,
+   "t_block_non_overlapping": 7.533,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 2.4473,
+     "t": 4.47,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 7.0192,
+     "t": 12.55,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 9.408,
+     "t": 14.178,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.9437,
+    "t_observed": 16.2634,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 4.5,
+    "years_needed_for_t2": 0.4,
+    "years_needed_for_t2_exact": 0.37429392740042405,
+    "powered": true,
+    "reading": "t = 16.26 on 24.8 years; t = 2 would need 0.4 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_dollar_vol_20d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.149567,
+   "t_naive": -13.217,
+   "t_hac": -5.631,
+   "t_block_non_overlapping": -5.69,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -19.6003,
+     "t": -8.34,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -14.3223,
+     "t": -9.862,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -10.5121,
+     "t": -5.912,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7669,
+    "t_observed": -13.2168,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.7669); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_ratio",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.041025,
+   "t_naive": 10.881,
+   "t_hac": 5.638,
+   "t_block_non_overlapping": 5.679,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.4943,
+     "t": 2.732,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 5.495,
+     "t": 10.791,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.5626,
+     "t": 7.0,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.6314,
+    "t_observed": 10.8814,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 10.0,
+    "years_needed_for_t2": 0.8,
+    "years_needed_for_t2_exact": 0.8361133525761462,
+    "powered": true,
+    "reading": "t = 10.88 on 24.8 years; t = 2 would need 0.8 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 1e-06
+  },
+  {
+   "feature": "drawdown_60d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.02513,
+   "t_naive": -9.775,
+   "t_hac": -5.566,
+   "t_block_non_overlapping": -5.431,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -1.1401,
+     "t": -2.829,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.697,
+     "t": -7.907,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -2.8305,
+     "t": -6.557,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.5672,
+    "t_observed": -9.7754,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.5672); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 2e-06
+  },
+  {
+   "feature": "drawdown_60d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.019257,
+   "t_naive": -12.264,
+   "t_hac": -5.85,
+   "t_block_non_overlapping": -5.357,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -1.1821,
+     "t": -5.421,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -2.6034,
+     "t": -8.409,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -2.0612,
+     "t": -7.603,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7116,
+    "t_observed": -12.2638,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.7116); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 3e-06
+  },
+  {
+   "feature": "ratio__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.031456,
+   "t_naive": 10.415,
+   "t_hac": 5.245,
+   "t_block_non_overlapping": 5.204,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 0.9452,
+     "t": 1.961,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 5.0379,
+     "t": 10.521,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 3.6599,
+     "t": 6.97,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.6043,
+    "t_observed": 10.4148,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 11.0,
+    "years_needed_for_t2": 0.9,
+    "years_needed_for_t2_exact": 0.9127089025971058,
+    "powered": true,
+    "reading": "t = 10.41 on 24.8 years; t = 2 would need 0.9 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 1e-06,
+   "holm_p": 7e-06
+  },
+  {
+   "feature": "log_dollar_vol_20d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.013453,
+   "t_naive": -10.958,
+   "t_hac": -4.827,
+   "t_block_non_overlapping": -5.083,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -1.6068,
+     "t": -6.469,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.4921,
+     "t": -9.14,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.9126,
+     "t": -4.464,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.6359,
+    "t_observed": -10.9581,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.6359); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 1e-06,
+   "holm_p": 1.2e-05
+  },
+  {
+   "feature": "disagreement__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.02914,
+   "t_naive": 12.021,
+   "t_hac": 5.005,
+   "t_block_non_overlapping": 4.921,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -0.0034,
+     "t": -0.01,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 3.7919,
+     "t": 10.773,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.2272,
+     "t": 13.995,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.6975,
+    "t_observed": 12.0206,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 8.2,
+    "years_needed_for_t2": 0.7,
+    "years_needed_for_t2_exact": 0.685146696635817,
+    "powered": true,
+    "reading": "t = 12.02 on 24.8 years; t = 2 would need 0.7 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 2e-06,
+   "holm_p": 2.8e-05
+  },
+  {
+   "feature": "mom_12_1__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.015626,
+   "t_naive": -12.358,
+   "t_hac": -5.123,
+   "t_block_non_overlapping": -4.806,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -1.1458,
+     "t": -5.419,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.9442,
+     "t": -9.168,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.6369,
+     "t": -7.176,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7171,
+    "t_observed": -12.3578,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.7171); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 4e-06,
+   "holm_p": 4.8e-05
+  },
+  {
+   "feature": "ratio",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.08729,
+   "t_naive": 8.197,
+   "t_hac": 4.295,
+   "t_block_non_overlapping": 4.34,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 2.2305,
+     "t": 1.468,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 10.8152,
+     "t": 8.138,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 13.7505,
+     "t": 5.809,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.4757,
+    "t_observed": 8.1974,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 17.7,
+    "years_needed_for_t2": 1.5,
+    "years_needed_for_t2_exact": 1.4732665359540096,
+    "powered": true,
+    "reading": "t = 8.20 on 24.8 years; t = 2 would need 1.5 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 3.5e-05,
+   "holm_p": 0.000427
+  },
+  {
+   "feature": "upside",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.08729,
+   "t_naive": 8.197,
+   "t_hac": 4.295,
+   "t_block_non_overlapping": 4.34,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 2.2305,
+     "t": 1.468,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 10.8152,
+     "t": 8.138,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 13.7505,
+     "t": 5.809,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.4757,
+    "t_observed": 8.1974,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 17.7,
+    "years_needed_for_t2": 1.5,
+    "years_needed_for_t2_exact": 1.4732665359540087,
+    "powered": true,
+    "reading": "t = 8.20 on 24.8 years; t = 2 would need 1.5 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 3.5e-05,
+   "holm_p": 0.000427
+  },
+  {
+   "feature": "ret_12m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.015935,
+   "t_naive": -9.284,
+   "t_hac": -3.867,
+   "t_block_non_overlapping": -3.717,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -0.7278,
+     "t": -2.621,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -2.3461,
+     "t": -7.31,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.7879,
+     "t": -6.588,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.5387,
+    "t_observed": -9.284,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.5387); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.000449,
+   "holm_p": 0.005645
+  },
+  {
+   "feature": "consensus_rev_1m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.005844,
+   "t_naive": 3.205,
+   "t_hac": 2.926,
+   "t_block_non_overlapping": 2.924,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 0.7631,
+     "t": 2.317,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2591,
+     "t": 0.857,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 0.7142,
+     "t": 2.288,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.186,
+    "t_observed": 3.205,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 115.7,
+    "years_needed_for_t2": 9.6,
+    "years_needed_for_t2_exact": 9.63804979250572,
+    "powered": true,
+    "reading": "t = 3.20 on 24.8 years; t = 2 would need 9.6 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.007362,
+   "holm_p": 0.093302
+  },
+  {
+   "feature": "consensus",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.041959,
+   "t_naive": -7.289,
+   "t_hac": -2.886,
+   "t_block_non_overlapping": -2.77,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -7.0328,
+     "t": -6.469,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.4525,
+     "t": -3.781,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.8364,
+     "t": -2.069,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.4229,
+    "t_observed": -7.2887,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.4229); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.011445,
+   "holm_p": 0.145746
+  },
+  {
+   "feature": "consensus__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.019482,
+   "t_naive": -6.738,
+   "t_hac": -2.687,
+   "t_block_non_overlapping": -2.52,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -3.4187,
+     "t": -6.776,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.6152,
+     "t": -3.515,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.6728,
+     "t": -1.354,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.391,
+    "t_observed": -6.7376,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.3910); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.023002,
+   "holm_p": 0.293387
+  }
+ ],
+ "loser_side": [
+  {
+   "feature": "drawdown_60d__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.073878,
+   "t_naive": -32.592,
+   "t_hac": -23.038,
+   "t_block_non_overlapping": -22.887,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -7.1095,
+     "t": -22.243,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -8.6071,
+     "t": -21.112,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -6.4729,
+     "t": -15.197,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.8912,
+    "t_observed": -32.5918,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.8912); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "log_close__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.06815,
+   "t_naive": -52.854,
+   "t_hac": -22.766,
+   "t_block_non_overlapping": -22.312,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -6.3738,
+     "t": -24.779,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -8.0046,
+     "t": -46.541,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -6.1081,
+     "t": -35.829,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -3.0669,
+    "t_observed": -52.8543,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -3.0669); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "drawdown_60d",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.049646,
+   "t_naive": -33.477,
+   "t_hac": -18.94,
+   "t_block_non_overlapping": -18.482,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -4.2829,
+     "t": -21.76,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -5.7578,
+     "t": -21.168,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -4.917,
+     "t": -17.425,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.9425,
+    "t_observed": -33.4768,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.9425); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "vol_20d__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.0495,
+   "t_naive": 33.791,
+   "t_hac": 18.302,
+   "t_block_non_overlapping": 17.622,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 4.2448,
+     "t": 17.036,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 5.9087,
+     "t": 23.634,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 4.7625,
+     "t": 20.448,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.9607,
+    "t_observed": 33.7906,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1.0,
+    "years_needed_for_t2": 0.1,
+    "years_needed_for_t2_exact": 0.08670493717444644,
+    "powered": true,
+    "reading": "t = 33.79 on 24.8 years; t = 2 would need 0.1 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "log_close",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.398561,
+   "t_naive": -46.116,
+   "t_hac": -17.334,
+   "t_block_non_overlapping": -16.734,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -30.1976,
+     "t": -22.77,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -46.6901,
+     "t": -37.007,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -43.5859,
+     "t": -32.574,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -2.6759,
+    "t_observed": -46.1157,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -2.6759); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "vol_60d__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.042094,
+   "t_naive": 42.236,
+   "t_hac": 17.393,
+   "t_block_non_overlapping": 16.378,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 3.7486,
+     "t": 18.668,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 4.7112,
+     "t": 31.075,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 4.2114,
+     "t": 30.248,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 2.4508,
+    "t_observed": 42.236,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 0.7,
+    "years_needed_for_t2": 0.1,
+    "years_needed_for_t2_exact": 0.055496935936228224,
+    "powered": true,
+    "reading": "t = 42.24 on 24.8 years; t = 2 would need 0.1 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "dispersion__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.074155,
+   "t_naive": 31.795,
+   "t_hac": 16.245,
+   "t_block_non_overlapping": 15.573,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 6.6742,
+     "t": 14.417,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 8.68,
+     "t": 26.136,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 6.9616,
+     "t": 19.153,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.8449,
+    "t_observed": 31.7946,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1.2,
+    "years_needed_for_t2": 0.1,
+    "years_needed_for_t2_exact": 0.09793295898770586,
+    "powered": true,
+    "reading": "t = 31.79 on 24.8 years; t = 2 would need 0.1 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "ret_3m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.057427,
+   "t_naive": -19.773,
+   "t_hac": -13.247,
+   "t_block_non_overlapping": -14.479,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -5.328,
+     "t": -14.145,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.8354,
+     "t": -13.45,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -5.1037,
+     "t": -8.435,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.1473,
+    "t_observed": -19.7727,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.1473); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ret_1m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.051088,
+   "t_naive": -16.65,
+   "t_hac": -13.004,
+   "t_block_non_overlapping": -13.474,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -4.5466,
+     "t": -9.49,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.4298,
+     "t": -11.803,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -4.4026,
+     "t": -7.923,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.9661,
+    "t_observed": -16.6497,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.9661); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ret_6m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.056052,
+   "t_naive": -20.725,
+   "t_hac": -11.618,
+   "t_block_non_overlapping": -13.052,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -4.9584,
+     "t": -13.552,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.722,
+     "t": -15.541,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -5.1957,
+     "t": -8.937,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.2026,
+    "t_observed": -20.7246,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.2026); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "log_market_cap__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.034075,
+   "t_naive": -31.913,
+   "t_hac": -12.139,
+   "t_block_non_overlapping": -12.363,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -3.0458,
+     "t": -15.141,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -4.0736,
+     "t": -24.692,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.1372,
+     "t": -18.994,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.8518,
+    "t_observed": -31.9132,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.8518); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "dispersion",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.060068,
+   "t_naive": 28.241,
+   "t_hac": 12.727,
+   "t_block_non_overlapping": 12.157,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 4.4734,
+     "t": 14.165,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 7.7266,
+     "t": 25.056,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.9641,
+     "t": 14.756,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.6387,
+    "t_observed": 28.2409,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1.5,
+    "years_needed_for_t2": 0.1,
+    "years_needed_for_t2_exact": 0.12413064210868809,
+    "powered": true,
+    "reading": "t = 28.24 on 24.8 years; t = 2 would need 0.1 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "net_rev_4w__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.028359,
+   "t_naive": -13.352,
+   "t_hac": -9.477,
+   "t_block_non_overlapping": -10.011,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.1934,
+     "t": -7.595,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.488,
+     "t": -8.506,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -2.8866,
+     "t": -7.271,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7747,
+    "t_observed": -13.3516,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.7747); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "log_market_cap",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.261262,
+   "t_naive": -27.435,
+   "t_hac": -9.947,
+   "t_block_non_overlapping": -9.883,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -19.6943,
+     "t": -12.684,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -30.2956,
+     "t": -21.098,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -28.9917,
+     "t": -16.608,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.5919,
+    "t_observed": -27.4347,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.5919); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "target_rev_1m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.029697,
+   "t_naive": -12.473,
+   "t_hac": -9.322,
+   "t_block_non_overlapping": -9.598,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.3795,
+     "t": -7.019,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.7159,
+     "t": -7.845,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -2.869,
+     "t": -6.868,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7237,
+    "t_observed": -12.4727,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.7237); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "net_rev_4w",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.030903,
+   "t_naive": -11.406,
+   "t_hac": -8.334,
+   "t_block_non_overlapping": -9.354,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.4726,
+     "t": -6.772,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.8218,
+     "t": -7.311,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.0346,
+     "t": -5.899,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.6618,
+    "t_observed": -11.4058,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.6618); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ret_12m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.036913,
+   "t_naive": -21.267,
+   "t_hac": -9.79,
+   "t_block_non_overlapping": -9.051,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.7021,
+     "t": -9.257,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -4.9265,
+     "t": -19.61,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.5381,
+     "t": -11.319,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.234,
+    "t_observed": -21.2665,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -1.2340); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ratio__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.068718,
+   "t_naive": 20.834,
+   "t_hac": 9.602,
+   "t_block_non_overlapping": 8.902,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 6.9219,
+     "t": 16.851,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 6.3571,
+     "t": 8.451,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 7.3317,
+     "t": 13.96,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.2089,
+    "t_observed": 20.8335,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2.7,
+    "years_needed_for_t2": 0.2,
+    "years_needed_for_t2_exact": 0.2280918372434779,
+    "powered": true,
+    "reading": "t = 20.83 on 24.8 years; t = 2 would need 0.2 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "net_rev_1m",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.030942,
+   "t_naive": -11.36,
+   "t_hac": -7.882,
+   "t_block_non_overlapping": -8.405,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.1353,
+     "t": -6.651,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.9625,
+     "t": -7.213,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.2747,
+     "t": -6.289,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.6592,
+    "t_observed": -11.3597,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.6592); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "disagreement",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.099924,
+   "t_naive": 21.041,
+   "t_hac": 7.989,
+   "t_block_non_overlapping": 7.53,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 5.5207,
+     "t": 8.918,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 14.9258,
+     "t": 17.759,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 9.9501,
+     "t": 13.768,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.2209,
+    "t_observed": 21.0412,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2.7,
+    "years_needed_for_t2": 0.2,
+    "years_needed_for_t2_exact": 0.22361231866378675,
+    "powered": true,
+    "reading": "t = 21.04 on 24.8 years; t = 2 would need 0.2 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "vol_60d",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.117349,
+   "t_naive": 14.365,
+   "t_hac": 6.75,
+   "t_block_non_overlapping": 7.423,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 7.3507,
+     "t": 12.461,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 12.2806,
+     "t": 10.87,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 15.9843,
+     "t": 7.686,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.8335,
+    "t_observed": 14.365,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 5.8,
+    "years_needed_for_t2": 0.5,
+    "years_needed_for_t2_exact": 0.4797619656588888,
+    "powered": true,
+    "reading": "t = 14.36 on 24.8 years; t = 2 would need 0.5 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "log_ratio",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.092298,
+   "t_naive": 19.003,
+   "t_hac": 7.723,
+   "t_block_non_overlapping": 7.257,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 8.4355,
+     "t": 13.538,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 7.2225,
+     "t": 7.687,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 12.1059,
+     "t": 13.623,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.1026,
+    "t_observed": 19.0026,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 3.3,
+    "years_needed_for_t2": 0.3,
+    "years_needed_for_t2_exact": 0.2741630647403524,
+    "powered": true,
+    "reading": "t = 19.00 on 24.8 years; t = 2 would need 0.3 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "vol_20d",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.11762,
+   "t_naive": 14.102,
+   "t_hac": 6.39,
+   "t_block_non_overlapping": 6.883,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 7.7829,
+     "t": 11.827,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 13.553,
+     "t": 10.048,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 14.3233,
+     "t": 7.089,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.8183,
+    "t_observed": 14.1023,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 6.0,
+    "years_needed_for_t2": 0.5,
+    "years_needed_for_t2_exact": 0.49779734156811695,
+    "powered": true,
+    "reading": "t = 14.10 on 24.8 years; t = 2 would need 0.5 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "ratio",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.185438,
+   "t_naive": 16.079,
+   "t_hac": 6.93,
+   "t_block_non_overlapping": 6.654,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 17.4119,
+     "t": 8.7,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 13.2683,
+     "t": 7.696,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 25.0574,
+     "t": 12.086,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.933,
+    "t_observed": 16.0788,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 4.6,
+    "years_needed_for_t2": 0.4,
+    "years_needed_for_t2_exact": 0.38293903622523356,
+    "powered": true,
+    "reading": "t = 16.08 on 24.8 years; t = 2 would need 0.4 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "upside",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.185438,
+   "t_naive": 16.079,
+   "t_hac": 6.93,
+   "t_block_non_overlapping": 6.654,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 17.4119,
+     "t": 8.7,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 13.2683,
+     "t": 7.696,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 25.0574,
+     "t": 12.086,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.933,
+    "t_observed": 16.0788,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 4.6,
+    "years_needed_for_t2": 0.4,
+    "years_needed_for_t2_exact": 0.38293903622523356,
+    "powered": true,
+    "reading": "t = 16.08 on 24.8 years; t = 2 would need 0.4 years at this Sharpe -- ENOUGH TAPE"
+   }
+  }
+ ],
+ "archetype_candidates": [
+  {
+   "feature": "log_dollar_vol_20d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.149567,
+   "t_naive": -13.217,
+   "t_hac": -5.631,
+   "t_block_non_overlapping": -5.69,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -19.6003,
+     "t": -8.34,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -14.3223,
+     "t": -9.862,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -10.5121,
+     "t": -5.912,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7669,
+    "t_observed": -13.2168,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.7669); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_dollar_vol_20d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.013453,
+   "t_naive": -10.958,
+   "t_hac": -4.827,
+   "t_block_non_overlapping": -5.083,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -1.6068,
+     "t": -6.469,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.4921,
+     "t": -9.14,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.9126,
+     "t": -4.464,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.6359,
+    "t_observed": -10.9581,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.6359); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 1e-06,
+   "holm_p": 1.2e-05
+  },
+  {
+   "feature": "consensus_rev_1m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.005844,
+   "t_naive": 3.205,
+   "t_hac": 2.926,
+   "t_block_non_overlapping": 2.924,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 0.7631,
+     "t": 2.317,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2591,
+     "t": 0.857,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 0.7142,
+     "t": 2.288,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.186,
+    "t_observed": 3.205,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 115.7,
+    "years_needed_for_t2": 9.6,
+    "years_needed_for_t2_exact": 9.63804979250572,
+    "powered": true,
+    "reading": "t = 3.20 on 24.8 years; t = 2 would need 9.6 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.007362,
+   "holm_p": 0.093302
+  },
+  {
+   "feature": "consensus",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.041959,
+   "t_naive": -7.289,
+   "t_hac": -2.886,
+   "t_block_non_overlapping": -2.77,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -7.0328,
+     "t": -6.469,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.4525,
+     "t": -3.781,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.8364,
+     "t": -2.069,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.4229,
+    "t_observed": -7.2887,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.4229); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.011445,
+   "holm_p": 0.145746
+  },
+  {
+   "feature": "consensus__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.019482,
+   "t_naive": -6.738,
+   "t_hac": -2.687,
+   "t_block_non_overlapping": -2.52,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -3.4187,
+     "t": -6.776,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.6152,
+     "t": -3.515,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.6728,
+     "t": -1.354,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.391,
+    "t_observed": -6.7376,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.3910); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.023002,
+   "holm_p": 0.293387
+  }
+ ],
+ "archetype_candidates_surviving_bh_fdr_10pct": [
+  "log_dollar_vol_20d",
+  "log_dollar_vol_20d__xs",
+  "consensus_rev_1m__xs",
+  "consensus",
+  "consensus__xs"
+ ],
+ "archetype_candidates_surviving_holm_5pct": [
+  "log_dollar_vol_20d",
+  "log_dollar_vol_20d__xs"
+ ],
+ "distinct_ideas_among_the_candidates": [
+  "analyst_revision",
+  "consensus",
+  "turnover_thinness"
+ ],
+ "distinct_idea_note": "net_rev_*/consensus_rev_* and their __xs ranks are views of ONE idea; counting them separately would inflate the finding by construction, so the headline counts IDEAS",
+ "opportunity_recall_baseline": {
+  "recall_analyst_upside_top_decile": 0.1768,
+  "recall_mom_12_1_top_decile": 0.1351,
+  "recall_net_revisions_top_decile": 0.1466
+ },
+ "recall_note": "share of each month's residual top-50 that was ALREADY in the top decile of each precursor at formation. A pure-chance precursor recalls 0.10 by construction.",
+ "multiplicity_note": "49 features on the winner side; the bar is the NON-OVERLAPPING |t| >= 2.5 plus a consistent sign in 2 of 3 eras, and the loser side is the sign check a t alone cannot give -- a feature that moves the same way for winners and losers is a statement about being EXTREME, not about being right",
+ "headline": "297 formation months, 100 winners x 3 matched controls each; 5 candidates over 3 DISTINCT ideas (['analyst_revision', 'consensus', 'turnover_thinness']) clear non-overlapping |t| >= 2.5, a consistent sign in 2 of 3 eras, and a loser side that does NOT move the same way; 5 survive BH-FDR 10% and 2 survive Holm 5%",
+ "verdict": "NOVEL",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W7_matched_loser",
+ "run": 10,
+ "variant": 1,
+ "written_utc": "2026-09-05T05:08:56+00:00",
+ "elapsed_s": 96.9,
+ "exit_code": 0
+}

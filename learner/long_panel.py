@@ -105,6 +105,12 @@ ERAS: tuple[tuple[str, int, int], ...] = (
 WARMUP_YEARS = 5
 FIRST_TEST_YEAR = LONG_START + WARMUP_YEARS
 
+#: The in-band rate the early era must reach. On the real panel it is 0.978; with
+#: the 2026-09-04 share-basis defect injected it is 0.853. 0.95 sits between them
+#: with room on both sides, and the gate PROVES that separation on every run by
+#: injecting the defect into a copy and reporting what it would have said.
+LEVEL_FLOOR = 0.95
+
 
 def era_of(year) -> str:
     y = int(year)
@@ -238,7 +244,35 @@ def split_era_share_basis_gate(df: pd.DataFrame, era_end: int = 2004,
     rate_split = float(sub["_r"].between(lo, hi).mean())
     rate_other = float(other["_r"].between(lo, hi).mean())
     gap = rate_other - rate_split
+    # THE LEVEL, WHICH IS THE ACTUAL TEST, AND THE DIFFERENCE, WHICH IS NOT.
+    #
+    # The first version of this gate rested on `gap` alone and could not go red.
+    # An adversarial review injected the exact 2026-09-04 defect -- a
+    # split-ADJUSTED numerator over a raw close -- and the gate still returned
+    # PASS at gap +0.0129 against its own 0.10 alarm. Two reasons, both measured:
+    #
+    #   * the corruption is driven by `cfacpr(t)`, the cumulative factor to the
+    #     END of the sample, which is a FORWARD quantity; the treatment arm is
+    #     `split_prior_year`, a BACKWARD flag. 84.1% of the distorted rows
+    #     therefore land in the CONTROL arm. Both rates fall together, from 0.98
+    #     to 0.86, and a difference cancels a common-mode shift exactly.
+    #   * a (0.3, 4.0) band is wider than the modal split factor of 2, so the
+    #     in-band rate can even RISE under the bug.
+    #
+    # So the binding test is the LEVEL of the in-band rate over the whole early
+    # era. Under the bug it is 0.853; on the real panel it is 0.978. The gap is
+    # kept as a secondary diagnostic, clearly labelled as insufficient on its own.
+    all_rows = d[eligible]
+    rate_all = float(all_rows["_r"].between(lo, hi).mean()) if len(all_rows) else float("nan")
     out = {
+        "PRIMARY_in_band_rate_whole_early_era": round(rate_all, 4),
+        "primary_floor": LEVEL_FLOOR,
+        "primary_passes": bool(rate_all >= LEVEL_FLOOR),
+        "why_the_level_and_not_the_difference": (
+            "the corruption is driven by cfacpr(t), a FORWARD cumulative factor, while "
+            "`split_prior_year` is a BACKWARD flag -- 84.1% of distorted rows land in the "
+            "CONTROL arm, so both rates fall together and a difference test cancels the "
+            "very shift it is looking for. Proven by injection; see `injection_self_test`."),
         "window": f"{int(pd.to_datetime(d['entry_date']).dt.year.min())}-{era_end}",
         "band": list(band),
         "ratio_source": "ratio, coalesced with ratio_unhygienic (raw PIT ratio, audit column)",
@@ -257,11 +291,61 @@ def split_era_share_basis_gate(df: pd.DataFrame, era_end: int = 2004,
                             "factor, so the split-name in-band rate would collapse "
                             "relative to the matched control"),
     }
-    # A 10-point gap is the alarm. A split-adjusted numerator would open a gap of
-    # tens of points, not one point; this is a loose bar on purpose, because the
-    # thing it is looking for is enormous when it is present.
-    out["verdict"] = "PASS" if gap < 0.10 else "FAIL"
+    # THE GATE MUST PROVE IT CAN GO RED, ON EVERY RUN. A guard whose sensitivity
+    # is asserted rather than demonstrated is a guard nobody has tested, and this
+    # one was wrong for a day. So the defect is injected into a COPY and the gate
+    # re-run on it; if the injected panel also passes, the gate REFUSES to
+    # certify the real one.
+    out["injection_self_test"] = _injection_self_test(d, eligible, band)
+    out["verdict"] = (
+        "PASS" if (out["primary_passes"]
+                   and gap < 0.10
+                   and out["injection_self_test"].get("gate_detects_the_defect"))
+        else ("CANNOT DETERMINE (the gate does not detect its own injected defect)"
+              if not out["injection_self_test"].get("gate_detects_the_defect")
+              else "FAIL"))
     return out
+
+
+def _injection_self_test(d: pd.DataFrame, eligible, band) -> dict:
+    """Re-run the level test on a copy carrying the 2026-09-04 defect.
+
+    The defect is a SPLIT-ADJUSTED numerator over a RAW close. The panel already
+    carries both legs: `mean_target_adj` is the adjusted consensus and `cfacpr`
+    is the factor that was wrongly used to reconcile them, so the corrupted ratio
+    is reproducible exactly -- `ratio_bug = ratio / cfacpr`, which is what
+    dividing an end-of-sample-adjusted target by a raw close amounts to.
+
+    If the gate cannot tell that panel from the real one, the gate is not
+    evidence about the real one either, and its verdict says so.
+    """
+    lo, hi = band
+    if "cfacpr" not in d.columns:
+        return {"gate_detects_the_defect": None,
+                "why": "cfacpr absent -- the defect cannot be reproduced, so the "
+                       "gate's sensitivity is untested on this panel"}
+    cf = d["cfacpr"].where(d["cfacpr"].notna() & (d["cfacpr"] != 0))
+    bug = (d["_r"] / cf)
+    ok = eligible & bug.notna() & (bug > 0)
+    if int(ok.sum()) < 1000:
+        return {"gate_detects_the_defect": None,
+                "why": f"only {int(ok.sum())} rows could carry the injected defect"}
+    rate_bug = float(bug[ok].between(lo, hi).mean())
+    rate_real = float(d.loc[eligible, "_r"].between(lo, hi).mean())
+    return {
+        "injected_defect": "ratio / cfacpr(t) -- a split-ADJUSTED numerator over a raw close",
+        "rows_injected": int(ok.sum()),
+        "in_band_rate_REAL_panel": round(rate_real, 4),
+        "in_band_rate_INJECTED_panel": round(rate_bug, 4),
+        "floor": LEVEL_FLOOR,
+        "gate_detects_the_defect": bool(rate_bug < LEVEL_FLOOR <= rate_real),
+        "reading": (f"the real panel scores {rate_real:.4f} and the same panel with the "
+                    f"2026-09-04 defect injected scores {rate_bug:.4f}; the {LEVEL_FLOOR} "
+                    f"floor separates them"
+                    if rate_bug < LEVEL_FLOOR <= rate_real else
+                    f"the floor does NOT separate them ({rate_real:.4f} vs {rate_bug:.4f}) "
+                    "-- this gate is not evidence"),
+    }
 
 
 def hand_checked_split_rows(df: pd.DataFrame, era_end: int = 2004,

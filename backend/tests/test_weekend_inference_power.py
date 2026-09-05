@@ -113,21 +113,26 @@ def test_sampled_planted_world_lands_on_the_analytic_requirement():
 
 
 def test_null_world_almost_never_claims_power():
-    """Zero-mean noise: `powered` must fire at about the size of the test.
+    """Zero-mean noise must not be reported as having produced a result.
 
-    `powered` is `years_needed <= years_observed`, which reduces algebraically
-    to `t_observed >= t_target`, so under a true null it must fire at the
-    one-sided normal rate for t = 2 (~2.3%) and not more. The bar is 10% over
-    200 draws -- roughly seven binomial sd above the truth, so it cannot flake,
-    and it still refutes any implementation that claims power by default.
+    `powered_for_observed_effect` reduces algebraically to `t_observed >=
+    t_target`, so under a true null it fires at the one-sided normal rate for
+    t = 2 (~2.3%) and no more. The bar is 10% over 200 draws -- roughly seven
+    binomial sd above the truth, so it cannot flake, and it still refutes any
+    implementation that claims power by default.
+
+    The real `powered` is NOT asserted here: it is a property of the
+    INSTRUMENT (length and volatility) and is deliberately independent of how
+    the arm did, so it is legitimately True for a long low-volatility null.
+    `test_power_does_not_depend_on_how_the_arm_did` pins that directly.
     """
     n_draws, fired = 200, 0
     for seed in range(n_draws):
         rng = np.random.default_rng(50_000 + seed)
         res = INF.power_note(rng.normal(0.0, 1.0, 240), periods_per_year=PPY)
-        fired += bool(res["powered"])
+        fired += bool(res["powered_for_observed_effect"])
     rate = fired / n_draws
-    assert rate <= 0.10, f"{rate:.1%} of pure-noise arms were reported as powered"
+    assert rate <= 0.10, f"{rate:.1%} of pure-noise arms crossed the t target"
 
 
 def test_null_world_reports_a_requirement_far_beyond_the_tape_it_has():
@@ -178,30 +183,74 @@ def test_exactly_zero_mean_returns_none():
 
 @pytest.mark.parametrize("n", [24, 60, 144, 240])
 def test_powered_is_exactly_the_t_target_crossing(n):
-    """`powered` must be True exactly when `t_observed >= t_target`.
+    """`powered_for_observed_effect` IS `t_observed >= t_target`, and that is why
+    it cannot be the flag a verdict rests on.
 
-    That is the algebraic content of `years_needed <= years_observed`, and it is
-    the form with no rounding in it: `powered` is computed from the UNROUNDED
-    requirement while the receipt prints the requirement rounded to one decimal
-    (see `test_powered_is_computed_before_the_rounding` for the gap that opens
-    at the boundary). Swept across the crossing so an inverted comparison cannot
-    hide on one side of it.
+    Substituting the identity into `years_needed <= years_observed`:
+
+        (t/SR)^2 / ppy <= T / ppy   <=>   SR*sqrt(T) >= t   <=>   t_obs >= t_target
+
+    So a flag built on the OBSERVED Sharpe is the t-test written a longer way,
+    and "underpowered when not powered" then fires for every arm with
+    0 < t < 2 -- making NOISE unreachable. This test pins that the field is
+    exactly the t-crossing (so nobody re-reads it as power) AND that the real
+    `powered`, which is computed against a PRE-SPECIFIED effect, is not the same
+    function. Swept across the crossing so an inverted comparison cannot hide on
+    one side of it.
     """
-    seen_true = seen_false = False
+    seen_true = seen_false = disagreed = False
     for sharpe in np.linspace(0.01, 0.60, 40):
         r = _series_with_exact_sample_sharpe(float(sharpe), n, seed=17)
         res = INF.power_note(r, periods_per_year=PPY, t_target=T_TARGET)
         by_t = res["t_observed"] >= T_TARGET - 1e-6
-        assert res["powered"] is by_t, (
-            f"powered={res['powered']} at t={res['t_observed']} vs target {T_TARGET}")
-        # away from the boundary the printed number must agree with the flag too
+        assert res["powered_for_observed_effect"] is by_t, (
+            f"powered_for_observed_effect={res['powered_for_observed_effect']} "
+            f"at t={res['t_observed']} vs target {T_TARGET}")
         if abs(res["t_observed"] - T_TARGET) > 0.05:
             by_years = (res["years_needed_for_t2"] is not None
                         and res["years_needed_for_t2"] <= res["years_observed"])
-            assert res["powered"] is by_years
-        seen_true |= res["powered"]
-        seen_false |= not res["powered"]
+            assert res["powered_for_observed_effect"] is by_years
+        disagreed |= (res["powered"] is not res["powered_for_observed_effect"])
+        seen_true |= res["powered_for_observed_effect"]
+        seen_false |= not res["powered_for_observed_effect"]
     assert seen_true and seen_false, "the sweep never crossed the boundary -- vacuous"
+    assert disagreed, (
+        "`powered` never differs from the t-crossing across a 40-point Sharpe sweep -- "
+        "it is still the circular flag under a new name")
+
+
+def test_the_mde_is_what_the_instrument_could_see():
+    """MDE inverts t = (mu/sd)*sqrt(T) for mu on the tape ACTUALLY HELD.
+
+    Checked against the closed form, and checked to behave: MDE must FALL as the
+    series lengthens (more tape resolves smaller effects) and RISE with
+    volatility (a noisier arm resolves less).
+    """
+    rng = np.random.default_rng(4)
+    a = rng.normal(0.004, 0.04, 240)
+    res = INF.power_note(a, periods_per_year=PPY, t_target=T_TARGET)
+    want = PPY * T_TARGET * float(np.std(a, ddof=1)) / np.sqrt(len(a))
+    assert res["mde_annual_excess_at_t_target"] == pytest.approx(want, rel=1e-3)
+
+    longer = INF.power_note(rng.normal(0.004, 0.04, 960), periods_per_year=PPY)
+    assert longer["mde_annual_excess_at_t_target"] < res["mde_annual_excess_at_t_target"]
+    noisier = INF.power_note(rng.normal(0.004, 0.12, 240), periods_per_year=PPY)
+    assert noisier["mde_annual_excess_at_t_target"] > res["mde_annual_excess_at_t_target"]
+
+
+def test_power_does_not_depend_on_how_the_arm_did():
+    """THE PROPERTY THAT MAKES IT POWER. Two series with the SAME volatility and
+    the same length must report the same `powered` and the same MDE however
+    differently they performed -- power is a property of the instrument, not of
+    the result."""
+    rng = np.random.default_rng(5)
+    noise = rng.normal(0.0, 0.03, 300)
+    win = noise + 0.02          # same sd, hugely better mean
+    a, b = INF.power_note(noise, periods_per_year=PPY), INF.power_note(win, periods_per_year=PPY)
+    assert a["t_observed"] != b["t_observed"]
+    assert a["powered"] is b["powered"]
+    assert a["mde_annual_excess_at_t_target"] == pytest.approx(
+        b["mde_annual_excess_at_t_target"], rel=1e-9)
 
 
 def test_powered_is_computed_before_the_rounding():
@@ -272,6 +321,7 @@ def test_degenerate_input_says_cannot_determine_and_does_not_crash(bad):
     res = INF.power_note(bad, periods_per_year=PPY)
     assert INF.CANNOT_DETERMINE in res["verdict"]
     assert res["powered"] is False
+    assert res["powered_for_observed_effect"] is False
     assert res["years_needed_for_t2"] is None
     assert res["sharpe_per_period"] is None
     assert res["t_observed"] is None
@@ -279,7 +329,9 @@ def test_degenerate_input_says_cannot_determine_and_does_not_crash(bad):
     # other field just moves the KeyError one line down.
     healthy = INF.power_note(_series_with_exact_sample_sharpe(0.25, 120, seed=3),
                              periods_per_year=PPY)
-    missing = set(healthy) - set(res) - {"years_needed_for_t2_exact"}
+    missing = (set(healthy) - set(res)
+               - {"years_needed_for_t2_exact", "detectable_annual_excess",
+                  "reference_sharpe_per_period", "mde_reading"})
     assert not missing, f"degenerate branch is missing {sorted(missing)}"
 
 

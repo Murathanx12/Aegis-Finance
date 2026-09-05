@@ -506,8 +506,20 @@ def _sr_or_nan(x: np.ndarray) -> float:
 # ------------------------------------------------ how much tape would it take?
 
 
+#: The effect a search is REQUIRED to be able to see. Expressed as an annualised
+#: excess return, converted to a per-period Sharpe using the arm's own realised
+#: volatility -- so the bar is "could this instrument have detected an economically
+#: interesting edge", not "did it".
+#:
+#: 3%/yr net of costs is the smallest excess this repo would act on: below it a
+#: 12-name book at 25 bps on ~1.0 monthly turnover is paying most of the edge away
+#: in spread (measured: the cost line alone runs ~5-6%/yr at that turnover).
+DETECTABLE_ANNUAL_EXCESS = 0.03
+
+
 def power_note(returns: Sequence[float], periods_per_year: int = 12,
-               t_target: float = 2.0) -> dict:
+               t_target: float = 2.0,
+               detectable_annual_excess: float = DETECTABLE_ANNUAL_EXCESS) -> dict:
     """`n_periods`, the observed t, and THE YEARS OF TAPE t = 2 WOULD NEED.
 
     WHY THIS BELONGS BESIDE EVERY SHARPE
@@ -528,6 +540,35 @@ def power_note(returns: Sequence[float], periods_per_year: int = 12,
     reported as `None` where the Sharpe is non-positive -- a negative arm does
     not "need" tape to become significant, it needs a different idea, and
     printing a number there would read as a promise.
+
+    `powered` IS NOT `years_needed <= years_observed`, AND THE FIRST VERSION
+    THOUGHT IT WAS
+    ---------------------------------------------------------------------------
+    Substituting the identity into that comparison:
+
+        years_needed <= years_observed
+        (t/SR)^2 / ppy <= T / ppy
+        (t/SR)^2 <= T
+        SR * sqrt(T) >= t
+        t_observed >= t_target
+
+    So a `powered` flag built on the OBSERVED Sharpe is the t-test written a
+    longer way, and a verdict rule reading "underpowered when not powered" fires
+    for every arm with 0 < t < 2 -- which is every null result. The two words the
+    vocabulary exists to separate collapse into one, and `NOISE` becomes
+    unreachable. (Found by a code review, 2026-09-06; 19 receipts had already
+    been written under the circular flag.)
+
+    A power calculation asks a question the data has not answered: **could this
+    instrument have detected an effect of a size we would act on?** So the bar is
+    a PRE-SPECIFIED effect -- `detectable_annual_excess`, 3%/yr -- converted to a
+    per-period Sharpe using the arm's own realised volatility. That number does
+    not depend on how the arm happened to do, which is exactly what makes it
+    power rather than significance.
+
+    `powered_for_observed_effect` is kept, clearly labelled, because it is a
+    legitimate thing to report (how much tape THIS Sharpe would need); it is
+    simply not what decides NOISE versus CANNOT DETERMINE.
     """
     a = _clean(returns)
     T = int(a.size)
@@ -553,6 +594,10 @@ def power_note(returns: Sequence[float], periods_per_year: int = 12,
             "periods_needed_for_t_target": None,
             "years_needed_for_t2": None,
             "powered": False,
+            "powered_for_observed_effect": False,
+            "years_needed_to_detect_that_effect": None,
+            "mde_annual_excess_at_t_target": None,
+            "power_basis": "undefined (degenerate series)",
             "verdict": f"{CANNOT_DETERMINE} ({why})",
             "reading": f"{CANNOT_DETERMINE}: {why}",
         }
@@ -589,8 +634,53 @@ def power_note(returns: Sequence[float], periods_per_year: int = 12,
         # than leaving a reader to reconcile two numbers that look contradictory.
         "years_needed_for_t2_exact": (float(needed_years)
                                       if needed_years is not None else None),
-        "powered": (bool(needed_years is not None and needed_years <= years_obs)),
+        # Kept, and clearly labelled: this is the t-test restated, NOT power.
+        "powered_for_observed_effect": (
+            bool(needed_years is not None and needed_years <= years_obs)),
+        **_power_for_a_declared_effect(a, T, periods_per_year, t_target,
+                                       detectable_annual_excess, years_obs),
         "reading": reading,
+    }
+
+
+def _power_for_a_declared_effect(a, T: int, ppy: int, t_target: float,
+                                 annual_excess: float, years_obs: float) -> dict:
+    """Could this instrument have SEEN a `annual_excess` edge, had one existed?
+
+    The per-period Sharpe such an edge would produce is
+    `(annual_excess / ppy) / sd`, using the arm's OWN realised per-period sd --
+    the volatility is a property of the instrument and is estimated from the
+    data; the effect size is declared and is not. `powered` is then whether the
+    tape on hand reaches `t_target` at THAT Sharpe.
+    """
+    sd = float(a.std(ddof=1))
+    if sd <= 0 or not annual_excess:
+        return {"powered": None, "power_basis": "undefined (zero variance)"}
+    sr_ref = (float(annual_excess) / float(ppy)) / sd
+    needed = (t_target / sr_ref) ** 2 if sr_ref > 0 else None
+    needed_years = needed / float(ppy) if needed is not None else None
+    # THE MINIMUM DETECTABLE EFFECT -- the number a reader actually wants, and
+    # the one CLAIM standard in CLAUDE.md already asks for by name. Inverting
+    # t = (mu/sd) * sqrt(T) for mu at t = t_target on the tape ACTUALLY HELD:
+    #     mu_per_period = t_target * sd / sqrt(T);  MDE = ppy * mu_per_period.
+    # A boolean says whether one arbitrary effect was reachable; the MDE says
+    # what the instrument could see at all, and it is comparable across arms.
+    mde_annual = float(ppy) * t_target * sd / math.sqrt(T) if T > 0 else None
+    return {
+        "detectable_annual_excess": annual_excess,
+        "reference_sharpe_per_period": round(sr_ref, 5),
+        "years_needed_to_detect_that_effect": (round(needed_years, 1)
+                                               if needed_years is not None else None),
+        "mde_annual_excess_at_t_target": (round(mde_annual, 5)
+                                          if mde_annual is not None else None),
+        "mde_reading": (f"on the {years_obs:.1f} years actually held, the smallest annual "
+                        f"excess this arm could have shown at t = {t_target:g} is "
+                        f"{mde_annual:.2%}/yr"
+                        if mde_annual is not None else None),
+        "powered": bool(needed_years is not None and needed_years <= years_obs),
+        "power_basis": (f"a pre-specified {annual_excess:.1%}/yr excess at this arm's own "
+                        f"realised volatility -- NOT its observed Sharpe, which would make "
+                        f"the flag equivalent to t >= {t_target:g}"),
     }
 
 

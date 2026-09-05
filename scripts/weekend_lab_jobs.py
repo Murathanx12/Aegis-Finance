@@ -132,6 +132,46 @@ def decay_reading(eras: dict) -> dict:
     }
 
 
+def screen_verdict(survivors, tested: int, eras: dict, power: dict | None = None,
+                   *, corrected: str | None = None) -> str:
+    """The verdict word for a FEATURE SCREEN -- which has no book and no Sharpe.
+
+    WHY THIS EXISTS. `verdict_from` needs a DSR, an SPA p and a PBO, and a
+    Fama-MacBeth coefficient series has none of them: there is no book, so there
+    is no terminal wealth to deflate. Three jobs (W5c, W6, W7) therefore rolled
+    their own `"NOVEL" if survivors else "NOISE"` on a bare |t| >= 2, and a code
+    review counted the damage: **25 of 92 committed verdicts said NOVEL and not
+    one of them had cleared the bar this module's docstring defines.** A
+    vocabulary applied inconsistently is worse than no vocabulary, because the
+    word still carries the weight of the definition.
+
+    So a screen gets its own word and its own bar, and the word is never NOVEL:
+
+      * `SCREEN_SURVIVOR`  -- cleared its controlled t AND a multiplicity
+        correction (Holm/BH) AND held one sign across eras. It has earned a BOOK,
+        which is the test that has killed five of these already.
+      * `SCREEN_ONLY`      -- cleared the raw bar, not the correction.
+      * `CANNOT DETERMINE` -- the instrument could not have seen an effect worth
+        acting on.
+      * `NOISE`            -- it could have, and there was nothing.
+
+    NOVEL is reserved for something that survived a book, a family and a
+    deflation. A screen cannot reach it, and pretending otherwise is how a
+    coefficient becomes a claim.
+    """
+    n = len(survivors)
+    if n and corrected:
+        return f"SCREEN_SURVIVOR ({n} of {tested}, {corrected})"
+    if n:
+        return f"SCREEN_ONLY ({n} of {tested}, no multiplicity correction applied)"
+    if power and power.get("powered") is False:
+        mde = power.get("mde_annual_excess_at_t_target")
+        return (f"CANNOT DETERMINE (underpowered; MDE "
+                f"{mde:.1%}/yr)" if isinstance(mde, float)
+                else "CANNOT DETERMINE (underpowered)")
+    return "NOISE"
+
+
 def verdict_from(inf: dict, eras: dict) -> str:
     """The bar, in one place. Every job calls this or explains why."""
     dsr = (inf.get("deflated_sharpe") or {}).get("dsr")
@@ -146,8 +186,17 @@ def verdict_from(inf: dict, eras: dict) -> str:
     # UNDERPOWERED is not NOISE. If a t = 2 would have needed more tape than the
     # panel holds, the search never had the chance to find the effect, and
     # calling that "NOISE" reports an absence of evidence as evidence of absence.
-    if pw.get("powered") is False and pw.get("years_needed_for_t2") is not None:
-        return "CANNOT DETERMINE (underpowered)"
+    # `powered` is now computed against a PRE-SPECIFIED effect (3%/yr at the arm's
+    # own volatility), not against its observed Sharpe. The first version used the
+    # observed one, which reduces algebraically to `t >= 2` -- so this branch
+    # fired for every arm with 0 < t < 2 and NOISE was unreachable. The MDE is
+    # quoted because it says what the instrument could see, which is the useful
+    # form of "underpowered".
+    if pw.get("powered") is False:
+        mde = pw.get("mde_annual_excess_at_t_target")
+        return (f"CANNOT DETERMINE (underpowered; this arm could only have shown an "
+                f"effect of {mde:.1%}/yr or larger)" if isinstance(mde, float)
+                else "CANNOT DETERMINE (underpowered)")
     # DECAYED is not NOISE either, and it is the verdict only a long panel can
     # reach. See `decay_reading`.
     dec = decay_reading(eras)
@@ -775,7 +824,12 @@ def W6_behavioural(variant: int = 0) -> dict:
                      f"in 2 of 3 eras: "
                      f"{[(r['feature'], r['t_fm_beta_controlled']) for r in survivors] or 'none'}"
                      f"; killed by the controls: {killed_by_controls or 'none'}"),
-        "verdict": "NOVEL" if survivors else "NOISE",
+        "verdict": screen_verdict(
+            survivors, len(rows),
+            (survivors[0].get("era_sign_table") if survivors else {}) or {},
+            (survivors[0].get("power") if survivors else None),
+            corrected=("controlled |t| >= 2 AND one sign in 2 of 3 eras; no formal "
+                       "multiplicity correction on 7 features" if survivors else None)),
     }
 
 
@@ -1128,11 +1182,11 @@ def W5c_options_exclusion(variant: int = 0) -> dict:
         # evidence of absence, which is the single error this whole weekend was
         # built to stop making. A search only earns the word NOISE when it HAD
         # the power and still found nothing.
-        "verdict": ("NOVEL" if real else
-                    ("CANNOT DETERMINE (underpowered)"
-                     if best and (best.get("power") or {}).get("powered") is False
-                     and (best.get("power") or {}).get("years_needed_for_t2") is not None
-                     else "NOISE")),
+        "verdict": screen_verdict(
+            real, len(lifts),
+            (best or {}).get("era_sign_table") or {}, (best or {}).get("power"),
+            corrected=("beats a RANDOM decile of the same size at t >= 2 with a "
+                       "consistent era sign" if real else None)),
         "power_of_the_best_cell": (best or {}).get("power"),
     }
 
@@ -1206,14 +1260,35 @@ def W7_matched_loser(variant: int = 0) -> dict:
         order = g["_resid"].sort_values(ascending=False)
         win = g.loc[order.index[:TOP_N]]
         los = g.loc[order.index[-TOP_N:]]
-        pool = g.drop(index=list(win.index) + list(los.index))
-        if len(pool) < N_MATCH * 2:
+        # THE CONTROL POOL MUST NOT BE CONDITIONED ON THE OUTCOME, and the first
+        # version of this line was. It read
+        #     pool = g.drop(index=list(win.index) + list(los.index))
+        # which makes "being eligible as a control" a statement about the FUTURE:
+        # a control was required to be a name whose 12-month outcome landed in
+        # neither tail. Any formation feature that predicts outcome DISPERSION --
+        # volatility, thinness, analyst disagreement -- then differs from the
+        # winners by construction, because the winners are drawn from the tail and
+        # the controls are drawn from the middle *of the outcome*. The published
+        # top archetype was `log_dollar_vol_20d`, a thinness measure, i.e.
+        # precisely a dispersion proxy. Found by an adversarial review, 2026-09-06.
+        #
+        # Dropping the WINNERS is necessary (a winner cannot be its own control).
+        # Dropping the LOSERS is the leak. So each side excludes only its own tail:
+        # a future loser is a perfectly good control for a winner -- in fact the
+        # most informative one, since it looked the same and did not become one.
+        pool_w = g.drop(index=list(win.index))
+        pool_l = g.drop(index=list(los.index))
+        if min(len(pool_w), len(pool_l)) < N_MATCH * 2:
             continue
-        # The match: same sector, nearest on (size rank, momentum rank).
-        pr = {c: pool[c].rank(pct=True) for c in on}
+        # ONE RANK SCALE FOR BOTH SIDES. The first version ranked candidates
+        # within the reduced pool and targets within the full month, so a
+        # percentile meant different things on the two sides of the same distance
+        # calculation -- and because the removed names skew small, a winner was
+        # matched to a systematically smaller name, biasing exactly the dimension
+        # the match exists to neutralise.
         gr = {c: g[c].rank(pct=True) for c in on}
 
-        def _controls(target_idx):
+        def _controls(target_idx, pool):
             picks = []
             for i in target_idx:
                 cand = pool
@@ -1221,20 +1296,26 @@ def W7_matched_loser(variant: int = 0) -> dict:
                     same = pool[pool["sector"] == g.at[i, "sector"]]
                     if len(same) >= N_MATCH:
                         cand = same
-                d2 = sum((pr[c].loc[cand.index] - gr[c].at[i]) ** 2 for c in on)
+                d2 = sum((gr[c].loc[cand.index] - gr[c].at[i]) ** 2 for c in on)
                 picks.extend(d2.nsmallest(N_MATCH).index.tolist())
             return pool.loc[list(dict.fromkeys(picks))]
 
-        cw = _controls(win.index)
-        cl = _controls(los.index)
+        cw = _controls(win.index, pool_w)
+        cl = _controls(los.index, pool_l)
         if not len(cw) or not len(cl):
             continue
         months_used.append(str(m))
+        # (month, value) PAIRS, not a bare list. A feature with incomplete
+        # coverage contributes on a SCATTERED subset of months, and appending
+        # bare values then zipping them against `months_used[:len(vals)]` stamps
+        # them onto the FIRST n months instead of the ones they came from -- a
+        # clean, wrong era table. Live on this panel: `ratio` has 292 values
+        # against 297 formation months. Found by a code review, 2026-09-06.
         for c in feats:
             if win[c].notna().sum() >= 10 and cw[c].notna().sum() >= 10:
-                diffs_w[c].append(float(win[c].mean() - cw[c].mean()))
+                diffs_w[c].append((str(m), float(win[c].mean() - cw[c].mean())))
             if los[c].notna().sum() >= 10 and cl[c].notna().sum() >= 10:
-                diffs_l[c].append(float(los[c].mean() - cl[c].mean()))
+                diffs_l[c].append((str(m), float(los[c].mean() - cl[c].mean())))
         # The recall baseline: which precursors already flagged this month's winners?
         rec = {"month": str(m), "winners": int(len(win))}
         for label, col in (("analyst_upside", "ratio"), ("mom_12_1", "mom_12_1"),
@@ -1271,7 +1352,8 @@ def W7_matched_loser(variant: int = 0) -> dict:
         for c, vals in store.items():
             if len(vals) < 24:
                 continue
-            s = pd.Series(vals, index=pd.Index(months_used[:len(vals)], name="month"))
+            s = pd.Series({m: v for m, v in vals}).sort_index()
+            s.index.name = "month"
             oc = EV.overlap_corrected(s, horizon_months)
             # THE KEY NAMES ARE `t_newey_west` AND `block_t_block`, and asking for
             # `t_hac`/`t_block` returns None for every feature -- which made the
@@ -1422,7 +1504,12 @@ def W7_matched_loser(variant: int = 0) -> dict:
                      f"|t| >= 2.5, a consistent sign in 2 of 3 eras, and a loser side that "
                      f"does NOT move the same way; {len(arche_bh)} survive BH-FDR 10% and "
                      f"{len(arche_holm)} survive Holm 5%"),
-        "verdict": "NOVEL" if arche else "NOISE",
+        "verdict": screen_verdict(
+            arche_holm or arche, len(w),
+            (arche[0].get("era_sign_table") if arche else {}) or {},
+            (arche[0].get("power") if arche else None),
+            corrected=(f"Holm <= 0.05 on the non-overlapping t, {len(arche_holm)} of "
+                       f"{len(arche)} candidates" if arche_holm else None)),
     }
 
 

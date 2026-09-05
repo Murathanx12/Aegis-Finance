@@ -103,3 +103,7 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W5b_options_book | 10 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | NOISE |
 | W5c_options_exclusion | 10 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
 | W4_graph_momentum | 10 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W7_matched_loser | 10 | 1 | 297 formation months, 100 winners x 3 matched controls each; 5 candidates over 3 DISTINCT ideas (['a | -- | -- | -- | -- | -- | NOVEL |
+| W7b_archetype_book | 10 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered) |
+| W8_states_three_nulls | 10 | 0 | k=4 market states over 286 months; market circular-shift p 0.578 (observed spread 0.008268 vs null p | -- | -- | -- | -- | -- | NOISE |
+| W9_survivor_books | 10 | 0 | 12 weekend survivors booked (24 cells): 5 beat the market NET, 10 beat it GROSS; 5 of them have thei | 0.2022 | 0.1078 | 0.2286 | 308 | 24.3 | DECAYED (worked, then stopped) |

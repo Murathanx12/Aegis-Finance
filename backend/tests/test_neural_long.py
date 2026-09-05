@@ -76,6 +76,13 @@ def _panel(n_names: int = 60, n_months: int = 84) -> pd.DataFrame:
     df["fwd_1m"] = df["excess_vw_1m"] + df["mkt_vw_1m"]
     df["market_cap"] = 1e9 * (1.0 + (df["permno"] % 7))
     df["prior_1m"] = 0.0
+    # `close` and a REALISTIC dollar volume, spanning $100k to $100m a day, so
+    # the $3m/day execution floor removes SOME of the book and not all of it.
+    # With a standard-normal `log_dollar_vol_20d` every name trades about two
+    # dollars, the floor empties the book, and the robustness block would report
+    # "no rows" -- a gate that cannot go green rather than a strict one.
+    df["close"] = np.exp(df["log_close"] * 0.3 + np.log(12.0))
+    df["log_dollar_vol_20d"] = np.log1p(10.0 ** rng.uniform(5.0, 8.0, n))
     return df.reset_index(drop=True)
 
 
@@ -329,3 +336,90 @@ def test_a_novel_verdict_requires_beating_lgbm_too(panel, monkeypatch):
     monkeypatch.setattr(WLJ, "verdict_from", lambda inf, eras: "NOVEL")
     r = NL.job(0, test_years=TEST_YEARS, seeds=[5], panel=panel.copy(), verbose=False)
     assert r["verdict"] == "NOISE (clears the market bar, does NOT beat lgbm)"
+
+
+# ------------------------------- 8. what the headline number is made of
+
+def test_robustness_regrades_under_the_execution_floor_and_names_the_tail(panel):
+    """The block that exists because a 561x terminal wealth went out of the
+    first full pass with nothing in the receipt able to contradict it.
+
+    `evaluate.book`'s default output has no liquidity column, no tail
+    decomposition and no holdings profile, so a pass without this block cannot
+    tell a model result from a microcap-with-five-good-months result.
+    """
+    df = panel.copy()
+    df["pred"] = df["excess_vw_1m"] + np.random.default_rng(4).normal(0, 0.02, len(df))
+    r = NL.robustness(df, "pred")
+    assert r["tradable_floor_usd"] == NL.TRADABLE_FLOOR_USD
+    for block in ("plain", "tradable_floor", "at_25bps"):
+        assert block in r, f"robustness is missing {block!r}"
+        assert "terminal_wealth_net" in r[block] or "error" in r[block]
+    # THE FLOOR MUST BITE AND MUST NOT EMPTY THE BOOK. Both failures are silent:
+    # a floor that removes nothing reads as "the edge is liquid", and a floor
+    # that removes everything returns `months: 0` and reads as an error.
+    fl = r["tradable_floor"]
+    assert fl.get("months"), "the tradable floor emptied the book -- it cannot go green"
+    assert fl["rows_after_tradable_floor"] > 0
+    assert fl["rows_after_tradable_floor"] < len(df), "the floor removed nothing"
+
+    t = r["tail"]
+    assert len(t["best_5_months"]) == 5
+    assert t["terminal_wealth_without_them"] < r["plain"]["terminal_wealth_net"]
+    # like with like: the MARKET's terminal wealth over the same removed months
+    assert "market_terminal_wealth_without_them" in t
+
+    h = r["holdings"]
+    for k in ("median_market_cap_musd", "median_close_usd", "median_dollar_volume_usd",
+              "share_of_book_under_5_dollars", "share_of_book_under_1m_dollar_volume"):
+        assert k in h, f"holdings profile is missing {k!r}"
+        assert h[k] is not None
+
+
+def test_the_floor_uses_the_houses_own_constant():
+    """One floor, one place. A second copy of $3m/day is a second floor."""
+    from learner import evaluate as E
+    assert NL.TRADABLE_FLOOR_USD == E.TRADABLE_DOLLAR_VOL == 3_000_000.0
+
+
+def test_holdings_refuses_rather_than_guessing_when_the_columns_are_absent(panel):
+    df = panel.copy()
+    df["pred"] = df["excess_vw_1m"]
+    r = NL.robustness(df.drop(columns=["log_dollar_vol_20d"]), "pred")
+    assert r["holdings"]["verdict"] == "CANNOT DETERMINE"
+    assert "log_dollar_vol_20d" in r["holdings"]["why"]
+
+
+def test_a_receipt_carries_the_floor_comparison_against_lgbm(panel):
+    r = NL.job(0, test_years=TEST_YEARS, seeds=[5, 6], panel=panel.copy(), verbose=False)
+    ex = r["execution_floor"]
+    assert ex["floor_usd_per_day"] == NL.TRADABLE_FLOOR_USD
+    # BOTH legs under the floor -- a floor that helps the incumbent and hurts the
+    # challenger reverses the comparison, and only printing one side hides that.
+    for k in ("terminal_wealth_plain", "terminal_wealth_under_floor",
+              "lgbm_terminal_wealth_plain", "lgbm_terminal_wealth_under_floor"):
+        assert k in ex
+    assert isinstance(ex["still_ahead_of_lgbm_under_the_floor"], bool)
+    assert "lgbm_raw" in r["robustness"]
+
+
+def test_clearing_every_bar_on_an_untradable_book_is_not_a_finding(panel, monkeypatch):
+    import scripts.weekend_lab_jobs as WLJ
+    monkeypatch.setattr(WLJ, "verdict_from", lambda inf, eras: "NOVEL")
+    monkeypatch.setattr(NL, "_beats_incumbent",
+                        lambda inf: {"clears": True, "reading": "stubbed"})
+    real = NL.robustness
+
+    def _dead(df, col, bps=10.0):
+        out = real(df, col, bps)
+        # the challenger dies at the floor; the incumbent does not
+        if col != "lgbm_raw":
+            out["tradable_floor"]["terminal_wealth_net"] = 0.5
+        else:
+            out["tradable_floor"]["terminal_wealth_net"] = 9.0
+        return out
+
+    monkeypatch.setattr(NL, "robustness", _dead)
+    r = NL.job(0, test_years=TEST_YEARS, seeds=[5], panel=panel.copy(), verbose=False)
+    assert r["verdict"] == "NOISE (clears every bar, dies at the $3m/day execution floor)"
+    assert r["execution_floor"]["still_ahead_of_lgbm_under_the_floor"] is False
