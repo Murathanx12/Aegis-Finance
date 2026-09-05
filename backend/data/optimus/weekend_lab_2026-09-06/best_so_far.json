@@ -1,40 +1,40 @@
 {
- "job": "W7b_archetype_book",
- "run": 6,
+ "job": "W9_survivor_books",
+ "run": 8,
  "variant": 0,
- "headline": "best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral best: arch_size_neutral|10bps|rebuild at -0.06%/month); DSR 0.0515, SPA p 0.7465, t2 needs 1380.1y vs 25.67y",
- "verdict": "CANNOT DETERMINE (underpowered)",
- "dsr": 0.0515,
- "spa_p": 0.7465,
- "pbo": 0.2,
+ "headline": "12 weekend survivors booked (24 cells): 5 beat the market NET, 10 beat it GROSS; 5 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.803%/month, DSR 0.5293, t2 needs 24.3y vs 25.67y",
+ "verdict": "DECAYED (worked, then stopped)",
+ "dsr": 0.5293,
+ "spa_p": 0.1078,
+ "pbo": 0.2286,
  "n_oos_months": 308,
- "years_needed_for_t2": 1380.1,
+ "years_needed_for_t2": 24.3,
  "years_observed": 25.67,
  "era_sign_table": {
   "1999-2007": {
    "months": 105,
-   "mean_pct": 0.5492,
-   "t": 1.243,
+   "mean_pct": 1.51,
+   "t": 2.349,
    "sign": 1
   },
   "2008-2015": {
    "months": 96,
-   "mean_pct": -0.3121,
-   "t": -0.581,
-   "sign": -1
+   "mean_pct": 0.9503,
+   "t": 1.807,
+   "sign": 1
   },
   "2016-2024": {
    "months": 107,
-   "mean_pct": -0.0416,
-   "t": -0.089,
+   "mean_pct": -0.0224,
+   "t": -0.028,
    "sign": -1
   },
-  "eras_with_a_positive_mean": 1,
-  "eras_with_a_negative_mean": 2,
+  "eras_with_a_positive_mean": 2,
+  "eras_with_a_negative_mean": 1,
   "eras_measured": 3,
-  "holds_in_2_of_3": false,
+  "holds_in_2_of_3": true,
   "same_sign_in_2_of_3": true,
-  "dominant_sign": -1
+  "dominant_sign": 1
  },
- "written_utc": "2026-09-05T04:46:34+00:00"
+ "written_utc": "2026-09-05T04:53:50+00:00"
 }

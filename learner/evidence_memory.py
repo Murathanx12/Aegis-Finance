@@ -10,26 +10,36 @@ work. Worse, it makes both errors available at once:
 * a cell that happened to look good on ONE pass gets quoted as a finding, and
 * a cell that happened to look flat on ONE pass gets called dead.
 
-THE RULE THAT PREVENTS BOTH: **A SINGLE PASS CAN NEITHER PROMOTE NOR KILL.**
-Every state transition here needs at least two independent passes agreeing, and
-`REFUTED` needs three AND needs each of them to have had the POWER to detect the
-effect. That last clause is the one that is usually missing, and it is the
-difference between "we looked and it was not there" and "we looked with an
-instrument too short to see it". The night lab of 2026-09-05 produced exactly
-that situation -- a +14.4%/yr arm needing 16.1 years to resolve on 7 years of
-tape -- and reporting it as NOISE would have been a false negative dressed as
-rigour.
+THE RULE THAT PREVENTS BOTH: **A SINGLE OBSERVATION CAN NEITHER PROMOTE NOR
+KILL.** Every state transition needs at least two DISTINCT observations agreeing,
+and `REFUTED` needs three AND needs each to have had the POWER to detect the
+effect. That last clause is the one usually missing, and it is the difference
+between "we looked and it was not there" and "we looked with an instrument too
+short to see it". The night lab of 2026-09-05 produced exactly that situation --
+a +14.4%/yr arm needing 16.1 years to resolve on 7 years of tape -- and reporting
+it as NOISE would have been a false negative dressed as rigour.
+
+**DISTINCT, NOT REPEATED -- and this file learned it from its own output.** The
+first version counted raw passes and promoted `attention_z_5d` to SUPPORTED on
+"24 of 24 passes". The weekend runner had simply executed a DETERMINISTIC job
+twenty-four times against the same panel; those were twenty-four copies of one
+observation. A rule meant to stop one lucky pass being quoted had licensed the
+opposite error: **a deterministic job promoting itself by being run again.**
+`evidence_key` now collapses passes that asked the same question of the same data
+and got the same answer. What survives as replication is a different VARIANT --
+W7's top-50/top-100/top-25 and 6m/12m arms are four genuinely different
+questions; running W6 nine times is one.
 
 THE STATES, AND WHAT EACH ONE LICENSES
 ======================================
 | state | means | may it be traded? |
 |---|---|---|
-| `IDEA` | fewer than 2 passes. Nothing is known yet. | no |
-| `CONDITIONAL` | clears its bar repeatedly, not the full NOVEL bar | paper only |
-| `SUPPORTED` | clears DSR + SPA + PBO + 2-of-3 eras, twice | candidate |
+| `IDEA` | fewer than 2 DISTINCT observations. Nothing is known yet. | no |
+| `CONDITIONAL` | clears its bar once, not twice | paper only |
+| `SUPPORTED` | clears DSR + SPA + PBO + 2-of-3 eras on >= 2 distinct observations | candidate |
 | `REGIME_SPECIFIC` | real in ONE era, absent in the others | paper, scoped |
 | `COST_KILLED` | beats the market GROSS, loses NET | no -- fix the costs |
-| `REFUTED` | 3+ POWERED passes, none positive | no |
+| `REFUTED` | 3+ POWERED distinct observations, none positive | no |
 
 `COST_KILLED` is a separate state on purpose. "It does not work" and "it works
 and the spread eats it" call for completely different next moves -- the second
@@ -152,6 +162,44 @@ def _era_count(r: dict) -> tuple[int, int]:
             int(meas) if isinstance(meas, int) else 0)
 
 
+def evidence_key(r: dict) -> tuple:
+    """What makes an observation a NEW piece of evidence rather than a copy.
+
+    THE BUG THIS EXISTS TO FIX, caught in this module's own output on 2026-09-06:
+
+        SUPPORTED  attention_z_5d  (cleared the full bar on 24 of 24 passes)
+
+    Twenty-four of twenty-four passes is not twenty-four pieces of evidence. The
+    weekend runner had executed `W6_behavioural` twenty-four times against the
+    same panel with the same code, and a deterministic job returns the identical
+    number every time. Those were twenty-four COPIES of one observation.
+
+    The rule "a single pass can neither promote nor kill" was written to stop one
+    lucky pass being quoted as a finding. Counting raw rows let in the opposite
+    error: a deterministic job promotes itself by being run again. Same shape as
+    `feedback_count_the_days_before_reading_the_columns` ("file size is not
+    sample size") -- PASS COUNT IS NOT EVIDENCE COUNT.
+
+    So evidence is keyed on the VARIANT and on the RESULT ITSELF, rounded. Two
+    passes that asked the same question of the same data and got the same answer
+    collapse to one. A different variant, a different panel, or a materially
+    different number is new evidence; a re-run is not.
+    """
+    def _r(x, n=4):
+        return round(float(x), n) if isinstance(x, (int, float)) else None
+    return (r.get("variant"), _r(r.get("dsr")), _r(r.get("spa_p")),
+            _r(r.get("pbo")), r.get("n_months"), _r(r.get("sharpe"), 6),
+            r.get("verdict"))
+
+
+def distinct_evidence(rows: list[dict]) -> list[dict]:
+    """One row per distinct evidence key, keeping the most recent of each."""
+    seen: dict[tuple, dict] = {}
+    for r in rows:
+        seen[evidence_key(r)] = r
+    return list(seen.values())
+
+
 def state_of(rows: list[dict], family_rate: float | None = None,
              global_rate: float | None = None) -> dict:
     """The state of ONE cell, from every observation of it.
@@ -162,9 +210,13 @@ def state_of(rows: list[dict], family_rate: float | None = None,
     a live lead.
     """
     from backend.services.arena import trust_router as TR
-    n = len(rows)
-    if n == 0:
+    raw_passes = len(rows)
+    if raw_passes == 0:
         return {"state": "IDEA", "passes": 0, "why": "never observed"}
+    # DISTINCT EVIDENCE, not raw passes. A deterministic job re-run twenty-four
+    # times is one observation, not twenty-four. See `evidence_key`.
+    rows = distinct_evidence(rows)
+    n = len(rows)
     cleared = sum(1 for r in rows if _clears(r))
     powered = [r for r in rows if r.get("powered") is True]
     n_powered = len(powered)
@@ -188,21 +240,26 @@ def state_of(rows: list[dict], family_rate: float | None = None,
             regime += 1
 
     if n < MIN_PASSES_TO_PROMOTE:
-        state, why = "IDEA", f"only {n} pass; a single pass can neither promote nor kill"
+        state, why = ("IDEA",
+                      f"{raw_passes} pass(es) collapse to {n} DISTINCT observation(s); a "
+                      "single observation can neither promote nor kill, and re-running a "
+                      "deterministic job is not a second observation")
     elif cleared >= MIN_PASSES_TO_PROMOTE:
-        state, why = "SUPPORTED", f"cleared the full bar on {cleared} of {n} passes"
+        state, why = ("SUPPORTED",
+                      f"cleared the full bar on {cleared} of {n} DISTINCT observations "
+                      f"(from {raw_passes} passes)")
     elif len(cost_killed) >= MIN_PASSES_TO_PROMOTE:
         state, why = ("COST_KILLED",
-                      f"beat the market GROSS and lost NET on {len(cost_killed)} of {n} "
+                      f"beat the market GROSS and lost NET on {len(cost_killed)} of {n} DISTINCT "
                       "passes -- an execution problem, not a research failure")
     elif regime >= MIN_PASSES_TO_PROMOTE:
         state, why = ("REGIME_SPECIFIC",
-                      f"positive in exactly one of three eras on {regime} of {n} passes")
+                      f"positive in exactly one of three eras on {regime} of {n} distinct observations")
     elif cleared >= 1:
-        state, why = "CONDITIONAL", f"cleared the bar on {cleared} of {n} passes, not twice"
+        state, why = "CONDITIONAL", f"cleared the bar on {cleared} of {n} distinct observations, not twice"
     elif n_powered >= MIN_PASSES_TO_REFUTE:
         state, why = ("REFUTED",
-                      f"{n_powered} POWERED passes and none cleared the bar")
+                      f"{n_powered} POWERED DISTINCT observations and none cleared the bar")
     else:
         # THE CLAUSE THAT IS USUALLY MISSING. Without power, "we looked and found
         # nothing" is not evidence of absence, and calling it REFUTED would be a
@@ -210,12 +267,14 @@ def state_of(rows: list[dict], family_rate: float | None = None,
         need = [r.get("years_needed_for_t2") for r in rows
                 if isinstance(r.get("years_needed_for_t2"), (int, float))]
         state = "IDEA"
-        why = (f"{n} passes, none cleared the bar, but only {n_powered} had the POWER to "
+        why = (f"{n} distinct observations ({raw_passes} passes), none cleared the bar, but "
+               f"only {n_powered} had the POWER to "
                f"detect it"
                + (f" (a t = 2 would need up to {max(need):.1f} years)" if need else "")
                + " -- absence of evidence is not evidence of absence")
     return {
         "state": state, "why": why,
+        "distinct_observations": n, "raw_passes": raw_passes,
         "passes": n, "passes_clearing_the_bar": cleared,
         "powered_passes": n_powered,
         "cost_killed_passes": len(cost_killed),
@@ -256,9 +315,10 @@ def snapshot() -> dict:
         "families": sorted(by_family),
         "global_clear_rate": round(g_clear, 4),
         "state_counts": counts,
-        "rule": ("a single pass can neither promote nor kill; REFUTED additionally "
-                 f"requires {MIN_PASSES_TO_REFUTE} passes that each HAD THE POWER "
-                 "to detect the effect"),
+        "rule": ("a single DISTINCT observation can neither promote nor kill; a "
+                 "deterministic job re-run is not a second observation (see "
+                 f"`evidence_key`); REFUTED additionally requires {MIN_PASSES_TO_REFUTE} "
+                 "distinct observations that each HAD THE POWER to detect the effect"),
         "by_cell": dict(sorted(cells.items(),
                                key=lambda kv: -(kv[1].get("best_dsr") or 0))),
     }

@@ -1,0 +1,34 @@
+{
+ "question": "what does the whole weekend, taken together, license us to say?",
+ "family_id": "weekend-W11-evidence-memory",
+ "receipts_read": 68,
+ "cell_observations_folded": 499,
+ "errors": [],
+ "state_counts": {
+  "IDEA": 86,
+  "REGIME_SPECIFIC": 2,
+  "SUPPORTED": 12,
+  "REFUTED": 2,
+  "COST_KILLED": 20
+ },
+ "observations_total": 1687,
+ "cells_tracked": 122,
+ "global_clear_rate": 0.1476,
+ "rule": "a single pass can neither promote nor kill; REFUTED additionally requires 3 passes that each HAD THE POWER to detect the effect",
+ "top_cells_by_best_dsr": [
+  "attention_z_5d = SUPPORTED",
+  "amihud_21d = SUPPORTED",
+  "ret_5d = SUPPORTED",
+  "log_dollar_vol_20d = SUPPORTED",
+  "log_dollar_vol_20d__xs = SUPPORTED"
+ ],
+ "headline": "68 receipts -> 499 cell observations; 122 cells tracked; states {'IDEA': 86, 'REGIME_SPECIFIC': 2, 'SUPPORTED': 12, 'REFUTED': 2, 'COST_KILLED': 20}",
+ "verdict": "INVENTORY",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W11_evidence_writeback",
+ "run": 8,
+ "variant": 0,
+ "written_utc": "2026-09-05T04:53:52+00:00",
+ "elapsed_s": 1.1,
+ "exit_code": 0
+}

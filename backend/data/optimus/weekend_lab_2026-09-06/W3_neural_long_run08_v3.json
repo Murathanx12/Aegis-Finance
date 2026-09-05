@@ -1,0 +1,12 @@
+{
+ "verdict": "DEFERRED",
+ "job_planned": "W3_neural_long",
+ "headline": "not built yet: GPU encoder pass pending",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W3_neural_long",
+ "run": 8,
+ "variant": 3,
+ "written_utc": "2026-09-05T04:53:51+00:00",
+ "elapsed_s": 0.7,
+ "exit_code": 0
+}
