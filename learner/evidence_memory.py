@@ -501,11 +501,44 @@ def state_of(rows: list[dict], family_rate: float | None = None,
     levels.append((float(cleared), float(n)))
     est = TR.backoff_estimate(levels, prior=0.10)
 
+    # REGIME_SPECIFIC IS THE ONE PROMOTION THAT NEEDED NO EVIDENCE, AND A
+    # SYNTHETIC NULL WALKED STRAIGHT INTO IT (labor-day lab B1, 2026-09-07).
+    #
+    # `eras_with_a_positive_mean == 1 of 3` is the SIGN of three numbers. Under
+    # a pure null those signs are coin flips, so P(exactly one positive) = 3/8
+    # for a single observation and P(two or more of three observations land
+    # there) is about a quarter -- higher when the observations share a panel,
+    # which they always do. The known-answer battery's NULL world produced
+    # three POWERED observations, every one of them adjudicated NOISE by
+    # `weekend_lab_jobs.verdict_from`, era means of 1e-4 to 1e-3 a month, zero
+    # passes clearing any bar -- and `state_of` returned REGIME_SPECIFIC, an
+    # EXPORTED state that reaches `signal_registry.yaml`.
+    #
+    # The branch checks BEFORE the REFUTED clause, so it also blocks the honest
+    # verdict on the way past. It had never fired on the real store (measured
+    # 2026-09-07: 0 of 328 cells), which is why nothing caught it.
+    #
+    # THE FIX, and its limit: a row whose own fields already earn a CAPPING
+    # verdict -- NOISE, REFUTED or CANNOT DETERMINE -- cannot also be evidence
+    # of a regime. If the pooled tape cannot distinguish the cell from noise,
+    # "positive in exactly one era" is the sign of that noise, not a regime. A
+    # genuinely regime-specific effect large enough to matter does not vanish
+    # into NOISE when pooled; one that does is UNDERPOWERED, and the IDEA branch
+    # below says exactly that instead of promoting it.
+    #
+    # The verdict is DERIVED from the row's own fields (`_derive_verdict`), not
+    # read off the recorded string, so a job that stamped an optimistic word
+    # cannot buy a promotion with it.
     regime = 0
+    regime_blocked = 0
     for r in rows:
         pos, meas = _era_count(r)
-        if meas >= 3 and pos == 1:
-            regime += 1
+        if not (meas >= 3 and pos == 1):
+            continue
+        if _leading_vocabulary_word(_derive_verdict(r)) in _CAPPING_WORDS:
+            regime_blocked += 1
+            continue
+        regime += 1
 
     if n < MIN_PASSES_TO_PROMOTE:
         state, why = ("IDEA",
@@ -547,6 +580,7 @@ def state_of(rows: list[dict], family_rate: float | None = None,
         "powered_passes": n_powered,
         "cost_killed_passes": len(cost_killed),
         "one_era_only_passes": regime,
+        "one_era_only_passes_blocked_by_a_capping_verdict": regime_blocked,
         "shrunk_clear_rate": round(float(est["estimate"]), 4),
         "evidence_n": est["evidence_n"],
         "last_seen": rows[-1].get("utc"),

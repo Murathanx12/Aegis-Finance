@@ -1,0 +1,556 @@
+{
+ "item": "LABOR_DAY_LAB_2026-09-07 / lane B / B1",
+ "title": "synthetic known-answer battery for the whole research machine",
+ "licence": "PRODUCT_EXPERIMENT",
+ "mode": "SYNTHETIC_WORLD \u2014 NOT MARKET EVIDENCE",
+ "generated_at_utc": "2026-09-05T15:29:32+00:00",
+ "argv": [
+  "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_b1_known_answer_battery.py",
+  "--fast"
+ ],
+ "git_commit": "729df522210d6dc9afabf857445370425a6b517c",
+ "python": "3.12.10",
+ "config": {
+  "fast": true,
+  "n_names": 60,
+  "start_year": 1999,
+  "end_year": 2008,
+  "test_years": [
+   2006,
+   2007,
+   2008
+  ],
+  "kinds": [
+   "ridge",
+   "lgbm",
+   "lgbm_clf"
+  ],
+  "worlds": [
+   "linear",
+   "null"
+  ],
+  "idio_sd": 0.08,
+  "mkt_mu": 0.007,
+  "mkt_sd": 0.045,
+  "alpha_scale": 0.012,
+  "regime_share": 0.35,
+  "regime_alpha_multiplier": 2.5,
+  "n_customers": 4,
+  "seed": 20260907
+ },
+ "inputs_opened": [
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\dataset.py",
+   "bytes": 60806,
+   "mtime_utc": "2026-09-05T05:48:52+00:00",
+   "why": "machine stage: learner.dataset"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\models.py",
+   "bytes": 21375,
+   "mtime_utc": "2026-09-05T04:27:57+00:00",
+   "why": "machine stage: learner.models"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\evaluate.py",
+   "bytes": 35480,
+   "mtime_utc": "2026-09-05T04:26:11+00:00",
+   "why": "machine stage: learner.evaluate"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\inference.py",
+   "bytes": 34820,
+   "mtime_utc": "2026-09-05T05:17:18+00:00",
+   "why": "machine stage: learner.inference"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\evidence_memory.py",
+   "bytes": 62410,
+   "mtime_utc": "2026-09-05T15:19:32+00:00",
+   "why": "machine stage: learner.evidence_memory"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\allocator.py",
+   "bytes": 50067,
+   "mtime_utc": "2026-09-04T17:03:02+00:00",
+   "why": "machine stage: learner.allocator"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\features_graph.py",
+   "bytes": 42290,
+   "mtime_utc": "2026-09-05T12:42:41+00:00",
+   "why": "machine stage: learner.features_graph"
+  }
+ ],
+ "machine_stages_exercised": [
+  "learner.dataset.feature_columns / walk_forward_splits",
+  "learner.features_graph.load_edges / relation_table / build / attach",
+  "learner.models.fit_predict / fit_predict_proba",
+  "learner.evaluate.book / rank_ic",
+  "learner.inference.full_report (DSR, SPA, PBO, power, MDE)",
+  "scripts.weekend_lab_jobs.verdict_from",
+  "learner.evidence_memory.observe / state_of (REDIRECTED store)",
+  "learner.allocator.utility_of / _allocate"
+ ],
+ "what_is_synthetic": [
+  "the panel (features, returns, market, caps)",
+  "the market-graph edge file",
+  "features_graph.monthly_returns (monkeypatched for the graph world ONLY; every other function in that module runs as written)"
+ ],
+ "safety": {
+  "real_evidence_memory_touched": false,
+  "evidence_store_redirected_to": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\labor_b1_0cdvqy9u\\evidence_memory.jsonl",
+  "graph_feature_parquet_written": false,
+  "llm_calls": 0,
+  "llm_spend_usd": 0.0
+ },
+ "eras": {
+  "2005-2006": [
+   2005,
+   2006
+  ],
+  "2007-2007": [
+   2007,
+   2007
+  ],
+  "2008-2008": [
+   2008,
+   2008
+  ]
+ },
+ "worlds": {
+  "linear": {
+   "world": "linear",
+   "planted": "excess[j+1] += 0.012 * xs_z(mom_12_1[j]) on every month",
+   "carrier": "mom_12_1",
+   "n_rows": 7140,
+   "n_names": 60,
+   "n_months": 119,
+   "months": [
+    "1999-01",
+    "2008-11"
+   ],
+   "regime_months": null,
+   "idio_sd_monthly": 0.08,
+   "alpha_scale": 0.012,
+   "n_features_offered": 49,
+   "oracle": {
+    "annualised_excess": 0.2607,
+    "t_stat_paired_vs_market": 5.136,
+    "months": 36,
+    "mean_monthly_excess": 0.021726,
+    "basis": "a book ranked on the TRUE planted alpha over the test years, at the same k, weight and cost as every measured cell. This is the planted effect in the units the MDE is quoted in."
+   }
+  },
+  "null": {
+   "world": "null",
+   "planted": "no alpha term at all \u2014 the matched control",
+   "carrier": null,
+   "n_rows": 7140,
+   "n_names": 60,
+   "n_months": 119,
+   "months": [
+    "1999-01",
+    "2008-11"
+   ],
+   "regime_months": null,
+   "idio_sd_monthly": 0.08,
+   "alpha_scale": 0.012,
+   "n_features_offered": 49,
+   "oracle": {
+    "annualised_excess": 0.0,
+    "t_stat_paired_vs_market": null,
+    "months": null,
+    "mean_monthly_excess": 0.0,
+    "basis": "NO alpha was planted. A book ranked on a constant is a tie-break ordering, not an oracle, and quoting its excess would invent a planted effect that does not exist."
+   }
+  }
+ },
+ "family": {
+  "cells": [
+   "linear::lgbm",
+   "linear::lgbm_clf",
+   "linear::ridge",
+   "null::lgbm",
+   "null::lgbm_clf",
+   "null::ridge"
+  ],
+  "size": 6,
+  "family_max_p": 0.87497951,
+  "correction": "Holm (export) and BH-FDR (screen), CANON \u00a763",
+  "pbo_computed_over": "the whole family; all cells share a length",
+  "cell_months": {
+   "linear::ridge": 36,
+   "linear::lgbm": 36,
+   "linear::lgbm_clf": 36,
+   "null::ridge": 36,
+   "null::lgbm": 36,
+   "null::lgbm_clf": 36
+  }
+ },
+ "results": {
+  "linear::ridge": {
+   "t": 2.9551,
+   "p_raw": 0.00312555,
+   "p_holm": 0.01543458,
+   "p_bh_fdr": 0.0062511,
+   "annualised_excess": 0.1527,
+   "mean_monthly_excess": 0.01272,
+   "months": 36,
+   "rank_ic": 0.07686,
+   "rank_ic_t": 3.675,
+   "rank_ic_months": 36,
+   "mde_annual_excess_at_t2": 0.10331,
+   "powered": false,
+   "years_needed_for_t2": 1.4,
+   "years_observed": 3.0,
+   "dsr": 0.9277,
+   "spa_p": 0.006,
+   "pbo": 0.0857,
+   "eras": {
+    "era_means": {
+     "2005-2006": -0.001923,
+     "2007-2007": 0.02667,
+     "2008-2008": 0.014811
+    },
+    "era_t": {
+     "2005-2006": -0.255,
+     "2007-2007": 4.638,
+     "2008-2008": 2.216
+    },
+    "eras_measured": 3,
+    "eras_with_a_positive_mean": 2,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true
+   },
+   "verdict": "NOISE"
+  },
+  "linear::lgbm": {
+   "t": 3.0147,
+   "p_raw": 0.00257243,
+   "p_holm": 0.01543458,
+   "p_bh_fdr": 0.0062511,
+   "annualised_excess": 0.1564,
+   "mean_monthly_excess": 0.01304,
+   "months": 36,
+   "rank_ic": 0.09006,
+   "rank_ic_t": 4.531,
+   "rank_ic_months": 36,
+   "mde_annual_excess_at_t2": 0.10378,
+   "powered": false,
+   "years_needed_for_t2": 1.3,
+   "years_observed": 3.0,
+   "dsr": 0.9313,
+   "spa_p": 0.002,
+   "pbo": 0.0857,
+   "eras": {
+    "era_means": {
+     "2005-2006": 0.000188,
+     "2007-2007": 0.024042,
+     "2008-2008": 0.016215
+    },
+    "era_t": {
+     "2005-2006": 0.021,
+     "2007-2007": 3.931,
+     "2008-2008": 3.301
+    },
+    "eras_measured": 3,
+    "eras_with_a_positive_mean": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true
+   },
+   "verdict": "NOISE"
+  },
+  "linear::lgbm_clf": {
+   "t": 2.9766,
+   "p_raw": 0.00291476,
+   "p_holm": 0.01543458,
+   "p_bh_fdr": 0.0062511,
+   "annualised_excess": 0.1349,
+   "mean_monthly_excess": 0.01124,
+   "months": 36,
+   "rank_ic": 0.06928,
+   "rank_ic_t": 3.754,
+   "rank_ic_months": 36,
+   "mde_annual_excess_at_t2": 0.09065,
+   "powered": false,
+   "years_needed_for_t2": 1.4,
+   "years_observed": 3.0,
+   "dsr": 0.9459,
+   "spa_p": 0.004,
+   "pbo": 0.0857,
+   "eras": {
+    "era_means": {
+     "2005-2006": 0.004003,
+     "2007-2007": 0.020243,
+     "2008-2008": 0.009982
+    },
+    "era_t": {
+     "2005-2006": 0.537,
+     "2007-2007": 3.421,
+     "2008-2008": 1.905
+    },
+    "eras_measured": 3,
+    "eras_with_a_positive_mean": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true
+   },
+   "verdict": "NOISE"
+  },
+  "null::ridge": {
+   "t": 0.1573,
+   "p_raw": 0.87497951,
+   "p_holm": 1.0,
+   "p_bh_fdr": 0.87497951,
+   "annualised_excess": 0.0086,
+   "mean_monthly_excess": 0.00072,
+   "months": 36,
+   "rank_ic": -0.01115,
+   "rank_ic_t": -0.662,
+   "rank_ic_months": 36,
+   "mde_annual_excess_at_t2": 0.10908,
+   "powered": false,
+   "years_needed_for_t2": 484.8,
+   "years_observed": 3.0,
+   "dsr": 0.1278,
+   "spa_p": 0.3836,
+   "pbo": 0.0857,
+   "eras": {
+    "era_means": {
+     "2005-2006": -0.012155,
+     "2007-2007": 0.010525,
+     "2008-2008": 0.005223
+    },
+    "era_t": {
+     "2005-2006": -1.303,
+     "2007-2007": 1.974,
+     "2008-2008": 0.762
+    },
+    "eras_measured": 3,
+    "eras_with_a_positive_mean": 2,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true
+   },
+   "verdict": "CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 10.9%/yr or larger)"
+  },
+  "null::lgbm": {
+   "t": 0.8218,
+   "p_raw": 0.4111895,
+   "p_holm": 1.0,
+   "p_bh_fdr": 0.61678425,
+   "annualised_excess": 0.0471,
+   "mean_monthly_excess": 0.00392,
+   "months": 36,
+   "rank_ic": 0.01164,
+   "rank_ic_t": 0.62,
+   "rank_ic_months": 36,
+   "mde_annual_excess_at_t2": 0.11461,
+   "powered": false,
+   "years_needed_for_t2": 17.8,
+   "years_observed": 3.0,
+   "dsr": 0.3205,
+   "spa_p": 0.2228,
+   "pbo": 0.0857,
+   "eras": {
+    "era_means": {
+     "2005-2006": -0.01245,
+     "2007-2007": 0.015831,
+     "2008-2008": 0.010288
+    },
+    "era_t": {
+     "2005-2006": -1.246,
+     "2007-2007": 3.92,
+     "2008-2008": 1.47
+    },
+    "eras_measured": 3,
+    "eras_with_a_positive_mean": 2,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true
+   },
+   "verdict": "CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 11.5%/yr or larger)"
+  },
+  "null::lgbm_clf": {
+   "t": 0.4151,
+   "p_raw": 0.67803795,
+   "p_holm": 1.0,
+   "p_bh_fdr": 0.81364554,
+   "annualised_excess": 0.0238,
+   "mean_monthly_excess": 0.00198,
+   "months": 36,
+   "rank_ic": -0.0026,
+   "rank_ic_t": -0.132,
+   "rank_ic_months": 36,
+   "mde_annual_excess_at_t2": 0.11462,
+   "powered": false,
+   "years_needed_for_t2": 69.6,
+   "years_observed": 3.0,
+   "dsr": 0.1887,
+   "spa_p": 0.3177,
+   "pbo": 0.0857,
+   "eras": {
+    "era_means": {
+     "2005-2006": -0.005065,
+     "2007-2007": 0.004822,
+     "2008-2008": 0.007214
+    },
+    "era_t": {
+     "2005-2006": -0.502,
+     "2007-2007": 1.01,
+     "2008-2008": 0.807
+    },
+    "eras_measured": 3,
+    "eras_with_a_positive_mean": 2,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true
+   },
+   "verdict": "CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 11.5%/yr or larger)"
+  }
+ },
+ "evidence_memory": {
+  "store_path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\labor_b1_0cdvqy9u\\evidence_memory.jsonl",
+  "real_store_untouched": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\evidence_memory.jsonl",
+  "states": {
+   "linear": {
+    "state": "IDEA",
+    "why": "3 distinct observations (3 passes), none cleared the bar, but only 0 had the POWER to detect it (a t = 2 would need up to 1.4 years) -- absence of evidence is not evidence of absence",
+    "distinct_observations": 3,
+    "passes_clearing_the_bar": 0,
+    "powered_passes": 0,
+    "one_era_only_passes": 0
+   },
+   "null": {
+    "state": "IDEA",
+    "why": "3 distinct observations (3 passes), none cleared the bar, but only 0 had the POWER to detect it (a t = 2 would need up to 484.8 years) -- absence of evidence is not evidence of absence",
+    "distinct_observations": 3,
+    "passes_clearing_the_bar": 0,
+    "powered_passes": 0,
+    "one_era_only_passes": 0
+   }
+  }
+ },
+ "allocator": {
+  "personality": "balanced",
+  "lambdas": {
+   "l1": 0.25,
+   "l2": 1.0,
+   "l3": 1.0,
+   "max_sleeve_weight": 0.4
+  },
+  "rows": [
+   {
+    "sleeve": "world_linear",
+    "U": 0.00762,
+    "u_margin_vs_benchmark": 0.03312,
+    "weight": 0.4,
+    "binding_constraint": "MAX_SLEEVE_WEIGHT_0.40 (uncapped share would be 1.0000)"
+   },
+   {
+    "sleeve": "world_null",
+    "U": -0.11251,
+    "u_margin_vs_benchmark": -0.08701,
+    "weight": 0.0,
+    "binding_constraint": "U_BELOW_BENCHMARK: does not beat the parking orbit under balanced lambdas (margin -0.0870)"
+   },
+   {
+    "sleeve": "benchmark_SPY",
+    "U": -0.0255,
+    "u_margin_vs_benchmark": 0.0,
+    "weight": 0.0,
+    "binding_constraint": "PARKING_ORBIT_DEFAULT: receives the residual because no sleeve claim (or thesis-backed cash claim) beat it"
+   },
+   {
+    "sleeve": "cash",
+    "U": -0.07,
+    "u_margin_vs_benchmark": -0.0445,
+    "weight": 0.0,
+    "binding_constraint": "NO_THESIS: cash requires a thesis and none was supplied"
+   }
+  ],
+  "residual": {
+   "sleeve": "__residual__",
+   "weight": 0.6,
+   "destination": "benchmark_SPY",
+   "thesis": null,
+   "rationale": "every unused dollar gets a documented competing allocation; this row IS that documentation. Residual = gross cap 1.00 minus the 0.4000 the sleeves claimed."
+  },
+  "cash_policy": {
+   "rule": "cash requires a thesis; the benchmark is the parking orbit. A positive cash margin WITHOUT a thesis is recorded, not funded (an allocator that drifts into cash by arithmetic is the itsang89 mirror).",
+   "thesis_supplied": null,
+   "cash_margin_vs_benchmark": -0.0445,
+   "cash_wins_numerically": false,
+   "outcome": "no thesis; residual parks in the benchmark"
+  }
+ },
+ "adjudication": {
+  "declared": {
+   "linear": {
+    "sign": 1,
+    "state": "IDEA",
+    "why": "36 OOS months reach no promotion bar; the fast battery pins SIGN and family-corrected p, and pins that the machine does NOT promote on three years"
+   },
+   "null": {
+    "sign": 0,
+    "state": "IDEA",
+    "verdict_prefix": "CANNOT DETERMINE",
+    "why": "36 OOS months cannot see a 3%/yr effect; the machine must say so rather than say NOISE"
+   }
+  },
+  "per_world": {
+   "linear": {
+    "best_cell": "linear::lgbm",
+    "planted_effect_annualised": 0.2607,
+    "machine_mde_annual_at_t2": 0.10378,
+    "planted_over_mde": 2.51,
+    "measured_annualised_excess": 0.1564,
+    "t": 3.0147,
+    "p_raw": 0.00257243,
+    "p_holm": 0.01543458,
+    "p_bh_fdr": 0.0062511,
+    "verdict": "NOISE",
+    "evidence_state": "IDEA",
+    "declared_state": "IDEA",
+    "checks": {
+     "sign_correct": true,
+     "family_corrected_p_below_0.05": true,
+     "bh_fdr_p_below_0.05": true,
+     "planted_above_mde": true,
+     "evidence_state_as_declared": true
+    },
+    "PASS": true
+   },
+   "null": {
+    "best_cell": "null::lgbm",
+    "planted_effect_annualised": 0.0,
+    "machine_mde_annual_at_t2": 0.11461,
+    "planted_over_mde": null,
+    "measured_annualised_excess": 0.0471,
+    "t": 0.8218,
+    "p_raw": 0.4111895,
+    "p_holm": 1.0,
+    "p_bh_fdr": 0.61678425,
+    "verdict": "CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 11.5%/yr or larger)",
+    "evidence_state": "IDEA",
+    "declared_state": "IDEA",
+    "checks": {
+     "no_cell_significant": true,
+     "verdict_is_CANNOT_DETERMINE": true,
+     "power_flag_matches_the_declaration": true,
+     "evidence_state_as_declared": true,
+     "allocator_gives_null_zero_weight": true,
+     "residual_parks_in_benchmark": true
+    },
+    "PASS": true
+   }
+  },
+  "ALL_PASS": true,
+  "findings": [
+   "FINDING [linear]: the arm's family-corrected p is 0.01543458 on a REAL planted edge and the verdict vocabulary still returns 'NOISE'. `verdict_from` has exactly two outcomes for a self-resolved arm \u2014 NOVEL (which needs the full DSR/SPA/PBO/era bar) or NOISE \u2014 so there is no word for 'significant, did not clear the deflation bar'. On short tape that reads as a false negative in the vocabulary, not in the numbers.",
+   "FINDING (not a miss): `learner/evaluate.ERAS` is hard-coded to 2016-2024. `grade_by_era` over a 1999-2024 panel reports three eras covering the last nine years and says nothing about the other seventeen \u2014 it does not refuse and it does not say what it dropped. This battery therefore derives its own eras. Not repaired here: evaluate.py is outside lane B's file ownership."
+  ]
+ },
+ "findings": [
+  "FINDING [linear]: the arm's family-corrected p is 0.01543458 on a REAL planted edge and the verdict vocabulary still returns 'NOISE'. `verdict_from` has exactly two outcomes for a self-resolved arm \u2014 NOVEL (which needs the full DSR/SPA/PBO/era bar) or NOISE \u2014 so there is no word for 'significant, did not clear the deflation bar'. On short tape that reads as a false negative in the vocabulary, not in the numbers.",
+  "FINDING (not a miss): `learner/evaluate.ERAS` is hard-coded to 2016-2024. `grade_by_era` over a 1999-2024 panel reports three eras covering the last nine years and says nothing about the other seventeen \u2014 it does not refuse and it does not say what it dropped. This battery therefore derives its own eras. Not repaired here: evaluate.py is outside lane B's file ownership."
+ ],
+ "runtime_seconds": 3.0
+}
