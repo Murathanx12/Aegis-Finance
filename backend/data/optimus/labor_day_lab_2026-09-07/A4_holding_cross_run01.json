@@ -1,0 +1,2749 @@
+{
+ "job": "A4_holding_cross",
+ "lane": "A",
+ "question": "given a ONE-MONTH ranking, how long should the book hold it? Two constructions (hold band and cohort) x two selectors x two cost rates, graded against the beta-matched benchmark.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "models_fitted": 0,
+ "what_varies": "the HOLDING RULE only. The prediction column is the frozen W3b stage vintage in both cases and no model is refitted; the signal's own forecast horizon stays 1 month throughout, so this is NOT a multi-horizon model comparison (A3 has that).",
+ "memory_free_gb_before": 9.07,
+ "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+ "training_universe": {
+  "dollar_volume_floor_usd_per_day": 3000000.0,
+  "min_close_usd": 5.0,
+  "rows_after": 530447,
+  "months_after": 310
+ },
+ "risk_free_leg": {
+  "months_built": 309,
+  "months_missing": [
+   "2024-12"
+  ],
+  "mean_monthly": 0.001553,
+  "annualised_12x": 0.01864,
+  "declared": "0.0 on the months that could not be built, and they are named above -- never silently zero-filled",
+  "source": "learner.benchmark.cash() -- pinned FF daily RF, OFFLINE"
+ },
+ "cells": {
+  "holdband|lgbm_clf|hold_k=none|10bps": {
+   "label": "holdband|lgbm_clf|hold_k=none|10bps",
+   "construction": "monthly rebalance, top-50 rebuilt every month (NO hysteresis -- the control)",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.8894,
+   "implied_mean_holding_months": 1.12,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 2.135,
+   "terminal_wealth_net": 22.6076,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1782,
+    "t_beta_minus_1_hac": 2.03,
+    "annualised_pct": 1.126,
+    "t_paired": 0.418,
+    "p_one_sided": 0.33794
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.393,
+    "t_paired": 1.225
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1331,
+     "t": -0.415,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4214,
+     "t": 1.227,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0983,
+     "t": -0.244,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=75|10bps": {
+   "label": "holdband|lgbm_clf|hold_k=75|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 75",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.8477,
+   "implied_mean_holding_months": 1.18,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 2.035,
+   "terminal_wealth_net": 24.7612,
+   "terminal_wealth_gross": 37.711,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1894,
+    "t_beta_minus_1_hac": 2.114,
+    "annualised_pct": 1.453,
+    "t_paired": 0.543,
+    "p_one_sided": 0.29365
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.863,
+    "t_paired": 1.398
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.2201,
+     "t": -0.676,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4434,
+     "t": 1.324,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.015,
+     "t": -0.037,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=100|10bps": {
+   "label": "holdband|lgbm_clf|hold_k=100|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 100",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.8122,
+   "implied_mean_holding_months": 1.23,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.949,
+   "terminal_wealth_net": 22.9954,
+   "terminal_wealth_gross": 34.413,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1891,
+    "t_beta_minus_1_hac": 2.144,
+    "annualised_pct": 1.084,
+    "t_paired": 0.408,
+    "p_one_sided": 0.34175
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.491,
+    "t_paired": 1.271
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3005,
+     "t": -0.9,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3929,
+     "t": 1.218,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0057,
+     "t": -0.014,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=150|10bps": {
+   "label": "holdband|lgbm_clf|hold_k=150|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 150",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.7523,
+   "implied_mean_holding_months": 1.33,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.806,
+   "terminal_wealth_net": 25.2214,
+   "terminal_wealth_gross": 36.6404,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1978,
+    "t_beta_minus_1_hac": 2.129,
+    "annualised_pct": 1.509,
+    "t_paired": 0.545,
+    "p_one_sided": 0.29294
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.025,
+    "t_paired": 1.407
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1482,
+     "t": -0.397,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3885,
+     "t": 1.189,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0128,
+     "t": 0.03,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=200|10bps": {
+   "label": "holdband|lgbm_clf|hold_k=200|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 200",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.6931,
+   "implied_mean_holding_months": 1.44,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.664,
+   "terminal_wealth_net": 29.2758,
+   "terminal_wealth_gross": 41.3004,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.204,
+    "t_beta_minus_1_hac": 2.203,
+    "annualised_pct": 2.192,
+    "t_paired": 0.778,
+    "p_one_sided": 0.2183
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.788,
+    "t_paired": 1.644
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.0378,
+     "t": -0.097,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.5466,
+     "t": 1.697,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0449,
+     "t": -0.103,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=400|10bps": {
+   "label": "holdband|lgbm_clf|hold_k=400|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 400",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.5267,
+   "implied_mean_holding_months": 1.9,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.264,
+   "terminal_wealth_net": 47.9593,
+   "terminal_wealth_gross": 62.2249,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1571,
+    "t_beta_minus_1_hac": 1.769,
+    "annualised_pct": 4.898,
+    "t_paired": 1.89,
+    "p_one_sided": 0.02938
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 6.897,
+    "t_paired": 2.599
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.0661,
+     "t": 0.163,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.5164,
+     "t": 1.659,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4644,
+     "t": 1.211,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=none|25bps": {
+   "label": "holdband|lgbm_clf|hold_k=none|25bps",
+   "construction": "monthly rebalance, top-50 rebuilt every month (NO hysteresis -- the control)",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.8894,
+   "implied_mean_holding_months": 1.12,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 5.336,
+   "terminal_wealth_net": 11.6417,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.178,
+    "t_beta_minus_1_hac": 2.028,
+    "annualised_pct": -2.073,
+    "t_paired": -0.77,
+    "p_one_sided": 0.7794
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 0.191,
+    "t_paired": 0.069
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3975,
+     "t": -1.236,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.142,
+     "t": 0.414,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3544,
+     "t": -0.881,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=75|25bps": {
+   "label": "holdband|lgbm_clf|hold_k=75|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 75",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.8477,
+   "implied_mean_holding_months": 1.18,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 5.086,
+   "terminal_wealth_net": 13.156,
+   "terminal_wealth_gross": 37.711,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.189,
+    "t_beta_minus_1_hac": 2.111,
+    "annualised_pct": -1.594,
+    "t_paired": -0.595,
+    "p_one_sided": 0.72412
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 0.811,
+    "t_paired": 0.293
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.4753,
+     "t": -1.456,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1746,
+     "t": 0.522,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.255,
+     "t": -0.632,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=100|25bps": {
+   "label": "holdband|lgbm_clf|hold_k=100|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 100",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.8122,
+   "implied_mean_holding_months": 1.23,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 4.873,
+   "terminal_wealth_net": 12.5447,
+   "terminal_wealth_gross": 34.413,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1886,
+    "t_beta_minus_1_hac": 2.142,
+    "annualised_pct": -1.833,
+    "t_paired": -0.689,
+    "p_one_sided": 0.75462
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 0.567,
+    "t_paired": 0.206
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.5388,
+     "t": -1.612,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1369,
+     "t": 0.425,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2395,
+     "t": -0.59,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=150|25bps": {
+   "label": "holdband|lgbm_clf|hold_k=150|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 150",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.7523,
+   "implied_mean_holding_months": 1.33,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 4.514,
+   "terminal_wealth_net": 14.3878,
+   "terminal_wealth_gross": 36.6404,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1975,
+    "t_beta_minus_1_hac": 2.128,
+    "annualised_pct": -1.196,
+    "t_paired": -0.432,
+    "p_one_sided": 0.66703
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 1.317,
+    "t_paired": 0.46
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3725,
+     "t": -0.997,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1497,
+     "t": 0.458,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.201,
+     "t": -0.474,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=200|25bps": {
+   "label": "holdband|lgbm_clf|hold_k=200|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 200",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.6931,
+   "implied_mean_holding_months": 1.44,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 4.159,
+   "terminal_wealth_net": 17.4549,
+   "terminal_wealth_gross": 41.3004,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2041,
+    "t_beta_minus_1_hac": 2.206,
+    "annualised_pct": -0.305,
+    "t_paired": -0.108,
+    "p_one_sided": 0.543
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 2.292,
+    "t_paired": 0.787
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.2492,
+     "t": -0.637,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3292,
+     "t": 1.021,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2431,
+     "t": -0.558,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|lgbm_clf|hold_k=400|25bps": {
+   "label": "holdband|lgbm_clf|hold_k=400|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 400",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.5267,
+   "implied_mean_holding_months": 1.9,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 3.16,
+   "terminal_wealth_net": 32.432,
+   "terminal_wealth_gross": 62.2249,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1572,
+    "t_beta_minus_1_hac": 1.774,
+    "annualised_pct": 3.0,
+    "t_paired": 1.16,
+    "p_one_sided": 0.12294
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 5.001,
+    "t_paired": 1.889
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1176,
+     "t": -0.291,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3552,
+     "t": 1.14,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.3206,
+     "t": 0.84,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=none|10bps": {
+   "label": "holdband|nn_pre_causal|hold_k=none|10bps",
+   "construction": "monthly rebalance, top-50 rebuilt every month (NO hysteresis -- the control)",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.8041,
+   "implied_mean_holding_months": 1.24,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.93,
+   "terminal_wealth_net": 49.0082,
+   "terminal_wealth_gross": 72.9934,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3294,
+    "t_beta_minus_1_hac": 4.238,
+    "annualised_pct": 3.953,
+    "t_paired": 1.153,
+    "p_one_sided": 0.12452
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 8.144,
+    "t_paired": 2.243
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1015,
+     "t": 0.204,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1043,
+     "t": 0.219,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.6336,
+     "t": 1.353,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=75|10bps": {
+   "label": "holdband|nn_pre_causal|hold_k=75|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 75",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.7192,
+   "implied_mean_holding_months": 1.39,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.726,
+   "terminal_wealth_net": 78.6926,
+   "terminal_wealth_gross": 112.302,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3108,
+    "t_beta_minus_1_hac": 3.867,
+    "annualised_pct": 6.417,
+    "t_paired": 1.862,
+    "p_one_sided": 0.03127
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 10.372,
+    "t_paired": 2.862
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1883,
+     "t": 0.39,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2877,
+     "t": 0.608,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.9118,
+     "t": 1.913,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=100|10bps": {
+   "label": "holdband|nn_pre_causal|hold_k=100|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 100",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.652,
+   "implied_mean_holding_months": 1.53,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.565,
+   "terminal_wealth_net": 100.0742,
+   "terminal_wealth_gross": 138.1158,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2869,
+    "t_beta_minus_1_hac": 3.819,
+    "annualised_pct": 7.824,
+    "t_paired": 2.265,
+    "p_one_sided": 0.01177
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 11.474,
+    "t_paired": 3.181
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3334,
+     "t": 0.667,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2837,
+     "t": 0.605,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 1.1252,
+     "t": 2.354,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=150|10bps": {
+   "label": "holdband|nn_pre_causal|hold_k=150|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 150",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.5523,
+   "implied_mean_holding_months": 1.81,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.325,
+   "terminal_wealth_net": 106.9009,
+   "terminal_wealth_gross": 140.4164,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2848,
+    "t_beta_minus_1_hac": 3.988,
+    "annualised_pct": 8.139,
+    "t_paired": 2.393,
+    "p_one_sided": 0.00836
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 11.763,
+    "t_paired": 3.31
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.6658,
+     "t": 1.36,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3818,
+     "t": 0.825,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.9498,
+     "t": 2.01,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=200|10bps": {
+   "label": "holdband|nn_pre_causal|hold_k=200|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 200",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.4829,
+   "implied_mean_holding_months": 2.07,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.159,
+   "terminal_wealth_net": 73.5885,
+   "terminal_wealth_gross": 93.4463,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3349,
+    "t_beta_minus_1_hac": 5.02,
+    "annualised_pct": 5.794,
+    "t_paired": 1.768,
+    "p_one_sided": 0.03851
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 10.055,
+    "t_paired": 2.878
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.5821,
+     "t": 1.19,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3581,
+     "t": 0.792,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.5502,
+     "t": 1.229,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=400|10bps": {
+   "label": "holdband|nn_pre_causal|hold_k=400|10bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 400",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.3295,
+   "implied_mean_holding_months": 3.04,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.791,
+   "terminal_wealth_net": 68.8064,
+   "terminal_wealth_gross": 81.0226,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.308,
+    "t_beta_minus_1_hac": 4.463,
+    "annualised_pct": 5.582,
+    "t_paired": 1.819,
+    "p_one_sided": 0.03446
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 9.501,
+    "t_paired": 2.91
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.4663,
+     "t": 1.016,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3437,
+     "t": 0.776,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.5736,
+     "t": 1.426,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=none|25bps": {
+   "label": "holdband|nn_pre_causal|hold_k=none|25bps",
+   "construction": "monthly rebalance, top-50 rebuilt every month (NO hysteresis -- the control)",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.8041,
+   "implied_mean_holding_months": 1.24,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 4.825,
+   "terminal_wealth_net": 26.9286,
+   "terminal_wealth_gross": 72.9934,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3297,
+    "t_beta_minus_1_hac": 4.241,
+    "annualised_pct": 1.054,
+    "t_paired": 0.307,
+    "p_one_sided": 0.37924
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 5.249,
+    "t_paired": 1.446
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1561,
+     "t": -0.313,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.1281,
+     "t": -0.27,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.391,
+     "t": 0.836,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=75|25bps": {
+   "label": "holdband|nn_pre_causal|hold_k=75|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 75",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.7192,
+   "implied_mean_holding_months": 1.39,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 4.315,
+   "terminal_wealth_net": 46.113,
+   "terminal_wealth_gross": 112.302,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3114,
+    "t_beta_minus_1_hac": 3.874,
+    "annualised_pct": 3.82,
+    "t_paired": 1.11,
+    "p_one_sided": 0.13356
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.782,
+    "t_paired": 2.149
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.0453,
+     "t": -0.094,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0826,
+     "t": 0.175,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.693,
+     "t": 1.456,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=100|25bps": {
+   "label": "holdband|nn_pre_causal|hold_k=100|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 100",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.652,
+   "implied_mean_holding_months": 1.53,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 3.912,
+   "terminal_wealth_net": 61.671,
+   "terminal_wealth_gross": 138.1158,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2875,
+    "t_beta_minus_1_hac": 3.832,
+    "annualised_pct": 5.469,
+    "t_paired": 1.584,
+    "p_one_sided": 0.05657
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 9.127,
+    "t_paired": 2.532
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1221,
+     "t": 0.244,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0952,
+     "t": 0.203,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.9289,
+     "t": 1.947,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=150|25bps": {
+   "label": "holdband|nn_pre_causal|hold_k=150|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 150",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.5523,
+   "implied_mean_holding_months": 1.81,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 3.314,
+   "terminal_wealth_net": 70.9675,
+   "terminal_wealth_gross": 140.4164,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2848,
+    "t_beta_minus_1_hac": 4.01,
+    "annualised_pct": 6.151,
+    "t_paired": 1.81,
+    "p_one_sided": 0.03515
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 9.774,
+    "t_paired": 2.753
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.4897,
+     "t": 0.999,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2218,
+     "t": 0.479,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.7837,
+     "t": 1.662,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=200|25bps": {
+   "label": "holdband|nn_pre_causal|hold_k=200|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 200",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.4829,
+   "implied_mean_holding_months": 2.07,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 2.898,
+   "terminal_wealth_net": 51.4013,
+   "terminal_wealth_gross": 93.4463,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3349,
+    "t_beta_minus_1_hac": 5.034,
+    "annualised_pct": 4.056,
+    "t_paired": 1.238,
+    "p_one_sided": 0.10781
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 8.317,
+    "t_paired": 2.382
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.4306,
+     "t": 0.88,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2166,
+     "t": 0.479,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4053,
+     "t": 0.907,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "holdband|nn_pre_causal|hold_k=400|25bps": {
+   "label": "holdband|nn_pre_causal|hold_k=400|25bps",
+   "construction": "monthly rebalance, buy at rank <= 50, hold until rank > 400",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.3295,
+   "implied_mean_holding_months": 3.04,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.977,
+   "terminal_wealth_net": 53.8342,
+   "terminal_wealth_gross": 81.0226,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3082,
+    "t_beta_minus_1_hac": 4.469,
+    "annualised_pct": 4.393,
+    "t_paired": 1.431,
+    "p_one_sided": 0.07627
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 8.315,
+    "t_paired": 2.545
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3652,
+     "t": 0.793,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2459,
+     "t": 0.554,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4743,
+     "t": 1.181,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|lgbm_clf|h=1m|10bps": {
+   "label": "cohort|lgbm_clf|h=1m|10bps",
+   "construction": "monthly top-50, the h=1 cohort and the no-hysteresis hold band are the same book",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.8894,
+   "implied_mean_holding_months": 1.12,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 2.135,
+   "terminal_wealth_net": 22.6076,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1782,
+    "t_beta_minus_1_hac": 2.03,
+    "annualised_pct": 1.126,
+    "t_paired": 0.418,
+    "p_one_sided": 0.33794
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.393,
+    "t_paired": 1.225
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1331,
+     "t": -0.415,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4214,
+     "t": 1.227,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0983,
+     "t": -0.244,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "cohort|lgbm_clf|h=3m|10bps": {
+   "label": "cohort|lgbm_clf|h=3m|10bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 3 months, portfolio 1/3 in each live cohort. Hysteresis is NOT available on this path: a cohort held 3 months IS the hold band.",
+   "nominal_horizon_months": 3,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.3132,
+   "implied_mean_holding_months": 3.19,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.752,
+   "terminal_wealth_net": 23.7452,
+   "terminal_wealth_gross": 27.7418,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2125,
+    "t_beta_minus_1_hac": 4.485,
+    "annualised_pct": 0.774,
+    "t_paired": 0.403,
+    "p_one_sided": 0.34351
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.478,
+    "t_paired": 1.681
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.006,
+     "t": -0.019,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2554,
+     "t": 1.099,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0751,
+     "t": -0.269,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "cohort|lgbm_clf|h=6m|10bps": {
+   "label": "cohort|lgbm_clf|h=6m|10bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 6 months, portfolio 1/6 in each live cohort. Hysteresis is NOT available on this path: a cohort held 6 months IS the hold band.",
+   "nominal_horizon_months": 6,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.176,
+   "implied_mean_holding_months": 5.68,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.422,
+   "terminal_wealth_net": 25.3279,
+   "terminal_wealth_gross": 27.6415,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2001,
+    "t_beta_minus_1_hac": 5.256,
+    "annualised_pct": 1.106,
+    "t_paired": 0.7,
+    "p_one_sided": 0.24204
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.652,
+    "t_paired": 2.101
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1355,
+     "t": 0.518,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1021,
+     "t": 0.577,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0638,
+     "t": 0.267,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|lgbm_clf|h=12m|10bps": {
+   "label": "cohort|lgbm_clf|h=12m|10bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 12 months, portfolio 1/12 in each live cohort. Hysteresis is NOT available on this path: a cohort held 12 months IS the hold band.",
+   "nominal_horizon_months": 12,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.1037,
+   "implied_mean_holding_months": 9.64,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.249,
+   "terminal_wealth_net": 26.0018,
+   "terminal_wealth_gross": 27.3778,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1607,
+    "t_beta_minus_1_hac": 4.082,
+    "annualised_pct": 1.535,
+    "t_paired": 1.142,
+    "p_one_sided": 0.12676
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.58,
+    "t_paired": 2.444
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.0105,
+     "t": 0.056,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0314,
+     "t": 0.187,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.2672,
+     "t": 1.347,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|lgbm_clf|h=1m|25bps": {
+   "label": "cohort|lgbm_clf|h=1m|25bps",
+   "construction": "monthly top-50, the h=1 cohort and the no-hysteresis hold band are the same book",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.8894,
+   "implied_mean_holding_months": 1.12,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 5.336,
+   "terminal_wealth_net": 11.6417,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.178,
+    "t_beta_minus_1_hac": 2.028,
+    "annualised_pct": -2.073,
+    "t_paired": -0.77,
+    "p_one_sided": 0.7794
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 0.191,
+    "t_paired": 0.069
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3975,
+     "t": -1.236,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.142,
+     "t": 0.414,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3544,
+     "t": -0.881,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "cohort|lgbm_clf|h=3m|25bps": {
+   "label": "cohort|lgbm_clf|h=3m|25bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 3 months, portfolio 1/3 in each live cohort. Hysteresis is NOT available on this path: a cohort held 3 months IS the hold band.",
+   "nominal_horizon_months": 3,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.3132,
+   "implied_mean_holding_months": 3.19,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.879,
+   "terminal_wealth_net": 18.7998,
+   "terminal_wealth_gross": 27.7418,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2124,
+    "t_beta_minus_1_hac": 4.48,
+    "annualised_pct": -0.353,
+    "t_paired": -0.184,
+    "p_one_sided": 0.57286
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 2.35,
+    "t_paired": 1.136
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.101,
+     "t": -0.321,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1576,
+     "t": 0.679,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.165,
+     "t": -0.591,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "cohort|lgbm_clf|h=6m|25bps": {
+   "label": "cohort|lgbm_clf|h=6m|25bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 6 months, portfolio 1/6 in each live cohort. Hysteresis is NOT available on this path: a cohort held 6 months IS the hold band.",
+   "nominal_horizon_months": 6,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.176,
+   "implied_mean_holding_months": 5.68,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.056,
+   "terminal_wealth_net": 22.214,
+   "terminal_wealth_gross": 27.6415,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2002,
+    "t_beta_minus_1_hac": 5.259,
+    "annualised_pct": 0.471,
+    "t_paired": 0.298,
+    "p_one_sided": 0.38276
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.018,
+    "t_paired": 1.738
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.0784,
+     "t": 0.301,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0484,
+     "t": 0.274,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0134,
+     "t": 0.056,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|lgbm_clf|h=12m|25bps": {
+   "label": "cohort|lgbm_clf|h=12m|25bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 12 months, portfolio 1/12 in each live cohort. Hysteresis is NOT available on this path: a cohort held 12 months IS the hold band.",
+   "nominal_horizon_months": 12,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.1037,
+   "implied_mean_holding_months": 9.64,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.622,
+   "terminal_wealth_net": 24.0657,
+   "terminal_wealth_gross": 27.3778,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1609,
+    "t_beta_minus_1_hac": 4.085,
+    "annualised_pct": 1.159,
+    "t_paired": 0.863,
+    "p_one_sided": 0.19413
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.206,
+    "t_paired": 2.19
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.0266,
+     "t": -0.143,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0006,
+     "t": 0.003,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.238,
+     "t": 1.2,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=1m|10bps": {
+   "label": "cohort|nn_pre_causal|h=1m|10bps",
+   "construction": "monthly top-50, the h=1 cohort and the no-hysteresis hold band are the same book",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.8041,
+   "implied_mean_holding_months": 1.24,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.93,
+   "terminal_wealth_net": 49.0082,
+   "terminal_wealth_gross": 72.9934,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3294,
+    "t_beta_minus_1_hac": 4.238,
+    "annualised_pct": 3.953,
+    "t_paired": 1.153,
+    "p_one_sided": 0.12452
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 8.144,
+    "t_paired": 2.243
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1015,
+     "t": 0.204,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1043,
+     "t": 0.219,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.6336,
+     "t": 1.353,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=3m|10bps": {
+   "label": "cohort|nn_pre_causal|h=3m|10bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 3 months, portfolio 1/3 in each live cohort. Hysteresis is NOT available on this path: a cohort held 3 months IS the hold band.",
+   "nominal_horizon_months": 3,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.305,
+   "implied_mean_holding_months": 3.28,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.732,
+   "terminal_wealth_net": 82.5264,
+   "terminal_wealth_gross": 95.9671,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3766,
+    "t_beta_minus_1_hac": 5.541,
+    "annualised_pct": 5.764,
+    "t_paired": 1.924,
+    "p_one_sided": 0.02717
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 10.556,
+    "t_paired": 3.208
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.4961,
+     "t": 1.136,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3163,
+     "t": 0.762,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.6204,
+     "t": 1.515,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=6m|10bps": {
+   "label": "cohort|nn_pre_causal|h=6m|10bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 6 months, portfolio 1/6 in each live cohort. Hysteresis is NOT available on this path: a cohort held 6 months IS the hold band.",
+   "nominal_horizon_months": 6,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.1803,
+   "implied_mean_holding_months": 5.55,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.433,
+   "terminal_wealth_net": 55.2366,
+   "terminal_wealth_gross": 60.4053,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3486,
+    "t_beta_minus_1_hac": 5.839,
+    "annualised_pct": 3.946,
+    "t_paired": 1.476,
+    "p_one_sided": 0.06998
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 8.382,
+    "t_paired": 2.835
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3693,
+     "t": 0.932,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1288,
+     "t": 0.338,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4902,
+     "t": 1.381,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=12m|10bps": {
+   "label": "cohort|nn_pre_causal|h=12m|10bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 12 months, portfolio 1/12 in each live cohort. Hysteresis is NOT available on this path: a cohort held 12 months IS the hold band.",
+   "nominal_horizon_months": 12,
+   "months": 251,
+   "cost_bps_per_side": 10.0,
+   "mean_turnover": 0.1137,
+   "implied_mean_holding_months": 8.8,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.273,
+   "terminal_wealth_net": 49.0102,
+   "terminal_wealth_gross": 51.8616,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2862,
+    "t_beta_minus_1_hac": 5.185,
+    "annualised_pct": 3.79,
+    "t_paired": 1.637,
+    "p_one_sided": 0.05086
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.431,
+    "t_paired": 2.93
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3673,
+     "t": 0.982,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1252,
+     "t": 0.41,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4637,
+     "t": 1.447,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=1m|25bps": {
+   "label": "cohort|nn_pre_causal|h=1m|25bps",
+   "construction": "monthly top-50, the h=1 cohort and the no-hysteresis hold band are the same book",
+   "nominal_horizon_months": 1,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.8041,
+   "implied_mean_holding_months": 1.24,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 4.825,
+   "terminal_wealth_net": 26.9286,
+   "terminal_wealth_gross": 72.9934,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": 50.0,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3297,
+    "t_beta_minus_1_hac": 4.241,
+    "annualised_pct": 1.054,
+    "t_paired": 0.307,
+    "p_one_sided": 0.37924
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 5.249,
+    "t_paired": 1.446
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1561,
+     "t": -0.313,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.1281,
+     "t": -0.27,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.391,
+     "t": 0.836,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "cohort|nn_pre_causal|h=3m|25bps": {
+   "label": "cohort|nn_pre_causal|h=3m|25bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 3 months, portfolio 1/3 in each live cohort. Hysteresis is NOT available on this path: a cohort held 3 months IS the hold band.",
+   "nominal_horizon_months": 3,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.305,
+   "implied_mean_holding_months": 3.28,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.83,
+   "terminal_wealth_net": 65.7993,
+   "terminal_wealth_gross": 95.9671,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3766,
+    "t_beta_minus_1_hac": 5.548,
+    "annualised_pct": 4.666,
+    "t_paired": 1.558,
+    "p_one_sided": 0.05967
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 9.457,
+    "t_paired": 2.874
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3985,
+     "t": 0.911,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2265,
+     "t": 0.546,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.53,
+     "t": 1.295,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=6m|25bps": {
+   "label": "cohort|nn_pre_causal|h=6m|25bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 6 months, portfolio 1/6 in each live cohort. Hysteresis is NOT available on this path: a cohort held 6 months IS the hold band.",
+   "nominal_horizon_months": 6,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.1803,
+   "implied_mean_holding_months": 5.55,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 1.082,
+   "terminal_wealth_net": 48.2976,
+   "terminal_wealth_gross": 60.4053,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.3488,
+    "t_beta_minus_1_hac": 5.844,
+    "annualised_pct": 3.295,
+    "t_paired": 1.232,
+    "p_one_sided": 0.10896
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.733,
+    "t_paired": 2.615
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3084,
+     "t": 0.775,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0769,
+     "t": 0.202,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4368,
+     "t": 1.231,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "cohort|nn_pre_causal|h=12m|25bps": {
+   "label": "cohort|nn_pre_causal|h=12m|25bps",
+   "construction": "a new cohort of 50 names every month, each held exactly 12 months, portfolio 1/12 in each live cohort. Hysteresis is NOT available on this path: a cohort held 12 months IS the hold band.",
+   "nominal_horizon_months": 12,
+   "months": 251,
+   "cost_bps_per_side": 25.0,
+   "mean_turnover": 0.1137,
+   "implied_mean_holding_months": 8.8,
+   "implied_holding_note": "1 / mean monthly weight turnover. An approximation of the average holding period, not a measured one.",
+   "annual_cost_line_pct": 0.682,
+   "terminal_wealth_net": 45.0229,
+   "terminal_wealth_gross": 51.8616,
+   "terminal_wealth_market_same_months": 14.3778,
+   "mean_names_per_month": null,
+   "PRIMARY_beta_matched": {
+    "beta": 1.2865,
+    "t_beta_minus_1_hac": 5.189,
+    "annualised_pct": 3.377,
+    "t_paired": 1.457,
+    "p_one_sided": 0.0725
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.022,
+    "t_paired": 2.767
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.3248,
+     "t": 0.864,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0933,
+     "t": 0.306,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4307,
+     "t": 1.344,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  }
+ },
+ "family_size": 40,
+ "hysteresis_availability_note": "`evaluate.book` takes hold_k; `evaluate.overlapping_book` does not. The mandate's rule (top-50 in, out below rank 100) therefore exists only on the hold-band path and is reported there. Presenting a cohort book as 'held with hysteresis' would be a lever that silently did nothing.",
+ "family": {
+  "size": 40,
+  "definition": "2 selectors x (6 hold bands + 4 cohort lengths) x 2 cost rates",
+  "family_min_p_one_sided": 0.00836,
+  "family_max_p_one_sided": 0.7794,
+  "holm_adjusted": {
+   "holdband|nn_pre_causal|hold_k=150|10bps": 0.3344,
+   "holdband|nn_pre_causal|hold_k=100|10bps": 0.45903,
+   "cohort|nn_pre_causal|h=3m|10bps": 1.0,
+   "holdband|lgbm_clf|hold_k=400|10bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=75|10bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=400|10bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=150|25bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=200|10bps": 1.0,
+   "cohort|nn_pre_causal|h=12m|10bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=100|25bps": 1.0,
+   "cohort|nn_pre_causal|h=3m|25bps": 1.0,
+   "cohort|nn_pre_causal|h=6m|10bps": 1.0,
+   "cohort|nn_pre_causal|h=12m|25bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=400|25bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=200|25bps": 1.0,
+   "cohort|nn_pre_causal|h=6m|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=400|25bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=none|10bps": 1.0,
+   "cohort|nn_pre_causal|h=1m|10bps": 1.0,
+   "cohort|lgbm_clf|h=12m|10bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=75|25bps": 1.0,
+   "cohort|lgbm_clf|h=12m|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=200|10bps": 1.0,
+   "cohort|lgbm_clf|h=6m|10bps": 1.0,
+   "holdband|lgbm_clf|hold_k=150|10bps": 1.0,
+   "holdband|lgbm_clf|hold_k=75|10bps": 1.0,
+   "holdband|lgbm_clf|hold_k=none|10bps": 1.0,
+   "cohort|lgbm_clf|h=1m|10bps": 1.0,
+   "holdband|lgbm_clf|hold_k=100|10bps": 1.0,
+   "cohort|lgbm_clf|h=3m|10bps": 1.0,
+   "holdband|nn_pre_causal|hold_k=none|25bps": 1.0,
+   "cohort|nn_pre_causal|h=1m|25bps": 1.0,
+   "cohort|lgbm_clf|h=6m|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=200|25bps": 1.0,
+   "cohort|lgbm_clf|h=3m|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=150|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=75|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=100|25bps": 1.0,
+   "holdband|lgbm_clf|hold_k=none|25bps": 1.0,
+   "cohort|lgbm_clf|h=1m|25bps": 1.0
+  },
+  "best_cell": "holdband|nn_pre_causal|hold_k=150|10bps",
+  "n_cells_surviving_holm_at_0_05": 0
+ },
+ "inference_on_the_best_cell": {
+  "n_cells_looked_at": 40,
+  "deflated_sharpe": {
+   "sharpe": 0.151,
+   "sharpe_benchmark_sr0": 0.1385,
+   "n_trials": 40,
+   "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+   "skew": -0.172,
+   "kurtosis": 3.919,
+   "n_periods": 251,
+   "z": 0.1946,
+   "dsr": 0.5771,
+   "verdict": "WITHIN_SELECTION_NOISE",
+   "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.151."
+  },
+  "power": {
+   "n_periods": 251,
+   "periods_per_year": 12,
+   "n_oos_months": 251,
+   "sharpe_per_period": 0.151,
+   "t_observed": 2.3929,
+   "years_observed": 20.92,
+   "t_target": 2.0,
+   "periods_needed_for_t_target": 175.3,
+   "years_needed_for_t2": 14.6,
+   "years_needed_for_t2_exact": 14.611453654478034,
+   "powered_for_observed_effect": true,
+   "detectable_annual_excess": 0.03,
+   "reference_sharpe_per_period": 0.05567,
+   "years_needed_to_detect_that_effect": 107.5,
+   "mde_annual_excess_at_t_target": 0.06802,
+   "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.80%/yr",
+   "powered": false,
+   "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+   "reading": "t = 2.39 on 20.9 years; t = 2 would need 14.6 years at this Sharpe -- ENOUGH TAPE"
+  },
+  "pbo": {
+   "pbo": 0.2571,
+   "n_partitions": 70,
+   "n_arms": 40,
+   "n_periods": 251,
+   "median_logit": 0.55,
+   "verdict": "SELECTION_IS_FRAGILE",
+   "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+  }
+ },
+ "scope_aware_verdict": {
+  "best_cell": "holdband|nn_pre_causal|hold_k=150|10bps",
+  "observed_effect_annual": 0.08139,
+  "mde_annual_at_t_2": 0.06802,
+  "verdict": "SEPARATED FROM ZERO",
+  "scope": "251 months, 2004-01..2024-11, the $3m/day + $5 floored research panel, top-50 vw. The BEST cell of a family of 40 -- its unadjusted p is the minimum of 40 draws and the Holm column beside it is the number to quote."
+ },
+ "horizon_answer": {
+  "table": {
+   "holdband|lgbm_clf|hold_k=none|10bps": {
+    "beta_matched_annualised_pct": 1.126,
+    "t": 0.418,
+    "raw_market_annualised_pct": 3.393,
+    "turnover": 0.8894,
+    "implied_holding_months": 1.12,
+    "annual_cost_line_pct": 2.135,
+    "terminal_wealth_net": 22.6076
+   },
+   "holdband|lgbm_clf|hold_k=75|10bps": {
+    "beta_matched_annualised_pct": 1.453,
+    "t": 0.543,
+    "raw_market_annualised_pct": 3.863,
+    "turnover": 0.8477,
+    "implied_holding_months": 1.18,
+    "annual_cost_line_pct": 2.035,
+    "terminal_wealth_net": 24.7612
+   },
+   "holdband|lgbm_clf|hold_k=100|10bps": {
+    "beta_matched_annualised_pct": 1.084,
+    "t": 0.408,
+    "raw_market_annualised_pct": 3.491,
+    "turnover": 0.8122,
+    "implied_holding_months": 1.23,
+    "annual_cost_line_pct": 1.949,
+    "terminal_wealth_net": 22.9954
+   },
+   "holdband|lgbm_clf|hold_k=150|10bps": {
+    "beta_matched_annualised_pct": 1.509,
+    "t": 0.545,
+    "raw_market_annualised_pct": 4.025,
+    "turnover": 0.7523,
+    "implied_holding_months": 1.33,
+    "annual_cost_line_pct": 1.806,
+    "terminal_wealth_net": 25.2214
+   },
+   "holdband|lgbm_clf|hold_k=200|10bps": {
+    "beta_matched_annualised_pct": 2.192,
+    "t": 0.778,
+    "raw_market_annualised_pct": 4.788,
+    "turnover": 0.6931,
+    "implied_holding_months": 1.44,
+    "annual_cost_line_pct": 1.664,
+    "terminal_wealth_net": 29.2758
+   },
+   "holdband|lgbm_clf|hold_k=400|10bps": {
+    "beta_matched_annualised_pct": 4.898,
+    "t": 1.89,
+    "raw_market_annualised_pct": 6.897,
+    "turnover": 0.5267,
+    "implied_holding_months": 1.9,
+    "annual_cost_line_pct": 1.264,
+    "terminal_wealth_net": 47.9593
+   },
+   "holdband|lgbm_clf|hold_k=none|25bps": {
+    "beta_matched_annualised_pct": -2.073,
+    "t": -0.77,
+    "raw_market_annualised_pct": 0.191,
+    "turnover": 0.8894,
+    "implied_holding_months": 1.12,
+    "annual_cost_line_pct": 5.336,
+    "terminal_wealth_net": 11.6417
+   },
+   "holdband|lgbm_clf|hold_k=75|25bps": {
+    "beta_matched_annualised_pct": -1.594,
+    "t": -0.595,
+    "raw_market_annualised_pct": 0.811,
+    "turnover": 0.8477,
+    "implied_holding_months": 1.18,
+    "annual_cost_line_pct": 5.086,
+    "terminal_wealth_net": 13.156
+   },
+   "holdband|lgbm_clf|hold_k=100|25bps": {
+    "beta_matched_annualised_pct": -1.833,
+    "t": -0.689,
+    "raw_market_annualised_pct": 0.567,
+    "turnover": 0.8122,
+    "implied_holding_months": 1.23,
+    "annual_cost_line_pct": 4.873,
+    "terminal_wealth_net": 12.5447
+   },
+   "holdband|lgbm_clf|hold_k=150|25bps": {
+    "beta_matched_annualised_pct": -1.196,
+    "t": -0.432,
+    "raw_market_annualised_pct": 1.317,
+    "turnover": 0.7523,
+    "implied_holding_months": 1.33,
+    "annual_cost_line_pct": 4.514,
+    "terminal_wealth_net": 14.3878
+   },
+   "holdband|lgbm_clf|hold_k=200|25bps": {
+    "beta_matched_annualised_pct": -0.305,
+    "t": -0.108,
+    "raw_market_annualised_pct": 2.292,
+    "turnover": 0.6931,
+    "implied_holding_months": 1.44,
+    "annual_cost_line_pct": 4.159,
+    "terminal_wealth_net": 17.4549
+   },
+   "holdband|lgbm_clf|hold_k=400|25bps": {
+    "beta_matched_annualised_pct": 3.0,
+    "t": 1.16,
+    "raw_market_annualised_pct": 5.001,
+    "turnover": 0.5267,
+    "implied_holding_months": 1.9,
+    "annual_cost_line_pct": 3.16,
+    "terminal_wealth_net": 32.432
+   },
+   "holdband|nn_pre_causal|hold_k=none|10bps": {
+    "beta_matched_annualised_pct": 3.953,
+    "t": 1.153,
+    "raw_market_annualised_pct": 8.144,
+    "turnover": 0.8041,
+    "implied_holding_months": 1.24,
+    "annual_cost_line_pct": 1.93,
+    "terminal_wealth_net": 49.0082
+   },
+   "holdband|nn_pre_causal|hold_k=75|10bps": {
+    "beta_matched_annualised_pct": 6.417,
+    "t": 1.862,
+    "raw_market_annualised_pct": 10.372,
+    "turnover": 0.7192,
+    "implied_holding_months": 1.39,
+    "annual_cost_line_pct": 1.726,
+    "terminal_wealth_net": 78.6926
+   },
+   "holdband|nn_pre_causal|hold_k=100|10bps": {
+    "beta_matched_annualised_pct": 7.824,
+    "t": 2.265,
+    "raw_market_annualised_pct": 11.474,
+    "turnover": 0.652,
+    "implied_holding_months": 1.53,
+    "annual_cost_line_pct": 1.565,
+    "terminal_wealth_net": 100.0742
+   },
+   "holdband|nn_pre_causal|hold_k=150|10bps": {
+    "beta_matched_annualised_pct": 8.139,
+    "t": 2.393,
+    "raw_market_annualised_pct": 11.763,
+    "turnover": 0.5523,
+    "implied_holding_months": 1.81,
+    "annual_cost_line_pct": 1.325,
+    "terminal_wealth_net": 106.9009
+   },
+   "holdband|nn_pre_causal|hold_k=200|10bps": {
+    "beta_matched_annualised_pct": 5.794,
+    "t": 1.768,
+    "raw_market_annualised_pct": 10.055,
+    "turnover": 0.4829,
+    "implied_holding_months": 2.07,
+    "annual_cost_line_pct": 1.159,
+    "terminal_wealth_net": 73.5885
+   },
+   "holdband|nn_pre_causal|hold_k=400|10bps": {
+    "beta_matched_annualised_pct": 5.582,
+    "t": 1.819,
+    "raw_market_annualised_pct": 9.501,
+    "turnover": 0.3295,
+    "implied_holding_months": 3.04,
+    "annual_cost_line_pct": 0.791,
+    "terminal_wealth_net": 68.8064
+   },
+   "holdband|nn_pre_causal|hold_k=none|25bps": {
+    "beta_matched_annualised_pct": 1.054,
+    "t": 0.307,
+    "raw_market_annualised_pct": 5.249,
+    "turnover": 0.8041,
+    "implied_holding_months": 1.24,
+    "annual_cost_line_pct": 4.825,
+    "terminal_wealth_net": 26.9286
+   },
+   "holdband|nn_pre_causal|hold_k=75|25bps": {
+    "beta_matched_annualised_pct": 3.82,
+    "t": 1.11,
+    "raw_market_annualised_pct": 7.782,
+    "turnover": 0.7192,
+    "implied_holding_months": 1.39,
+    "annual_cost_line_pct": 4.315,
+    "terminal_wealth_net": 46.113
+   },
+   "holdband|nn_pre_causal|hold_k=100|25bps": {
+    "beta_matched_annualised_pct": 5.469,
+    "t": 1.584,
+    "raw_market_annualised_pct": 9.127,
+    "turnover": 0.652,
+    "implied_holding_months": 1.53,
+    "annual_cost_line_pct": 3.912,
+    "terminal_wealth_net": 61.671
+   },
+   "holdband|nn_pre_causal|hold_k=150|25bps": {
+    "beta_matched_annualised_pct": 6.151,
+    "t": 1.81,
+    "raw_market_annualised_pct": 9.774,
+    "turnover": 0.5523,
+    "implied_holding_months": 1.81,
+    "annual_cost_line_pct": 3.314,
+    "terminal_wealth_net": 70.9675
+   },
+   "holdband|nn_pre_causal|hold_k=200|25bps": {
+    "beta_matched_annualised_pct": 4.056,
+    "t": 1.238,
+    "raw_market_annualised_pct": 8.317,
+    "turnover": 0.4829,
+    "implied_holding_months": 2.07,
+    "annual_cost_line_pct": 2.898,
+    "terminal_wealth_net": 51.4013
+   },
+   "holdband|nn_pre_causal|hold_k=400|25bps": {
+    "beta_matched_annualised_pct": 4.393,
+    "t": 1.431,
+    "raw_market_annualised_pct": 8.315,
+    "turnover": 0.3295,
+    "implied_holding_months": 3.04,
+    "annual_cost_line_pct": 1.977,
+    "terminal_wealth_net": 53.8342
+   },
+   "cohort|lgbm_clf|h=1m|10bps": {
+    "beta_matched_annualised_pct": 1.126,
+    "t": 0.418,
+    "raw_market_annualised_pct": 3.393,
+    "turnover": 0.8894,
+    "implied_holding_months": 1.12,
+    "annual_cost_line_pct": 2.135,
+    "terminal_wealth_net": 22.6076
+   },
+   "cohort|lgbm_clf|h=3m|10bps": {
+    "beta_matched_annualised_pct": 0.774,
+    "t": 0.403,
+    "raw_market_annualised_pct": 3.478,
+    "turnover": 0.3132,
+    "implied_holding_months": 3.19,
+    "annual_cost_line_pct": 0.752,
+    "terminal_wealth_net": 23.7452
+   },
+   "cohort|lgbm_clf|h=6m|10bps": {
+    "beta_matched_annualised_pct": 1.106,
+    "t": 0.7,
+    "raw_market_annualised_pct": 3.652,
+    "turnover": 0.176,
+    "implied_holding_months": 5.68,
+    "annual_cost_line_pct": 0.422,
+    "terminal_wealth_net": 25.3279
+   },
+   "cohort|lgbm_clf|h=12m|10bps": {
+    "beta_matched_annualised_pct": 1.535,
+    "t": 1.142,
+    "raw_market_annualised_pct": 3.58,
+    "turnover": 0.1037,
+    "implied_holding_months": 9.64,
+    "annual_cost_line_pct": 0.249,
+    "terminal_wealth_net": 26.0018
+   },
+   "cohort|lgbm_clf|h=1m|25bps": {
+    "beta_matched_annualised_pct": -2.073,
+    "t": -0.77,
+    "raw_market_annualised_pct": 0.191,
+    "turnover": 0.8894,
+    "implied_holding_months": 1.12,
+    "annual_cost_line_pct": 5.336,
+    "terminal_wealth_net": 11.6417
+   },
+   "cohort|lgbm_clf|h=3m|25bps": {
+    "beta_matched_annualised_pct": -0.353,
+    "t": -0.184,
+    "raw_market_annualised_pct": 2.35,
+    "turnover": 0.3132,
+    "implied_holding_months": 3.19,
+    "annual_cost_line_pct": 1.879,
+    "terminal_wealth_net": 18.7998
+   },
+   "cohort|lgbm_clf|h=6m|25bps": {
+    "beta_matched_annualised_pct": 0.471,
+    "t": 0.298,
+    "raw_market_annualised_pct": 3.018,
+    "turnover": 0.176,
+    "implied_holding_months": 5.68,
+    "annual_cost_line_pct": 1.056,
+    "terminal_wealth_net": 22.214
+   },
+   "cohort|lgbm_clf|h=12m|25bps": {
+    "beta_matched_annualised_pct": 1.159,
+    "t": 0.863,
+    "raw_market_annualised_pct": 3.206,
+    "turnover": 0.1037,
+    "implied_holding_months": 9.64,
+    "annual_cost_line_pct": 0.622,
+    "terminal_wealth_net": 24.0657
+   },
+   "cohort|nn_pre_causal|h=1m|10bps": {
+    "beta_matched_annualised_pct": 3.953,
+    "t": 1.153,
+    "raw_market_annualised_pct": 8.144,
+    "turnover": 0.8041,
+    "implied_holding_months": 1.24,
+    "annual_cost_line_pct": 1.93,
+    "terminal_wealth_net": 49.0082
+   },
+   "cohort|nn_pre_causal|h=3m|10bps": {
+    "beta_matched_annualised_pct": 5.764,
+    "t": 1.924,
+    "raw_market_annualised_pct": 10.556,
+    "turnover": 0.305,
+    "implied_holding_months": 3.28,
+    "annual_cost_line_pct": 0.732,
+    "terminal_wealth_net": 82.5264
+   },
+   "cohort|nn_pre_causal|h=6m|10bps": {
+    "beta_matched_annualised_pct": 3.946,
+    "t": 1.476,
+    "raw_market_annualised_pct": 8.382,
+    "turnover": 0.1803,
+    "implied_holding_months": 5.55,
+    "annual_cost_line_pct": 0.433,
+    "terminal_wealth_net": 55.2366
+   },
+   "cohort|nn_pre_causal|h=12m|10bps": {
+    "beta_matched_annualised_pct": 3.79,
+    "t": 1.637,
+    "raw_market_annualised_pct": 7.431,
+    "turnover": 0.1137,
+    "implied_holding_months": 8.8,
+    "annual_cost_line_pct": 0.273,
+    "terminal_wealth_net": 49.0102
+   },
+   "cohort|nn_pre_causal|h=1m|25bps": {
+    "beta_matched_annualised_pct": 1.054,
+    "t": 0.307,
+    "raw_market_annualised_pct": 5.249,
+    "turnover": 0.8041,
+    "implied_holding_months": 1.24,
+    "annual_cost_line_pct": 4.825,
+    "terminal_wealth_net": 26.9286
+   },
+   "cohort|nn_pre_causal|h=3m|25bps": {
+    "beta_matched_annualised_pct": 4.666,
+    "t": 1.558,
+    "raw_market_annualised_pct": 9.457,
+    "turnover": 0.305,
+    "implied_holding_months": 3.28,
+    "annual_cost_line_pct": 1.83,
+    "terminal_wealth_net": 65.7993
+   },
+   "cohort|nn_pre_causal|h=6m|25bps": {
+    "beta_matched_annualised_pct": 3.295,
+    "t": 1.232,
+    "raw_market_annualised_pct": 7.733,
+    "turnover": 0.1803,
+    "implied_holding_months": 5.55,
+    "annual_cost_line_pct": 1.082,
+    "terminal_wealth_net": 48.2976
+   },
+   "cohort|nn_pre_causal|h=12m|25bps": {
+    "beta_matched_annualised_pct": 3.377,
+    "t": 1.457,
+    "raw_market_annualised_pct": 7.022,
+    "turnover": 0.1137,
+    "implied_holding_months": 8.8,
+    "annual_cost_line_pct": 0.682,
+    "terminal_wealth_net": 45.0229
+   }
+  },
+  "best_holding_rule_per_selector_and_cost": {
+   "lgbm_clf|10bps": {
+    "best_cell": "holdband|lgbm_clf|hold_k=400|10bps",
+    "beta_matched_annualised_pct": 4.898,
+    "t": 1.89,
+    "raw_market_annualised_pct": 6.897,
+    "turnover": 0.5267,
+    "implied_holding_months": 1.9,
+    "annual_cost_line_pct": 1.264,
+    "terminal_wealth_net": 47.9593,
+    "beats_the_no_hysteresis_monthly_control_by_pp": 3.772
+   },
+   "lgbm_clf|25bps": {
+    "best_cell": "holdband|lgbm_clf|hold_k=400|25bps",
+    "beta_matched_annualised_pct": 3.0,
+    "t": 1.16,
+    "raw_market_annualised_pct": 5.001,
+    "turnover": 0.5267,
+    "implied_holding_months": 1.9,
+    "annual_cost_line_pct": 3.16,
+    "terminal_wealth_net": 32.432,
+    "beats_the_no_hysteresis_monthly_control_by_pp": 5.073
+   },
+   "nn_pre_causal|10bps": {
+    "best_cell": "holdband|nn_pre_causal|hold_k=150|10bps",
+    "beta_matched_annualised_pct": 8.139,
+    "t": 2.393,
+    "raw_market_annualised_pct": 11.763,
+    "turnover": 0.5523,
+    "implied_holding_months": 1.81,
+    "annual_cost_line_pct": 1.325,
+    "terminal_wealth_net": 106.9009,
+    "beats_the_no_hysteresis_monthly_control_by_pp": 4.186
+   },
+   "nn_pre_causal|25bps": {
+    "best_cell": "holdband|nn_pre_causal|hold_k=150|25bps",
+    "beta_matched_annualised_pct": 6.151,
+    "t": 1.81,
+    "raw_market_annualised_pct": 9.774,
+    "turnover": 0.5523,
+    "implied_holding_months": 1.81,
+    "annual_cost_line_pct": 3.314,
+    "terminal_wealth_net": 70.9675,
+    "beats_the_no_hysteresis_monthly_control_by_pp": 5.097
+   }
+  },
+  "hold_band_ladder_robustness": {
+   "lgbm_clf|10bps": {
+    "control_beta_matched_annualised_pct": 1.126,
+    "control_annual_cost_line_pct": 2.135,
+    "rungs": 5,
+    "rungs_beating_the_control": 4,
+    "all_rungs_beat_the_control": false,
+    "by_rung": {
+     "hold_k=100": 1.084,
+     "hold_k=150": 1.509,
+     "hold_k=200": 2.192,
+     "hold_k=400": 4.898,
+     "hold_k=75": 1.453
+    }
+   },
+   "lgbm_clf|25bps": {
+    "control_beta_matched_annualised_pct": -2.073,
+    "control_annual_cost_line_pct": 5.336,
+    "rungs": 5,
+    "rungs_beating_the_control": 5,
+    "all_rungs_beat_the_control": true,
+    "by_rung": {
+     "hold_k=100": -1.833,
+     "hold_k=150": -1.196,
+     "hold_k=200": -0.305,
+     "hold_k=400": 3.0,
+     "hold_k=75": -1.594
+    }
+   },
+   "nn_pre_causal|10bps": {
+    "control_beta_matched_annualised_pct": 3.953,
+    "control_annual_cost_line_pct": 1.93,
+    "rungs": 5,
+    "rungs_beating_the_control": 5,
+    "all_rungs_beat_the_control": true,
+    "by_rung": {
+     "hold_k=100": 7.824,
+     "hold_k=150": 8.139,
+     "hold_k=200": 5.794,
+     "hold_k=400": 5.582,
+     "hold_k=75": 6.417
+    }
+   },
+   "nn_pre_causal|25bps": {
+    "control_beta_matched_annualised_pct": 1.054,
+    "control_annual_cost_line_pct": 4.825,
+    "rungs": 5,
+    "rungs_beating_the_control": 5,
+    "all_rungs_beat_the_control": true,
+    "by_rung": {
+     "hold_k=100": 5.469,
+     "hold_k=150": 6.151,
+     "hold_k=200": 4.056,
+     "hold_k=400": 4.393,
+     "hold_k=75": 3.82
+    }
+   }
+  },
+  "reading": "`beats_the_no_hysteresis_monthly_control_by_pp` is the number that matters: it is what the holding rule bought over the book this repo already trades. A best cell that beats the control by a fraction of a point has answered the question NO. `hold_band_ladder_robustness` is the guard against the opposite error: a single winning rung is the maximum of a sweep, while a ladder in which EVERY rung beats the control is a curve."
+ },
+ "memory_free_gb_after": 8.38,
+ "headline": "family 40, family-max p 0.7794, 0 cells survive Holm. lgbm_clf|10bps: best lgbm_clf|hold_k=400|10bps at 4.898%/yr t 1.89 (+3.772pp over the monthly control) | lgbm_clf|25bps: best lgbm_clf|hold_k=400|25bps at 3.0%/yr t 1.16 (+5.073pp over the monthly control) | nn_pre_causal|10bps: best nn_pre_causal|hold_k=150|10bps at 8.139%/yr t 2.393 (+4.186pp over the monthly control) | nn_pre_causal|25bps: best nn_pre_causal|hold_k=150|25bps at 6.151%/yr t 1.81 (+5.097pp over the monthly control)",
+ "wall_seconds": 31.9,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_a4_holding_cross.py",
+   "--quiet"
+  ],
+  "resolved_config": {
+   "SELECTORS": {
+    "lgbm_clf": "lgbm_clf",
+    "nn_pre_causal": "nn_pre_causal_seedmean"
+   },
+   "COSTS": [
+    10.0,
+    25.0
+   ],
+   "K": 50,
+   "HOLD_BANDS": [
+    "None",
+    "75",
+    "100",
+    "150",
+    "200",
+    "400"
+   ],
+   "MANDATE_HOLD_K": 100,
+   "COHORT_HORIZONS": [
+    1,
+    3,
+    6,
+    12
+   ],
+   "NW_LAG": 4,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\labor_day_lab_2026-09-07\\A4_holding_cross_run01.json"
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "exists": true,
+    "bytes": 418154944,
+    "mtime_utc": "2026-09-05T05:51:44+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+    "exists": true,
+    "bytes": 6225813,
+    "mtime_utc": "2026-09-05T14:24:06+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet",
+    "exists": true,
+    "bytes": 24015048,
+    "mtime_utc": "2026-09-05T14:27:05+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   }
+  ],
+  "git_commit": "011c29b",
+  "python": "3.12.10",
+  "generated_utc": "2026-09-05T15:24:57+00:00"
+ },
+ "generated_utc": "2026-09-05T15:24:57+00:00"
+}

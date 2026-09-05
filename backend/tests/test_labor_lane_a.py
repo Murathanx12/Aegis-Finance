@@ -309,3 +309,92 @@ def test_a3_receipt_fits_no_models():
     if rec is None:
         pytest.skip("A3 receipt not present")
     assert rec["models_fitted"] == 0
+
+
+# ------------------------------------------------------------------------- A4
+
+A4 = pytest.importorskip("scripts.labor_a4_holding_cross")
+
+
+def test_a4_grade_cell_reports_the_holding_period_as_an_outcome():
+    """1 / turnover, and labelled an approximation rather than printed as a fact."""
+    idx = pd.period_range("2010-01", periods=60, freq="M").astype(str)
+    rng = np.random.default_rng(21)
+    mkt = pd.Series(rng.normal(0.007, 0.04, 60), index=idx)
+    bk = {"cost_bps_per_side": 10.0, "terminal_wealth_net": 1.0,
+          "_series": {"net": mkt + 0.002, "market": mkt,
+                      "turnover": pd.Series(0.25, index=idx)}}
+    blk, ex = A4.grade_cell(bk, pd.Series(0.0, index=idx), label="x",
+                            construction="y", horizon_months=3)
+    assert blk["mean_turnover"] == pytest.approx(0.25)
+    assert blk["implied_mean_holding_months"] == pytest.approx(4.0)
+    assert "approximation" in blk["implied_holding_note"]
+    # 0.25 turnover x 2 sides x 10 bps x 12 months = 0.6%/yr
+    assert blk["annual_cost_line_pct"] == pytest.approx(0.6, abs=1e-6)
+    assert len(ex) == 60
+
+
+def test_a4_horizon_answer_counts_rungs_that_beat_the_control():
+    cells = {}
+    for sel, vals in (("lgbm_clf", {"none": 1.0, "100": 2.0, "150": 0.5}),):
+        for hk, v in vals.items():
+            cells[f"holdband|{sel}|hold_k={hk}|10bps"] = {
+                "PRIMARY_beta_matched": {"annualised_pct": v, "t_paired": 1.0},
+                "SECONDARY_raw_market": {"annualised_pct": v + 2},
+                "mean_turnover": 0.5, "implied_mean_holding_months": 2.0,
+                "annual_cost_line_pct": 1.2, "terminal_wealth_net": 10.0}
+    got = A4._horizon_answer(cells)
+    rb = got["hold_band_ladder_robustness"]["lgbm_clf|10bps"]
+    assert rb["rungs"] == 2
+    assert rb["rungs_beating_the_control"] == 1
+    assert rb["all_rungs_beat_the_control"] is False
+
+
+def test_a4_receipt_says_hysteresis_is_unavailable_on_the_cohort_path():
+    """A lever that silently did nothing is the house failure mode."""
+    rec = _receipt("A4_holding_cross_run01.json")
+    if rec is None:
+        pytest.skip("A4 receipt not present")
+    note = rec.get("hysteresis_availability_note") or ""
+    assert "overlapping_book" in note and "does not" in note
+
+
+def test_a4_the_no_hysteresis_cell_and_the_h1_cohort_are_the_same_book():
+    """They ARE the same construction. If they ever disagree, one path has a bug."""
+    rec = _receipt("A4_holding_cross_run01.json")
+    if rec is None or "cells" not in rec:
+        pytest.skip("A4 receipt not present")
+    cells = rec["cells"]
+    checked = 0
+    for sel in ("lgbm_clf", "nn_pre_causal"):
+        for bps in (10, 25):
+            a = cells.get(f"holdband|{sel}|hold_k=none|{bps}bps")
+            b = cells.get(f"cohort|{sel}|h=1m|{bps}bps")
+            if not a or not b:
+                continue
+            assert a["terminal_wealth_net"] == pytest.approx(b["terminal_wealth_net"])
+            assert (a["PRIMARY_beta_matched"]["annualised_pct"]
+                    == pytest.approx(b["PRIMARY_beta_matched"]["annualised_pct"]))
+            checked += 1
+    assert checked >= 1
+
+
+def test_a4_receipt_quotes_holm_beside_the_best_cell():
+    """The best of a family of 40 has a minimum-of-40 p. The Holm column is the
+    one to quote and it must be present."""
+    rec = _receipt("A4_holding_cross_run01.json")
+    if rec is None:
+        pytest.skip("A4 receipt not present")
+    fam = rec["family"]
+    assert fam["best_cell"] in fam["holm_adjusted"]
+    assert fam["size"] == len(fam["holm_adjusted"])
+    assert fam["family_max_p_one_sided"] is not None
+
+
+def test_a4_reports_both_cost_rates_everywhere():
+    rec = _receipt("A4_holding_cross_run01.json")
+    if rec is None or "cells" not in rec:
+        pytest.skip("A4 receipt not present")
+    rates = {c["cost_bps_per_side"] for c in rec["cells"].values()
+             if "cost_bps_per_side" in c}
+    assert rates == {10.0, 25.0}, f"costs are never omitted; got {rates}"
