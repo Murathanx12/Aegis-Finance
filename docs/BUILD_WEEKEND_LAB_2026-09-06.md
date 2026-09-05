@@ -9,16 +9,19 @@ their receipts before each update; a line with no receipt is not in this file.*
 
 | | |
 |---|---|
-| **Best historical net strategy vs the market** | *pending — W2 baseline still on its first pass* |
+| **Best historical net strategy vs the market** | **none beats it.** Every options-book cell loses *gross* (best 11.58 vs market 13.18 over 309 months). W2's 26-year learner grid is still fitting. |
 | **Best forward paper strategy** | unchanged; the lab placed no orders and touched no book |
-| **Independent selector count** | unchanged |
-| **New actionable finding** | **YES — three, below** |
+| **Independent selector count** | unchanged — nothing was promoted |
+| **New actionable finding** | **YES — six, below** |
 | **External execution drag** | not measured this weekend (no orders) |
 | **LLM spend** | **$0.00** — no LLM call was made |
 
-**RESULT IMPROVEMENT SO FAR: the instrument got 2.2× longer, and two published
-kinds of feature died under their own controls.** No strategy has yet been
-promoted, and none was killed.
+**RESULT IMPROVEMENT: NONE in return terms.** No strategy was promoted and none
+was killed. What moved is the *instrument* and what we know about the *method*:
+
+1. the panel is **2.2× longer in months** (143 → 310), which is the quantity that was actually scarce;
+2. **five published features died under their own controls** — the 52-week high, single-day attention, ATM implied vol, IV-minus-realised-vol, and a VWAP gap that was a split artefact;
+3. **a Fama-MacBeth t of +4.15 produced a book that loses gross**, and the decile table says exactly why. That one applies to every feature screen in this repo.
 
 ---
 
@@ -249,7 +252,170 @@ widening the tolerance.
 **`MECHANISM_REJECTED` would be wrong.** This closes *this graph at this size*:
 `FAILED_VARIANT` / `DEPRIORITIZED`, pending a wider edge set.
 
-### FINDING 5 — my own survivor filter had a sign bug that hid three of four features
+### FINDING 5 — **a Fama-MacBeth t of 4.15 lost money GROSS.** This is the weekend's most useful result.
+
+This is a three-step chain, and the last step is the one that generalises.
+
+**Step 1 — W5: two options features survive on 26 years, with controls.**
+`learner/features_options.py`, built from `optionm_surface30d_*.parquet`
+(**29 files, 1996-2024, 71,132,384 raw rows**, measured — not the month-end
+decoy in the sibling repo, which is 12 dates a year and has already been
+misread as "the surface is monthly" twice). `secid → permno` reuses the existing
+`link_optionm_crsp` with interval validity; 99.96% linked — *and the receipt says
+that rate is not evidence*, because the surface was pulled with a WHERE clause
+bounded by that same link.
+
+| feature | rank IC t | **FM t (controlled)** | eras | reading |
+|---|---|---|---|---|
+| `cp_iv_spread_30d` | 3.68 | **+4.15** | +/+/+ | Cremers-Weinbaum, literature's sign |
+| `skew_25d_30d` | −0.38 | **−5.37** | −/−/− | Xing-Zhang-Zhao, literature's sign |
+| `atm_iv_30d` | **−3.86** | −0.27 | mixed | **killed by controls** |
+| `iv_minus_rv_21d` | **−3.54** | +0.87 | mixed | **killed by controls** |
+| `atm_iv_chg_1m` | −0.17 | 1.55 | mixed | nothing |
+
+Two more published features that are realised volatility wearing a
+forward-looking label. That is now **three independent instances today** — with
+`prox_52w_high` and `attention_z` — of a named effect dying under its own
+controls. It is the weekend's most repeated finding.
+
+**Step 2 — W5b: build the actual book. All 24 cells lose, and they lose GROSS.**
+
+| | best cell | market |
+|---|---|---|
+| terminal wealth NET, 309 months | 6.65 | **13.18** |
+| terminal wealth GROSS | **11.58** | 13.18 |
+| turnover | 0.90/month | — |
+
+Scored against **both** the full CRSP market and the value-weighted return of the
+option-covered universe itself, because only 72.9% of panel rows carry a surface
+and the missing 27% are systematically the small and illiquid — a book measured
+only against the full market is partly measuring *having listed options*. It
+loses against both. And since it loses **gross**, the spread is not the
+explanation.
+
+**Step 3 — the shape says why, and it is not a subtle reason.**
+
+```
+cp_iv_spread_30d — mean realised excess (%/month) by signal decile
+d1     d2     d3     d4     d5     d6     d7     d8     d9     d10
+-0.619 -0.047 +0.179 +0.089 +0.171 +0.182 +0.104 +0.089 +0.061 -0.032
+```
+
+Top-minus-bottom is +0.587%/month — **that is the entire FM t.** Deciles 3-10
+span 0.2 percentage points and **d10 is worse than d3-d9.** The same shape holds
+for skew (d1 −0.516, everything above it +0.01 to +0.14) and for the combination
+(d1 −0.600, rest flat).
+
+**These are short-side signals.** They identify names that will do badly and say
+almost nothing about which will do well. A long-only top-50 value-weighted book
+lives entirely in d10 — the one region where the signal is worthless.
+
+**Why it generalises.** A Fama-MacBeth beta is the average slope over the whole
+cross-section with every name weighted equally inside the month. A top-50
+value-weighted book is the extreme tail with the weight on the largest names.
+Those are different objects, and a signal that is monotone through the middle and
+flat at the top scores brilliantly on the first and loses on the second. Every
+feature result in this weekend — W6's three survivors, W4's arms, and any future
+screen — is an FM beta. **This is the demonstration that t = 4 in that framework
+can be worth less than zero as a book.** It is `feedback_ask_the_cross_section_first`
+("the quantile SHAPE decides the construction") arriving with a price tag.
+
+**Step 4 — W5c: the instrument a bottom-decile signal actually has.** A signal
+that only marks losers needs no short book and no borrow: *don't hold them*.
+Removing the bottom decile of `cp_iv_spread_30d` (ranked **within** each month,
+never a full-sample cut) from an ordinary long book, against **a random decile
+exclusion of the same size drawn from the same screenable rows in the same
+months** — because removing 10% of any universe shifts the size mix, the sector
+mix, and the number of names competing for 50 slots:
+
+| base | bps | screen lift | random lift | **screen − random** | t | yrs → t2 |
+|---|---|---|---|---|---|---|
+| `mom_12_1` | 25 | +0.137%/mo | −0.035%/mo | **+0.171%/mo** | 1.27 | **64.1** |
+| `mom_12_1` | 10 | +0.141%/mo | −0.021%/mo | +0.162%/mo | 1.21 | 60.1 |
+| `net_rev_4w` | 25 | +0.007%/mo | −0.062%/mo | +0.069%/mo | 1.15 | 9,186 |
+| `ratio` | 25 | −0.189%/mo | −0.224%/mo | +0.035%/mo | 0.14 | — |
+
+**Verdict: CANNOT DETERMINE (underpowered), not NOISE.** ~+2%/yr in the right
+direction against the control, needing 64 years of tape against 25.8 on hand.
+Note the sign split: the IV screen helps a momentum book and *hurts* an
+analyst-upside book, which is consistent with the two selecting different names.
+
+*(My first version of this job returned `"NOVEL" if real else "NOISE"` and
+printed NOISE for that row — the exact error the whole weekend exists to stop.
+It now routes through the power block.)*
+
+### FINDING 6 — the archetype does not make money, and the reason is the same shape lesson
+
+`W7b_archetype_book` turns W7's three legs into an actual book. It does not work:
+best cell **+0.91%/yr excess, t 0.27, DSR 0.052, 1,380 years needed**; the
+size-neutral version is **−0.72%/yr**. Every one of 20 cells is at or below the
+market.
+
+The leg-by-leg shape says why, and it is the mirror image of the options result:
+
+```
+_leg_thin_for_size — mean realised excess (%/month) by decile
+d1     d2     d3     d4     d5     d6     d7     d8     d9     d10
+-0.019 +0.131 +0.193 +0.128 +0.210 +0.200 +0.123 +0.028 -0.090 -0.106
+```
+
+An **inverted U**. Moderately thin is +0.20%/month; *extremely* thin is −0.11%.
+Top-minus-bottom is **negative**, so a long top-decile book buys the worst part —
+and that leg alone returns **−7.2%/yr, t −2.21**. `_leg_rated_low` is similar
+(−5.8%/yr). Only `_leg_being_upgraded` has its best decile at the top
+(top-bottom +0.466, d10 +0.319), and it still makes no money as a VW top-50.
+
+**The general form, and it is W5b's lesson from the other side:**
+
+> A matched-control mean difference is a **LOCAL gradient** — how a winner
+> differed from its nearest twin. A top-decile book is a **GLOBAL extreme**. For
+> a non-monotone feature those two point in opposite directions, and *both
+> readings are correct*.
+
+Nothing about W7 is retracted. Its finding is a statement about the neighbourhood
+of a matched control; W7b is a statement about the tail. The panel simply says
+those are different places.
+
+### FINDING 7 — S28's liquidity band does NOT replicate as a band. It replicates as a FLOOR.
+
+W7b's inverted U is S28's liquidity band (+6.98%, t 2.22 in $100k–$10m/day,
+found 2026-08-30 on 2013-2024) re-derived from a completely different direction.
+That makes it a **replication target**: the edges are quoted, not chosen, and
+1999-2012 is fourteen years the original claim never saw.
+
+**The first version of this test was wrong, and the control row is what caught
+it.** Measured against the value-weighted market, the band showed +7.64%/yr at
+**t 2.25** out of sample — a near-perfect match to S28. But so did *every* band,
+including `above_the_band` at t 2.06. The reason: `excess_vw_1m` is a name's
+return minus the **value-weighted** market, and averaging it **equal-weighted**
+over any broad set of names in 1999-2012 is positive, because EW beat VW
+enormously in that decade. `learner/dataset.py` states the rule this broke — *an
+EW benchmark is a size artefact, a small-cap portfolio wearing a market's name* —
+and the test had built the artefact into its own benchmark.
+
+Re-measured against the **equal-weighted rest of the universe** (same weighting
+on both legs, so the regime cancels):
+
+| band | vs VW market | t | **vs EW rest** | **t** | OOS t | eras + | yrs → t2 |
+|---|---|---|---|---|---|---|---|
+| below $100k/day | −0.59%/yr | −0.17 | **−2.58%/yr** | −0.93 | −0.77 | **0 of 3** | — |
+| S28's $100k–$10m | +1.92%/yr | 0.68 | +0.85%/yr | 0.50 | 1.67 | 2 of 3 | 407 |
+| wider $50k–$50m | +1.98%/yr | 0.82 | +1.79%/yr | 1.02 | **2.04** | 2 of 3 | 98 |
+| narrower $500k–$5m | +1.86%/yr | 0.64 | +0.34%/yr | 0.23 | 1.23 | 1 of 3 | 1,887 |
+| **above $10m/day (control)** | +1.34%/yr | 0.95 | **−0.06%/yr** | **−0.03** | −1.28 | 1 of 3 | — |
+
+The control goes to **t −0.031** — dead flat — which is exactly what a control
+should do once the artefact is removed, and is the evidence that it *was*
+removed.
+
+**Verdict: the band does not replicate as a band.** What survives is its lower
+edge. Sub-$100k/day names lose 2.58%/yr against the equal-weighted rest and are
+negative in **3 of 3 eras**; above that, liquidity stops mattering (the
+$10m+ control is zero). That is a **FLOOR**, not a band — and the repo already
+carries `evaluate.TRADABLE_DOLLAR_VOL = $3,000,000`, which is well above where
+the damage actually is. Underpowered as an *edge*; clear as an *exclusion*.
+
+### FINDING 8 — my own survivor filter had a sign bug that hid three of four features
 
 The first version of the era test asked `holds_in_2_of_3` — how many eras had a
 **positive** mean. That is right for a **strategy's excess return**, where the

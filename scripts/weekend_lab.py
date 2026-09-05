@@ -72,12 +72,15 @@ QUEUE: list[tuple[str, int, int]] = [
     # slot and a mean one costs the whole grid, every pass, forever.
     ("W2_learner_long", 300, 5),
     ("W6_behavioural", 60, 1),
+    ("W6b_liquidity_band", 45, 1),
     ("W3_neural_long", 150, 4),
     ("W5_options_iv", 120, 2),
     ("W5b_options_book", 90, 1),
+    ("W5c_options_exclusion", 90, 1),
     ("W4_graph_momentum", 90, 1),
     ("W7_matched_loser", 180, 4),
-    ("W8_states_three_nulls", 60, 1),
+    ("W7b_archetype_book", 90, 1),
+    ("W8_states_three_nulls", 60, 3),
     ("W11_evidence_writeback", 20, 1),
 ]
 

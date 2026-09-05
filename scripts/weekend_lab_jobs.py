@@ -731,6 +731,41 @@ def W5b_options_book(variant: int = 0) -> dict:
     if not series:
         return {"verdict": "CANNOT DETERMINE", "cells": cells,
                 "headline": "no options cell produced a usable paired series"}
+
+    # THE SHAPE, because a losing book with a winning coefficient is a question,
+    # not an answer. A Fama-MacBeth beta is the average slope across the WHOLE
+    # cross-section with every name weighted equally inside the month; a top-50
+    # value-weighted book is the extreme tail with the weight on the largest
+    # names. A signal that is monotone through the middle and flat or REVERSED
+    # in its top decile produces exactly that pair of results, and the decile
+    # table is the only thing that tells the two apart. This repo's own
+    # `feedback_ask_the_cross_section_first` says it in one line: the quantile
+    # SHAPE decides the construction.
+    shape = {}
+    for col in cols:
+        tbl = evaluate.decile_table(df, col, "excess_vw_1m")
+        if not tbl:
+            continue
+        top, bot = tbl[-1], tbl[0]
+        mono = all(tbl[i]["mean_realized"] <= tbl[i + 1]["mean_realized"]
+                   for i in range(len(tbl) - 1))
+        # Is the TOP decile still going the right way, or has it turned over?
+        turn = (len(tbl) >= 3
+                and tbl[-1]["mean_realized"] < tbl[-2]["mean_realized"])
+        shape[col] = {
+            "deciles": [{"d": r["decile"], "n": r["n"],
+                         "mean_realized_pct": round(r["mean_realized"] * 100, 4)}
+                        for r in tbl],
+            "top_minus_bottom_pct": round((top["mean_realized"] - bot["mean_realized"]) * 100, 4),
+            "monotone_increasing": bool(mono),
+            "top_decile_turns_over": bool(turn),
+            "reading": ("the top decile is NOT the best decile -- a book that holds only "
+                        "the top will underperform a regression that used all of them"
+                        if turn else
+                        "the top decile is the best decile; the book's loss is not a "
+                        "shape problem"),
+        }
+
     wide = pd.concat(series, axis=1).dropna()
     fam = {k: wide[k].tolist() for k in wide.columns}
     # THE CHAMPION IS CHOSEN AMONG THE CELLS MEASURED AGAINST THE COVERED
@@ -758,6 +793,12 @@ def W5b_options_book(variant: int = 0) -> dict:
         },
         "cells_looked_at": len(cells),
         "cells": cells,
+        "cross_section_shape": shape,
+        "why_a_winning_coefficient_can_lose_money": (
+            "the Fama-MacBeth t is the average slope over the WHOLE cross-section with "
+            "every name weighted equally inside the month; this book is the top 50 only, "
+            "value-weighted. If a cell loses GROSS -- before a penny of cost -- the "
+            "spread is not the problem and `cross_section_shape` is where the answer is."),
         "n_common_months": int(len(wide)),
         "best_cell": best,
         "best_vs_full_market_twin": {"cell": twin,
@@ -774,6 +815,171 @@ def W5b_options_book(variant: int = 0) -> dict:
                      f"PBO {(inf.get('pbo') or {}).get('pbo')}, t2 needs "
                      f"{pw.get('years_needed_for_t2')}y vs {pw.get('years_observed')}y"),
         "verdict": verdict_from(inf, eras),
+    }
+
+
+def W5c_options_exclusion(variant: int = 0) -> dict:
+    """THE OPTIONS SIGNAL IS A BOTTOM-DECILE OBJECT. Use it as an EXCLUSION.
+
+    W5b settled the shape question. Both surviving options features carry their
+    whole effect in decile 1 and are flat above it:
+
+        cp_iv_spread_30d, mean realised excess by signal decile (%/month)
+        d1     d2     d3     d4     d5     d6     d7     d8     d9     d10
+        -0.619 -0.047 +0.179 +0.089 +0.171 +0.182 +0.104 +0.089 +0.061 -0.032
+
+    The Fama-MacBeth t of +4.15 is that -0.619 in d1. Deciles 3-10 span 0.2
+    percentage points and d10 is WORSE than d3-d9. So a long-only top-50 book --
+    which lives entirely in d10 -- is drawn from the one region where the signal
+    says nothing, which is why W5b lost GROSS.
+
+    A signal that only marks losers has an obvious instrument that needs no short
+    book and no borrow: DO NOT HOLD THEM. This job asks whether removing the
+    bottom decile from an ordinary long book improves it, and it asks the
+    question the honest way -- against a RANDOM exclusion of the same size, in
+    the same months, on the same universe.
+
+    THE RANDOM CONTROL IS THE POINT. Removing 10% of any universe changes a
+    book: it shifts the size mix, the sector mix, and the number of names
+    competing for 50 slots. An improvement that a random 10% exclusion also
+    produces is not a finding about implied volatility. `feedback_run_the_control
+    _you_would_not_have_chosen` is in this repo for exactly this shape.
+    """
+    from learner import evaluate, inference, features_options as FO
+    if not FO.available():
+        return _deferred("W5c_options_exclusion", "features_options.parquet not built")
+    df = _panel()
+    df, join_note = FO.attach(df)
+    screen = "cp_iv_spread_30d"
+    if screen not in df.columns:
+        return {"verdict": "FAILED", "headline": f"{screen} not on the joined panel"}
+
+    # The base books. Deliberately ORDINARY signals the house already trades on:
+    # the point is whether the screen improves something real, not whether some
+    # bespoke pairing can be made to look good.
+    bases = {b: b for b in ("mom_12_1", "ratio", "net_rev_4w") if b in df.columns}
+    if not bases:
+        return {"verdict": "FAILED", "headline": "no base signal on the panel"}
+
+    rng = np.random.default_rng(20260906)
+    # The screen: bottom decile WITHIN each month, so it is a PIT cross-sectional
+    # rule and never a full-sample quantile.
+    q = df.groupby("month")[screen].rank(pct=True)
+    df["_excluded"] = (q <= 0.10)
+    # Only rows that HAVE a surface can be screened; a name with no options is
+    # not "clean", it is unmeasured, and dropping it would make the screen a
+    # coverage filter.
+    df["_screenable"] = df[screen].notna()
+    # The random control: the same COUNT of exclusions per month, drawn from the
+    # same screenable rows.
+    df["_rand_excluded"] = False
+    for m, g in df.groupby("month"):
+        elig = g.index[g["_screenable"]]
+        k = int(df.loc[g.index, "_excluded"].sum())
+        if k and len(elig) >= k:
+            df.loc[rng.choice(elig, size=k, replace=False), "_rand_excluded"] = True
+
+    cells, series = {}, {}
+    for base in bases:
+        for bps in (10, 25):
+            for arm, mask in (("all", None),
+                              ("minus_iv_bottom_decile", ~df["_excluded"]),
+                              ("minus_RANDOM_decile", ~df["_rand_excluded"])):
+                sub = df if mask is None else df[mask]
+                key = f"{base}|{arm}|{bps}bps"
+                try:
+                    bk = evaluate.book(sub, base, k=50, weight="vw", cost_bps=bps,
+                                       ret_col="fwd_1m", mkt_col="mkt_vw_1m",
+                                       return_series=True)
+                except Exception as exc:                                # noqa: BLE001
+                    cells[key] = {"error": f"{type(exc).__name__}: {exc}"}
+                    continue
+                ser = bk.get("_series") or {}
+                cells[key] = {k2: v for k2, v in bk.items() if not k2.startswith("_")}
+                net, mkt = ser.get("net"), ser.get("market")
+                if net is not None and mkt is not None and len(net) and net.index.equals(mkt.index):
+                    series[key] = (net - mkt).astype("float64")
+
+    # THE PAIRED COMPARISON. Two terminal wealths are ONE draw of a correlated
+    # pair; the difference has to be tested on the SAME months.
+    lifts = []
+    for base in bases:
+        for bps in (10, 25):
+            a = series.get(f"{base}|all|{bps}bps")
+            s = series.get(f"{base}|minus_iv_bottom_decile|{bps}bps")
+            r = series.get(f"{base}|minus_RANDOM_decile|{bps}bps")
+            if a is None or s is None:
+                continue
+            d_screen = (s - a).dropna()
+            d_rand = (r - a).dropna() if r is not None else pd.Series(dtype="float64")
+            row = {
+                "base": base, "cost_bps": bps,
+                "months": int(len(d_screen)),
+                "screen_lift_pct_per_month": round(float(d_screen.mean()) * 100, 4),
+                "screen_lift_t": (round(float(d_screen.mean() /
+                                              (d_screen.std(ddof=1) / np.sqrt(len(d_screen)))), 3)
+                                  if d_screen.std(ddof=1) else None),
+                "random_lift_pct_per_month": (round(float(d_rand.mean()) * 100, 4)
+                                              if len(d_rand) else None),
+                "random_lift_t": (round(float(d_rand.mean() /
+                                              (d_rand.std(ddof=1) / np.sqrt(len(d_rand)))), 3)
+                                  if len(d_rand) > 2 and d_rand.std(ddof=1) else None),
+                "era_sign_table": era_sign_table(d_screen),
+                "power": inference.power_note(d_screen.tolist()),
+            }
+            # The lift OVER the random control -- the only number that is about
+            # implied volatility rather than about removing 10% of a universe.
+            if len(d_rand):
+                dd = (d_screen - d_rand).dropna()
+                row["screen_minus_random_pct_per_month"] = round(float(dd.mean()) * 100, 4)
+                row["screen_minus_random_t"] = (
+                    round(float(dd.mean() / (dd.std(ddof=1) / np.sqrt(len(dd)))), 3)
+                    if len(dd) > 2 and dd.std(ddof=1) else None)
+            lifts.append(row)
+
+    real = [r for r in lifts
+            if isinstance(r.get("screen_minus_random_t"), (int, float))
+            and r["screen_minus_random_t"] >= 2.0
+            and (r.get("era_sign_table") or {}).get("same_sign_in_2_of_3")]
+    best = max(lifts, key=lambda r: r.get("screen_minus_random_t") or -99, default=None)
+    return {
+        "question": ("does removing the bottom decile of the call-put IV spread improve an "
+                     "ordinary long book by MORE than removing a random decile does?"),
+        "family_id": "weekend-W5c-options-exclusion",
+        "screen": screen,
+        "screen_rule": "drop the bottom decile WITHIN each month (PIT, never a full-sample cut)",
+        "join": join_note,
+        "base_signals": sorted(bases),
+        "cells": cells,
+        "lifts": lifts,
+        "cells_where_the_screen_beats_a_RANDOM_decile": [
+            f"{r['base']}@{r['cost_bps']}bps" for r in real],
+        "control_note": ("removing 10% of any universe changes the size mix, the sector mix "
+                         "and the number of names competing for 50 slots. The random-decile "
+                         "arm is drawn from the SAME screenable rows in the SAME months, so "
+                         "`screen_minus_random` is the only column that is about implied "
+                         "volatility rather than about removing a tenth of a universe."),
+        "headline": (f"{len(lifts)} base x cost cells; best screen-minus-random is "
+                     f"{best['screen_minus_random_pct_per_month'] if best else None}%/month "
+                     f"(t {best.get('screen_minus_random_t') if best else None}) on "
+                     f"{best['base'] if best else '--'}@{best['cost_bps'] if best else '--'}bps; "
+                     f"{len(real)} of {len(lifts)} cells beat a random decile at t >= 2 with a "
+                     f"consistent era sign; best needs "
+                     f"{(best.get('power') or {}).get('years_needed_for_t2') if best else None} "
+                     f"years of tape for t = 2 against "
+                     f"{(best.get('power') or {}).get('years_observed') if best else None} on hand"),
+        # NOT "NOVEL if real else NOISE". The best cell here is +0.17%/month in
+        # the right direction against a RANDOM decile and needs 64 years of tape
+        # to resolve; calling that NOISE reports an absence of evidence as
+        # evidence of absence, which is the single error this whole weekend was
+        # built to stop making. A search only earns the word NOISE when it HAD
+        # the power and still found nothing.
+        "verdict": ("NOVEL" if real else
+                    ("CANNOT DETERMINE (underpowered)"
+                     if best and (best.get("power") or {}).get("powered") is False
+                     and (best.get("power") or {}).get("years_needed_for_t2") is not None
+                     else "NOISE")),
+        "power_of_the_best_cell": (best or {}).get("power"),
     }
 
 
@@ -1125,6 +1331,324 @@ def _market_circular_shift_null(d, state_col: str, target: str, S,
     }
 
 
+def _oos_t(s):
+    """t on the 1999-2012 half only -- the years the S28 claim never saw."""
+    o = s[[i for i in s.index if str(i) < "2013-01"]]
+    if len(o) < 3 or o.std(ddof=1) == 0:
+        return None
+    return round(float(o.mean() / (o.std(ddof=1) / np.sqrt(len(o)))), 3)
+
+
+def W6b_liquidity_band(variant: int = 0) -> dict:
+    """S28's LIQUIDITY BAND, tested out of sample on 26 years.
+
+    WHY THIS IS A REPLICATION AND NOT A POST-HOC FIT -- the distinction is the
+    whole value of the job. On 2026-08-30, session 28 reported an edge inside a
+    liquidity BAND of roughly $100k-$10m of dollar volume a day (+6.98%, t 2.22),
+    on the 2013-2024 window. That is a PRIOR claim, made on a different window,
+    with a stated direction and stated edges.
+
+    W7b then re-derived the same shape from a completely different direction: the
+    `thin_for_size` leg of the winner/matched-loser archetype is an INVERTED U --
+    moderately thin is +0.20%/month, extremely thin is -0.11%/month, and
+    top-minus-bottom is NEGATIVE. Choosing the middle deciles after seeing that
+    would be fitting the sample. Testing S28's already-published edges on
+    1999-2024 is not: 1999-2012 is fourteen years the original claim never saw.
+
+    So the receipt reports THREE things and refuses to collapse them:
+      * the band's excess on the FULL 26 years,
+      * the band's excess on 1999-2012 ONLY -- the genuinely out-of-sample half, and
+      * the same band with the edges moved, so a reader can see whether the
+        result is about these edges or about any middle.
+
+    A replication that only reports the pooled number has hidden the one column
+    that makes it a replication.
+    """
+    from learner import evaluate, inference
+    df = _panel()
+    col = "log_dollar_vol_20d"
+    if col not in df.columns:
+        return {"verdict": "FAILED", "headline": f"{col} not on the panel"}
+    dv = np.expm1(df[col])                       # back to dollars/day
+    # S28's published edges. NOT tuned here; quoted.
+    BANDS = {
+        "S28_100k_10m": (1e5, 1e7),
+        "wider_50k_50m": (5e4, 5e7),
+        "narrower_500k_5m": (5e5, 5e6),
+        "below_the_band": (0.0, 1e5),
+        "above_the_band": (1e7, np.inf),
+    }
+    # THE BENCHMARK THIS TEST ACTUALLY NEEDS, and the trap it was built with.
+    #
+    # `excess_vw_1m` is a name's return minus the VALUE-WEIGHTED market. Average
+    # it EQUAL-WEIGHT over any broad set of names and 1999-2012 comes out
+    # strongly positive -- not because those names were special, but because EW
+    # beat VW enormously in that decade. The first version of this job did
+    # exactly that and made every band look like a replication, INCLUDING the
+    # `above_the_band` control at t 2.06. `learner/dataset.py` states the rule it
+    # broke: an EW benchmark is a SIZE ARTEFACT, a small-cap portfolio wearing a
+    # market's name.
+    #
+    # So the band is measured against the EQUAL-WEIGHTED REST OF THE UNIVERSE in
+    # the same months -- same weighting on both legs, so the EW-vs-VW regime
+    # cancels and what is left is whether BEING IN THE BAND pays.
+    ew_all = (df[df["excess_vw_1m"].notna()]
+              .groupby("month")["excess_vw_1m"].mean().sort_index())
+
+    rows, series = [], {}
+    for name, (lo, hi) in BANDS.items():
+        m = dv.between(lo, hi)
+        sub = df[m & df["excess_vw_1m"].notna()]
+        if sub["month"].nunique() < 24:
+            rows.append({"band": name, "verdict": "CANNOT DETERMINE",
+                         "months": int(sub["month"].nunique())})
+            continue
+        # The band's own EQUAL-WEIGHT monthly excess: the question is whether
+        # BEING in the band pays, not whether some signal inside it pays.
+        s = sub.groupby("month")["excess_vw_1m"].mean().sort_index()
+        # vs the equal-weighted rest of the universe, on exactly the same months.
+        rest = (df[~m & df["excess_vw_1m"].notna()]
+                .groupby("month")["excess_vw_1m"].mean().sort_index())
+        vs_rest = (s - rest).dropna()
+        vs_all = (s - ew_all.reindex(s.index)).dropna()
+        series[name] = s
+        oos = s[[str(i) for i in s.index if str(i) < "2013-01"]]
+        pw = inference.power_note(s.tolist())
+        rows.append({
+            "band": name, "dollar_vol_per_day": [lo, None if hi == np.inf else hi],
+            "months": int(len(s)),
+            "name_months": int(len(sub)),
+            "mean_monthly_excess_pct": round(float(s.mean()) * 100, 4),
+            "annualised_excess_pct": round(float(s.mean()) * 12 * 100, 3),
+            "t": (round(float(s.mean() / (s.std(ddof=1) / np.sqrt(len(s)))), 3)
+                  if s.std(ddof=1) else None),
+            # THE NUMBER THAT IS ABOUT THE BAND. Same weighting on both legs, so
+            # the EW-vs-VW regime cancels instead of being counted as an edge.
+            "VS_EW_REST_OF_UNIVERSE": {
+                "months": int(len(vs_rest)),
+                "annualised_excess_pct": (round(float(vs_rest.mean()) * 12 * 100, 3)
+                                          if len(vs_rest) else None),
+                "t": (round(float(vs_rest.mean() /
+                                  (vs_rest.std(ddof=1) / np.sqrt(len(vs_rest)))), 3)
+                      if len(vs_rest) > 2 and vs_rest.std(ddof=1) else None),
+                "oos_1999_2012_t": _oos_t(vs_rest),
+                "era_sign_table": era_sign_table(vs_rest),
+                "power": inference.power_note(vs_rest.tolist()),
+            },
+            "vs_ew_whole_universe_t": (
+                round(float(vs_all.mean() / (vs_all.std(ddof=1) / np.sqrt(len(vs_all)))), 3)
+                if len(vs_all) > 2 and vs_all.std(ddof=1) else None),
+            "OUT_OF_SAMPLE_1999_2012": {
+                "months": int(len(oos)),
+                "mean_monthly_excess_pct": (round(float(oos.mean()) * 100, 4)
+                                            if len(oos) else None),
+                "t": (round(float(oos.mean() / (oos.std(ddof=1) / np.sqrt(len(oos)))), 3)
+                      if len(oos) > 2 and oos.std(ddof=1) else None),
+                "note": ("fourteen years the S28 claim never saw -- this column is what "
+                         "makes the job a replication rather than a re-fit"),
+            },
+            "era_sign_table": era_sign_table(s),
+            "power": pw,
+        })
+    band = next((r for r in rows if r["band"] == "S28_100k_10m"), None)
+    above = next((r for r in rows if r["band"] == "above_the_band"), None)
+    # THE VERDICT RESTS ON `VS_EW_REST_OF_UNIVERSE`, never on the vs-VW-market
+    # column. The latter is positive for EVERY band out of sample -- including
+    # the above-band control at t 2.06 -- because it compares an equal-weighted
+    # average to a value-weighted market across the decade EW won.
+    vr = (band or {}).get("VS_EW_REST_OF_UNIVERSE") or {}
+    oos_t = vr.get("oos_1999_2012_t")
+    full_t = vr.get("t")
+    replicated = bool(isinstance(full_t, (int, float)) and full_t >= 2.0
+                      and isinstance(oos_t, (int, float)) and oos_t >= 2.0
+                      and (vr.get("era_sign_table") or {}).get("holds_in_2_of_3"))
+    pw = vr.get("power") or {}
+    return {
+        "question": ("does S28's $100k-$10m/day liquidity band survive on 1999-2024, and "
+                     "in particular on the fourteen years it was never fitted to?"),
+        "family_id": "weekend-W6b-liquidity-band",
+        "prior_claim": ("S28, 2026-08-30: +6.98%, t 2.22, in a $100k-$10m/day dollar-volume "
+                        "band on 2013-2024"),
+        "why_this_is_a_replication": (
+            "the band edges are QUOTED from the prior claim, not chosen here. W7b "
+            "independently re-derived the same inverted-U shape from the winner/matched-"
+            "loser archetype, and picking the middle deciles after seeing that would be "
+            "fitting the sample. 1999-2012 is out of sample for the original claim."),
+        "bands": rows,
+        "the_benchmark_trap_this_job_fell_into_first": (
+            "measured against the VALUE-WEIGHTED market, every band -- including the "
+            "above-$10m control -- is positive out of sample at t ~2, because an "
+            "equal-weighted average of names beat a value-weighted market across "
+            "1999-2012. That is the EW-vs-VW regime, not the band. The verdict rests on "
+            "`VS_EW_REST_OF_UNIVERSE`, which puts the same weighting on both legs."),
+        "control_above_the_band_vs_rest_t": (
+            ((above or {}).get("VS_EW_REST_OF_UNIVERSE") or {}).get("t")),
+        "headline": (f"S28 band vs the EW REST of the universe on 26 years: "
+                     f"{vr.get('annualised_excess_pct')}%/yr t {full_t}; out-of-sample "
+                     f"1999-2012 t {oos_t}; (against the VW market it reads "
+                     f"{(band or {}).get('annualised_excess_pct')}%/yr t "
+                     f"{(band or {}).get('t')}, but so does every band); "
+                     f"below-band {next((r.get('annualised_excess_pct') for r in rows if r['band'] == 'below_the_band'), None)}%/yr, "
+                     f"above-band {next((r.get('annualised_excess_pct') for r in rows if r['band'] == 'above_the_band'), None)}%/yr; "
+                     f"t = 2 would need {pw.get('years_needed_for_t2')}y vs "
+                     f"{pw.get('years_observed')}y"),
+        "verdict": ("REPLICATED" if replicated else
+                    ("CANNOT DETERMINE (underpowered)"
+                     if pw.get("powered") is False and pw.get("years_needed_for_t2") is not None
+                     else "NOT REPLICATED")),
+        "verdict_rests_on": "VS_EW_REST_OF_UNIVERSE (same weighting on both legs)",
+    }
+
+
+def W7b_archetype_book(variant: int = 0) -> dict:
+    """THE ARCHETYPE AS A BOOK -- with the decile shape printed BEFORE the verdict.
+
+    W7 found, on 297 formation months and against sector/size/momentum/vol-matched
+    controls, that a future 12-month residual winner was: thinly traded FOR ITS
+    SIZE (Holm p 0.00018, same sign in 3 of 3 eras), being UPGRADED by analysts
+    (Holm p 0.0062, 3 of 3), and RATED LOWER than its twin to begin with
+    (BH q 0.012, 3 of 3). Unloved, illiquid for its size, improving from a low
+    base.
+
+    That is a t-statistic, not a strategy, and W5b is this weekend's expensive
+    demonstration of the difference: two options features at Fama-MacBeth t +4.15
+    and -5.37 produced twenty-four book cells that all lost GROSS, because their
+    whole effect lived in decile 1 and a long-only top-50 book lives in decile 10.
+    So the shape is computed and reported FIRST here, before any terminal wealth,
+    and the receipt is readable as a diagnosis whichever way the verdict goes.
+
+    THE SIZE NEUTRALISATION IS NOT OPTIONAL. The archetype was DISCOVERED against
+    controls matched on size; "thin dollar volume" without holding size is just a
+    small-cap book, and this repo has an entire farm receipt saying a small-cap
+    book is a size artefact wearing a signal's name. So the composite is
+    residualised on the log-market-cap rank within each month, and an
+    un-neutralised arm is run beside it so the difference is visible rather than
+    asserted.
+    """
+    from learner import evaluate, inference
+    df = _panel()
+    legs = {
+        "thin_for_size": ("log_dollar_vol_20d", -1.0),
+        "being_upgraded": ("consensus_rev_1m", +1.0),
+        "rated_low": ("consensus", -1.0),
+    }
+    have = {k: v for k, v in legs.items() if v[0] in df.columns}
+    if len(have) < 2:
+        return {"verdict": "FAILED",
+                "headline": f"only {len(have)} archetype legs are on the panel"}
+    # Ranks within the month: three columns on three different scales, and a raw
+    # sum would silently weight by whichever has the largest dispersion.
+    parts = []
+    for name, (col, sign) in have.items():
+        r = df.groupby("month")[col].rank(pct=True)
+        df[f"_leg_{name}"] = r if sign > 0 else (1.0 - r)
+        parts.append(df[f"_leg_{name}"])
+    df["arch_raw"] = sum(parts) / len(parts)
+
+    # SIZE-NEUTRAL: the residual of the composite on the size rank, within month.
+    def _resid_on_size(g):
+        d = g[["arch_raw", "log_market_cap"]].dropna()
+        if len(d) < 30:
+            return pd.Series(np.nan, index=g.index)
+        X = np.column_stack([np.ones(len(d)), d["log_market_cap"].rank(pct=True).to_numpy()])
+        y = d["arch_raw"].to_numpy()
+        try:
+            coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+        except np.linalg.LinAlgError:
+            return pd.Series(np.nan, index=g.index)
+        out = pd.Series(np.nan, index=g.index)
+        out.loc[d.index] = y - X @ coef
+        return out
+    df["arch_size_neutral"] = (df.groupby("month", group_keys=False)
+                               .apply(_resid_on_size, include_groups=False))
+
+    sigs = ["arch_raw", "arch_size_neutral"] + [f"_leg_{k}" for k in have]
+
+    # THE SHAPE FIRST. W5b's lesson: a decile table would have told us in one
+    # glance what twenty-four book cells took an hour to say.
+    shape = {}
+    for col in sigs:
+        tbl = evaluate.decile_table(df, col, "excess_vw_1m")
+        if not tbl:
+            continue
+        turn = len(tbl) >= 3 and tbl[-1]["mean_realized"] < tbl[-2]["mean_realized"]
+        shape[col] = {
+            "deciles_pct": [round(r["mean_realized"] * 100, 4) for r in tbl],
+            "top_minus_bottom_pct": round(
+                (tbl[-1]["mean_realized"] - tbl[0]["mean_realized"]) * 100, 4),
+            "top_decile_turns_over": bool(turn),
+            "where_the_effect_lives": ("the BOTTOM decile -- this is a short-side / "
+                                       "exclusion signal, not a long one"
+                                       if abs(tbl[0]["mean_realized"]) >
+                                       abs(tbl[-1]["mean_realized"]) else
+                                       "the TOP decile -- a long book is the right "
+                                       "instrument"),
+        }
+
+    cells, series = {}, {}
+    for col in sigs:
+        for bps in (10, 25):
+            for hold in (None, 100):
+                key = f"{col}|{bps}bps|{'hyst' if hold else 'rebuild'}"
+                try:
+                    bk = evaluate.book(df, col, k=50, weight="vw", cost_bps=bps,
+                                       ret_col="fwd_1m", mkt_col="mkt_vw_1m",
+                                       hold_k=hold, return_series=True)
+                except Exception as exc:                                # noqa: BLE001
+                    cells[key] = {"error": f"{type(exc).__name__}: {exc}"}
+                    continue
+                ser = bk.get("_series") or {}
+                cells[key] = {k2: v for k2, v in bk.items() if not k2.startswith("_")}
+                net, mkt = ser.get("net"), ser.get("market")
+                if net is not None and mkt is not None and len(net) and net.index.equals(mkt.index):
+                    series[key] = (net - mkt).astype("float64")
+    if not series:
+        return {"verdict": "CANNOT DETERMINE", "cells": cells,
+                "cross_section_shape": shape,
+                "headline": "no archetype cell produced a usable paired series"}
+    wide = pd.concat(series, axis=1).dropna()
+    fam = {k: wide[k].tolist() for k in wide.columns}
+    best = max(fam, key=lambda k: float(np.mean(fam[k])))
+    inf = inference.full_report(fam[best], family=fam, paired_excess=fam,
+                                n_trials=len(cells) or len(fam), n_boot=500, seed=17)
+    eras = era_sign_table(wide[best])
+    pw = inf.get("power", {})
+    neutral = {k: v for k, v in fam.items() if k.startswith("arch_size_neutral")}
+    best_neutral = (max(neutral, key=lambda k: float(np.mean(neutral[k])))
+                    if neutral else None)
+    return {
+        "question": ("does the W7 archetype -- thin for its size, being upgraded, rated "
+                     "low -- make money as a book, and is it size or is it the archetype?"),
+        "family_id": "weekend-W7b-archetype-book",
+        "legs": {k: {"column": v[0], "direction": "low is good" if v[1] < 0 else "high is good"}
+                 for k, v in have.items()},
+        "cross_section_shape": shape,
+        "cells_looked_at": len(cells),
+        "cells": cells,
+        "best_cell": best,
+        "best_mean_monthly_excess_pct": round(float(np.mean(fam[best])) * 100, 4),
+        "best_SIZE_NEUTRAL_cell": best_neutral,
+        "best_size_neutral_mean_monthly_excess_pct": (
+            round(float(np.mean(fam[best_neutral])) * 100, 4) if best_neutral else None),
+        "size_note": ("`arch_raw` vs `arch_size_neutral` is the whole question. The "
+                      "archetype was DISCOVERED against size-matched controls, so an "
+                      "un-neutralised book that works is a small-cap book, and the farm "
+                      "has already shown a small-cap book is a size artefact wearing a "
+                      "signal's name."),
+        "inference": inf,
+        "era_sign_table": eras,
+        "headline": (f"best of {len(cells)} archetype cells is {best} at "
+                     f"{np.mean(fam[best]) * 100:+.3f}%/month over {len(wide)} months "
+                     f"(size-neutral best: {best_neutral} at "
+                     f"{round(float(np.mean(fam[best_neutral])) * 100, 3) if best_neutral else None}"
+                     f"%/month); DSR {(inf.get('deflated_sharpe') or {}).get('dsr')}, "
+                     f"SPA p {(inf.get('spa') or {}).get('p_spa_consistent')}, "
+                     f"t2 needs {pw.get('years_needed_for_t2')}y vs "
+                     f"{pw.get('years_observed')}y"),
+        "verdict": verdict_from(inf, eras),
+    }
+
+
 def W8_states_three_nulls(variant: int = 0) -> dict:
     """MARKET STATES on 26 years, and the three nulls a state claim owes.
 
@@ -1312,8 +1836,11 @@ JOBS = {
     "W4_graph_momentum": W4_graph_momentum,
     "W5_options_iv": W5_options_iv,
     "W5b_options_book": W5b_options_book,
+    "W5c_options_exclusion": W5c_options_exclusion,
     "W6_behavioural": W6_behavioural,
+    "W6b_liquidity_band": W6b_liquidity_band,
     "W7_matched_loser": W7_matched_loser,
+    "W7b_archetype_book": W7b_archetype_book,
     "W8_states_three_nulls": W8_states_three_nulls,
     "W11_evidence_writeback": W11_evidence_writeback,
 }

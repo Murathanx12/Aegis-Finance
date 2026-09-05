@@ -1,0 +1,40 @@
+{
+ "job": "W5b_options_book",
+ "run": 2,
+ "variant": 0,
+ "headline": "best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month over 309 months; DSR 0.0207, SPA p 1.0, PBO 0.2429, t2 needs Noney vs 25.75y",
+ "verdict": "NOISE",
+ "dsr": 0.0207,
+ "spa_p": 1.0,
+ "pbo": 0.2429,
+ "n_oos_months": 309,
+ "years_needed_for_t2": null,
+ "years_observed": 25.75,
+ "era_sign_table": {
+  "1999-2007": {
+   "months": 106,
+   "mean_pct": 0.1095,
+   "t": 0.181,
+   "sign": 1
+  },
+  "2008-2015": {
+   "months": 96,
+   "mean_pct": 0.3759,
+   "t": 0.801,
+   "sign": 1
+  },
+  "2016-2024": {
+   "months": 107,
+   "mean_pct": -0.5002,
+   "t": -1.129,
+   "sign": -1
+  },
+  "eras_with_a_positive_mean": 2,
+  "eras_with_a_negative_mean": 1,
+  "eras_measured": 3,
+  "holds_in_2_of_3": true,
+  "same_sign_in_2_of_3": true,
+  "dominant_sign": 1
+ },
+ "written_utc": "2026-09-05T04:31:36+00:00"
+}
