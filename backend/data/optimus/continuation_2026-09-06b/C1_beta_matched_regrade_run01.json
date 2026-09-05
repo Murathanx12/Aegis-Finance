@@ -1,0 +1,2910 @@
+{
+ "job": "C1_beta_matched_regrade",
+ "question": "is the incumbents' excess an INTERCEPT or a LOADING? Graded against a beta-matched benchmark instead of the raw VW market, does lgbm_clf / lgbm_raw / nn_pre_causal_seedmean keep a positive alpha, or does the excess collapse into beta > 1?",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "memory_before": {
+  "free_gb": 10.81,
+  "floor_gb": 6.0
+ },
+ "training_universe": {
+  "dollar_volume_floor_usd_per_day": 3000000.0,
+  "min_close_usd": 5.0,
+  "rows_before": 925757,
+  "rows_after": 530447,
+  "share_kept": 0.573,
+  "months_after": 310,
+  "fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa"
+ },
+ "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+ "universe_fingerprint_matches_w3b": true,
+ "stage_files": {
+  "incumbents": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+  "nn_pre_causal": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet"
+ },
+ "stage_scope": {
+  "test_years": [
+   2004,
+   2024
+  ],
+  "n_test_years": 21,
+  "seeds": [
+   20260906,
+   20260907,
+   20260908,
+   20260909,
+   20260910,
+   20260911,
+   20260912,
+   20260913
+  ]
+ },
+ "cells": {
+  "lgbm_clf|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.889,
+   "terminal_wealth_net": 22.6076,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1608,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00283,
+   "annualised_excess": 0.0339,
+   "t_stat_paired_vs_market": 1.225,
+   "months_beating_market": 0.5259,
+   "worst_month_net": -0.2746,
+   "hit_rate": 0.6454
+  },
+  "lgbm_clf|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.889,
+   "terminal_wealth_net": 11.6417,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1245,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00016,
+   "annualised_excess": 0.0019,
+   "t_stat_paired_vs_market": 0.069,
+   "months_beating_market": 0.4701,
+   "worst_month_net": -0.2774,
+   "hit_rate": 0.6375
+  },
+  "lgbm_raw|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.868,
+   "terminal_wealth_net": 36.2448,
+   "terminal_wealth_gross": 55.7939,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1873,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.0061,
+   "annualised_excess": 0.0732,
+   "t_stat_paired_vs_market": 1.684,
+   "months_beating_market": 0.5378,
+   "worst_month_net": -0.3047,
+   "hit_rate": 0.6096
+  },
+  "lgbm_raw|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.868,
+   "terminal_wealth_net": 18.9497,
+   "terminal_wealth_gross": 55.7939,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.151,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00349,
+   "annualised_excess": 0.0419,
+   "t_stat_paired_vs_market": 0.964,
+   "months_beating_market": 0.51,
+   "worst_month_net": -0.3076,
+   "hit_rate": 0.5936
+  },
+  "nn_pre_causal_seedmean|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.804,
+   "terminal_wealth_net": 49.0082,
+   "terminal_wealth_gross": 72.9934,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.2045,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00679,
+   "annualised_excess": 0.0814,
+   "t_stat_paired_vs_market": 2.243,
+   "months_beating_market": 0.5578,
+   "worst_month_net": -0.3368,
+   "hit_rate": 0.6375
+  },
+  "nn_pre_causal_seedmean|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.804,
+   "terminal_wealth_net": 26.9286,
+   "terminal_wealth_gross": 72.9934,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1705,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00437,
+   "annualised_excess": 0.0525,
+   "t_stat_paired_vs_market": 1.446,
+   "months_beating_market": 0.5418,
+   "worst_month_net": -0.3394,
+   "hit_rate": 0.6255
+  }
+ },
+ "reproduction_of_w3b_cells": {
+  "lgbm_clf|10bps": {
+   "reproduces_w3b": true,
+   "diffs": []
+  },
+  "lgbm_clf|25bps": {
+   "reproduces_w3b": true,
+   "diffs": []
+  },
+  "lgbm_raw|10bps": {
+   "reproduces_w3b": true,
+   "diffs": []
+  },
+  "lgbm_raw|25bps": {
+   "reproduces_w3b": true,
+   "diffs": []
+  },
+  "nn_pre_causal_seedmean|10bps": {
+   "reproduces_w3b": true,
+   "diffs": []
+  },
+  "nn_pre_causal_seedmean|25bps": {
+   "reproduces_w3b": true,
+   "diffs": []
+  }
+ },
+ "all_cells_reproduce_w3b": true,
+ "n_common_months": 251,
+ "common_window": [
+  "2004-01",
+  "2024-11"
+ ],
+ "risk_free_leg": {
+  "source": "learner.benchmark.cash() -- pinned FF daily RF",
+  "window": "(entry_date, mat_date_1m] per book month, compounded",
+  "daily_rows": 15833,
+  "daily_span": [
+   "1963-07-01",
+   "2026-05-29"
+  ],
+  "available": true,
+  "months_built": 251,
+  "months_missing": [],
+  "mean_monthly_rf": 0.001281,
+  "annualised_rf_12x": 0.01538
+ },
+ "month_label_convention": {
+  "note": "the panel's row labelled `2020-02` is the book ENTERED 2020-02-21 and held to its 2020-03-2x maturity; `mkt_vw_1m` there is -33.3% because that window contains the crash. Every leg in this receipt uses that same window, so the labels are consistent even though they are not calendar months.",
+  "first_entry_date": "2004-01-16",
+  "last_entry_date": "2024-11-15"
+ },
+ "benchmark_stamp": {
+  "schema": 1,
+  "module": "learner.benchmark",
+  "benchmark_id": "vw_crsp_common_main",
+  "freq": "M",
+  "overlapping": false,
+  "provenance": {
+   "source": "learner.evaluate.book(..., return_series=True)['market']",
+   "construction": "the panel's own `mkt_vw_1m` value-weighted CRSP common-share total return over each book month's holding window -- the identical series every W3b cell was graded against. NOT re-cut to the tradable slice.",
+   "dividends_included": true,
+   "network": false,
+   "index": "the book month's entry_date"
+  },
+  "provenance_sha256": "b5371b62da338f32e4b8bf750b60bbbadee13fd8b45a4283122d5010c1e9aca8",
+  "span": [
+   "2004-01-16",
+   "2024-11-15"
+  ],
+  "n_periods": 251
+ },
+ "benchmark_stamp_valid": {
+  "ok": true,
+  "why": "ok"
+ },
+ "risk_free_stamp": {
+  "schema": 1,
+  "module": "learner.benchmark",
+  "benchmark_id": "cash_rf_pinned",
+  "freq": "M",
+  "overlapping": false,
+  "provenance": {
+   "source": "learner.benchmark.cash() (pinned FF daily RF), compounded",
+   "construction": "(entry_date, mat_date_1m] per book month, compounded",
+   "network": false
+  },
+  "provenance_sha256": "4e929d2541b39e01ac77f1e142aa8465245e7194586eb82231973820a2bd584e",
+  "span": [
+   "2004-01-16",
+   "2024-11-15"
+  ],
+  "n_periods": 251
+ },
+ "holm_adjusted_one_sided_alpha_p_over_this_jobs_six_cells": {
+  "nn_pre_causal_seedmean|10bps": 0.82098,
+  "lgbm_raw|10bps": 1.0,
+  "lgbm_clf|10bps": 1.0,
+  "nn_pre_causal_seedmean|25bps": 1.0,
+  "lgbm_raw|25bps": 1.0,
+  "lgbm_clf|25bps": 1.0
+ },
+ "by_cell": {
+  "lgbm_clf|10bps": {
+   "book": "lgbm_clf",
+   "cost_bps_per_side": 10.0,
+   "A_market_regression": {
+    "n_months": 251,
+    "nw_lag": 4,
+    "alpha_monthly": 0.000938,
+    "alpha_annualised_12x": 0.01126,
+    "alpha_se_ols": 0.002303,
+    "alpha_se_hac": 0.00269,
+    "t_alpha_ols": 0.407,
+    "t_alpha_hac": 0.349,
+    "p_alpha_one_sided_hac": 0.36362,
+    "beta": 1.1782,
+    "beta_se_ols": 0.04717,
+    "beta_se_hac": 0.08779,
+    "t_beta_ols": 24.978,
+    "t_beta_hac": 13.42,
+    "t_beta_minus_1_ols": 3.778,
+    "t_beta_minus_1_hac": 2.03,
+    "r_squared": 0.7147,
+    "residual_sd_monthly": 0.03562,
+    "residual_sd_annualised": 0.1234,
+    "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+   },
+   "A_reading": "beta > 1 with t(beta-1) >= 2 means the book carried MORE market than the benchmark it was graded against; alpha is what is left once that leverage is paid for",
+   "B_beta_matched": {
+    "benchmark_stamp": {
+     "schema": 1,
+     "module": "learner.benchmark",
+     "benchmark_id": "beta_matched",
+     "freq": "M",
+     "overlapping": false,
+     "provenance": {
+      "source": "learner.benchmark.beta_matched",
+      "construction": "1.1782 x vw_crsp_common_main + -0.1782 x cash_rf_pinned",
+      "beta": 1.1782,
+      "market_benchmark_id": "vw_crsp_common_main",
+      "rf_included": true,
+      "network": false
+     },
+     "provenance_sha256": "644a2886772377b5bfb7329d76a1dec979d869f146744b74634fd97554c577ff",
+     "span": [
+      "2004-01-16",
+      "2024-11-15"
+     ],
+     "n_periods": 251
+    },
+    "beta_used": 1.1782,
+    "beta_source": "full-sample OLS of (net - rf) on (mkt - rf)",
+    "leg_reconstruction_max_abs_error": 0.0,
+    "mean_monthly_excess": 0.000938,
+    "annualised_excess_12x": 0.01126,
+    "sd_monthly": 0.03555,
+    "t_paired": 0.418,
+    "t_paired_hac": 0.402,
+    "months_ahead_of_beta_matched_leg": 0.49,
+    "book_terminal_wealth": 22.6076,
+    "beta_matched_leg_terminal_wealth": 20.308,
+    "raw_market_terminal_wealth": 14.3778,
+    "terminal_wealth_ratio_book_over_beta_matched": 1.1132
+   },
+   "B_raw_market_for_comparison": {
+    "mean_monthly_excess": 0.002828,
+    "annualised_excess_12x": 0.03393,
+    "t_paired": 1.225,
+    "w3b_annualised_excess": 0.0339,
+    "w3b_t_stat_paired_vs_market": 1.225
+   },
+   "B_walk_forward_beta": {
+    "min_months_before_a_beta_is_formed": 36,
+    "months_graded": 215,
+    "beta_first": 1.0113,
+    "beta_last": 1.1757,
+    "beta_mean": 1.218,
+    "beta_min": 1.0113,
+    "beta_max": 1.3921,
+    "mean_monthly_excess": 0.001176,
+    "annualised_excess_12x": 0.01412,
+    "t_paired": 0.449,
+    "note": "beta_t uses months strictly before t. It is NOT the headline: it answers whether a desk could have hedged the loading in real time, which is a different question from how much of the realised excess WAS the loading."
+   },
+   "C_inference_on_beta_matched_excess": {
+    "family": [
+     "lgbm_clf|10bps",
+     "lgbm_clf|25bps",
+     "lgbm_raw|10bps",
+     "lgbm_raw|25bps",
+     "nn_pre_causal_seedmean|10bps",
+     "nn_pre_causal_seedmean|25bps"
+    ],
+    "family_size_cells_in_this_job": 6,
+    "family_size_declared_for_deflation": 40,
+    "family_size_justification": "the three prediction columns are three of the 40 cells the W3b search opened (cells_looked_at = 40); this job re-grades them against a new benchmark and opens 6 more. 40 is the headline because the SELECTION happened there; dsr at 6 (this job alone) and 46 (both) are carried beside it.",
+    "dsr_at_alternative_family_sizes": {
+     "6": 0.1862,
+     "46": 0.0325
+    },
+    "n_cells_looked_at": 40,
+    "deflated_sharpe": {
+     "sharpe": 0.0264,
+     "sharpe_benchmark_sr0": 0.1385,
+     "n_trials": 40,
+     "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+     "skew": 0.813,
+     "kurtosis": 7.446,
+     "n_periods": 251,
+     "z": -1.7905,
+     "dsr": 0.0367,
+     "verdict": "WITHIN_SELECTION_NOISE",
+     "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.026."
+    },
+    "power": {
+     "n_periods": 251,
+     "periods_per_year": 12,
+     "n_oos_months": 251,
+     "sharpe_per_period": 0.0264,
+     "t_observed": 0.4181,
+     "years_observed": 20.92,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 5743.6,
+     "years_needed_for_t2": 478.6,
+     "years_needed_for_t2_exact": 478.63253227919495,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.07032,
+     "years_needed_to_detect_that_effect": 67.4,
+     "mde_annual_excess_at_t_target": 0.05386,
+     "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.39%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "t = 0.42 on 20.9 years; t = 2 would need 478.6 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    },
+    "spa": {
+     "best_arm": "nn_pre_causal_seedmean|10bps",
+     "n_arms": 6,
+     "n_periods": 251,
+     "n_boot": 500,
+     "block_periods": 4.0,
+     "t_spa": 1.1235,
+     "p_spa_consistent": 0.2794,
+     "p_spa_lower": 0.2794,
+     "p_spa_upper": 0.2794,
+     "arm_means": {
+      "lgbm_clf|10bps": 0.000938,
+      "lgbm_clf|25bps": -0.001728,
+      "lgbm_raw|10bps": 0.001943,
+      "lgbm_raw|25bps": -0.000664,
+      "nn_pre_causal_seedmean|10bps": 0.003294,
+      "nn_pre_causal_seedmean|25bps": 0.000878
+     },
+     "verdict": "WITHIN_SPA_NULL",
+     "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+    },
+    "pbo": {
+     "pbo": 0.4571,
+     "n_partitions": 70,
+     "n_arms": 6,
+     "n_periods": 251,
+     "median_logit": 0.2877,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+    },
+    "family_max_p_spa_consistent": 0.2794,
+    "family_max_p_spa_best_arm": "nn_pre_causal_seedmean|10bps",
+    "mde_annual_excess_at_t_target": 0.05386,
+    "holm_p_this_job_6_cells": 1.0
+   },
+   "C_era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1331,
+     "t": -0.415,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4214,
+     "t": 1.227,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0983,
+     "t": -0.244,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "D_top5_share": {
+    "vs_raw_market_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.2869,
+      "2020-03": 0.2746,
+      "2008-11": 0.2595,
+      "2009-03": 0.1952,
+      "2018-12": 0.1774
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1881,
+      "2020-03": 0.0835,
+      "2008-11": 0.1661,
+      "2009-03": 0.0822,
+      "2018-12": 0.0732
+     },
+     "total_excess_sum": 0.70976,
+     "share_of_total_excess_from_those_5": 0.8355,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.11672,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 22.6076,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 7.7767,
+     "benchmark_terminal_wealth_without_them": 8.1753
+    },
+    "vs_beta_matched_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.2869,
+      "2020-03": 0.2746,
+      "2008-11": 0.2595,
+      "2009-03": 0.1952,
+      "2018-12": 0.1774
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1705,
+      "2020-03": 0.0496,
+      "2008-11": 0.1494,
+      "2009-03": 0.062,
+      "2018-12": 0.055
+     },
+     "total_excess_sum": 0.23549,
+     "share_of_total_excess_from_those_5": 2.066,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.25103,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 22.6076,
+     "benchmark_terminal_wealth_all_months": 20.308,
+     "book_terminal_wealth_without_them": 7.7767,
+     "benchmark_terminal_wealth_without_them": 10.518
+    },
+    "vs_raw_market_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.2869,
+      "2008-11": 0.2595,
+      "2012-02": 0.141,
+      "2023-12": 0.1001,
+      "2020-02": -0.2459
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1881,
+      "2008-11": 0.1661,
+      "2012-02": 0.1113,
+      "2023-12": 0.0899,
+      "2020-02": 0.0872
+     },
+     "total_excess_sum": 0.70976,
+     "share_of_total_excess_from_those_5": 0.9054,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.06713,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 22.6076,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 14.7359,
+     "benchmark_terminal_wealth_without_them": 17.2518
+    },
+    "vs_beta_matched_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.2869,
+      "2008-11": 0.2595,
+      "2020-02": -0.2459,
+      "2012-02": 0.141,
+      "2008-12": 0.0179
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1705,
+      "2008-11": 0.1494,
+      "2020-02": 0.1469,
+      "2012-02": 0.106,
+      "2008-12": 0.0928
+     },
+     "total_excess_sum": 0.23549,
+     "share_of_total_excess_from_those_5": 2.8269,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.43022,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 22.6076,
+     "benchmark_terminal_wealth_all_months": 20.308,
+     "book_terminal_wealth_without_them": 15.9264,
+     "benchmark_terminal_wealth_without_them": 28.1904
+    },
+    "w3b_raw_market_share_for_comparison": {
+     "share_of_total_excess_from_those_5": 0.8355,
+     "terminal_wealth_without_them": 7.777,
+     "note": "W3b computed the tail at 10 bps only, ranking by NET"
+    }
+   },
+   "E_monte_carlo_top5_null": {
+    "beta_matched_excess": {
+     "observed_top5_share_by_excess": 2.8269,
+     "series_mean_monthly": 0.000938,
+     "series_sd_monthly": 0.035552,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20324947,
+      "mean_used": 0.000938,
+      "sd_used": 0.035552,
+      "observed_share": 2.8269,
+      "median_null_share": 0.5469,
+      "mean_null_share_positive_total_only": 4.5803,
+      "share_of_draws_with_positive_total": 0.6607,
+      "p_turns_negative_without_top5": 0.6326,
+      "p_turns_negative_without_top5_given_positive_total": 0.4439,
+      "p_share_ge_observed": 0.1017,
+      "p_share_ge_observed_given_positive_total": 0.154
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20324947,
+      "mean_used": 0.000938,
+      "sd_used": 0.035552,
+      "observed_share": 2.8269,
+      "median_null_share": 0.7124,
+      "mean_null_share_positive_total_only": 7.1328,
+      "share_of_draws_with_positive_total": 0.6658,
+      "p_turns_negative_without_top5": 0.7084,
+      "p_turns_negative_without_top5_given_positive_total": 0.562,
+      "p_share_ge_observed": 0.1326,
+      "p_share_ge_observed_given_positive_total": 0.1991
+     }
+    },
+    "raw_market_excess": {
+     "observed_top5_share_by_excess": 0.9054,
+     "series_mean_monthly": 0.002828,
+     "series_sd_monthly": 0.036557,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20334663,
+      "mean_used": 0.002828,
+      "sd_used": 0.036557,
+      "observed_share": 0.9054,
+      "median_null_share": 0.5156,
+      "mean_null_share_positive_total_only": 7.5304,
+      "share_of_draws_with_positive_total": 0.8902,
+      "p_turns_negative_without_top5": 0.325,
+      "p_turns_negative_without_top5_given_positive_total": 0.2417,
+      "p_share_ge_observed": 0.2461,
+      "p_share_ge_observed_given_positive_total": 0.2765
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20334663,
+      "mean_used": 0.002828,
+      "sd_used": 0.036557,
+      "observed_share": 0.9054,
+      "median_null_share": 0.6458,
+      "mean_null_share_positive_total_only": 2.9674,
+      "share_of_draws_with_positive_total": 0.8913,
+      "p_turns_negative_without_top5": 0.3854,
+      "p_turns_negative_without_top5_given_positive_total": 0.3104,
+      "p_share_ge_observed": 0.3143,
+      "p_share_ge_observed_given_positive_total": 0.3526
+     }
+    }
+   }
+  },
+  "lgbm_clf|25bps": {
+   "book": "lgbm_clf",
+   "cost_bps_per_side": 25.0,
+   "A_market_regression": {
+    "n_months": 251,
+    "nw_lag": 4,
+    "alpha_monthly": -0.001728,
+    "alpha_annualised_12x": -0.02074,
+    "alpha_se_ols": 0.002303,
+    "alpha_se_hac": 0.002681,
+    "t_alpha_ols": -0.75,
+    "t_alpha_hac": -0.644,
+    "p_alpha_one_sided_hac": 0.74035,
+    "beta": 1.178,
+    "beta_se_ols": 0.04716,
+    "beta_se_hac": 0.08776,
+    "t_beta_ols": 24.98,
+    "t_beta_hac": 13.424,
+    "t_beta_minus_1_ols": 3.775,
+    "t_beta_minus_1_hac": 2.028,
+    "r_squared": 0.7148,
+    "residual_sd_monthly": 0.03561,
+    "residual_sd_annualised": 0.12337,
+    "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+   },
+   "A_reading": "beta > 1 with t(beta-1) >= 2 means the book carried MORE market than the benchmark it was graded against; alpha is what is left once that leverage is paid for",
+   "B_beta_matched": {
+    "benchmark_stamp": {
+     "schema": 1,
+     "module": "learner.benchmark",
+     "benchmark_id": "beta_matched",
+     "freq": "M",
+     "overlapping": false,
+     "provenance": {
+      "source": "learner.benchmark.beta_matched",
+      "construction": "1.178 x vw_crsp_common_main + -0.178 x cash_rf_pinned",
+      "beta": 1.178,
+      "market_benchmark_id": "vw_crsp_common_main",
+      "rf_included": true,
+      "network": false
+     },
+     "provenance_sha256": "da6ea4d5aba7f4b44ea2a4070d6b7dd69702d2cb872d4c6220e9cf14ed860531",
+     "span": [
+      "2004-01-16",
+      "2024-11-15"
+     ],
+     "n_periods": 251
+    },
+    "beta_used": 1.178,
+    "beta_source": "full-sample OLS of (net - rf) on (mkt - rf)",
+    "leg_reconstruction_max_abs_error": 0.0,
+    "mean_monthly_excess": -0.001728,
+    "annualised_excess_12x": -0.02073,
+    "sd_monthly": 0.03554,
+    "t_paired": -0.77,
+    "t_paired_hac": -0.742,
+    "months_ahead_of_beta_matched_leg": 0.4343,
+    "book_terminal_wealth": 11.6417,
+    "beta_matched_leg_terminal_wealth": 20.3005,
+    "raw_market_terminal_wealth": 14.3778,
+    "terminal_wealth_ratio_book_over_beta_matched": 0.5735
+   },
+   "B_raw_market_for_comparison": {
+    "mean_monthly_excess": 0.00016,
+    "annualised_excess_12x": 0.00191,
+    "t_paired": 0.069,
+    "w3b_annualised_excess": 0.0019,
+    "w3b_t_stat_paired_vs_market": 0.069
+   },
+   "B_walk_forward_beta": {
+    "min_months_before_a_beta_is_formed": 36,
+    "months_graded": 215,
+    "beta_first": 1.0045,
+    "beta_last": 1.1755,
+    "beta_mean": 1.217,
+    "beta_min": 1.0045,
+    "beta_max": 1.3911,
+    "mean_monthly_excess": -0.001508,
+    "annualised_excess_12x": -0.0181,
+    "t_paired": -0.576,
+    "note": "beta_t uses months strictly before t. It is NOT the headline: it answers whether a desk could have hedged the loading in real time, which is a different question from how much of the realised excess WAS the loading."
+   },
+   "C_inference_on_beta_matched_excess": {
+    "family": [
+     "lgbm_clf|10bps",
+     "lgbm_clf|25bps",
+     "lgbm_raw|10bps",
+     "lgbm_raw|25bps",
+     "nn_pre_causal_seedmean|10bps",
+     "nn_pre_causal_seedmean|25bps"
+    ],
+    "family_size_cells_in_this_job": 6,
+    "family_size_declared_for_deflation": 40,
+    "family_size_justification": "the three prediction columns are three of the 40 cells the W3b search opened (cells_looked_at = 40); this job re-grades them against a new benchmark and opens 6 more. 40 is the headline because the SELECTION happened there; dsr at 6 (this job alone) and 46 (both) are carried beside it.",
+    "dsr_at_alternative_family_sizes": {
+     "6": 0.0214,
+     "46": 0.0016
+    },
+    "n_cells_looked_at": 40,
+    "deflated_sharpe": {
+     "sharpe": -0.0486,
+     "sharpe_benchmark_sr0": 0.1385,
+     "n_trials": 40,
+     "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+     "skew": 0.806,
+     "kurtosis": 7.439,
+     "n_periods": 251,
+     "z": -2.8965,
+     "dsr": 0.0019,
+     "verdict": "WITHIN_SELECTION_NOISE",
+     "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is -0.049."
+    },
+    "power": {
+     "n_periods": 251,
+     "periods_per_year": 12,
+     "n_oos_months": 251,
+     "sharpe_per_period": -0.0486,
+     "t_observed": -0.7702,
+     "years_observed": 20.92,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.07034,
+     "years_needed_to_detect_that_effect": 67.4,
+     "mde_annual_excess_at_t_target": 0.05384,
+     "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.38%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "the arm's mean is not positive (SR -0.0486); no amount of tape makes a negative mean significant in the intended direction"
+    },
+    "spa": {
+     "best_arm": "nn_pre_causal_seedmean|10bps",
+     "n_arms": 6,
+     "n_periods": 251,
+     "n_boot": 500,
+     "block_periods": 4.0,
+     "t_spa": 1.1235,
+     "p_spa_consistent": 0.2794,
+     "p_spa_lower": 0.2794,
+     "p_spa_upper": 0.2794,
+     "arm_means": {
+      "lgbm_clf|10bps": 0.000938,
+      "lgbm_clf|25bps": -0.001728,
+      "lgbm_raw|10bps": 0.001943,
+      "lgbm_raw|25bps": -0.000664,
+      "nn_pre_causal_seedmean|10bps": 0.003294,
+      "nn_pre_causal_seedmean|25bps": 0.000878
+     },
+     "verdict": "WITHIN_SPA_NULL",
+     "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+    },
+    "pbo": {
+     "pbo": 0.4571,
+     "n_partitions": 70,
+     "n_arms": 6,
+     "n_periods": 251,
+     "median_logit": 0.2877,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+    },
+    "family_max_p_spa_consistent": 0.2794,
+    "family_max_p_spa_best_arm": "nn_pre_causal_seedmean|10bps",
+    "mde_annual_excess_at_t_target": 0.05384,
+    "holm_p_this_job_6_cells": 1.0
+   },
+   "C_era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3975,
+     "t": -1.236,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.142,
+     "t": 0.414,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3544,
+     "t": -0.881,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "D_top5_share": {
+    "vs_raw_market_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.2841,
+      "2020-03": 0.2716,
+      "2008-11": 0.2568,
+      "2009-03": 0.1925,
+      "2018-12": 0.1746
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1854,
+      "2020-03": 0.0805,
+      "2008-11": 0.1634,
+      "2009-03": 0.0795,
+      "2018-12": 0.0704
+     },
+     "total_excess_sum": 0.04004,
+     "share_of_total_excess_from_those_5": 14.4614,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.53905,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 11.6417,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 4.05,
+     "benchmark_terminal_wealth_without_them": 8.1753
+    },
+    "vs_beta_matched_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.2841,
+      "2020-03": 0.2716,
+      "2008-11": 0.2568,
+      "2009-03": 0.1925,
+      "2018-12": 0.1746
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1678,
+      "2020-03": 0.0466,
+      "2008-11": 0.1467,
+      "2009-03": 0.0594,
+      "2018-12": 0.0522
+     },
+     "total_excess_sum": -0.43369,
+     "share_of_total_excess_from_those_5": -1.09,
+     "total_excess_is_positive": false,
+     "share_is_interpretable": false,
+     "excess_sum_without_them": -0.9064,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 11.6417,
+     "benchmark_terminal_wealth_all_months": 20.3005,
+     "book_terminal_wealth_without_them": 4.05,
+     "benchmark_terminal_wealth_without_them": 10.5152
+    },
+    "vs_raw_market_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.2841,
+      "2008-11": 0.2568,
+      "2012-02": 0.138,
+      "2023-12": 0.0973,
+      "2020-02": -0.2489
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1854,
+      "2008-11": 0.1634,
+      "2012-02": 0.1084,
+      "2023-12": 0.087,
+      "2020-02": 0.0842
+     },
+     "total_excess_sum": 0.04004,
+     "share_of_total_excess_from_those_5": 15.6905,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.58828,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 11.6417,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 7.6913,
+     "benchmark_terminal_wealth_without_them": 17.2518
+    },
+    "vs_beta_matched_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.2841,
+      "2008-11": 0.2568,
+      "2020-02": -0.2489,
+      "2012-02": 0.138,
+      "2008-12": 0.0152
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.1678,
+      "2008-11": 0.1467,
+      "2020-02": 0.1438,
+      "2012-02": 0.1031,
+      "2008-12": 0.0901
+     },
+     "total_excess_sum": -0.43369,
+     "share_of_total_excess_from_those_5": -1.5023,
+     "total_excess_is_positive": false,
+     "share_is_interpretable": false,
+     "excess_sum_without_them": -1.08524,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 11.6417,
+     "benchmark_terminal_wealth_all_months": 20.3005,
+     "book_terminal_wealth_without_them": 8.313,
+     "benchmark_terminal_wealth_without_them": 28.1775
+    },
+    "w3b_raw_market_share_for_comparison": {
+     "share_of_total_excess_from_those_5": 0.8355,
+     "terminal_wealth_without_them": 7.777,
+     "note": "W3b computed the tail at 10 bps only, ranking by NET"
+    }
+   },
+   "E_monte_carlo_top5_null": {
+    "beta_matched_excess": {
+     "observed_top5_share_by_excess": -1.5023,
+     "series_mean_monthly": -0.001728,
+     "series_sd_monthly": 0.035543,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20314598,
+      "mean_used": -0.001728,
+      "sd_used": 0.035543,
+      "observed_share": -1.5023,
+      "median_null_share": -0.5309,
+      "mean_null_share_positive_total_only": 12.3589,
+      "share_of_draws_with_positive_total": 0.2223,
+      "p_turns_negative_without_top5": 0.9365,
+      "p_turns_negative_without_top5_given_positive_total": 0.7143,
+      "p_share_ge_observed": 0.8282,
+      "p_share_ge_observed_given_positive_total": 1.0
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20314598,
+      "mean_used": -0.001728,
+      "sd_used": 0.035543,
+      "observed_share": -1.5023,
+      "median_null_share": -0.6283,
+      "mean_null_share_positive_total_only": 9.8509,
+      "share_of_draws_with_positive_total": 0.2205,
+      "p_turns_negative_without_top5": 0.9616,
+      "p_turns_negative_without_top5_given_positive_total": 0.8258,
+      "p_share_ge_observed": 0.785,
+      "p_share_ge_observed_given_positive_total": 1.0
+     }
+    },
+    "raw_market_excess": {
+     "observed_top5_share_by_excess": 15.6905,
+     "series_mean_monthly": 0.00016,
+     "series_sd_monthly": 0.036546,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20301101,
+      "mean_used": 0.00016,
+      "sd_used": 0.036546,
+      "observed_share": 15.6905,
+      "median_null_share": 0.4103,
+      "mean_null_share_positive_total_only": 11.5153,
+      "share_of_draws_with_positive_total": 0.5331,
+      "p_turns_negative_without_top5": 0.7554,
+      "p_turns_negative_without_top5_given_positive_total": 0.5413,
+      "p_share_ge_observed": 0.0191,
+      "p_share_ge_observed_given_positive_total": 0.0358
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20301101,
+      "mean_used": 0.00016,
+      "sd_used": 0.036546,
+      "observed_share": 15.6905,
+      "median_null_share": 0.5017,
+      "mean_null_share_positive_total_only": 7.2791,
+      "share_of_draws_with_positive_total": 0.5246,
+      "p_turns_negative_without_top5": 0.8252,
+      "p_turns_negative_without_top5_given_positive_total": 0.6667,
+      "p_share_ge_observed": 0.0238,
+      "p_share_ge_observed_given_positive_total": 0.0454
+     }
+    }
+   }
+  },
+  "lgbm_raw|10bps": {
+   "book": "lgbm_raw",
+   "cost_bps_per_side": 10.0,
+   "A_market_regression": {
+    "n_months": 251,
+    "nw_lag": 4,
+    "alpha_monthly": 0.001944,
+    "alpha_annualised_12x": 0.02332,
+    "alpha_se_ols": 0.003514,
+    "alpha_se_hac": 0.00359,
+    "t_alpha_ols": 0.553,
+    "t_alpha_hac": 0.541,
+    "p_alpha_one_sided_hac": 0.29411,
+    "beta": 1.3918,
+    "beta_se_ols": 0.07196,
+    "beta_se_hac": 0.11462,
+    "t_beta_ols": 19.342,
+    "t_beta_hac": 12.142,
+    "t_beta_minus_1_ols": 5.444,
+    "t_beta_minus_1_hac": 3.418,
+    "r_squared": 0.6004,
+    "residual_sd_monthly": 0.05434,
+    "residual_sd_annualised": 0.18825,
+    "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+   },
+   "A_reading": "beta > 1 with t(beta-1) >= 2 means the book carried MORE market than the benchmark it was graded against; alpha is what is left once that leverage is paid for",
+   "B_beta_matched": {
+    "benchmark_stamp": {
+     "schema": 1,
+     "module": "learner.benchmark",
+     "benchmark_id": "beta_matched",
+     "freq": "M",
+     "overlapping": false,
+     "provenance": {
+      "source": "learner.benchmark.beta_matched",
+      "construction": "1.3918 x vw_crsp_common_main + -0.3918 x cash_rf_pinned",
+      "beta": 1.3918,
+      "market_benchmark_id": "vw_crsp_common_main",
+      "rf_included": true,
+      "network": false
+     },
+     "provenance_sha256": "6dc38029d698cbad274ea946ac362a604a2b40ca3abc31fb391fb01f9a9cf028",
+     "span": [
+      "2004-01-16",
+      "2024-11-15"
+     ],
+     "n_periods": 251
+    },
+    "beta_used": 1.3918,
+    "beta_source": "full-sample OLS of (net - rf) on (mkt - rf)",
+    "leg_reconstruction_max_abs_error": 0.0,
+    "mean_monthly_excess": 0.001943,
+    "annualised_excess_12x": 0.02332,
+    "sd_monthly": 0.05423,
+    "t_paired": 0.568,
+    "t_paired_hac": 0.57,
+    "months_ahead_of_beta_matched_leg": 0.494,
+    "book_terminal_wealth": 36.2448,
+    "beta_matched_leg_terminal_wealth": 29.6973,
+    "raw_market_terminal_wealth": 14.3778,
+    "terminal_wealth_ratio_book_over_beta_matched": 1.2205
+   },
+   "B_raw_market_for_comparison": {
+    "mean_monthly_excess": 0.006098,
+    "annualised_excess_12x": 0.07317,
+    "t_paired": 1.684,
+    "w3b_annualised_excess": 0.0732,
+    "w3b_t_stat_paired_vs_market": 1.684
+   },
+   "B_walk_forward_beta": {
+    "min_months_before_a_beta_is_formed": 36,
+    "months_graded": 215,
+    "beta_first": 1.712,
+    "beta_last": 1.3906,
+    "beta_mean": 1.4507,
+    "beta_min": 1.2835,
+    "beta_max": 1.712,
+    "mean_monthly_excess": 0.002581,
+    "annualised_excess_12x": 0.03097,
+    "t_paired": 0.669,
+    "note": "beta_t uses months strictly before t. It is NOT the headline: it answers whether a desk could have hedged the loading in real time, which is a different question from how much of the realised excess WAS the loading."
+   },
+   "C_inference_on_beta_matched_excess": {
+    "family": [
+     "lgbm_clf|10bps",
+     "lgbm_clf|25bps",
+     "lgbm_raw|10bps",
+     "lgbm_raw|25bps",
+     "nn_pre_causal_seedmean|10bps",
+     "nn_pre_causal_seedmean|25bps"
+    ],
+    "family_size_cells_in_this_job": 6,
+    "family_size_declared_for_deflation": 40,
+    "family_size_justification": "the three prediction columns are three of the 40 cells the W3b search opened (cells_looked_at = 40); this job re-grades them against a new benchmark and opens 6 more. 40 is the headline because the SELECTION happened there; dsr at 6 (this job alone) and 46 (both) are carried beside it.",
+    "dsr_at_alternative_family_sizes": {
+     "6": 0.2276,
+     "46": 0.0439
+    },
+    "n_cells_looked_at": 40,
+    "deflated_sharpe": {
+     "sharpe": 0.0358,
+     "sharpe_benchmark_sr0": 0.1385,
+     "n_trials": 40,
+     "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+     "skew": 1.038,
+     "kurtosis": 8.985,
+     "n_periods": 251,
+     "z": -1.6518,
+     "dsr": 0.0493,
+     "verdict": "WITHIN_SELECTION_NOISE",
+     "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.036."
+    },
+    "power": {
+     "n_periods": 251,
+     "periods_per_year": 12,
+     "n_oos_months": 251,
+     "sharpe_per_period": 0.0358,
+     "t_observed": 0.5676,
+     "years_observed": 20.92,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 3115.9,
+     "years_needed_for_t2": 259.7,
+     "years_needed_for_t2_exact": 259.6595197053346,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.0461,
+     "years_needed_to_detect_that_effect": 156.9,
+     "mde_annual_excess_at_t_target": 0.08216,
+     "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.22%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "t = 0.57 on 20.9 years; t = 2 would need 259.7 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    },
+    "spa": {
+     "best_arm": "nn_pre_causal_seedmean|10bps",
+     "n_arms": 6,
+     "n_periods": 251,
+     "n_boot": 500,
+     "block_periods": 4.0,
+     "t_spa": 1.1235,
+     "p_spa_consistent": 0.2794,
+     "p_spa_lower": 0.2794,
+     "p_spa_upper": 0.2794,
+     "arm_means": {
+      "lgbm_clf|10bps": 0.000938,
+      "lgbm_clf|25bps": -0.001728,
+      "lgbm_raw|10bps": 0.001943,
+      "lgbm_raw|25bps": -0.000664,
+      "nn_pre_causal_seedmean|10bps": 0.003294,
+      "nn_pre_causal_seedmean|25bps": 0.000878
+     },
+     "verdict": "WITHIN_SPA_NULL",
+     "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+    },
+    "pbo": {
+     "pbo": 0.4571,
+     "n_partitions": 70,
+     "n_arms": 6,
+     "n_periods": 251,
+     "median_logit": 0.2877,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+    },
+    "family_max_p_spa_consistent": 0.2794,
+    "family_max_p_spa_best_arm": "nn_pre_causal_seedmean|10bps",
+    "mde_annual_excess_at_t_target": 0.08216,
+    "holm_p_this_job_6_cells": 1.0
+   },
+   "C_era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.08,
+     "t": -0.129,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.5786,
+     "t": 1.129,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0274,
+     "t": -0.046,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "D_top5_share": {
+    "vs_raw_market_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.4764,
+      "2009-03": 0.3398,
+      "2008-11": 0.2404,
+      "2024-04": 0.2273,
+      "2023-11": 0.2175
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.3776,
+      "2009-03": 0.2268,
+      "2008-11": 0.147,
+      "2024-04": 0.1551,
+      "2023-11": 0.1514
+     },
+     "total_excess_sum": 1.53048,
+     "share_of_total_excess_from_those_5": 0.6912,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.47254,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 36.2448,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 9.8863,
+     "benchmark_terminal_wealth_without_them": 9.4071
+    },
+    "vs_beta_matched_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.4764,
+      "2009-03": 0.3398,
+      "2008-11": 0.2404,
+      "2024-04": 0.2273,
+      "2023-11": 0.2175
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.339,
+      "2009-03": 0.1826,
+      "2008-11": 0.1104,
+      "2024-04": 0.1284,
+      "2023-11": 0.1272
+     },
+     "total_excess_sum": 0.48773,
+     "share_of_total_excess_from_those_5": 1.8196,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.39977,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 36.2448,
+     "benchmark_terminal_wealth_all_months": 29.6973,
+     "book_terminal_wealth_without_them": 9.8863,
+     "benchmark_terminal_wealth_without_them": 16.6645
+    },
+    "vs_raw_market_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.4764,
+      "2009-03": 0.3398,
+      "2024-04": 0.2273,
+      "2023-11": 0.2175,
+      "2020-11": 0.2067
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.3776,
+      "2009-03": 0.2268,
+      "2024-04": 0.1551,
+      "2023-11": 0.1514,
+      "2020-11": 0.1476
+     },
+     "total_excess_sum": 1.53048,
+     "share_of_total_excess_from_those_5": 0.6917,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.4719,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 36.2448,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 10.162,
+     "benchmark_terminal_wealth_without_them": 9.7118
+    },
+    "vs_beta_matched_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.4764,
+      "2009-03": 0.3398,
+      "2020-02": -0.3047,
+      "2008-05": 0.0785,
+      "2024-04": 0.2273
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.339,
+      "2009-03": 0.1826,
+      "2020-02": 0.1597,
+      "2008-05": 0.134,
+      "2024-04": 0.1284
+     },
+     "total_excess_sum": 0.48773,
+     "share_of_total_excess_from_those_5": 1.9348,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.45592,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 36.2448,
+     "benchmark_terminal_wealth_all_months": 29.6973,
+     "book_terminal_wealth_without_them": 19.9101,
+     "benchmark_terminal_wealth_without_them": 40.5881
+    },
+    "w3b_raw_market_share_for_comparison": {
+     "share_of_total_excess_from_those_5": 0.6912,
+     "terminal_wealth_without_them": 9.886,
+     "note": "W3b computed the tail at 10 bps only, ranking by NET"
+    }
+   },
+   "E_monte_carlo_top5_null": {
+    "beta_matched_excess": {
+     "observed_top5_share_by_excess": 1.9348,
+     "series_mean_monthly": 0.001943,
+     "series_sd_monthly": 0.054234,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20272667,
+      "mean_used": 0.001943,
+      "sd_used": 0.054234,
+      "observed_share": 1.9348,
+      "median_null_share": 0.5735,
+      "mean_null_share_positive_total_only": 3.6987,
+      "share_of_draws_with_positive_total": 0.721,
+      "p_turns_negative_without_top5": 0.5767,
+      "p_turns_negative_without_top5_given_positive_total": 0.413,
+      "p_share_ge_observed": 0.1436,
+      "p_share_ge_observed_given_positive_total": 0.1992
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20272667,
+      "mean_used": 0.001943,
+      "sd_used": 0.054234,
+      "observed_share": 1.9348,
+      "median_null_share": 0.7312,
+      "mean_null_share_positive_total_only": 7.6399,
+      "share_of_draws_with_positive_total": 0.713,
+      "p_turns_negative_without_top5": 0.6594,
+      "p_turns_negative_without_top5_given_positive_total": 0.5224,
+      "p_share_ge_observed": 0.1844,
+      "p_share_ge_observed_given_positive_total": 0.2586
+     }
+    },
+    "raw_market_excess": {
+     "observed_top5_share_by_excess": 0.6917,
+     "series_mean_monthly": 0.006098,
+     "series_sd_monthly": 0.057371,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20296889,
+      "mean_used": 0.006098,
+      "sd_used": 0.057371,
+      "observed_share": 0.6917,
+      "median_null_share": 0.4365,
+      "mean_null_share_positive_total_only": 1.0127,
+      "share_of_draws_with_positive_total": 0.9545,
+      "p_turns_negative_without_top5": 0.1741,
+      "p_turns_negative_without_top5_given_positive_total": 0.1347,
+      "p_share_ge_observed": 0.2323,
+      "p_share_ge_observed_given_positive_total": 0.2434
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20296889,
+      "mean_used": 0.006098,
+      "sd_used": 0.057371,
+      "observed_share": 0.6917,
+      "median_null_share": 0.5402,
+      "mean_null_share_positive_total_only": 1.5448,
+      "share_of_draws_with_positive_total": 0.9546,
+      "p_turns_negative_without_top5": 0.2245,
+      "p_turns_negative_without_top5_given_positive_total": 0.1876,
+      "p_share_ge_observed": 0.333,
+      "p_share_ge_observed_given_positive_total": 0.3488
+     }
+    }
+   }
+  },
+  "lgbm_raw|25bps": {
+   "book": "lgbm_raw",
+   "cost_bps_per_side": 25.0,
+   "A_market_regression": {
+    "n_months": 251,
+    "nw_lag": 4,
+    "alpha_monthly": -0.000665,
+    "alpha_annualised_12x": -0.00798,
+    "alpha_se_ols": 0.003516,
+    "alpha_se_hac": 0.003585,
+    "t_alpha_ols": -0.189,
+    "t_alpha_hac": -0.185,
+    "p_alpha_one_sided_hac": 0.57356,
+    "beta": 1.392,
+    "beta_se_ols": 0.072,
+    "beta_se_hac": 0.11464,
+    "t_beta_ols": 19.333,
+    "t_beta_hac": 12.142,
+    "t_beta_minus_1_ols": 5.445,
+    "t_beta_minus_1_hac": 3.42,
+    "r_squared": 0.6002,
+    "residual_sd_monthly": 0.05438,
+    "residual_sd_annualised": 0.18837,
+    "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+   },
+   "A_reading": "beta > 1 with t(beta-1) >= 2 means the book carried MORE market than the benchmark it was graded against; alpha is what is left once that leverage is paid for",
+   "B_beta_matched": {
+    "benchmark_stamp": {
+     "schema": 1,
+     "module": "learner.benchmark",
+     "benchmark_id": "beta_matched",
+     "freq": "M",
+     "overlapping": false,
+     "provenance": {
+      "source": "learner.benchmark.beta_matched",
+      "construction": "1.392 x vw_crsp_common_main + -0.392 x cash_rf_pinned",
+      "beta": 1.392,
+      "market_benchmark_id": "vw_crsp_common_main",
+      "rf_included": true,
+      "network": false
+     },
+     "provenance_sha256": "c33e1c0c715c703cecb0fb5161940526e8e40dadd81204c80dd7708b4239938b",
+     "span": [
+      "2004-01-16",
+      "2024-11-15"
+     ],
+     "n_periods": 251
+    },
+    "beta_used": 1.392,
+    "beta_source": "full-sample OLS of (net - rf) on (mkt - rf)",
+    "leg_reconstruction_max_abs_error": 0.0,
+    "mean_monthly_excess": -0.000664,
+    "annualised_excess_12x": -0.00797,
+    "sd_monthly": 0.05427,
+    "t_paired": -0.194,
+    "t_paired_hac": -0.195,
+    "months_ahead_of_beta_matched_leg": 0.4701,
+    "book_terminal_wealth": 18.9497,
+    "beta_matched_leg_terminal_wealth": 29.7074,
+    "raw_market_terminal_wealth": 14.3778,
+    "terminal_wealth_ratio_book_over_beta_matched": 0.6379
+   },
+   "B_raw_market_for_comparison": {
+    "mean_monthly_excess": 0.003492,
+    "annualised_excess_12x": 0.0419,
+    "t_paired": 0.964,
+    "w3b_annualised_excess": 0.0419,
+    "w3b_t_stat_paired_vs_market": 0.964
+   },
+   "B_walk_forward_beta": {
+    "min_months_before_a_beta_is_formed": 36,
+    "months_graded": 215,
+    "beta_first": 1.7116,
+    "beta_last": 1.3909,
+    "beta_mean": 1.4509,
+    "beta_min": 1.2834,
+    "beta_max": 1.7116,
+    "mean_monthly_excess": -0.000102,
+    "annualised_excess_12x": -0.00123,
+    "t_paired": -0.027,
+    "note": "beta_t uses months strictly before t. It is NOT the headline: it answers whether a desk could have hedged the loading in real time, which is a different question from how much of the realised excess WAS the loading."
+   },
+   "C_inference_on_beta_matched_excess": {
+    "family": [
+     "lgbm_clf|10bps",
+     "lgbm_clf|25bps",
+     "lgbm_raw|10bps",
+     "lgbm_raw|25bps",
+     "nn_pre_causal_seedmean|10bps",
+     "nn_pre_causal_seedmean|25bps"
+    ],
+    "family_size_cells_in_this_job": 6,
+    "family_size_declared_for_deflation": 40,
+    "family_size_justification": "the three prediction columns are three of the 40 cells the W3b search opened (cells_looked_at = 40); this job re-grades them against a new benchmark and opens 6 more. 40 is the headline because the SELECTION happened there; dsr at 6 (this job alone) and 46 (both) are carried beside it.",
+    "dsr_at_alternative_family_sizes": {
+     "6": 0.0689,
+     "46": 0.0077
+    },
+    "n_cells_looked_at": 40,
+    "deflated_sharpe": {
+     "sharpe": -0.0122,
+     "sharpe_benchmark_sr0": 0.1385,
+     "n_trials": 40,
+     "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+     "skew": 1.04,
+     "kurtosis": 8.985,
+     "n_periods": 251,
+     "z": -2.3677,
+     "dsr": 0.0089,
+     "verdict": "WITHIN_SELECTION_NOISE",
+     "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is -0.012."
+    },
+    "power": {
+     "n_periods": 251,
+     "periods_per_year": 12,
+     "n_oos_months": 251,
+     "sharpe_per_period": -0.0122,
+     "t_observed": -0.194,
+     "years_observed": 20.92,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.04607,
+     "years_needed_to_detect_that_effect": 157.1,
+     "mde_annual_excess_at_t_target": 0.08221,
+     "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.22%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "the arm's mean is not positive (SR -0.0122); no amount of tape makes a negative mean significant in the intended direction"
+    },
+    "spa": {
+     "best_arm": "nn_pre_causal_seedmean|10bps",
+     "n_arms": 6,
+     "n_periods": 251,
+     "n_boot": 500,
+     "block_periods": 4.0,
+     "t_spa": 1.1235,
+     "p_spa_consistent": 0.2794,
+     "p_spa_lower": 0.2794,
+     "p_spa_upper": 0.2794,
+     "arm_means": {
+      "lgbm_clf|10bps": 0.000938,
+      "lgbm_clf|25bps": -0.001728,
+      "lgbm_raw|10bps": 0.001943,
+      "lgbm_raw|25bps": -0.000664,
+      "nn_pre_causal_seedmean|10bps": 0.003294,
+      "nn_pre_causal_seedmean|25bps": 0.000878
+     },
+     "verdict": "WITHIN_SPA_NULL",
+     "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+    },
+    "pbo": {
+     "pbo": 0.4571,
+     "n_partitions": 70,
+     "n_arms": 6,
+     "n_periods": 251,
+     "median_logit": 0.2877,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+    },
+    "family_max_p_spa_consistent": 0.2794,
+    "family_max_p_spa_best_arm": "nn_pre_causal_seedmean|10bps",
+    "mde_annual_excess_at_t_target": 0.08221,
+    "holm_p_this_job_6_cells": 1.0
+   },
+   "C_era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3076,
+     "t": -0.496,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.308,
+     "t": 0.601,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2943,
+     "t": -0.491,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "D_top5_share": {
+    "vs_raw_market_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.4739,
+      "2009-03": 0.3377,
+      "2008-11": 0.2376,
+      "2024-04": 0.2269,
+      "2023-11": 0.2153
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.3751,
+      "2009-03": 0.2247,
+      "2008-11": 0.1441,
+      "2024-04": 0.1547,
+      "2023-11": 0.1492
+     },
+     "total_excess_sum": 0.8765,
+     "share_of_total_excess_from_those_5": 1.1956,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.17141,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 18.9497,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 5.2086,
+     "benchmark_terminal_wealth_without_them": 9.4071
+    },
+    "vs_beta_matched_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-05": 0.4739,
+      "2009-03": 0.3377,
+      "2008-11": 0.2376,
+      "2024-04": 0.2269,
+      "2023-11": 0.2153
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.3364,
+      "2009-03": 0.1804,
+      "2008-11": 0.1075,
+      "2024-04": 0.128,
+      "2023-11": 0.125
+     },
+     "total_excess_sum": -0.16678,
+     "share_of_total_excess_from_those_5": -5.2608,
+     "total_excess_is_positive": false,
+     "share_is_interpretable": false,
+     "excess_sum_without_them": -1.04417,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 18.9497,
+     "benchmark_terminal_wealth_all_months": 29.7074,
+     "book_terminal_wealth_without_them": 5.2086,
+     "benchmark_terminal_wealth_without_them": 16.6688
+    },
+    "vs_raw_market_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.4739,
+      "2009-03": 0.3377,
+      "2024-04": 0.2269,
+      "2023-11": 0.2153,
+      "2020-11": 0.2041
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.3751,
+      "2009-03": 0.2247,
+      "2024-04": 0.1547,
+      "2023-11": 0.1492,
+      "2020-11": 0.145
+     },
+     "total_excess_sum": 0.8765,
+     "share_of_total_excess_from_those_5": 1.1965,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.17226,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 18.9497,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 5.3533,
+     "benchmark_terminal_wealth_without_them": 9.7118
+    },
+    "vs_beta_matched_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2020-05": 0.4739,
+      "2009-03": 0.3377,
+      "2020-02": -0.3076,
+      "2008-05": 0.0758,
+      "2024-04": 0.2269
+     },
+     "excess_in_those_5": {
+      "2020-05": 0.3364,
+      "2009-03": 0.1804,
+      "2020-02": 0.1568,
+      "2008-05": 0.1313,
+      "2024-04": 0.128
+     },
+     "total_excess_sum": -0.16678,
+     "share_of_total_excess_from_those_5": -5.5944,
+     "total_excess_is_positive": false,
+     "share_is_interpretable": false,
+     "excess_sum_without_them": -1.09981,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 18.9497,
+     "benchmark_terminal_wealth_all_months": 29.7074,
+     "book_terminal_wealth_without_them": 10.5176,
+     "benchmark_terminal_wealth_without_them": 40.6052
+    },
+    "w3b_raw_market_share_for_comparison": {
+     "share_of_total_excess_from_those_5": 0.6912,
+     "terminal_wealth_without_them": 9.886,
+     "note": "W3b computed the tail at 10 bps only, ranking by NET"
+    }
+   },
+   "E_monte_carlo_top5_null": {
+    "beta_matched_excess": {
+     "observed_top5_share_by_excess": -5.5944,
+     "series_mean_monthly": -0.000664,
+     "series_sd_monthly": 0.054269,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20296417,
+      "mean_used": -0.000664,
+      "sd_used": 0.054269,
+      "observed_share": -5.5944,
+      "median_null_share": -0.4453,
+      "mean_null_share_positive_total_only": 15.5543,
+      "share_of_draws_with_positive_total": 0.418,
+      "p_turns_negative_without_top5": 0.8319,
+      "p_turns_negative_without_top5_given_positive_total": 0.598,
+      "p_share_ge_observed": 0.9452,
+      "p_share_ge_observed_given_positive_total": 1.0
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20296417,
+      "mean_used": -0.000664,
+      "sd_used": 0.054269,
+      "observed_share": -5.5944,
+      "median_null_share": -0.4892,
+      "mean_null_share_positive_total_only": 10.8354,
+      "share_of_draws_with_positive_total": 0.4245,
+      "p_turns_negative_without_top5": 0.885,
+      "p_turns_negative_without_top5_given_positive_total": 0.729,
+      "p_share_ge_observed": 0.9336,
+      "p_share_ge_observed_given_positive_total": 1.0
+     }
+    },
+    "raw_market_excess": {
+     "observed_top5_share_by_excess": 1.1965,
+     "series_mean_monthly": 0.003492,
+     "series_sd_monthly": 0.057409,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20344595,
+      "mean_used": 0.003492,
+      "sd_used": 0.057409,
+      "observed_share": 1.1965,
+      "median_null_share": 0.5605,
+      "mean_null_share_positive_total_only": 2.7148,
+      "share_of_draws_with_positive_total": 0.8377,
+      "p_turns_negative_without_top5": 0.4183,
+      "p_turns_negative_without_top5_given_positive_total": 0.3056,
+      "p_share_ge_observed": 0.2054,
+      "p_share_ge_observed_given_positive_total": 0.2452
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20344595,
+      "mean_used": 0.003492,
+      "sd_used": 0.057409,
+      "observed_share": 1.1965,
+      "median_null_share": 0.6989,
+      "mean_null_share_positive_total_only": 4.8225,
+      "share_of_draws_with_positive_total": 0.8364,
+      "p_turns_negative_without_top5": 0.4874,
+      "p_turns_negative_without_top5_given_positive_total": 0.3872,
+      "p_share_ge_observed": 0.2586,
+      "p_share_ge_observed_given_positive_total": 0.3092
+     }
+    }
+   }
+  },
+  "nn_pre_causal_seedmean|10bps": {
+   "book": "nn_pre_causal_seedmean",
+   "cost_bps_per_side": 10.0,
+   "A_market_regression": {
+    "n_months": 251,
+    "nw_lag": 4,
+    "alpha_monthly": 0.003293,
+    "alpha_annualised_12x": 0.03952,
+    "alpha_se_ols": 0.002933,
+    "alpha_se_hac": 0.003009,
+    "t_alpha_ols": 1.123,
+    "t_alpha_hac": 1.095,
+    "p_alpha_one_sided_hac": 0.13683,
+    "beta": 1.3294,
+    "beta_se_ols": 0.06007,
+    "beta_se_hac": 0.07773,
+    "t_beta_ols": 22.133,
+    "t_beta_hac": 17.104,
+    "t_beta_minus_1_ols": 5.485,
+    "t_beta_minus_1_hac": 4.238,
+    "r_squared": 0.663,
+    "residual_sd_monthly": 0.04536,
+    "residual_sd_annualised": 0.15714,
+    "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+   },
+   "A_reading": "beta > 1 with t(beta-1) >= 2 means the book carried MORE market than the benchmark it was graded against; alpha is what is left once that leverage is paid for",
+   "B_beta_matched": {
+    "benchmark_stamp": {
+     "schema": 1,
+     "module": "learner.benchmark",
+     "benchmark_id": "beta_matched",
+     "freq": "M",
+     "overlapping": false,
+     "provenance": {
+      "source": "learner.benchmark.beta_matched",
+      "construction": "1.3294 x vw_crsp_common_main + -0.3294 x cash_rf_pinned",
+      "beta": 1.3294,
+      "market_benchmark_id": "vw_crsp_common_main",
+      "rf_included": true,
+      "network": false
+     },
+     "provenance_sha256": "314eb7a5b959b798ffd31a66e2a94ea2463cb18e60e65181b9626b27dae8f662",
+     "span": [
+      "2004-01-16",
+      "2024-11-15"
+     ],
+     "n_periods": 251
+    },
+    "beta_used": 1.3294,
+    "beta_source": "full-sample OLS of (net - rf) on (mkt - rf)",
+    "leg_reconstruction_max_abs_error": 0.0,
+    "mean_monthly_excess": 0.003294,
+    "annualised_excess_12x": 0.03953,
+    "sd_monthly": 0.04527,
+    "t_paired": 1.153,
+    "t_paired_hac": 1.154,
+    "months_ahead_of_beta_matched_leg": 0.5179,
+    "book_terminal_wealth": 49.0082,
+    "beta_matched_leg_terminal_wealth": 26.6841,
+    "raw_market_terminal_wealth": 14.3778,
+    "terminal_wealth_ratio_book_over_beta_matched": 1.8366
+   },
+   "B_raw_market_for_comparison": {
+    "mean_monthly_excess": 0.006787,
+    "annualised_excess_12x": 0.08144,
+    "t_paired": 2.243,
+    "w3b_annualised_excess": 0.0814,
+    "w3b_t_stat_paired_vs_market": 2.243
+   },
+   "B_walk_forward_beta": {
+    "min_months_before_a_beta_is_formed": 36,
+    "months_graded": 215,
+    "beta_first": 1.5841,
+    "beta_last": 1.3305,
+    "beta_mean": 1.3545,
+    "beta_min": 1.234,
+    "beta_max": 1.6039,
+    "mean_monthly_excess": 0.004792,
+    "annualised_excess_12x": 0.0575,
+    "t_paired": 1.493,
+    "note": "beta_t uses months strictly before t. It is NOT the headline: it answers whether a desk could have hedged the loading in real time, which is a different question from how much of the realised excess WAS the loading."
+   },
+   "C_inference_on_beta_matched_excess": {
+    "family": [
+     "lgbm_clf|10bps",
+     "lgbm_clf|25bps",
+     "lgbm_raw|10bps",
+     "lgbm_raw|25bps",
+     "nn_pre_causal_seedmean|10bps",
+     "nn_pre_causal_seedmean|25bps"
+    ],
+    "family_size_cells_in_this_job": 6,
+    "family_size_declared_for_deflation": 40,
+    "family_size_justification": "the three prediction columns are three of the 40 cells the W3b search opened (cells_looked_at = 40); this job re-grades them against a new benchmark and opens 6 more. 40 is the headline because the SELECTION happened there; dsr at 6 (this job alone) and 46 (both) are carried beside it.",
+    "dsr_at_alternative_family_sizes": {
+     "6": 0.4406,
+     "46": 0.1373
+    },
+    "n_cells_looked_at": 40,
+    "deflated_sharpe": {
+     "sharpe": 0.0728,
+     "sharpe_benchmark_sr0": 0.1385,
+     "n_trials": 40,
+     "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+     "skew": 0.014,
+     "kurtosis": 3.759,
+     "n_periods": 251,
+     "z": -1.0377,
+     "dsr": 0.1497,
+     "verdict": "WITHIN_SELECTION_NOISE",
+     "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.073."
+    },
+    "power": {
+     "n_periods": 251,
+     "periods_per_year": 12,
+     "n_oos_months": 251,
+     "sharpe_per_period": 0.0728,
+     "t_observed": 1.1527,
+     "years_observed": 20.92,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 755.6,
+     "years_needed_for_t2": 63.0,
+     "years_needed_for_t2_exact": 62.970751782103,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.05522,
+     "years_needed_to_detect_that_effect": 109.3,
+     "mde_annual_excess_at_t_target": 0.06858,
+     "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.86%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "t = 1.15 on 20.9 years; t = 2 would need 63.0 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    },
+    "spa": {
+     "best_arm": "nn_pre_causal_seedmean|10bps",
+     "n_arms": 6,
+     "n_periods": 251,
+     "n_boot": 500,
+     "block_periods": 4.0,
+     "t_spa": 1.1235,
+     "p_spa_consistent": 0.2794,
+     "p_spa_lower": 0.2794,
+     "p_spa_upper": 0.2794,
+     "arm_means": {
+      "lgbm_clf|10bps": 0.000938,
+      "lgbm_clf|25bps": -0.001728,
+      "lgbm_raw|10bps": 0.001943,
+      "lgbm_raw|25bps": -0.000664,
+      "nn_pre_causal_seedmean|10bps": 0.003294,
+      "nn_pre_causal_seedmean|25bps": 0.000878
+     },
+     "verdict": "WITHIN_SPA_NULL",
+     "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+    },
+    "pbo": {
+     "pbo": 0.4571,
+     "n_partitions": 70,
+     "n_arms": 6,
+     "n_periods": 251,
+     "median_logit": 0.2877,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+    },
+    "family_max_p_spa_consistent": 0.2794,
+    "family_max_p_spa_best_arm": "nn_pre_causal_seedmean|10bps",
+    "mde_annual_excess_at_t_target": 0.06858,
+    "holm_p_this_job_6_cells": 0.82098
+   },
+   "C_era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1015,
+     "t": 0.204,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1043,
+     "t": 0.219,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.6336,
+     "t": 1.353,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "D_top5_share": {
+    "vs_raw_market_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-03": 0.2783,
+      "2020-05": 0.239,
+      "2009-03": 0.2374,
+      "2022-07": 0.2162,
+      "2023-11": 0.191
+     },
+     "excess_in_those_5": {
+      "2020-03": 0.0872,
+      "2020-05": 0.1402,
+      "2009-03": 0.1244,
+      "2022-07": 0.0942,
+      "2023-11": 0.1249
+     },
+     "total_excess_sum": 1.70342,
+     "share_of_total_excess_from_those_5": 0.3351,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 1.13256,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 49.0082,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 17.2648,
+     "benchmark_terminal_wealth_without_them": 8.2519
+    },
+    "vs_beta_matched_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-03": 0.2783,
+      "2020-05": 0.239,
+      "2009-03": 0.2374,
+      "2022-07": 0.2162,
+      "2023-11": 0.191
+     },
+     "excess_in_those_5": {
+      "2020-03": 0.0245,
+      "2020-05": 0.1077,
+      "2009-03": 0.0872,
+      "2022-07": 0.0543,
+      "2023-11": 0.1045
+     },
+     "total_excess_sum": 0.82675,
+     "share_of_total_excess_from_those_5": 0.4574,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.44858,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 49.0082,
+     "benchmark_terminal_wealth_all_months": 26.6841,
+     "book_terminal_wealth_without_them": 17.2648,
+     "benchmark_terminal_wealth_without_them": 12.9566
+    },
+    "vs_raw_market_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2008-03": 0.1817,
+      "2020-05": 0.239,
+      "2020-11": 0.1895,
+      "2023-11": 0.191,
+      "2009-03": 0.2374
+     },
+     "excess_in_those_5": {
+      "2008-03": 0.162,
+      "2020-05": 0.1402,
+      "2020-11": 0.1304,
+      "2023-11": 0.1249,
+      "2009-03": 0.1244
+     },
+     "total_excess_sum": 1.70342,
+     "share_of_total_excess_from_those_5": 0.4004,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 1.02144,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 49.0082,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 19.0954,
+     "benchmark_terminal_wealth_without_them": 10.2125
+    },
+    "vs_beta_matched_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2008-03": 0.1817,
+      "2020-11": 0.1895,
+      "2008-05": 0.0561,
+      "2020-05": 0.239,
+      "2020-02": -0.3368
+     },
+     "excess_in_those_5": {
+      "2008-03": 0.1563,
+      "2020-11": 0.111,
+      "2008-05": 0.109,
+      "2020-05": 0.1077,
+      "2020-02": 0.1067
+     },
+     "total_excess_sum": 0.82675,
+     "share_of_total_excess_from_those_5": 0.7144,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.23615,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 49.0082,
+     "benchmark_terminal_wealth_all_months": 26.6841,
+     "book_terminal_wealth_without_them": 40.1804,
+     "benchmark_terminal_wealth_without_them": 40.466
+    },
+    "w3b_raw_market_share_for_comparison": {
+     "share_of_total_excess_from_those_5": 0.3351,
+     "terminal_wealth_without_them": 17.265,
+     "note": "W3b computed the tail at 10 bps only, ranking by NET"
+    }
+   },
+   "E_monte_carlo_top5_null": {
+    "beta_matched_excess": {
+     "observed_top5_share_by_excess": 0.7144,
+     "series_mean_monthly": 0.003294,
+     "series_sd_monthly": 0.045272,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20321329,
+      "mean_used": 0.003294,
+      "sd_used": 0.045272,
+      "observed_share": 0.7144,
+      "median_null_share": 0.529,
+      "mean_null_share_positive_total_only": 2.1657,
+      "share_of_draws_with_positive_total": 0.8754,
+      "p_turns_negative_without_top5": 0.3488,
+      "p_turns_negative_without_top5_given_positive_total": 0.2561,
+      "p_share_ge_observed": 0.3439,
+      "p_share_ge_observed_given_positive_total": 0.3929
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20321329,
+      "mean_used": 0.003294,
+      "sd_used": 0.045272,
+      "observed_share": 0.7144,
+      "median_null_share": 0.6609,
+      "mean_null_share_positive_total_only": 3.3302,
+      "share_of_draws_with_positive_total": 0.8751,
+      "p_turns_negative_without_top5": 0.4158,
+      "p_turns_negative_without_top5_given_positive_total": 0.3325,
+      "p_share_ge_observed": 0.4546,
+      "p_share_ge_observed_given_positive_total": 0.5195
+     }
+    },
+    "raw_market_excess": {
+     "observed_top5_share_by_excess": 0.4004,
+     "series_mean_monthly": 0.006787,
+     "series_sd_monthly": 0.047929,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20287861,
+      "mean_used": 0.006787,
+      "sd_used": 0.047929,
+      "observed_share": 0.4004,
+      "median_null_share": 0.3502,
+      "mean_null_share_positive_total_only": 0.8263,
+      "share_of_draws_with_positive_total": 0.9885,
+      "p_turns_negative_without_top5": 0.0702,
+      "p_turns_negative_without_top5_given_positive_total": 0.0594,
+      "p_share_ge_observed": 0.38,
+      "p_share_ge_observed_given_positive_total": 0.3844
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20287861,
+      "mean_used": 0.006787,
+      "sd_used": 0.047929,
+      "observed_share": 0.4004,
+      "median_null_share": 0.4292,
+      "mean_null_share_positive_total_only": 0.8295,
+      "share_of_draws_with_positive_total": 0.9878,
+      "p_turns_negative_without_top5": 0.0855,
+      "p_turns_negative_without_top5_given_positive_total": 0.0742,
+      "p_share_ge_observed": 0.5719,
+      "p_share_ge_observed_given_positive_total": 0.579
+     }
+    }
+   }
+  },
+  "nn_pre_causal_seedmean|25bps": {
+   "book": "nn_pre_causal_seedmean",
+   "cost_bps_per_side": 25.0,
+   "A_market_regression": {
+    "n_months": 251,
+    "nw_lag": 4,
+    "alpha_monthly": 0.000878,
+    "alpha_annualised_12x": 0.01053,
+    "alpha_se_ols": 0.002932,
+    "alpha_se_hac": 0.00301,
+    "t_alpha_ols": 0.299,
+    "t_alpha_hac": 0.292,
+    "p_alpha_one_sided_hac": 0.38526,
+    "beta": 1.3297,
+    "beta_se_ols": 0.06004,
+    "beta_se_hac": 0.07776,
+    "t_beta_ols": 22.147,
+    "t_beta_hac": 17.101,
+    "t_beta_minus_1_ols": 5.492,
+    "t_beta_minus_1_hac": 4.241,
+    "r_squared": 0.6633,
+    "residual_sd_monthly": 0.04535,
+    "residual_sd_annualised": 0.15708,
+    "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+   },
+   "A_reading": "beta > 1 with t(beta-1) >= 2 means the book carried MORE market than the benchmark it was graded against; alpha is what is left once that leverage is paid for",
+   "B_beta_matched": {
+    "benchmark_stamp": {
+     "schema": 1,
+     "module": "learner.benchmark",
+     "benchmark_id": "beta_matched",
+     "freq": "M",
+     "overlapping": false,
+     "provenance": {
+      "source": "learner.benchmark.beta_matched",
+      "construction": "1.3297 x vw_crsp_common_main + -0.3297 x cash_rf_pinned",
+      "beta": 1.3297,
+      "market_benchmark_id": "vw_crsp_common_main",
+      "rf_included": true,
+      "network": false
+     },
+     "provenance_sha256": "b0990901033ba7a9cd6d25fc5a181a3ba2e2d1dabea0c921cc6ef61c736bbf6f",
+     "span": [
+      "2004-01-16",
+      "2024-11-15"
+     ],
+     "n_periods": 251
+    },
+    "beta_used": 1.3297,
+    "beta_source": "full-sample OLS of (net - rf) on (mkt - rf)",
+    "leg_reconstruction_max_abs_error": 0.0,
+    "mean_monthly_excess": 0.000878,
+    "annualised_excess_12x": 0.01054,
+    "sd_monthly": 0.04525,
+    "t_paired": 0.307,
+    "t_paired_hac": 0.308,
+    "months_ahead_of_beta_matched_leg": 0.4781,
+    "book_terminal_wealth": 26.9286,
+    "beta_matched_leg_terminal_wealth": 26.698,
+    "raw_market_terminal_wealth": 14.3778,
+    "terminal_wealth_ratio_book_over_beta_matched": 1.0086
+   },
+   "B_raw_market_for_comparison": {
+    "mean_monthly_excess": 0.004374,
+    "annualised_excess_12x": 0.05249,
+    "t_paired": 1.446,
+    "w3b_annualised_excess": 0.0525,
+    "w3b_t_stat_paired_vs_market": 1.446
+   },
+   "B_walk_forward_beta": {
+    "min_months_before_a_beta_is_formed": 36,
+    "months_graded": 215,
+    "beta_first": 1.5837,
+    "beta_last": 1.3308,
+    "beta_mean": 1.3547,
+    "beta_min": 1.2343,
+    "beta_max": 1.6036,
+    "mean_monthly_excess": 0.002395,
+    "annualised_excess_12x": 0.02874,
+    "t_paired": 0.747,
+    "note": "beta_t uses months strictly before t. It is NOT the headline: it answers whether a desk could have hedged the loading in real time, which is a different question from how much of the realised excess WAS the loading."
+   },
+   "C_inference_on_beta_matched_excess": {
+    "family": [
+     "lgbm_clf|10bps",
+     "lgbm_clf|25bps",
+     "lgbm_raw|10bps",
+     "lgbm_raw|25bps",
+     "nn_pre_causal_seedmean|10bps",
+     "nn_pre_causal_seedmean|25bps"
+    ],
+    "family_size_cells_in_this_job": 6,
+    "family_size_declared_for_deflation": 40,
+    "family_size_justification": "the three prediction columns are three of the 40 cells the W3b search opened (cells_looked_at = 40); this job re-grades them against a new benchmark and opens 6 more. 40 is the headline because the SELECTION happened there; dsr at 6 (this job alone) and 46 (both) are carried beside it.",
+    "dsr_at_alternative_family_sizes": {
+     "6": 0.1603,
+     "46": 0.0263
+    },
+    "n_cells_looked_at": 40,
+    "deflated_sharpe": {
+     "sharpe": 0.0194,
+     "sharpe_benchmark_sr0": 0.1385,
+     "n_trials": 40,
+     "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+     "skew": 0.019,
+     "kurtosis": 3.758,
+     "n_periods": 251,
+     "z": -1.8827,
+     "dsr": 0.0299,
+     "verdict": "WITHIN_SELECTION_NOISE",
+     "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.019."
+    },
+    "power": {
+     "n_periods": 251,
+     "periods_per_year": 12,
+     "n_oos_months": 251,
+     "sharpe_per_period": 0.0194,
+     "t_observed": 0.3075,
+     "years_observed": 20.92,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 10618.9,
+     "years_needed_for_t2": 884.9,
+     "years_needed_for_t2_exact": 884.9065829011624,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.05524,
+     "years_needed_to_detect_that_effect": 109.2,
+     "mde_annual_excess_at_t_target": 0.06856,
+     "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.86%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "t = 0.31 on 20.9 years; t = 2 would need 884.9 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    },
+    "spa": {
+     "best_arm": "nn_pre_causal_seedmean|10bps",
+     "n_arms": 6,
+     "n_periods": 251,
+     "n_boot": 500,
+     "block_periods": 4.0,
+     "t_spa": 1.1235,
+     "p_spa_consistent": 0.2794,
+     "p_spa_lower": 0.2794,
+     "p_spa_upper": 0.2794,
+     "arm_means": {
+      "lgbm_clf|10bps": 0.000938,
+      "lgbm_clf|25bps": -0.001728,
+      "lgbm_raw|10bps": 0.001943,
+      "lgbm_raw|25bps": -0.000664,
+      "nn_pre_causal_seedmean|10bps": 0.003294,
+      "nn_pre_causal_seedmean|25bps": 0.000878
+     },
+     "verdict": "WITHIN_SPA_NULL",
+     "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+    },
+    "pbo": {
+     "pbo": 0.4571,
+     "n_partitions": 70,
+     "n_arms": 6,
+     "n_periods": 251,
+     "median_logit": 0.2877,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+    },
+    "family_max_p_spa_consistent": 0.2794,
+    "family_max_p_spa_best_arm": "nn_pre_causal_seedmean|10bps",
+    "mde_annual_excess_at_t_target": 0.06856,
+    "holm_p_this_job_6_cells": 1.0
+   },
+   "C_era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1561,
+     "t": -0.313,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.1281,
+     "t": -0.27,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.391,
+     "t": 0.836,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "D_top5_share": {
+    "vs_raw_market_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-03": 0.2753,
+      "2020-05": 0.2364,
+      "2009-03": 0.2353,
+      "2022-07": 0.2138,
+      "2023-10": 0.1904
+     },
+     "excess_in_those_5": {
+      "2020-03": 0.0842,
+      "2020-05": 0.1376,
+      "2009-03": 0.1223,
+      "2022-07": 0.0918,
+      "2023-10": 0.1129
+     },
+     "total_excess_sum": 1.09793,
+     "share_of_total_excess_from_those_5": 0.4998,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.54915,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 26.9286,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 9.5684,
+     "benchmark_terminal_wealth_without_them": 8.1644
+    },
+    "vs_beta_matched_top5_by_net": {
+     "selection": "best 5 by the book's NET return (the rule neural_long.robustness uses)",
+     "best_5_months": {
+      "2020-03": 0.2753,
+      "2020-05": 0.2364,
+      "2009-03": 0.2353,
+      "2022-07": 0.2138,
+      "2023-10": 0.1904
+     },
+     "excess_in_those_5": {
+      "2020-03": 0.0214,
+      "2020-05": 0.1051,
+      "2009-03": 0.085,
+      "2022-07": 0.0519,
+      "2023-10": 0.0888
+     },
+     "total_excess_sum": 0.22046,
+     "share_of_total_excess_from_those_5": 1.5974,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.1317,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 26.9286,
+     "benchmark_terminal_wealth_all_months": 26.698,
+     "book_terminal_wealth_without_them": 9.5684,
+     "benchmark_terminal_wealth_without_them": 12.7828
+    },
+    "vs_raw_market_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2008-03": 0.1795,
+      "2020-05": 0.2364,
+      "2020-11": 0.1869,
+      "2009-03": 0.2353,
+      "2023-11": 0.1881
+     },
+     "excess_in_those_5": {
+      "2008-03": 0.1599,
+      "2020-05": 0.1376,
+      "2020-11": 0.1278,
+      "2009-03": 0.1223,
+      "2023-11": 0.122
+     },
+     "total_excess_sum": 1.09793,
+     "share_of_total_excess_from_those_5": 0.6099,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": 0.42834,
+     "turns_negative_without_them": false,
+     "book_terminal_wealth_all_months": 26.9286,
+     "benchmark_terminal_wealth_all_months": 14.3778,
+     "book_terminal_wealth_without_them": 10.6008,
+     "benchmark_terminal_wealth_without_them": 10.2125
+    },
+    "vs_beta_matched_top5_by_excess": {
+     "selection": "best 5 by the EXCESS itself (the rule the MC null uses)",
+     "best_5_months": {
+      "2008-03": 0.1795,
+      "2020-11": 0.1869,
+      "2008-05": 0.0539,
+      "2020-05": 0.2364,
+      "2020-04": 0.1623
+     },
+     "excess_in_those_5": {
+      "2008-03": 0.1541,
+      "2020-11": 0.1083,
+      "2008-05": 0.1068,
+      "2020-05": 0.1051,
+      "2020-04": 0.1042
+     },
+     "total_excess_sum": 0.22046,
+     "share_of_total_excess_from_those_5": 2.6241,
+     "total_excess_is_positive": true,
+     "share_is_interpretable": true,
+     "excess_sum_without_them": -0.35805,
+     "turns_negative_without_them": true,
+     "book_terminal_wealth_all_months": 26.9286,
+     "benchmark_terminal_wealth_all_months": 26.698,
+     "book_terminal_wealth_without_them": 12.7005,
+     "benchmark_terminal_wealth_without_them": 21.2926
+    },
+    "w3b_raw_market_share_for_comparison": {
+     "share_of_total_excess_from_those_5": 0.3351,
+     "terminal_wealth_without_them": 17.265,
+     "note": "W3b computed the tail at 10 bps only, ranking by NET"
+    }
+   },
+   "E_monte_carlo_top5_null": {
+    "beta_matched_excess": {
+     "observed_top5_share_by_excess": 2.6241,
+     "series_mean_monthly": 0.000878,
+     "series_sd_monthly": 0.045255,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20277511,
+      "mean_used": 0.000878,
+      "sd_used": 0.045255,
+      "observed_share": 2.6241,
+      "median_null_share": 0.5276,
+      "mean_null_share_positive_total_only": 4.2608,
+      "share_of_draws_with_positive_total": 0.6196,
+      "p_turns_negative_without_top5": 0.6817,
+      "p_turns_negative_without_top5_given_positive_total": 0.4862,
+      "p_share_ge_observed": 0.1159,
+      "p_share_ge_observed_given_positive_total": 0.1872
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20277511,
+      "mean_used": 0.000878,
+      "sd_used": 0.045255,
+      "observed_share": 2.6241,
+      "median_null_share": 0.6824,
+      "mean_null_share_positive_total_only": 4.7585,
+      "share_of_draws_with_positive_total": 0.6188,
+      "p_turns_negative_without_top5": 0.7531,
+      "p_turns_negative_without_top5_given_positive_total": 0.601,
+      "p_share_ge_observed": 0.141,
+      "p_share_ge_observed_given_positive_total": 0.2279
+     }
+    },
+    "raw_market_excess": {
+     "observed_top5_share_by_excess": 0.6099,
+     "series_mean_monthly": 0.004374,
+     "series_sd_monthly": 0.047917,
+     "normal": {
+      "dist": "normal",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20273618,
+      "mean_used": 0.004374,
+      "sd_used": 0.047917,
+      "observed_share": 0.6099,
+      "median_null_share": 0.4785,
+      "mean_null_share_positive_total_only": 1.9172,
+      "share_of_draws_with_positive_total": 0.9259,
+      "p_turns_negative_without_top5": 0.2475,
+      "p_turns_negative_without_top5_given_positive_total": 0.1873,
+      "p_share_ge_observed": 0.3561,
+      "p_share_ge_observed_given_positive_total": 0.3846
+     },
+     "t4": {
+      "dist": "t4",
+      "draws": 20000,
+      "months_per_draw": 251,
+      "seed": 20273618,
+      "mean_used": 0.004374,
+      "sd_used": 0.047917,
+      "observed_share": 0.6099,
+      "median_null_share": 0.5921,
+      "mean_null_share_positive_total_only": 4.0229,
+      "share_of_draws_with_positive_total": 0.9266,
+      "p_turns_negative_without_top5": 0.3045,
+      "p_turns_negative_without_top5_given_positive_total": 0.2494,
+      "p_share_ge_observed": 0.4803,
+      "p_share_ge_observed_given_positive_total": 0.5183
+     }
+    }
+   }
+  }
+ },
+ "fable_claim5_check": {
+  "claim": "REVIEW_2026-09-06_FABLE51 claim 5: a top-5-month share >= 0.8355 on a series with mean 0.28%/mo and sd 3.6% happens in 31% (normal) to 40% (t4) of pure-noise draws, so 'the baseline is five months' is not evidence of beta timing.",
+  "threshold_tested": 0.8355,
+  "threshold_source": "W3b robustness.lgbm_clf.tail (ranked by NET, 10 bps)",
+  "at_lgbm_clf_realised_moments": {
+   "mean_monthly": 0.002828,
+   "sd_monthly": 0.036557,
+   "normal": {
+    "dist": "normal",
+    "draws": 20000,
+    "months_per_draw": 251,
+    "seed": 20314210,
+    "mean_used": 0.002828,
+    "sd_used": 0.036557,
+    "observed_share": 0.8355,
+    "median_null_share": 0.5185,
+    "mean_null_share_positive_total_only": 3.3301,
+    "share_of_draws_with_positive_total": 0.8895,
+    "p_turns_negative_without_top5": 0.3261,
+    "p_turns_negative_without_top5_given_positive_total": 0.2425,
+    "p_share_ge_observed": 0.271,
+    "p_share_ge_observed_given_positive_total": 0.3046
+   },
+   "t4": {
+    "dist": "t4",
+    "draws": 20000,
+    "months_per_draw": 251,
+    "seed": 20314210,
+    "mean_used": 0.002828,
+    "sd_used": 0.036557,
+    "observed_share": 0.8355,
+    "median_null_share": 0.6412,
+    "mean_null_share_positive_total_only": 3.4272,
+    "share_of_draws_with_positive_total": 0.8941,
+    "p_turns_negative_without_top5": 0.3818,
+    "p_turns_negative_without_top5_given_positive_total": 0.3086,
+    "p_share_ge_observed": 0.3548,
+    "p_share_ge_observed_given_positive_total": 0.3969
+   }
+  },
+  "at_the_reviews_rounded_moments": {
+   "mean_monthly": 0.0028,
+   "sd_monthly": 0.036,
+   "normal": {
+    "dist": "normal",
+    "draws": 20000,
+    "months_per_draw": 251,
+    "seed": 20320850,
+    "mean_used": 0.0028,
+    "sd_used": 0.036,
+    "observed_share": 0.8355,
+    "median_null_share": 0.5184,
+    "mean_null_share_positive_total_only": 2.5826,
+    "share_of_draws_with_positive_total": 0.8921,
+    "p_turns_negative_without_top5": 0.3215,
+    "p_turns_negative_without_top5_given_positive_total": 0.2394,
+    "p_share_ge_observed": 0.2697,
+    "p_share_ge_observed_given_positive_total": 0.3023
+   },
+   "t4": {
+    "dist": "t4",
+    "draws": 20000,
+    "months_per_draw": 251,
+    "seed": 20320850,
+    "mean_used": 0.0028,
+    "sd_used": 0.036,
+    "observed_share": 0.8355,
+    "median_null_share": 0.6465,
+    "mean_null_share_positive_total_only": 3.2295,
+    "share_of_draws_with_positive_total": 0.8937,
+    "p_turns_negative_without_top5": 0.3837,
+    "p_turns_negative_without_top5_given_positive_total": 0.3104,
+    "p_share_ge_observed": 0.3543,
+    "p_share_ge_observed_given_positive_total": 0.3964
+   }
+  }
+ },
+ "summary_table": {
+  "lgbm_clf|10bps": {
+   "beta": 1.1782,
+   "t_beta_minus_1_hac": 2.03,
+   "t_beta_minus_1_ols": 3.778,
+   "r_squared": 0.7147,
+   "annualised_excess_vs_raw_market": 0.03393,
+   "t_vs_raw_market": 1.225,
+   "alpha_annualised_beta_matched": 0.01126,
+   "t_alpha_ols": 0.407,
+   "t_alpha_hac": 0.349,
+   "dsr_family_40": 0.0367,
+   "family_max_p_spa": 0.2794,
+   "holm_p_6_cells": 1.0,
+   "mde_annual_excess_at_t2": 0.05386,
+   "eras_positive_of_3": 1,
+   "top5_share_vs_raw_market_by_net": 0.8355,
+   "top5_share_vs_beta_matched_by_net": 2.066,
+   "top5_share_vs_beta_matched_is_interpretable": true,
+   "terminal_wealth_book": 22.6076,
+   "terminal_wealth_beta_matched_leg": 20.308,
+   "terminal_wealth_raw_market": 14.3778
+  },
+  "lgbm_clf|25bps": {
+   "beta": 1.178,
+   "t_beta_minus_1_hac": 2.028,
+   "t_beta_minus_1_ols": 3.775,
+   "r_squared": 0.7148,
+   "annualised_excess_vs_raw_market": 0.00191,
+   "t_vs_raw_market": 0.069,
+   "alpha_annualised_beta_matched": -0.02074,
+   "t_alpha_ols": -0.75,
+   "t_alpha_hac": -0.644,
+   "dsr_family_40": 0.0019,
+   "family_max_p_spa": 0.2794,
+   "holm_p_6_cells": 1.0,
+   "mde_annual_excess_at_t2": 0.05384,
+   "eras_positive_of_3": 1,
+   "top5_share_vs_raw_market_by_net": 14.4614,
+   "top5_share_vs_beta_matched_by_net": -1.09,
+   "top5_share_vs_beta_matched_is_interpretable": false,
+   "terminal_wealth_book": 11.6417,
+   "terminal_wealth_beta_matched_leg": 20.3005,
+   "terminal_wealth_raw_market": 14.3778
+  },
+  "lgbm_raw|10bps": {
+   "beta": 1.3918,
+   "t_beta_minus_1_hac": 3.418,
+   "t_beta_minus_1_ols": 5.444,
+   "r_squared": 0.6004,
+   "annualised_excess_vs_raw_market": 0.07317,
+   "t_vs_raw_market": 1.684,
+   "alpha_annualised_beta_matched": 0.02332,
+   "t_alpha_ols": 0.553,
+   "t_alpha_hac": 0.541,
+   "dsr_family_40": 0.0493,
+   "family_max_p_spa": 0.2794,
+   "holm_p_6_cells": 1.0,
+   "mde_annual_excess_at_t2": 0.08216,
+   "eras_positive_of_3": 1,
+   "top5_share_vs_raw_market_by_net": 0.6912,
+   "top5_share_vs_beta_matched_by_net": 1.8196,
+   "top5_share_vs_beta_matched_is_interpretable": true,
+   "terminal_wealth_book": 36.2448,
+   "terminal_wealth_beta_matched_leg": 29.6973,
+   "terminal_wealth_raw_market": 14.3778
+  },
+  "lgbm_raw|25bps": {
+   "beta": 1.392,
+   "t_beta_minus_1_hac": 3.42,
+   "t_beta_minus_1_ols": 5.445,
+   "r_squared": 0.6002,
+   "annualised_excess_vs_raw_market": 0.0419,
+   "t_vs_raw_market": 0.964,
+   "alpha_annualised_beta_matched": -0.00798,
+   "t_alpha_ols": -0.189,
+   "t_alpha_hac": -0.185,
+   "dsr_family_40": 0.0089,
+   "family_max_p_spa": 0.2794,
+   "holm_p_6_cells": 1.0,
+   "mde_annual_excess_at_t2": 0.08221,
+   "eras_positive_of_3": 1,
+   "top5_share_vs_raw_market_by_net": 1.1956,
+   "top5_share_vs_beta_matched_by_net": -5.2608,
+   "top5_share_vs_beta_matched_is_interpretable": false,
+   "terminal_wealth_book": 18.9497,
+   "terminal_wealth_beta_matched_leg": 29.7074,
+   "terminal_wealth_raw_market": 14.3778
+  },
+  "nn_pre_causal_seedmean|10bps": {
+   "beta": 1.3294,
+   "t_beta_minus_1_hac": 4.238,
+   "t_beta_minus_1_ols": 5.485,
+   "r_squared": 0.663,
+   "annualised_excess_vs_raw_market": 0.08144,
+   "t_vs_raw_market": 2.243,
+   "alpha_annualised_beta_matched": 0.03952,
+   "t_alpha_ols": 1.123,
+   "t_alpha_hac": 1.095,
+   "dsr_family_40": 0.1497,
+   "family_max_p_spa": 0.2794,
+   "holm_p_6_cells": 0.82098,
+   "mde_annual_excess_at_t2": 0.06858,
+   "eras_positive_of_3": 3,
+   "top5_share_vs_raw_market_by_net": 0.3351,
+   "top5_share_vs_beta_matched_by_net": 0.4574,
+   "top5_share_vs_beta_matched_is_interpretable": true,
+   "terminal_wealth_book": 49.0082,
+   "terminal_wealth_beta_matched_leg": 26.6841,
+   "terminal_wealth_raw_market": 14.3778
+  },
+  "nn_pre_causal_seedmean|25bps": {
+   "beta": 1.3297,
+   "t_beta_minus_1_hac": 4.241,
+   "t_beta_minus_1_ols": 5.492,
+   "r_squared": 0.6633,
+   "annualised_excess_vs_raw_market": 0.05249,
+   "t_vs_raw_market": 1.446,
+   "alpha_annualised_beta_matched": 0.01053,
+   "t_alpha_ols": 0.299,
+   "t_alpha_hac": 0.292,
+   "dsr_family_40": 0.0299,
+   "family_max_p_spa": 0.2794,
+   "holm_p_6_cells": 1.0,
+   "mde_annual_excess_at_t2": 0.06856,
+   "eras_positive_of_3": 1,
+   "top5_share_vs_raw_market_by_net": 0.4998,
+   "top5_share_vs_beta_matched_by_net": 1.5974,
+   "top5_share_vs_beta_matched_is_interpretable": true,
+   "terminal_wealth_book": 26.9286,
+   "terminal_wealth_beta_matched_leg": 26.698,
+   "terminal_wealth_raw_market": 14.3778
+  }
+ },
+ "verdict_rule": {
+  "LOADING": "beta - 1 clears t >= 2 AND the beta-matched alpha's t < 2",
+  "INTERCEPT": "the beta-matched alpha's t >= 2 (HAC)",
+  "BOTH": "both of the above",
+  "NEITHER": "neither -- the excess is neither a demonstrable intercept nor a demonstrable loading on this much tape",
+  "note": "a LABEL on an arithmetic result, not a promotion gate. No book is promoted, sealed, ordered or deployed by this receipt."
+ },
+ "verdict_by_cell": {
+  "lgbm_clf|10bps": "LOADING",
+  "lgbm_clf|25bps": "LOADING",
+  "lgbm_raw|10bps": "LOADING",
+  "lgbm_raw|25bps": "LOADING",
+  "nn_pre_causal_seedmean|10bps": "LOADING",
+  "nn_pre_causal_seedmean|25bps": "LOADING"
+ },
+ "one_sentence_answer": "LOADING: lgbm_clf's beta is 1.1782 (t(beta-1) = 2.03 HAC, 3.778 OLS), and once that leverage is paid for its annualised excess falls from +0.0339 (t 1.225) against the raw VW market to +0.0113 (t 0.349 HAC) against the beta-matched leg at 10 bps and -0.0207 (t -0.644) at 25 bps -- an intercept indistinguishable from zero sitting on a market loading that is not. The 8-seed nn_pre_causal ensemble is the SAME shape and not the opposite: its beta is 1.3294 (t(beta-1) = 4.238 HAC), its only-net-VW-beating t of 2.243 against the raw market becomes +0.0395/yr at t 1.095 beta-matched at 10 bps and +0.0105/yr at t 0.292 at 25 bps, so its residual alpha is positive in every cell but clears nothing (DSR 0.1497 at a 40-cell family, MDE 0.06858/yr against a +0.0395 effect) -- it is the one book whose beta-matched excess is positive in all three eras.",
+ "headline": "LOADING: lgbm_clf's beta is 1.1782 (t(beta-1) = 2.03 HAC, 3.778 OLS), and once that leverage is paid for its annualised excess falls from +0.0339 (t 1.225) against the raw VW market to +0.0113 (t 0.349 HAC) against the beta-matched leg at 10 bps and -0.0207 (t -0.644) at 25 bps -- an intercept indistinguishable from zero sitting on a market loading that is not. The 8-seed nn_pre_causal ensemble is the SAME shape and not the opposite: its beta is 1.3294 (t(beta-1) = 4.238 HAC), its only-net-VW-beating t of 2.243 against the raw market becomes +0.0395/yr at t 1.095 beta-matched at 10 bps and +0.0105/yr at t 0.292 at 25 bps, so its residual alpha is positive in every cell but clears nothing (DSR 0.1497 at a 40-cell family, MDE 0.06858/yr against a +0.0395 effect) -- it is the one book whose beta-matched excess is positive in all three eras.",
+ "verdict": "LOADING (all 6 cells)",
+ "memory_after": {
+  "free_gb": 9.86
+ },
+ "wall_seconds": 8.4,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\c6b_beta_matched_regrade.py"
+  ],
+  "resolved_config": {
+   "books": [
+    "lgbm_clf",
+    "lgbm_raw",
+    "nn_pre_causal_seedmean"
+   ],
+   "costs_bps_per_side": [
+    10.0,
+    25.0
+   ],
+   "k": 50,
+   "weight": "vw",
+   "ret_col": "fwd_1m",
+   "mkt_col": "mkt_vw_1m",
+   "tradable_floor_usd": 3000000.0,
+   "tradable_min_close_usd": 5.0,
+   "test_years": [
+    2004,
+    2024
+   ],
+   "seeds": [
+    20260906,
+    20260907,
+    20260908,
+    20260909,
+    20260910,
+    20260911,
+    20260912,
+    20260913
+   ],
+   "nw_lag": 4,
+   "family_n_trials_headline": 40,
+   "family_n_trials_alternatives": [
+    6,
+    46
+   ],
+   "mc_draws": 20000,
+   "mc_seed_base": 20260906,
+   "mc_t_df": 4,
+   "walk_forward_min_months": 36,
+   "spa_n_boot": 500,
+   "spa_seed": 61,
+   "rng": "np.random.default_rng only",
+   "python_executable": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+   "stage_dir": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage",
+   "receipt_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06b\\C1_beta_matched_regrade_run01.json"
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06\\W3b_neural_floored_run01.json",
+    "sha256": "ec0ac73e0969bc0914e56eeeabfe844d3b855441091085aad0014e93b319a6bd",
+    "bytes": 207053
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+    "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
+    "bytes": 6225813
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_meta_incumbents.json",
+    "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2",
+    "bytes": 9066
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet",
+    "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
+    "bytes": 24015048
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_meta_nn_pre_causal.json",
+    "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
+    "bytes": 74013
+   }
+  ],
+  "git_commit": "59ace19",
+  "generated_utc": "2026-09-05T14:35:26.124227+00:00"
+ },
+ "generated_utc": "2026-09-05T14:35:26.124227+00:00"
+}
