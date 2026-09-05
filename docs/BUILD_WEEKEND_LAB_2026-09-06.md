@@ -66,6 +66,23 @@ their receipts before each update; a line with no receipt is not in this file.*
 | **External execution drag** | not measured this weekend (no orders) |
 | **LLM spend** | **$0.00** — no LLM call was made |
 
+**The verdict census across all 83 current receipts:**
+
+| verdict | count |
+|---|---|
+| CANNOT DETERMINE (underpowered) | 29 |
+| NOISE | 23 |
+| INVENTORY | 18 |
+| SCREEN_SURVIVOR | 6 |
+| DEFERRED | 5 |
+| AUTOPSY | 1 |
+| DECAYED (worked, then stopped) | 1 |
+| **NOVEL** | **0** |
+
+**Nothing this weekend reached NOVEL.** An earlier count of 21 did, and every one
+of them was a feature screen wearing a word defined for a book — see
+`_superseded_old_verdict_vocabulary/`.
+
 **RESULT IMPROVEMENT: NONE in return terms.** No strategy was promoted and none
 was killed. What moved is the *instrument*, one dated fact, and what we know
 about the *method*:

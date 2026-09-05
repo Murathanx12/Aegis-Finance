@@ -114,3 +114,5 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W6b_liquidity_band | 11 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
 | W5_options_iv | 11 | 0 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | NOVEL |
 | W5b_options_book | 11 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 7.1%/yr or larger) |
+| W5c_options_exclusion | 11 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | NOISE |
+| W4_graph_momentum | 11 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | NOISE |
