@@ -405,4 +405,5 @@ CLEAN · a global negative does not answer a conditional question.
 | B8 evolution | blocked on B1, B4, B6 | — |
 | B9 allocator | blocked on B2, B4 | — |
 | B10 learner v3 | blocked on B1, B4, B5 | — |
+| W weekend lab 2026-09-06 | OPEN — `WEEKEND_LAB_2026-09-06_ROADMAP_AND_PROMPT.md`: long panel 1999-2024 (IBES unadjusted from 1999-03, CRSP daily from 1990), CUDA torch, learner + neural loops with DSR/SPA/PBO and three-era sign tables, graph/options/behavioural features, matched-loser factory, evidence write-back; loops until STOP | — |
 | M / P / D lanes | open | — |
