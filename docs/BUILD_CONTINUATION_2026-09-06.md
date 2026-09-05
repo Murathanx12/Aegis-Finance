@@ -20,9 +20,10 @@ bought, built and measured; **none beat what we already had.**
 | External execution drag | not measured — no orders, no seals, no deploys |
 | LLM spend / cost per gradeable output | **$4.14 of a $15.00 cap.** $0.00105 per supply-chain edge, $0.00063 per graded LLM rank decision |
 
-**Fast suite: 6,627 passed, 14 skipped, 119 deselected.** Terminal repo:
-**76 suites, 3,483 checks, ALL PASS** (from 74 / 3,367).
-**20 local commits** here, **4** in the terminal repo.
+**Fast suite (final, exit 0): `6655 passed, 14 skipped, 119 deselected` in
+531.16 s.** Terminal repo: **76 suites, 3,483 checks, ALL PASS** (from
+74 / 3,367 at session start). **32 local commits** here, **4** in the terminal
+repo; `main` fast-forwarded onto them at the end. Nothing pushed.
 
 ## THE WORK, BY ITEM
 
