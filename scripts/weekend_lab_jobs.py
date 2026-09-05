@@ -366,9 +366,34 @@ def _augmented_features(df):
 _CELL_CACHE = ROOT / "backend" / "data" / "optimus" / "weekend_lab_2026-09-06" / "_cells"
 
 
+def _panel_fingerprint() -> str:
+    """A short hash of the panel the cache was built against.
+
+    THE CACHE MUST DIE WHEN THE PANEL CHANGES, and the first version had no way
+    to know that it had. On 2026-09-06 `dataset.build` was corrected -- the
+    target-revision legs had been a ratio of two different share bases -- and the
+    panel was rebuilt. Every cached cell was then a set of predictions fitted on
+    the SUPERSEDED panel, and nothing in the key said so: the next pass would
+    have served them silently and reported them as results on the corrected data.
+
+    The fingerprint is the panel file's size and modification time. Not its
+    contents -- hashing 418 MB on every cell lookup would cost more than the
+    refit it saves -- and both change on any rebuild, which is the event that
+    matters. A missing panel yields "nopanel", which simply never matches.
+    """
+    from learner import long_panel as LP
+    try:
+        st = LP.LONG_TABLE.stat()
+        raw = f"{st.st_size}-{int(st.st_mtime)}"
+    except OSError:
+        return "nopanel"
+    import hashlib
+    return hashlib.sha1(raw.encode()).hexdigest()[:10]
+
+
 def _cache_key(tag: str, kind: str, target: str, h: int) -> Path:
     safe = f"{tag}__{kind}__{target}__{h}m".replace("/", "-").replace("|", "-")
-    return _CELL_CACHE / f"{safe}.json"
+    return _CELL_CACHE / f"{_panel_fingerprint()}__{safe}.json"
 
 
 def _w2_grid(df, feature_cols, kinds, targets, horizons, costs, hold_k=None,
@@ -508,6 +533,15 @@ def _w2_report(series, cells, question, family_id, extra=None) -> dict:
     return {
         "question": question,
         "family_id": family_id,
+        "robustness_note": (
+            "`evaluate.book`'s default output carries no liquidity, no tail and no "
+            "holdings information, which is exactly how a 561x terminal wealth nearly "
+            "shipped unchallenged from the neural lane. `learner.neural_long.robustness` "
+            "asks the four questions that caught it -- the tradable floor (and what the "
+            "INCUMBENT does under the same floor, because a floor that helps lgbm and "
+            "hurts the challenger reverses the comparison), 25 bps, the share of the "
+            "excess in the five best months, and what the book actually held. It is "
+            "attached to the champion by `W2_learner_long`."),
         "cells_looked_at": len(cells),
         "n_common_months": int(len(wide)),
         "common_window": [str(wide.index[0]), str(wide.index[-1])],
@@ -552,8 +586,27 @@ def W2_learner_long(variant: int = 0) -> dict:
     if name == "baseline":
         s, c = _w2_grid(df, fc, kinds, targets, horizons, costs,
                         test_years=test_years, tag="baseline")
-        return _w2_report(s, c, "does any learner cell beat the market on 26 years, "
-                          "after costs?", "weekend-W2-baseline", extra)
+        out = _w2_report(s, c, "does any learner cell beat the market on 26 years, "
+                         "after costs?", "weekend-W2-baseline", extra)
+        # THE FOUR QUESTIONS THAT CAUGHT THE NEURAL LANE'S 561x, asked of this
+        # grid's champion too. The neural lane measured that 99.6% of LightGBM's
+        # own 251-month excess came from FIVE MONTHS -- if that holds here it
+        # qualifies this job's headline severely, and it is not visible anywhere
+        # in `evaluate.book`'s default output.
+        best = out.get("best_cell")
+        if best:
+            col = "pred_" + "_".join(best.split("|")[:3]).replace("m", "m")
+            col = f"pred_{best.split('|')[0]}_{best.split('|')[1]}_{best.split('|')[2]}"
+            if col in df.columns:
+                try:
+                    from learner import neural_long as NL
+                    out["robustness"] = NL.robustness(
+                        df, col, bps=float(best.split("|")[-1][:-3]))
+                except Exception as exc:                                # noqa: BLE001
+                    out["robustness"] = {"error": f"{type(exc).__name__}: {exc}"}
+            else:
+                out["robustness"] = {"error": f"prediction column {col!r} not on the frame"}
+        return out
 
     if name == "hysteresis":
         # The cheapest way to make a real edge survive costs: buy at rank <= 50,

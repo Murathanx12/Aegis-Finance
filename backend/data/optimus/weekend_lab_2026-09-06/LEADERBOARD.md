@@ -131,3 +131,5 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W4_graph_momentum | 12 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | NOISE |
 | W7_matched_loser | 12 | 3 | 297 formation months, 25 winners x 8 matched controls each; 8 candidates over 4 DISTINCT ideas (['an | -- | -- | -- | -- | -- | SCREEN_SURVIVOR (3 of 49, Holm <= 0.05 on the non-overlapping t, 3 of 8 candidates) |
 | W7b_archetype_book | 12 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 6.6%/yr or larger) |
+| W8_states_three_nulls | 12 | 2 | k=6 market states over 286 months; market circular-shift p 0.062 (observed spread 0.020108 vs null p | -- | -- | -- | -- | -- | NOISE |
+| W9_survivor_books | 12 | 0 | 14 weekend survivors booked (28 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have thei | 0.1978 | 0.1257 | 0.1429 | 308 | 24.3 | DECAYED (worked, then stopped) |

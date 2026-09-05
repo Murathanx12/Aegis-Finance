@@ -849,6 +849,21 @@ receipt**, not written up in a document. A 561× sitting in a JSON file will be
 quoted by somebody, and the correction has to travel with the number rather than
 live somewhere they might not read.
 
+**The neural lane found the same thing independently, and went three steps
+further.** Its `robustness()` block is now permanent and in every receipt:
+
+- **The champion is the top of an 8-draw distribution.** Across seeds the annualised excess runs min 4.4% / median 12.2% / **max 24.0%** (sd 6.1pp) and terminal wealth **9.26 → 49.31 → 561.06**. Only **6 of 8** seeds beat LightGBM. The published champion's t is five times the worst draw's.
+- **The floor reverses the comparison.** Under $3m/day the champion falls 561 → 92.8 — and **LightGBM RISES, 16.75 → 59.85.** A 33× lead becomes 1.55×, and the seed-mean ensemble (89.3 → 42.8) ends up *behind* lgbm. A floor that helps the incumbent and hurts the challenger is not a detail.
+- **Two more variants are refuted outright.** The **q90 pinball head loses money** — ensemble −3.5%/yr, terminal wealth **0.098**, a 90% loss, with 3 of 8 seeds positive. *"The right tail is more predictable"* is refuted on this panel, which retires W2's own quantile hypothesis. And **4× width does nothing** (median 11.5% vs 12.2%): capacity is not the constraint, which is the tape-not-model diagnosis arriving from a third direction.
+- **The one thing that helped is the honest one.** Self-supervised masked-feature pre-training tightens the seed spread from sd 6.09 to **3.47pp**, lifts the worst seed from +4.4%/yr to **+14.2%/yr**, makes **all 8** seeds beat lgbm, and its ensemble survives the floor (83.6 vs lgbm 59.8) where the baseline's does not. Still NOISE by the family — but it is the direction worth another pass.
+- **And the "mild look-ahead" buys nothing.** Pre-training on all 1999-2024 *features* is **worse** than the strictly causal version on every statistic. That removes a whole class of future temptation.
+
+**One number from that lane lands on this document's own centrepiece:**
+**99.6% of LightGBM's entire 251-month excess comes from five months** (43% for
+the neural champion). At 25 bps lgbm goes 16.75 → **8.55, below the market's
+14.38.** That is `feedback_check_the_tail_before_the_mean` pointed directly at
+§0.0, and it is checked there.
+
 ---
 
 ## 5. What the evidence memory says, taken together

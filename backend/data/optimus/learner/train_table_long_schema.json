@@ -228,6 +228,15 @@
         "toxic_ge_5": 4
       }
     },
+    "target_revision_share_basis": {
+      "rule": "both legs on ONE basis: the prior target is multiplied by cfacpr(t)/cfacpr(t-h), which is exactly the split applied between the two vintages and cancels every factor after t",
+      "why": "meanptg is UNADJUSTED, so a 2:1 split between vintages reads as a -50% revision with no analyst having moved and a 1-for-10 reverse split as +900%",
+      "rows_rebased": {
+        "1m": 4359,
+        "3m": 12523
+      },
+      "kept_not_dropped": "names that split are names that ran, so nulling them would delete a non-random 6.6% of the population"
+    },
     "rows": 925757,
     "months": 310,
     "names": 8981,
@@ -256,13 +265,13 @@
       "miss__upside": 0.1788,
       "miss__log_ratio": 0.1788,
       "miss__dispersion": 0.1497,
+      "miss__target_rev_3m": 0.0455,
       "miss__ret_12m": 0.0454,
       "miss__mom_12_1": 0.0454,
-      "miss__target_rev_3m": 0.0451,
       "miss__ret_6m": 0.0196,
-      "miss__target_rev_1m": 0.0153,
-      "miss__coverage_rev_1m": 0.0153,
+      "miss__target_rev_1m": 0.0158,
       "miss__consensus_rev_1m": 0.0153,
+      "miss__coverage_rev_1m": 0.0153,
       "miss__ret_3m": 0.0077,
       "miss__vol_60d": 0.002,
       "miss__ret_1m": 0.0009,
@@ -775,7 +784,7 @@
         "check_agrees": true
       }
     ],
-    "build_seconds": 156.9,
+    "build_seconds": 153.4,
     "by_era": [
       {
         "era": "1999-2007",
@@ -794,28 +803,6 @@
         "name_months": 335566,
         "months": 108,
         "permnos": 5156
-      }
-    ],
-    "regated": [
-      {
-        "utc": "2026-09-05T03:53:43+00:00",
-        "sections": [
-          "coverage_by_year",
-          "share_basis_gate_early_era",
-          "share_basis_hand_rows_early_era",
-          "by_era"
-        ],
-        "why": "the first early-era gate read `ratio`, which `hygiene` NULLS on exactly the split-flagged rows the gate exists to inspect, so it could only ever return nan and FAIL"
-      },
-      {
-        "utc": "2026-09-05T05:20:51+00:00",
-        "sections": [
-          "coverage_by_year",
-          "share_basis_gate_early_era",
-          "share_basis_hand_rows_early_era",
-          "by_era"
-        ],
-        "why": "the first early-era gate read `ratio`, which `hygiene` NULLS on exactly the split-flagged rows the gate exists to inspect, so it could only ever return nan and FAIL"
       }
     ]
   },
@@ -1127,5 +1114,5 @@
     "in_sample_warning": "The band constants were fitted on 2013-2024 in full. As an OOS baseline the prior is FLATTERED -- it knows the test years. Beating it is therefore a hard test, not an easy one."
   },
   "table": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
-  "written_utc": "2026-09-05T03:51:33+00:00"
+  "written_utc": "2026-09-05T05:51:44+00:00"
 }
