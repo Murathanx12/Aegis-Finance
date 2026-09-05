@@ -25,6 +25,27 @@
 # stamps `python_executable`, `python_version` and `torch_file` onto every
 # neural receipt so the question cannot be asked again.
 #
+# THE TWO INTERPRETERS ARE THE SAME BINARY (refined 2026-09-06)
+# --------------------------------------------------------------
+# `.venv/pyvenv.cfg` reads:
+#     home       = %LOCALAPPDATA%\Programs\Python\Python312
+#     executable = ...\Python312\python.exe
+#     version    = 3.12.10
+#     include-system-site-packages = false
+#
+# So the venv and the "GPU interpreter" are ONE python.exe with TWO package
+# sets. The venv's own `torch 2.11.0+cpu` SHADOWS the base install's
+# `torch 2.11.0+cu128`; the venv launcher is a trampoline that execs the base
+# binary with the venv's site-packages in front. Confirmed by watching the fast
+# suite: the venv's `python.exe -m pytest` sat at 4 MB and 0 s of CPU while its
+# CHILD, the base Python312 `python.exe`, carried 618 s and 1.3 GB.
+#
+# CONSEQUENCE FOR THE INSTALL BELOW: run it against the BASE interpreter and
+# NOT from inside an activated venv. Inside the venv, pip installs into the
+# VENV's site-packages -- `torch.cuda.is_available()` there flips to True, the
+# base install is untouched, and the environment W3 actually ran on has not
+# changed. Both outcomes "work"; only one is the one the receipts name.
+#
 # THE DESIGNATED GPU INTERPRETER
 # ------------------------------
 #   C:\Users\mrthn\AppData\Local\Programs\Python\Python312\python.exe

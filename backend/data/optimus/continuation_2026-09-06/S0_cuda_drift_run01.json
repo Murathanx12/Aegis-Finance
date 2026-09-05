@@ -45,5 +45,14 @@
  "caveat_for_every_W3_number": "W3 ran on system Python 3.12 (numpy 2.4.6, sklearn 1.9.0), not on the repo venv (numpy 2.4.3). The fast suite has never exercised the interpreter that produced the neural receipts.",
  "tests": "backend/tests/test_gpu_environment_pin.py 4 passed",
  "llm_spend_usd": 0.0,
- "generated_utc": "2026-09-05T11:47:00.075765+00:00"
+ "generated_utc": "2026-09-05T11:47:00.075765+00:00",
+ "REFINEMENT_2026-09-06_same_session": {
+  "what_I_learned_later": "the two 'interpreters' are the SAME python.exe. `.venv/pyvenv.cfg` reads home = C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312, executable = C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe, version = 3.12.10.",
+  "so_the_difference_is_not_the_binary_it_is_the_path": "include-system-site-packages = false. The venv's own torch 2.11.0+cpu SHADOWS the base install's torch 2.11.0+cu128. Invoke the venv's python.exe and you get CPU; invoke the base python.exe directly and you get CUDA. One Python, two package sets.",
+  "how_I_noticed": "watching the final fast suite: the venv's python.exe running pytest (pid 73476) sat at 4 MB and 0 s of CPU while a CHILD process -- the BASE Python312 python.exe, pid 109648 -- carried 618 s and 1.3 GB. The venv launcher is a trampoline into its own base interpreter.",
+  "does_this_change_the_verdict": "NO, and it makes it sharper. `python_executable` still distinguishes the two correctly, because the two PATHS differ even though one file sits behind them. And the venv is still verifiably CPU-only: its python -c 'import torch' returns 2.11.0+cpu today, and its site-packages has not been modified since 2026-08-27.",
+  "what_it_does_change": "the install line in requirements-gpu.txt must be run against the BASE interpreter and NOT from inside an activated venv. Inside the venv, pip installs into the VENV's site-packages: torch.cuda.is_available() there flips to True, the base install is untouched, and the environment W3 actually ran on has not changed. Both outcomes 'work'; only one is the one the receipts name.",
+  "and_it_explains_the_stack": "the base interpreter carries pandas 2.2.3 / numpy 2.4.6 / lightgbm 4.6.0 / sklearn 1.9.0 / scipy 1.18.0 / pyarrow 23.0.1 because it is this machine's general Python, not because anyone assembled a second research environment. The venv's numpy is 2.4.3, so the caveat stands: W3's numbers came from a package set the fast suite has never exercised.",
+  "recorded_utc": "2026-09-05T12:40:09.214546+00:00"
+ }
 }
