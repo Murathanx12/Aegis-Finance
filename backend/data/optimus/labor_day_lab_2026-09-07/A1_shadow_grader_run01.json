@@ -1,0 +1,766 @@
+{
+ "job": "A1_shadow_grader",
+ "lane": "A",
+ "question": "do lgbm_clf and nn_pre_causal make DIFFERENT errors? Graded by ONE grader against the beta-matched benchmark (PRIMARY) and the raw market (SECONDARY), with the paired monthly difference between the two selectors as the PRIMARY SERIES.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "day": "2026-09-05",
+ "heartbeat": {
+  "day": "2026-09-05",
+  "what_this_is": "the live status of both selectors' nightly shadow plumbing. It is NOT a grade; the grade is the historical_grade block.",
+  "lgbm_clf_daily_shadow": {
+   "selector": "lgbm_clf",
+   "cadence": "daily",
+   "scored_on": "aegis-alpha-terminal/state/tracker/<day>.jsonl",
+   "latest_tracker_day": "2026-09-02",
+   "status": "REFUSED",
+   "reasons": [
+    "schema hash mismatch: model was sealed against fd48dbc7c7535262, the current shadow schema is 7f01cbe49f85286d. Retrain."
+   ],
+   "model": {
+    "kind": "lgbm_clf",
+    "arm": "engine_feature",
+    "horizon_months": 1,
+    "model_vintage_sha256_16": "1dcee45058e078aa",
+    "prediction_unit": "P(excess > 0) over the horizon -- a probability, NOT a return",
+    "schema_hash": "fd48dbc7c7535262",
+    "prior_version": "band_prior_v2/2026-09-01",
+    "trained_rows": 438027,
+    "trained_through_month": "2024-11",
+    "trained_at_utc": "2026-09-02T11:23:22+00:00"
+   },
+   "coverage": {
+    "n_rows": 3056,
+    "n_scoreable": 2947,
+    "core_coverage": 0.9643,
+    "column_coverage": 1.0
+   }
+  },
+  "nn_pre_causal_shadow": {
+   "selector": "nn_pre_causal",
+   "cadence": "monthly book, nightly receipt",
+   "status": "PENDING_ARTEFACT",
+   "reasons": [
+    "no monthly book has been produced under this contract yet. The arm is FROZEN and REGISTERED; its forward record starts at the first book. This is not a failure and not an empty book -- it is the night before the first month."
+   ],
+   "books_to_date": 0,
+   "contract_sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1",
+   "contract_ok": true,
+   "first_grade_date": "2026-09-05",
+   "how_to_produce_one": "python -m scripts.w3_neural_floored --stage nn_pre_causal, then --stage combine, with the seeds and years named in the contract; the seed-mean book is written to backend/data/optimus/learner/nn_shadow/books/nn_pre_causal_book_<YYYY-MM>.json"
+  },
+  "can_either_selector_produce_a_FORWARD_vintage_tonight": {
+   "question": "is a forward monthly book reachable for nn_pre_causal under the current pipeline?",
+   "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+   "panel_first_month": "1999-03",
+   "panel_last_month": "2024-12",
+   "shadow_first_grade_date": "2026-09-05",
+   "months_between_panel_end_and_first_grade_date": 21,
+   "reachable": false,
+   "verdict": "NOT REACHABLE UNDER THE CURRENT PIPELINE",
+   "reading": "the research panel `train_table_long.parquet` ends 2024-12; the shadow's forward record opens 2026-09-05, 21 months later. The producing command named in the shadow receipt (`scripts.w3_neural_floored --stage nn_pre_causal`) can only ever emit a book for a month the panel carries, so the newest book it could produce is 2024-12 -- which is a BACKTEST row, not a forward vintage, and back-dating the forward record is exactly what the freeze exists to prevent. PENDING_ARTEFACT is therefore NOT 'the night before the first month': it is a structural gap, and it will read the same every night until the panel is extended to the current month. Naming it is cheap; letting a permanently red line sit beside real checks teaches the reader to skim red lines.",
+   "what_would_close_it": [
+    "extend train_table_long.parquet past the shadow's first_grade_date (needs a CRSP/IBES vintage that reaches the current month), OR",
+    "define a SEPARATE forward feature path for nn_pre_causal off the nightly tracker -- refused today because the day file supplies 14 of the 50 features the arm reads (learner/shadow_nn.py, cadence.why_not_nightly_book)."
+   ]
+  }
+ },
+ "historical_grade": {
+  "status": "OK",
+  "memory_free_gb_before": 11.44,
+  "training_universe": {
+   "dollar_volume_floor_usd_per_day": 3000000.0,
+   "min_close_usd": 5.0,
+   "rows_before": 925757,
+   "rows_after": 530447,
+   "share_kept": 0.573,
+   "months_after": 310
+  },
+  "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+  "universe_fingerprint_matches_w3b": true,
+  "cells_raw_market": {
+   "lgbm_clf|10bps": {
+    "months": 251,
+    "k": 50,
+    "weight": "vw",
+    "cost_bps_per_side": 10.0,
+    "tradable_floor_usd": 3000000.0,
+    "rows_after_tradable_floor": 454708,
+    "mean_names_per_month": 50.0,
+    "mean_turnover": 0.889,
+    "terminal_wealth_net": 22.6076,
+    "terminal_wealth_gross": 35.154,
+    "terminal_wealth_market_same_months": 14.3778,
+    "cagr_net": 0.1608,
+    "cagr_market": 0.1359,
+    "mean_monthly_excess": 0.00283,
+    "annualised_excess": 0.0339,
+    "t_stat_paired_vs_market": 1.225,
+    "months_beating_market": 0.5259,
+    "worst_month_net": -0.2746,
+    "hit_rate": 0.6454
+   },
+   "lgbm_clf|25bps": {
+    "months": 251,
+    "k": 50,
+    "weight": "vw",
+    "cost_bps_per_side": 25.0,
+    "tradable_floor_usd": 3000000.0,
+    "rows_after_tradable_floor": 454708,
+    "mean_names_per_month": 50.0,
+    "mean_turnover": 0.889,
+    "terminal_wealth_net": 11.6417,
+    "terminal_wealth_gross": 35.154,
+    "terminal_wealth_market_same_months": 14.3778,
+    "cagr_net": 0.1245,
+    "cagr_market": 0.1359,
+    "mean_monthly_excess": 0.00016,
+    "annualised_excess": 0.0019,
+    "t_stat_paired_vs_market": 0.069,
+    "months_beating_market": 0.4701,
+    "worst_month_net": -0.2774,
+    "hit_rate": 0.6375
+   },
+   "nn_pre_causal|10bps": {
+    "months": 251,
+    "k": 50,
+    "weight": "vw",
+    "cost_bps_per_side": 10.0,
+    "tradable_floor_usd": 3000000.0,
+    "rows_after_tradable_floor": 454708,
+    "mean_names_per_month": 50.0,
+    "mean_turnover": 0.804,
+    "terminal_wealth_net": 49.0082,
+    "terminal_wealth_gross": 72.9934,
+    "terminal_wealth_market_same_months": 14.3778,
+    "cagr_net": 0.2045,
+    "cagr_market": 0.1359,
+    "mean_monthly_excess": 0.00679,
+    "annualised_excess": 0.0814,
+    "t_stat_paired_vs_market": 2.243,
+    "months_beating_market": 0.5578,
+    "worst_month_net": -0.3368,
+    "hit_rate": 0.6375
+   },
+   "nn_pre_causal|25bps": {
+    "months": 251,
+    "k": 50,
+    "weight": "vw",
+    "cost_bps_per_side": 25.0,
+    "tradable_floor_usd": 3000000.0,
+    "rows_after_tradable_floor": 454708,
+    "mean_names_per_month": 50.0,
+    "mean_turnover": 0.804,
+    "terminal_wealth_net": 26.9286,
+    "terminal_wealth_gross": 72.9934,
+    "terminal_wealth_market_same_months": 14.3778,
+    "cagr_net": 0.1705,
+    "cagr_market": 0.1359,
+    "mean_monthly_excess": 0.00437,
+    "annualised_excess": 0.0525,
+    "t_stat_paired_vs_market": 1.446,
+    "months_beating_market": 0.5418,
+    "worst_month_net": -0.3394,
+    "hit_rate": 0.6255
+   }
+  },
+  "n_months": 251,
+  "window": [
+   "2004-01",
+   "2024-11"
+  ],
+  "benchmark_legs": {
+   "risk_free": {
+    "months_built": 251,
+    "months_missing": [],
+    "mean_monthly": 0.001281,
+    "annualised_12x": 0.01538,
+    "source": "learner.benchmark.cash() -- pinned FF daily RF, OFFLINE"
+   },
+   "pinned_market_tr": {
+    "months_built": 251,
+    "months_missing": [],
+    "mean_monthly": 0.011939,
+    "annualised_12x": 0.14326,
+    "source": "learner.benchmark.pinned_market_total_return() -- pinned FF daily total-market return, OFFLINE",
+    "why_not_spy": "the mandate names SPY TR. benchmark.spy_total_return() fetches from yfinance and this lane is under a hard zero-network rule, so the pinned FF total market is used and is NEVER called SPY."
+   }
+  },
+  "month_label_convention": "a row labelled YYYY-MM is the book ENTERED on that month's entry_date and held to its 1m maturity; every leg is compounded over that same window.",
+  "by_cell": {
+   "lgbm_clf|10bps": {
+    "PRIMARY_beta_matched": {
+     "benchmark": "1.1782 x mkt_vw_1m + -0.1782 x pinned_rf",
+     "months": 251,
+     "mean_monthly_pct": 0.0938,
+     "annualised_pct": 1.126,
+     "t_paired": 0.418,
+     "months_ahead": 0.49
+    },
+    "SECONDARY_raw_market": {
+     "benchmark": "mkt_vw_1m (a 1.00x market leg)",
+     "months": 251,
+     "annualised_pct": 3.393,
+     "t_paired": 1.225
+    },
+    "market_regression": {
+     "n_months": 251,
+     "nw_lag": 4,
+     "alpha_monthly": 0.000938,
+     "alpha_annualised_12x": 0.01126,
+     "t_alpha_ols": 0.407,
+     "t_alpha_hac": 0.349,
+     "p_alpha_one_sided_hac": 0.36362,
+     "beta": 1.1782,
+     "beta_se_hac": 0.08779,
+     "t_beta_minus_1_hac": 2.03,
+     "r_squared": 0.7147,
+     "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+    },
+    "verdict": "LOADING",
+    "SECONDARY_pinned_market_tr": {
+     "benchmark": "pinned FF total market TR over the same windows (the offline stand-in for SPY TR; NOT SPY)",
+     "months": 251,
+     "annualised_pct": 3.329,
+     "t_paired": 1.202
+    }
+   },
+   "lgbm_clf|25bps": {
+    "PRIMARY_beta_matched": {
+     "benchmark": "1.178 x mkt_vw_1m + -0.178 x pinned_rf",
+     "months": 251,
+     "mean_monthly_pct": -0.1728,
+     "annualised_pct": -2.073,
+     "t_paired": -0.77,
+     "months_ahead": 0.4343
+    },
+    "SECONDARY_raw_market": {
+     "benchmark": "mkt_vw_1m (a 1.00x market leg)",
+     "months": 251,
+     "annualised_pct": 0.191,
+     "t_paired": 0.069
+    },
+    "market_regression": {
+     "n_months": 251,
+     "nw_lag": 4,
+     "alpha_monthly": -0.001728,
+     "alpha_annualised_12x": -0.02074,
+     "t_alpha_ols": -0.75,
+     "t_alpha_hac": -0.644,
+     "p_alpha_one_sided_hac": 0.74035,
+     "beta": 1.178,
+     "beta_se_hac": 0.08776,
+     "t_beta_minus_1_hac": 2.028,
+     "r_squared": 0.7148,
+     "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+    },
+    "verdict": "LOADING",
+    "SECONDARY_pinned_market_tr": {
+     "benchmark": "pinned FF total market TR over the same windows (the offline stand-in for SPY TR; NOT SPY)",
+     "months": 251,
+     "annualised_pct": 0.127,
+     "t_paired": 0.046
+    }
+   },
+   "nn_pre_causal|10bps": {
+    "PRIMARY_beta_matched": {
+     "benchmark": "1.3294 x mkt_vw_1m + -0.3294 x pinned_rf",
+     "months": 251,
+     "mean_monthly_pct": 0.3294,
+     "annualised_pct": 3.953,
+     "t_paired": 1.153,
+     "months_ahead": 0.5179
+    },
+    "SECONDARY_raw_market": {
+     "benchmark": "mkt_vw_1m (a 1.00x market leg)",
+     "months": 251,
+     "annualised_pct": 8.144,
+     "t_paired": 2.243
+    },
+    "market_regression": {
+     "n_months": 251,
+     "nw_lag": 4,
+     "alpha_monthly": 0.003293,
+     "alpha_annualised_12x": 0.03952,
+     "t_alpha_ols": 1.123,
+     "t_alpha_hac": 1.095,
+     "p_alpha_one_sided_hac": 0.13683,
+     "beta": 1.3294,
+     "beta_se_hac": 0.07773,
+     "t_beta_minus_1_hac": 4.238,
+     "r_squared": 0.663,
+     "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+    },
+    "verdict": "LOADING",
+    "SECONDARY_pinned_market_tr": {
+     "benchmark": "pinned FF total market TR over the same windows (the offline stand-in for SPY TR; NOT SPY)",
+     "months": 251,
+     "annualised_pct": 8.079,
+     "t_paired": 2.221
+    }
+   },
+   "nn_pre_causal|25bps": {
+    "PRIMARY_beta_matched": {
+     "benchmark": "1.3297 x mkt_vw_1m + -0.3297 x pinned_rf",
+     "months": 251,
+     "mean_monthly_pct": 0.0878,
+     "annualised_pct": 1.054,
+     "t_paired": 0.307,
+     "months_ahead": 0.4781
+    },
+    "SECONDARY_raw_market": {
+     "benchmark": "mkt_vw_1m (a 1.00x market leg)",
+     "months": 251,
+     "annualised_pct": 5.249,
+     "t_paired": 1.446
+    },
+    "market_regression": {
+     "n_months": 251,
+     "nw_lag": 4,
+     "alpha_monthly": 0.000878,
+     "alpha_annualised_12x": 0.01053,
+     "t_alpha_ols": 0.299,
+     "t_alpha_hac": 0.292,
+     "p_alpha_one_sided_hac": 0.38526,
+     "beta": 1.3297,
+     "beta_se_hac": 0.07776,
+     "t_beta_minus_1_hac": 4.241,
+     "r_squared": 0.6633,
+     "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2"
+    },
+    "verdict": "LOADING",
+    "SECONDARY_pinned_market_tr": {
+     "benchmark": "pinned FF total market TR over the same windows (the offline stand-in for SPY TR; NOT SPY)",
+     "months": 251,
+     "annualised_pct": 5.184,
+     "t_paired": 1.426
+    }
+   }
+  },
+  "reproduces_C1": {
+   "lgbm_clf|10bps": {
+    "c1_beta": 1.1782,
+    "this_job_beta": 1.1782,
+    "c1_annualised_beta_matched_excess_pct": 1.126,
+    "this_job_annualised_pct": 1.126,
+    "c1_t_paired": 0.418,
+    "this_job_t_paired": 0.418,
+    "c1_t_alpha_hac": 0.349,
+    "this_job_t_alpha_hac": 0.349,
+    "beta_matches": true,
+    "excess_matches": true,
+    "t_matches": true
+   },
+   "lgbm_clf|25bps": {
+    "c1_beta": 1.178,
+    "this_job_beta": 1.178,
+    "c1_annualised_beta_matched_excess_pct": -2.073,
+    "this_job_annualised_pct": -2.073,
+    "c1_t_paired": -0.77,
+    "this_job_t_paired": -0.77,
+    "c1_t_alpha_hac": -0.644,
+    "this_job_t_alpha_hac": -0.644,
+    "beta_matches": true,
+    "excess_matches": true,
+    "t_matches": true
+   },
+   "nn_pre_causal|10bps": {
+    "c1_beta": 1.3294,
+    "this_job_beta": 1.3294,
+    "c1_annualised_beta_matched_excess_pct": 3.953,
+    "this_job_annualised_pct": 3.953,
+    "c1_t_paired": 1.153,
+    "this_job_t_paired": 1.153,
+    "c1_t_alpha_hac": 1.095,
+    "this_job_t_alpha_hac": 1.095,
+    "beta_matches": true,
+    "excess_matches": true,
+    "t_matches": true
+   },
+   "nn_pre_causal|25bps": {
+    "c1_beta": 1.3297,
+    "this_job_beta": 1.3297,
+    "c1_annualised_beta_matched_excess_pct": 1.054,
+    "this_job_annualised_pct": 1.054,
+    "c1_t_paired": 0.307,
+    "this_job_t_paired": 0.307,
+    "c1_t_alpha_hac": 0.292,
+    "this_job_t_alpha_hac": 0.292,
+    "beta_matches": true,
+    "excess_matches": true,
+    "t_matches": true
+   }
+  },
+  "reproduces_C1_all": true,
+  "reproduces_C1_note": "the BUILD doc quotes lgbm_clf at 't 0.349' and nn_pre_causal at 't 1.095'. Those are the HAC t on the CAPM INTERCEPT (`t_alpha_hac`), not the t on the beta-matched excess series (`t_paired`, 0.418 and 1.153). They are two statistics on the same number and both are carried here so nobody quotes one under the other's name.",
+  "PRIMARY_paired_difference": {
+   "10bps": {
+    "definition": "D_t = (net_nn - beta_matched_nn) - (net_lgbm - beta_matched_lgbm). PRIMARY because the two selectors carry DIFFERENT betas: differencing the raw nets would compare a 1.33x market leg against a 1.18x one and call the extra equity premium 'different errors'.",
+    "months": 251,
+    "mean_monthly_pct": 0.2356,
+    "annualised_pct": 2.827,
+    "t_paired": 0.748,
+    "t_paired_hac_lag4": 0.796,
+    "p_one_sided": 0.22738,
+    "months_nn_ahead": 0.5418,
+    "SECONDARY_raw_net_difference": {
+     "definition": "net_nn - net_lgbm, no beta adjustment on either side",
+     "annualised_pct": 4.751,
+     "t_paired": 1.243
+    },
+    "era_table_on_the_PRIMARY_difference": {
+     "1999-2007": {
+      "months": 48,
+      "mean_pct": 0.2345,
+      "t": 0.403,
+      "sign": 1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": -0.3171,
+      "t": -0.628,
+      "sign": -1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": 0.7319,
+      "t": 1.403,
+      "sign": 1
+     },
+     "eras_with_a_positive_mean": 2,
+     "eras_with_a_negative_mean": 1,
+     "eras_measured": 3,
+     "holds_in_2_of_3": true,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": 1
+    },
+    "correlation_of_the_two_beta_matched_excesses": 0.255,
+    "correlation_of_the_two_net_series": 0.7666,
+    "months_the_two_disagree_in_sign_of_excess": 115,
+    "inference": {
+     "n_cells_looked_at": 40,
+     "deflated_sharpe": {
+      "sharpe": 0.0472,
+      "sharpe_benchmark_sr0": 0.1385,
+      "n_trials": 40,
+      "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+      "skew": -0.033,
+      "kurtosis": 4.339,
+      "n_periods": 251,
+      "z": -1.441,
+      "dsr": 0.0748,
+      "verdict": "WITHIN_SELECTION_NOISE",
+      "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.047."
+     },
+     "power": {
+      "n_periods": 251,
+      "periods_per_year": 12,
+      "n_oos_months": 251,
+      "sharpe_per_period": 0.0472,
+      "t_observed": 0.7475,
+      "years_observed": 20.92,
+      "t_target": 2.0,
+      "periods_needed_for_t_target": 1796.8,
+      "years_needed_for_t2": 149.7,
+      "years_needed_for_t2_exact": 149.73018831066614,
+      "powered_for_observed_effect": false,
+      "detectable_annual_excess": 0.03,
+      "reference_sharpe_per_period": 0.05008,
+      "years_needed_to_detect_that_effect": 132.9,
+      "mde_annual_excess_at_t_target": 0.07563,
+      "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.56%/yr",
+      "powered": false,
+      "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+      "reading": "t = 0.75 on 20.9 years; t = 2 would need 149.7 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+     },
+     "spa": {
+      "best_arm": "nn_pre_causal",
+      "n_arms": 2,
+      "n_periods": 251,
+      "n_boot": 1000,
+      "block_periods": 4.0,
+      "t_spa": 1.156,
+      "p_spa_consistent": 0.2048,
+      "p_spa_lower": 0.2048,
+      "p_spa_upper": 0.2048,
+      "arm_means": {
+       "nn_pre_causal": 0.003294,
+       "lgbm_clf": 0.000938
+      },
+      "verdict": "WITHIN_SPA_NULL",
+      "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+     },
+     "pbo": {
+      "pbo": 0.3429,
+      "n_partitions": 70,
+      "n_arms": 4,
+      "n_periods": 251,
+      "median_logit": 0.4055,
+      "verdict": "SELECTION_IS_FRAGILE",
+      "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+     },
+     "family_note": "n_trials = 40: the cells the W3b search that produced these predictions looked at. This job's own family is 10 cells; both are declared and neither is the convenient one alone."
+    },
+    "scope_aware_verdict": {
+     "verdict": "UNDERPOWERED, NOT NOISE",
+     "observed_effect_annual": 0.02827,
+     "mde_annual_at_t_2": 0.07563,
+     "years_of_tape_needed": 132.9,
+     "scope": "251 months, 2004-01..2024-11, top-50 vw books on the $3m/day-floored research panel. This says nothing about the pair's forward behaviour: neither selector has a forward vintage (see heartbeat)."
+    }
+   },
+   "25bps": {
+    "definition": "D_t = (net_nn - beta_matched_nn) - (net_lgbm - beta_matched_lgbm). PRIMARY because the two selectors carry DIFFERENT betas: differencing the raw nets would compare a 1.33x market leg against a 1.18x one and call the extra equity premium 'different errors'.",
+    "months": 251,
+    "mean_monthly_pct": 0.2606,
+    "annualised_pct": 3.127,
+    "t_paired": 0.827,
+    "t_paired_hac_lag4": 0.881,
+    "p_one_sided": 0.20417,
+    "months_nn_ahead": 0.5418,
+    "SECONDARY_raw_net_difference": {
+     "definition": "net_nn - net_lgbm, no beta adjustment on either side",
+     "annualised_pct": 5.058,
+     "t_paired": 1.323
+    },
+    "era_table_on_the_PRIMARY_difference": {
+     "1999-2007": {
+      "months": 48,
+      "mean_pct": 0.2414,
+      "t": 0.413,
+      "sign": 1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": -0.2701,
+      "t": -0.536,
+      "sign": -1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": 0.7455,
+      "t": 1.428,
+      "sign": 1
+     },
+     "eras_with_a_positive_mean": 2,
+     "eras_with_a_negative_mean": 1,
+     "eras_measured": 3,
+     "holds_in_2_of_3": true,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": 1
+    },
+    "correlation_of_the_two_beta_matched_excesses": 0.2542,
+    "correlation_of_the_two_net_series": 0.7665,
+    "months_the_two_disagree_in_sign_of_excess": 107,
+    "inference": {
+     "n_cells_looked_at": 40,
+     "deflated_sharpe": {
+      "sharpe": 0.0522,
+      "sharpe_benchmark_sr0": 0.1385,
+      "n_trials": 40,
+      "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+      "skew": -0.026,
+      "kurtosis": 4.336,
+      "n_periods": 251,
+      "z": -1.3618,
+      "dsr": 0.0866,
+      "verdict": "WITHIN_SELECTION_NOISE",
+      "reading": "after 40 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.138; this arm's is 0.052."
+     },
+     "power": {
+      "n_periods": 251,
+      "periods_per_year": 12,
+      "n_oos_months": 251,
+      "sharpe_per_period": 0.0522,
+      "t_observed": 0.8268,
+      "years_observed": 20.92,
+      "t_target": 2.0,
+      "periods_needed_for_t_target": 1468.6,
+      "years_needed_for_t2": 122.4,
+      "years_needed_for_t2_exact": 122.3815228322916,
+      "powered_for_observed_effect": false,
+      "detectable_annual_excess": 0.03,
+      "reference_sharpe_per_period": 0.05006,
+      "years_needed_to_detect_that_effect": 133.0,
+      "mde_annual_excess_at_t_target": 0.07565,
+      "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.56%/yr",
+      "powered": false,
+      "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+      "reading": "t = 0.83 on 20.9 years; t = 2 would need 122.4 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+     },
+     "spa": {
+      "best_arm": "nn_pre_causal",
+      "n_arms": 2,
+      "n_periods": 251,
+      "n_boot": 1000,
+      "block_periods": 4.0,
+      "t_spa": 0.3084,
+      "p_spa_consistent": 0.5584,
+      "p_spa_lower": 0.5584,
+      "p_spa_upper": 0.4226,
+      "arm_means": {
+       "nn_pre_causal": 0.000878,
+       "lgbm_clf": -0.001728
+      },
+      "verdict": "WITHIN_SPA_NULL",
+      "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+     },
+     "pbo": {
+      "pbo": 0.3429,
+      "n_partitions": 70,
+      "n_arms": 4,
+      "n_periods": 251,
+      "median_logit": 0.4055,
+      "verdict": "SELECTION_IS_FRAGILE",
+      "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+     },
+     "family_note": "n_trials = 40: the cells the W3b search that produced these predictions looked at. This job's own family is 10 cells; both are declared and neither is the convenient one alone."
+    },
+    "scope_aware_verdict": {
+     "verdict": "UNDERPOWERED, NOT NOISE",
+     "observed_effect_annual": 0.03127,
+     "mde_annual_at_t_2": 0.07565,
+     "years_of_tape_needed": 133.0,
+     "scope": "251 months, 2004-01..2024-11, top-50 vw books on the $3m/day-floored research panel. This says nothing about the pair's forward behaviour: neither selector has a forward vintage (see heartbeat)."
+    }
+   }
+  },
+  "family": {
+   "size_this_job": 6,
+   "family_min_p_one_sided": 0.12452,
+   "family_max_p_one_sided": 0.7794,
+   "holm_adjusted": {
+    "nn_pre_causal|10bps": 0.74713,
+    "paired_difference|25bps": 1.0,
+    "paired_difference|10bps": 1.0,
+    "lgbm_clf|10bps": 1.0,
+    "nn_pre_causal|25bps": 1.0,
+    "lgbm_clf|25bps": 1.0
+   },
+   "nothing_survives_holm_at_0_05": true
+  },
+  "different_errors": {
+   "holdings_overlap": {
+    "months": 251,
+    "k": 50,
+    "mean_names_in_common": 8.32,
+    "mean_jaccard": 0.0955,
+    "min_names_in_common": 0,
+    "max_names_in_common": 30,
+    "expected_overlap_if_independent_draws_from_the_menu": "not computed here -- the monthly menu size varies; see mean_names_in_common against k as the crude ruler",
+    "reading": "two selectors holding 8.3 of 50 names in common are holding substantially different books"
+   },
+   "why_this_is_the_question": "docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md: all ten arena books select on ONE signal. A second selector earns the name only if its ERRORS are different -- correlation of excesses and overlap of holdings are the two cheapest rulers, and both are reported here rather than a model card."
+  },
+  "memory_free_gb_after": 10.85
+ },
+ "headline": "PRIMARY (nn_pre_causal - lgbm_clf, beta-matched excess, 10 bps): 2.827%/yr at t 0.748 over 251 months; the two books hold 8.32 of 50 names in common (corr of beta-matched excesses 0.255). Nightly: lgbm_clf REFUSED, nn_pre_causal PENDING_ARTEFACT.",
+ "wall_seconds": 6.0,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_a1_shadow_grader.py"
+  ],
+  "resolved_config": {
+   "SELECTORS": {
+    "lgbm_clf": "lgbm_clf",
+    "nn_pre_causal": "nn_pre_causal_seedmean"
+   },
+   "COSTS": [
+    10.0,
+    25.0
+   ],
+   "K": 50,
+   "WEIGHT": "vw",
+   "NW_LAG": 4,
+   "FAMILY_THIS_JOB": 10,
+   "FAMILY_SEARCH": 40,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\labor_day_lab_2026-09-07\\A1_shadow_grader_run01.json"
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\tracker\\2026-09-02.jsonl",
+    "exists": true,
+    "bytes": 2291475,
+    "mtime_utc": "2026-09-02T07:04:49+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\models\\champion_shadow.joblib",
+    "exists": true,
+    "bytes": 83155,
+    "mtime_utc": "2026-09-02T11:23:22+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\contracts\\nn_pre_causal_shadow_v1.json",
+    "exists": true,
+    "bytes": 3829,
+    "mtime_utc": "2026-09-05T14:30:06+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "exists": true,
+    "bytes": 418154944,
+    "mtime_utc": "2026-09-05T05:51:44+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "exists": true,
+    "bytes": 418154944,
+    "mtime_utc": "2026-09-05T05:51:44+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06\\W3b_neural_floored_run01.json",
+    "exists": true,
+    "bytes": 207053,
+    "mtime_utc": "2026-09-05T12:42:41+00:00",
+    "sha256": "ec0ac73e0969bc0914e56eeeabfe844d3b855441091085aad0014e93b319a6bd"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+    "exists": true,
+    "bytes": 6225813,
+    "mtime_utc": "2026-09-05T14:24:06+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_meta_incumbents.json",
+    "exists": true,
+    "bytes": 9066,
+    "mtime_utc": "2026-09-05T14:24:06+00:00",
+    "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet",
+    "exists": true,
+    "bytes": 24015048,
+    "mtime_utc": "2026-09-05T14:27:05+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_meta_nn_pre_causal.json",
+    "exists": true,
+    "bytes": 74013,
+    "mtime_utc": "2026-09-05T14:27:05+00:00",
+    "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06b\\C1_beta_matched_regrade_run01.json",
+    "exists": true,
+    "bytes": 103121,
+    "mtime_utc": "2026-09-05T14:35:26+00:00",
+    "sha256": "8f7b481d04337fff891aac3f1bce899e8f276ca9dae0c8fe762d86237936d6d8"
+   }
+  ],
+  "inputs_note": "every file this run OPENED, with size and mtime. Large parquets are not hashed -- the universe fingerprint check against W3b is the stronger guarantee and is reported separately.",
+  "git_commit": "9dbccc0",
+  "python": "3.12.10",
+  "generated_utc": "2026-09-05T15:09:55+00:00"
+ },
+ "generated_utc": "2026-09-05T15:09:55+00:00"
+}
