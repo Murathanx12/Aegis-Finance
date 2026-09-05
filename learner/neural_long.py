@@ -130,6 +130,7 @@ did not consult all of them.
 
 from __future__ import annotations
 
+import sys
 import time
 
 import numpy as np
@@ -218,6 +219,16 @@ def resolve_device(prefer_cuda: bool = True) -> tuple["torch.device", dict]:
         "torch_version": torch.__version__,
         "cuda_available": bool(torch.cuda.is_available()),
         "cuda_requested": bool(prefer_cuda),
+        # WHICH INTERPRETER. On 2026-09-06 a review spent an hour deciding
+        # whether W3's `2.11.0+cu128` receipt came from a different interpreter
+        # or from a torch that was downgraded afterwards. It was the former --
+        # the repo `.venv` is CPU-only and always has been, and the CUDA build
+        # lives in the system Python 3.12 (`requirements-gpu.txt`). A device
+        # block that does not name its interpreter cannot answer that question,
+        # so it now always does.
+        "python_executable": sys.executable,
+        "python_version": sys.version.split()[0],
+        "torch_file": getattr(torch, "__file__", None),
     }
     if prefer_cuda and torch.cuda.is_available():
         dev = torch.device("cuda")

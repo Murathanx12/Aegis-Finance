@@ -1,0 +1,49 @@
+{
+ "job": "S0_cuda_drift",
+ "question": "W3 recorded torch 2.11.0+cu128 on an RTX 5060; the repo venv reports 2.11.0+cpu. Different interpreter, or a downgrade?",
+ "answer": "A DIFFERENT INTERPRETER RAN W3. There was no downgrade.",
+ "evidence": {
+  "venv_torch_dist_info_RECORD_mtime": "2026-03-31 11:22:18 +0800",
+  "venv_site_packages_dir_mtime": "2026-08-27 17:35:46 +0800",
+  "venv_site_packages_entries_newer_than_2026-09-01": 0,
+  "why_that_settles_it": "a directory's mtime moves when an entry is added or removed; site-packages has not moved since 2026-08-27, so no torch was installed into or removed from the venv on 2026-09-05. The venv's torch has been the CPU build continuously since 2026-03-31.",
+  "system_python312_torch_dist_info_RECORD_mtime": "2026-09-05 11:49:15 +0800",
+  "W3_receipt_mtimes": [
+   "W3_neural_long_run10_v1.json 2026-09-05 13:30:39",
+   "W3_neural_long_run13_v0.json 2026-09-05 14:07:49"
+  ],
+  "gap": "the CUDA wheel was installed into the system Python 3.12 ~1h41m before the first CUDA-stamped W3 receipt",
+  "other_torch_installs_on_the_machine": {
+   "C:/Users/mrthn/aegis-finance/.venv": "2.11.0+cpu",
+   "C:/Users/mrthn/AppData/Local/Programs/Python/Python312": "2.11.0+cu128 (cuda 12.8)",
+   "C:/Users/mrthn/AppData/Local/Python/pythoncore-3.14-64": "2.10.0+cpu",
+   "C:/Users/mrthn/market-prediction-engine/.venv": "2.10.0+cpu"
+  },
+  "resolve_device_was_honest_at_the_time": "git show da82992:learner/neural_long.py -- resolve_device() derived every field from the live torch; it did not hardcode cu128. The GPU numbers are real.",
+  "nvidia_smi": "GPU 0: NVIDIA GeForce RTX 5060 Laptop GPU"
+ },
+ "live_probe": {
+  "venv": {
+   "exe": "C:\\Users\\mrthn\\aegis-finance\\.venv\\Scripts\\python.exe",
+   "torch": "2.11.0+cpu",
+   "cuda": false,
+   "name": null
+  },
+  "designated_gpu_interpreter": {
+   "exe": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+   "torch": "2.11.0+cu128",
+   "cuda": true,
+   "name": "NVIDIA GeForce RTX 5060 Laptop GPU"
+  }
+ },
+ "the_real_defect": "the device block named the torch build but never the INTERPRETER, so the receipt could not answer the question it was written to answer.",
+ "fix": {
+  "1": "learner/neural_long.py resolve_device() now stamps python_executable, python_version and torch_file on every neural receipt",
+  "2": "requirements-gpu.txt pins torch==2.11.0+cu128 with its --index-url, names the designated interpreter and the AEGIS_GPU_PYTHON override, and carries this receipt in its header",
+  "3": "backend/tests/test_gpu_environment_pin.py -- 4 tests; FAILS on any host with an NVIDIA GPU whose designated interpreter stops reporting CUDA, SKIPS on a GPU-less host (CI)"
+ },
+ "caveat_for_every_W3_number": "W3 ran on system Python 3.12 (numpy 2.4.6, sklearn 1.9.0), not on the repo venv (numpy 2.4.3). The fast suite has never exercised the interpreter that produced the neural receipts.",
+ "tests": "backend/tests/test_gpu_environment_pin.py 4 passed",
+ "llm_spend_usd": 0.0,
+ "generated_utc": "2026-09-05T11:47:00.075765+00:00"
+}

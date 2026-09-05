@@ -1,0 +1,44 @@
+# GPU (CUDA) requirements — NOT installed into this repo's `.venv`.
+#
+# WHY THIS FILE EXISTS (2026-09-06)
+# ---------------------------------
+# `W3_neural_long_run13` recorded `torch 2.11.0+cu128`, `cuda_available: true`,
+# an RTX 5060 Laptop GPU and `sm_120`, while `.venv/Scripts/python -c
+# "import torch"` reported `2.11.0+cpu`. The reviewer's two hypotheses were
+# "a different interpreter ran W3" or "torch was downgraded afterwards".
+#
+# It was the FIRST one, and the filesystem settles it:
+#
+#   .venv/Lib/site-packages/torch-2.11.0.dist-info/RECORD   2026-03-31 11:22
+#   .venv/Lib/site-packages/           (dir mtime)          2026-08-27 17:35
+#     -> no package was added or removed from the venv after 2026-08-27, so the
+#        venv's torch has been the CPU build continuously since 2026-03-31 and
+#        was never downgraded.
+#
+#   C:\Users\mrthn\AppData\Local\Programs\Python\Python312
+#     torch-2.11.0+cu128.dist-info/RECORD                   2026-09-05 11:49
+#     -> the CUDA build was installed into the SYSTEM Python 3.12 ninety
+#        minutes before the W3 runs (13:30-14:07 on 2026-09-05).
+#
+# So the GPU numbers are real and were produced by a real GPU; what was missing
+# was any record of WHICH interpreter produced them. `resolve_device()` now
+# stamps `python_executable`, `python_version` and `torch_file` onto every
+# neural receipt so the question cannot be asked again.
+#
+# THE DESIGNATED GPU INTERPRETER
+# ------------------------------
+#   C:\Users\mrthn\AppData\Local\Programs\Python\Python312\python.exe
+# Override with the environment variable AEGIS_GPU_PYTHON.
+#
+# THE INSTALL LINE (run it with THAT interpreter, never with .venv's):
+#
+#   & "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m pip install \
+#       --index-url https://download.pytorch.org/whl/cu128 \
+#       torch==2.11.0+cu128
+#
+# A plain `pip install -r backend/requirements.txt` into that interpreter will
+# NOT undo this (torch is not listed there), but a `pip install torch` from
+# PyPI WILL silently replace it with the CPU build. `test_gpu_environment_pin.py`
+# fails on this laptop the moment that happens, and skips on any host without an
+# NVIDIA GPU.
+torch==2.11.0+cu128   # --index-url https://download.pytorch.org/whl/cu128
