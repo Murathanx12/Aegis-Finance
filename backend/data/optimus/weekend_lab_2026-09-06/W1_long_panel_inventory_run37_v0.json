@@ -1,0 +1,117 @@
+{
+ "question": "what is on the long panel, and did its share-basis gate pass?",
+ "rows": 925757,
+ "months": 310,
+ "permnos": 8981,
+ "window": "1999-2024",
+ "schema_version": "learner-train-table-3",
+ "matured_targets": {
+  "1m": 922335,
+  "3m": 915839,
+  "6m": 906016,
+  "12m": 886155
+ },
+ "by_era": [
+  {
+   "era": "1999-2007",
+   "name_months": 306187,
+   "months": 106,
+   "permnos": 5563
+  },
+  {
+   "era": "2008-2015",
+   "name_months": 284004,
+   "months": 96,
+   "permnos": 5059
+  },
+  {
+   "era": "2016-2024",
+   "name_months": 335566,
+   "months": 108,
+   "permnos": 5156
+  }
+ ],
+ "coverage_first_and_last": [
+  {
+   "year": 1999,
+   "era": "1999-2007",
+   "name_months": 19733,
+   "permnos": 2895,
+   "months": 10,
+   "hygiene_ok": 15864,
+   "hygiene_pass_rate": 0.8039,
+   "median_coverage": 7.0,
+   "median_close": 22.69,
+   "matured_1m": 19726,
+   "matured_12m": 19714
+  },
+  {
+   "year": 2024,
+   "era": "2016-2024",
+   "name_months": 38124,
+   "permnos": 3420,
+   "months": 12,
+   "hygiene_ok": 29466,
+   "hygiene_pass_rate": 0.7729,
+   "median_coverage": 6.0,
+   "median_close": 21.49,
+   "matured_1m": 34987,
+   "matured_12m": 0
+  }
+ ],
+ "thinnest_year": {
+  "year": 1999,
+  "era": "1999-2007",
+  "name_months": 19733,
+  "permnos": 2895,
+  "months": 10,
+  "hygiene_ok": 15864,
+  "hygiene_pass_rate": 0.8039,
+  "median_coverage": 7.0,
+  "median_close": 22.69,
+  "matured_1m": 19726,
+  "matured_12m": 19714
+ },
+ "share_basis_gate_early_era": {
+  "PRIMARY_in_band_rate_whole_early_era": 0.9783,
+  "primary_floor": 0.95,
+  "primary_passes": true,
+  "why_the_level_and_not_the_difference": "the corruption is driven by cfacpr(t), a FORWARD cumulative factor, while `split_prior_year` is a BACKWARD flag -- 84.1% of distorted rows land in the CONTROL arm, so both rates fall together and a difference test cancels the very shift it is looking for. Proven by injection; see `injection_self_test`.",
+  "window": "1999-2004",
+  "band": [
+   0.3,
+   4.0
+  ],
+  "ratio_source": "ratio, coalesced with ratio_unhygienic (raw PIT ratio, audit column)",
+  "match": "has_opinion and 0 < raw ratio < RATIO_UNREADABLE_AT on BOTH sides; the split flag is the only difference",
+  "permnos_with_a_share_basis_change": 1453,
+  "rows_around_a_change": 19619,
+  "ratio_in_band_rate_split_names": 0.9807,
+  "rows_without_a_change": 147551,
+  "ratio_in_band_rate_other_names": 0.978,
+  "gap": -0.0027,
+  "median_ratio_split_names": 1.2149,
+  "median_ratio_other_names": 1.2439,
+  "what_would_fail": "a split-adjusted numerator over a raw denominator would push the post-change rows out of the band by roughly the split factor, so the split-name in-band rate would collapse relative to the matched control",
+  "injection_self_test": {
+   "injected_defect": "ratio / cfacpr(t) -- a split-ADJUSTED numerator over a raw close",
+   "rows_injected": 167170,
+   "in_band_rate_REAL_panel": 0.9783,
+   "in_band_rate_INJECTED_panel": 0.8545,
+   "floor": 0.95,
+   "gate_detects_the_defect": true,
+   "reading": "the real panel scores 0.9783 and the same panel with the 2026-09-04 defect injected scores 0.8545; the 0.95 floor separates them"
+  },
+  "verdict": "PASS"
+ },
+ "incumbent_panel_name_months": 605410,
+ "headline": "925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel had 605,410 rows / 143 months",
+ "verdict": "INVENTORY",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W1_long_panel_inventory",
+ "run": 37,
+ "variant": 0,
+ "written_utc": "2026-09-05T08:40:32+00:00",
+ "elapsed_s": 1.3,
+ "exit_code": 0
+}

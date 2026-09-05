@@ -1,0 +1,397 @@
+{
+ "question": "does the 30-day implied-volatility surface -- level, one-month change, call-put parity spread, 25-delta skew and the variance risk premium -- add anything to momentum, size and vol for excess_vw_1m on the 1999-2024 panel?",
+ "family_id": "weekend-W5-options-iv",
+ "variant": 0,
+ "target": "excess_vw_1m",
+ "surface_coverage": [
+  "1996-01-04",
+  "2024-12-31"
+ ],
+ "join": {
+  "rows_in": 925757,
+  "rows_out": 925757,
+  "match_rate": {
+   "atm_iv_30d": 0.7293,
+   "atm_iv_chg_1m": 0.7152,
+   "cp_iv_spread_30d": 0.7293,
+   "skew_25d_30d": 0.7293,
+   "iv_minus_rv_21d": 0.729
+  },
+  "tolerance_days": 7,
+  "allow_same_day": false,
+  "direction": "backward, exact matches EXCLUDED -- the surface is end-of-day and the trade is not",
+  "median_lag_days": 1.0,
+  "note": "the ceiling here is not the join, it is OPTION COVERAGE: only names with a listed and liquid 30-day surface have a row at all, which is a size and liquidity filter on top of the panel's own",
+  "verdict": "JOINED"
+ },
+ "features": [
+  {
+   "feature": "atm_iv_30d",
+   "family": "iv_level",
+   "definition": "mean(IV[30d, 50-delta call], IV[30d, 50-delta put])",
+   "rows": 654686,
+   "months": 309,
+   "names_per_month_median": 2192,
+   "mean_rank_ic": -0.04537,
+   "t_rank_ic": -3.863,
+   "mean_fm_beta_controlled": -0.001074,
+   "t_fm_beta_controlled": -0.273,
+   "t_fm_beta_controlled_hac": -0.274,
+   "newey_west_lags": 0,
+   "overlap_note": "the target spans 1 month(s), so a monthly series of it overlaps 0 month(s); the HAC t is the one the survivor bar uses",
+   "controls": [
+    "mom_12_1",
+    "log_market_cap",
+    "vol_60d"
+   ],
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": -0.4646,
+     "t": -0.55,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1475,
+     "t": 0.274,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0178,
+     "t": 0.03,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": -0.0155,
+    "t_observed": -0.2731,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03617,
+    "years_needed_to_detect_that_effect": 254.8,
+    "mde_annual_excess_at_t_target": 0.09437,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.44%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.0155); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "atm_iv_chg_1m",
+   "family": "iv_dynamics",
+   "definition": "atm_iv_30d(t) - atm_iv_30d(t-21 sessions), voided across a gap of more than 45 calendar days",
+   "rows": 643502,
+   "months": 307,
+   "names_per_month_median": 2168,
+   "mean_rank_ic": -0.00057,
+   "t_rank_ic": -0.166,
+   "mean_fm_beta_controlled": 0.001822,
+   "t_fm_beta_controlled": 1.553,
+   "t_fm_beta_controlled_hac": 1.555,
+   "newey_west_lags": 0,
+   "overlap_note": "the target spans 1 month(s), so a monthly series of it overlaps 0 month(s); the HAC t is the one the survivor bar uses",
+   "controls": [
+    "mom_12_1",
+    "log_market_cap",
+    "vol_60d"
+   ],
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.125,
+     "t": 0.607,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3915,
+     "t": 1.761,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 105,
+     "mean_pct": 0.0485,
+     "t": 0.266,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 307,
+    "periods_per_year": 12,
+    "n_oos_months": 307,
+    "sharpe_per_period": 0.0886,
+    "t_observed": 1.5525,
+    "years_observed": 25.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 509.5,
+    "years_needed_for_t2": 42.5,
+    "years_needed_for_t2_exact": 42.455877059833604,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.12161,
+    "years_needed_to_detect_that_effect": 22.5,
+    "mde_annual_excess_at_t_target": 0.02816,
+    "mde_reading": "on the 25.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 2.82%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 1.55 on 25.6 years; t = 2 would need 42.5 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  },
+  {
+   "feature": "cp_iv_spread_30d",
+   "family": "informed_flow",
+   "definition": "IV[30d, 50-delta CALL] - IV[30d, 50-delta PUT]; positive = calls richer than puts (put-call parity violated on the call side)",
+   "rows": 654686,
+   "months": 309,
+   "names_per_month_median": 2192,
+   "mean_rank_ic": 0.00793,
+   "t_rank_ic": 3.678,
+   "mean_fm_beta_controlled": 0.003673,
+   "t_fm_beta_controlled": 4.144,
+   "t_fm_beta_controlled_hac": 4.15,
+   "newey_west_lags": 0,
+   "overlap_note": "the target spans 1 month(s), so a monthly series of it overlaps 0 month(s); the HAC t is the one the survivor bar uses",
+   "controls": [
+    "mom_12_1",
+    "log_market_cap",
+    "vol_60d"
+   ],
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.2766,
+     "t": 1.774,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.6693,
+     "t": 4.64,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.1862,
+     "t": 1.197,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.2357,
+    "t_observed": 4.1435,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 72.0,
+    "years_needed_for_t2": 6.0,
+    "years_needed_for_t2_exact": 5.999189966968875,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.16044,
+    "years_needed_to_detect_that_effect": 12.9,
+    "mde_annual_excess_at_t_target": 0.02127,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 2.13%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 4.14 on 25.8 years; t = 2 would need 6.0 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "skew_25d_30d",
+   "family": "tail_skew",
+   "definition": "IV[30d, 25-delta PUT] - IV[30d, 25-delta CALL]; positive = crash insurance dearer than upside, the usual sign for equities",
+   "rows": 654686,
+   "months": 309,
+   "names_per_month_median": 2192,
+   "mean_rank_ic": -0.00103,
+   "t_rank_ic": -0.378,
+   "mean_fm_beta_controlled": -0.004925,
+   "t_fm_beta_controlled": -5.364,
+   "t_fm_beta_controlled_hac": -5.373,
+   "newey_west_lags": 0,
+   "overlap_note": "the target spans 1 month(s), so a monthly series of it overlaps 0 month(s); the HAC t is the one the survivor bar uses",
+   "controls": [
+    "mom_12_1",
+    "log_market_cap",
+    "vol_60d"
+   ],
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": -0.6683,
+     "t": -4.588,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.5944,
+     "t": -3.227,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2271,
+     "t": -1.545,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": -0.3052,
+    "t_observed": -5.3642,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.15489,
+    "years_needed_to_detect_that_effect": 13.9,
+    "mde_annual_excess_at_t_target": 0.02204,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 2.20%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.3052); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "iv_minus_rv_21d",
+   "family": "variance_premium",
+   "definition": "atm_iv_30d - annualised 21-session realised vol of the underlying from CRSP daily returns",
+   "rows": 654669,
+   "months": 309,
+   "names_per_month_median": 2192,
+   "mean_rank_ic": -0.01499,
+   "t_rank_ic": -3.542,
+   "mean_fm_beta_controlled": 0.001493,
+   "t_fm_beta_controlled": 0.869,
+   "t_fm_beta_controlled_hac": 0.87,
+   "newey_west_lags": 0,
+   "overlap_note": "the target spans 1 month(s), so a monthly series of it overlaps 0 month(s); the HAC t is the one the survivor bar uses",
+   "controls": [
+    "mom_12_1",
+    "log_market_cap",
+    "vol_60d"
+   ],
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": -0.0219,
+     "t": -0.078,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4082,
+     "t": 1.562,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0867,
+     "t": 0.256,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0494,
+    "t_observed": 0.8686,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1638.2,
+    "years_needed_for_t2": 136.5,
+    "years_needed_for_t2_exact": 136.51676278052236,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.08272,
+    "years_needed_to_detect_that_effect": 48.7,
+    "mde_annual_excess_at_t_target": 0.04126,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 4.13%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 0.87 on 25.8 years; t = 2 would need 136.5 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  }
+ ],
+ "n_features_tested": 5,
+ "newey_west_lags": 0,
+ "survivors_controlled_t2_and_same_sign_2of3_eras": [
+  {
+   "feature": "cp_iv_spread_30d",
+   "t": 4.15,
+   "t_naive": 4.144,
+   "sign": 1
+  },
+  {
+   "feature": "skew_25d_30d",
+   "t": -5.373,
+   "t_naive": -5.364,
+   "sign": -1
+  }
+ ],
+ "killed_by_the_controls": [
+  "atm_iv_30d",
+  "iv_minus_rv_21d"
+ ],
+ "killed_note": "these cleared |t| >= 3 on the RAW rank IC and fall below |t| = 2 once momentum, size and vol are in the same monthly regression. For an option column that specifically means realised volatility wearing a forward-looking label.",
+ "coverage_caveat": "the option universe is NOT the panel universe: a name only has a row here if it had a listed 30-day surface, which is a size and liquidity screen on top of the panel's own. Every number above is conditional on that screen and says nothing about the names it excludes.",
+ "multiplicity_note": "5 features were scored; a |t| >= 2 bar on 5 independent tests expects 0.2 false positives, so the era requirement is doing the work a Holm correction would",
+ "headline": "5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= 2 WITH momentum, size and vol in the regression and keep one sign in 2 of 3 eras: [('cp_iv_spread_30d', 4.15), ('skew_25d_30d', -5.373)]; killed by the controls: ['atm_iv_30d', 'iv_minus_rv_21d']",
+ "verdict": "SCREEN_SURVIVOR (2 of 5, controlled |t| >= 2 with momentum/size/vol in the same monthly regression AND one sign across eras)",
+ "verdict_reported_by_the_module": "NOVEL",
+ "verdict_note": "W5_options_iv is a FEATURE SCREEN: it has no book and no Sharpe to deflate, so it cannot reach NOVEL. Its module's own word is kept above. W5b is the book these coefficients earned, and all 24 of its cells lost GROSS.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W5_options_iv",
+ "run": 17,
+ "written_utc": "2026-09-05T07:03:17+00:00",
+ "elapsed_s": 8.4,
+ "exit_code": 0
+}

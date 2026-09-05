@@ -1,0 +1,204 @@
+{
+ "question": "does the future differ across discovered market states by more than a partition of the same months, with the same persistence, would produce?",
+ "family_id": "weekend-W8-states-k4",
+ "k": 4,
+ "state_col": "market_state",
+ "months": 286,
+ "state_is_market_level": true,
+ "state_meta": {
+  "k": 4,
+  "assigned_months": 286,
+  "burn_in_months": 24,
+  "protocol": "expanding window, refit EVERY month on months strictly before M",
+  "mean_centroid_drift": 0.891,
+  "mean_centroid_separation": 8.1158,
+  "drift_over_separation": 0.1098,
+  "state_month_counts": {
+   "0": 69,
+   "1": 28,
+   "2": 131,
+   "3": 58
+  }
+ },
+ "conditional_table": [
+  {
+   "state": 0,
+   "rows": 202761,
+   "share": 0.23417,
+   "names": 7316,
+   "months": 69,
+   "excess_vw_1m": {
+    "n": 202693,
+    "mean": 0.00505,
+    "median": -0.00278,
+    "monthly_mean_of_means": 0.0055,
+    "months": 69,
+    "t_stat_months": 1.593,
+    "p05": -0.20121,
+    "p95": 0.22049,
+    "tail_loss_mean_worst_5pct": -0.30417,
+    "share_negative": 0.5139
+   },
+   "excess_vw_3m": {
+    "n": 202648,
+    "mean": 0.01201,
+    "median": -0.0047,
+    "monthly_mean_of_means": 0.01286,
+    "months": 69,
+    "t_stat_months": 2.022,
+    "p05": -0.34965,
+    "p95": 0.39308,
+    "tail_loss_mean_worst_5pct": -0.49664,
+    "share_negative": 0.5125
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.18975
+  },
+  {
+   "state": 1,
+   "rows": 84877,
+   "share": 0.09803,
+   "names": 7798,
+   "months": 28,
+   "excess_vw_1m": {
+    "n": 81714,
+    "mean": -0.00291,
+    "median": -0.01089,
+    "monthly_mean_of_means": -0.00277,
+    "months": 27,
+    "t_stat_months": -0.376,
+    "p05": -0.2619,
+    "p95": 0.26712,
+    "tail_loss_mean_worst_5pct": -0.38538,
+    "share_negative": 0.5429
+   },
+   "excess_vw_3m": {
+    "n": 81679,
+    "mean": 0.01919,
+    "median": -0.01042,
+    "monthly_mean_of_means": 0.021,
+    "months": 27,
+    "t_stat_months": 1.178,
+    "p05": -0.42693,
+    "p95": 0.5116,
+    "tail_loss_mean_worst_5pct": -0.56917,
+    "share_negative": 0.5211
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.22635
+  },
+  {
+   "state": 2,
+   "rows": 400266,
+   "share": 0.46227,
+   "names": 8125,
+   "months": 131,
+   "excess_vw_1m": {
+    "n": 400143,
+    "mean": 0.00024,
+    "median": -0.00383,
+    "monthly_mean_of_means": 0.0007,
+    "months": 131,
+    "t_stat_months": 0.292,
+    "p05": -0.20107,
+    "p95": 0.20315,
+    "tail_loss_mean_worst_5pct": -0.30891,
+    "share_negative": 0.5185
+   },
+   "excess_vw_3m": {
+    "n": 400065,
+    "mean": -0.00258,
+    "median": -0.01221,
+    "monthly_mean_of_means": -0.00122,
+    "months": 131,
+    "t_stat_months": -0.297,
+    "p05": -0.3598,
+    "p95": 0.35751,
+    "tail_loss_mean_worst_5pct": -0.50687,
+    "share_negative": 0.5326
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.16226
+  },
+  {
+   "state": 3,
+   "rows": 177964,
+   "share": 0.20553,
+   "names": 6924,
+   "months": 58,
+   "excess_vw_1m": {
+    "n": 177914,
+    "mean": -0.00286,
+    "median": -0.0091,
+    "monthly_mean_of_means": -0.00259,
+    "months": 58,
+    "t_stat_months": -0.557,
+    "p05": -0.24113,
+    "p95": 0.2373,
+    "tail_loss_mean_worst_5pct": -0.3578,
+    "share_negative": 0.5411
+   },
+   "excess_vw_3m": {
+    "n": 171592,
+    "mean": -0.01442,
+    "median": -0.02817,
+    "monthly_mean_of_means": -0.0136,
+    "months": 56,
+    "t_stat_months": -1.557,
+    "p05": -0.42799,
+    "p95": 0.40441,
+    "tail_loss_mean_worst_5pct": -0.57134,
+    "share_negative": 0.5657
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.1601
+  }
+ ],
+ "null_1_within_month_shuffle": {
+  "skipped": true,
+  "why": "`states.shuffled_null` permutes state labels WITHIN each month. A market-level state is CONSTANT within a month, so that permutation is the identity: every draw equals the observation, `null_p95 == observed`, and p is 1.0 by construction regardless of the data. It is a correct null for a NAME-level state and an undefined one here."
+ },
+ "null_2_persistent_shuffle_per_name": {
+  "skipped": true,
+  "why": "`states.persistent_shuffled_null` circularly shifts EACH NAME's own state sequence independently. Under a market-level state every name shares one sequence, so shifting them independently destroys the market-wide coherence that is the object under test -- the null becomes far weaker than the alternative and returns p = 0.0 as an artefact."
+ },
+ "null_3_market_circular_shift": {
+  "null": "market-level circular shift of the single monthly state sequence",
+  "statistic": "max-minus-min of per-state mean monthly excess",
+  "target": "excess_vw_1m",
+  "months": 286,
+  "observed": 0.008268,
+  "null_draws": 500,
+  "null_mean": 0.009271,
+  "null_p95": 0.016699,
+  "p_value_one_sided": 0.578,
+  "preserves": [
+   "state marginal",
+   "run lengths / transition multiset",
+   "calendar"
+  ],
+  "destroys": [
+   "alignment of states to the returns that followed"
+  ]
+ },
+ "null_4_by_era": {
+  "1999-2007": {
+   "rows": 246298,
+   "spread": 0.039677
+  },
+  "2008-2015": {
+   "rows": 284004,
+   "spread": 0.011685
+  },
+  "2016-2024": {
+   "rows": 335566,
+   "spread": 0.015271
+  }
+ },
+ "which_null_the_verdict_rests_on": "null_3_market_circular_shift -- the only one of the three that is DEFINED for a market-level state. Nulls 1 and 2 are correct for NAME-level states and are recorded here with the reason they do not apply, because a null that returns p = 1.0 or p = 0.0 by construction is not a weak result, it is not a result.",
+ "headline": "k=4 market states over 286 months; market circular-shift p 0.578 (observed spread 0.008268 vs null p95 0.016699); era spreads {'1999-2007': 0.039677, '2008-2015': 0.011685, '2016-2024': 0.015271}",
+ "verdict": "NOISE",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W8_states_three_nulls",
+ "run": 28,
+ "variant": 0,
+ "written_utc": "2026-09-05T08:00:25+00:00",
+ "elapsed_s": 33.5,
+ "exit_code": 0
+}

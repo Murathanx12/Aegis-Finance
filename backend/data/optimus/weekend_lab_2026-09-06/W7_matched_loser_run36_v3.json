@@ -1,0 +1,3513 @@
+{
+ "question": "what was observable BEFOREHAND that separated a 12-month residual winner from the names that looked exactly like it?",
+ "family_id": "weekend-W7-matched-loser",
+ "variant_config": {
+  "top_n": 25,
+  "n_match": 8,
+  "outcome": "excess_vw_12m"
+ },
+ "design": {
+  "top_n": 25,
+  "controls_per_name": 8,
+  "residualised_on": [
+   "log_market_cap",
+   "mom_12_1",
+   "vol_60d"
+  ],
+  "match_on": [
+   "sector (exact where available)",
+   "log_market_cap",
+   "mom_12_1",
+   "vol_60d"
+  ],
+  "outcome": "excess_vw_12m",
+  "formation_months": 297,
+  "window": [
+   "1999-04",
+   "2023-12"
+  ]
+ },
+ "features_tested": 49,
+ "winner_side": [
+  {
+   "feature": "vol_60d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.017594,
+   "t_naive": 23.217,
+   "t_hac": 15.171,
+   "t_block_non_overlapping": 13.356,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.8771,
+     "t": 14.178,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 1.8263,
+     "t": 15.051,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 1.5638,
+     "t": 11.334,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.3472,
+    "t_observed": 23.2167,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2.2,
+    "years_needed_for_t2": 0.2,
+    "years_needed_for_t2_exact": 0.1836684993402262,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.19142,
+    "years_needed_to_detect_that_effect": 9.1,
+    "mde_annual_excess_at_t_target": 0.01819,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 1.82%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 23.22 on 24.8 years; t = 2 would need 0.2 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "vol_20d__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.02366,
+   "t_naive": 12.284,
+   "t_hac": 12.825,
+   "t_block_non_overlapping": 11.193,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 2.398,
+     "t": 6.84,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 2.0851,
+     "t": 6.284,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.6119,
+     "t": 8.308,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.7128,
+    "t_observed": 12.2841,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 7.9,
+    "years_needed_for_t2": 0.7,
+    "years_needed_for_t2_exact": 0.6560677547022765,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.07532,
+    "years_needed_to_detect_that_effect": 58.8,
+    "mde_annual_excess_at_t_target": 0.04623,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 4.62%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 12.28 on 24.8 years; t = 2 would need 0.7 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_close__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.050401,
+   "t_naive": -23.594,
+   "t_hac": -10.546,
+   "t_block_non_overlapping": -9.429,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -5.2993,
+     "t": -13.641,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.1332,
+     "t": -18.457,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.6634,
+     "t": -10.783,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.3691,
+    "t_observed": -23.5943,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06791,
+    "years_needed_to_detect_that_effect": 72.3,
+    "mde_annual_excess_at_t_target": 0.05127,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.13%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.3691); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_market_cap__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.017178,
+   "t_naive": -18.672,
+   "t_hac": -8.974,
+   "t_block_non_overlapping": -8.459,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.32,
+     "t": -12.637,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.5217,
+     "t": -11.298,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.2551,
+     "t": -9.844,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.0834,
+    "t_observed": -18.6716,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.15768,
+    "years_needed_to_detect_that_effect": 13.4,
+    "mde_annual_excess_at_t_target": 0.02208,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 2.21%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.0834); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_close",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.29012,
+   "t_naive": -21.124,
+   "t_hac": -8.722,
+   "t_block_non_overlapping": -7.927,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -29.883,
+     "t": -12.875,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -33.5478,
+     "t": -15.952,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -23.5237,
+     "t": -9.043,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.2257,
+    "t_observed": -21.1238,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01056,
+    "years_needed_to_detect_that_effect": 2987.9,
+    "mde_annual_excess_at_t_target": 0.32962,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 32.96%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.2257); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "dispersion__xs",
+   "side": "winner_minus_matched_control",
+   "months": 293,
+   "mean_diff": 0.061463,
+   "t_naive": 14.875,
+   "t_hac": 8.144,
+   "t_block_non_overlapping": 7.586,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 101,
+     "mean_pct": 5.1497,
+     "t": 6.539,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 7.5504,
+     "t": 11.1,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.7907,
+     "t": 8.945,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 293,
+    "periods_per_year": 12,
+    "n_oos_months": 293,
+    "sharpe_per_period": 0.869,
+    "t_observed": 14.8749,
+    "years_observed": 24.42,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 5.3,
+    "years_needed_for_t2": 0.4,
+    "years_needed_for_t2_exact": 0.4414034435651324,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03535,
+    "years_needed_to_detect_that_effect": 266.8,
+    "mde_annual_excess_at_t_target": 0.09917,
+    "mde_reading": "on the 24.4 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.92%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 14.87 on 24.4 years; t = 2 would need 0.4 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "log_market_cap",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.150392,
+   "t_naive": -17.201,
+   "t_hac": -8.02,
+   "t_block_non_overlapping": -7.519,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -21.4361,
+     "t": -11.73,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -12.9393,
+     "t": -11.58,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -10.1424,
+     "t": -8.725,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.9981,
+    "t_observed": -17.2012,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01659,
+    "years_needed_to_detect_that_effect": 1210.8,
+    "mde_annual_excess_at_t_target": 0.20983,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 20.98%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.9981); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "dispersion",
+   "side": "winner_minus_matched_control",
+   "months": 293,
+   "mean_diff": 0.048632,
+   "t_naive": 14.079,
+   "t_hac": 6.965,
+   "t_block_non_overlapping": 6.476,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 101,
+     "mean_pct": 4.1921,
+     "t": 7.325,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 6.301,
+     "t": 8.915,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 4.1314,
+     "t": 8.719,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 293,
+    "periods_per_year": 12,
+    "n_oos_months": 293,
+    "sharpe_per_period": 0.8225,
+    "t_observed": 14.0794,
+    "years_observed": 24.42,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 5.9,
+    "years_needed_for_t2": 0.5,
+    "years_needed_for_t2_exact": 0.492693429630415,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04228,
+    "years_needed_to_detect_that_effect": 186.4,
+    "mde_annual_excess_at_t_target": 0.0829,
+    "mde_reading": "on the 24.4 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.29%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 14.08 on 24.4 years; t = 2 would need 0.5 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "disagreement",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.072417,
+   "t_naive": 11.039,
+   "t_hac": 5.921,
+   "t_block_non_overlapping": 6.099,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.8115,
+     "t": 2.006,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 10.6782,
+     "t": 9.288,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 9.7444,
+     "t": 8.479,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.6405,
+    "t_observed": 11.0389,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 9.7,
+    "years_needed_for_t2": 0.8,
+    "years_needed_for_t2_exact": 0.8124326038734414,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.02211,
+    "years_needed_to_detect_that_effect": 681.7,
+    "mde_annual_excess_at_t_target": 0.15744,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 15.74%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 11.04 on 24.8 years; t = 2 would need 0.8 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "vol_20d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.039221,
+   "t_naive": 6.949,
+   "t_hac": 6.062,
+   "t_block_non_overlapping": 5.776,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 4.539,
+     "t": 6.03,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 4.3933,
+     "t": 5.31,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.7762,
+     "t": 2.137,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.4032,
+    "t_observed": 6.9492,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 24.6,
+    "years_needed_for_t2": 2.1,
+    "years_needed_for_t2_exact": 2.0500362478110796,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.0257,
+    "years_needed_to_detect_that_effect": 504.6,
+    "mde_annual_excess_at_t_target": 0.13545,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 13.55%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 6.95 on 24.8 years; t = 2 would need 2.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "vol_60d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.040017,
+   "t_naive": 10.413,
+   "t_hac": 5.965,
+   "t_block_non_overlapping": 5.765,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 3.9702,
+     "t": 8.475,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 5.0691,
+     "t": 8.25,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.9689,
+     "t": 3.405,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.6042,
+    "t_observed": 10.4128,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 11.0,
+    "years_needed_for_t2": 0.9,
+    "years_needed_for_t2_exact": 0.9130581087426304,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03775,
+    "years_needed_to_detect_that_effect": 233.9,
+    "mde_annual_excess_at_t_target": 0.09223,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.22%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 10.41 on 24.8 years; t = 2 would need 0.9 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.0,
+   "holm_p": 0.0
+  },
+  {
+   "feature": "mom_12_1__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.010828,
+   "t_naive": -8.505,
+   "t_hac": -4.54,
+   "t_block_non_overlapping": -4.303,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -0.92,
+     "t": -4.141,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.2525,
+     "t": -6.051,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.0911,
+     "t": -4.709,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.4935,
+    "t_observed": -8.5046,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.11394,
+    "years_needed_to_detect_that_effect": 25.7,
+    "mde_annual_excess_at_t_target": 0.03056,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 3.06%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.4935); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 6.9e-05,
+   "holm_p": 0.00064
+  },
+  {
+   "feature": "disagreement__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.033939,
+   "t_naive": 8.169,
+   "t_hac": 3.982,
+   "t_block_non_overlapping": 3.964,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -0.1271,
+     "t": -0.211,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 5.1798,
+     "t": 7.237,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 5.4591,
+     "t": 7.76,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.474,
+    "t_observed": 8.169,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 17.8,
+    "years_needed_for_t2": 1.5,
+    "years_needed_for_t2_exact": 1.4835261853150277,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03492,
+    "years_needed_to_detect_that_effect": 273.4,
+    "mde_annual_excess_at_t_target": 0.09971,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.97%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 8.17 on 24.8 years; t = 2 would need 1.5 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.000278,
+   "holm_p": 0.002727
+  },
+  {
+   "feature": "net_rev_4w",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.014104,
+   "t_naive": 4.042,
+   "t_hac": 4.065,
+   "t_block_non_overlapping": 3.873,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.3545,
+     "t": 2.27,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2352,
+     "t": 0.409,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.6467,
+     "t": 4.264,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.2345,
+    "t_observed": 4.042,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 72.7,
+    "years_needed_for_t2": 6.1,
+    "years_needed_for_t2_exact": 6.05969418244601,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04157,
+    "years_needed_to_detect_that_effect": 192.9,
+    "mde_annual_excess_at_t_target": 0.08375,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.37%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 4.04 on 24.8 years; t = 2 would need 6.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.000376,
+   "holm_p": 0.00387
+  },
+  {
+   "feature": "target_rev_1m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 295,
+   "mean_diff": 0.012663,
+   "t_naive": 3.795,
+   "t_hac": 3.478,
+   "t_block_non_overlapping": 3.759,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": 1.6254,
+     "t": 2.923,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.6268,
+     "t": 1.049,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 1.5204,
+     "t": 2.611,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": 0.2209,
+    "t_observed": 3.7946,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 82.0,
+    "years_needed_for_t2": 6.8,
+    "years_needed_for_t2_exact": 6.829242826117164,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04362,
+    "years_needed_to_detect_that_effect": 175.2,
+    "mde_annual_excess_at_t_target": 0.08009,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.01%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.79 on 24.6 years; t = 2 would need 6.8 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.000557,
+   "holm_p": 0.005971
+  },
+  {
+   "feature": "net_rev_1m",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.013936,
+   "t_naive": 3.926,
+   "t_hac": 3.639,
+   "t_block_non_overlapping": 3.548,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.2376,
+     "t": 2.068,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3277,
+     "t": 0.564,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.6303,
+     "t": 4.057,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.2278,
+    "t_observed": 3.9264,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 77.1,
+    "years_needed_for_t2": 6.4,
+    "years_needed_for_t2_exact": 6.4217593945223115,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04087,
+    "years_needed_to_detect_that_effect": 199.6,
+    "mde_annual_excess_at_t_target": 0.08519,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.52%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.93 on 24.8 years; t = 2 would need 6.4 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.001189,
+   "holm_p": 0.013198
+  },
+  {
+   "feature": "consensus",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.066273,
+   "t_naive": -7.646,
+   "t_hac": -3.463,
+   "t_block_non_overlapping": -3.241,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -11.8184,
+     "t": -8.03,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -7.1984,
+     "t": -4.763,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.3786,
+     "t": -0.296,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.4436,
+    "t_observed": -7.6456,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01674,
+    "years_needed_to_detect_that_effect": 1190.2,
+    "mde_annual_excess_at_t_target": 0.20804,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 20.80%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.4436); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.003433,
+   "holm_p": 0.039307
+  },
+  {
+   "feature": "consensus_rev_1m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 295,
+   "mean_diff": 0.008959,
+   "t_naive": 3.045,
+   "t_hac": 3.027,
+   "t_block_non_overlapping": 3.146,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": 1.3743,
+     "t": 2.528,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3244,
+     "t": 0.625,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 0.9542,
+     "t": 2.094,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": 0.1773,
+    "t_observed": 3.045,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 127.3,
+    "years_needed_for_t2": 10.6,
+    "years_needed_for_t2_exact": 10.605181587580795,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04947,
+    "years_needed_to_detect_that_effect": 136.2,
+    "mde_annual_excess_at_t_target": 0.07061,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.06%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.05 on 24.6 years; t = 2 would need 10.6 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.004506,
+   "holm_p": 0.052966
+  },
+  {
+   "feature": "consensus__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.031623,
+   "t_naive": -7.401,
+   "t_hac": -3.335,
+   "t_block_non_overlapping": -3.068,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -5.7521,
+     "t": -8.417,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.3863,
+     "t": -4.608,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.1056,
+     "t": -0.152,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.4294,
+    "t_observed": -7.4006,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03395,
+    "years_needed_to_detect_that_effect": 289.2,
+    "mde_annual_excess_at_t_target": 0.10255,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.26%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.4294); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.005558,
+   "holm_p": 0.066804
+  },
+  {
+   "feature": "log_ratio",
+   "side": "winner_minus_matched_control",
+   "months": 258,
+   "mean_diff": 0.042247,
+   "t_naive": 5.293,
+   "t_hac": 2.874,
+   "t_block_non_overlapping": 3.061,
+   "n_effective": 22,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 93,
+     "mean_pct": -0.564,
+     "t": -0.555,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 85,
+     "mean_pct": 4.988,
+     "t": 5.496,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 80,
+     "mean_pct": 8.9805,
+     "t": 4.655,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 258,
+    "periods_per_year": 12,
+    "n_oos_months": 258,
+    "sharpe_per_period": 0.3295,
+    "t_observed": 5.2929,
+    "years_observed": 21.5,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 36.8,
+    "years_needed_for_t2": 3.1,
+    "years_needed_for_t2_exact": 3.0697951154793732,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.0195,
+    "years_needed_to_detect_that_effect": 876.6,
+    "mde_annual_excess_at_t_target": 0.19156,
+    "mde_reading": "on the 21.5 years actually held, the smallest annual excess this arm could have shown at t = 2 is 19.16%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 5.29 on 21.5 years; t = 2 would need 3.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.005558,
+   "holm_p": 0.066804
+  },
+  {
+   "feature": "net_rev_4w__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.008782,
+   "t_naive": 3.294,
+   "t_hac": 3.367,
+   "t_block_non_overlapping": 3.06,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.1588,
+     "t": 2.671,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2231,
+     "t": 0.469,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 1.2264,
+     "t": 2.577,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.1912,
+    "t_observed": 3.2944,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 109.5,
+    "years_needed_for_t2": 9.1,
+    "years_needed_for_t2_exact": 9.1215667585034,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.05442,
+    "years_needed_to_detect_that_effect": 112.6,
+    "mde_annual_excess_at_t_target": 0.06398,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.40%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.29 on 24.8 years; t = 2 would need 9.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.005558,
+   "holm_p": 0.066804
+  },
+  {
+   "feature": "drawdown_60d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.011513,
+   "t_naive": -5.213,
+   "t_hac": -3.19,
+   "t_block_non_overlapping": -2.94,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -0.3252,
+     "t": -0.948,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -2.3686,
+     "t": -5.962,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.8375,
+     "t": -2.186,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.3025,
+    "t_observed": -5.2129,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06568,
+    "years_needed_to_detect_that_effect": 77.3,
+    "mde_annual_excess_at_t_target": 0.05301,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.30%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.3025); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.00731,
+   "holm_p": 0.091899
+  },
+  {
+   "feature": "coverage_rev_1m",
+   "side": "winner_minus_matched_control",
+   "months": 295,
+   "mean_diff": -0.025079,
+   "t_naive": -2.997,
+   "t_hac": -2.991,
+   "t_block_non_overlapping": -2.854,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": -3.7518,
+     "t": -2.305,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.3404,
+     "t": -2.122,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.3409,
+     "t": -0.332,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": -0.1745,
+    "t_observed": -2.9975,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.0174,
+    "years_needed_to_detect_that_effect": 1101.4,
+    "mde_annual_excess_at_t_target": 0.2008,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 20.08%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.1745); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.009198,
+   "holm_p": 0.116566
+  },
+  {
+   "feature": "log_dollar_vol_20d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.107321,
+   "t_naive": -5.707,
+   "t_hac": -2.585,
+   "t_block_non_overlapping": -2.569,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -23.7454,
+     "t": -6.935,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.117,
+     "t": -2.173,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.1139,
+     "t": -0.372,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.3311,
+    "t_observed": -5.7068,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.00771,
+    "years_needed_to_detect_that_effect": 5602.0,
+    "mde_annual_excess_at_t_target": 0.45134,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 45.13%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.3311); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "bh_fdr_q": 0.020823,
+   "holm_p": 0.26518
+  },
+  {
+   "feature": "coverage",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.243325,
+   "t_naive": 5.437,
+   "t_hac": 2.636,
+   "t_block_non_overlapping": 2.526,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -3.5082,
+     "t": -0.473,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 49.1238,
+     "t": 6.78,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 29.9919,
+     "t": 3.903,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.3155,
+    "t_observed": 5.437,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 40.2,
+    "years_needed_for_t2": 3.3,
+    "years_needed_for_t2_exact": 3.348977237456124,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.00324,
+    "years_needed_to_detect_that_effect": 31725.3,
+    "mde_annual_excess_at_t_target": 1.07408,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 107.41%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 5.44 on 24.8 years; t = 2 would need 3.3 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "bh_fdr_q": 0.022612,
+   "holm_p": 0.288424
+  }
+ ],
+ "loser_side": [
+  {
+   "feature": "drawdown_60d__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.077844,
+   "t_naive": -25.199,
+   "t_hac": -19.489,
+   "t_block_non_overlapping": -18.244,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -8.2734,
+     "t": -15.719,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -8.7147,
+     "t": -17.119,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -6.3194,
+     "t": -11.643,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.4622,
+    "t_observed": -25.1989,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04696,
+    "years_needed_to_detect_that_effect": 151.2,
+    "mde_annual_excess_at_t_target": 0.07414,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.41%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.4622); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ret_3m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.070727,
+   "t_naive": -18.5,
+   "t_hac": -14.35,
+   "t_block_non_overlapping": -15.215,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -6.6742,
+     "t": -10.72,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -7.801,
+     "t": -12.222,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -6.7804,
+     "t": -9.322,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.0735,
+    "t_observed": -18.4998,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03794,
+    "years_needed_to_detect_that_effect": 231.5,
+    "mde_annual_excess_at_t_target": 0.09176,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.18%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.0735); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ret_1m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.066883,
+   "t_naive": -14.934,
+   "t_hac": -15.505,
+   "t_block_non_overlapping": -14.27,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -6.638,
+     "t": -9.621,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -7.8902,
+     "t": -10.157,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -5.5412,
+     "t": -6.482,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.8666,
+    "t_observed": -14.934,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03239,
+    "years_needed_to_detect_that_effect": 317.7,
+    "mde_annual_excess_at_t_target": 0.10749,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.75%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.8666); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "log_close",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.317053,
+   "t_naive": -29.052,
+   "t_hac": -13.848,
+   "t_block_non_overlapping": -13.848,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -27.9465,
+     "t": -14.674,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -36.4488,
+     "t": -20.773,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -31.073,
+     "t": -16.254,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.6858,
+    "t_observed": -29.0522,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01329,
+    "years_needed_to_detect_that_effect": 1886.5,
+    "mde_annual_excess_at_t_target": 0.26192,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 26.19%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.6858); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "drawdown_60d",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.054157,
+   "t_naive": -24.756,
+   "t_hac": -13.581,
+   "t_block_non_overlapping": -13.285,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -4.9763,
+     "t": -14.504,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.3821,
+     "t": -15.479,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -4.93,
+     "t": -13.377,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.4365,
+    "t_observed": -24.7563,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06631,
+    "years_needed_to_detect_that_effect": 75.8,
+    "mde_annual_excess_at_t_target": 0.0525,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.25%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.4365); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ret_6m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.067744,
+   "t_naive": -19.15,
+   "t_hac": -12.772,
+   "t_block_non_overlapping": -12.306,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -7.2544,
+     "t": -12.875,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.9682,
+     "t": -11.276,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -6.0557,
+     "t": -9.173,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.1112,
+    "t_observed": -19.1503,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04101,
+    "years_needed_to_detect_that_effect": 198.2,
+    "mde_annual_excess_at_t_target": 0.0849,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.49%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.1112); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "net_rev_4w__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.033346,
+   "t_naive": -11.538,
+   "t_hac": -11.004,
+   "t_block_non_overlapping": -11.607,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.5923,
+     "t": -5.997,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.8788,
+     "t": -7.257,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.6022,
+     "t": -6.742,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.6695,
+    "t_observed": -11.5381,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.05019,
+    "years_needed_to_detect_that_effect": 132.3,
+    "mde_annual_excess_at_t_target": 0.06936,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.94%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.6695); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "log_close__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.053578,
+   "t_naive": -24.223,
+   "t_hac": -11.014,
+   "t_block_non_overlapping": -11.225,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -5.4714,
+     "t": -12.056,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.3409,
+     "t": -18.522,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -4.2505,
+     "t": -14.615,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -1.4056,
+    "t_observed": -24.223,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06558,
+    "years_needed_to_detect_that_effect": 77.5,
+    "mde_annual_excess_at_t_target": 0.05309,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.31%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -1.4056); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "dispersion",
+   "side": "loser_minus_matched_control",
+   "months": 295,
+   "mean_diff": 0.068707,
+   "t_naive": 18.745,
+   "t_hac": 9.977,
+   "t_block_non_overlapping": 10.016,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": 5.5271,
+     "t": 9.359,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 8.7137,
+     "t": 13.9,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 6.4693,
+     "t": 9.923,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": 1.0914,
+    "t_observed": 18.7451,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 3.4,
+    "years_needed_for_t2": 0.3,
+    "years_needed_for_t2_exact": 0.27985060574761217,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03971,
+    "years_needed_to_detect_that_effect": 211.4,
+    "mde_annual_excess_at_t_target": 0.08797,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.80%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 18.75 on 24.6 years; t = 2 would need 0.3 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "vol_20d__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.030719,
+   "t_naive": 14.322,
+   "t_hac": 9.194,
+   "t_block_non_overlapping": 9.581,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 2.6342,
+     "t": 6.265,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 3.4483,
+     "t": 10.506,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 3.1742,
+     "t": 9.155,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.8311,
+    "t_observed": 14.3223,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 5.8,
+    "years_needed_for_t2": 0.5,
+    "years_needed_for_t2_exact": 0.4826271927214671,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06763,
+    "years_needed_to_detect_that_effect": 72.9,
+    "mde_annual_excess_at_t_target": 0.05148,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.15%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 14.32 on 24.8 years; t = 2 would need 0.5 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "dispersion__xs",
+   "side": "loser_minus_matched_control",
+   "months": 295,
+   "mean_diff": 0.070156,
+   "t_naive": 17.716,
+   "t_hac": 10.266,
+   "t_block_non_overlapping": 9.549,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": 6.9547,
+     "t": 8.187,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 7.6679,
+     "t": 11.519,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 6.4287,
+     "t": 14.073,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": 1.0315,
+    "t_observed": 17.7163,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 3.8,
+    "years_needed_for_t2": 0.3,
+    "years_needed_for_t2_exact": 0.31329568674359237,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03676,
+    "years_needed_to_detect_that_effect": 246.7,
+    "mde_annual_excess_at_t_target": 0.09504,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.50%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 17.72 on 24.6 years; t = 2 would need 0.3 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "net_rev_4w",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.038773,
+   "t_naive": -9.858,
+   "t_hac": -9.052,
+   "t_block_non_overlapping": -9.213,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.8596,
+     "t": -5.049,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -4.8802,
+     "t": -6.451,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.9876,
+     "t": -5.573,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.572,
+    "t_observed": -9.8585,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03688,
+    "years_needed_to_detect_that_effect": 245.0,
+    "mde_annual_excess_at_t_target": 0.09439,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.44%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.5720); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "ratio__xs",
+   "side": "loser_minus_matched_control",
+   "months": 247,
+   "mean_diff": 0.070839,
+   "t_naive": 13.517,
+   "t_hac": 8.77,
+   "t_block_non_overlapping": 8.532,
+   "n_effective": 21,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 97,
+     "mean_pct": 8.0778,
+     "t": 9.895,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 76,
+     "mean_pct": 6.6993,
+     "t": 7.418,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 74,
+     "mean_pct": 6.1759,
+     "t": 6.031,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 247,
+    "periods_per_year": 12,
+    "n_oos_months": 247,
+    "sharpe_per_period": 0.8601,
+    "t_observed": 13.5173,
+    "years_observed": 20.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 5.4,
+    "years_needed_for_t2": 0.5,
+    "years_needed_for_t2_exact": 0.45060279308850676,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03035,
+    "years_needed_to_detect_that_effect": 361.8,
+    "mde_annual_excess_at_t_target": 0.12577,
+    "mde_reading": "on the 20.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 12.58%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 13.52 on 20.6 years; t = 2 would need 0.5 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "net_rev_1m",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.038427,
+   "t_naive": -9.81,
+   "t_hac": -8.23,
+   "t_block_non_overlapping": -7.86,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -2.7731,
+     "t": -5.172,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -4.8956,
+     "t": -6.476,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -3.9597,
+     "t": -5.397,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.5692,
+    "t_observed": -9.8102,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03703,
+    "years_needed_to_detect_that_effect": 243.0,
+    "mde_annual_excess_at_t_target": 0.09401,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.40%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.5692); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "target_rev_1m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 296,
+   "mean_diff": -0.037729,
+   "t_naive": -10.597,
+   "t_hac": -8.731,
+   "t_block_non_overlapping": -7.84,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 104,
+     "mean_pct": -2.9519,
+     "t": -5.75,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -4.105,
+     "t": -6.095,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -4.3302,
+     "t": -6.54,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 296,
+    "periods_per_year": 12,
+    "n_oos_months": 296,
+    "sharpe_per_period": -0.6159,
+    "t_observed": -10.5969,
+    "years_observed": 24.67,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04081,
+    "years_needed_to_detect_that_effect": 200.1,
+    "mde_annual_excess_at_t_target": 0.08545,
+    "mde_reading": "on the 24.7 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.54%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.6159); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "vol_60d__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.021607,
+   "t_naive": 17.536,
+   "t_hac": 7.571,
+   "t_block_non_overlapping": 7.599,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.9641,
+     "t": 7.605,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 2.2627,
+     "t": 11.07,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.2739,
+     "t": 14.67,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 1.0176,
+    "t_observed": 17.5364,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 3.9,
+    "years_needed_for_t2": 0.3,
+    "years_needed_for_t2_exact": 0.3219238569704022,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.11773,
+    "years_needed_to_detect_that_effect": 24.0,
+    "mde_annual_excess_at_t_target": 0.02957,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 2.96%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 17.54 on 24.8 years; t = 2 would need 0.3 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "log_ratio",
+   "side": "loser_minus_matched_control",
+   "months": 247,
+   "mean_diff": 0.083123,
+   "t_naive": 12.146,
+   "t_hac": 8.068,
+   "t_block_non_overlapping": 7.575,
+   "n_effective": 21,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 97,
+     "mean_pct": 8.678,
+     "t": 9.056,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 76,
+     "mean_pct": 7.596,
+     "t": 6.508,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 74,
+     "mean_pct": 8.5687,
+     "t": 5.729,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 247,
+    "periods_per_year": 12,
+    "n_oos_months": 247,
+    "sharpe_per_period": 0.7728,
+    "t_observed": 12.1458,
+    "years_observed": 20.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 6.7,
+    "years_needed_for_t2": 0.6,
+    "years_needed_for_t2_exact": 0.5581105118267787,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.02324,
+    "years_needed_to_detect_that_effect": 617.0,
+    "mde_annual_excess_at_t_target": 0.16425,
+    "mde_reading": "on the 20.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 16.43%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 12.15 on 20.6 years; t = 2 would need 0.6 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "ratio",
+   "side": "loser_minus_matched_control",
+   "months": 247,
+   "mean_diff": 0.146412,
+   "t_naive": 9.771,
+   "t_hac": 8.156,
+   "t_block_non_overlapping": 7.236,
+   "n_effective": 21,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 97,
+     "mean_pct": 14.5123,
+     "t": 5.73,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 76,
+     "mean_pct": 14.6911,
+     "t": 7.194,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 74,
+     "mean_pct": 14.7588,
+     "t": 4.716,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 247,
+    "periods_per_year": 12,
+    "n_oos_months": 247,
+    "sharpe_per_period": 0.6217,
+    "t_observed": 9.771,
+    "years_observed": 20.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 10.3,
+    "years_needed_for_t2": 0.9,
+    "years_needed_for_t2_exact": 0.8623811566543574,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01062,
+    "years_needed_to_detect_that_effect": 2957.8,
+    "mde_annual_excess_at_t_target": 0.35962,
+    "mde_reading": "on the 20.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 35.96%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 9.77 on 20.6 years; t = 2 would need 0.9 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "upside",
+   "side": "loser_minus_matched_control",
+   "months": 247,
+   "mean_diff": 0.146412,
+   "t_naive": 9.771,
+   "t_hac": 8.156,
+   "t_block_non_overlapping": 7.236,
+   "n_effective": 21,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 97,
+     "mean_pct": 14.5123,
+     "t": 5.73,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 76,
+     "mean_pct": 14.6911,
+     "t": 7.194,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 74,
+     "mean_pct": 14.7588,
+     "t": 4.716,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 247,
+    "periods_per_year": 12,
+    "n_oos_months": 247,
+    "sharpe_per_period": 0.6217,
+    "t_observed": 9.771,
+    "years_observed": 20.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 10.3,
+    "years_needed_for_t2": 0.9,
+    "years_needed_for_t2_exact": 0.8623811566543574,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01062,
+    "years_needed_to_detect_that_effect": 2957.8,
+    "mde_annual_excess_at_t_target": 0.35962,
+    "mde_reading": "on the 20.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 35.96%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 9.77 on 20.6 years; t = 2 would need 0.9 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "ret_12m__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.030199,
+   "t_naive": -13.527,
+   "t_hac": -7.674,
+   "t_block_non_overlapping": -7.158,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -3.2147,
+     "t": -8.486,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.9531,
+     "t": -10.392,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.8735,
+     "t": -4.999,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7849,
+    "t_observed": -13.5267,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06498,
+    "years_needed_to_detect_that_effect": 78.9,
+    "mde_annual_excess_at_t_target": 0.05358,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.36%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.7849); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "target_rev_3m",
+   "side": "loser_minus_matched_control",
+   "months": 292,
+   "mean_diff": -0.044818,
+   "t_naive": -12.557,
+   "t_hac": -8.265,
+   "t_block_non_overlapping": -7.088,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 100,
+     "mean_pct": -3.4809,
+     "t": -6.764,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -4.3929,
+     "t": -6.199,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -5.6135,
+     "t": -9.195,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 292,
+    "periods_per_year": 12,
+    "n_oos_months": 292,
+    "sharpe_per_period": -0.7349,
+    "t_observed": -12.5571,
+    "years_observed": 24.33,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04099,
+    "years_needed_to_detect_that_effect": 198.4,
+    "mde_annual_excess_at_t_target": 0.08566,
+    "mde_reading": "on the 24.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.57%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.7349); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "disagreement",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.121602,
+   "t_naive": 15.419,
+   "t_hac": 6.502,
+   "t_block_non_overlapping": 6.512,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 6.5885,
+     "t": 5.828,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 18.0168,
+     "t": 12.028,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 12.3977,
+     "t": 10.115,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.8947,
+    "t_observed": 15.4187,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 5.0,
+    "years_needed_for_t2": 0.4,
+    "years_needed_for_t2_exact": 0.4164254127719415,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.01839,
+    "years_needed_to_detect_that_effect": 985.2,
+    "mde_annual_excess_at_t_target": 0.18928,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 18.93%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 15.42 on 24.8 years; t = 2 would need 0.4 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  {
+   "feature": "target_rev_1m",
+   "side": "loser_minus_matched_control",
+   "months": 296,
+   "mean_diff": -0.016965,
+   "t_naive": -7.999,
+   "t_hac": -7.352,
+   "t_block_non_overlapping": -6.19,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 104,
+     "mean_pct": -1.0582,
+     "t": -3.887,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.9555,
+     "t": -4.63,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -2.129,
+     "t": -5.357,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 296,
+    "periods_per_year": 12,
+    "n_oos_months": 296,
+    "sharpe_per_period": -0.4649,
+    "t_observed": -7.9987,
+    "years_observed": 24.67,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.06851,
+    "years_needed_to_detect_that_effect": 71.0,
+    "mde_annual_excess_at_t_target": 0.0509,
+    "mde_reading": "on the 24.7 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.09%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.4649); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "log_market_cap__xs",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.016289,
+   "t_naive": -13.524,
+   "t_hac": -5.606,
+   "t_block_non_overlapping": -5.655,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -1.4785,
+     "t": -6.362,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -2.52,
+     "t": -18.679,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.9024,
+     "t": -4.361,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.7847,
+    "t_observed": -13.5239,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.12044,
+    "years_needed_to_detect_that_effect": 23.0,
+    "mde_annual_excess_at_t_target": 0.02891,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 2.89%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.7847); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "feature": "vol_20d",
+   "side": "loser_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.115371,
+   "t_naive": 8.275,
+   "t_hac": 4.759,
+   "t_block_non_overlapping": 5.39,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 6.2708,
+     "t": 6.426,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 14.0741,
+     "t": 4.73,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 14.7602,
+     "t": 5.139,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.4801,
+    "t_observed": 8.2746,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 17.4,
+    "years_needed_for_t2": 1.4,
+    "years_needed_for_t2_exact": 1.4458974125087922,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.0104,
+    "years_needed_to_detect_that_effect": 3079.3,
+    "mde_annual_excess_at_t_target": 0.33463,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 33.46%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 8.27 on 24.8 years; t = 2 would need 1.4 years at this Sharpe -- ENOUGH TAPE"
+   }
+  }
+ ],
+ "archetype_candidates": [
+  {
+   "feature": "net_rev_4w",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.014104,
+   "t_naive": 4.042,
+   "t_hac": 4.065,
+   "t_block_non_overlapping": 3.873,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.3545,
+     "t": 2.27,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2352,
+     "t": 0.409,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.6467,
+     "t": 4.264,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.2345,
+    "t_observed": 4.042,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 72.7,
+    "years_needed_for_t2": 6.1,
+    "years_needed_for_t2_exact": 6.05969418244601,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04157,
+    "years_needed_to_detect_that_effect": 192.9,
+    "mde_annual_excess_at_t_target": 0.08375,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.37%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 4.04 on 24.8 years; t = 2 would need 6.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.000376,
+   "holm_p": 0.00387
+  },
+  {
+   "feature": "target_rev_1m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 295,
+   "mean_diff": 0.012663,
+   "t_naive": 3.795,
+   "t_hac": 3.478,
+   "t_block_non_overlapping": 3.759,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": 1.6254,
+     "t": 2.923,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.6268,
+     "t": 1.049,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 1.5204,
+     "t": 2.611,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": 0.2209,
+    "t_observed": 3.7946,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 82.0,
+    "years_needed_for_t2": 6.8,
+    "years_needed_for_t2_exact": 6.829242826117164,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04362,
+    "years_needed_to_detect_that_effect": 175.2,
+    "mde_annual_excess_at_t_target": 0.08009,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.01%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.79 on 24.6 years; t = 2 would need 6.8 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.000557,
+   "holm_p": 0.005971
+  },
+  {
+   "feature": "net_rev_1m",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.013936,
+   "t_naive": 3.926,
+   "t_hac": 3.639,
+   "t_block_non_overlapping": 3.548,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.2376,
+     "t": 2.068,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3277,
+     "t": 0.564,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 2.6303,
+     "t": 4.057,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.2278,
+    "t_observed": 3.9264,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 77.1,
+    "years_needed_for_t2": 6.4,
+    "years_needed_for_t2_exact": 6.4217593945223115,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04087,
+    "years_needed_to_detect_that_effect": 199.6,
+    "mde_annual_excess_at_t_target": 0.08519,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.52%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.93 on 24.8 years; t = 2 would need 6.4 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.001189,
+   "holm_p": 0.013198
+  },
+  {
+   "feature": "consensus_rev_1m__xs",
+   "side": "winner_minus_matched_control",
+   "months": 295,
+   "mean_diff": 0.008959,
+   "t_naive": 3.045,
+   "t_hac": 3.027,
+   "t_block_non_overlapping": 3.146,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 103,
+     "mean_pct": 1.3743,
+     "t": 2.528,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.3244,
+     "t": 0.625,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 0.9542,
+     "t": 2.094,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 295,
+    "periods_per_year": 12,
+    "n_oos_months": 295,
+    "sharpe_per_period": 0.1773,
+    "t_observed": 3.045,
+    "years_observed": 24.58,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 127.3,
+    "years_needed_for_t2": 10.6,
+    "years_needed_for_t2_exact": 10.605181587580795,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.04947,
+    "years_needed_to_detect_that_effect": 136.2,
+    "mde_annual_excess_at_t_target": 0.07061,
+    "mde_reading": "on the 24.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.06%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.05 on 24.6 years; t = 2 would need 10.6 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.004506,
+   "holm_p": 0.052966
+  },
+  {
+   "feature": "consensus__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.031623,
+   "t_naive": -7.401,
+   "t_hac": -3.335,
+   "t_block_non_overlapping": -3.068,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -5.7521,
+     "t": -8.417,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -3.3863,
+     "t": -4.608,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -0.1056,
+     "t": -0.152,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.4294,
+    "t_observed": -7.4006,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.03395,
+    "years_needed_to_detect_that_effect": 289.2,
+    "mde_annual_excess_at_t_target": 0.10255,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.26%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.4294); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.005558,
+   "holm_p": 0.066804
+  },
+  {
+   "feature": "net_rev_4w__xs",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.008782,
+   "t_naive": 3.294,
+   "t_hac": 3.367,
+   "t_block_non_overlapping": 3.06,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": 1.1588,
+     "t": 2.671,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2231,
+     "t": 0.469,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 1.2264,
+     "t": 2.577,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.1912,
+    "t_observed": 3.2944,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 109.5,
+    "years_needed_for_t2": 9.1,
+    "years_needed_for_t2_exact": 9.1215667585034,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.05442,
+    "years_needed_to_detect_that_effect": 112.6,
+    "mde_annual_excess_at_t_target": 0.06398,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.40%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 3.29 on 24.8 years; t = 2 would need 9.1 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.005558,
+   "holm_p": 0.066804
+  },
+  {
+   "feature": "log_dollar_vol_20d",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": -0.107321,
+   "t_naive": -5.707,
+   "t_hac": -2.585,
+   "t_block_non_overlapping": -2.569,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -23.7454,
+     "t": -6.935,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -6.117,
+     "t": -2.173,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": -1.1139,
+     "t": -0.372,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": -0.3311,
+    "t_observed": -5.7068,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.00771,
+    "years_needed_to_detect_that_effect": 5602.0,
+    "mde_annual_excess_at_t_target": 0.45134,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 45.13%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.3311); no amount of tape makes a negative mean significant in the intended direction"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.020823,
+   "holm_p": 0.26518
+  },
+  {
+   "feature": "coverage",
+   "side": "winner_minus_matched_control",
+   "months": 297,
+   "mean_diff": 0.243325,
+   "t_naive": 5.437,
+   "t_hac": 2.636,
+   "t_block_non_overlapping": 2.526,
+   "n_effective": 25,
+   "overlap_note": "the outcome is a 12-month return sampled monthly; the naive t divides by sqrt(months) when the independent draws number about months/12",
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct": -3.5082,
+     "t": -0.473,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 49.1238,
+     "t": 6.78,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 96,
+     "mean_pct": 29.9919,
+     "t": 3.903,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 297,
+    "periods_per_year": 12,
+    "n_oos_months": 297,
+    "sharpe_per_period": 0.3155,
+    "t_observed": 5.437,
+    "years_observed": 24.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 40.2,
+    "years_needed_for_t2": 3.3,
+    "years_needed_for_t2_exact": 3.348977237456124,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.00324,
+    "years_needed_to_detect_that_effect": 31725.3,
+    "mde_annual_excess_at_t_target": 1.07408,
+    "mde_reading": "on the 24.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 107.41%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 5.44 on 24.8 years; t = 2 would need 3.3 years at this Sharpe -- ENOUGH TAPE"
+   },
+   "loser_side_moves_the_same_way": false,
+   "bh_fdr_q": 0.022612,
+   "holm_p": 0.288424
+  }
+ ],
+ "archetype_candidates_surviving_bh_fdr_10pct": [
+  "net_rev_4w",
+  "target_rev_1m__xs",
+  "net_rev_1m",
+  "consensus_rev_1m__xs",
+  "consensus__xs",
+  "net_rev_4w__xs",
+  "log_dollar_vol_20d",
+  "coverage"
+ ],
+ "archetype_candidates_surviving_holm_5pct": [
+  "net_rev_4w",
+  "target_rev_1m__xs",
+  "net_rev_1m"
+ ],
+ "distinct_ideas_among_the_candidates": [
+  "analyst_revision",
+  "consensus",
+  "coverage",
+  "turnover_thinness"
+ ],
+ "distinct_idea_note": "net_rev_*/consensus_rev_* and their __xs ranks are views of ONE idea; counting them separately would inflate the finding by construction, so the headline counts IDEAS",
+ "opportunity_recall_baseline": {
+  "recall_analyst_upside_top_decile": 0.2102,
+  "recall_mom_12_1_top_decile": 0.1288,
+  "recall_net_revisions_top_decile": 0.1375
+ },
+ "recall_note": "share of each month's residual top-50 that was ALREADY in the top decile of each precursor at formation. A pure-chance precursor recalls 0.10 by construction.",
+ "multiplicity_note": "49 features on the winner side; the bar is the NON-OVERLAPPING |t| >= 2.5 plus a consistent sign in 2 of 3 eras, and the loser side is the sign check a t alone cannot give -- a feature that moves the same way for winners and losers is a statement about being EXTREME, not about being right",
+ "headline": "297 formation months, 25 winners x 8 matched controls each; 8 candidates over 4 DISTINCT ideas (['analyst_revision', 'consensus', 'coverage', 'turnover_thinness']) clear non-overlapping |t| >= 2.5, a consistent sign in 2 of 3 eras, and a loser side that does NOT move the same way; 8 survive BH-FDR 10% and 3 survive Holm 5%",
+ "verdict": "SCREEN_SURVIVOR (3 of 49, Holm <= 0.05 on the non-overlapping t, 3 of 8 candidates)",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W7_matched_loser",
+ "run": 36,
+ "variant": 3,
+ "written_utc": "2026-09-05T08:37:58+00:00",
+ "elapsed_s": 22.7,
+ "exit_code": 0
+}

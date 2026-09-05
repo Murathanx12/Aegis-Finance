@@ -1,0 +1,248 @@
+{
+ "question": "does NOT HOLDING the worst decile of a composite of the six bottom-decile signals beat not holding a RANDOM decile?",
+ "family_id": "weekend-W13-composite-exclusion-drop5",
+ "legs": {
+  "cp_iv_spread_30d": "high is good",
+  "skew_25d_30d": "low is good",
+  "ret_5d": "low is good",
+  "amihud_21d": "low is good",
+  "attention_z_5d": "high is good"
+ },
+ "drop_fraction": 0.05,
+ "universe": "tradable only: >= $3,000,000/day and close >= $5 -- the weekend's standing lesson, applied here by construction rather than as an afterthought",
+ "universe_names_per_month_median": 1793,
+ "months": 309,
+ "arms": {
+  "screened_minus_base": {
+   "label": "screen vs the unfiltered universe",
+   "months": 309,
+   "annualised_pct": 0.0559,
+   "t": 2.115,
+   "terminal_wealth": 13.4946,
+   "terminal_wealth_ref": 13.2734,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.0057,
+     "t": 1.113,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0066,
+     "t": 1.775,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0019,
+     "t": 0.962,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.1203,
+    "t_observed": 2.1151,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 276.3,
+    "years_needed_for_t2": 23.0,
+    "years_needed_for_t2_exact": 23.024474983278818,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 6.46126,
+    "years_needed_to_detect_that_effect": 0.0,
+    "mde_annual_excess_at_t_target": 0.00053,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 0.05%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 2.12 on 25.8 years; t = 2 would need 23.0 years at this Sharpe -- ENOUGH TAPE"
+   }
+  },
+  "random_minus_base": {
+   "label": "a RANDOM decile removed, the control",
+   "months": 309,
+   "annualised_pct": -0.0607,
+   "t": -0.548,
+   "terminal_wealth": 13.04,
+   "terminal_wealth_ref": 13.2734,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.0029,
+     "t": 0.22,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0036,
+     "t": -0.439,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0143,
+     "t": -0.651,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": -0.0312,
+    "t_observed": -0.5483,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 1.54105,
+    "years_needed_to_detect_that_effect": 0.1,
+    "mde_annual_excess_at_t_target": 0.00221,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 0.22%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "the arm's mean is not positive (SR -0.0312); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  "screened_minus_random": {
+   "label": "the only column about the SIGNALS",
+   "months": 309,
+   "annualised_pct": 0.1166,
+   "t": 1.004,
+   "terminal_wealth": 13.4946,
+   "terminal_wealth_ref": 13.04,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.0027,
+     "t": 0.183,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0102,
+     "t": 1.21,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0162,
+     "t": 0.717,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0571,
+    "t_observed": 1.0041,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1225.8,
+    "years_needed_for_t2": 102.2,
+    "years_needed_for_t2_exact": 102.15392847849365,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 1.46982,
+    "years_needed_to_detect_that_effect": 0.2,
+    "mde_annual_excess_at_t_target": 0.00232,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 0.23%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 1.00 on 25.8 years; t = 2 would need 102.2 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  },
+  "base_minus_market": {
+   "label": "the tradable universe vs the CRSP VW market",
+   "months": 309,
+   "annualised_pct": 0.0055,
+   "t": 0.033,
+   "terminal_wealth": 13.2734,
+   "terminal_wealth_ref": 13.1817,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.0029,
+     "t": 0.079,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0128,
+     "t": -0.733,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.01,
+     "t": 1.608,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0019,
+    "t_observed": 0.0333,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1117585.7,
+    "years_needed_for_t2": 93132.1,
+    "years_needed_for_t2_exact": 93132.14062384646,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 1.03586,
+    "years_needed_to_detect_that_effect": 0.3,
+    "mde_annual_excess_at_t_target": 0.0033,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 0.33%/yr",
+    "powered": true,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 0.03 on 25.8 years; t = 2 would need 93132.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  }
+ },
+ "control_note": "removing a tenth of any universe changes its size mix, its sector mix and its concentration. `screened_minus_random` is the only column that is about the signals rather than about removing a tenth of a universe.",
+ "why_this_shape": "six survivors carry their whole effect in decile 1 and a long top-k book lives in decile 10; the long-short that CAN reach decile 1 dies at 25bps or a 500bps borrow. An exclusion needs no borrow and no concentration.",
+ "headline": "drop the worst 5% by composite from a tradable universe of 1793 names: vs unfiltered 0.0559%/yr (t 2.115), vs a RANDOM decile 0.1166%/yr (t 1.004); MDE 0.23%/yr",
+ "verdict": "NOISE",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W13_composite_exclusion",
+ "run": 33,
+ "variant": 2,
+ "written_utc": "2026-09-05T08:22:39+00:00",
+ "elapsed_s": 19.2,
+ "exit_code": 0
+}

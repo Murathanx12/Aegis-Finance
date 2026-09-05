@@ -127,6 +127,68 @@ def observe(family_id: str, cell: str, *, n_months, sharpe=None, dsr=None,
     return row
 
 
+SUPERSESSIONS = STORE_DIR / "evidence_memory_supersessions.jsonl"
+
+
+def supersede(family_id: str, before_utc: str, why: str,
+              cell_prefix: str | None = None) -> dict:
+    """Mark observations of a family (or cell) BEFORE a time as not counting.
+
+    THE DEFECT THIS REPAIRS, found in this module's own output on 2026-09-06.
+    The store is append-only, which is right: a summary that overwrites itself
+    cannot answer "what did we believe before we changed the bar". But
+    append-only with no supersession means a RETRACTED experiment keeps voting.
+
+    W7's matched-control pool was leaking (it excluded future losers, so any
+    predictor of outcome dispersion differed from winners by construction). It
+    was fixed, and the leaked RECEIPTS were moved aside. The observations those
+    receipts had already written stayed in the JSONL, still outnumbering the
+    corrected ones -- and the memory went on reporting
+    `log_dollar_vol_20d` as SUPPORTED, which is precisely the archetype the fix
+    destroyed (Holm 0.000178 -> 0.158).
+
+    So supersession is EXPLICIT, APPENDED, and carries its reason. Nothing is
+    deleted; `read_all()` still returns every row, and `--show-superseded` prints
+    what is being excluded and why. The difference between "we never saw this"
+    and "we saw it, and then we learned the instrument was broken" is the whole
+    value of keeping the file.
+    """
+    row = {"utc": _now(), "family_id": family_id, "before_utc": before_utc,
+           "cell_prefix": cell_prefix, "why": why}
+    STORE_DIR.mkdir(parents=True, exist_ok=True)
+    with SUPERSESSIONS.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+    return row
+
+
+def read_supersessions() -> list[dict]:
+    if not SUPERSESSIONS.exists():
+        return []
+    out = []
+    for line in SUPERSESSIONS.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+def is_superseded(r: dict, rules: list[dict]) -> str | None:
+    """The reason this observation no longer counts, or None."""
+    for s in rules:
+        if s.get("family_id") not in (None, r.get("family_id")):
+            continue
+        pre = s.get("cell_prefix")
+        if pre and not str(r.get("cell", "")).startswith(pre):
+            continue
+        if str(r.get("utc", "")) < str(s.get("before_utc", "")):
+            return s.get("why") or "superseded"
+    return None
+
+
 def read_all() -> list[dict]:
     if not STORE.exists():
         return []
@@ -310,8 +372,21 @@ def state_of(rows: list[dict], family_rate: float | None = None,
 
 
 def snapshot() -> dict:
-    """Every cell's state, derived from the whole history. Written to disk."""
-    rows = read_all()
+    """Every cell's state, derived from the whole history. Written to disk.
+
+    Observations covered by a supersession rule are EXCLUDED from the state and
+    COUNTED in the receipt, so the snapshot says how much evidence it is
+    declining to use and why.
+    """
+    all_rows = read_all()
+    rules = read_supersessions()
+    rows, dropped = [], {}
+    for r in all_rows:
+        why = is_superseded(r, rules) if rules else None
+        if why is None:
+            rows.append(r)
+        else:
+            dropped[why] = dropped.get(why, 0) + 1
     by_cell: dict[tuple[str, str], list[dict]] = {}
     by_family: dict[str, list[dict]] = {}
     for r in rows:
@@ -330,6 +405,9 @@ def snapshot() -> dict:
     out = {
         "version": VERSION, "written_utc": _now(),
         "observations": len(rows),
+        "observations_on_file": len(all_rows),
+        "observations_superseded": dict(sorted(dropped.items(), key=lambda kv: -kv[1])),
+        "supersession_rules": len(rules),
         "cells": len(cells),
         "families": sorted(by_family),
         "global_clear_rate": round(g_clear, 4),
@@ -508,6 +586,8 @@ def main(argv=None) -> int:
     import argparse
     ap = argparse.ArgumentParser(description="evidence memory")
     ap.add_argument("--snapshot", action="store_true")
+    ap.add_argument("--show-superseded", action="store_true",
+                    help="print the supersession rules and what each one excludes")
     ap.add_argument("--ingest-dir", help="fold every *.json receipt in a directory")
     a = ap.parse_args(argv)
     if a.ingest_dir:
@@ -518,6 +598,23 @@ def main(argv=None) -> int:
             except Exception as exc:                                    # noqa: BLE001
                 print(f"  {p.name}: {type(exc).__name__}: {exc}")
         print(f"folded {n} cell observations")
+    if a.show_superseded:
+        rules = read_supersessions()
+        rows = read_all()
+        if not rules:
+            print("no supersession rules -- every observation on file is counted")
+        for r in rules:
+            n = sum(1 for x in rows if is_superseded(x, [r]))
+            print("")
+            print(f"  family    {r.get('family_id')}")
+            print(f"  before    {r.get('before_utc')}")
+            print(f"  excludes  {n} observations")
+            print(f"  why       {r.get('why')}")
+        print("")
+        print("Nothing is deleted: `read_all()` still returns every row. The "
+              "difference between 'we never saw this' and 'we saw it and then "
+              "learned the instrument was broken' is why the file is kept.")
+        return 0
     s = snapshot()
     print(json.dumps({k: v for k, v in s.items() if k != "by_cell"}, indent=1))
     for k, v in list(s["by_cell"].items())[:15]:

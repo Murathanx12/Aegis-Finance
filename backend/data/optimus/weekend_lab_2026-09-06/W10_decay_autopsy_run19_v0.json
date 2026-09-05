@@ -1,0 +1,344 @@
+{
+ "question": "what changed for target_rev_1m__xs between 1999-2007 and 2016-2024?",
+ "family_id": "weekend-W10-decay-autopsy",
+ "signal": "target_rev_1m__xs",
+ "by_era": [
+  {
+   "era": "1999-2007",
+   "months": 106,
+   "name_months": 306187,
+   "book_vw": {
+    "tw_net": 4.832,
+    "tw_gross": 5.9056,
+    "tw_market": 1.1036,
+    "annualised_excess": 0.21,
+    "t": 2.774,
+    "turnover": 0.965
+   },
+   "book_ew": {
+    "tw_net": 7.5729,
+    "tw_gross": 9.2186,
+    "tw_market": 1.1036,
+    "annualised_excess": 0.2582,
+    "t": 3.602,
+    "turnover": 0.95
+   },
+   "signal_dispersion": {
+    "median_within_month_sd": 0.104789,
+    "median_within_month_iqr": 0.013789,
+    "share_nonzero": 0.5409
+   },
+   "coverage": {
+    "median": 6.0,
+    "mean": 7.901
+   },
+   "decile_spread": {
+    "1m": {
+     "mean_monthly_spread": 0.01748,
+     "t": 2.908,
+     "months": 105
+    },
+    "3m": {
+     "mean_monthly_spread": 0.04462,
+     "t": 4.696,
+     "months": 105
+    }
+   }
+  },
+  {
+   "era": "2008-2015",
+   "months": 96,
+   "name_months": 284004,
+   "book_vw": {
+    "tw_net": 5.0076,
+    "tw_gross": 6.0056,
+    "tw_market": 2.4276,
+    "annualised_excess": 0.112,
+    "t": 1.784,
+    "turnover": 0.961
+   },
+   "book_ew": {
+    "tw_net": 2.9006,
+    "tw_gross": 3.4745,
+    "tw_market": 2.4276,
+    "annualised_excess": 0.0523,
+    "t": 0.762,
+    "turnover": 0.948
+   },
+   "signal_dispersion": {
+    "median_within_month_sd": 0.09539,
+    "median_within_month_iqr": 0.026448,
+    "share_nonzero": 0.6272
+   },
+   "coverage": {
+    "median": 7.0,
+    "mean": 9.021
+   },
+   "decile_spread": {
+    "1m": {
+     "mean_monthly_spread": 0.00798,
+     "t": 1.704,
+     "months": 96
+    },
+    "3m": {
+     "mean_monthly_spread": 0.02017,
+     "t": 2.334,
+     "months": 96
+    }
+   }
+  },
+  {
+   "era": "2016-2024",
+   "months": 108,
+   "name_months": 335566,
+   "book_vw": {
+    "tw_net": 3.5259,
+    "tw_gross": 4.3086,
+    "tw_market": 4.8636,
+    "annualised_excess": 0.0086,
+    "t": 0.094,
+    "turnover": 0.948
+   },
+   "book_ew": {
+    "tw_net": 2.9831,
+    "tw_gross": 3.6355,
+    "tw_market": 4.8636,
+    "annualised_excess": -0.0287,
+    "t": -0.381,
+    "turnover": 0.931
+   },
+   "signal_dispersion": {
+    "median_within_month_sd": 0.106516,
+    "median_within_month_iqr": 0.025138,
+    "share_nonzero": 0.6318
+   },
+   "coverage": {
+    "median": 6.0,
+    "mean": 8.895
+   },
+   "decile_spread": {
+    "1m": {
+     "mean_monthly_spread": 0.00506,
+     "t": 1.028,
+     "months": 107
+    },
+    "3m": {
+     "mean_monthly_spread": 0.02757,
+     "t": 3.78,
+     "months": 105
+    }
+   }
+  }
+ ],
+ "slower_rebalance_books": {
+  "hold1m|1999-2007|10bps": {
+   "tw_net": 4.832,
+   "tw_gross": 5.9056,
+   "tw_market": 1.1036,
+   "annualised_excess": 0.21,
+   "t": 2.774,
+   "turnover": 0.965
+  },
+  "hold1m|1999-2007|25bps": {
+   "tw_net": 3.5736,
+   "tw_gross": 5.9056,
+   "tw_market": 1.1036,
+   "annualised_excess": 0.1753,
+   "t": 2.315,
+   "turnover": 0.965
+  },
+  "hold1m|2008-2015|10bps": {
+   "tw_net": 5.0076,
+   "tw_gross": 6.0056,
+   "tw_market": 2.4276,
+   "annualised_excess": 0.112,
+   "t": 1.784,
+   "turnover": 0.961
+  },
+  "hold1m|2008-2015|25bps": {
+   "tw_net": 3.8102,
+   "tw_gross": 6.0056,
+   "tw_market": 2.4276,
+   "annualised_excess": 0.0774,
+   "t": 1.234,
+   "turnover": 0.961
+  },
+  "hold1m|2016-2024|10bps": {
+   "tw_net": 3.5259,
+   "tw_gross": 4.3086,
+   "tw_market": 4.8636,
+   "annualised_excess": 0.0086,
+   "t": 0.094,
+   "turnover": 0.948
+  },
+  "hold1m|2016-2024|25bps": {
+   "tw_net": 2.6084,
+   "tw_gross": 4.3086,
+   "tw_market": 4.8636,
+   "annualised_excess": -0.0256,
+   "t": -0.279,
+   "turnover": 0.948
+  },
+  "hold3m|1999-2007|10bps": {
+   "tw_net": 2.4647,
+   "tw_gross": 2.659,
+   "tw_market": 1.0788,
+   "annualised_excess": 0.1339,
+   "t": 1.801,
+   "turnover": 0.37
+  },
+  "hold3m|1999-2007|25bps": {
+   "tw_net": 2.1989,
+   "tw_gross": 2.659,
+   "tw_market": 1.0788,
+   "annualised_excess": 0.1206,
+   "t": 1.625,
+   "turnover": 0.37
+  },
+  "hold3m|2008-2015|10bps": {
+   "tw_net": 3.3836,
+   "tw_gross": 3.636,
+   "tw_market": 2.4276,
+   "annualised_excess": 0.066,
+   "t": 1.022,
+   "turnover": 0.379
+  },
+  "hold3m|2008-2015|25bps": {
+   "tw_net": 3.0367,
+   "tw_gross": 3.636,
+   "tw_market": 2.4276,
+   "annualised_excess": 0.0524,
+   "t": 0.811,
+   "turnover": 0.379
+  },
+  "hold3m|2016-2024|10bps": {
+   "tw_net": 3.6546,
+   "tw_gross": 3.9353,
+   "tw_market": 4.8636,
+   "annualised_excess": -0.0048,
+   "t": -0.062,
+   "turnover": 0.348
+  },
+  "hold3m|2016-2024|25bps": {
+   "tw_net": 3.2699,
+   "tw_gross": 3.9353,
+   "tw_market": 4.8636,
+   "annualised_excess": -0.0173,
+   "t": -0.222,
+   "turnover": 0.348
+  },
+  "hold6m|1999-2007|10bps": {
+   "tw_net": 1.4294,
+   "tw_gross": 1.4965,
+   "tw_market": 1.1392,
+   "annualised_excess": 0.0693,
+   "t": 0.9,
+   "turnover": 0.226
+  },
+  "hold6m|1999-2007|25bps": {
+   "tw_net": 1.3342,
+   "tw_gross": 1.4965,
+   "tw_market": 1.1392,
+   "annualised_excess": 0.0612,
+   "t": 0.793,
+   "turnover": 0.226
+  },
+  "hold6m|2008-2015|10bps": {
+   "tw_net": 2.8077,
+   "tw_gross": 2.9322,
+   "tw_market": 2.4276,
+   "annualised_excess": 0.0407,
+   "t": 0.652,
+   "turnover": 0.227
+  },
+  "hold6m|2008-2015|25bps": {
+   "tw_net": 2.6305,
+   "tw_gross": 2.9322,
+   "tw_market": 2.4276,
+   "annualised_excess": 0.0325,
+   "t": 0.521,
+   "turnover": 0.227
+  },
+  "hold6m|2016-2024|10bps": {
+   "tw_net": 7.8874,
+   "tw_gross": 8.2548,
+   "tw_market": 4.8636,
+   "annualised_excess": 0.0869,
+   "t": 1.013,
+   "turnover": 0.213
+  },
+  "hold6m|2016-2024|25bps": {
+   "tw_net": 7.3658,
+   "tw_gross": 8.2548,
+   "tw_market": 4.8636,
+   "annualised_excess": 0.0792,
+   "t": 0.921,
+   "turnover": 0.213
+  }
+ },
+ "cells_alive_in_the_LAST_era_at_t2": [],
+ "tempting_cells_that_are_NOT_promoted": [
+  {
+   "cell": "hold6m|2016-2024|10bps",
+   "terminal_wealth_net": 7.8874,
+   "market": 4.8636,
+   "annualised_excess": 0.0869,
+   "t": 1.013,
+   "same_construction_in_the_first_era": {
+    "cell": "hold6m|1999-2007|10bps",
+    "tw_net": 1.4294,
+    "market": 1.1392,
+    "t": 0.9
+   },
+   "why_it_is_not_promoted": "t = 1.013 on one era of a 18-cell search, and the identical rule returns tw_net 1.4294 against a market of 1.1392 in 1999-2007. A rule that only works in the era it was found in is a description of that era."
+  },
+  {
+   "cell": "hold6m|2016-2024|25bps",
+   "terminal_wealth_net": 7.3658,
+   "market": 4.8636,
+   "annualised_excess": 0.0792,
+   "t": 0.921,
+   "same_construction_in_the_first_era": {
+    "cell": "hold6m|1999-2007|25bps",
+    "tw_net": 1.3342,
+    "market": 1.1392,
+    "t": 0.793
+   },
+   "why_it_is_not_promoted": "t = 0.921 on one era of a 18-cell search, and the identical rule returns tw_net 1.3342 against a market of 1.1392 in 1999-2007. A rule that only works in the era it was found in is a description of that era."
+  }
+ ],
+ "the_decile_spread_is_not_a_book": "the 3-month DECILE SPREAD is alive in the last era at t 3.479, and the 3-month BOOK is not (tw_net 4.511 vs a market of 4.864). A spread is top-decile MINUS bottom-decile, equal-weighted inside each decile; the book is the top 50 only, value-weighted. Third appearance of the same lesson this weekend -- see W5b.",
+ "slow_book_note": "the signal is refreshed every `hold` months and carried in between -- the portfolio a quarterly rebalance produces. If the 3-month decile spread is alive while the 1-month book is dead, the effect SLOWED rather than died, and this is where that shows up as money or fails to.",
+ "candidate_mechanisms": [
+  {
+   "finding": "arbitraged_away",
+   "evidence": "gross TW 4.3086 vs market 4.8636 in 2016-2024"
+  },
+  {
+   "finding": "not_a_size_migration",
+   "evidence": "equal-weighted t -0.381 in 2016-2024"
+  },
+  {
+   "finding": "dispersion_intact",
+   "evidence": "within-month sd 0.106516 vs 0.104789 (1.02x)"
+  },
+  {
+   "finding": "still_alive_at_3m",
+   "evidence": "3-month decile-spread t 3.78 in 2016-2024"
+  }
+ ],
+ "coverage_then_vs_now": {
+  "mean_analysts_then": 7.901,
+  "mean_analysts_now": 8.895
+ },
+ "why_the_negatives_matter": "a mechanism that did NOT change is what rules an explanation out. All five candidates are reported, including the ones that moved nothing.",
+ "headline": "target_rev_1m__xs decay autopsy: arbitraged_away (gross TW 4.3086 vs market 4.8636 in 2016-2024); not_a_size_migration (equal-weighted t -0.381 in 2016-2024); dispersion_intact (within-month sd 0.106516 vs 0.104789 (1.02x)); still_alive_at_3m (3-month decile-spread t 3.78 in 2016-2024); slower-rebalance cells alive in 2016-2024 at t>=2: none",
+ "verdict": "AUTOPSY",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W10_decay_autopsy",
+ "run": 19,
+ "variant": 0,
+ "written_utc": "2026-09-05T07:18:05+00:00",
+ "elapsed_s": 11.9,
+ "exit_code": 0
+}
