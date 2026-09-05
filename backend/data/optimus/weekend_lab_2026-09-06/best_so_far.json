@@ -1,32 +1,32 @@
 {
  "job": "W3_neural_long",
- "run": 9,
+ "run": 13,
  "variant": 0,
- "headline": "[cuda] best of 20 cells is nn_s20260912|10bps at +1.998%/month vs market over 251 months (TW net 561.0604 vs market 14.3778); DSR 0.9835, SPA p 0.016, PBO 0.0857, t2 needs 6.7y vs 20.92y on hand. vs LGBM (TW 16.752 @10bps): best neural arm is 16.617%/yr (t 2.533), DSR 0.7467 -- the neural arm's advantage over lgbm does NOT survive the family",
+ "headline": "[cuda] best of 20 cells is nn_s20260912|10bps at +2.086%/month vs market over 251 months (TW net 698.8855 vs market 14.3778); DSR 0.9902, SPA p 0.008, PBO 0.0429, t2 needs 6.2y vs 20.92y on hand. vs LGBM (TW 23.3062 @10bps): best neural arm is 16.928%/yr (t 2.633), DSR 0.7806 -- the neural arm's advantage over lgbm does NOT survive the family. UNDER THE $3m/day FLOOR: best 64.8616 vs lgbm 55.807 (plain 698.8855 vs 23.3062); 0.3997 of the excess is 5 months; median holding trades $1039369.0/day, 0.48 of the book under $1m/day",
  "verdict": "NOISE (clears the market bar, does NOT beat lgbm)",
- "dsr": 0.9835,
- "spa_p": 0.016,
- "pbo": 0.0857,
+ "dsr": 0.9902,
+ "spa_p": 0.008,
+ "pbo": 0.0429,
  "n_oos_months": 251,
- "years_needed_for_t2": 6.7,
+ "years_needed_for_t2": 6.2,
  "years_observed": 20.92,
  "era_sign_table": {
   "1999-2007": {
    "months": 48,
-   "mean_pct": 0.4318,
-   "t": 0.61,
+   "mean_pct": 0.5361,
+   "t": 0.903,
    "sign": 1
   },
   "2008-2015": {
    "months": 96,
-   "mean_pct": 1.9587,
-   "t": 2.825,
+   "mean_pct": 1.8937,
+   "t": 2.864,
    "sign": 1
   },
   "2016-2024": {
    "months": 107,
-   "mean_pct": 2.7352,
-   "t": 2.438,
+   "mean_pct": 2.954,
+   "t": 2.536,
    "sign": 1
   },
   "eras_with_a_positive_mean": 3,
@@ -36,5 +36,5 @@
   "same_sign_in_2_of_3": true,
   "dominant_sign": 1
  },
- "written_utc": "2026-09-05T05:05:19+00:00"
+ "written_utc": "2026-09-05T06:07:49+00:00"
 }

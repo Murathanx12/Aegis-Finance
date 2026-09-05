@@ -219,9 +219,95 @@ def _env() -> dict:
     return dict(os.environ)
 
 
+#: A job that loads the long panel needs roughly this much headroom. Measured on
+#: 2026-09-06, when the runner and a standalone `W2_learner_long` and a foreground
+#: job all held the 418 MB panel plus their derived columns and model matrices at
+#: once, and the OS killed all three. Each panel-loading job peaks around 3-4 GB.
+MIN_FREE_GB_TO_START = 6.0
+
+
+def _free_gb() -> float | None:
+    """Free physical memory, or None if it cannot be determined.
+
+    None means DO NOT GUESS -- the guard reports that it could not measure and
+    proceeds, rather than blocking the whole weekend on a platform where the
+    number is unavailable. A guard that silently blocks is worse than no guard;
+    a guard that silently passes is what this one exists to replace.
+    """
+    try:
+        import ctypes
+
+        class _MS(ctypes.Structure):
+            _fields_ = [("dwLength", ctypes.c_ulong),
+                        ("dwMemoryLoad", ctypes.c_ulong),
+                        ("ullTotalPhys", ctypes.c_ulonglong),
+                        ("ullAvailPhys", ctypes.c_ulonglong),
+                        ("ullTotalPageFile", ctypes.c_ulonglong),
+                        ("ullAvailPageFile", ctypes.c_ulonglong),
+                        ("ullTotalVirtual", ctypes.c_ulonglong),
+                        ("ullAvailVirtual", ctypes.c_ulonglong),
+                        ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+        st = _MS()
+        st.dwLength = ctypes.sizeof(_MS)
+        if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st)):
+            return None
+        return st.ullAvailPhys / (1024 ** 3)
+    except Exception:                                                   # noqa: BLE001
+        try:
+            import psutil                                               # type: ignore
+            return psutil.virtual_memory().available / (1024 ** 3)
+        except Exception:                                               # noqa: BLE001
+            return None
+
+
+def _other_lab_jobs() -> list[int]:
+    """PIDs of OTHER lab job subprocesses already running.
+
+    The 2026-09-06 kill was not caused by any single job. It was caused by a
+    standalone `weekend_lab_jobs` run started BESIDE the loop, each holding its
+    own copy of a 418 MB panel expanded into several GB of float64 columns. The
+    runner serialises its own jobs correctly; what it could not see was a second
+    runner or a hand-started job. Now it can.
+    """
+    import os
+    out = []
+    try:
+        import subprocess as sp
+        r = sp.run(["powershell", "-NoProfile", "-Command",
+                    "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
+                    "Where-Object { $_.CommandLine -like '*weekend_lab_jobs*' } | "
+                    "ForEach-Object { $_.ProcessId }"],
+                   capture_output=True, text=True, timeout=30)
+        for line in (r.stdout or "").split():
+            if line.strip().isdigit() and int(line) != os.getpid():
+                out.append(int(line))
+    except Exception:                                                   # noqa: BLE001
+        return []
+    return out
+
+
 def run_job(job: str, run: int, variant: int, timeout_min: int) -> dict:
     """One job as a subprocess. Its traceback IS its receipt when it fails."""
     started = time.time()
+    # MEMORY GUARD, WITH A RECEIPT. On 2026-09-06 the OS killed the runner, a
+    # standalone W2 and two waiters together, and the only evidence was the
+    # absence of the processes -- exactly the "a process that produces no
+    # artefact reads like a process that was never run" failure this runner
+    # exists to prevent. A refusal is a finding; an OOM kill is not.
+    free = _free_gb()
+    others = _other_lab_jobs()
+    if free is not None and free < MIN_FREE_GB_TO_START:
+        payload = {"verdict": "SKIPPED_LOW_MEMORY",
+                   "headline": (f"{free:.1f} GB free, below the {MIN_FREE_GB_TO_START} GB "
+                                f"a panel-loading job needs; {len(others)} other lab job(s) "
+                                f"running (PIDs {others})"),
+                   "free_gb": round(free, 2), "other_lab_job_pids": others,
+                   "why": ("each job that loads the long panel peaks around 3-4 GB. Running "
+                           "one beside the loop is what got all of them killed on "
+                           "2026-09-06, and the kill left no receipt at all."),
+                   "elapsed_s": 0.0}
+        write_receipt(job, run, variant, payload)
+        return payload
     out_path = _receipt_path(job, run, variant)
     cmd = [sys.executable, "-m", "scripts.weekend_lab_jobs", job,
            "--out", str(out_path), "--run", str(run), "--variant", str(variant)]

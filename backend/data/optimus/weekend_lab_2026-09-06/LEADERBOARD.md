@@ -7,12 +7,12 @@ tape a t = 2 would need at the arm's own Sharpe -- the number that decides
 whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 
 <!-- BEST SO FAR -->
-**BEST SO FAR (ranked by DEFLATED Sharpe, not by return)** -- rewritten 2026-09-05T05:05:19+00:00
+**BEST SO FAR (ranked by DEFLATED Sharpe, not by return)** -- rewritten 2026-09-05T06:07:49+00:00
 
-- **W3_neural_long pass 9 variant 0** -- [cuda] best of 20 cells is nn_s20260912|10bps at +1.998%/month vs market over 251 months (TW net 561.0604 vs market 14.3778); DSR 0.9835, SPA p 0.016, PBO 0.0857, t2 needs 6.7y vs 20.92y on hand. vs LGBM (TW 16.752 @10bps): best neural arm is 16.617%/yr (t 2.533), DSR 0.7467 -- the neural arm's advantage over lgbm does NOT survive the family
-- DSR **0.9835** | SPA p 0.016 | PBO 0.0857 | verdict **NOISE (clears the market bar, does NOT beat lgbm)**
-- 251 out-of-sample months (20.92 years); t = 2 would need **6.7** years at this Sharpe
-- three-era sign table: {'1999-2007': {'months': 48, 'mean_pct': 0.4318, 't': 0.61, 'sign': 1}, '2008-2015': {'months': 96, 'mean_pct': 1.9587, 't': 2.825, 'sign': 1}, '2016-2024': {'months': 107, 'mean_pct': 2.7352, 't': 2.438, 'sign': 1}, 'eras_with_a_positive_mean': 3, 'eras_with_a_negative_mean': 0, 'eras_measured': 3, 'holds_in_2_of_3': True, 'same_sign_in_2_of_3': True, 'dominant_sign': 1}
+- **W3_neural_long pass 13 variant 0** -- [cuda] best of 20 cells is nn_s20260912|10bps at +2.086%/month vs market over 251 months (TW net 698.8855 vs market 14.3778); DSR 0.9902, SPA p 0.008, PBO 0.0429, t2 needs 6.2y vs 20.92y on hand. vs LGBM (TW 23.3062 @10bps): best neural arm is 16.928%/yr (t 2.633), DSR 0.7806 -- the neural arm's advantage over lgbm does NOT survive the family. UNDER THE $3m/day FLOOR: best 64.8616 vs lgbm 55.807 (plain 698.8855 vs 23.3062); 0.3997 of the excess is 5 months; median holding trades $1039369.0/day, 0.48 of the book under $1m/day
+- DSR **0.9902** | SPA p 0.008 | PBO 0.0429 | verdict **NOISE (clears the market bar, does NOT beat lgbm)**
+- 251 out-of-sample months (20.92 years); t = 2 would need **6.2** years at this Sharpe
+- three-era sign table: {'1999-2007': {'months': 48, 'mean_pct': 0.5361, 't': 0.903, 'sign': 1}, '2008-2015': {'months': 96, 'mean_pct': 1.8937, 't': 2.864, 'sign': 1}, '2016-2024': {'months': 107, 'mean_pct': 2.954, 't': 2.536, 'sign': 1}, 'eras_with_a_positive_mean': 3, 'eras_with_a_negative_mean': 0, 'eras_measured': 3, 'holds_in_2_of_3': True, 'same_sign_in_2_of_3': True, 'dominant_sign': 1}
 <!-- /BEST SO FAR -->
 
 | job | pass | v | headline | DSR | SPA p | PBO | n_oos_m | yrs->t2 | verdict |
@@ -145,3 +145,7 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W7_matched_loser | 13 | 0 | 297 formation months, 50 winners x 5 matched controls each; 11 candidates over 4 DISTINCT ideas (['a | -- | -- | -- | -- | -- | SCREEN_SURVIVOR (4 of 49, Holm <= 0.05 on the non-overlapping t, 4 of 11 candidates) |
 | W7b_archetype_book | 13 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 6.6%/yr or larger) |
 | W8_states_three_nulls | 13 | 0 | k=4 market states over 286 months; market circular-shift p 0.578 (observed spread 0.008268 vs null p | -- | -- | -- | -- | -- | NOISE |
+| W9_survivor_books | 13 | 0 | 14 weekend survivors booked (28 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have thei | 0.1267 | 0.0639 | 0.1143 | 308 | 36.3 | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 8.0%/yr or larger) |
+| W3_neural_long | 13 | 0 | [cuda] best of 20 cells is nn_s20260912|10bps at +2.086%/month vs market over 251 months (TW net 698 | 0.9902 | 0.008 | 0.0429 | 251 | 6.2 | NOISE (clears the market bar, does NOT beat lgbm) |
+| W11_evidence_writeback | 13 | 0 | 115 receipts -> 1166 cell observations; 324 cells tracked; states {'IDEA': 310, 'SUPPORTED': 12, 'CO | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 14 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
