@@ -1,0 +1,184 @@
+{
+ "job": "C7_monday_prep_read_only",
+ "mandate": "docs/CONTINUATION_2026-09-06b_OPUS_PROMPT.md item 7",
+ "question": "re-run B3_3_monday_dry_run with the two 2026-09-05 decisions applied as PROPOSALS: (a) band-derived exp_return kept as an UNVALIDATED INDICATOR stamped on the seal so hack6 is not empty; (b) hack2 marked manage-only in the runbook.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "read_only": {
+  "sealed": false,
+  "ordered": false,
+  "deployed": false,
+  "railway_variables_changed": false,
+  "state_predictions_written": false,
+  "AAT_BAND_MODE_locally": "unset (the live default `returns` is byte-identical)"
+ },
+ "tracker_vintage": "2026-09-02",
+ "why_a_seal_was_not_attempted": "the newest tracker vintage on disk is 2026-09-02 and MAX_TRACKER_AGE_SESSIONS is 2, so a seal today is correctly REFUSED. Running --refresh to manufacture a vintage was declined: a half-finished refresh leaves a FRESH-LOOKING partial vintage that Monday's seal would then price a book on, which is worse than an absent one.",
+ "proposal_a_indicator_mode": {
+  "the_problem": "hygiene-only implemented literally EMPTIES hack6 (15 -> 0) and replaces hack3's ten with a different five. The band's four return constants were the SOURCE of exp_return for those names, so retiring them sends every row back to the panel base rate and 799 of 810 then fail the long-book coherence floor, against 35 of 806 today. The floor is doing its job; nothing is left for it to read.",
+  "the_proposal": "a THIRD mode, AAT_BAND_MODE=indicator, OFF by default: hygiene gates admission exactly as under hygiene_only, the ratio is an admission rule in neither, and the band constant still populates exp_return -- stamped UNVALIDATED_INDICATOR on the row, in the book, and inside the seal's content_sha256.",
+  "admitted_sets": {
+   "returns": {
+    "hack3": [],
+    "hack4": [],
+    "hack6": []
+   },
+   "hygiene_only": {
+    "hack3": [],
+    "hack4": [],
+    "hack6": []
+   },
+   "indicator": {
+    "hack3": [],
+    "hack4": [],
+    "hack6": []
+   }
+  },
+  "band_mode_difference": {
+   "returns_to_hygiene_only": {
+    "hack3": "10 -> 5",
+    "hack4": "5 -> 5",
+    "hack6": "15 -> 0"
+   },
+   "returns_to_indicator": {
+    "hack3": "10 -> 10",
+    "hack4": "5 -> 5",
+    "hack6": "15 -> 15"
+   }
+  },
+  "reading": "the proposal COSTS NOTHING IN ADMISSIONS and BUYS THE LABEL. hack6 is not empty; the admitted sets are identical to today's live mode; the ratio stops being an admission rule; hygiene starts being one; and every exp_return that came off an eleven-year constant now says so.",
+  "what_it_does_NOT_claim": [
+   "that the constants are right -- they came off a tape whose defects are documented and they sit below their own t 2 bar, which is why the label reads UNVALIDATED",
+   "that the identical admitted set proves the hygiene gate is inert. It fires: 33 names fail it and appear in every book's `fails` column. It removes names that were already failing something else on this vintage."
+  ],
+  "what_genuinely_changes_under_it": {
+   "candidate_pool": "806 -> 810",
+   "hard_price_floor": "$1 -> $2",
+   "ratio_ge_4_bar": "bars candidacy -> REPORTED as an indicator",
+   "note": "the same three movements hygiene_only makes, pulling in opposite directions, which is why they are one switch and not three"
+  },
+  "typo_safety": "an unrecognised AAT_BAND_MODE value resolves to `returns`. A typo in a Railway variable must not half-apply a mode to a live book. Pinned by a test that sets `hygeine_only`."
+ },
+ "proposal_b_hack2_manage_only": {
+  "the_finding": "contract.defaults_for branches on TRACKER_BOOKS = (hack3, hack4, hack6), so hack2 falls through to the EVENT defaults: horizon 3 sessions, min hold 0, profit_target_frac 0.025, on an `aggressive` 3% stop. The one armed book with NO minimum hold and a +2.5% target is the exact churn the minimum-hold build exists to stop -- and it is the book that opened five 1:8 shorts on 2026-09-04.",
+  "written_where": "aegis-alpha-terminal/docs/RUNBOOK_2026-09-08_REARM.md Appendix B.2",
+  "instruction_proposed": "mark hack2 MANAGE-ONLY before the Monday deploy re-arms entries, and leave it there until its contract defaults are decided",
+  "not_done_in_code": "nothing in this session set manage_only on hack2. Which defaults hack2 gets is Murat's call, not a session's, and two of the four possible disarms are RAILWAY VARIABLES a local process cannot see -- so the verification is at the service, not from the laptop.",
+  "entry_authority_as_measured": {
+   "hack1": "DISARMED (Mandate.manage_only=True in alpha/fleet.py)",
+   "hack2": "ARMED",
+   "hack3": "ARMED",
+   "hack4": "ARMED",
+   "hack5": "ARMED",
+   "hack6": "ARMED",
+   "caveat": "what a LOCAL process can see. Two disarms are Railway variables and this block refuses to guess them."
+  }
+ },
+ "code_changed_in_the_terminal_repo": {
+  "alpha/murat_rule.py": "BAND_MODE_INDICATOR, BAND_MODES, the indicator branch of band_overlay (reusing the returns path verbatim rather than re-expressing its four silences), exp_return_validation on every scored row in EVERY mode",
+  "alpha/tracker.py": "hygiene_gate_on() beside the narrower hygiene_only(); the eligibility chain, the $2 floor and the ratio bar now ask the GATE question rather than the MODE-NAME question",
+  "scripts/prediction_book.py": "band_mode in the seal provenance block and exp_return_validation on every holding, both INSIDE content_sha256",
+  "scripts/monday_dry_run.py": "--mode indicator, --compare over three modes, hygiene count printed for every mode that runs the gate",
+  "tests_smoke_band_mode.py": "20 new checks incl. the typo-resolves-to-returns case",
+  "live_default_behaviour": "byte-identical. AAT_BAND_MODE is unset."
+ },
+ "the_bug_this_avoided": "gating the eligibility chain on hygiene_only() alone would have silently dropped the hygiene exclusion the moment the third mode was switched on -- a guard that stops firing because a neighbouring constant changed. hygiene_gate_on() asks the question the chain actually has.",
+ "tests": {
+  "command": "python run_tests.py (terminal repo; NEVER bare)",
+  "result": "76 suites, 3503 checks, ALL PASS",
+  "before_this_item": "76 suites, 3483 checks, ALL PASS"
+ },
+ "artefacts": {
+  "printout": "backend/data/optimus/continuation_2026-09-06b/C7_monday_dry_run_printout.txt",
+  "replay_json": "backend/data/optimus/continuation_2026-09-06b/C7_monday_dry_run_replay_2026-09-02.json",
+  "runbook": "aegis-alpha-terminal/docs/RUNBOOK_2026-09-08_REARM.md APPENDIX B",
+  "terminal_commit_at_write_time": "d28742b"
+ },
+ "_provenance": {
+  "sys_argv": [
+   "C:/Users/mrthn/AppData/Local/Temp/claude/C--Users-mrthn-aegis-finance/e2a797ae-8a72-4f80-af48-6610c88e9ced/scratchpad/mk_c7.py"
+  ],
+  "resolved_config": {
+   "tracker_vintage": "2026-09-02",
+   "modes": [
+    "returns",
+    "hygiene_only",
+    "indicator"
+   ],
+   "books": [
+    "hack3",
+    "hack4",
+    "hack6"
+   ],
+   "AAT_BAND_MODE": null,
+   "sealed": false,
+   "deployed": false,
+   "railway_touched": false
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/continuation_2026-09-06b/c7_monday_dry_run_printout.txt",
+    "sha256": "6e44d0faf241e566ebfc00625a678852a5340a95e2421f3634e60ecae53195fb",
+    "bytes": 23929,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/continuation_2026-09-06b/c7_monday_dry_run_replay_2026-09-02.json",
+    "sha256": "650dc7a3e7358c0a7ca54c9dbac3fe4a2072c067f18eeef50b04cd74a2a24140",
+    "bytes": 29922,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/continuation_2026-09-06/b3_3_monday_dry_run_printout.txt",
+    "sha256": "2c7b41e8a9c09afbbe1e0f3384fad7ba53caa4c39d74aca1f3b7ed3beb4d6cb3",
+    "bytes": 16225,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/docs/decisions_2026-09-05_plain_language.md",
+    "sha256": "e7344b2d8c3f6c9e8bc2f2ec50fd5f06854f539f089906de3aaee49ec471d716",
+    "bytes": 9185,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/docs/review_2026-09-06_fable51_on_the_continuation.md",
+    "sha256": "0a0f53fc194f1dd5358796ea4c10f2cf7e39d8eb1495d8ad6761940272c43d2f",
+    "bytes": 8003,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/docs/runbook_2026-09-08_rearm.md",
+    "sha256": "4129e8f2a8358b9a4ac74f6c1d911d2a5b4af919610d3feda7ce2a7674736dbe",
+    "bytes": 24769,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/alpha/murat_rule.py",
+    "sha256": "856a6d6c4735c8a7aca6e32be0aafd23fe068a32d7c99c293520922e3cb19f0a",
+    "bytes": 34709,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/alpha/tracker.py",
+    "sha256": "6973708dfdf28280a03f3d620630420ae73d2fc9aa0b442ee3fa4d5141834398",
+    "bytes": 74264,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/scripts/monday_dry_run.py",
+    "sha256": "0669817e7137385bd1c23d093d107a2b58405eae16d2c5b3355b91a77a90c97a",
+    "bytes": 17809,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/scripts/prediction_book.py",
+    "sha256": "cd55a1cebc8e66a7a63f2825fc4fff1c2678539e06827c0c6f3f336b9acfd625",
+    "bytes": 74580,
+    "opened_utc": "2026-09-05T14:44:01+00:00"
+   }
+  ],
+  "git_commit": "59ace19079c8",
+  "generated_utc": "2026-09-05T14:44:01+00:00"
+ }
+}
