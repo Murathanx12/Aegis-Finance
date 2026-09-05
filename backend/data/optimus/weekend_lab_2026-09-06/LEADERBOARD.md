@@ -149,3 +149,11 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W3_neural_long | 13 | 0 | [cuda] best of 20 cells is nn_s20260912|10bps at +2.086%/month vs market over 251 months (TW net 698 | 0.9902 | 0.008 | 0.0429 | 251 | 6.2 | NOISE (clears the market bar, does NOT beat lgbm) |
 | W11_evidence_writeback | 13 | 0 | 115 receipts -> 1166 cell observations; 324 cells tracked; states {'IDEA': 310, 'SUPPORTED': 12, 'CO | -- | -- | -- | -- | -- | INVENTORY |
 | W1_long_panel_inventory | 14 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 14 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W6_behavioural | 14 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | SCREEN_SURVIVOR (3 of 7, controlled |t| >= 2 AND one sign in 2 of 3 eras; no formal multiplicity correction on 7 features) |
+| W6b_liquidity_band | 14 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W5_options_iv | 14 | 1 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | SCREEN_SURVIVOR (2 of 5, controlled |t| >= 2 with momentum/size/vol in the same monthly regression AND one sign across eras) |
+| W5b_options_book | 14 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 7.1%/yr or larger) |
+| W5c_options_exclusion | 14 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | NOISE |
+| W13_composite_exclusion | 14 | 1 | drop the worst 20% by composite from a tradable universe of 1793 names: vs unfiltered 0.3545%/yr (t  | -- | -- | -- | -- | -- | NOISE |
+| W4_graph_momentum | 14 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | NOISE |
