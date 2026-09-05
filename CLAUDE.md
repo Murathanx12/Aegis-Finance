@@ -93,6 +93,11 @@ the wrong path. Fetch first, then check, and check the real path.
    uncapped gross are bigger losses (`docs/ROADMAP_2026-08-29_WEEKEND_TO_MONDAY.md` §1).
 5. Test fixtures never encode a calendar moment: a literal option expiry that
    was "next week" fails the day after it passes. Derive dates from `today`.
+6. **Never `taskkill /F /IM python.exe` (or any kill-by-image-name).** On
+   2026-09-06 one agent did it to stop its own job and killed two other agents'
+   jobs, a running test suite, ~1,676 already-billed LLM extractions, and the
+   Optimus MCP server for the rest of the session. Kill by PID, from a PID you
+   wrote down when you started the process, or don't kill.
 
 The long-form lessons behind this file (the farm's seven lessons, the feature
 list, layout, test table, retired lab) moved verbatim to
