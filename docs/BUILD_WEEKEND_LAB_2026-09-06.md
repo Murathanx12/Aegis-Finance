@@ -59,7 +59,7 @@ their receipts before each update; a line with no receipt is not in this file.*
 
 | | |
 |---|---|
-| **Best historical net strategy vs the market** | **none clears any bar.** The 26-year learner grid's best cell is +11.45%/yr at **t 1.43**, DSR **0.293** against a 0.95 bar. The one book that reached t > 2 unfloored falls to **t 1.68** once restricted to names anyone could buy, and 54% of it is five months. Every options-book cell loses *gross*. |
+| **Best historical net strategy vs the market** | **none, and the best-looking one is beta timing.** The 26-year learner grid's champion is +11.38%/yr at t 1.45 — and **96.2% of that is five months**, all market-bottom rebounds; without them, +0.44%/yr at **t 0.07**. The one book that reached t > 2 unfloored falls to t 1.68 once restricted to names anyone could buy. Every options-book cell loses *gross*. |
 | **Best forward paper strategy** | unchanged; the lab placed no orders and touched no book |
 | **Independent selector count** | unchanged — nothing was promoted |
 | **New actionable finding** | **YES — six, below** |
@@ -87,10 +87,11 @@ of them was a feature screen wearing a word defined for a book — see
 was killed. What moved is the *instrument*, one dated fact, and what we know
 about the *method*:
 
-1. the panel is **2.2× longer in months** (143 → 310), which is the quantity that was actually scarce;
-2. **the one result that looked powered did not survive being made tradable** (§0) — it is a tail-driven, early-era effect: 54% of its excess is five months, and without them it is +3.13%/yr at t 0.84;
-3. **five published features died under their own controls** — the 52-week high, single-day attention, ATM implied vol, IV-minus-realised-vol, and a VWAP gap that was a split artefact;
-4. **a Fama-MacBeth t of +4.15 produced a book that loses gross**, and the decile table says exactly why. That one applies to every feature screen in this repo.
+1. **the learner's 26-year edge is six market-bottom rebound months** (§0.0) — 96.2% of the champion's excess is five months (2009-02/03/04, 2016-02, 2019-01, 2020-03/05); without them it is +0.44%/yr at **t 0.07**, and it wins 48.8% of months. The market's own top-5 are 21.9% of its total, so this is not a property of monthly returns. It is beta timing on a $4.19-median book, not selection;
+2. the panel is **2.2× longer in months** (143 → 310), and that is what made the above visible rather than arguable;
+3. **the one result that looked powered did not survive being made tradable** (§0) — 54% of its excess is five months, and without them it is +3.13%/yr at t 0.84;
+4. **five published features died under their own controls** — the 52-week high, single-day attention, ATM implied vol, IV-minus-realised-vol, and a VWAP gap that was a split artefact;
+5. **a Fama-MacBeth t of +4.15 produced a book that loses gross**, and the decile table says exactly why. That one applies to every feature screen in this repo.
 
 ---
 
