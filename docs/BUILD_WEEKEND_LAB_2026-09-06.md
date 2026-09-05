@@ -283,7 +283,48 @@ Same gap as W5b and W7b.
 
 > *"Whether nineteen years say something seven could not."*
 
-**They do not.** `W2_learner_long`, the full 32-cell learner grid, walk-forward
+**They do — but not the thing we were asking.** Nineteen years say the learner's
+edge was never an edge. It is six market-bottom rebound months.
+
+### The finding that supersedes the DSR argument
+
+On the corrected panel the champion is `lgbm|residual|6m|10bps`: terminal wealth
+**25.84 against a market at 12.89**, +11.38%/yr, t 1.448 over 246 months. Then
+ask where it came from.
+
+| | share of excess in the **5 best months** | excess **without** them |
+|---|---|---|
+| no floor | **96.2%** | +0.44%/yr, **t 0.07** |
+| $3m/day | 90.5% | +0.95%/yr, t 0.19 |
+| $3m/day and ≥ $5 | 88.8% | +0.88%/yr, t 0.18 |
+
+The runner-up `lgbm|raw|6m` is **108.8%** — *negative* without its five best
+months. And the months name themselves:
+
+```
+2009-02  +74.9%     2016-02  +46.9%     2020-05  +37.2%
+2019-01  +34.2%     2009-03  +31.3%     2020-03  +25.5%     2009-04  +25.5%
+```
+
+GFC bottom · the February 2016 bottom · the COVID crash and its rebound · the
+rebound from the December 2018 selloff. **Every one is a market-bottom rebound.**
+The book wins **48.8% of months** — a coin flip — and takes 96% of its total from
+six of them.
+
+**The control settles it.** The market's own five best months are **21.9%** of
+its own total; this book's are **96.2%**. The concentration is not a property of
+monthly returns. It is specific to this book.
+
+**So the learner is not selecting stocks.** It holds small, cheap, volatile names
+— the champion's median holding closes at **$4.19** and trades **$533k/day**,
+with 58% of the book under $5 — and those rebound violently off bottoms against a
+cap-weighted index. That is a **beta-timing artefact**, not selection skill, and
+more tape does not fix it; it just supplies more bottoms.
+
+This supersedes the deflation argument below. The DSR was never the binding
+constraint: **there was no persistent monthly edge to deflate.**
+
+### The deflation argument, which is still true and no longer the point `W2_learner_long`, the full 32-cell learner grid, walk-forward
 2004-2023, 240 months common to every cell:
 
 | | 12-year panel (night lab, 09-05) | **26-year panel** |
@@ -296,7 +337,9 @@ Same gap as W5b and W7b.
 | out-of-sample months | 84 | **240** |
 | years needed for t = 2 | 16.1 (had 7.0) | **30.7 (has 20.0)** |
 
-More tape moved the Deflated Sharpe from **0.197 to 0.293**. The bar is 0.95.
+More tape moved the Deflated Sharpe from **0.197 to 0.293** on the pre-fix panel,
+and to **0.263** on the corrected one (the champion moves to `lgbm|residual|6m`,
+SPA p 0.361, PBO 0.157, t 1.536, MDE **16.0%/yr**). The bar is 0.95.
 Tripling the out-of-sample months bought about ten points of DSR and left the
 verdict where it was: **CANNOT DETERMINE — underpowered.** The best cell shows
 +11.45%/yr of excess at **t 1.43**, and its Minimum Detectable Effect is
