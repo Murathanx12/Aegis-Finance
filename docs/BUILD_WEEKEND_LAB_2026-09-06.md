@@ -88,13 +88,51 @@ was killed. What moved is the *instrument*, one dated fact, and what we know
 about the *method*:
 
 1. the panel is **2.2× longer in months** (143 → 310), which is the quantity that was actually scarce;
-2. **the first POWERED result of the run, and it is a decay** (below) — the 26-year panel did not find a new edge, it **dated the death of an old one**;
+2. **the one result that looked powered did not survive being made tradable** (§0) — it is a tail-driven, early-era effect: 54% of its excess is five months, and without them it is +3.13%/yr at t 0.84;
 3. **five published features died under their own controls** — the 52-week high, single-day attention, ATM implied vol, IV-minus-realised-vol, and a VWAP gap that was a split artefact;
 4. **a Fama-MacBeth t of +4.15 produced a book that loses gross**, and the decile table says exactly why. That one applies to every feature screen in this repo.
 
 ---
 
-## 0. THE HEADLINE — analyst target-price revisions worked for 17 years and have been dead for 9
+## 0. THE HEADLINE, AND ITS RETRACTION
+
+> **RETRACTED IN ITS ORIGINAL FORM.** What follows below was written against the
+> **unfloored** book on the **pre-fix** panel. Both were wrong, in opposite
+> directions, and the corrected version is much weaker. The section is kept
+> because the reasoning is still the reasoning; the numbers it was built on are
+> superseded by this box.
+>
+> Two things changed after it was written. `dataset.build`'s target-revision legs
+> were a ratio of two different share bases and were fixed (4,359 rows rebased at
+> 1m), and the repo's own `TRADABLE_DOLLAR_VOL` floor was applied, which no book
+> job had been doing.
+>
+> | | unfloored | **tradable ($3m/day, close ≥ $5)** |
+> |---|---|---|
+> | terminal wealth, 308 months | 85.32 vs market 13.03 | **36.44 vs 13.03** |
+> | annualised excess | 10.95% | **6.73%** |
+> | **t** | 2.407 | **1.682** |
+> | share of excess in the 5 best months | 43.4% | **54.3%** |
+> | **excluding those 5 months** | +6.30%/yr, t 1.57 | **+3.13%/yr, t 0.844** |
+> | era t's (99-07 / 08-15 / 16-24) | 2.77 / 1.78 / 0.09 | **2.23 / 0.71 / 0.04** |
+>
+> The five months are **2020-01, 1999-11, 2000-05, 1999-12, 2020-11** — dot-com
+> and COVID. Remove them and there is nothing left.
+>
+> **So "worked for 17 years and stopped in 2016" is not what the tradable book
+> says.** It says **1999-2007 only** (t 2.23), already weak by 2008-2015
+> (t 0.71), gone after. And half of even that is five months.
+>
+> The correct verdict is not `DECAYED`. It is: **a tail-driven, early-era,
+> largely untradeable effect, with a DSR of ~0.2 over the weekend's full
+> 288-trial search.** Nothing here is a candidate for anything.
+>
+> *Two corrections pushed in opposite directions and that is the interesting
+> part: the share-basis fix made the unfloored number BETTER (t 2.055 → 2.407),
+> and the execution floor then took more than all of it back (→ 1.682). The fix
+> improved the signal on split-heavy names, and split-heavy names are thin.*
+
+## 0.old — the original headline, superseded by the box above
 
 `W9_survivor_books` takes **every feature any screen marked as a survivor this
 weekend** and books all of them in ONE family — which is also the multiplicity
@@ -919,7 +957,7 @@ weekend and should be run as written.
 
 1. **Nineteen years do not say what seven could not.** The 32-cell learner grid on 26 years moves the DSR from 0.197 to **0.293** against a bar of 0.95. Tripling the out-of-sample months bought ten points and changed no verdict. That is the answer to the question the weekend was set.
 2. **Three of this session's own findings were wrong, and two review lanes found them** — a leak in the matched-control design, a guard that could not go red, and a power flag that was the t-test restated. All fixed, all with the correction attached to the number rather than filed in a document. **The reviews were the highest-value hours of the weekend.**
-3. **Analyst target-price revisions worked for 17 years and stopped in 2016** — dated, and arbitraged rather than out-costed (the *gross* book loses in 2016-24). Not a trade; a fact.
+3. **The headline retracted itself.** Analyst target-price revisions looked like a powered +9.6%/yr result that decayed in 2016. Corrected for share basis and restricted to names over $3m/day above $5, it is **t 1.68, 54% of it five months, and confined to 1999-2007**. The retraction is the finding: it took a share-basis fix and one line of `tradable_floor` to move it, and neither was in place when it was written.
 4. **A regression coefficient is not a book.** Five features died crossing that gap. Every book job now prints its decile shape before its verdict, and `W9_survivor_books` books every survivor in one family so multiplicity is counted over the whole search (288 trials, not 24). Related and cheap: **apply `TRADABLE_DOLLAR_VOL` in every book** — it was in none of them, and it is what turned a 561× into 36×.
 5. **The liquidity FLOOR, not band.** Sub-$100k/day names lose 2.58%/yr against the equal-weighted rest, negative in 3 of 3 eras; above that liquidity stops mattering. The current $3m floor is safe but was not evidence-shaped until now.
 
