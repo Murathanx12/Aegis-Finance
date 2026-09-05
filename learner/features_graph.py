@@ -446,7 +446,20 @@ def build(max_age_days: int = DEFAULT_MAX_AGE_DAYS, edges_path: Path | None = No
 
     receipt = {
         "version": VERSION,
-        "source": str(edge_source()),
+        # THE FILE THAT WAS ACTUALLY READ, not the module default.
+        #
+        # This line used to be `str(edge_source())`, which ignores the
+        # `edges_path` argument entirely. On 2026-09-06 `w4_companyworld_rerun`
+        # ran three arms over three different edge files and all three receipts
+        # named `../Aegis module/runs/MARKET-GRAPH-1/edge_instances.parquet` --
+        # including the arm whose 2,020 rows came from `companyworld_v1.parquet`
+        # and the pooled arm whose 12,943 rows came from neither file alone.
+        # Only `source_rows` disagreed, and a reader who trusted the path would
+        # have attributed a never-seen-tape result to the tape it was testing
+        # against. Outcome provenance is a standing rule; a receipt that names
+        # the wrong file is worse than one that names none.
+        "source": str(Path(edges_path) if edges_path is not None else edge_source()),
+        "source_is_the_module_default": bool(edges_path is None),
         "source_rows": int(len(edges)),
         "licence": "PRODUCT_EXPERIMENT",
         # --- the coverage window, MEASURED. The roadmap said "reportedly

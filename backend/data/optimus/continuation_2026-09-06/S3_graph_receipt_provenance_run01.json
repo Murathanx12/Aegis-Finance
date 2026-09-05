@@ -1,0 +1,32 @@
+{
+ "job": "S3_graph_receipt_provenance",
+ "defect": "learner/features_graph.build() stamped `\"source\": str(edge_source())` -- the module default or env override -- and IGNORED the `edges_path` it was handed.",
+ "how_it_surfaced": "W4b_companyworld_rerun_run01.json ran three arms over three different edge sets and all three graph_receipts named the SAME file.",
+ "measured": {
+  "companyworld_only": {
+   "receipt_source": "C:/Users/mrthn/Aegis module/runs/MARKET-GRAPH-1/edge_instances.parquet",
+   "actual_source": "backend/data/optimus/graph/companyworld_v1.parquet",
+   "source_rows": 2020
+  },
+  "market_graph_1_only": {
+   "receipt_source": "the same path",
+   "actual_source": "the same path (correct by coincidence)",
+   "source_rows": 10923
+  },
+  "pooled": {
+   "receipt_source": "the same path",
+   "actual_source": "a concatenation of BOTH files, which is neither",
+   "source_rows": 12943
+  }
+ },
+ "why_it_matters": "only `source_rows` disagreed. A reader checking provenance would have been told that the never-seen 1999-2013 tape came from the 2014-2024 file it was being tested against -- i.e. would have been told the experiment did not exist. The FINDING survives (the row counts and coverage windows are right and internally consistent); the provenance line did not.",
+ "fix": {
+  "code": "learner/features_graph.py -- the receipt records `edges_path` when one is given, and carries `source_is_the_module_default` so 'the default' and 'a path that happens to match' are distinguishable",
+  "test": "backend/tests/test_graph_receipt_names_its_source.py -- 2 tests, no skips (1.25s)",
+  "red_proof": "the fix was temporarily reverted to `str(edge_source())` and the test FAILED with `WindowsPath('C:/Users/mrthn/Aegis module/runs/MARKET-GRAPH-1/edge_instances.parquet')` against the temp fixture path; the file was restored byte-identical afterwards (grep SABOTAGE -> 0)"
+ },
+ "NOT_FIXED_reported_only": "the pooled arm's scope line reads '27 of 26 panel years' -- features_graph's coverage counter includes a 2025-01 feature month beyond the panel's end, so a counter can exceed its own denominator. Cosmetic, and left for its owner.",
+ "receipts_NOT_reissued": "W4b_companyworld_rerun_run01.json still carries the wrong source strings; re-running it costs a full three-arm pass and the numbers would not change. The defect and the correction are recorded here instead, and the fix is in the code that writes the next one.",
+ "llm_spend_usd": 0.0,
+ "generated_utc": "2026-09-05T12:18:40.890048+00:00"
+}
