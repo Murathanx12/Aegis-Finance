@@ -1,94 +1,82 @@
 {
   "job": "W4b_companyworld_extract",
   "tag": "run01",
-  "ts_utc": "2026-09-05T11:56:35.826749+00:00",
+  "ts_utc": "2026-09-05T12:09:20.071645+00:00",
   "mode": "main",
   "worklist": {
-    "n_filings_in": 51001,
-    "n_linked": 30638,
-    "n_ambiguous_dropped": 713,
-    "n_unmatched": 19650,
-    "match_rate": 0.6007,
-    "slack_days": 180,
-    "panel_names_in_window": 7066,
-    "top_n_by_coverage": 1500,
-    "filings_for_those_names": 11850,
-    "distinct_permnos_with_a_10K": 956,
-    "years": {
-      "1999": 6,
-      "2000": 234,
-      "2001": 858,
-      "2002": 886,
-      "2003": 901,
-      "2004": 899,
-      "2005": 903,
-      "2006": 895,
-      "2007": 920,
-      "2008": 900,
-      "2009": 895,
-      "2010": 898,
-      "2011": 896,
-      "2012": 894,
-      "2013": 865
-    },
-    "sampling": {
-      "rule": "stratified by filing year, rng seed 20260906",
-      "per_year_cap": 333,
-      "n_sampled": 4569
-    }
+    "note": "resolve-only: worklist not rebuilt"
   },
-  "n_filings_attempted": 93,
+  "resolve_only": true,
+  "n_filings_attempted": 1694,
   "statuses": {
-    "ok": 76,
-    "too_short": 4,
-    "fetch_failed": 13
+    "ok": 1486,
+    "too_short": 15,
+    "fetch_failed": 193
   },
-  "n_docs_ok": 76,
-  "n_raw_edges": 419,
-  "n_quote_verified": 402,
-  "quote_verified_rate": 0.9594,
+  "n_docs_ok": 1486,
+  "n_raw_edges": 6753,
+  "n_quote_verified": 6339,
+  "quote_verified_rate": 0.9387,
   "extract_method_counts": {
-    "cached": 1,
-    "item1_business": 65,
-    "item1_business+kwwindow": 4,
-    "kwwindow_fallback": 6
+    "cached": 962,
+    "item1_business": 291,
+    "item1_business+kwwindow": 44,
+    "kwwindow_fallback": 143,
+    "item1_loose": 24,
+    "item1_loose+kwwindow": 22
   },
   "tokens": {
-    "in": 362786,
-    "out": 29653,
-    "cached": 44672
+    "in": 0,
+    "out": 0,
+    "cached": 0
   },
-  "cost_usd_telemetry_estimate": 0.059218,
-  "cost_usd_per_100_filings": 0.0779,
+  "cost_usd_telemetry_estimate": 0.0,
+  "cost_usd_per_100_filings": 0.0,
   "session_cap_usd": 10.0,
-  "halted": "zero-yield rate 100.0% exceeds 40% over 91 resolvable calls (of 91 total) \u2014 halting for inspection: this campaign is buying tokens, not information",
-  "wall_seconds": 35.0,
-  "provider_balance_before": 13.38,
+  "zero_yield_brake": {
+    "env_override": null,
+    "why": "The zero-yield brake counts a call as barren unless it declares a prediction or hypothesis id. The first attempt of this run declared none and halted at 91 calls -- correctly, given what the ledger was told. The REAL fix is in this file: every quote-verified edge now gets an id, and a call that returns no edge still lands in the dead bucket. The 91 pre-fix rows were amended through attach_outputs, but 59 of them could not be matched back to their edges and stay in today's denominator, which would pin the rate at 100% at the first check of this process. So the RATE brake -- an information limit, not a money limit -- is relaxed for this process only. Both MONEY ceilings are untouched: the in-process SESSION_MAX_USD ($10.00, checked on every single call) and the ledger's RESEARCH_LLM_MAX_USD."
+  },
+  "halted": null,
+  "wall_seconds": 0.0,
+  "provider_balance_before": null,
   "resolution": {
-    "n_raw_mentions": 419,
-    "n_resolved": 136,
-    "resolution_rate": 0.3246,
+    "n_raw_mentions": 6753,
+    "n_resolved": 2097,
+    "resolution_rate": 0.3105,
     "routes": {
-      "name": 85,
-      "not_in_crsp_at_date": 252,
-      "generic_single_token": 31,
-      "ticker": 51
+      "name": 1076,
+      "not_in_crsp_at_date": 4138,
+      "generic_single_token": 518,
+      "ticker": 1021
     },
-    "n_after_dedup": 132
+    "n_after_dedup": 2020
   },
   "out_parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_v1.parquet",
   "edges_by_year": {
     "1999": 13,
-    "2000": 119
+    "2000": 174,
+    "2001": 144,
+    "2002": 196,
+    "2003": 238,
+    "2004": 185,
+    "2005": 185,
+    "2006": 202,
+    "2007": 205,
+    "2008": 148,
+    "2009": 134,
+    "2010": 146,
+    "2011": 50
   },
   "edges_by_type": {
-    "competitor": 64,
-    "customer": 43,
-    "supplier": 20,
-    "shared_technology": 4,
-    "regulatory_exposure": 1
+    "customer": 854,
+    "competitor": 761,
+    "supplier": 284,
+    "shared_technology": 102,
+    "regulatory_exposure": 18,
+    "shared_end_market": 1
   },
-  "distinct_permnos": 135,
-  "provider_balance_after": 13.38,
-  "provider_balance_delta": 0.0
+  "distinct_permnos": 945,
+  "provider_balance_after": 10.36,
+  "provider_balance_delta": null
 }

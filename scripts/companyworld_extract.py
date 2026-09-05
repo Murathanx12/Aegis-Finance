@@ -436,33 +436,47 @@ Answer in English only."""
 
 _LOCK = threading.Lock()
 _STATE = {"calls": 0, "cost": 0.0, "in": 0, "out": 0, "cached": 0, "halted": None}
-_BUDGET_TTL_S = 20.0
+_BUDGET_TTL_S = 900.0
 _BUDGET = {"t": -1e9, "ok": True, "reason": None}
+#: MEASURED, NOT ASSUMED: the first main pass fell from ~120 documents/minute
+#: to ~10 after twenty minutes and the vendor latency never moved. The cause was
+#: this function. `require()` re-parses the WHOLE telemetry ledger (49.6 MB by
+#: then, and other jobs were appending to it), and the TTL check released `_LOCK`
+#: before calling it -- so when the TTL expired all forty workers parsed 49.6 MB
+#: SIMULTANEOUSLY, every time. mg1_extract's docstring warns about the ledger
+#: read becoming the bottleneck; this copy reintroduced the bug in a worse form
+#: by making it a stampede. The refresh is now serialised on its own lock: one
+#: thread parses, the rest wait and read what it wrote.
+_REFRESH_LOCK = threading.Lock()
 
 
 def _budget_ok(since: str) -> None:
-    """The governor, consulted at most once per TTL across all workers.
+    """The governor, consulted at most once per TTL across ALL workers.
 
-    `require()` re-parses the whole telemetry ledger on every call; with 24
-    workers writing to it that read, not the vendor, becomes the bottleneck.
-    The two HARD in-process ceilings above are checked on EVERY call, so the
-    exposure this buys is bounded at workers x TTL x per-call cost.
+    The two HARD in-process ceilings are checked on every single call by the
+    caller, so the exposure this TTL buys is bounded at workers x TTL x
+    per-call cost -- pennies -- while the ledger read happens once.
     """
-    now = time.monotonic()
-    with _LOCK:
-        fresh = (now - _BUDGET["t"]) < _BUDGET_TTL_S
-        if fresh and _BUDGET["ok"]:
+    def _fresh() -> bool | None:
+        with _LOCK:
+            if not _BUDGET["ok"]:
+                raise ResearchBudgetExhausted(str(_BUDGET["reason"]))
+            return (time.monotonic() - _BUDGET["t"]) < _BUDGET_TTL_S
+
+    if _fresh():
+        return
+    with _REFRESH_LOCK:
+        # Re-check inside the lock: while waiting, another thread refreshed.
+        if _fresh():
             return
-        if not _BUDGET["ok"]:
-            raise ResearchBudgetExhausted(str(_BUDGET["reason"]))
-    try:
-        require(CAMPAIGN, since=since)
-        with _LOCK:
-            _BUDGET.update(t=now, ok=True, reason=None)
-    except ResearchBudgetExhausted as exc:
-        with _LOCK:
-            _BUDGET.update(t=now, ok=False, reason=str(exc))
-        raise
+        try:
+            require(CAMPAIGN, since=since)
+            with _LOCK:
+                _BUDGET.update(t=time.monotonic(), ok=True, reason=None)
+        except ResearchBudgetExhausted as exc:
+            with _LOCK:
+                _BUDGET.update(t=time.monotonic(), ok=False, reason=str(exc))
+            raise
 
 
 def _client():
@@ -811,6 +825,9 @@ def main(argv=None) -> int:
     ap.add_argument("--top-n", type=int, default=1500)
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--tag", default="run01")
+    ap.add_argument("--resolve-only", action="store_true",
+                    help="skip the wire entirely: resolve and write the parquet "
+                         "from the records already flushed to disk. Spends $0.")
     a = ap.parse_args(argv)
 
     WORK.mkdir(parents=True, exist_ok=True)
@@ -819,6 +836,24 @@ def main(argv=None) -> int:
 
     t_start = time.time()
     since = pd.Timestamp.utcnow().strftime("%Y-%m-%d")
+
+    if a.resolve_only:
+        # The wire is never touched. This exists because the main pass is
+        # long-running and its throughput degrades against a growing telemetry
+        # ledger: the records are flushed per document precisely so that
+        # ALREADY-PAID extraction can become a parquet without re-buying it.
+        jl = WORK / f"records_{a.tag}.jsonl"
+        if not jl.exists():
+            raise SystemExit(f"REFUSED: no flushed records at {jl}")
+        recs = []
+        for line in jl.read_text(encoding="utf-8").splitlines():
+            try:
+                recs.append(json.loads(line))
+            except Exception:                                  # noqa: BLE001
+                continue
+        return _finish(recs, a, t_start, {"note": "resolve-only: worklist not rebuilt"},
+                       None, None, spent_here=0.0)
+
     n_want = a.pilot or a.limit
     wl, wl_report = build_worklist(a.top_n, limit=n_want)
     print(f"worklist: {len(wl):,} filings, {wl['permno'].nunique():,} permnos, "
@@ -830,32 +865,67 @@ def main(argv=None) -> int:
     cli = _client()
     recs, halted = [], None
     rows = wl.to_dict("records")
+
+    # PAID WORK IS FLUSHED AS IT ARRIVES, NOT AT THE END.
+    # The first main pass held 1,676 extracted documents in memory and was
+    # killed while stalled; $1.33 of already-billed extraction went with it.
+    # An append-per-record costs nothing and makes a kill lose at most one
+    # document. Already-extracted accessions are skipped on a resume.
+    jl = WORK / f"records_{a.tag}.jsonl"
+    done_acc: set[str] = set()
+    if jl.exists():
+        for line in jl.read_text(encoding="utf-8").splitlines():
+            try:
+                r = json.loads(line)
+            except Exception:                                  # noqa: BLE001
+                continue
+            recs.append(r)
+            if r.get("status") == "ok":
+                done_acc.add(str(r.get("accession")))
+        rows = [r for r in rows if str(r["accession"]) not in done_acc]
+        print(f"resume: {len(done_acc):,} already extracted, "
+              f"{len(rows):,} to go", flush=True)
+    _jl_lock = threading.Lock()
+    _jl_fh = open(jl, "a", encoding="utf-8")
+
+    def _flush(rec: dict) -> None:
+        with _jl_lock:
+            _jl_fh.write(json.dumps(rec, default=str) + "\n")
+            _jl_fh.flush()
     with ThreadPoolExecutor(max_workers=a.workers) as ex:
         futs = {ex.submit(fetch_and_extract, r, cli, since): r for r in rows}
         done = 0
         for fu in as_completed(futs):
             try:
-                recs.append(fu.result())
+                r = fu.result()
+                recs.append(r)
+                _flush(r)
             except ResearchBudgetExhausted as exc:
                 halted = str(exc)
                 for f2 in futs:
                     f2.cancel()
                 break
             except Exception as exc:                           # noqa: BLE001
-                recs.append({"status": "worker_error",
-                             "error": f"{type(exc).__name__}: {exc}"})
+                r = {"status": "worker_error",
+                     "error": f"{type(exc).__name__}: {exc}"}
+                recs.append(r)
+                _flush(r)
             done += 1
             if done % 50 == 0:
                 print(f"  {done}/{len(rows)}  calls={_STATE['calls']} "
                       f"cost=${_STATE['cost']:.4f}", flush=True)
 
-    (WORK / f"records_{a.tag}.jsonl").write_text(
-        "\n".join(json.dumps(r, default=str) for r in recs), encoding="utf-8")
+    _jl_fh.close()
+    return _finish(recs, a, t_start, wl_report, halted, bal0,
+                   spent_here=round(_STATE["cost"], 6))
 
+
+def _finish(recs, a, t_start, wl_report, halted, bal0, spent_here):
+    """Receipt + parquet from a set of records, however they were obtained."""
     ok = [r for r in recs if r.get("status") == "ok"]
     n_edges = sum(r.get("n_edges", 0) for r in ok)
     n_qv = sum(r.get("n_quote_verified", 0) for r in ok)
-    cost = round(_STATE["cost"], 6)
+    cost = float(spent_here)
     per100 = round(cost / max(len(ok), 1) * 100, 4)
     statuses = {}
     for r in recs:
@@ -872,6 +942,7 @@ def main(argv=None) -> int:
         "ts_utc": pd.Timestamp.utcnow().isoformat(),
         "mode": "pilot" if a.pilot else "main",
         "worklist": wl_report,
+        "resolve_only": bool(a.resolve_only),
         "n_filings_attempted": len(recs),
         "statuses": statuses,
         "n_docs_ok": len(ok),

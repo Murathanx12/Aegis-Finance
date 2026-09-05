@@ -1,0 +1,2538 @@
+{
+  "job": "W4b_companyworld_rerun",
+  "question": "does a name's customers'/suppliers'/competitors' last month predict its next one, once its own momentum, size and vol are in the same regression -- on a graph that now reaches 1999?",
+  "family_id": "W4b-companyworld-graph-momentum",
+  "licence": "PRODUCT_EXPERIMENT",
+  "ts_utc": "2026-09-05T12:09:56.765093+00:00",
+  "variant": 0,
+  "training_universe_floors": {
+    "rule": "dollar_vol_20d >= $3,000,000/day AND close >= $5.0",
+    "applied_to": "the TRAINING universe, before any monthly regression",
+    "rows_before": 925757,
+    "rows_after": 530447,
+    "share_kept": 0.573,
+    "names_before": 8981,
+    "names_after": 6546
+  },
+  "verdict_vocabulary_note": "This is a FEATURE SCREEN: no book, no Sharpe to deflate, so it CANNOT reach NOVEL. NOVEL is reserved for something that survived a book, a family and a deflation -- see weekend_lab_jobs._normalise_screen_verdict and W5b, where two options coefficients with FM t 4.15 and -5.37 built 24 book cells that all lost GROSS.",
+  "arms": {
+    "companyworld_only": {
+      "verdict": "CANNOT DETERMINE (underpowered)",
+      "scope": "15 of 26 panel years (1999-10-01..2013-03-01), 939 graph names of 6,546 floored-panel names",
+      "graph_receipt": {
+        "source": "C:\\Users\\mrthn\\Aegis module\\runs\\MARKET-GRAPH-1\\edge_instances.parquet",
+        "source_rows": 2020,
+        "max_age_days": 730,
+        "relations": {
+          "oriented": 1116,
+          "symmetric": 880,
+          "unoriented_dropped": 22,
+          "unmapped": 2,
+          "directed_rows": 3990,
+          "by_relation": {
+            "cust": 1116,
+            "supp": 1116,
+            "comp": 1522,
+            "assoc": 236
+          },
+          "permnos": 939
+        },
+        "coverage": {
+          "filing_date_first": "1999-09-01",
+          "filing_date_last": "2011-03-03",
+          "source_as_of_date_first": "1999-09-01",
+          "source_as_of_date_last": "2011-03-03",
+          "as_of_minus_filing_days": {
+            "min": 0,
+            "median": 0.0,
+            "max": 0
+          },
+          "feature_date_first": "1999-10-01",
+          "feature_date_last": "2013-03-01",
+          "feature_months": 162,
+          "feature_years": 15,
+          "long_panel_years": 26,
+          "edges_by_filing_year": {
+            "1999": 13,
+            "2000": 174,
+            "2001": 144,
+            "2002": 196,
+            "2003": 238,
+            "2004": 185,
+            "2005": 185,
+            "2006": 202,
+            "2007": 205,
+            "2008": 148,
+            "2009": 134,
+            "2010": 146,
+            "2011": 50
+          },
+          "rows_by_year": [
+            {
+              "year": 1999,
+              "rows": 27,
+              "permnos": 9
+            },
+            {
+              "year": 2000,
+              "rows": 1175,
+              "permnos": 160
+            },
+            {
+              "year": 2001,
+              "rows": 2733,
+              "permnos": 267
+            },
+            {
+              "year": 2002,
+              "rows": 3393,
+              "permnos": 365
+            },
+            {
+              "year": 2003,
+              "rows": 3785,
+              "permnos": 395
+            },
+            {
+              "year": 2004,
+              "rows": 3896,
+              "permnos": 412
+            },
+            {
+              "year": 2005,
+              "rows": 4052,
+              "permnos": 441
+            },
+            {
+              "year": 2006,
+              "rows": 4070,
+              "permnos": 450
+            },
+            {
+              "year": 2007,
+              "rows": 4027,
+              "permnos": 449
+            },
+            {
+              "year": 2008,
+              "rows": 3656,
+              "permnos": 394
+            },
+            {
+              "year": 2009,
+              "rows": 3046,
+              "permnos": 338
+            },
+            {
+              "year": 2010,
+              "rows": 3067,
+              "permnos": 338
+            },
+            {
+              "year": 2011,
+              "rows": 2787,
+              "permnos": 293
+            },
+            {
+              "year": 2012,
+              "rows": 1241,
+              "permnos": 199
+            },
+            {
+              "year": 2013,
+              "rows": 132,
+              "permnos": 63
+            }
+          ]
+        },
+        "permnos": 939
+      },
+      "join": {
+        "rows_in": 530447,
+        "rows_out": 530447,
+        "match_rate": {
+          "graph_cust_mom_1m_ew": 0.0174,
+          "graph_cust_mom_1m_cw": 0.0174,
+          "graph_supp_mom_1m_ew": 0.026,
+          "graph_supp_mom_1m_cw": 0.026,
+          "graph_comp_mom_1m_ew": 0.0296,
+          "graph_comp_mom_1m_cw": 0.0296,
+          "graph_assoc_mom_1m_ew": 0.006,
+          "graph_assoc_mom_1m_cw": 0.006,
+          "graph_log_degree": 0.058,
+          "graph_n_cust": 0.0174,
+          "graph_n_supp": 0.026,
+          "graph_n_comp": 0.0296,
+          "graph_n_assoc": 0.006
+        },
+        "tolerance_days": 40,
+        "direction": "backward (a forward join would use a month that had not finished)",
+        "panel_share_inside_the_graph_date_window": 0.4843,
+        "panel_share_on_a_permno_the_graph_covers": 0.2987,
+        "ceiling": 0.2987,
+        "why_the_ceiling": "the product of a ONE-DECADE date window and a 386-name universe inside an 8,981-name panel; the match rate is not a join defect and must not be repaired by widening the tolerance",
+        "verdict": "THIN -- best feature column matches 5.80% of panel rows"
+      },
+      "target": "excess_vw_1m",
+      "controls": [
+        "mom_12_1",
+        "log_market_cap",
+        "vol_60d"
+      ],
+      "features": [
+        {
+          "feature": "graph_cust_mom_1m_ew",
+          "family": "customer_momentum",
+          "rows": 9237,
+          "months": 137,
+          "median_names_per_month": 63,
+          "mean_rank_ic": 0.01425,
+          "t_rank_ic": 1.009,
+          "mean_fm_beta_controlled": 0.00130518,
+          "t_fm_beta_controlled": 0.297,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 84,
+              "mean_pct": 0.1515,
+              "t": 0.256,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 53,
+              "mean_pct": 0.0973,
+              "t": 0.15,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 137,
+            "periods_per_year": 12,
+            "n_oos_months": 137,
+            "sharpe_per_period": 0.0254,
+            "t_observed": 0.297,
+            "years_observed": 11.42,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 6212.8,
+            "years_needed_for_t2": 517.7,
+            "years_needed_for_t2_exact": 517.7313901134572,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.0486,
+            "years_needed_to_detect_that_effect": 141.1,
+            "mde_annual_excess_at_t_target": 0.10547,
+            "mde_reading": "on the 11.4 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.55%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.30 on 11.4 years; t = 2 would need 517.7 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_cust_mom_1m_cw",
+          "family": "customer_momentum",
+          "rows": 9237,
+          "months": 137,
+          "median_names_per_month": 63,
+          "mean_rank_ic": 0.01515,
+          "t_rank_ic": 1.069,
+          "mean_fm_beta_controlled": 0.00150079,
+          "t_fm_beta_controlled": 0.339,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 84,
+              "mean_pct": 0.1823,
+              "t": 0.31,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 53,
+              "mean_pct": 0.0991,
+              "t": 0.148,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 137,
+            "periods_per_year": 12,
+            "n_oos_months": 137,
+            "sharpe_per_period": 0.029,
+            "t_observed": 0.3394,
+            "years_observed": 11.42,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 4755.9,
+            "years_needed_for_t2": 396.3,
+            "years_needed_for_t2_exact": 396.3262964384824,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.04831,
+            "years_needed_to_detect_that_effect": 142.8,
+            "mde_annual_excess_at_t_target": 0.10611,
+            "mde_reading": "on the 11.4 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.61%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.34 on 11.4 years; t = 2 would need 396.3 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_supp_mom_1m_ew",
+          "family": "supplier_momentum",
+          "rows": 13736,
+          "months": 151,
+          "median_names_per_month": 88,
+          "mean_rank_ic": -0.00298,
+          "t_rank_ic": -0.264,
+          "mean_fm_beta_controlled": -0.00022789,
+          "t_fm_beta_controlled": -0.065,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 89,
+              "mean_pct": 0.3794,
+              "t": 0.772,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 62,
+              "mean_pct": -0.6002,
+              "t": -1.25,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 0
+          },
+          "power": {
+            "n_periods": 151,
+            "periods_per_year": 12,
+            "n_oos_months": 151,
+            "sharpe_per_period": -0.0053,
+            "t_observed": -0.0648,
+            "years_observed": 12.58,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05787,
+            "years_needed_to_detect_that_effect": 99.5,
+            "mde_annual_excess_at_t_target": 0.08437,
+            "mde_reading": "on the 12.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.44%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0053); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_supp_mom_1m_cw",
+          "family": "supplier_momentum",
+          "rows": 13736,
+          "months": 151,
+          "median_names_per_month": 88,
+          "mean_rank_ic": -0.00275,
+          "t_rank_ic": -0.243,
+          "mean_fm_beta_controlled": 3.5e-07,
+          "t_fm_beta_controlled": 0.0,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 89,
+              "mean_pct": 0.4261,
+              "t": 0.865,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 62,
+              "mean_pct": -0.6115,
+              "t": -1.274,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 0
+          },
+          "power": {
+            "n_periods": 151,
+            "periods_per_year": 12,
+            "n_oos_months": 151,
+            "sharpe_per_period": 0.0,
+            "t_observed": 0.0001,
+            "years_observed": 12.58,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 62738138017.8,
+            "years_needed_for_t2": 5228178168.1,
+            "years_needed_for_t2_exact": 5228178168.14708,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05774,
+            "years_needed_to_detect_that_effect": 100.0,
+            "mde_annual_excess_at_t_target": 0.08456,
+            "mde_reading": "on the 12.6 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.46%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.00 on 12.6 years; t = 2 would need 5228178168.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_comp_mom_1m_ew",
+          "family": "competitor_momentum",
+          "rows": 15698,
+          "months": 144,
+          "median_names_per_month": 104,
+          "mean_rank_ic": -0.00732,
+          "t_rank_ic": -0.585,
+          "mean_fm_beta_controlled": -0.00434562,
+          "t_fm_beta_controlled": -1.005,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 93,
+              "mean_pct": -0.634,
+              "t": -1.057,
+              "sign": -1
+            },
+            "2008-2015": {
+              "months": 51,
+              "mean_pct": -0.0709,
+              "t": -0.129,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 0,
+            "eras_with_a_negative_mean": 2,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 144,
+            "periods_per_year": 12,
+            "n_oos_months": 144,
+            "sharpe_per_period": -0.0837,
+            "t_observed": -1.0048,
+            "years_observed": 12.0,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.04817,
+            "years_needed_to_detect_that_effect": 143.7,
+            "mde_annual_excess_at_t_target": 0.1038,
+            "mde_reading": "on the 12.0 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.38%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0837); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_comp_mom_1m_cw",
+          "family": "competitor_momentum",
+          "rows": 15698,
+          "months": 144,
+          "median_names_per_month": 104,
+          "mean_rank_ic": -0.00744,
+          "t_rank_ic": -0.593,
+          "mean_fm_beta_controlled": -0.00446162,
+          "t_fm_beta_controlled": -1.028,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 93,
+              "mean_pct": -0.6513,
+              "t": -1.082,
+              "sign": -1
+            },
+            "2008-2015": {
+              "months": 51,
+              "mean_pct": -0.0721,
+              "t": -0.131,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 0,
+            "eras_with_a_negative_mean": 2,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 144,
+            "periods_per_year": 12,
+            "n_oos_months": 144,
+            "sharpe_per_period": -0.0856,
+            "t_observed": -1.0276,
+            "years_observed": 12.0,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.04798,
+            "years_needed_to_detect_that_effect": 144.8,
+            "mde_annual_excess_at_t_target": 0.1042,
+            "mde_reading": "on the 12.0 years actually held, the smallest annual excess this arm could have shown at t = 2 is 10.42%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0856); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_assoc_mom_1m_ew",
+          "family": "association_momentum",
+          "rows": 3166,
+          "months": 40,
+          "median_names_per_month": 32,
+          "mean_rank_ic": 0.00864,
+          "t_rank_ic": 0.276,
+          "mean_fm_beta_controlled": 0.00716455,
+          "t_fm_beta_controlled": 0.669,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 37,
+              "mean_pct": 0.4387,
+              "t": 0.407,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 3,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 1,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 40,
+            "periods_per_year": 12,
+            "n_oos_months": 40,
+            "sharpe_per_period": 0.1058,
+            "t_observed": 0.6693,
+            "years_observed": 3.33,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 357.2,
+            "years_needed_for_t2": 29.8,
+            "years_needed_for_t2_exact": 29.76597817633665,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.03693,
+            "years_needed_to_detect_that_effect": 244.5,
+            "mde_annual_excess_at_t_target": 0.25692,
+            "mde_reading": "on the 3.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 25.69%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.67 on 3.3 years; t = 2 would need 29.8 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_assoc_mom_1m_cw",
+          "family": "association_momentum",
+          "rows": 3166,
+          "months": 40,
+          "median_names_per_month": 32,
+          "mean_rank_ic": 0.00131,
+          "t_rank_ic": 0.042,
+          "mean_fm_beta_controlled": 0.00542199,
+          "t_fm_beta_controlled": 0.517,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 37,
+              "mean_pct": 0.2802,
+              "t": 0.261,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 3,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 1,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 40,
+            "periods_per_year": 12,
+            "n_oos_months": 40,
+            "sharpe_per_period": 0.0817,
+            "t_observed": 0.5166,
+            "years_observed": 3.33,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 599.5,
+            "years_needed_for_t2": 50.0,
+            "years_needed_for_t2_exact": 49.95475048633316,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.03766,
+            "years_needed_to_detect_that_effect": 235.0,
+            "mde_annual_excess_at_t_target": 0.25188,
+            "mde_reading": "on the 3.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 25.19%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.52 on 3.3 years; t = 2 would need 50.0 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_log_degree",
+          "family": "graph_position",
+          "rows": 30671,
+          "months": 155,
+          "median_names_per_month": 201,
+          "mean_rank_ic": -0.00785,
+          "t_rank_ic": -1.188,
+          "mean_fm_beta_controlled": -0.00164681,
+          "t_fm_beta_controlled": -0.643,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 93,
+              "mean_pct": -0.0749,
+              "t": -0.211,
+              "sign": -1
+            },
+            "2008-2015": {
+              "months": 62,
+              "mean_pct": -0.2994,
+              "t": -0.839,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "eras_with_a_positive_mean": 0,
+            "eras_with_a_negative_mean": 2,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 155,
+            "periods_per_year": 12,
+            "n_oos_months": 155,
+            "sharpe_per_period": -0.0517,
+            "t_observed": -0.6434,
+            "years_observed": 12.92,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.07845,
+            "years_needed_to_detect_that_effect": 54.2,
+            "mde_annual_excess_at_t_target": 0.06143,
+            "mde_reading": "on the 12.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.14%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0517); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        }
+      ],
+      "survivors_t2_and_same_sign_2of3_eras": [],
+      "inference": {
+        "family_id": "W4b-companyworld-graph-momentum",
+        "family_size": 9,
+        "family_members": [
+          "graph_assoc_mom_1m_cw",
+          "graph_assoc_mom_1m_ew",
+          "graph_comp_mom_1m_cw",
+          "graph_comp_mom_1m_ew",
+          "graph_cust_mom_1m_cw",
+          "graph_cust_mom_1m_ew",
+          "graph_log_degree",
+          "graph_supp_mom_1m_cw",
+          "graph_supp_mom_1m_ew"
+        ],
+        "family_max_t_feature": "graph_comp_mom_1m_cw",
+        "family_max_t": -1.028,
+        "p_raw_two_sided": 0.30395,
+        "p_family_max_sidak": 0.96165,
+        "deflated_sharpe": {
+          "sharpe": 0.1016,
+          "sharpe_benchmark_sr0": 0.2435,
+          "n_trials": 9,
+          "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+          "skew": 0.139,
+          "kurtosis": 2.188,
+          "n_periods": 40,
+          "z": -0.8912,
+          "dsr": 0.1864,
+          "verdict": "WITHIN_SELECTION_NOISE",
+          "reading": "after 9 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.244; this arm's is 0.102."
+        },
+        "spa": {
+          "best_arm": "graph_comp_mom_1m_ew",
+          "n_arms": 9,
+          "n_periods": 40,
+          "n_boot": 1000,
+          "block_periods": 4.0,
+          "t_spa": 0.8753,
+          "p_spa_consistent": 0.6104,
+          "p_spa_lower": 0.6643,
+          "p_spa_upper": 0.6104,
+          "arm_means": {
+            "graph_cust_mom_1m_ew": 0.003114,
+            "graph_cust_mom_1m_cw": 0.003031,
+            "graph_supp_mom_1m_ew": 0.001571,
+            "graph_supp_mom_1m_cw": 0.001491,
+            "graph_comp_mom_1m_ew": 0.004094,
+            "graph_comp_mom_1m_cw": 0.003997,
+            "graph_assoc_mom_1m_ew": 0.007165,
+            "graph_assoc_mom_1m_cw": 0.005422,
+            "graph_log_degree": -0.004162
+          },
+          "verdict": "WITHIN_SPA_NULL",
+          "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+        },
+        "pbo": {
+          "pbo": 0.9571,
+          "n_partitions": 70,
+          "n_arms": 9,
+          "n_periods": 40,
+          "median_logit": -0.8473,
+          "verdict": "SELECTION_IS_OVERFIT",
+          "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+        },
+        "mde_power": {
+          "n_periods": 40,
+          "periods_per_year": 12,
+          "n_oos_months": 40,
+          "sharpe_per_period": 0.1016,
+          "t_observed": 0.6426,
+          "years_observed": 3.33,
+          "t_target": 2.0,
+          "periods_needed_for_t_target": 387.5,
+          "years_needed_for_t2": 32.3,
+          "years_needed_for_t2_exact": 32.291663284914264,
+          "powered_for_observed_effect": false,
+          "detectable_annual_excess": 0.03,
+          "reference_sharpe_per_period": 0.06355,
+          "years_needed_to_detect_that_effect": 82.5,
+          "mde_annual_excess_at_t_target": 0.14929,
+          "mde_reading": "on the 3.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 14.93%/yr",
+          "powered": false,
+          "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+          "reading": "t = 0.64 on 3.3 years; t = 2 would need 32.3 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+        },
+        "note": "the arm's 'returns' are its monthly Fama-MacBeth betas, which is the object whose t is being claimed. It is NOT a book: no position was taken, no cost was paid, and W5b is the standing demonstration that an FM t of 4.15 can lose money gross."
+      }
+    },
+    "market_graph_1_only": {
+      "verdict": "CANNOT DETERMINE (underpowered)",
+      "scope": "12 of 26 panel years (2014-05-01..2025-01-01), 386 graph names of 6,546 floored-panel names",
+      "graph_receipt": {
+        "source": "C:\\Users\\mrthn\\Aegis module\\runs\\MARKET-GRAPH-1\\edge_instances.parquet",
+        "source_rows": 10923,
+        "max_age_days": 730,
+        "relations": {
+          "oriented": 4177,
+          "symmetric": 6553,
+          "unoriented_dropped": 187,
+          "unmapped": 6,
+          "directed_rows": 6540,
+          "by_relation": {
+            "cust": 1289,
+            "supp": 1289,
+            "comp": 3338,
+            "assoc": 624
+          },
+          "permnos": 386
+        },
+        "coverage": {
+          "filing_date_first": "2014-04-24",
+          "filing_date_last": "2024-06-26",
+          "source_as_of_date_first": "2015-03-31",
+          "source_as_of_date_last": "2024-06-28",
+          "as_of_minus_filing_days": {
+            "min": 1,
+            "median": 154.0,
+            "max": 428
+          },
+          "feature_date_first": "2014-05-01",
+          "feature_date_last": "2025-01-01",
+          "feature_months": 129,
+          "feature_years": 12,
+          "long_panel_years": 26,
+          "edges_by_filing_year": {
+            "2014": 222,
+            "2015": 1135,
+            "2016": 1097,
+            "2017": 1177,
+            "2018": 1141,
+            "2019": 1211,
+            "2020": 1319,
+            "2021": 1237,
+            "2022": 1076,
+            "2023": 926,
+            "2024": 382
+          },
+          "rows_by_year": [
+            {
+              "year": 2014,
+              "rows": 306,
+              "permnos": 74
+            },
+            {
+              "year": 2015,
+              "rows": 2021,
+              "permnos": 191
+            },
+            {
+              "year": 2016,
+              "rows": 2663,
+              "permnos": 232
+            },
+            {
+              "year": 2017,
+              "rows": 2754,
+              "permnos": 261
+            },
+            {
+              "year": 2018,
+              "rows": 2745,
+              "permnos": 250
+            },
+            {
+              "year": 2019,
+              "rows": 2692,
+              "permnos": 252
+            },
+            {
+              "year": 2020,
+              "rows": 2812,
+              "permnos": 266
+            },
+            {
+              "year": 2021,
+              "rows": 2976,
+              "permnos": 265
+            },
+            {
+              "year": 2022,
+              "rows": 2755,
+              "permnos": 266
+            },
+            {
+              "year": 2023,
+              "rows": 2462,
+              "permnos": 242
+            },
+            {
+              "year": 2024,
+              "rows": 2300,
+              "permnos": 218
+            },
+            {
+              "year": 2025,
+              "rows": 188,
+              "permnos": 188
+            }
+          ]
+        },
+        "permnos": 386
+      },
+      "join": {
+        "rows_in": 530447,
+        "rows_out": 530447,
+        "match_rate": {
+          "graph_cust_mom_1m_ew": 0.0203,
+          "graph_cust_mom_1m_cw": 0.0203,
+          "graph_supp_mom_1m_ew": 0.0192,
+          "graph_supp_mom_1m_cw": 0.0192,
+          "graph_comp_mom_1m_ew": 0.0363,
+          "graph_comp_mom_1m_cw": 0.0363,
+          "graph_assoc_mom_1m_ew": 0.012,
+          "graph_assoc_mom_1m_cw": 0.012,
+          "graph_log_degree": 0.0489,
+          "graph_n_cust": 0.0203,
+          "graph_n_supp": 0.0192,
+          "graph_n_comp": 0.0363,
+          "graph_n_assoc": 0.012
+        },
+        "tolerance_days": 40,
+        "direction": "backward (a forward join would use a month that had not finished)",
+        "panel_share_inside_the_graph_date_window": 0.4613,
+        "panel_share_on_a_permno_the_graph_covers": 0.1761,
+        "ceiling": 0.1761,
+        "why_the_ceiling": "the product of a ONE-DECADE date window and a 386-name universe inside an 8,981-name panel; the match rate is not a join defect and must not be repaired by widening the tolerance",
+        "verdict": "THIN -- best feature column matches 4.89% of panel rows"
+      },
+      "target": "excess_vw_1m",
+      "controls": [
+        "mom_12_1",
+        "log_market_cap",
+        "vol_60d"
+      ],
+      "features": [
+        {
+          "feature": "graph_cust_mom_1m_ew",
+          "family": "customer_momentum",
+          "rows": 10676,
+          "months": 117,
+          "median_names_per_month": 93,
+          "mean_rank_ic": 0.01048,
+          "t_rank_ic": 0.79,
+          "mean_fm_beta_controlled": 0.00435956,
+          "t_fm_beta_controlled": 1.447,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 10,
+              "mean_pct": -0.9598,
+              "t": -0.689,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.5664,
+              "t": 1.874,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 0
+          },
+          "power": {
+            "n_periods": 117,
+            "periods_per_year": 12,
+            "n_oos_months": 117,
+            "sharpe_per_period": 0.1338,
+            "t_observed": 1.4471,
+            "years_observed": 9.75,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 223.5,
+            "years_needed_for_t2": 18.6,
+            "years_needed_for_t2_exact": 18.624570880293017,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.07672,
+            "years_needed_to_detect_that_effect": 56.6,
+            "mde_annual_excess_at_t_target": 0.0723,
+            "mde_reading": "on the 9.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.23%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 1.45 on 9.8 years; t = 2 would need 18.6 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_cust_mom_1m_cw",
+          "family": "customer_momentum",
+          "rows": 10676,
+          "months": 117,
+          "median_names_per_month": 93,
+          "mean_rank_ic": 0.00939,
+          "t_rank_ic": 0.705,
+          "mean_fm_beta_controlled": 0.00411592,
+          "t_fm_beta_controlled": 1.365,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 10,
+              "mean_pct": -0.9814,
+              "t": -0.709,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.5418,
+              "t": 1.789,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 0
+          },
+          "power": {
+            "n_periods": 117,
+            "periods_per_year": 12,
+            "n_oos_months": 117,
+            "sharpe_per_period": 0.1262,
+            "t_observed": 1.3649,
+            "years_observed": 9.75,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 251.2,
+            "years_needed_for_t2": 20.9,
+            "years_needed_for_t2_exact": 20.936000175573167,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.07664,
+            "years_needed_to_detect_that_effect": 56.7,
+            "mde_annual_excess_at_t_target": 0.07238,
+            "mde_reading": "on the 9.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.24%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 1.36 on 9.8 years; t = 2 would need 20.9 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_supp_mom_1m_ew",
+          "family": "supplier_momentum",
+          "rows": 10096,
+          "months": 117,
+          "median_names_per_month": 89,
+          "mean_rank_ic": -0.00374,
+          "t_rank_ic": -0.312,
+          "mean_fm_beta_controlled": 0.00220226,
+          "t_fm_beta_controlled": 0.749,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 10,
+              "mean_pct": 0.6511,
+              "t": 0.89,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.18,
+              "t": 0.572,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 117,
+            "periods_per_year": 12,
+            "n_oos_months": 117,
+            "sharpe_per_period": 0.0692,
+            "t_observed": 0.749,
+            "years_observed": 9.75,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 834.3,
+            "years_needed_for_t2": 69.5,
+            "years_needed_for_t2_exact": 69.5218235064183,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.07861,
+            "years_needed_to_detect_that_effect": 53.9,
+            "mde_annual_excess_at_t_target": 0.07057,
+            "mde_reading": "on the 9.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.06%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.75 on 9.8 years; t = 2 would need 69.5 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_supp_mom_1m_cw",
+          "family": "supplier_momentum",
+          "rows": 10096,
+          "months": 117,
+          "median_names_per_month": 89,
+          "mean_rank_ic": -0.00377,
+          "t_rank_ic": -0.315,
+          "mean_fm_beta_controlled": 0.00222867,
+          "t_fm_beta_controlled": 0.755,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 10,
+              "mean_pct": 0.6279,
+              "t": 0.81,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.185,
+              "t": 0.587,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 117,
+            "periods_per_year": 12,
+            "n_oos_months": 117,
+            "sharpe_per_period": 0.0698,
+            "t_observed": 0.7546,
+            "years_observed": 9.75,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 822.0,
+            "years_needed_for_t2": 68.5,
+            "years_needed_for_t2_exact": 68.49898564430735,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.07825,
+            "years_needed_to_detect_that_effect": 54.4,
+            "mde_annual_excess_at_t_target": 0.07089,
+            "mde_reading": "on the 9.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 7.09%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.75 on 9.8 years; t = 2 would need 68.5 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_comp_mom_1m_ew",
+          "family": "competitor_momentum",
+          "rows": 19048,
+          "months": 123,
+          "median_names_per_month": 163,
+          "mean_rank_ic": 0.00988,
+          "t_rank_ic": 0.781,
+          "mean_fm_beta_controlled": 0.00056785,
+          "t_fm_beta_controlled": 0.206,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 16,
+              "mean_pct": 0.0522,
+              "t": 0.063,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.0575,
+              "t": 0.196,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 123,
+            "periods_per_year": 12,
+            "n_oos_months": 123,
+            "sharpe_per_period": 0.0186,
+            "t_observed": 0.206,
+            "years_observed": 10.25,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 11593.0,
+            "years_needed_for_t2": 966.1,
+            "years_needed_for_t2_exact": 966.0840610436645,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.08178,
+            "years_needed_to_detect_that_effect": 49.8,
+            "mde_annual_excess_at_t_target": 0.06615,
+            "mde_reading": "on the 10.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.62%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.21 on 10.2 years; t = 2 would need 966.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_comp_mom_1m_cw",
+          "family": "competitor_momentum",
+          "rows": 19048,
+          "months": 123,
+          "median_names_per_month": 163,
+          "mean_rank_ic": 0.01046,
+          "t_rank_ic": 0.823,
+          "mean_fm_beta_controlled": 0.00060158,
+          "t_fm_beta_controlled": 0.217,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 16,
+              "mean_pct": 0.0425,
+              "t": 0.051,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.0628,
+              "t": 0.212,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 123,
+            "periods_per_year": 12,
+            "n_oos_months": 123,
+            "sharpe_per_period": 0.0195,
+            "t_observed": 0.2165,
+            "years_observed": 10.25,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 10495.7,
+            "years_needed_for_t2": 874.6,
+            "years_needed_for_t2_exact": 874.6430566038272,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.08113,
+            "years_needed_to_detect_that_effect": 50.6,
+            "mde_annual_excess_at_t_target": 0.06668,
+            "mde_reading": "on the 10.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.67%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.22 on 10.2 years; t = 2 would need 874.6 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_assoc_mom_1m_ew",
+          "family": "association_momentum",
+          "rows": 6300,
+          "months": 105,
+          "median_names_per_month": 57,
+          "mean_rank_ic": 0.00459,
+          "t_rank_ic": 0.279,
+          "mean_fm_beta_controlled": -0.00201275,
+          "t_fm_beta_controlled": -0.505,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2016-2024": {
+              "months": 105,
+              "mean_pct": -0.2013,
+              "t": -0.505,
+              "sign": -1
+            },
+            "eras_with_a_positive_mean": 0,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 1,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 105,
+            "periods_per_year": 12,
+            "n_oos_months": 105,
+            "sharpe_per_period": -0.0493,
+            "t_observed": -0.5052,
+            "years_observed": 8.75,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.06123,
+            "years_needed_to_detect_that_effect": 88.9,
+            "mde_annual_excess_at_t_target": 0.09562,
+            "mde_reading": "on the 8.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.56%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0493); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_assoc_mom_1m_cw",
+          "family": "association_momentum",
+          "rows": 6300,
+          "months": 105,
+          "median_names_per_month": 57,
+          "mean_rank_ic": 0.00518,
+          "t_rank_ic": 0.315,
+          "mean_fm_beta_controlled": -0.00199718,
+          "t_fm_beta_controlled": -0.507,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2016-2024": {
+              "months": 105,
+              "mean_pct": -0.1997,
+              "t": -0.507,
+              "sign": -1
+            },
+            "eras_with_a_positive_mean": 0,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 1,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 105,
+            "periods_per_year": 12,
+            "n_oos_months": 105,
+            "sharpe_per_period": -0.0495,
+            "t_observed": -0.507,
+            "years_observed": 8.75,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.06194,
+            "years_needed_to_detect_that_effect": 86.9,
+            "mde_annual_excess_at_t_target": 0.09454,
+            "mde_reading": "on the 8.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.45%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0495); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_log_degree",
+          "family": "graph_position",
+          "rows": 25620,
+          "months": 124,
+          "median_names_per_month": 219,
+          "mean_rank_ic": 0.0134,
+          "t_rank_ic": 1.479,
+          "mean_fm_beta_controlled": 0.00350639,
+          "t_fm_beta_controlled": 1.484,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 0,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2008-2015": {
+              "months": 17,
+              "mean_pct": 0.917,
+              "t": 1.491,
+              "sign": 1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.2606,
+              "t": 1.019,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 0,
+            "eras_measured": 2,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 124,
+            "periods_per_year": 12,
+            "n_oos_months": 124,
+            "sharpe_per_period": 0.1333,
+            "t_observed": 1.4843,
+            "years_observed": 10.33,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 225.1,
+            "years_needed_for_t2": 18.8,
+            "years_needed_for_t2_exact": 18.761393522133044,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.09504,
+            "years_needed_to_detect_that_effect": 36.9,
+            "mde_annual_excess_at_t_target": 0.0567,
+            "mde_reading": "on the 10.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.67%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 1.48 on 10.3 years; t = 2 would need 18.8 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        }
+      ],
+      "survivors_t2_and_same_sign_2of3_eras": [],
+      "inference": {
+        "family_id": "W4b-companyworld-graph-momentum",
+        "family_size": 9,
+        "family_members": [
+          "graph_assoc_mom_1m_cw",
+          "graph_assoc_mom_1m_ew",
+          "graph_comp_mom_1m_cw",
+          "graph_comp_mom_1m_ew",
+          "graph_cust_mom_1m_cw",
+          "graph_cust_mom_1m_ew",
+          "graph_log_degree",
+          "graph_supp_mom_1m_cw",
+          "graph_supp_mom_1m_ew"
+        ],
+        "family_max_t_feature": "graph_log_degree",
+        "family_max_t": 1.484,
+        "p_raw_two_sided": 0.137809,
+        "p_family_max_sidak": 0.736712,
+        "deflated_sharpe": {
+          "sharpe": 0.119,
+          "sharpe_benchmark_sr0": 0.1491,
+          "n_trials": 9,
+          "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+          "skew": 0.531,
+          "kurtosis": 3.923,
+          "n_periods": 105,
+          "z": -0.3158,
+          "dsr": 0.3761,
+          "verdict": "WITHIN_SELECTION_NOISE",
+          "reading": "after 9 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.149; this arm's is 0.119."
+        },
+        "spa": {
+          "best_arm": "graph_cust_mom_1m_ew",
+          "n_arms": 9,
+          "n_periods": 105,
+          "n_boot": 1000,
+          "block_periods": 4.0,
+          "t_spa": 1.9405,
+          "p_spa_consistent": 0.1069,
+          "p_spa_lower": 0.1069,
+          "p_spa_upper": 0.0909,
+          "arm_means": {
+            "graph_cust_mom_1m_ew": 0.006004,
+            "graph_cust_mom_1m_cw": 0.00575,
+            "graph_supp_mom_1m_ew": 0.001363,
+            "graph_supp_mom_1m_cw": 0.001441,
+            "graph_comp_mom_1m_ew": 0.000214,
+            "graph_comp_mom_1m_cw": 0.000271,
+            "graph_assoc_mom_1m_ew": -0.002013,
+            "graph_assoc_mom_1m_cw": -0.001997,
+            "graph_log_degree": 0.003142
+          },
+          "verdict": "WITHIN_SPA_NULL",
+          "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+        },
+        "pbo": {
+          "pbo": 0.3429,
+          "n_partitions": 70,
+          "n_arms": 9,
+          "n_periods": 105,
+          "median_logit": 1.3863,
+          "verdict": "SELECTION_IS_FRAGILE",
+          "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+        },
+        "mde_power": {
+          "n_periods": 105,
+          "periods_per_year": 12,
+          "n_oos_months": 105,
+          "sharpe_per_period": 0.119,
+          "t_observed": 1.2192,
+          "years_observed": 8.75,
+          "t_target": 2.0,
+          "periods_needed_for_t_target": 282.5,
+          "years_needed_for_t2": 23.5,
+          "years_needed_for_t2_exact": 23.544457660814746,
+          "powered_for_observed_effect": false,
+          "detectable_annual_excess": 0.03,
+          "reference_sharpe_per_period": 0.09469,
+          "years_needed_to_detect_that_effect": 37.2,
+          "mde_annual_excess_at_t_target": 0.06184,
+          "mde_reading": "on the 8.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.18%/yr",
+          "powered": false,
+          "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+          "reading": "t = 1.22 on 8.8 years; t = 2 would need 23.5 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+        },
+        "note": "the arm's 'returns' are its monthly Fama-MacBeth betas, which is the object whose t is being claimed. It is NOT a book: no position was taken, no cost was paid, and W5b is the standing demonstration that an FM t of 4.15 can lose money gross."
+      }
+    },
+    "pooled": {
+      "verdict": "CANNOT DETERMINE (underpowered)",
+      "scope": "27 of 26 panel years (1999-10-01..2025-01-01), 1119 graph names of 6,546 floored-panel names",
+      "graph_receipt": {
+        "source": "C:\\Users\\mrthn\\Aegis module\\runs\\MARKET-GRAPH-1\\edge_instances.parquet",
+        "source_rows": 12943,
+        "max_age_days": 730,
+        "relations": {
+          "oriented": 5293,
+          "symmetric": 7433,
+          "unoriented_dropped": 209,
+          "unmapped": 8,
+          "directed_rows": 10530,
+          "by_relation": {
+            "cust": 2405,
+            "supp": 2405,
+            "comp": 4860,
+            "assoc": 860
+          },
+          "permnos": 1119
+        },
+        "coverage": {
+          "filing_date_first": "1999-09-01",
+          "filing_date_last": "2024-06-26",
+          "source_as_of_date_first": "1999-09-01",
+          "source_as_of_date_last": "2024-06-28",
+          "as_of_minus_filing_days": {
+            "min": 0,
+            "median": 133.0,
+            "max": 428
+          },
+          "feature_date_first": "1999-10-01",
+          "feature_date_last": "2025-01-01",
+          "feature_months": 291,
+          "feature_years": 27,
+          "long_panel_years": 26,
+          "edges_by_filing_year": {
+            "1999": 13,
+            "2000": 174,
+            "2001": 144,
+            "2002": 196,
+            "2003": 238,
+            "2004": 185,
+            "2005": 185,
+            "2006": 202,
+            "2007": 205,
+            "2008": 148,
+            "2009": 134,
+            "2010": 146,
+            "2011": 50,
+            "2014": 222,
+            "2015": 1135,
+            "2016": 1097,
+            "2017": 1177,
+            "2018": 1141,
+            "2019": 1211,
+            "2020": 1319,
+            "2021": 1237,
+            "2022": 1076,
+            "2023": 926,
+            "2024": 382
+          },
+          "rows_by_year": [
+            {
+              "year": 1999,
+              "rows": 27,
+              "permnos": 9
+            },
+            {
+              "year": 2000,
+              "rows": 1175,
+              "permnos": 160
+            },
+            {
+              "year": 2001,
+              "rows": 2733,
+              "permnos": 267
+            },
+            {
+              "year": 2002,
+              "rows": 3393,
+              "permnos": 365
+            },
+            {
+              "year": 2003,
+              "rows": 3785,
+              "permnos": 395
+            },
+            {
+              "year": 2004,
+              "rows": 3896,
+              "permnos": 412
+            },
+            {
+              "year": 2005,
+              "rows": 4052,
+              "permnos": 441
+            },
+            {
+              "year": 2006,
+              "rows": 4070,
+              "permnos": 450
+            },
+            {
+              "year": 2007,
+              "rows": 4027,
+              "permnos": 449
+            },
+            {
+              "year": 2008,
+              "rows": 3656,
+              "permnos": 394
+            },
+            {
+              "year": 2009,
+              "rows": 3046,
+              "permnos": 338
+            },
+            {
+              "year": 2010,
+              "rows": 3067,
+              "permnos": 338
+            },
+            {
+              "year": 2011,
+              "rows": 2787,
+              "permnos": 293
+            },
+            {
+              "year": 2012,
+              "rows": 1241,
+              "permnos": 199
+            },
+            {
+              "year": 2013,
+              "rows": 132,
+              "permnos": 63
+            },
+            {
+              "year": 2014,
+              "rows": 306,
+              "permnos": 74
+            },
+            {
+              "year": 2015,
+              "rows": 2021,
+              "permnos": 191
+            },
+            {
+              "year": 2016,
+              "rows": 2663,
+              "permnos": 232
+            },
+            {
+              "year": 2017,
+              "rows": 2754,
+              "permnos": 261
+            },
+            {
+              "year": 2018,
+              "rows": 2745,
+              "permnos": 250
+            },
+            {
+              "year": 2019,
+              "rows": 2692,
+              "permnos": 252
+            },
+            {
+              "year": 2020,
+              "rows": 2812,
+              "permnos": 266
+            },
+            {
+              "year": 2021,
+              "rows": 2976,
+              "permnos": 265
+            },
+            {
+              "year": 2022,
+              "rows": 2755,
+              "permnos": 266
+            },
+            {
+              "year": 2023,
+              "rows": 2462,
+              "permnos": 242
+            },
+            {
+              "year": 2024,
+              "rows": 2300,
+              "permnos": 218
+            },
+            {
+              "year": 2025,
+              "rows": 188,
+              "permnos": 188
+            }
+          ]
+        },
+        "permnos": 1119
+      },
+      "join": {
+        "rows_in": 530447,
+        "rows_out": 530447,
+        "match_rate": {
+          "graph_cust_mom_1m_ew": 0.0378,
+          "graph_cust_mom_1m_cw": 0.0378,
+          "graph_supp_mom_1m_ew": 0.0452,
+          "graph_supp_mom_1m_cw": 0.0452,
+          "graph_comp_mom_1m_ew": 0.066,
+          "graph_comp_mom_1m_cw": 0.066,
+          "graph_assoc_mom_1m_ew": 0.018,
+          "graph_assoc_mom_1m_cw": 0.018,
+          "graph_log_degree": 0.1068,
+          "graph_n_cust": 0.0378,
+          "graph_n_supp": 0.0452,
+          "graph_n_comp": 0.066,
+          "graph_n_assoc": 0.018
+        },
+        "tolerance_days": 40,
+        "direction": "backward (a forward join would use a month that had not finished)",
+        "panel_share_inside_the_graph_date_window": 0.9889,
+        "panel_share_on_a_permno_the_graph_covers": 0.3637,
+        "ceiling": 0.3637,
+        "why_the_ceiling": "the product of a ONE-DECADE date window and a 386-name universe inside an 8,981-name panel; the match rate is not a join defect and must not be repaired by widening the tolerance",
+        "verdict": "THIN -- best feature column matches 10.68% of panel rows"
+      },
+      "target": "excess_vw_1m",
+      "controls": [
+        "mom_12_1",
+        "log_market_cap",
+        "vol_60d"
+      ],
+      "features": [
+        {
+          "feature": "graph_cust_mom_1m_ew",
+          "family": "customer_momentum",
+          "rows": 19913,
+          "months": 254,
+          "median_names_per_month": 76,
+          "mean_rank_ic": 0.01251,
+          "t_rank_ic": 1.284,
+          "mean_fm_beta_controlled": 0.00271212,
+          "t_fm_beta_controlled": 0.989,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 84,
+              "mean_pct": 0.1515,
+              "t": 0.256,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 63,
+              "mean_pct": -0.0705,
+              "t": -0.12,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.5664,
+              "t": 1.874,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 3,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 254,
+            "periods_per_year": 12,
+            "n_oos_months": 254,
+            "sharpe_per_period": 0.062,
+            "t_observed": 0.9886,
+            "years_observed": 21.17,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 1039.5,
+            "years_needed_for_t2": 86.6,
+            "years_needed_for_t2_exact": 86.62342201069596,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05718,
+            "years_needed_to_detect_that_effect": 101.9,
+            "mde_annual_excess_at_t_target": 0.06584,
+            "mde_reading": "on the 21.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.58%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.99 on 21.2 years; t = 2 would need 86.6 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_cust_mom_1m_cw",
+          "family": "customer_momentum",
+          "rows": 19913,
+          "months": 254,
+          "median_names_per_month": 76,
+          "mean_rank_ic": 0.0125,
+          "t_rank_ic": 1.277,
+          "mean_fm_beta_controlled": 0.0027054,
+          "t_fm_beta_controlled": 0.982,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 84,
+              "mean_pct": 0.1823,
+              "t": 0.31,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 63,
+              "mean_pct": -0.0724,
+              "t": -0.12,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.5418,
+              "t": 1.789,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 3,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 254,
+            "periods_per_year": 12,
+            "n_oos_months": 254,
+            "sharpe_per_period": 0.0616,
+            "t_observed": 0.9817,
+            "years_observed": 21.17,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 1054.3,
+            "years_needed_for_t2": 87.9,
+            "years_needed_for_t2_exact": 87.85742743597892,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05692,
+            "years_needed_to_detect_that_effect": 102.9,
+            "mde_annual_excess_at_t_target": 0.06614,
+            "mde_reading": "on the 21.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.61%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.98 on 21.2 years; t = 2 would need 87.9 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_supp_mom_1m_ew",
+          "family": "supplier_momentum",
+          "rows": 23832,
+          "months": 268,
+          "median_names_per_month": 89,
+          "mean_rank_ic": -0.00331,
+          "t_rank_ic": -0.403,
+          "mean_fm_beta_controlled": 0.00083303,
+          "t_fm_beta_controlled": 0.353,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 89,
+              "mean_pct": 0.3794,
+              "t": 0.772,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 72,
+              "mean_pct": -0.4264,
+              "t": -0.998,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.18,
+              "t": 0.572,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 3,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 268,
+            "periods_per_year": 12,
+            "n_oos_months": 268,
+            "sharpe_per_period": 0.0216,
+            "t_observed": 0.3534,
+            "years_observed": 22.33,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 8584.4,
+            "years_needed_for_t2": 715.4,
+            "years_needed_for_t2_exact": 715.3707524112801,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.06478,
+            "years_needed_to_detect_that_effect": 79.4,
+            "mde_annual_excess_at_t_target": 0.05658,
+            "mde_reading": "on the 22.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.66%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.35 on 22.3 years; t = 2 would need 715.4 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_supp_mom_1m_cw",
+          "family": "supplier_momentum",
+          "rows": 23832,
+          "months": 268,
+          "median_names_per_month": 89,
+          "mean_rank_ic": -0.00319,
+          "t_rank_ic": -0.389,
+          "mean_fm_beta_controlled": 0.00097316,
+          "t_fm_beta_controlled": 0.412,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 89,
+              "mean_pct": 0.4261,
+              "t": 0.865,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 72,
+              "mean_pct": -0.4394,
+              "t": -1.025,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.185,
+              "t": 0.587,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 2,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 3,
+            "holds_in_2_of_3": true,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": 1
+          },
+          "power": {
+            "n_periods": 268,
+            "periods_per_year": 12,
+            "n_oos_months": 268,
+            "sharpe_per_period": 0.0251,
+            "t_observed": 0.4117,
+            "years_observed": 22.33,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 6325.8,
+            "years_needed_for_t2": 527.1,
+            "years_needed_for_t2_exact": 527.1473337338356,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.0646,
+            "years_needed_to_detect_that_effect": 79.9,
+            "mde_annual_excess_at_t_target": 0.05674,
+            "mde_reading": "on the 22.3 years actually held, the smallest annual excess this arm could have shown at t = 2 is 5.67%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.41 on 22.3 years; t = 2 would need 527.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_comp_mom_1m_ew",
+          "family": "competitor_momentum",
+          "rows": 34746,
+          "months": 267,
+          "median_names_per_month": 138,
+          "mean_rank_ic": 0.0006,
+          "t_rank_ic": 0.068,
+          "mean_fm_beta_controlled": -0.00208211,
+          "t_fm_beta_controlled": -0.784,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 93,
+              "mean_pct": -0.634,
+              "t": -1.057,
+              "sign": -1
+            },
+            "2008-2015": {
+              "months": 67,
+              "mean_pct": -0.0415,
+              "t": -0.09,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.0575,
+              "t": 0.196,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 2,
+            "eras_measured": 3,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 267,
+            "periods_per_year": 12,
+            "n_oos_months": 267,
+            "sharpe_per_period": -0.048,
+            "t_observed": -0.7841,
+            "years_observed": 22.25,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05762,
+            "years_needed_to_detect_that_effect": 100.4,
+            "mde_annual_excess_at_t_target": 0.06373,
+            "mde_reading": "on the 22.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.37%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0480); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_comp_mom_1m_cw",
+          "family": "competitor_momentum",
+          "rows": 34746,
+          "months": 267,
+          "median_names_per_month": 138,
+          "mean_rank_ic": 0.00081,
+          "t_rank_ic": 0.09,
+          "mean_fm_beta_controlled": -0.00212914,
+          "t_fm_beta_controlled": -0.798,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 93,
+              "mean_pct": -0.6513,
+              "t": -1.082,
+              "sign": -1
+            },
+            "2008-2015": {
+              "months": 67,
+              "mean_pct": -0.0448,
+              "t": -0.097,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.0628,
+              "t": 0.212,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 2,
+            "eras_measured": 3,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 267,
+            "periods_per_year": 12,
+            "n_oos_months": 267,
+            "sharpe_per_period": -0.0488,
+            "t_observed": -0.7979,
+            "years_observed": 22.25,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": null,
+            "years_needed_for_t2": null,
+            "years_needed_for_t2_exact": null,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05733,
+            "years_needed_to_detect_that_effect": 101.4,
+            "mde_annual_excess_at_t_target": 0.06404,
+            "mde_reading": "on the 22.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.40%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "the arm's mean is not positive (SR -0.0488); no amount of tape makes a negative mean significant in the intended direction"
+          }
+        },
+        {
+          "feature": "graph_assoc_mom_1m_ew",
+          "family": "association_momentum",
+          "rows": 9466,
+          "months": 145,
+          "median_names_per_month": 51,
+          "mean_rank_ic": 0.00571,
+          "t_rank_ic": 0.389,
+          "mean_fm_beta_controlled": 0.00051892,
+          "t_fm_beta_controlled": 0.126,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 37,
+              "mean_pct": 0.4387,
+              "t": 0.407,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 3,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2016-2024": {
+              "months": 105,
+              "mean_pct": -0.2013,
+              "t": -0.505,
+              "sign": -1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 0
+          },
+          "power": {
+            "n_periods": 145,
+            "periods_per_year": 12,
+            "n_oos_months": 145,
+            "sharpe_per_period": 0.0105,
+            "t_observed": 0.1259,
+            "years_observed": 12.08,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 36575.1,
+            "years_needed_for_t2": 3047.9,
+            "years_needed_for_t2_exact": 3047.922222515456,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05038,
+            "years_needed_to_detect_that_effect": 131.3,
+            "mde_annual_excess_at_t_target": 0.0989,
+            "mde_reading": "on the 12.1 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.89%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.13 on 12.1 years; t = 2 would need 3047.9 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_assoc_mom_1m_cw",
+          "family": "association_momentum",
+          "rows": 9466,
+          "months": 145,
+          "median_names_per_month": 51,
+          "mean_rank_ic": 0.00412,
+          "t_rank_ic": 0.281,
+          "mean_fm_beta_controlled": 4.949e-05,
+          "t_fm_beta_controlled": 0.012,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 37,
+              "mean_pct": 0.2802,
+              "t": 0.261,
+              "sign": 1
+            },
+            "2008-2015": {
+              "months": 3,
+              "mean_pct": null,
+              "sign": null,
+              "note": "fewer than 6 months"
+            },
+            "2016-2024": {
+              "months": 105,
+              "mean_pct": -0.1997,
+              "t": -0.507,
+              "sign": -1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 1,
+            "eras_measured": 2,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": false,
+            "dominant_sign": 0
+          },
+          "power": {
+            "n_periods": 145,
+            "periods_per_year": 12,
+            "n_oos_months": 145,
+            "sharpe_per_period": 0.001,
+            "t_observed": 0.0122,
+            "years_observed": 12.08,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 3888746.0,
+            "years_needed_for_t2": 324062.2,
+            "years_needed_for_t2_exact": 324062.16739639244,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.05123,
+            "years_needed_to_detect_that_effect": 127.0,
+            "mde_annual_excess_at_t_target": 0.09725,
+            "mde_reading": "on the 12.1 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.73%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.01 on 12.1 years; t = 2 would need 324062.2 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        },
+        {
+          "feature": "graph_log_degree",
+          "family": "graph_position",
+          "rows": 56291,
+          "months": 279,
+          "median_names_per_month": 215,
+          "mean_rank_ic": 0.0016,
+          "t_rank_ic": 0.292,
+          "mean_fm_beta_controlled": 0.0006435,
+          "t_fm_beta_controlled": 0.363,
+          "controls": [
+            "mom_12_1",
+            "log_market_cap",
+            "vol_60d"
+          ],
+          "era_sign_table": {
+            "1999-2007": {
+              "months": 93,
+              "mean_pct": -0.0749,
+              "t": -0.211,
+              "sign": -1
+            },
+            "2008-2015": {
+              "months": 79,
+              "mean_pct": -0.0376,
+              "t": -0.12,
+              "sign": -1
+            },
+            "2016-2024": {
+              "months": 107,
+              "mean_pct": 0.2606,
+              "t": 1.019,
+              "sign": 1
+            },
+            "eras_with_a_positive_mean": 1,
+            "eras_with_a_negative_mean": 2,
+            "eras_measured": 3,
+            "holds_in_2_of_3": false,
+            "same_sign_in_2_of_3": true,
+            "dominant_sign": -1
+          },
+          "power": {
+            "n_periods": 279,
+            "periods_per_year": 12,
+            "n_oos_months": 279,
+            "sharpe_per_period": 0.0218,
+            "t_observed": 0.3633,
+            "years_observed": 23.25,
+            "t_target": 2.0,
+            "periods_needed_for_t_target": 8454.8,
+            "years_needed_for_t2": 704.6,
+            "years_needed_for_t2_exact": 704.5672249960721,
+            "powered_for_observed_effect": false,
+            "detectable_annual_excess": 0.03,
+            "reference_sharpe_per_period": 0.0845,
+            "years_needed_to_detect_that_effect": 46.7,
+            "mde_annual_excess_at_t_target": 0.04251,
+            "mde_reading": "on the 23.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 4.25%/yr",
+            "powered": false,
+            "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+            "reading": "t = 0.36 on 23.2 years; t = 2 would need 704.6 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+          }
+        }
+      ],
+      "survivors_t2_and_same_sign_2of3_eras": [],
+      "inference": {
+        "family_id": "W4b-companyworld-graph-momentum",
+        "family_size": 9,
+        "family_members": [
+          "graph_assoc_mom_1m_cw",
+          "graph_assoc_mom_1m_ew",
+          "graph_comp_mom_1m_cw",
+          "graph_comp_mom_1m_ew",
+          "graph_cust_mom_1m_cw",
+          "graph_cust_mom_1m_ew",
+          "graph_log_degree",
+          "graph_supp_mom_1m_cw",
+          "graph_supp_mom_1m_ew"
+        ],
+        "family_max_t_feature": "graph_cust_mom_1m_ew",
+        "family_max_t": 0.989,
+        "p_raw_two_sided": 0.322663,
+        "p_family_max_sidak": 0.969992,
+        "deflated_sharpe": {
+          "sharpe": 0.1516,
+          "sharpe_benchmark_sr0": 0.1267,
+          "n_trials": 9,
+          "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+          "skew": -0.115,
+          "kurtosis": 3.739,
+          "n_periods": 145,
+          "z": 0.2936,
+          "dsr": 0.6155,
+          "verdict": "WITHIN_SELECTION_NOISE",
+          "reading": "after 9 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.127; this arm's is 0.152."
+        },
+        "spa": {
+          "best_arm": "graph_cust_mom_1m_ew",
+          "n_arms": 9,
+          "n_periods": 145,
+          "n_boot": 1000,
+          "block_periods": 4.0,
+          "t_spa": 1.7745,
+          "p_spa_consistent": 0.1738,
+          "p_spa_lower": 0.1738,
+          "p_spa_upper": 0.1738,
+          "arm_means": {
+            "graph_cust_mom_1m_ew": 0.005032,
+            "graph_cust_mom_1m_cw": 0.004789,
+            "graph_supp_mom_1m_ew": 0.002576,
+            "graph_supp_mom_1m_cw": 0.00255,
+            "graph_comp_mom_1m_ew": 0.001543,
+            "graph_comp_mom_1m_cw": 0.001536,
+            "graph_assoc_mom_1m_ew": 0.000519,
+            "graph_assoc_mom_1m_cw": 4.9e-05,
+            "graph_log_degree": 0.002225
+          },
+          "verdict": "WITHIN_SPA_NULL",
+          "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+        },
+        "pbo": {
+          "pbo": 0.5143,
+          "n_partitions": 70,
+          "n_arms": 9,
+          "n_periods": 145,
+          "median_logit": 0.0,
+          "verdict": "SELECTION_IS_OVERFIT",
+          "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+        },
+        "mde_power": {
+          "n_periods": 145,
+          "periods_per_year": 12,
+          "n_oos_months": 145,
+          "sharpe_per_period": 0.1516,
+          "t_observed": 1.8255,
+          "years_observed": 12.08,
+          "t_target": 2.0,
+          "periods_needed_for_t_target": 174.0,
+          "years_needed_for_t2": 14.5,
+          "years_needed_for_t2_exact": 14.503955530313057,
+          "powered_for_observed_effect": false,
+          "detectable_annual_excess": 0.03,
+          "reference_sharpe_per_period": 0.07531,
+          "years_needed_to_detect_that_effect": 58.8,
+          "mde_annual_excess_at_t_target": 0.06616,
+          "mde_reading": "on the 12.1 years actually held, the smallest annual excess this arm could have shown at t = 2 is 6.62%/yr",
+          "powered": false,
+          "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+          "reading": "t = 1.83 on 12.1 years; t = 2 would need 14.5 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+        },
+        "note": "the arm's 'returns' are its monthly Fama-MacBeth betas, which is the object whose t is being claimed. It is NOT a book: no position was taken, no cost was paid, and W5b is the standing demonstration that an FM t of 4.15 can lose money gross."
+      }
+    }
+  },
+  "wall_seconds": 24.4
+}
