@@ -383,6 +383,24 @@ not promoted.**
 beat is itself five months wearing twenty-one years — the same shape as the
 weekend's own champion (54.3% in five months) and the night lab's L1.
 
+**Verified independently from `robustness.*.tail` in the receipt** — and the
+nuance matters more than the headline:
+
+| object | 5 best months | share of total excess | TW without them | market without them |
+|---|---|---|---|---|
+| `lgbm_clf` (mandated baseline) | 2020-05, 2020-03, 2008-11, 2009-03, 2018-12 | **83.55%** | **7.78** | **8.18** (BEHIND) |
+| `lgbm` (W3's incumbent) | 2020-05, 2009-03, 2008-11, 2024-04, 2023-11 | 69.12% | 9.89 | 9.41 |
+| `nn` seed-mean | 2009-02, 2009-03, 2020-03, 2022-07, 2022-06 | 68.54% | 8.01 | 8.31 (BEHIND) |
+| `nn_pre_causal` seed-mean | 2020-03, 2020-05, 2009-03, 2022-07, 2023-11 | **33.51%** | **17.27** | 8.25 |
+
+Both incumbents' tails are the GFC and COVID bottoms. **The arm that failed the
+family correction is by far the LEAST tail-dependent object in the comparison**
+— 33.5% against the baseline's 83.6%, and it is still ahead of the market with
+its five best months removed. That does not earn B10, and the declared rule was
+not softened for it. It does mean the thing the ladder is built on is worse than
+the thing that failed to climb it.
+
+
 Receipts: `W3b_neural_floored_run01_declaration.json`,
 `W3b_neural_floored_run01.json`
 

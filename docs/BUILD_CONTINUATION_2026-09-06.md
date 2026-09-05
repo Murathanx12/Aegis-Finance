@@ -16,7 +16,7 @@ bought, built and measured; **none beat what we already had.**
 | Best forward paper strategy | none. Books flat by design; hack3/4/6 dry-run only |
 | Independent selector count | **unchanged at 1** |
 | Farm candidates tested / promoted | **3 / 0** — companyworld graph features, floored neural encoder, LLM era-replay decider |
-| New actionable finding | **the mandated baseline is five months.** 83.6% of `lgbm_clf`'s 251-month excess is five months; without them it is **behind the market** (7.78 vs 8.18) |
+| New actionable finding | **the mandated baseline is five months.** **83.55%** of `lgbm_clf`'s 251-month excess is five months (2020-05, 2020-03, 2008-11, 2009-03, 2018-12 — GFC and COVID bottoms); without them it is **behind the market**, 7.78 vs 8.18. The arm that FAILED the family correction is the least tail-dependent object in the comparison at **33.5%** |
 | External execution drag | not measured — no orders, no seals, no deploys |
 | LLM spend / cost per gradeable output | **$4.14 of a $15.00 cap.** $0.00105 per supply-chain edge, $0.00063 per graded LLM rank decision |
 
