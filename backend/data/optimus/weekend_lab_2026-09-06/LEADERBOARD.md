@@ -7,12 +7,12 @@ tape a t = 2 would need at the arm's own Sharpe -- the number that decides
 whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 
 <!-- BEST SO FAR -->
-**BEST SO FAR (ranked by DEFLATED Sharpe, not by return)** -- rewritten 2026-09-05T04:31:36+00:00
+**BEST SO FAR (ranked by DEFLATED Sharpe, not by return)** -- rewritten 2026-09-05T04:46:34+00:00
 
-- **W5b_options_book pass 2 variant 0** -- best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month over 309 months; DSR 0.0207, SPA p 1.0, PBO 0.2429, t2 needs Noney vs 25.75y
-- DSR **0.0207** | SPA p 1.0 | PBO 0.2429 | verdict **NOISE**
-- 309 out-of-sample months (25.75 years); t = 2 would need **None** years at this Sharpe
-- three-era sign table: {'1999-2007': {'months': 106, 'mean_pct': 0.1095, 't': 0.181, 'sign': 1}, '2008-2015': {'months': 96, 'mean_pct': 0.3759, 't': 0.801, 'sign': 1}, '2016-2024': {'months': 107, 'mean_pct': -0.5002, 't': -1.129, 'sign': -1}, 'eras_with_a_positive_mean': 2, 'eras_with_a_negative_mean': 1, 'eras_measured': 3, 'holds_in_2_of_3': True, 'same_sign_in_2_of_3': True, 'dominant_sign': 1}
+- **W7b_archetype_book pass 6 variant 0** -- best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral best: arch_size_neutral|10bps|rebuild at -0.06%/month); DSR 0.0515, SPA p 0.7465, t2 needs 1380.1y vs 25.67y
+- DSR **0.0515** | SPA p 0.7465 | PBO 0.2 | verdict **CANNOT DETERMINE (underpowered)**
+- 308 out-of-sample months (25.67 years); t = 2 would need **1380.1** years at this Sharpe
+- three-era sign table: {'1999-2007': {'months': 105, 'mean_pct': 0.5492, 't': 1.243, 'sign': 1}, '2008-2015': {'months': 96, 'mean_pct': -0.3121, 't': -0.581, 'sign': -1}, '2016-2024': {'months': 107, 'mean_pct': -0.0416, 't': -0.089, 'sign': -1}, 'eras_with_a_positive_mean': 1, 'eras_with_a_negative_mean': 2, 'eras_measured': 3, 'holds_in_2_of_3': False, 'same_sign_in_2_of_3': True, 'dominant_sign': -1}
 <!-- /BEST SO FAR -->
 
 | job | pass | v | headline | DSR | SPA p | PBO | n_oos_m | yrs->t2 | verdict |
@@ -51,3 +51,22 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W5_options_iv | 5 | 0 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | NOVEL |
 | W5b_options_book | 5 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | NOISE |
 | W4_graph_momentum | 5 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W1_long_panel_inventory | 6 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W6_behavioural | 6 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | NOVEL |
+| W6b_liquidity_band | 6 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W5_options_iv | 6 | 1 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | NOVEL |
+| W5b_options_book | 6 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | NOISE |
+| W5c_options_exclusion | 6 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W4_graph_momentum | 6 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W7_matched_loser | 6 | 1 | 297 formation months, 100 winners x 3 matched controls each; 5 candidates over 3 DISTINCT ideas (['a | -- | -- | -- | -- | -- | NOVEL |
+| W7b_archetype_book | 6 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered) |
+| W8_states_three_nulls | 6 | 2 | k=6 market states over 286 months; market circular-shift p 0.062 (observed spread 0.020108 vs null p | -- | -- | -- | -- | -- | NOISE |
+| W3_neural_long | 6 | 1 | not built yet: GPU encoder pass pending | -- | -- | -- | -- | -- | DEFERRED |
+| W11_evidence_writeback | 6 | 0 | 47 receipts -> 311 cell observations; 97 cells tracked; states {'IDEA': 81, 'REGIME_SPECIFIC': 2, 'S | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 7 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W6_behavioural | 7 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | NOVEL |
+| W6b_liquidity_band | 7 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W5_options_iv | 7 | 0 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | NOVEL |
+| W5b_options_book | 7 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | NOISE |
+| W5c_options_exclusion | 7 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W4_graph_momentum | 7 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |

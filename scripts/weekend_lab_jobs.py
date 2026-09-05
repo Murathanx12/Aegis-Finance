@@ -92,8 +92,48 @@ def era_sign_table(series: pd.Series) -> dict:
     return out
 
 
+def decay_reading(eras: dict) -> dict:
+    """DID IT WORK AND THEN STOP? A 26-year panel can ask; a 12-year one cannot.
+
+    The weekend's best cell -- analyst target-price revisions, +9.6%/yr at t 2.06
+    over 308 months, the FIRST powered result of the run -- reads era by era:
+
+        1999-2007  +1.51%/month  t 2.35
+        2008-2015  +0.95%/month  t 1.81
+        2016-2024  -0.02%/month  t -0.03
+
+    Pooling those into one mean and calling the result NOISE (DSR 0.53) throws
+    away the only thing worth knowing: it worked for seventeen years and has been
+    dead for nine. That is not the same claim as "there was never anything here",
+    and it is not the same DECISION either -- a decayed anomaly says look for
+    what changed, a null says look somewhere else.
+
+    On 2013-2024 alone this shows up as a weak positive and gets filed as noise.
+    Dating the decay is what the extra fourteen years bought.
+    """
+    from learner import long_panel as LP
+    names = [n for n, _lo, _hi in LP.ERAS]
+    got = [eras.get(n) or {} for n in names]
+    ts = [g.get("t") for g in got]
+    if any(t is None for t in ts) or len(ts) < 3:
+        return {"decayed": False, "why": "not every era has a usable t"}
+    early_alive = sum(1 for t in ts[:-1] if isinstance(t, (int, float)) and t >= 1.5)
+    last = ts[-1]
+    dead_last = isinstance(last, (int, float)) and abs(last) < 1.0
+    return {
+        "decayed": bool(early_alive >= 1 and dead_last),
+        "era_t": dict(zip(names, ts)),
+        "eras_alive_before_the_last": early_alive,
+        "last_era_t": last,
+        "reading": (f"alive in {early_alive} of the {len(ts) - 1} earlier eras and flat in "
+                    f"{names[-1]} (t {last}) -- a DECAYED effect, not an absent one"
+                    if early_alive >= 1 and dead_last else
+                    "no decay pattern: the last era is not the odd one out"),
+    }
+
+
 def verdict_from(inf: dict, eras: dict) -> str:
-    """The four-part bar, in one place. Every job calls this or explains why."""
+    """The bar, in one place. Every job calls this or explains why."""
     dsr = (inf.get("deflated_sharpe") or {}).get("dsr")
     spa_p = (inf.get("spa") or {}).get("p_spa_consistent")
     pbo = (inf.get("pbo") or {}).get("pbo")
@@ -108,6 +148,11 @@ def verdict_from(inf: dict, eras: dict) -> str:
     # calling that "NOISE" reports an absence of evidence as evidence of absence.
     if pw.get("powered") is False and pw.get("years_needed_for_t2") is not None:
         return "CANNOT DETERMINE (underpowered)"
+    # DECAYED is not NOISE either, and it is the verdict only a long panel can
+    # reach. See `decay_reading`.
+    dec = decay_reading(eras)
+    if dec.get("decayed") and pw.get("powered") is True:
+        return "DECAYED (worked, then stopped)"
     return "NOISE"
 
 
@@ -1787,6 +1832,170 @@ def W8_states_three_nulls(variant: int = 0) -> dict:
     }
 
 
+def W9_survivor_books(variant: int = 0) -> dict:
+    """EVERY FEATURE THAT SURVIVED ANY SCREEN THIS WEEKEND, AS A BOOK.
+
+    The weekend's most expensive lesson (W5b) is that a feature surviving a
+    Fama-MacBeth screen tells you almost nothing about whether a book built on it
+    makes money: `cp_iv_spread_30d` cleared at HAC t +4.15 in 3 of 3 eras and its
+    twenty-four book cells all lost GROSS, because the whole effect lived in
+    decile 1 while a long top-50 book lives in decile 10.
+
+    So this job closes the loop mechanically rather than one bespoke job at a
+    time. It READS THE RECEIPTS the lab has already written, collects every
+    feature any screen marked as a survivor, and books all of them in ONE family
+    -- which also fixes a multiplicity problem that per-job testing hides: five
+    jobs each reporting "my best cell" is a five-fold search whose deflation
+    nobody was computing.
+
+    DIRECTION IS TAKEN FROM THE SCREEN, NOT SEARCHED. A feature whose controlled
+    coefficient was negative is booked LOW-first. Trying both directions and
+    keeping the better one would double the family and hand the search a free
+    sign, which is how a coin flip becomes a signal.
+
+    The decile shape is computed for every survivor and reported BEFORE the
+    verdict, because it is the diagnosis and the terminal wealth is only the
+    symptom.
+    """
+    from learner import evaluate, inference, features_price as FP
+    from scripts import weekend_lab as WL
+
+    # ---- harvest the survivors the lab has already found
+    survivors: dict[str, dict] = {}
+    for p in sorted(WL.OUT.glob("W*_run*_v*.json")):
+        try:
+            r = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:                                               # noqa: BLE001
+            continue
+        for row in r.get("features") or []:
+            t = row.get("t_fm_beta_controlled")
+            eras = row.get("era_sign_table") or {}
+            if (isinstance(t, (int, float)) and abs(t) >= 2.0
+                    and eras.get("same_sign_in_2_of_3")):
+                survivors.setdefault(row["feature"], {
+                    "from": r.get("job"), "controlled_t": t,
+                    "direction": "low" if t < 0 else "high"})
+        for a in r.get("archetype_candidates") or []:
+            holm = a.get("holm_p")
+            if isinstance(holm, (int, float)) and holm <= 0.05:
+                tb = a.get("t_block_non_overlapping")
+                survivors.setdefault(a["feature"], {
+                    "from": r.get("job"), "controlled_t": tb,
+                    "direction": "low" if isinstance(tb, (int, float)) and tb < 0 else "high"})
+    if not survivors:
+        return {"verdict": "CANNOT DETERMINE",
+                "headline": ("no receipt in the lab directory yet declares a survivor -- "
+                             "this job reads what the screens found and books it, so it "
+                             "has nothing to do until they have run")}
+
+    df = _panel()
+    if FP.available():
+        df, _note = FP.attach(df)
+    try:
+        from learner import features_options as FO
+        if FO.available():
+            df, _n2 = FO.attach(df)
+    except Exception:                                                   # noqa: BLE001
+        pass
+
+    usable = {f: m for f, m in survivors.items() if f in df.columns}
+    missing = sorted(set(survivors) - set(usable))
+    if not usable:
+        return {"verdict": "CANNOT DETERMINE", "survivors_declared": sorted(survivors),
+                "not_on_the_joined_panel": missing,
+                "headline": f"none of the {len(survivors)} declared survivors is a panel column"}
+
+    shape, cells, series = {}, {}, {}
+    for feat, meta in usable.items():
+        sign = -1.0 if meta["direction"] == "low" else +1.0
+        col = f"book_{feat}"
+        df[col] = df[feat] * sign
+        tbl = evaluate.decile_table(df, col, "excess_vw_1m")
+        if tbl:
+            lo, hi = tbl[0]["mean_realized"], tbl[-1]["mean_realized"]
+            shape[feat] = {
+                "booked_direction": meta["direction"],
+                "controlled_t_from_the_screen": meta["controlled_t"],
+                "deciles_pct": [round(r["mean_realized"] * 100, 4) for r in tbl],
+                "top_minus_bottom_pct": round((hi - lo) * 100, 4),
+                "top_decile_turns_over": bool(len(tbl) >= 3
+                                              and tbl[-1]["mean_realized"] < tbl[-2]["mean_realized"]),
+                "effect_lives_in": ("the BOTTOM decile -- an EXCLUSION or short leg is the "
+                                    "instrument, not a long top-k book"
+                                    if abs(lo) > abs(hi) else "the TOP decile"),
+            }
+        for bps in (10, 25):
+            key = f"{feat}|{meta['direction']}|{bps}bps"
+            try:
+                bk = evaluate.book(df, col, k=50, weight="vw", cost_bps=bps,
+                                   ret_col="fwd_1m", mkt_col="mkt_vw_1m",
+                                   return_series=True)
+            except Exception as exc:                                    # noqa: BLE001
+                cells[key] = {"error": f"{type(exc).__name__}: {exc}"}
+                continue
+            ser = bk.get("_series") or {}
+            cells[key] = {k: v for k, v in bk.items() if not k.startswith("_")}
+            net, mkt = ser.get("net"), ser.get("market")
+            if net is not None and mkt is not None and len(net) and net.index.equals(mkt.index):
+                series[key] = (net - mkt).astype("float64")
+
+    if not series:
+        return {"verdict": "CANNOT DETERMINE", "cells": cells,
+                "cross_section_shape": shape,
+                "headline": "no survivor produced a usable paired series"}
+    wide = pd.concat(series, axis=1).dropna()
+    fam = {k: wide[k].tolist() for k in wide.columns}
+    best = max(fam, key=lambda k: float(np.mean(fam[k])))
+    inf = inference.full_report(fam[best], family=fam, paired_excess=fam,
+                                n_trials=len(cells) or len(fam), n_boot=500, seed=17)
+    eras = era_sign_table(wide[best])
+    pw = inf.get("power", {})
+    beat = [k for k, v in cells.items()
+            if isinstance(v, dict) and "error" not in v
+            and v.get("terminal_wealth_net") is not None
+            and v.get("terminal_wealth_market_same_months") is not None
+            and v["terminal_wealth_net"] > v["terminal_wealth_market_same_months"]]
+    beat_gross = [k for k, v in cells.items()
+                  if isinstance(v, dict) and "error" not in v
+                  and v.get("terminal_wealth_gross") is not None
+                  and v.get("terminal_wealth_market_same_months") is not None
+                  and v["terminal_wealth_gross"] > v["terminal_wealth_market_same_months"]]
+    bottom = [f for f, s in shape.items() if "BOTTOM" in s.get("effect_lives_in", "")]
+    return {
+        "question": ("does ANY feature that survived a screen this weekend make money as a "
+                     "top-50 value-weighted book?"),
+        "family_id": "weekend-W9-survivor-books",
+        "survivors_harvested": {f: m for f, m in survivors.items()},
+        "not_on_the_joined_panel": missing,
+        "cross_section_shape": shape,
+        "features_whose_effect_is_in_the_BOTTOM_decile": bottom,
+        "cells_looked_at": len(cells),
+        "cells": cells,
+        "cells_beating_the_market_NET": beat,
+        "cells_beating_the_market_GROSS": beat_gross,
+        "best_cell": best,
+        "best_mean_monthly_excess_pct": round(float(np.mean(fam[best])) * 100, 4),
+        "inference": inf,
+        "era_sign_table": eras,
+        "decay_reading": decay_reading(eras),
+        "multiplicity_note": (f"booking all {len(usable)} survivors in ONE family is also the "
+                              "multiplicity fix: five screens each reporting 'my best cell' is "
+                              "a five-fold search whose deflation nobody was computing, and "
+                              "the DSR here is over the whole weekend's search, not one job's"),
+        "direction_note": ("each feature is booked in the direction its SCREEN found. Trying "
+                           "both and keeping the better would double the family and hand the "
+                           "search a free sign."),
+        "headline": (f"{len(usable)} weekend survivors booked ({len(cells)} cells): "
+                     f"{len(beat)} beat the market NET, {len(beat_gross)} beat it GROSS; "
+                     f"{len(bottom)} of them have their effect in the BOTTOM decile "
+                     f"({bottom or 'none'}), where a long top-50 book cannot reach it. "
+                     f"Best {best} at {np.mean(fam[best]) * 100:+.3f}%/month, DSR "
+                     f"{(inf.get('deflated_sharpe') or {}).get('dsr')}, t2 needs "
+                     f"{pw.get('years_needed_for_t2')}y vs {pw.get('years_observed')}y"),
+        "verdict": verdict_from(inf, eras),
+    }
+
+
 def W11_evidence_writeback(variant: int = 0) -> dict:
     """Fold every receipt this weekend has written into the evidence memory.
 
@@ -1842,6 +2051,7 @@ JOBS = {
     "W7_matched_loser": W7_matched_loser,
     "W7b_archetype_book": W7b_archetype_book,
     "W8_states_three_nulls": W8_states_three_nulls,
+    "W9_survivor_books": W9_survivor_books,
     "W11_evidence_writeback": W11_evidence_writeback,
 }
 

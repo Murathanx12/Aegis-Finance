@@ -17,11 +17,63 @@ their receipts before each update; a line with no receipt is not in this file.*
 | **LLM spend** | **$0.00** — no LLM call was made |
 
 **RESULT IMPROVEMENT: NONE in return terms.** No strategy was promoted and none
-was killed. What moved is the *instrument* and what we know about the *method*:
+was killed. What moved is the *instrument*, one dated fact, and what we know
+about the *method*:
 
 1. the panel is **2.2× longer in months** (143 → 310), which is the quantity that was actually scarce;
-2. **five published features died under their own controls** — the 52-week high, single-day attention, ATM implied vol, IV-minus-realised-vol, and a VWAP gap that was a split artefact;
-3. **a Fama-MacBeth t of +4.15 produced a book that loses gross**, and the decile table says exactly why. That one applies to every feature screen in this repo.
+2. **the first POWERED result of the run, and it is a decay** (below) — the 26-year panel did not find a new edge, it **dated the death of an old one**;
+3. **five published features died under their own controls** — the 52-week high, single-day attention, ATM implied vol, IV-minus-realised-vol, and a VWAP gap that was a split artefact;
+4. **a Fama-MacBeth t of +4.15 produced a book that loses gross**, and the decile table says exactly why. That one applies to every feature screen in this repo.
+
+---
+
+## 0. THE HEADLINE — analyst target-price revisions worked for 17 years and have been dead for 9
+
+`W9_survivor_books` takes **every feature any screen marked as a survivor this
+weekend** and books all of them in ONE family — which is also the multiplicity
+fix, because five jobs each reporting "my best cell" is a five-fold search whose
+deflation nobody was computing. Twelve survivors, 24 cells.
+
+The best cell is `target_rev_1m__xs` (within-month rank of the 1-month change in
+the mean analyst target price), long the top 50, value-weighted, 10 bps:
+
+| | book | market |
+|---|---|---|
+| terminal wealth, 308 months | **56.66** | 13.03 |
+| CAGR | **17.03%** | 10.52% |
+| annualised excess | **+9.64%** | — |
+| paired t vs market | **2.055** | — |
+| turnover | 0.958/month | — |
+
+**`powered: true`.** t = 2 needs 24.3 years at this Sharpe; the panel has 25.67.
+**This is the first cell in the entire weekend with enough tape to answer its own
+question** — which is the single thing the long panel was built to buy.
+
+**And then the era table:**
+
+| era | mean/month | t |
+|---|---|---|
+| 1999-2007 | **+1.51%** | **2.35** |
+| 2008-2015 | **+0.95%** | 1.81 |
+| **2016-2024** | **−0.02%** | **−0.03** |
+
+It stopped. Not "was never there" — *stopped*, around 2016. Costs matter too:
+at 25 bps the excess falls from +9.6%/yr to +6.2%/yr and t from 2.06 to 1.32, so
+roughly half the edge lives between 10 and 25 bps on ~0.96 monthly turnover.
+DSR over the 24-cell family is 0.529 and SPA p is 0.108, so it does **not** clear
+the NOVEL bar.
+
+**Why this is the weekend's most valuable output.** On the 2013-2024 panel this
+appears as a weak positive and gets filed as noise. On 1999-2024 it is a strong
+effect with a visible end date. *A decayed anomaly and an absent one are
+different findings and imply different next moves* — the first says find out what
+changed, the second says look elsewhere. So `verdict_from` gained a fourth word,
+`DECAYED (worked, then stopped)`, which only a long panel can ever reach.
+
+This is consistent with the published post-publication decay literature
+(McLean–Pontiff) and with revision-based anomalies being among the most heavily
+arbitraged. **It is not a trade. It is a dated fact**, and the obvious follow-up
+is what changed in 2016 — coverage, speed of dissemination, or crowding.
 
 ---
 

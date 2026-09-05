@@ -1,40 +1,40 @@
 {
- "job": "W5b_options_book",
- "run": 2,
+ "job": "W7b_archetype_book",
+ "run": 6,
  "variant": 0,
- "headline": "best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month over 309 months; DSR 0.0207, SPA p 1.0, PBO 0.2429, t2 needs Noney vs 25.75y",
- "verdict": "NOISE",
- "dsr": 0.0207,
- "spa_p": 1.0,
- "pbo": 0.2429,
- "n_oos_months": 309,
- "years_needed_for_t2": null,
- "years_observed": 25.75,
+ "headline": "best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral best: arch_size_neutral|10bps|rebuild at -0.06%/month); DSR 0.0515, SPA p 0.7465, t2 needs 1380.1y vs 25.67y",
+ "verdict": "CANNOT DETERMINE (underpowered)",
+ "dsr": 0.0515,
+ "spa_p": 0.7465,
+ "pbo": 0.2,
+ "n_oos_months": 308,
+ "years_needed_for_t2": 1380.1,
+ "years_observed": 25.67,
  "era_sign_table": {
   "1999-2007": {
-   "months": 106,
-   "mean_pct": 0.1095,
-   "t": 0.181,
+   "months": 105,
+   "mean_pct": 0.5492,
+   "t": 1.243,
    "sign": 1
   },
   "2008-2015": {
    "months": 96,
-   "mean_pct": 0.3759,
-   "t": 0.801,
-   "sign": 1
+   "mean_pct": -0.3121,
+   "t": -0.581,
+   "sign": -1
   },
   "2016-2024": {
    "months": 107,
-   "mean_pct": -0.5002,
-   "t": -1.129,
+   "mean_pct": -0.0416,
+   "t": -0.089,
    "sign": -1
   },
-  "eras_with_a_positive_mean": 2,
-  "eras_with_a_negative_mean": 1,
+  "eras_with_a_positive_mean": 1,
+  "eras_with_a_negative_mean": 2,
   "eras_measured": 3,
-  "holds_in_2_of_3": true,
+  "holds_in_2_of_3": false,
   "same_sign_in_2_of_3": true,
-  "dominant_sign": 1
+  "dominant_sign": -1
  },
- "written_utc": "2026-09-05T04:31:36+00:00"
+ "written_utc": "2026-09-05T04:46:34+00:00"
 }
