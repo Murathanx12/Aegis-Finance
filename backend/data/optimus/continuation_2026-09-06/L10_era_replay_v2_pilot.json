@@ -1,0 +1,658 @@
+{
+ "job": "L10 era replay v2 -- the LLM reading test, DECIDE step",
+ "spec": "docs/AEGIS_VISION_2026-08-30_LOG_REVISION_ERA_REPLAY.md \u00a73; docs/CONTINUATION_2026-09-06_OPUS_PROMPT.md \u00a72b",
+ "licence": "PRODUCT_EXPERIMENT (exploratory). A screen cannot reach NOVEL.",
+ "run_utc": "2026-09-05T12:09:20+00:00",
+ "elapsed_s": 0.8,
+ "correction_verified": {
+  "claim": "CONTINUATION \u00a72b says 'Friday's L10 built the scaffolding'",
+  "finding": "FALSE. docs/BUILD_NIGHT_LAB_2026-09-05.md \u00a75 lists L10 among the jobs NOT RUN, and backend/data/optimus/night_lab_2026-09-05/ contains no L10 receipt (L1, L4, L8, L11, L12, L13 only). The scaffolding did not exist; this run built it."
+ },
+ "design": {
+  "era": "2016-01 .. 2019-12",
+  "windows_built": 192,
+  "windows_run": 3,
+  "k_names_per_window": 8,
+  "top_n_held": 3,
+  "threads": 4,
+  "arms": [
+   "fantasy_nodiary",
+   "fantasy_diary",
+   "realanon_nodiary",
+   "realanon_diary"
+  ],
+  "rewriter": {
+   "provider": "openai",
+   "model": "gpt-5-nano",
+   "reasoning_effort": "minimal",
+   "note": "temperature is a 400 on this model and is not sent"
+  },
+  "decider": {
+   "provider": "deepseek",
+   "model": "deepseek-chat",
+   "temperature": 0.0,
+   "language_pin": "Respond in English only."
+  },
+  "graded": "RANK ONLY. The LLM never sees or produces a price; learner/evaluate.py conventions price it.",
+  "benchmark": "the equal-weight basket of the SAME 8 anonymised names in the SAME month (vision \u00a73c 'better than what?')",
+  "cost_bps_per_side": 10.0,
+  "floors": {
+   "tradable_dollar_vol": 3000000.0,
+   "price_usd": 5.0
+  },
+  "excluded_source": {
+   "edgar_8k_items": "REFUSED. manifest.json says the universe is resolved via company_tickers.json = CURRENT registrants, so 8-K presence in 2016-19 correlates with survival to 2026 -- a forward-looking leak into the bundle. Its own coverage_truncation_caveat is the second reason: absence is truncation, not evidence."
+  }
+ },
+ "rewriter_integrity": {
+  "bundles_checked": 6,
+  "magnitude_ok": 4,
+  "leak_ok": 6,
+  "examples_dropped": [
+   {
+    "window": "t0_2016-02",
+    "naming": "realanon",
+    "n_expected": 104,
+    "n_found": 98,
+    "dropped": [
+     "0.000",
+     "0.000",
+     "0.000",
+     "0.000",
+     "0.000",
+     "0.000"
+    ],
+    "n_dropped": 6,
+    "share_preserved": 0.9423,
+    "ok": false
+   },
+   {
+    "window": "t0_2016-03",
+    "naming": "fantasy",
+    "n_expected": 104,
+    "n_found": 99,
+    "dropped": [
+     "-1.2",
+     "0.000",
+     "0.125",
+     "2.3",
+     "2.9"
+    ],
+    "n_dropped": 5,
+    "share_preserved": 0.9519,
+    "ok": false
+   }
+  ],
+  "examples_leaked": [],
+  "magnitude_all_present_rate": 0.6667,
+  "leak_ok_rate": 1.0,
+  "share_preserved_by_naming": {
+   "fantasy": 0.984,
+   "realanon": 0.9808
+  },
+  "arm_preservation_gap": 0.0032,
+  "reads": "share_preserved_by_naming must be close between arms; a gap means the arm contrast is measuring the REWRITER, not the decider."
+ },
+ "arms": {
+  "fantasy_nodiary": {
+   "arm": "fantasy_nodiary",
+   "naming": "fantasy",
+   "diary": false,
+   "n_windows": 3,
+   "n_month_blocks": 3,
+   "mean_ic": 0.0,
+   "t_ic_windows": 0.0,
+   "t_ic_month_blocks": 0.0,
+   "share_ic_positive": 0.3333,
+   "mean_top_minus_ew_pct": -1.553,
+   "mean_net_top_minus_ew_pct": -1.753,
+   "t_net_top_minus_ew_windows": -0.825,
+   "t_net_top_minus_ew_month_blocks": -0.825,
+   "mean_top_minus_bottom_pct": -2.1671,
+   "t_top_minus_bottom": -0.681,
+   "mean_turnover": 1.0,
+   "cost_bps_per_side": 10.0,
+   "terminal_wealth_book": 1.10684,
+   "terminal_wealth_ew_same_names": 1.16652,
+   "terminal_wealth_ratio": 0.94884,
+   "canary": {
+    "asked": 3,
+    "exact_year_hits": 0,
+    "exact_year_rate": 0.0,
+    "chance_rate_uniform_over_era": 0.25,
+    "company_named_rate": 0.0,
+    "year_guess_histogram": {
+     "2023": 2
+    },
+    "n_no_guess": 1
+   },
+   "nulls": {
+    "observed_mean_net_excess_pct": -1.753,
+    "null_1_shuffled_companies": {
+     "draws": 2000,
+     "mean_pct": -0.2472,
+     "sd_pct": 2.6913,
+     "p_one_sided": 0.691,
+     "reads": "the same rank vector on a permuted bundle"
+    },
+    "null_2_shuffled_dates": {
+     "draws": 2000,
+     "mean_pct": 0.1428,
+     "sd_pct": 2.8227,
+     "p_one_sided": 0.755,
+     "reads": "the rank applied to another month of the same thread"
+    },
+    "null_3_same_day_paired": {
+     "mean_top_minus_bottom_pct": -2.1671,
+     "t_stat": -0.681,
+     "n": 3,
+     "reads": "chosen vs not-chosen inside the SAME bundle, same month -- the month effect cancels; this is the primary statistic"
+    }
+   },
+   "year_sign_table": {
+    "2016": {
+     "n": 3,
+     "mean_pct": -1.753,
+     "sign": "-"
+    },
+    "2017": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2018": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2019": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "_canonical_three_era_table": "CANNOT DETERMINE -- learner.evaluate.ERAS spans 2016-2024 and this job ran 2016-2019 only. The sign table above is a within-era year check and is NOT a substitute."
+   },
+   "inference": {
+    "n_cells_looked_at": 4,
+    "deflated_sharpe": {
+     "verdict": "CANNOT DETERMINE (only 3 periods; DSR needs a sample)",
+     "n_periods": 3
+    },
+    "power": {
+     "n_periods": 3,
+     "periods_per_year": 12,
+     "n_oos_months": 3,
+     "sharpe_per_period": -0.4763,
+     "t_observed": -0.8249,
+     "years_observed": 0.25,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.06792,
+     "years_needed_to_detect_that_effect": 72.3,
+     "mde_annual_excess_at_t_target": 0.51002,
+     "mde_reading": "on the 0.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 51.00%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "the arm's mean is not positive (SR -0.4763); no amount of tape makes a negative mean significant in the intended direction"
+    },
+    "spa": {
+     "verdict": "CANNOT DETERMINE (only 3 periods)",
+     "n_periods": 3
+    },
+    "pbo": {
+     "verdict": "CANNOT DETERMINE (3 periods is too few for 8 blocks)",
+     "n_periods": 3,
+     "n_arms": 4
+    },
+    "family_size_declared": 4,
+    "family_members": [
+     "fantasy_diary",
+     "fantasy_nodiary",
+     "realanon_diary",
+     "realanon_nodiary"
+    ],
+    "series_is": "month-block mean of paired net (top-3 minus the equal-weight basket of the SAME 8 names)"
+   }
+  },
+  "fantasy_diary": {
+   "arm": "fantasy_diary",
+   "naming": "fantasy",
+   "diary": true,
+   "n_windows": 3,
+   "n_month_blocks": 3,
+   "mean_ic": 0.15079,
+   "t_ic_windows": 0.498,
+   "t_ic_month_blocks": 0.498,
+   "share_ic_positive": 0.6667,
+   "mean_top_minus_ew_pct": -1.0662,
+   "mean_net_top_minus_ew_pct": -1.2662,
+   "t_net_top_minus_ew_windows": -0.533,
+   "t_net_top_minus_ew_month_blocks": -0.533,
+   "mean_top_minus_bottom_pct": -1.6803,
+   "t_top_minus_bottom": -0.475,
+   "mean_turnover": 1.0,
+   "cost_bps_per_side": 10.0,
+   "terminal_wealth_book": 1.12269,
+   "terminal_wealth_ew_same_names": 1.16652,
+   "terminal_wealth_ratio": 0.96243,
+   "canary": {
+    "asked": 3,
+    "exact_year_hits": 0,
+    "exact_year_rate": 0.0,
+    "chance_rate_uniform_over_era": 0.25,
+    "company_named_rate": 0.0,
+    "year_guess_histogram": {},
+    "n_no_guess": 3
+   },
+   "nulls": {
+    "observed_mean_net_excess_pct": -1.2662,
+    "null_1_shuffled_companies": {
+     "draws": 2000,
+     "mean_pct": -0.2457,
+     "sd_pct": 2.7081,
+     "p_one_sided": 0.63,
+     "reads": "the same rank vector on a permuted bundle"
+    },
+    "null_2_shuffled_dates": {
+     "draws": 2000,
+     "mean_pct": -0.4578,
+     "sd_pct": 1.4998,
+     "p_one_sided": 0.7245,
+     "reads": "the rank applied to another month of the same thread"
+    },
+    "null_3_same_day_paired": {
+     "mean_top_minus_bottom_pct": -1.6803,
+     "t_stat": -0.475,
+     "n": 3,
+     "reads": "chosen vs not-chosen inside the SAME bundle, same month -- the month effect cancels; this is the primary statistic"
+    }
+   },
+   "year_sign_table": {
+    "2016": {
+     "n": 3,
+     "mean_pct": -1.2662,
+     "sign": "-"
+    },
+    "2017": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2018": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2019": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "_canonical_three_era_table": "CANNOT DETERMINE -- learner.evaluate.ERAS spans 2016-2024 and this job ran 2016-2019 only. The sign table above is a within-era year check and is NOT a substitute."
+   },
+   "inference": {
+    "n_cells_looked_at": 4,
+    "deflated_sharpe": {
+     "verdict": "CANNOT DETERMINE (only 3 periods; DSR needs a sample)",
+     "n_periods": 3
+    },
+    "power": {
+     "n_periods": 3,
+     "periods_per_year": 12,
+     "n_oos_months": 3,
+     "sharpe_per_period": -0.3077,
+     "t_observed": -0.533,
+     "years_observed": 0.25,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.06075,
+     "years_needed_to_detect_that_effect": 90.3,
+     "mde_annual_excess_at_t_target": 0.57018,
+     "mde_reading": "on the 0.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 57.02%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "the arm's mean is not positive (SR -0.3077); no amount of tape makes a negative mean significant in the intended direction"
+    },
+    "spa": {
+     "verdict": "CANNOT DETERMINE (only 3 periods)",
+     "n_periods": 3
+    },
+    "pbo": {
+     "verdict": "CANNOT DETERMINE (3 periods is too few for 8 blocks)",
+     "n_periods": 3,
+     "n_arms": 4
+    },
+    "family_size_declared": 4,
+    "family_members": [
+     "fantasy_diary",
+     "fantasy_nodiary",
+     "realanon_diary",
+     "realanon_nodiary"
+    ],
+    "series_is": "month-block mean of paired net (top-3 minus the equal-weight basket of the SAME 8 names)"
+   }
+  },
+  "realanon_nodiary": {
+   "arm": "realanon_nodiary",
+   "naming": "realanon",
+   "diary": false,
+   "n_windows": 3,
+   "n_month_blocks": 3,
+   "mean_ic": -0.07937,
+   "t_ic_windows": -0.209,
+   "t_ic_month_blocks": -0.209,
+   "share_ic_positive": 0.3333,
+   "mean_top_minus_ew_pct": -2.5587,
+   "mean_net_top_minus_ew_pct": -2.7587,
+   "t_net_top_minus_ew_windows": -1.276,
+   "t_net_top_minus_ew_month_blocks": -1.276,
+   "mean_top_minus_bottom_pct": -3.5246,
+   "t_top_minus_bottom": -0.985,
+   "mean_turnover": 1.0,
+   "cost_bps_per_side": 10.0,
+   "terminal_wealth_book": 1.07716,
+   "terminal_wealth_ew_same_names": 1.16652,
+   "terminal_wealth_ratio": 0.9234,
+   "canary": {
+    "asked": 3,
+    "exact_year_hits": 0,
+    "exact_year_rate": 0.0,
+    "chance_rate_uniform_over_era": 0.25,
+    "company_named_rate": 0.0,
+    "year_guess_histogram": {
+     "2023": 3
+    },
+    "n_no_guess": 0
+   },
+   "nulls": {
+    "observed_mean_net_excess_pct": -2.7587,
+    "null_1_shuffled_companies": {
+     "draws": 2000,
+     "mean_pct": -0.2443,
+     "sd_pct": 2.7121,
+     "p_one_sided": 0.807,
+     "reads": "the same rank vector on a permuted bundle"
+    },
+    "null_2_shuffled_dates": {
+     "draws": 2000,
+     "mean_pct": 0.5045,
+     "sd_pct": 2.6726,
+     "p_one_sided": 0.932,
+     "reads": "the rank applied to another month of the same thread"
+    },
+    "null_3_same_day_paired": {
+     "mean_top_minus_bottom_pct": -3.5246,
+     "t_stat": -0.985,
+     "n": 3,
+     "reads": "chosen vs not-chosen inside the SAME bundle, same month -- the month effect cancels; this is the primary statistic"
+    }
+   },
+   "year_sign_table": {
+    "2016": {
+     "n": 3,
+     "mean_pct": -2.7587,
+     "sign": "-"
+    },
+    "2017": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2018": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2019": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "_canonical_three_era_table": "CANNOT DETERMINE -- learner.evaluate.ERAS spans 2016-2024 and this job ran 2016-2019 only. The sign table above is a within-era year check and is NOT a substitute."
+   },
+   "inference": {
+    "n_cells_looked_at": 4,
+    "deflated_sharpe": {
+     "verdict": "CANNOT DETERMINE (only 3 periods; DSR needs a sample)",
+     "n_periods": 3
+    },
+    "power": {
+     "n_periods": 3,
+     "periods_per_year": 12,
+     "n_oos_months": 3,
+     "sharpe_per_period": -0.7365,
+     "t_observed": -1.2757,
+     "years_observed": 0.25,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.06675,
+     "years_needed_to_detect_that_effect": 74.8,
+     "mde_annual_excess_at_t_target": 0.519,
+     "mde_reading": "on the 0.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 51.90%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "the arm's mean is not positive (SR -0.7365); no amount of tape makes a negative mean significant in the intended direction"
+    },
+    "spa": {
+     "verdict": "CANNOT DETERMINE (only 3 periods)",
+     "n_periods": 3
+    },
+    "pbo": {
+     "verdict": "CANNOT DETERMINE (3 periods is too few for 8 blocks)",
+     "n_periods": 3,
+     "n_arms": 4
+    },
+    "family_size_declared": 4,
+    "family_members": [
+     "fantasy_diary",
+     "fantasy_nodiary",
+     "realanon_diary",
+     "realanon_nodiary"
+    ],
+    "series_is": "month-block mean of paired net (top-3 minus the equal-weight basket of the SAME 8 names)"
+   }
+  },
+  "realanon_diary": {
+   "arm": "realanon_diary",
+   "naming": "realanon",
+   "diary": true,
+   "n_windows": 3,
+   "n_month_blocks": 3,
+   "mean_ic": -0.11111,
+   "t_ic_windows": -0.345,
+   "t_ic_month_blocks": -0.345,
+   "share_ic_positive": 0.3333,
+   "mean_top_minus_ew_pct": -2.6986,
+   "mean_net_top_minus_ew_pct": -2.8986,
+   "t_net_top_minus_ew_windows": -1.321,
+   "t_net_top_minus_ew_month_blocks": -1.321,
+   "mean_top_minus_bottom_pct": -3.6645,
+   "t_top_minus_bottom": -1.011,
+   "mean_turnover": 1.0,
+   "cost_bps_per_side": 10.0,
+   "terminal_wealth_book": 1.07291,
+   "terminal_wealth_ew_same_names": 1.16652,
+   "terminal_wealth_ratio": 0.91975,
+   "canary": {
+    "asked": 3,
+    "exact_year_hits": 0,
+    "exact_year_rate": 0.0,
+    "chance_rate_uniform_over_era": 0.25,
+    "company_named_rate": 0.0,
+    "year_guess_histogram": {},
+    "n_no_guess": 3
+   },
+   "nulls": {
+    "observed_mean_net_excess_pct": -2.8986,
+    "null_1_shuffled_companies": {
+     "draws": 2000,
+     "mean_pct": -0.2471,
+     "sd_pct": 2.6993,
+     "p_one_sided": 0.8255,
+     "reads": "the same rank vector on a permuted bundle"
+    },
+    "null_2_shuffled_dates": {
+     "draws": 2000,
+     "mean_pct": -0.5257,
+     "sd_pct": 1.4388,
+     "p_one_sided": 0.932,
+     "reads": "the rank applied to another month of the same thread"
+    },
+    "null_3_same_day_paired": {
+     "mean_top_minus_bottom_pct": -3.6645,
+     "t_stat": -1.011,
+     "n": 3,
+     "reads": "chosen vs not-chosen inside the SAME bundle, same month -- the month effect cancels; this is the primary statistic"
+    }
+   },
+   "year_sign_table": {
+    "2016": {
+     "n": 3,
+     "mean_pct": -2.8986,
+     "sign": "-"
+    },
+    "2017": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2018": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "2019": {
+     "n": 0,
+     "mean_pct": null,
+     "sign": "n/a"
+    },
+    "_canonical_three_era_table": "CANNOT DETERMINE -- learner.evaluate.ERAS spans 2016-2024 and this job ran 2016-2019 only. The sign table above is a within-era year check and is NOT a substitute."
+   },
+   "inference": {
+    "n_cells_looked_at": 4,
+    "deflated_sharpe": {
+     "verdict": "CANNOT DETERMINE (only 3 periods; DSR needs a sample)",
+     "n_periods": 3
+    },
+    "power": {
+     "n_periods": 3,
+     "periods_per_year": 12,
+     "n_oos_months": 3,
+     "sharpe_per_period": -0.7624,
+     "t_observed": -1.3205,
+     "years_observed": 0.25,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered_for_observed_effect": false,
+     "detectable_annual_excess": 0.03,
+     "reference_sharpe_per_period": 0.06576,
+     "years_needed_to_detect_that_effect": 77.1,
+     "mde_annual_excess_at_t_target": 0.52681,
+     "mde_reading": "on the 0.2 years actually held, the smallest annual excess this arm could have shown at t = 2 is 52.68%/yr",
+     "powered": false,
+     "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+     "reading": "the arm's mean is not positive (SR -0.7624); no amount of tape makes a negative mean significant in the intended direction"
+    },
+    "spa": {
+     "verdict": "CANNOT DETERMINE (only 3 periods)",
+     "n_periods": 3
+    },
+    "pbo": {
+     "verdict": "CANNOT DETERMINE (3 periods is too few for 8 blocks)",
+     "n_periods": 3,
+     "n_arms": 4
+    },
+    "family_size_declared": 4,
+    "family_members": [
+     "fantasy_diary",
+     "fantasy_nodiary",
+     "realanon_diary",
+     "realanon_nodiary"
+    ],
+    "series_is": "month-block mean of paired net (top-3 minus the equal-weight basket of the SAME 8 names)"
+   }
+  }
+ },
+ "family": {
+  "per_arm_p_two_sided": {
+   "fantasy_nodiary": 0.49611,
+   "fantasy_diary": 0.64733,
+   "realanon_nodiary": 0.33011,
+   "realanon_diary": 0.31739
+  },
+  "bh_fdr_adjusted": {
+   "realanon_diary": 1.0,
+   "realanon_nodiary": 0.66021,
+   "fantasy_nodiary": 0.66148,
+   "fantasy_diary": 0.64733
+  },
+  "family_size": 4,
+  "family_max_p": 0.64733,
+  "family_min_p": 0.31739,
+  "any_survives_bh_05": false
+ },
+ "spend": {
+  "gpt5_nano": {
+   "calls": 0,
+   "tokens_in": 0,
+   "cached_in": 0,
+   "tokens_out": 0,
+   "usd": 0.0,
+   "price_table": {
+    "in": 0.05,
+    "cached_in": 0.005,
+    "out": 0.4
+   },
+   "price_source": "OpenAI published list price, local table (config.py not editable this session)",
+   "reconciliation": "TELEMETRY, not a provider balance -- OpenAI exposes no balance endpoint to this key."
+  },
+  "deepseek_chat": {
+   "calls": 0,
+   "tokens_in": 0,
+   "cached_in": 0,
+   "tokens_out": 0,
+   "usd": 0.0,
+   "price_table_source": "backend.config.LLM_PRICE_PER_MTOK"
+  },
+  "total_usd": 0.0,
+  "hard_cap_usd": 4.5,
+  "refusals": []
+ },
+ "ledger_state": {
+  "campaign_calls_all_time": 58106,
+  "campaign_cost_usd_all_time": 27.249383,
+  "cost_is_lower_bound": true,
+  "shared_ceiling_usd": null,
+  "usd_remaining_under_shared_ceiling": 12.7506,
+  "note": "gpt-5-nano has no entry in config.LLM_PRICE_PER_MTOK, so the LEDGER total is a lower bound for this job. The receipt's own `spend` block prices it from a local table and is the number to read for this run."
+ },
+ "deepseek_balance_before": {
+  "error": "DEEPSEEK_API_KEY absent"
+ },
+ "deepseek_balance_after": {
+  "is_available": true,
+  "balance_infos": [
+   {
+    "currency": "USD",
+    "total_balance": "10.36",
+    "granted_balance": "0.00",
+    "topped_up_balance": "10.36"
+   }
+  ]
+ },
+ "halted": null
+}

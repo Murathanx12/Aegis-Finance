@@ -1,0 +1,19 @@
+{
+ "built_utc": "2026-09-05T11:57:04+00:00",
+ "era": "2016-2019",
+ "seed": 20260906,
+ "k_names": 8,
+ "n_threads": 4,
+ "top_n": 3,
+ "n_windows": 192,
+ "months": 48,
+ "eligible_rows": 85294,
+ "eligible_permnos": 2743,
+ "floors": {
+  "tradable_dollar_vol": 3000000.0,
+  "price_usd": 5.0
+ },
+ "excluded_source": {
+  "edgar_8k_items": "REFUSED. manifest.json says the universe is resolved via company_tickers.json = CURRENT registrants, so 8-K presence in 2016-19 correlates with survival to 2026 -- a forward-looking leak into the bundle. Its own coverage_truncation_caveat is the second reason: absence is truncation, not evidence."
+ }
+}
