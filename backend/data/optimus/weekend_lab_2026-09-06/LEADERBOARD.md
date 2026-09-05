@@ -7,12 +7,12 @@ tape a t = 2 would need at the arm's own Sharpe -- the number that decides
 whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 
 <!-- BEST SO FAR -->
-**BEST SO FAR (ranked by DEFLATED Sharpe, not by return)** -- rewritten 2026-09-05T04:53:50+00:00
+**BEST SO FAR (ranked by DEFLATED Sharpe, not by return)** -- rewritten 2026-09-05T05:05:19+00:00
 
-- **W9_survivor_books pass 8 variant 0** -- 12 weekend survivors booked (24 cells): 5 beat the market NET, 10 beat it GROSS; 5 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.803%/month, DSR 0.5293, t2 needs 24.3y vs 25.67y
-- DSR **0.5293** | SPA p 0.1078 | PBO 0.2286 | verdict **DECAYED (worked, then stopped)**
-- 308 out-of-sample months (25.67 years); t = 2 would need **24.3** years at this Sharpe
-- three-era sign table: {'1999-2007': {'months': 105, 'mean_pct': 1.51, 't': 2.349, 'sign': 1}, '2008-2015': {'months': 96, 'mean_pct': 0.9503, 't': 1.807, 'sign': 1}, '2016-2024': {'months': 107, 'mean_pct': -0.0224, 't': -0.028, 'sign': -1}, 'eras_with_a_positive_mean': 2, 'eras_with_a_negative_mean': 1, 'eras_measured': 3, 'holds_in_2_of_3': True, 'same_sign_in_2_of_3': True, 'dominant_sign': 1}
+- **W3_neural_long pass 9 variant 0** -- [cuda] best of 20 cells is nn_s20260912|10bps at +1.998%/month vs market over 251 months (TW net 561.0604 vs market 14.3778); DSR 0.9835, SPA p 0.016, PBO 0.0857, t2 needs 6.7y vs 20.92y on hand. vs LGBM (TW 16.752 @10bps): best neural arm is 16.617%/yr (t 2.533), DSR 0.7467 -- the neural arm's advantage over lgbm does NOT survive the family
+- DSR **0.9835** | SPA p 0.016 | PBO 0.0857 | verdict **NOISE (clears the market bar, does NOT beat lgbm)**
+- 251 out-of-sample months (20.92 years); t = 2 would need **6.7** years at this Sharpe
+- three-era sign table: {'1999-2007': {'months': 48, 'mean_pct': 0.4318, 't': 0.61, 'sign': 1}, '2008-2015': {'months': 96, 'mean_pct': 1.9587, 't': 2.825, 'sign': 1}, '2016-2024': {'months': 107, 'mean_pct': 2.7352, 't': 2.438, 'sign': 1}, 'eras_with_a_positive_mean': 3, 'eras_with_a_negative_mean': 0, 'eras_measured': 3, 'holds_in_2_of_3': True, 'same_sign_in_2_of_3': True, 'dominant_sign': 1}
 <!-- /BEST SO FAR -->
 
 | job | pass | v | headline | DSR | SPA p | PBO | n_oos_m | yrs->t2 | verdict |
@@ -94,3 +94,7 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W7b_archetype_book | 9 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered) |
 | W8_states_three_nulls | 9 | 2 | k=6 market states over 286 months; market circular-shift p 0.062 (observed spread 0.020108 vs null p | -- | -- | -- | -- | -- | NOISE |
 | W9_survivor_books | 9 | 0 | 12 weekend survivors booked (24 cells): 5 beat the market NET, 10 beat it GROSS; 5 of them have thei | 0.5293 | 0.1078 | 0.2286 | 308 | 24.3 | DECAYED (worked, then stopped) |
+| W3_neural_long | 9 | 0 | [cuda] best of 20 cells is nn_s20260912|10bps at +1.998%/month vs market over 251 months (TW net 561 | 0.9835 | 0.016 | 0.0857 | 251 | 6.7 | NOISE (clears the market bar, does NOT beat lgbm) |
+| W11_evidence_writeback | 9 | 0 | 81 receipts -> 637 cell observations; 142 cells tracked; states {'IDEA': 134, 'SUPPORTED': 7, 'CONDI | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 10 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W6_behavioural | 10 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | NOVEL |

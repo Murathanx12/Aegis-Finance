@@ -589,6 +589,64 @@ what makes them indistinguishable.
 
 ---
 
+### FINDING 9 — the shapes were pointing at real money, and the frictions are worst exactly where it lives
+
+Five of twelve survivors have their whole effect in decile 1. W5b, W7b and W10
+each concluded independently that a long top-50 book cannot reach an effect that
+lives in the bottom decile. `W12_short_side` measures the book that can: long
+top-50, short bottom-50, value-weighted inside each leg, **dollar-neutral,
+benchmarked against CASH** (a neutral book carries no market exposure to beat),
+with costs charged on **both** legs' measured turnover and **borrow charged
+monthly on the short notional**.
+
+`cp_iv_spread_30d`, at 10 bps and general-collateral borrow: **+4.91%/yr,
+t 2.398**, SPA p **0.036**, PBO 0.157. The decomposition says where it comes
+from:
+
+| leg | annualised |
+|---|---|
+| long top-50 | **+13.71%** — ≈ the market itself, i.e. no alpha |
+| short bottom-50 | **−0.78%** — ≈ 14.5 points below the long leg |
+| transaction cost @ 10 bps | −2.08% |
+| borrow @ 50 bps/yr | −0.25% |
+
+**Essentially all of the spread is the short leg.** The decile-1 story, confirmed
+in money.
+
+**And then the frictions.**
+
+| cell | ann. net | t vs cash |
+|---|---|---|
+| 10 bps, 50 bps borrow | +4.91% | **2.40** |
+| 10 bps, 200 bps borrow | +4.16% | **2.03** |
+| 10 bps, **500 bps borrow** | +2.66% | 1.30 |
+| **25 bps**, 50 bps borrow | +1.79% | 0.87 |
+| 25 bps, 500 bps borrow | −0.46% | −0.23 |
+
+At 25 bps the cost drag is 5.21%/yr and it eats the whole thing. At 500 bps
+borrow it dies too. **And the short leg's median dollar volume is $2,245,045/day**
+— small, thin names, which is precisely where borrow is *not* general collateral.
+**The realistic friction scenario is the one that kills it.** Zero of 30 cells
+survive a 500 bps borrow at t ≥ 2, and DSR over the 30-cell family is 0.629.
+
+`skew_25d_30d` behaves the same way one notch weaker (+3.68%/yr, t 1.70 at
+10/50). `attention_z_5d` inverts entirely as a long-short (−1.23%/yr, t −0.53) —
+its Fama-MacBeth coefficient does not translate at all.
+
+**This is `COST_KILLED`, not `REFUTED`** — and the evidence memory has a separate
+word for it on purpose, because "it does not work" and "it works and the
+frictions eat it" call for completely different next moves. The honest reading:
+the informed-trading signal in the options surface is real and it is on the short
+side, and the instrument that could harvest it is the one this book cannot
+afford. **The affordable version is an exclusion screen** — which is exactly what
+`W5c` tested, and found at +0.17%/month over a random exclusion, t 1.27, needing
+64 years.
+
+**This is research, not a proposal.** `Mandate.allow_short` gates naked shorts on
+the live books; this job placed no order, changed no mandate and proposed no seal.
+
+---
+
 ## 5. What the evidence memory says, taken together
 
 `learner/evidence_memory.py` is what makes a looping lab cumulative rather than

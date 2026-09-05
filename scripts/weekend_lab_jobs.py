@@ -2262,6 +2262,195 @@ def W10_decay_autopsy(variant: int = 0) -> dict:
     }
 
 
+def _long_short(df, col, k=50, cost_bps=10.0, borrow_bps_per_year=50.0,
+                ret_col="fwd_1m", mkt_col="mkt_vw_1m", month_col="month"):
+    """Long top-k, short bottom-k, value-weighted inside each leg.
+
+    THE SHORT LEG IS NOT A SIGN FLIP. Three things make it a different object and
+    all three are charged here:
+
+    * **Borrow.** A short pays a fee for the locate, every day it is on. Charged
+      as `borrow_bps_per_year / 12` on the short notional each month. Omitting it
+      is the single most common way a paper short book invents money.
+    * **Costs on BOTH legs.** Turnover is measured per leg and paid per leg.
+    * **The benchmark is CASH, not the market.** A dollar-neutral book has no
+      market exposure to beat, and scoring it against an index that rose 13x
+      would be scoring it against a risk it does not carry.
+
+    Returns the monthly net series and a summary. Gross is reported beside net
+    and the borrow line is reported separately, because the whole question is
+    which of the three -- alpha, spread, borrow -- decides the answer.
+    """
+    d = df[[month_col, "permno", col, ret_col, mkt_col, "market_cap",
+            "log_dollar_vol_20d"]].dropna(subset=[col, ret_col, mkt_col]).copy()
+    if d.empty:
+        return None, {"months": 0, "note": "no rows"}
+    mo = d[month_col].astype(str).str.replace("-", "", regex=False).astype("int64")
+    d["_tb"] = (d["permno"].astype("int64") * 2_654_435_761 + mo * 97 + 20260902) % 1_000_003
+
+    def _w(sel):
+        w = sel["market_cap"].fillna(sel["market_cap"].median()).clip(lower=0)
+        return (w / w.sum()) if w.sum() > 0 else pd.Series(1.0 / len(sel), index=sel.index)
+
+    rows, prevL, prevS, short_dv = {}, None, None, []
+    for m, chunk in d.groupby(month_col, sort=True):
+        if len(chunk) < 2 * k:
+            continue
+        srt = chunk.sort_values([col, "_tb"], ascending=[False, True])
+        L, S = srt.head(k), srt.tail(k)
+        wl, ws = _w(L), _w(S)
+        rl = float((wl * L[ret_col]).sum())
+        rs = float((ws * S[ret_col]).sum())
+        dl = dict(zip(L["permno"].astype(int), wl.to_numpy()))
+        ds = dict(zip(S["permno"].astype(int), ws.to_numpy()))
+        tl = 1.0 if prevL is None else 0.5 * sum(
+            abs(dl.get(x, 0.0) - prevL.get(x, 0.0)) for x in set(dl) | set(prevL))
+        ts = 1.0 if prevS is None else 0.5 * sum(
+            abs(ds.get(x, 0.0) - prevS.get(x, 0.0)) for x in set(ds) | set(prevS))
+        prevL, prevS = dl, ds
+        short_dv.append(float(np.expm1(S["log_dollar_vol_20d"]).median())
+                        if S["log_dollar_vol_20d"].notna().any() else np.nan)
+        cost = (tl + ts) * (cost_bps / 10_000.0) * 2.0
+        borrow = (borrow_bps_per_year / 10_000.0) / 12.0
+        rows[m] = {
+            "gross": 0.5 * (rl - rs),
+            "net": 0.5 * (rl - rs) - 0.5 * cost - 0.5 * borrow,
+            "long": rl, "short": rs, "turn": 0.5 * (tl + ts),
+            "cost": 0.5 * cost, "borrow": 0.5 * borrow,
+            "market": float(S[mkt_col].iloc[0]),
+        }
+    if not rows:
+        return None, {"months": 0, "note": "no month produced both legs"}
+    f = pd.DataFrame(rows).T.sort_index()
+    net = f["net"].astype(float)
+    t = float(net.mean() / (net.std(ddof=1) / np.sqrt(len(net)))) if net.std(ddof=1) else None
+    yrs = len(net) / 12.0
+    tw = float((1.0 + net).prod())
+    return net, {
+        "months": int(len(net)),
+        "k": k, "cost_bps_per_side": cost_bps,
+        "borrow_bps_per_year": borrow_bps_per_year,
+        "terminal_wealth_net": round(tw, 4),
+        "terminal_wealth_gross": round(float((1.0 + f["gross"]).prod()), 4),
+        "cagr_net": round(tw ** (1 / yrs) - 1.0, 4) if yrs > 0 and tw > 0 else None,
+        "mean_monthly_net": round(float(net.mean()), 5),
+        "annualised_net": round(float(net.mean()) * 12, 4),
+        "t_vs_cash": round(t, 3) if t is not None else None,
+        "mean_turnover_per_leg": round(float(f["turn"].mean()), 3),
+        "annual_cost_drag": round(float(f["cost"].mean()) * 12, 4),
+        "annual_borrow_drag": round(float(f["borrow"].mean()) * 12, 4),
+        "long_leg_annualised": round(float(f["long"].astype(float).mean()) * 12, 4),
+        "short_leg_annualised": round(float(f["short"].astype(float).mean()) * 12, 4),
+        "median_dollar_vol_of_the_SHORT_leg": (round(float(np.nanmedian(short_dv)), 0)
+                                               if short_dv else None),
+        "benchmark": "CASH -- a dollar-neutral book carries no market exposure to beat",
+    }
+
+
+def W12_short_side(variant: int = 0) -> dict:
+    """THE WEEKEND'S SHAPES ALL POINT AT THE SHORT SIDE. Measure it.
+
+    Five of the twelve survivors have their entire effect in decile 1:
+    `cp_iv_spread_30d`, `skew_25d_30d`, `attention_z_5d`, `amihud_21d`, `ret_5d`.
+    W5b, W7b and W10 each concluded, independently, that a long top-50 book
+    cannot reach an effect that lives in the bottom decile. Nobody has measured
+    the book that CAN.
+
+    So: long the top 50, short the bottom 50, value-weighted inside each leg,
+    dollar-neutral, benchmarked against CASH -- and with the two charges that
+    decide whether a paper short book is real.
+
+    THE BORROW IS CHARGED, AND ITS SENSITIVITY IS REPORTED. Omitting the locate
+    fee is the commonest way a short book invents money. 50 bps/yr is general
+    collateral; the bottom decile of an illiquidity or attention sort is
+    precisely where names are hard to borrow, so 200 and 500 bps/yr are run as
+    well and `median_dollar_vol_of_the_SHORT_leg` is printed so a reader can see
+    what is actually being shorted.
+
+    THIS IS RESEARCH, NOT A PROPOSAL. `Mandate.allow_short` gates naked shorts on
+    the live books and this job places no order, changes no mandate and proposes
+    no seal. What it settles is whether the shapes were pointing at money or at
+    an artefact.
+    """
+    from learner import inference, features_price as FP
+    df = _panel()
+    if FP.available():
+        df, _ = FP.attach(df)
+    try:
+        from learner import features_options as FO
+        if FO.available():
+            df, _ = FO.attach(df)
+    except Exception:                                                   # noqa: BLE001
+        pass
+    # Direction from the screens, never searched.
+    sigs = {"cp_iv_spread_30d": +1.0, "skew_25d_30d": -1.0,
+            "attention_z_5d": +1.0, "amihud_21d": -1.0, "ret_5d": -1.0}
+    have = {s: k for s, k in sigs.items() if s in df.columns}
+    if not have:
+        return _deferred("W12_short_side", "no bottom-decile survivor is on the panel")
+    for s, k in have.items():
+        df[f"ls_{s}"] = df[s] * k
+
+    cells, series = {}, {}
+    for s in have:
+        for bps in (10, 25):
+            for borrow in (50.0, 200.0, 500.0):
+                key = f"{s}|{bps}bps|borrow{int(borrow)}"
+                net, summ = _long_short(df, f"ls_{s}", k=50, cost_bps=bps,
+                                        borrow_bps_per_year=borrow)
+                cells[key] = summ
+                if net is not None and len(net) >= 24:
+                    series[key] = net.astype("float64")
+    if not series:
+        return {"verdict": "CANNOT DETERMINE", "cells": cells,
+                "headline": "no long-short cell produced a usable series"}
+    wide = pd.concat(series, axis=1).dropna()
+    fam = {k: wide[k].tolist() for k in wide.columns}
+    best = max(fam, key=lambda k: float(np.mean(fam[k])))
+    inf = inference.full_report(fam[best], family=fam, paired_excess=fam,
+                                n_trials=len(cells), n_boot=500, seed=17)
+    eras = era_sign_table(wide[best])
+    pw = inf.get("power", {})
+    # Does it survive the EXPENSIVE borrow? A long-short that only works at
+    # general collateral is a long-short that only works on names nobody will
+    # lend cheaply -- which is the same names.
+    hard = {k: v for k, v in cells.items()
+            if k.endswith("borrow500") and isinstance(v, dict)
+            and isinstance(v.get("t_vs_cash"), (int, float))}
+    survives_hard = [k for k, v in hard.items() if v["t_vs_cash"] >= 2.0]
+    return {
+        "question": ("the five bottom-decile survivors as a DOLLAR-NEUTRAL long-short "
+                     "book -- do the shapes point at money once borrow is paid?"),
+        "family_id": "weekend-W12-short-side",
+        "signals": sorted(have),
+        "construction": ("long top-50, short bottom-50, value-weighted inside each leg, "
+                         "costs charged on BOTH legs' measured turnover, borrow charged "
+                         "monthly on the short notional, benchmarked against CASH"),
+        "cells_looked_at": len(cells),
+        "cells": cells,
+        "best_cell": best,
+        "best_annualised_net_pct": round(float(np.mean(fam[best])) * 12 * 100, 3),
+        "cells_surviving_500bps_borrow_at_t2": survives_hard,
+        "borrow_note": ("50 bps/yr is general collateral. The bottom decile of an "
+                        "illiquidity or attention sort is exactly where names are hard to "
+                        "borrow, so 200 and 500 bps are run too and the short leg's median "
+                        "dollar volume is printed. A long-short that only works at general "
+                        "collateral only works on names nobody lends cheaply."),
+        "not_a_proposal": ("Mandate.allow_short gates naked shorts on the live books. This "
+                           "job places no order, changes no mandate and proposes no seal."),
+        "inference": inf,
+        "era_sign_table": eras,
+        "headline": (f"{len(have)} bottom-decile signals as dollar-neutral long-short "
+                     f"({len(cells)} cells): best {best} at "
+                     f"{np.mean(fam[best]) * 12 * 100:+.2f}%/yr net vs cash, "
+                     f"t {(cells.get(best) or {}).get('t_vs_cash')}; "
+                     f"{len(survives_hard)} cells survive a 500bps borrow at t>=2; "
+                     f"DSR {(inf.get('deflated_sharpe') or {}).get('dsr')}, t2 needs "
+                     f"{pw.get('years_needed_for_t2')}y vs {pw.get('years_observed')}y"),
+        "verdict": verdict_from(inf, eras),
+    }
+
+
 def W11_evidence_writeback(variant: int = 0) -> dict:
     """Fold every receipt this weekend has written into the evidence memory.
 
@@ -2319,6 +2508,7 @@ JOBS = {
     "W8_states_three_nulls": W8_states_three_nulls,
     "W9_survivor_books": W9_survivor_books,
     "W10_decay_autopsy": W10_decay_autopsy,
+    "W12_short_side": W12_short_side,
     "W11_evidence_writeback": W11_evidence_writeback,
 }
 

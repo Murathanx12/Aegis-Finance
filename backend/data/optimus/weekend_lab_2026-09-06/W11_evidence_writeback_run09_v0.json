@@ -1,0 +1,32 @@
+{
+ "question": "what does the whole weekend, taken together, license us to say?",
+ "family_id": "weekend-W11-evidence-memory",
+ "receipts_read": 81,
+ "cell_observations_folded": 637,
+ "errors": [],
+ "state_counts": {
+  "IDEA": 134,
+  "SUPPORTED": 7,
+  "CONDITIONAL": 1
+ },
+ "observations_total": 1174,
+ "cells_tracked": 142,
+ "global_clear_rate": 0.1227,
+ "rule": "a single DISTINCT observation can neither promote nor kill; a deterministic job re-run is not a second observation (see `evidence_key`); REFUTED additionally requires 3 distinct observations that each HAD THE POWER to detect the effect",
+ "top_cells_by_best_dsr": [
+  "cp_iv_spread_30d = SUPPORTED",
+  "skew_25d_30d = SUPPORTED",
+  "attention_z_5d = IDEA",
+  "amihud_21d = IDEA",
+  "ret_5d = IDEA"
+ ],
+ "headline": "81 receipts -> 637 cell observations; 142 cells tracked; states {'IDEA': 134, 'SUPPORTED': 7, 'CONDITIONAL': 1}",
+ "verdict": "INVENTORY",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W11_evidence_writeback",
+ "run": 9,
+ "variant": 0,
+ "written_utc": "2026-09-05T05:05:20+00:00",
+ "elapsed_s": 0.9,
+ "exit_code": 0
+}

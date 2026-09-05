@@ -1,40 +1,40 @@
 {
- "job": "W9_survivor_books",
- "run": 8,
+ "job": "W3_neural_long",
+ "run": 9,
  "variant": 0,
- "headline": "12 weekend survivors booked (24 cells): 5 beat the market NET, 10 beat it GROSS; 5 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.803%/month, DSR 0.5293, t2 needs 24.3y vs 25.67y",
- "verdict": "DECAYED (worked, then stopped)",
- "dsr": 0.5293,
- "spa_p": 0.1078,
- "pbo": 0.2286,
- "n_oos_months": 308,
- "years_needed_for_t2": 24.3,
- "years_observed": 25.67,
+ "headline": "[cuda] best of 20 cells is nn_s20260912|10bps at +1.998%/month vs market over 251 months (TW net 561.0604 vs market 14.3778); DSR 0.9835, SPA p 0.016, PBO 0.0857, t2 needs 6.7y vs 20.92y on hand. vs LGBM (TW 16.752 @10bps): best neural arm is 16.617%/yr (t 2.533), DSR 0.7467 -- the neural arm's advantage over lgbm does NOT survive the family",
+ "verdict": "NOISE (clears the market bar, does NOT beat lgbm)",
+ "dsr": 0.9835,
+ "spa_p": 0.016,
+ "pbo": 0.0857,
+ "n_oos_months": 251,
+ "years_needed_for_t2": 6.7,
+ "years_observed": 20.92,
  "era_sign_table": {
   "1999-2007": {
-   "months": 105,
-   "mean_pct": 1.51,
-   "t": 2.349,
+   "months": 48,
+   "mean_pct": 0.4318,
+   "t": 0.61,
    "sign": 1
   },
   "2008-2015": {
    "months": 96,
-   "mean_pct": 0.9503,
-   "t": 1.807,
+   "mean_pct": 1.9587,
+   "t": 2.825,
    "sign": 1
   },
   "2016-2024": {
    "months": 107,
-   "mean_pct": -0.0224,
-   "t": -0.028,
-   "sign": -1
+   "mean_pct": 2.7352,
+   "t": 2.438,
+   "sign": 1
   },
-  "eras_with_a_positive_mean": 2,
-  "eras_with_a_negative_mean": 1,
+  "eras_with_a_positive_mean": 3,
+  "eras_with_a_negative_mean": 0,
   "eras_measured": 3,
   "holds_in_2_of_3": true,
   "same_sign_in_2_of_3": true,
   "dominant_sign": 1
  },
- "written_utc": "2026-09-05T04:53:50+00:00"
+ "written_utc": "2026-09-05T05:05:19+00:00"
 }
