@@ -162,3 +162,246 @@ receipt rather than argued:
   The scaffolding was built this session.
 
 ---
+
+## 2a. SUPPLY-CHAIN EDGES BOUGHT — and the scope excuse is answered NEGATIVELY
+
+`scripts/companyworld_extract.py` (a copy of the third repo's `mg1_*`, never an
+import across repos) read **1,486 10-K filings** from EDGAR — 10-K bodies were
+not on this machine and were fetched at 8 req/s with a declared UA; no corpus
+substitution — and wrote
+`backend/data/optimus/graph/companyworld_v1.parquet`:
+
+**2,020 resolved edges over 945 distinct permnos, 1999-2011**, 93.9% carrying a
+verbatim quote present in the excerpt that was sent. Resolution to CRSP 31.1%,
+within a point of mg1's own 30.6%; the residue is the same and is not a bug —
+**4,138 of 6,753 mentions are not in CRSP at the date, because the supply chain
+is mostly not US-listed.**
+
+| year | 99 | 00 | 01 | 02 | 03 | 04 | 05 | 06 | 07 | 08 | 09 | 10 | 11 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| edges | 13 | 174 | 144 | 196 | 238 | 185 | 185 | 202 | 205 | 148 | 134 | 146 | 50 |
+
+customer 854 · competitor 761 · supplier 284 · shared_technology 102 ·
+regulatory_exposure 18 · shared_end_market 1. Panel coverage **945 of 8,981
+names** (939 of the 6,546 that survive the floors) against MARKET-GRAPH-1's
+**386**.
+
+### W4's new verdict: CANNOT DETERMINE (underpowered) on all three arms — and the direction is the finding
+
+Floors applied to the **training** universe before any regression
+($3m/day AND close >= $5): 925,757 -> **530,447 rows (57.3%)**, 8,981 -> 6,546
+names.
+
+| arm | months | best controlled FM t | family-max Sidak p | SPA p | PBO |
+|---|---|---|---|---|---|
+| `companyworld_only` (1999-2013, never seen) | 40 | `cust_mom_ew` **0.297** | 0.96 | 0.61 | **0.957 OVERFIT** |
+| `market_graph_1_only` (2014-24, W4's own) | 105 | `cust_mom_ew` **1.447** | 0.74 | 0.11 | 0.343 FRAGILE |
+| `pooled` | 145 | `cust_mom_ew` **0.989** | 0.97 | 0.17 | 0.514 OVERFIT |
+
+Family size 9 per arm. DSR 0.186 / 0.376 / 0.616 — all `WITHIN_SELECTION_NOISE`.
+Years-to-t2 32.3 / 23.5 / 14.5 against 12.1 observed.
+
+**Same prompt, same taxonomy, same liveness rule; only the years changed, and
+customer momentum fell from t 1.45 to t 0.297.** "The graph is too small" was
+W4's stated reason for not concluding. It is now answered rather than
+outstanding: **more tape made it weaker.** This closes the scope excuse, not
+financial graphs.
+
+**Cost: $2.12 of the $10.00 cap**, 3,462 calls, every one priced. The provider
+balance moved 13.38 -> 10.21 = $3.17, which is an **upper bound and not this
+job's cost** — §2b was drawing on the same key over the same window. The pilot
+projected $0.0988/100 filings, i.e. $11.71 for the full 11,850-filing worklist,
+so the **sample was cut rather than the cap exceeded**.
+
+Receipts: `W4b_companyworld_extract_pilot.json`,
+`W4b_companyworld_extract_run01.json`, `W4b_companyworld_rerun_run01.json`,
+`W4b_cost_reconciliation_run01.json`, `S3_graph_receipt_provenance_run01.json`
+
+---
+
+## 2b. THE LLM READING TEST — 192 windows, four arms, and every one of them is negative
+
+The prompt said "Friday's L10 built the scaffolding". **It did not** — L10 was
+never run; there is no L10 receipt in `night_lab_2026-09-05/`. The scaffolding
+was built this session.
+
+2016-01..2019-12, **192 windows** (all of them, not the 200 ceiling), 8 names
+per window, top 3 held, gpt-5-nano rewriter at `reasoning_effort="minimal"`
+(`temperature` is a 400 on that model and is not sent), DeepSeek decider at
+T=0, **rank graded only** — the LLM never sees or produces a price — benchmarked
+against the equal-weight basket of **the same 8 anonymised names in the same
+month**, 10 bps, $3m/day and $5 floors.
+
+| arm | windows | mean IC | t (month blocks) | mean net top−EW |
+|---|---|---|---|---|
+| fantasy, no diary | 192 | −0.0314 | −0.964 | −0.393% |
+| fantasy, diary | 192 | −0.0259 | −0.811 | −0.127% |
+| real-anon, no diary | 190 | −0.0427 | −1.294 | −0.308% |
+| real-anon, diary | 190 | −0.0530 | −1.621 | −0.518% |
+
+Family size 4, **family-max p 0.729**, min p 0.175, **nothing survives BH at
+0.05**. DSR of the best arm **0.0205**. Nulls 1-3 all one-sided p > 0.72, and
+null 3 — the same-day paired statistic, which is the primary one because the
+month effect cancels — is **−0.449%, t −0.678**.
+
+**The memorisation canary is clean: 0 of 192 exact-year hits against a 0.25
+chance rate, 0% company-named.** When the model did guess a year it said 2023
+(75) or 2024 (24) — i.e. it guessed its own training era, not the era it was
+reading. That is the control working.
+
+**Reading: on 2016-19, a DeepSeek decider reading rewritten filings ranks
+WORSE than the equal-weight basket of the same names, in all four arms, and the
+diary does not help.** The fantasy-vs-real-anon contrast — the memorisation
+question — is not answerable here, because neither arm is above zero.
+
+One defect worth more than the table: `rewriter_integrity` shows
+**195 of 382 bundles preserved every magnitude**; the rest silently dropped
+numbers (e.g. 104 expected, 96 found). A rewriter that drops magnitudes has
+changed the information the decider sees, and it is a confound on any future
+positive result from this rig.
+
+**Cost: $0.3175** — gpt-5-nano $0.1587 (215 calls, telemetry; OpenAI exposes no
+balance endpoint) + DeepSeek $0.1589 (724 calls) — against a $4.50 working cap.
+
+Receipts: `L10_era_replay_windows.json`, `L10_era_replay_v2_pilot.json`,
+`L10_era_replay_v2_run01.json`
+
+---
+
+## 2c. THE NEURAL ARM UNDER THE FLOOR — **B10 NOT EARNED**
+
+The decision rule was written to disk and hashed **before** the run
+(`W3b_neural_floored_run01_declaration.json`, sha `428a7148f61942b0…`), and the
+object judged is the **seed-mean ensemble**, never the best cell.
+
+Floored **training** universe (not only grading): 530,447 of 925,757 rows.
+251 months, 8 seeds x 2 arms x 21 folds, on the CUDA interpreter
+(`python_executable` = system Python 3.12, torch 2.11.0+cu128, RTX 5060).
+
+| arm | TW net @10bps | vs market |
+|---|---|---|
+| market | 14.378 | — |
+| `lgbm_clf` (mandatory baseline) | 22.608 | — |
+| `lgbm` (W3's own incumbent) | **36.245** | — |
+| nn seed-mean ensemble | 24.134 | +4.58%/yr, t 1.318 |
+| nn_pre_causal seed-mean ensemble | 49.008 | +8.14%/yr, t 2.243 |
+
+The pretrained ensemble clears three of the four declared clauses — (a) positive
+against both incumbents at both cost rates, (c) TW ahead of both, (d) sign in
+2 of 3 eras — and **fails the family-corrected one**: DSR vs `lgbm_clf`
+**0.1726** against a 0.95 bar, SPA p 0.108, PBO 0.343, paired t 1.24. It is only
++0.83%/yr over `lgbm` (t 0.23). The supervised `nn` arm fails (a), (b) and (c)
+outright: **−2.74%/yr against `lgbm` at 10 bps** (its DSR vs `lgbm_clf` is
+0.0294).
+
+Seed spread over 8 seeds at 10 bps: `nn_pre_causal` TW **26.0 / 54.1 / 105.0**
+(min / median / max), sd 23.9. The best cell is twice the median seed — which is
+exactly why the rule declared beforehand judged the ensemble. Its own inference
+looks strong in isolation (DSR 0.8621, SPA p 0.004, PBO 0.1429, MDE 7.35%/yr,
+t=2 needs 8.0y against 20.92 observed, 3 of 3 eras positive) and it is **not
+promoted**, because a maximum over eight seeds is not a choice a desk could
+have made.
+
+Proof the floor bound the FIT and not just the book: the grading floor then
+removed **0 of 454,708** gradeable rows, and every graded book has a median
+holding trading **$17-29m/day at $27-41 a share, 0% under $5, 0% under
+$1m/day** (`floor_at_grading_is_a_noop.pass: true`).
+
+**"B10 not earned" is written into the receipt. The neural loop stops. No
+champion frozen, no shadow accrual, and the best cell (TW 105.0) is explicitly
+not promoted.**
+
+**The finding that outranks the verdict:** five months carry **83.6% of
+`lgbm_clf`'s entire 251-month excess**, and without them the incumbent is
+**BEHIND the market** (7.78 vs 8.18). The baseline the neural arm failed to
+beat is itself five months wearing twenty-one years — the same shape as the
+weekend's own champion (54.3% in five months) and the night lab's L1.
+
+Receipts: `W3b_neural_floored_run01_declaration.json`,
+`W3b_neural_floored_run01.json`
+
+---
+
+## 2e. EVIDENCE MEMORY -> REGISTRY
+
+`backend/data/signal_registry.yaml` gains a `conditional_evidence:` block:
+**12 rows over 3 families and 4 cells** — `weekend-W3-supervised` (SUPPORTED),
+`weekend-W5-options-iv` (SUPPORTED), `weekend-W7b-archetype-book`
+(COST_KILLED) — each at four eras (ALL / 1999-2007 / 2008-2015 / 2016-2024)
+with `{n, sharpe, dsr, spa_p, pbo, verdict}`. It reconciles exactly against the
+snapshot: 327 cells = 4 exported + 15 withheld with the excluded family + 308
+IDEA.
+
+**The load-bearing exclusion:** `weekend-W7-matched-loser` is SUPERSEDED by the
+matched-control leak, and **9 of the memory's 12 SUPPORTED cells live in that
+family**. Every one of them survives the *row-level* rule, because the
+supersession boundary (05:40) predates the corrected re-runs and only 101 of
+6,199 observations are removed. So the export excludes the family **and names
+the count** rather than dropping it silently.
+
+**The superseded-cannot-vote test was proved red, not asserted green.**
+`live_rows` was temporarily reverted to the pre-fix behaviour and **5 of 11
+tests went red**; the file was restored byte-identical (sha `8ce96ba0b61ea443`
+before and after), and `test_the_fixture_can_actually_vote` asserts the pre-fix
+SUPPORTED so the others cannot pass vacuously.
+
+**What `e6ce604` did not cover, and this did:** its filter lived inside
+`snapshot()` alone, while `read_all` and `state_of` are public and unfiltered —
+so this export, the *second* consumer, would have read the whole leaked store
+green. Three further silent holes closed: `read_supersessions()` used to skip
+unparseable rule lines (skipping an observation costs one data point; skipping
+a supersession re-admits a retracted experiment); `before_utc: "2026-09-05"`
+excluded **nothing** because the comparison is lexicographic; and a rule
+matching zero rows now carries a WARNING instead of reading as "applied, no
+effect".
+
+Inert for the PM, proved rather than asserted: `Registry.__dataclass_fields__`
+has five keys and no sixth, and
+`test_no_reader_of_the_registry_consumes_conditional_evidence` greps every `.py`
+in the repo — asserting **>500 files were actually scanned**, because an empty
+search is not evidence. Idempotent: three runs, sha `3224a851…` each time, no
+wall clock in the block, everything outside the two markers byte-identical
+including CRLF.
+
+Open for a human: `weekend-W7b-archetype-book` IS exported while
+`weekend-W7-matched-loser` is not — the supersession rule names only the
+latter, and W7b is the archetype *book* built on W7's candidates. If the
+control-pool fix touches it, that needs a second rule. **The job did not invent
+a retraction.**
+
+Receipt: `B6_evidence_to_registry_run01.json` · tests 11 + 32 passed
+
+---
+
+## 2f. THE REVISION BOOK CONTRACT — DRAFTED, NOT FROZEN
+
+`docs/CONTRACT_DRAFT_2026-09-06_REVISION_BOOK.md`. Six `REQUIRED_FIELDS` filled
+from the terminal repo's real `alpha/contract.py`: horizon 126, min hold 42,
+per-cohort `thesis_expiry`, three revision-specific falsifiers, ~$27/name risk
+budget, and the real six emergency exit reasons quoted verbatim. Licence asked
+for: **`PRODUCT_EXPERIMENT`**.
+
+The power line, as written: *the tape says this needs ~36 years to reach t = 2
+at its own Sharpe; we hold 25.7; forward paper cannot adjudicate the alpha
+claim, not this year and not this decade; the book exists to test holding
+discipline and regret, not alpha.* Followed by the tail — 54.28% of the excess
+in five months, +3.128%/yr at t 0.844 without them.
+
+**Two blockers it found, neither fixed, both Murat's call:**
+1. `alpha/contract.defaults_for` branches on
+   `TRACKER_BOOKS = ("hack3","hack4","hack6")`. **hack2 falls through to the
+   EVENT defaults — horizon 3, min hold 0, `profit_target_frac` 0.025** — so a
+   hack2 seal today gets a 3-session contract with a +2.5% target and holds
+   nothing.
+2. `alpha/fleet.py:104` gives hack2 profile `aggressive` = a **3% stop**, the
+   exact "stop inside the noise is a fee" failure its own header names.
+   There is also no cohort id field, so the ledger cannot group by cohort.
+
+It also **refused a number**: `net_rev_4w` **under the tradable floor is NOT IN
+A RECEIPT** — W9 run40's `cells` rows all carry `tradable_floor_usd: null`, and
+its power/tail/era blocks are computed on the *champion* arm, not on
+`net_rev_4w`. Unfloored, `net_rev_4w|high|10bps` is TW 22.859 vs market 13.182,
+**+2.53%/yr t 1.038**; at 25 bps it is **−0.98%/yr, t −0.402**. The entire
+result is the cost assumption, and the draft says so in its own scoreboard.
+
+---
