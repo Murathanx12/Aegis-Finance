@@ -792,6 +792,49 @@ afford. **The affordable version is an exclusion screen** — which is exactly w
 **This is research, not a proposal.** `Mandate.allow_short` gates naked shorts on
 the live books; this job placed no order, changed no mandate and proposed no seal.
 
+### FINDING 10 — the GPU neural arm, and how 561× became 36×
+
+`learner/neural_long.py` on the long panel, CUDA verified (`sm_120`, 8 seeds,
+21 walk-forward years). Its best cell reported **terminal wealth 561.06 against a
+market at 14.38** over 251 months — a ~35%/yr top-50 book, DSR 0.9835, SPA p
+0.016, PBO 0.086. Every family test it was given, it passed.
+
+In this repo a number that size has been an artefact before — the split
+adjustment bug once produced a "42% CAGR equal-weighted market" and an 831×
+basket — so it was checked the way `feedback_ask_what_it_bought` says to check:
+**by printing the holdings.**
+
+| | neural book | whole panel |
+|---|---|---|
+| median close | **$6.61** | $20.68 |
+| share under $5 | **41.3%** | — |
+| share under $2 | **17.9%** | — |
+| median $ volume/day | **$1.03m** | $6.22m |
+| share under $1m/day | **49.3%** | — |
+| median market cap | **$202m** | $883m |
+
+It is a microcap book. And `evaluate.TRADABLE_DOLLAR_VOL` — **$3m/day, this
+repo's own execution floor** — was not being applied by the neural module, nor
+by any of this weekend's book jobs.
+
+| filter | TW net | excess | t |
+|---|---|---|---|
+| no floor | **561.06** | 23.97%/yr | 3.542 |
+| $1m/day | 112.04 | 14.23%/yr | 2.917 |
+| $3m/day (house floor) | 92.81 | 12.70%/yr | 2.756 |
+| **$3m/day and close ≥ $5** | **36.31** | 7.04%/yr | **1.981** |
+
+**93.7% of the headline is unbuyable**, and the t falls under 2 once a price
+floor joins the volume floor. The neural arm's own verdict was already *"clears
+the market bar, does NOT beat lgbm"* — the advantage over LightGBM does not
+survive the family — so nothing here was going to be promoted anyway. But the
+561× was going to be *quoted*.
+
+So the floor check is computed in the **W3 wrapper and attached to every neural
+receipt**, not written up in a document. A 561× sitting in a JSON file will be
+quoted by somebody, and the correction has to travel with the number rather than
+live somewhere they might not read.
+
 ---
 
 ## 5. What the evidence memory says, taken together
@@ -843,11 +886,21 @@ skipped, 0 failed** on the last full run.
 (`aegis-alpha-terminal/docs/RUNBOOK_2026-09-08_REARM.md`) is unaffected by this
 weekend and should be run as written.
 
-**The three things worth your attention, in order:**
+**The five things worth your attention, in order:**
 
-1. **Analyst target-price revisions worked for 17 years and stopped in 2016** — powered, dated, and arbitraged rather than out-costed. Not a trade; a fact, and the most interesting thing the long panel produced.
-2. **A regression coefficient is not a book.** Five features died crossing that gap this weekend. Every book job now prints its decile shape before its verdict, and `W9_survivor_books` books every survivor in one family so the multiplicity is counted over the whole search (277 trials, not 24).
-3. **The liquidity FLOOR, not band.** Sub-$100k/day names lose 2.58%/yr against the equal-weighted rest, negative in 3 of 3 eras; above that liquidity stops mattering. `evaluate.TRADABLE_DOLLAR_VOL` is $3m — well above where the damage is, so the current floor is safe but not evidence-shaped.
+1. **Nineteen years do not say what seven could not.** The 32-cell learner grid on 26 years moves the DSR from 0.197 to **0.293** against a bar of 0.95. Tripling the out-of-sample months bought ten points and changed no verdict. That is the answer to the question the weekend was set.
+2. **Three of this session's own findings were wrong, and two review lanes found them** — a leak in the matched-control design, a guard that could not go red, and a power flag that was the t-test restated. All fixed, all with the correction attached to the number rather than filed in a document. **The reviews were the highest-value hours of the weekend.**
+3. **Analyst target-price revisions worked for 17 years and stopped in 2016** — dated, and arbitraged rather than out-costed (the *gross* book loses in 2016-24). Not a trade; a fact.
+4. **A regression coefficient is not a book.** Five features died crossing that gap. Every book job now prints its decile shape before its verdict, and `W9_survivor_books` books every survivor in one family so multiplicity is counted over the whole search (288 trials, not 24). Related and cheap: **apply `TRADABLE_DOLLAR_VOL` in every book** — it was in none of them, and it is what turned a 561× into 36×.
+5. **The liquidity FLOOR, not band.** Sub-$100k/day names lose 2.58%/yr against the equal-weighted rest, negative in 3 of 3 eras; above that liquidity stops mattering. The current $3m floor is safe but was not evidence-shaped until now.
+
+**The single most useful number to carry forward:** a top-50 book over 21 years at
+realistic volatility has a **Minimum Detectable Effect of ~7.4%/yr**, and the
+26-year learner grid's best cell has an MDE of **16.3%/yr**. Most of what this
+programme wants to measure is smaller than what its instruments can see. That is
+not a reason to stop; it is the reason evidence has to accumulate across
+independent tests rather than arrive from one — which is what
+`learner/evidence_memory.py` now exists to do.
 
 **Housekeeping I could not do from this repo:** the weekend roadmap asks for a
 `W weekend lab` row in the roadmap §6 and a B10 status line. Those B-lanes live
