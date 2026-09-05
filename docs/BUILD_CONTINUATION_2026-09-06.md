@@ -689,3 +689,70 @@ that carries it.
     `B3_2_autopsy_and_opportunity_recall.json`.
 
 ---
+
+## LLM SPEND, TO THE CENT — and a defect in how we count it
+
+| provider | measured how | this session |
+|---|---|---|
+| DeepSeek | **provider balance**, 13.36 -> 9.38 | **$3.98** |
+| gpt-5-nano | telemetry (OpenAI exposes no balance endpoint to this key) | **$0.16** |
+| **TOTAL** | | **$4.14 of a $15.00 cap** |
+
+By purpose (telemetry attribution): `companyworld_edges` **$2.12** of its $10
+sub-cap, `era_replay_v2.decide` **$0.48** of its $5 sub-cap, everything else
+**$0.00**. 4,598 calls. Unit economics: **$0.00105 per supply-chain edge** and
+**$0.00063 per graded LLM rank decision**.
+
+**The defect: our ledger prices only 56% of what DeepSeek charged.** Telemetry
+totals $2.22 across 4,201 calls, 12.83M input and 1.43M output tokens; the
+provider took $3.98. If the table's 1:2 in/out ratio holds, the implied rate is
+**$0.2535/Mtok in — 1.81x** the $0.14 in
+`backend.config.LLM_PRICE_PER_MTOK["deepseek-v4-flash"]`.
+`research_budget.require()` enforces its DOLLAR ceiling against that ledger, so
+a $10 dollar-gate would in fact stop near $17.90 of real spend. **The CALL
+ceiling is the hard one for exactly this reason, and it is what held here.**
+Not fixed from an inferred constant — the fix is to read the published price
+list with the network available and re-derive both legs.
+
+Receipt: `S4_llm_spend_reconciliation_run01.json`
+
+---
+
+## WHAT I COULD NOT DO, AND WHY
+
+1. **The full 11,850-filing 10-K worklist was not extracted.** The pilot
+   projected $11.71 against a $10.00 sub-cap, so the sample was cut to 1,486
+   filings rather than the cap exceeded. Coverage is 1999-2011; **2012-13 are
+   absent.** The verdict is not sensitive to it — the direction is already
+   down — but the window is not what §2a asked for.
+2. **B5 §3-§5 (the 8-K event schema, the case-company FACT rows, the first
+   consumers) were not started.** §2 (the historical permno-CIK link) fell out
+   as a by-product: 30,638 of 51,001 filings linked, 60.1%.
+3. **B7 §3-§4 (the fantasy stress exams and the live pre-open bridge) were not
+   started.** One era ran, so the three-era table is CANNOT DETERMINE by
+   construction.
+4. **The Optimus MCP server was down for most of the session** — collateral
+   damage from the `taskkill`. `session_briefing()` and
+   `aegis_verified_state()` ran at the start; `brain_query` was unavailable
+   afterwards. `python tools/refresh_aegis.py` ran at the end and succeeded
+   (aegis-finance sha `da8875d`, 245 session-memory pages, 470 doc pages).
+5. **Nothing was pushed, sealed, ordered, deployed or changed on Railway**, by
+   design.
+6. **A branch note that needs a decision.** The working tree is on
+   `lab/weekend-2026-09-06`, not `main` — `main` was at `c45a825` when this
+   session opened and the branch was already checked out. All 20 commits landed
+   on the branch. `main` is a strict ancestor, so a fast-forward is lossless and
+   is what the mandate ("commit locally on `main`") intends; it is applied at
+   the end of the session and both refs then point at the same commit. Nothing
+   is rewritten and nothing is pushed.
+
+---
+
+## THE ONE-LINE VERDICT
+
+Three mechanisms were bought, built and measured this weekend and **none of
+them beat what we already had.** The most useful thing produced is not a
+candidate — it is the discovery that **the incumbent we measure candidates
+against is itself five months of beta timing**, which means the whole
+comparison ladder has been resting on an artefact. That is worth more than any
+of the three arms, and it is the first thing the next session should act on.
