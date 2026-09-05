@@ -1,0 +1,42 @@
+{
+  "job": "W4b_companyworld_cost_reconciliation",
+  "ts_utc": "2026-09-05T12:11:24.263043+00:00",
+  "hard_cap_usd": 10.0,
+  "telemetry": {
+    "n_calls": 3462,
+    "tokens_in": 12503769,
+    "cached_tokens": 7228800,
+    "tokens_out": 1245552,
+    "cost_usd_estimate": 2.119515,
+    "n_calls_with_no_edge_minted": 1982,
+    "zero_yield_rate": 0.5725,
+    "basis": "config.LLM_PRICE_PER_MTOK, deepseek-chat $0.14/$0.0028/$0.28 per Mtok"
+  },
+  "provider_balance_usd": {
+    "before_first_main_pass_20_46_local": 13.38,
+    "after": 10.21,
+    "delta": 3.17,
+    "WHY_THE_DELTA_IS_NOT_MY_COST": "The balance is the vendor's truth for the ACCOUNT, not for this job. Other jobs in this same session (the era-replay decide step, \u00a72b) were calling DeepSeek on the same key over the same window, so $3.17 is an UPPER BOUND on this campaign and $2.12 is the per-call sum of the rows this campaign actually wrote. Quoting the balance delta as this job's cost would charge it for someone else's calls."
+  },
+  "cost_to_the_cent": {
+    "this_campaign_usd": 2.12,
+    "account_delta_usd_all_jobs": 3.17
+  },
+  "what_the_money_bought": {
+    "filings_extracted": 1486,
+    "raw_edges": 6753,
+    "quote_verified": 6339,
+    "resolved_edges_written": 2020,
+    "distinct_permnos": 945,
+    "usd_per_100_filings": 0.1426
+  },
+  "waste_recorded_not_hidden": {
+    "first_halted_pass": "91 calls refused by the zero-yield brake; 76 documents kept and reused",
+    "killed_stalled_pass": "~1,676 documents were extracted and BILLED, then lost when the stalled process was killed, because records were only written at the end of the run. That is the larger part of the $2.12 and it bought nothing. Fixed: records are flushed per document and the run resumes from them."
+  },
+  "stop_rule": {
+    "rule": "90 minutes to get the extractor running end-to-end",
+    "met": true,
+    "detail": "the 20-filing pilot completed end-to-end at minute ~45 (15/15 documents, 109 edges, $0.0148). The overrun after that was the MAIN pass, not the extractor failing to run, and it was caused by the governor stampede described in the extract receipt."
+  }
+}
