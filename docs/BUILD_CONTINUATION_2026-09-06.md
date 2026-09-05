@@ -7,17 +7,40 @@ ordered, deployed or changed on Railway. Every number below has a receipt path.
 
 ## RESULTS SCOREBOARD
 
-*(filled at the end of the session — see the sections below for the receipts)*
+**RESULT IMPROVEMENT: NONE.** Nothing reached NOVEL. Two of the three research
+questions closed NEGATIVE with the evidence to say so, one closed
+CANNOT DETERMINE, and the strongest new number is about the **baseline**, not
+about any candidate.
 
 | KPI | This session |
 |---|---|
-| Best historical net strategy vs the market | — |
-| Best forward paper strategy | — |
-| Independent selector count | — |
-| Farm candidates tested / promoted | — |
-| New actionable finding | — |
-| External execution drag | — |
-| LLM spend / cost per gradeable output | — |
+| Best historical net strategy vs the market | unchanged: `target_rev_1m__xs` top-50 VW, TW **85.324** vs VW market 13.031 (t 2.407) — but **+4.01%/yr t 0.859** vs an EW market and **DSR 0.1239** over its own 307-trial search. Still not a finding. |
+| Best forward paper strategy | none. The books are flat by design; hack3/4/6 are dry-run only this session |
+| Independent selector count | **unchanged at 1.** Nothing promoted. The neural arm was refused, the graph arm did not replicate, the LLM arm is negative |
+| Farm candidates tested / promoted | **3 tested / 0 promoted** (companyworld graph features, floored neural encoder, LLM era-replay decider) |
+| New actionable finding | **the mandated baseline is five months.** 83.6% of `lgbm_clf`'s 251-month excess sits in five months, and without them it is BEHIND the market (7.78 vs 8.18). Every "beats/loses to lgbm" statement in this repo is a comparison against a beta-timing artefact |
+| External execution drag | not measured this session — no orders, no seals, no deploys |
+| LLM spend / cost per gradeable output | **$4.14 of a $15.00 cap.** DeepSeek $3.98 provider-measured; gpt-5-nano $0.16 telemetry. 4,598 calls. **$2.12 bought 2,020 supply-chain edges (~$0.00105/edge) and $0.32 bought 768 graded LLM rank decisions (~$0.00041/decision).** And a defect: our ledger prices only **56%** of what the provider charged |
+
+### The five things a reader should take away
+
+1. **The CUDA question is answered and it was a different interpreter, not a
+   downgrade.** The GPU numbers were always real; the receipt could not say
+   whose they were, and now it can.
+2. **Buying more supply-chain tape made the graph result WEAKER**, not
+   stronger. Customer momentum: FM t 1.447 on MARKET-GRAPH-1's own 2014-24
+   window, **t 0.297** on the never-seen 1999-2013 window. The scope excuse is
+   answered rather than outstanding.
+3. **B10 is not earned and the neural loop is stopped**, on a rule declared and
+   hashed before the first fit, judged on the seed-mean ensemble.
+4. **The LLM cannot read 2016-19 filings into a rank that beats the equal-weight
+   basket of the same names** — all four arms negative, family-max p 0.729,
+   memorisation canary clean at 0/192. The one caveat is a rewriter that
+   preserved every magnitude in only 195 of 382 bundles.
+5. **Four of the adversarial review's six ranked next moves were already closed
+   before this session started, and I called one of them open by reading the
+   receipt the review quoted instead of the newest one.** The correction is in
+   the receipt.
 
 ---
 
