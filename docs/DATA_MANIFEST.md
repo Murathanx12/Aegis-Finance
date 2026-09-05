@@ -22,10 +22,20 @@ commit.** An ignore rule without a manifest row is the bug.
 | `backend/data/optimus/wrds/crsp_monthly_panel_2013_2024.json` | ~31.9 MB | WRDS pull scripts (`scripts/wrds_*`) | CRSP monthly panel, 2013–2024. Substrate for the tracker/IBES backtests. | Re-pull from WRDS `crsp.msf` + `crsp.msenames` |
 | `backend/data/optimus/wrds/tr13f_quarterly.json` | ~25.3 MB | WRDS pull scripts | Thomson Reuters 13F quarterly holdings. Substrate for the holder-provenance work (H2/H3). | Re-pull from WRDS `tr_13f.s34` |
 
+| `backend/data/optimus/graph/companyworld_work/` | ~31 MB | `scripts/companyworld_extract.py` (2026-09-06) | Per-document extraction records the run resumes from, plus cached 10-K bodies for 1,486 filings. | Re-run the extractor; re-buying the DeepSeek calls costs about **$2.12** |
+| `backend/data/optimus/graph/companyworld_inputs/` | ~57 MB | copied at run time | Two CRSP/Compustat link registries that ALREADY live under `backend/data/`. A second copy of a source is a second source. | Delete; the originals are the source |
+
 The derived, committed evidence for both is in
 `backend/data/optimus/tracker_backtest/` — `holder_h2_h3.json`,
 `holder_fingerprint_summary.json`, `ibes_status_rules_2013_2024.json`,
 `topn_concentration.json`. **Quote the receipt, not the panel.**
+
+The companyworld PRODUCT is **committed**: `backend/data/optimus/graph/companyworld_v1.parquet` (18 KB, 2,020 edges, 945
+permnos, 1999-2011, `graph_layer=FACT`, 94.65% quote-verified), with
+`continuation_2026-09-06/W4b_companyworld_extract_run01.json`,
+`W4b_companyworld_rerun_run01.json`, `W4b_cost_reconciliation_run01.json` and
+`S5_companyworld_integrity_check_run01.json` beside it. **Quote the receipt,
+not the working directory.**
 
 ## Ignored by the blanket `*.parquet` rule (.gitignore line 63)
 
