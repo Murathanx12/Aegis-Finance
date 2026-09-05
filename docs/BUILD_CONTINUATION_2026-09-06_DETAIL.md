@@ -759,3 +759,27 @@ candidate — it is the discovery that **the incumbent we measure candidates
 against is itself five months of beta timing**, which means the whole
 comparison ladder has been resting on an artefact. That is worth more than any
 of the three arms, and it is the first thing the next session should act on.
+
+
+## ONE MORE, AT MY OWN EXPENSE: I WROTE A GATE THAT COULD NOT GO RED
+
+Waiting for the final suite, I wrote a poll loop around
+
+```bash
+if ! tasklist /FI "PID eq 109648" | grep -q 109648; then echo "pytest exited"; fi
+```
+
+`tasklist` with a non-matching filter prints `INFO: No tasks are running...` and
+**exits 0**, and in Git Bash the filter did not match a live PID at all, so the
+loop reported "pytest exited" at t=0 while the process was sitting at 958 MB and
+still collecting. It is the same shape as `reference_gate_that_cannot_go_green`
+and as the share-basis gate this session verified: **a check whose negative
+branch is unreachable is not a strict check, it is an absent one.** The
+replacement asks the OS directly and compares to a literal:
+
+```bash
+powershell -NoProfile -Command "if (Get-Process -Id $PID) {'ALIVE'} else {'GONE'}"
+```
+
+Recorded because it happened in the same session that shipped two guards against
+exactly this, which is the useful part of the anecdote.
