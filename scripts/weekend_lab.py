@@ -82,6 +82,7 @@ QUEUE: list[tuple[str, int, int]] = [
     ("W7b_archetype_book", 90, 1),
     ("W8_states_three_nulls", 60, 3),
     ("W9_survivor_books", 90, 1),
+    ("W10_decay_autopsy", 60, 1),
     ("W11_evidence_writeback", 20, 1),
 ]
 

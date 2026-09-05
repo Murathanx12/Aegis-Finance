@@ -70,3 +70,13 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W5b_options_book | 7 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | NOISE |
 | W5c_options_exclusion | 7 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
 | W4_graph_momentum | 7 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W1_long_panel_inventory | 8 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W6_behavioural | 8 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | NOVEL |
+| W6b_liquidity_band | 8 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W5_options_iv | 8 | 1 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | NOVEL |
+| W5b_options_book | 8 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | NOISE |
+| W5c_options_exclusion | 8 | 0 | 6 base x cost cells; best screen-minus-random is 0.1714%/month (t 1.272) on mom_12_1@25bps; 0 of 6 c | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W4_graph_momentum | 8 | 0 | 9 graph features on 12 of 26 panel years (2014-05-01..2025-01-01), 386 of 8,981 panel names; 0 clear | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W7_matched_loser | 8 | 3 | 297 formation months, 25 winners x 8 matched controls each; 8 candidates over 3 DISTINCT ideas (['an | -- | -- | -- | -- | -- | NOVEL |
+| W7b_archetype_book | 8 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered) |
+| W8_states_three_nulls | 8 | 1 | k=5 market states over 286 months; market circular-shift p 0.112 (observed spread 0.017384 vs null p | -- | -- | -- | -- | -- | NOISE |

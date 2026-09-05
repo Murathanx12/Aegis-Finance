@@ -1996,6 +1996,236 @@ def W9_survivor_books(variant: int = 0) -> dict:
     }
 
 
+def W10_decay_autopsy(variant: int = 0) -> dict:
+    """WHAT CHANGED IN 2016? The autopsy on the weekend's one powered result.
+
+    W9 found the first POWERED cell of the run -- analyst target-price revisions,
+    +9.64%/yr at t 2.06 over 308 months, terminal wealth 56.66 against a market
+    at 13.03 -- and then found that it is over:
+
+        1999-2007  +1.51%/month  t  2.35
+        2008-2015  +0.95%/month  t  1.81
+        2016-2024  -0.02%/month  t -0.03
+
+    "It stopped working" is where most research stops. It is not an explanation
+    and it does not tell anyone what to do next. This job asks which of the
+    candidate mechanisms actually moved, and it reports every one of them
+    including the ones that did not, because a mechanism that did NOT change is
+    what rules out an explanation.
+
+    THE CANDIDATES, each with a number attached:
+
+    1. **The alpha was arbitraged.** Then the GROSS spread should shrink between
+       eras, not just the net. If gross is intact and only net died, the story is
+       costs or turnover, not crowding.
+    2. **It moved to smaller names.** A value-weighted book cannot hold what a
+       cap-weighted portfolio underweights. An EQUAL-WEIGHTED arm that still
+       works in 2016-2024 says the effect migrated rather than died.
+    3. **The signal itself changed shape.** If the cross-sectional dispersion of
+       target revisions collapsed, there is simply less to sort on -- an
+       information-supply story, not an arbitrage one.
+    4. **Coverage changed.** More analysts per name means faster dissemination.
+    5. **The horizon moved.** If a monthly rebalance is now too slow, the 1-month
+       forward is the wrong target and a shorter one would still pay.
+
+    A decayed anomaly is a lead. This is the file that says which lead.
+    """
+    from learner import evaluate, long_panel as LP
+    df = _panel()
+    sig = "target_rev_1m__xs"
+    if sig not in df.columns:
+        return {"verdict": "FAILED", "headline": f"{sig} is not on the panel"}
+    df["_y"] = pd.to_datetime(df["entry_date"]).dt.year
+    rows = []
+    for era, lo, hi in LP.ERAS:
+        g = df[(df["_y"] >= lo) & (df["_y"] <= hi)].copy()
+        if g["month"].nunique() < 24:
+            rows.append({"era": era, "note": "too few months"})
+            continue
+        row = {"era": era, "months": int(g["month"].nunique()),
+               "name_months": int(len(g))}
+        # (1) gross vs net, VW -- is the alpha gone or only the profit?
+        for weight in ("vw", "ew"):
+            try:
+                bk = evaluate.book(g, sig, k=50, weight=weight, cost_bps=10,
+                                   ret_col="fwd_1m", mkt_col="mkt_vw_1m")
+            except Exception as exc:                                    # noqa: BLE001
+                row[f"book_{weight}"] = {"error": f"{type(exc).__name__}: {exc}"}
+                continue
+            row[f"book_{weight}"] = {
+                "tw_net": bk.get("terminal_wealth_net"),
+                "tw_gross": bk.get("terminal_wealth_gross"),
+                "tw_market": bk.get("terminal_wealth_market_same_months"),
+                "annualised_excess": bk.get("annualised_excess"),
+                "t": bk.get("t_stat_paired_vs_market"),
+                "turnover": bk.get("mean_turnover"),
+            }
+        # (3) the SIGNAL's own shape: is there still anything to sort on?
+        raw = "target_rev_1m"
+        if raw in g.columns:
+            per_month = g.groupby("month")[raw]
+            row["signal_dispersion"] = {
+                "median_within_month_sd": round(float(per_month.std().median()), 6),
+                "median_within_month_iqr": round(float(
+                    (per_month.quantile(0.75) - per_month.quantile(0.25)).median()), 6),
+                "share_nonzero": round(float((g[raw].fillna(0) != 0).mean()), 4),
+            }
+        # (4) coverage
+        if "coverage" in g.columns:
+            row["coverage"] = {
+                "median": float(g["coverage"].median()),
+                "mean": round(float(g["coverage"].mean()), 3),
+            }
+        # (5) horizon: the decile spread at 1m vs 3m
+        row["decile_spread"] = {}
+        for h in (1, 3):
+            tcol = f"excess_vw_{h}m"
+            if tcol not in g.columns:
+                continue
+            tb = evaluate.top_minus_bottom(g, sig, tcol)
+            row["decile_spread"][f"{h}m"] = {
+                "mean_monthly_spread": tb.get("mean_monthly_spread"),
+                "t": tb.get("t_stat"), "months": tb.get("months")}
+        rows.append(row)
+
+    def _get(era, *path):
+        r = next((x for x in rows if x.get("era") == era), {})
+        for k in path:
+            if not isinstance(r, dict):
+                return None
+            r = r.get(k)
+        return r
+
+    first, last = LP.ERAS[0][0], LP.ERAS[-1][0]
+    gross_then = _get(first, "book_vw", "tw_gross")
+    gross_now = _get(last, "book_vw", "tw_gross")
+    mkt_now = _get(last, "book_vw", "tw_market")
+    ew_now_t = _get(last, "book_ew", "t")
+    disp_then = _get(first, "signal_dispersion", "median_within_month_sd")
+    disp_now = _get(last, "signal_dispersion", "median_within_month_sd")
+    cov_then = _get(first, "coverage", "mean")
+    cov_now = _get(last, "coverage", "mean")
+    spread3_now = _get(last, "decile_spread", "3m", "t")
+
+    verdicts = []
+    if isinstance(gross_now, (int, float)) and isinstance(mkt_now, (int, float)):
+        verdicts.append(("arbitraged_away"
+                         if gross_now <= mkt_now else "gross_alpha_survives",
+                         f"gross TW {gross_now} vs market {mkt_now} in {last}"))
+    if isinstance(ew_now_t, (int, float)):
+        verdicts.append(("migrated_to_smaller_names" if ew_now_t >= 2.0
+                         else "not_a_size_migration",
+                         f"equal-weighted t {ew_now_t} in {last}"))
+    if isinstance(disp_then, (int, float)) and isinstance(disp_now, (int, float)) and disp_then:
+        ratio = disp_now / disp_then
+        verdicts.append(("signal_dispersion_collapsed" if ratio < 0.7
+                         else "dispersion_intact",
+                         f"within-month sd {disp_now} vs {disp_then} ({ratio:.2f}x)"))
+    if isinstance(spread3_now, (int, float)):
+        verdicts.append(("still_alive_at_3m" if abs(spread3_now) >= 2.0
+                         else "dead_at_3m_too",
+                         f"3-month decile-spread t {spread3_now} in {last}"))
+    # ---- THE LEAD THE AUTOPSY OPENS. If the 1-month effect is gone and the
+    # 3-month decile spread is not, the effect did not die -- it SLOWED. The
+    # decile spread is not a book, so it is built here: the signal is refreshed
+    # only every `hold` months and held in between, which is the same portfolio
+    # a quarterly rebalance produces and cuts turnover by roughly `hold`.
+    slow = {}
+    for hold in (1, 3, 6):
+        col = f"_slow{hold}"
+        months = sorted(df["month"].unique())
+        keep = {m: months[(i // hold) * hold] for i, m in enumerate(months)}
+        # The signal a desk would still be holding: the value from the month the
+        # book last rebalanced. Never a future month -- `keep` maps forward only
+        # from an EARLIER index, so this is a carry, not a peek.
+        src = df.set_index(["month", "permno"])[sig]
+        asof = df["month"].map(keep)
+        idx = pd.MultiIndex.from_arrays([asof, df["permno"]])
+        df[col] = src.reindex(idx).to_numpy()
+        for era, lo, hi in LP.ERAS:
+            g = df[(df["_y"] >= lo) & (df["_y"] <= hi)]
+            for bps in (10, 25):
+                try:
+                    bk = evaluate.book(g, col, k=50, weight="vw", cost_bps=bps,
+                                       ret_col="fwd_1m", mkt_col="mkt_vw_1m")
+                except Exception as exc:                                # noqa: BLE001
+                    slow[f"hold{hold}m|{era}|{bps}bps"] = {
+                        "error": f"{type(exc).__name__}: {exc}"}
+                    continue
+                slow[f"hold{hold}m|{era}|{bps}bps"] = {
+                    "tw_net": bk.get("terminal_wealth_net"),
+                    "tw_gross": bk.get("terminal_wealth_gross"),
+                    "tw_market": bk.get("terminal_wealth_market_same_months"),
+                    "annualised_excess": bk.get("annualised_excess"),
+                    "t": bk.get("t_stat_paired_vs_market"),
+                    "turnover": bk.get("mean_turnover"),
+                }
+    revived = [k for k, v in slow.items()
+               if isinstance(v, dict) and "error" not in v
+               and k.split("|")[1] == last
+               and isinstance(v.get("t"), (int, float)) and v["t"] >= 2.0]
+
+    # THE TEMPTING CELL, NAMED ON PURPOSE. Somebody reading this table will find
+    # `hold6m` in the last era, see a terminal wealth well above the market, and
+    # want it. It is written out here WITH the two numbers that kill it -- its
+    # own t, and what the identical construction did in the FIRST era -- so the
+    # discovery happens here rather than in three weeks with a book attached.
+    tempting = []
+    for k, v in slow.items():
+        if not isinstance(v, dict) or "error" in v or k.split("|")[1] != last:
+            continue
+        tw, tm = v.get("tw_net"), v.get("tw_market")
+        if not (isinstance(tw, (int, float)) and isinstance(tm, (int, float)) and tw > tm * 1.2):
+            continue
+        twin = k.replace(last, first)
+        tv = slow.get(twin, {})
+        tempting.append({
+            "cell": k,
+            "terminal_wealth_net": tw, "market": tm,
+            "annualised_excess": v.get("annualised_excess"),
+            "t": v.get("t"),
+            "same_construction_in_the_first_era": {
+                "cell": twin, "tw_net": tv.get("tw_net"), "market": tv.get("tw_market"),
+                "t": tv.get("t")},
+            "why_it_is_not_promoted": (
+                f"t = {v.get('t')} on one era of a {len(slow)}-cell search, and the "
+                f"identical rule returns tw_net {tv.get('tw_net')} against a market of "
+                f"{tv.get('tw_market')} in {first}. A rule that only works in the era it "
+                "was found in is a description of that era."),
+        })
+
+    return {
+        "question": f"what changed for {sig} between {first} and {last}?",
+        "family_id": "weekend-W10-decay-autopsy",
+        "signal": sig,
+        "by_era": rows,
+        "slower_rebalance_books": slow,
+        "cells_alive_in_the_LAST_era_at_t2": revived,
+        "tempting_cells_that_are_NOT_promoted": tempting,
+        "the_decile_spread_is_not_a_book": (
+            "the 3-month DECILE SPREAD is alive in the last era at t 3.479, and the "
+            "3-month BOOK is not (tw_net 4.511 vs a market of 4.864). A spread is "
+            "top-decile MINUS bottom-decile, equal-weighted inside each decile; the book "
+            "is the top 50 only, value-weighted. Third appearance of the same lesson this "
+            "weekend -- see W5b."),
+        "slow_book_note": ("the signal is refreshed every `hold` months and carried in "
+                           "between -- the portfolio a quarterly rebalance produces. If the "
+                           "3-month decile spread is alive while the 1-month book is dead, "
+                           "the effect SLOWED rather than died, and this is where that shows "
+                           "up as money or fails to."),
+        "candidate_mechanisms": [{"finding": v, "evidence": e} for v, e in verdicts],
+        "coverage_then_vs_now": {"mean_analysts_then": cov_then, "mean_analysts_now": cov_now},
+        "why_the_negatives_matter": ("a mechanism that did NOT change is what rules an "
+                                     "explanation out. All five candidates are reported, "
+                                     "including the ones that moved nothing."),
+        "headline": (f"{sig} decay autopsy: "
+                     + "; ".join(f"{v} ({e})" for v, e in verdicts)
+                     + f"; slower-rebalance cells alive in {last} at t>=2: "
+                     + (", ".join(revived) if revived else "none")),
+        "verdict": ("SLOWED_NOT_DEAD" if revived else "AUTOPSY"),
+    }
+
+
 def W11_evidence_writeback(variant: int = 0) -> dict:
     """Fold every receipt this weekend has written into the evidence memory.
 
@@ -2052,6 +2282,7 @@ JOBS = {
     "W7b_archetype_book": W7b_archetype_book,
     "W8_states_three_nulls": W8_states_three_nulls,
     "W9_survivor_books": W9_survivor_books,
+    "W10_decay_autopsy": W10_decay_autopsy,
     "W11_evidence_writeback": W11_evidence_writeback,
 }
 

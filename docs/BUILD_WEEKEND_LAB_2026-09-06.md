@@ -72,8 +72,49 @@ changed, the second says look elsewhere. So `verdict_from` gained a fourth word,
 
 This is consistent with the published post-publication decay literature
 (McLean–Pontiff) and with revision-based anomalies being among the most heavily
-arbitraged. **It is not a trade. It is a dated fact**, and the obvious follow-up
-is what changed in 2016 — coverage, speed of dissemination, or crowding.
+arbitraged. **It is not a trade. It is a dated fact.**
+
+### 0.1 The autopsy — *what* changed, with the negatives reported
+
+"It stopped working" is where research usually stops. `W10_decay_autopsy` tests
+five candidate mechanisms and reports all of them, **including the ones that did
+not move — because a mechanism that did not change is what rules an explanation
+out.**
+
+| era | VW book gross | market | excess | t | EW t | signal sd | mean analysts | 3m decile-spread t |
+|---|---|---|---|---|---|---|---|---|
+| 1999-2007 | 4.51 | 1.10 | +18.1% | **2.35** | **3.14** | 0.136 | 7.9 | **4.72** |
+| 2008-2015 | 6.10 | 2.43 | +11.4% | 1.81 | 0.31 | 0.198 | 9.0 | 2.30 |
+| **2016-2024** | **3.69** | **4.86** | −0.3% | −0.03 | −1.48 | **0.547** | 8.9 | **3.48** |
+
+- **Arbitraged, not out-costed.** The **gross** book loses in 2016-2024 (3.69 vs 4.86). Costs explain net-vs-gross; they cannot explain this.
+- **Not a size migration.** Equal-weighted is *worse* (t −1.48), so it did not move to names a VW book underweights.
+- **Not an information-supply story.** Within-month dispersion of the signal **quadrupled** (0.136 → 0.547). There is *more* to sort on, not less. Coverage is flat (7.9 → 8.9 analysts).
+- **But the 3-month decile spread is still alive at t 3.48** — stronger than in 2008-2015.
+
+**So the lead was: it slowed rather than died.** Tested directly, by refreshing
+the signal only every *n* months and carrying it in between (the portfolio a
+quarterly rebalance produces, at ~1/3 the turnover):
+
+| hold | era | tw net | market | excess | t | turnover |
+|---|---|---|---|---|---|---|
+| 1m | 2016-2024 | 3.03 | 4.86 | −0.3% | −0.03 | 0.945 |
+| 3m | 2016-2024 | 4.51 | 4.86 | +2.2% | 0.27 | 0.378 |
+| 6m | 2016-2024 | **7.96** | 4.86 | **+9.0%** | **1.02** | 0.235 |
+
+**The lead does not survive.** No cell reaches t ≥ 2 in the last era.
+
+And the tempting cell is named in the receipt on purpose — `hold6m|2016-2024`
+shows terminal wealth **7.96 against a market of 4.86**, which is exactly the
+number someone finds later and wants. It is not promoted because **t = 1.02 on
+one era of an 18-cell search, and the identical rule returns 0.74 against a
+market of 1.14 in 1999-2007.** A rule that only works in the era it was found in
+is a description of that era.
+
+**Third appearance of one lesson:** the 3-month *decile spread* is alive (t 3.48)
+and the 3-month *book* is not (4.51 vs 4.86). A spread is top-minus-bottom,
+equal-weighted inside each decile; a book is the top 50 only, value-weighted.
+Same gap as W5b and W7b.
 
 ---
 
