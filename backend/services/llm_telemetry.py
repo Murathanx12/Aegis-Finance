@@ -1050,6 +1050,25 @@ def spend(since: Any = None, path: Path | None = None, *,
     as "spend is UNKNOWN" and refuses, which is the only safe reading when the
     accounting is broken.
     """
+    # THE DOCSTRING ABOVE WAS TRUE OF NOTHING (2026-09-07, Labor Day lab C3).
+    #
+    # It says "Returns {} on failure, never a zero", and there was no such
+    # branch: `read_calls()` returns [] when the path cannot be resolved, when
+    # the file does not exist, and when every line is torn, and this function
+    # then returned a POPULATED dict of zeros. `research_budget.check()` tests
+    # `if not s:` — a truthy dict of zeros walks straight past it, `calls_left`
+    # becomes MAX_CALLS and `usd_left` becomes MAX_USD, and the whole ceiling is
+    # re-authorised at precisely the moment the accounting is broken. That is
+    # [[a docs move disarmed a budget gate]] rebuilt in the successor module.
+    #
+    # THE DISTINCTION THAT HAD TO SURVIVE: a ledger that EXISTS and holds no
+    # matching rows is a MEASURED zero and stays one. A campaign that has not
+    # spent yet, and a `purpose` filter that matches nothing, are both real
+    # answers. Only "no ledger was opened at all" is unknown, so the test is on
+    # the FILE, before any filtering — a filter cannot make spend unknowable.
+    resolved = _resolve_path(path)
+    if resolved is None or not resolved.exists():
+        return {}
     # NOT reprice(): that materialises a new dict per row, and this function is
     # called before EVERY vendor request. Same arithmetic, no allocation.
     rows = read_calls(path)

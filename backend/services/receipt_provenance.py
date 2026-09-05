@@ -466,8 +466,28 @@ def check_receipt(receipt: Mapping[str, Any], *,
     argv = prov.get("sys_argv") or []
     raw_inputs = prov.get("_inputs_opened")
     inputs = raw_inputs if isinstance(raw_inputs, list) else []
-    opened = [normalise(e.get("path", "")) for e in inputs
-              if isinstance(e, Mapping) and e.get("path")]
+    # AN ATTEMPT IS NOT AN OPEN (2026-09-07, Labor Day lab C3).
+    #
+    # `InputTracker.opened()` records a path it could not find as
+    # `{"path": ..., "error": "MISSING"}` and appends it to the order — which is
+    # right, and is what makes the failure visible at all. This filtered on
+    # `path` alone, so those entries counted as successful opens: they satisfied
+    # `EMPTY_INPUTS`, and they satisfied `UNOPENED_PATH_STAMPED` by matching the
+    # stamp that named them. A job whose every input was absent therefore
+    # produced a receipt that passed the provenance sweep CLEAN — the checker
+    # for "a number produced from no file it can name" could be satisfied by
+    # naming files that were not there.
+    attempted = [e for e in inputs if isinstance(e, Mapping) and e.get("path")]
+    unopened = [e for e in attempted if e.get("error")]
+    opened = [normalise(e.get("path", "")) for e in attempted if not e.get("error")]
+    if unopened:
+        out.append(
+            "INPUTS_MISSING_ON_DISK: the loader tried to open "
+            + ", ".join(f"`{normalise(e.get('path', ''))}` ({e.get('error')})"
+                        for e in unopened[:4])
+            + (f" and {len(unopened) - 4} more" if len(unopened) > 4 else "")
+            + ". These are recorded attempts, not inputs: any number in this "
+              "receipt was computed without them.")
 
     if require_inputs and not opened:
         out.append("EMPTY_INPUTS: `_inputs_opened` is empty while inputs were "
