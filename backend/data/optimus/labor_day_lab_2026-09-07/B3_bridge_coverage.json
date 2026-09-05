@@ -1,0 +1,1433 @@
+{
+ "item": "LABOR_DAY_LAB_2026-09-07 / lane B / B3",
+ "title": "scenario bridge v2 field coverage",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_at_utc": "2026-09-05T15:29:28+00:00",
+ "argv": [
+  "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_b3_bridge_coverage.py"
+ ],
+ "git_commit": "729df522210d6dc9afabf857445370425a6b517c",
+ "python": "3.12.10",
+ "config": {
+  "panel_years": [
+   2013,
+   2024
+  ],
+  "k": 20,
+  "with_holders": true,
+  "regrade": true,
+  "scenarios": "the SAME 20, not regenerated"
+ },
+ "inputs_opened": [
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table.parquet",
+   "bytes": 204021057,
+   "mtime_utc": "2026-09-04T15:51:20+00:00",
+   "why": "the 2013-2024 training panel (permno universe)"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\eightk_items.parquet",
+   "bytes": 10090360,
+   "mtime_utc": "2026-09-03T16:19:48+00:00",
+   "why": "SEC 8-K item tape"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\manifest.json",
+   "bytes": 1762,
+   "mtime_utc": "2026-09-03T16:19:48+00:00",
+   "why": "SEC 8-K manifest"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\company_tickers.json",
+   "bytes": 869877,
+   "mtime_utc": "2026-09-03T16:01:11+00:00",
+   "why": "current ticker -> CIK map"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_v1.parquet",
+   "bytes": 89794,
+   "mtime_utc": "2026-09-05T12:42:41+00:00",
+   "why": "companyworld_v1 relation edges"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_inputs\\cik_lookup.parquet",
+   "bytes": 29086271,
+   "mtime_utc": "2026-09-05T11:50:06+00:00",
+   "why": "EDGAR name -> CIK lookup"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\crsp__stocknames.parquet",
+   "bytes": 1910034,
+   "mtime_utc": "2026-08-20T09:30:24+00:00",
+   "why": "CRSP stocknames (name windows)"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\crsp_pit\\crsp_pit_monthly_v1.parquet",
+   "bytes": 14036809,
+   "mtime_utc": "2026-08-19T04:33:19+00:00",
+   "why": "CRSP PIT monthly (permno -> ticker/comnam)"
+  },
+  {
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\tracker_backtest\\scenario_bridge_rerun_20260904.json",
+   "bytes": 238070,
+   "mtime_utc": "2026-09-03T22:02:22+00:00",
+   "why": "the 20260904 rerun receipt this is measured against"
+  }
+ ],
+ "llm_spend": {
+  "n_calls": 0,
+  "usd": 0.0,
+  "note": "nothing is regenerated; code re-grades code"
+ },
+ "no_2010_2013_edgar_era": "the 8-K tape's first filing_date is 2013-01-02 \u2014 there is NO 2010-2013 EDGAR era on disk and none is claimed.",
+ "tapes": {
+  "edgar_8k": {
+   "exists": true,
+   "rows": 293619,
+   "ciks": 2594,
+   "filing_date_min": "2013-01-02",
+   "filing_date_max": "2026-09-03",
+   "built_utc": "2026-09-03T16:19:48.105617+00:00",
+   "coverage_truncation_caveat": "the default pull reads only `filings.recent` (~1,000 most recent filings per CIK, all forms); a heavy filer's 8-K history is TRUNCATED at its coverage_start. Absence of a row before coverage_start is truncation, not evidence of no filing. --full-history fetches the older pages.",
+   "survivor_caveat": "universe resolved via company_tickers.json = CURRENT registrants; names delisted before the map's fetch date are absent"
+  },
+  "companyworld_v1": {
+   "exists": true,
+   "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_v1.parquet",
+   "rows": 2020,
+   "filing_date_min": "1999-09-01",
+   "filing_date_max": "2011-03-03",
+   "types": {
+    "customer": 854,
+    "competitor": 761,
+    "supplier": 284,
+    "shared_technology": 102,
+    "regulatory_exposure": 18,
+    "shared_end_market": 1
+   },
+   "directions": {
+    "mutual": 902,
+    "out": 836,
+    "in": 282
+   },
+   "graph_layers": {
+    "FACT": 2020
+   },
+   "quote_verified_rate": 0.9465,
+   "distinct_permnos": 945,
+   "named_counterparties": 1059,
+   "permnos_also_in_panel": 671,
+   "edges_inside_panel_window": 0,
+   "panel_window": "2013-01-01..2024-12-31",
+   "reads_as": "the relation tape is REAL, typed, quote-verified and permno-resolved \u2014 and 0 of its 2020 edges fall inside the panel window. Ownership of a concept is not coverage of a panel."
+  }
+ },
+ "cik_link": {
+  "panel_permnos": 5721,
+  "today_ticker_map": {
+   "with_crsp_ticker": 5721,
+   "resolving_to_current_cik": 3167,
+   "rate": 0.5536,
+   "route": "permno -> last CRSP ticker -> company_tickers.json (CURRENT registrants only; delisted names cannot resolve)"
+  },
+  "historical_name_window_bridge": {
+   "bridge_rows": 28689,
+   "distinct_permnos_in_bridge": 11131,
+   "panel_permnos_resolving": 4110,
+   "rate": 0.7184,
+   "route": "CRSP stocknames (comnam, namedt..nameenddt) -> normalised name_key -> EDGAR cik_lookup -> cik. Rename-proof and survivorship-neutral, per companyworld_extract.cik_permno_windows",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_inputs\\cik_lookup.parquet"
+  },
+  "delta": 0.1648,
+  "reads_as": "the CIK link is the gate between 'we own an 8-K tape' and 'event_type can filter the panel'. The 20260904 receipt measured the survivor-tilted route; this measures the historical one. A higher rate here is the distance that actually closed."
+ },
+ "coverage": {
+  "retrieval_fields": 15,
+  "maps_to_nothing": {
+   "20260903_baseline": 0.4667,
+   "20260904_after_8K": 0.4,
+   "20260907_v2_ownership_standard": 0.2667,
+   "20260907_v2_panel_overlap_standard": 0.4
+  },
+  "summaries": {
+   "20260903_baseline": {
+    "retrieval_fields": 15,
+    "direct": 5,
+    "proxy": 2,
+    "coarse": 1,
+    "unmappable": 7,
+    "direct_rate": 0.3333,
+    "any_mapping_rate": 0.5333,
+    "headline": "5 of 15 retrieval fields map DIRECTLY; 2 map through a NAMED PROXY, 1 only coarsely, 7 not at all."
+   },
+   "20260904_after_8K": {
+    "retrieval_fields": 15,
+    "direct": 5,
+    "proxy": 3,
+    "coarse": 1,
+    "unmappable": 6,
+    "direct_rate": 0.3333,
+    "any_mapping_rate": 0.6,
+    "headline": "5 of 15 retrieval fields map DIRECTLY; 3 map through a NAMED PROXY, 1 only coarsely, 6 not at all."
+   },
+   "v2_ownership": {
+    "retrieval_fields": 15,
+    "direct": 5,
+    "proxy": 5,
+    "coarse": 1,
+    "unmappable": 4,
+    "direct_rate": 0.3333,
+    "any_mapping_rate": 0.7333,
+    "headline": "5 of 15 retrieval fields map DIRECTLY; 5 map through a NAMED PROXY, 1 only coarsely, 4 not at all."
+   },
+   "v2_panel_overlap": {
+    "retrieval_fields": 15,
+    "direct": 5,
+    "proxy": 3,
+    "coarse": 1,
+    "unmappable": 6,
+    "direct_rate": 0.3333,
+    "any_mapping_rate": 0.6,
+    "headline": "5 of 15 retrieval fields map DIRECTLY; 3 map through a NAMED PROXY, 1 only coarsely, 6 not at all."
+   }
+  },
+  "movement_since_20260904": {
+   "ownership_standard": [
+    {
+     "field": "price_state.drawdown_state",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "drawdown_60d__xs (within-month percentile)"
+    },
+    {
+     "field": "price_state.momentum_12_1_sign",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "sign(mom_12_1)"
+    },
+    {
+     "field": "analyst_change",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "target_rev_1m__xs / net_rev_4w__xs / coverage_rev_1m"
+    },
+    {
+     "field": "expected_horizon_months",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "selects excess_vw_{h}m"
+    },
+    {
+     "field": "direction",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "sign applied to the realised spread"
+    },
+    {
+     "field": "sic_division_hint",
+     "before": "COARSE",
+     "after": "COARSE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "sector (10 SIC divisions)"
+    },
+    {
+     "field": "attention_state",
+     "before": "PROXY",
+     "after": "PROXY",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "coverage__xs (analyst coverage percentile)"
+    },
+    {
+     "field": "holder_action",
+     "before": "PROXY",
+     "after": "PROXY",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "13F holder_events aggregate, quarterly, +45d filing lag"
+    },
+    {
+     "field": "event_type",
+     "before": "PROXY",
+     "after": "PROXY",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "edgar_8k/eightk_items.parquet (dated 8-K item codes; 293619 rows, 2594 CIKs, 2013-01-02..2026-09-03)"
+    },
+    {
+     "field": "actors",
+     "before": "UNMAPPABLE",
+     "after": "PROXY",
+     "moved": true,
+     "movement": "UNMAPPABLE -> PROXY",
+     "panel_after": "companyworld_v1.counterparty_name (1059 named entities, each resolved to a permno)"
+    },
+    {
+     "field": "company_role",
+     "before": "UNMAPPABLE",
+     "after": "PROXY",
+     "moved": true,
+     "movement": "UNMAPPABLE -> PROXY",
+     "panel_after": "graph/companyworld_v1.parquet (2020 typed edges, 945 permnos, 1999-09-01..2011-03-03)"
+    },
+    {
+     "field": "demand_change",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "supply_change",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "capacity_constraint",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "sector_theme",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    }
+   ],
+   "panel_overlap_standard": [
+    {
+     "field": "price_state.drawdown_state",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "drawdown_60d__xs (within-month percentile)"
+    },
+    {
+     "field": "price_state.momentum_12_1_sign",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "sign(mom_12_1)"
+    },
+    {
+     "field": "analyst_change",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "target_rev_1m__xs / net_rev_4w__xs / coverage_rev_1m"
+    },
+    {
+     "field": "expected_horizon_months",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "selects excess_vw_{h}m"
+    },
+    {
+     "field": "direction",
+     "before": "DIRECT",
+     "after": "DIRECT",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "sign applied to the realised spread"
+    },
+    {
+     "field": "sic_division_hint",
+     "before": "COARSE",
+     "after": "COARSE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "sector (10 SIC divisions)"
+    },
+    {
+     "field": "attention_state",
+     "before": "PROXY",
+     "after": "PROXY",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "coverage__xs (analyst coverage percentile)"
+    },
+    {
+     "field": "holder_action",
+     "before": "PROXY",
+     "after": "PROXY",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "13F holder_events aggregate, quarterly, +45d filing lag"
+    },
+    {
+     "field": "event_type",
+     "before": "PROXY",
+     "after": "PROXY",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "edgar_8k/eightk_items.parquet (dated 8-K item codes; 293619 rows, 2594 CIKs, 2013-01-02..2026-09-03)"
+    },
+    {
+     "field": "actors",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "company_role",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "demand_change",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "supply_change",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "capacity_constraint",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    },
+    {
+     "field": "sector_theme",
+     "before": "UNMAPPABLE",
+     "after": "UNMAPPABLE",
+     "moved": false,
+     "movement": "unchanged",
+     "panel_after": "-"
+    }
+   ]
+  },
+  "headline": "maps-to-nothing 40.0% -> 26.7% under the OWNERSHIP standard the 20260904 receipt used, and 40.0% (UNCHANGED) under a panel-overlap standard. The gap is the whole finding: companyworld_v1 gives us the concept and not the dates."
+ },
+ "field_maps": {
+  "current_20260904": {
+   "price_state.drawdown_state": {
+    "grade": "DIRECT",
+    "panel": "drawdown_60d__xs (within-month percentile)",
+    "note": "the panel holds the quantity itself"
+   },
+   "price_state.momentum_12_1_sign": {
+    "grade": "DIRECT",
+    "panel": "sign(mom_12_1)",
+    "note": "the house's own 12-1 definition"
+   },
+   "analyst_change": {
+    "grade": "DIRECT",
+    "panel": "target_rev_1m__xs / net_rev_4w__xs / coverage_rev_1m",
+    "note": "IBES revisions and coverage changes are in the panel"
+   },
+   "expected_horizon_months": {
+    "grade": "DIRECT",
+    "panel": "selects excess_vw_{h}m",
+    "note": "a control on the grading, not a retrieval filter"
+   },
+   "direction": {
+    "grade": "DIRECT",
+    "panel": "sign applied to the realised spread",
+    "note": "the ONLY place the model's opinion touches the number, and it only flips a sign computed from real returns"
+   },
+   "sic_division_hint": {
+    "grade": "COARSE",
+    "panel": "sector (10 SIC divisions)",
+    "note": "'semiconductor capex cycle' and 'office furniture' are both Manufacturing; a sector THEME does not survive this"
+   },
+   "attention_state": {
+    "grade": "PROXY",
+    "panel": "coverage__xs (analyst coverage percentile)",
+    "note": "analyst attention stands in for attention. No news counts, no search volume, no filing counts exist before 2026-08-30 (learner/dataset.company_state_schema)"
+   },
+   "holder_action": {
+    "grade": "PROXY",
+    "panel": "13F holder_events aggregate, quarterly, +45d filing lag",
+    "note": "NEW_POSITION+LARGE_ADD minus LARGE_TRIM+COMPLETE_EXIT, ranked within month. Covers accumulation/distribution ONLY: activist_stake, insider_buying and insider_selling are UNMAPPABLE (no 13D/G, no Form 4)"
+   },
+   "event_type": {
+    "grade": "PROXY",
+    "panel": "edgar_8k/eightk_items.parquet (dated 8-K item codes; 293619 rows, 2594 CIKs, 2013-01-02..2026-09-03)",
+    "note": "8-K item codes stand in for the event taxonomy via EIGHTK_ITEM_EVENT_TYPE. Availability = EDGAR acceptance timestamp, never the event's own date. Not a retrieval predicate yet: the tape is survivor-tilted (current registrants only) and not panel-joined."
+   },
+   "actors": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "no entity graph links a named actor to a permno"
+   },
+   "company_role": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "supplier / customer / substitute is a SUPPLY-CHAIN RELATION; the panel has no customer-supplier edges"
+   },
+   "demand_change": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs revenue/unit fundamentals (Compustat fundq is on disk but is NOT joined to permno here)"
+   },
+   "supply_change": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs industry capacity/utilisation series"
+   },
+   "capacity_constraint": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs utilisation, backlog or lead-time data"
+   },
+   "sector_theme": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "the free-text theme itself; only its division hint maps"
+   },
+   "falsifier": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "not a retrieval field -- it is what a future test would look for, recorded so the scenario is refutable at all"
+   }
+  },
+  "v2_ownership_standard": {
+   "price_state.drawdown_state": {
+    "grade": "DIRECT",
+    "panel": "drawdown_60d__xs (within-month percentile)",
+    "note": "the panel holds the quantity itself"
+   },
+   "price_state.momentum_12_1_sign": {
+    "grade": "DIRECT",
+    "panel": "sign(mom_12_1)",
+    "note": "the house's own 12-1 definition"
+   },
+   "analyst_change": {
+    "grade": "DIRECT",
+    "panel": "target_rev_1m__xs / net_rev_4w__xs / coverage_rev_1m",
+    "note": "IBES revisions and coverage changes are in the panel"
+   },
+   "expected_horizon_months": {
+    "grade": "DIRECT",
+    "panel": "selects excess_vw_{h}m",
+    "note": "a control on the grading, not a retrieval filter"
+   },
+   "direction": {
+    "grade": "DIRECT",
+    "panel": "sign applied to the realised spread",
+    "note": "the ONLY place the model's opinion touches the number, and it only flips a sign computed from real returns"
+   },
+   "sic_division_hint": {
+    "grade": "COARSE",
+    "panel": "sector (10 SIC divisions)",
+    "note": "'semiconductor capex cycle' and 'office furniture' are both Manufacturing; a sector THEME does not survive this"
+   },
+   "attention_state": {
+    "grade": "PROXY",
+    "panel": "coverage__xs (analyst coverage percentile)",
+    "note": "analyst attention stands in for attention. No news counts, no search volume, no filing counts exist before 2026-08-30 (learner/dataset.company_state_schema)"
+   },
+   "holder_action": {
+    "grade": "PROXY",
+    "panel": "13F holder_events aggregate, quarterly, +45d filing lag",
+    "note": "NEW_POSITION+LARGE_ADD minus LARGE_TRIM+COMPLETE_EXIT, ranked within month. Covers accumulation/distribution ONLY: activist_stake, insider_buying and insider_selling are UNMAPPABLE (no 13D/G, no Form 4)"
+   },
+   "event_type": {
+    "grade": "PROXY",
+    "panel": "edgar_8k/eightk_items.parquet (dated 8-K item codes; 293619 rows, 2594 CIKs, 2013-01-02..2026-09-03)",
+    "note": "8-K item codes stand in for the event taxonomy via EIGHTK_ITEM_EVENT_TYPE. Availability = EDGAR acceptance timestamp, never the event's own date. Not a retrieval predicate yet: the tape is survivor-tilted (current registrants only) and not panel-joined."
+   },
+   "actors": {
+    "grade": "PROXY",
+    "panel": "companyworld_v1.counterparty_name (1059 named entities, each resolved to a permno)",
+    "note": "the 20260903 map said 'no entity graph links a named actor to a permno'; this one does. It links COMPANIES, not people or regulators, so a scenario naming a regulator or an activist still maps to nothing. Same date problem as company_role."
+   },
+   "company_role": {
+    "grade": "PROXY",
+    "panel": "graph/companyworld_v1.parquet (2020 typed edges, 945 permnos, 1999-09-01..2011-03-03)",
+    "note": "supplier / customer / competitor is exactly what this tape stores, quote-verified and permno-resolved. PROXY, never DIRECT: an extracted filing sentence is a claim about a relationship, not a measured revenue share. NOT a retrieval predicate: the tape ends 2011-03-03 and has ZERO edges inside the 2013-2024 panel window."
+   },
+   "demand_change": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs revenue/unit fundamentals (Compustat fundq is on disk but is NOT joined to permno here)"
+   },
+   "supply_change": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs industry capacity/utilisation series"
+   },
+   "capacity_constraint": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs utilisation, backlog or lead-time data"
+   },
+   "sector_theme": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "the free-text theme itself; only its division hint maps"
+   },
+   "falsifier": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "not a retrieval field -- it is what a future test would look for, recorded so the scenario is refutable at all"
+   }
+  },
+  "v2_panel_overlap_standard": {
+   "price_state.drawdown_state": {
+    "grade": "DIRECT",
+    "panel": "drawdown_60d__xs (within-month percentile)",
+    "note": "the panel holds the quantity itself"
+   },
+   "price_state.momentum_12_1_sign": {
+    "grade": "DIRECT",
+    "panel": "sign(mom_12_1)",
+    "note": "the house's own 12-1 definition"
+   },
+   "analyst_change": {
+    "grade": "DIRECT",
+    "panel": "target_rev_1m__xs / net_rev_4w__xs / coverage_rev_1m",
+    "note": "IBES revisions and coverage changes are in the panel"
+   },
+   "expected_horizon_months": {
+    "grade": "DIRECT",
+    "panel": "selects excess_vw_{h}m",
+    "note": "a control on the grading, not a retrieval filter"
+   },
+   "direction": {
+    "grade": "DIRECT",
+    "panel": "sign applied to the realised spread",
+    "note": "the ONLY place the model's opinion touches the number, and it only flips a sign computed from real returns"
+   },
+   "sic_division_hint": {
+    "grade": "COARSE",
+    "panel": "sector (10 SIC divisions)",
+    "note": "'semiconductor capex cycle' and 'office furniture' are both Manufacturing; a sector THEME does not survive this"
+   },
+   "attention_state": {
+    "grade": "PROXY",
+    "panel": "coverage__xs (analyst coverage percentile)",
+    "note": "analyst attention stands in for attention. No news counts, no search volume, no filing counts exist before 2026-08-30 (learner/dataset.company_state_schema)"
+   },
+   "holder_action": {
+    "grade": "PROXY",
+    "panel": "13F holder_events aggregate, quarterly, +45d filing lag",
+    "note": "NEW_POSITION+LARGE_ADD minus LARGE_TRIM+COMPLETE_EXIT, ranked within month. Covers accumulation/distribution ONLY: activist_stake, insider_buying and insider_selling are UNMAPPABLE (no 13D/G, no Form 4)"
+   },
+   "event_type": {
+    "grade": "PROXY",
+    "panel": "edgar_8k/eightk_items.parquet (dated 8-K item codes; 293619 rows, 2594 CIKs, 2013-01-02..2026-09-03)",
+    "note": "8-K item codes stand in for the event taxonomy via EIGHTK_ITEM_EVENT_TYPE. Availability = EDGAR acceptance timestamp, never the event's own date. Not a retrieval predicate yet: the tape is survivor-tilted (current registrants only) and not panel-joined."
+   },
+   "actors": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "no entity graph links a named actor to a permno | 2026-09-07: companyworld_v1 OWNS this concept (2020 edges) but 0 of them fall inside 2013-2024, so under a panel-overlap standard the field is still unmappable HERE."
+   },
+   "company_role": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "supplier / customer / substitute is a SUPPLY-CHAIN RELATION; the panel has no customer-supplier edges | 2026-09-07: companyworld_v1 OWNS this concept (2020 edges) but 0 of them fall inside 2013-2024, so under a panel-overlap standard the field is still unmappable HERE."
+   },
+   "demand_change": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs revenue/unit fundamentals (Compustat fundq is on disk but is NOT joined to permno here)"
+   },
+   "supply_change": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs industry capacity/utilisation series"
+   },
+   "capacity_constraint": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "needs utilisation, backlog or lead-time data"
+   },
+   "sector_theme": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "the free-text theme itself; only its division hint maps"
+   },
+   "falsifier": {
+    "grade": "UNMAPPABLE",
+    "panel": "-",
+    "note": "not a retrieval field -- it is what a future test would look for, recorded so the scenario is refutable at all"
+   }
+  }
+ },
+ "regrade": {
+  "v2_vs_control_SAME_PANEL": {
+   "compared": true,
+   "label": "field map only (v2 vs the 20260904 map, both on today's panel)",
+   "n_scenarios": 20,
+   "n_changed": 0,
+   "changed_ids": [],
+   "expected": "zero: none of the upgraded fields is a retrieval predicate, so the analogue sets are identical by construction",
+   "VERDICT": "GRADES UNCHANGED - as constructed",
+   "rows": [
+    {
+     "scenario_id": "SB-20260903-00",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.004342,
+      "t_paired_by_month": 1.99857
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.004342,
+      "t_paired_by_month": 1.99857
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-01",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.016473,
+      "t_paired_by_month": 1.111961
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.016473,
+      "t_paired_by_month": 1.111961
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-02",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.009547,
+      "t_paired_by_month": 0.535788
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.009547,
+      "t_paired_by_month": 0.535788
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-03",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.001152,
+      "t_paired_by_month": 0.288913
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.001152,
+      "t_paired_by_month": 0.288913
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-04",
+     "old": {
+      "status": "GRADED",
+      "horizon": "3",
+      "spread_net": -0.002203,
+      "t_paired_by_month": 0.257359
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "3",
+      "spread_net": -0.002203,
+      "t_paired_by_month": 0.257359
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-05",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.015994,
+      "t_paired_by_month": -1.085485
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.015994,
+      "t_paired_by_month": -1.085485
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-06",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.053078,
+      "t_paired_by_month": 1.749457
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.053078,
+      "t_paired_by_month": 1.749457
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-07",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.019482,
+      "t_paired_by_month": 1.992343
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.019482,
+      "t_paired_by_month": 1.992343
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-08",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.007144,
+      "t_paired_by_month": -0.135594
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.007144,
+      "t_paired_by_month": -0.135594
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-09",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.031089,
+      "t_paired_by_month": 1.34106
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.031089,
+      "t_paired_by_month": 1.34106
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-10",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.014342,
+      "t_paired_by_month": -1.99857
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.014342,
+      "t_paired_by_month": -1.99857
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-11",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.013788,
+      "t_paired_by_month": 1.403891
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.013788,
+      "t_paired_by_month": 1.403891
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-12",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.00628,
+      "t_paired_by_month": -0.073354
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.00628,
+      "t_paired_by_month": -0.073354
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-13",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.023764,
+      "t_paired_by_month": -1.396005
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.023764,
+      "t_paired_by_month": -1.396005
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-14",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.039149,
+      "t_paired_by_month": 1.743142
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.039149,
+      "t_paired_by_month": 1.743142
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-15",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.000869,
+      "t_paired_by_month": 0.689766
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.000869,
+      "t_paired_by_month": 0.689766
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-16",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.018042,
+      "t_paired_by_month": -1.386391
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.018042,
+      "t_paired_by_month": -1.386391
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-17",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.005517,
+      "t_paired_by_month": -0.023182
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.005517,
+      "t_paired_by_month": -0.023182
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-18",
+     "old": {
+      "status": "REFUSED_TOO_THIN",
+      "horizon": "6",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "new": {
+      "status": "REFUSED_TOO_THIN",
+      "horizon": "6",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-19",
+     "old": {
+      "status": "NO_OBSERVABLE_STATE",
+      "horizon": "12",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "new": {
+      "status": "NO_OBSERVABLE_STATE",
+      "horizon": "12",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "changed": false
+    }
+   ]
+  },
+  "control_vs_20260904_receipt": {
+   "compared": true,
+   "label": "panel only (the 20260904 map, then vs now)",
+   "n_scenarios": 20,
+   "n_changed": 18,
+   "changed_ids": [
+    "SB-20260903-00",
+    "SB-20260903-01",
+    "SB-20260903-02",
+    "SB-20260903-03",
+    "SB-20260903-04",
+    "SB-20260903-05",
+    "SB-20260903-06",
+    "SB-20260903-07",
+    "SB-20260903-08",
+    "SB-20260903-09",
+    "SB-20260903-10",
+    "SB-20260903-11",
+    "SB-20260903-12",
+    "SB-20260903-13",
+    "SB-20260903-14",
+    "SB-20260903-15",
+    "SB-20260903-16",
+    "SB-20260903-17"
+   ],
+   "expected": "not zero, and not a bug: this comparison crosses a panel rebuild and measures its effect",
+   "VERDICT": "18 of 20 scenarios moved - attributable to the panel, see panel_provenance_diff",
+   "rows": [
+    {
+     "scenario_id": "SB-20260903-00",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.004283,
+      "t_paired_by_month": 1.998328
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.004342,
+      "t_paired_by_month": 1.99857
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-01",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.019476,
+      "t_paired_by_month": 1.283139
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.016473,
+      "t_paired_by_month": 1.111961
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-02",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.011851,
+      "t_paired_by_month": 0.623892
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.009547,
+      "t_paired_by_month": 0.535788
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-03",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.00129,
+      "t_paired_by_month": 0.278407
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.001152,
+      "t_paired_by_month": 0.288913
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-04",
+     "old": {
+      "status": "GRADED",
+      "horizon": "3",
+      "spread_net": -0.00103,
+      "t_paired_by_month": 0.368736
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "3",
+      "spread_net": -0.002203,
+      "t_paired_by_month": 0.257359
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-05",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.015893,
+      "t_paired_by_month": -1.078607
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.015994,
+      "t_paired_by_month": -1.085485
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-06",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.052612,
+      "t_paired_by_month": 1.73694
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.053078,
+      "t_paired_by_month": 1.749457
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-07",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.020219,
+      "t_paired_by_month": 2.081187
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.019482,
+      "t_paired_by_month": 1.992343
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-08",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.007464,
+      "t_paired_by_month": -0.1562
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.007144,
+      "t_paired_by_month": -0.135594
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-09",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.031585,
+      "t_paired_by_month": 1.357128
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.031089,
+      "t_paired_by_month": 1.34106
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-10",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.014283,
+      "t_paired_by_month": -1.998328
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.014342,
+      "t_paired_by_month": -1.99857
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-11",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.014158,
+      "t_paired_by_month": 1.428706
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": 0.013788,
+      "t_paired_by_month": 1.403891
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-12",
+     "old": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.006335,
+      "t_paired_by_month": -0.076684
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "6",
+      "spread_net": -0.00628,
+      "t_paired_by_month": -0.073354
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-13",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.02449,
+      "t_paired_by_month": -1.46336
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.023764,
+      "t_paired_by_month": -1.396005
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-14",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.038833,
+      "t_paired_by_month": 1.729015
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": 0.039149,
+      "t_paired_by_month": 1.743142
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-15",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.001141,
+      "t_paired_by_month": 0.645604
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.000869,
+      "t_paired_by_month": 0.689766
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-16",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.018223,
+      "t_paired_by_month": -1.40426
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.018042,
+      "t_paired_by_month": -1.386391
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-17",
+     "old": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.005875,
+      "t_paired_by_month": -0.039236
+     },
+     "new": {
+      "status": "GRADED",
+      "horizon": "12",
+      "spread_net": -0.005517,
+      "t_paired_by_month": -0.023182
+     },
+     "changed": true
+    },
+    {
+     "scenario_id": "SB-20260903-18",
+     "old": {
+      "status": "REFUSED_TOO_THIN",
+      "horizon": "6",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "new": {
+      "status": "REFUSED_TOO_THIN",
+      "horizon": "6",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "changed": false
+    },
+    {
+     "scenario_id": "SB-20260903-19",
+     "old": {
+      "status": "NO_OBSERVABLE_STATE",
+      "horizon": "12",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "new": {
+      "status": "NO_OBSERVABLE_STATE",
+      "horizon": "12",
+      "spread_net": null,
+      "t_paired_by_month": null
+     },
+     "changed": false
+    }
+   ]
+  },
+  "panel_provenance_diff": {
+   "identical": false,
+   "n_fields_differing": 5,
+   "diffs": {
+    "holder_action": {
+     "before": {
+      "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\holder_events",
+      "rows_with_holder_row": 426462,
+      "coverage": 0.9664,
+      "pit_rule": "merge_asof backward on quarter_end + 45 days"
+     },
+     "after": {
+      "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\holder_events",
+      "rows_with_holder_row": 426951,
+      "coverage": 0.9664,
+      "pit_rule": "merge_asof backward on quarter_end + 45 days"
+     }
+    },
+    "names": {
+     "before": 5713,
+     "after": 5721
+    },
+    "rows": {
+     "before": 441278,
+     "after": 441797
+    },
+    "rows_raw": {
+     "before": 441278,
+     "after": 441797
+    },
+    "sector_relabel": {
+     "before": {
+      "from": [
+       "Public Administration",
+       "_UNKNOWN"
+      ],
+      "to": "_UNCLASSIFIED_SIC9999",
+      "rows": 100400,
+      "panel_vintage": "pre-fix: 'Public Administration' is 98.8% SIC 9999 = NONCLASSIFIABLE and is folded into the unknown bucket",
+      "evidence": "3,580 of 3,625 CRSP name-rows in SIC 9000-9999 are code 9999 = NONCLASSIFIABLE ESTABLISHMENTS (98.8%); source fixed 2026-09-03 in tracker_ibes_backtest.SIC_DIVISIONS"
+     },
+     "after": {
+      "from": [
+       "Unclassified",
+       "_UNKNOWN"
+      ],
+      "to": "_UNCLASSIFIED_SIC9999",
+      "rows": 100428,
+      "panel_vintage": "post-fix: source emits 'Unclassified' for SIC 9900-9999; 'Public Administration' is genuine and KEPT",
+      "evidence": "3,580 of 3,625 CRSP name-rows in SIC 9000-9999 are code 9999 = NONCLASSIFIABLE ESTABLISHMENTS (98.8%); source fixed 2026-09-03 in tracker_ibes_backtest.SIC_DIVISIONS"
+     }
+    }
+   },
+   "reads_as": "the panel was REBUILT between the two receipts; a grade difference across this boundary cannot be attributed to a code change"
+  },
+  "receipt_paths": {
+   "v2": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\labor_day_lab_2026-09-07\\B3_bridge_coverage_regrade.json",
+   "control": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\labor_day_lab_2026-09-07\\B3_bridge_coverage_control.json"
+  },
+  "how_to_read": "the FIRST comparison is the claim - the field map changes no grade, because none of the upgraded fields is a retrieval predicate. The SECOND is a reproducibility measurement: it is what a panel rebuild does to a sealed receipt."
+ }
+}
