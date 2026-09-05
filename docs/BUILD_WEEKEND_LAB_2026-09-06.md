@@ -791,7 +791,18 @@ edge. Sub-$100k/day names lose 2.58%/yr against the equal-weighted rest and are
 negative in **3 of 3 eras**; above that, liquidity stops mattering (the
 $10m+ control is zero). That is a **FLOOR**, not a band — and the repo already
 carries `evaluate.TRADABLE_DOLLAR_VOL = $3,000,000`, which is well above where
-the damage actually is. Underpowered as an *edge*; clear as an *exclusion*.
+the damage actually is. Underpowered as an *edge*; ~~clear as an *exclusion*~~
+— **CORRECTED 2026-09-06: "clear" is not a supported word.** The exclusion
+leg's own statistic is **t −0.93**. It is *directionally consistent* (negative
+in 3 of 3 eras) and it *strengthens* under the tail attack (dropping the five
+largest-|diff| months takes it −2.58%/yr → −4.40%/yr, t −1.74), and neither of
+those is significance. The honest sentence is: **sub-$100k/day names are
+negative in every era at t −0.93, which is consistent with an exclusion and
+does not establish one.** The operational conclusion is unchanged, because
+`evaluate.TRADABLE_DOLLAR_VOL = $3,000,000` already sits an order of magnitude
+above the damage and is not justified by this number.
+(Review item 6, `REVIEW_2026-09-06_ATTACK_ON_THE_WEEKEND.md` claim 4;
+corrected here at the point of use rather than under a header.)
 
 ### FINDING 8 — my own survivor filter had a sign bug that hid three of four features
 

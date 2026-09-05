@@ -140,7 +140,7 @@ Receipts: `.../continuation_2026-09-06/S1_panel_split_contamination_recheck_run0
 | 3 | null `target_rev_1m`/`target_rev_3m` across a `cfacpr` move; re-issue | **DONE before this session, as a REBASE** — mean on split rows 3.12 -> 0.0675 |
 | 4 | add the EW-market and cap-matched-control rows | **DONE THIS SESSION** — `S2_size_matched_control_run01.json` |
 | 5 | re-run W10 through the runner so it has a durable receipt | **STILL OPEN.** Not attempted: the house rule is one lab job at a time and the GPU pass held the slot |
-| 6 | downgrade "clear as an exclusion" (claim 4) or re-issue at the $2 floor | **STILL OPEN** |
+| 6 | downgrade "clear as an exclusion" (claim 4) or re-issue at the $2 floor | **DONE THIS SESSION** — struck at the point of use in `BUILD_WEEKEND_LAB_2026-09-06.md` FINDING 7; the exclusion leg is t −0.93, negative in 3 of 3 eras, and that is consistent-with, not established |
 
 Three corrections to the continuation prompt itself, each verified against a
 receipt rather than argued:
