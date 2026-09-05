@@ -210,7 +210,52 @@ W2_VARIANTS = [
     "ablation",            # 2 -- one feature family removed at a time
     "quantile",            # 3 -- pinball heads: is the TAIL predictable?
     "long_only_eras",      # 4 -- fit inside one era, test in the others
+    "augmented",           # 5 -- the panel's 49 features PLUS everything W4/W5/W6 built
 ]
+
+
+def _augmented_features(df):
+    """Join the weekend's new feature families onto the panel and return
+    (frame, extra feature columns, join notes).
+
+    THE ROADMAP'S ACTUAL ASK, and the one thing the individual feature jobs
+    cannot answer. W5 says the options surface carries an informed-trading
+    signal; W6 says short-run reversal and 5-day attention survive their
+    controls. Each was measured ALONE, in a Fama-MacBeth regression, against
+    momentum/size/vol. None of that says whether a MODEL that already has 49
+    features gets better when they are added -- which is the only form of the
+    question that decides whether to carry the data.
+
+    A feature that is real and redundant is worth knowing about, and it looks
+    identical to a real and useful one until the model is fitted both ways.
+    """
+    notes = {}
+    extra: list[str] = []
+    try:
+        from learner import features_price as FP
+        if FP.available():
+            df, n = FP.attach(df)
+            notes["price"] = n.get("verdict")
+            extra += [c for c in FP.FEATURES if c in df.columns]
+    except Exception as exc:                                            # noqa: BLE001
+        notes["price"] = f"{type(exc).__name__}: {exc}"
+    try:
+        from learner import features_options as FO
+        if FO.available():
+            df, n = FO.attach(df)
+            notes["options"] = n.get("verdict")
+            extra += [c for c in getattr(FO, "FEATURES", ()) if c in df.columns]
+    except Exception as exc:                                            # noqa: BLE001
+        notes["options"] = f"{type(exc).__name__}: {exc}"
+    try:
+        from learner import features_graph as FG
+        if FG.available():
+            df, n = FG.attach(df)
+            notes["graph"] = n.get("verdict")
+            extra += [c for c in getattr(FG, "FEATURES", ()) if c in df.columns]
+    except Exception as exc:                                            # noqa: BLE001
+        notes["graph"] = f"{type(exc).__name__}: {exc}"
+    return df, sorted(set(extra)), notes
 
 
 #: Where a half-finished grid parks its completed cells.
@@ -525,6 +570,68 @@ def W2_learner_long(variant: int = 0) -> dict:
         return _w2_report(series, cells,
                           "does a model fitted inside one era work outside it?",
                           "weekend-W2-era-transfer", extra)
+
+    if name == "augmented":
+        # THE PAIRED COMPARISON IS THE EXPERIMENT. The augmented grid is run
+        # beside the SAME grid on the panel's own features, over the SAME months,
+        # so the difference is the features and not the window. Reporting the
+        # augmented number alone would be a comparison to a remembered baseline.
+        df2, extra_cols, notes = _augmented_features(df)
+        if not extra_cols:
+            return _deferred("W2_learner_long[augmented]",
+                             "no weekend feature table is on disk to join")
+        base_s, base_c = _w2_grid(df2, fc, ["lgbm"], ["raw"], [1, 3], costs,
+                                  test_years=test_years, tag="aug_base")
+        aug_s, aug_c = _w2_grid(df2, fc + extra_cols, ["lgbm"], ["raw"], [1, 3], costs,
+                                test_years=test_years, tag="aug_plus")
+        series, cells = {}, {}
+        for k, v in base_s.items():
+            series[f"panel_only|{k}"] = v
+        for k, v in base_c.items():
+            cells[f"panel_only|{k}"] = v
+        for k, v in aug_s.items():
+            series[f"augmented|{k}"] = v
+        for k, v in aug_c.items():
+            cells[f"augmented|{k}"] = v
+        lifts = []
+        for k in base_s:
+            a, b = base_s.get(k), aug_s.get(k)
+            if a is None or b is None:
+                continue
+            d = (b - a).dropna()
+            if len(d) < 24 or d.std(ddof=1) == 0:
+                continue
+            lifts.append({
+                "cell": k, "months": int(len(d)),
+                "augmented_minus_panel_pct_per_month": round(float(d.mean()) * 100, 4),
+                "t": round(float(d.mean() / (d.std(ddof=1) / np.sqrt(len(d)))), 3),
+                "era_sign_table": era_sign_table(d),
+            })
+        meta = dict(extra)
+        meta.update({
+            "extra_features": extra_cols,
+            "n_extra_features": len(extra_cols),
+            "n_panel_features": len(fc),
+            "join_notes": notes,
+            "paired_lift_augmented_minus_panel_only": lifts,
+            "why_paired": ("both grids are fitted on the SAME rows over the SAME months, "
+                           "so the difference is the features and not the window. A "
+                           "feature that is real and REDUNDANT looks identical to a real "
+                           "and useful one until the model is fitted both ways."),
+        })
+        out = _w2_report(series, cells,
+                         "does the learner get better when the weekend's new features "
+                         "are added to the panel's own?",
+                         "weekend-W2-augmented", meta)
+        best_lift = max(lifts, key=lambda r: r["t"], default=None)
+        out["headline"] = (
+            f"{len(extra_cols)} weekend features added to the panel's {len(fc)}: best "
+            f"paired lift "
+            f"{best_lift['augmented_minus_panel_pct_per_month'] if best_lift else None}"
+            f"%/month (t {best_lift['t'] if best_lift else None}) on "
+            f"{best_lift['cell'] if best_lift else '--'}; "
+            + str(out.get("headline", ""))[:110])
+        return out
 
     return {"verdict": "FAILED", "headline": f"unknown W2 variant {variant} ({name})"}
 

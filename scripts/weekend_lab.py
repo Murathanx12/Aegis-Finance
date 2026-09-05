@@ -70,7 +70,7 @@ QUEUE: list[tuple[str, int, int]] = [
     # loaded machine. The cell cache (`_w2_grid`, tag-keyed) means a killed pass
     # is resumed rather than repeated, so a generous timeout costs at most one
     # slot and a mean one costs the whole grid, every pass, forever.
-    ("W2_learner_long", 300, 5),
+    ("W2_learner_long", 300, 6),
     ("W6_behavioural", 60, 1),
     ("W6b_liquidity_band", 45, 1),
     ("W3_neural_long", 180, 4),

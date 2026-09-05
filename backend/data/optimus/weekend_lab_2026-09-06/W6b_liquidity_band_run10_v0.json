@@ -1,0 +1,545 @@
+{
+ "question": "does S28's $100k-$10m/day liquidity band survive on 1999-2024, and in particular on the fourteen years it was never fitted to?",
+ "family_id": "weekend-W6b-liquidity-band",
+ "prior_claim": "S28, 2026-08-30: +6.98%, t 2.22, in a $100k-$10m/day dollar-volume band on 2013-2024",
+ "why_this_is_a_replication": "the band edges are QUOTED from the prior claim, not chosen here. W7b independently re-derived the same inverted-U shape from the winner/matched-loser archetype, and picking the middle deciles after seeing that would be fitting the sample. 1999-2012 is out of sample for the original claim.",
+ "bands": [
+  {
+   "band": "S28_100k_10m",
+   "dollar_vol_per_day": [
+    100000.0,
+    10000000.0
+   ],
+   "months": 309,
+   "name_months": 487391,
+   "mean_monthly_excess_pct": 0.1597,
+   "annualised_excess_pct": 1.916,
+   "t": 0.684,
+   "VS_EW_REST_OF_UNIVERSE": {
+    "months": 309,
+    "annualised_excess_pct": 0.851,
+    "t": 0.503,
+    "oos_1999_2012_t": 1.673,
+    "era_sign_table": {
+     "1999-2007": {
+      "months": 106,
+      "mean_pct": 0.3439,
+      "t": 1.817,
+      "sign": 1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": 0.054,
+      "t": 0.218,
+      "sign": 1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": -0.1844,
+      "t": -0.648,
+      "sign": -1
+     },
+     "eras_with_a_positive_mean": 2,
+     "eras_with_a_negative_mean": 1,
+     "eras_measured": 3,
+     "holds_in_2_of_3": true,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": 1
+    },
+    "power": {
+     "n_periods": 309,
+     "periods_per_year": 12,
+     "n_oos_months": 309,
+     "sharpe_per_period": 0.0286,
+     "t_observed": 0.5029,
+     "years_observed": 25.75,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 4887.2,
+     "years_needed_for_t2": 407.3,
+     "years_needed_for_t2_exact": 407.2692079916124,
+     "powered": false,
+     "reading": "t = 0.50 on 25.8 years; t = 2 would need 407.3 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    }
+   },
+   "vs_ew_whole_universe_t": 0.251,
+   "OUT_OF_SAMPLE_1999_2012": {
+    "months": 166,
+    "mean_monthly_excess_pct": 0.6368,
+    "t": 2.251,
+    "note": "fourteen years the S28 claim never saw -- this column is what makes the job a replication rather than a re-fit"
+   },
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.6216,
+     "t": 1.921,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2229,
+     "t": 0.574,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3546,
+     "t": -0.741,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0389,
+    "t_observed": 0.684,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2641.7,
+    "years_needed_for_t2": 220.1,
+    "years_needed_for_t2_exact": 220.14397620431586,
+    "powered": false,
+    "reading": "t = 0.68 on 25.8 years; t = 2 would need 220.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  },
+  {
+   "band": "wider_50k_50m",
+   "dollar_vol_per_day": [
+    50000.0,
+    50000000.0
+   ],
+   "months": 309,
+   "name_months": 727584,
+   "mean_monthly_excess_pct": 0.1653,
+   "annualised_excess_pct": 1.983,
+   "t": 0.82,
+   "VS_EW_REST_OF_UNIVERSE": {
+    "months": 309,
+    "annualised_excess_pct": 1.794,
+    "t": 1.024,
+    "oos_1999_2012_t": 2.04,
+    "era_sign_table": {
+     "1999-2007": {
+      "months": 106,
+      "mean_pct": 0.4536,
+      "t": 2.025,
+      "sign": 1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": 0.1368,
+      "t": 0.528,
+      "sign": 1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": -0.1404,
+      "t": -0.517,
+      "sign": -1
+     },
+     "eras_with_a_positive_mean": 2,
+     "eras_with_a_negative_mean": 1,
+     "eras_measured": 3,
+     "holds_in_2_of_3": true,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": 1
+    },
+    "power": {
+     "n_periods": 309,
+     "periods_per_year": 12,
+     "n_oos_months": 309,
+     "sharpe_per_period": 0.0583,
+     "t_observed": 1.0241,
+     "years_observed": 25.75,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 1178.5,
+     "years_needed_for_t2": 98.2,
+     "years_needed_for_t2_exact": 98.20461140482485,
+     "powered": false,
+     "reading": "t = 1.02 on 25.8 years; t = 2 would need 98.2 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    }
+   },
+   "vs_ew_whole_universe_t": 0.692,
+   "OUT_OF_SAMPLE_1999_2012": {
+    "months": 166,
+    "mean_monthly_excess_pct": 0.5909,
+    "t": 2.36,
+    "note": "fourteen years the S28 claim never saw -- this column is what makes the job a replication rather than a re-fit"
+   },
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.5616,
+     "t": 1.93,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2347,
+     "t": 0.698,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2896,
+     "t": -0.717,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0467,
+    "t_observed": 0.8204,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1836.2,
+    "years_needed_for_t2": 153.0,
+    "years_needed_for_t2_exact": 153.0201572714028,
+    "powered": false,
+    "reading": "t = 0.82 on 25.8 years; t = 2 would need 153.0 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  },
+  {
+   "band": "narrower_500k_5m",
+   "dollar_vol_per_day": [
+    500000.0,
+    5000000.0
+   ],
+   "months": 309,
+   "name_months": 274726,
+   "mean_monthly_excess_pct": 0.1552,
+   "annualised_excess_pct": 1.862,
+   "t": 0.642,
+   "VS_EW_REST_OF_UNIVERSE": {
+    "months": 309,
+    "annualised_excess_pct": 0.34,
+    "t": 0.234,
+    "oos_1999_2012_t": 1.23,
+    "era_sign_table": {
+     "1999-2007": {
+      "months": 106,
+      "mean_pct": 0.2827,
+      "t": 1.947,
+      "sign": 1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": -0.0499,
+      "t": -0.245,
+      "sign": -1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": -0.1533,
+      "t": -0.585,
+      "sign": -1
+     },
+     "eras_with_a_positive_mean": 1,
+     "eras_with_a_negative_mean": 2,
+     "eras_measured": 3,
+     "holds_in_2_of_3": false,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": -1
+    },
+    "power": {
+     "n_periods": 309,
+     "periods_per_year": 12,
+     "n_oos_months": 309,
+     "sharpe_per_period": 0.0133,
+     "t_observed": 0.2336,
+     "years_observed": 25.75,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": 22645.1,
+     "years_needed_for_t2": 1887.1,
+     "years_needed_for_t2_exact": 1887.089261099962,
+     "powered": false,
+     "reading": "t = 0.23 on 25.8 years; t = 2 would need 1887.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+    }
+   },
+   "vs_ew_whole_universe_t": 0.149,
+   "OUT_OF_SAMPLE_1999_2012": {
+    "months": 166,
+    "mean_monthly_excess_pct": 0.627,
+    "t": 2.214,
+    "note": "fourteen years the S28 claim never saw -- this column is what makes the job a replication rather than a re-fit"
+   },
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.6716,
+     "t": 2.068,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1695,
+     "t": 0.431,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3693,
+     "t": -0.729,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0365,
+    "t_observed": 0.6422,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 2996.5,
+    "years_needed_for_t2": 249.7,
+    "years_needed_for_t2_exact": 249.7063576331286,
+    "powered": false,
+    "reading": "t = 0.64 on 25.8 years; t = 2 would need 249.7 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  },
+  {
+   "band": "below_the_band",
+   "dollar_vol_per_day": [
+    0.0,
+    100000.0
+   ],
+   "months": 309,
+   "name_months": 64761,
+   "mean_monthly_excess_pct": -0.0495,
+   "annualised_excess_pct": -0.594,
+   "t": -0.169,
+   "VS_EW_REST_OF_UNIVERSE": {
+    "months": 309,
+    "annualised_excess_pct": -2.58,
+    "t": -0.926,
+    "oos_1999_2012_t": -0.77,
+    "era_sign_table": {
+     "1999-2007": {
+      "months": 106,
+      "mean_pct": -0.2073,
+      "t": -0.588,
+      "sign": -1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": -0.2127,
+      "t": -0.463,
+      "sign": -1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": -0.2248,
+      "t": -0.561,
+      "sign": -1
+     },
+     "eras_with_a_positive_mean": 0,
+     "eras_with_a_negative_mean": 3,
+     "eras_measured": 3,
+     "holds_in_2_of_3": false,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": -1
+    },
+    "power": {
+     "n_periods": 309,
+     "periods_per_year": 12,
+     "n_oos_months": 309,
+     "sharpe_per_period": -0.0527,
+     "t_observed": -0.9263,
+     "years_observed": 25.75,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered": false,
+     "reading": "the arm's mean is not positive (SR -0.0527); no amount of tape makes a negative mean significant in the intended direction"
+    }
+   },
+   "vs_ew_whole_universe_t": -0.901,
+   "OUT_OF_SAMPLE_1999_2012": {
+    "months": 166,
+    "mean_monthly_excess_pct": 0.2796,
+    "t": 0.694,
+    "note": "fourteen years the S28 claim never saw -- this column is what makes the job a replication rather than a re-fit"
+   },
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.2972,
+     "t": 0.634,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0036,
+     "t": -0.007,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.4342,
+     "t": -0.827,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": -0.0096,
+    "t_observed": -0.169,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": null,
+    "years_needed_for_t2": null,
+    "years_needed_for_t2_exact": null,
+    "powered": false,
+    "reading": "the arm's mean is not positive (SR -0.0096); no amount of tape makes a negative mean significant in the intended direction"
+   }
+  },
+  {
+   "band": "above_the_band",
+   "dollar_vol_per_day": [
+    10000000.0,
+    null
+   ],
+   "months": 309,
+   "name_months": 370132,
+   "mean_monthly_excess_pct": 0.1115,
+   "annualised_excess_pct": 1.338,
+   "t": 0.946,
+   "VS_EW_REST_OF_UNIVERSE": {
+    "months": 309,
+    "annualised_excess_pct": -0.059,
+    "t": -0.031,
+    "oos_1999_2012_t": -1.281,
+    "era_sign_table": {
+     "1999-2007": {
+      "months": 106,
+      "mean_pct": -0.3164,
+      "t": -1.162,
+      "sign": -1
+     },
+     "2008-2015": {
+      "months": 96,
+      "mean_pct": -0.0442,
+      "t": -0.177,
+      "sign": -1
+     },
+     "2016-2024": {
+      "months": 107,
+      "mean_pct": 0.3389,
+      "t": 1.112,
+      "sign": 1
+     },
+     "eras_with_a_positive_mean": 1,
+     "eras_with_a_negative_mean": 2,
+     "eras_measured": 3,
+     "holds_in_2_of_3": false,
+     "same_sign_in_2_of_3": true,
+     "dominant_sign": -1
+    },
+    "power": {
+     "n_periods": 309,
+     "periods_per_year": 12,
+     "n_oos_months": 309,
+     "sharpe_per_period": -0.0017,
+     "t_observed": -0.0306,
+     "years_observed": 25.75,
+     "t_target": 2.0,
+     "periods_needed_for_t_target": null,
+     "years_needed_for_t2": null,
+     "years_needed_for_t2_exact": null,
+     "powered": false,
+     "reading": "the arm's mean is not positive (SR -0.0017); no amount of tape makes a negative mean significant in the intended direction"
+    }
+   },
+   "vs_ew_whole_universe_t": -0.315,
+   "OUT_OF_SAMPLE_1999_2012": {
+    "months": 166,
+    "mean_monthly_excess_pct": 0.3203,
+    "t": 2.059,
+    "note": "fourteen years the S28 claim never saw -- this column is what makes the job a replication rather than a re-fit"
+   },
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.2596,
+     "t": 1.339,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1509,
+     "t": 0.804,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0705,
+     "t": -0.313,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.0538,
+    "t_observed": 0.946,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 1381.2,
+    "years_needed_for_t2": 115.1,
+    "years_needed_for_t2_exact": 115.0998117145884,
+    "powered": false,
+    "reading": "t = 0.95 on 25.8 years; t = 2 would need 115.1 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  }
+ ],
+ "the_benchmark_trap_this_job_fell_into_first": "measured against the VALUE-WEIGHTED market, every band -- including the above-$10m control -- is positive out of sample at t ~2, because an equal-weighted average of names beat a value-weighted market across 1999-2012. That is the EW-vs-VW regime, not the band. The verdict rests on `VS_EW_REST_OF_UNIVERSE`, which puts the same weighting on both legs.",
+ "control_above_the_band_vs_rest_t": -0.031,
+ "headline": "S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1.673; (against the VW market it reads 1.916%/yr t 0.684, but so does every band); below-band -0.594%/yr, above-band 1.338%/yr; t = 2 would need 407.3y vs 25.75y",
+ "verdict": "CANNOT DETERMINE (underpowered)",
+ "verdict_rests_on": "VS_EW_REST_OF_UNIVERSE (same weighting on both legs)",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W6b_liquidity_band",
+ "run": 10,
+ "variant": 0,
+ "written_utc": "2026-09-05T05:05:51+00:00",
+ "elapsed_s": 5.6,
+ "exit_code": 0
+}
