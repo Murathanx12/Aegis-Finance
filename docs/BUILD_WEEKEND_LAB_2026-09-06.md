@@ -1026,6 +1026,46 @@ What replicates is a different **variant**, not a second execution:
 
 ---
 
+### FINDING 13 — append-only was letting a retracted experiment keep voting
+
+After the leak was fixed and the leaked receipts moved aside, the evidence memory
+was still reporting **`log_dollar_vol_20d` as SUPPORTED on 4 of 6 distinct
+observations** — the very archetype the fix had destroyed.
+
+Moving the *receipts* aside did nothing. The observations they had already
+written stayed in the JSONL and kept voting, and there were more of them than
+there were corrected ones. **Append-only is right for auditability and wrong on
+its own**: a corrected experiment's old results outnumber its new ones forever.
+That is the failure this module exists to prevent, arriving from the other side.
+
+`supersede(family, before_utc, why)` appends an explicit, reasoned rule;
+`snapshot()` excludes the covered observations and *reports how many it declined
+and why*; `--show-superseded` prints the rules and their effect. Nothing is
+deleted — `read_all()` still returns every row — because **the difference between
+"we never saw this" and "we saw it and then learned the instrument was broken" is
+the whole value of keeping the file.**
+
+Applied to the W7 leak (101 observations excluded):
+
+| cell | before | after |
+|---|---|---|
+| `log_dollar_vol_20d` | SUPPORTED (4 of 6) | **IDEA** (2 obs, cleared 0) |
+| `log_dollar_vol_20d__xs` | SUPPORTED (3 of 4) | out entirely |
+| SUPPORTED cells | 14 | **12** |
+
+**And what remains SUPPORTED is almost entirely one idea seen through seven
+columns** — `net_rev_4w`, `net_rev_1m`, `net_rev_4w__xs`, `consensus_rev_1m`,
+`consensus_rev_1m__xs`, `target_rev_1m__xs`, `target_rev_3m` — plus
+`consensus__xs`, `ret_6m__xs`, the two options features, and the neural champion
+that is 94% microcap.
+
+**The only screen-level idea with repeated support across genuinely different
+variants is ANALYST REVISIONS, and it does not survive becoming a tradable book.**
+That is the weekend's cumulative verdict, and it is the one sentence the evidence
+memory was built to be able to produce.
+
+---
+
 ## 6. For Murat, on check-in
 
 **Nothing was pushed, sealed, ordered, deployed, or changed on Railway.** The
