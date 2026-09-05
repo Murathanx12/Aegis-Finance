@@ -1,0 +1,162 @@
+{
+ "job": "S2_size_matched_control",
+ "question": "does the weekend's headline arm beat a CAP-MATCHED draw, or only a value-weighted market index?",
+ "feature": "target_rev_1m__xs",
+ "k": 50,
+ "weighting": "vw",
+ "cost_bps_per_side": 10.0,
+ "seeds": 10,
+ "floors_applied": {
+  "tradable_dollar_vol": null,
+  "price": null
+ },
+ "panel": "train_table_long.parquet (learner-train-table-3)",
+ "months": 308,
+ "terminal_wealth": {
+  "book_net": 85.324,
+  "vw_market_same_months": 13.0306,
+  "ew_market_same_months": 57.1828,
+  "cap_matched_control_same_cost": 11.1272
+ },
+ "paired_tests": {
+  "vs_vw_market": {
+   "benchmark": "CRSP value-weighted market (what the build doc reported)",
+   "months": 308,
+   "mean_pct_per_month": 0.9125,
+   "annualised_pct": 11.516,
+   "t_paired": 2.407,
+   "by_era": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct_per_month": 1.7501,
+     "t": 2.774,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct_per_month": 0.9337,
+     "t": 1.784,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct_per_month": 0.0715,
+     "t": 0.094,
+     "sign": 1
+    }
+   }
+  },
+  "vs_ew_market": {
+   "benchmark": "CRSP equal-weighted market",
+   "months": 308,
+   "mean_pct_per_month": 0.3281,
+   "annualised_pct": 4.009,
+   "t_paired": 0.859,
+   "by_era": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct_per_month": 0.541,
+     "t": 0.823,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct_per_month": 0.3178,
+     "t": 0.629,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct_per_month": 0.1284,
+     "t": 0.167,
+     "sign": 1
+    }
+   }
+  },
+  "vs_cap_matched_control": {
+   "benchmark": "cap-decile-matched random draw, identical weights, 10 seeds",
+   "months": 308,
+   "mean_pct_per_month": 0.9149,
+   "annualised_pct": 11.549,
+   "t_paired": 2.496,
+   "by_era": {
+    "1999-2007": {
+     "months": 105,
+     "mean_pct_per_month": 1.5268,
+     "t": 2.525,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct_per_month": 1.0357,
+     "t": 2.16,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct_per_month": 0.206,
+     "t": 0.272,
+     "sign": 1
+    }
+   }
+  }
+ },
+ "control_construction": "each holding is replaced by a name drawn uniformly from the SAME within-month market-cap decile of the same eligible universe, at the IDENTICAL weight, averaged over the seeds. The control pays the BOOK's cost series, not its own, so the comparison isolates SELECTION and does not fold a turnover difference into it.",
+ "deflated_sharpe_of_the_book_minus_control": {
+  "sharpe": 0.1422,
+  "sharpe_benchmark_sr0": 0.1657,
+  "n_trials": 307,
+  "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+  "skew": 1.125,
+  "kurtosis": 12.799,
+  "n_periods": 308,
+  "z": -0.4326,
+  "dsr": 0.3326,
+  "verdict": "WITHIN_SELECTION_NOISE",
+  "reading": "after 307 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.166; this arm's is 0.142."
+ },
+ "power_of_the_book_minus_control": {
+  "n_periods": 308,
+  "periods_per_year": 12,
+  "n_oos_months": 308,
+  "sharpe_per_period": 0.1422,
+  "t_observed": 2.4964,
+  "years_observed": 25.67,
+  "t_target": 2.0,
+  "periods_needed_for_t_target": 197.7,
+  "years_needed_for_t2": 16.5,
+  "years_needed_for_t2_exact": 16.473693116768207,
+  "powered_for_observed_effect": true,
+  "detectable_annual_excess": 0.03,
+  "reference_sharpe_per_period": 0.03887,
+  "years_needed_to_detect_that_effect": 220.6,
+  "mde_annual_excess_at_t_target": 0.08796,
+  "mde_reading": "on the 25.7 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.80%/yr",
+  "powered": false,
+  "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+  "reading": "t = 2.50 on 25.7 years; t = 2 would need 16.5 years at this Sharpe -- ENOUGH TAPE"
+ },
+ "n_trials_note": "307 is the trial count `W9_survivor_books_run40_v0.json` computes for this weekend's whole search; this control is not a new search and must not be priced as one cell.",
+ "reading_rule": "three benchmarks, three answers, and a claim is only as strong as its weakest one. Quoting the VW line alone is the thing the review objected to.",
+ "written_utc": "2026-09-05T11:56:07.418283+00:00",
+ "why_these_numbers_differ_from_the_review": {
+  "review_quoted": {
+   "terminal_wealth_net": 56.655,
+   "t_paired_vs_vw": 2.055,
+   "tree": "f6b96e3 (2026-09-05 13:07 +0800)"
+  },
+  "here_and_in_W9_run40": {
+   "terminal_wealth_net": 85.324,
+   "t_paired_vs_vw": 2.407
+  },
+  "cause": "the panel was rebuilt at 13:51 +0800, 28 minutes after 35915db rebased the target-revision legs by cfacpr(t)/cfacpr(t-h). Both numbers are correct for their own tape. `evaluate.book` on the panel on disk reproduces 85.324 / 2.407 exactly, and so does W9_survivor_books_run40_v0.json -- this script is a reproduction of the repo's own instrument, not a second opinion.",
+  "direction": "cleaning the share basis made the arm STRONGER, which is why it is not the explanation for anything."
+ },
+ "THE_THREE_ANSWERS": {
+  "vs_the_value_weighted_market": "+11.52%/yr, t 2.407, eras 2.774 / 1.784 / 0.094",
+  "vs_the_equal_weighted_market": "+4.01%/yr, t 0.859, eras 0.823 / 0.629 / 0.167 -- NO ERA IS ALIVE",
+  "vs_a_cap_decile_matched_draw": "+11.55%/yr, t 2.496, eras 2.525 / 2.160 / 0.272 -- the claim SURVIVES the right control",
+  "the_honest_sentence": "the arm beats a cap-matched draw of its own universe and does not beat an equal-weighted market. The decay is real against cap-matched peers (2.53 -> 2.16 -> 0.27) and there was never anything to decay against an EW market. Quoting only the VW line, as the build doc did, presents one of three readings as the only one.",
+  "and_it_still_does_not_reach_a_verdict": "DSR of book-minus-control is 0.3326 over the weekend's own 307 trials -- WITHIN_SELECTION_NOISE. t=2 on this Sharpe needs 16.5 years and 25.67 are on hand, so this arm IS powered for its own observed effect; what it is not is unsearched."
+ }
+}

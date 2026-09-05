@@ -1,0 +1,66 @@
+{
+  "job": "W4b_companyworld_extract",
+  "tag": "pilot",
+  "ts_utc": "2026-09-05T11:55:38.136660+00:00",
+  "mode": "pilot",
+  "worklist": {
+    "n_filings_in": 51001,
+    "n_linked": 30638,
+    "n_ambiguous_dropped": 713,
+    "n_unmatched": 19650,
+    "match_rate": 0.6007,
+    "slack_days": 180,
+    "panel_names_in_window": 7066,
+    "top_n_by_coverage": 1500,
+    "filings_for_those_names": 11850,
+    "distinct_permnos_with_a_10K": 956,
+    "years": {
+      "1999": 6,
+      "2000": 234,
+      "2001": 858,
+      "2002": 886,
+      "2003": 901,
+      "2004": 899,
+      "2005": 903,
+      "2006": 895,
+      "2007": 920,
+      "2008": 900,
+      "2009": 895,
+      "2010": 898,
+      "2011": 896,
+      "2012": 894,
+      "2013": 865
+    },
+    "sampling": {
+      "rule": "stratified by filing year, rng seed 20260906",
+      "per_year_cap": 1,
+      "n_sampled": 15
+    }
+  },
+  "n_filings_attempted": 15,
+  "statuses": {
+    "ok": 15
+  },
+  "n_docs_ok": 15,
+  "n_raw_edges": 109,
+  "n_quote_verified": 103,
+  "quote_verified_rate": 0.945,
+  "extract_method_counts": {
+    "item1_business": 9,
+    "kwwindow_fallback": 4,
+    "item1_business+kwwindow": 2
+  },
+  "tokens": {
+    "in": 89084,
+    "out": 8368,
+    "cached": 1536
+  },
+  "cost_usd_telemetry_estimate": 0.014819,
+  "cost_usd_per_100_filings": 0.0988,
+  "session_cap_usd": 10.0,
+  "halted": null,
+  "wall_seconds": 17.1,
+  "provider_balance_before": 13.38,
+  "provider_balance_after": 13.38,
+  "provider_balance_delta": 0.0
+}
