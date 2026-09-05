@@ -387,7 +387,10 @@ Receipts: `W3b_neural_floored_run01_declaration.json`,
 
 ## 2d. MONDAY MUST LEARN — and the dry run found the thing that would have gone wrong
 
-Terminal repo, three commits (`5e27070`, `c253ede`, `c01043d`, `d28742b`).
+Terminal repo, four commits (`5e27070`, `c253ede`, `c01043d`, `d28742b`).
+**`python run_tests.py` -> 76 suites, 3,483 checks, ALL PASS** (session-start
+baseline 74 suites / 3,367 checks), from a run that completed after the
+`taskkill` and was re-run after the last commit with the same numbers.
 Nothing sealed, ordered, deployed or pushed.
 
 ### 1. Every CANNOT DETERMINE on the learning report now names whose fault it is
@@ -399,15 +402,34 @@ account's own session day IS the report day, so today's equity can never be
 stamped onto an earlier day — pinned by test), the counterfactual marker, the
 shadow path (`AEGIS_SHADOW_DIR`, then two fallbacks, because a rename or a
 case-sensitive mount is not a missing shadow), the tracker path, and **one SPY
-close source** (`alpha/spy.py`).
+close source** (`alpha/spy.py`, `feed=sip`). There were **four readers on two
+tapes**: this report used `config.stock_feed()` = `iex` while
+`move_decomposition` and `logic_brain` used `sip`. Same page, same day: SPY
+genesis close **769.28 (iex) vs 769.35 (sip)**. And the report was parsing all
+**1.07 GB** of `counterfactual.jsonl` on every run — now a bounded 64 MB tail.
 
 **Measured on 2026-09-04: the counterfactual marker last wrote 2026-08-28 —
 eight days dead.** The page had been reporting that as "either nothing was
 refused, or the marker did not run", which is exactly the undifferentiated red
-line that teaches a reader to skim.
+line that teaches a reader to skim. Likewise `books_vs_fills` printed "normal
+for non-tracker roles" for all three tracker books on a day when **no seal
+existed at all**.
 
-Also found on the way: **the test suite was writing into two production
-ledgers** and nothing said so (`B3_1b_test_suite_wrote_production_ledgers.json`).
+What still says CANNOT DETERMINE, and which kind: **honest** — the shadow,
+because the finance repo's learner wrote 09-02 and no later day and owes the
+terminal nothing. **Plumbing, and not this session's to fix** — the
+counterfactual marker and the tracker refresh, which are the stopped Railway
+loops; reviving them is `fleet --deploy --up`, attended.
+
+Also found on the way: **`python run_tests.py` was writing into two PRODUCTION
+ledgers** — `state/decisions.jsonl` (six fictional PANW/NVDA exit rows, from
+`tests_smoke_contract.py` calling `exits.manage(dry_run=False)`, which the
+learning report was counting as real exits) and `state/llm_spend.jsonl`
+(caller `tests.smoke`, i.e. **inside the budget gate's own input**). Fixed with
+a per-run `AAT_LEDGER_DIR` plus a before/after fingerprint tripwire. **The rows
+already written were NOT deleted** — the hash chain has been torn since 25 Aug
+and repairing it *is* the tampering.
+(`B3_1b_test_suite_wrote_production_ledgers.json`.)
 
 ### 2. `daily_autopsy` writes a receipt every night, and the misses are typed
 Every exit path of both scripts now writes `state/autopsy/<day>.json`, including
@@ -445,15 +467,39 @@ attached to `docs/RUNBOOK_2026-09-08_REARM.md`.
 | hack4 | 5 | **5 admitted**, 50% gross, worst case −3.00% | **5** (same names) | `exp_return not positive` — 20 fail only it |
 | hack6 | 15 | **15 admitted**, 90% gross, worst case −2.70% | **0** | `exp_return not positive` — 185 fail only it |
 
-**This is the decision Murat has to make and did not know he was making.**
-Decision B.1 §4a retires the band's four *return constants* and keeps only
-hygiene. But `exp_return` is computed FROM those constants — so removing them
-makes `exp_return` non-positive for **799 of 810 candidates**, and the
-book-level effect is hack6 **15 → 0** and hack3 **10 → 5 with an entirely
-different five** (LOVE, RZLT, RFIL, LAES, AVAV in place of all ten previous
-names). Hygiene-only is not a loosening; on this vintage it is the tightest
-rule in the stack. **Implementing 4a literally on Monday would arm three books
-and fill one and a half of them.**
+**This is the decision Murat has to make and did not know he was making, and
+the mechanism is exact.** Decision B.1 §4a retires the band's four *return
+constants* and keeps hygiene. But those constants were not only an exclusion
+rule — **they were the SOURCE of `exp_return` for every name they covered.**
+Without them `score()` falls back to `(2 * p_up - 1) * claimed` off the
+152-name panel, whose **unconditional `p_up` is 0.4615**, i.e. negative for
+everything the rule does not fire on. **799 of 810 candidates then fail the
+coherence floor, against 35 of 806 today** — hack3 10 → 5 with an entirely
+different five (LOVE, RZLT, RFIL, LAES, AVAV), hack4 5 → 5, hack6 **15 → 0**.
+Hygiene-only is not a loosening; on this vintage it is the tightest rule in the
+stack, and implementing 4a literally on Monday arms three books and fills one
+and a half of them.
+
+**Hygiene itself is innocent**: it excludes 33 of 810 and its `fails_only` is
+**ZERO in all three books**. So §4a needs one companion decision from Murat —
+*what feeds `exp_return`*, or *whether the coherence floor should apply to a
+transferred base rate at all*. `AAT_BAND_MODE=hygiene_only` exists, is **OFF by
+default**, the live fleet is byte-identical without it, and both modes are
+pinned by tests.
+
+**Two more things Monday would have hit.** The 10:01 pass, run dry against the
+live venue, returns **EXIT=2 on all three books** — *"no sealed book for
+2026-09-05 … Declining rather than re-deriving"*. That is the artery working as
+built, and it is also the whole Monday risk in one line: **no seal, no
+entries.** And `RUNBOOK §6b` told the reader to pass `--dry-run` to `run_pass`;
+**that flag does not exist** (`error: unrecognized arguments`). Both corrected
+in the appendix.
+
+The dry run used vintage **2026-09-02**, the newest on disk — a seal dated today
+is correctly refused at 3 sessions stale, and the agent **declined to run
+`--refresh`**, because a half-finished refresh leaves a fresh-*looking* partial
+vintage that Monday would seal on. Reproduce:
+`AAT_ACCOUNT_ROLE=hack1 python -m scripts.monday_dry_run --compare`.
 
 The binding constraint is reported as `only` (names failing **nothing else**),
 not as first-fired — `fails` vs `only` diverge by an order of magnitude

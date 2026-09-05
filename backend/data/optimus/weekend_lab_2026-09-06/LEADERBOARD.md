@@ -575,3 +575,4 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W9_survivor_books | 14 | 0 | 15 weekend survivors booked (30 cells): 10 beat the market NET, 20 beat it GROSS; 6 of them have the | 0.1239 | 0.0679 | 0.1429 | 308 | 36.3 | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 8.0%/yr or larger) |
 | W10_decay_autopsy | 14 | 0 | target_rev_1m__xs decay autopsy: arbitraged_away (gross TW 4.3086 vs market 4.8636 in 2016-2024); no | -- | -- | -- | -- | -- | AUTOPSY |
 | W11_evidence_writeback | 14 | 0 | 527 receipts -> 5494 cell observations; 328 cells tracked; states {'IDEA': 312, 'SUPPORTED': 14, 'CO | -- | -- | -- | -- | -- | INVENTORY |
+| W10_decay_autopsy | 1 | 0 | target_rev_1m__xs decay autopsy: arbitraged_away (gross TW 4.3086 vs market 4.8636 in 2016-2024); no | -- | -- | -- | -- | -- | AUTOPSY |
