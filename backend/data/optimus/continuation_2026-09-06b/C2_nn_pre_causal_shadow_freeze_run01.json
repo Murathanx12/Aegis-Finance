@@ -1,0 +1,183 @@
+{
+ "job": "C2_nn_pre_causal_shadow_freeze",
+ "mandate": "docs/CONTINUATION_2026-09-06b_OPUS_PROMPT.md item 2",
+ "question": "Fable claim 4: B10-not-earned is the right verdict for CAPITAL and for CLAIMS, and the wrong reason to stop the ARM. Freeze nn_pre_causal as a zero-capital shadow book with a frozen contract, graded beside lgbm_clf's shadow, receipt every night even when empty.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "capital": "ZERO. No order path imports learner/. Enforced by the SHADOW grade (signal_registry._validate refuses allowed_in_pm on a SHADOW row) and by an AST import scan in test_shadow_nn_freeze.py.",
+ "what_was_frozen": {
+  "contract_id": "nn_pre_causal_shadow_v1",
+  "contract_path": "backend/data/optimus/learner/contracts/nn_pre_causal_shadow_v1.json",
+  "contract_sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1",
+  "decision_rule_sha256": "428a7148f61942b0934765ae192090d63942c0a60d219469fdbdc22bdb0fb4af",
+  "rule_was_hashed_before_the_first_fit": true,
+  "seeds": [
+   20260906,
+   20260907,
+   20260908,
+   20260909,
+   20260910,
+   20260911,
+   20260912,
+   20260913
+  ],
+  "seed_selection": "FORBIDDEN -- the graded object is the seed-mean over all eight",
+  "pretrain_scope": "causal",
+  "width": "base",
+  "hyperparameters_snapshotted_by_value": 18,
+  "training_universe": {
+   "applied_to": "the TRAINING universe as well as the graded book",
+   "dollar_volume_floor_usd_per_day": 3000000.0,
+   "min_close_usd": 5.0,
+   "source": "learner.neural_long.tradable_universe"
+  },
+  "book": {
+   "k": 50,
+   "weight": "vw",
+   "cadence": "monthly",
+   "cost_bps_per_side": [
+    10.0,
+    25.0
+   ],
+   "ret_col": "fwd_1m",
+   "mkt_col": "mkt_vw_1m",
+   "grader": "learner.evaluate.book"
+  }
+ },
+ "why_the_frozen_object_is_a_CONTRACT_and_not_a_model_file": "learner.neural_long.run_neural produces WALK-FORWARD OOS predictions over 21 folds, each fitted on tape that had matured before its test year opened. There is no single model object to persist, and persisting the last fold's net would be a DIFFERENT experiment (one model, one vintage) from the one W3b measured. So the recipe is frozen by hash and verify_contract() compares learner.neural_long's LIVE constants against the frozen ones -- a module edit leaves the contract file byte-identical while changing what it means, and a file-hash check alone cannot see that.",
+ "cadence": {
+  "book": "MONTHLY. The arm predicts a one-month forward excess on the research panel.",
+  "receipt": "NIGHTLY. A receipt is written on every invocation.",
+  "why_the_book_cannot_be_nightly": "the tracker day file supplies dataset.SHADOW_MAPPABLE -- 14 base features -- and this arm reads 50. Median-imputing a third of a model's inputs and calling the output a prediction is the house failure mode: code that runs green and silently does nothing.",
+  "statuses": {
+   "OK": "a book exists for the current month",
+   "NO_NEW_MONTH": "heartbeat; the last book is named",
+   "PENDING_ARTEFACT": "frozen and registered, no monthly book yet; the producing command is named",
+   "REFUSED": "the contract drifted. A refusal is a finding."
+  }
+ },
+ "first_receipt_tonight": {
+  "day": "2026-09-05",
+  "status": "PENDING_ARTEFACT",
+  "books_to_date": 0,
+  "path": "backend/data/optimus/learner/nn_shadow/nn_shadow_2026-09-05.json",
+  "reading": "PENDING_ARTEFACT is the honest status on the night of the freeze. It is not an empty book and not a failure -- it is the night before the first month. The producing command is named in the receipt so the gate can go green."
+ },
+ "registry_row": {
+  "signal_id": "neural_pre_causal_ensemble_v1",
+  "evidence_grade": "SHADOW",
+  "permitted_role": "PICKER",
+  "allowed_in_pm": false,
+  "usable_now": false,
+  "queued": true,
+  "first_grade_date": "2026-09-05",
+  "contract_sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1",
+  "reliability_weight": null,
+  "resolved_weight": 0.5,
+  "label": "SHADOW/PICKER, UNCALIBRATED"
+ },
+ "schema_change": {
+  "file": "backend/services/signal_registry.py",
+  "added_grade": "SHADOW",
+  "added_fields": [
+   "first_grade_date",
+   "contract_path",
+   "contract_sha256"
+  ],
+  "new_validation_rules": [
+   "a SHADOW row without first_grade_date is REFUSED -- an undated accrual cannot be read forward and a date added later is a backfill",
+   "a SHADOW row with allowed_in_pm true is REFUSED -- SHADOW means ZERO CAPITAL",
+   "a SHADOW row without contract_sha256 is REFUSED -- a frozen experiment whose contract is not hashed is not frozen"
+  ],
+  "SHADOW_is_not_in_NEVER_PICKS": true,
+  "why": "a shadow is ALIVE. Grouping it with REJECTED/PERVERSE would make the graduation queue and the graveyard the same list."
+ },
+ "evidence_at_freeze": {
+  "vs_lgbm_clf_annualised_10bps": 0.0475,
+  "vs_lgbm_clf_annualised_25bps": 0.0506,
+  "terminal_wealth_net_10bps": 49.0082,
+  "terminal_wealth_lgbm_clf": 22.6076,
+  "terminal_wealth_lgbm_raw": 36.2448,
+  "terminal_wealth_market_same_months": 14.3778,
+  "t_stat_paired_vs_market": 2.243,
+  "deflated_sharpe_vs_bar": {
+   "dsr": 0.1726,
+   "bar": 0.95
+  },
+  "spa_p": 0.1078,
+  "eras_positive": "3 of 3",
+  "months": 251,
+  "B10_not_earned": true,
+  "reading": "clears three clauses of the pre-declared rule and fails the family correction. Not earned for CAPITAL and not a RESEARCH_CLAIM; permitted as a zero-capital shadow under the PRODUCT_EXPERIMENT licence."
+ },
+ "the_claim_this_freeze_does_NOT_make": "nothing here says nn_pre_causal has alpha. It failed the family correction (DSR 0.1726 vs a 0.95 bar, SPA p 0.108) and B10_not_earned stays true. Separately, its excess is measured against the RAW VW market and may be a LOADING rather than an intercept -- item 1's beta-matched re-grade (C1_beta_matched_regrade_run01.json) is what settles that. Until it is read, no 'beats lgbm' sentence about this arm is an alpha claim.",
+ "proved_red": [
+  "test_verify_contract_goes_RED_when_the_module_drifts -- moves learner.neural_long.DROPOUT and asserts verify_contract() reports the drift by name, with the contract file untouched",
+  "test_registry_REFUSES_a_shadow_that_is_not_one[allowed_in_pm=True]",
+  "test_registry_REFUSES_a_shadow_that_is_not_one[first_grade_date=None]",
+  "test_registry_REFUSES_a_shadow_that_is_not_one[contract_sha256=None]",
+  "test_freeze_refuses_to_overwrite_a_different_contract"
+ ],
+ "incidental_finding": {
+  "what": "lgbm_clf's DAILY shadow is currently REFUSED.",
+  "detail": "`python -m scripts.learner_shadow_seal` on the 2026-09-02 tracker day returns status REFUSED: 'schema hash mismatch: model was sealed against fd48dbc7c7535262, the current shadow schema is 7f01cbe49f85286d. Retrain.' Coverage is fine (2947/3056 scoreable, column coverage 1.0) -- the model is stale, not the data.",
+  "not_caused_by_this_session": true,
+  "consequence": "the 'graded nightly beside lgbm_clf's shadow' half of item 2 is graded beside a shadow that is itself refusing. Retraining the champion is a separate attended job and was not done here."
+ },
+ "files_changed": [
+  "learner/shadow_nn.py (new)",
+  "scripts/learner_shadow_seal.py (--arms {both,lgbm_clf,nn_pre_causal}, --freeze-nn)",
+  "backend/services/signal_registry.py (SHADOW grade + three fields + three refusals)",
+  "backend/data/signal_registry.yaml (row neural_pre_causal_ensemble_v1)",
+  "backend/tests/test_shadow_nn_freeze.py (new)"
+ ],
+ "tests": {
+  "command": "AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/test_shadow_nn_freeze.py backend/tests/test_signal_registry.py -q --timeout=300",
+  "result": "42 passed in 3.03s"
+ },
+ "_provenance": {
+  "sys_argv": [
+   "C:/Users/mrthn/AppData/Local/Temp/claude/C--Users-mrthn-aegis-finance/e2a797ae-8a72-4f80-af48-6610c88e9ced/scratchpad/mk_c2.py"
+  ],
+  "resolved_config": {
+   "contract_id": "nn_pre_causal_shadow_v1",
+   "signal_id": "neural_pre_causal_ensemble_v1",
+   "first_grade_date": "2026-09-05",
+   "decision_rule_sha256": "428a7148f61942b0934765ae192090d63942c0a60d219469fdbdc22bdb0fb4af",
+   "source_receipt": "backend/data/optimus/continuation_2026-09-06/W3b_neural_floored_run01.json",
+   "contract_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\contracts\\nn_pre_causal_shadow_v1.json",
+   "receipt_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\nn_shadow",
+   "book_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\nn_shadow\\books"
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06\\W3b_neural_floored_run01.json",
+    "sha256": "ec0ac73e0969bc0914e56eeeabfe844d3b855441091085aad0014e93b319a6bd",
+    "bytes": 207053
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06\\W3b_neural_floored_run01_declaration.json",
+    "sha256": "32fd598123773dff9670994d4c612f425ea5a5ffc9c6f7a481c286b0e80859f9",
+    "bytes": 3154
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\docs\\REVIEW_2026-09-06_FABLE51_ON_THE_CONTINUATION.md",
+    "sha256": "0a0f53fc194f1dd5358796ea4c10f2cf7e39d8eb1495d8ad6761940272c43d2f",
+    "bytes": 8003
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\contracts\\nn_pre_causal_shadow_v1.json",
+    "sha256": "dd63e9a2c374832ec656aa0db9773f7ed85664a5aa05ca6e6faf1cf8b0d64030",
+    "bytes": 3829
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\signal_registry.yaml",
+    "sha256": "fbcef5937ad7f92929e16b66b4e026ccbdff496af79fc999b6b79b99f1c50291",
+    "bytes": 53392
+   }
+  ],
+  "git_commit": "13b6452",
+  "generated_utc": "2026-09-05T14:34:34.558893+00:00"
+ }
+}

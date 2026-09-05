@@ -1,0 +1,95 @@
+{
+ "artefact": "AEGIS_SHADOW_CONTRACT",
+ "contract_id": "nn_pre_causal_shadow_v1",
+ "schema": "shadow-contract-1",
+ "licence": "PRODUCT_EXPERIMENT",
+ "capital": "ZERO. No order path imports learner/. This contract confers no broker authority and no sizing authority of any kind.",
+ "signal_id": "neural_pre_causal_ensemble_v1",
+ "frozen_utc": "2026-09-05T00:00:00+00:00",
+ "first_grade_date": "2026-09-05",
+ "arm": "nn_pre_causal",
+ "what_is_frozen": "the RECIPE, not a serialised net. run_neural produces walk-forward OOS predictions over 21 folds; there is no single model object, and persisting the last fold would be a different experiment. The eight seeds, the architecture, the pre-training scope, the training-universe floor, the object judged (seed-mean ensemble, never the best cell), the book and the grader are frozen by the hash of this file.",
+ "seeds": [
+  20260906,
+  20260907,
+  20260908,
+  20260909,
+  20260910,
+  20260911,
+  20260912,
+  20260913
+ ],
+ "seed_selection": "FORBIDDEN. The graded object is the seed-mean over all eight. Reporting the best seed would be the maximum of eight draws quoted as one.",
+ "pretrain_scope": "causal",
+ "width": "base",
+ "hyperparameters": {
+  "seed_base": 20260906,
+  "n_seeds": 8,
+  "horizon_months": 1,
+  "clip_sd": 5.0,
+  "target_clip_sd": 5.0,
+  "dropout": 0.2,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "max_epochs": 30,
+  "patience": 4,
+  "batch": 16384,
+  "mask_fraction": 0.15,
+  "pretrain_epochs": 8,
+  "pretrain_lr": 0.001,
+  "tradable_floor_usd": 3000000.0,
+  "tradable_min_close": 5.0,
+  "first_test_year": 2004,
+  "last_test_year": 2024
+ },
+ "training_universe": {
+  "applied_to": "the TRAINING universe as well as the graded book",
+  "dollar_volume_floor_usd_per_day": 3000000.0,
+  "min_close_usd": 5.0,
+  "source": "learner.neural_long.tradable_universe"
+ },
+ "book": {
+  "k": 50,
+  "weight": "vw",
+  "cadence": "monthly",
+  "cost_bps_per_side": [
+   10.0,
+   25.0
+  ],
+  "ret_col": "fwd_1m",
+  "mkt_col": "mkt_vw_1m",
+  "grader": "learner.evaluate.book"
+ },
+ "benchmark": {
+  "primary": "the panel's own mkt_vw_1m (vw_crsp_common_main)",
+  "also_required": "beta_matched -- an excess that is a LOADING is not an intercept; see continuation_2026-09-06b/C1_beta_matched_regrade_run01.json",
+  "module": "learner.benchmark"
+ },
+ "decision_rule_sha256": "428a7148f61942b0934765ae192090d63942c0a60d219469fdbdc22bdb0fb4af",
+ "source_receipt": "backend/data/optimus/continuation_2026-09-06/W3b_neural_floored_run01.json",
+ "evidence_at_freeze": {
+  "vs_lgbm_clf_annualised_10bps": 0.0475,
+  "vs_lgbm_clf_annualised_25bps": 0.0506,
+  "terminal_wealth_net_10bps": 49.0082,
+  "terminal_wealth_lgbm_clf": 22.6076,
+  "terminal_wealth_lgbm_raw": 36.2448,
+  "terminal_wealth_market_same_months": 14.3778,
+  "t_stat_paired_vs_market": 2.243,
+  "deflated_sharpe_vs_bar": {
+   "dsr": 0.1726,
+   "bar": 0.95
+  },
+  "spa_p": 0.1078,
+  "eras_positive": "3 of 3",
+  "months": 251,
+  "B10_not_earned": true,
+  "reading": "clears three clauses of the pre-declared rule and fails the family correction. Not earned for CAPITAL and not a RESEARCH_CLAIM; permitted as a zero-capital shadow under the PRODUCT_EXPERIMENT licence."
+ },
+ "cadence": {
+  "book": "monthly -- the arm predicts a one-month forward excess",
+  "receipt": "nightly -- a receipt is written every invocation, including nights with no new month",
+  "why_not_nightly_book": "the tracker day file supplies dataset.SHADOW_MAPPABLE (14 base features); this arm reads 50. Median-imputing a third of a model's inputs and calling the output a prediction is the house failure mode."
+ },
+ "promotion": "A shadow is promoted by changing its GRADE in backend/data/signal_registry.yaml, attended, under CANON. Nothing in this module can do that.",
+ "sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1"
+}

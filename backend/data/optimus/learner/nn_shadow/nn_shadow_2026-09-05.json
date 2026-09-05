@@ -1,0 +1,31 @@
+{
+  "artefact": "AEGIS_NN_SHADOW_RECEIPT",
+  "licence": "PRODUCT_EXPERIMENT",
+  "signal_id": "neural_pre_causal_ensemble_v1",
+  "contract_id": "nn_pre_causal_shadow_v1",
+  "broker_authority": "NONE -- zero capital by contract. This file is written, never sent.",
+  "day": "2026-09-05",
+  "generated_at_utc": "2026-09-05T14:31:21+00:00",
+  "first_grade_date": "2026-09-05",
+  "decision_rule_sha256": "428a7148f61942b0934765ae192090d63942c0a60d219469fdbdc22bdb0fb4af",
+  "contract_verification": {
+    "contract_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\contracts\\nn_pre_causal_shadow_v1.json",
+    "ok": true,
+    "checks": {
+      "contract_present": true,
+      "hash_matches_body": true,
+      "live_constants_readable": true,
+      "hyperparameters_unchanged": true
+    },
+    "drift": [],
+    "stored_sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1",
+    "recomputed_sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1"
+  },
+  "contract_sha256": "16e7d4390686d4d0809455ce9b917e1b6a2806763fb8343565d1b7b04bf0f0d1",
+  "books_to_date": 0,
+  "status": "PENDING_ARTEFACT",
+  "reasons": [
+    "no monthly book has been produced under this contract yet. The arm is FROZEN and REGISTERED; its forward record starts at the first book. This is not a failure and not an empty book -- it is the night before the first month."
+  ],
+  "how_to_produce_one": "python -m scripts.w3_neural_floored --stage nn_pre_causal, then --stage combine, with the seeds and years named in the contract; the seed-mean book is written to backend/data/optimus/learner/nn_shadow/books/nn_pre_causal_book_<YYYY-MM>.json"
+}

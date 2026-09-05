@@ -51,8 +51,28 @@ ROLES = {
 
 GRADES = {
     "VALIDATED", "SUPPORTED", "SHELF", "OBSERVATIONAL", "HYPOTHESIS",
-    "REJECTED", "PERVERSE",
+    "SHADOW", "REJECTED", "PERVERSE",
 }
+
+#: SHADOW, added 2026-09-05 (CONTINUATION_2026-09-06b item 2).
+#:
+#: A mechanism with a FROZEN contract, accruing forward evidence at ZERO
+#: CAPITAL. It sits between HYPOTHESIS ("registered, never run") and SUPPORTED
+#: ("real effect, spanned or era-fragile"): it HAS been run, it did NOT clear
+#: the family correction, and stopping its accrual would be over-closing
+#: (`docs/REVIEW_2026-09-06_FABLE51_ON_THE_CONTINUATION.md` claim 4 -- "Stopping
+#: the loop is right; refusing shadow accrual is over-closing").
+#:
+#: The grade carries three obligations, enforced in `_validate` below rather
+#: than by intention:
+#:   1. `first_grade_date` is required. A shadow with no start date cannot have
+#:      its forward record read later, and a date added afterwards is a
+#:      backfill wearing a start date.
+#:   2. `allowed_in_pm` must be false. SHADOW means zero capital. Promotion
+#:      changes the GRADE first, attended, under CANON.
+#:   3. `contract_sha256` is required. A frozen experiment whose contract is
+#:      not hashed is not frozen.
+SHADOW_GRADE = "SHADOW"
 
 #: Grades that may never carry a role that chooses or promotes a name, no
 #: matter what the YAML says. Belt and braces: the enforcement does not depend
@@ -90,6 +110,14 @@ class Signal:
     implementation_notes: str = ""
     distinct_from: list[str] = field(default_factory=list)
     last_updated: str = ""
+    #: The first date on which this signal's forward record began accruing.
+    #: Required for SHADOW; never back-dated.
+    first_grade_date: Optional[str] = None
+    #: Repo-relative path of the frozen contract a SHADOW accrues under.
+    contract_path: Optional[str] = None
+    #: SHA-256 of that contract. A shadow whose contract hash moves is a
+    #: different experiment wearing the same name.
+    contract_sha256: Optional[str] = None
 
     @property
     def calibrated(self) -> bool:
@@ -246,6 +274,19 @@ def _validate(sig: Signal, seen: set[str]) -> list[str]:
     if sig.evidence_grade in NEVER_PICKS and sig.allowed_in_pm and sig.weight > 0.5:
         bad.append(f"{sig.signal_id}: graded {sig.evidence_grade} yet allowed in "
                    f"the PM at weight {sig.weight}")
+    if sig.evidence_grade == SHADOW_GRADE:
+        if not sig.first_grade_date:
+            bad.append(f"{sig.signal_id}: graded SHADOW with no first_grade_date "
+                       f"-- an undated accrual cannot be read forward, and a "
+                       f"date added later is a backfill")
+        if sig.allowed_in_pm:
+            bad.append(f"{sig.signal_id}: graded SHADOW yet allowed_in_pm -- "
+                       f"SHADOW means ZERO CAPITAL; promotion changes the grade "
+                       f"first, attended, under CANON")
+        if not sig.contract_sha256:
+            bad.append(f"{sig.signal_id}: graded SHADOW with no contract_sha256 "
+                       f"-- a frozen experiment whose contract is not hashed is "
+                       f"not frozen")
     if sig.evidence_grade in {"VALIDATED", "SUPPORTED", "REJECTED", "PERVERSE"} \
             and not sig.receipts:
         bad.append(f"{sig.signal_id}: graded {sig.evidence_grade} with no "

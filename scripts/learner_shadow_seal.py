@@ -3,6 +3,24 @@
     python -m scripts.learner_shadow_seal                 # latest tracker day
     python -m scripts.learner_shadow_seal --day 2026-09-02
     python -m scripts.learner_shadow_seal --print-only    # do not write
+    python -m scripts.learner_shadow_seal --arms lgbm_clf # skip the nn shadow
+    python -m scripts.learner_shadow_seal --freeze-nn     # (re)write the contract
+
+TWO SHADOWS, ONE GRADER (added 2026-09-05)
+==========================================
+Since the `nn_pre_causal` freeze this script grades TWO zero-capital shadows:
+
+  * `lgbm_clf` -- the daily tracker shadow. Scores today's tracker day file
+    with the sealed champion. Cadence: nightly.
+  * `nn_pre_causal` -- the frozen 8-seed ensemble (contract
+    `nn_pre_causal_shadow_v1`, rule hash `428a7148...`). Cadence: the BOOK is
+    monthly, the RECEIPT is nightly. It cannot be scored on the tracker day
+    file at all -- the day file supplies 14 mappable features and that arm
+    reads 50 -- so on a night with no new panel month its receipt is a
+    heartbeat naming the last book. That is the honest form of an empty night;
+    a book built from a median-imputed third of a model's inputs is not.
+
+Both write a file and neither places anything.
 
 WHAT "SHADOW" MEANS HERE
 ========================
@@ -34,7 +52,8 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from learner import shadow as S      # noqa: E402
+from learner import shadow as S           # noqa: E402
+from learner import shadow_nn as SN       # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -47,7 +66,58 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--print-only", action="store_true")
     ap.add_argument("--strict", action="store_true",
                     help="exit 1 on REFUSED (for a scheduler that wants to be paged)")
+    ap.add_argument("--arms", default="both",
+                    choices=("both", "lgbm_clf", "nn_pre_causal"),
+                    help="which zero-capital shadows to grade tonight")
+    ap.add_argument("--freeze-nn", action="store_true",
+                    help="(re)write the frozen nn_pre_causal contract, then exit. "
+                         "REFUSES to overwrite a contract with a different hash.")
     a = ap.parse_args(argv)
+
+    if a.freeze_nn:
+        path = SN.freeze()
+        c = json.loads(path.read_text(encoding="utf-8"))
+        print(f"  contract {c['contract_id']} sha256 {c['sha256']}")
+        print(f"  -> {path}   (zero capital; nothing in this file can place an order)")
+        return 0
+
+    refused = False
+    if a.arms in ("both", "lgbm_clf"):
+        refused |= _seal_lgbm_shadow(a)
+    if a.arms in ("both", "nn_pre_causal"):
+        refused |= _seal_nn_shadow(a)
+    return 1 if (a.strict and refused) else 0
+
+
+def _seal_nn_shadow(a) -> bool:
+    """The frozen nn_pre_causal shadow. Writes a receipt EVERY night.
+
+    Returns True only on REFUSED (a drifted contract). PENDING_ARTEFACT and
+    NO_NEW_MONTH are not failures -- a scheduler paged on "no new month" would
+    be paged 30 nights in 31, and an alarm that always fires is not an alarm.
+    """
+    rec = SN.build_nn_shadow_receipt(day=a.day)
+    print("")
+    print(f"  [nn_pre_causal shadow]  day: {rec.get('day')}   "
+          f"status: {rec.get('status')}")
+    print(f"  contract: {rec.get('contract_id')} "
+          f"sha256 {str(rec.get('contract_sha256'))[:16]}   "
+          f"rule {rec.get('decision_rule_sha256')[:16]}   "
+          f"accruing since {rec.get('first_grade_date')}")
+    print(f"  books to date: {rec.get('books_to_date')}")
+    for r in rec.get("reasons", []):
+        print(f"  {rec.get('status')}: {r}")
+    if rec.get("how_to_produce_one"):
+        print(f"  next: {rec['how_to_produce_one']}")
+    if a.print_only:
+        print(json.dumps(rec, indent=2, default=str)[:400])
+    else:
+        path = SN.write_nn_shadow_receipt(rec)
+        print(f"  -> {path}   (this file is written, never sent)")
+    return rec.get("status") == "REFUSED"
+
+
+def _seal_lgbm_shadow(a) -> bool:
 
     book = S.build_shadow_book(day=a.day, k=a.k, weight_pct=a.weight_pct, tag=a.tag)
 
@@ -93,7 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         path = S.write_shadow_book(book)
         print(f"  -> {path}   (this file is written, never sent)")
 
-    return 1 if (a.strict and book.get("status") == "REFUSED") else 0
+    return book.get("status") == "REFUSED"
 
 
 if __name__ == "__main__":
