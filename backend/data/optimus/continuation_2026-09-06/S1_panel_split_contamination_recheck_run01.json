@@ -26,9 +26,36 @@
  "reading": "the mean on split rows fell 3.12 -> 0.0675, a 46x reduction, and the max 359 -> 31.5. The contamination the review measured is gone from the tape the neural and graph jobs in this session are training on.",
  "RESIDUAL_STILL_OPEN": {
   "1": "2.04% of the 4,359 rebased split rows still report a one-month consensus-target move above +100%, and the panel-wide max is +141.5. A rebase cannot fix a row where the two IBES vintages themselves disagree about the share basis; those rows are still readable as features and nothing bounds them.",
-  "2": "the review's OTHER two settlement items are NOT addressed by this and remain open: (a) re-run W9_survivor_books on the code actually on disk so `n_trials_used_for_the_DSR` is populated -- the published receipt carries 24 and the code computes 277, and at 277 the DSR is 0.2022, BELOW the 0.2305 noise bar that made the L1 learner arm NOISE; (b) publish the size-matched control table beside the raw excess."
+  "2": "SUPERSEDED by CORRECTION_2026-09-06_same_session -- item (a) was ALREADY DONE (W9 run40, n_trials 307, DSR 0.1239 WITHIN_SELECTION_NOISE). Only item (b), the size-matched control table published beside the raw excess, is still open."
  },
  "cost_of_this_check_usd": 0.0,
  "llm_calls": 0,
- "generated_utc": "2026-09-05T11:51:51.991223+00:00"
+ "generated_utc": "2026-09-05T11:51:51.991223+00:00",
+ "CORRECTION_2026-09-06_same_session": {
+  "what_I_got_wrong": "RESIDUAL_STILL_OPEN item 2(a) said the W9 re-run with a populated n_trials was still open. It is NOT. I checked one receipt (run09, the one the review quoted) and inferred from it; there are 31 W9 receipts and the LAST one already answers it.",
+  "the_receipt_that_settles_it": "backend/data/optimus/weekend_lab_2026-09-06/W9_survivor_books_run40_v0.json, written_utc 2026-09-05T09:00:06Z -- AFTER the review's tree (f6b96e3, 05:07Z)",
+  "n_trials_used_for_the_DSR": 307,
+  "search_breadth_feature_job_variant_rows": 277,
+  "sharpe": 0.0959,
+  "sharpe_benchmark_sr0": 0.1657,
+  "dsr": 0.1239,
+  "dsr_verdict": "WITHIN_SELECTION_NOISE",
+  "dsr_if_only_the_books_were_counted": 0.6408,
+  "spa_p_consistent": 0.0679,
+  "pbo": 0.1429,
+  "mde_annual_excess_at_t2": 0.08001,
+  "years_needed_for_t2": 36.3,
+  "years_observed": 25.67,
+  "tail_share_of_excess_from_top_5_months": 0.5428,
+  "t_without_the_top_5_months": 0.844,
+  "era_sign_table_t": {
+   "1999-2007": 2.233,
+   "2008-2015": 0.705,
+   "2016-2024": 0.037
+  },
+  "verdict_on_disk": "CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 8.0%/yr or larger)",
+  "reading": "the review's estimate of DSR 0.2022 at n_trials 277 was the right direction and understated it: the code on disk counts 307 trials and returns 0.1239. The weekend's headline arm is BELOW its own noise bar by the repo's own instrument, and the receipt already says so. Item 2(b), the size-matched control table, remains genuinely open.",
+  "the_lesson": "31 receipts share a prefix and only the LAST one is current. I read the one the review quoted and called the item open -- absence of a fix in the receipt you were handed is not evidence of absence.",
+  "corrected_utc": "2026-09-05T11:52:46.039067+00:00"
+ }
 }
