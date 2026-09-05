@@ -1738,7 +1738,72 @@ TE_WAR_WINDOW = ("2026-06-04", "2026-07-29")
 #: own cache-hit rate. The two providers disagree about whether cached tokens
 #: are counted inside or beside the input count — `llm_telemetry.extract_usage`
 #: normalises that, so this table only needs the three rates.
-LLM_PRICE_AS_OF = "2026-08-12"
+LLM_PRICE_AS_OF = "2026-09-05"
+#: RE-DERIVED 2026-09-05 FROM THE PROVIDER BALANCE, not from a published list.
+#: Receipt: `backend/data/optimus/continuation_2026-09-06b/
+#: C3_deepseek_price_derivation_run01.json`; the derivation is
+#: `scripts/c6b_deepseek_price_derivation.py` and it is re-runnable offline.
+#:
+#: The 2026-08-12 table below priced 55.8% of what DeepSeek actually charged.
+#: Two balance readings bracket two windows, and the ledger's own token counts
+#: sit inside them:
+#:
+#:   W1  2026-08-24T12:10Z  $23.99 -> 2026-09-05T11:58Z  $13.36   spend $10.63
+#:       4,471 calls · 6,022,632 in · 1,893,504 cached · 7,474,321 out
+#:       priced by the old table at $2.94  ->  multiple 3.61x
+#:   W2  2026-09-05T11:58Z  $13.36 -> 2026-09-05T12:23Z   $9.38   spend  $3.98
+#:       4,099 calls · 12,732,488 in · 7,601,792 cached · 1,398,775 out
+#:       priced by the old table at $2.20  ->  multiple 1.81x
+#:
+#: THE TWO MULTIPLES DISAGREE BY 1.99x, so no scalar correction of the whole
+#: table can be right — S4's "1.79-1.81x" was the 25-minute window alone.
+#: Solving the 2x2 `in*Min + out*Mout = spend` (condition number 2.58, so the
+#: windows genuinely differ in mix) gives **in $0.169413 / out $1.284835 per
+#: Mtok**: the input leg was roughly right (1.21x) and the OUTPUT leg was
+#: under-priced by 4.59x.
+#:
+#: WHY "THE TABLE IS WRONG" AND NOT "THE LEDGER IS INCOMPLETE" — the key is
+#: shared with every other job on this machine, so missing rows were the rival
+#: explanation. The two stories predict different SHAPES for the gap, and the
+#: shape decides it: the gap is $1.03/Mtok-out in W1 and $1.28/Mtok-out in W2
+#: (spread 1.24x) but $0.00172 vs $0.00044 per CALL (spread 3.95x) and $1.28 vs
+#: $0.14 per Mtok-IN (spread 9.11x). Missing rows lose whole calls and would
+#: show a constant gap per call; they do not. The incomplete-ledger story would
+#: additionally have to claim 72.3% of a 12-day window's real money and 44.8%
+#: of a supervised 25-minute window's real money left no trace, at unledgered
+#: burn rates 160x apart.
+#:
+#: CROSS-CHECKS, all agreeing on the output leg: least squares over four
+#: sub-windows recovered from this session's sibling receipts gives
+#: 0.1166/1.3461; holding in=0.14 and solving only the output leg gives 1.3476
+#: pooled (1.309 / 1.556 per window). The OUTPUT leg is bracketed [1.28, 1.35];
+#: the INPUT leg is only bracketed [0.117, 0.169] and the old 0.14 is inside
+#: it. The adopted numbers are the exact 2x2 on the only two readings that
+#: carry a recorded timestamp — the high end of the input bracket, which is the
+#: safe direction for a gate.
+#:
+#: WHAT IS MEASURED AND WHAT IS NOT:
+#:  * `in` and `out` for the v4-flash family: MEASURED (2 windows, 2 unknowns).
+#:  * `cached_in`: SCALED by the same factor as `in`, NOT MEASURED. Two windows
+#:    cannot identify three legs, and the 50x discount is preserved rather than
+#:    invented.
+#:  * `deepseek-v4-pro`: PROPAGATED, NOT MEASURED — the ledger holds ZERO
+#:    v4-pro rows in 70,664 lines, so this window says nothing about it. The
+#:    old pro entry was EXACTLY 3.1071x flash on both legs, which is the
+#:    signature of one reading of one list on one day; a correction to that
+#:    reading therefore carries. The alternative — leaving out=0.87 — would
+#:    price pro's output BELOW measured flash output, which is incoherent and
+#:    under-binds a gate.
+#:  * Anthropic rows: UNTOUCHED. Different vendor, no balance, no evidence.
+#:
+#: History is NOT rewritten. `llm_calls.jsonl` keeps every row at the price it
+#: was written with (`pricing_as_of` travels on each row) — repairing an
+#: append-only accounting file is the tampering. `llm_telemetry.reprice()` is
+#: the audit helper that re-values stored TOKENS at this table, and
+#: `llm_telemetry.spend()` — which `research_budget.require()` gates on —
+#: already reads through `row_cost` -> `price_call`, so every dollar ceiling in
+#: this repo begins binding at these rates with no further change.
+#:
 #: CORRECTED 2026-08-12 against the live account. `GET /models` returns EXACTLY
 #: TWO ids — `deepseek-v4-flash` and `deepseek-v4-pro`. The names this codebase
 #: has always used are SERVER-SIDE ALIASES, verified by reading `model` off the
@@ -1760,17 +1825,24 @@ LLM_PRICE_AS_OF = "2026-08-12"
 #:     wrong. Real rates from api-docs.deepseek.com/quick_start/pricing.
 #:
 #: Note `cached_in` for v4-flash is FIFTY TIMES cheaper than a cache miss
-#: ($0.0028 vs $0.14). Sharing a long common prefix across the arms of an
+#: ($0.00338826 vs $0.169413 after the 2026-09-05 re-derivation; the 50x ratio
+#: is carried, not re-measured). Sharing a long common prefix across the arms of an
 #: experiment is therefore worth more than any other cost optimisation
 #: available to us.
 LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
     # DeepSeek — the workhorse for specialists and research roles.
-    "deepseek-v4-flash": {"in": 0.14, "cached_in": 0.0028, "out": 0.28},
-    "deepseek-v4-pro": {"in": 0.435, "cached_in": 0.003625, "out": 0.87},
+    # in/out MEASURED from the balance (2026-09-05); cached_in scaled with `in`.
+    "deepseek-v4-flash": {"in": 0.169413, "cached_in": 0.00338826,
+                          "out": 1.284835},
+    # PROPAGATED at the same per-leg multiples (1.2101x in, 4.5887x out), not
+    # measured: no v4-pro call has ever been made. See the block above.
+    "deepseek-v4-pro": {"in": 0.526390, "cached_in": 0.00438659,
+                        "out": 3.992166},
     # Legacy aliases. Both resolve server-side to v4-flash, so they are priced
     # as v4-flash. Kept because call sites still send these strings.
-    "deepseek-chat": {"in": 0.14, "cached_in": 0.0028, "out": 0.28},
-    "deepseek-reasoner": {"in": 0.14, "cached_in": 0.0028, "out": 0.28},
+    "deepseek-chat": {"in": 0.169413, "cached_in": 0.00338826, "out": 1.284835},
+    "deepseek-reasoner": {"in": 0.169413, "cached_in": 0.00338826,
+                          "out": 1.284835},
     # Anthropic — used by llm_analyzer/copilot when ANTHROPIC_API_KEY is set.
     "claude-opus-5": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
     "claude-opus-4-8": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
@@ -1781,6 +1853,76 @@ LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
 #: Env var that overrides the telemetry ledger path. Named here rather than
 #: hardcoded in the service so a deploy can move the file with the rest of the
 #: data-dir configuration.
+#: HOW the DeepSeek rows of `LLM_PRICE_PER_MTOK` were obtained — machine-readable
+#: so a test can assert the table still matches its own derivation, and so a
+#: reader of a dashboard can find the receipt without reading this file.
+#:
+#: A price table whose provenance lives only in a comment is a table nobody can
+#: check: the 2026-08-12 correction was a careful, documented edit that got the
+#: output leg wrong by 4.6x and nothing failed for 24 days. This dict is what
+#: `test_llm_price_from_balance.py` pins the table against.
+LLM_PRICE_DERIVATION: dict[str, object] = {
+    "method": "two_rate_linear_solve_on_provider_balance_windows",
+    "derived_on": "2026-09-05",
+    "receipt": ("backend/data/optimus/continuation_2026-09-06b/"
+                "C3_deepseek_price_derivation_run01.json"),
+    "script": "scripts/c6b_deepseek_price_derivation.py",
+    "source_of_truth": ("the DeepSeek account balance "
+                        "(backend/data/optimus/deepseek_balance.jsonl), NOT "
+                        "our own telemetry and NOT a published list"),
+    "balance_readings": [
+        {"read_at": "2026-08-24T12:10:08+00:00", "total_usd": 23.99},
+        {"read_at": "2026-09-05T11:58:34.953036+00:00", "total_usd": 13.36},
+        {"read_at": "2026-09-05T12:23:33.325408+00:00", "total_usd": 9.38},
+    ],
+    "windows": [
+        {"label": "W1", "provider_spend_usd": 10.63, "n_calls": 4471,
+         "tokens_in": 6022632, "tokens_cached": 1893504, "tokens_out": 7474321,
+         "old_table_usd": 2.94128, "multiple_of_old_table": 3.6141},
+        {"label": "W2", "provider_spend_usd": 3.98, "n_calls": 4099,
+         "tokens_in": 12732488, "tokens_cached": 7601792, "tokens_out": 1398775,
+         "old_table_usd": 2.19549, "multiple_of_old_table": 1.8128},
+    ],
+    "condition_number": 2.5791,
+    "measured_usd_per_mtok": {"in": 0.169413, "out": 1.284835},
+    "multiple_of_the_2026_08_12_table": {"in": 1.2101, "out": 4.5887},
+    #: The finding a single scalar multiple would have hidden: the two windows
+    #: need 3.61x and 1.81x of the old table, so the SHAPE was wrong, not the
+    #: level. S4's 1.79-1.81x was the 25-minute window read alone.
+    "scalar_multiple_is_refuted": {"W1": 3.6141, "W2": 1.8128,
+                                   "spread": 1.9936},
+    #: Table-wrong vs ledger-incomplete. The gap is proportional to output
+    #: tokens (per-window spread 1.24x), not to calls (3.95x) or input tokens
+    #: (9.11x) — missing rows lose whole calls and would look constant per call.
+    "gap_attribution_spread": {"per_mtok_out": 1.2402, "per_call": 3.954,
+                               "per_mtok_in": 9.1088},
+    "verdict": "TABLE_IS_WRONG_OUTPUT_LEG",
+    "measured_entries": ["deepseek-v4-flash", "deepseek-chat",
+                         "deepseek-reasoner"],
+    "scaled_not_measured": {
+        "cached_in": ("carried at the table's 50x discount; two windows cannot "
+                      "identify three legs"),
+        "deepseek-v4-pro": ("propagated at the same per-leg multiples; ZERO "
+                            "v4-pro rows exist in the ledger, so this "
+                            "measurement says nothing about it"),
+    },
+    "untouched": ["claude-opus-5", "claude-opus-4-8", "claude-sonnet-5",
+                  "claude-sonnet-4-6", "claude-haiku-4-5"],
+    "residual_uncertainty": {
+        "in_bracket": [0.116643, 0.169413],
+        "out_bracket": [1.284835, 1.347635],
+        "what_would_close_it": ("two controlled calls with opposite in/out "
+                                "mixes, each bracketed by a timestamped "
+                                "GET /user/balance after the posting lag"),
+        "unchecked_implication": (
+            "repricing the whole ledger at these rates implies $97.61 of "
+            "lifetime DeepSeek spend since 2026-08-12 vs $27.41 at the old "
+            "table; most of that predates the first balance reading and "
+            "cannot be checked without top-up history. The measurement "
+            "INSIDE the two windows is direct; this extrapolation is not."),
+    },
+}
+
 LLM_TELEMETRY_PATH_ENV = "AEGIS_LLM_TELEMETRY_PATH"
 
 # ── WHY-MOVED (NIGHT-14): explaining a day's move, gradeably ────────────────

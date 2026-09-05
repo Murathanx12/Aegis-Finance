@@ -82,7 +82,17 @@ def test_reprice_recomputes_from_tokens_not_from_stored_dollars() -> None:
         "cached_tokens": 0, "cost_usd": 1.37,  # the OLD table's answer
     }]
     fresh = lt.reprice(stale)[0]
-    assert fresh["cost_usd"] == pytest.approx(0.14 + 0.28)
+    # Was hardcoded `0.14 + 0.28`. Those were the 2026-08-12 numbers, and the
+    # 2026-09-05 re-derivation from the provider balance moved the output leg
+    # to $1.284835/Mtok — receipt `backend/data/optimus/continuation_2026-09-06b/
+    # C3_deepseek_price_derivation_run01.json`. The INVARIANT here is "repriced
+    # from tokens at the CURRENT table", not any particular number, so it now
+    # reads the table; the numeric pin lives in `test_llm_price_from_balance.py`,
+    # which checks the table against `config.LLM_PRICE_DERIVATION`.
+    p = LLM_PRICE_PER_MTOK["deepseek-chat"]
+    assert fresh["cost_usd"] == pytest.approx(p["in"] + p["out"])
+    assert fresh["cost_usd"] != pytest.approx(1.37), (
+        "reprice must not echo the stored dollars back")
     assert fresh["cost_repriced"] is True
     # The original is preserved, because "we used to think it cost this" is
     # itself a fact worth keeping when reconciling against a vendor invoice.

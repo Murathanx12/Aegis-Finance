@@ -1,0 +1,443 @@
+{
+ "job": "C3_deepseek_price_derivation",
+ "question": "what does DeepSeek actually charge per Mtok, measured from the PROVIDER BALANCE rather than from our own price table",
+ "balance_readings": [
+  {
+   "read_at": "2026-08-24T12:10:08+00:00",
+   "total_usd": 23.99,
+   "source": "deepseek_balance.jsonl"
+  },
+  {
+   "read_at": "2026-09-05T11:58:34.953036+00:00",
+   "total_usd": 13.36,
+   "source": "deepseek_balance.jsonl"
+  },
+  {
+   "read_at": "2026-09-05T12:23:33.325408+00:00",
+   "total_usd": 9.38,
+   "source": "deepseek_balance.jsonl"
+  }
+ ],
+ "ledger": {
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls.jsonl",
+  "n_rows": 70664,
+  "n_unreadable_lines": 3,
+  "note": "unreadable lines are tokens we cannot see, so every derived rate is an UPPER bound by that much"
+ },
+ "primary_windows": [
+  {
+   "label": "W1",
+   "t0": "2026-08-24T12:10:08+00:00",
+   "t1": "2026-09-05T11:58:34.953036+00:00",
+   "hours": 287.8075,
+   "provider_spend_usd": 10.63,
+   "n_calls": 4471,
+   "tokens_in_full_rate": 6022632,
+   "tokens_cached": 1893504,
+   "tokens_out": 7474321,
+   "baseline_table_usd": 2.94128,
+   "multiple_of_baseline_table": 3.614073
+  },
+  {
+   "label": "W2",
+   "t0": "2026-09-05T11:58:34.953036+00:00",
+   "t1": "2026-09-05T12:23:33.325408+00:00",
+   "hours": 0.4162,
+   "provider_spend_usd": 3.98,
+   "n_calls": 4099,
+   "tokens_in_full_rate": 12732488,
+   "tokens_cached": 7601792,
+   "tokens_out": 1398775,
+   "baseline_table_usd": 2.19549,
+   "multiple_of_baseline_table": 1.812807
+  }
+ ],
+ "a_two_rate_solve": {
+  "method": "two_rate_linear_solve",
+  "n_windows": 2,
+  "in_usd_per_mtok": 0.16941287536838093,
+  "out_usd_per_mtok": 1.2848354942811726,
+  "cached_in_usd_per_mtok": 0.003388257507367618,
+  "cache_ratio_assumed": 0.019999999999999997,
+  "condition_number": 2.579077395186041,
+  "out_over_in": 7.584048682766016,
+  "residual_usd_by_window": {
+   "W1": 0.0,
+   "W2": 0.0
+  },
+  "max_abs_residual_usd": 1.7763568394002505e-15,
+  "economically_sensible": true
+ },
+ "bc_scalar_multiple": {
+  "method": "scalar_multiple_of_the_2026_08_12_table",
+  "per_window": {
+   "W1": 3.614073,
+   "W2": 1.812807
+  },
+  "pooled": 2.844199,
+  "spread_max_over_min": 1.9936,
+  "reading": "a scalar multiple is the right model only if every window returns the same one; the spread is how badly it fails"
+ },
+ "gap_attribution": {
+  "gap_per_call_usd": {
+   "per_window": {
+    "W1": 0.00172,
+    "W2": 0.000435
+   },
+   "spread_max_over_min": 3.954
+  },
+  "gap_per_mtok_in_usd": {
+   "per_window": {
+    "W1": 1.276638,
+    "W2": 0.140154
+   },
+   "spread_max_over_min": 9.1088
+  },
+  "gap_per_mtok_out_usd": {
+   "per_window": {
+    "W1": 1.028685,
+    "W2": 1.275766
+   },
+   "spread_max_over_min": 1.2402
+  },
+  "gap_per_mtok_total_usd": {
+   "per_window": {
+    "W1": 0.569663,
+    "W2": 0.126281
+   },
+   "spread_max_over_min": 4.5111
+  },
+  "tightest_denominator": "gap_per_mtok_out_usd",
+  "ranking_by_spread": [
+   [
+    "gap_per_mtok_out_usd",
+    1.2402
+   ],
+   [
+    "gap_per_call_usd",
+    3.954
+   ],
+   [
+    "gap_per_mtok_total_usd",
+    4.5111
+   ],
+   [
+    "gap_per_mtok_in_usd",
+    9.1088
+   ]
+  ],
+  "reading": "the denominator whose per-window value is most nearly CONSTANT is the quantity the missing dollars are proportional to. Constant per output token => the output leg of the table is under-priced. Constant per call => rows are missing from the ledger."
+ },
+ "if_the_table_were_right": {
+  "W1": {
+   "unledgered_usd": 7.68872,
+   "share_of_provider_spend": 0.723304,
+   "unledgered_usd_per_hour": 0.026715,
+   "ledgered_usd_per_hour": 0.01022
+  },
+  "W2": {
+   "unledgered_usd": 1.78451,
+   "share_of_provider_spend": 0.448369,
+   "unledgered_usd_per_hour": 4.287475,
+   "ledgered_usd_per_hour": 5.274901
+  }
+ },
+ "overdetermined_cross_check": {
+  "sources": [
+   {
+    "read_at": "2026-09-05T11:55:38.136660+00:00",
+    "total_usd": 13.38,
+    "from": "W4b_companyworld_extract_pilot.json:provider_balance_after"
+   },
+   {
+    "read_at": "2026-09-05T12:09:20.071645+00:00",
+    "total_usd": 10.36,
+    "from": "W4b_companyworld_extract_run01.json:provider_balance_after"
+   },
+   {
+    "read_at": "2026-09-05T12:11:24.263043+00:00",
+    "total_usd": 10.21,
+    "from": "W4b_cost_reconciliation_run01.json:provider_balance_usd.after"
+   }
+  ],
+  "caveat": "these instants are the RECEIPTS' write times, not the balance read times, so each is an upper bound by seconds to minutes; sub-minute windows are also smeared by the vendor's posting lag, which is visible as a near-zero delta across a window that spent money",
+  "windows": [
+   {
+    "label": "S1",
+    "t0": "2026-08-24T12:10:08+00:00",
+    "t1": "2026-09-05T11:55:38.136660+00:00",
+    "hours": 287.7584,
+    "provider_spend_usd": 10.61,
+    "n_calls": 4277,
+    "tokens_in_full_rate": 5541865,
+    "tokens_cached": 1498880,
+    "tokens_out": 7405360,
+    "baseline_table_usd": 2.853559,
+    "multiple_of_baseline_table": 3.718164
+   },
+   {
+    "label": "S2",
+    "t0": "2026-09-05T11:55:38.136660+00:00",
+    "t1": "2026-09-05T11:58:34.953036+00:00",
+    "hours": 0.0491,
+    "provider_spend_usd": 0.02,
+    "n_calls": 194,
+    "tokens_in_full_rate": 480767,
+    "tokens_cached": 394624,
+    "tokens_out": 68961,
+    "baseline_table_usd": 0.087721,
+    "multiple_of_baseline_table": 0.227995
+   },
+   {
+    "label": "S3",
+    "t0": "2026-09-05T11:58:34.953036+00:00",
+    "t1": "2026-09-05T12:09:20.071645+00:00",
+    "hours": 0.1792,
+    "provider_spend_usd": 3.0,
+    "n_calls": 3337,
+    "tokens_in_full_rate": 11994653,
+    "tokens_cached": 6905600,
+    "tokens_out": 1191807,
+    "baseline_table_usd": 2.032293,
+    "multiple_of_baseline_table": 1.476165
+   },
+   {
+    "label": "S4",
+    "t0": "2026-09-05T12:09:20.071645+00:00",
+    "t1": "2026-09-05T12:11:24.263043+00:00",
+    "hours": 0.0345,
+    "provider_spend_usd": 0.15,
+    "n_calls": 0,
+    "tokens_in_full_rate": 0,
+    "tokens_cached": 0,
+    "tokens_out": 0,
+    "baseline_table_usd": 0.0,
+    "multiple_of_baseline_table": null
+   },
+   {
+    "label": "S5",
+    "t0": "2026-09-05T12:11:24.263043+00:00",
+    "t1": "2026-09-05T12:23:33.325408+00:00",
+    "hours": 0.2025,
+    "provider_spend_usd": 0.83,
+    "n_calls": 762,
+    "tokens_in_full_rate": 737835,
+    "tokens_cached": 696192,
+    "tokens_out": 206968,
+    "baseline_table_usd": 0.163197,
+    "multiple_of_baseline_table": 5.085869
+   }
+  ],
+  "least_squares": {
+   "method": "two_rate_linear_solve",
+   "n_windows": 4,
+   "in_usd_per_mtok": 0.11664336029327005,
+   "out_usd_per_mtok": 1.3461446552106624,
+   "cached_in_usd_per_mtok": 0.0023328672058654004,
+   "cache_ratio_assumed": 0.019999999999999997,
+   "condition_number": 2.406424539413992,
+   "out_over_in": 11.540688229712554,
+   "residual_usd_by_window": {
+    "S1": 0.008604,
+    "S2": 0.12983,
+    "S3": 0.019551,
+    "S5": -0.463703
+   },
+   "max_abs_residual_usd": 0.4637034557725888,
+   "economically_sensible": true
+  }
+ },
+ "d_output_leg_only_fit": {
+  "method": "hold in=0.14/cached=0.0028, solve out from the pooled gap",
+  "out_usd_per_mtok": 1.347635,
+  "per_window": {
+   "W1": 1.308685,
+   "W2": 1.555766
+  }
+ },
+ "verdict": {
+  "status": "TABLE_IS_WRONG",
+  "which_leg": "output",
+  "statement": "the 2026-08-12 table's INPUT leg is approximately right and its OUTPUT leg is under-priced by ~4.6x. No single scalar multiple fits both windows (3.61 vs 1.81, spread 1.9936x), which by itself refutes the S4 reading of a 1.79-1.81x table-wide multiple: that number is the 25-minute window alone, and the 12-day window says 3.61x.",
+  "the_number_that_decides_it": {
+   "gap_per_mtok_out_spread": 1.2402,
+   "gap_per_call_spread": 3.954,
+   "gap_per_mtok_in_spread": 9.1088,
+   "reading": "the missing dollars are proportional to OUTPUT TOKENS (per-window spread 1.2402x) and not to calls (3.954x) or input tokens (9.1088x). Missing ledger rows lose whole calls, so an incomplete ledger would show its gap constant per CALL; it is 3.2x looser there than per output token. The incomplete-ledger story would additionally have to claim that 72.3% of a 12-day window's real money and 44.8% of a supervised 25-minute window's real money left no trace, at unledgered burn rates 160x apart."
+  },
+  "rate_bracket_usd_per_mtok": {
+   "in": [
+    0.116643,
+    0.169413
+   ],
+   "out": [
+    1.284835,
+    1.347635
+   ],
+   "note": "the OUTPUT leg is identified by every method inside a narrow band; the INPUT leg is weakly identified and the old 0.14 sits inside its band"
+  },
+  "ADOPTED": {
+   "basis": "method (a), the exact 2x2 solve on the only two balance readings that carry a recorded timestamp",
+   "deepseek-v4-flash": {
+    "in": 0.169413,
+    "cached_in": 0.00338826,
+    "out": 1.284835
+   },
+   "cached_in_is": "SCALED at the table's 50x ratio, NOT MEASURED \u2014 two windows cannot identify three legs",
+   "multiple_vs_2026_08_12": {
+    "in": 1.2101,
+    "out": 4.5887
+   }
+  },
+  "residual_open_question": "repricing the WHOLE ledger at these rates implies $97.61 of lifetime DeepSeek spend since 2026-08-12 against $27.41 at the old table. Most of that sits BEFORE the first balance reading (50,087 calls, 59.2M output tokens, 2026-08-12 to 08-24) and cannot be checked: we hold no top-up history, only three balance snapshots, and the account read $23.99 on 08-24. One undated anecdote in llm_telemetry's docstring ('DeepSeek billed ~$5.26 for 40M tokens across 8,936 requests') points the other way, but carries no in/out/cached split and no receipt, and at a heavy cache-hit share it is consistent with either table. This does NOT weaken the measurement inside the two windows, which is direct and timestamped; it is a reason to take the controlled measurement below rather than to treat the number as settled.",
+  "what_would_decide_it_beyond_doubt": "one controlled measurement: read GET /user/balance, issue a single call with a large, deliberately output-heavy completion and record its usage, wait for the posting lag, read the balance again. Two such calls with opposite in/out mixes over-determine both legs with recorded timestamps and no shared-key contamination. That costs cents and is the only thing that separates the last factor of 1.45 between in=0.117 and in=0.169."
+ },
+ "live_table": {
+  "LLM_PRICE_AS_OF": "2026-09-05",
+  "deepseek-v4-flash": {
+   "in": 0.169413,
+   "cached_in": 0.00338826,
+   "out": 1.284835
+  },
+  "deepseek-v4-pro": {
+   "in": 0.52639,
+   "cached_in": 0.00438659,
+   "out": 3.992166
+  },
+  "LLM_PRICE_DERIVATION": {
+   "method": "two_rate_linear_solve_on_provider_balance_windows",
+   "derived_on": "2026-09-05",
+   "receipt": "backend/data/optimus/continuation_2026-09-06b/C3_deepseek_price_derivation_run01.json",
+   "script": "scripts/c6b_deepseek_price_derivation.py",
+   "source_of_truth": "the DeepSeek account balance (backend/data/optimus/deepseek_balance.jsonl), NOT our own telemetry and NOT a published list",
+   "balance_readings": [
+    {
+     "read_at": "2026-08-24T12:10:08+00:00",
+     "total_usd": 23.99
+    },
+    {
+     "read_at": "2026-09-05T11:58:34.953036+00:00",
+     "total_usd": 13.36
+    },
+    {
+     "read_at": "2026-09-05T12:23:33.325408+00:00",
+     "total_usd": 9.38
+    }
+   ],
+   "windows": [
+    {
+     "label": "W1",
+     "provider_spend_usd": 10.63,
+     "n_calls": 4471,
+     "tokens_in": 6022632,
+     "tokens_cached": 1893504,
+     "tokens_out": 7474321,
+     "old_table_usd": 2.94128,
+     "multiple_of_old_table": 3.6141
+    },
+    {
+     "label": "W2",
+     "provider_spend_usd": 3.98,
+     "n_calls": 4099,
+     "tokens_in": 12732488,
+     "tokens_cached": 7601792,
+     "tokens_out": 1398775,
+     "old_table_usd": 2.19549,
+     "multiple_of_old_table": 1.8128
+    }
+   ],
+   "condition_number": 2.5791,
+   "measured_usd_per_mtok": {
+    "in": 0.169413,
+    "out": 1.284835
+   },
+   "multiple_of_the_2026_08_12_table": {
+    "in": 1.2101,
+    "out": 4.5887
+   },
+   "scalar_multiple_is_refuted": {
+    "W1": 3.6141,
+    "W2": 1.8128,
+    "spread": 1.9936
+   },
+   "gap_attribution_spread": {
+    "per_mtok_out": 1.2402,
+    "per_call": 3.954,
+    "per_mtok_in": 9.1088
+   },
+   "verdict": "TABLE_IS_WRONG_OUTPUT_LEG",
+   "measured_entries": [
+    "deepseek-v4-flash",
+    "deepseek-chat",
+    "deepseek-reasoner"
+   ],
+   "scaled_not_measured": {
+    "cached_in": "carried at the table's 50x discount; two windows cannot identify three legs",
+    "deepseek-v4-pro": "propagated at the same per-leg multiples; ZERO v4-pro rows exist in the ledger, so this measurement says nothing about it"
+   },
+   "untouched": [
+    "claude-opus-5",
+    "claude-opus-4-8",
+    "claude-sonnet-5",
+    "claude-sonnet-4-6",
+    "claude-haiku-4-5"
+   ],
+   "residual_uncertainty": {
+    "in_bracket": [
+     0.116643,
+     0.169413
+    ],
+    "out_bracket": [
+     1.284835,
+     1.347635
+    ],
+    "what_would_close_it": "two controlled calls with opposite in/out mixes, each bracketed by a timestamped GET /user/balance after the posting lag"
+   }
+  }
+ },
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\c6b_deepseek_price_derivation.py"
+  ],
+  "resolved_config": {
+   "LLM_PRICE_AS_OF": "2026-09-05",
+   "LLM_PRICE_PER_MTOK.deepseek-v4-flash": {
+    "in": 0.169413,
+    "cached_in": 0.00338826,
+    "out": 1.284835
+   },
+   "BASELINE_TABLE_2026_08_12": {
+    "in": 0.14,
+    "cached_in": 0.0028,
+    "out": 0.28
+   },
+   "DEEPSEEK_MODELS": [
+    "deepseek-v4-flash",
+    "deepseek-chat",
+    "deepseek-reasoner",
+    "deepseek-v4-pro"
+   ],
+   "MAX_CONDITION_NUMBER": 1000000.0,
+   "ledger": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_calls.jsonl",
+   "balance": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\deepseek_balance.jsonl"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/deepseek_balance.jsonl",
+    "sha256": "203647931a881b0988d126f83ad0300b987ea2347f67aed2e571964e6747cd38",
+    "bytes": 465,
+    "opened_utc": "2026-09-05T14:46:38+00:00",
+    "note": "provider balance snapshots"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/llm_calls.jsonl",
+    "sha256": "913556371422194a90245dc0ee2bbee2a536190095b6503b3b1f751c09dee55b",
+    "bytes": 51815470,
+    "opened_utc": "2026-09-05T14:46:38+00:00",
+    "note": "LLM telemetry ledger (token counts)"
+   }
+  ],
+  "git_commit": "31bee72a06c0",
+  "generated_utc": "2026-09-05T14:46:39+00:00"
+ }
+}

@@ -588,7 +588,16 @@ def test_spend_and_reprice_agree_on_every_row(tmp_path):
     rows = tel.read_calls(p)
     from_reprice = sum(r["cost_usd"] for r in tel.reprice(rows)
                        if r["cost_usd"] is not None)
-    assert tel.spend(path=p)["total_cost_usd"] == pytest.approx(from_reprice)
+    # `spend()` documents a 6-decimal rounding of its total, so comparing that
+    # rounded scalar against an unrounded sum TIGHTER than its own quantum is
+    # testing float noise rather than agreement. The old $0.14/$0.28 rates hid
+    # this by landing on exact micro-dollars; the 2026-09-05 balance-derived
+    # rates do not (receipt: backend/data/optimus/continuation_2026-09-06b/
+    # C3_deepseek_price_derivation_run01.json). The invariant is unchanged —
+    # same rows, same table, same arithmetic, now compared at the same
+    # precision the function promises.
+    assert tel.spend(path=p)["total_cost_usd"] == pytest.approx(
+        round(from_reprice, 6))
     assert tel.spend(path=p)["total_is_lower_bound"] is True
 
 

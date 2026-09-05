@@ -724,7 +724,15 @@ def summary(since: Any = None, path: Path | None = None,
 
     priced = [r for r in rows if r.get("cost_usd") is not None]
     unpriced = [r for r in rows if r.get("cost_usd") is None]
-    total = round(sum(float(r["cost_usd"]) for r in priced), 6)
+    # The unrounded sum is kept because every SHARE below divides by it. A
+    # ratio of two numbers that were each rounded to micro-dollars is not that
+    # ratio: at the 2026-09-05 DeepSeek rates a three-call ledger reported a
+    # zero-yield share of 0.6669 where the honest answer is 0.6667, and the old
+    # $0.14/$0.28 table only hid it because those rates happened to land on
+    # exact micro-dollars. Rounding is for the REPORTED dollars, never for the
+    # arithmetic done with them.
+    total_exact = sum(float(r["cost_usd"]) for r in priced)
+    total = round(total_exact, 6)
 
     def _bucket(rs: list[dict]) -> dict:
         p = [r for r in rs if r.get("cost_usd") is not None]
@@ -748,8 +756,9 @@ def summary(since: Any = None, path: Path | None = None,
 
     pending_rows = [r for r in rows if _yield_pending(r)]
     dead = [r for r in rows if not _gradeable(r) and not _yield_pending(r)]
-    dead_cost = round(sum(float(r["cost_usd"]) for r in dead
-                          if r.get("cost_usd") is not None), 6)
+    dead_cost_exact = sum(float(r["cost_usd"]) for r in dead
+                          if r.get("cost_usd") is not None)
+    dead_cost = round(dead_cost_exact, 6)
     n_valid = sum(1 for r in rows if r.get("schema_valid"))
     pred_ids: list[str] = []
     for r in rows:
@@ -783,8 +792,8 @@ def summary(since: Any = None, path: Path | None = None,
                                           for r in pending_rows
                                           if r.get("cost_usd") is not None), 6),
             "cost_usd": dead_cost,
-            "share_of_spend": (round(dead_cost / total, 4)
-                               if total > 0 else None),
+            "share_of_spend": (round(dead_cost_exact / total_exact, 4)
+                               if total_exact > 0 else None),
             "reading": ("spend that produced no schema-valid, gradeable output "
                         "— the bucket this ledger exists to make visible. "
                         "`n_yield_pending` is spend on chain campaigns whose "
