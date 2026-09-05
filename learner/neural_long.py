@@ -923,6 +923,24 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
     lg_pl, lg_fl = _tw("lgbm_raw", "plain"), _tw("lgbm_raw", "tradable_floor")
     survives = (isinstance(tw_fl, (int, float)) and isinstance(lg_fl, (int, float))
                 and tw_fl > lg_fl)
+    # AND THE HONEST OBJECT, NOT ONLY THE CHAMPION. The best cell is the top of
+    # an 8-draw seed distribution and nobody can pick it in advance; the
+    # SEED-MEAN ensemble is what a desk could actually run. On the first full
+    # pass they disagreed -- the champion seed cleared the floor (92.8 vs lgbm
+    # 59.8) and the ensemble did not (42.8) -- so a receipt that reported only
+    # the champion would have read as a pass on a book nobody could have chosen.
+    ens_cells = sorted(c for c in rob if c.endswith("seedmean"))
+    ens = {}
+    for c in ens_cells:
+        e_fl = _tw(c, "tradable_floor")
+        ens[c] = {
+            "terminal_wealth_plain": _tw(c, "plain"),
+            "terminal_wealth_under_floor": e_fl,
+            "ahead_of_lgbm_under_the_floor": bool(
+                isinstance(e_fl, (int, float)) and isinstance(lg_fl, (int, float))
+                and e_fl > lg_fl),
+        }
+    ens_ok = bool(ens) and all(v["ahead_of_lgbm_under_the_floor"] for v in ens.values())
     liq = {
         "best_cell": bc,
         "terminal_wealth_plain": tw_pl,
@@ -930,13 +948,22 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
         "lgbm_terminal_wealth_plain": lg_pl,
         "lgbm_terminal_wealth_under_floor": lg_fl,
         "still_ahead_of_lgbm_under_the_floor": bool(survives),
+        "seed_mean_ensembles": ens,
+        "every_ensemble_ahead_of_lgbm_under_the_floor": ens_ok,
         "floor_usd_per_day": TRADABLE_FLOOR_USD,
+        "why_the_ensemble_matters": (
+            "the best cell is the maximum of an 8-seed draw and is not choosable in "
+            "advance; the seed-mean ensemble is the object a desk could run. Where "
+            "they disagree, the ensemble is the honest number."),
         "reading": ("the best cell is still ahead of lgbm once every holding must "
                     "trade $3m a day" if survives else
                     "the best cell's lead over lgbm does NOT survive the $3m/day "
                     "execution floor -- the edge is in names the incumbent could "
                     "not have bought"),
     }
+    # The verdict's floor leg is judged on the ENSEMBLE where one exists, and on
+    # the champion only when there is none.
+    survives = ens_ok if ens else survives
 
     # ---- the verdict. BOTH legs, or it is not a finding.
     base_verdict = verdict_from(inf_mkt, eras)

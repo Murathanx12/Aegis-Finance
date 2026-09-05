@@ -706,9 +706,89 @@ def _deferred(job: str, why: str) -> dict:
 
 
 def W3_neural_long(variant: int = 0) -> dict:
-    """The GPU encoder on the long panel. Import inside the body, as W4/W5 do."""
+    """The GPU encoder on the long panel, with the EXECUTION FLOOR beside it.
+
+    WHY THE WRAPPER ADDS ANYTHING. The neural arm's first receipt reported a
+    terminal wealth of **561.06 against a market of 14.38** over 251 months --
+    a ~35%/yr book. In this repo a number of that size has been an artefact
+    before (the split-adjustment bug once produced a "42% CAGR equal-weighted
+    market" and an 831x basket), so it was checked the way
+    `feedback_ask_what_it_bought` says to check: by printing the holdings.
+
+        median close        $6.61   (panel median $20.68)
+        share under $5      41.3%
+        share under $2      17.9%
+        median $vol/day     $1.03m  (panel median $6.22m)
+        share under $1m/day 49.3%
+        median market cap   $202m   (panel median $883m)
+
+    It is a microcap book. `evaluate.TRADABLE_DOLLAR_VOL` ($3m/day) is this
+    repo's own execution floor and neither the neural module nor any of this
+    weekend's book jobs was applying it. With it, and with a $5 price floor:
+
+        no floor                        TW 561.06   t 3.542
+        $1m/day                         TW 112.04   t 2.917
+        $3m/day (the house floor)       TW  92.81   t 2.756
+        $3m/day AND close >= $5         TW  36.31   t 1.981
+
+    ~94% of the headline was unbuyable. So the floored numbers are computed HERE
+    and attached to every neural receipt, because a 561x sitting in a JSON file
+    will be quoted by somebody, and the correction has to travel with it rather
+    than live in a document they might not read.
+    """
     from learner.neural_long import job as _w3
-    return _w3(variant)
+    payload = _w3(variant)
+    if not isinstance(payload, dict) or payload.get("verdict") == "DEFERRED":
+        return payload
+    try:
+        payload["execution_floor_check"] = _neural_floor_check(payload)
+    except Exception as exc:                                            # noqa: BLE001
+        payload["execution_floor_check"] = {"error": f"{type(exc).__name__}: {exc}"}
+    return payload
+
+
+def _neural_floor_check(payload: dict) -> dict:
+    """Re-book the neural arm's best cell under the house execution floor."""
+    from learner import evaluate, long_panel as LP, neural_long as N
+    best = str(payload.get("best_cell") or "")
+    seed = None
+    for tok in best.replace("|", "_").split("_"):
+        if tok.startswith("s") and tok[1:].isdigit():
+            seed = int(tok[1:])
+            break
+    if seed is None:
+        return {"note": f"could not recover a seed from best_cell {best!r}"}
+    df = LP.load_long()
+    preds, _ = N.run_neural(df, list(range(LP.FIRST_TEST_YEAR, 2025)),
+                            seeds=[seed], verbose=False)
+    key = next((k for k in preds if k.endswith(f"s{seed}") or k == f"s{seed}"), None)
+    if key is None:
+        return {"note": f"seed {seed} produced no prediction column"}
+    df["_nn"] = preds[key]
+    out = {"best_cell": best, "seed": seed,
+           "floor_source": "evaluate.TRADABLE_DOLLAR_VOL -- this repo's own execution floor"}
+    for label, floor, pmin in (("no_floor", None, None),
+                               ("dollar_vol_1m", 1_000_000.0, None),
+                               ("dollar_vol_3m_house_floor", evaluate.TRADABLE_DOLLAR_VOL, None),
+                               ("dollar_vol_3m_and_close_ge_5",
+                                evaluate.TRADABLE_DOLLAR_VOL, 5.0)):
+        sub = df if pmin is None else df[df["close"] >= pmin]
+        bk = evaluate.book(sub, "_nn", k=50, weight="vw", cost_bps=10,
+                           ret_col="fwd_1m", mkt_col="mkt_vw_1m", tradable_floor=floor)
+        out[label] = {"terminal_wealth_net": bk.get("terminal_wealth_net"),
+                      "market": bk.get("terminal_wealth_market_same_months"),
+                      "annualised_excess": bk.get("annualised_excess"),
+                      "t": bk.get("t_stat_paired_vs_market"),
+                      "months": bk.get("months")}
+    a = out["no_floor"]["terminal_wealth_net"]
+    b = out["dollar_vol_3m_and_close_ge_5"]["terminal_wealth_net"]
+    out["share_of_the_headline_that_is_unbuyable"] = (
+        round(1.0 - (b - 1) / (a - 1), 4) if a and b and a > 1 else None)
+    out["reading"] = (
+        f"the unfloored book reports {a} and the same predictions restricted to names "
+        f"trading over ${evaluate.TRADABLE_DOLLAR_VOL:,.0f}/day above $5 report {b}. "
+        "The unfloored number is not a strategy; it is a microcap sort.")
+    return out
 
 
 def _normalise_screen_verdict(payload: dict, job: str) -> dict:

@@ -401,6 +401,14 @@ def test_a_receipt_carries_the_floor_comparison_against_lgbm(panel):
         assert k in ex
     assert isinstance(ex["still_ahead_of_lgbm_under_the_floor"], bool)
     assert "lgbm_raw" in r["robustness"]
+    # THE HONEST OBJECT TOO. The best cell is the max of a seed draw and cannot
+    # be chosen in advance; on the first real pass the champion cleared the floor
+    # and the seed-mean ensemble did not.
+    assert ex["seed_mean_ensembles"], "no ensemble was graded under the floor"
+    for c, v in ex["seed_mean_ensembles"].items():
+        assert c.endswith("seedmean")
+        assert isinstance(v["ahead_of_lgbm_under_the_floor"], bool)
+    assert isinstance(ex["every_ensemble_ahead_of_lgbm_under_the_floor"], bool)
 
 
 def test_clearing_every_bar_on_an_untradable_book_is_not_a_finding(panel, monkeypatch):
@@ -413,10 +421,7 @@ def test_clearing_every_bar_on_an_untradable_book_is_not_a_finding(panel, monkey
     def _dead(df, col, bps=10.0):
         out = real(df, col, bps)
         # the challenger dies at the floor; the incumbent does not
-        if col != "lgbm_raw":
-            out["tradable_floor"]["terminal_wealth_net"] = 0.5
-        else:
-            out["tradable_floor"]["terminal_wealth_net"] = 9.0
+        out["tradable_floor"]["terminal_wealth_net"] = 9.0 if col == "lgbm_raw" else 0.5
         return out
 
     monkeypatch.setattr(NL, "robustness", _dead)
