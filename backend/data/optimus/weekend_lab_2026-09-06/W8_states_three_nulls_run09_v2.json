@@ -1,0 +1,270 @@
+{
+ "question": "does the future differ across discovered market states by more than a partition of the same months, with the same persistence, would produce?",
+ "family_id": "weekend-W8-states-k6",
+ "k": 6,
+ "state_col": "market_state",
+ "months": 286,
+ "state_is_market_level": true,
+ "state_meta": {
+  "k": 6,
+  "assigned_months": 286,
+  "burn_in_months": 24,
+  "protocol": "expanding window, refit EVERY month on months strictly before M",
+  "mean_centroid_drift": 1.2932,
+  "mean_centroid_separation": 8.706,
+  "drift_over_separation": 0.1485,
+  "state_month_counts": {
+   "0": 25,
+   "1": 40,
+   "2": 80,
+   "3": 50,
+   "4": 43,
+   "5": 48
+  }
+ },
+ "conditional_table": [
+  {
+   "state": 0,
+   "rows": 76050,
+   "share": 0.08783,
+   "names": 5903,
+   "months": 25,
+   "excess_vw_1m": {
+    "n": 76028,
+    "mean": -0.01128,
+    "median": -0.01241,
+    "monthly_mean_of_means": -0.01061,
+    "months": 25,
+    "t_stat_months": -1.779,
+    "p05": -0.2441,
+    "p95": 0.20364,
+    "tail_loss_mean_worst_5pct": -0.35727,
+    "share_negative": 0.5542
+   },
+   "excess_vw_3m": {
+    "n": 76017,
+    "mean": -0.01284,
+    "median": -0.02057,
+    "monthly_mean_of_means": -0.01126,
+    "months": 25,
+    "t_stat_months": -1.402,
+    "p05": -0.42231,
+    "p95": 0.37255,
+    "tail_loss_mean_worst_5pct": -0.57393,
+    "share_negative": 0.5499
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.17724
+  },
+  {
+   "state": 1,
+   "rows": 117321,
+   "share": 0.1355,
+   "names": 7743,
+   "months": 40,
+   "excess_vw_1m": {
+    "n": 117282,
+    "mean": 0.00642,
+    "median": 0.00064,
+    "monthly_mean_of_means": 0.00712,
+    "months": 40,
+    "t_stat_months": 1.428,
+    "p05": -0.21385,
+    "p95": 0.23252,
+    "tail_loss_mean_worst_5pct": -0.31677,
+    "share_negative": 0.4973
+   },
+   "excess_vw_3m": {
+    "n": 117252,
+    "mean": 0.01735,
+    "median": 0.00027,
+    "monthly_mean_of_means": 0.0191,
+    "months": 40,
+    "t_stat_months": 1.708,
+    "p05": -0.36989,
+    "p95": 0.4183,
+    "tail_loss_mean_worst_5pct": -0.50388,
+    "share_negative": 0.4994
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.18915
+  },
+  {
+   "state": 2,
+   "rows": 236095,
+   "share": 0.27267,
+   "names": 8002,
+   "months": 80,
+   "excess_vw_1m": {
+    "n": 236030,
+    "mean": -0.00078,
+    "median": -0.00428,
+    "monthly_mean_of_means": -0.00073,
+    "months": 80,
+    "t_stat_months": -0.263,
+    "p05": -0.18621,
+    "p95": 0.1889,
+    "tail_loss_mean_worst_5pct": -0.28665,
+    "share_negative": 0.5223
+   },
+   "excess_vw_3m": {
+    "n": 232843,
+    "mean": -0.00067,
+    "median": -0.00856,
+    "monthly_mean_of_means": -0.00029,
+    "months": 79,
+    "t_stat_months": -0.065,
+    "p05": -0.32822,
+    "p95": 0.33654,
+    "tail_loss_mean_worst_5pct": -0.46118,
+    "share_negative": 0.5241
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.14688
+  },
+  {
+   "state": 3,
+   "rows": 146765,
+   "share": 0.1695,
+   "names": 7014,
+   "months": 50,
+   "excess_vw_1m": {
+    "n": 146711,
+    "mean": -0.00093,
+    "median": -0.00543,
+    "monthly_mean_of_means": -0.00076,
+    "months": 50,
+    "t_stat_months": -0.203,
+    "p05": -0.21014,
+    "p95": 0.20582,
+    "tail_loss_mean_worst_5pct": -0.32319,
+    "share_negative": 0.5283
+   },
+   "excess_vw_3m": {
+    "n": 146676,
+    "mean": -0.00332,
+    "median": -0.01545,
+    "monthly_mean_of_means": -0.00312,
+    "months": 50,
+    "t_stat_months": -0.473,
+    "p05": -0.36081,
+    "p95": 0.36305,
+    "tail_loss_mean_worst_5pct": -0.50912,
+    "share_negative": 0.5414
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.15978
+  },
+  {
+   "state": 4,
+   "rows": 135920,
+   "share": 0.15698,
+   "names": 7294,
+   "months": 43,
+   "excess_vw_1m": {
+    "n": 135867,
+    "mean": 0.008,
+    "median": -0.00602,
+    "monthly_mean_of_means": 0.0095,
+    "months": 43,
+    "t_stat_months": 1.466,
+    "p05": -0.23343,
+    "p95": 0.27782,
+    "tail_loss_mean_worst_5pct": -0.35856,
+    "share_negative": 0.5252
+   },
+   "excess_vw_3m": {
+    "n": 135837,
+    "mean": 0.00699,
+    "median": -0.02311,
+    "monthly_mean_of_means": 0.01103,
+    "months": 43,
+    "t_stat_months": 0.854,
+    "p05": -0.42893,
+    "p95": 0.49283,
+    "tail_loss_mean_worst_5pct": -0.59685,
+    "share_negative": 0.5513
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.23017
+  },
+  {
+   "state": 5,
+   "rows": 153717,
+   "share": 0.17753,
+   "names": 7672,
+   "months": 48,
+   "excess_vw_1m": {
+    "n": 150546,
+    "mean": -0.0019,
+    "median": -0.00682,
+    "monthly_mean_of_means": -0.00182,
+    "months": 47,
+    "t_stat_months": -0.431,
+    "p05": -0.23525,
+    "p95": 0.23179,
+    "tail_loss_mean_worst_5pct": -0.34875,
+    "share_negative": 0.5295
+   },
+   "excess_vw_3m": {
+    "n": 147359,
+    "mean": -0.00591,
+    "median": -0.01806,
+    "monthly_mean_of_means": -0.00533,
+    "months": 46,
+    "t_stat_months": -0.572,
+    "p05": -0.41209,
+    "p95": 0.40262,
+    "tail_loss_mean_worst_5pct": -0.54993,
+    "share_negative": 0.5421
+   },
+   "large_upside_freq__fwd_3m_gt_0.2": 0.16812
+  }
+ ],
+ "null_1_within_month_shuffle": {
+  "skipped": true,
+  "why": "`states.shuffled_null` permutes state labels WITHIN each month. A market-level state is CONSTANT within a month, so that permutation is the identity: every draw equals the observation, `null_p95 == observed`, and p is 1.0 by construction regardless of the data. It is a correct null for a NAME-level state and an undefined one here."
+ },
+ "null_2_persistent_shuffle_per_name": {
+  "skipped": true,
+  "why": "`states.persistent_shuffled_null` circularly shifts EACH NAME's own state sequence independently. Under a market-level state every name shares one sequence, so shifting them independently destroys the market-wide coherence that is the object under test -- the null becomes far weaker than the alternative and returns p = 0.0 as an artefact."
+ },
+ "null_3_market_circular_shift": {
+  "null": "market-level circular shift of the single monthly state sequence",
+  "statistic": "max-minus-min of per-state mean monthly excess",
+  "target": "excess_vw_1m",
+  "months": 286,
+  "observed": 0.020108,
+  "null_draws": 500,
+  "null_mean": 0.012801,
+  "null_p95": 0.020548,
+  "p_value_one_sided": 0.062,
+  "preserves": [
+   "state marginal",
+   "run lengths / transition multiset",
+   "calendar"
+  ],
+  "destroys": [
+   "alignment of states to the returns that followed"
+  ]
+ },
+ "null_4_by_era": {
+  "1999-2007": {
+   "rows": 246298,
+   "spread": 0.022088
+  },
+  "2008-2015": {
+   "rows": 284004,
+   "spread": 0.084856
+  },
+  "2016-2024": {
+   "rows": 335566,
+   "spread": 0.024465
+  }
+ },
+ "which_null_the_verdict_rests_on": "null_3_market_circular_shift -- the only one of the three that is DEFINED for a market-level state. Nulls 1 and 2 are correct for NAME-level states and are recorded here with the reason they do not apply, because a null that returns p = 1.0 or p = 0.0 by construction is not a weak result, it is not a result.",
+ "headline": "k=6 market states over 286 months; market circular-shift p 0.062 (observed spread 0.020108 vs null p95 0.020548); era spreads {'1999-2007': 0.022088, '2008-2015': 0.084856, '2016-2024': 0.024465}",
+ "verdict": "NOISE",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W8_states_three_nulls",
+ "run": 9,
+ "variant": 2,
+ "written_utc": "2026-09-05T04:57:13+00:00",
+ "elapsed_s": 41.1,
+ "exit_code": 0
+}

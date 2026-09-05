@@ -1863,12 +1863,31 @@ def W9_survivor_books(variant: int = 0) -> dict:
     from scripts import weekend_lab as WL
 
     # ---- harvest the survivors the lab has already found
+    #
+    # AND COUNT THE SEARCH THAT PRODUCED THEM. `n_trials = len(cells)` counts the
+    # BOOKS and not the screening that chose which features to book, and those
+    # are not the same search. Measured on this weekend's own receipts: W6 tested
+    # 7 features, W5 tested 5, and W7 tested ~49 features on each of 4 variants.
+    # `target_rev_1m__xs` -- the headline -- survived in ONE of those four
+    # variants, while `log_dollar_vol_20d` survived in all four. A DSR computed
+    # over 24 book cells prices the second search and ignores the first, which
+    # flatters exactly the thin-path survivor most.
+    #
+    # So the breadth is DERIVED from the receipts: every distinct
+    # (feature, job, variant) that was ever examined. Deriving it beats asserting
+    # a constant, and it grows automatically as the lab tries more things.
     survivors: dict[str, dict] = {}
+    examined: set[tuple] = set()
     for p in sorted(WL.OUT.glob("W*_run*_v*.json")):
         try:
             r = json.loads(p.read_text(encoding="utf-8"))
         except Exception:                                               # noqa: BLE001
             continue
+        _jv = (r.get("job"), r.get("variant"))
+        for _k in ("features", "winner_side", "loser_side", "archetype_candidates"):
+            for _row in r.get(_k) or []:
+                if isinstance(_row, dict) and "feature" in _row:
+                    examined.add((_row["feature"], *_jv, _k))
         for row in r.get("features") or []:
             t = row.get("t_fm_beta_controlled")
             eras = row.get("era_sign_table") or {}
@@ -1948,8 +1967,13 @@ def W9_survivor_books(variant: int = 0) -> dict:
     wide = pd.concat(series, axis=1).dropna()
     fam = {k: wide[k].tolist() for k in wide.columns}
     best = max(fam, key=lambda k: float(np.mean(fam[k])))
+    # THE FAMILY IS THE WHOLE SEARCH, not just the books. See the harvest block.
+    n_trials = len(examined) + len(cells)
     inf = inference.full_report(fam[best], family=fam, paired_excess=fam,
-                                n_trials=len(cells) or len(fam), n_boot=500, seed=17)
+                                n_trials=n_trials, n_boot=500, seed=17)
+    # What the DSR would have said had only the books been counted -- printed so
+    # the correction is visible rather than asserted.
+    inf_books_only = inference.deflated_sharpe(fam[best], n_trials=len(cells) or len(fam))
     eras = era_sign_table(wide[best])
     pw = inf.get("power", {})
     beat = [k for k, v in cells.items()
@@ -1972,6 +1996,16 @@ def W9_survivor_books(variant: int = 0) -> dict:
         "cross_section_shape": shape,
         "features_whose_effect_is_in_the_BOTTOM_decile": bottom,
         "cells_looked_at": len(cells),
+        "search_breadth_feature_job_variant_rows": len(examined),
+        "n_trials_used_for_the_DSR": n_trials,
+        "dsr_if_only_the_books_were_counted": inf_books_only.get("dsr"),
+        "why_the_bigger_family": (
+            "n_trials counts the SCREENING that chose which features to book as well as the "
+            "books themselves. Measured on this weekend's receipts, `target_rev_1m__xs` -- "
+            "the best cell -- survived in ONE of W7's four variants while "
+            "`log_dollar_vol_20d` survived in all four. A DSR over the book cells alone "
+            "prices the second search and ignores the first, which flatters the thin-path "
+            "survivor most."),
         "cells": cells,
         "cells_beating_the_market_NET": beat,
         "cells_beating_the_market_GROSS": beat_gross,

@@ -60,8 +60,44 @@ question** — which is the single thing the long panel was built to buy.
 It stopped. Not "was never there" — *stopped*, around 2016. Costs matter too:
 at 25 bps the excess falls from +9.6%/yr to +6.2%/yr and t from 2.06 to 1.32, so
 roughly half the edge lives between 10 and 25 bps on ~0.96 monthly turnover.
-DSR over the 24-cell family is 0.529 and SPA p is 0.108, so it does **not** clear
-the NOVEL bar.
+
+**And two things make the headline weaker than it first looked, both found by
+interrogating it rather than by defending it:**
+
+**(a) The DSR was computed over the wrong family.** `n_trials = 24 book cells`
+counts the *books* and not the *screening that chose which features to book*.
+Derived from the receipts, the real search is **253 distinct
+(feature, job, variant) rows examined**, so `n_trials = 277`:
+
+| | DSR |
+|---|---|
+| counting only the 24 book cells | 0.529 |
+| **counting the whole search (277)** | **0.202** |
+
+0.202 is almost exactly the **0.197** the night lab got on the 12-year panel —
+the search is producing selection noise at the same rate, and the corrected
+number says a zero-edge search would produce a Sharpe this good about 80% of the
+time.
+
+**(b) The headline signal is the *least* robust of the archetypes.** Across four
+genuinely different W7 variants (top-100×3, top-25×8, top-50×5 at 12m, top-50×5
+at 6m):
+
+| feature | survives in | block-t range |
+|---|---|---|
+| `log_dollar_vol_20d` | **4 of 4** | −5.69 … −3.18 |
+| `consensus__xs` | **4 of 4** | −3.48 … −2.52 |
+| `net_rev_4w`, `net_rev_1m`, `consensus_rev_1m__xs` | 3 of 4 | ≈ +3 |
+| **`target_rev_1m__xs`** | **1 of 4** | +3.81 |
+
+`target_rev_1m__xs` entered the survivor list from a **single** variant. The book
+result on 308 months stands on its own — it was measured independently — but the
+*selection* of that feature came from a thin path.
+
+**So it does not clear the NOVEL bar and it is not claimed to.** What survives
+scrutiny is not the Sharpe; it is the **era pattern**, which is driven by the
+sign table and the `powered` flag rather than by the DSR, and which no 12-year
+panel could have shown.
 
 **Why this is the weekend's most valuable output.** On the 2013-2024 panel this
 appears as a weak positive and gets filed as noise. On 1999-2024 it is a strong
