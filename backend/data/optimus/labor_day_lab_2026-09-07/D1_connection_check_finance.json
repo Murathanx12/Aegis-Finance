@@ -1,0 +1,707 @@
+{
+ "argv": [
+  "--json",
+  "backend/data/optimus/labor_day_lab_2026-09-07/D1_connection_check_finance.json",
+  "--markdown",
+  "backend/data/optimus/labor_day_lab_2026-09-07/D1_connection_table.md"
+ ],
+ "counts": {
+  "cannot_determine": 1,
+  "fail": 4,
+  "ok": 16,
+  "total": 21
+ },
+ "env_source": "backend.config",
+ "failure_classes": {
+  "absent": [
+   "Featherless"
+  ],
+  "auth": [
+   "Alpaca (finance mirror/arena)"
+  ],
+  "cannot_determine": [
+   "NVIDIA NIM"
+  ],
+  "network": [
+   "WRDS"
+  ],
+  "quota": [
+   "GDELT"
+  ]
+ },
+ "finished_utc": "2026-09-05T15:30:22.059895+00:00",
+ "llm_probe_max_output_tokens_each": 5,
+ "llm_probes_enabled": true,
+ "llm_probes_issued": [
+  "nvidia",
+  "hf_router",
+  "openai",
+  "featherless"
+ ],
+ "receipt": "LABOR-D1-CONNECTION-CHECK",
+ "repo": "aegis-finance",
+ "rows": [
+  {
+   "detail": "2/2 endpoints answered 200",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "series/VIXCLS",
+     "ms": 627.0,
+     "url": "https://api.stlouisfed.org/fred/series?series_id=VIXCLS&api_key=%3Credacted%3E&file_type=json",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "series/observations/DGS10",
+     "ms": 476.7,
+     "url": "https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=%3Credacted%3E&file_type=json&limit=1&sort_order=desc",
+     "why": null
+    }
+   ],
+   "entitlement": "granted: series/VIXCLS,series/observations/DGS10",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": "sha256:4392b888/len32",
+   "latency_ms": 476.7,
+   "provider": "FRED",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "VIX, rates, macro series"
+  },
+  {
+   "detail": "5/7 endpoints answered 200",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "quote (free)",
+     "ms": 1118.8,
+     "url": "https://finnhub.io/api/v1/quote?symbol=AAPL&token=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "stock/profile2 (free)",
+     "ms": 639.9,
+     "url": "https://finnhub.io/api/v1/stock/profile2?symbol=AAPL&token=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "stock/recommendation (free)",
+     "ms": 534.3,
+     "url": "https://finnhub.io/api/v1/stock/recommendation?symbol=AAPL&token=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "company-news (free)",
+     "ms": 653.1,
+     "url": "https://finnhub.io/api/v1/company-news?symbol=AAPL&from=2026-08-31&to=2026-09-05&token=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": "entitlement",
+     "code": 403,
+     "endpoint": "stock/price-target (PREMIUM)",
+     "ms": 505.9,
+     "url": "https://finnhub.io/api/v1/stock/price-target?symbol=AAPL&token=%3Credacted%3E",
+     "why": "403"
+    },
+    {
+     "class": "entitlement",
+     "code": 403,
+     "endpoint": "stock/candle (PREMIUM)",
+     "ms": 1686.2,
+     "url": "https://finnhub.io/api/v1/stock/candle?symbol=AAPL&resolution=D&count=2&token=%3Credacted%3E",
+     "why": "403"
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "stock/insider-transactions",
+     "ms": 747.2,
+     "url": "https://finnhub.io/api/v1/stock/insider-transactions?symbol=AAPL&token=%3Credacted%3E",
+     "why": null
+    }
+   ],
+   "entitlement": "granted: company-news (free),quote (free),stock/insider-transactions,stock/profile2 (free),stock/recommendation (free) | NOT entitled(403): stock/candle (PREMIUM),stock/price-target (PREMIUM)",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": "sha256:ce62c336/len40",
+   "latency_ms": 534.3,
+   "provider": "Finnhub",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "quotes, profiles, analyst recommendations; the free-tier map"
+  },
+  {
+   "detail": "2/4 endpoints answered 200; the /api/v3 LEGACY surface is retired for this key. backend/services/providers/fmp_provider.py and backend/services/esg.py still point at /api/v3 \u2014 every call they make is a 403.",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "stable/quote",
+     "ms": 1372.9,
+     "url": "https://financialmodelingprep.com/stable/quote?symbol=AAPL&apikey=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "stable/profile",
+     "ms": 1162.3,
+     "url": "https://financialmodelingprep.com/stable/profile?symbol=AAPL&apikey=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": "entitlement",
+     "code": 403,
+     "endpoint": "v3/quote (LEGACY)",
+     "ms": 1145.4,
+     "url": "https://financialmodelingprep.com/api/v3/quote/AAPL?apikey=%3Credacted%3E",
+     "why": "403"
+    },
+    {
+     "class": "entitlement",
+     "code": 403,
+     "endpoint": "v3/ratios-ttm (LEGACY)",
+     "ms": 1274.6,
+     "url": "https://financialmodelingprep.com/api/v3/ratios-ttm/AAPL?apikey=%3Credacted%3E",
+     "why": "403"
+    }
+   ],
+   "entitlement": "granted: stable/profile,stable/quote | NOT entitled(403): v3/quote (LEGACY),v3/ratios-ttm (LEGACY)",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": "sha256:412805cb/len32",
+   "latency_ms": 1162.3,
+   "provider": "FMP",
+   "quota_hint": "budget state unreadable: AttributeError",
+   "status": "ok",
+   "why": "fundamentals, ratios, congress trades"
+  },
+  {
+   "detail": "2/3 endpoints answered 200",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "v2/aggs prev close",
+     "ms": 1015.9,
+     "url": "https://api.polygon.io/v2/aggs/ticker/AAPL/prev?apiKey=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "v3/reference/tickers",
+     "ms": 916.1,
+     "url": "https://api.polygon.io/v3/reference/tickers?limit=1&apiKey=%3Credacted%3E",
+     "why": null
+    },
+    {
+     "class": "entitlement",
+     "code": 403,
+     "endpoint": "v2/last/trade (PAID tier)",
+     "ms": 830.4,
+     "url": "https://api.polygon.io/v2/last/trade/AAPL?apiKey=%3Credacted%3E",
+     "why": "403"
+    }
+   ],
+   "entitlement": "granted: v2/aggs prev close,v3/reference/tickers | NOT entitled(403): v2/last/trade (PAID tier)",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": "sha256:ab050819/len32",
+   "latency_ms": 916.1,
+   "provider": "Polygon",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "aggregates, reference data"
+  },
+  {
+   "detail": "GLOBAL_QUOTE returned a quote",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GLOBAL_QUOTE",
+     "ms": 658.3,
+     "url": "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=%3Credacted%3E",
+     "why": null
+    }
+   ],
+   "entitlement": "free tier",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": "sha256:6cdbb46e/len16",
+   "latency_ms": 658.3,
+   "provider": "AlphaVantage",
+   "quota_hint": "free tier is 25 requests/day \u2014 one spent by this probe",
+   "status": "ok",
+   "why": "fallback quotes and FX"
+  },
+  {
+   "detail": "1/2 endpoints answered 200; the DATA endpoints 401 while /user answers 200 \u2014 the token is real and the data subscription is not active. That is a BILLING finding, not a dead key.",
+   "endpoints": [
+    {
+     "class": "auth",
+     "code": 401,
+     "endpoint": "eod/AAPL.US",
+     "ms": 1070.3,
+     "url": "https://eodhd.com/api/eod/AAPL.US?api_token=%3Credacted%3E&fmt=json&period=d&from=2026-08-29",
+     "why": "401"
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "user (plan + quota)",
+     "ms": 824.9,
+     "url": "https://eodhd.com/api/user?api_token=%3Credacted%3E&fmt=json",
+     "why": null
+    }
+   ],
+   "entitlement": "granted: user (plan + quota) | 401 on: eod/AAPL.US",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": "sha256:0f5cf220/len23",
+   "latency_ms": 824.9,
+   "provider": "EODHD",
+   "quota_hint": "plan=monthly dailyRateLimit=20 apiRequests=1 on 2026-08-12",
+   "status": "ok",
+   "why": "EOD prices, splits, fundamentals"
+  },
+  {
+   "detail": "balance endpoint answered; is_available=True",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /user/balance",
+     "ms": 313.6,
+     "url": "https://api.deepseek.com/user/balance",
+     "why": null
+    }
+   ],
+   "entitlement": "pay-as-you-go",
+   "failure_class": null,
+   "group": "llm",
+   "key_fingerprint": "sha256:8bc3fd9a/len35",
+   "latency_ms": 313.6,
+   "provider": "DeepSeek",
+   "quota_hint": "balance 9.35 USD",
+   "status": "ok",
+   "why": "THE sole provisioned LLM provider"
+  },
+  {
+   "detail": "credential authenticated (81 models listed) and none of moonshotai/kimi-k3, minimaxai/minimax-m3, google/gemma-4-31b-it returned within 30 s each. NOT a key failure and NOT proof the family works \u2014 CANNOT DETERMINE.",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /models",
+     "ms": 343.3,
+     "url": "https://integrate.api.nvidia.com/v1/models",
+     "why": null
+    },
+    {
+     "class": "network",
+     "code": null,
+     "endpoint": "chat/completions moonshotai/kimi-k3",
+     "ms": 30248.2,
+     "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+     "why": "TimeoutError: The read operation timed out"
+    },
+    {
+     "class": "network",
+     "code": null,
+     "endpoint": "chat/completions minimaxai/minimax-m3",
+     "ms": 30229.2,
+     "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+     "why": "TimeoutError: The read operation timed out"
+    },
+    {
+     "class": "network",
+     "code": null,
+     "endpoint": "chat/completions google/gemma-4-31b-it",
+     "ms": 30238.9,
+     "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+     "why": "TimeoutError: The read operation timed out"
+    }
+   ],
+   "entitlement": "unknown",
+   "failure_class": "cannot_determine",
+   "group": "llm",
+   "key_fingerprint": "sha256:e0b68a59/len70",
+   "latency_ms": 30238.9,
+   "provider": "NVIDIA NIM",
+   "quota_hint": null,
+   "status": "CANNOT_DETERMINE",
+   "why": "second LLM family (kimi/minimax/gemma)"
+  },
+  {
+   "detail": "5-token completion returned ''",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /v1/models",
+     "ms": 646.2,
+     "url": "https://router.huggingface.co/v1/models",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "chat/completions zai-org/GLM-5.3-Flash",
+     "ms": 798.8,
+     "url": "https://router.huggingface.co/v1/chat/completions",
+     "why": null
+    }
+   ],
+   "entitlement": "138 models visible; GLM-5.3-Flash served",
+   "failure_class": null,
+   "group": "llm",
+   "key_fingerprint": "sha256:1f14df0b/len37",
+   "latency_ms": 798.8,
+   "provider": "HF router",
+   "quota_hint": "usage=27p/5c",
+   "status": "ok",
+   "why": "third LLM family via huggingface router"
+  },
+  {
+   "detail": "5-token completion returned 'up'",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /v1/models",
+     "ms": 1582.9,
+     "url": "https://api.openai.com/v1/models",
+     "why": null
+    },
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "chat/completions gpt-5-nano",
+     "ms": 2411.8,
+     "url": "https://api.openai.com/v1/chat/completions",
+     "why": null
+    }
+   ],
+   "entitlement": "125 models visible; gpt-5-nano served",
+   "failure_class": null,
+   "group": "llm",
+   "key_fingerprint": "sha256:c4c8ffc4/len164",
+   "latency_ms": 2411.8,
+   "provider": "OpenAI",
+   "quota_hint": "usage=23p/10c",
+   "status": "ok",
+   "why": "gpt-5-nano bulk extraction; gpt-5-mini judge"
+  },
+  {
+   "detail": "no AAT_FEATHERLESS_API_KEY/FEATHERLESS_API_KEY in THIS process \u2014 the key lives in the terminal repo's .env, so probe it from there",
+   "endpoints": [],
+   "entitlement": "unknown",
+   "failure_class": "absent",
+   "group": "llm",
+   "key_fingerprint": null,
+   "latency_ms": null,
+   "provider": "Featherless",
+   "quota_hint": null,
+   "status": "FAIL",
+   "why": "fifth LLM family (qwen/alibaba)"
+  },
+  {
+   "detail": "connection to server at \"wrds-pgdata.wharton.upenn.edu\" (165.123.60.118), port 9737 failed: timeout expired",
+   "endpoints": [
+    {
+     "at": "2026-08-31T09:06:06.334061+00:00",
+     "endpoint": "last recorded entitlement map",
+     "source": "backend\\data\\optimus\\wrds\\entitlement_probe.json"
+    }
+   ],
+   "entitlement": "NOT MEASURED TODAY. Last recorded 2026-08-31: READ=crsp-daily,ibes,ibes-detail,taq-ms,taq-liquidity,patents,boardex,13f,audit,compustat,optionmetrics | DENIED=ravenpack-full,ravenpack-dj,ravenpack-web,ravenpack-common,ibes-guidance",
+   "failure_class": "network",
+   "group": "research",
+   "key_fingerprint": null,
+   "latency_ms": null,
+   "provider": "WRDS",
+   "quota_hint": null,
+   "status": "FAIL",
+   "why": "CRSP / IBES / OptionMetrics panels; the RavenPack question"
+  },
+  {
+   "detail": "429",
+   "endpoints": [
+    {
+     "class": "quota",
+     "code": 429,
+     "endpoint": "v2/doc artlist",
+     "ms": 11897.0,
+     "url": "https://api.gdeltproject.org/api/v2/doc/doc?query=%22Federal+Reserve%22&mode=artlist&maxrecords=1&format=json",
+     "why": "429"
+    }
+   ],
+   "entitlement": "unknown",
+   "failure_class": "quota",
+   "group": "news",
+   "key_fingerprint": null,
+   "latency_ms": 11897.0,
+   "provider": "GDELT",
+   "quota_hint": null,
+   "status": "FAIL",
+   "why": "global news volume; the stability canary"
+  },
+  {
+   "detail": "submissions answered for 'Apple Inc.'",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "submissions CIK0000320193",
+     "ms": 582.9,
+     "url": "https://data.sec.gov/submissions/CIK0000320193.json",
+     "why": null
+    }
+   ],
+   "entitlement": "public; declared UA present (47 chars)",
+   "failure_class": null,
+   "group": "filings",
+   "key_fingerprint": null,
+   "latency_ms": 582.9,
+   "provider": "EDGAR",
+   "quota_hint": "SEC fair access: 10 req/s",
+   "status": "ok",
+   "why": "8-K item codes, Form 4, submissions"
+  },
+  {
+   "detail": "/events returned 1 event(s)",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /events",
+     "ms": 800.7,
+     "url": "https://api.elections.kalshi.com/trade-api/v2/events?limit=1&status=open",
+     "why": null
+    }
+   ],
+   "entitlement": "public read, no key",
+   "failure_class": null,
+   "group": "prediction",
+   "key_fingerprint": null,
+   "latency_ms": 800.7,
+   "provider": "Kalshi",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "event probabilities"
+  },
+  {
+   "detail": "/markets returned 1 market(s)",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /markets",
+     "ms": 235.2,
+     "url": "https://gamma-api.polymarket.com/markets?limit=1&closed=false",
+     "why": null
+    }
+   ],
+   "entitlement": "public read, no key",
+   "failure_class": null,
+   "group": "prediction",
+   "key_fingerprint": null,
+   "latency_ms": 235.2,
+   "provider": "Polymarket",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "event probabilities"
+  },
+  {
+   "detail": "delayed VIX quote answered",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "delayed_quotes/_VIX",
+     "ms": 1178.9,
+     "url": "https://cdn.cboe.com/api/global/delayed_quotes/quotes/_VIX.json",
+     "why": null
+    }
+   ],
+   "entitlement": "public CDN, no key; NO CALLER IN THIS REPO",
+   "failure_class": null,
+   "group": "data",
+   "key_fingerprint": null,
+   "latency_ms": 1178.9,
+   "provider": "CBOE",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "delayed quotes / VIX; NOT wired in code"
+  },
+  {
+   "detail": "status='ok', 10 lanes, 50 recent warnings (40045 B sliced away)",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET (sliced locally)",
+     "ms": 27379.0,
+     "summary": {
+      "commit": "",
+      "lane_count": 10,
+      "payload_bytes": 40045,
+      "status": "ok",
+      "top_level_keys": [
+       "data_sources",
+       "degraded_reasons",
+       "deploy",
+       "event_intel",
+       "event_store",
+       "execution_ledger",
+       "fmp_budget",
+       "forecast_populations",
+       "fred_health",
+       "information_bus",
+       "investment_committee",
+       "llm",
+       "lppls",
+       "options_pit",
+       "overlay",
+       "paper_broker",
+       "prediction_ledger",
+       "recent_warnings",
+       "scheduler",
+       "selector_identity"
+      ],
+      "uptime_s": null,
+      "warning_count": 50
+     },
+     "url": "https://aegis-finance-production.up.railway.app/api/health/full",
+     "why": null
+    }
+   ],
+   "entitlement": "ours",
+   "failure_class": null,
+   "group": "ours",
+   "key_fingerprint": null,
+   "latency_ms": 27379.0,
+   "provider": "website /api/health/full",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "the deployed backend; scheduler, lanes, source health"
+  },
+  {
+   "detail": "authority reachable (root 200); no book for 2026-09-05 yet \u2014 that is a seal state, not a connection failure",
+   "endpoints": [
+    {
+     "class": null,
+     "code": 200,
+     "endpoint": "GET /",
+     "ms": 563.9,
+     "url": "https://seal-authority-production.up.railway.app/",
+     "why": null
+    },
+    {
+     "class": "cannot_determine",
+     "code": 404,
+     "endpoint": "GET /2026-09-05.json",
+     "ms": 617.3,
+     "url": "https://seal-authority-production.up.railway.app/2026-09-05.json",
+     "why": "404 \u2014 the endpoint moved or the probe path is wrong"
+    }
+   ],
+   "entitlement": "ours, public read",
+   "failure_class": null,
+   "group": "ours",
+   "key_fingerprint": null,
+   "latency_ms": 563.9,
+   "provider": "seal-authority (public GET)",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "the artery: books the fleet reads instead of re-deriving"
+  },
+  {
+   "detail": "mirror,arena rejected (401/403) \u2014 CONFIRMS the revocation. Neither is read by the terminal repo: alpha/config._FORBIDDEN_INHERITED refuses both names.",
+   "endpoints": [
+    {
+     "class": "auth",
+     "code": 401,
+     "endpoint": "mirror /v2/account",
+     "ms": 858.2,
+     "url": "https://paper-api.alpaca.markets/v2/account",
+     "why": "401"
+    },
+    {
+     "class": "auth",
+     "code": 401,
+     "endpoint": "arena /v2/account",
+     "ms": 842.6,
+     "url": "https://paper-api.alpaca.markets/v2/account",
+     "why": "401"
+    },
+    {
+     "endpoint": "per-pair result",
+     "pairs": {
+      "arena": {
+       "class": "auth",
+       "code": 401,
+       "key_fingerprint": "sha256:512104b6/len26"
+      },
+      "mirror": {
+       "class": "auth",
+       "code": 401,
+       "key_fingerprint": "sha256:0c510528/len26"
+      }
+     }
+    }
+   ],
+   "entitlement": "revoked",
+   "failure_class": "auth",
+   "group": "venue",
+   "key_fingerprint": null,
+   "latency_ms": null,
+   "provider": "Alpaca (finance mirror/arena)",
+   "quota_hint": null,
+   "status": "FAIL",
+   "why": "the two key pairs session 36 recorded as revoked"
+  },
+  {
+   "detail": "8 services; aat-loop-staging=Failed (EXPECTED, and it is the only one)",
+   "endpoints": [
+    {
+     "endpoint": "railway status",
+     "services": {
+      "aat-loop-hack1": "Online",
+      "aat-loop-hack2": "Online",
+      "aat-loop-hack3": "Online",
+      "aat-loop-hack4": "Online",
+      "aat-loop-hack5": "Online",
+      "aat-loop-hack6": "Online",
+      "aat-loop-staging": "Failed",
+      "seal-authority": "Online"
+     }
+    }
+   ],
+   "entitlement": "ours",
+   "failure_class": null,
+   "group": "ours",
+   "key_fingerprint": null,
+   "latency_ms": 2273.4,
+   "provider": "Railway (loving-elegance)",
+   "quota_hint": null,
+   "status": "ok",
+   "why": "is every fleet service Online / Failed / Sleeping"
+  }
+ ],
+ "started_utc": "2026-09-05T15:28:50.020438+00:00",
+ "why_this_call_can_change_a_decision": "Decides whether to KEEP or DELETE each LLM credential and whether the council may RANK a family in its provider order: a 5-token completion is the only evidence that separates a live key from a listed-but-unserved model, and a dead family must be dropped from the probe order rather than retried nightly."
+}
