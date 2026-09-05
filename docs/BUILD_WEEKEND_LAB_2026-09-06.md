@@ -908,6 +908,45 @@ the neural champion). At 25 bps lgbm goes 16.75 → **8.55, below the market's
 14.38.** That is `feedback_check_the_tail_before_the_mean` pointed directly at
 §0.0, and it is checked there.
 
+### FINDING 11 — the last untried instrument, and why the decile-1 alpha cannot be harvested
+
+Every book this weekend was the same shape: top 50 by a signal, value-weighted,
+rebuilt monthly. The evidence kept saying that is the wrong shape — six survivors
+carry their whole effect in **decile 1** and a long top-k book lives in decile 10;
+the long-short that *can* reach decile 1 dies at 25 bps or a 500 bps borrow.
+
+A signal that only marks losers, on names that are expensive to short, has one
+remaining instrument: **do not hold them.** No borrow, no short book, no
+concentration. `W13_composite_exclusion` builds it — on the **tradable universe
+by construction** (≥$3m/day, ≥$5; 1,793 names/month, 309 months), dropping the
+worst 10% by a composite of the five bottom-decile signals.
+
+| arm | annualised | t | eras + | MDE |
+|---|---|---|---|---|
+| screened − unfiltered | +0.142% | **2.43** | **3 of 3** | 0.12%/yr |
+| **random** decile − unfiltered *(control)* | −0.122% | −0.90 | 0 of 3 | 0.27%/yr |
+| **screened − random** *(the only real column)* | **+0.264%** | 1.78 | **3 of 3** | 0.30%/yr |
+| tradable universe − CRSP VW market *(sanity)* | +0.006% | 0.03 | — | 0.33%/yr |
+
+Everything behaves. The control *hurts* (removing random names from a
+value-weighted universe adds noise, −0.12%/yr, negative in all three eras); the
+universe restriction is neutral (+0.006%/yr, t 0.03), so the floor is not doing
+the work; and the signal-based exclusion beats a random one **in all three eras**.
+This arm is also, for once, **well powered** — its MDE is 0.30%/yr, not 8%.
+
+**And it is worth +0.26%/yr.** An order of magnitude below anything tradeable.
+
+**The reason closes the arc.** A value-weighted universe barely notices its worst
+decile, because those names are *small* — dropping 10% of 1,793 names by count
+removes a tiny fraction by weight. The decile-1 alpha is real, and:
+
+- a **long top-k** book cannot reach it (it lives in decile 10);
+- a **long-short** can reach it and cannot afford it (borrow, on a $2.2m/day short leg);
+- an **exclusion** can afford it and cannot feel it (value weighting dilutes it away).
+
+That is every instrument, and the answer is the same each time. The alpha in
+these signals is concentrated exactly where capital cannot go.
+
 ---
 
 ## 5. What the evidence memory says, taken together

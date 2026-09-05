@@ -2952,6 +2952,156 @@ def W12_short_side(variant: int = 0) -> dict:
     }
 
 
+def W13_composite_exclusion(variant: int = 0) -> dict:
+    """THE INSTRUMENT THE WEEKEND'S EVIDENCE ACTUALLY RECOMMENDS, and the only
+    one that was never built.
+
+    Every book this weekend was the same shape: top 50 by a signal,
+    value-weighted, rebuilt monthly. The evidence kept saying that is the wrong
+    shape:
+
+      * six of the surviving features carry their whole effect in DECILE 1 and
+        are flat above it (W5b, W9) -- a long top-k book lives in decile 10,
+        which is the one region where they say nothing;
+      * the long-short that CAN reach decile 1 earns +4.91%/yr at 10 bps and
+        general collateral, and dies at 25 bps or a 500 bps borrow on a short
+        leg trading $2.2m/day (W12);
+      * the archetype legs are non-monotone, so the extreme is not the place
+        (W7b).
+
+    A signal that only marks losers, on names that are expensive to short, has
+    one remaining instrument: **do not hold them.** No borrow, no short book, no
+    concentration. This job builds it -- and builds it on the TRADABLE universe,
+    because the other lesson of the weekend is that no book job was applying the
+    execution floor.
+
+    THREE ARMS, AND THE MIDDLE ONE IS THE POINT:
+
+      base      the whole tradable universe, value-weighted
+      screened  the same, minus the worst decile by the composite
+      RANDOM    the same, minus a RANDOM decile of the same size, same months
+
+    Removing a tenth of any universe changes its size mix, its sector mix and
+    its concentration. An improvement a RANDOM exclusion also produces is not a
+    finding about the signals. `screened - random` is the only column that is.
+    """
+    from learner import evaluate, inference, features_price as FP
+    df = _panel()
+    if FP.available():
+        df, _ = FP.attach(df)
+    try:
+        from learner import features_options as FO
+        if FO.available():
+            df, _ = FO.attach(df)
+    except Exception:                                                   # noqa: BLE001
+        pass
+    # The bottom-decile signals, each oriented so LOW is bad.
+    legs = {"cp_iv_spread_30d": +1.0, "skew_25d_30d": -1.0,
+            "ret_5d": -1.0, "amihud_21d": -1.0, "attention_z_5d": +1.0}
+    have = {k: v for k, v in legs.items() if k in df.columns}
+    if len(have) < 2:
+        return _deferred("W13_composite_exclusion",
+                         f"only {len(have)} bottom-decile signals are on the panel")
+    parts = []
+    for c, s in have.items():
+        r = df.groupby("month")[c].rank(pct=True)
+        parts.append(r if s > 0 else (1.0 - r))
+    # Mean of available ranks: a name missing one leg is scored on the rest
+    # rather than dropped, because dropping it would make the screen a coverage
+    # filter -- the failure W5b's covered-universe benchmark exists to avoid.
+    stacked = pd.concat(parts, axis=1)
+    df["_composite"] = stacked.mean(axis=1)
+    df["_n_legs"] = stacked.notna().sum(axis=1)
+
+    # THE TRADABLE UNIVERSE. The weekend's other standing lesson.
+    dv = np.expm1(df["log_dollar_vol_20d"])
+    univ = df[(dv >= evaluate.TRADABLE_DOLLAR_VOL) & (df["close"] >= 5.0)
+              & df["fwd_1m"].notna() & df["mkt_vw_1m"].notna()
+              & df["market_cap"].notna() & (df["market_cap"] > 0)].copy()
+    if univ["month"].nunique() < 24:
+        return {"verdict": "CANNOT DETERMINE",
+                "headline": f"only {univ['month'].nunique()} tradable months"}
+    cut = float(variant % 3) if variant else 0.0
+    drop_frac = (0.10, 0.20, 0.05)[int(cut)]
+    q = univ.groupby("month")["_composite"].rank(pct=True)
+    univ["_screened_out"] = (q <= drop_frac) & univ["_composite"].notna()
+    rng = np.random.default_rng(20260906)
+    univ["_random_out"] = False
+    for m, g in univ.groupby("month"):
+        elig = g.index[g["_composite"].notna()]
+        k = int(g["_screened_out"].sum())
+        if k and len(elig) >= k:
+            univ.loc[rng.choice(elig, size=k, replace=False), "_random_out"] = True
+
+    def _vw(frame):
+        w = frame["market_cap"].clip(lower=0)
+        return (frame.assign(_w=w).groupby("month")
+                .apply(lambda g: float((g["_w"] * g["fwd_1m"]).sum() / g["_w"].sum())
+                       if g["_w"].sum() > 0 else np.nan, include_groups=False)
+                .sort_index())
+
+    base = _vw(univ)
+    screened = _vw(univ[~univ["_screened_out"]])
+    random_ = _vw(univ[~univ["_random_out"]])
+    mkt = univ.groupby("month")["mkt_vw_1m"].first().sort_index()
+
+    def _stat(s, ref, label):
+        d = (s - ref).dropna()
+        if len(d) < 24 or d.std(ddof=1) == 0:
+            return {"label": label, "months": int(len(d)), "note": "too few months"}
+        t = float(d.mean() / (d.std(ddof=1) / np.sqrt(len(d))))
+        return {"label": label, "months": int(len(d)),
+                "annualised_pct": round(float(d.mean()) * 1200, 4),
+                "t": round(t, 3),
+                "terminal_wealth": round(float((1 + s.reindex(d.index)).prod()), 4),
+                "terminal_wealth_ref": round(float((1 + ref.reindex(d.index)).prod()), 4),
+                "era_sign_table": era_sign_table(d),
+                "power": inference.power_note(d.tolist())}
+
+    rows = {
+        "screened_minus_base": _stat(screened, base, "screen vs the unfiltered universe"),
+        "random_minus_base": _stat(random_, base, "a RANDOM decile removed, the control"),
+        "screened_minus_random": _stat(screened, random_,
+                                       "the only column about the SIGNALS"),
+        "base_minus_market": _stat(base, mkt, "the tradable universe vs the CRSP VW market"),
+    }
+    key = rows["screened_minus_random"]
+    pw = key.get("power") or {}
+    real = bool(isinstance(key.get("t"), (int, float)) and key["t"] >= 2.0
+                and (key.get("era_sign_table") or {}).get("same_sign_in_2_of_3"))
+    return {
+        "question": ("does NOT HOLDING the worst decile of a composite of the six "
+                     "bottom-decile signals beat not holding a RANDOM decile?"),
+        "family_id": f"weekend-W13-composite-exclusion-drop{int(drop_frac*100)}",
+        "legs": {k: ("high is good" if v > 0 else "low is good") for k, v in have.items()},
+        "drop_fraction": drop_frac,
+        "universe": (f"tradable only: >= ${evaluate.TRADABLE_DOLLAR_VOL:,.0f}/day and "
+                     f"close >= $5 -- the weekend's standing lesson, applied here by "
+                     f"construction rather than as an afterthought"),
+        "universe_names_per_month_median": int(univ.groupby("month").size().median()),
+        "months": int(len(base)),
+        "arms": rows,
+        "control_note": ("removing a tenth of any universe changes its size mix, its "
+                         "sector mix and its concentration. `screened_minus_random` is "
+                         "the only column that is about the signals rather than about "
+                         "removing a tenth of a universe."),
+        "why_this_shape": ("six survivors carry their whole effect in decile 1 and a long "
+                           "top-k book lives in decile 10; the long-short that CAN reach "
+                           "decile 1 dies at 25bps or a 500bps borrow. An exclusion needs "
+                           "no borrow and no concentration."),
+        "headline": (f"drop the worst {drop_frac:.0%} by composite from a tradable "
+                     f"universe of {int(univ.groupby('month').size().median())} names: "
+                     f"vs unfiltered {rows['screened_minus_base'].get('annualised_pct')}%/yr "
+                     f"(t {rows['screened_minus_base'].get('t')}), vs a RANDOM decile "
+                     f"{key.get('annualised_pct')}%/yr (t {key.get('t')}); MDE "
+                     f"{round((pw.get('mde_annual_excess_at_t_target') or 0) * 100, 2)}%/yr"),
+        "verdict": ("NOVEL" if real else
+                    ("CANNOT DETERMINE (underpowered; this arm could only have shown "
+                     f"{(pw.get('mde_annual_excess_at_t_target') or 0) * 100:.1f}%/yr or larger)"
+                     if pw.get("powered") is False else "NOISE")),
+    }
+
+
 def W11_evidence_writeback(variant: int = 0) -> dict:
     """Fold every receipt this weekend has written into the evidence memory.
 
@@ -3010,6 +3160,7 @@ JOBS = {
     "W9_survivor_books": W9_survivor_books,
     "W10_decay_autopsy": W10_decay_autopsy,
     "W12_short_side": W12_short_side,
+    "W13_composite_exclusion": W13_composite_exclusion,
     "W11_evidence_writeback": W11_evidence_writeback,
 }
 
