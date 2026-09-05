@@ -184,3 +184,18 @@ backend/data/optimus/learner/states/sweep_meta*.json
 # it is committed. GitHub warns above 50 MB and rejects above 100 MB, and this
 # repo is public. Data manifest: docs/DATA_MANIFEST.md.
 backend/data/optimus/edgar_8k/*.jsonl
+
+# COMPANYWORLD v1 working artefacts (2026-09-06). The PRODUCT --
+# `backend/data/optimus/graph/companyworld_v1.parquet`, 2,020 edges, 18 KB -- IS
+# committed, and so is every receipt. These two directories are not:
+#   companyworld_work/   31 MB -- the per-document extraction records the run
+#                        resumes from, plus the cached 10-K bodies. Re-derivable
+#                        by `scripts/companyworld_extract.py`, and re-buying them
+#                        costs about $2.12.
+#   companyworld_inputs/ 57 MB -- copies of two CRSP/Compustat link registries
+#                        that already live under backend/data/. A second copy of
+#                        a source is a second source.
+# This repo is public and GitHub rejects blobs above 100 MB.
+# Data manifest: docs/DATA_MANIFEST.md.
+backend/data/optimus/graph/companyworld_work/
+backend/data/optimus/graph/companyworld_inputs/
