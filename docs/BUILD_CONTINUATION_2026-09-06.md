@@ -35,8 +35,9 @@ about any candidate.
    hashed before the first fit, judged on the seed-mean ensemble.
 4. **The LLM cannot read 2016-19 filings into a rank that beats the equal-weight
    basket of the same names** — all four arms negative, family-max p 0.729,
-   memorisation canary clean at 0/192. The one caveat is a rewriter that
-   preserved every magnitude in only 195 of 382 bundles.
+   memorisation canary clean at **0 of 768 decisions**. Blinded, the decider
+   assumes it is NOW: of 243 year guesses, 190 said 2023 and 53 said 2024, and
+   **not one said 2016-2019**.
 5. **Four of the adversarial review's six ranked next moves were already closed
    before this session started, and I called one of them open by reading the
    receipt the review quoted instead of the newest one.** The correction is in
@@ -255,36 +256,75 @@ T=0, **rank graded only** — the LLM never sees or produces a price — benchma
 against the equal-weight basket of **the same 8 anonymised names in the same
 month**, 10 bps, $3m/day and $5 floors.
 
-| arm | windows | mean IC | t (month blocks) | mean net top−EW |
-|---|---|---|---|---|
-| fantasy, no diary | 192 | −0.0314 | −0.964 | −0.393% |
-| fantasy, diary | 192 | −0.0259 | −0.811 | −0.127% |
-| real-anon, no diary | 190 | −0.0427 | −1.294 | −0.308% |
-| real-anon, diary | 190 | −0.0530 | −1.621 | −0.518% |
+| arm | IC | t(IC) | net vs EW %/mo | t | TW book | TW EW | ratio | canary |
+|---|---|---|---|---|---|---|---|---|
+| fantasy, no diary | −0.031 | −0.96 | −0.393 | −1.05 | 1.549 | 1.939 | 0.799 | 0.000 |
+| fantasy, diary | −0.026 | −0.81 | **−0.127** | −0.35 | 1.759 | 1.939 | 0.907 | 0.000 |
+| real-anon, no diary | −0.046 | −1.34 | −0.353 | −1.00 | 1.577 | 1.939 | 0.813 | 0.000 |
+| real-anon, diary | −0.053 | −1.58 | −0.530 | −1.39 | 1.459 | 1.939 | 0.752 | 0.000 |
 
-Family size 4, **family-max p 0.729**, min p 0.175, **nothing survives BH at
-0.05**. DSR of the best arm **0.0205**. Nulls 1-3 all one-sided p > 0.72, and
+Family size 4, **family-max p 0.729**, min p 0.175, **nothing survives BH-FDR
+at 0.05**. DSR **0.081** WITHIN_SELECTION_NOISE, SPA p **1.00**, PBO 0.386. Nulls 1-3 all one-sided p > 0.72, and
 null 3 — the same-day paired statistic, which is the primary one because the
 month effect cancels — is **−0.449%, t −0.678**.
 
-**The memorisation canary is clean: 0 of 192 exact-year hits against a 0.25
-chance rate, 0% company-named.** When the model did guess a year it said 2023
-(75) or 2024 (24) — i.e. it guessed its own training era, not the era it was
-reading. That is the control working.
+**The memorisation canary is clean: 0 of 768 decisions named the true year,
+0% company-named.** When the model did volunteer a year — 243 times of 768 — it
+said **2023 (190) or 2024 (53)**, and **not once 2016-2019**. Blinded, it
+assumes it is now. That is the control working, and it is the first time the
+blind has been measured on a pre-2023 era.
 
 **Reading: on 2016-19, a DeepSeek decider reading rewritten filings ranks
 WORSE than the equal-weight basket of the same names, in all four arms, and the
 diary does not help.** The fantasy-vs-real-anon contrast — the memorisation
 question — is not answerable here, because neither arm is above zero.
 
-One defect worth more than the table: `rewriter_integrity` shows
-**195 of 382 bundles preserved every magnitude**; the rest silently dropped
-numbers (e.g. 104 expected, 96 found). A rewriter that drops magnitudes has
-changed the information the decider sees, and it is a confound on any future
-positive result from this rig.
+~~One defect worth more than the table: `rewriter_integrity` shows 195 of 382
+bundles preserved every magnitude~~ — **RETRACTED 2026-09-06, in-session, by the
+agent that produced it.** That number was the CHECKER's bug, not the rewriter's:
+the first checker regexed the whole fact card and counted field NAMES as data,
+so "12-1 momentum" contributed a 12 and a -1, "4 weeks" a 4, "rating 3.33 of 5"
+a 5, "60d volatility" a 60 — and a **perfect** rewrite scored 0%. Against the
+actually emitted values, preservation is **97.9% (fantasy) / 98.4% (real-anon),
+arm gap 0.005**, and `leak_check` is clean on **384 of 384** bundles. The
+confound does not exist, and **the arm gap is the number that decides whether
+the 2x2 is comparable at all** — which is why it was the right thing to ask.
 
-**Cost: $0.3175** — gpt-5-nano $0.1587 (215 calls, telemetry; OpenAI exposes no
-balance endpoint) + DeepSeek $0.1589 (724 calls) — against a $4.50 working cap.
+Two sibling defects, both of which also failed silently and were caught by the
+same integrity pass: `deepseek-chat` abbreviates "Company A" to "A", which lost
+**every** real-anon window while the table still printed; and `gpt-5-nano` keys
+its JSON on the whole heading line, which lost 11 of 20 bundles.
+
+Three things that DO survive, and are better than the arms table:
+
+1. **The blind held: 0 of 768 decisions named the true year.** First time
+   measured on a pre-2023 era.
+2. **Blinded, `deepseek-chat` assumes it is NOW.** Of 243 year guesses, 190
+   said 2023 and 53 said 2024; not one said 2016-2019.
+3. **The diary SUPPRESSES the canary** — 191 of 192 no-guess with a diary
+   against 93 and 50 without. **An in-band canary is weaker evidence than it
+   looks**, and the next replay must ask it in a separate call.
+
+One loud refusal: the **EDGAR 8-K item tape was refused as a source.** Its own
+manifest resolves the universe through `company_tickers.json`, i.e. CURRENT
+registrants, so 8-K presence in 2016-19 correlates with survival to 2026 — a
+forward-looking leak straight into the prompt. The refusal travels in the
+window receipt.
+
+And the null that matters: a **random ranking already loses about −0.20%/mo**,
+because a top-3-of-8 book pays turnover the basket does not. So null 1 is the
+real test, and its p-values are 0.72 / 0.41 / 0.68 / 0.85 — three arms rank
+*worse* than chance and the fourth is chance.
+
+Verdict **NOISE**: TW ratio 0.75-0.91 against the same-name basket, DSR
+**0.081** WITHIN_SELECTION_NOISE, SPA p **1.00**, PBO 0.386, **MDE 8.75%/yr on
+48 month blocks**. NOISE here means *not detectable on four years*, not
+*absent*; the three-era table is CANNOT DETERMINE because one era was run.
+
+**Cost: $0.4817** of the $5.00 cap — gpt-5-nano $0.3032 (telemetry; OpenAI
+exposes no balance endpoint to this key) + DeepSeek $0.1785. About **$0.0006
+per graded rank decision**. Money was never the constraint; independent months
+were.
 
 Receipts: `L10_era_replay_windows.json`, `L10_era_replay_v2_pilot.json`,
 `L10_era_replay_v2_run01.json`
@@ -483,10 +523,12 @@ that carries it.
    against a beta-timing artefact. Same receipt.
 6. **The LLM cannot read 2016-19 filings into a rank that beats the equal-weight
    basket of the same names.** All four arms negative, family-max p 0.729,
-   canary clean at 0/192. Attack the rewriter: only 195 of 382 bundles preserved
-   every magnitude, so the decider may have been reading a degraded document
-   rather than failing to reason. That is the single most likely way this
-   negative is wrong. `L10_era_replay_v2_run01.json`.
+   canary clean at 0 of 768 decisions. The rewriter-degradation confound I first
+   published here was **retracted in-session** — a checker bug; true preservation
+   is 97.9%/98.4%. Attack the POWER instead: MDE is **8.75%/yr on 48 month
+   blocks**, so this reads "not detectable on four years", and anyone taking it
+   as "LLMs cannot read filings" is over-reading it.
+   `L10_era_replay_v2_run01.json`, `docs/FINDING_2026-09-06_ERA_REPLAY_V2.md`.
 7. **Nine of the evidence memory's twelve SUPPORTED cells are in a superseded
    family, and all nine survive the row-level rule** because the supersession
    boundary predates the corrected re-runs. The export excludes the family
