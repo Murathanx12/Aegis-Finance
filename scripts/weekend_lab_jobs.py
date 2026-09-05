@@ -186,22 +186,29 @@ def verdict_from(inf: dict, eras: dict) -> str:
     # UNDERPOWERED is not NOISE. If a t = 2 would have needed more tape than the
     # panel holds, the search never had the chance to find the effect, and
     # calling that "NOISE" reports an absence of evidence as evidence of absence.
-    # `powered` is now computed against a PRE-SPECIFIED effect (3%/yr at the arm's
-    # own volatility), not against its observed Sharpe. The first version used the
-    # observed one, which reduces algebraically to `t >= 2` -- so this branch
-    # fired for every arm with 0 < t < 2 and NOISE was unreachable. The MDE is
-    # quoted because it says what the instrument could see, which is the useful
-    # form of "underpowered".
-    if pw.get("powered") is False:
+    # ORDER MATTERS, AND THE FIRST VERSION HAD IT WRONG.
+    #
+    # An arm whose OWN observed effect cleared t = 2 has been resolved by this
+    # tape, whatever it would have taken to resolve a smaller effect. Its era
+    # table is therefore readable, and DECAYED -- the one verdict only a long
+    # panel can reach -- must be checked BEFORE the underpowered branch, or an
+    # arm that visibly worked for seventeen years and stopped gets filed as
+    # "cannot determine" on the grounds that a 3%/yr effect would have been
+    # invisible. Both statements are true; the informative one goes first.
+    dec = decay_reading(eras)
+    resolved_itself = pw.get("powered_for_observed_effect") is True
+    if dec.get("decayed") and resolved_itself:
+        return "DECAYED (worked, then stopped)"
+    # `powered` is computed against a PRE-SPECIFIED effect (3%/yr at the arm's own
+    # volatility), not against its observed Sharpe -- the observed version reduces
+    # algebraically to `t >= 2`, which made this branch fire for every arm with
+    # 0 < t < 2 and NOISE unreachable. The MDE is quoted because "underpowered"
+    # is only useful when it says what the instrument COULD have seen.
+    if pw.get("powered") is False and not resolved_itself:
         mde = pw.get("mde_annual_excess_at_t_target")
         return (f"CANNOT DETERMINE (underpowered; this arm could only have shown an "
                 f"effect of {mde:.1%}/yr or larger)" if isinstance(mde, float)
                 else "CANNOT DETERMINE (underpowered)")
-    # DECAYED is not NOISE either, and it is the verdict only a long panel can
-    # reach. See `decay_reading`.
-    dec = decay_reading(eras)
-    if dec.get("decayed") and pw.get("powered") is True:
-        return "DECAYED (worked, then stopped)"
     return "NOISE"
 
 

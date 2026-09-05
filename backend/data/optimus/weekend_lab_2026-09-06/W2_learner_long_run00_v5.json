@@ -1,0 +1,475 @@
+{
+ "question": "does the learner get better when the weekend's new features are added to the panel's own?",
+ "family_id": "weekend-W2-augmented",
+ "cells_looked_at": 8,
+ "n_common_months": 249,
+ "common_window": [
+  "2004-01",
+  "2024-09"
+ ],
+ "months_per_cell": {
+  "panel_only|lgbm|raw|1m|10bps": 251,
+  "panel_only|lgbm|raw|1m|25bps": 251,
+  "panel_only|lgbm|raw|3m|10bps": 249,
+  "panel_only|lgbm|raw|3m|25bps": 249,
+  "augmented|lgbm|raw|1m|10bps": 251,
+  "augmented|lgbm|raw|1m|25bps": 251,
+  "augmented|lgbm|raw|3m|10bps": 249,
+  "augmented|lgbm|raw|3m|25bps": 249
+ },
+ "best_cell": "panel_only|lgbm|raw|3m|10bps",
+ "best_mean_monthly_excess_pct": 0.9576,
+ "best_cell_book": {
+  "months": 249,
+  "k": 50,
+  "weight": "vw",
+  "cost_bps_per_side": 10,
+  "tradable_floor_usd": null,
+  "rows_after_tradable_floor": 762186,
+  "mean_names_per_month": 50.0,
+  "mean_turnover": 0.828,
+  "terminal_wealth_net": 30.0484,
+  "terminal_wealth_gross": 45.2347,
+  "terminal_wealth_market_same_months": 13.7061,
+  "cagr_net": 0.1782,
+  "cagr_market": 0.1345,
+  "mean_monthly_excess": 0.00958,
+  "annualised_excess": 0.1149,
+  "t_stat_paired_vs_market": 1.525,
+  "months_beating_market": 0.5141,
+  "worst_month_net": -0.4337,
+  "hit_rate": 0.5663
+ },
+ "cells": {
+  "panel_only|lgbm|raw|1m|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 768639,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.878,
+   "terminal_wealth_net": 27.4782,
+   "terminal_wealth_gross": 42.5527,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1716,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00738,
+   "annualised_excess": 0.0886,
+   "t_stat_paired_vs_market": 1.41,
+   "months_beating_market": 0.494,
+   "worst_month_net": -0.3938,
+   "hit_rate": 0.5578
+  },
+  "panel_only|lgbm|raw|1m|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 768639,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.878,
+   "terminal_wealth_net": 14.2374,
+   "terminal_wealth_gross": 42.5527,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1354,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00475,
+   "annualised_excess": 0.057,
+   "t_stat_paired_vs_market": 0.907,
+   "months_beating_market": 0.4661,
+   "worst_month_net": -0.3965,
+   "hit_rate": 0.5538
+  },
+  "panel_only|lgbm|raw|3m|10bps": {
+   "months": 249,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 762186,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.828,
+   "terminal_wealth_net": 30.0484,
+   "terminal_wealth_gross": 45.2347,
+   "terminal_wealth_market_same_months": 13.7061,
+   "cagr_net": 0.1782,
+   "cagr_market": 0.1345,
+   "mean_monthly_excess": 0.00958,
+   "annualised_excess": 0.1149,
+   "t_stat_paired_vs_market": 1.525,
+   "months_beating_market": 0.5141,
+   "worst_month_net": -0.4337,
+   "hit_rate": 0.5663
+  },
+  "panel_only|lgbm|raw|3m|25bps": {
+   "months": 249,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 762186,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.828,
+   "terminal_wealth_net": 16.2469,
+   "terminal_wealth_gross": 45.2347,
+   "terminal_wealth_market_same_months": 13.7061,
+   "cagr_net": 0.1438,
+   "cagr_market": 0.1345,
+   "mean_monthly_excess": 0.00709,
+   "annualised_excess": 0.0851,
+   "t_stat_paired_vs_market": 1.13,
+   "months_beating_market": 0.506,
+   "worst_month_net": -0.4361,
+   "hit_rate": 0.5502
+  },
+  "augmented|lgbm|raw|1m|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 768639,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.916,
+   "terminal_wealth_net": 21.043,
+   "terminal_wealth_gross": 33.2268,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1568,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00754,
+   "annualised_excess": 0.0905,
+   "t_stat_paired_vs_market": 1.207,
+   "months_beating_market": 0.5259,
+   "worst_month_net": -0.4242,
+   "hit_rate": 0.5817
+  },
+  "augmented|lgbm|raw|1m|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 768639,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.916,
+   "terminal_wealth_net": 10.5887,
+   "terminal_wealth_gross": 33.2268,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1194,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00479,
+   "annualised_excess": 0.0575,
+   "t_stat_paired_vs_market": 0.767,
+   "months_beating_market": 0.498,
+   "worst_month_net": -0.4266,
+   "hit_rate": 0.5697
+  },
+  "augmented|lgbm|raw|3m|10bps": {
+   "months": 249,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 762186,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.838,
+   "terminal_wealth_net": 10.0578,
+   "terminal_wealth_gross": 15.2454,
+   "terminal_wealth_market_same_months": 13.7061,
+   "cagr_net": 0.1177,
+   "cagr_market": 0.1345,
+   "mean_monthly_excess": 0.00403,
+   "annualised_excess": 0.0483,
+   "t_stat_paired_vs_market": 0.731,
+   "months_beating_market": 0.49,
+   "worst_month_net": -0.3764,
+   "hit_rate": 0.5502
+  },
+  "augmented|lgbm|raw|3m|25bps": {
+   "months": 249,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25,
+   "tradable_floor_usd": null,
+   "rows_after_tradable_floor": 762186,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.838,
+   "terminal_wealth_net": 5.3822,
+   "terminal_wealth_gross": 15.2454,
+   "terminal_wealth_market_same_months": 13.7061,
+   "cagr_net": 0.0845,
+   "cagr_market": 0.1345,
+   "mean_monthly_excess": 0.00151,
+   "annualised_excess": 0.0181,
+   "t_stat_paired_vs_market": 0.274,
+   "months_beating_market": 0.4739,
+   "worst_month_net": -0.3787,
+   "hit_rate": 0.5341
+  }
+ },
+ "inference": {
+  "n_cells_looked_at": 8,
+  "deflated_sharpe": {
+   "sharpe": 0.0967,
+   "sharpe_benchmark_sr0": 0.0926,
+   "n_trials": 8,
+   "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+   "skew": 1.519,
+   "kurtosis": 8.792,
+   "n_periods": 249,
+   "z": 0.0676,
+   "dsr": 0.5269,
+   "verdict": "WITHIN_SELECTION_NOISE",
+   "reading": "after 8 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.093; this arm's is 0.097."
+  },
+  "power": {
+   "n_periods": 249,
+   "periods_per_year": 12,
+   "n_oos_months": 249,
+   "sharpe_per_period": 0.0967,
+   "t_observed": 1.5252,
+   "years_observed": 20.75,
+   "t_target": 2.0,
+   "periods_needed_for_t_target": 428.2,
+   "years_needed_for_t2": 35.7,
+   "years_needed_for_t2_exact": 35.68164625624724,
+   "powered": false,
+   "reading": "t = 1.53 on 20.8 years; t = 2 would need 35.7 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+  },
+  "spa": {
+   "best_arm": "panel_only|lgbm|raw|3m|10bps",
+   "n_arms": 8,
+   "n_periods": 249,
+   "n_boot": 500,
+   "block_periods": 4.0,
+   "t_spa": 1.3347,
+   "p_spa_consistent": 0.2275,
+   "p_spa_lower": 0.2275,
+   "p_spa_upper": 0.2275,
+   "arm_means": {
+    "panel_only|lgbm|raw|1m|10bps": 0.006156,
+    "panel_only|lgbm|raw|1m|25bps": 0.003518,
+    "panel_only|lgbm|raw|3m|10bps": 0.009576,
+    "panel_only|lgbm|raw|3m|25bps": 0.007094,
+    "augmented|lgbm|raw|1m|10bps": 0.007152,
+    "augmented|lgbm|raw|1m|25bps": 0.004403,
+    "augmented|lgbm|raw|3m|10bps": 0.004025,
+    "augmented|lgbm|raw|3m|25bps": 0.00151
+   },
+   "verdict": "WITHIN_SPA_NULL",
+   "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
+  },
+  "pbo": {
+   "pbo": 0.5429,
+   "n_partitions": 70,
+   "n_arms": 8,
+   "n_periods": 249,
+   "median_logit": -0.2231,
+   "verdict": "SELECTION_IS_OVERFIT",
+   "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+  }
+ },
+ "era_sign_table": {
+  "1999-2007": {
+   "months": 48,
+   "mean_pct": -0.9556,
+   "t": -1.118,
+   "sign": -1
+  },
+  "2008-2015": {
+   "months": 96,
+   "mean_pct": 1.6118,
+   "t": 1.705,
+   "sign": 1
+  },
+  "2016-2024": {
+   "months": 105,
+   "mean_pct": 1.2341,
+   "t": 1.078,
+   "sign": 1
+  },
+  "eras_with_a_positive_mean": 2,
+  "eras_with_a_negative_mean": 1,
+  "eras_measured": 3,
+  "holds_in_2_of_3": true,
+  "same_sign_in_2_of_3": true,
+  "dominant_sign": 1
+ },
+ "headline": "21 weekend features added to the panel's 49: best paired lift 0.0157%/month (t 0.032) on lgbm|raw|1m|10bps; best of 8 cells is panel_only|lgbm|raw|3m|10bps at +0.958%/month paired excess over 249 months; DSR 0.5269, SP",
+ "verdict": "CANNOT DETERMINE (underpowered)",
+ "variant_name": "augmented",
+ "test_years": [
+  2004,
+  2024
+ ],
+ "panel": "train_table_long.parquet (learner-train-table-3)",
+ "extra_features": [
+  "amihud_21d",
+  "atm_iv_30d",
+  "atm_iv_chg_1m",
+  "attention_z",
+  "attention_z_5d",
+  "cp_iv_spread_30d",
+  "graph_assoc_mom_1m_cw",
+  "graph_assoc_mom_1m_ew",
+  "graph_comp_mom_1m_cw",
+  "graph_comp_mom_1m_ew",
+  "graph_cust_mom_1m_cw",
+  "graph_cust_mom_1m_ew",
+  "graph_log_degree",
+  "graph_supp_mom_1m_cw",
+  "graph_supp_mom_1m_ew",
+  "iv_minus_rv_21d",
+  "prox_52w_high",
+  "prox_52w_low",
+  "ret_5d",
+  "skew_25d_30d",
+  "vwap_60d_gap"
+ ],
+ "n_extra_features": 21,
+ "n_panel_features": 49,
+ "join_notes": {
+  "price": "JOINED",
+  "options": "JOINED",
+  "graph": "THIN -- best feature column matches 2.80% of panel rows"
+ },
+ "paired_lift_augmented_minus_panel_only": [
+  {
+   "cell": "lgbm|raw|1m|10bps",
+   "months": 251,
+   "augmented_minus_panel_pct_per_month": 0.0157,
+   "t": 0.032,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1552,
+     "t": 0.229,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.4517,
+     "t": -0.748,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.3724,
+     "t": 0.386,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  {
+   "cell": "lgbm|raw|1m|25bps",
+   "months": 251,
+   "augmented_minus_panel_pct_per_month": 0.0042,
+   "t": 0.009,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.1248,
+     "t": 0.184,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.4595,
+     "t": -0.762,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.366,
+     "t": 0.38,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  {
+   "cell": "lgbm|raw|3m|10bps",
+   "months": 249,
+   "augmented_minus_panel_pct_per_month": -0.5551,
+   "t": -1.166,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 1.4974,
+     "t": 2.112,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.399,
+     "t": -2.251,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 105,
+     "mean_pct": -0.7219,
+     "t": -0.793,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  {
+   "cell": "lgbm|raw|3m|25bps",
+   "months": 249,
+   "augmented_minus_panel_pct_per_month": -0.5584,
+   "t": -1.173,
+   "era_sign_table": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 1.4861,
+     "t": 2.095,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.4023,
+     "t": -2.259,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 105,
+     "mean_pct": -0.7213,
+     "t": -0.792,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  }
+ ],
+ "why_paired": "both grids are fitted on the SAME rows over the SAME months, so the difference is the features and not the window. A feature that is real and REDUNDANT looks identical to a real and useful one until the model is fitted both ways.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "W2_learner_long",
+ "run": 1,
+ "variant": 5,
+ "written_utc": "2026-09-05T05:14:47+00:00"
+}

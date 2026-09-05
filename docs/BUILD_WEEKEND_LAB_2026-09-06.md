@@ -5,6 +5,56 @@ their receipts before each update; a line with no receipt is not in this file.*
 
 ---
 
+> ## CORRECTIONS — read these before anything below
+>
+> Two adversarial review lanes were run against this document's own claims. They
+> found a leak, a guard that could not fail, and a circular flag. **Three things
+> in this file changed as a result, and the earlier versions were wrong.**
+>
+> **1. FINDING 3's headline archetype was a LEAK.** W7's control pool excluded
+> future *losers* as well as winners, which made "being a control" a statement
+> about the future. Any feature predicting outcome **dispersion** then differs
+> from winners by construction — and the published #1 archetype,
+> `log_dollar_vol_20d` ("thinly traded for its size", Holm p 0.000178), is
+> exactly a dispersion proxy. **Fixed** — each side now excludes only its own
+> tail. `log_dollar_vol_20d` falls to t −2.76, Holm **0.158**: it does not
+> survive. The analyst-revision cluster survives and gets *stronger*
+> (`net_rev_4w` Holm 0.063 → **0.0047**). **The corrected archetype is "being
+> upgraded", not "unloved and illiquid."**
+>
+> **2. The early-era share-basis gate could not go red.** The reviewer injected
+> the exact 2026-09-04 defect and the gate still returned PASS. The corruption
+> travels through `cfacpr(t)` (forward) while the treatment arm is
+> `split_prior_year` (backward), so 84% of corrupted rows land in the *control*
+> and a difference test cancels it. **Fixed** — the gate now tests the level and
+> **proves its own sensitivity on every run** by injecting the defect into a copy
+> (real 0.9783 vs injected 0.8545, floor 0.95 separates them). The panel was
+> always fine; the *evidence* that it was fine is only now real.
+>
+> **3. `powered` was the t-test written longer.** `years_needed ≤ years_observed`
+> reduces algebraically to `t ≥ 2`, so `CANNOT DETERMINE (underpowered)` fired
+> for every arm with 0 < t < 2 and **NOISE was unreachable** — across 19
+> receipts. **Fixed** — power is now measured against a pre-specified 3%/yr
+> effect at the arm's own volatility, and the receipt reports the **Minimum
+> Detectable Effect**. The honest number is sobering: a top-50 book over 21 years
+> at realistic volatility has an **MDE of ~7.4%/yr**.
+>
+> Also fixed: 25 of 92 verdicts said `NOVEL` while bypassing the bar this repo
+> defines (screens now have their own vocabulary and can never reach NOVEL); the
+> evidence memory stamped a *fabricated* DSR on screen rows and then sorted on
+> it; and W7 stamped the wrong months onto any feature with incomplete coverage.
+>
+> **And one number below is not what it looked like:** the neural arm's terminal
+> wealth of **561×** is ~94% microcap. At the repo's own `TRADABLE_DOLLAR_VOL`
+> floor of $3m/day it is 92.8×, and with a $5 price floor as well it is **36.3×
+> at t 1.98**. Its median holding without a floor closes at **$6.61** and trades
+> **$1.03m/day**; 18% are under $2.
+>
+> The full reports are `docs/REVIEW_2026-09-06_ATTACK_ON_THE_WEEKEND.md` and
+> `docs/REVIEW_2026-09-06_CODE.md`.
+
+---
+
 ## RESULTS SCOREBOARD (the house rule: this block comes before any code count)
 
 | | |
@@ -151,6 +201,79 @@ is a description of that era.
 and the 3-month *book* is not (4.51 vs 4.86). A spread is top-minus-bottom,
 equal-weighted inside each decile; a book is the top 50 only, value-weighted.
 Same gap as W5b and W7b.
+
+---
+
+## 0.0 THE ANSWER TO THE QUESTION THE WEEKEND WAS ASKED
+
+> *"Whether nineteen years say something seven could not."*
+
+**They do not.** `W2_learner_long`, the full 32-cell learner grid, walk-forward
+2004-2023, 240 months common to every cell:
+
+| | 12-year panel (night lab, 09-05) | **26-year panel** |
+|---|---|---|
+| best cell | lgbm\|raw\|3m\|10bps | **lgbm\|raw\|6m\|10bps** |
+| paired excess | +1.553%/month | +1.096%/month |
+| **DSR** | 0.197 | **0.293** |
+| SPA p | 0.291 | 0.277 |
+| PBO | 0.286 | 0.171 |
+| out-of-sample months | 84 | **240** |
+| years needed for t = 2 | 16.1 (had 7.0) | **30.7 (has 20.0)** |
+
+More tape moved the Deflated Sharpe from **0.197 to 0.293**. The bar is 0.95.
+Tripling the out-of-sample months bought about ten points of DSR and left the
+verdict where it was: **CANNOT DETERMINE — underpowered.** The best cell shows
++11.45%/yr of excess at **t 1.43**, and its Minimum Detectable Effect is
+**16.3%/yr** — the instrument could not have resolved what it appears to have
+found.
+
+Best cell by terminal wealth is `lgbm|raw|3m|10bps` at **TW 31.69 against a
+market at 13.71** (+11.17%/yr, t 1.59) — and it still does not clear.
+
+**One clean structural result, though, and it is the same in every cell:**
+
+| | 10 bps | 25 bps |
+|---|---|---|
+| **every `lgbm` cell** (16 of 16) | positive excess | positive excess |
+| **every `ridge` cell** (16 of 16) | **negative** excess | **negative** excess |
+
+Ridge is not merely worse — it *loses*, by 1.2 to 9.3 %/yr, in all sixteen cells.
+The relationship between these features and forward excess return is not linear,
+and a linear model on them is an active liability rather than a weak baseline.
+That is a finding about the feature space that holds across 26 years, four
+horizons, two target shapes and two cost levels, and it does not depend on any
+of the corrections above.
+
+### 0.0.1 And feeding the weekend's new features into the learner does not help
+
+The roadmap's instruction was that W4/W5/W6's features "feed into W2/W3's next
+pass". They now do — `W2` variant 5, both grids fitted on the **same rows over
+the same months** so the difference is the features and not the window, because
+a feature that is real and *redundant* looks identical to a real and useful one
+until the model is fitted both ways.
+
+21 features added to the panel's 49:
+
+| cell | paired lift (augmented − panel-only) | t | eras |
+|---|---|---|---|
+| lgbm\|raw\|1m\|10bps | +0.016%/mo | 0.03 | 2+/1− |
+| lgbm\|raw\|1m\|25bps | +0.004%/mo | 0.01 | 2+/1− |
+| lgbm\|raw\|3m\|10bps | **−0.555%/mo** | −1.17 | 1+/2− |
+| lgbm\|raw\|3m\|25bps | **−0.558%/mo** | −1.17 | 1+/2− |
+
+Terminal wealth at 3 months: **30.05 panel-only against 10.06 augmented.** Adding
+the features cut it by two thirds.
+
+They are real in isolation — W5 and W6 measured controlled Fama-MacBeth t's of 2
+to 5 for several of them. They are **redundant given what the panel already
+carries**, and eight of the 21 are the graph columns, which match **2.8%** of
+panel rows: a ~97%-missing feature adds variance without information, even though
+LightGBM consumes NaN natively.
+
+**Conclusion: do not carry these into the learner.** The options surface still
+earns its keep elsewhere — it is the source of the short-side signal in FINDING
+9 — but as learner inputs the whole set is a no-op at best.
 
 ---
 
@@ -312,32 +435,39 @@ and every one of them is correctly excluded.
 What survives the matched control, a non-overlapping |t| ≥ 2.5, a consistent sign
 in ≥ 2 of 3 eras, **and** a loser side that moves differently:
 
-| feature | winner − control | naive t | NW t | **block t** | BH q | **Holm p** | eras |
-|---|---|---|---|---|---|---|---|
-| `log_dollar_vol_20d` | −0.1308 | −9.75 | −4.51 | **−4.57** | 1.7e-05 | **0.00018** | 0+/3− |
-| `log_dollar_vol_20d__xs` | −0.0105 | −7.71 | −3.63 | **−3.91** | 0.00027 | **0.0031** | 0+/3− |
-| `consensus_rev_1m__xs` | +0.0094 | 3.97 | 3.50 | **3.73** | 0.00053 | **0.0062** | 3+/0− |
-| `net_rev_4w` | +0.0108 | 3.57 | 3.02 | 3.05 | 0.0050 | 0.063 | 2+/1− |
-| `net_rev_1m` | +0.0111 | 3.65 | 2.98 | 2.98 | 0.0062 | 0.079 | 3+/0− |
-| `consensus__xs` | −0.0250 | −7.06 | −2.94 | −2.72 | 0.012 | 0.152 | 0+/3− |
-| `consensus_rev_1m` | +0.0058 | 3.06 | 2.91 | 2.70 | 0.012 | 0.152 | 3+/0− |
-| `net_rev_4w__xs` | +0.0069 | 2.95 | 2.47 | 2.50 | 0.021 | 0.259 | 2+/1− |
+**AFTER THE LEAK FIX** (the pre-fix column is kept so the size of the correction
+is visible, not asserted):
 
-Eight candidates, but only **three DISTINCT ideas** — `net_rev_*` /
-`consensus_rev_*` and their `__xs` ranks are four views of one idea, and counting
-them separately would inflate the finding by construction. **All 8 survive
-BH-FDR 10%; 3 survive Holm 5%** (CANON §63: screen = BH, export = Holm).
+| feature | **block t (fixed)** | **Holm p (fixed)** | *block t (leaked)* | *Holm p (leaked)* | eras |
+|---|---|---|---|---|---|
+| `net_rev_4w` | **3.83** | **0.0047** ✓ | *3.05* | *0.063* | 2+/1− |
+| `net_rev_1m` | **3.68** | **0.0082** ✓ | *2.98* | *0.079* | 3+/0− |
+| `consensus_rev_1m__xs` | **3.52** | **0.0146** ✓ | *3.73* | *0.0062* | 3+/0− |
+| `net_rev_4w__xs` | **3.35** | **0.027** ✓ | *2.50* | *0.259* | 2+/1− |
+| `consensus_rev_1m` | 3.06 | 0.068 | *2.70* | *0.152* | 3+/0− |
+| `coverage` | 2.93 | 0.099 | *—* | *—* | |
+| `consensus` | −2.91 | 0.102 | *—* | *—* | |
+| **`log_dollar_vol_20d`** | **−2.76** | **0.158** ✗ | *−4.57* | *0.00018* | 0+/3− |
+| `consensus__xs` | −2.74 | 0.162 | *−2.72* | *0.152* | 0+/3− |
+| `log_dollar_vol_20d__xs` | *dropped* | — | *−3.91* | *0.0031* | |
 
-**The archetype, in words.** Against a name matched on sector, size, momentum and
-vol, a future 12-month residual winner was, at formation:
+Eleven candidates over **four distinct ideas** — `net_rev_*` / `consensus_rev_*`
+and their `__xs` ranks are several views of one idea, and counting them
+separately would inflate the finding by construction. **Four survive Holm 5%**
+(CANON §63: screen = BH, export = Holm).
 
-1. **thinly traded for its size** — market cap is matched, dollar volume is not, so this is *low turnover*, not *small* (Holm p 0.00018, same sign in 3 of 3 eras);
-2. **being upgraded** — analyst ratings revising up (Holm p 0.0062, 3 of 3 eras);
-3. **rated worse than its twin** to begin with (`consensus__xs` −2.72, BH-surviving, 3 of 3 eras).
+**The corrected archetype, in words.** Against a name matched on sector, size,
+momentum and vol, a future 12-month residual winner was, at formation, **being
+upgraded** — analyst ratings and target counts revising up (`net_rev_4w` Holm
+0.0047, `net_rev_1m` Holm 0.0082, `consensus_rev_1m__xs` Holm 0.0146), with a
+secondary and weaker tendency to have been **rated lower to begin with**
+(`consensus` −2.91, `consensus__xs` −2.74, both outside Holm).
 
-*Unloved, illiquid for its size, and improving from a low base.* That is a
-falsifiable archetype and it is not a restatement of size or momentum, because
-both were matched away.
+**What is NOT in the archetype any more:** "thinly traded for its size." It was
+the leak. Excluding future losers from the control pool made any predictor of
+outcome *dispersion* differ from winners by construction, and thinness is
+precisely that. It is worth noting that this leg was the one the earlier draft
+found most striking — the largest t, the smallest p, and the first thing quoted.
 
 **The honest counterweight — the recall baseline.** Share of each month's residual
 top-50 already in the top decile of each precursor at formation, against the 0.10

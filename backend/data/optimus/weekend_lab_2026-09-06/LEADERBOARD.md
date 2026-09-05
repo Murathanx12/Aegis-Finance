@@ -107,3 +107,8 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W7b_archetype_book | 10 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered) |
 | W8_states_three_nulls | 10 | 0 | k=4 market states over 286 months; market circular-shift p 0.578 (observed spread 0.008268 vs null p | -- | -- | -- | -- | -- | NOISE |
 | W9_survivor_books | 10 | 0 | 12 weekend survivors booked (24 cells): 5 beat the market NET, 10 beat it GROSS; 5 of them have thei | 0.2022 | 0.1078 | 0.2286 | 308 | 24.3 | DECAYED (worked, then stopped) |
+| W3_neural_long | 10 | 1 | [cuda] best of 38 cells is nn_pre_causal_s20260906|10bps at +1.987%/month vs market over 251 months  | 0.9081 | 0.02 | 0.4571 | 251 | 8.3 | NOISE |
+| W11_evidence_writeback | 10 | 0 | 93 receipts -> 815 cell observations; 256 cells tracked; states {'IDEA': 244, 'SUPPORTED': 11, 'COND | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 11 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
+| W6_behavioural | 11 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | SCREEN_SURVIVOR (3 of 7, controlled |t| >= 2 AND one sign in 2 of 3 eras; no formal multiplicity correction on 7 features) |
+| W6b_liquidity_band | 11 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
