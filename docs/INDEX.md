@@ -32,6 +32,7 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 - **`BUILD_WEEKEND_LAB_2026-09-06.md` — the weekend lab's result (2026-09-06).** Read it for the ANSWER to "does a longer tape resolve the learner" (no: DSR 0.197 -> 0.293 on 2.2x the months) and, more usefully, for **five methodological findings that bind every future screen in this repo**: a regression coefficient is not a book; a matched control must not be picked on the outcome; apply the execution floor before believing a book; a power flag built on the observed effect is the t-test; pass count is not evidence count. Its own headline is RETRACTED inside it, with both sets of numbers. Paired with `REVIEW_2026-09-06_CODE.md` and `REVIEW_2026-09-06_ATTACK_ON_THE_WEEKEND.md`, which found the defects.
 
+- **AMENDMENT (2026-09-07): `ROADMAP_2026-09-07_GROWTH_BOOK_AMENDMENT.md`** — the second ruler: after-cost terminal wealth at a declared drawdown budget, β reported and allowed; the alpha ruler stays for claims. Read WITH the roadmap.
 - **`ROADMAP_2026-09-04_PROFIT_ENGINE.md` — ACTIVE (adopted 2026-09-04).** Ten
   gate-ordered blocks (B1 truth → B2 hold → B3 loop → B4 inference → B5 graph →
   B6 autopsy → B7 era replay v2 → B8 evolution → B9 allocator → B10 learner v3)
