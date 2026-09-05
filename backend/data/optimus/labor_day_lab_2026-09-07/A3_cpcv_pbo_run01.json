@@ -1,0 +1,4045 @@
+{
+ "job": "A3_cpcv_pbo",
+ "lane": "A",
+ "question": "is the incumbents' leaderboard overfit? PBO over the 32-cell learner grid and the reconstructible neural family, plus the out-of-sample PATH DISTRIBUTION of the selection procedure rather than one path.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "memory_free_gb_before": 9.19,
+ "models_fitted": 0,
+ "models_fitted_note": "zero. Every series here is a re-grade of predictions already on disk; a job that refits is a different experiment wearing the same name.",
+ "learner_family": {
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\oos_predictions_v2.parquet",
+  "rows_predictions": 441278,
+  "rows_panel": 441797,
+  "rows_joined": 441278,
+  "contamination_filter": {
+   "rule": "ratio < 50.0",
+   "rows_removed": 73284,
+   "why": "a stale analyst target across a split is not an opinion (S30b). Applied IDENTICALLY to every arm, nulls included."
+  },
+  "prediction_columns_available": 72,
+  "cells_graded": 72,
+  "cells_skipped": [],
+  "by_horizon": {
+   "grid32_h1m_PRIMARY_paired_excess": {
+    "label": "the 8 v1 grid arms at h=1m",
+    "n_arms": 8,
+    "n_aligned_periods": 107,
+    "window": [
+     "2016-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "ridge__raw__1m": {
+      "annualised_pct": 10.349,
+      "sharpe_monthly": 0.1417
+     },
+     "ridge__residual__1m": {
+      "annualised_pct": 3.86,
+      "sharpe_monthly": 0.058
+     },
+     "lgbm__raw__1m": {
+      "annualised_pct": 20.901,
+      "sharpe_monthly": 0.1646
+     },
+     "lgbm__residual__1m": {
+      "annualised_pct": 12.415,
+      "sharpe_monthly": 0.12
+     },
+     "mlp__raw__1m": {
+      "annualised_pct": 5.479,
+      "sharpe_monthly": 0.0545
+     },
+     "mlp__residual__1m": {
+      "annualised_pct": 0.831,
+      "sharpe_monthly": 0.0076
+     },
+     "lgbm_clf__1m": {
+      "annualised_pct": 9.737,
+      "sharpe_monthly": 0.1852
+     },
+     "NULL_shuffled__lgbm_raw__1m": {
+      "annualised_pct": 2.078,
+      "sharpe_monthly": 0.037
+     }
+    },
+    "full_sample_champion": "lgbm_clf__1m",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.5286,
+     "n_partitions": 70,
+     "n_arms": 8,
+     "n_periods": 107,
+     "median_logit": -0.2231,
+     "verdict": "SELECTION_IS_OVERFIT",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "ridge__raw__1m",
+      "ridge__residual__1m",
+      "lgbm__raw__1m",
+      "lgbm__residual__1m",
+      "mlp__raw__1m",
+      "mlp__residual__1m",
+      "lgbm_clf__1m",
+      "NULL_shuffled__lgbm_raw__1m"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 8.",
+     "pbo_minus_baseline": 0.0286,
+     "verdict_against_its_own_baseline": "AT THE COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": -0.03606,
+      "q25": 0.00023,
+      "median": 0.02336,
+      "q75": 0.07703,
+      "max": 0.12043,
+      "mean": 0.03476,
+      "sd": 0.05082,
+      "share_of_paths_negative": 0.2667
+     },
+     "oos_sharpe_distribution": {
+      "min": -0.0809,
+      "median": 0.0388,
+      "max": 0.2292
+     },
+     "in_sample_champion_counts": {
+      "lgbm_clf__1m": 9,
+      "lgbm__raw__1m": 3,
+      "ridge__raw__1m": 2,
+      "NULL_shuffled__lgbm_raw__1m": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0667,
+     "paths": [
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.2224,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.000481,
+       "oos_annualised": 0.00578,
+       "oos_sharpe": 0.0216,
+       "oos_terminal_wealth_of_the_excess_series": 1.0085
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.1624,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.008102,
+       "oos_annualised": 0.09723,
+       "oos_sharpe": 0.2175,
+       "oos_terminal_wealth_of_the_excess_series": 1.297
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.1841,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.003164,
+       "oos_annualised": 0.03797,
+       "oos_sharpe": 0.1147,
+       "oos_terminal_wealth_of_the_excess_series": 1.1027
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.2775,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.000405,
+       "oos_annualised": 0.00487,
+       "oos_sharpe": 0.0089,
+       "oos_terminal_wealth_of_the_excess_series": 0.9789
+      },
+      {
+       "is_champion": "lgbm__raw__1m",
+       "is_sharpe": 0.1968,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.003153,
+       "oos_annualised": 0.03783,
+       "oos_sharpe": 0.0388,
+       "oos_terminal_wealth_of_the_excess_series": 1.0013
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.1807,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.006456,
+       "oos_annualised": 0.07747,
+       "oos_sharpe": 0.1765,
+       "oos_terminal_wealth_of_the_excess_series": 1.233
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.1958,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.001655,
+       "oos_annualised": 0.01986,
+       "oos_sharpe": 0.0619,
+       "oos_terminal_wealth_of_the_excess_series": 1.0483
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.2923,
+       "oos_months": 36,
+       "oos_mean_monthly": -0.001027,
+       "oos_annualised": -0.01232,
+       "oos_sharpe": -0.0229,
+       "oos_terminal_wealth_of_the_excess_series": 0.9306
+      },
+      {
+       "is_champion": "lgbm__raw__1m",
+       "is_sharpe": 0.2032,
+       "oos_months": 36,
+       "oos_mean_monthly": -0.000367,
+       "oos_annualised": -0.0044,
+       "oos_sharpe": -0.005,
+       "oos_terminal_wealth_of_the_excess_series": 0.9022
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.1793,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.009065,
+       "oos_annualised": 0.10877,
+       "oos_sharpe": 0.2292,
+       "oos_terminal_wealth_of_the_excess_series": 1.3483
+      },
+      {
+       "is_champion": "lgbm_clf__1m",
+       "is_sharpe": 0.2359,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.006382,
+       "oos_annualised": 0.07659,
+       "oos_sharpe": 0.1187,
+       "oos_terminal_wealth_of_the_excess_series": 1.1969
+      },
+      {
+       "is_champion": "NULL_shuffled__lgbm_raw__1m",
+       "is_sharpe": 0.0881,
+       "oos_months": 36,
+       "oos_mean_monthly": -0.002993,
+       "oos_annualised": -0.03592,
+       "oos_sharpe": -0.0809,
+       "oos_terminal_wealth_of_the_excess_series": 0.8766
+      },
+      {
+       "is_champion": "ridge__raw__1m",
+       "is_sharpe": 0.2858,
+       "oos_months": 36,
+       "oos_mean_monthly": -0.003005,
+       "oos_annualised": -0.03606,
+       "oos_sharpe": -0.0386,
+       "oos_terminal_wealth_of_the_excess_series": 0.8094
+      },
+      {
+       "is_champion": "lgbm__raw__1m",
+       "is_sharpe": 0.1788,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.010036,
+       "oos_annualised": 0.12043,
+       "oos_sharpe": 0.1038,
+       "oos_terminal_wealth_of_the_excess_series": 1.2239
+      },
+      {
+       "is_champion": "ridge__raw__1m",
+       "is_sharpe": 0.3241,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.001947,
+       "oos_annualised": 0.02336,
+       "oos_sharpe": 0.0214,
+       "oos_terminal_wealth_of_the_excess_series": 0.9323
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "grid32_h3m_PRIMARY_paired_excess": {
+    "label": "the 8 v1 grid arms at h=3m",
+    "n_arms": 8,
+    "n_aligned_periods": 105,
+    "window": [
+     "2016-01",
+     "2024-09"
+    ],
+    "full_sample_leaderboard": {
+     "ridge__raw__3m": {
+      "annualised_pct": 10.795,
+      "sharpe_monthly": 0.1652
+     },
+     "ridge__residual__3m": {
+      "annualised_pct": 8.29,
+      "sharpe_monthly": 0.1283
+     },
+     "lgbm__raw__3m": {
+      "annualised_pct": 11.942,
+      "sharpe_monthly": 0.1186
+     },
+     "lgbm__residual__3m": {
+      "annualised_pct": 11.35,
+      "sharpe_monthly": 0.1328
+     },
+     "mlp__raw__3m": {
+      "annualised_pct": 14.092,
+      "sharpe_monthly": 0.1666
+     },
+     "mlp__residual__3m": {
+      "annualised_pct": 2.522,
+      "sharpe_monthly": 0.0325
+     },
+     "lgbm_clf__3m": {
+      "annualised_pct": 18.942,
+      "sharpe_monthly": 0.3625
+     },
+     "NULL_shuffled__lgbm_raw__3m": {
+      "annualised_pct": -4.763,
+      "sharpe_monthly": -0.1152
+     }
+    },
+    "full_sample_champion": "lgbm_clf__3m",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.1429,
+     "n_partitions": 70,
+     "n_arms": 8,
+     "n_periods": 105,
+     "median_logit": 2.0794,
+     "verdict": "SELECTION_IS_STABLE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "ridge__raw__3m",
+      "ridge__residual__3m",
+      "lgbm__raw__3m",
+      "lgbm__residual__3m",
+      "mlp__raw__3m",
+      "mlp__residual__3m",
+      "lgbm_clf__3m",
+      "NULL_shuffled__lgbm_raw__3m"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 8.",
+     "pbo_minus_baseline": -0.3571,
+     "verdict_against_its_own_baseline": "BETTER THAN A COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 3,
+     "embargo_periods": 3,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.03702,
+      "q25": 0.1271,
+      "median": 0.17609,
+      "q75": 0.21404,
+      "max": 0.2856,
+      "mean": 0.17059,
+      "sd": 0.0714,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0373,
+      "median": 0.3139,
+      "max": 0.663
+     },
+     "in_sample_champion_counts": {
+      "lgbm_clf__3m": 14,
+      "ridge__raw__3m": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.4186,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.00667,
+       "oos_annualised": 0.08004,
+       "oos_sharpe": 0.2508,
+       "oos_terminal_wealth_of_the_excess_series": 1.2472
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.4129,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.008187,
+       "oos_annualised": 0.09825,
+       "oos_sharpe": 0.3139,
+       "oos_terminal_wealth_of_the_excess_series": 1.3051
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.4342,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.009663,
+       "oos_annualised": 0.11595,
+       "oos_sharpe": 0.2329,
+       "oos_terminal_wealth_of_the_excess_series": 1.3632
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.4178,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.011522,
+       "oos_annualised": 0.13826,
+       "oos_sharpe": 0.2219,
+       "oos_terminal_wealth_of_the_excess_series": 1.4148
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.2929,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.017758,
+       "oos_annualised": 0.2131,
+       "oos_sharpe": 0.5301,
+       "oos_terminal_wealth_of_the_excess_series": 1.8186
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.3441,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.011682,
+       "oos_annualised": 0.14018,
+       "oos_sharpe": 0.3941,
+       "oos_terminal_wealth_of_the_excess_series": 1.4799
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.3969,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.013019,
+       "oos_annualised": 0.15623,
+       "oos_sharpe": 0.3007,
+       "oos_terminal_wealth_of_the_excess_series": 1.5457
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.3764,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.014921,
+       "oos_annualised": 0.17905,
+       "oos_sharpe": 0.2814,
+       "oos_terminal_wealth_of_the_excess_series": 1.6042
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.2515,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.02089,
+       "oos_annualised": 0.25068,
+       "oos_sharpe": 0.5932,
+       "oos_terminal_wealth_of_the_excess_series": 2.0622
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.4371,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.014675,
+       "oos_annualised": 0.17609,
+       "oos_sharpe": 0.3401,
+       "oos_terminal_wealth_of_the_excess_series": 1.6175
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.3884,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.016681,
+       "oos_annualised": 0.20017,
+       "oos_sharpe": 0.3142,
+       "oos_terminal_wealth_of_the_excess_series": 1.6787
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.2246,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.02277,
+       "oos_annualised": 0.27324,
+       "oos_sharpe": 0.663,
+       "oos_terminal_wealth_of_the_excess_series": 2.1579
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.3719,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.017914,
+       "oos_annualised": 0.21497,
+       "oos_sharpe": 0.2916,
+       "oos_terminal_wealth_of_the_excess_series": 1.7534
+      },
+      {
+       "is_champion": "lgbm_clf__3m",
+       "is_sharpe": 0.2405,
+       "oos_months": 36,
+       "oos_mean_monthly": 0.0238,
+       "oos_annualised": 0.2856,
+       "oos_sharpe": 0.5144,
+       "oos_terminal_wealth_of_the_excess_series": 2.2539
+      },
+      {
+       "is_champion": "ridge__raw__3m",
+       "is_sharpe": 0.3495,
+       "oos_months": 35,
+       "oos_mean_monthly": 0.003085,
+       "oos_annualised": 0.03702,
+       "oos_sharpe": 0.0373,
+       "oos_terminal_wealth_of_the_excess_series": 0.9958
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "grid32_h6m_PRIMARY_paired_excess": {
+    "label": "the 8 v1 grid arms at h=6m",
+    "n_arms": 8,
+    "n_aligned_periods": 102,
+    "window": [
+     "2016-01",
+     "2024-06"
+    ],
+    "full_sample_leaderboard": {
+     "ridge__raw__6m": {
+      "annualised_pct": 14.938,
+      "sharpe_monthly": 0.2252
+     },
+     "ridge__residual__6m": {
+      "annualised_pct": 7.51,
+      "sharpe_monthly": 0.1063
+     },
+     "lgbm__raw__6m": {
+      "annualised_pct": 13.155,
+      "sharpe_monthly": 0.1542
+     },
+     "lgbm__residual__6m": {
+      "annualised_pct": 12.652,
+      "sharpe_monthly": 0.1601
+     },
+     "mlp__raw__6m": {
+      "annualised_pct": 8.129,
+      "sharpe_monthly": 0.1132
+     },
+     "mlp__residual__6m": {
+      "annualised_pct": 6.989,
+      "sharpe_monthly": 0.0857
+     },
+     "lgbm_clf__6m": {
+      "annualised_pct": 15.567,
+      "sharpe_monthly": 0.3663
+     },
+     "NULL_shuffled__lgbm_raw__6m": {
+      "annualised_pct": -4.608,
+      "sharpe_monthly": -0.1336
+     }
+    },
+    "full_sample_champion": "lgbm_clf__6m",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.1286,
+     "n_partitions": 70,
+     "n_arms": 8,
+     "n_periods": 102,
+     "median_logit": 2.0794,
+     "verdict": "SELECTION_IS_STABLE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "ridge__raw__6m",
+      "ridge__residual__6m",
+      "lgbm__raw__6m",
+      "lgbm__residual__6m",
+      "mlp__raw__6m",
+      "mlp__residual__6m",
+      "lgbm_clf__6m",
+      "NULL_shuffled__lgbm_raw__6m"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 8.",
+     "pbo_minus_baseline": -0.3714,
+     "verdict_against_its_own_baseline": "BETTER THAN A COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 6,
+     "embargo_periods": 6,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.04442,
+      "q25": 0.06406,
+      "median": 0.08369,
+      "q75": 0.0966,
+      "max": 0.21728,
+      "mean": 0.0922,
+      "sd": 0.04695,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0466,
+      "median": 0.2243,
+      "max": 0.3846
+     },
+     "in_sample_champion_counts": {
+      "lgbm_clf__6m": 10,
+      "ridge__raw__6m": 5
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.4445,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.004252,
+       "oos_annualised": 0.05103,
+       "oos_sharpe": 0.215,
+       "oos_terminal_wealth_of_the_excess_series": 1.1479
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.4216,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.005899,
+       "oos_annualised": 0.07079,
+       "oos_sharpe": 0.3104,
+       "oos_terminal_wealth_of_the_excess_series": 1.2143
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.4507,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.007251,
+       "oos_annualised": 0.08701,
+       "oos_sharpe": 0.2765,
+       "oos_terminal_wealth_of_the_excess_series": 1.2645
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.4059,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.003702,
+       "oos_annualised": 0.04442,
+       "oos_sharpe": 0.1296,
+       "oos_terminal_wealth_of_the_excess_series": 1.1188
+      },
+      {
+       "is_champion": "ridge__raw__6m",
+       "is_sharpe": 0.4872,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.00759,
+       "oos_annualised": 0.09108,
+       "oos_sharpe": 0.1115,
+       "oos_terminal_wealth_of_the_excess_series": 1.2037
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.3542,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.006974,
+       "oos_annualised": 0.08369,
+       "oos_sharpe": 0.3521,
+       "oos_terminal_wealth_of_the_excess_series": 1.2586
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.4371,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.008326,
+       "oos_annualised": 0.09991,
+       "oos_sharpe": 0.3112,
+       "oos_terminal_wealth_of_the_excess_series": 1.3106
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.3844,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.004777,
+       "oos_annualised": 0.05732,
+       "oos_sharpe": 0.1637,
+       "oos_terminal_wealth_of_the_excess_series": 1.1596
+      },
+      {
+       "is_champion": "ridge__raw__6m",
+       "is_sharpe": 0.5367,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.006182,
+       "oos_annualised": 0.07419,
+       "oos_sharpe": 0.0932,
+       "oos_terminal_wealth_of_the_excess_series": 1.1522
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.4293,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.009973,
+       "oos_annualised": 0.11967,
+       "oos_sharpe": 0.3846,
+       "oos_terminal_wealth_of_the_excess_series": 1.3864
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.3508,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.006423,
+       "oos_annualised": 0.07708,
+       "oos_sharpe": 0.2243,
+       "oos_terminal_wealth_of_the_excess_series": 1.2266
+      },
+      {
+       "is_champion": "ridge__raw__6m",
+       "is_sharpe": 0.2767,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.018107,
+       "oos_annualised": 0.21728,
+       "oos_sharpe": 0.2585,
+       "oos_terminal_wealth_of_the_excess_series": 1.7069
+      },
+      {
+       "is_champion": "lgbm_clf__6m",
+       "is_sharpe": 0.363,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.007775,
+       "oos_annualised": 0.0933,
+       "oos_sharpe": 0.2297,
+       "oos_terminal_wealth_of_the_excess_series": 1.2773
+      },
+      {
+       "is_champion": "ridge__raw__6m",
+       "is_sharpe": 0.288,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.014142,
+       "oos_annualised": 0.1697,
+       "oos_sharpe": 0.1993,
+       "oos_terminal_wealth_of_the_excess_series": 1.4915
+      },
+      {
+       "is_champion": "ridge__raw__6m",
+       "is_sharpe": 0.4737,
+       "oos_months": 34,
+       "oos_mean_monthly": 0.003872,
+       "oos_annualised": 0.04646,
+       "oos_sharpe": 0.0466,
+       "oos_terminal_wealth_of_the_excess_series": 1.0245
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "grid32_h12m_PRIMARY_paired_excess": {
+    "label": "the 8 v1 grid arms at h=12m",
+    "n_arms": 8,
+    "n_aligned_periods": 96,
+    "window": [
+     "2016-01",
+     "2023-12"
+    ],
+    "full_sample_leaderboard": {
+     "ridge__raw__12m": {
+      "annualised_pct": 12.04,
+      "sharpe_monthly": 0.1914
+     },
+     "ridge__residual__12m": {
+      "annualised_pct": 8.789,
+      "sharpe_monthly": 0.1382
+     },
+     "lgbm__raw__12m": {
+      "annualised_pct": 18.914,
+      "sharpe_monthly": 0.2961
+     },
+     "lgbm__residual__12m": {
+      "annualised_pct": 18.852,
+      "sharpe_monthly": 0.3024
+     },
+     "mlp__raw__12m": {
+      "annualised_pct": 3.579,
+      "sharpe_monthly": 0.0535
+     },
+     "mlp__residual__12m": {
+      "annualised_pct": -10.521,
+      "sharpe_monthly": -0.1807
+     },
+     "lgbm_clf__12m": {
+      "annualised_pct": 4.554,
+      "sharpe_monthly": 0.1399
+     },
+     "NULL_shuffled__lgbm_raw__12m": {
+      "annualised_pct": 3.535,
+      "sharpe_monthly": 0.1147
+     }
+    },
+    "full_sample_champion": "lgbm__residual__12m",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.4857,
+     "n_partitions": 70,
+     "n_arms": 8,
+     "n_periods": 96,
+     "median_logit": 0.2231,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "ridge__raw__12m",
+      "ridge__residual__12m",
+      "lgbm__raw__12m",
+      "lgbm__residual__12m",
+      "mlp__raw__12m",
+      "mlp__residual__12m",
+      "lgbm_clf__12m",
+      "NULL_shuffled__lgbm_raw__12m"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 8.",
+     "pbo_minus_baseline": -0.0143,
+     "verdict_against_its_own_baseline": "AT THE COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 12,
+     "embargo_periods": 12,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": -0.03231,
+      "q25": 0.01229,
+      "median": 0.022,
+      "q75": 0.0891,
+      "max": 0.22699,
+      "mean": 0.06271,
+      "sd": 0.08045,
+      "share_of_paths_negative": 0.1333
+     },
+     "oos_sharpe_distribution": {
+      "min": -0.0926,
+      "median": 0.0652,
+      "max": 0.4001
+     },
+     "in_sample_champion_counts": {
+      "lgbm_clf__12m": 7,
+      "lgbm__residual__12m": 4,
+      "lgbm__raw__12m": 3,
+      "ridge__raw__12m": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "lgbm__raw__12m",
+       "is_sharpe": 0.3435,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.014091,
+       "oos_annualised": 0.16909,
+       "oos_sharpe": 0.3133,
+       "oos_terminal_wealth_of_the_excess_series": 1.5168
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.327,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.000876,
+       "oos_annualised": 0.01051,
+       "oos_sharpe": 0.0441,
+       "oos_terminal_wealth_of_the_excess_series": 1.0221
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.4387,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.00039,
+       "oos_annualised": 0.00468,
+       "oos_sharpe": 0.0144,
+       "oos_terminal_wealth_of_the_excess_series": 1.0009
+      },
+      {
+       "is_champion": "lgbm__raw__12m",
+       "is_sharpe": 0.4062,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.008452,
+       "oos_annualised": 0.10142,
+       "oos_sharpe": 0.1615,
+       "oos_terminal_wealth_of_the_excess_series": 1.2551
+      },
+      {
+       "is_champion": "lgbm__raw__12m",
+       "is_sharpe": 0.5866,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.004409,
+       "oos_annualised": 0.05291,
+       "oos_sharpe": 0.0664,
+       "oos_terminal_wealth_of_the_excess_series": 1.0784
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.2669,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.001657,
+       "oos_annualised": 0.01988,
+       "oos_sharpe": 0.0817,
+       "oos_terminal_wealth_of_the_excess_series": 1.0477
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.3874,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.001171,
+       "oos_annualised": 0.01406,
+       "oos_sharpe": 0.0426,
+       "oos_terminal_wealth_of_the_excess_series": 1.026
+      },
+      {
+       "is_champion": "lgbm__residual__12m",
+       "is_sharpe": 0.4377,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.017588,
+       "oos_annualised": 0.21106,
+       "oos_sharpe": 0.4001,
+       "oos_terminal_wealth_of_the_excess_series": 1.6969
+      },
+      {
+       "is_champion": "lgbm__residual__12m",
+       "is_sharpe": 0.6929,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.006399,
+       "oos_annualised": 0.07678,
+       "oos_sharpe": 0.1096,
+       "oos_terminal_wealth_of_the_excess_series": 1.1649
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.3626,
+       "oos_months": 32,
+       "oos_mean_monthly": -0.002693,
+       "oos_annualised": -0.03231,
+       "oos_sharpe": -0.0926,
+       "oos_terminal_wealth_of_the_excess_series": 0.9052
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.358,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.001833,
+       "oos_annualised": 0.022,
+       "oos_sharpe": 0.0652,
+       "oos_terminal_wealth_of_the_excess_series": 1.0475
+      },
+      {
+       "is_champion": "lgbm__residual__12m",
+       "is_sharpe": 0.4185,
+       "oos_months": 32,
+       "oos_mean_monthly": -0.000855,
+       "oos_annualised": -0.01026,
+       "oos_sharpe": -0.0141,
+       "oos_terminal_wealth_of_the_excess_series": 0.9196
+      },
+      {
+       "is_champion": "lgbm_clf__12m",
+       "is_sharpe": 0.3543,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.001348,
+       "oos_annualised": 0.01617,
+       "oos_sharpe": 0.04,
+       "oos_terminal_wealth_of_the_excess_series": 1.0258
+      },
+      {
+       "is_champion": "lgbm__residual__12m",
+       "is_sharpe": 0.3642,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.018916,
+       "oos_annualised": 0.22699,
+       "oos_sharpe": 0.2795,
+       "oos_terminal_wealth_of_the_excess_series": 1.7022
+      },
+      {
+       "is_champion": "ridge__raw__12m",
+       "is_sharpe": 0.4811,
+       "oos_months": 32,
+       "oos_mean_monthly": 0.004804,
+       "oos_annualised": 0.05765,
+       "oos_sharpe": 0.0589,
+       "oos_terminal_wealth_of_the_excess_series": 1.0564
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   }
+  },
+  "grid_32_definition": {
+   "stems": [
+    "ridge__raw",
+    "ridge__residual",
+    "lgbm__raw",
+    "lgbm__residual",
+    "mlp__raw",
+    "mlp__residual",
+    "lgbm_clf",
+    "NULL_shuffled__lgbm_raw"
+   ],
+   "horizons": [
+    1,
+    3,
+    6,
+    12
+   ],
+   "cells_expected": 32,
+   "cells_found": 32,
+   "note": "the mandate names a '32-cell learner grid'. This is it, spelled out: 8 v1 stems x 4 horizons. The NULL arm is inside the family on purpose."
+  },
+  "POOLED_grid32_PRIMARY_paired_excess": {
+   "label": "all 32 learner cells pooled",
+   "n_arms": 32,
+   "n_aligned_periods": 96,
+   "window": [
+    "2016-01",
+    "2023-12"
+   ],
+   "full_sample_leaderboard": {
+    "ridge__raw__1m": {
+     "annualised_pct": 6.532,
+     "sharpe_monthly": 0.093
+    },
+    "ridge__residual__1m": {
+     "annualised_pct": 3.241,
+     "sharpe_monthly": 0.0494
+    },
+    "lgbm__raw__1m": {
+     "annualised_pct": 23.341,
+     "sharpe_monthly": 0.1775
+    },
+    "lgbm__residual__1m": {
+     "annualised_pct": 9.769,
+     "sharpe_monthly": 0.0959
+    },
+    "mlp__raw__1m": {
+     "annualised_pct": 11.887,
+     "sharpe_monthly": 0.1239
+    },
+    "mlp__residual__1m": {
+     "annualised_pct": 9.155,
+     "sharpe_monthly": 0.0898
+    },
+    "lgbm_clf__1m": {
+     "annualised_pct": 8.053,
+     "sharpe_monthly": 0.1578
+    },
+    "NULL_shuffled__lgbm_raw__1m": {
+     "annualised_pct": 2.864,
+     "sharpe_monthly": 0.0506
+    },
+    "ridge__raw__3m": {
+     "annualised_pct": 9.194,
+     "sharpe_monthly": 0.1396
+    },
+    "ridge__residual__3m": {
+     "annualised_pct": 4.146,
+     "sharpe_monthly": 0.0707
+    },
+    "lgbm__raw__3m": {
+     "annualised_pct": 14.081,
+     "sharpe_monthly": 0.14
+    },
+    "lgbm__residual__3m": {
+     "annualised_pct": 11.242,
+     "sharpe_monthly": 0.1321
+    },
+    "mlp__raw__3m": {
+     "annualised_pct": 13.186,
+     "sharpe_monthly": 0.1531
+    },
+    "mlp__residual__3m": {
+     "annualised_pct": 5.278,
+     "sharpe_monthly": 0.0673
+    },
+    "lgbm_clf__3m": {
+     "annualised_pct": 17.804,
+     "sharpe_monthly": 0.336
+    },
+    "NULL_shuffled__lgbm_raw__3m": {
+     "annualised_pct": -2.726,
+     "sharpe_monthly": -0.0688
+    },
+    "ridge__raw__6m": {
+     "annualised_pct": 16.041,
+     "sharpe_monthly": 0.2395
+    },
+    "ridge__residual__6m": {
+     "annualised_pct": 7.483,
+     "sharpe_monthly": 0.1065
+    },
+    "lgbm__raw__6m": {
+     "annualised_pct": 9.849,
+     "sharpe_monthly": 0.1232
+    },
+    "lgbm__residual__6m": {
+     "annualised_pct": 8.451,
+     "sharpe_monthly": 0.1181
+    },
+    "mlp__raw__6m": {
+     "annualised_pct": 8.638,
+     "sharpe_monthly": 0.1194
+    },
+    "mlp__residual__6m": {
+     "annualised_pct": 6.923,
+     "sharpe_monthly": 0.0881
+    },
+    "lgbm_clf__6m": {
+     "annualised_pct": 11.666,
+     "sharpe_monthly": 0.3416
+    },
+    "NULL_shuffled__lgbm_raw__6m": {
+     "annualised_pct": -3.44,
+     "sharpe_monthly": -0.1008
+    },
+    "ridge__raw__12m": {
+     "annualised_pct": 12.04,
+     "sharpe_monthly": 0.1914
+    },
+    "ridge__residual__12m": {
+     "annualised_pct": 8.789,
+     "sharpe_monthly": 0.1382
+    },
+    "lgbm__raw__12m": {
+     "annualised_pct": 18.914,
+     "sharpe_monthly": 0.2961
+    },
+    "lgbm__residual__12m": {
+     "annualised_pct": 18.852,
+     "sharpe_monthly": 0.3024
+    },
+    "mlp__raw__12m": {
+     "annualised_pct": 3.579,
+     "sharpe_monthly": 0.0535
+    },
+    "mlp__residual__12m": {
+     "annualised_pct": -10.521,
+     "sharpe_monthly": -0.1807
+    },
+    "lgbm_clf__12m": {
+     "annualised_pct": 4.554,
+     "sharpe_monthly": 0.1399
+    },
+    "NULL_shuffled__lgbm_raw__12m": {
+     "annualised_pct": 3.535,
+     "sharpe_monthly": 0.1147
+    }
+   },
+   "full_sample_champion": "lgbm_clf__6m",
+   "full_sample_champion_is_a_NULL": false,
+   "pbo": {
+    "pbo": 0.0143,
+    "n_partitions": 70,
+    "n_arms": 32,
+    "n_periods": 96,
+    "median_logit": 1.1394,
+    "verdict": "SELECTION_IS_STABLE",
+    "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+    "arms": [
+     "ridge__raw__1m",
+     "ridge__residual__1m",
+     "lgbm__raw__1m",
+     "lgbm__residual__1m",
+     "mlp__raw__1m",
+     "mlp__residual__1m",
+     "lgbm_clf__1m",
+     "NULL_shuffled__lgbm_raw__1m",
+     "ridge__raw__3m",
+     "ridge__residual__3m",
+     "lgbm__raw__3m",
+     "lgbm__residual__3m",
+     "mlp__raw__3m",
+     "mlp__residual__3m",
+     "lgbm_clf__3m",
+     "NULL_shuffled__lgbm_raw__3m",
+     "ridge__raw__6m",
+     "ridge__residual__6m",
+     "lgbm__raw__6m",
+     "lgbm__residual__6m",
+     "mlp__raw__6m",
+     "mlp__residual__6m",
+     "lgbm_clf__6m",
+     "NULL_shuffled__lgbm_raw__6m",
+     "ridge__raw__12m",
+     "ridge__residual__12m",
+     "lgbm__raw__12m",
+     "lgbm__residual__12m",
+     "mlp__raw__12m",
+     "mlp__residual__12m",
+     "lgbm_clf__12m",
+     "NULL_shuffled__lgbm_raw__12m"
+    ],
+    "n_splits_requested": 8,
+    "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+    "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 32.",
+    "pbo_minus_baseline": -0.4857,
+    "verdict_against_its_own_baseline": "BETTER THAN A COIN FLIP"
+   },
+   "cpcv_path_distribution": {
+    "n_partitions": 15,
+    "n_groups": 6,
+    "k_test": 2,
+    "purge_periods": 12,
+    "embargo_periods": 12,
+    "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+    "oos_annualised_distribution": {
+     "min": -0.11646,
+     "q25": 0.05134,
+     "median": 0.06438,
+     "q75": 0.10951,
+     "max": 0.22699,
+     "mean": 0.075,
+     "sd": 0.0844,
+     "share_of_paths_negative": 0.1333
+    },
+    "oos_sharpe_distribution": {
+     "min": -0.1051,
+     "median": 0.2201,
+     "max": 0.3771
+    },
+    "in_sample_champion_counts": {
+     "lgbm_clf__6m": 6,
+     "lgbm__residual__12m": 3,
+     "ridge__raw__6m": 2,
+     "lgbm_clf__3m": 2,
+     "mlp__raw__1m": 1,
+     "lgbm_clf__12m": 1
+    },
+    "champion_is_the_same_arm_in_every_partition": false,
+    "share_of_partitions_won_by_a_NULL_arm": 0.0,
+    "paths": [
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.4104,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004748,
+      "oos_annualised": 0.05698,
+      "oos_sharpe": 0.2403,
+      "oos_terminal_wealth_of_the_excess_series": 1.1568
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.4179,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004578,
+      "oos_annualised": 0.05493,
+      "oos_sharpe": 0.2813,
+      "oos_terminal_wealth_of_the_excess_series": 1.1527
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.5918,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.009319,
+      "oos_annualised": 0.11183,
+      "oos_sharpe": 0.3412,
+      "oos_terminal_wealth_of_the_excess_series": 1.3307
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.4695,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.005748,
+      "oos_annualised": 0.06898,
+      "oos_sharpe": 0.2201,
+      "oos_terminal_wealth_of_the_excess_series": 1.1887
+     },
+     {
+      "is_champion": "ridge__raw__6m",
+      "is_sharpe": 0.6351,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004362,
+      "oos_annualised": 0.05235,
+      "oos_sharpe": 0.0584,
+      "oos_terminal_wealth_of_the_excess_series": 1.0585
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.3749,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004194,
+      "oos_annualised": 0.05033,
+      "oos_sharpe": 0.2259,
+      "oos_terminal_wealth_of_the_excess_series": 1.1373
+     },
+     {
+      "is_champion": "lgbm_clf__3m",
+      "is_sharpe": 0.6674,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.017677,
+      "oos_annualised": 0.21212,
+      "oos_sharpe": 0.3771,
+      "oos_terminal_wealth_of_the_excess_series": 1.6981
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.5713,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.005365,
+      "oos_annualised": 0.06438,
+      "oos_sharpe": 0.1942,
+      "oos_terminal_wealth_of_the_excess_series": 1.1728
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.6929,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.006399,
+      "oos_annualised": 0.07678,
+      "oos_sharpe": 0.1096,
+      "oos_terminal_wealth_of_the_excess_series": 1.1649
+     },
+     {
+      "is_champion": "lgbm_clf__3m",
+      "is_sharpe": 0.5228,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.012722,
+      "oos_annualised": 0.15267,
+      "oos_sharpe": 0.2776,
+      "oos_terminal_wealth_of_the_excess_series": 1.4544
+     },
+     {
+      "is_champion": "mlp__raw__1m",
+      "is_sharpe": 0.4175,
+      "oos_months": 32,
+      "oos_mean_monthly": -0.009705,
+      "oos_annualised": -0.11646,
+      "oos_sharpe": -0.1051,
+      "oos_terminal_wealth_of_the_excess_series": 0.6421
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.4185,
+      "oos_months": 32,
+      "oos_mean_monthly": -0.000855,
+      "oos_annualised": -0.01026,
+      "oos_sharpe": -0.0141,
+      "oos_terminal_wealth_of_the_excess_series": 0.9196
+     },
+     {
+      "is_champion": "lgbm_clf__12m",
+      "is_sharpe": 0.3543,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.001348,
+      "oos_annualised": 0.01617,
+      "oos_sharpe": 0.04,
+      "oos_terminal_wealth_of_the_excess_series": 1.0258
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.3642,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.018916,
+      "oos_annualised": 0.22699,
+      "oos_sharpe": 0.2795,
+      "oos_terminal_wealth_of_the_excess_series": 1.7022
+     },
+     {
+      "is_champion": "ridge__raw__6m",
+      "is_sharpe": 0.4945,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.008932,
+      "oos_annualised": 0.10719,
+      "oos_sharpe": 0.1057,
+      "oos_terminal_wealth_of_the_excess_series": 1.1979
+     }
+    ],
+    "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+   }
+  },
+  "POOLED_grid32_SECONDARY_net": {
+   "label": "all 32 learner cells pooled, on NET not excess",
+   "n_arms": 32,
+   "n_aligned_periods": 96,
+   "window": [
+    "2016-01",
+    "2023-12"
+   ],
+   "full_sample_leaderboard": {
+    "ridge__raw__1m": {
+     "annualised_pct": 24.925,
+     "sharpe_monthly": 0.2301
+    },
+    "ridge__residual__1m": {
+     "annualised_pct": 21.635,
+     "sharpe_monthly": 0.2154
+    },
+    "lgbm__raw__1m": {
+     "annualised_pct": 41.734,
+     "sharpe_monthly": 0.251
+    },
+    "lgbm__residual__1m": {
+     "annualised_pct": 28.163,
+     "sharpe_monthly": 0.1997
+    },
+    "mlp__raw__1m": {
+     "annualised_pct": 30.281,
+     "sharpe_monthly": 0.2324
+    },
+    "mlp__residual__1m": {
+     "annualised_pct": 27.549,
+     "sharpe_monthly": 0.1877
+    },
+    "lgbm_clf__1m": {
+     "annualised_pct": 26.447,
+     "sharpe_monthly": 0.2996
+    },
+    "NULL_shuffled__lgbm_raw__1m": {
+     "annualised_pct": 21.257,
+     "sharpe_monthly": 0.2165
+    },
+    "ridge__raw__3m": {
+     "annualised_pct": 27.587,
+     "sharpe_monthly": 0.2558
+    },
+    "ridge__residual__3m": {
+     "annualised_pct": 22.539,
+     "sharpe_monthly": 0.2344
+    },
+    "lgbm__raw__3m": {
+     "annualised_pct": 32.474,
+     "sharpe_monthly": 0.2352
+    },
+    "lgbm__residual__3m": {
+     "annualised_pct": 29.636,
+     "sharpe_monthly": 0.2346
+    },
+    "mlp__raw__3m": {
+     "annualised_pct": 31.58,
+     "sharpe_monthly": 0.2455
+    },
+    "mlp__residual__3m": {
+     "annualised_pct": 23.671,
+     "sharpe_monthly": 0.1904
+    },
+    "lgbm_clf__3m": {
+     "annualised_pct": 36.197,
+     "sharpe_monthly": 0.3921
+    },
+    "NULL_shuffled__lgbm_raw__3m": {
+     "annualised_pct": 15.667,
+     "sharpe_monthly": 0.2039
+    },
+    "ridge__raw__6m": {
+     "annualised_pct": 34.434,
+     "sharpe_monthly": 0.3172
+    },
+    "ridge__residual__6m": {
+     "annualised_pct": 25.877,
+     "sharpe_monthly": 0.2396
+    },
+    "lgbm__raw__6m": {
+     "annualised_pct": 28.242,
+     "sharpe_monthly": 0.2319
+    },
+    "lgbm__residual__6m": {
+     "annualised_pct": 26.845,
+     "sharpe_monthly": 0.233
+    },
+    "mlp__raw__6m": {
+     "annualised_pct": 27.032,
+     "sharpe_monthly": 0.237
+    },
+    "mlp__residual__6m": {
+     "annualised_pct": 25.316,
+     "sharpe_monthly": 0.2118
+    },
+    "lgbm_clf__6m": {
+     "annualised_pct": 30.059,
+     "sharpe_monthly": 0.3944
+    },
+    "NULL_shuffled__lgbm_raw__6m": {
+     "annualised_pct": 14.954,
+     "sharpe_monthly": 0.1845
+    },
+    "ridge__raw__12m": {
+     "annualised_pct": 30.434,
+     "sharpe_monthly": 0.3009
+    },
+    "ridge__residual__12m": {
+     "annualised_pct": 27.182,
+     "sharpe_monthly": 0.2847
+    },
+    "lgbm__raw__12m": {
+     "annualised_pct": 37.308,
+     "sharpe_monthly": 0.3577
+    },
+    "lgbm__residual__12m": {
+     "annualised_pct": 37.245,
+     "sharpe_monthly": 0.3658
+    },
+    "mlp__raw__12m": {
+     "annualised_pct": 21.973,
+     "sharpe_monthly": 0.2105
+    },
+    "mlp__residual__12m": {
+     "annualised_pct": 7.873,
+     "sharpe_monthly": 0.0829
+    },
+    "lgbm_clf__12m": {
+     "annualised_pct": 22.947,
+     "sharpe_monthly": 0.2993
+    },
+    "NULL_shuffled__lgbm_raw__12m": {
+     "annualised_pct": 21.929,
+     "sharpe_monthly": 0.2822
+    }
+   },
+   "full_sample_champion": "lgbm_clf__6m",
+   "full_sample_champion_is_a_NULL": false,
+   "pbo": {
+    "pbo": 0.0429,
+    "n_partitions": 70,
+    "n_arms": 32,
+    "n_periods": 96,
+    "median_logit": 1.1394,
+    "verdict": "SELECTION_IS_STABLE",
+    "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+    "arms": [
+     "ridge__raw__1m",
+     "ridge__residual__1m",
+     "lgbm__raw__1m",
+     "lgbm__residual__1m",
+     "mlp__raw__1m",
+     "mlp__residual__1m",
+     "lgbm_clf__1m",
+     "NULL_shuffled__lgbm_raw__1m",
+     "ridge__raw__3m",
+     "ridge__residual__3m",
+     "lgbm__raw__3m",
+     "lgbm__residual__3m",
+     "mlp__raw__3m",
+     "mlp__residual__3m",
+     "lgbm_clf__3m",
+     "NULL_shuffled__lgbm_raw__3m",
+     "ridge__raw__6m",
+     "ridge__residual__6m",
+     "lgbm__raw__6m",
+     "lgbm__residual__6m",
+     "mlp__raw__6m",
+     "mlp__residual__6m",
+     "lgbm_clf__6m",
+     "NULL_shuffled__lgbm_raw__6m",
+     "ridge__raw__12m",
+     "ridge__residual__12m",
+     "lgbm__raw__12m",
+     "lgbm__residual__12m",
+     "mlp__raw__12m",
+     "mlp__residual__12m",
+     "lgbm_clf__12m",
+     "NULL_shuffled__lgbm_raw__12m"
+    ],
+    "n_splits_requested": 8,
+    "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+    "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 32.",
+    "pbo_minus_baseline": -0.4571,
+    "verdict_against_its_own_baseline": "BETTER THAN A COIN FLIP"
+   },
+   "cpcv_path_distribution": {
+    "n_partitions": 15,
+    "n_groups": 6,
+    "k_test": 2,
+    "purge_periods": 12,
+    "embargo_periods": 12,
+    "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+    "oos_annualised_distribution": {
+     "min": 0.13286,
+     "q25": 0.21512,
+     "median": 0.25831,
+     "q75": 0.30959,
+     "max": 0.4323,
+     "mean": 0.26162,
+     "sd": 0.07716,
+     "share_of_paths_negative": 0.0
+    },
+    "oos_sharpe_distribution": {
+     "min": 0.1343,
+     "median": 0.3183,
+     "max": 0.8992
+    },
+    "in_sample_champion_counts": {
+     "lgbm_clf__6m": 4,
+     "lgbm__residual__12m": 4,
+     "lgbm_clf__12m": 3,
+     "lgbm_clf__3m": 2,
+     "lgbm__raw__12m": 1,
+     "mlp__raw__12m": 1
+    },
+    "champion_is_the_same_arm_in_every_partition": false,
+    "share_of_partitions_won_by_a_NULL_arm": 0.0,
+    "paths": [
+     {
+      "is_champion": "lgbm_clf__3m",
+      "is_sharpe": 0.3869,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.025489,
+      "oos_annualised": 0.30587,
+      "oos_sharpe": 0.8992,
+      "oos_terminal_wealth_of_the_excess_series": 2.2115
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.3926,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.020084,
+      "oos_annualised": 0.24101,
+      "oos_sharpe": 0.4975,
+      "oos_terminal_wealth_of_the_excess_series": 1.8434
+     },
+     {
+      "is_champion": "lgbm_clf__3m",
+      "is_sharpe": 0.4456,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.036025,
+      "oos_annualised": 0.4323,
+      "oos_sharpe": 0.4123,
+      "oos_terminal_wealth_of_the_excess_series": 2.7697
+     },
+     {
+      "is_champion": "lgbm__raw__12m",
+      "is_sharpe": 0.3266,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.021963,
+      "oos_annualised": 0.26355,
+      "oos_sharpe": 0.2758,
+      "oos_terminal_wealth_of_the_excess_series": 1.8246
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.4751,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.019575,
+      "oos_annualised": 0.23489,
+      "oos_sharpe": 0.2537,
+      "oos_terminal_wealth_of_the_excess_series": 1.7026
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.4091,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.017212,
+      "oos_annualised": 0.20654,
+      "oos_sharpe": 0.4359,
+      "oos_terminal_wealth_of_the_excess_series": 1.686
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.6317,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.028064,
+      "oos_annualised": 0.33677,
+      "oos_sharpe": 0.3705,
+      "oos_terminal_wealth_of_the_excess_series": 2.2113
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.3971,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.028611,
+      "oos_annualised": 0.34333,
+      "oos_sharpe": 0.3972,
+      "oos_terminal_wealth_of_the_excess_series": 2.2847
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.618,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.021526,
+      "oos_annualised": 0.25831,
+      "oos_sharpe": 0.2785,
+      "oos_terminal_wealth_of_the_excess_series": 1.8095
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.6107,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.02611,
+      "oos_annualised": 0.31332,
+      "oos_sharpe": 0.3183,
+      "oos_terminal_wealth_of_the_excess_series": 2.0492
+     },
+     {
+      "is_champion": "lgbm_clf__12m",
+      "is_sharpe": 0.9328,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.011072,
+      "oos_annualised": 0.13286,
+      "oos_sharpe": 0.1639,
+      "oos_terminal_wealth_of_the_excess_series": 1.3287
+     },
+     {
+      "is_champion": "lgbm_clf__12m",
+      "is_sharpe": 0.9032,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.018641,
+      "oos_annualised": 0.2237,
+      "oos_sharpe": 0.3434,
+      "oos_terminal_wealth_of_the_excess_series": 1.7279
+     },
+     {
+      "is_champion": "lgbm_clf__12m",
+      "is_sharpe": 0.55,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.016697,
+      "oos_annualised": 0.20037,
+      "oos_sharpe": 0.1754,
+      "oos_terminal_wealth_of_the_excess_series": 1.457
+     },
+     {
+      "is_champion": "mlp__raw__12m",
+      "is_sharpe": 0.599,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.022939,
+      "oos_annualised": 0.27527,
+      "oos_sharpe": 0.1783,
+      "oos_terminal_wealth_of_the_excess_series": 1.5855
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.4289,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.013016,
+      "oos_annualised": 0.15619,
+      "oos_sharpe": 0.1343,
+      "oos_terminal_wealth_of_the_excess_series": 1.3163
+     }
+    ],
+    "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+   }
+  },
+  "pooled_purge_note": "the pooled family contains a 12-month arm, so purge and embargo are 12 for the pooled block and h for each per-horizon block. Quoting one purge for both would leak a year of labels into the 12m arms' training months.",
+  "POOLED_full_family_PRIMARY_paired_excess": {
+   "label": "every graded v2 cell (72)",
+   "n_arms": 72,
+   "n_aligned_periods": 96,
+   "window": [
+    "2016-01",
+    "2023-12"
+   ],
+   "full_sample_leaderboard": {
+    "constant__1m": {
+     "annualised_pct": -3.34,
+     "sharpe_monthly": -0.0757
+    },
+    "prior__1m": {
+     "annualised_pct": 3.741,
+     "sharpe_monthly": 0.0397
+    },
+    "rank_upside__1m": {
+     "annualised_pct": -61.957,
+     "sharpe_monthly": -0.5179
+    },
+    "rank_consensus__1m": {
+     "annualised_pct": -6.05,
+     "sharpe_monthly": -0.1205
+    },
+    "random_rank__1m": {
+     "annualised_pct": -0.971,
+     "sharpe_monthly": -0.0279
+    },
+    "ridge__raw__1m": {
+     "annualised_pct": 6.532,
+     "sharpe_monthly": 0.093
+    },
+    "ridge__residual__1m": {
+     "annualised_pct": 3.241,
+     "sharpe_monthly": 0.0494
+    },
+    "lgbm__raw__1m": {
+     "annualised_pct": 23.341,
+     "sharpe_monthly": 0.1775
+    },
+    "lgbm__residual__1m": {
+     "annualised_pct": 9.769,
+     "sharpe_monthly": 0.0959
+    },
+    "mlp__raw__1m": {
+     "annualised_pct": 11.887,
+     "sharpe_monthly": 0.1239
+    },
+    "mlp__residual__1m": {
+     "annualised_pct": 9.155,
+     "sharpe_monthly": 0.0898
+    },
+    "lgbm_clf__1m": {
+     "annualised_pct": 8.053,
+     "sharpe_monthly": 0.1578
+    },
+    "NULL_shuffled__lgbm_raw__1m": {
+     "annualised_pct": 2.864,
+     "sharpe_monthly": 0.0506
+    },
+    "encoder__raw__1m": {
+     "annualised_pct": 22.051,
+     "sharpe_monthly": 0.1934
+    },
+    "encoder_clf__raw__1m": {
+     "annualised_pct": 12.656,
+     "sharpe_monthly": 0.1588
+    },
+    "encoder__residual__1m": {
+     "annualised_pct": 15.554,
+     "sharpe_monthly": 0.1611
+    },
+    "encoder_clf__residual__1m": {
+     "annualised_pct": 12.867,
+     "sharpe_monthly": 0.2101
+    },
+    "NULL_shuffled__encoder_raw__1m": {
+     "annualised_pct": 1.892,
+     "sharpe_monthly": 0.0223
+    },
+    "constant__3m": {
+     "annualised_pct": -2.416,
+     "sharpe_monthly": -0.0586
+    },
+    "prior__3m": {
+     "annualised_pct": 4.683,
+     "sharpe_monthly": 0.0559
+    },
+    "rank_upside__3m": {
+     "annualised_pct": -61.766,
+     "sharpe_monthly": -0.5815
+    },
+    "rank_consensus__3m": {
+     "annualised_pct": -2.499,
+     "sharpe_monthly": -0.0494
+    },
+    "random_rank__3m": {
+     "annualised_pct": 0.836,
+     "sharpe_monthly": 0.043
+    },
+    "ridge__raw__3m": {
+     "annualised_pct": 9.194,
+     "sharpe_monthly": 0.1396
+    },
+    "ridge__residual__3m": {
+     "annualised_pct": 4.146,
+     "sharpe_monthly": 0.0707
+    },
+    "lgbm__raw__3m": {
+     "annualised_pct": 14.081,
+     "sharpe_monthly": 0.14
+    },
+    "lgbm__residual__3m": {
+     "annualised_pct": 11.242,
+     "sharpe_monthly": 0.1321
+    },
+    "mlp__raw__3m": {
+     "annualised_pct": 13.186,
+     "sharpe_monthly": 0.1531
+    },
+    "mlp__residual__3m": {
+     "annualised_pct": 5.278,
+     "sharpe_monthly": 0.0673
+    },
+    "lgbm_clf__3m": {
+     "annualised_pct": 17.804,
+     "sharpe_monthly": 0.336
+    },
+    "NULL_shuffled__lgbm_raw__3m": {
+     "annualised_pct": -2.726,
+     "sharpe_monthly": -0.0688
+    },
+    "encoder__raw__3m": {
+     "annualised_pct": 15.559,
+     "sharpe_monthly": 0.171
+    },
+    "encoder_clf__raw__3m": {
+     "annualised_pct": 12.403,
+     "sharpe_monthly": 0.1685
+    },
+    "encoder__residual__3m": {
+     "annualised_pct": 12.263,
+     "sharpe_monthly": 0.1314
+    },
+    "encoder_clf__residual__3m": {
+     "annualised_pct": 14.179,
+     "sharpe_monthly": 0.2859
+    },
+    "NULL_shuffled__encoder_raw__3m": {
+     "annualised_pct": 12.486,
+     "sharpe_monthly": 0.2254
+    },
+    "constant__6m": {
+     "annualised_pct": -2.013,
+     "sharpe_monthly": -0.0555
+    },
+    "prior__6m": {
+     "annualised_pct": 1.637,
+     "sharpe_monthly": 0.0227
+    },
+    "rank_upside__6m": {
+     "annualised_pct": -61.798,
+     "sharpe_monthly": -0.6089
+    },
+    "rank_consensus__6m": {
+     "annualised_pct": -4.086,
+     "sharpe_monthly": -0.0881
+    },
+    "random_rank__6m": {
+     "annualised_pct": -0.743,
+     "sharpe_monthly": -0.048
+    },
+    "ridge__raw__6m": {
+     "annualised_pct": 16.041,
+     "sharpe_monthly": 0.2395
+    },
+    "ridge__residual__6m": {
+     "annualised_pct": 7.483,
+     "sharpe_monthly": 0.1065
+    },
+    "lgbm__raw__6m": {
+     "annualised_pct": 9.849,
+     "sharpe_monthly": 0.1232
+    },
+    "lgbm__residual__6m": {
+     "annualised_pct": 8.451,
+     "sharpe_monthly": 0.1181
+    },
+    "mlp__raw__6m": {
+     "annualised_pct": 8.638,
+     "sharpe_monthly": 0.1194
+    },
+    "mlp__residual__6m": {
+     "annualised_pct": 6.923,
+     "sharpe_monthly": 0.0881
+    },
+    "lgbm_clf__6m": {
+     "annualised_pct": 11.666,
+     "sharpe_monthly": 0.3416
+    },
+    "NULL_shuffled__lgbm_raw__6m": {
+     "annualised_pct": -3.44,
+     "sharpe_monthly": -0.1008
+    },
+    "encoder__raw__6m": {
+     "annualised_pct": 19.911,
+     "sharpe_monthly": 0.2349
+    },
+    "encoder_clf__raw__6m": {
+     "annualised_pct": 12.707,
+     "sharpe_monthly": 0.1907
+    },
+    "encoder__residual__6m": {
+     "annualised_pct": 17.729,
+     "sharpe_monthly": 0.2027
+    },
+    "encoder_clf__residual__6m": {
+     "annualised_pct": 6.885,
+     "sharpe_monthly": 0.146
+    },
+    "NULL_shuffled__encoder_raw__6m": {
+     "annualised_pct": 9.89,
+     "sharpe_monthly": 0.1741
+    },
+    "constant__12m": {
+     "annualised_pct": -2.788,
+     "sharpe_monthly": -0.0855
+    },
+    "prior__12m": {
+     "annualised_pct": -2.172,
+     "sharpe_monthly": -0.0368
+    },
+    "rank_upside__12m": {
+     "annualised_pct": -55.534,
+     "sharpe_monthly": -0.6278
+    },
+    "rank_consensus__12m": {
+     "annualised_pct": -4.549,
+     "sharpe_monthly": -0.102
+    },
+    "random_rank__12m": {
+     "annualised_pct": -1.14,
+     "sharpe_monthly": -0.0908
+    },
+    "ridge__raw__12m": {
+     "annualised_pct": 12.04,
+     "sharpe_monthly": 0.1914
+    },
+    "ridge__residual__12m": {
+     "annualised_pct": 8.789,
+     "sharpe_monthly": 0.1382
+    },
+    "lgbm__raw__12m": {
+     "annualised_pct": 18.914,
+     "sharpe_monthly": 0.2961
+    },
+    "lgbm__residual__12m": {
+     "annualised_pct": 18.852,
+     "sharpe_monthly": 0.3024
+    },
+    "mlp__raw__12m": {
+     "annualised_pct": 3.579,
+     "sharpe_monthly": 0.0535
+    },
+    "mlp__residual__12m": {
+     "annualised_pct": -10.521,
+     "sharpe_monthly": -0.1807
+    },
+    "lgbm_clf__12m": {
+     "annualised_pct": 4.554,
+     "sharpe_monthly": 0.1399
+    },
+    "NULL_shuffled__lgbm_raw__12m": {
+     "annualised_pct": 3.535,
+     "sharpe_monthly": 0.1147
+    },
+    "encoder__raw__12m": {
+     "annualised_pct": 17.765,
+     "sharpe_monthly": 0.2477
+    },
+    "encoder_clf__raw__12m": {
+     "annualised_pct": 14.794,
+     "sharpe_monthly": 0.299
+    },
+    "encoder__residual__12m": {
+     "annualised_pct": 12.146,
+     "sharpe_monthly": 0.1585
+    },
+    "encoder_clf__residual__12m": {
+     "annualised_pct": 13.779,
+     "sharpe_monthly": 0.3317
+    },
+    "NULL_shuffled__encoder_raw__12m": {
+     "annualised_pct": 6.084,
+     "sharpe_monthly": 0.1207
+    }
+   },
+   "full_sample_champion": "lgbm_clf__6m",
+   "full_sample_champion_is_a_NULL": false,
+   "pbo": {
+    "pbo": 0.0857,
+    "n_partitions": 70,
+    "n_arms": 72,
+    "n_periods": 96,
+    "median_logit": 0.9067,
+    "verdict": "SELECTION_IS_STABLE",
+    "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+    "arms": [
+     "constant__1m",
+     "prior__1m",
+     "rank_upside__1m",
+     "rank_consensus__1m",
+     "random_rank__1m",
+     "ridge__raw__1m",
+     "ridge__residual__1m",
+     "lgbm__raw__1m",
+     "lgbm__residual__1m",
+     "mlp__raw__1m",
+     "mlp__residual__1m",
+     "lgbm_clf__1m",
+     "NULL_shuffled__lgbm_raw__1m",
+     "encoder__raw__1m",
+     "encoder_clf__raw__1m",
+     "encoder__residual__1m",
+     "encoder_clf__residual__1m",
+     "NULL_shuffled__encoder_raw__1m",
+     "constant__3m",
+     "prior__3m",
+     "rank_upside__3m",
+     "rank_consensus__3m",
+     "random_rank__3m",
+     "ridge__raw__3m",
+     "ridge__residual__3m",
+     "lgbm__raw__3m",
+     "lgbm__residual__3m",
+     "mlp__raw__3m",
+     "mlp__residual__3m",
+     "lgbm_clf__3m",
+     "NULL_shuffled__lgbm_raw__3m",
+     "encoder__raw__3m",
+     "encoder_clf__raw__3m",
+     "encoder__residual__3m",
+     "encoder_clf__residual__3m",
+     "NULL_shuffled__encoder_raw__3m",
+     "constant__6m",
+     "prior__6m",
+     "rank_upside__6m",
+     "rank_consensus__6m",
+     "random_rank__6m",
+     "ridge__raw__6m",
+     "ridge__residual__6m",
+     "lgbm__raw__6m",
+     "lgbm__residual__6m",
+     "mlp__raw__6m",
+     "mlp__residual__6m",
+     "lgbm_clf__6m",
+     "NULL_shuffled__lgbm_raw__6m",
+     "encoder__raw__6m",
+     "encoder_clf__raw__6m",
+     "encoder__residual__6m",
+     "encoder_clf__residual__6m",
+     "NULL_shuffled__encoder_raw__6m",
+     "constant__12m",
+     "prior__12m",
+     "rank_upside__12m",
+     "rank_consensus__12m",
+     "random_rank__12m",
+     "ridge__raw__12m",
+     "ridge__residual__12m",
+     "lgbm__raw__12m",
+     "lgbm__residual__12m",
+     "mlp__raw__12m",
+     "mlp__residual__12m",
+     "lgbm_clf__12m",
+     "NULL_shuffled__lgbm_raw__12m",
+     "encoder__raw__12m",
+     "encoder_clf__raw__12m",
+     "encoder__residual__12m",
+     "encoder_clf__residual__12m",
+     "NULL_shuffled__encoder_raw__12m"
+    ],
+    "n_splits_requested": 8,
+    "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+    "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 72.",
+    "pbo_minus_baseline": -0.4143,
+    "verdict_against_its_own_baseline": "BETTER THAN A COIN FLIP"
+   },
+   "cpcv_path_distribution": {
+    "n_partitions": 15,
+    "n_groups": 6,
+    "k_test": 2,
+    "purge_periods": 12,
+    "embargo_periods": 12,
+    "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+    "oos_annualised_distribution": {
+     "min": -0.11646,
+     "q25": 0.02558,
+     "median": 0.05235,
+     "q75": 0.09198,
+     "max": 0.21212,
+     "mean": 0.05945,
+     "sd": 0.07426,
+     "share_of_paths_negative": 0.0667
+    },
+    "oos_sharpe_distribution": {
+     "min": -0.1051,
+     "median": 0.1096,
+     "max": 0.3771
+    },
+    "in_sample_champion_counts": {
+     "lgbm_clf__6m": 4,
+     "encoder_clf__residual__12m": 2,
+     "ridge__raw__6m": 2,
+     "NULL_shuffled__encoder_raw__6m": 2,
+     "lgbm_clf__3m": 1,
+     "lgbm__residual__12m": 1,
+     "encoder_clf__residual__3m": 1,
+     "mlp__raw__1m": 1,
+     "lgbm_clf__12m": 1
+    },
+    "champion_is_the_same_arm_in_every_partition": false,
+    "share_of_partitions_won_by_a_NULL_arm": 0.1333,
+    "paths": [
+     {
+      "is_champion": "encoder_clf__residual__12m",
+      "is_sharpe": 0.5581,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.002915,
+      "oos_annualised": 0.03498,
+      "oos_sharpe": 0.1609,
+      "oos_terminal_wealth_of_the_excess_series": 1.092
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.4179,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004578,
+      "oos_annualised": 0.05493,
+      "oos_sharpe": 0.2813,
+      "oos_terminal_wealth_of_the_excess_series": 1.1527
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.5918,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.009319,
+      "oos_annualised": 0.11183,
+      "oos_sharpe": 0.3412,
+      "oos_terminal_wealth_of_the_excess_series": 1.3307
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.4695,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.005748,
+      "oos_annualised": 0.06898,
+      "oos_sharpe": 0.2201,
+      "oos_terminal_wealth_of_the_excess_series": 1.1887
+     },
+     {
+      "is_champion": "ridge__raw__6m",
+      "is_sharpe": 0.6351,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004362,
+      "oos_annualised": 0.05235,
+      "oos_sharpe": 0.0584,
+      "oos_terminal_wealth_of_the_excess_series": 1.0585
+     },
+     {
+      "is_champion": "lgbm_clf__6m",
+      "is_sharpe": 0.3749,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004194,
+      "oos_annualised": 0.05033,
+      "oos_sharpe": 0.2259,
+      "oos_terminal_wealth_of_the_excess_series": 1.1373
+     },
+     {
+      "is_champion": "lgbm_clf__3m",
+      "is_sharpe": 0.6674,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.017677,
+      "oos_annualised": 0.21212,
+      "oos_sharpe": 0.3771,
+      "oos_terminal_wealth_of_the_excess_series": 1.6981
+     },
+     {
+      "is_champion": "encoder_clf__residual__12m",
+      "is_sharpe": 0.8417,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.000554,
+      "oos_annualised": 0.00665,
+      "oos_sharpe": 0.0258,
+      "oos_terminal_wealth_of_the_excess_series": 1.0106
+     },
+     {
+      "is_champion": "lgbm__residual__12m",
+      "is_sharpe": 0.6929,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.006399,
+      "oos_annualised": 0.07678,
+      "oos_sharpe": 0.1096,
+      "oos_terminal_wealth_of_the_excess_series": 1.1649
+     },
+     {
+      "is_champion": "encoder_clf__residual__3m",
+      "is_sharpe": 0.5472,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.013085,
+      "oos_annualised": 0.15702,
+      "oos_sharpe": 0.2366,
+      "oos_terminal_wealth_of_the_excess_series": 1.4441
+     },
+     {
+      "is_champion": "mlp__raw__1m",
+      "is_sharpe": 0.4175,
+      "oos_months": 32,
+      "oos_mean_monthly": -0.009705,
+      "oos_annualised": -0.11646,
+      "oos_sharpe": -0.1051,
+      "oos_terminal_wealth_of_the_excess_series": 0.6421
+     },
+     {
+      "is_champion": "NULL_shuffled__encoder_raw__6m",
+      "is_sharpe": 0.4573,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.000793,
+      "oos_annualised": 0.00952,
+      "oos_sharpe": 0.0136,
+      "oos_terminal_wealth_of_the_excess_series": 0.9764
+     },
+     {
+      "is_champion": "lgbm_clf__12m",
+      "is_sharpe": 0.3543,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.001348,
+      "oos_annualised": 0.01617,
+      "oos_sharpe": 0.04,
+      "oos_terminal_wealth_of_the_excess_series": 1.0258
+     },
+     {
+      "is_champion": "NULL_shuffled__encoder_raw__6m",
+      "is_sharpe": 0.3791,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.004116,
+      "oos_annualised": 0.04939,
+      "oos_sharpe": 0.0704,
+      "oos_terminal_wealth_of_the_excess_series": 1.0855
+     },
+     {
+      "is_champion": "ridge__raw__6m",
+      "is_sharpe": 0.4945,
+      "oos_months": 32,
+      "oos_mean_monthly": 0.008932,
+      "oos_annualised": 0.10719,
+      "oos_sharpe": 0.1057,
+      "oos_terminal_wealth_of_the_excess_series": 1.1979
+     }
+    ],
+    "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+   }
+  },
+  "HOW_TO_READ": {
+   "pooled_pbo": 0.0143,
+   "pooled_verdict": "SELECTION_IS_STABLE",
+   "pbo_by_horizon": {
+    "1m": 0.5286,
+    "3m": 0.1429,
+    "6m": 0.1286,
+    "12m": 0.4857
+   },
+   "verdict_by_horizon": {
+    "1m": "SELECTION_IS_OVERFIT",
+    "3m": "SELECTION_IS_STABLE",
+    "6m": "SELECTION_IS_STABLE",
+    "12m": "SELECTION_IS_FRAGILE"
+   },
+   "worst_horizon": "1m",
+   "pbo_minus_baseline_by_horizon": {
+    "1m": 0.0286,
+    "3m": -0.3571,
+    "6m": -0.3714,
+    "12m": -0.0143
+   },
+   "the_caveat_that_decides_the_reading": "PBO ranks arms by Sharpe on the SAME monthly index, and the 3m/6m/12m arms are OVERLAPPING books: 1/h of the portfolio rolls each month, so their monthly series are serially smoothed and their monthly Sharpes are mechanically higher than a 1m book's at the same economic edge. A POOLED family that mixes horizons therefore lets the in-sample selector escape into the smoothest arm, and its low PBO is partly a statement about overlap, not about stability. The PER-HORIZON blocks compare like with like and are the honest reading.",
+   "reading": "pooled across horizons the 32-cell grid reads SELECTION_IS_STABLE at PBO 0.0143. Per horizon it does not: 1m 0.5286 (SELECTION_IS_OVERFIT), 3m 0.1429 (SELECTION_IS_STABLE), 6m 0.1286 (SELECTION_IS_STABLE), 12m 0.4857 (SELECTION_IS_FRAGILE). The 1m horizon is the one the books actually trade."
+  },
+  "status": "OK"
+ },
+ "memory_free_gb_after_family_1": 8.09,
+ "neural_family": {
+  "stage_files_present": {
+   "incumbents": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+   "nn_pre_causal": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet"
+  },
+  "stage_files_absent": {
+   "nn": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn.parquet"
+  },
+  "family_shortfall": {
+   "w3b_cells_looked_at": 40,
+   "cells_reconstructible_from_disk": 22,
+   "why": "PBO needs per-period returns, which needs the PREDICTIONS, not the W3b receipt's summary rows. The stage parquets listed in stage_files_absent are gone, and refitting eight neural seeds to rebuild them is a different experiment, not a re-grade."
+  },
+  "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+  "training_universe": {
+   "dollar_volume_floor_usd_per_day": 3000000.0,
+   "min_close_usd": 5.0,
+   "rows_after": 530447,
+   "months_after": 310
+  },
+  "arms_reconstructed": [
+   "lgbm_clf",
+   "lgbm_raw",
+   "nn_pre_causal_s20260906",
+   "nn_pre_causal_s20260907",
+   "nn_pre_causal_s20260908",
+   "nn_pre_causal_s20260909",
+   "nn_pre_causal_s20260910",
+   "nn_pre_causal_s20260911",
+   "nn_pre_causal_s20260912",
+   "nn_pre_causal_s20260913",
+   "nn_pre_causal_seedmean"
+  ],
+  "families": {
+   "neural_family_10bps_PRIMARY_paired_excess": {
+    "label": "11 arms at 10 bps",
+    "n_arms": 11,
+    "n_aligned_periods": 251,
+    "window": [
+     "2004-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "lgbm_clf|10bps": {
+      "annualised_pct": 3.393,
+      "sharpe_monthly": 0.0774
+     },
+     "lgbm_raw|10bps": {
+      "annualised_pct": 7.317,
+      "sharpe_monthly": 0.1063
+     },
+     "nn_pre_causal_s20260906|10bps": {
+      "annualised_pct": 4.397,
+      "sharpe_monthly": 0.0901
+     },
+     "nn_pre_causal_s20260907|10bps": {
+      "annualised_pct": 7.819,
+      "sharpe_monthly": 0.1484
+     },
+     "nn_pre_causal_s20260908|10bps": {
+      "annualised_pct": 9.55,
+      "sharpe_monthly": 0.1414
+     },
+     "nn_pre_causal_s20260909|10bps": {
+      "annualised_pct": 9.413,
+      "sharpe_monthly": 0.1613
+     },
+     "nn_pre_causal_s20260910|10bps": {
+      "annualised_pct": 7.967,
+      "sharpe_monthly": 0.1324
+     },
+     "nn_pre_causal_s20260911|10bps": {
+      "annualised_pct": 10.644,
+      "sharpe_monthly": 0.1768
+     },
+     "nn_pre_causal_s20260912|10bps": {
+      "annualised_pct": 11.912,
+      "sharpe_monthly": 0.2045
+     },
+     "nn_pre_causal_s20260913|10bps": {
+      "annualised_pct": 7.919,
+      "sharpe_monthly": 0.1472
+     },
+     "nn_pre_causal_seedmean|10bps": {
+      "annualised_pct": 8.144,
+      "sharpe_monthly": 0.1416
+     }
+    },
+    "full_sample_champion": "nn_pre_causal_s20260912|10bps",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.5143,
+     "n_partitions": 70,
+     "n_arms": 11,
+     "n_periods": 251,
+     "median_logit": 0.0,
+     "verdict": "SELECTION_IS_OVERFIT",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "lgbm_clf|10bps",
+      "lgbm_raw|10bps",
+      "nn_pre_causal_s20260906|10bps",
+      "nn_pre_causal_s20260907|10bps",
+      "nn_pre_causal_s20260908|10bps",
+      "nn_pre_causal_s20260909|10bps",
+      "nn_pre_causal_s20260910|10bps",
+      "nn_pre_causal_s20260911|10bps",
+      "nn_pre_causal_s20260912|10bps",
+      "nn_pre_causal_s20260913|10bps",
+      "nn_pre_causal_seedmean|10bps"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5455,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5454545454545454 at N = 11.",
+     "pbo_minus_baseline": -0.0312,
+     "verdict_against_its_own_baseline": "AT THE COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.04431,
+      "q25": 0.0636,
+      "median": 0.09191,
+      "q75": 0.11122,
+      "max": 0.14696,
+      "mean": 0.0916,
+      "sd": 0.03354,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0757,
+      "median": 0.1621,
+      "max": 0.2504
+     },
+     "in_sample_champion_counts": {
+      "nn_pre_causal_s20260912|10bps": 10,
+      "nn_pre_causal_s20260911|10bps": 4,
+      "nn_pre_causal_s20260913|10bps": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2707,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.003693,
+       "oos_annualised": 0.04431,
+       "oos_sharpe": 0.0757,
+       "oos_terminal_wealth_of_the_excess_series": 1.2311
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2317,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.004681,
+       "oos_annualised": 0.05617,
+       "oos_sharpe": 0.1199,
+       "oos_terminal_wealth_of_the_excess_series": 1.3839
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2401,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.003982,
+       "oos_annualised": 0.04778,
+       "oos_sharpe": 0.1042,
+       "oos_terminal_wealth_of_the_excess_series": 1.3092
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2362,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.004326,
+       "oos_annualised": 0.05191,
+       "oos_sharpe": 0.0849,
+       "oos_terminal_wealth_of_the_excess_series": 1.2853
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2283,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.008624,
+       "oos_annualised": 0.10349,
+       "oos_sharpe": 0.1642,
+       "oos_terminal_wealth_of_the_excess_series": 1.8296
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2194,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.007374,
+       "oos_annualised": 0.08849,
+       "oos_sharpe": 0.1627,
+       "oos_terminal_wealth_of_the_excess_series": 1.7039
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2239,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.006683,
+       "oos_annualised": 0.08019,
+       "oos_sharpe": 0.1497,
+       "oos_terminal_wealth_of_the_excess_series": 1.6118
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2013,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.009911,
+       "oos_annualised": 0.11894,
+       "oos_sharpe": 0.1621,
+       "oos_terminal_wealth_of_the_excess_series": 1.9663
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.211,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.01127,
+       "oos_annualised": 0.13524,
+       "oos_sharpe": 0.1976,
+       "oos_terminal_wealth_of_the_excess_series": 2.2527
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.197,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.00766,
+       "oos_annualised": 0.09191,
+       "oos_sharpe": 0.2266,
+       "oos_terminal_wealth_of_the_excess_series": 1.8119
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.1941,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.008404,
+       "oos_annualised": 0.10085,
+       "oos_sharpe": 0.162,
+       "oos_terminal_wealth_of_the_excess_series": 1.8058
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.1775,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.012247,
+       "oos_annualised": 0.14696,
+       "oos_sharpe": 0.2504,
+       "oos_terminal_wealth_of_the_excess_series": 2.5323
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.1812,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.008173,
+       "oos_annualised": 0.09808,
+       "oos_sharpe": 0.1689,
+       "oos_terminal_wealth_of_the_excess_series": 1.7976
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.1868,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.011556,
+       "oos_annualised": 0.13867,
+       "oos_sharpe": 0.2391,
+       "oos_terminal_wealth_of_the_excess_series": 2.3955
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260913|10bps",
+       "is_sharpe": 0.1844,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005919,
+       "oos_annualised": 0.07103,
+       "oos_sharpe": 0.1091,
+       "oos_terminal_wealth_of_the_excess_series": 1.4556
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "neural_family_25bps_PRIMARY_paired_excess": {
+    "label": "11 arms at 25 bps",
+    "n_arms": 11,
+    "n_aligned_periods": 251,
+    "window": [
+     "2004-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "lgbm_clf|25bps": {
+      "annualised_pct": 0.191,
+      "sharpe_monthly": 0.0044
+     },
+     "lgbm_raw|25bps": {
+      "annualised_pct": 4.19,
+      "sharpe_monthly": 0.0608
+     },
+     "nn_pre_causal_s20260906|25bps": {
+      "annualised_pct": 1.374,
+      "sharpe_monthly": 0.0282
+     },
+     "nn_pre_causal_s20260907|25bps": {
+      "annualised_pct": 4.994,
+      "sharpe_monthly": 0.0949
+     },
+     "nn_pre_causal_s20260908|25bps": {
+      "annualised_pct": 6.534,
+      "sharpe_monthly": 0.0967
+     },
+     "nn_pre_causal_s20260909|25bps": {
+      "annualised_pct": 6.5,
+      "sharpe_monthly": 0.1113
+     },
+     "nn_pre_causal_s20260910|25bps": {
+      "annualised_pct": 5.131,
+      "sharpe_monthly": 0.0852
+     },
+     "nn_pre_causal_s20260911|25bps": {
+      "annualised_pct": 7.866,
+      "sharpe_monthly": 0.1306
+     },
+     "nn_pre_causal_s20260912|25bps": {
+      "annualised_pct": 9.151,
+      "sharpe_monthly": 0.157
+     },
+     "nn_pre_causal_s20260913|25bps": {
+      "annualised_pct": 5.031,
+      "sharpe_monthly": 0.0935
+     },
+     "nn_pre_causal_seedmean|25bps": {
+      "annualised_pct": 5.249,
+      "sharpe_monthly": 0.0913
+     }
+    },
+    "full_sample_champion": "nn_pre_causal_s20260912|25bps",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.4,
+     "n_partitions": 70,
+     "n_arms": 11,
+     "n_periods": 251,
+     "median_logit": 0.3365,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "lgbm_clf|25bps",
+      "lgbm_raw|25bps",
+      "nn_pre_causal_s20260906|25bps",
+      "nn_pre_causal_s20260907|25bps",
+      "nn_pre_causal_s20260908|25bps",
+      "nn_pre_causal_s20260909|25bps",
+      "nn_pre_causal_s20260910|25bps",
+      "nn_pre_causal_s20260911|25bps",
+      "nn_pre_causal_s20260912|25bps",
+      "nn_pre_causal_s20260913|25bps",
+      "nn_pre_causal_seedmean|25bps"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5455,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5454545454545454 at N = 11.",
+     "pbo_minus_baseline": -0.1455,
+     "verdict_against_its_own_baseline": "AT THE COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.01571,
+      "q25": 0.03508,
+      "median": 0.06459,
+      "q75": 0.08281,
+      "max": 0.1214,
+      "mean": 0.06337,
+      "sd": 0.03429,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0268,
+      "median": 0.1151,
+      "max": 0.2067
+     },
+     "in_sample_champion_counts": {
+      "nn_pre_causal_s20260912|25bps": 10,
+      "nn_pre_causal_s20260911|25bps": 4,
+      "nn_pre_causal_s20260913|25bps": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.2238,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.001309,
+       "oos_annualised": 0.01571,
+       "oos_sharpe": 0.0268,
+       "oos_terminal_wealth_of_the_excess_series": 1.01
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1876,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.002403,
+       "oos_annualised": 0.02884,
+       "oos_sharpe": 0.0615,
+       "oos_terminal_wealth_of_the_excess_series": 1.1459
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1975,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.001588,
+       "oos_annualised": 0.01905,
+       "oos_sharpe": 0.0415,
+       "oos_terminal_wealth_of_the_excess_series": 1.0734
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|25bps",
+       "is_sharpe": 0.1919,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.0018,
+       "oos_annualised": 0.0216,
+       "oos_sharpe": 0.0354,
+       "oos_terminal_wealth_of_the_excess_series": 1.0424
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1783,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.00638,
+       "oos_annualised": 0.07656,
+       "oos_sharpe": 0.1214,
+       "oos_terminal_wealth_of_the_excess_series": 1.5198
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1733,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005107,
+       "oos_annualised": 0.06128,
+       "oos_sharpe": 0.1126,
+       "oos_terminal_wealth_of_the_excess_series": 1.4093
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1795,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.004301,
+       "oos_annualised": 0.05161,
+       "oos_sharpe": 0.0962,
+       "oos_terminal_wealth_of_the_excess_series": 1.3202
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|25bps",
+       "is_sharpe": 0.1506,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.007422,
+       "oos_annualised": 0.08906,
+       "oos_sharpe": 0.1214,
+       "oos_terminal_wealth_of_the_excess_series": 1.5968
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.158,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.009036,
+       "oos_annualised": 0.10843,
+       "oos_sharpe": 0.1583,
+       "oos_terminal_wealth_of_the_excess_series": 1.8692
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1547,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005382,
+       "oos_annualised": 0.06459,
+       "oos_sharpe": 0.159,
+       "oos_terminal_wealth_of_the_excess_series": 1.4977
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|25bps",
+       "is_sharpe": 0.1487,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005967,
+       "oos_annualised": 0.0716,
+       "oos_sharpe": 0.1151,
+       "oos_terminal_wealth_of_the_excess_series": 1.473
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1283,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.010117,
+       "oos_annualised": 0.1214,
+       "oos_sharpe": 0.2067,
+       "oos_terminal_wealth_of_the_excess_series": 2.1206
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|25bps",
+       "is_sharpe": 0.1379,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005647,
+       "oos_annualised": 0.06776,
+       "oos_sharpe": 0.1167,
+       "oos_terminal_wealth_of_the_excess_series": 1.4553
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|25bps",
+       "is_sharpe": 0.1393,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.009311,
+       "oos_annualised": 0.11173,
+       "oos_sharpe": 0.1923,
+       "oos_terminal_wealth_of_the_excess_series": 1.9865
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260913|25bps",
+       "is_sharpe": 0.1242,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.003444,
+       "oos_annualised": 0.04133,
+       "oos_sharpe": 0.0635,
+       "oos_terminal_wealth_of_the_excess_series": 1.1827
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "POOLED_all_cost_rates_PRIMARY_paired_excess": {
+    "label": "22 cells (arms x cost rates)",
+    "n_arms": 22,
+    "n_aligned_periods": 251,
+    "window": [
+     "2004-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "lgbm_clf|10bps": {
+      "annualised_pct": 3.393,
+      "sharpe_monthly": 0.0774
+     },
+     "lgbm_raw|10bps": {
+      "annualised_pct": 7.317,
+      "sharpe_monthly": 0.1063
+     },
+     "nn_pre_causal_s20260906|10bps": {
+      "annualised_pct": 4.397,
+      "sharpe_monthly": 0.0901
+     },
+     "nn_pre_causal_s20260907|10bps": {
+      "annualised_pct": 7.819,
+      "sharpe_monthly": 0.1484
+     },
+     "nn_pre_causal_s20260908|10bps": {
+      "annualised_pct": 9.55,
+      "sharpe_monthly": 0.1414
+     },
+     "nn_pre_causal_s20260909|10bps": {
+      "annualised_pct": 9.413,
+      "sharpe_monthly": 0.1613
+     },
+     "nn_pre_causal_s20260910|10bps": {
+      "annualised_pct": 7.967,
+      "sharpe_monthly": 0.1324
+     },
+     "nn_pre_causal_s20260911|10bps": {
+      "annualised_pct": 10.644,
+      "sharpe_monthly": 0.1768
+     },
+     "nn_pre_causal_s20260912|10bps": {
+      "annualised_pct": 11.912,
+      "sharpe_monthly": 0.2045
+     },
+     "nn_pre_causal_s20260913|10bps": {
+      "annualised_pct": 7.919,
+      "sharpe_monthly": 0.1472
+     },
+     "nn_pre_causal_seedmean|10bps": {
+      "annualised_pct": 8.144,
+      "sharpe_monthly": 0.1416
+     },
+     "lgbm_clf|25bps": {
+      "annualised_pct": 0.191,
+      "sharpe_monthly": 0.0044
+     },
+     "lgbm_raw|25bps": {
+      "annualised_pct": 4.19,
+      "sharpe_monthly": 0.0608
+     },
+     "nn_pre_causal_s20260906|25bps": {
+      "annualised_pct": 1.374,
+      "sharpe_monthly": 0.0282
+     },
+     "nn_pre_causal_s20260907|25bps": {
+      "annualised_pct": 4.994,
+      "sharpe_monthly": 0.0949
+     },
+     "nn_pre_causal_s20260908|25bps": {
+      "annualised_pct": 6.534,
+      "sharpe_monthly": 0.0967
+     },
+     "nn_pre_causal_s20260909|25bps": {
+      "annualised_pct": 6.5,
+      "sharpe_monthly": 0.1113
+     },
+     "nn_pre_causal_s20260910|25bps": {
+      "annualised_pct": 5.131,
+      "sharpe_monthly": 0.0852
+     },
+     "nn_pre_causal_s20260911|25bps": {
+      "annualised_pct": 7.866,
+      "sharpe_monthly": 0.1306
+     },
+     "nn_pre_causal_s20260912|25bps": {
+      "annualised_pct": 9.151,
+      "sharpe_monthly": 0.157
+     },
+     "nn_pre_causal_s20260913|25bps": {
+      "annualised_pct": 5.031,
+      "sharpe_monthly": 0.0935
+     },
+     "nn_pre_causal_seedmean|25bps": {
+      "annualised_pct": 5.249,
+      "sharpe_monthly": 0.0913
+     }
+    },
+    "full_sample_champion": "nn_pre_causal_s20260912|10bps",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.3286,
+     "n_partitions": 70,
+     "n_arms": 22,
+     "n_periods": 251,
+     "median_logit": 0.9341,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "lgbm_clf|10bps",
+      "lgbm_raw|10bps",
+      "nn_pre_causal_s20260906|10bps",
+      "nn_pre_causal_s20260907|10bps",
+      "nn_pre_causal_s20260908|10bps",
+      "nn_pre_causal_s20260909|10bps",
+      "nn_pre_causal_s20260910|10bps",
+      "nn_pre_causal_s20260911|10bps",
+      "nn_pre_causal_s20260912|10bps",
+      "nn_pre_causal_s20260913|10bps",
+      "nn_pre_causal_seedmean|10bps",
+      "lgbm_clf|25bps",
+      "lgbm_raw|25bps",
+      "nn_pre_causal_s20260906|25bps",
+      "nn_pre_causal_s20260907|25bps",
+      "nn_pre_causal_s20260908|25bps",
+      "nn_pre_causal_s20260909|25bps",
+      "nn_pre_causal_s20260910|25bps",
+      "nn_pre_causal_s20260911|25bps",
+      "nn_pre_causal_s20260912|25bps",
+      "nn_pre_causal_s20260913|25bps",
+      "nn_pre_causal_seedmean|25bps"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 22.",
+     "pbo_minus_baseline": -0.1714,
+     "verdict_against_its_own_baseline": "BETTER THAN A COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.04431,
+      "q25": 0.0636,
+      "median": 0.09191,
+      "q75": 0.11122,
+      "max": 0.14696,
+      "mean": 0.0916,
+      "sd": 0.03354,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0757,
+      "median": 0.1621,
+      "max": 0.2504
+     },
+     "in_sample_champion_counts": {
+      "nn_pre_causal_s20260912|10bps": 10,
+      "nn_pre_causal_s20260911|10bps": 4,
+      "nn_pre_causal_s20260913|10bps": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2707,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.003693,
+       "oos_annualised": 0.04431,
+       "oos_sharpe": 0.0757,
+       "oos_terminal_wealth_of_the_excess_series": 1.2311
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2317,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.004681,
+       "oos_annualised": 0.05617,
+       "oos_sharpe": 0.1199,
+       "oos_terminal_wealth_of_the_excess_series": 1.3839
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2401,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.003982,
+       "oos_annualised": 0.04778,
+       "oos_sharpe": 0.1042,
+       "oos_terminal_wealth_of_the_excess_series": 1.3092
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2362,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.004326,
+       "oos_annualised": 0.05191,
+       "oos_sharpe": 0.0849,
+       "oos_terminal_wealth_of_the_excess_series": 1.2853
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2283,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.008624,
+       "oos_annualised": 0.10349,
+       "oos_sharpe": 0.1642,
+       "oos_terminal_wealth_of_the_excess_series": 1.8296
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2194,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.007374,
+       "oos_annualised": 0.08849,
+       "oos_sharpe": 0.1627,
+       "oos_terminal_wealth_of_the_excess_series": 1.7039
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2239,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.006683,
+       "oos_annualised": 0.08019,
+       "oos_sharpe": 0.1497,
+       "oos_terminal_wealth_of_the_excess_series": 1.6118
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2013,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.009911,
+       "oos_annualised": 0.11894,
+       "oos_sharpe": 0.1621,
+       "oos_terminal_wealth_of_the_excess_series": 1.9663
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.211,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.01127,
+       "oos_annualised": 0.13524,
+       "oos_sharpe": 0.1976,
+       "oos_terminal_wealth_of_the_excess_series": 2.2527
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.197,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.00766,
+       "oos_annualised": 0.09191,
+       "oos_sharpe": 0.2266,
+       "oos_terminal_wealth_of_the_excess_series": 1.8119
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.1941,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.008404,
+       "oos_annualised": 0.10085,
+       "oos_sharpe": 0.162,
+       "oos_terminal_wealth_of_the_excess_series": 1.8058
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.1775,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.012247,
+       "oos_annualised": 0.14696,
+       "oos_sharpe": 0.2504,
+       "oos_terminal_wealth_of_the_excess_series": 2.5323
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.1812,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.008173,
+       "oos_annualised": 0.09808,
+       "oos_sharpe": 0.1689,
+       "oos_terminal_wealth_of_the_excess_series": 1.7976
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.1868,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.011556,
+       "oos_annualised": 0.13867,
+       "oos_sharpe": 0.2391,
+       "oos_terminal_wealth_of_the_excess_series": 2.3955
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260913|10bps",
+       "is_sharpe": 0.1844,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005919,
+       "oos_annualised": 0.07103,
+       "oos_sharpe": 0.1091,
+       "oos_terminal_wealth_of_the_excess_series": 1.4556
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "POOLED_all_cost_rates_SECONDARY_net": {
+    "label": "22 cells on NET not excess",
+    "n_arms": 22,
+    "n_aligned_periods": 251,
+    "window": [
+     "2004-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "lgbm_clf|10bps": {
+      "annualised_pct": 17.655,
+      "sharpe_monthly": 0.2213
+     },
+     "lgbm_raw|10bps": {
+      "annualised_pct": 21.579,
+      "sharpe_monthly": 0.2097
+     },
+     "nn_pre_causal_s20260906|10bps": {
+      "annualised_pct": 18.659,
+      "sharpe_monthly": 0.2234
+     },
+     "nn_pre_causal_s20260907|10bps": {
+      "annualised_pct": 22.08,
+      "sharpe_monthly": 0.2442
+     },
+     "nn_pre_causal_s20260908|10bps": {
+      "annualised_pct": 23.812,
+      "sharpe_monthly": 0.237
+     },
+     "nn_pre_causal_s20260909|10bps": {
+      "annualised_pct": 23.675,
+      "sharpe_monthly": 0.2487
+     },
+     "nn_pre_causal_s20260910|10bps": {
+      "annualised_pct": 22.229,
+      "sharpe_monthly": 0.2382
+     },
+     "nn_pre_causal_s20260911|10bps": {
+      "annualised_pct": 24.906,
+      "sharpe_monthly": 0.2615
+     },
+     "nn_pre_causal_s20260912|10bps": {
+      "annualised_pct": 26.174,
+      "sharpe_monthly": 0.2774
+     },
+     "nn_pre_causal_s20260913|10bps": {
+      "annualised_pct": 22.18,
+      "sharpe_monthly": 0.2489
+     },
+     "nn_pre_causal_seedmean|10bps": {
+      "annualised_pct": 22.405,
+      "sharpe_monthly": 0.2398
+     },
+     "lgbm_clf|25bps": {
+      "annualised_pct": 14.453,
+      "sharpe_monthly": 0.1812
+     },
+     "lgbm_raw|25bps": {
+      "annualised_pct": 18.452,
+      "sharpe_monthly": 0.1793
+     },
+     "nn_pre_causal_s20260906|25bps": {
+      "annualised_pct": 15.636,
+      "sharpe_monthly": 0.1872
+     },
+     "nn_pre_causal_s20260907|25bps": {
+      "annualised_pct": 19.255,
+      "sharpe_monthly": 0.2131
+     },
+     "nn_pre_causal_s20260908|25bps": {
+      "annualised_pct": 20.796,
+      "sharpe_monthly": 0.2069
+     },
+     "nn_pre_causal_s20260909|25bps": {
+      "annualised_pct": 20.762,
+      "sharpe_monthly": 0.2181
+     },
+     "nn_pre_causal_s20260910|25bps": {
+      "annualised_pct": 19.393,
+      "sharpe_monthly": 0.2077
+     },
+     "nn_pre_causal_s20260911|25bps": {
+      "annualised_pct": 22.127,
+      "sharpe_monthly": 0.2323
+     },
+     "nn_pre_causal_s20260912|25bps": {
+      "annualised_pct": 23.413,
+      "sharpe_monthly": 0.2481
+     },
+     "nn_pre_causal_s20260913|25bps": {
+      "annualised_pct": 19.293,
+      "sharpe_monthly": 0.2165
+     },
+     "nn_pre_causal_seedmean|25bps": {
+      "annualised_pct": 19.511,
+      "sharpe_monthly": 0.2088
+     }
+    },
+    "full_sample_champion": "nn_pre_causal_s20260912|10bps",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.3857,
+     "n_partitions": 70,
+     "n_arms": 22,
+     "n_periods": 251,
+     "median_logit": 0.6286,
+     "verdict": "SELECTION_IS_FRAGILE",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "lgbm_clf|10bps",
+      "lgbm_raw|10bps",
+      "nn_pre_causal_s20260906|10bps",
+      "nn_pre_causal_s20260907|10bps",
+      "nn_pre_causal_s20260908|10bps",
+      "nn_pre_causal_s20260909|10bps",
+      "nn_pre_causal_s20260910|10bps",
+      "nn_pre_causal_s20260911|10bps",
+      "nn_pre_causal_s20260912|10bps",
+      "nn_pre_causal_s20260913|10bps",
+      "nn_pre_causal_seedmean|10bps",
+      "lgbm_clf|25bps",
+      "lgbm_raw|25bps",
+      "nn_pre_causal_s20260906|25bps",
+      "nn_pre_causal_s20260907|25bps",
+      "nn_pre_causal_s20260908|25bps",
+      "nn_pre_causal_s20260909|25bps",
+      "nn_pre_causal_s20260910|25bps",
+      "nn_pre_causal_s20260911|25bps",
+      "nn_pre_causal_s20260912|25bps",
+      "nn_pre_causal_s20260913|25bps",
+      "nn_pre_causal_seedmean|25bps"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.5,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.5 at N = 22.",
+     "pbo_minus_baseline": -0.1143,
+     "verdict_against_its_own_baseline": "AT THE COIN FLIP"
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.09699,
+      "q25": 0.18887,
+      "median": 0.22855,
+      "q75": 0.25632,
+      "max": 0.29812,
+      "mean": 0.21748,
+      "sd": 0.05792,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0967,
+      "median": 0.2475,
+      "max": 0.3745
+     },
+     "in_sample_champion_counts": {
+      "nn_pre_causal_s20260912|10bps": 8,
+      "nn_pre_causal_s20260911|10bps": 4,
+      "nn_pre_causal_s20260913|10bps": 2,
+      "lgbm_clf|10bps": 1
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.3581,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.010141,
+       "oos_annualised": 0.12169,
+       "oos_sharpe": 0.1245,
+       "oos_terminal_wealth_of_the_excess_series": 1.7498
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2755,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.016844,
+       "oos_annualised": 0.20213,
+       "oos_sharpe": 0.2722,
+       "oos_terminal_wealth_of_the_excess_series": 3.4281
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2854,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.014355,
+       "oos_annualised": 0.17226,
+       "oos_sharpe": 0.2475,
+       "oos_terminal_wealth_of_the_excess_series": 2.8472
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2949,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.016982,
+       "oos_annualised": 0.20378,
+       "oos_sharpe": 0.203,
+       "oos_terminal_wealth_of_the_excess_series": 3.0274
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2747,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.020474,
+       "oos_annualised": 0.24568,
+       "oos_sharpe": 0.2796,
+       "oos_terminal_wealth_of_the_excess_series": 4.3601
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.3082,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.017093,
+       "oos_annualised": 0.20511,
+       "oos_sharpe": 0.2118,
+       "oos_terminal_wealth_of_the_excess_series": 3.1671
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.3106,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.014633,
+       "oos_annualised": 0.1756,
+       "oos_sharpe": 0.1881,
+       "oos_terminal_wealth_of_the_excess_series": 2.6304
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.323,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.020118,
+       "oos_annualised": 0.24141,
+       "oos_sharpe": 0.196,
+       "oos_terminal_wealth_of_the_excess_series": 3.4407
+      },
+      {
+       "is_champion": "lgbm_clf|10bps",
+       "is_sharpe": 0.313,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.008082,
+       "oos_annualised": 0.09699,
+       "oos_sharpe": 0.0967,
+       "oos_terminal_wealth_of_the_excess_series": 1.4618
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.2423,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.021257,
+       "oos_annualised": 0.25508,
+       "oos_sharpe": 0.3745,
+       "oos_terminal_wealth_of_the_excess_series": 5.1533
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2444,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.024258,
+       "oos_annualised": 0.29109,
+       "oos_sharpe": 0.2876,
+       "oos_terminal_wealth_of_the_excess_series": 5.5744
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260913|10bps",
+       "is_sharpe": 0.2333,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.019046,
+       "oos_annualised": 0.22855,
+       "oos_sharpe": 0.2576,
+       "oos_terminal_wealth_of_the_excess_series": 3.9258
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260911|10bps",
+       "is_sharpe": 0.2475,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.022258,
+       "oos_annualised": 0.2671,
+       "oos_sharpe": 0.2805,
+       "oos_terminal_wealth_of_the_excess_series": 4.8909
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260912|10bps",
+       "is_sharpe": 0.236,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.024843,
+       "oos_annualised": 0.29812,
+       "oos_sharpe": 0.3622,
+       "oos_terminal_wealth_of_the_excess_series": 6.5544
+      },
+      {
+       "is_champion": "nn_pre_causal_s20260913|10bps",
+       "is_sharpe": 0.2803,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.021463,
+       "oos_annualised": 0.25756,
+       "oos_sharpe": 0.2238,
+       "oos_terminal_wealth_of_the_excess_series": 3.9517
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "decision_rule_family_10bps_PRIMARY_paired_excess": {
+    "label": "the 3 arms the W3b decision rule judged (seed-mean, never a seed) at 10 bps",
+    "n_arms": 3,
+    "n_aligned_periods": 251,
+    "window": [
+     "2004-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "lgbm_clf|10bps": {
+      "annualised_pct": 3.393,
+      "sharpe_monthly": 0.0774
+     },
+     "lgbm_raw|10bps": {
+      "annualised_pct": 7.317,
+      "sharpe_monthly": 0.1063
+     },
+     "nn_pre_causal_seedmean|10bps": {
+      "annualised_pct": 8.144,
+      "sharpe_monthly": 0.1416
+     }
+    },
+    "full_sample_champion": "nn_pre_causal_seedmean|10bps",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.9714,
+     "n_partitions": 70,
+     "n_arms": 3,
+     "n_periods": 251,
+     "median_logit": 0.0,
+     "verdict": "SELECTION_IS_OVERFIT",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "lgbm_clf|10bps",
+      "lgbm_raw|10bps",
+      "nn_pre_causal_seedmean|10bps"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.6667,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.6666666666666666 at N = 3.",
+     "pbo_minus_baseline": 0.3047,
+     "verdict_against_its_own_baseline": "WORSE THAN A COIN FLIP",
+     "small_family_caveat": "3 arms. PBO's rank statistic is coarse here -- only 3 distinct OOS ranks exist -- so read `pbo_minus_baseline`, never the raw number against 0.5."
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": 0.02481,
+      "q25": 0.04636,
+      "median": 0.05633,
+      "q75": 0.06898,
+      "max": 0.15914,
+      "mean": 0.06644,
+      "sd": 0.03907,
+      "share_of_paths_negative": 0.0
+     },
+     "oos_sharpe_distribution": {
+      "min": 0.0438,
+      "median": 0.1015,
+      "max": 0.2795
+     },
+     "in_sample_champion_counts": {
+      "nn_pre_causal_seedmean|10bps": 12,
+      "lgbm_raw|10bps": 3
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1851,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.003219,
+       "oos_annualised": 0.03863,
+       "oos_sharpe": 0.0646,
+       "oos_terminal_wealth_of_the_excess_series": 1.179
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1596,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.002994,
+       "oos_annualised": 0.03593,
+       "oos_sharpe": 0.0774,
+       "oos_terminal_wealth_of_the_excess_series": 1.2049
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1496,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.00389,
+       "oos_annualised": 0.04668,
+       "oos_sharpe": 0.1059,
+       "oos_terminal_wealth_of_the_excess_series": 1.3056
+      },
+      {
+       "is_champion": "lgbm_raw|10bps",
+       "is_sharpe": 0.1343,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.004694,
+       "oos_annualised": 0.05633,
+       "oos_sharpe": 0.0719,
+       "oos_terminal_wealth_of_the_excess_series": 1.2565
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1866,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.002068,
+       "oos_annualised": 0.02481,
+       "oos_sharpe": 0.0438,
+       "oos_terminal_wealth_of_the_excess_series": 1.0836
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1563,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.004974,
+       "oos_annualised": 0.05969,
+       "oos_sharpe": 0.1015,
+       "oos_terminal_wealth_of_the_excess_series": 1.3732
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1417,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.00586,
+       "oos_annualised": 0.07032,
+       "oos_sharpe": 0.1235,
+       "oos_terminal_wealth_of_the_excess_series": 1.4879
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1058,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.012599,
+       "oos_annualised": 0.15119,
+       "oos_sharpe": 0.2167,
+       "oos_terminal_wealth_of_the_excess_series": 2.4946
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.184,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.004059,
+       "oos_annualised": 0.0487,
+       "oos_sharpe": 0.0726,
+       "oos_terminal_wealth_of_the_excess_series": 1.235
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1334,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.005637,
+       "oos_annualised": 0.06764,
+       "oos_sharpe": 0.1575,
+       "oos_terminal_wealth_of_the_excess_series": 1.5205
+      },
+      {
+       "is_champion": "lgbm_raw|10bps",
+       "is_sharpe": 0.0978,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.00726,
+       "oos_annualised": 0.08711,
+       "oos_sharpe": 0.1184,
+       "oos_terminal_wealth_of_the_excess_series": 1.5943
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1617,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.003836,
+       "oos_annualised": 0.04603,
+       "oos_sharpe": 0.0827,
+       "oos_terminal_wealth_of_the_excess_series": 1.2621
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.0729,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.013262,
+       "oos_annualised": 0.15914,
+       "oos_sharpe": 0.2795,
+       "oos_terminal_wealth_of_the_excess_series": 2.7623
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|10bps",
+       "is_sharpe": 0.1508,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.004722,
+       "oos_annualised": 0.05666,
+       "oos_sharpe": 0.1054,
+       "oos_terminal_wealth_of_the_excess_series": 1.3676
+      },
+      {
+       "is_champion": "lgbm_raw|10bps",
+       "is_sharpe": 0.1461,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.003972,
+       "oos_annualised": 0.04767,
+       "oos_sharpe": 0.0555,
+       "oos_terminal_wealth_of_the_excess_series": 1.1448
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   },
+   "decision_rule_family_25bps_PRIMARY_paired_excess": {
+    "label": "the 3 arms the W3b decision rule judged (seed-mean, never a seed) at 25 bps",
+    "n_arms": 3,
+    "n_aligned_periods": 251,
+    "window": [
+     "2004-01",
+     "2024-11"
+    ],
+    "full_sample_leaderboard": {
+     "lgbm_clf|25bps": {
+      "annualised_pct": 0.191,
+      "sharpe_monthly": 0.0044
+     },
+     "lgbm_raw|25bps": {
+      "annualised_pct": 4.19,
+      "sharpe_monthly": 0.0608
+     },
+     "nn_pre_causal_seedmean|25bps": {
+      "annualised_pct": 5.249,
+      "sharpe_monthly": 0.0913
+     }
+    },
+    "full_sample_champion": "nn_pre_causal_seedmean|25bps",
+    "full_sample_champion_is_a_NULL": false,
+    "pbo": {
+     "pbo": 0.9714,
+     "n_partitions": 70,
+     "n_arms": 3,
+     "n_periods": 251,
+     "median_logit": 0.0,
+     "verdict": "SELECTION_IS_OVERFIT",
+     "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip.",
+     "arms": [
+      "lgbm_clf|25bps",
+      "lgbm_raw|25bps",
+      "nn_pre_causal_seedmean|25bps"
+     ],
+     "n_splits_requested": 8,
+     "pbo_baseline_under_pure_noise_for_this_n_arms": 0.6667,
+     "pbo_baseline_derivation": "the OOS rank is discrete: rank = (j+1)/(N+1) for j = 0..N-1, and PBO counts lambda = log(rank/(1-rank)) <= 0, i.e. j+1 <= (N+1)/2. Under pure noise j is uniform, so the baseline is floor((N+1)/2)/N = 0.6666666666666666 at N = 3.",
+     "pbo_minus_baseline": 0.3047,
+     "verdict_against_its_own_baseline": "WORSE THAN A COIN FLIP",
+     "small_family_caveat": "3 arms. PBO's rank statistic is coarse here -- only 3 distinct OOS ranks exist -- so read `pbo_minus_baseline`, never the raw number against 0.5."
+    },
+    "cpcv_path_distribution": {
+     "n_partitions": 15,
+     "n_groups": 6,
+     "k_test": 2,
+     "purge_periods": 1,
+     "embargo_periods": 1,
+     "purge_note": "purge and embargo are set to the HORIZON in months so a label maturing inside a test block cannot have been fitted on the train side",
+     "oos_annualised_distribution": {
+      "min": -0.00487,
+      "q25": 0.01675,
+      "median": 0.02652,
+      "q75": 0.04108,
+      "max": 0.13067,
+      "mean": 0.03709,
+      "sd": 0.03915,
+      "share_of_paths_negative": 0.0667
+     },
+     "oos_sharpe_distribution": {
+      "min": -0.0086,
+      "median": 0.0404,
+      "max": 0.2297
+     },
+     "in_sample_champion_counts": {
+      "nn_pre_causal_seedmean|25bps": 12,
+      "lgbm_raw|25bps": 3
+     },
+     "champion_is_the_same_arm_in_every_partition": false,
+     "share_of_partitions_won_by_a_NULL_arm": 0.0,
+     "paths": [
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1347,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.000731,
+       "oos_annualised": 0.00877,
+       "oos_sharpe": 0.0147,
+       "oos_terminal_wealth_of_the_excess_series": 0.959
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1138,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.000541,
+       "oos_annualised": 0.00649,
+       "oos_sharpe": 0.014,
+       "oos_terminal_wealth_of_the_excess_series": 0.983
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1039,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.001486,
+       "oos_annualised": 0.01784,
+       "oos_sharpe": 0.0404,
+       "oos_terminal_wealth_of_the_excess_series": 1.0696
+      },
+      {
+       "is_champion": "lgbm_raw|25bps",
+       "is_sharpe": 0.0844,
+       "oos_months": 83,
+       "oos_mean_monthly": 0.00221,
+       "oos_annualised": 0.02652,
+       "oos_sharpe": 0.0338,
+       "oos_terminal_wealth_of_the_excess_series": 1.0224
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1376,
+       "oos_months": 83,
+       "oos_mean_monthly": -0.000406,
+       "oos_annualised": -0.00487,
+       "oos_sharpe": -0.0086,
+       "oos_terminal_wealth_of_the_excess_series": 0.8822
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1055,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.002582,
+       "oos_annualised": 0.03099,
+       "oos_sharpe": 0.0527,
+       "oos_terminal_wealth_of_the_excess_series": 1.1238
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.0913,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.003516,
+       "oos_annualised": 0.0422,
+       "oos_sharpe": 0.0741,
+       "oos_terminal_wealth_of_the_excess_series": 1.2228
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.0484,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.010143,
+       "oos_annualised": 0.12171,
+       "oos_sharpe": 0.1745,
+       "oos_terminal_wealth_of_the_excess_series": 2.0333
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1288,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.001647,
+       "oos_annualised": 0.01976,
+       "oos_sharpe": 0.0295,
+       "oos_terminal_wealth_of_the_excess_series": 1.0086
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.0871,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.003329,
+       "oos_annualised": 0.03995,
+       "oos_sharpe": 0.093,
+       "oos_terminal_wealth_of_the_excess_series": 1.2534
+      },
+      {
+       "is_champion": "lgbm_raw|25bps",
+       "is_sharpe": 0.0524,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.004509,
+       "oos_annualised": 0.05411,
+       "oos_sharpe": 0.0735,
+       "oos_terminal_wealth_of_the_excess_series": 1.2662
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1121,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.001459,
+       "oos_annualised": 0.01751,
+       "oos_sharpe": 0.0314,
+       "oos_terminal_wealth_of_the_excess_series": 1.0338
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.022,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.010889,
+       "oos_annualised": 0.13067,
+       "oos_sharpe": 0.2297,
+       "oos_terminal_wealth_of_the_excess_series": 2.2678
+      },
+      {
+       "is_champion": "nn_pre_causal_seedmean|25bps",
+       "is_sharpe": 0.1014,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.002393,
+       "oos_annualised": 0.02872,
+       "oos_sharpe": 0.0534,
+       "oos_terminal_wealth_of_the_excess_series": 1.1249
+      },
+      {
+       "is_champion": "lgbm_raw|25bps",
+       "is_sharpe": 0.0933,
+       "oos_months": 84,
+       "oos_mean_monthly": 0.001332,
+       "oos_annualised": 0.01599,
+       "oos_sharpe": 0.0186,
+       "oos_terminal_wealth_of_the_excess_series": 0.9163
+      }
+     ],
+     "reading": "the DISTRIBUTION is the result. A procedure whose OOS paths straddle zero is a procedure, not an edge, however good its single published path looks."
+    }
+   }
+  },
+  "SEED_SELECTION_FINDING": {
+   "neural_family_10bps_PRIMARY_paired_excess": {
+    "partitions": 15,
+    "won_by_an_individual_SEED": 15,
+    "share_won_by_a_seed": 1.0,
+    "champion_counts": {
+     "nn_pre_causal_s20260912|10bps": 10,
+     "nn_pre_causal_s20260911|10bps": 4,
+     "nn_pre_causal_s20260913|10bps": 1
+    },
+    "pbo": 0.5143,
+    "pbo_verdict": "SELECTION_IS_OVERFIT"
+   },
+   "neural_family_25bps_PRIMARY_paired_excess": {
+    "partitions": 15,
+    "won_by_an_individual_SEED": 15,
+    "share_won_by_a_seed": 1.0,
+    "champion_counts": {
+     "nn_pre_causal_s20260912|25bps": 10,
+     "nn_pre_causal_s20260911|25bps": 4,
+     "nn_pre_causal_s20260913|25bps": 1
+    },
+    "pbo": 0.4,
+    "pbo_verdict": "SELECTION_IS_FRAGILE"
+   },
+   "POOLED_all_cost_rates_PRIMARY_paired_excess": {
+    "partitions": 15,
+    "won_by_an_individual_SEED": 15,
+    "share_won_by_a_seed": 1.0,
+    "champion_counts": {
+     "nn_pre_causal_s20260912|10bps": 10,
+     "nn_pre_causal_s20260911|10bps": 4,
+     "nn_pre_causal_s20260913|10bps": 1
+    },
+    "pbo": 0.3286,
+    "pbo_verdict": "SELECTION_IS_FRAGILE"
+   },
+   "POOLED_all_cost_rates_SECONDARY_net": {
+    "partitions": 15,
+    "won_by_an_individual_SEED": 14,
+    "share_won_by_a_seed": 0.9333,
+    "champion_counts": {
+     "nn_pre_causal_s20260912|10bps": 8,
+     "nn_pre_causal_s20260911|10bps": 4,
+     "nn_pre_causal_s20260913|10bps": 2,
+     "lgbm_clf|10bps": 1
+    },
+    "pbo": 0.3857,
+    "pbo_verdict": "SELECTION_IS_FRAGILE"
+   },
+   "decision_rule_family_10bps_PRIMARY_paired_excess": {
+    "partitions": 15,
+    "won_by_an_individual_SEED": 0,
+    "share_won_by_a_seed": 0.0,
+    "champion_counts": {
+     "nn_pre_causal_seedmean|10bps": 12,
+     "lgbm_raw|10bps": 3
+    },
+    "pbo": 0.9714,
+    "pbo_verdict": "SELECTION_IS_OVERFIT"
+   },
+   "decision_rule_family_25bps_PRIMARY_paired_excess": {
+    "partitions": 15,
+    "won_by_an_individual_SEED": 0,
+    "share_won_by_a_seed": 0.0,
+    "champion_counts": {
+     "nn_pre_causal_seedmean|25bps": 12,
+     "lgbm_raw|25bps": 3
+    },
+    "pbo": 0.9714,
+    "pbo_verdict": "SELECTION_IS_OVERFIT"
+   },
+   "reading": "the shadow contract forbids seed selection and judges the SEED-MEAN. These counts say why: in neural_family_10bps_PRIMARY_paired_excess an individual seed wins 15 of 15 in-sample partitions; neural_family_25bps_PRIMARY_paired_excess an individual seed wins 15 of 15 in-sample partitions; POOLED_all_cost_rates_PRIMARY_paired_excess an individual seed wins 15 of 15 in-sample partitions; POOLED_all_cost_rates_SECONDARY_net an individual seed wins 14 of 15 in-sample partitions. A leaderboard whose top row is one seed of eight is the maximum of eight draws quoted as one, and PBO measures exactly that."
+  },
+  "cost_rates_note": "the same arm at 10 and 25 bps is TWO cells in the pooled family because the search reported both and a reader may pick either. It is not two independent arms, and the pooled PBO is therefore an optimistic reading of a family whose members are near-duplicates -- said here rather than discovered later.",
+  "status": "OK"
+ },
+ "memory_free_gb_after": 6.94,
+ "headline": "32-cell learner grid pooled: PBO 0.0143 vs its own noise baseline 0.5 -- but AT 1m, the horizon the books trade, PBO 0.5286 vs 0.5 = AT THE COIN FLIP; CPCV OOS annualised median 0.06438, 0.1333 of paths negative | neural family (22 of 40 cells reconstructible): PBO 0.3286 vs baseline 0.5; an INDIVIDUAL SEED wins 15 of 15 in-sample CPCV partitions at 10 bps, never the seed-mean",
+ "wall_seconds": 52.1,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_a3_cpcv_pbo.py"
+  ],
+  "resolved_config": {
+   "HORIZONS": [
+    1,
+    3,
+    6,
+    12
+   ],
+   "BOOK_K": 50,
+   "GRID_32_STEMS": [
+    "ridge__raw",
+    "ridge__residual",
+    "lgbm__raw",
+    "lgbm__residual",
+    "mlp__raw",
+    "mlp__residual",
+    "lgbm_clf",
+    "NULL_shuffled__lgbm_raw"
+   ],
+   "NULL_STEMS": [
+    "NULL_shuffled__lgbm_raw",
+    "NULL_shuffled__encoder_raw",
+    "random_rank"
+   ],
+   "RATIO_CAP": 50.0,
+   "CPCV_GROUPS": 6,
+   "CPCV_K_TEST": 2,
+   "PBO_SPLITS": 8,
+   "COSTS": [
+    10.0,
+    25.0
+   ],
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\labor_day_lab_2026-09-07\\A3_cpcv_pbo_run01.json"
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\oos_predictions_v2.parquet",
+    "exists": true,
+    "bytes": 153343444,
+    "mtime_utc": "2026-09-03T07:20:05+00:00",
+    "sha256": "NOT HASHED (size+mtime only)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table.parquet",
+    "exists": true,
+    "bytes": 204021057,
+    "mtime_utc": "2026-09-04T15:51:20+00:00",
+    "sha256": "NOT HASHED (size+mtime only)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "exists": true,
+    "bytes": 418154944,
+    "mtime_utc": "2026-09-05T05:51:44+00:00",
+    "sha256": "NOT HASHED (size+mtime only)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+    "exists": true,
+    "bytes": 6225813,
+    "mtime_utc": "2026-09-05T14:24:06+00:00",
+    "sha256": "NOT HASHED (size+mtime only)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet",
+    "exists": true,
+    "bytes": 24015048,
+    "mtime_utc": "2026-09-05T14:27:05+00:00",
+    "sha256": "NOT HASHED (size+mtime only)"
+   }
+  ],
+  "git_commit": "7407a1d",
+  "python": "3.12.10",
+  "generated_utc": "2026-09-05T15:20:13+00:00"
+ },
+ "generated_utc": "2026-09-05T15:20:13+00:00"
+}

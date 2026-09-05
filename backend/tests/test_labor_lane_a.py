@@ -209,3 +209,103 @@ def test_a1_forward_gate_is_derived_not_asserted():
         # it must have READ the panel's last month, not hardcoded one
         assert gate["panel_last_month"]
         assert isinstance(gate["months_between_panel_end_and_first_grade_date"], int)
+
+
+# ------------------------------------------------------------------------- A3
+
+A3 = pytest.importorskip("scripts.labor_a3_cpcv_pbo")
+
+
+def test_a3_pbo_baseline_is_derived_from_the_arm_count_not_assumed_to_be_half():
+    """`inference.pbo` says "0.5 is a coin flip". That is FALSE for a small odd N.
+
+    With N arms the OOS rank is discrete and PBO counts `j + 1 <= (N+1)/2`, so
+    under pure noise the rate is floor((N+1)/2)/N: 0.500 at N=8, 6/11 at N=11,
+    and 2/3 at N=3. A three-arm family quoted against 0.5 reads as catastrophic
+    overfitting when its own null is already 0.667.
+    """
+    rng = np.random.default_rng(11)
+    for n_arms, want in ((3, 2 / 3), (8, 0.5), (11, 6 / 11), (22, 0.5)):
+        M = pd.DataFrame(rng.normal(0, 0.03, size=(120, n_arms)),
+                         columns=[f"a{i}" for i in range(n_arms)])
+        blk = A3.pbo_block(M)
+        assert blk["pbo_baseline_under_pure_noise_for_this_n_arms"] == pytest.approx(
+            want, abs=1e-4), f"N={n_arms}"
+        if n_arms < 6:
+            assert "small_family_caveat" in blk
+
+
+def test_a3_pbo_block_reports_the_difference_from_its_own_baseline():
+    rng = np.random.default_rng(12)
+    M = pd.DataFrame(rng.normal(0, 0.03, size=(120, 8)),
+                     columns=[f"a{i}" for i in range(8)])
+    blk = A3.pbo_block(M)
+    assert blk["pbo_minus_baseline"] == pytest.approx(
+        blk["pbo"] - blk["pbo_baseline_under_pure_noise_for_this_n_arms"], abs=1e-9)
+    assert blk["verdict_against_its_own_baseline"] in {
+        "WORSE THAN A COIN FLIP", "AT THE COIN FLIP", "BETTER THAN A COIN FLIP"}
+
+
+def test_a3_cpcv_picks_the_planted_dominant_arm_in_every_partition():
+    """A planted world with one obviously best arm must select it everywhere.
+
+    If this fails the selection machinery is broken and every PBO in the receipt
+    is a number about that bug rather than about the leaderboard.
+    """
+    rng = np.random.default_rng(13)
+    T = 180
+    M = pd.DataFrame({
+        "good": rng.normal(0.02, 0.01, T),
+        "meh": rng.normal(0.000, 0.03, T),
+        "bad": rng.normal(-0.01, 0.03, T),
+    }, index=pd.period_range("2000-01", periods=T, freq="M").astype(str))
+    got = A3.cpcv_path_distribution(M, purge=1, embargo=1)
+    assert got["champion_is_the_same_arm_in_every_partition"] is True
+    assert list(got["in_sample_champion_counts"]) == ["good"]
+    assert got["oos_annualised_distribution"]["share_of_paths_negative"] == 0.0
+    assert got["share_of_partitions_won_by_a_NULL_arm"] == 0.0
+
+
+def test_a3_cpcv_cannot_determine_on_a_short_series():
+    M = pd.DataFrame(np.zeros((5, 3)), columns=list("abc"))
+    got = A3.cpcv_path_distribution(M, purge=1, embargo=1)
+    assert got["verdict"] == "CANNOT DETERMINE"
+
+
+def test_a3_seed_finding_counts_individual_seeds_not_the_seed_mean():
+    fams = {
+        "f": {"pbo": {"pbo": 0.5, "verdict": "x"},
+              "cpcv_path_distribution": {"in_sample_champion_counts": {
+                  "nn_pre_causal_s20260912|10bps": 9,
+                  "nn_pre_causal_seedmean|10bps": 6}}},
+    }
+    got = A3._seed_finding(fams)
+    assert got["f"]["won_by_an_individual_SEED"] == 9
+    assert got["f"]["partitions"] == 15
+    assert got["f"]["share_won_by_a_seed"] == pytest.approx(0.6)
+
+
+def test_a3_receipt_family_definitions_are_spelled_out_and_shortfalls_named():
+    rec = _receipt("A3_cpcv_pbo_run01.json")
+    if rec is None:
+        pytest.skip("A3 receipt not present")
+    lf = rec.get("learner_family") or {}
+    if lf.get("status") == "OK":
+        gd = lf["grid_32_definition"]
+        assert gd["cells_expected"] == 32
+        assert gd["cells_found"] == gd["cells_expected"], \
+            "the 32-cell grid must be 32 cells or say which are missing"
+    nf = rec.get("neural_family") or {}
+    if nf.get("status") == "OK":
+        sh = nf["family_shortfall"]
+        # 40 cells were looked at; the receipt must NOT claim 40 series
+        assert sh["w3b_cells_looked_at"] == 40
+        assert sh["cells_reconstructible_from_disk"] < 40
+        assert nf["stage_files_absent"], "a shortfall with no named absent file"
+
+
+def test_a3_receipt_fits_no_models():
+    rec = _receipt("A3_cpcv_pbo_run01.json")
+    if rec is None:
+        pytest.skip("A3 receipt not present")
+    assert rec["models_fitted"] == 0
