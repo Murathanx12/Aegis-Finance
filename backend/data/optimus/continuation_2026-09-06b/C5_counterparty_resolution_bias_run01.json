@@ -1,0 +1,2183 @@
+{
+ "job": "C5_counterparty_resolution_bias",
+ "tag": "run01",
+ "item": "item 5 of the seven-item 2026-09-06b mandate",
+ "question": "Were the supply-chain graph's RESOLVED counterparties systematically SMALL?  If so, customer momentum -- a large-customer -> small-supplier effect -- was tested on the wrong half of the graph.",
+ "reconciling_against": {
+  "W4b_companyworld_extract_run01.json": {
+   "resolution_rate": 0.3105,
+   "n_raw_mentions": 6753,
+   "n_resolved": 2097,
+   "n_after_dedup": 2020,
+   "distinct_permnos": 945
+  },
+  "W4b_companyworld_rerun_run01.json": {
+   "companyworld_only.family_max_t": -1.028,
+   "note": "the review's 1.447 -> 0.297 is the customer-momentum column specifically; this receipt does not re-run the regression and does not restate it as its own finding"
+  }
+ },
+ "statistics_declaration": "DESCRIPTIVE ONLY -- a distribution, a decomposition and a resolution-rate estimate.  No effect is claimed, no book exists, no Sharpe is computed, so DSR / MDE / the three-era table are DELIBERATELY ABSENT rather than silently omitted.  No Fama-MacBeth regression was re-run here; if one is, learner/inference.py's deflated_sharpe + power_note + full_report is mandatory for it.",
+ "llm_spend_usd": 0.0,
+ "universe": {
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+  "rule": "dollar_vol_20d >= $3,000,000/day AND close >= $5.0",
+  "rows_before": 925757,
+  "rows_after": 530447,
+  "names_before": 8981,
+  "names_after": 6546,
+  "distinct_months": 312,
+  "date_range": [
+   "1999-03-19",
+   "2024-12-20"
+  ],
+  "reconciles_with": "W4b_companyworld_rerun_run01.json -> training_universe_floors (925757 -> 530447, 8981 -> 6546)",
+  "named": "the W4b TRAINING universe: learner/train_table_long.parquet under the two floors above.  The same 530,447 rows / 6,546 names the Fama-MacBeth ran on, so the histogram compares ONE population."
+ },
+ "crsp_universe_census": {
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\crsp__stocknames.parquet",
+  "name_rows": 46108,
+  "distinct_permnos": 18691,
+  "distinct_normalised_name_keys": 25309,
+  "shrcd_counts": {
+   "11": 42836,
+   "10": 2415,
+   "12": 537,
+   "18": 175,
+   "48": 43,
+   "71": 34,
+   "14": 25,
+   "41": 21,
+   "70": 9,
+   "40": 6,
+   "21": 4,
+   "81": 2,
+   "42": 1
+  },
+  "adr_share_code_rows_30_31_73": 0,
+  "why_this_matters": "THIS IS THE EXTRACTOR'S ENTIRE RESOLVABLE UNIVERSE.  The pull is US ordinary common stock: shrcd 10/11/12/18 only, and ZERO rows with an ADR share code (30/31/73).  Nortel, Alcatel, Celestica, BP, SAP, Canon and Nissan return NOTHING from it -- verified by direct substring search on `comnam`.  So the producing agent's 'the residue is foreign or private' was not merely an assumption: for every foreign name it is TRUE BY CONSTRUCTION, because no foreign line exists to resolve to.  What that claim could not cover, and what the decomposition below measures, is the US names it also missed."
+ },
+ "cap_decile_histogram": {
+  "how": "deciles formed WITHIN MONTH on the floored panel (1 = smallest market cap).  The panel is therefore uniform at 10% per decile in EVERY month by construction, so no month re-weighting is needed and the flat 10% is the exact null.",
+  "edge_to_panel_month": {
+   "rule": "the last panel month <= filing_date (backward, same direction as the feature join)",
+   "lag_days_median": 13.0,
+   "lag_days_max": 34.0,
+   "n_edge_months": 104,
+   "panel_rows_in_those_months": 160338
+  },
+  "coverage": {
+   "n_edges": 2020,
+   "counterparty_in_floored_panel_that_month": 1733,
+   "subject_in_floored_panel_that_month": 1294,
+   "note": "an edge whose counterparty is NOT in the floored panel that month contributes nothing to the feature at all; the histogram is over the ones that do."
+  },
+  "panel_control": {
+   "label": "floored panel, edge months only",
+   "n": 160338,
+   "count_by_decile": {
+    "1": 16033,
+    "2": 16034,
+    "3": 16031,
+    "4": 16040,
+    "5": 16004,
+    "6": 16058,
+    "7": 16034,
+    "8": 16037,
+    "9": 16028,
+    "10": 16039
+   },
+   "share_by_decile": {
+    "1": 0.1,
+    "2": 0.1,
+    "3": 0.09998,
+    "4": 0.10004,
+    "5": 0.09981,
+    "6": 0.10015,
+    "7": 0.1,
+    "8": 0.10002,
+    "9": 0.09996,
+    "10": 0.10003
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 1.0,
+    "2": 1.0,
+    "3": 0.9998,
+    "4": 1.0004,
+    "5": 0.9981,
+    "6": 1.0015,
+    "7": 1.0,
+    "8": 1.0002,
+    "9": 0.9996,
+    "10": 1.0003
+   },
+   "mean_decile": 5.5002,
+   "share_bottom_3": 0.29998,
+   "share_top_3": 0.30002
+  },
+  "resolved_counterparties_ALL_EDGES": {
+   "label": "resolved_counterparties_ALL_EDGES",
+   "n": 1733,
+   "count_by_decile": {
+    "1": 33,
+    "2": 39,
+    "3": 68,
+    "4": 64,
+    "5": 72,
+    "6": 120,
+    "7": 112,
+    "8": 141,
+    "9": 259,
+    "10": 825
+   },
+   "share_by_decile": {
+    "1": 0.01904,
+    "2": 0.0225,
+    "3": 0.03924,
+    "4": 0.03693,
+    "5": 0.04155,
+    "6": 0.06924,
+    "7": 0.06463,
+    "8": 0.08136,
+    "9": 0.14945,
+    "10": 0.47605
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.1904,
+    "2": 0.225,
+    "3": 0.3924,
+    "4": 0.3693,
+    "5": 0.4155,
+    "6": 0.6924,
+    "7": 0.6463,
+    "8": 0.8136,
+    "9": 1.4945,
+    "10": 4.7605
+   },
+   "mean_decile": 8.1616,
+   "share_bottom_3": 0.08078,
+   "share_top_3": 0.70687,
+   "chi2_vs_panel_uniform": {
+    "chi2": 2947.006,
+    "df": 9,
+    "p": 0.0,
+    "n": 1733,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "ks_vs_uniform_pct_rank": {
+    "ks_D": 0.42946,
+    "p": 8.118883875415889e-291,
+    "n": 1733,
+    "mean_pct_rank": 0.77607,
+    "median_pct_rank": 0.88743,
+    "note": "H0: within-month percentile rank ~ U(0,1), which is what the panel is by construction."
+   },
+   "median_market_cap_usd": 14282945040.0
+  },
+  "resolved_counterparties_CUSTOMER_EDGES": {
+   "label": "resolved_counterparties_CUSTOMER_EDGES",
+   "n": 759,
+   "count_by_decile": {
+    "1": 11,
+    "2": 12,
+    "3": 17,
+    "4": 22,
+    "5": 33,
+    "6": 47,
+    "7": 43,
+    "8": 48,
+    "9": 105,
+    "10": 421
+   },
+   "share_by_decile": {
+    "1": 0.01449,
+    "2": 0.01581,
+    "3": 0.0224,
+    "4": 0.02899,
+    "5": 0.04348,
+    "6": 0.06192,
+    "7": 0.05665,
+    "8": 0.06324,
+    "9": 0.13834,
+    "10": 0.55468
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.1449,
+    "2": 0.1581,
+    "3": 0.224,
+    "4": 0.2899,
+    "5": 0.4348,
+    "6": 0.6192,
+    "7": 0.5665,
+    "8": 0.6324,
+    "9": 1.3834,
+    "10": 5.5468
+   },
+   "mean_decile": 8.5125,
+   "share_bottom_3": 0.0527,
+   "share_top_3": 0.75626,
+   "chi2_vs_panel_uniform": {
+    "chi2": 1833.292,
+    "df": 9,
+    "p": 0.0,
+    "n": 759,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "ks_vs_uniform_pct_rank": {
+    "ks_D": 0.4984,
+    "p": 8.708502176474132e-175,
+    "n": 759,
+    "mean_pct_rank": 0.81169,
+    "median_pct_rank": 0.92398,
+    "note": "H0: within-month percentile rank ~ U(0,1), which is what the panel is by construction."
+   },
+   "median_market_cap_usd": 20269255680.0
+  },
+  "resolved_counterparties_SUPPLIER_EDGES": {
+   "label": "resolved_counterparties_SUPPLIER_EDGES",
+   "n": 236,
+   "count_by_decile": {
+    "1": 4,
+    "2": 4,
+    "3": 11,
+    "4": 12,
+    "5": 8,
+    "6": 16,
+    "7": 10,
+    "8": 17,
+    "9": 31,
+    "10": 123
+   },
+   "share_by_decile": {
+    "1": 0.01695,
+    "2": 0.01695,
+    "3": 0.04661,
+    "4": 0.05085,
+    "5": 0.0339,
+    "6": 0.0678,
+    "7": 0.04237,
+    "8": 0.07203,
+    "9": 0.13136,
+    "10": 0.52119
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.1695,
+    "2": 0.1695,
+    "3": 0.4661,
+    "4": 0.5085,
+    "5": 0.339,
+    "6": 0.678,
+    "7": 0.4237,
+    "8": 0.7203,
+    "9": 1.3136,
+    "10": 5.2119
+   },
+   "mean_decile": 8.2373,
+   "share_bottom_3": 0.08051,
+   "share_top_3": 0.72458,
+   "chi2_vs_panel_uniform": {
+    "chi2": 488.407,
+    "df": 9,
+    "p": 1.7439958846970936e-99,
+    "n": 236,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "ks_vs_uniform_pct_rank": {
+    "ks_D": 0.46166,
+    "p": 1.4757843565845924e-46,
+    "n": 236,
+    "mean_pct_rank": 0.78882,
+    "median_pct_rank": 0.91191,
+    "note": "H0: within-month percentile rank ~ U(0,1), which is what the panel is by construction."
+   },
+   "median_market_cap_usd": 17608414560.0
+  },
+  "resolved_counterparties_COMPETITOR_EDGES": {
+   "label": "resolved_counterparties_COMPETITOR_EDGES",
+   "n": 636,
+   "count_by_decile": {
+    "1": 17,
+    "2": 23,
+    "3": 38,
+    "4": 29,
+    "5": 25,
+    "6": 52,
+    "7": 52,
+    "8": 65,
+    "9": 112,
+    "10": 223
+   },
+   "share_by_decile": {
+    "1": 0.02673,
+    "2": 0.03616,
+    "3": 0.05975,
+    "4": 0.0456,
+    "5": 0.03931,
+    "6": 0.08176,
+    "7": 0.08176,
+    "8": 0.1022,
+    "9": 0.1761,
+    "10": 0.35063
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.2673,
+    "2": 0.3616,
+    "3": 0.5975,
+    "4": 0.456,
+    "5": 0.3931,
+    "6": 0.8176,
+    "7": 0.8176,
+    "8": 1.022,
+    "9": 1.761,
+    "10": 3.5063
+   },
+   "mean_decile": 7.6289,
+   "share_bottom_3": 0.12264,
+   "share_top_3": 0.62893,
+   "chi2_vs_panel_uniform": {
+    "chi2": 553.214,
+    "df": 9,
+    "p": 2.277866356696908e-113,
+    "n": 636,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "ks_vs_uniform_pct_rank": {
+    "ks_D": 0.33879,
+    "p": 1.2319230525940233e-65,
+    "n": 636,
+    "mean_pct_rank": 0.7196,
+    "median_pct_rank": 0.81608,
+    "note": "H0: within-month percentile rank ~ U(0,1), which is what the panel is by construction."
+   },
+   "median_market_cap_usd": 7862632525.0
+  },
+  "subject_side_ALL_EDGES": {
+   "label": "subject/filer side (the SUPPLIER half) -- all edges",
+   "n": 1294,
+   "count_by_decile": {
+    "1": 49,
+    "2": 79,
+    "3": 118,
+    "4": 115,
+    "5": 81,
+    "6": 160,
+    "7": 172,
+    "8": 131,
+    "9": 161,
+    "10": 228
+   },
+   "share_by_decile": {
+    "1": 0.03787,
+    "2": 0.06105,
+    "3": 0.09119,
+    "4": 0.08887,
+    "5": 0.0626,
+    "6": 0.12365,
+    "7": 0.13292,
+    "8": 0.10124,
+    "9": 0.12442,
+    "10": 0.1762
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.3787,
+    "2": 0.6105,
+    "3": 0.9119,
+    "4": 0.8887,
+    "5": 0.626,
+    "6": 1.2365,
+    "7": 1.3292,
+    "8": 1.0124,
+    "9": 1.2442,
+    "10": 1.762
+   },
+   "mean_decile": 6.466,
+   "share_bottom_3": 0.19011,
+   "share_top_3": 0.40185,
+   "chi2_vs_panel_uniform": {
+    "chi2": 194.423,
+    "df": 9,
+    "p": 4.882043378819072e-37,
+    "n": 1294,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "ks_vs_uniform_pct_rank": {
+    "ks_D": 0.16613,
+    "p": 1.1096145100970538e-31,
+    "n": 1294,
+    "mean_pct_rank": 0.59551,
+    "median_pct_rank": 0.62482,
+    "note": "H0: within-month percentile rank ~ U(0,1), which is what the panel is by construction."
+   },
+   "median_market_cap_usd": 2862405420.0
+  },
+  "resolved_counterparties_DISTINCT_PERMNOS": {
+   "label": "DISTINCT counterparty permnos, first edge month",
+   "n": 578,
+   "count_by_decile": {
+    "1": 27,
+    "2": 36,
+    "3": 47,
+    "4": 44,
+    "5": 38,
+    "6": 63,
+    "7": 57,
+    "8": 68,
+    "9": 83,
+    "10": 115
+   },
+   "share_by_decile": {
+    "1": 0.04671,
+    "2": 0.06228,
+    "3": 0.08131,
+    "4": 0.07612,
+    "5": 0.06574,
+    "6": 0.109,
+    "7": 0.09862,
+    "8": 0.11765,
+    "9": 0.1436,
+    "10": 0.19896
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.4671,
+    "2": 0.6228,
+    "3": 0.8131,
+    "4": 0.7612,
+    "5": 0.6574,
+    "6": 1.09,
+    "7": 0.9862,
+    "8": 1.1765,
+    "9": 1.436,
+    "10": 1.9896
+   },
+   "mean_decile": 6.6159,
+   "share_bottom_3": 0.19031,
+   "share_top_3": 0.46021,
+   "chi2_vs_panel_uniform": {
+    "chi2": 106.602,
+    "df": 9,
+    "p": 7.219271556322049e-19,
+    "n": 578,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "ks_vs_uniform_pct_rank": {
+    "ks_D": 0.17709,
+    "p": 2.510163703078759e-16,
+    "n": 578,
+    "mean_pct_rank": 0.61387,
+    "median_pct_rank": 0.66288,
+    "note": "H0: within-month percentile rank ~ U(0,1), which is what the panel is by construction."
+   },
+   "median_market_cap_usd": 3609030410.0
+  },
+  "subject_side_DISTINCT_PERMNOS": {
+   "label": "DISTINCT subject permnos, first edge month",
+   "n": 248,
+   "count_by_decile": {
+    "1": 13,
+    "2": 15,
+    "3": 18,
+    "4": 25,
+    "5": 28,
+    "6": 31,
+    "7": 30,
+    "8": 25,
+    "9": 29,
+    "10": 34
+   },
+   "share_by_decile": {
+    "1": 0.05242,
+    "2": 0.06048,
+    "3": 0.07258,
+    "4": 0.10081,
+    "5": 0.1129,
+    "6": 0.125,
+    "7": 0.12097,
+    "8": 0.10081,
+    "9": 0.11694,
+    "10": 0.1371
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.5242,
+    "2": 0.6048,
+    "3": 0.7258,
+    "4": 1.0081,
+    "5": 1.129,
+    "6": 1.25,
+    "7": 1.2097,
+    "8": 1.0081,
+    "9": 1.1694,
+    "10": 1.371
+   },
+   "mean_decile": 6.1855,
+   "share_bottom_3": 0.18548,
+   "share_top_3": 0.35484,
+   "chi2_vs_panel_uniform": {
+    "chi2": 18.532,
+    "df": 9,
+    "p": 0.029477147011344636,
+    "n": 248,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "median_market_cap_usd": 2533273680.0
+  },
+  "median_market_cap_usd_panel_edge_months": 1919746425.0,
+  "top25_resolved_counterparties_by_edge_count": [
+   {
+    "counterparty_permno": 27828,
+    "edges": 47,
+    "name": "Hewlett-Packard",
+    "median_decile": 10.0,
+    "median_mktcap": 96111265580.0
+   },
+   {
+    "counterparty_permno": 12490,
+    "edges": 46,
+    "name": "IBM",
+    "median_decile": 10.0,
+    "median_mktcap": 155230952000.0
+   },
+   {
+    "counterparty_permno": 55976,
+    "edges": 39,
+    "name": "Wal-Mart",
+    "median_decile": 10.0,
+    "median_mktcap": 203806100280.0
+   },
+   {
+    "counterparty_permno": 10107,
+    "edges": 36,
+    "name": "Microsoft",
+    "median_decile": 10.0,
+    "median_mktcap": 279329580460.0
+   },
+   {
+    "counterparty_permno": 59328,
+    "edges": 35,
+    "name": "Intel",
+    "median_decile": 10.0,
+    "median_mktcap": 123681599999.99998
+   },
+   {
+    "counterparty_permno": 22779,
+    "edges": 28,
+    "name": "Motorola",
+    "median_decile": 10.0,
+    "median_mktcap": 37733851000.0
+   },
+   {
+    "counterparty_permno": 76076,
+    "edges": 28,
+    "name": "Cisco",
+    "median_decile": 10.0,
+    "median_mktcap": 134181372520.0
+   },
+   {
+    "counterparty_permno": 49154,
+    "edges": 24,
+    "name": "Target",
+    "median_decile": 10.0,
+    "median_mktcap": 38864739680.0
+   },
+   {
+    "counterparty_permno": 19561,
+    "edges": 20,
+    "name": "Boeing",
+    "median_decile": 10.0,
+    "median_mktcap": 37057819680.0
+   },
+   {
+    "counterparty_permno": 12060,
+    "edges": 19,
+    "name": "General Electric",
+    "median_decile": 10.0,
+    "median_mktcap": 355128872870.0
+   },
+   {
+    "counterparty_permno": 25785,
+    "edges": 15,
+    "name": "Ford Motor Company",
+    "median_decile": 10.0,
+    "median_mktcap": 22794255360.000004
+   },
+   {
+    "counterparty_permno": 11081,
+    "edges": 15,
+    "name": "Dell Computer Corporation",
+    "median_decile": 10.0,
+    "median_mktcap": 74223620000.0
+   },
+   {
+    "counterparty_permno": 14593,
+    "edges": 14,
+    "name": "Apple Computer",
+    "median_decile": 10.0,
+    "median_mktcap": 35397013450.0
+   },
+   {
+    "counterparty_permno": 21178,
+    "edges": 14,
+    "name": "Lockheed Martin Corporation",
+    "median_decile": 10.0,
+    "median_mktcap": 27790445355.0
+   },
+   {
+    "counterparty_permno": 66181,
+    "edges": 13,
+    "name": "Home Depot",
+    "median_decile": 10.0,
+    "median_mktcap": 83826319170.0
+   },
+   {
+    "counterparty_permno": 24766,
+    "edges": 13,
+    "name": "Northrop Grumman",
+    "median_decile": 10.0,
+    "median_mktcap": 17482261440.0
+   },
+   {
+    "counterparty_permno": 10104,
+    "edges": 13,
+    "name": "Oracle Corporation",
+    "median_decile": 10.0,
+    "median_mktcap": 73084883100.0
+   },
+   {
+    "counterparty_permno": 10078,
+    "edges": 12,
+    "name": "Sun Microsystems, Inc.",
+    "median_decile": 10.0,
+    "median_mktcap": 23254410435.0
+   },
+   {
+    "counterparty_permno": 21936,
+    "edges": 12,
+    "name": "Pfizer",
+    "median_decile": 10.0,
+    "median_mktcap": 194267658585.0
+   },
+   {
+    "counterparty_permno": 27684,
+    "edges": 11,
+    "name": "Avnet",
+    "median_decile": 7.0,
+    "median_mktcap": 2907350100.0
+   },
+   {
+    "counterparty_permno": 10145,
+    "edges": 11,
+    "name": "Honeywell International",
+    "median_decile": 10.0,
+    "median_mktcap": 31794972000.0
+   },
+   {
+    "counterparty_permno": 15579,
+    "edges": 11,
+    "name": "Texas Instruments",
+    "median_decile": 10.0,
+    "median_mktcap": 47441430810.0
+   },
+   {
+    "counterparty_permno": 12079,
+    "edges": 10,
+    "name": "General Motors Corporation",
+    "median_decile": 9.5,
+    "median_mktcap": 17671863480.0
+   },
+   {
+    "counterparty_permno": 29209,
+    "edges": 10,
+    "name": "Arrow Electronics",
+    "median_decile": 6.0,
+    "median_mktcap": 2561269030.0
+   },
+   {
+    "counterparty_permno": 61241,
+    "edges": 10,
+    "name": "Advanced Micro Devices",
+    "median_decile": 8.0,
+    "median_mktcap": 5316012750.0
+   }
+  ],
+  "robustness_unfloored_panel_deciles": {
+   "label": "resolved counterparties, deciles on the UNFLOORED panel",
+   "n": 1911,
+   "count_by_decile": {
+    "1": 16,
+    "2": 24,
+    "3": 27,
+    "4": 43,
+    "5": 59,
+    "6": 85,
+    "7": 125,
+    "8": 201,
+    "9": 249,
+    "10": 1082
+   },
+   "share_by_decile": {
+    "1": 0.00837,
+    "2": 0.01256,
+    "3": 0.01413,
+    "4": 0.0225,
+    "5": 0.03087,
+    "6": 0.04448,
+    "7": 0.06541,
+    "8": 0.10518,
+    "9": 0.1303,
+    "10": 0.5662
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.0837,
+    "2": 0.1256,
+    "3": 0.1413,
+    "4": 0.225,
+    "5": 0.3087,
+    "6": 0.4448,
+    "7": 0.6541,
+    "8": 1.0518,
+    "9": 1.303,
+    "10": 5.662
+   },
+   "mean_decile": 8.7211,
+   "share_bottom_3": 0.03506,
+   "share_top_3": 0.80167,
+   "chi2_vs_panel_uniform": {
+    "chi2": 4906.724,
+    "df": 9,
+    "p": 0.0,
+    "n": 1911,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "median_market_cap_usd": 10837911479.999998,
+   "n_edges_matched": 1911,
+   "why": "a decile formed INSIDE an already liquidity-screened universe understates the tilt; this is the same question asked of the whole 8,981-name panel."
+  },
+  "robustness_unfloored_panel_deciles_subject": {
+   "label": "subject/filer side, deciles on the UNFLOORED panel",
+   "n": 1944,
+   "count_by_decile": {
+    "1": 48,
+    "2": 79,
+    "3": 154,
+    "4": 154,
+    "5": 162,
+    "6": 231,
+    "7": 202,
+    "8": 286,
+    "9": 273,
+    "10": 355
+   },
+   "share_by_decile": {
+    "1": 0.02469,
+    "2": 0.04064,
+    "3": 0.07922,
+    "4": 0.07922,
+    "5": 0.08333,
+    "6": 0.11883,
+    "7": 0.10391,
+    "8": 0.14712,
+    "9": 0.14043,
+    "10": 0.18261
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.2469,
+    "2": 0.4064,
+    "3": 0.7922,
+    "4": 0.7922,
+    "5": 0.8333,
+    "6": 1.1883,
+    "7": 1.0391,
+    "8": 1.4712,
+    "9": 1.4043,
+    "10": 1.8261
+   },
+   "mean_decile": 6.7845,
+   "share_bottom_3": 0.14455,
+   "share_top_3": 0.47016,
+   "median_market_cap_usd": 1383326200.0
+  }
+ },
+ "resolution_audit": {
+  "n_raw_mentions_recomputed": 6753,
+  "n_raw_mentions_receipt": 6753,
+  "reconciles": true,
+  "routes_recomputed": {
+   "not_in_crsp_at_date": 4138,
+   "name": 1076,
+   "ticker": 1021,
+   "generic_single_token": 518
+  },
+  "routes_receipt": {
+   "name": 1076,
+   "not_in_crsp_at_date": 4138,
+   "generic_single_token": 518,
+   "ticker": 1021
+  },
+  "n_resolved_recomputed": 2097,
+  "resolution_rate_recomputed": 0.3105,
+  "routes_reconcile": true,
+  "declared_rename_table_is_dead_code": {
+   "rename_route_count_in_6753_mentions": 0,
+   "entries": [
+    {
+     "rename_key": "GOOGLE",
+     "alias": "ALPHABET",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "FACEBOOK",
+     "alias": "META PLATFORMS",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "SPRINT NEXTEL",
+     "alias": "SPRINT",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "DOW CHEMICAL",
+     "alias": "DOW",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "UNITED TECHNOLOGIES",
+     "alias": "RAYTHEON TECHNOLOGIES",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "SQUARE",
+     "alias": "BLOCK",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "KRAFT",
+     "alias": "KRAFT HEINZ",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "TIME WARNER CABLE",
+     "alias": "CHARTER COMMUNICATIONS",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": false
+    },
+    {
+     "rename_key": "IBM",
+     "alias": "INTERNATIONAL BUSINESS MACHS COR",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "GE",
+     "alias": "GENERAL ELECTRIC",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "GM",
+     "alias": "GENERAL MOTORS",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "J&J",
+     "alias": "JOHNSON JOHNSON",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "P&G",
+     "alias": "PROCTER GAMBLE",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "UPS",
+     "alias": "UNITED PARCEL SERVICE",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "AMD",
+     "alias": "ADVANCED MICRO DEVICES",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "EMC",
+     "alias": "E M C CORP MA",
+     "alias_in_crsp": true,
+     "blocked_by_generic_single_token_gate": true
+    },
+    {
+     "rename_key": "HPE",
+     "alias": "HEWLETT PACKARD ENTR",
+     "alias_in_crsp": false,
+     "blocked_by_generic_single_token_gate": true
+    }
+   ],
+   "n_entries_blocked_before_the_branch": 9,
+   "mentions_whose_key_is_a_rename_entry": {
+    "GOOGLE": 8,
+    "FACEBOOK": 0,
+    "SPRINT NEXTEL": 6,
+    "DOW CHEMICAL": 6,
+    "UNITED TECHNOLOGIES": 3,
+    "SQUARE": 0,
+    "KRAFT": 1,
+    "TIME WARNER CABLE": 0,
+    "IBM": 58,
+    "GE": 4,
+    "GM": 1,
+    "J&J": 3,
+    "P&G": 0,
+    "UPS": 3,
+    "AMD": 6,
+    "EMC": 14,
+    "HPE": 0
+   },
+   "why_it_matters": "`IBM` is the single most-named counterparty in the run (54 mentions) and its rename entry can never be reached.  This is a FINDING about the extractor, not a repair: `scripts/companyworld_extract.py` is out of scope for this item and was not touched."
+  },
+  "unresolved_full_decomposition": {
+   "n": 4656,
+   "by_reason": {
+    "key_never_in_crsp": 4189,
+    "key_in_crsp_but_no_window_covers_filing_date": 392,
+    "SHOULD_HAVE_RESOLVED_but_did_not": 52,
+    "key_live_but_ambiguous_multiple_permnos": 19,
+    "resolves_to_the_filer_itself": 4
+   },
+   "with_a_unique_token_prefix_match": 563,
+   "with_a_foreign_legal_form_token": 178,
+   "note": "EXACT, over every unresolved mention -- not a sample.  'key_never_in_crsp' is the only bucket consistent with the producing agent's 'foreign or private' story; every other bucket is a name CRSP knows."
+  },
+  "unresolved_DISTINCT_NAMES": {
+   "n": 3110,
+   "by_reason": {
+    "key_never_in_crsp": 2796,
+    "key_in_crsp_but_no_window_covers_filing_date": 274,
+    "SHOULD_HAVE_RESOLVED_but_did_not": 21,
+    "key_live_but_ambiguous_multiple_permnos": 16,
+    "resolves_to_the_filer_itself": 3
+   },
+   "with_a_unique_token_prefix_match": 347
+  },
+  "recoverable_residue_decile_table": {
+   "label": "RECOVERABLE-BUT-MISSED counterparties (unique token-prefix match), mention level",
+   "n": 165,
+   "count_by_decile": {
+    "1": 4,
+    "2": 4,
+    "3": 6,
+    "4": 8,
+    "5": 11,
+    "6": 8,
+    "7": 6,
+    "8": 16,
+    "9": 41,
+    "10": 61
+   },
+   "share_by_decile": {
+    "1": 0.02424,
+    "2": 0.02424,
+    "3": 0.03636,
+    "4": 0.04848,
+    "5": 0.06667,
+    "6": 0.04848,
+    "7": 0.03636,
+    "8": 0.09697,
+    "9": 0.24848,
+    "10": 0.3697
+   },
+   "ratio_vs_panel_uniform_10pct": {
+    "1": 0.2424,
+    "2": 0.2424,
+    "3": 0.3636,
+    "4": 0.4848,
+    "5": 0.6667,
+    "6": 0.4848,
+    "7": 0.3636,
+    "8": 0.9697,
+    "9": 2.4848,
+    "10": 3.697
+   },
+   "mean_decile": 7.9636,
+   "share_bottom_3": 0.08485,
+   "share_top_3": 0.71515,
+   "chi2_vs_panel_uniform": {
+    "chi2": 199.303,
+    "df": 9,
+    "p": 4.637811544048493e-38,
+    "n": 165,
+    "note": "H0: the panel's own within-month-uniform 10% per decile."
+   },
+   "median_market_cap_usd": 8644530840.0,
+   "caveat": "the token-prefix rule is looser than the extractor's and is NOT validated to the extractor's standard; this table says which SIZE the residue sits at, not that every row of it should have been an edge."
+  },
+  "recoverable_residue_top40_by_mentions": [
+   {
+    "name_key": "SUMITOMO",
+    "n": 26,
+    "permno": 73315,
+    "crsp": "SUMITOMO BANK CA",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "ALZA",
+    "n": 18,
+    "permno": 64856,
+    "crsp": "ALZA",
+    "mktcap": 7905212199.999999
+   },
+   {
+    "name_key": "FLEXTRONICS",
+    "n": 11,
+    "permno": 11724,
+    "crsp": "FLEXTRONICS",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "LUCENT",
+    "n": 10,
+    "permno": 83332,
+    "crsp": "LUCENT TECHNOLOGIES",
+    "mktcap": 193575435875.0
+   },
+   {
+    "name_key": "COMPAQ",
+    "n": 9,
+    "permno": 68347,
+    "crsp": "COMPAQ COMPUTER",
+    "mktcap": 46695000000.0
+   },
+   {
+    "name_key": "WAL MART",
+    "n": 9,
+    "permno": 55976,
+    "crsp": "WAL MART STORES",
+    "mktcap": 248296005000.0
+   },
+   {
+    "name_key": "CHRYSLER",
+    "n": 7,
+    "permno": 11260,
+    "crsp": "CHRYSLER",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "ROHM",
+    "n": 6,
+    "permno": 23990,
+    "crsp": "ROHM HAAS",
+    "mktcap": 8400915420.0
+   },
+   {
+    "name_key": "LOWES",
+    "n": 6,
+    "permno": 61399,
+    "crsp": "LOWES COMPANIES",
+    "mktcap": 45856375890.00001
+   },
+   {
+    "name_key": "VERIZON",
+    "n": 6,
+    "permno": 65875,
+    "crsp": "VERIZON COMMUNICATIONS",
+    "mktcap": 120795727900.0
+   },
+   {
+    "name_key": "WARNER BROS",
+    "n": 6,
+    "permno": 22976,
+    "crsp": "WARNER BROS DISCOVERY",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "PHILIPS",
+    "n": 6,
+    "permno": 42753,
+    "crsp": "PHILIPS INDUSTRIES",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "KMART",
+    "n": 4,
+    "permno": 89757,
+    "crsp": "KMART HOLDING",
+    "mktcap": 17116860559.999998
+   },
+   {
+    "name_key": "SEAGATE",
+    "n": 4,
+    "permno": 69607,
+    "crsp": "SEAGATE TECHNOLOGY",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "QWEST",
+    "n": 4,
+    "permno": 85032,
+    "crsp": "QWEST COMMUNICATIONS",
+    "mktcap": 11680768600.0
+   },
+   {
+    "name_key": "CELANESE",
+    "n": 4,
+    "permno": 90520,
+    "crsp": "CELANESE CORP DEL",
+    "mktcap": 4003218870.0
+   },
+   {
+    "name_key": "CISCO",
+    "n": 4,
+    "permno": 76076,
+    "crsp": "CISCO SYSTEMS",
+    "mktcap": 136302935980.0
+   },
+   {
+    "name_key": "WALMART",
+    "n": 4,
+    "permno": 55976,
+    "crsp": "WALMART",
+    "mktcap": 240172958120.0
+   },
+   {
+    "name_key": "AMCOR",
+    "n": 4,
+    "permno": 75967,
+    "crsp": "AMCOR CAPITAL",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "FORD",
+    "n": 4,
+    "permno": 25785,
+    "crsp": "FORD MOTOR",
+    "mktcap": 26111202305.0
+   },
+   {
+    "name_key": "ACER",
+    "n": 4,
+    "permno": 91471,
+    "crsp": "ACER THERAPEUTICS",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "HYATT",
+    "n": 4,
+    "permno": 93098,
+    "crsp": "HYATT HOTELS",
+    "mktcap": 1718472210.0000002
+   },
+   {
+    "name_key": "TOYS R US",
+    "n": 3,
+    "permno": 61065,
+    "crsp": "TOYS R US",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "T MOBILE",
+    "n": 3,
+    "permno": 91937,
+    "crsp": "T MOBILE U S",
+    "mktcap": 5597097300.0
+   },
+   {
+    "name_key": "BUY",
+    "n": 3,
+    "permno": 87591,
+    "crsp": "BUY",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "QUANTA",
+    "n": 3,
+    "permno": 85792,
+    "crsp": "QUANTA SERVICES",
+    "mktcap": 2952268590.0
+   },
+   {
+    "name_key": "3M",
+    "n": 3,
+    "permno": 22592,
+    "crsp": "3M",
+    "mktcap": 57928030480.0
+   },
+   {
+    "name_key": "3COM",
+    "n": 3,
+    "permno": 76129,
+    "crsp": "3COM",
+    "mktcap": 13742937845.0
+   },
+   {
+    "name_key": "DETROIT DIESEL",
+    "n": 3,
+    "permno": 79751,
+    "crsp": "DETROIT DIESEL",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "COMPUSA",
+    "n": 3,
+    "permno": 77179,
+    "crsp": "COMPUSA",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "COPPER MOUNTAIN",
+    "n": 3,
+    "permno": 86885,
+    "crsp": "COPPER MOUNTAIN NETWORKS",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "MALLINCKRODT",
+    "n": 3,
+    "permno": 12511,
+    "crsp": "MALLINCKRODT",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "NICKELODEON",
+    "n": 3,
+    "permno": 81264,
+    "crsp": "NICKELODEON THEATER",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "PLIANT",
+    "n": 3,
+    "permno": 19485,
+    "crsp": "PLIANT THERAPEUTICS",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "PACIFICORP",
+    "n": 3,
+    "permno": 42833,
+    "crsp": "PACIFICORP",
+    "mktcap": NaN
+   },
+   {
+    "name_key": "SIEBEL",
+    "n": 3,
+    "permno": 83693,
+    "crsp": "SIEBEL SYSTEMS",
+    "mktcap": 4475833325.0
+   },
+   {
+    "name_key": "ASYST",
+    "n": 3,
+    "permno": 79568,
+    "crsp": "ASYST TECHNOLOGIES",
+    "mktcap": 388135125.0
+   },
+   {
+    "name_key": "BLACK HILLS",
+    "n": 2,
+    "permno": 61946,
+    "crsp": "BLACK HILLS",
+    "mktcap": 1130293240.0
+   },
+   {
+    "name_key": "BROCADE",
+    "n": 2,
+    "permno": 86881,
+    "crsp": "BROCADE COMMUNICATIONS SYS",
+    "mktcap": 13209567247.009998
+   },
+   {
+    "name_key": "SMART MODULAR",
+    "n": 2,
+    "permno": 82616,
+    "crsp": "SMART MODULAR TECHNOLOGIES",
+    "mktcap": NaN
+   }
+  ],
+  "sample_50": {
+   "seed": 20260906,
+   "rng": "np.random.default_rng(seed)",
+   "sampling_frame": "the UNRESOLVED MENTION list (not distinct names): the 31.05% headline is a mention-level rate, so an unbiased estimate of what it is missing must be drawn at the mention level.  A frequently-named counterparty therefore appears in proportion to how often it is named, which is correct.",
+   "n_frame": 4656,
+   "n_drawn": 50,
+   "tally": {
+    "MATCHED_US_LISTED": 6,
+    "PLAUSIBLY_FOREIGN_OR_PRIVATE": 42,
+    "AMBIGUOUS": 2
+   },
+   "share_matched_us_listed_wilson95": {
+    "p_hat": 0.12,
+    "lo": 0.05618,
+    "hi": 0.23805,
+    "n": 50,
+    "k": 6,
+    "method": "Wilson score, 95%"
+   },
+   "share_matched_or_ambiguous_wilson95": {
+    "p_hat": 0.16,
+    "lo": 0.08337,
+    "hi": 0.28514,
+    "n": 50,
+    "k": 8,
+    "method": "Wilson score, 95%"
+   },
+   "implied_true_resolution_rate": {
+    "headline": 0.3105,
+    "point": 0.3933,
+    "lo": 0.3493,
+    "hi": 0.4747,
+    "upper_bound_if_every_AMBIGUOUS_is_also_a_miss": 0.4208,
+    "formula": "(n_resolved + n_unresolved * p_missed) / n_raw_mentions",
+    "n_resolved": 2097,
+    "n_unresolved": 4656,
+    "n_raw": 6753
+   },
+   "table": [
+    {
+     "raw_name": "EMC",
+     "raw_ticker": null,
+     "normalised_key": "EMC",
+     "filing_date": "2002-03-18",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": "E M C CORP MA",
+     "matched_permno": 10147,
+     "listing_kind": "us_common",
+     "match_route": "declared_rename_table",
+     "match_score": 0.95,
+     "verdict": "MATCHED_US_LISTED"
+    },
+    {
+     "raw_name": "Mercury (formerly Daewoo)",
+     "raw_ticker": null,
+     "normalised_key": "MERCURY FORMERLY DAEWOO",
+     "filing_date": "2002-03-29",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Cable & Wireless",
+     "raw_ticker": null,
+     "normalised_key": "CABLE WIRELESS",
+     "filing_date": "2002-03-29",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "CompAir",
+     "raw_ticker": null,
+     "normalised_key": "COMPAIR",
+     "filing_date": "2002-03-28",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "BHA Aero Composite Parts Co., Ltd.",
+     "raw_ticker": null,
+     "normalised_key": "BHA AERO COMPOSITE PARTS",
+     "filing_date": "2002-03-28",
+     "edge_type": "shared_technology",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Nine West",
+     "raw_ticker": null,
+     "normalised_key": "NINE WEST",
+     "filing_date": "2002-03-29",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_in_crsp_but_no_window_covers_filing_date",
+     "best_alias_match": "NINE WEST GROUP INC",
+     "matched_permno": 78928,
+     "listing_kind": "us_common",
+     "match_route": "exact_name_key",
+     "match_score": 1.0,
+     "verdict": "MATCHED_US_LISTED"
+    },
+    {
+     "raw_name": "eSys Distribution",
+     "raw_ticker": null,
+     "normalised_key": "ESYS DISTRIBUTION",
+     "filing_date": "2002-09-25",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Alcatel",
+     "raw_ticker": null,
+     "normalised_key": "ALCATEL",
+     "filing_date": "2002-12-04",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "ERSO",
+     "raw_ticker": null,
+     "normalised_key": "ERSO",
+     "filing_date": "2003-03-13",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Centerpulse Orthopedics, Inc.",
+     "raw_ticker": null,
+     "normalised_key": "CENTERPULSE ORTHOPEDICS",
+     "filing_date": "2003-03-14",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Celestica, Inc.",
+     "raw_ticker": null,
+     "normalised_key": "CELESTICA",
+     "filing_date": "2003-03-26",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Novation, LLC",
+     "raw_ticker": null,
+     "normalised_key": "NOVATION",
+     "filing_date": "2003-03-28",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "NEBS",
+     "raw_ticker": null,
+     "normalised_key": "NEBS",
+     "filing_date": "2003-08-01",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Yoplait",
+     "raw_ticker": null,
+     "normalised_key": "YOPLAIT",
+     "filing_date": "2003-08-05",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Coltec Industries Inc",
+     "raw_ticker": null,
+     "normalised_key": "COLTEC INDUSTRIES",
+     "filing_date": "2004-02-24",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_in_crsp_but_no_window_covers_filing_date",
+     "best_alias_match": "COLTEC INDUSTRIES INC",
+     "matched_permno": 77473,
+     "listing_kind": "us_common",
+     "match_route": "exact_name_key",
+     "match_score": 1.0,
+     "verdict": "MATCHED_US_LISTED"
+    },
+    {
+     "raw_name": "Saab",
+     "raw_ticker": null,
+     "normalised_key": "SAAB",
+     "filing_date": "2004-03-26",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Nortel Networks",
+     "raw_ticker": null,
+     "normalised_key": "NORTEL NETWORKS",
+     "filing_date": "2004-04-06",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Canadian National Railway",
+     "raw_ticker": "CNI",
+     "normalised_key": "CANADIAN NATIONAL RAILWAY",
+     "filing_date": "2005-02-11",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Rainy River Energy",
+     "raw_ticker": null,
+     "normalised_key": "RAINY RIVER ENERGY",
+     "filing_date": "2005-02-11",
+     "edge_type": "regulatory_exposure",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Nissan",
+     "raw_ticker": "NSANY",
+     "normalised_key": "NISSAN",
+     "filing_date": "2005-02-28",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "J R Crompton",
+     "raw_ticker": null,
+     "normalised_key": "J R CROMPTON",
+     "filing_date": "2005-03-16",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Matador Petroleum Corporation",
+     "raw_ticker": null,
+     "normalised_key": "MATADOR PETROLEUM",
+     "filing_date": "2005-03-16",
+     "edge_type": "supplier",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "BP",
+     "raw_ticker": "BP",
+     "normalised_key": "BP",
+     "filing_date": "2005-03-16",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Cargill, Incorporated",
+     "raw_ticker": null,
+     "normalised_key": "CARGILL",
+     "filing_date": "2005-07-12",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "CNH Global N.V.",
+     "raw_ticker": null,
+     "normalised_key": "CNH GLOBAL N V",
+     "filing_date": "2006-02-22",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate+foreign_legal_form",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "CSI Wireless",
+     "raw_ticker": null,
+     "normalised_key": "CSI WIRELESS",
+     "filing_date": "2006-03-10",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "IBM",
+     "raw_ticker": null,
+     "normalised_key": "IBM",
+     "filing_date": "2006-03-16",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": "INTERNATIONAL BUSINESS MACHS COR",
+     "matched_permno": 12490,
+     "listing_kind": "us_common",
+     "match_route": "declared_rename_table",
+     "match_score": 0.95,
+     "verdict": "MATCHED_US_LISTED"
+    },
+    {
+     "raw_name": "NEX 1 Future, Co., Ltd.",
+     "raw_ticker": null,
+     "normalised_key": "NEX 1 FUTURE",
+     "filing_date": "2006-09-06",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Rooms To Go Kids",
+     "raw_ticker": null,
+     "normalised_key": "ROOMS TO GO KIDS",
+     "filing_date": "2007-02-05",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "MEGlobal",
+     "raw_ticker": null,
+     "normalised_key": "MEGLOBAL",
+     "filing_date": "2007-02-20",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "STATS-Chippac",
+     "raw_ticker": null,
+     "normalised_key": "STATS CHIPPAC",
+     "filing_date": "2007-03-01",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Acucote, Inc.",
+     "raw_ticker": null,
+     "normalised_key": "ACUCOTE",
+     "filing_date": "2007-03-01",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Jacmar Companies",
+     "raw_ticker": null,
+     "normalised_key": "JACMAR COMPANIES",
+     "filing_date": "2007-03-13",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "SAP",
+     "raw_ticker": "SAP",
+     "normalised_key": "SAP",
+     "filing_date": "2007-12-07",
+     "edge_type": "shared_technology",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "GNC",
+     "raw_ticker": null,
+     "normalised_key": "GNC",
+     "filing_date": "2007-04-30",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "J&J",
+     "raw_ticker": null,
+     "normalised_key": "J&J",
+     "filing_date": "2008-02-28",
+     "edge_type": "regulatory_exposure",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": "JOHNSON & JOHNSON",
+     "matched_permno": 22111,
+     "listing_kind": "us_common",
+     "match_route": "declared_rename_table",
+     "match_score": 0.95,
+     "verdict": "MATCHED_US_LISTED"
+    },
+    {
+     "raw_name": "Federal National Mortgage Association",
+     "raw_ticker": "FNMA",
+     "normalised_key": "FEDERAL NATIONAL MORTGAGE ASSOCIATION",
+     "filing_date": "2008-03-18",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": "FEDERAL NATIONAL MORTGAGE ASSN",
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "unique_leading_2_token_prefix",
+     "match_score": 0.7,
+     "verdict": "AMBIGUOUS"
+    },
+    {
+     "raw_name": "sanofi-aventis",
+     "raw_ticker": null,
+     "normalised_key": "SANOFI AVENTIS",
+     "filing_date": "2008-02-29",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "CSL",
+     "raw_ticker": null,
+     "normalised_key": "CSL",
+     "filing_date": "2008-02-29",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "HSBC UK",
+     "raw_ticker": null,
+     "normalised_key": "HSBC UK",
+     "filing_date": "2008-07-30",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Genesis",
+     "raw_ticker": null,
+     "normalised_key": "GENESIS",
+     "filing_date": "2008-11-26",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": "10 permnos start with this key",
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "token_prefix_multi_permno",
+     "match_score": 0.5,
+     "verdict": "AMBIGUOUS"
+    },
+    {
+     "raw_name": "Oc\u00e9",
+     "raw_ticker": null,
+     "normalised_key": "OC",
+     "filing_date": "2009-02-13",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Nortel",
+     "raw_ticker": null,
+     "normalised_key": "NORTEL",
+     "filing_date": "2009-12-29",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Erie Insurance Exchange",
+     "raw_ticker": null,
+     "normalised_key": "ERIE INSURANCE EXCHANGE",
+     "filing_date": "2010-02-25",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "GHH RAND",
+     "raw_ticker": null,
+     "normalised_key": "GHH RAND",
+     "filing_date": "2010-02-26",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Land America Health & Fitness Co., LTD.",
+     "raw_ticker": null,
+     "normalised_key": "LAND AMERICA HEALTH FITNESS",
+     "filing_date": "2010-03-08",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Saks Fifth Avenue",
+     "raw_ticker": null,
+     "normalised_key": "SAKS FIFTH AVENUE",
+     "filing_date": "2010-03-03",
+     "edge_type": "customer",
+     "direction": "out",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Schultz Steel Company",
+     "raw_ticker": null,
+     "normalised_key": "SCHULTZ STEEL",
+     "filing_date": "2010-05-27",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Canon",
+     "raw_ticker": "CAJ",
+     "normalised_key": "CANON",
+     "filing_date": "2010-03-24",
+     "edge_type": "supplier",
+     "direction": "in",
+     "extractor_reason": "key_never_in_crsp",
+     "best_alias_match": null,
+     "matched_permno": null,
+     "listing_kind": null,
+     "match_route": "no_crsp_candidate",
+     "match_score": 0.0,
+     "verdict": "PLAUSIBLY_FOREIGN_OR_PRIVATE"
+    },
+    {
+     "raw_name": "Noble Drilling",
+     "raw_ticker": null,
+     "normalised_key": "NOBLE DRILLING",
+     "filing_date": "2011-03-01",
+     "edge_type": "competitor",
+     "direction": "mutual",
+     "extractor_reason": "key_in_crsp_but_no_window_covers_filing_date",
+     "best_alias_match": "NOBLE DRILLING CORP",
+     "matched_permno": 90537,
+     "listing_kind": "us_common",
+     "match_route": "exact_name_key",
+     "match_score": 1.0,
+     "verdict": "MATCHED_US_LISTED"
+    }
+   ],
+   "grading_rules": {
+    "MATCHED_US_LISTED": "exact normalised key in CRSP stocknames at any date (score 1.00) OR the key is a unique token-prefix of exactly one permno (score 0.90).  'US-listed' = IN CRSP and therefore resolvable; an ADR line counts.",
+    "PLAUSIBLY_FOREIGN_OR_PRIVATE": "no CRSP key and no unique prefix candidate (score 0.00).",
+    "AMBIGUOUS": "a candidate exists but more than one permno claims it (score 0.50-0.60).  Named unknown, never guessed.",
+    "no_llm": "regex + normalisation + the extractor's own RENAMES table only."
+   }
+  }
+ },
+ "headline_numbers": {
+  "resolved_counterparty_share_in_top_3_deciles": 0.70687,
+  "panel_share_in_top_3_deciles": 0.30002,
+  "resolved_counterparty_mean_decile": 8.1616,
+  "panel_mean_decile": 5.5002,
+  "median_market_cap_usd_resolved_counterparties": 14282945040.0,
+  "median_market_cap_usd_panel": 1919746425.0,
+  "chi2_edge_level": {
+   "chi2": 2947.006,
+   "df": 9,
+   "p": 0.0,
+   "n": 1733,
+   "note": "H0: the panel's own within-month-uniform 10% per decile."
+  },
+  "chi2_distinct_permnos": {
+   "chi2": 106.602,
+   "df": 9,
+   "p": 7.219271556322049e-19,
+   "n": 578,
+   "note": "H0: the panel's own within-month-uniform 10% per decile."
+  },
+  "customer_edges_mean_decile": 8.5125,
+  "sample_50_tally": {
+   "MATCHED_US_LISTED": 6,
+   "PLAUSIBLY_FOREIGN_OR_PRIVATE": 42,
+   "AMBIGUOUS": 2
+  },
+  "implied_true_resolution_rate_point": 0.3933
+ },
+ "verdict_direction": "RESOLVED_SIDE_IS_LARGE",
+ "verdict": "NO -- customer momentum was NOT tested on the small half of the graph; it was tested on the LARGE half.  Resolved counterparties sit at mean within-month market-cap decile 8.1616 against the panel's 5.5002 (median cap $14.3bn vs $1.9bn; 47.6% of edges land in decile 10 alone, chi2=2947.006 on 9 df), and on customer-type edges specifically at 8.5125 (median cap $20.3bn) while the filer/supplier side sits lower at 6.466 (median $2.9bn) -- which is the Cohen-Frazzini shape, large customer and smaller supplier, not its inverse.  The number that decides it: mean decile 8.5125 for resolved customers against 5.50 for the panel by construction.",
+ "verdict_scope_and_what_is_still_open": {
+  "settled": "claim 3's resolution-bias hypothesis.  The resolved half is not the small half, so 'more tape made it weaker' cannot be explained by the extractor having tested the wrong side of the graph.",
+  "not_settled_by_this_receipt": [
+   "POWER.  `graph_cust_mom_1m_ew` matched 1.74% of panel rows (W4b_companyworld_rerun_run01.json -> join.match_rate).  A 1.74%-coverage column is a different reason for a small t than either bias or absence of the mechanism, and this receipt does not adjudicate between them.",
+   "SUPPLIER-SIDE SCOPE.  The filer half's median cap is $2.9bn on the floored panel and $1.4bn unfloored -- mid-cap, not the small/neglected tail where Cohen-Frazzini is strongest.  The graph therefore tests the mechanism among mid-to-large suppliers.  That is a DIFFERENT limitation from the one claim 3 proposed, and it is the one a next session should price: the reading that would settle it is the same FM run restricted to subjects below the panel's median cap, with learner/inference.py's full block attached.",
+   "EXTRACTOR RECALL, not bias.  ~4.0-7.9 percentage points of additional mention-level resolution look recoverable (see sample_50), and the recoverable residue is ALSO large (mean decile 7.96) -- so repairing the resolver would push the graph MORE mega-cap, not less."
+  ]
+ },
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\c6b_counterparty_bias.py"
+  ],
+  "resolved_config": {
+   "seed": 20260906,
+   "sample_n": 50,
+   "floor_dollar_vol_usd_per_day": 3000000.0,
+   "floor_close_usd": 5.0,
+   "llm_calls": 0,
+   "llm_spend_usd": 0.0,
+   "network_calls": 0
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_v1.parquet",
+    "sha256": "21c6bc5f8660b7598282b4a71bf1b07253b029379c6eda57e0b9234ba7107d9c",
+    "bytes": 89794
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\graph\\companyworld_work\\records_run01.jsonl",
+    "sha256": "d42227c94d14538e6b60753d7260dc2d8a84e2a8313ec2f53fd4dc6f0be48d3f",
+    "bytes": 3043931
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\crsp__stocknames.parquet",
+    "sha256": "8875036f25c6708cdbf68efdc6c3a8a61e5785fd79e6e10292349efd708c1e6f",
+    "bytes": 1910034
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06\\W4b_companyworld_extract_run01.json",
+    "sha256": "e4569d49ab5f68e63777be4382a0ad43a9b0c331e5cf413e36ebd058cac24d43",
+    "bytes": 2715
+   }
+  ],
+  "git_commit": "59ace19",
+  "generated_utc": "2026-09-05T14:38:08.287138+00:00"
+ }
+}
