@@ -1,0 +1,37 @@
+{
+ "job": "S5_companyworld_integrity_check",
+ "what": "coordinator's independent integrity check of the session's one new DATASET, run against the parquet on disk rather than against the producing agent's report",
+ "file": "backend/data/optimus/graph/companyworld_v1.parquet",
+ "rows": 2020,
+ "distinct_permnos_either_side": 945,
+ "checks": {
+  "edges_visible_before_their_filing_date": 0,
+  "inverted_validity_windows_valid_to_le_valid_from": 0,
+  "feature_date_before_filing_date": 0,
+  "self_edges_subject_equals_counterparty": 0,
+  "duplicate_(subject,counterparty,type,filing_date)": 0
+ },
+ "ranges": {
+  "filing_date": [
+   "1999-09-01",
+   "2011-03-03"
+  ],
+  "valid_to": [
+   "2001-08-31",
+   "2013-03-02"
+  ],
+  "note": "valid_to is filing_date + 730d (the liveness rule), which is why it runs past the last filing"
+ },
+ "quality": {
+  "quote_verified_rate": 0.9465,
+  "confidence": {
+   "min": 0.3,
+   "median": 0.9,
+   "max": 1.0
+  }
+ },
+ "verdict": "PASS -- every PIT invariant holds on the file itself.",
+ "what_this_does_NOT_check": "whether the 68.9% of mentions that did not resolve to a permno are genuinely non-US-listed (the producing agent's claim) or a resolver failure. If the unresolved counterparties are systematically the LARGE ones, the new arm is a different graph rather than the same graph on a different era, and W4b's negative would be measuring the wrong thing. That is claim 3 on the attack list and it is NOT settled here.",
+ "llm_spend_usd": 0.0,
+ "generated_utc": "2026-09-05T12:26:44.209889+00:00"
+}
