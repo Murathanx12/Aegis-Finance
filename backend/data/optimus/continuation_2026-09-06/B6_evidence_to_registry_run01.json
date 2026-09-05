@@ -1,0 +1,206 @@
+{
+ "job": "B6 \u00a74 \u2014 evidence memory -> signal registry",
+ "licence": "PRODUCT_EXPERIMENT",
+ "entry_point": "python -m learner.evidence_memory --to-registry",
+ "written_utc": "2026-09-05T12:06:27+00:00",
+ "headline": "12 rows across 3 families into conditional_evidence:; 1 family excluded (SUPERSEDED), withholding 15 cells including 9 of the memory's 12 SUPPORTED; 308 IDEA cells not exported",
+ "rows_by_family_era_state": {
+  "weekend-W3-supervised | 1999-2007 | SUPPORTED": 1,
+  "weekend-W3-supervised | 2008-2015 | SUPPORTED": 1,
+  "weekend-W3-supervised | 2016-2024 | SUPPORTED": 1,
+  "weekend-W3-supervised | ALL | SUPPORTED": 1,
+  "weekend-W5-options-iv | 1999-2007 | SUPPORTED": 1,
+  "weekend-W5-options-iv | 2008-2015 | SUPPORTED": 1,
+  "weekend-W5-options-iv | 2016-2024 | SUPPORTED": 1,
+  "weekend-W5-options-iv | ALL | SUPPORTED": 1,
+  "weekend-W7b-archetype-book | 1999-2007 | COST_KILLED": 1,
+  "weekend-W7b-archetype-book | 2008-2015 | COST_KILLED": 1,
+  "weekend-W7b-archetype-book | 2016-2024 | COST_KILLED": 1,
+  "weekend-W7b-archetype-book | ALL | COST_KILLED": 1
+ },
+ "rows_by_state": {
+  "SUPPORTED": 8,
+  "COST_KILLED": 4
+ },
+ "rows_by_era": {
+  "1999-2007": 3,
+  "2008-2015": 3,
+  "2016-2024": 3,
+  "ALL": 3
+ },
+ "rows_by_verdict": {
+  "NOISE": 6,
+  "SCREEN_ONLY": 5,
+  "CANNOT DETERMINE": 1
+ },
+ "cells_exported": 4,
+ "idea_cells_not_exported": 308,
+ "families_excluded": {
+  "weekend-W7-matched-loser": {
+   "reason": "SUPERSEDED",
+   "why": "W7 matched-control LEAK: the control pool excluded future LOSERS as well as winners, so any predictor of outcome DISPERSION differed from winners by construction. Fixed in 35915db; the leaked receipts are in _superseded_leaked_control/. log_dollar_vol_20d went Holm 0.000178 -> 0.158.",
+   "cells_withheld_by_state": {
+    "IDEA": 5,
+    "SUPPORTED": 9,
+    "CONDITIONAL": 1
+   },
+   "observations_row_superseded": 101
+  }
+ },
+ "observations_on_file": 101454,
+ "observations_counted": 101353,
+ "observations_superseded": {
+  "W7 matched-control LEAK: the control pool excluded future LOSERS as well as winners, so any predictor of outcome DISPERSION differed from winners by construction. Fixed in 35915db; the leaked receipts are in _superseded_leaked_control/. log_dollar_vol_20d went Holm 0.000178 -> 0.158.": 101
+ },
+ "supersession_rule_effects": {
+  "0:weekend-W7-matched-loser": {
+   "before_utc": "2026-09-05T05:40:00+00:00",
+   "cell_prefix": null,
+   "observations_excluded": 101,
+   "why": "W7 matched-control LEAK: the control pool excluded future LOSERS as well as winners, so any predictor of outcome DISPERSION differed from winners by construction. Fixed in 35915db; the leaked receipts are in _superseded_leaked_control/. log_dollar_vol_20d went Holm 0.000178 -> 0.158.",
+   "WARNING": null
+  }
+ },
+ "reconciliation_against_the_snapshot": {
+  "snapshot_state_counts": {
+   "IDEA": 313,
+   "SUPPORTED": 12,
+   "COST_KILLED": 1,
+   "CONDITIONAL": 1
+  },
+  "note": "327 cells = 4 exported + 15 withheld with the excluded family + 308 IDEA. SUPPORTED 12 = 3 exported + 9 withheld; CONDITIONAL 1 and 5 IDEA cells are withheld with it."
+ },
+ "idempotency_proof": {
+  "sha256_before_this_run": "0881f8a27723442595e29baeff37fc7cc887284e9918c4390179214a9414dfc1",
+  "sha256_after_run_1": "3224a8510f017fbca8dd1afbf058ca0931f9867766b34af7fe9fe713962c78ef",
+  "sha256_after_run_2": "3224a8510f017fbca8dd1afbf058ca0931f9867766b34af7fe9fe713962c78ef",
+  "sha256_after_run_3": "3224a8510f017fbca8dd1afbf058ca0931f9867766b34af7fe9fe713962c78ef",
+  "runs_2_and_3_byte_identical_to_run_1": true,
+  "exit_codes": [
+   0,
+   0,
+   0
+  ],
+  "how": "the block carries no wall clock: provenance is rows_sha256 + the newest observation utc, both functions of the store"
+ },
+ "registry_round_trip": {
+  "method": "TEXT surgery between two markers; the file is never parsed and re-dumped, because 56 lines of reasoned comment precede the first key and yaml.safe_dump would delete all of them",
+  "line_endings_preserved": "CRLF (the file's own convention)",
+  "guard": "to_registry() re-parses the result and REFUSES if any top-level key other than conditional_evidence differs",
+  "pinned_by": "test_everything_outside_the_markers_survives_byte_for_byte"
+ },
+ "registry_readers_checked": {
+  "backend/services/investment_committee.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/services/kill_conditions.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": true
+  },
+  "backend/services/opportunity_funnel.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/services/pm_actions.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": true
+  },
+  "backend/services/pm_engine.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/services/recommendation.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/services/shadow_portfolios.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/services/signal_registry.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": true
+  },
+  "backend/tests/guard_contract.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/tests/test_evidence_memory_superseded.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": true
+  },
+  "backend/tests/test_evidence_registry_export.py": {
+   "mentions_conditional_evidence": true,
+   "reads_the_yaml_directly": true
+  },
+  "backend/tests/test_opportunity_funnel.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/tests/test_optionm_provenance.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": true
+  },
+  "backend/tests/test_recommendation.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "backend/tests/test_signal_registry.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  },
+  "learner/evidence_memory.py": {
+   "mentions_conditional_evidence": true,
+   "reads_the_yaml_directly": true
+  },
+  "scripts/mirror_challenge.py": {
+   "mentions_conditional_evidence": false,
+   "reads_the_yaml_directly": false
+  }
+ },
+ "read_only_proof": {
+  "Registry_dataclass_fields": [
+   "schema",
+   "signals",
+   "source_of_truth",
+   "standing_constraints",
+   "written"
+  ],
+  "conditional_evidence_is_a_field": false,
+  "load_reads_top_level_keys": [
+   "schema",
+   "written",
+   "signals",
+   "standing_constraints",
+   "source_of_truth"
+  ],
+  "n_signals_after_the_write": 30,
+  "python_files_mentioning_conditional_evidence_outside_the_generator": [
+   "backend/tests/test_evidence_registry_export.py",
+   "learner/evidence_memory.py"
+  ],
+  "conclusion": "no reader consumes the block; it is invisible to permits(), weight() and check_closed() by construction, not by convention"
+ },
+ "superseded_cannot_vote": {
+  "can_the_test_go_red": true,
+  "how_proved": "`live_rows` was temporarily reverted to the pre-fix behaviour (return every row unfiltered), the file was restored byte-identical afterwards, and 5 of 11 tests went red",
+  "red_proof_transcript": "store = WindowsPath('C:/Users/mrthn/AppData/Local/Temp/pytest-of-mrthn/pytest-217/test_the_registry_export_exclu0')\n\n    def test_the_registry_export_excludes_the_superseded_family(store):\n        \"\"\"THE PATH THAT DID NOT EXIST WHEN THE FILTER WAS WRITTEN.\n    \n        The export is the second consumer, and the whole point of `live_rows` is\n        that it inherits the filter rather than re-implementing or forgetting it.\n        \"\"\"\n        rows, meta = EM.registry_rows()\n        assert [r[\"family\"] for r in rows if r[\"era\"] == \"ALL\"] == [FAMILY]\n        assert meta[\"families_excluded\"] == {}\n    \n        _write_rule(store)\n        rows, meta = EM.registry_rows()\n        assert rows == [], rows\n        assert FAMILY in meta[\"families_excluded\"]\n        assert meta[\"families_excluded\"][FAMILY][\"reason\"] == \"SUPERSEDED\"\n        # Withheld, and SAID SO. Silently dropping a retracted family is the same\n        # error as letting it vote, pointed the other way. Here the rule's boundary\n        # postdates every row, so there is no SURVIVING cell to withhold and the\n        # honest number is the row count the boundary already removed.\n>       assert meta[\"families_excluded\"][FAMILY][\"cells_withheld_by_state\"] == {}\nE       AssertionError: assert {'SUPPORTED': 1} == {}\nE         \nE         Left contains 1 more item:\nE         {'SUPPORTED': 1}\nE         Use -v to get more diff\n\nbackend\\tests\\test_evidence_memory_superseded.py:148: AssertionError\n______________ test_a_whole_family_retraction_needs_no_boundary _______________\n\nstore = WindowsPath('C:/Users/mrthn/AppData/Local/Temp/pytest-of-mrthn/pytest-217/test_a_whole_family_retraction0')\n\n    def test_a_whole_family_retraction_needs_no_boundary(store):\n        \"\"\"`before_utc=None` supersedes the family for all time \u2014 a retraction with\n        no surviving correction. Written through the real entry point.\"\"\"\n        EM.supersede(FAMILY, None, \"the whole family is withdrawn\")\n        rules = EM.read_supersessions()\n        assert len(rules) == 1\n        kept, dropped, effect = EM.live_rows()\n>       assert kept == []\nE       AssertionError: assert [{'cell': 'ar...3, ...}, ...}] == []\nE         \nE         Left contains 2 more items, first extra item: {'cell': 'arm|10bps', 'controlled_t': None, 'dsr': 0.99, 'eras': {'1999-2007': {'mean_pct': 1.0, 'months': 48, 'sign':...'sign': 1, 't': 2.6}, '2016-2024': {'mean_pct': 1.2, 'months': 96, 'sign': 1, 't': 2.2}, 'eras_measured': 3, ...}, ...}\nE         Use -v to get more diff\n\nbackend\\tests\\test_evidence_memory_superseded.py:226: AssertionError\n______________ test_a_rule_that_excludes_nothing_says_so_loudly _______________\n\nstore = WindowsPath('C:/Users/mrthn/AppData/Local/Temp/pytest-of-mrthn/pytest-217/test_a_rule_that_excludes_noth0')\n\n    def test_a_rule_that_excludes_nothing_says_so_loudly(store):\n        \"\"\"SILENCE IS NOT EVIDENCE. A rule aimed at a family that is not in the\n        store excludes zero rows, and must never read as 'applied, no effect'.\"\"\"\n        _write_rule(store, dict(RULE, family_id=\"a-family-that-does-not-exist\"))\n        kept, dropped, effect = EM.live_rows()\n        assert len(kept) == 2 and dropped == {}\n>       (only,) = effect.values()\n        ^^^^^^^\nE       ValueError: not enough values to unpack (expected 1, got 0)\n\nbackend\\tests\\test_evidence_memory_superseded.py:236: ValueError\n=========================== short test summary info ===========================\nFAILED backend/tests/test_evidence_memory_superseded.py::test_state_of_refuses_a_superseded_observation\nFAILED backend/tests/test_evidence_memory_superseded.py::test_snapshot_excludes_the_superseded_family\nFAILED backend/tests/test_evidence_memory_superseded.py::test_the_registry_export_excludes_the_superseded_family\nFAILED backend/tests/test_evidence_memory_superseded.py::test_a_whole_family_retraction_needs_no_boundary\nFAILED backend/tests/test_evidence_memory_superseded.py::test_a_rule_that_excludes_nothing_says_so_loudly\n5 failed, 6 passed in 0.41s\n",
+  "what_e6ce604_did_not_cover": "the filter lived inside snapshot() alone. state_of() and read_all() are public and unfiltered, so the registry export -- a second consumer written after the fix -- would have inherited the unfiltered store with nothing going red. live_rows() is now the one place, and snapshot/state_of/registry_rows all route through it",
+  "additional_holes_closed": [
+   "read_supersessions() SKIPPED an unparseable rule line; a dropped observation costs one data point, a dropped supersession re-admits a retracted experiment. It now raises EvidenceMemoryError.",
+   "before_utc is compared lexicographically, so a bare date ('2026-09-05') excluded NOTHING while reading as a retraction. _check_before_utc refuses anything shorter than a full timestamp.",
+   "before_utc=None now means the WHOLE family for all time.",
+   "a rule that excludes zero observations now carries a WARNING in the snapshot receipt instead of reading as 'applied, no effect'."
+  ]
+ },
+ "pytest": {
+  "backend/tests/test_evidence_memory_superseded.py": "11 passed in 0.32s",
+  "backend/tests/test_evidence_registry_export.py": "32 passed in 13.57s",
+  "backend/tests/test_signal_registry.py": "20 passed in 0.49s",
+  "backend/tests/test_optionm_provenance.py": "5 passed in 0.28s"
+ },
+ "open_question_for_the_human": "weekend-W7b-archetype-book is EXPORTED (COST_KILLED) and weekend-W7-matched-loser is not. The leak rule names only the latter, and this job does not invent retractions -- but W7b is the archetype BOOK built on W7's candidates. If the same control-pool fix touches it, the supersession needs a second rule; deciding that is not a machine's call.",
+ "no_llm_calls": true,
+ "nothing_pushed_sealed_ordered_or_deployed": true
+}
