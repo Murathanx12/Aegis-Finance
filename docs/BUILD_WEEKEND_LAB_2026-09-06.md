@@ -116,6 +116,20 @@ the mean analyst target price), long the top 50, value-weighted, 10 bps:
 **This is the first cell in the entire weekend with enough tape to answer its own
 question** — which is the single thing the long panel was built to buy.
 
+**And unlike the neural arm, it is buyable.** Under this repo's own execution
+floor:
+
+| filter | TW net | excess | t |
+|---|---|---|---|
+| no floor | 56.66 | 9.64%/yr | 2.055 |
+| $3m/day (house floor) | 53.92 | 7.73%/yr | **2.08** |
+| $3m/day **and** close ≥ $5 | 52.29 | 7.74%/yr | **2.022** |
+
+**Only 7.85% of it is unbuyable**, against **93.7%** for the neural arm's 561×.
+The t is essentially unchanged. Its median holding closes at $12.87 on $3.1m/day
+— real names. Whatever else is wrong with this finding, it is not a microcap
+artefact.
+
 **And then the era table:**
 
 | era | mean/month | t |

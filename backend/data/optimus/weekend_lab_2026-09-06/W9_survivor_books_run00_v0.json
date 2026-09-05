@@ -4,12 +4,12 @@
  "survivors_harvested": {
   "cp_iv_spread_30d": {
    "from": "W5_options_iv",
-   "controlled_t": 4.393,
+   "controlled_t": 4.144,
    "direction": "high"
   },
   "skew_25d_30d": {
    "from": "W5_options_iv",
-   "controlled_t": -4.567,
+   "controlled_t": -5.364,
    "direction": "low"
   },
   "attention_z_5d": {
@@ -71,23 +71,13 @@
    "from": "W7_matched_loser",
    "controlled_t": 3.711,
    "direction": "high"
-  },
-  "log_dollar_vol_20d": {
-   "from": "W7_matched_loser",
-   "controlled_t": -5.69,
-   "direction": "low"
-  },
-  "log_dollar_vol_20d__xs": {
-   "from": "W7_matched_loser",
-   "controlled_t": -5.083,
-   "direction": "low"
   }
  },
  "not_on_the_joined_panel": [],
  "cross_section_shape": {
   "cp_iv_spread_30d": {
    "booked_direction": "high",
-   "controlled_t_from_the_screen": 4.393,
+   "controlled_t_from_the_screen": 4.144,
    "deciles_pct": [
     -0.619,
     -0.048,
@@ -106,7 +96,7 @@
   },
   "skew_25d_30d": {
    "booked_direction": "low",
-   "controlled_t_from_the_screen": -4.567,
+   "controlled_t_from_the_screen": -5.364,
    "deciles_pct": [
     -0.516,
     0.011,
@@ -350,44 +340,6 @@
    "top_minus_bottom_pct": 0.898,
    "top_decile_turns_over": false,
    "effect_lives_in": "the TOP decile"
-  },
-  "log_dollar_vol_20d": {
-   "booked_direction": "low",
-   "controlled_t_from_the_screen": -5.69,
-   "deciles_pct": [
-    -0.019,
-    0.131,
-    0.193,
-    0.128,
-    0.21,
-    0.2,
-    0.123,
-    0.028,
-    -0.09,
-    -0.106
-   ],
-   "top_minus_bottom_pct": -0.087,
-   "top_decile_turns_over": true,
-   "effect_lives_in": "the TOP decile"
-  },
-  "log_dollar_vol_20d__xs": {
-   "booked_direction": "low",
-   "controlled_t_from_the_screen": -5.083,
-   "deciles_pct": [
-    -0.019,
-    0.131,
-    0.193,
-    0.128,
-    0.21,
-    0.2,
-    0.123,
-    0.028,
-    -0.09,
-    -0.106
-   ],
-   "top_minus_bottom_pct": -0.087,
-   "top_decile_turns_over": true,
-   "effect_lives_in": "the TOP decile"
   }
  },
  "features_whose_effect_is_in_the_BOTTOM_decile": [
@@ -398,10 +350,10 @@
   "ret_5d",
   "coverage"
  ],
- "cells_looked_at": 32,
- "search_breadth_feature_job_variant_rows": 273,
- "n_trials_used_for_the_DSR": 305,
- "dsr_if_only_the_books_were_counted": 0.4805,
+ "cells_looked_at": 28,
+ "search_breadth_feature_job_variant_rows": 258,
+ "n_trials_used_for_the_DSR": 286,
+ "dsr_if_only_the_books_were_counted": 0.5029,
  "why_the_bigger_family": "n_trials counts the SCREENING that chose which features to book as well as the books themselves. Measured on this weekend's receipts, `target_rev_1m__xs` -- the best cell -- survived in ONE of W7's four variants while `log_dollar_vol_20d` survived in all four. A DSR over the book cells alone prices the second search and ignores the first, which flatters the thin-path survivor most.",
  "cells": {
   "cp_iv_spread_30d|high|10bps": {
@@ -991,90 +943,6 @@
    "months_beating_market": 0.4968,
    "worst_month_net": -0.4989,
    "hit_rate": 0.5909
-  },
-  "log_dollar_vol_20d|low|10bps": {
-   "months": 309,
-   "k": 50,
-   "weight": "vw",
-   "cost_bps_per_side": 10,
-   "tradable_floor_usd": null,
-   "rows_after_tradable_floor": 922284,
-   "mean_names_per_month": 50.0,
-   "mean_turnover": 0.431,
-   "terminal_wealth_net": 1.8565,
-   "terminal_wealth_gross": 2.4227,
-   "terminal_wealth_market_same_months": 13.1817,
-   "cagr_net": 0.0243,
-   "cagr_market": 0.1053,
-   "mean_monthly_excess": -0.006,
-   "annualised_excess": -0.072,
-   "t_stat_paired_vs_market": -2.209,
-   "months_beating_market": 0.4434,
-   "worst_month_net": -0.3798,
-   "hit_rate": 0.5469
-  },
-  "log_dollar_vol_20d|low|25bps": {
-   "months": 309,
-   "k": 50,
-   "weight": "vw",
-   "cost_bps_per_side": 25,
-   "tradable_floor_usd": null,
-   "rows_after_tradable_floor": 922284,
-   "mean_names_per_month": 50.0,
-   "mean_turnover": 0.431,
-   "terminal_wealth_net": 1.2447,
-   "terminal_wealth_gross": 2.4227,
-   "terminal_wealth_market_same_months": 13.1817,
-   "cagr_net": 0.0085,
-   "cagr_market": 0.1053,
-   "mean_monthly_excess": -0.00729,
-   "annualised_excess": -0.0875,
-   "t_stat_paired_vs_market": -2.687,
-   "months_beating_market": 0.4272,
-   "worst_month_net": -0.3811,
-   "hit_rate": 0.5372
-  },
-  "log_dollar_vol_20d__xs|low|10bps": {
-   "months": 309,
-   "k": 50,
-   "weight": "vw",
-   "cost_bps_per_side": 10,
-   "tradable_floor_usd": null,
-   "rows_after_tradable_floor": 922284,
-   "mean_names_per_month": 50.0,
-   "mean_turnover": 0.431,
-   "terminal_wealth_net": 1.8565,
-   "terminal_wealth_gross": 2.4227,
-   "terminal_wealth_market_same_months": 13.1817,
-   "cagr_net": 0.0243,
-   "cagr_market": 0.1053,
-   "mean_monthly_excess": -0.006,
-   "annualised_excess": -0.072,
-   "t_stat_paired_vs_market": -2.209,
-   "months_beating_market": 0.4434,
-   "worst_month_net": -0.3798,
-   "hit_rate": 0.5469
-  },
-  "log_dollar_vol_20d__xs|low|25bps": {
-   "months": 309,
-   "k": 50,
-   "weight": "vw",
-   "cost_bps_per_side": 25,
-   "tradable_floor_usd": null,
-   "rows_after_tradable_floor": 922284,
-   "mean_names_per_month": 50.0,
-   "mean_turnover": 0.431,
-   "terminal_wealth_net": 1.2447,
-   "terminal_wealth_gross": 2.4227,
-   "terminal_wealth_market_same_months": 13.1817,
-   "cagr_net": 0.0085,
-   "cagr_market": 0.1053,
-   "mean_monthly_excess": -0.00729,
-   "annualised_excess": -0.0875,
-   "t_stat_paired_vs_market": -2.687,
-   "months_beating_market": 0.4272,
-   "worst_month_net": -0.3811,
-   "hit_rate": 0.5372
   }
  },
  "cells_beating_the_market_NET": [
@@ -1107,22 +975,52 @@
   "target_rev_1m__xs|high|10bps",
   "target_rev_1m__xs|high|25bps"
  ],
+ "execution_floor_check": {
+  "signal": "book_target_rev_1m__xs",
+  "label": "target_rev_1m__xs|high|10bps",
+  "cost_bps": 10.0,
+  "floor_source": "evaluate.TRADABLE_DOLLAR_VOL -- this repo's execution floor",
+  "no_floor": {
+   "terminal_wealth_net": 56.655,
+   "market": 13.0306,
+   "annualised_excess": 0.0964,
+   "t": 2.055,
+   "months": 308
+  },
+  "dollar_vol_3m_house_floor": {
+   "terminal_wealth_net": 53.9232,
+   "market": 13.0306,
+   "annualised_excess": 0.0773,
+   "t": 2.08,
+   "months": 308
+  },
+  "dollar_vol_3m_and_close_ge_5": {
+   "terminal_wealth_net": 52.2859,
+   "market": 13.0306,
+   "annualised_excess": 0.0774,
+   "t": 2.022,
+   "months": 308
+  },
+  "share_of_the_headline_that_is_unbuyable": 0.0785,
+  "survives_the_floor": true,
+  "reading": "t 2.055 unfloored, t 2.022 restricted to names over $3m/day above $5"
+ },
  "best_cell": "target_rev_1m__xs|high|10bps",
  "best_mean_monthly_excess_pct": 0.8032,
  "inference": {
-  "n_cells_looked_at": 305,
+  "n_cells_looked_at": 286,
   "deflated_sharpe": {
    "sharpe": 0.1171,
-   "sharpe_benchmark_sr0": 0.1656,
-   "n_trials": 305,
+   "sharpe_benchmark_sr0": 0.1644,
+   "n_trials": 286,
    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
    "skew": 0.588,
    "kurtosis": 10.564,
    "n_periods": 308,
-   "z": -0.8646,
-   "dsr": 0.1936,
+   "z": -0.844,
+   "dsr": 0.1993,
    "verdict": "WITHIN_SELECTION_NOISE",
-   "reading": "after 305 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.166; this arm's is 0.117."
+   "reading": "after 286 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.164; this arm's is 0.117."
   },
   "power": {
    "n_periods": 308,
@@ -1147,13 +1045,13 @@
   },
   "spa": {
    "best_arm": "target_rev_1m__xs|high|10bps",
-   "n_arms": 32,
+   "n_arms": 28,
    "n_periods": 308,
    "n_boot": 500,
    "block_periods": 4.0,
    "t_spa": 2.1111,
    "p_spa_consistent": 0.1257,
-   "p_spa_lower": 0.1677,
+   "p_spa_lower": 0.1537,
    "p_spa_upper": 0.1038,
    "arm_means": {
     "cp_iv_spread_30d|high|10bps": -0.000243,
@@ -1183,21 +1081,17 @@
     "consensus__xs|low|10bps": -0.005005,
     "consensus__xs|low|25bps": -0.005814,
     "target_rev_1m__xs|high|10bps": 0.008032,
-    "target_rev_1m__xs|high|25bps": 0.005157,
-    "log_dollar_vol_20d|low|10bps": -0.006112,
-    "log_dollar_vol_20d|low|25bps": -0.007399,
-    "log_dollar_vol_20d__xs|low|10bps": -0.006112,
-    "log_dollar_vol_20d__xs|low|25bps": -0.007399
+    "target_rev_1m__xs|high|25bps": 0.005157
    },
    "verdict": "WITHIN_SPA_NULL",
    "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
   },
   "pbo": {
-   "pbo": 0.1143,
+   "pbo": 0.1429,
    "n_partitions": 70,
-   "n_arms": 32,
+   "n_arms": 28,
    "n_periods": 308,
-   "median_logit": 1.5041,
+   "median_logit": 1.3437,
    "verdict": "SELECTION_IS_STABLE",
    "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
   }
@@ -1239,13 +1133,13 @@
   "last_era_t": -0.028,
   "reading": "alive in 2 of the 2 earlier eras and flat in 2016-2024 (t -0.028) -- a DECAYED effect, not an absent one"
  },
- "multiplicity_note": "booking all 16 survivors in ONE family is also the multiplicity fix: five screens each reporting 'my best cell' is a five-fold search whose deflation nobody was computing, and the DSR here is over the whole weekend's search, not one job's",
+ "multiplicity_note": "booking all 14 survivors in ONE family is also the multiplicity fix: five screens each reporting 'my best cell' is a five-fold search whose deflation nobody was computing, and the DSR here is over the whole weekend's search, not one job's",
  "direction_note": "each feature is booked in the direction its SCREEN found. Trying both and keeping the better would double the family and hand the search a free sign.",
- "headline": "16 weekend survivors booked (32 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d', 'coverage']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.803%/month, DSR 0.1936, t2 needs 24.3y vs 25.67y",
+ "headline": "14 weekend survivors booked (28 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d', 'coverage']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.803%/month, DSR 0.1993, t2 needs 24.3y vs 25.67y",
  "verdict": "DECAYED (worked, then stopped)",
  "licence": "PRODUCT_EXPERIMENT",
  "job": "W9_survivor_books",
  "run": 1,
  "variant": 0,
- "written_utc": "2026-09-05T05:29:37+00:00"
+ "written_utc": "2026-09-05T05:47:13+00:00"
 }

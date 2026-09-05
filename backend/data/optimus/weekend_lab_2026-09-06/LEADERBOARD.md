@@ -120,3 +120,6 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W7b_archetype_book | 11 | 0 | best of 20 archetype cells is arch_raw|10bps|rebuild at +0.076%/month over 308 months (size-neutral  | 0.0515 | 0.7465 | 0.2 | 308 | 1380.1 | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 6.6%/yr or larger) |
 | W8_states_three_nulls | 11 | 1 | k=5 market states over 286 months; market circular-shift p 0.112 (observed spread 0.017384 vs null p | -- | -- | -- | -- | -- | NOISE |
 | W9_survivor_books | 11 | 0 | 14 weekend survivors booked (28 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have thei | 0.1993 | 0.1257 | 0.1429 | 308 | 24.3 | DECAYED (worked, then stopped) |
+| W3_neural_long | 11 | 2 | [cuda] best of 38 cells is nn_q_s20260909_q50|10bps at +0.580%/month vs market over 251 months (TW n | 0.394 | 0.1557 | 0.1429 | 251 | 22.8 | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 7.3%/yr or larger) |
+| W11_evidence_writeback | 11 | 0 | 88 receipts -> 882 cell observations; 302 cells tracked; states {'IDEA': 289, 'SUPPORTED': 11, 'COST | -- | -- | -- | -- | -- | INVENTORY |
+| W1_long_panel_inventory | 12 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |

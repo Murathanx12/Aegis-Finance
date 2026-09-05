@@ -217,6 +217,54 @@ def _panel():
     return LP.load_long()
 
 
+def floor_check(df, col: str, cost_bps: float = 10.0, label: str = "") -> dict:
+    """Re-book one signal under this repo's own EXECUTION FLOOR.
+
+    NONE of this weekend's book jobs applied `evaluate.TRADABLE_DOLLAR_VOL`
+    ($3m/day), which exists precisely because a book that holds what it cannot
+    buy is a backtest of something unbuyable. The neural arm showed what that
+    costs: terminal wealth **561.06** unfloored, **36.31** with the $3m floor and
+    a $5 price floor, and a t falling from 3.54 to 1.98. 93.7% of the headline
+    was untradeable.
+
+    So every book job attaches this. It does NOT enter the family -- adding a
+    floored twin for every cell would double the search and inflate the very
+    deflation the family exists to compute. It is a diagnostic that travels with
+    the number, which is the only form of correction that survives being quoted.
+    """
+    from learner import evaluate
+    out = {"signal": col, "label": label, "cost_bps": cost_bps,
+           "floor_source": "evaluate.TRADABLE_DOLLAR_VOL -- this repo's execution floor"}
+    for name, floor, pmin in (("no_floor", None, None),
+                              ("dollar_vol_3m_house_floor", evaluate.TRADABLE_DOLLAR_VOL, None),
+                              ("dollar_vol_3m_and_close_ge_5",
+                               evaluate.TRADABLE_DOLLAR_VOL, 5.0)):
+        sub = df if pmin is None else df[df["close"] >= pmin]
+        try:
+            bk = evaluate.book(sub, col, k=50, weight="vw", cost_bps=cost_bps,
+                               ret_col="fwd_1m", mkt_col="mkt_vw_1m",
+                               tradable_floor=floor)
+        except Exception as exc:                                        # noqa: BLE001
+            out[name] = {"error": f"{type(exc).__name__}: {exc}"}
+            continue
+        out[name] = {"terminal_wealth_net": bk.get("terminal_wealth_net"),
+                     "market": bk.get("terminal_wealth_market_same_months"),
+                     "annualised_excess": bk.get("annualised_excess"),
+                     "t": bk.get("t_stat_paired_vs_market"),
+                     "months": bk.get("months")}
+    a = (out.get("no_floor") or {}).get("terminal_wealth_net")
+    b = (out.get("dollar_vol_3m_and_close_ge_5") or {}).get("terminal_wealth_net")
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)) and a > 1:
+        out["share_of_the_headline_that_is_unbuyable"] = round(1.0 - (b - 1) / (a - 1), 4)
+    ta = (out.get("no_floor") or {}).get("t")
+    tb = (out.get("dollar_vol_3m_and_close_ge_5") or {}).get("t")
+    out["survives_the_floor"] = bool(
+        isinstance(tb, (int, float)) and isinstance(ta, (int, float)) and tb >= 2.0)
+    out["reading"] = (f"t {ta} unfloored, t {tb} restricted to names over "
+                      f"$3m/day above $5")
+    return out
+
+
 # ------------------------------------------------------------- W1: inventory
 
 def W1_long_panel_inventory(variant: int = 0) -> dict:
@@ -1993,6 +2041,9 @@ def W7b_archetype_book(variant: int = 0) -> dict:
         "cross_section_shape": shape,
         "cells_looked_at": len(cells),
         "cells": cells,
+        "execution_floor_check": floor_check(df, best.split("|")[0],
+                                             cost_bps=float(best.split("|")[1][:-3]),
+                                             label=best),
         "best_cell": best,
         "best_mean_monthly_excess_pct": round(float(np.mean(fam[best])) * 100, 4),
         "best_SIZE_NEUTRAL_cell": best_neutral,
@@ -2330,6 +2381,9 @@ def W9_survivor_books(variant: int = 0) -> dict:
         "cells": cells,
         "cells_beating_the_market_NET": beat,
         "cells_beating_the_market_GROSS": beat_gross,
+        "execution_floor_check": floor_check(
+            df, f"book_{best.split('|')[0]}", cost_bps=float(best.split('|')[-1][:-3]),
+            label=best),
         "best_cell": best,
         "best_mean_monthly_excess_pct": round(float(np.mean(fam[best])) * 100, 4),
         "inference": inf,
