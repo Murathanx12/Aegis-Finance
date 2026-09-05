@@ -589,11 +589,72 @@ what makes them indistinguishable.
 
 ---
 
-## 5. Still running / open
+## 5. What the evidence memory says, taken together
 
-- **W2** — the 32-cell learner grid on 26 years. First pass in flight.
-- **W7** — winner vs matched loser, re-running with the corrected overlap t.
-- **W8** — market states with three nulls.
-- **W3 / W4 / W5** — neural on GPU, supply-chain graph, options surface: in progress in parallel lanes.
+`learner/evidence_memory.py` is what makes a looping lab cumulative rather than
+repetitive: **a single distinct observation can neither promote nor kill**, and
+`REFUTED` additionally needs three observations that each *had the power* to
+detect the effect.
 
-*Claims for Fable to attack are marked as such above.*
+It also caught a flaw in itself, which is worth reading as a warning about every
+looping system:
+
+> `SUPPORTED  attention_z_5d  (cleared the full bar on 24 of 24 passes)`
+
+Twenty-four of twenty-four passes is not twenty-four pieces of evidence — the
+runner had executed a **deterministic** job twenty-four times against the same
+panel. A rule written to stop one lucky pass being quoted had licensed the exact
+opposite error: **a deterministic job promoting itself by being run again.**
+`evidence_key` now collapses observations that asked the same question of the
+same data and got the same answer. State counts before → after: SUPPORTED 12 → 7,
+REFUTED 2 → 0, IDEA 91 → 114.
+
+What replicates is a different **variant**, not a second execution:
+
+| cell | state | on |
+|---|---|---|
+| `cp_iv_spread_30d`, `skew_25d_30d` | SUPPORTED | 2 of 2 distinct observations (8 passes) |
+| `log_dollar_vol_20d` (+`__xs`) | SUPPORTED | 4 of 4, and 4 of 4 W7 variants |
+| `consensus_rev_1m__xs`, `net_rev_4w`, `consensus__xs` | SUPPORTED | 2-3 distinct |
+| `net_rev_1m` | CONDITIONAL | cleared once, not twice |
+| `attention_z_5d`, `amihud_21d`, `ret_5d` | **IDEA** | 9 passes collapse to **1** observation |
+| **`target_rev_1m__xs`** (the headline) | **IDEA** | **1 observation, however good** |
+
+---
+
+## 6. For Murat, on check-in
+
+**Nothing was pushed, sealed, ordered, deployed, or changed on Railway.** The
+lab's own rule. One command publishes the work:
+
+```
+git push -u origin lab/weekend-2026-09-06
+```
+
+Branch `lab/weekend-2026-09-06`, ~8 commits. Fast suite **6,545 passed, 17
+skipped, 0 failed** on the last full run.
+
+**Nothing here is ready to trade.** The Monday runbook
+(`aegis-alpha-terminal/docs/RUNBOOK_2026-09-08_REARM.md`) is unaffected by this
+weekend and should be run as written.
+
+**The three things worth your attention, in order:**
+
+1. **Analyst target-price revisions worked for 17 years and stopped in 2016** — powered, dated, and arbitraged rather than out-costed. Not a trade; a fact, and the most interesting thing the long panel produced.
+2. **A regression coefficient is not a book.** Five features died crossing that gap this weekend. Every book job now prints its decile shape before its verdict, and `W9_survivor_books` books every survivor in one family so the multiplicity is counted over the whole search (277 trials, not 24).
+3. **The liquidity FLOOR, not band.** Sub-$100k/day names lose 2.58%/yr against the equal-weighted rest, negative in 3 of 3 eras; above that liquidity stops mattering. `evaluate.TRADABLE_DOLLAR_VOL` is $3m — well above where the damage is, so the current floor is safe but not evidence-shaped.
+
+**Housekeeping I could not do from this repo:** the weekend roadmap asks for a
+`W weekend lab` row in the roadmap §6 and a B10 status line. Those B-lanes live
+in `aegis-alpha-terminal`, and per the four-repo rule this session did not reach
+across. One row, yours to place.
+
+## 7. Still running when this was written
+
+- **W2** — the 32-cell learner grid on 26 years. Ridge on the late folds (700k rows × 5 alphas) is far slower than a 2010 probe suggested, so the grid is resumable: completed cells are cached tag-keyed and a killed pass resumes rather than repeats.
+- **W3** — the GPU encoder, four variants × 8 seeds × 21 walk-forward years.
+- The loop itself, cycling variants until a `STOP` file appears at
+  `backend/data/optimus/weekend_lab_2026-09-06/STOP`.
+
+*Claims for Fable to attack are marked as such above; two review lanes were also
+run against them and their reports are in `docs/REVIEW_2026-09-06_*.md`.*
