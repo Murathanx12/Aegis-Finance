@@ -425,3 +425,62 @@ signal still separates deciles at 3 months and no slower-rebalance book can
 monetise it.
 
 ---
+
+## CLAIMS FOR FABLE TO ATTACK
+
+Ranked by how much would change if the claim is wrong. Each names the receipt
+that carries it.
+
+1. **The CUDA numbers were always real; the receipt just could not say whose
+   they were.** The directory-mtime argument is the whole proof — if
+   `site-packages`' mtime can move without an add/remove on Windows (an
+   antivirus rewrite, a `pip check`, a metadata touch), the argument fails and
+   the downgrade hypothesis returns. `S0_cuda_drift_run01.json`.
+2. **`target_rev_1m__xs` beats a cap-decile-matched draw at t 2.496 and an
+   equal-weighted market at t 0.859.** The control replaces each holding with a
+   uniform draw from the same within-month cap decile at identical weights, and
+   pays the BOOK's cost series. Attack the decile construction
+   (`qcut` on `rank(method="first")`, ties broken arbitrarily) and the choice to
+   hold cost fixed. `S2_size_matched_control_run01.json`.
+3. **More supply-chain tape made customer momentum WEAKER** — FM t 1.447 on
+   2014-24 to 0.297 on the never-seen 1999-2013. Attack the extraction:
+   resolution is 31.1%, and the 68.9% that does not resolve is assumed to be
+   non-US-listed rather than a resolver failure. If the unresolved mentions are
+   systematically the *large* counterparties, the new arm is a different graph,
+   not the same graph on a different era. `W4b_companyworld_rerun_run01.json`.
+4. **B10 is not earned.** The pretrained ensemble is +8.14%/yr with t 2.243 and
+   fails only on the family correction (DSR 0.1726). Attack the family: it is
+   every cell across both arms and both cost rates from this job alone. A
+   reader who thinks the family should be *larger* makes the verdict stronger;
+   one who thinks it should be per-arm makes it weaker. Say which.
+   `W3b_neural_floored_run01.json`.
+5. **The mandated baseline is itself five months.** 83.6% of `lgbm_clf`'s
+   251-month excess, and behind the market without them. If true, every
+   "beats/loses to lgbm" statement in this repo's history is a comparison
+   against a beta-timing artefact. Same receipt.
+6. **The LLM cannot read 2016-19 filings into a rank that beats the equal-weight
+   basket of the same names.** All four arms negative, family-max p 0.729,
+   canary clean at 0/192. Attack the rewriter: only 195 of 382 bundles preserved
+   every magnitude, so the decider may have been reading a degraded document
+   rather than failing to reason. That is the single most likely way this
+   negative is wrong. `L10_era_replay_v2_run01.json`.
+7. **Nine of the evidence memory's twelve SUPPORTED cells are in a superseded
+   family, and all nine survive the row-level rule** because the supersession
+   boundary predates the corrected re-runs. The export excludes the family
+   wholesale. Attack that: is wholesale exclusion right, or should the
+   corrected re-runs be allowed back in under a narrower rule?
+   `B6_evidence_to_registry_run01.json`.
+8. **W4b's three receipts named the wrong edge file** and only `source_rows`
+   disagreed. Fixed and proved red. Attack whether any *other* receipt in this
+   repo stamps a module default in place of an argument — I checked
+   `features_graph` and nothing else. `S3_graph_receipt_provenance_run01.json`.
+9. **All six of the adversarial review's ranked next moves are closed, and four
+   of them were closed before this session began.** If any of the four is
+   actually still open, the correction record above is wrong in the same way I
+   was wrong about W9 the first time. `S1_...json` (`CORRECTION_...` field).
+10. **The venue screener called seven names "the whole market".** The union with
+    our own universe gives 23, and not one of the day's sixteen biggest movers
+    was on the candidate list in either direction.
+    `B3_2_autopsy_and_opportunity_recall.json`.
+
+---
