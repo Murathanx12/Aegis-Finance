@@ -711,6 +711,46 @@ def W3_neural_long(variant: int = 0) -> dict:
     return _w3(variant)
 
 
+def _normalise_screen_verdict(payload: dict, job: str) -> dict:
+    """Re-derive a FEATURE-SCREEN module's verdict through this file's bar.
+
+    `features_options` and `features_graph` were written by separate lanes and
+    each rolled its own verdict word. `features_options.job` returns NOVEL for
+    "2 of 5 features clear |t| >= 2 with controls" -- which is a perfectly good
+    SCREEN result and is not what NOVEL means here: NOVEL is reserved for
+    something that survived a BOOK, a family and a deflation, and W5b showed
+    exactly what happens to these two coefficients when a book is built on them
+    (all 24 cells lost, and they lost gross).
+
+    Rather than edit two modules another lane owns, the wrapper re-labels. The
+    module's own word is preserved under `verdict_reported_by_the_module`, so
+    nothing is hidden -- the receipt shows both and says which bar each is from.
+    """
+    if not isinstance(payload, dict) or payload.get("verdict") in (None, "DEFERRED"):
+        return payload
+    rows = payload.get("features") or []
+    survivors = [r for r in rows
+                 if isinstance(r, dict)
+                 and isinstance(r.get("t_fm_beta_controlled"), (int, float))
+                 and abs(r["t_fm_beta_controlled"]) >= 2.0
+                 and ((r.get("era_sign_table") or {}).get("same_sign_in_2_of_3")
+                      or (r.get("era_sign_table") or {}).get("holds_in_2_of_3"))]
+    if not rows:
+        return payload
+    payload["verdict_reported_by_the_module"] = payload.get("verdict")
+    payload["verdict"] = screen_verdict(
+        survivors, len(rows),
+        (survivors[0].get("era_sign_table") if survivors else {}) or {},
+        (survivors[0].get("power") if survivors else None),
+        corrected=("controlled |t| >= 2 with momentum/size/vol in the same monthly "
+                   "regression AND one sign across eras" if survivors else None))
+    payload["verdict_note"] = (
+        f"{job} is a FEATURE SCREEN: it has no book and no Sharpe to deflate, so it "
+        "cannot reach NOVEL. Its module's own word is kept above. W5b is the book "
+        "these coefficients earned, and all 24 of its cells lost GROSS.")
+    return payload
+
+
 def W4_graph_momentum(variant: int = 0) -> dict:
     """Customer / supplier / competitor momentum from MARKET-GRAPH-1.
 
@@ -719,7 +759,7 @@ def W4_graph_momentum(variant: int = 0) -> dict:
     having to know how the module fails.
     """
     from learner import features_graph as FG
-    return FG.job(variant)
+    return _normalise_screen_verdict(FG.job(variant), "W4_graph_momentum")
 
 
 def W5_options_iv(variant: int = 0) -> dict:
@@ -730,7 +770,7 @@ def W5_options_iv(variant: int = 0) -> dict:
     side would close the cycle.
     """
     from learner.features_options import job as _w5
-    return _w5(variant)
+    return _normalise_screen_verdict(_w5(variant), "W5_options_iv")
 
 
 def W6_behavioural(variant: int = 0) -> dict:

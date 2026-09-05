@@ -112,3 +112,5 @@ whether a null verdict means NOISE or means NOT ENOUGH TAPE.
 | W1_long_panel_inventory | 11 | 0 | 925,757 name-months over 310 months (1999-2024); early-era share-basis gate PASS; incumbent panel ha | -- | -- | -- | -- | -- | INVENTORY |
 | W6_behavioural | 11 | 0 | 7 behavioural features on 925,757 rows; 3 clear |t| >= 2 WITH controls and keep one sign in 2 of 3 e | -- | -- | -- | -- | -- | SCREEN_SURVIVOR (3 of 7, controlled |t| >= 2 AND one sign in 2 of 3 eras; no formal multiplicity correction on 7 features) |
 | W6b_liquidity_band | 11 | 0 | S28 band vs the EW REST of the universe on 26 years: 0.851%/yr t 0.503; out-of-sample 1999-2012 t 1. | -- | -- | -- | -- | -- | CANNOT DETERMINE (underpowered) |
+| W5_options_iv | 11 | 0 | 5 option-surface features on 925,757 panel rows (worst column matches 71.5% of them); 2 clear |t| >= | -- | -- | -- | -- | -- | NOVEL |
+| W5b_options_book | 11 | 0 | best of 24 options-book cells is sig_cp_iv_spread_30d|10bps|rebuild|covered_univ at -0.019%/month ov | 0.0207 | 1.0 | 0.2429 | 309 | -- | CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 7.1%/yr or larger) |
