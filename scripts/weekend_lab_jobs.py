@@ -1993,12 +1993,18 @@ def W7b_archetype_book(variant: int = 0) -> dict:
             "top_minus_bottom_pct": round(
                 (tbl[-1]["mean_realized"] - tbl[0]["mean_realized"]) * 100, 4),
             "top_decile_turns_over": bool(turn),
-            "where_the_effect_lives": ("the BOTTOM decile -- this is a short-side / "
-                                       "exclusion signal, not a long one"
-                                       if abs(tbl[0]["mean_realized"]) >
-                                       abs(tbl[-1]["mean_realized"]) else
-                                       "the TOP decile -- a long book is the right "
-                                       "instrument"),
+            # SIGN FIRST, THEN MAGNITUDE. Comparing |bottom| to |top| alone told
+            # the reader "the TOP decile -- a long book is the right instrument"
+            # for legs whose top decile was NEGATIVE and worse than several
+            # deciles below it. W5b gets this right; this was a regression
+            # against its sibling.
+            "where_the_effect_lives": (
+                "the TOP decile is NEGATIVE -- a long book buys the worst names"
+                if tbl[-1]["mean_realized"] < 0 else
+                ("the BOTTOM decile -- a short leg or an EXCLUSION is the instrument, "
+                 "not a long top-k"
+                 if abs(tbl[0]["mean_realized"]) > abs(tbl[-1]["mean_realized"]) else
+                 "the TOP decile -- a long book is the right instrument")),
         }
 
     cells, series = {}, {}
@@ -2168,7 +2174,15 @@ def W8_states_three_nulls(variant: int = 0) -> dict:
     # they were considered and ruled out rather than forgotten.
     era_spreads = [v.get("spread") for v in by_era.values()
                    if isinstance(v.get("spread"), (int, float))]
-    era_consistent = bool(len(era_spreads) >= 2 and min(era_spreads) > 0)
+    # A SPREAD IS A RANGE (max minus min of per-state means), so it is
+    # NON-NEGATIVE BY CONSTRUCTION and `min(spreads) > 0` is True for any state
+    # assignment whatsoever. That made `era_consistent` always True and
+    # REGIME_SPECIFIC unreachable -- a near-miss at k=6 was saved only by its
+    # p-value. Consistency has to mean the eras AGREE IN MAGNITUDE, so the test
+    # is that the smallest era spread is at least half the largest.
+    era_consistent = bool(
+        len(era_spreads) >= 2 and max(era_spreads) > 0
+        and (min(era_spreads) / max(era_spreads)) >= 0.5)
     if pm is None:
         verdict = "CANNOT DETERMINE"
     elif pm <= 0.05 and era_consistent:

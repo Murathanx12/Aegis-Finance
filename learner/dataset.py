@@ -783,8 +783,36 @@ def build(start: int = 2013, end: int = 2024, lag_days: int = 1,
     ok1 = (gap >= 20) & (gap <= 45)
     gap3 = (m["vintage"] - g["vintage"].shift(3)).dt.days
     ok3 = (gap3 >= 75) & (gap3 <= 115)
-    m["target_rev_1m"] = (m["meanptg"] / g["meanptg"].shift(1) - 1.0).where(ok1)
-    m["target_rev_3m"] = (m["meanptg"] / g["meanptg"].shift(3) - 1.0).where(ok3)
+    # ONE SHARE BASIS ON BOTH LEGS OF THE REVISION, TOO.
+    #
+    # `meanptg` is the UNADJUSTED consensus -- the target as quoted in the share
+    # terms that existed at that `statpers`. Dividing today's by last month's is
+    # therefore a ratio of two DIFFERENT bases whenever a split fell between
+    # them: a 2:1 split halves the quoted target and the "revision" reads -50%
+    # with no analyst having moved, and a 1-for-10 reverse split reads +900%.
+    # Measured on the 1999-2024 panel: 4,303 rows with a mean of +312% and a
+    # maximum of +359x, and 6.58% of the holdings of the book this feature
+    # produces. Found by an adversarial review, 2026-09-06; it is the same
+    # share-basis error as the 2026-09-04 one, one level down, and no test caught
+    # it either.
+    #
+    # THE PRIOR TARGET IS REBASED, NOT DROPPED. `cfacpr` is cumulative to the END
+    # of the sample, so its LEVEL is a future quantity -- but the RATIO
+    # `cfacpr(t) / cfacpr(t-1)` cancels every factor after t and is exactly the
+    # split applied between the two vintages, which is knowable at t. Multiplying
+    # the earlier target by it expresses it in today's share terms. Nulling those
+    # rows instead would delete 6.58% of the population, and they are not random:
+    # names that split are names that ran.
+    cf_now = m["cfacpr"].where(m["cfacpr"].notna() & (m["cfacpr"] != 0))
+    for h, okh in ((1, ok1), (3, ok3)):
+        prev_ptg = g["meanptg"].shift(h)
+        prev_cf = g["cfacpr"].shift(h)
+        prev_cf = prev_cf.where(prev_cf.notna() & (prev_cf != 0))
+        # prior target, restated in the share terms of THIS row
+        prev_rebased = prev_ptg * (cf_now / prev_cf)
+        m[f"target_rev_{h}m"] = (m["meanptg"] / prev_rebased - 1.0).where(okh)
+        m[f"_target_rev_{h}m_rebased"] = (
+            okh & prev_cf.notna() & cf_now.notna() & (prev_cf != cf_now)).fillna(False)
     m["consensus_rev_1m"] = (m["consensus"] - g["consensus"].shift(1)).where(ok1)
     m["coverage_rev_1m"] = (m["coverage"] - g["coverage"].shift(1)).where(ok1)
 
@@ -956,6 +984,20 @@ def build(start: int = 2013, end: int = 2024, lag_days: int = 1,
     cols = [c for c in cols if c in m.columns]
     out = m[cols].copy()
 
+    # The share-basis repair on the revision legs, counted rather than asserted.
+    receipt["target_revision_share_basis"] = {
+        "rule": ("both legs on ONE basis: the prior target is multiplied by "
+                 "cfacpr(t)/cfacpr(t-h), which is exactly the split applied between "
+                 "the two vintages and cancels every factor after t"),
+        "why": ("meanptg is UNADJUSTED, so a 2:1 split between vintages reads as a -50% "
+                "revision with no analyst having moved and a 1-for-10 reverse split as "
+                "+900%"),
+        "rows_rebased": {f"{h}m": int(m.get(f"_target_rev_{h}m_rebased",
+                                            pd.Series(dtype=bool)).sum())
+                         for h in (1, 3)},
+        "kept_not_dropped": ("names that split are names that ran, so nulling them would "
+                             "delete a non-random 6.6% of the population"),
+    }
     receipt["rows"] = int(len(out))
     receipt["months"] = int(out["month"].nunique())
     receipt["names"] = int(out["permno"].nunique())
