@@ -1,0 +1,50 @@
+{
+ "job": "W3b_neural_floored",
+ "status": "DECLARED -- written BEFORE the run, so the bar cannot be moved after",
+ "declared_utc": "2026-09-05T11:55:48.989212+00:00",
+ "decision_rule_declared_before_the_result": {
+  "declared": "BEFORE the run, by --declare, and hashed",
+  "question": "does the neural arm, FITTED on the tradable universe, beat the LightGBM incumbents fitted on the same universe on the same folds?",
+  "the_object_judged": "the SEED-MEAN ENSEMBLE of each arm over the eight declared seeds -- never the best cell. The best cell is the maximum of an 8-seed draw and is not choosable in advance; reporting it as the result would publish a number no desk could have selected.",
+  "incumbents": [
+   "lgbm_clf (models.fit_predict_proba -- the baseline the mandate names; mandatory)",
+   "lgbm (models.fit_predict regression head -- W3's own incumbent)"
+  ],
+  "beats_requires_ALL_of": [
+   "(a) the paired monthly net-return difference (ensemble minus incumbent) has a POSITIVE mean against BOTH incumbents at 10 bps AND at 25 bps",
+   "(b) the family-corrected inference on the ensemble-minus-lgbm_clf difference series clears DSR >= 0.95 AND SPA p <= 0.10 AND PBO < 0.5 (learner.neural_long._beats_incumbent), with the family = every cell this job looked at across BOTH arms and BOTH cost rates",
+   "(c) the ensemble's terminal wealth net exceeds BOTH incumbents' over the same months at 10 bps",
+   "(d) the sign of the ensemble-minus-lgbm_clf monthly difference is positive in >= 2 of the 3 eras"
+  ],
+  "evaluated_on": "each arm's ensemble independently; the neural arm 'beats' if at least ONE ensemble satisfies all four. Both shots are paid for in (b), whose family spans both arms.",
+  "if_it_does_NOT_beat": "write B10_not_earned = true into this receipt, say so plainly in the headline, STOP THE NEURAL LOOP. Do not soften it, do not re-cut the universe until it passes, do not promote the best cell instead.",
+  "if_it_DOES_beat": "freeze ONE champion -- named arm + width + the seed-mean-over-the-eight-declared-seeds policy, no seed selection -- and set up shadow accrual via learner/shadow.py. Nothing sealed, ordered, deployed or pushed either way.",
+  "not_a_get_out": "an UNDERPOWERED verdict on the market leg does not convert a failure to beat the incumbent into a pass. The incumbent leg is a PAIRED difference on the same months and does not depend on the market leg's power."
+ },
+ "decision_rule_sha256": "428a7148f61942b0934765ae192090d63942c0a60d219469fdbdc22bdb0fb4af",
+ "arms": [
+  {
+   "tag": "nn",
+   "width": "base",
+   "pretrain": null,
+   "why": "W3's variant 0 -- the architecture that produced run13's champion"
+  },
+  {
+   "tag": "nn_pre_causal",
+   "width": "base",
+   "pretrain": "causal",
+   "why": "masked-feature self-supervised pre-training, strictly point-in-time; the plausible way a smaller floored training set is compensated"
+  }
+ ],
+ "seeds": [
+  20260906,
+  20260907,
+  20260908,
+  20260909,
+  20260910,
+  20260911,
+  20260912,
+  20260913
+ ],
+ "receipt_path": "backend\\data\\optimus\\continuation_2026-09-06\\W3b_neural_floored_run01.json"
+}

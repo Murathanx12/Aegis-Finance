@@ -605,6 +605,42 @@ def run_lgbm(df: pd.DataFrame, test_years, verbose: bool = True
                  "provenance": "learner.models.fit_predict -- the same call W2 makes"}
 
 
+def run_lgbm_clf(df: pd.DataFrame, test_years, verbose: bool = True
+                 ) -> tuple[pd.Series, dict]:
+    """The SECOND incumbent: `models.CLASSIFIER` (`lgbm_clf`), same folds.
+
+    WHY A SECOND ONE. `run_lgbm` fits a conditional MEAN of excess return;
+    `lgbm_clf` fits P(excess > 0) and is ranked on that probability. They are
+    different objectives over the same features, and S36 recorded that on half
+    the panel `lgbm_clf` was the only model left standing -- so "we beat lgbm"
+    computed against the regression head alone can be true while the challenger
+    is behind the incumbent the desk would actually have picked.
+
+    The score column is the probability itself. `evaluate.book` only ranks, so
+    no reconstruction onto the excess scale is needed or wanted -- a probability
+    dressed as an expected return would be a units error of exactly the shape
+    [[feedback-a-lopsided-disagreement-rate-is-a-units-error]] describes.
+    """
+    log = (lambda *a: print(*a, flush=True)) if verbose else (lambda *a: None)
+    fc = DS.feature_columns()
+    out = pd.Series(np.nan, index=df.index, dtype="float64")
+    notes, t0 = [], time.perf_counter()
+    for year, tr, te in DS.walk_forward_splits(df, test_years, HORIZON):
+        t1 = time.perf_counter()
+        p, meta = M.fit_predict_proba(df.loc[tr], df.loc[te], fc, HORIZON)
+        out.loc[te] = p
+        notes.append({"year": int(year), "n_train": int(len(tr)),
+                      "n_test": int(len(te)),
+                      "best_iteration": meta.get("best_iteration"),
+                      "seconds": round(time.perf_counter() - t1, 2)})
+        log(f"    lgbm_clf {year}: {notes[-1]['seconds']}s")
+    return out, {"kind": M.CLASSIFIER, "arm": "engine_feature",
+                 "n_features": len(fc) + 1, "folds": notes,
+                 "wall_seconds": round(time.perf_counter() - t0, 1),
+                 "score": "P(excess_vw_1m > 0); ranked directly, never rescaled",
+                 "provenance": "learner.models.fit_predict_proba"}
+
+
 # ------------------------------------------------------------- the evaluation
 
 def _grade(df: pd.DataFrame, col: str, bps: float) -> dict:
@@ -617,6 +653,121 @@ def _grade(df: pd.DataFrame, col: str, bps: float) -> dict:
 #: name is OBSERVE_ONLY and a book holding it is a backtest of something
 #: unbuyable. IMPORTED, not restated -- one floor, one place.
 TRADABLE_FLOOR_USD = evaluate.TRADABLE_DOLLAR_VOL
+
+#: The price half of the same gate. `evaluate` owns the dollar-volume floor and
+#: nothing else, so the $5 line lives here beside its partner rather than being
+#: retyped at four call sites; `scripts/w3_neural_floored.py` imports both.
+TRADABLE_MIN_CLOSE = 5.0
+
+
+def tradable_universe(df: pd.DataFrame, *,
+                      floor_usd: float = TRADABLE_FLOOR_USD,
+                      min_close: float | None = TRADABLE_MIN_CLOSE,
+                      ) -> tuple[pd.DataFrame, dict]:
+    """Restrict a panel to the names a desk could have bought -- BEFORE FITTING.
+
+    THIS IS A DIFFERENT EXPERIMENT FROM `evaluate.book(..., tradable_floor=...)`,
+    and the difference is the whole point of W3b.
+
+    `evaluate.book`'s floor is a GRADING filter: the model is fitted on all
+    925,757 panel rows -- microcaps included -- learns whatever relationship
+    those rows carry, ranks the full universe, and only then has its book
+    restricted to names trading $3m a day. That answers "what happens to a
+    microcap-trained ranking when you are forbidden to buy microcaps?" The
+    ranking is still optimised for a population the book may not hold, and the
+    top-50 it produces inside the liquid slice is the residue of a sort aimed
+    somewhere else.
+
+    This function answers the question a desk would actually ask: "fit on the
+    names I can trade, rank the names I can trade, buy the names I can trade."
+    Same floor, applied one stage earlier -- to the rows the model is FITTED on,
+    to the rows the impute/scale/clip pipeline is FITTED on, to the rows the
+    self-supervised pass reconstructs, to the inner temporal holdout that stops
+    training, and to the rows that are graded.
+
+    Which of the two is better is not knowable in advance. Training on the wider
+    population is more data (530,447 rows survive the floor, 57.3% of the panel)
+    and the extra rows are drawn from the same feature manifold; training on the
+    floored population is less data but every gradient step is spent on the
+    distribution the book is scored against. That is the experiment.
+
+    DERIVES ITS INPUT OR REFUSES. The panel stores `log_dollar_vol_20d`, not
+    `dollar_vol_20d`; the first version of `evaluate.book`'s floor asked for the
+    raw column, did not find it, and skipped the filter in silence, so a book
+    labelled `tradable_3m` was byte-identical to the unfiltered one. The same
+    mistake is available here and would be worse -- a "floored training
+    universe" that quietly trained on everything would make this entire job a
+    re-run of W3 under a new heading -- so a missing column is a REFUSAL and the
+    receipt always carries `rows_removed`, which a reader can check is not zero.
+
+    A row whose liquidity or price is UNKNOWN is dropped, not kept. "We could
+    not tell whether this was tradable" is not evidence that it was.
+    """
+    if "dollar_vol_20d" in df.columns and df["dollar_vol_20d"].notna().any():
+        dv = df["dollar_vol_20d"].astype("float64")
+        dv_source = "dollar_vol_20d (raw)"
+    elif "log_dollar_vol_20d" in df.columns:
+        dv = np.expm1(df["log_dollar_vol_20d"].astype("float64"))
+        dv_source = "expm1(log_dollar_vol_20d)"
+    else:
+        raise SystemExit(
+            "REFUSED: a tradable TRAINING universe was requested and neither "
+            "`dollar_vol_20d` nor `log_dollar_vol_20d` is present. A liquidity gate "
+            "with no liquidity column silently passes everything, and the receipt "
+            "would then claim a floored fit that never happened.")
+    if min_close is not None and "close" not in df.columns:
+        raise SystemExit(
+            "REFUSED: a price floor of "
+            f"${min_close:,.2f} was requested and `close` is not in the panel.")
+
+    n0 = int(len(df))
+    liq = dv.to_numpy() >= float(floor_usd)
+    unknown_dv = int(dv.isna().sum())
+    keep = liq & ~dv.isna().to_numpy()
+    unknown_px = 0
+    if min_close is not None:
+        px = df["close"].astype("float64")
+        unknown_px = int(px.isna().sum())
+        keep = keep & (px.to_numpy() >= float(min_close)) & ~px.isna().to_numpy()
+
+    out = df.loc[keep].copy()
+    by_year: dict[str, dict] = {}
+    if "entry_date" in df.columns:
+        yr_all = pd.to_datetime(df["entry_date"]).dt.year
+        yr_keep = pd.to_datetime(out["entry_date"]).dt.year if len(out) else yr_all[:0]
+        a = yr_all.value_counts().sort_index()
+        b = yr_keep.value_counts().sort_index() if len(out) else a * 0
+        for y in a.index:
+            by_year[str(int(y))] = {"panel": int(a.get(y, 0)),
+                                    "tradable": int(b.get(y, 0))}
+    receipt = {
+        "applied_to": "THE TRAINING UNIVERSE as well as the graded book -- the "
+                      "model is fitted, standardised, pre-trained, early-stopped "
+                      "and graded on these rows only",
+        "dollar_volume_floor_usd_per_day": float(floor_usd),
+        "dollar_volume_source": dv_source,
+        "min_close_usd": (None if min_close is None else float(min_close)),
+        "rows_before": n0,
+        "rows_after": int(len(out)),
+        "rows_removed": n0 - int(len(out)),
+        "share_kept": (round(len(out) / n0, 4) if n0 else None),
+        "rows_with_unknown_dollar_volume_dropped": unknown_dv,
+        "rows_with_unknown_close_dropped": unknown_px,
+        "months_before": (int(df["month"].nunique()) if "month" in df.columns else None),
+        "months_after": (int(out["month"].nunique()) if "month" in out.columns else None),
+        "median_names_per_month_after": (
+            float(out.groupby("month").size().median()) if len(out) and "month" in out.columns
+            else None),
+        "rows_by_year": by_year,
+        "floor_source": "learner.evaluate.TRADABLE_DOLLAR_VOL + learner.neural_long."
+                        "TRADABLE_MIN_CLOSE",
+    }
+    if receipt["rows_removed"] == 0:
+        receipt["warning"] = (
+            "THE FLOOR REMOVED NOTHING. Either the panel was already floored or the "
+            "liquidity column is not what it claims to be; do not read this run as a "
+            "floored-training result without settling which.")
+    return out, receipt
 
 
 def robustness(df: pd.DataFrame, col: str, bps: float = 10.0) -> dict:
@@ -731,7 +882,7 @@ def _variant_name(variant: int) -> str:
 
 
 def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
-        panel: pd.DataFrame | None = None) -> dict:
+        panel: pd.DataFrame | None = None, universe_floor: bool = False) -> dict:
     """One weekend-lab receipt. Shape matches `scripts.weekend_lab_jobs.W2_*`.
 
     Variants
@@ -762,7 +913,18 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
                 "inference": {}, "headline": str(exc)}
 
     df = panel if panel is not None else LP.load_long()
-    log(f"W3 {name}: panel {len(df):,} rows, {df['month'].nunique()} months, "
+    # OFF BY DEFAULT, so W3's own receipts are unchanged byte for byte. When ON
+    # this is W3b: the $3m/day + $5 floor is applied to the rows the model is
+    # FITTED on, not only to the rows it is graded on. See `tradable_universe`.
+    universe_receipt = None
+    fam_suffix = ""
+    if universe_floor:
+        df, universe_receipt = tradable_universe(df)
+        # The family id CHANGES. A floored fit is a different experiment on a
+        # different universe; sharing `weekend-W3-supervised` with the unfloored
+        # run would let two incompatible cell populations pool into one DSR.
+        fam_suffix = "-floored"
+    log(f"W3 {name}{fam_suffix}: panel {len(df):,} rows, {df['month'].nunique()} months, "
         f"test years {test_years[0]}-{test_years[-1]}, {len(seeds)} seeds, "
         f"device {dev_info['device_actually_used']}")
 
@@ -833,7 +995,8 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
     if not neural_keys or not lgbm_keys:
         return {"verdict": "CANNOT DETERMINE",
                 "question": "does a neural encoder beat lgbm on the long panel?",
-                "family_id": f"weekend-W3-{name}", "cells_looked_at": len(cells),
+                "family_id": f"weekend-W3-{name}{fam_suffix}",
+                "cells_looked_at": len(cells),
                 "inference": {}, "cells": cells,
                 "headline": "no usable paired series on one of the two legs",
                 "device": dev_info, "runs": run_receipts, "lgbm": lgbm_rec}
@@ -1019,8 +1182,11 @@ def job(variant: int = 0, *, test_years=None, seeds=None, verbose: bool = True,
         "question": ("does a GPU neural encoder on the 1999-2024 panel beat "
                      "LightGBM on the same walk-forward folds, after the "
                      "multiplicity family?"),
-        "family_id": f"weekend-W3-{name}",
+        "family_id": f"weekend-W3-{name}{fam_suffix}",
         "variant_name": name,
+        "training_universe": (universe_receipt or {
+            "applied_to": "GRADING ONLY -- the model was fitted on the whole panel",
+            "note": "pass universe_floor=True for the W3b floored-training experiment"}),
         "cells_looked_at": len(cells),
         "n_common_months": int(len(wide)),
         "common_window": [str(wide.index[0]), str(wide.index[-1])],
@@ -1151,15 +1317,25 @@ def describe() -> dict:
             "its excess was five months, and imposing the floor cut it to 93x while "
             "RAISING lgbm's from 16.8 to 59.8."),
         "leakage": _leakage_statement(),
+        "training_universe_option": (
+            "job(universe_floor=True) applies TRADABLE_FLOOR_USD ($3m/day) and "
+            "TRADABLE_MIN_CLOSE ($5) to the rows the model is FITTED on -- the "
+            "pipeline fit, the self-supervised pass, the inner temporal holdout and "
+            "the graded book all see the same restricted universe. OFF by default so "
+            "W3's own receipts are unchanged; ON is the W3b experiment "
+            "(scripts/w3_neural_floored.py)."),
+        "incumbents": ["lgbm (regression head, models.fit_predict)",
+                       "lgbm_clf (classifier head, models.fit_predict_proba)"],
         "torch_available": _TORCH,
     }
 
 
-__all__ = ["job", "describe", "run_neural", "run_lgbm", "resolve_device",
+__all__ = ["job", "describe", "run_neural", "run_lgbm", "run_lgbm_clf",
+           "resolve_device", "tradable_universe",
            "make_pipeline", "feature_cols", "pretrain", "train_head", "TrunkNet",
            "robustness", "VARIANTS", "QUANTILES", "WIDTHS", "SEED_BASE", "N_SEEDS",
            "COSTS", "HORIZON", "TARGET_CLIP_SD", "CLIP_SD", "TRADABLE_FLOOR_USD",
-           "FIRST_TEST_YEAR", "LAST_TEST_YEAR"]
+           "TRADABLE_MIN_CLOSE", "FIRST_TEST_YEAR", "LAST_TEST_YEAR"]
 
 
 def main(argv=None) -> int:                        # pragma: no cover - CLI
