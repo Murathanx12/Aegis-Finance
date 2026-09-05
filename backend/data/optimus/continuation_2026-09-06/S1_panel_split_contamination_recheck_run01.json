@@ -1,0 +1,34 @@
+{
+ "job": "S1_panel_split_contamination_recheck",
+ "question": "REVIEW_2026-09-06_ATTACK_ON_THE_WEEKEND.md claim 1 item 2 asks for `target_rev_1m` to be nulled on rows whose `cfacpr` moved, and measures mean +3.12 (312%) / max +359 on 4,303 such rows. Is that still true of the panel every job in this session is reading?",
+ "answer": "NO -- it was already fixed and the panel was already rebuilt. The reviewer's numbers are correct for the tree they read and STALE for the tree on disk.",
+ "why_the_reviewer_and_the_panel_disagree": {
+  "review_written_against": "f6b96e3 (2026-09-05 13:07)",
+  "fix_commit": "35915db (2026-09-05 13:23) 'Two adversarial reviews found a LEAK, a gate that cannot go red, and a circular power flag'",
+  "panel_rebuilt": "backend/data/optimus/learner/train_table_long.parquet mtime 2026-09-05 13:51:44 +0800 -- 28 minutes AFTER the fix",
+  "the_fix_is_not_a_null_it_is_a_rebase": "learner/dataset.py:799-809 -- the prior target is rebased by cfacpr(t)/cfacpr(t-h), which cancels every factor after t and is exactly the split applied between the two vintages. Rebasing keeps the row; nulling would have thrown the observation away."
+ },
+ "measured_on_the_panel_on_disk": {
+  "panel": "train_table_long.parquet (learner-train-table-3), 925,757 rows",
+  "rows_with_a_cfacpr_move_vs_prior_row": 4901,
+  "of_those_with_a_non_null_target_rev_1m": 4359,
+  "mean_target_rev_1m_on_those_rows": 0.0675,
+  "max_target_rev_1m_on_those_rows": 31.5214,
+  "share_of_those_rows_above_100pct": 0.0204,
+  "panel_wide_target_rev_1m_mean": 0.0035,
+  "panel_wide_target_rev_1m_max": 141.5,
+  "reviewer_measured_at_f6b96e3": {
+   "rows": 4303,
+   "mean": 3.12,
+   "max": 359.0
+  }
+ },
+ "reading": "the mean on split rows fell 3.12 -> 0.0675, a 46x reduction, and the max 359 -> 31.5. The contamination the review measured is gone from the tape the neural and graph jobs in this session are training on.",
+ "RESIDUAL_STILL_OPEN": {
+  "1": "2.04% of the 4,359 rebased split rows still report a one-month consensus-target move above +100%, and the panel-wide max is +141.5. A rebase cannot fix a row where the two IBES vintages themselves disagree about the share basis; those rows are still readable as features and nothing bounds them.",
+  "2": "the review's OTHER two settlement items are NOT addressed by this and remain open: (a) re-run W9_survivor_books on the code actually on disk so `n_trials_used_for_the_DSR` is populated -- the published receipt carries 24 and the code computes 277, and at 277 the DSR is 0.2022, BELOW the 0.2305 noise bar that made the L1 learner arm NOISE; (b) publish the size-matched control table beside the raw excess."
+ },
+ "cost_of_this_check_usd": 0.0,
+ "llm_calls": 0,
+ "generated_utc": "2026-09-05T11:51:51.991223+00:00"
+}
