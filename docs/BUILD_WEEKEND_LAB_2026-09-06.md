@@ -59,7 +59,7 @@ their receipts before each update; a line with no receipt is not in this file.*
 
 | | |
 |---|---|
-| **Best historical net strategy vs the market** | **none beats it.** Every options-book cell loses *gross* (best 11.58 vs market 13.18 over 309 months). W2's 26-year learner grid is still fitting. |
+| **Best historical net strategy vs the market** | **none clears any bar.** The 26-year learner grid's best cell is +11.45%/yr at **t 1.43**, DSR **0.293** against a 0.95 bar. The one book that reached t > 2 unfloored falls to **t 1.68** once restricted to names anyone could buy, and 54% of it is five months. Every options-book cell loses *gross*. |
 | **Best forward paper strategy** | unchanged; the lab placed no orders and touched no book |
 | **Independent selector count** | unchanged — nothing was promoted |
 | **New actionable finding** | **YES — six, below** |
@@ -76,7 +76,7 @@ their receipts before each update; a line with no receipt is not in this file.*
 | SCREEN_SURVIVOR | 6 |
 | DEFERRED | 5 |
 | AUTOPSY | 1 |
-| DECAYED (worked, then stopped) | 1 |
+| DECAYED (worked, then stopped) | 1 *(retracted in §0 — the tradable book is not decayed, it is early-era and tail-driven)* |
 | **NOVEL** | **0** |
 
 **Nothing this weekend reached NOVEL.** An earlier count of 21 did, and every one
