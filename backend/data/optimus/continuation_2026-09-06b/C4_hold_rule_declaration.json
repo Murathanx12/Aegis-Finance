@@ -1,0 +1,42 @@
+{
+ "job": "C4_era_replay_hold",
+ "status": "DECLARED -- written BEFORE the grade, so the band cannot be moved after the number is seen",
+ "declared_utc": "2026-09-05T14:32:56.560252+00:00",
+ "hold_rule": {
+  "declared": "BEFORE the grade, by --declare, and hashed (sha256).",
+  "why_declaring_first_matters_here": "the HOLD arm is a RE-GRADE of decisions collected on 2026-09-05 and cached on disk. Nothing about it has to wait for data. A band chosen after seeing which band helps is not a rule, it is a fit, and the only evidence that it was not is this file's timestamp and hash.",
+  "rule": "BUY at rank <= k; HOLD an incumbent until its rank leaves the top hold_k. Book size stays k: incumbents inside the band keep their slots, best-ranked first, and the remainder is filled from the top of the ranking.",
+  "k": 3,
+  "hold_k": 6,
+  "hold_k_is": "2k, exactly as the review specified ('the top 2k')",
+  "implementation": "scripts/era_replay_v2.select_with_hold, which is a re-implementation of learner/evaluate.py `book`'s `hold_k` hysteresis (evaluate.py:191-208). The era-replay grader is bespoke -- it grades 8-name bundles with a sealed forward column, not a monthly panel -- so the rule is re-implemented rather than routed through `book`, and backend/tests/test_era_replay_hold.py proves the two agree on a synthetic panel, month by month.",
+  "degenerate_case": "hold_k == k is the no-hysteresis rule written a longer way. `select_with_hold` accepts it (the equivalence is what the test pins); `grade_arm` REFUSES it, exactly as evaluate.book refuses hold_k == k, so no receipt can report a band where there is none.",
+  "what_is_held_constant": [
+   "the DECISIONS -- identical cached ranks, no new LLM call, $0",
+   "the benchmark -- the equal-weight basket of the SAME 8 anonymised names in the SAME month",
+   "the cost rate -- learner.evaluate.COST_BPS_PER_SIDE, both sides, on realised turnover (design.cost_bps_per_side = 10.0 in the sealed era-1 receipt; that receipt graded ONE cost level, so this one does)",
+   "the nulls -- null-1 shuffled companies, null-2 shuffled dates, null-3 same-day paired, unchanged code, unchanged draws, unchanged seed",
+   "the canary -- the same guess_year / guess_company answers, so blind-held is the same fact for a hold cell as for its parent"
+  ],
+  "what_changes": [
+   "which 3 of the 8 slots the book holds, and therefore realised turnover, the cost line, and net excess",
+   "the family: 4 arms -> 8 cells. Every per-arm p is re-corrected by BH-FDR at m = 8 (CANON \u00a763, SCREEN = BH-FDR), and DSR's n_trials rises with it."
+  ],
+  "decision_rule_declared_before_the_result": {
+   "the_hold_arm_changes_the_verdict_only_if_ALL_of": [
+    "(a) at least one hold cell's mean net excess over the EW basket of the same names is POSITIVE, and",
+    "(b) that cell survives BH-FDR at 0.05 in the family of 8, and",
+    "(c) its null-1 (shuffled companies) one-sided p is <= 0.05, and",
+    "(d) its terminal wealth exceeds the EW basket's over the same months."
+   ],
+   "otherwise": "the verdict of the sealed era-1 receipt stands unchanged and the hold arm is reported as what it is: a cost-line experiment on an arm that is at random.",
+   "pre_committed_expectation": "the rule will move almost nothing, and the reason is structural rather than statistical: the window build redraws the 8-name bundle every month, so an incumbent is only rarely in the next month's opportunity set. This expectation is written here BEFORE the grade precisely so that 'we knew it would not move' cannot be claimed afterwards for free -- the receipt reports `incumbents_present_in_next_bundle`, which is the hard ceiling on anything hysteresis can save, and the reader can check it.",
+   "power_caveat": "the sealed era-1 receipt's MDE is ~8.98%/yr at t = 2 on 48 month blocks. A cost saving of a few basis points a month is INVISIBLE at that resolution. 'The hold arm did not change the verdict' is therefore not evidence that hysteresis is worthless in general -- it is evidence that it is worthless HERE, where turnover is a property of the sampling design."
+  },
+  "three_era_axis": "CANNOT DETERMINE BY CONSTRUCTION. learner.evaluate.ERAS is 2016-18 / 2019-21 / 2022-24; this replay covers 2016-01..2019-12 only, which is one era and one quarter of the next. No re-grade of these decisions can produce the three-era table, because the decisions for the other two eras do not exist. Part (b) of this job -- the second-era window build -- is the fix, and it is BUILD-ONLY here.",
+  "licence": "PRODUCT_EXPERIMENT (exploratory). A screen cannot reach NOVEL."
+ },
+ "hold_rule_sha256": "e5e176a3c8cb422d8787d207b42ccd5d0b0dfdcc04e367f1eca4d4ecdfa65ec7",
+ "grades_data_already_on_disk": true,
+ "llm_calls_authorised": 0
+}

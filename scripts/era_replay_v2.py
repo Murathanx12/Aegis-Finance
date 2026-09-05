@@ -123,6 +123,7 @@ if str(REPO) not in sys.path:
 
 DATA = REPO / "backend" / "data" / "optimus" / "era_replay_v2"
 RECEIPTS = REPO / "backend" / "data" / "optimus" / "continuation_2026-09-06"
+RECEIPTS_B = REPO / "backend" / "data" / "optimus" / "continuation_2026-09-06b"
 WINDOWS_PATH = DATA / "windows.json"
 CACHE_PATH = DATA / "llm_cache.jsonl"
 
@@ -222,21 +223,39 @@ FACT_COLS = ["permno", "month", "sector", "close", "market_cap", "ratio",
              "fwd_1m", "mkt_ew_1m", "excess_ew_1m"]
 
 
-def eligible_panel() -> pd.DataFrame:
-    """The 2016-19 slice, with the house's execution floors applied UP FRONT.
+def eligible_panel(start_year: int = ERA_START_YEAR,
+                   end_year: int = ERA_END_YEAR,
+                   narrow: bool = False) -> pd.DataFrame:
+    """The era slice, with the house's execution floors applied UP FRONT.
 
     Applying `TRADABLE_DOLLAR_VOL` and the $5 floor here rather than at grading
     is the point: a window can then never contain a name the house would refuse
     to buy, so no result of this job is a backtest of something unbuyable.
+
+    `narrow=True` reads ONLY the columns this function consumes instead of the
+    whole 418 MB long panel. It is off by default so the 2016-19 path is the
+    path that produced `windows.json`, byte for byte; it exists because the
+    era-2 DRY RUN has to answer "how many windows would this era produce?" on a
+    machine with four other agents on it, and a 1 GB frame to count months is
+    the kind of avoidable footprint that gets a run killed mid-count.
     """
     from learner import evaluate, long_panel
 
     if not long_panel.available():
         raise RuntimeError("long panel not built -- run learner.long_panel first")
-    d = long_panel.load_long()
+    if narrow:
+        need = sorted({"permno", "month", "hygiene_ok", "has_opinion",
+                       "log_dollar_vol_20d", "close", "fwd_1m", "market_cap",
+                       "sector", *FACT_COLS})
+        import pyarrow.parquet as pq
+        have = set(pq.ParquetFile(long_panel.LONG_TABLE).schema_arrow.names)
+        d = pd.read_parquet(long_panel.LONG_TABLE,
+                            columns=[c for c in need if c in have])
+    else:
+        d = long_panel.load_long()
     d = d.copy()
     d["year"] = d["month"].astype(str).str[:4].astype(int)
-    d = d[(d["year"] >= ERA_START_YEAR) & (d["year"] <= ERA_END_YEAR)]
+    d = d[(d["year"] >= start_year) & (d["year"] <= end_year)]
     dv = np.exp(pd.to_numeric(d["log_dollar_vol_20d"], errors="coerce"))
     keep = (d["hygiene_ok"].astype(bool)
             & d["has_opinion"].astype(bool)
@@ -259,13 +278,48 @@ def trailing_market(panel: pd.DataFrame) -> dict[str, float]:
     return {str(k): float(v) for k, v in g.items() if np.isfinite(v)}
 
 
-def build_windows() -> dict:
-    """Deterministic bundles. Same seed -> byte-identical windows."""
-    panel = eligible_panel()
+def build_windows(start_year: int = ERA_START_YEAR,
+                  end_year: int = ERA_END_YEAR,
+                  write: bool = True,
+                  dry_run: bool = False,
+                  narrow: bool = False) -> dict:
+    """Deterministic bundles. Same seed -> byte-identical windows.
+
+    `dry_run=True` runs the SAME eligibility path and the SAME month loop and
+    stops before materialising the per-name fact cards: it answers "how many
+    windows would this era produce, backed by how much tape?" at a fraction of
+    the memory, and never writes `windows.json`. It is the mode part (b) of the
+    2026-09-06b mandate uses, because a second era must be COUNTED before it is
+    paid for.
+    """
+    panel = eligible_panel(start_year, end_year, narrow=narrow)
     mkt = trailing_market(panel)
     months = sorted(panel["month"].astype(str).unique())
     rng = np.random.default_rng(BUILD_SEED)
     by_month = {m: g for m, g in panel.groupby(panel["month"].astype(str))}
+
+    if dry_run:
+        usable = [m for m in months if len(by_month[m]) >= K_NAMES]
+        return {
+            "dry_run": True,
+            "built_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "era": f"{start_year}-{end_year}",
+            "seed": BUILD_SEED,
+            "k_names": K_NAMES,
+            "n_threads": N_THREADS,
+            "top_n": TOP_N,
+            "months_in_era": len(months),
+            "months_with_at_least_k_eligible": len(usable),
+            "months_dropped_thin": sorted(set(months) - set(usable)),
+            "n_windows_would_build": len(usable) * N_THREADS,
+            "eligible_rows": int(len(panel)),
+            "eligible_permnos": int(panel["permno"].nunique()),
+            "eligible_rows_by_year": {
+                str(y): int(v) for y, v in
+                panel["month"].astype(str).str[:4].value_counts().sort_index().items()},
+            "floors": {"tradable_dollar_vol": 3_000_000.0, "price_usd": 5.0},
+            "wrote_windows_file": False,
+        }
 
     windows = []
     for th in range(N_THREADS):
@@ -311,7 +365,7 @@ def build_windows() -> dict:
             })
     rec = {
         "built_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "era": f"{ERA_START_YEAR}-{ERA_END_YEAR}",
+        "era": f"{start_year}-{end_year}",
         "seed": BUILD_SEED,
         "k_names": K_NAMES,
         "n_threads": N_THREADS,
@@ -331,8 +385,9 @@ def build_windows() -> dict:
         },
         "windows": windows,
     }
-    DATA.mkdir(parents=True, exist_ok=True)
-    WINDOWS_PATH.write_text(json.dumps(rec), encoding="utf-8")
+    if write:
+        DATA.mkdir(parents=True, exist_ok=True)
+        WINDOWS_PATH.write_text(json.dumps(rec), encoding="utf-8")
     return rec
 
 
@@ -505,6 +560,53 @@ def leak_check(rewritten: str, forbidden_labels: Sequence[str] = ()) -> dict:
 
 class HardCapReached(RuntimeError):
     """Local ceiling hit. Refusing further vendor calls."""
+
+
+class DecideOutsideFrozenEra(RuntimeError):
+    """A wire call was attempted for a window outside the frozen decided era."""
+
+
+#: The ONLY era whose windows this module is permitted to put on the wire.
+#: Part (b) of the 2026-09-06b mandate builds a SECOND era (2010-2013) and is
+#: explicitly forbidden to pay for its decide step in this session. A flag that
+#: "cannot reach decide" is worth nothing if the enforcement is a flag: this is
+#: enforced on the DATA instead, immediately before every wire call, so no
+#: combination of arguments -- and no future caller who never read this note --
+#: can spend a dollar on a month outside 2016-2019 without editing this line and
+#: saying why in the commit.
+FROZEN_DECIDE_ERA = (ERA_START_YEAR, ERA_END_YEAR)
+
+
+def month_of_meta(meta: dict) -> str | None:
+    """The window's month, from `meta["month"]` or parsed out of `window_id`."""
+    m = meta.get("month")
+    if m:
+        return str(m)
+    wid = str(meta.get("window_id") or "")
+    hit = re.search(r"(\d{4}-\d{2})", wid)
+    return hit.group(1) if hit else None
+
+
+def assert_decidable(meta: dict) -> None:
+    """REFUSE a vendor call for any window outside `FROZEN_DECIDE_ERA`.
+
+    Called before `_gate`, so a CACHE HIT is unaffected: replaying what has
+    already been bought is free and stays free. Only the wire is locked.
+    """
+    m = month_of_meta(meta)
+    if m is None:
+        raise DecideOutsideFrozenEra(
+            f"REFUSED: cannot establish the window's month from meta {meta!r}; "
+            "a wire call whose era cannot be derived is a wire call that is not "
+            "gated. A guard DERIVES its inputs or REFUSES.")
+    year = int(str(m)[:4])
+    lo, hi = FROZEN_DECIDE_ERA
+    if not (lo <= year <= hi):
+        raise DecideOutsideFrozenEra(
+            f"REFUSED: window month {m} is outside the frozen decide era "
+            f"{lo}-{hi}. The second-era (2010-2013) build is BUILD-ONLY this "
+            "session: its decide step is unfunded and unpaid, and this module "
+            "will not put it on the wire.")
 
 
 @dataclass
@@ -698,13 +800,13 @@ def _parse_json(text: str) -> dict | None:
 
 
 def call_rewriter(card: str, labels: list[str], meta: dict) -> dict | None:
-    key = "rw|" + hashlib.sha256((REWRITER_SYSTEM + "||" + card)
-                                 .encode("utf-8")).hexdigest()[:24]
+    key = rewriter_cache_key(card)
     with _CACHE_LOCK:
         hit = _CACHE.get(key)
     if hit is not None:
         return hit.get("parsed")
 
+    assert_decidable(meta)
     _gate(REWRITER_MODEL)
     t0 = time.time()
     err, parsed, raw = None, None, ""
@@ -797,8 +899,12 @@ def normalise_rank(rank: object, labels: Sequence[str]) -> list[str] | None:
     return out
 
 
-def call_decider(profiles: dict, labels: list[str], diary: str | None,
-                 prev_top: list[str] | None, meta: dict) -> dict | None:
+def decider_user_prompt(profiles: dict, labels: list[str], diary: str | None,
+                        prev_top: list[str] | None) -> str:
+    """The decider's user message. Factored out so the cache-only replay path
+    builds the SAME string -- and therefore the same cache key -- as the wire
+    path did. Two hand-copied prompt builders is how a "free re-grade" quietly
+    becomes a $4 re-run."""
     body = ["Company profiles:"]
     for lab in labels:
         body.append(f"\n{lab}: {profiles.get(lab, '')}")
@@ -809,15 +915,30 @@ def call_decider(profiles: dict, labels: list[str], diary: str | None,
                     + (", ".join(prev_top) if prev_top else "(none)")
                     + ". Note that the companies shown now are a NEW set and the "
                       "labels do NOT refer to the same companies as last time.")
-    user = "\n".join(body)
+    return "\n".join(body)
 
-    key = ("dc|" + hashlib.sha256((DECIDER_SYSTEM + "||" + user)
-                                  .encode("utf-8")).hexdigest()[:24])
+
+def rewriter_cache_key(card: str) -> str:
+    return "rw|" + hashlib.sha256((REWRITER_SYSTEM + "||" + card)
+                                  .encode("utf-8")).hexdigest()[:24]
+
+
+def decider_cache_key(user: str) -> str:
+    return "dc|" + hashlib.sha256((DECIDER_SYSTEM + "||" + user)
+                                  .encode("utf-8")).hexdigest()[:24]
+
+
+def call_decider(profiles: dict, labels: list[str], diary: str | None,
+                 prev_top: list[str] | None, meta: dict) -> dict | None:
+    user = decider_user_prompt(profiles, labels, diary, prev_top)
+
+    key = decider_cache_key(user)
     with _CACHE_LOCK:
         hit = _CACHE.get(key)
     if hit is not None:
         return hit.get("parsed")
 
+    assert_decidable(meta)
     _gate(DECIDER_MODEL)
     t0 = time.time()
     err, parsed, raw = None, None, ""
@@ -1019,6 +1140,103 @@ def run_arms(windows: list[dict], arms: Sequence[str] = ARMS,
             "integrity": integ, "stopped": stopped}
 
 
+def replay_from_cache(windows: list[dict], arms: Sequence[str] = ARMS) -> dict:
+    """`run_arms` with the wire amputated. $0, and provably so.
+
+    Every prose block and every decision is taken from `llm_cache.jsonl` by the
+    SAME key the wire path computed. Nothing here can call a provider: no
+    client is constructed, `_gate` is never reached, and a miss is recorded as a
+    MISS rather than filled.
+
+    The control flow is a mirror of `run_arms` down to the skip rules -- a
+    window whose prose is missing is skipped, a decision that is missing does
+    NOT advance the diary -- because the diary chain's cache keys depend on the
+    exact text of the previous decision. Any divergence would silently miss the
+    rest of that thread, and a "coverage 71%" line would be an artefact of the
+    replay rather than a fact about the cache.
+    """
+    cards: dict[tuple[str, str], tuple[str, list[str], list[str]]] = {}
+    for w in windows:
+        for naming in sorted({naming_of(a) for a in arms}):
+            cards[(w["window_id"], naming)] = render_bundle(w, naming)
+
+    prose: dict[tuple[str, str], dict] = {}
+    prose_miss: list[str] = []
+    for (wid, naming), (card, labels, _v) in cards.items():
+        hit = _CACHE.get(rewriter_cache_key(card))
+        if hit is None or hit.get("parsed") is None:
+            prose_miss.append(f"{wid}|{naming}")
+            continue
+        prose[(wid, naming)] = hit["parsed"]
+
+    decisions: dict[tuple[str, str], dict] = {}
+    miss: list[str] = []
+
+    by_thread: dict[int, list[dict]] = {}
+    for w in windows:
+        by_thread.setdefault(int(w["thread"]), []).append(w)
+    for th in by_thread:
+        by_thread[th].sort(key=lambda x: x["month"])
+
+    for arm in arms:
+        naming = naming_of(arm)
+        if not diary_of(arm):
+            for w in windows:
+                p = prose.get((w["window_id"], naming))
+                if p is None:
+                    miss.append(f"{w['window_id']}|{arm}|no-prose")
+                    continue
+                _, labels, _v = cards[(w["window_id"], naming)]
+                key = decider_cache_key(decider_user_prompt(p, labels, None, None))
+                hit = _CACHE.get(key)
+                if hit is None or hit.get("parsed") is None:
+                    miss.append(f"{w['window_id']}|{arm}|no-decision")
+                    continue
+                decisions[(w["window_id"], arm)] = hit["parsed"]
+            continue
+        for th in sorted(by_thread):
+            diary, prev_top = None, None
+            for w in by_thread[th]:
+                p = prose.get((w["window_id"], naming))
+                if p is None:
+                    miss.append(f"{w['window_id']}|{arm}|no-prose")
+                    continue
+                _, labels, _v = cards[(w["window_id"], naming)]
+                key = decider_cache_key(
+                    decider_user_prompt(p, labels, diary or "", prev_top))
+                hit = _CACHE.get(key)
+                if hit is None or hit.get("parsed") is None:
+                    miss.append(f"{w['window_id']}|{arm}|no-decision")
+                    continue
+                d = hit["parsed"]
+                decisions[(w["window_id"], arm)] = d
+                diary = str(d.get("diary") or "")[:900]
+                prev_top = [str(x) for x in (d.get("rank") or [])[:TOP_N]]
+
+    want = len(windows) * len(arms)
+    return {
+        "decisions": decisions,
+        "cards": cards,
+        "prose": prose,
+        "coverage": {
+            "windows": len(windows),
+            "arms": list(arms),
+            "decisions_wanted": want,
+            "decisions_recovered": len(decisions),
+            "coverage_rate": round(len(decisions) / max(1, want), 4),
+            "prose_bundles_wanted": len(cards),
+            "prose_bundles_recovered": len(prose),
+            "prose_misses": prose_miss[:40],
+            "decision_misses": miss[:40],
+            "n_decision_misses": len(miss),
+            "cache_rows_loaded": len(_CACHE),
+            "wire_calls_made": 0,
+            "usd_spent": 0.0,
+        },
+        "stopped": None,
+    }
+
+
 # ══════════════════════════════════════════════════════════════════════════
 # 5. GRADING -- code prices, the LLM never does
 # ══════════════════════════════════════════════════════════════════════════
@@ -1027,10 +1245,61 @@ def _label_map(naming: str, k: int) -> list[str]:
     return (FANTASY_FIRMS if naming == "fantasy" else REAL_LABELS)[:k]
 
 
+# ── the HOLD rule (mandate C4, 2026-09-06b) ─────────────────────────────────
+#: `hold_n = HOLD_MULTIPLE * TOP_N`. Declared in
+#: `backend/data/optimus/continuation_2026-09-06b/C4_hold_rule_declaration.json`
+#: and hashed there BEFORE this grade ran, because a hysteresis band chosen
+#: after seeing which band helps is not a rule, it is a fit.
+HOLD_MULTIPLE = 2
+
+
+def select_with_hold(ranks: Sequence[float], permnos: Sequence[int],
+                     prev_held: set[int], top_n: int,
+                     hold_n: int | None) -> list[int]:
+    """Slot indices the book holds this window. `learner.evaluate.book`'s rule.
+
+    BUY at rank <= `top_n`; HOLD an incumbent until its rank leaves `hold_n`.
+    Book size stays `top_n`: incumbents inside the band keep their slots
+    (best-ranked first, so the book never prefers a worse incumbent to a better
+    one), and the remainder is filled from the top of the ranking. Nothing
+    about the RANKING changes -- only how often the book pays the spread.
+
+    `hold_n is None` is the no-hysteresis rule and reproduces the original
+    grade exactly. `hold_n == top_n` is the same rule written a longer way; it
+    is accepted HERE (the equivalence is what the test proves) and REFUSED by
+    `grade_arm`, exactly as `evaluate.book` refuses `hold_k == k`, so that no
+    receipt can report a band where there is none.
+
+    `ranks` is 0-based rank POSITION per slot: 0 = the decider's best pick.
+    """
+    ranks = np.asarray(ranks, dtype=float)
+    order = list(np.argsort(ranks, kind="stable"))          # slots, best first
+    if hold_n is None:
+        return [i for i in range(len(ranks)) if ranks[i] < top_n]
+    if int(hold_n) < int(top_n):
+        raise ValueError(f"hold_n={hold_n} < top_n={top_n}: not a band")
+    keep = [i for i in order
+            if ranks[i] < hold_n and int(permnos[i]) in prev_held][:top_n]
+    fill = [i for i in order if i not in keep][:max(0, top_n - len(keep))]
+    return keep + fill
+
+
 def grade_arm(windows: list[dict], decisions: dict, arm: str,
-              cost_bps: float) -> dict:
-    """Per-window rank metrics, the paired within-bundle spread, and wealth."""
+              cost_bps: float, hold_n: int | None = None) -> dict:
+    """Per-window rank metrics, the paired within-bundle spread, and wealth.
+
+    `hold_n=None` is the original grade and is UNCHANGED, key for key and digit
+    for digit. `hold_n > TOP_N` grades the same decisions under the hysteresis
+    band of `select_with_hold`.
+    """
     from learner import evaluate
+
+    if hold_n is not None and int(hold_n) <= TOP_N:
+        raise SystemExit(
+            f"REFUSED: hold_n={hold_n} must be strictly greater than top_n="
+            f"{TOP_N}. A hold band no wider than the buy rank is the "
+            "no-hysteresis rule written a longer way, and the receipt would "
+            "report a band where there is none. (Mirrors learner.evaluate.book.)")
 
     naming = naming_of(arm)
     rows = []
@@ -1040,6 +1309,12 @@ def grade_arm(windows: list[dict], decisions: dict, arm: str,
     canary_year_hits = canary_year_asked = 0
     canary_co_named = 0
     year_guesses: list[int | None] = []
+    # THE NUMBER THAT DECIDES WHETHER A HOLD RULE CAN DO ANYTHING AT ALL:
+    # an incumbent can only be held if it is IN this month's bundle. The window
+    # build redraws 8 names from ~2,700 eligible permnos every month, so this
+    # is a property of the DESIGN, not of the decider's rank churn.
+    n_incumbents_present = 0     # prior holdings that reappear in the bundle
+    n_incumbents_held = 0        # ...and were actually kept by the hold rule
 
     order = sorted(windows, key=lambda w: (int(w["thread"]), str(w["month"])))
     for w in order:
@@ -1057,15 +1332,17 @@ def grade_arm(windows: list[dict], decisions: dict, arm: str,
         # rank IC: -rank (1 = best) against realised forward return
         rho = stats.spearmanr(-ranks, fwd).statistic
 
-        picked = [i for i in range(len(fwd)) if ranks[i] < TOP_N]
+        th = int(w["thread"])
+        prev = prev_hold.get(th, set())
+        picked = select_with_hold(ranks, permnos, prev, TOP_N, hold_n)
         bottom = [i for i in range(len(fwd)) if ranks[i] >= len(fwd) - TOP_N]
         r_top = float(np.mean(fwd[picked]))
         r_bot = float(np.mean(fwd[bottom]))
         r_ew = float(np.mean(fwd))
 
-        th = int(w["thread"])
         held = {permnos[i] for i in picked}
-        prev = prev_hold.get(th, set())
+        n_incumbents_present += len(prev & set(permnos))
+        n_incumbents_held += len(held & prev)
         turnover = (len(held - prev) / max(1, len(held))) if prev else 1.0
         cost = turnover * (cost_bps / 10_000.0) * 2.0
         prev_hold[th] = held
@@ -1121,7 +1398,7 @@ def grade_arm(windows: list[dict], decisions: dict, arm: str,
     bw = float(np.prod([bench_wealth[t] for t in bench_wealth])
                ** (1.0 / max(1, len(bench_wealth))))
 
-    return {
+    res = {
         "arm": arm, "naming": naming, "diary": diary_of(arm),
         "n_windows": int(len(df)),
         "n_month_blocks": int(monthly.shape[0]),
@@ -1160,6 +1437,21 @@ def grade_arm(windows: list[dict], decisions: dict, arm: str,
         "_rows": rows,
         "_monthly": {str(k): float(v) for k, v in monthly.items()},
     }
+    if hold_n is not None:
+        # ONLY on the hysteresis path, so the no-hold receipt keeps the exact
+        # key set the sealed 2026-09-06 receipt carries (the same reasoning
+        # `learner.evaluate.book` records for its own `hold_k` keys).
+        res["hold_n"] = int(hold_n)
+        res["selection_rule"] = (f"buy at rank <= {TOP_N}, hold until rank > "
+                                 f"{int(hold_n)}")
+        res["incumbents_present_in_next_bundle"] = int(n_incumbents_present)
+        res["incumbents_actually_held"] = int(n_incumbents_held)
+        res["hold_opportunity_note"] = (
+            "an incumbent can only be held if it REAPPEARS in the next month's "
+            "8-name bundle. The window build redraws 8 names from the whole "
+            "eligible universe each month, so `incumbents_present_in_next_"
+            "bundle` is the hard ceiling on anything a hold rule can save.")
+    return res
 
 
 def nulls(graded: dict, n_draws: int = 2000, seed: int = 7) -> dict:
@@ -1309,6 +1601,259 @@ def family_max_p(all_graded: dict[str, dict]) -> dict:
         "family_max_p": round(max(live.values()), 5),
         "family_min_p": round(min(live.values()), 5),
         "any_survives_bh_05": any(v <= 0.05 for v in bh.values()),
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# 5b. THE SECOND ERA -- BUILD ONLY, $0 (mandate C4b, 2026-09-06b)
+# ══════════════════════════════════════════════════════════════════════════
+# "A second era is worth more than more windows in the same one -- windows
+# within a month share the month." (REVIEW_2026-09-06_FABLE51 claim 6.)
+#
+# The decide step of a second era is NOT funded this session. Everything below
+# counts, prices and refuses; `assert_decidable` is what makes the refusal a
+# property of the code rather than of this comment.
+
+ERA2 = (2010, 2013)
+EDGAR_DIR = REPO / "backend" / "data" / "optimus" / "edgar_8k"
+
+
+def edgar_backing(start_year: int, end_year: int) -> dict:
+    """How much EDGAR 8-K tape actually exists inside an era, and its two clocks.
+
+    TWO CLOCKS, NAMED SEPARATELY (the trap of
+    [[feedback-two-clocks-need-two-bounds]]: one shared PIT bound across a
+    BACKWARD news window and a FORWARD calendar deleted every catalyst row in
+    this repo once, so 'a dated catalyst inside 21 sessions' had never once been
+    evaluated):
+
+      * BACKWARD / knowability clock -- `acceptance_datetime`. A filing is
+        usable at a decision instant iff it was ACCEPTED by EDGAR before that
+        instant. `event_date` is when the thing happened and is never the gate;
+        the manifest says so itself.
+      * FORWARD / grading clock -- the month AFTER the decision instant, which
+        is where `fwd_1m` lives. It is a different variable with a different
+        bound, and it is not derived from the first.
+
+    They are reported as two fields on purpose. A single `pit_bound` here would
+    be the same bug wearing this job's clothes.
+    """
+    man_path = EDGAR_DIR / "manifest.json"
+    parq = EDGAR_DIR / "eightk_items.parquet"
+    out: dict[str, Any] = {
+        "era": f"{start_year}-{end_year}",
+        "source_files": [str(man_path), str(parq)],
+        "pit_backward_bound": (
+            "acceptance_datetime (EDGAR acceptance, UTC) <= the decision "
+            "instant. event_date is NOT the knowability gate."),
+        "pit_forward_window": (
+            "the calendar month AFTER the decision instant -- `fwd_1m` in the "
+            "long panel. A SEPARATE variable with a SEPARATE bound; sharing one "
+            "bound between the two clocks deletes every row."),
+    }
+    if not man_path.exists() or not parq.exists():
+        out["error"] = f"EDGAR tape absent: {man_path} / {parq}"
+        out["filings_in_era"] = 0
+        return out
+
+    man = json.loads(man_path.read_text(encoding="utf-8"))
+    out["manifest"] = {
+        k: man.get(k) for k in
+        ("built_utc", "source", "rows", "ciks", "with_permno",
+         "filing_date_min", "filing_date_max", "coverage_start_median",
+         "coverage_truncation_caveat", "survivor_caveat", "pit_rule", "params")}
+
+    d = pd.read_parquet(parq, columns=["cik", "filing_date",
+                                       "acceptance_datetime", "permno"])
+    yr = pd.to_datetime(d["filing_date"], errors="coerce").dt.year
+    out["filings_all_years"] = {str(k): int(v)
+                                for k, v in yr.value_counts().sort_index().items()}
+    m = (yr >= start_year) & (yr <= end_year)
+    sub = d.loc[m]
+    out["filings_in_era"] = int(len(sub))
+    out["filings_in_era_by_year"] = {
+        str(k): int(v) for k, v in yr[m].value_counts().sort_index().items()}
+    out["ciks_in_era"] = int(sub["cik"].nunique()) if len(sub) else 0
+    out["permnos_in_era"] = (int(sub["permno"].notna().sum()) if len(sub) else 0)
+    out["acceptance_datetime_present_rate_in_era"] = (
+        round(float(sub["acceptance_datetime"].notna().mean()), 4)
+        if len(sub) else None)
+    out["permno_link_rate_whole_tape"] = round(
+        float(d["permno"].notna().mean()), 4)
+    return out
+
+
+def build_era2_dry_run(era: tuple[int, int] = ERA2,
+                       edgar_only: bool = True) -> dict:
+    """Count the second era. Never decide it, never write a windows file.
+
+    Returns the receipt body for `C4b_era2_window_build_dryrun.json`.
+    """
+    lo, hi = era
+    backing = edgar_backing(lo, hi)
+
+    # The panel-backed count is reported BESIDE the EDGAR-only answer, not
+    # instead of it: it is the number the roadmap needs ("what would a second
+    # era cost?") and it is NOT an EDGAR-only build. Saying which is which is
+    # the whole job here.
+    panel: dict[str, Any]
+    try:
+        panel = build_windows(lo, hi, write=False, dry_run=True, narrow=True)
+    except Exception as exc:                                   # noqa: BLE001
+        panel = {"error": f"{type(exc).__name__}: {exc}"}
+
+    n_edgar = int(backing.get("filings_in_era") or 0)
+    years_with_tape = sorted(backing.get("filings_in_era_by_year", {}))
+    n_years = hi - lo + 1
+    buildable = edgar_only and n_edgar > 0 and len(years_with_tape) == n_years
+
+    n_windows_panel = int(panel.get("n_windows_would_build") or 0)
+    cost = project_decide_cost(n_windows_panel)
+
+    return {
+        "era": f"{lo}-{hi}",
+        "mode": "BUILD-ONLY DRY RUN. No windows file written, no LLM call made.",
+        "source_policy": ("EDGAR ONLY (no other vendor tape)" if edgar_only
+                          else "long panel"),
+        "edgar_backing": backing,
+        "edgar_only_windows_would_build": 0 if not buildable else None,
+        "edgar_only_verdict": (
+            "CANNOT BUILD" if not buildable else "BUILDABLE (recount before use)"),
+        "edgar_only_why": (
+            f"the EDGAR 8-K tape's own manifest reports filing_date_min "
+            f"{backing.get('manifest', {}).get('filing_date_min')} and its pull "
+            f"params start {(backing.get('manifest', {}).get('params') or {}).get('start')}. "
+            f"Inside {lo}-{hi} it holds {n_edgar} filings, in "
+            f"{len(years_with_tape)} of {n_years} years "
+            f"({years_with_tape or 'none'}). An era-replay window needs a "
+            "cross-section in EVERY month of the era; three of these four years "
+            "have literally zero rows, so an EDGAR-only build of this era is not "
+            "thin, it is EMPTY. Two further defects would bind even if the pull "
+            "were extended: (a) the survivor caveat -- the universe is resolved "
+            "through company_tickers.json = CURRENT registrants, so presence in "
+            f"{lo}-{hi} correlates with survival to 2026, the same leak this "
+            "job already refuses for 2016-19; (b) the truncation caveat -- the "
+            "default pull reads only `filings.recent`, coverage_start_median is "
+            f"{backing.get('manifest', {}).get('coverage_start_median')}, so "
+            "absence before that date is truncation and not evidence. And a "
+            "third, structural: EDGAR carries no return, so an EDGAR-only "
+            "bundle cannot be GRADED at all without joining a price tape -- and "
+            f"only {backing.get('permno_link_rate_whole_tape')} of the whole "
+            "tape's rows even carry a permno to join on."),
+        "what_would_make_it_buildable": [
+            "re-pull EDGAR with --full-history so pre-2016 pages are fetched "
+            "(the manifest's params show full_history: false), AND",
+            "resolve the universe from a POINT-IN-TIME registrant list rather "
+            "than today's company_tickers.json, or accept and declare the "
+            "survivorship leak, AND",
+            "join a return tape for grading -- EDGAR prices nothing.",
+        ],
+        "panel_backed_alternative": {
+            "note": ("NOT an EDGAR-only build. This is the SAME window-build "
+                     "code path (`build_windows(..., dry_run=True)`) run on the "
+                     "long panel for the same era, so the roadmap has a real "
+                     "number for what a second era would cost."),
+            **panel,
+        },
+        "projected_decide_cost": cost,
+        "decide_step": {
+            "run_this_session": False,
+            "enforcement": (
+                "`assert_decidable` refuses any rewriter or decider wire call "
+                "whose window month falls outside FROZEN_DECIDE_ERA "
+                f"{FROZEN_DECIDE_ERA}. Enforced on the DATA immediately before "
+                "the wire, not on a CLI flag: no argument combination reaches a "
+                "provider with a 2010-2013 window."),
+            "llm_calls_made_by_this_job": 0,
+            "usd_spent_by_this_job": 0.0,
+        },
+    }
+
+
+def project_decide_cost(n_windows: int, arms: Sequence[str] = ARMS) -> dict:
+    """What a decide step over `n_windows` would cost, from MEASURED unit cost.
+
+    The unit costs come from era-1's own ledger block, not from a guess: 417
+    rewriter calls at $0.303226 and 846 decider calls at $0.178508 (receipt
+    `L10_era_replay_v2_run01.json` -> `campaign_spend_total`). Those totals
+    include the pilot and the errored calls, so the per-call figures are the
+    REALISED cost of getting a usable answer, which is the number a projection
+    wants.
+    """
+    era1 = (RECEIPTS / "L10_era_replay_v2_run01.json")
+    unit_rw = unit_dc = unit_dc_corr = None
+    basis = "hardcoded fallback"
+    as_run: dict[str, Any] = {}
+    corrected: dict[str, Any] = {"available": False}
+    if era1.exists():
+        try:
+            blk = json.loads(era1.read_text(encoding="utf-8"))["campaign_spend_total"]
+            rw = blk["by_model"][REWRITER_MODEL]
+            dc = blk["by_model"][DECIDER_MODEL]
+            unit_rw = rw["usd"] / max(1, rw["calls"])
+            unit_dc = dc["usd"] / max(1, dc["calls"])
+            basis = f"measured, {era1.name} -> campaign_spend_total"
+            as_run = {"rewriter_calls": rw["calls"], "rewriter_usd": rw["usd"],
+                      "decider_calls": dc["calls"], "decider_usd": dc["usd"]}
+            # RE-PRICE the SAME token counts under whatever the price table
+            # says NOW. The sealed receipt's dollars were computed under the
+            # 2026-08-12 table; if a sibling agent has since re-derived the
+            # DeepSeek price from the PROVIDER BALANCE, that correction has to
+            # reach this projection or the roadmap budgets the second era at a
+            # price nobody charges. A receipt's USD is a function of a table
+            # and a token count; only the token count is a measurement.
+            from backend.config import LLM_PRICE_PER_MTOK, LLM_PRICE_AS_OF
+            p = LLM_PRICE_PER_MTOK.get(DECIDER_MODEL)
+            if p:
+                usd = (dc["tokens_in"] * p["in"]
+                       + dc["cached_in"] * p.get("cached_in", p["in"])
+                       + dc["tokens_out"] * p["out"]) / 1e6
+                unit_dc_corr = usd / max(1, dc["calls"])
+                corrected = {
+                    "available": True,
+                    "price_table_as_of": LLM_PRICE_AS_OF,
+                    "decider_price_per_mtok": p,
+                    "era1_decider_usd_repriced": round(usd, 6),
+                    "era1_decider_usd_as_sealed": dc["usd"],
+                    "correction_multiple": round(usd / max(1e-12, dc["usd"]), 3),
+                    "reads": ("the SAME 846 calls and the SAME token counts, "
+                              "priced by the table on disk today. The sealed "
+                              "receipt's dollars are not wrong -- they are the "
+                              "old table's answer, and the token counts are "
+                              "what was actually measured."),
+                }
+        except Exception:                                      # noqa: BLE001
+            pass
+    if unit_rw is None:
+        unit_rw, unit_dc = 0.000727, 0.000211
+    n_namings = len({naming_of(a) for a in arms})
+    n_rw = n_windows * n_namings
+    n_dc = n_windows * len(arms)
+    proj_old = n_rw * unit_rw + n_dc * unit_dc
+    proj_new = (n_rw * unit_rw + n_dc * unit_dc_corr
+                if unit_dc_corr is not None else None)
+    return {
+        "n_windows": int(n_windows),
+        "n_rewriter_calls": int(n_rw),
+        "n_decider_calls": int(n_dc),
+        "usd_per_rewriter_call": round(unit_rw, 6),
+        "usd_per_decider_call_as_sealed": round(unit_dc, 6),
+        "usd_per_decider_call_corrected": (round(unit_dc_corr, 6)
+                                           if unit_dc_corr is not None else None),
+        "projected_usd_at_sealed_prices": round(proj_old, 4),
+        "projected_usd_at_corrected_prices": (round(proj_new, 4)
+                                              if proj_new is not None else None),
+        "projected_usd": round(proj_new if proj_new is not None else proj_old, 4),
+        "era1_measured": as_run,
+        "corrected_price": corrected,
+        "unit_cost_basis": basis,
+        "price_table_caveat": (
+            "gpt-5-nano is priced from this module's LOCAL table "
+            f"{NANO_PRICE_PER_MTOK} because it has no entry in "
+            "config.LLM_PRICE_PER_MTOK, so the rewriter leg is NOT corrected "
+            "and remains a lower bound. deepseek-chat is priced from "
+            "config.LLM_PRICE_PER_MTOK, which is re-read at run time; "
+            "`corrected_price` says which table that was."),
     }
 
 
@@ -1484,9 +2029,10 @@ def _ledger_state() -> dict:
         return {"error": f"{type(exc).__name__}: {exc}"}
 
 
-def write_receipt(name: str, payload: dict) -> Path:
-    RECEIPTS.mkdir(parents=True, exist_ok=True)
-    p = RECEIPTS / name
+def write_receipt(name: str, payload: dict, out_dir: Path | None = None) -> Path:
+    out_dir = out_dir or RECEIPTS
+    out_dir.mkdir(parents=True, exist_ok=True)
+    p = out_dir / name
     p.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
     print(f"[receipt] {p}")
     return p
@@ -1504,7 +2050,35 @@ def main(argv=None) -> int:
     ap.add_argument("--workers", type=int, default=10)
     ap.add_argument("--cost-bps", type=float, default=None)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--era", default=f"{ERA_START_YEAR}-{ERA_END_YEAR}",
+                    help="YYYY-YYYY. Any era other than the frozen "
+                         "2016-2019 is BUILD-ONLY: its decide step is unfunded.")
+    ap.add_argument("--build-only", action="store_true",
+                    help="count the era's windows and refuse to decide it ($0)")
     a = ap.parse_args(argv)
+
+    try:
+        era_lo, era_hi = (int(x) for x in str(a.era).split("-", 1))
+    except Exception:
+        raise SystemExit(f"REFUSED: --era must be YYYY-YYYY, got {a.era!r}")
+    frozen = (era_lo, era_hi) == FROZEN_DECIDE_ERA
+
+    if not frozen and (a.run or a.pilot):
+        # Belt. `assert_decidable` is the braces, and it is the one that binds:
+        # it refuses at the wire whatever this branch is talked out of.
+        raise SystemExit(
+            f"REFUSED: --era {a.era} is not the frozen decide era "
+            f"{FROZEN_DECIDE_ERA[0]}-{FROZEN_DECIDE_ERA[1]}. A second era is "
+            "BUILD-ONLY this session (mandate C4b): its decide step is unfunded. "
+            "Use --build-only.")
+
+    if a.build_only:
+        rec = build_era2_dry_run((era_lo, era_hi), edgar_only=True)
+        write_receipt(a.out or "C4b_era2_window_build_dryrun.json", rec,
+                      out_dir=RECEIPTS_B)
+        print(json.dumps({k: v for k, v in rec.items()
+                          if k != "edgar_backing"}, indent=1, default=str))
+        return 0
 
     from learner import evaluate
     cost_bps = a.cost_bps if a.cost_bps is not None else evaluate.COST_BPS_PER_SIDE

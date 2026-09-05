@@ -1,0 +1,170 @@
+{
+ "era": "2010-2013",
+ "mode": "BUILD-ONLY DRY RUN. No windows file written, no LLM call made.",
+ "source_policy": "EDGAR ONLY (no other vendor tape)",
+ "edgar_backing": {
+  "era": "2010-2013",
+  "source_files": [
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\manifest.json",
+   "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\eightk_items.parquet"
+  ],
+  "pit_backward_bound": "acceptance_datetime (EDGAR acceptance, UTC) <= the decision instant. event_date is NOT the knowability gate.",
+  "pit_forward_window": "the calendar month AFTER the decision instant -- `fwd_1m` in the long panel. A SEPARATE variable with a SEPARATE bound; sharing one bound between the two clocks deletes every row.",
+  "manifest": {
+   "built_utc": "2026-09-03T16:19:48.105617+00:00",
+   "source": "SEC EDGAR submissions API (data.sec.gov)",
+   "rows": 293619,
+   "ciks": 2594,
+   "with_permno": 23319,
+   "filing_date_min": "2013-01-02",
+   "filing_date_max": "2026-09-03",
+   "coverage_start_median": "2016-02-09",
+   "coverage_truncation_caveat": "the default pull reads only `filings.recent` (~1,000 most recent filings per CIK, all forms); a heavy filer's 8-K history is TRUNCATED at its coverage_start. Absence of a row before coverage_start is truncation, not evidence of no filing. --full-history fetches the older pages.",
+   "survivor_caveat": "universe resolved via company_tickers.json = CURRENT registrants; names delisted before the map's fetch date are absent",
+   "pit_rule": "availability = acceptance_datetime (EDGAR acceptance, UTC). event_date is when the thing happened; it is NEVER the knowability gate.",
+   "params": {
+    "start": "2013-01-01",
+    "end": "2026-09-03",
+    "universe": "both",
+    "full_history": false
+   }
+  },
+  "filings_all_years": {
+   "2013": 6927,
+   "2014": 9603,
+   "2015": 12515,
+   "2016": 14606,
+   "2017": 17471,
+   "2018": 19994,
+   "2019": 22096,
+   "2020": 26446,
+   "2021": 27986,
+   "2022": 26860,
+   "2023": 27828,
+   "2024": 28678,
+   "2025": 30175,
+   "2026": 22434
+  },
+  "filings_in_era": 6927,
+  "filings_in_era_by_year": {
+   "2013": 6927
+  },
+  "ciks_in_era": 644,
+  "permnos_in_era": 454,
+  "acceptance_datetime_present_rate_in_era": 1.0,
+  "permno_link_rate_whole_tape": 0.0794
+ },
+ "edgar_only_windows_would_build": 0,
+ "edgar_only_verdict": "CANNOT BUILD",
+ "edgar_only_why": "the EDGAR 8-K tape's own manifest reports filing_date_min 2013-01-02 and its pull params start 2013-01-01. Inside 2010-2013 it holds 6927 filings, in 1 of 4 years (['2013']). An era-replay window needs a cross-section in EVERY month of the era; three of these four years have literally zero rows, so an EDGAR-only build of this era is not thin, it is EMPTY. Two further defects would bind even if the pull were extended: (a) the survivor caveat -- the universe is resolved through company_tickers.json = CURRENT registrants, so presence in 2010-2013 correlates with survival to 2026, the same leak this job already refuses for 2016-19; (b) the truncation caveat -- the default pull reads only `filings.recent`, coverage_start_median is 2016-02-09, so absence before that date is truncation and not evidence. And a third, structural: EDGAR carries no return, so an EDGAR-only bundle cannot be GRADED at all without joining a price tape -- and only 0.0794 of the whole tape's rows even carry a permno to join on.",
+ "what_would_make_it_buildable": [
+  "re-pull EDGAR with --full-history so pre-2016 pages are fetched (the manifest's params show full_history: false), AND",
+  "resolve the universe from a POINT-IN-TIME registrant list rather than today's company_tickers.json, or accept and declare the survivorship leak, AND",
+  "join a return tape for grading -- EDGAR prices nothing."
+ ],
+ "panel_backed_alternative": {
+  "note": "NOT an EDGAR-only build. This is the SAME window-build code path (`build_windows(..., dry_run=True)`) run on the long panel for the same era, so the roadmap has a real number for what a second era would cost.",
+  "dry_run": true,
+  "built_utc": "2026-09-05T14:36:49+00:00",
+  "era": "2010-2013",
+  "seed": 20260906,
+  "k_names": 8,
+  "n_threads": 4,
+  "top_n": 3,
+  "months_in_era": 48,
+  "months_with_at_least_k_eligible": 48,
+  "months_dropped_thin": [],
+  "n_windows_would_build": 192,
+  "eligible_rows": 75192,
+  "eligible_permnos": 2595,
+  "eligible_rows_by_year": {
+   "2010": 18564,
+   "2011": 18981,
+   "2012": 18121,
+   "2013": 19526
+  },
+  "floors": {
+   "tradable_dollar_vol": 3000000.0,
+   "price_usd": 5.0
+  },
+  "wrote_windows_file": false
+ },
+ "projected_decide_cost": {
+  "n_windows": 192,
+  "n_rewriter_calls": 384,
+  "n_decider_calls": 768,
+  "usd_per_rewriter_call": 0.000727,
+  "usd_per_decider_call_as_sealed": 0.000211,
+  "usd_per_decider_call_corrected": 0.000513,
+  "projected_usd_at_sealed_prices": 0.4413,
+  "projected_usd_at_corrected_prices": 0.6733,
+  "projected_usd": 0.6733,
+  "era1_measured": {
+   "rewriter_calls": 417,
+   "rewriter_usd": 0.303226,
+   "decider_calls": 846,
+   "decider_usd": 0.178508
+  },
+  "corrected_price": {
+   "available": true,
+   "price_table_as_of": "2026-09-05",
+   "decider_price_per_mtok": {
+    "in": 0.169413,
+    "cached_in": 0.00338826,
+    "out": 1.284835
+   },
+   "era1_decider_usd_repriced": 0.434116,
+   "era1_decider_usd_as_sealed": 0.178508,
+   "correction_multiple": 2.432,
+   "reads": "the SAME 846 calls and the SAME token counts, priced by the table on disk today. The sealed receipt's dollars are not wrong -- they are the old table's answer, and the token counts are what was actually measured."
+  },
+  "unit_cost_basis": "measured, L10_era_replay_v2_run01.json -> campaign_spend_total",
+  "price_table_caveat": "gpt-5-nano is priced from this module's LOCAL table {'in': 0.05, 'cached_in': 0.005, 'out': 0.4} because it has no entry in config.LLM_PRICE_PER_MTOK, so the rewriter leg is NOT corrected and remains a lower bound. deepseek-chat is priced from config.LLM_PRICE_PER_MTOK, which is re-read at run time; `corrected_price` says which table that was."
+ },
+ "decide_step": {
+  "run_this_session": false,
+  "enforcement": "`assert_decidable` refuses any rewriter or decider wire call whose window month falls outside FROZEN_DECIDE_ERA (2016, 2019). Enforced on the DATA immediately before the wire, not on a CLI flag: no argument combination reaches a provider with a 2010-2013 window.",
+  "llm_calls_made_by_this_job": 0,
+  "usd_spent_by_this_job": 0.0
+ },
+ "mandate": "continuation 2026-09-06b item 4(b)",
+ "licence": "PRODUCT_EXPERIMENT (exploratory)",
+ "llm_spend_usd": 0.0,
+ "llm_calls_made": 0,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\c6b_era_replay_hold.py",
+   "--era2"
+  ],
+  "resolved_config": {
+   "era": "2010-2013",
+   "edgar_only": true,
+   "k_names": 8,
+   "n_threads": 4,
+   "build_seed": 20260906,
+   "frozen_decide_era": [
+    2016,
+    2019
+   ]
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\manifest.json",
+    "sha256": "c75d2e4db5c4f8c0290697b7a35af9ed256953e401b21fc9de2b86d0c0c37808",
+    "bytes": 1762
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\eightk_items.parquet",
+    "sha256": "dd0aafc85575391ee463bbce6b2e2c8d8f8d2e2697b2d745f96e2004f86b2be9",
+    "bytes": 10090360
+   },
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\continuation_2026-09-06\\L10_era_replay_v2_run01.json",
+    "sha256": "7445ae4c9fbbeae2438ec878a81e9559e712a6561479213bbf1498219e5d3ee9",
+    "bytes": 28409
+   }
+  ],
+  "git_commit": "59ace19",
+  "generated_utc": "2026-09-05T14:36:49+00:00"
+ }
+}
