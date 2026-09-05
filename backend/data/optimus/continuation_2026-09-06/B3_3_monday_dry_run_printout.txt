@@ -1,0 +1,249 @@
+==============================================================================
+MONDAY DRY RUN -- tracker vintage 2026-09-02   band mode: RETURNS
+generated 2026-09-05T12:23:41+00:00Z  REPLAY: nothing sealed, nothing ordered, nothing published
+==============================================================================
+universe: 3056 names screened -> 806 candidates
+data gaps on the vintage: rec_status not ok 3, target_status not ok 101
+
+------------------------------------------------------------------------------
+HACK3   personality=hack3  k=10  rank=risk_adjusted_ratio  exclude_past_winners=True
+  pool 806 -> eligible 416 -> ADMITTED 10
+  names: IVA, TNXP, IMRX, LENZ, ASPI, DAKT, INVA, CRUS, VST, NPKI
+  BINDING: downside above the 30% cap  -- dropping it ALONE admits 151 name(s)
+    rule                                                            fails   only
+    downside above the 30% cap                                        259    151
+    past winner                                                       150     88
+    past_winner unreadable (no 12-month history)                       60     27
+    exp_return not positive (own base rate says this cell loses;       35     15
+    (`fails` counts names failing the rule at all; `only` counts names failing NOTHING ELSE -- the ones a relaxation would actually buy)
+  SIZE: 8% of equity per name x 10 name(s) = 83% gross;  stop 8.0% (profile 'basket')
+    worst case if every name gaps to its stop the same day: 6.64% of equity = $6,640 on $100,000
+  CONTRACT on every holding (alpha/contract.py):
+    expected_horizon_sessions   21
+    min_normal_hold_sessions    10
+    thesis_expiry               2026-10-01
+    hard_falsifiers             3 item(s)
+      - the sealed ranking value for this name is no longer in the book's admitted set
+      - the analyst target that ranked it is withdrawn or cut below the entry price
+      - a delisting, halt or split makes the sealed price basis unreadable
+    risk_budget_usd             664.0
+    emergency_exit_reasons      6 item(s)
+      - DEADLINE
+      - EXECUTION_CORRECTION
+      - HARD_RISK_LIMIT
+      - DATA_ERROR
+      - THESIS_INVALIDATED
+      - EXPLICIT_EVENT_STRATEGY_EXIT
+    profit_target_frac          None   (None = no profit target; a +2.5% target on a 21-session thesis collects a day of noise)
+    stop_fraction (profile)     8.0%
+    min_edge_over_stop          None   (None = MEASURED AND RECORDED, NOT ENFORCED)
+    stamped on all 10 holding(s) at seal time: no -- the seal REFUSES a book whose holdings are unstamped; this replay did not stamp 10
+
+------------------------------------------------------------------------------
+HACK4   personality=hack4  k=5  rank=upside_x_consensus  exclude_past_winners=False
+  pool 806 -> eligible 31 -> ADMITTED 5
+  names: NB, LAES, ALMU, ABAT, FPS
+  BINDING: catalyst beyond 30 calendar days  -- dropping it ALONE admits 607 name(s)
+    rule                                                            fails   only
+    catalyst beyond 30 calendar days                                  629    607
+    no readable catalyst                                              144    133
+    exp_return not positive (own base rate says this cell loses;       35      2
+    (`fails` counts names failing the rule at all; `only` counts names failing NOTHING ELSE -- the ones a relaxation would actually buy)
+  SIZE: 10% of equity per name x 5 name(s) = 50% gross;  stop 6.0% (profile 'maximum')
+    worst case if every name gaps to its stop the same day: 3.00% of equity = $3,000 on $100,000
+  CONTRACT on every holding (alpha/contract.py):
+    expected_horizon_sessions   21
+    min_normal_hold_sessions    10
+    thesis_expiry               2026-10-01
+    hard_falsifiers             3 item(s)
+      - the sealed ranking value for this name is no longer in the book's admitted set
+      - the analyst target that ranked it is withdrawn or cut below the entry price
+      - a delisting, halt or split makes the sealed price basis unreadable
+    risk_budget_usd             600.0
+    emergency_exit_reasons      6 item(s)
+      - DEADLINE
+      - EXECUTION_CORRECTION
+      - HARD_RISK_LIMIT
+      - DATA_ERROR
+      - THESIS_INVALIDATED
+      - EXPLICIT_EVENT_STRATEGY_EXIT
+    profit_target_frac          None   (None = no profit target; a +2.5% target on a 21-session thesis collects a day of noise)
+    stop_fraction (profile)     6.0%
+    min_edge_over_stop          None   (None = MEASURED AND RECORDED, NOT ENFORCED)
+    stamped on all 5 holding(s) at seal time: no -- the seal REFUSES a book whose holdings are unstamped; this replay did not stamp 5
+
+------------------------------------------------------------------------------
+HACK6   personality=hack6  k=15  rank=upside_downside_ratio  exclude_past_winners=False
+  pool 806 -> eligible 185 -> ADMITTED 15
+  names: MAZE, NKTR, RARE, NAMS, AMSC, RUSHA, INVA, MLYS, BUR, TREE, HLMN, HDB, GRAB, CALX, VST
+  BINDING: downside above the 20% cap  -- dropping it ALONE admits 375 name(s)
+    rule                                                            fails   only
+    downside above the 20% cap                                        543    375
+    coverage below 4-10                                               153     32
+    below the $5m/day liquidity floor                                  93     16
+    coverage above 11-25                                               32     13
+    exp_return not positive (own base rate says this cell loses;       35      0
+    (`fails` counts names failing the rule at all; `only` counts names failing NOTHING ELSE -- the ones a relaxation would actually buy)
+  SIZE: 6% of equity per name x 15 name(s) = 90% gross;  stop 3.0% (profile 'aggressive')
+    worst case if every name gaps to its stop the same day: 2.70% of equity = $2,700 on $100,000
+  CONTRACT on every holding (alpha/contract.py):
+    expected_horizon_sessions   21
+    min_normal_hold_sessions    10
+    thesis_expiry               2026-10-01
+    hard_falsifiers             3 item(s)
+      - the sealed ranking value for this name is no longer in the book's admitted set
+      - the analyst target that ranked it is withdrawn or cut below the entry price
+      - a delisting, halt or split makes the sealed price basis unreadable
+    risk_budget_usd             180.0
+    emergency_exit_reasons      6 item(s)
+      - DEADLINE
+      - EXECUTION_CORRECTION
+      - HARD_RISK_LIMIT
+      - DATA_ERROR
+      - THESIS_INVALIDATED
+      - EXPLICIT_EVENT_STRATEGY_EXIT
+    profit_target_frac          None   (None = no profit target; a +2.5% target on a 21-session thesis collects a day of noise)
+    stop_fraction (profile)     3.0%
+    min_edge_over_stop          None   (None = MEASURED AND RECORDED, NOT ENFORCED)
+    stamped on all 15 holding(s) at seal time: no -- the seal REFUSES a book whose holdings are unstamped; this replay did not stamp 15
+
+==============================================================================
+MONDAY DRY RUN -- tracker vintage 2026-09-02   band mode: HYGIENE_ONLY
+generated 2026-09-05T12:23:41+00:00Z  REPLAY: nothing sealed, nothing ordered, nothing published
+==============================================================================
+universe: 3056 names screened -> 810 candidates   (33 fail hygiene: >= $2, >= 2 analysts, target window readable)
+data gaps on the vintage: rec_status not ok 3, target_status not ok 101
+
+------------------------------------------------------------------------------
+HACK3   personality=hack3  k=10  rank=risk_adjusted_ratio  exclude_past_winners=True
+  pool 810 -> eligible 5 -> ADMITTED 5
+  names: LOVE, RZLT, RFIL, LAES, AVAV
+  BINDING: exp_return not positive (own base rate says this cell loses; a long book cannot hold it)  -- dropping it ALONE admits 413 name(s)
+    rule                                                            fails   only
+    exp_return not positive (own base rate says this cell loses;      799    413
+    downside above the 30% cap                                        262      4
+    past winner                                                       150      1
+    past_winner unreadable (no 12-month history)                       60      1
+    hygiene (B.1 4a: >= $2, >= 2 analysts, target window readable      33      0
+    (`fails` counts names failing the rule at all; `only` counts names failing NOTHING ELSE -- the ones a relaxation would actually buy)
+  SIZE: 8% of equity per name x 5 name(s) = 42% gross;  stop 8.0% (profile 'basket')
+    worst case if every name gaps to its stop the same day: 3.32% of equity = $3,320 on $100,000
+  CONTRACT on every holding (alpha/contract.py):
+    expected_horizon_sessions   21
+    min_normal_hold_sessions    10
+    thesis_expiry               2026-10-01
+    hard_falsifiers             3 item(s)
+      - the sealed ranking value for this name is no longer in the book's admitted set
+      - the analyst target that ranked it is withdrawn or cut below the entry price
+      - a delisting, halt or split makes the sealed price basis unreadable
+    risk_budget_usd             664.0
+    emergency_exit_reasons      6 item(s)
+      - DEADLINE
+      - EXECUTION_CORRECTION
+      - HARD_RISK_LIMIT
+      - DATA_ERROR
+      - THESIS_INVALIDATED
+      - EXPLICIT_EVENT_STRATEGY_EXIT
+    profit_target_frac          None   (None = no profit target; a +2.5% target on a 21-session thesis collects a day of noise)
+    stop_fraction (profile)     8.0%
+    min_edge_over_stop          None   (None = MEASURED AND RECORDED, NOT ENFORCED)
+    stamped on all 5 holding(s) at seal time: no -- the seal REFUSES a book whose holdings are unstamped; this replay did not stamp 5
+
+------------------------------------------------------------------------------
+HACK4   personality=hack4  k=5  rank=upside_x_consensus  exclude_past_winners=False
+  pool 810 -> eligible 11 -> ADMITTED 5
+  names: NB, LAES, ALMU, ABAT, FPS
+  BINDING: exp_return not positive (own base rate says this cell loses; a long book cannot hold it)  -- dropping it ALONE admits 20 name(s)
+    rule                                                            fails   only
+    exp_return not positive (own base rate says this cell loses;      799     20
+    catalyst beyond 30 calendar days                                  633      0
+    no readable catalyst                                              144      0
+    hygiene (B.1 4a: >= $2, >= 2 analysts, target window readable      33      0
+    (`fails` counts names failing the rule at all; `only` counts names failing NOTHING ELSE -- the ones a relaxation would actually buy)
+  SIZE: 10% of equity per name x 5 name(s) = 50% gross;  stop 6.0% (profile 'maximum')
+    worst case if every name gaps to its stop the same day: 3.00% of equity = $3,000 on $100,000
+  CONTRACT on every holding (alpha/contract.py):
+    expected_horizon_sessions   21
+    min_normal_hold_sessions    10
+    thesis_expiry               2026-10-01
+    hard_falsifiers             3 item(s)
+      - the sealed ranking value for this name is no longer in the book's admitted set
+      - the analyst target that ranked it is withdrawn or cut below the entry price
+      - a delisting, halt or split makes the sealed price basis unreadable
+    risk_budget_usd             600.0
+    emergency_exit_reasons      6 item(s)
+      - DEADLINE
+      - EXECUTION_CORRECTION
+      - HARD_RISK_LIMIT
+      - DATA_ERROR
+      - THESIS_INVALIDATED
+      - EXPLICIT_EVENT_STRATEGY_EXIT
+    profit_target_frac          None   (None = no profit target; a +2.5% target on a 21-session thesis collects a day of noise)
+    stop_fraction (profile)     6.0%
+    min_edge_over_stop          None   (None = MEASURED AND RECORDED, NOT ENFORCED)
+    stamped on all 5 holding(s) at seal time: no -- the seal REFUSES a book whose holdings are unstamped; this replay did not stamp 5
+
+------------------------------------------------------------------------------
+HACK6   personality=hack6  k=15  rank=upside_downside_ratio  exclude_past_winners=False
+  pool 810 -> eligible 0 -> ADMITTED 0
+  names: NONE
+  BINDING: exp_return not positive (own base rate says this cell loses; a long book cannot hold it)  -- dropping it ALONE admits 185 name(s)
+    rule                                                            fails   only
+    exp_return not positive (own base rate says this cell loses;      799    185
+    downside above the 20% cap                                        547      5
+    below the $5m/day liquidity floor                                  94      1
+    coverage below 4-10                                               155      0
+    hygiene (B.1 4a: >= $2, >= 2 analysts, target window readable      33      0
+    coverage above 11-25                                               32      0
+    (`fails` counts names failing the rule at all; `only` counts names failing NOTHING ELSE -- the ones a relaxation would actually buy)
+  SIZE: 6% of equity per name x 0 name(s) = 0% gross;  stop 3.0% (profile 'aggressive')
+    worst case if every name gaps to its stop the same day: 0.00% of equity = $0 on $100,000
+  CONTRACT on every holding (alpha/contract.py):
+    expected_horizon_sessions   21
+    min_normal_hold_sessions    10
+    thesis_expiry               2026-10-01
+    hard_falsifiers             3 item(s)
+      - the sealed ranking value for this name is no longer in the book's admitted set
+      - the analyst target that ranked it is withdrawn or cut below the entry price
+      - a delisting, halt or split makes the sealed price basis unreadable
+    risk_budget_usd             180.0
+    emergency_exit_reasons      6 item(s)
+      - DEADLINE
+      - EXECUTION_CORRECTION
+      - HARD_RISK_LIMIT
+      - DATA_ERROR
+      - THESIS_INVALIDATED
+      - EXPLICIT_EVENT_STRATEGY_EXIT
+    profit_target_frac          None   (None = no profit target; a +2.5% target on a 21-session thesis collects a day of noise)
+    stop_fraction (profile)     3.0%
+    min_edge_over_stop          None   (None = MEASURED AND RECORDED, NOT ENFORCED)
+    stamped on all 0 holding(s) at seal time: yes
+
+------------------------------------------------------------------------------
+ENTRY AUTHORITY -- may each book OPEN a position, and what stops it
+  hack1  DISARMED  Mandate.manage_only=True (declared in alpha/fleet.py)
+  hack2  ARMED     nothing -- this book may enter
+  hack3  ARMED     nothing -- this book may enter
+  hack4  ARMED     nothing -- this book may enter
+  hack5  ARMED     nothing -- this book may enter
+  hack6  ARMED     nothing -- this book may enter
+  TWO of the four possible disarms are RAILWAY VARIABLES and are invisible from
+  here: `railway variables --service aat-loop-<role>`. This block reports what a
+  local process can see and refuses to guess the rest.
+
+  hack2 IS ARMED AND IS NOT A TRACKER BOOK -- print this before Monday.
+  `contract.defaults_for` branches on TRACKER_BOOKS = (hack3, hack4, hack6), so
+  hack2 falls through to the EVENT defaults: horizon 3 sessions, min hold 0,
+  profit_target_frac 0.025. Its fleet profile is 'aggressive' = a 3% stop. So the
+  one armed book with NO minimum hold and a +2.5% target is the book the whole
+  minimum-hold build was written to stop churning. Not fixed here -- which
+  defaults hack2 gets is Murat's call, not a session's.
+
+------------------------------------------------------------------------------
+BAND MODE DIFFERENCE (returns -> hygiene_only)
+  hack3  10 -> 5   added: ['AVAV', 'LAES', 'LOVE', 'RFIL', 'RZLT']   dropped: ['ASPI', 'CRUS', 'DAKT', 'IMRX', 'INVA', 'IVA', 'LENZ', 'NPKI', 'TNXP', 'VST']
+  hack4  5 -> 5   added: -   dropped: -
+  hack6  15 -> 0   added: -   dropped: ['AMSC', 'BUR', 'CALX', 'GRAB', 'HDB', 'HLMN', 'INVA', 'MAZE', 'MLYS', 'NAMS', 'NKTR', 'RARE', 'RUSHA', 'TREE', 'VST']
+
+
+replay receipt: C:\Users\mrthn\AppData\Local\Temp\claude\C--Users-mrthn-aegis-finance\e2a797ae-8a72-4f80-af48-6610c88e9ced\scratchpad\dryrun\monday_dry_run_2026-09-02.json   (NOT a seal; nothing under state/predictions was written)

@@ -1,0 +1,110 @@
+{
+ "artefact": "B3_3_MONDAY_DRY_RUN",
+ "spec": "docs/CONTINUATION_2026-09-06_OPUS_PROMPT.md 2d.3 -- seal today's tracker vintage locally under the hygiene-only band; run hack3/4/6's 10:01 pass in dry mode; print names admitted, the BINDING constraint, the contract fields, min hold 10, armed/disarmed",
+ "repo": "aegis-alpha-terminal",
+ "written_utc": "2026-09-05",
+ "sealed_for_real": false, "ordered": false, "deployed": false, "pushed": false,
+ "full_printout": "B3_3_monday_dry_run_printout.txt (beside this file); reproduce with `AAT_ACCOUNT_ROLE=hack1 python -m scripts.monday_dry_run --compare`",
+ "attached_to": "aegis-alpha-terminal/docs/RUNBOOK_2026-09-08_REARM.md APPENDIX A",
+
+ "vintage": {
+  "tracker_day": "2026-09-02",
+  "why_not_today": "MAX_TRACKER_AGE_SESSIONS = 2 and the nightly refresh has not run since 09-02, so a seal dated today is CORRECTLY refused. A `--refresh` to manufacture one was declined deliberately: a half-finished refresh leaves a FRESH-LOOKING partial vintage that Monday's seal would then price a book on, which is worse than an absent one.",
+  "replay_discipline": "scripts/monday_dry_run.py passes `tracker_rows(day, asof=day)` -- 'was this vintage fresh on its own day'. `asof` is KEYWORD-ONLY and a live seal passes none, so it is still measured against today. Pinned by test.",
+  "names_screened": 3056, "candidates_returns": 806, "candidates_hygiene": 810,
+  "data_gaps": {"rec_status_not_ok": 3, "target_status_not_ok": 101}
+ },
+
+ "the_10_01_pass_in_dry_mode": {
+  "command": "AAT_MANDATE_END_UTC=2027-12-31T15:00:00Z AAT_ACCOUNT_ROLE=<role> python -m scripts.run_pass --expiry 2027-12-31 --role <role> --profile <profile> --brains tracker_portfolio   (no --live == dry)",
+  "hack3": "EXIT=2 -- tracker_portfolio is enabled but its sealed portfolio could not be read: no sealed book for 2026-09-05. Declining rather than re-deriving.",
+  "hack4": "EXIT=2 -- identical",
+  "hack6": "EXIT=2 -- identical",
+  "reading": "the artery working as designed, and the whole Monday risk in one line: NO SEAL, NO TRADE. The refresh -> backfill-prices -> seal -> publish chain must finish before 10:01 ET.",
+  "runbook_defect_found": "RUNBOOK 6b instructs `python -m scripts.run_pass ... --dry-run`. Verified 2026-09-05: `run_pass.py: error: unrecognized arguments: --dry-run`. A pass is dry by DEFAULT; `--live` is what sends orders. Corrected in APPENDIX A."
+ },
+
+ "admitted_and_binding": {
+  "note": "BINDING is `fails_only` -- names failing ONLY that rule, i.e. what relaxing it alone would buy. NOT the first-fired reason: the chain short-circuits, so `excluded_by_reason` names the earliest rule a name failed.",
+  "returns_LIVE_TODAY": {
+   "hack3": {"pool": 806, "eligible": 416, "admitted": 10,
+             "names": ["IVA", "TNXP", "IMRX", "LENZ", "ASPI", "DAKT", "INVA", "CRUS", "VST", "NPKI"],
+             "binding": "downside above the 30% cap", "fails_only": 151,
+             "size": "8.3% x 10 = 83% gross, stop 8.0% (basket), worst case -6.64% = -$6,640"},
+   "hack4": {"pool": 806, "eligible": 31, "admitted": 5,
+             "names": ["NB", "LAES", "ALMU", "ABAT", "FPS"],
+             "binding": "catalyst beyond 30 calendar days", "fails_only": 607,
+             "size": "10% x 5 = 50% gross, stop 6.0% (maximum), worst case -3.00% = -$3,000"},
+   "hack6": {"pool": 806, "eligible": 185, "admitted": 15,
+             "names": ["MAZE", "NKTR", "RARE", "NAMS", "AMSC", "RUSHA", "INVA", "MLYS", "BUR", "TREE", "HLMN", "HDB", "GRAB", "CALX", "VST"],
+             "binding": "downside above the 20% cap", "fails_only": 375,
+             "size": "6% x 15 = 90% gross, stop 3.0% (aggressive), worst case -2.70% = -$2,700"}
+  },
+  "hygiene_only_NOT_ENABLED": {
+   "hack3": {"pool": 810, "eligible": 5, "admitted": 5,
+             "names": ["LOVE", "RZLT", "RFIL", "LAES", "AVAV"],
+             "binding": "exp_return not positive", "fails_only": 413},
+   "hack4": {"pool": 810, "eligible": 11, "admitted": 5,
+             "names": ["NB", "LAES", "ALMU", "ABAT", "FPS"],
+             "binding": "exp_return not positive", "fails_only": 20},
+   "hack6": {"pool": 810, "eligible": 0, "admitted": 0, "names": [],
+             "binding": "exp_return not positive", "fails_only": 185}
+  },
+  "difference": {
+   "hack3": {"from": 10, "to": 5, "added": ["AVAV", "LAES", "LOVE", "RFIL", "RZLT"],
+             "dropped": ["ASPI", "CRUS", "DAKT", "IMRX", "INVA", "IVA", "LENZ", "NPKI", "TNXP", "VST"]},
+   "hack4": {"from": 5, "to": 5, "added": [], "dropped": []},
+   "hack6": {"from": 15, "to": 0, "added": [], "dropped": ["AMSC", "BUR", "CALX", "GRAB", "HDB", "HLMN", "INVA", "MAZE", "MLYS", "NAMS", "NKTR", "RARE", "RUSHA", "TREE", "VST"]}
+  }
+ },
+
+ "THE_FINDING": {
+  "headline": "Decision B.1 4a, implemented literally, would EMPTY hack6 and halve hack3.",
+  "mechanism": "The four band-return constants were not only an exclusion rule -- they were the SOURCE of `exp_return` for every name they covered. Take them away and `murat_rule.score` falls back to `(2*p_up - 1) * claimed_abs_move` off the 152-name panel, whose UNCONDITIONAL base rate is p_up = 0.4615 (the rule-firing cell is 0.5082). Negative for everything the rule does not fire on.",
+  "measured": "799 of 810 candidates fail the coherence floor `exp_return not positive` under hygiene-only, versus 35 of 806 under the live setting.",
+  "consequence": "the long-book coherence floor becomes the SOLE gate: hack6 0 names, hack3 5, hack4 5.",
+  "hygiene_itself_is_not_the_cause": "hygiene excluded 33 of 810 candidates and its `fails_only` is ZERO in all three books -- not one name was admitted or refused because of hygiene alone.",
+  "what_is_needed_from_Murat": [
+   "(i) what feeds `exp_return` once the band constants are gone -- the panel base rate (which empties the books), the learner, or a flat prior; OR",
+   "(ii) whether the coherence floor still applies when `exp_return` is a transferred 152-name base rate rather than a measured band."
+  ],
+  "status": "the flag exists, is OFF by default, the live fleet is byte-identical without it, and both modes are exercised by the suite. DO NOT set AAT_BAND_MODE=hygiene_only on a live service until (i) or (ii) is answered."
+ },
+
+ "what_the_flag_changes": {
+  "enable": "railway variables --service aat-loop-<role> --set \"AAT_BAND_MODE=hygiene_only\"",
+  "1_admits": "UPSIDE_IMPLAUSIBLE_AT (ratio >= 4.0) stops BARRING candidacy and becomes a reported indicator",
+  "2_excludes": "the hard price floor rises $1 -> $2, the condition every EXP-RETURN-XS-1 cell was measured under",
+  "3_excludes": "a target window whose high/low exceeds 5x is UNREADABLE and is barred -- the split / share-basis defect the toxic band was made of, named as a data defect instead of priced as a forecast",
+  "kept_as_indicator": "`upside_band` travels on every scored row in BOTH modes -- a guide a reader and a model can see, and a gate in neither once the flag is on"
+ },
+
+ "contract_on_every_holding": {
+  "identical_across": ["hack3", "hack4", "hack6"],
+  "expected_horizon_sessions": 21,
+  "min_normal_hold_sessions": 10,
+  "thesis_expiry": "2026-10-01 (21 weekday sessions from the vintage)",
+  "hard_falsifiers": 3,
+  "risk_budget_usd": {"hack3": 664.0, "hack4": 600.0, "hack6": 180.0,
+                      "basis": "per-name notional fraction x $100,000 frozen genesis equity x the profile stop"},
+  "emergency_exit_reasons": ["DEADLINE", "EXECUTION_CORRECTION", "HARD_RISK_LIMIT", "DATA_ERROR", "THESIS_INVALIDATED", "EXPLICIT_EVENT_STRATEGY_EXIT"],
+  "profit_target_frac": null,
+  "min_edge_over_stop": null
+ },
+
+ "armed_disarmed_2026-09-05": {
+  "hack1": "DISARMED -- Mandate.manage_only=True (declared in alpha/fleet.py)",
+  "hack2": "ARMED", "hack3": "ARMED", "hack4": "ARMED", "hack5": "ARMED", "hack6": "ARMED",
+  "caveat": "two of the four possible disarms are RAILWAY VARIABLES and are invisible to a local process. Reported as such, never guessed.",
+  "hack2_warning": "contract.defaults_for branches on TRACKER_BOOKS = (hack3, hack4, hack6), so hack2 falls through to the EVENT defaults: horizon 3, min_normal_hold_sessions 0, profit_target_frac 0.025. Its fleet profile is 'aggressive' = a 3% stop. The one armed book with NO minimum hold and a +2.5% target is precisely the churn the minimum-hold build exists to stop. NOT FIXED -- Murat's call. (Surfaced by the 2f agent, verified here.)"
+ },
+
+ "files": [
+  "aegis-alpha-terminal/alpha/murat_rule.py (band_mode, hygiene, hygiene-only overlay, score fields)",
+  "aegis-alpha-terminal/alpha/tracker.py (hygiene_only, min_price_usd, indicator-not-gate, hygiene eligibility check)",
+  "aegis-alpha-terminal/scripts/prediction_book.py (tracker_rows keyword-only `asof` for a declared replay)",
+  "aegis-alpha-terminal/scripts/monday_dry_run.py (new)",
+  "aegis-alpha-terminal/tests_smoke_band_mode.py (new)",
+  "aegis-alpha-terminal/docs/RUNBOOK_2026-09-08_REARM.md (APPENDIX A)"
+ ]
+}

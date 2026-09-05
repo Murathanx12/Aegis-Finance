@@ -1,0 +1,95 @@
+{
+ "artefact": "B3_1_LEARNING_REPORT_PLUMBING",
+ "spec": "docs/CONTINUATION_2026-09-06_OPUS_PROMPT.md 2d.1 -- kill every CANNOT DETERMINE that is our own plumbing",
+ "repo": "aegis-alpha-terminal (terminal), branch main, local commits only",
+ "written_utc": "2026-09-05",
+ "author": "Fable 5.1 (B3 agent)",
+
+ "the_rule_implemented": {
+  "statement": "Every refusal on the daily learning report now carries `cause`: PLUMBING (our own wiring did not deliver an input that exists) or NO_DATA_YET (the input genuinely does not exist -- a CORRECT refusal that stays).",
+  "why": "A gate that cannot go green is a broken gate -- and it cuts both ways. One undifferentiated red line teaches the reader to skim whether it is our dead job or an honest absence, and the two need opposite responses.",
+  "surfaced_where": "header line `REFUSALS: n OUR PLUMBING [...] | m no data yet [...]`, plus `report['refusal_census']` in the receipt."
+ },
+
+ "wired": [
+  {
+   "input": "live-equity fallback",
+   "was": "scoreboard_row refused the whole role line whenever portfolio_history (1D) had no row for the day, with the venue one GET away.",
+   "now": "build_report reads GET /v2/account per role; scoreboard_row uses the live equity ONLY when the account's own session day IS the report day, and stamps `equity_source`. An older day is still refused, and now says why in one sentence.",
+   "guard": "never stamps today's equity onto an earlier day -- that would be a fabrication, and the test pins it."
+  },
+  {
+   "input": "counterfactual marker (revived as a distinction, not a silence)",
+   "was": "one CANNOT DETERMINE for three different facts, whose own text said it 'cannot tell those apart and will not pretend to'.",
+   "now": "marker_last_day() dates the marker off the ledger's newest row. marker < day => PLUMBING with the command; marker >= day and no refusals => status ok with an explicit ZERO; no rows at all => PLUMBING naming the ledger directory.",
+   "measured_on_2026-09-04": "the marker last wrote 2026-08-28 -- EIGHT DAYS dead. The page had been reporting that as 'either nothing was refused, or the marker did not run'."
+  },
+  {
+   "input": "shadow path env var",
+   "was": "one hardcoded sibling path; a missing file printed 'not present' whether the directory existed or not.",
+   "now": "AEGIS_SHADOW_DIR first, then ../aegis-finance/backend/data/optimus/learner, then ../Aegis-Finance/... (a rename or a case-sensitive mount is not a missing shadow). Missing DIRECTORY => PLUMBING naming the env var; directory present and this day absent => NO_DATA_YET naming the newest day that IS there.",
+   "measured_on_2026-09-04": "directory present, 1 day-file, newest 2026-09-02 => HONEST refusal. The finance repo's nightly owes the terminal nothing."
+  },
+  {
+   "input": "tracker path",
+   "was": "hardcoded `_state_dir()/tracker`, and one CANNOT DETERMINE for 'no directory' and 'no file for this day'.",
+   "now": "tracker_dir() honours AAT_TRACKER_DIR (the seal authority runs with a mounted volume where state/ is not the tracker's home). Three separate refusals: no directory / directory with no day files / this day missing while older days exist -- the last names the newest day present.",
+   "measured_on_2026-09-04": "newest tracker day is 2026-09-02 => PLUMBING (the nightly refresh did not run), with `python -m scripts.tracker --refresh`."
+  },
+  {
+   "input": "ONE SPY close source",
+   "was": "at least four readers on TWO DIFFERENT TAPES.",
+   "sources_found": [
+    "scripts/daily_learning_report.spy_window -> client.stock_bars(feed=config.stock_feed())",
+    "scripts/move_decomposition -> client.stock_bars_multi(feed default 'sip')",
+    "scripts/logic_brain -> client.stock_bars_multi(feed default 'sip')",
+    "scripts/blind_tournament -> its own paged /v2/stocks/bars (research backtest, left alone and named here)"
+   ],
+   "the_defect_measured": {
+    "config_stock_feed": "iex",
+    "consequence": "the daily learning report's benchmark was quoted off the IEX tape while two other modules used the consolidated tape. Not a rounding difference: a different market.",
+    "same_page_2026-09-04": {
+     "iex": {"spy_genesis_close": 769.28, "spy_day_close": 770.18, "window_return_pct": 0.117},
+     "sip": {"spy_genesis_close": 769.35, "spy_day_close": 770.19, "window_return_pct": 0.109},
+     "benchmark_regret_shift_pp": 0.01
+    }
+   },
+   "now": "alpha/spy.py owns SYMBOL, FEED='sip', closes_from_bars() and window(). daily_learning_report.spy_window is a delegating wrapper; move_decomposition and logic_brain take SYMBOL and FEED from it. Pinned by test.",
+   "not_changed": "scripts/blind_tournament pages its own multi-symbol bars for a research backtest and reads SPY only as a within-fetch control; rewiring it would add a call and change nothing. Named, not silently left."
+  },
+  {
+   "input": "books-vs-fills: 'no seal at all' vs 'role not in the seal'",
+   "was": "every role, TRACKER BOOKS INCLUDED, printed 'no sealed book (normal for non-tracker roles)' on 2026-09-04 when the truth was that NO seal existed for the day.",
+   "now": "seal_exists is passed in; no seal => PLUMBING with the seal command; seal present and role absent => NO_DATA_YET."
+  },
+  {
+   "input": "counterfactual ledger read",
+   "was": "the whole of state/counterfactual.jsonl -- 1.07 GB, append-only -- parsed on every run to report ONE session.",
+   "now": "bounded 64 MB tail read, first (partial) line discarded."
+  }
+ ],
+
+ "still_cannot_determine_and_HONEST": [
+  {"section": "(d) SHADOW", "cause": "NO_DATA_YET",
+   "reading": "the finance repo's learner wrote 2026-09-02 and no later day. That repo's nightly owes the terminal nothing; this refusal is correct and should stay."}
+ ],
+
+ "still_cannot_determine_and_PLUMBING_but_NOT_OURS_TO_FIX_TONIGHT": [
+  {"section": "(c) REFUSAL REGRET", "cause": "PLUMBING",
+   "why": "the counterfactual marker has not run since 2026-08-28 because the LOOPS are stopped (deliberately, since judging day). The report now says exactly that and prints the command. Reviving the job itself is `fleet --deploy <role> --up`, which is attended and out of this session's boundaries."},
+  {"section": "(e) WATCHLIST", "cause": "PLUMBING",
+   "why": "same root: the nightly tracker refresh has not run since 2026-09-02. Named with its command; running it is a network job outside this session's dry-run mandate."},
+  {"section": "(b) BOOKS vs FILLS", "cause": "PLUMBING",
+   "why": "no seal exists for 2026-09-04 -- nothing was sealed on judging day after the liquidation. The B3 dry-run seals a vintage locally (see B3_3) but does not publish it."}
+ ],
+
+ "known_fact_reported_not_repaired": "the decisions-ledger hash chain has been TORN since 2026-08-25 (~line 1203). Read, reported, NOT repaired -- repairing a tamper-evident chain IS the tampering. The report prints it on every run.",
+
+ "files": [
+  "aegis-alpha-terminal/alpha/spy.py (new)",
+  "aegis-alpha-terminal/scripts/daily_learning_report.py",
+  "aegis-alpha-terminal/scripts/move_decomposition.py",
+  "aegis-alpha-terminal/scripts/logic_brain.py",
+  "aegis-alpha-terminal/tests_smoke_learning_report.py"
+ ]
+}

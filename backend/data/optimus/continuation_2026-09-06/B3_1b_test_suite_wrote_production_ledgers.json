@@ -1,0 +1,41 @@
+{
+ "artefact": "B3_1b_TEST_SUITE_WROTE_PRODUCTION_LEDGERS",
+ "found_while": "B3 2d.1 -- wiring the daily learning report's (c2) HOLDING DISCIPLINE census",
+ "repo": "aegis-alpha-terminal",
+ "written_utc": "2026-09-05",
+ "severity": "the suite was writing into two append-only records that other code makes decisions from",
+
+ "how_it_surfaced": {
+  "observation": "state/decisions.jsonl had an mtime of 2026-09-05 20:02 local (12:02 UTC) -- one minute after a `python run_tests.py` finished, in a repo whose loops have been stopped since judging day.",
+  "rows": "six exit rows for PANW and NVDA, `HARD_RISK_LIMIT: shares at -9.00% against the 3% stop declared for profile 'default'`, decision_ids 20260905T1153 / T1154 / T1202 -- exactly the two suite runs.",
+  "source": "tests_smoke_contract.py:278 calls `exits.manage(RefusingClient(), deadline_utc=DL, dry_run=False)`. The client is fake; the LEDGER WRITE is real."
+ },
+
+ "why_no_existing_guard_caught_it": "AAT_TEST_MODE blocks the SOCKET. Nothing blocked the FILESYSTEM. `alpha/ledger.py:41` resolves LEDGER_DIR from AAT_LEDGER_DIR **at import time**, defaulting to `state/`, so a suite that sets the variable after importing alpha.ledger has already lost -- which is why the fix has to live in run_tests.py, the one place a child's environment is set. Same shape as the 2026-08-27 leak: only an env var reaches a child.",
+
+ "consequences_measured": [
+  "daily_learning_report section (c2) counted those fictional rows as real exits in its exit-reason census.",
+  "the rows sit inside a hash chain that has been TORN since 2026-08-25. They were NOT deleted: editing a tamper-evident chain IS the tampering. They are recorded here instead."
+ ],
+
+ "the_second_leak_the_new_guard_found_immediately": {
+  "file": "state/llm_spend.jsonl",
+  "growth_one_run": "1789100 -> 1789420 bytes",
+  "rows": "caller `tests.smoke`, model deepseek-chat, fictional usage",
+  "why_it_matters": "this is the file `spend.spent_usd()` reads to decide whether a real LLM call is affordable. Fabricated rows inside a budget gate's own input. `alpha/spend.py:50` hardcoded the absolute path and ignored AAT_LEDGER_DIR entirely.",
+  "fix": "alpha/spend.ledger_path() resolves at CALL time and redirects to AAT_LEDGER_DIR **only under AAT_TEST_MODE**. Production is byte-for-byte unchanged, on purpose: moving a budget gate's input is how spent_usd() once read absence as $0.00 and re-authorised money already spent."
+ },
+
+ "fixes": [
+  "run_tests.py exports AAT_LEDGER_DIR to a per-run temp directory unless the caller set one (the same reason it exports AAT_TEST_MODE).",
+  "run_tests.py FINGERPRINTS decisions/counterfactual/fills/llm_spend/belief_series before and after the whole run and FAILS the run if any grew, printing the sizes and refusing to tidy up.",
+  "alpha/spend.ledger_path() as above."
+ ],
+
+ "verification": {
+  "before_fix": "1 SUITE(S) FAILED: ['PRODUCTION LEDGER WRITTEN'] -- state/llm_spend.jsonl 1789100 -> 1789420",
+  "after_fix": "74 suites, 3396 checks, ALL PASS, ledger REDIRECTED, no production ledger changed"
+ },
+
+ "known_fact_untouched": "the decisions-ledger hash chain remains TORN at ~line 1203 since 2026-08-25. Reported, not repaired."
+}

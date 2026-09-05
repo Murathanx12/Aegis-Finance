@@ -1,0 +1,75 @@
+{
+ "artefact": "B3_2_AUTOPSY_AND_OPPORTUNITY_RECALL",
+ "spec": "docs/CONTINUATION_2026-09-06_OPUS_PROMPT.md 2d.2 -- revive daily_autopsy on the after-close schedule; the second question becomes the opportunity-recall ledger with typed misses",
+ "repo": "aegis-alpha-terminal",
+ "written_utc": "2026-09-05",
+ "llm_spend_usd": 0.0,
+
+ "1_a_receipt_every_night": {
+  "was": [
+   "daily_autopsy printed a one-line complaint, returned 1 and wrote NOTHING when the universe was empty",
+   "it dated its receipt from `max(bar['t'][:10])`, so a night with no bars wrote `state/autopsy/None.json`",
+   "discovery_autopsy had exactly one exit path and wrote a receipt only on the happy one",
+   "the after-close block stamped `last['autopsy'] = now` UNCONDITIONALLY, so one non-zero exit lost the whole night -- the next attempt was 20 hours away, by which time the 16:00-20:00 ET window had closed"
+  ],
+  "now": [
+   "the session day is DERIVED from alpha.exits.session_day() (the repo's one clock), and the bars only CONFIRM it; a mismatch prints a note naming both",
+   "every exit path of both scripts writes state/autopsy/<day>.json through ONE writer, with status ok | EMPTY | REFUSED and the reason",
+   "the after-close block retries after 30 min on failure and holds the 20h lock only on success",
+   "the ET hour comes from alpha.exits.ET_OFFSET instead of a second inline `(utc.hour - 4)`"
+  ],
+  "proved_live": {
+   "refusal_path": "AAT_ACCOUNT_ROLE unset -> `DISCOVERY AUTOPSY 2026-09-04: REFUSED -- CredentialRefusal...` and a receipt on disk",
+   "ok_path": "daily_autopsy --no-llm ran 3,056 names, filed under session 2026-09-04 while the clock day was 2026-09-05, and printed the note"
+  }
+ },
+
+ "2_opportunity_recall_ledger": {
+  "module": "alpha/recall.py (pure, offline-testable)",
+  "written_to": "state/opportunity_recall/<day>.jsonl, one row per mover, both sides of the tape",
+  "typed_misses": {
+   "NOT_OBSERVED": "never entered any AEGIS list. The repair is COVERAGE.",
+   "GENERATED_NOT_RANKED": "we had the name; the ranking did not surface it. The repair is the MODEL.",
+   "RANKED_NOT_BOUGHT": "the sealed book named it and no fill exists. The repair is EXECUTION or an admission gate -- the class hack3 lost ten names in on 2026-09-03.",
+   "BOUGHT_SOLD_EARLY": "closed inside the contract's minimum hold. The repair is the EXIT RULE -- 60% of round trips finished the session they opened.",
+   "CAPTURED": "not a miss."
+  },
+  "both_sides": "every mover carries recall_kind: missed_winner / captured_winner / avoided_loser / held_loser, and summarise() reports winner_recall BESIDE loser_avoidance. Either alone is maximised by a book with no discipline -- buy everything and recall is 1.0.",
+  "refusals_that_matter": [
+   "sold_early is TRI-STATE: None means 'held, or cannot tell'. An UNTYPED exit row (written before 2026-09-05) is NOT counted as sold-early -- absence of a code is not evidence of one.",
+   "no seal for the day => `ranked` is UNKNOWN and the whole day is written UNCLASSIFIED. Treating it as an empty ranking would type every observed name GENERATED_NOT_RANKED and blame the MODEL for a night the seal never ran.",
+   "no decisions ledger => `bought` is UNKNOWN, same treatment; otherwise everything ranked would type RANKED_NOT_BOUGHT and blame EXECUTION.",
+   "a rate over zero movers is None, never 1.0 (the 312-wins-on-$0.00 lesson)."
+  ]
+ },
+
+ "3_the_whole_market_was_seven_names": {
+  "finding": "the venue screener /v1beta1/screener/stocks/movers returned SEVEN names at or above $3 for 2026-09-04. The second question's own wording is 'the biggest idiosyncratic winners and losers across the WHOLE market', and daily_autopsy already ranks the same session over the 3,056-name tradable universe on SIP closes.",
+  "missed_by_the_screener": ["NX +22.2%", "GWRE -19.9%", "LULU -17.4%", "FICO -16.7%", "PATH -16.6%", "ADSK -8.3%", "a five-name LOSS:Technology cluster"],
+  "fix": "discovery_autopsy takes the UNION of the screener and daily_autopsy's universe movers; every row records `mover_source`. 7 -> 23 movers on 2026-09-04."
+ },
+
+ "live_run_2026-09-04": {
+  "movers": 23,
+  "by_pipeline_location": {"NOT_GENERATED": 16, "window_universe": 7},
+  "research_queue_NOT_GENERATED_with_pre_open_evidence": ["AOUT", "TRBG", "PDEX", "TYRA", "BLTE", "AEHR", "SNDK", "FICO", "OXM", "ASAN"],
+  "recall_status": "CANNOT DETERMINE -- NO SEAL for 2026-09-04, `ranked` is UNKNOWN, not empty",
+  "reading": "the guard working. Judging day had no seal after the 10:45 liquidation; the ledger refused to blame a stage rather than typing 23 names GENERATED_NOT_RANKED.",
+  "daily_autopsy_grade": {"winners_in_candidates": 0, "losers_in_candidates": 0, "movers_in_old_universe": 0,
+                          "reading": "not one of the day's sixteen biggest movers was on the candidate list, either way."}
+ },
+
+ "observed_not_fixed": {
+  "what": "pre_move_evidence's `first_headline` shows the SAME Benzinga roundup ('Why Samsara Shares Are Trading Higher...') for AOUT, TRBG, GWRE, OXM and ASAN.",
+  "status": "UNVERIFIED. Benzinga roundups legitimately tag many tickers, so this may be correct. It is recorded rather than fixed -- out of B3's scope, and guessing at it would be worse than naming it."
+ },
+
+ "tests": "tests_smoke_recall.py, 45 checks, in the standard runner",
+ "files": [
+  "aegis-alpha-terminal/alpha/recall.py (new)",
+  "aegis-alpha-terminal/scripts/daily_autopsy.py",
+  "aegis-alpha-terminal/scripts/discovery_autopsy.py",
+  "aegis-alpha-terminal/scripts/agent_loop.py",
+  "aegis-alpha-terminal/tests_smoke_recall.py (new)"
+ ]
+}

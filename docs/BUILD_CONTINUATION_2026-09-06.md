@@ -20,7 +20,7 @@ about any candidate.
 | Farm candidates tested / promoted | **3 tested / 0 promoted** (companyworld graph features, floored neural encoder, LLM era-replay decider) |
 | New actionable finding | **the mandated baseline is five months.** 83.6% of `lgbm_clf`'s 251-month excess sits in five months, and without them it is BEHIND the market (7.78 vs 8.18). Every "beats/loses to lgbm" statement in this repo is a comparison against a beta-timing artefact |
 | External execution drag | not measured this session — no orders, no seals, no deploys |
-| LLM spend / cost per gradeable output | **$4.14 of a $15.00 cap.** DeepSeek $3.98 provider-measured; gpt-5-nano $0.16 telemetry. 4,598 calls. **$2.12 bought 2,020 supply-chain edges (~$0.00105/edge) and $0.32 bought 768 graded LLM rank decisions (~$0.00041/decision).** And a defect: our ledger prices only **56%** of what the provider charged |
+| LLM spend / cost per gradeable output | **$4.14 of a $15.00 cap.** DeepSeek $3.98 provider-measured; gpt-5-nano $0.16 telemetry. 4,598 calls. **$2.12 bought 2,020 supply-chain edges (~$0.00105/edge) and $0.48 bought 768 graded LLM rank decisions (~$0.00063/decision).** And a defect: our ledger prices only **56%** of what the provider charged |
 
 ### The five things a reader should take away
 
@@ -382,6 +382,100 @@ weekend's own champion (54.3% in five months) and the night lab's L1.
 
 Receipts: `W3b_neural_floored_run01_declaration.json`,
 `W3b_neural_floored_run01.json`
+
+---
+
+## 2d. MONDAY MUST LEARN — and the dry run found the thing that would have gone wrong
+
+Terminal repo, three commits (`5e27070`, `c253ede`, `c01043d`, `d28742b`).
+Nothing sealed, ordered, deployed or pushed.
+
+### 1. Every CANNOT DETERMINE on the learning report now names whose fault it is
+Each refusal carries `cause`: **PLUMBING** (our wiring failed to deliver an
+input that exists) or **NO_DATA_YET** (a correct refusal that stays). The
+header prints `REFUSALS: n OUR PLUMBING | m no data yet`. Wired: live-equity
+fallback (reads `GET /v2/account` per role, and **only** uses it when the
+account's own session day IS the report day, so today's equity can never be
+stamped onto an earlier day — pinned by test), the counterfactual marker, the
+shadow path (`AEGIS_SHADOW_DIR`, then two fallbacks, because a rename or a
+case-sensitive mount is not a missing shadow), the tracker path, and **one SPY
+close source** (`alpha/spy.py`).
+
+**Measured on 2026-09-04: the counterfactual marker last wrote 2026-08-28 —
+eight days dead.** The page had been reporting that as "either nothing was
+refused, or the marker did not run", which is exactly the undifferentiated red
+line that teaches a reader to skim.
+
+Also found on the way: **the test suite was writing into two production
+ledgers** and nothing said so (`B3_1b_test_suite_wrote_production_ledgers.json`).
+
+### 2. `daily_autopsy` writes a receipt every night, and the misses are typed
+Every exit path of both scripts now writes `state/autopsy/<day>.json`, including
+the empty and refused paths; the session day is derived from
+`alpha.exits.session_day()` — the repo's one clock — and the bars only confirm
+it. `alpha/recall.py` is new and pure: one row per mover in
+`state/opportunity_recall/<day>.jsonl`, typed `NOT_OBSERVED` (repair =
+COVERAGE) / `GENERATED_NOT_RANKED` (repair = MODEL) / `RANKED_NOT_BOUGHT` /
+`BOUGHT_SOLD_EARLY`, **both sides of the tape** — `winner_recall` is reported
+beside `loser_avoidance`, because either alone is maximised by a book with no
+discipline.
+
+**"The whole market" was seven names.** The venue's mover screener returned 7
+names at or above $3 for 2026-09-04, missing NX +22.2%, GWRE −19.9%,
+LULU −17.4%, FICO −16.7%, PATH −16.6%, ADSK −8.3% and a five-name
+LOSS:Technology cluster. The union with our own universe gives **23**. And of
+those 23, **16 were NOT_GENERATED** — *not one of the day's sixteen biggest
+movers was on the candidate list, in either direction.*
+
+The recall status for the day is **CANNOT DETERMINE** and that is the guard
+working: judging day had no seal after the 10:45 liquidation, so `ranked` is
+UNKNOWN, not empty, and the ledger refused to type 23 names
+`GENERATED_NOT_RANKED` and blame a stage.
+
+### 3. THE MONDAY DRY RUN — and hygiene-only, implemented literally, EMPTIES hack6
+
+Tracker vintage 2026-09-02, replayed under both band modes. **Nothing sealed,
+nothing ordered, nothing published.** Full printout:
+`backend/data/optimus/continuation_2026-09-06/B3_3_monday_dry_run_printout.txt`,
+attached to `docs/RUNBOOK_2026-09-08_REARM.md`.
+
+| book | k | RETURNS mode | HYGIENE_ONLY mode | binding constraint under hygiene-only |
+|---|---|---|---|---|
+| hack3 | 10 | **10 admitted**, 83% gross, worst case −6.64% | **5** | `exp_return not positive` — 799 of 810 fail it, 413 fail *only* it |
+| hack4 | 5 | **5 admitted**, 50% gross, worst case −3.00% | **5** (same names) | `exp_return not positive` — 20 fail only it |
+| hack6 | 15 | **15 admitted**, 90% gross, worst case −2.70% | **0** | `exp_return not positive` — 185 fail only it |
+
+**This is the decision Murat has to make and did not know he was making.**
+Decision B.1 §4a retires the band's four *return constants* and keeps only
+hygiene. But `exp_return` is computed FROM those constants — so removing them
+makes `exp_return` non-positive for **799 of 810 candidates**, and the
+book-level effect is hack6 **15 → 0** and hack3 **10 → 5 with an entirely
+different five** (LOVE, RZLT, RFIL, LAES, AVAV in place of all ten previous
+names). Hygiene-only is not a loosening; on this vintage it is the tightest
+rule in the stack. **Implementing 4a literally on Monday would arm three books
+and fill one and a half of them.**
+
+The binding constraint is reported as `only` (names failing **nothing else**),
+not as first-fired — `fails` vs `only` diverge by an order of magnitude
+(hack6 returns-mode: 543 fail the 20% downside cap; **375** fail only it).
+
+**Entry authority, and an honest refusal:** hack1 DISARMED (`manage_only`);
+hack2, hack3, hack4, hack5, hack6 **ARMED**. Two of the four possible disarms
+are **Railway variables and invisible from this machine** — the block says so
+and refuses to guess.
+
+**hack2 is ARMED and is not a tracker book.** `contract.defaults_for` branches
+on `TRACKER_BOOKS = (hack3, hack4, hack6)`, so hack2 falls through to the EVENT
+defaults: **horizon 3 sessions, min hold 0, `profit_target_frac` 0.025** — one
+armed book with no minimum hold and a +2.5% target, which is precisely the
+churn the whole minimum-hold build was written to stop. Independently found by
+the §2f agent from the other side. **Not fixed: which defaults hack2 gets is
+Murat's call.**
+
+Receipts: `B3_1_learning_report_plumbing.json`,
+`B3_1b_test_suite_wrote_production_ledgers.json`,
+`B3_2_autopsy_and_opportunity_recall.json`, `B3_3_monday_dry_run.json`,
+`B3_3_monday_dry_run_printout.txt`
 
 ---
 
