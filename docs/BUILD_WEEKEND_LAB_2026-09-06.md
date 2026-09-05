@@ -76,7 +76,7 @@ their receipts before each update; a line with no receipt is not in this file.*
 | SCREEN_SURVIVOR | 6 |
 | DEFERRED | 5 |
 | AUTOPSY | 1 |
-| DECAYED (worked, then stopped) | 1 *(retracted in §0 — the tradable book is not decayed, it is early-era and tail-driven)* |
+| DECAYED (worked, then stopped) | 0 *(the one that said so is retracted in §0: graded on the tradable book it is CANNOT DETERMINE, DSR 0.127)* |
 | **NOVEL** | **0** |
 
 **Nothing this weekend reached NOVEL.** An earlier count of 21 did, and every one
@@ -123,9 +123,15 @@ about the *method*:
 > says.** It says **1999-2007 only** (t 2.23), already weak by 2008-2015
 > (t 0.71), gone after. And half of even that is five months.
 >
-> The correct verdict is not `DECAYED`. It is: **a tail-driven, early-era,
-> largely untradeable effect, with a DSR of ~0.2 over the weekend's full
-> 288-trial search.** Nothing here is a candidate for anything.
+> The correct verdict is not `DECAYED`. Graded on the tradable book, `W9` now
+> returns **CANNOT DETERMINE (underpowered; MDE 8.0%/yr)** with a **DSR of
+> 0.127** over the weekend's full 288-trial search. Nothing here is a candidate
+> for anything.
+>
+> `W9` is now graded on the tradable series by construction — the verdict, the
+> era table and the power block all come from it, and `tail_concentration` is on
+> every receipt. The unfloored numbers remain in the receipt, labelled, because
+> the gap between them is the finding.
 >
 > *Two corrections pushed in opposite directions and that is the interesting
 > part: the share-basis fix made the unfloored number BETTER (t 2.055 → 2.407),
