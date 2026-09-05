@@ -1019,6 +1019,35 @@ independent tests rather than arrive from one — which is what
 in `aegis-alpha-terminal`, and per the four-repo rule this session did not reach
 across. One row, yours to place.
 
+### FINDING 12 — the lab ran out of memory and left no receipt at all
+
+Late in the session the OS killed the runner, a standalone `W2_learner_long` and
+two waiters **together**. None was individually large: every job that loads the
+long panel peaks around **3-4 GB** (418 MB of parquet expanded into 142 float64
+columns over 925,757 rows, plus model matrices), and three were holding one at
+once — because a standalone job had been started *beside* the loop. Mine.
+
+The runner serialises its **own** jobs correctly. What it could not see was a
+second runner or a hand-started job, so it could not know it was one of three.
+
+**The interesting part is not the OOM. It is that four processes vanished and the
+only evidence was their absence** — which is precisely the failure this runner
+was built to prevent: *a process that produces no artefact reads exactly like a
+process that was never run.* The runner had that invariant for crashes, for
+timeouts and for jobs that find nothing, and not for being killed from outside.
+
+Fixed: `_free_gb()` reads available physical memory and `_other_lab_jobs()`
+enumerates competing `weekend_lab_jobs` processes. Below **6 GB free** a job is
+skipped with a receipt naming the free memory and the competing PIDs.
+`_free_gb()` returns `None` rather than guessing where it cannot measure, and the
+guard then *proceeds* with that recorded — a guard that silently blocks a weekend
+is worse than no guard, and a guard that silently passes is the one it replaces.
+
+The operating rule this leaves behind: **either the loop runs, or a standalone
+job runs. Never both.**
+
+---
+
 ## 7. Still running when this was written
 
 - **W2** — the 32-cell learner grid on 26 years. Ridge on the late folds (700k rows × 5 alphas) is far slower than a 2010 probe suggested, so the grid is resumable: completed cells are cached tag-keyed and a killed pass resumes rather than repeats.
