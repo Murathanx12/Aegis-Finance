@@ -543,7 +543,9 @@ def _deferred(job: str, why: str) -> dict:
 
 
 def W3_neural_long(variant: int = 0) -> dict:
-    return _deferred("W3_neural_long", "GPU encoder pass pending")
+    """The GPU encoder on the long panel. Import inside the body, as W4/W5 do."""
+    from learner.neural_long import job as _w3
+    return _w3(variant)
 
 
 def W4_graph_momentum(variant: int = 0) -> dict:

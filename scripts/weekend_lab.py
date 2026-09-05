@@ -73,7 +73,7 @@ QUEUE: list[tuple[str, int, int]] = [
     ("W2_learner_long", 300, 5),
     ("W6_behavioural", 60, 1),
     ("W6b_liquidity_band", 45, 1),
-    ("W3_neural_long", 150, 4),
+    ("W3_neural_long", 180, 4),
     ("W5_options_iv", 120, 2),
     ("W5b_options_book", 90, 1),
     ("W5c_options_exclusion", 90, 1),
