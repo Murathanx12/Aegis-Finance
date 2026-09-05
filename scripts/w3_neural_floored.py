@@ -57,7 +57,9 @@ import argparse
 import ctypes
 import hashlib
 import json
+import os
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -78,6 +80,25 @@ OUT_DIR = REPO / "backend" / "data" / "optimus" / "continuation_2026-09-06"
 RECEIPT = OUT_DIR / "W3b_neural_floored_run01.json"
 DECLARATION = OUT_DIR / "W3b_neural_floored_run01_declaration.json"
 
+#: WHY THIS JOB RUNS IN STAGES (2026-09-05, after run01 attempt 1).
+#: The first full pass died at arm 2 fold 2019 with **exit code 1, no traceback,
+#: no Windows Application- or System-log event, and no receipt** -- after 21
+#: folds of arm 1 and 15 of arm 2 had already been fitted. The cause was settled
+#: afterwards and was not this job: a PARALLEL AGENT ran `taskkill /F /IM
+#: python.exe`, which takes every Python process on the machine. That is exactly
+#: why there was no traceback and no event -- a hard kill leaves neither -- and
+#: it is not a failure any amount of care inside this process could have
+#: prevented. What this process COULD have done, and now does, is survive it.
+#:
+#: So each arm and the incumbents now run as their own bounded process and
+#: PERSIST their predictions; `--stage combine` grades and infers from what is
+#: on disk. A kill now costs one stage, not the run, and leaves a progress file
+#: behind saying exactly which fold it reached. The universe fingerprint is
+#: written by every stage and CHECKED at combine, so predictions fitted on one
+#: universe can never be graded against another.
+STAGE_DIR = Path(os.environ.get("W3B_STAGE_DIR")
+                 or (Path(tempfile.gettempdir()) / "aegis_w3b_stage"))
+
 #: The two arms. `supervised` is W3's champion architecture; `pretrained` is run
 #: at the CAUSAL scope ONLY -- the `all` scope is a named look-ahead in
 #: `neural_long`, a claim may not be made from it, and carrying it would add
@@ -94,6 +115,30 @@ ARMS: tuple[dict, ...] = (
 #: with less than this free is REFUSED rather than allowed to swap the machine
 #: to a halt in the middle of a 21-fold loop.
 MIN_FREE_GB = 6.0
+
+#: The run's own history, carried IN the receipt. A receipt that reports only
+#: the attempt that succeeded is a survivorship-biased account of its own
+#: production, and the next reader deciding whether to trust a staged pipeline
+#: deserves to know it exists because an earlier pass was destroyed.
+RUN_HISTORY = [
+    {"attempt": 1, "utc": "2026-09-05T~12:0x", "mode": "single process (--stage all)",
+     "reached": "arm 1 complete (21 folds); arm 2 (nn_pre_causal) fold 2019 of 21",
+     "outcome": "KILLED -- exit code 1, no traceback, no Windows event, no receipt",
+     "cause": "a parallel agent ran `taskkill /F /IM python.exe`, which kills every "
+              "Python process on the machine. Confirmed by that agent afterwards; "
+              "consistent with the absence of both a traceback and an event-log "
+              "entry, which a MemoryError or a CUDA OOM would both have produced.",
+     "cost": "~9 minutes of GPU work, unrecoverable because every prediction lived "
+             "in one process's memory"},
+    {"attempt": 2, "mode": "four bounded stages (nn / nn_pre_causal / incumbents / "
+                           "combine), predictions persisted to parquet between them",
+     "outcome": "completed",
+     "why_the_change": "a kill now costs one stage, not the run. The staged path was "
+                       "verified to reproduce attempt 1's in-process numbers exactly "
+                       "on a 3-year/2-seed window (TW 1.3507 / 1.5784 / 1.1788 / "
+                       "0.7859 in both), so staging changed the plumbing and not a "
+                       "single number."},
+]
 
 DECISION_RULE = {
     "declared": "BEFORE the run, by --declare, and hashed",
@@ -164,6 +209,117 @@ def free_gb() -> float | None:
         return None
 
 
+# ------------------------------------------------------- the universe, once
+
+def lean_columns() -> list[str]:
+    """Only the columns any stage of this job reads.
+
+    The panel carries 143; the fit, the book and the robustness block between
+    them touch about 60. Carrying the other 83 through two processes is ~250 MB
+    of copies for nothing, and this job has already been killed once for
+    reasons nobody could name.
+    """
+    base = list(N.feature_cols())                       # 49 panel features + prior_1m
+    extra = ["permno", "month", "entry_date", "mat_date_1m",
+             "excess_vw_1m", "pos_vw_1m", "fwd_1m", "mkt_vw_1m",
+             "market_cap", "close", "log_dollar_vol_20d"]
+    return list(dict.fromkeys(base + extra))
+
+
+def universe_fingerprint(df: pd.DataFrame) -> str:
+    """A hash of WHICH ROWS the universe is, not of their values.
+
+    Stages run in separate processes. If one of them floors a different panel --
+    a rebuilt `train_table_long.parquet`, a changed floor -- its predictions must
+    not be silently graded beside the others'. The combine step refuses on a
+    mismatch instead of producing a receipt that averages two populations.
+    """
+    h = hashlib.sha256()
+    h.update(f"{len(df)}|{int(df.index[0])}|{int(df.index[-1])}".encode())
+    h.update(pd.util.hash_pandas_object(df["permno"], index=False).values.tobytes())
+    h.update(str(df["month"].iloc[0]).encode() + b"|" + str(df["month"].iloc[-1]).encode())
+    return h.hexdigest()
+
+
+def load_universe(verbose: bool = True) -> tuple[pd.DataFrame, dict, str]:
+    """The floored panel, lean, plus its receipt and fingerprint. Every stage
+    calls THIS and never floors by hand."""
+    panel = LP.load_long()
+    df, uni = N.tradable_universe(panel)
+    del panel
+    df = df[[c for c in lean_columns() if c in df.columns]].copy()
+    fp = universe_fingerprint(df)
+    uni["fingerprint_sha256"] = fp
+    uni["columns_kept_for_this_job"] = int(df.shape[1])
+    if verbose:
+        print(f"universe: {uni['rows_before']:,} -> {uni['rows_after']:,} rows "
+              f"({uni['share_kept']:.1%}), {uni['months_after']} months, "
+              f"median {uni['median_names_per_month_after']:.0f} names/month, "
+              f"fingerprint {fp[:16]}", flush=True)
+    return df, uni, fp
+
+
+def _stage_path(tag: str) -> Path:
+    return STAGE_DIR / f"w3b_pred_{tag}.parquet"
+
+
+def _scope(test_years, seeds) -> dict:
+    """WHAT a stage was run over. Checked at combine beside the universe hash.
+
+    The fingerprint says WHICH ROWS exist; the scope says WHICH FOLDS and WHICH
+    SEEDS were fitted. A 3-year smoke leaves stage files on disk that a 21-year
+    combine would happily read -- same universe, same hash -- and the receipt
+    would report 21 years of inference over 3 years of predictions. That is
+    exactly the shape of failure this repo calls "file size is not sample size",
+    so the scope is compared too and a mismatch REFUSES.
+    """
+    return {"test_years": [int(test_years[0]), int(test_years[-1])],
+            "n_test_years": int(len(test_years)),
+            "seeds": [int(x) for x in seeds]}
+
+
+def _write_stage(tag: str, preds: dict, fp: str, scope: dict, meta: dict) -> Path:
+    STAGE_DIR.mkdir(parents=True, exist_ok=True)
+    out = pd.DataFrame({k: v.astype("float32") for k, v in preds.items()})
+    out.insert(0, "_row", out.index.to_numpy())
+    path = _stage_path(tag)
+    out.to_parquet(path, index=False)
+    (STAGE_DIR / f"w3b_meta_{tag}.json").write_text(
+        json.dumps({"tag": tag, "universe_fingerprint_sha256": fp, "scope": scope,
+                    "columns": list(preds), "rows": int(len(out)),
+                    "written_utc": datetime.now(timezone.utc).isoformat(),
+                    "meta": meta}, indent=1, default=str), encoding="utf-8")
+    return path
+
+
+def _read_stage(tag: str, fp: str, scope: dict) -> tuple[pd.DataFrame, dict]:
+    path, m = _stage_path(tag), STAGE_DIR / f"w3b_meta_{tag}.json"
+    if not path.exists() or not m.exists():
+        raise SystemExit(
+            f"REFUSED: stage {tag!r} has not been run -- {path} is missing. Run it "
+            "before --stage combine; a receipt assembled from whatever happens to be "
+            "on disk is not a receipt.")
+    meta = json.loads(m.read_text(encoding="utf-8"))
+    if meta.get("universe_fingerprint_sha256") != fp:
+        raise SystemExit(
+            f"REFUSED: stage {tag!r} was fitted on universe "
+            f"{str(meta.get('universe_fingerprint_sha256'))[:16]} and this combine is "
+            f"grading universe {fp[:16]}. Grading one population's predictions "
+            "against another's rows would produce a number with no meaning.")
+    got = meta.get("scope") or {}
+    want = dict(scope)
+    if tag == "incumbents":                 # the incumbents carry no seeds
+        got, want = dict(got), dict(want)
+        got.pop("seeds", None), want.pop("seeds", None)
+    if got != want:
+        raise SystemExit(
+            f"REFUSED: stage {tag!r} was run over {got} and this combine wants "
+            f"{want}. A 3-year stage file read by a 21-year combine would report "
+            "inference over folds that were never fitted.")
+    d = pd.read_parquet(path)
+    return d.set_index("_row"), meta
+
+
 # ---------------------------------------------------------------- the grading
 
 def grade(df: pd.DataFrame, col: str, bps: float) -> dict:
@@ -201,7 +357,61 @@ def _diff_block(a: pd.Series, b: pd.Series) -> tuple[pd.Series | None, dict]:
 
 # ------------------------------------------------------------------- the run
 
-def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dict:
+def _memory_gate() -> None:
+    fg = free_gb()
+    if fg is not None and fg < MIN_FREE_GB:
+        raise SystemExit(
+            f"REFUSED: {fg} GB free, below the {MIN_FREE_GB} GB floor. Five agents "
+            "share this laptop; nothing was fitted.")
+
+
+def stage_neural(tag: str, *, seeds: list[int], test_years: list[int],
+                 verbose: bool = True) -> Path:
+    """ONE neural arm, ONE process, predictions persisted before it exits."""
+    arm = next((a for a in ARMS if a["tag"] == tag), None)
+    if arm is None:
+        raise SystemExit(f"REFUSED: {tag!r} is not one of {[a['tag'] for a in ARMS]}")
+    _memory_gate()
+    device, dev = N.resolve_device()
+    print(f"device: {dev.get('device_actually_used')} ({dev.get('device_name')}) "
+          f"torch {dev.get('torch_version')} on {dev.get('python_executable')}",
+          flush=True)
+    df, uni, fp = load_universe(verbose)
+    preds, rec = N.run_neural(df, test_years, seeds=seeds, width=arm["width"],
+                              pretrain_scope=arm["pretrain"], device=device,
+                              device_info=dev, verbose=verbose)
+    named = {f"{tag}_{k}": v for k, v in preds.items()}
+    member = [f"{tag}_s{int(x)}" for x in seeds if f"{tag}_s{int(x)}" in named]
+    if len(member) > 1:
+        # THE SEED-MEAN ENSEMBLE, built here so the object the decision rule
+        # judges is persisted beside its members rather than re-derived later.
+        named[f"{tag}_seedmean"] = pd.concat(
+            [named[c] for c in member], axis=1).mean(axis=1, skipna=False)
+    path = _write_stage(tag, named, fp, _scope(test_years, seeds),
+                        {"run": rec, "device": dev, "arm": arm, "universe": uni})
+    print(f"stage {tag} -> {path} ({len(named)} columns)", flush=True)
+    return path
+
+
+def stage_incumbents(*, test_years: list[int], verbose: bool = True) -> Path:
+    """Both incumbents, ONE process, on the SAME floored folds.
+
+    `lgbm_clf` is the baseline the mandate names and is not optional; `lgbm` is
+    W3's own incumbent and keeps this receipt comparable with run13.
+    """
+    _memory_gate()
+    df, uni, fp = load_universe(verbose)
+    clf, clf_rec = N.run_lgbm_clf(df, test_years, verbose=verbose)
+    reg, reg_rec = N.run_lgbm(df, test_years, verbose=verbose)
+    path = _write_stage("incumbents", {"lgbm_clf": clf, "lgbm_raw": reg}, fp,
+                        _scope(test_years, []),
+                        {"lgbm_clf": clf_rec, "lgbm_raw": reg_rec, "universe": uni})
+    print(f"stage incumbents -> {path}", flush=True)
+    return path
+
+
+def run(*, seeds: list[int], test_years: list[int], verbose: bool = True,
+        from_stages: bool = False) -> dict:
     from scripts.weekend_lab_jobs import era_sign_table          # READ ONLY import
     log = (lambda *a: print(*a, flush=True)) if verbose else (lambda *a: None)
     t0 = time.perf_counter()
@@ -217,6 +427,7 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
         "licence": "PRODUCT_EXPERIMENT",
         "llm_spend_usd": 0.0,
         "llm_calls": 0,
+        "run_history": RUN_HISTORY,
     }
     if DECLARATION.exists():
         try:
@@ -254,13 +465,9 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
         f"torch {dev.get('torch_version')} on {dev.get('python_executable')}")
 
     # ---- THE UNIVERSE, floored BEFORE anything is fitted
-    panel = LP.load_long()
-    df, uni = N.tradable_universe(panel)
-    del panel
+    df, uni, fp = load_universe(verbose)
     out["training_universe"] = uni
-    log(f"universe: {uni['rows_before']:,} -> {uni['rows_after']:,} rows "
-        f"({uni['share_kept']:.1%}), {uni['months_after']} months, "
-        f"median {uni['median_names_per_month_after']:.0f} names/month")
+    out["universe_fingerprint_sha256"] = fp
 
     out["benchmark_stamp"] = BM.declare(
         "vw_crsp_common_main",
@@ -279,37 +486,54 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
     out["test_years"] = [int(test_years[0]), int(test_years[-1])]
     out["arms"] = list(ARMS)
 
-    # ---- the neural arms
+    # ---- the neural arms and the incumbents
     runs: dict = {}
     pred_cols: dict[str, str] = {}
-    for arm in ARMS:
-        log(f"  arm {arm['tag']} (width {arm['width']}, pretrain {arm['pretrain']})")
-        preds, rec = N.run_neural(df, test_years, seeds=seeds, width=arm["width"],
-                                  pretrain_scope=arm["pretrain"], device=device,
-                                  device_info=dev, verbose=verbose)
-        runs[arm["tag"]] = rec
-        for key, s in preds.items():
-            col = f"{arm['tag']}_{key}"
-            df[col] = s.to_numpy()
-            pred_cols[col] = arm["tag"]
-        member = [f"{arm['tag']}_s{int(s)}" for s in seeds]
-        member = [c for c in member if c in df.columns]
-        if len(member) > 1:
-            col = f"{arm['tag']}_seedmean"
-            df[col] = df[member].mean(axis=1, skipna=False)
-            pred_cols[col] = arm["tag"]
-        del preds
-
-    # ---- the incumbents, on the SAME floored folds
-    log("  lgbm_clf on the same folds ...")
-    clf_pred, clf_rec = N.run_lgbm_clf(df, test_years, verbose=verbose)
-    df["lgbm_clf"] = clf_pred.to_numpy()
-    log("  lgbm (regression) on the same folds ...")
-    reg_pred, reg_rec = N.run_lgbm(df, test_years, verbose=verbose)
-    df["lgbm_raw"] = reg_pred.to_numpy()
-    runs["lgbm_clf"] = clf_rec
-    runs["lgbm_raw"] = reg_rec
-    del clf_pred, reg_pred
+    out["assembled_from_stages"] = bool(from_stages)
+    if from_stages:
+        # EVERY prediction comes off disk, and every stage's universe fingerprint
+        # must match the one being graded, or `_read_stage` REFUSES.
+        for arm in ARMS:
+            block, meta = _read_stage(arm["tag"], fp, _scope(test_years, seeds))
+            runs[arm["tag"]] = (meta.get("meta") or {}).get("run")
+            for col in block.columns:
+                df[col] = block[col].reindex(df.index).astype("float64")
+                pred_cols[col] = arm["tag"]
+        block, meta = _read_stage("incumbents", fp, _scope(test_years, []))
+        for col in block.columns:
+            df[col] = block[col].reindex(df.index).astype("float64")
+        runs["lgbm_clf"] = (meta.get("meta") or {}).get("lgbm_clf")
+        runs["lgbm_raw"] = (meta.get("meta") or {}).get("lgbm_raw")
+        out["stage_files"] = {a["tag"]: str(_stage_path(a["tag"])) for a in ARMS}
+        out["stage_files"]["incumbents"] = str(_stage_path("incumbents"))
+        out["stage_scope"] = _scope(test_years, seeds)
+    else:
+        for arm in ARMS:
+            log(f"  arm {arm['tag']} (width {arm['width']}, pretrain {arm['pretrain']})")
+            preds, rec = N.run_neural(df, test_years, seeds=seeds, width=arm["width"],
+                                      pretrain_scope=arm["pretrain"], device=device,
+                                      device_info=dev, verbose=verbose)
+            runs[arm["tag"]] = rec
+            for key, ser in preds.items():
+                col = f"{arm['tag']}_{key}"
+                df[col] = ser.to_numpy()
+                pred_cols[col] = arm["tag"]
+            member = [c for c in (f"{arm['tag']}_s{int(x)}" for x in seeds)
+                      if c in df.columns]
+            if len(member) > 1:
+                col = f"{arm['tag']}_seedmean"
+                df[col] = df[member].mean(axis=1, skipna=False)
+                pred_cols[col] = arm["tag"]
+            del preds
+        log("  lgbm_clf on the same folds ...")
+        clf_pred, clf_rec = N.run_lgbm_clf(df, test_years, verbose=verbose)
+        df["lgbm_clf"] = clf_pred.to_numpy()
+        log("  lgbm (regression) on the same folds ...")
+        reg_pred, reg_rec = N.run_lgbm(df, test_years, verbose=verbose)
+        df["lgbm_raw"] = reg_pred.to_numpy()
+        runs["lgbm_clf"] = clf_rec
+        runs["lgbm_raw"] = reg_rec
+        del clf_pred, reg_pred
 
     INCUMBENTS = ("lgbm_clf", "lgbm_raw")
 
@@ -335,12 +559,24 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
 
     # the no-op proof: the grading floor removed nothing, because the training
     # universe was already at least as tight.
-    any_cell = next((v for v in cells.values() if "rows_after_tradable_floor" in v), {})
+    probe = f"lgbm_clf|{int(N.COSTS[0])}bps"
+    with_floor = (cells.get(probe) or {}).get("rows_after_tradable_floor")
+    no_floor = evaluate.book(df, "lgbm_clf", k=50, weight="vw",
+                             cost_bps=N.COSTS[0], ret_col="fwd_1m",
+                             mkt_col="mkt_vw_1m").get("rows_after_tradable_floor")
+    if no_floor is None:                     # v1 receipt shape: count it directly
+        no_floor = int(df[["lgbm_clf", "fwd_1m", "mkt_vw_1m"]].dropna().shape[0])
     out["floor_at_grading_is_a_noop"] = {
-        "rows_after_tradable_floor_at_grading": any_cell.get("rows_after_tradable_floor"),
-        "reading": "the panel handed to evaluate.book was already floored, so the "
-                   "grading floor can only confirm it. If these ever disagree the "
-                   "training universe was NOT the graded universe.",
+        "gradeable_rows_without_the_grading_floor": int(no_floor),
+        "gradeable_rows_with_the_grading_floor": with_floor,
+        "removed_by_the_grading_floor": (
+            int(no_floor) - int(with_floor) if isinstance(with_floor, int) else None),
+        "pass": bool(isinstance(with_floor, int) and int(with_floor) == int(no_floor)),
+        "reading": "the panel handed to evaluate.book was ALREADY floored, so the "
+                   "grading floor must remove exactly zero rows. A non-zero number "
+                   "here would mean the training universe was not the graded "
+                   "universe and every comparison in this receipt is between two "
+                   "different populations.",
     }
 
     neural_keys = [k for k in ex_series if not k.startswith(("lgbm_clf|", "lgbm_raw|"))]
@@ -378,6 +614,7 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
             if d is not None:
                 diff_fam[k] = d
         inf_inc, best_vs = {}, None
+        per_ensemble: dict = {}
         if diff_fam:
             wd = pd.concat(diff_fam, axis=1).dropna()
             if len(wd) >= 12:
@@ -386,7 +623,22 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
                 inf_inc = inference.full_report(dfam[best_vs], family=dfam,
                                                 paired_excess=dfam,
                                                 n_trials=len(cells), n_boot=500, seed=23)
+                # AND ON EACH ENSEMBLE IN ITS OWN RIGHT. The declared rule judges
+                # "the ensemble-minus-incumbent difference series", not the best
+                # cell's -- and the best cell's DSR is by construction the largest
+                # in the family, so reusing it here would make clause (b) EASIER
+                # than the clause that was declared. The family and `n_trials` are
+                # the same either way; only the arm being deflated changes.
+                for a in ARMS:
+                    ec = f"{a['tag']}_seedmean|10bps"
+                    if ec in dfam:
+                        per_ensemble[ec] = inference.full_report(
+                            dfam[ec], family=dfam, paired_excess=dfam,
+                            n_trials=len(cells), n_boot=500, seed=23)
         vs[inc] = {
+            "inference_per_ensemble": per_ensemble,
+            "bar_per_ensemble": {k: N._beats_incumbent(v)
+                                 for k, v in per_ensemble.items()},
             "incumbent_book_10bps": cells.get(f"{inc}|10bps"),
             "incumbent_book_25bps": cells.get(f"{inc}|25bps"),
             "per_cell": diff_cells,
@@ -449,7 +701,10 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
                 a_detail[f"{cell}_vs_{inc}"] = m
                 if not (isinstance(m, (int, float)) and m > 0):
                     a_pos = False
-        b_ok = bool(vs["lgbm_clf"]["bar"].get("clears"))
+        b_bar = (vs["lgbm_clf"]["bar_per_ensemble"].get(ens10)
+                 or {"clears": False,
+                     "reading": f"no paired difference series for {ens10}"})
+        b_ok = bool(b_bar.get("clears"))
         tw_ens = (cells.get(ens10) or {}).get("terminal_wealth_net")
         tw_inc = {i: (cells.get(f"{i}|10bps") or {}).get("terminal_wealth_net")
                   for i in INCUMBENTS}
@@ -465,8 +720,8 @@ def run(*, seeds: list[int], test_years: list[int], verbose: bool = True) -> dic
             "a_positive_mean_vs_both_incumbents_at_both_cost_rates": {
                 "pass": a_pos, "annualised_pct_by_pair": a_detail},
             "b_family_corrected_vs_lgbm_clf": {
-                "pass": b_ok, **{k: v for k, v in vs["lgbm_clf"]["bar"].items()
-                                 if k != "clears"}},
+                "pass": b_ok, "series": ens10,
+                **{k: v for k, v in b_bar.items() if k != "clears"}},
             "c_terminal_wealth_ahead_of_both_at_10bps": {
                 "pass": c_ok, "ensemble": tw_ens, "incumbents": tw_inc},
             "d_sign_in_2_of_3_eras_vs_lgbm_clf": {
@@ -565,6 +820,12 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--declare", action="store_true",
                     help="write the decision rule to disk BEFORE the run, then exit")
+    ap.add_argument("--stage", default="all",
+                    choices=["all", "nn", "nn_pre_causal", "incumbents", "combine"],
+                    help="run ONE bounded stage. Neural arms and the incumbents "
+                         "persist their predictions; `combine` grades and infers "
+                         "from what is on disk. `all` does everything in one "
+                         "process (only safe for short windows).")
     ap.add_argument("--seeds", type=int, default=N.N_SEEDS)
     ap.add_argument("--first-year", type=int, default=N.FIRST_TEST_YEAR)
     ap.add_argument("--last-year", type=int, default=N.LAST_TEST_YEAR)
@@ -572,15 +833,23 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     if a.declare:
-        p = declare()
-        print(f"declared -> {p} (sha {_rule_sha()[:16]})")
+        path = declare()
+        print(f"declared -> {path} (sha {_rule_sha()[:16]})")
         return 0
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     seeds = [N.SEED_BASE + i for i in range(a.seeds)]
     years = list(range(a.first_year, a.last_year + 1))
+
+    if a.stage in ("nn", "nn_pre_causal"):
+        stage_neural(a.stage, seeds=seeds, test_years=years)
+        return 0
+    if a.stage == "incumbents":
+        stage_incumbents(test_years=years)
+        return 0
+
     try:
-        res = run(seeds=seeds, test_years=years)
+        res = run(seeds=seeds, test_years=years, from_stages=(a.stage == "combine"))
     except BaseException as exc:                                        # noqa: BLE001
         # A TRACEBACK IS A RECEIPT. A job that dies without one leaves the reader
         # unable to tell a crash from a job that was never started.
