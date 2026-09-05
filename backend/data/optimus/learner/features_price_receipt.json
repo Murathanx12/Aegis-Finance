@@ -1,0 +1,39 @@
+{
+  "version": "features-price-1",
+  "window": "1998-2024",
+  "rows": 31051486,
+  "permnos": 14708,
+  "first_date": "1998-01-02",
+  "last_date": "2024-12-31",
+  "families": {
+    "anchor_high_low": [
+      "prox_52w_high",
+      "prox_52w_low"
+    ],
+    "anchor_vwap": [
+      "vwap_60d_gap"
+    ],
+    "attention": [
+      "attention_z",
+      "attention_z_5d"
+    ],
+    "liquidity_impact": [
+      "amihud_21d"
+    ],
+    "short_reversal": [
+      "ret_5d"
+    ]
+  },
+  "non_null_rate": {
+    "prox_52w_high": 0.9445,
+    "prox_52w_low": 0.9445,
+    "vwap_60d_gap": 0.991,
+    "attention_z": 0.9905,
+    "attention_z_5d": 0.9896,
+    "amihud_21d": 0.9826,
+    "ret_5d": 0.9976
+  },
+  "split_note": "attention is built on DOLLAR volume, which is split-invariant by construction; a share-count z-score would read a 2:1 split as a 6-sigma attention event",
+  "pit_note": "every column at date t uses bars dated t and earlier; the attention window excludes today's own observation",
+  "built_utc": "2026-09-05T04:06:07+00:00"
+}

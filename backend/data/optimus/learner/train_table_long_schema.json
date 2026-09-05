@@ -1,0 +1,1108 @@
+{
+  "build": {
+    "schema_version": "learner-train-table-3",
+    "window": "1999-2024",
+    "lag_days": 1,
+    "ibes_loader_pin": {
+      "name_months": 1228757,
+      "agrees_with": "scripts.tracker_ibes_backtest.load_ibes"
+    },
+    "universe_coverage": {
+      "window": "1999-2024",
+      "dsf_pull_permnos": 13783,
+      "screen_permnos": 13770,
+      "screen_definition": "shrcd in (10, 11) and exchcd in (1, 2, 3), name window overlaps",
+      "coverage": 1.0,
+      "pulled_outside_the_screen": 13,
+      "missing_from_the_pull": 0,
+      "missing_permnos": [],
+      "verdict": "the pull holds names the screen does not"
+    },
+    "delistings": {
+      "window": [
+        1999,
+        2024
+      ],
+      "events": 9917,
+      "by_category": {
+        "liquidation": {
+          "events": 275,
+          "with_crsp_dlret": 241,
+          "mean_dlret": -0.01001,
+          "mean_dlret_used": -0.01001
+        },
+        "merger_or_exchange": {
+          "events": 6058,
+          "with_crsp_dlret": 5976,
+          "mean_dlret": 0.009496,
+          "mean_dlret_used": 0.009496
+        },
+        "other": {
+          "events": 131,
+          "with_crsp_dlret": 101,
+          "mean_dlret": -0.125882,
+          "mean_dlret_used": -0.125882
+        },
+        "performance": {
+          "events": 3453,
+          "with_crsp_dlret": 3126,
+          "mean_dlret": -0.16588,
+          "mean_dlret_used": -0.192047
+        }
+      },
+      "shumway_filled": {
+        "shumway_nasdaq": 186,
+        "shumway_nyse_amex": 141
+      },
+      "performance_codes": {
+        "definition": "dlstcd in {500} u [520, 584]",
+        "why_not_400_591": "400-591 counts liquidations (450) and administrative codes and dilutes the mean from -24.63% to -19.57%"
+      }
+    },
+    "volume_units": {
+      "median_of_top_100_daily_vol": 1182331091.5,
+      "read_as": "shares"
+    },
+    "delisting_return_merge": {
+      "permnos_with_a_factor": 9917,
+      "permnos_applied": 8864,
+      "permnos_event_out_of_range": 0,
+      "mean_factor_applied": 0.930053,
+      "source": "crsp__dsedelist via tracker_ibes_backtest.delisting_factors"
+    },
+    "market_benchmark": {
+      "schema": 1,
+      "module": "learner.benchmark",
+      "benchmark_id": "vw_crsp_common_main",
+      "freq": "D",
+      "overlapping": false,
+      "provenance": {
+        "source": "learner.dataset.market_indices (same pass as the panel)",
+        "construction": "value-weight daily total return, CRSP common stock / main exchange, membership resolved per (permno, date), weights on the previous session's market cap",
+        "dividends_included": true,
+        "network": false
+      },
+      "provenance_sha256": "a4ef19107826d2f852ae9bbf34c6d121e9c772766fc47fd957049809a45c3d82",
+      "span": [
+        "1998-01-05",
+        "2024-12-31"
+      ],
+      "n_periods": 6792
+    },
+    "share_basis": {
+      "pit_source": "ibes__ptgsumu.parquet (UNADJUSTED -- the numerator)",
+      "adjusted_source": "ibes__ptgsum.parquet (diagnostic only)",
+      "denominator": "raw CRSP dsf.prc (abs; negative prc is the bid/ask flag)",
+      "check_definition": "ratio_adj_check = mean_target_adj * cfacpr(t) / close",
+      "tolerance_relative": 0.01,
+      "rows_with_both": 924715,
+      "agree_rows": 843324,
+      "agree_rate": 0.911983,
+      "disagree_rate": 0.088017,
+      "why_the_check_cannot_be_the_fix": "cfacpr(t) is the cumulative factor to the END of the sample, so the rescale multiplies by the same future quantity it is trying to remove",
+      "hand_verified_row": {
+        "name": "AAPL",
+        "permno": 14593,
+        "statpers": "2013-06-20",
+        "meanptg_adjusted": 19.323,
+        "meanptg_unadjusted": 541.04,
+        "cfacpr": 28.0,
+        "note": "cfacpr 28 = the 7:1 of 2014 times the 4:1 of 2020"
+      }
+    },
+    "hygiene": {
+      "rules": {
+        "min_price": 2.0,
+        "min_coverage": 2,
+        "ratio_unreadable_at": 50.0,
+        "split_prior_year_is_unreadable": true,
+        "one_definition": "close/coverage floors are learner.prior.has_opinion, imported not re-implemented"
+      },
+      "rows": 925757,
+      "has_opinion": 804208,
+      "target_readable": 872364,
+      "hygiene_ok": 760264,
+      "failed_price_or_coverage": 121549,
+      "failed_ratio_ge_50": 617,
+      "failed_ratio_nonpositive_or_null": 0,
+      "failed_split_prior_year": 53005,
+      "on_failure": "the row is KEPT (deleting it is survivorship bias) but ratio/upside/log_ratio are NULL and band is no_opinion"
+    },
+    "sector_labels": {
+      "unclassified_label": "Unclassified",
+      "counts": {
+        "Manufacturing": 319325,
+        "Services": 155089,
+        "Finance & Real Estate": 143657,
+        "Unclassified": 103302,
+        "Transport & Utilities": 73833,
+        "Retail": 53860,
+        "Mining": 36211,
+        "Wholesale": 27230,
+        "Construction": 10382,
+        "Agriculture": 1530,
+        "_UNKNOWN": 1076,
+        "Public Administration": 262
+      }
+    },
+    "rebucketing_census": {
+      "rows": "old band (adjusted target / raw close) -> new band (PIT)",
+      "table": {
+        "b_1_5_3": {
+          "b_1_5_3": 99560,
+          "b_3_5": 120,
+          "lt_1_5": 1794,
+          "no_opinion": 5211,
+          "toxic_ge_5": 14
+        },
+        "b_3_5": {
+          "b_1_5_3": 528,
+          "b_3_5": 9062,
+          "lt_1_5": 3700,
+          "no_opinion": 1483,
+          "toxic_ge_5": 32
+        },
+        "lt_1_5": {
+          "b_1_5_3": 6213,
+          "b_3_5": 71,
+          "lt_1_5": 582198,
+          "no_opinion": 33042,
+          "toxic_ge_5": 20
+        },
+        "no_opinion": {
+          "b_1_5_3": 210,
+          "b_3_5": 46,
+          "lt_1_5": 83,
+          "no_opinion": 121567,
+          "toxic_ge_5": 12
+        },
+        "toxic_ge_5": {
+          "b_1_5_3": 22245,
+          "b_3_5": 4696,
+          "lt_1_5": 25536,
+          "no_opinion": 4190,
+          "toxic_ge_5": 4124
+        }
+      },
+      "old_band_counts": {
+        "lt_1_5": 621544,
+        "no_opinion": 121918,
+        "b_1_5_3": 106699,
+        "toxic_ge_5": 60791,
+        "b_3_5": 14805
+      },
+      "new_band_counts": {
+        "lt_1_5": 613311,
+        "no_opinion": 165493,
+        "b_1_5_3": 128756,
+        "b_3_5": 13995,
+        "toxic_ge_5": 4202
+      }
+    },
+    "prior_status": {
+      "prior_version": "band_prior_v2/2026-09-01",
+      "status": "VOID ON THIS PANEL -- constants fitted on the corrupted tape",
+      "meaning": "prior_*/resid_* columns are carried for schema continuity. They are NOT expectations until B1.5 re-derives BAND_PRIOR from this panel; nothing may read them as an expected excess return.",
+      "corrected_toxic_cell_is_not_a_signal": "the corrected toxic_ge_5 cell measures +37.4%/yr t 1.94 on ~7 names/month, but 84.1% of it trades under $5 (median close $3.08), a $5 floor flips it to -31.6%/yr t -1.41, its median monthly excess is -0.86% against a mean of +2.69%, 2022-24 is +0.7%/yr t 0.03, and 27.6% still carries a future reverse split (+56pp when those are dropped). A right-tail cell in a thin, cheap corner is not a location shift and must not be carried as a long."
+    },
+    "categorical_maps": {
+      "sector": {
+        "Agriculture": 0,
+        "Construction": 1,
+        "Finance & Real Estate": 2,
+        "Manufacturing": 3,
+        "Mining": 4,
+        "Public Administration": 5,
+        "Retail": 6,
+        "Services": 7,
+        "Transport & Utilities": 8,
+        "Unclassified": 9,
+        "Wholesale": 10,
+        "_UNKNOWN": 11
+      },
+      "band": {
+        "b_1_5_3": 0,
+        "b_3_5": 1,
+        "lt_1_5": 2,
+        "no_opinion": 3,
+        "toxic_ge_5": 4
+      }
+    },
+    "rows": 925757,
+    "months": 310,
+    "names": 8981,
+    "schema_hash": "f083d1c154dce270",
+    "schema_hash_shadow": "7f01cbe49f85286d",
+    "target_maturity": {
+      "1m": {
+        "rows_with_target": 922335,
+        "rows_null_not_matured": 3422
+      },
+      "3m": {
+        "rows_with_target": 915839,
+        "rows_null_not_matured": 9918
+      },
+      "6m": {
+        "rows_with_target": 906016,
+        "rows_null_not_matured": 19741
+      },
+      "12m": {
+        "rows_with_target": 886155,
+        "rows_null_not_matured": 39602
+      }
+    },
+    "missingness_top": {
+      "miss__ratio": 0.1788,
+      "miss__upside": 0.1788,
+      "miss__log_ratio": 0.1788,
+      "miss__dispersion": 0.1497,
+      "miss__ret_12m": 0.0454,
+      "miss__mom_12_1": 0.0454,
+      "miss__target_rev_3m": 0.0451,
+      "miss__ret_6m": 0.0196,
+      "miss__target_rev_1m": 0.0153,
+      "miss__coverage_rev_1m": 0.0153,
+      "miss__consensus_rev_1m": 0.0153,
+      "miss__ret_3m": 0.0077,
+      "miss__vol_60d": 0.002,
+      "miss__ret_1m": 0.0009,
+      "miss__drawdown_60d": 0.0006,
+      "miss__vol_20d": 0.0002,
+      "miss__log_dollar_vol_20d": 0.0001,
+      "miss__coverage": 0.0,
+      "miss__net_rev_4w": 0.0,
+      "miss__disagreement": 0.0,
+      "miss__numest": 0.0,
+      "miss__log_coverage": 0.0,
+      "miss__consensus": 0.0,
+      "miss__net_rev_1m": 0.0,
+      "miss__log_market_cap": 0.0,
+      "miss__log_close": 0.0
+    },
+    "band_counts": {
+      "lt_1_5": 613311,
+      "no_opinion": 165493,
+      "b_1_5_3": 128756,
+      "b_3_5": 13995,
+      "toxic_ge_5": 4202
+    },
+    "horizon_window_guard": {
+      "rule": "the realised maturity gap must be 0.6x-1.5x the horizon in calendar days (a delisted name may mature early but never late). shift(-n) moves n ROWS, and a thinly-traded name advances years in 21 rows.",
+      "nulled_by_horizon": {
+        "1m": 3422,
+        "3m": 9863,
+        "6m": 19496,
+        "12m": 38517
+      }
+    },
+    "delisting_filled_rows": {
+      "1m": {
+        "rows": 3706,
+        "share": 0.004,
+        "mean_fwd_return_of_filled_rows": -0.0863,
+        "mean_fwd_return_of_other_rows": 0.0108
+      },
+      "3m": {
+        "rows": 11472,
+        "share": 0.01239,
+        "mean_fwd_return_of_filled_rows": -0.0499,
+        "mean_fwd_return_of_other_rows": 0.0266
+      },
+      "6m": {
+        "rows": 23670,
+        "share": 0.02557,
+        "mean_fwd_return_of_filled_rows": 0.0132,
+        "mean_fwd_return_of_other_rows": 0.054
+      },
+      "12m": {
+        "rows": 48748,
+        "share": 0.05266,
+        "mean_fwd_return_of_filled_rows": 0.0637,
+        "mean_fwd_return_of_other_rows": 0.115
+      }
+    },
+    "window_of_the_incumbent": "2013-2024 (learner-train-table-2, still on disk)",
+    "eras": [
+      {
+        "era": "1999-2007",
+        "from": 1999,
+        "to": 2007
+      },
+      {
+        "era": "2008-2015",
+        "from": 2008,
+        "to": 2015
+      },
+      {
+        "era": "2016-2024",
+        "from": 2016,
+        "to": 2024
+      }
+    ],
+    "warmup_years": 5,
+    "first_test_year": 2004,
+    "coverage_by_year": [
+      {
+        "year": 1999,
+        "era": "1999-2007",
+        "name_months": 19733,
+        "permnos": 2895,
+        "months": 10,
+        "hygiene_ok": 15864,
+        "hygiene_pass_rate": 0.8039,
+        "median_coverage": 7.0,
+        "median_close": 22.69,
+        "matured_1m": 19726,
+        "matured_12m": 19714
+      },
+      {
+        "year": 2000,
+        "era": "1999-2007",
+        "name_months": 34261,
+        "permnos": 3461,
+        "months": 12,
+        "hygiene_ok": 26416,
+        "hygiene_pass_rate": 0.771,
+        "median_coverage": 6.0,
+        "median_close": 19.81,
+        "matured_1m": 34251,
+        "matured_12m": 34142
+      },
+      {
+        "year": 2001,
+        "era": "1999-2007",
+        "name_months": 34549,
+        "permnos": 3299,
+        "months": 12,
+        "hygiene_ok": 25875,
+        "hygiene_pass_rate": 0.7489,
+        "median_coverage": 5.0,
+        "median_close": 17.78,
+        "matured_1m": 34530,
+        "matured_12m": 34444
+      },
+      {
+        "year": 2002,
+        "era": "1999-2007",
+        "name_months": 32738,
+        "permnos": 3131,
+        "months": 12,
+        "hygiene_ok": 25427,
+        "hygiene_pass_rate": 0.7767,
+        "median_coverage": 6.0,
+        "median_close": 17.5,
+        "matured_1m": 32727,
+        "matured_12m": 32622
+      },
+      {
+        "year": 2003,
+        "era": "1999-2007",
+        "name_months": 32473,
+        "permnos": 3113,
+        "months": 12,
+        "hygiene_ok": 26152,
+        "hygiene_pass_rate": 0.8053,
+        "median_coverage": 5.0,
+        "median_close": 18.49,
+        "matured_1m": 32462,
+        "matured_12m": 32416
+      },
+      {
+        "year": 2004,
+        "era": "1999-2007",
+        "name_months": 35283,
+        "permnos": 3316,
+        "months": 12,
+        "hygiene_ok": 27817,
+        "hygiene_pass_rate": 0.7884,
+        "median_coverage": 5.0,
+        "median_close": 21.2,
+        "matured_1m": 35276,
+        "matured_12m": 35211
+      },
+      {
+        "year": 2005,
+        "era": "1999-2007",
+        "name_months": 37834,
+        "permnos": 3519,
+        "months": 12,
+        "hygiene_ok": 30326,
+        "hygiene_pass_rate": 0.8016,
+        "median_coverage": 6.0,
+        "median_close": 21.44,
+        "matured_1m": 37818,
+        "matured_12m": 37697
+      },
+      {
+        "year": 2006,
+        "era": "1999-2007",
+        "name_months": 39460,
+        "permnos": 3648,
+        "months": 12,
+        "hygiene_ok": 32038,
+        "hygiene_pass_rate": 0.8119,
+        "median_coverage": 6.0,
+        "median_close": 22.1,
+        "matured_1m": 39441,
+        "matured_12m": 39336
+      },
+      {
+        "year": 2007,
+        "era": "1999-2007",
+        "name_months": 39856,
+        "permnos": 3746,
+        "months": 12,
+        "hygiene_ok": 33344,
+        "hygiene_pass_rate": 0.8366,
+        "median_coverage": 6.0,
+        "median_close": 21.6,
+        "matured_1m": 39837,
+        "matured_12m": 39788
+      },
+      {
+        "year": 2008,
+        "era": "2008-2015",
+        "name_months": 38307,
+        "permnos": 3537,
+        "months": 12,
+        "hygiene_ok": 31073,
+        "hygiene_pass_rate": 0.8112,
+        "median_coverage": 6.0,
+        "median_close": 14.83,
+        "matured_1m": 38299,
+        "matured_12m": 38170
+      },
+      {
+        "year": 2009,
+        "era": "2008-2015",
+        "name_months": 34940,
+        "permnos": 3256,
+        "months": 12,
+        "hygiene_ok": 28556,
+        "hygiene_pass_rate": 0.8173,
+        "median_coverage": 6.0,
+        "median_close": 12.69,
+        "matured_1m": 34930,
+        "matured_12m": 34917
+      },
+      {
+        "year": 2010,
+        "era": "2008-2015",
+        "name_months": 35215,
+        "permnos": 3210,
+        "months": 12,
+        "hygiene_ok": 30094,
+        "hygiene_pass_rate": 0.8546,
+        "median_coverage": 7.0,
+        "median_close": 16.2,
+        "matured_1m": 35207,
+        "matured_12m": 35178
+      },
+      {
+        "year": 2011,
+        "era": "2008-2015",
+        "name_months": 35107,
+        "permnos": 3195,
+        "months": 12,
+        "hygiene_ok": 29724,
+        "hygiene_pass_rate": 0.8467,
+        "median_coverage": 7.0,
+        "median_close": 17.47,
+        "matured_1m": 35090,
+        "matured_12m": 35061
+      },
+      {
+        "year": 2012,
+        "era": "2008-2015",
+        "name_months": 34204,
+        "permnos": 3108,
+        "months": 12,
+        "hygiene_ok": 29444,
+        "hygiene_pass_rate": 0.8608,
+        "median_coverage": 7.0,
+        "median_close": 17.97,
+        "matured_1m": 34195,
+        "matured_12m": 34195
+      },
+      {
+        "year": 2013,
+        "era": "2008-2015",
+        "name_months": 33861,
+        "permnos": 3101,
+        "months": 12,
+        "hygiene_ok": 29595,
+        "hygiene_pass_rate": 0.874,
+        "median_coverage": 7.0,
+        "median_close": 22.71,
+        "matured_1m": 33858,
+        "matured_12m": 33831
+      },
+      {
+        "year": 2014,
+        "era": "2008-2015",
+        "name_months": 35720,
+        "permnos": 3278,
+        "months": 12,
+        "hygiene_ok": 30811,
+        "hygiene_pass_rate": 0.8626,
+        "median_coverage": 7.0,
+        "median_close": 24.46,
+        "matured_1m": 35707,
+        "matured_12m": 35682
+      },
+      {
+        "year": 2015,
+        "era": "2008-2015",
+        "name_months": 36650,
+        "permnos": 3335,
+        "months": 12,
+        "hygiene_ok": 31224,
+        "hygiene_pass_rate": 0.852,
+        "median_coverage": 7.0,
+        "median_close": 23.52,
+        "matured_1m": 36639,
+        "matured_12m": 36607
+      },
+      {
+        "year": 2016,
+        "era": "2016-2024",
+        "name_months": 35974,
+        "permnos": 3259,
+        "months": 12,
+        "hygiene_ok": 30201,
+        "hygiene_pass_rate": 0.8395,
+        "median_coverage": 7.0,
+        "median_close": 21.28,
+        "matured_1m": 35961,
+        "matured_12m": 35916
+      },
+      {
+        "year": 2017,
+        "era": "2016-2024",
+        "name_months": 35035,
+        "permnos": 3163,
+        "months": 12,
+        "hygiene_ok": 29580,
+        "hygiene_pass_rate": 0.8443,
+        "median_coverage": 6.0,
+        "median_close": 25.45,
+        "matured_1m": 35024,
+        "matured_12m": 35006
+      },
+      {
+        "year": 2018,
+        "era": "2016-2024",
+        "name_months": 35130,
+        "permnos": 3190,
+        "months": 12,
+        "hygiene_ok": 29947,
+        "hygiene_pass_rate": 0.8525,
+        "median_coverage": 6.0,
+        "median_close": 27.09,
+        "matured_1m": 35117,
+        "matured_12m": 35077
+      },
+      {
+        "year": 2019,
+        "era": "2016-2024",
+        "name_months": 35400,
+        "permnos": 3192,
+        "months": 12,
+        "hygiene_ok": 29926,
+        "hygiene_pass_rate": 0.8454,
+        "median_coverage": 6.0,
+        "median_close": 24.13,
+        "matured_1m": 35385,
+        "matured_12m": 35315
+      },
+      {
+        "year": 2020,
+        "era": "2016-2024",
+        "name_months": 35362,
+        "permnos": 3212,
+        "months": 12,
+        "hygiene_ok": 29776,
+        "hygiene_pass_rate": 0.842,
+        "median_coverage": 6.0,
+        "median_close": 21.75,
+        "matured_1m": 35348,
+        "matured_12m": 35316
+      },
+      {
+        "year": 2021,
+        "era": "2016-2024",
+        "name_months": 38792,
+        "permnos": 3624,
+        "months": 12,
+        "hygiene_ok": 33725,
+        "hygiene_pass_rate": 0.8694,
+        "median_coverage": 6.0,
+        "median_close": 28.66,
+        "matured_1m": 38788,
+        "matured_12m": 38788
+      },
+      {
+        "year": 2022,
+        "era": "2016-2024",
+        "name_months": 41640,
+        "permnos": 3690,
+        "months": 12,
+        "hygiene_ok": 33285,
+        "hygiene_pass_rate": 0.7994,
+        "median_coverage": 6.0,
+        "median_close": 19.97,
+        "matured_1m": 41635,
+        "matured_12m": 41634
+      },
+      {
+        "year": 2023,
+        "era": "2016-2024",
+        "name_months": 40109,
+        "permnos": 3595,
+        "months": 12,
+        "hygiene_ok": 30578,
+        "hygiene_pass_rate": 0.7624,
+        "median_coverage": 6.0,
+        "median_close": 18.48,
+        "matured_1m": 40097,
+        "matured_12m": 40092
+      },
+      {
+        "year": 2024,
+        "era": "2016-2024",
+        "name_months": 38124,
+        "permnos": 3420,
+        "months": 12,
+        "hygiene_ok": 29466,
+        "hygiene_pass_rate": 0.7729,
+        "median_coverage": 6.0,
+        "median_close": 21.49,
+        "matured_1m": 34987,
+        "matured_12m": 0
+      }
+    ],
+    "share_basis_gate_early_era": {
+      "window": "1999-2004",
+      "band": [
+        0.3,
+        4.0
+      ],
+      "ratio_source": "ratio, coalesced with ratio_unhygienic (raw PIT ratio, audit column)",
+      "match": "has_opinion and 0 < raw ratio < RATIO_UNREADABLE_AT on BOTH sides; the split flag is the only difference",
+      "permnos_with_a_share_basis_change": 1453,
+      "rows_around_a_change": 19619,
+      "ratio_in_band_rate_split_names": 0.9807,
+      "rows_without_a_change": 147551,
+      "ratio_in_band_rate_other_names": 0.978,
+      "gap": -0.0027,
+      "median_ratio_split_names": 1.2149,
+      "median_ratio_other_names": 1.2439,
+      "what_would_fail": "a split-adjusted numerator over a raw denominator would push the post-change rows out of the band by roughly the split factor, so the split-name in-band rate would collapse relative to the matched control",
+      "verdict": "PASS"
+    },
+    "share_basis_hand_rows_early_era": [
+      {
+        "permno": 10032,
+        "vintage": "2000-09-14",
+        "entry_date": "2000-09-15",
+        "mean_target_unadjusted": 68.333,
+        "close_raw": 69.7656,
+        "cfacpr_at_t": 1.0,
+        "raw_pit_ratio": 0.9795,
+        "ratio_after_hygiene": null,
+        "ratio_adj_check": 0.9795,
+        "check_agrees": true
+      },
+      {
+        "permno": 10078,
+        "vintage": "1999-04-15",
+        "entry_date": "1999-04-16",
+        "mean_target_unadjusted": 76.75,
+        "close_raw": 54.9375,
+        "cfacpr_at_t": 1.0,
+        "raw_pit_ratio": 1.397,
+        "ratio_after_hygiene": null,
+        "ratio_adj_check": 1.397,
+        "check_agrees": true
+      },
+      {
+        "permno": 10104,
+        "vintage": "1999-03-18",
+        "entry_date": "1999-03-19",
+        "mean_target_unadjusted": 55.0,
+        "close_raw": 27.5625,
+        "cfacpr_at_t": 4.0,
+        "raw_pit_ratio": 1.9955,
+        "ratio_after_hygiene": null,
+        "ratio_adj_check": 1.9955,
+        "check_agrees": true
+      },
+      {
+        "permno": 10107,
+        "vintage": "1999-04-15",
+        "entry_date": "1999-04-16",
+        "mean_target_unadjusted": 95.0,
+        "close_raw": 86.625,
+        "cfacpr_at_t": 2.0,
+        "raw_pit_ratio": 1.0967,
+        "ratio_after_hygiene": null,
+        "ratio_adj_check": 1.0967,
+        "check_agrees": true
+      },
+      {
+        "permno": 10108,
+        "vintage": "2001-07-19",
+        "entry_date": "2001-07-20",
+        "mean_target_unadjusted": 34.538,
+        "close_raw": 30.95,
+        "cfacpr_at_t": 1.0,
+        "raw_pit_ratio": 1.1159,
+        "ratio_after_hygiene": null,
+        "ratio_adj_check": 1.1159,
+        "check_agrees": true
+      }
+    ],
+    "build_seconds": 156.9,
+    "by_era": [
+      {
+        "era": "1999-2007",
+        "name_months": 306187,
+        "months": 106,
+        "permnos": 5563
+      },
+      {
+        "era": "2008-2015",
+        "name_months": 284004,
+        "months": 96,
+        "permnos": 5059
+      },
+      {
+        "era": "2016-2024",
+        "name_months": 335566,
+        "months": 108,
+        "permnos": 5156
+      }
+    ],
+    "regated": [
+      {
+        "utc": "2026-09-05T03:53:43+00:00",
+        "sections": [
+          "coverage_by_year",
+          "share_basis_gate_early_era",
+          "share_basis_hand_rows_early_era",
+          "by_era"
+        ],
+        "why": "the first early-era gate read `ratio`, which `hygiene` NULLS on exactly the split-flagged rows the gate exists to inspect, so it could only ever return nan and FAIL"
+      }
+    ]
+  },
+  "schema": {
+    "schema_version": "learner-train-table-2",
+    "prior_version": "band_prior_v2/2026-09-01",
+    "row_key": [
+      "permno",
+      "month",
+      "vintage"
+    ],
+    "features": [
+      "ratio",
+      "upside",
+      "log_ratio",
+      "consensus",
+      "coverage",
+      "log_coverage",
+      "numest",
+      "disagreement",
+      "dispersion",
+      "net_rev_4w",
+      "net_rev_1m",
+      "target_rev_1m",
+      "target_rev_3m",
+      "consensus_rev_1m",
+      "coverage_rev_1m",
+      "ret_1m",
+      "ret_3m",
+      "ret_6m",
+      "ret_12m",
+      "mom_12_1",
+      "drawdown_60d",
+      "vol_20d",
+      "vol_60d",
+      "log_dollar_vol_20d",
+      "log_market_cap",
+      "log_close",
+      "ratio__xs",
+      "consensus__xs",
+      "coverage__xs",
+      "numest__xs",
+      "disagreement__xs",
+      "dispersion__xs",
+      "net_rev_4w__xs",
+      "target_rev_1m__xs",
+      "consensus_rev_1m__xs",
+      "ret_1m__xs",
+      "ret_3m__xs",
+      "ret_6m__xs",
+      "ret_12m__xs",
+      "mom_12_1__xs",
+      "drawdown_60d__xs",
+      "vol_20d__xs",
+      "vol_60d__xs",
+      "log_dollar_vol_20d__xs",
+      "log_market_cap__xs",
+      "log_close__xs",
+      "split_prior_year",
+      "sector_code",
+      "band_code"
+    ],
+    "features_shadow_mappable": [
+      "ratio",
+      "upside",
+      "log_ratio",
+      "consensus",
+      "coverage",
+      "log_coverage",
+      "numest",
+      "disagreement",
+      "ret_12m",
+      "drawdown_60d",
+      "vol_20d",
+      "log_dollar_vol_20d",
+      "log_market_cap",
+      "log_close"
+    ],
+    "targets": [
+      "fwd_1m",
+      "mkt_vw_1m",
+      "mkt_ew_1m",
+      "excess_vw_1m",
+      "excess_ew_1m",
+      "prior_1m",
+      "resid_vw_1m",
+      "resid_ew_1m",
+      "pos_vw_1m",
+      "mat_date_1m",
+      "fwd_3m",
+      "mkt_vw_3m",
+      "mkt_ew_3m",
+      "excess_vw_3m",
+      "excess_ew_3m",
+      "prior_3m",
+      "resid_vw_3m",
+      "resid_ew_3m",
+      "pos_vw_3m",
+      "mat_date_3m",
+      "fwd_6m",
+      "mkt_vw_6m",
+      "mkt_ew_6m",
+      "excess_vw_6m",
+      "excess_ew_6m",
+      "prior_6m",
+      "resid_vw_6m",
+      "resid_ew_6m",
+      "pos_vw_6m",
+      "mat_date_6m",
+      "fwd_12m",
+      "mkt_vw_12m",
+      "mkt_ew_12m",
+      "excess_vw_12m",
+      "excess_ew_12m",
+      "prior_12m",
+      "resid_vw_12m",
+      "resid_ew_12m",
+      "pos_vw_12m",
+      "mat_date_12m"
+    ],
+    "horizons_months": [
+      1,
+      3,
+      6,
+      12
+    ],
+    "horizon_sessions": {
+      "1": 21,
+      "3": 63,
+      "6": 126,
+      "12": 252
+    },
+    "primary_benchmark": "value_weighted",
+    "unit_note": "ratio = mean_target / close ; upside = ratio - 1. mean_target is the UNADJUSTED IBES consensus (ibes__ptgsumu) and close is the raw CRSP close -- ONE share basis. mean_target_adj is the split-adjusted number, kept only for the ratio_adj_check diagnostic.",
+    "hygiene": {
+      "min_price": 2.0,
+      "min_coverage": 2,
+      "ratio_unreadable_at": 50.0,
+      "split_prior_year_is_unreadable": true,
+      "columns": [
+        "has_opinion",
+        "target_readable",
+        "hygiene_ok"
+      ],
+      "on_failure": "ratio/upside/log_ratio NULL, band no_opinion, row kept"
+    },
+    "delisting": "crsp__dsedelist.dlret compounded into the final index value; Shumway fill (-30% NYSE/AMEX, -55% NASDAQ) for performance codes {500} u [520,584] with no dlret. dsf.ret is NOT delisting-inclusive.",
+    "missing_policy": "NaN is preserved and mirrored in miss__<feature>. fillna(0) is BANNED; imputation happens inside a model pipeline (median) or not at all (LightGBM)."
+  },
+  "schema_shadow": {
+    "schema_version": "learner-train-table-2",
+    "prior_version": "band_prior_v2/2026-09-01",
+    "row_key": [
+      "permno",
+      "month",
+      "vintage"
+    ],
+    "features": [
+      "ratio",
+      "upside",
+      "log_ratio",
+      "consensus",
+      "coverage",
+      "log_coverage",
+      "numest",
+      "disagreement",
+      "ret_12m",
+      "drawdown_60d",
+      "vol_20d",
+      "log_dollar_vol_20d",
+      "log_market_cap",
+      "log_close",
+      "ratio__xs",
+      "consensus__xs",
+      "coverage__xs",
+      "numest__xs",
+      "disagreement__xs",
+      "ret_12m__xs",
+      "drawdown_60d__xs",
+      "vol_20d__xs",
+      "log_dollar_vol_20d__xs",
+      "log_market_cap__xs",
+      "log_close__xs",
+      "band_code"
+    ],
+    "features_shadow_mappable": [
+      "ratio",
+      "upside",
+      "log_ratio",
+      "consensus",
+      "coverage",
+      "log_coverage",
+      "numest",
+      "disagreement",
+      "ret_12m",
+      "drawdown_60d",
+      "vol_20d",
+      "log_dollar_vol_20d",
+      "log_market_cap",
+      "log_close"
+    ],
+    "targets": [
+      "fwd_1m",
+      "mkt_vw_1m",
+      "mkt_ew_1m",
+      "excess_vw_1m",
+      "excess_ew_1m",
+      "prior_1m",
+      "resid_vw_1m",
+      "resid_ew_1m",
+      "pos_vw_1m",
+      "mat_date_1m",
+      "fwd_3m",
+      "mkt_vw_3m",
+      "mkt_ew_3m",
+      "excess_vw_3m",
+      "excess_ew_3m",
+      "prior_3m",
+      "resid_vw_3m",
+      "resid_ew_3m",
+      "pos_vw_3m",
+      "mat_date_3m",
+      "fwd_6m",
+      "mkt_vw_6m",
+      "mkt_ew_6m",
+      "excess_vw_6m",
+      "excess_ew_6m",
+      "prior_6m",
+      "resid_vw_6m",
+      "resid_ew_6m",
+      "pos_vw_6m",
+      "mat_date_6m",
+      "fwd_12m",
+      "mkt_vw_12m",
+      "mkt_ew_12m",
+      "excess_vw_12m",
+      "excess_ew_12m",
+      "prior_12m",
+      "resid_vw_12m",
+      "resid_ew_12m",
+      "pos_vw_12m",
+      "mat_date_12m"
+    ],
+    "horizons_months": [
+      1,
+      3,
+      6,
+      12
+    ],
+    "horizon_sessions": {
+      "1": 21,
+      "3": 63,
+      "6": 126,
+      "12": 252
+    },
+    "primary_benchmark": "value_weighted",
+    "unit_note": "ratio = mean_target / close ; upside = ratio - 1. mean_target is the UNADJUSTED IBES consensus (ibes__ptgsumu) and close is the raw CRSP close -- ONE share basis. mean_target_adj is the split-adjusted number, kept only for the ratio_adj_check diagnostic.",
+    "hygiene": {
+      "min_price": 2.0,
+      "min_coverage": 2,
+      "ratio_unreadable_at": 50.0,
+      "split_prior_year_is_unreadable": true,
+      "columns": [
+        "has_opinion",
+        "target_readable",
+        "hygiene_ok"
+      ],
+      "on_failure": "ratio/upside/log_ratio NULL, band no_opinion, row kept"
+    },
+    "delisting": "crsp__dsedelist.dlret compounded into the final index value; Shumway fill (-30% NYSE/AMEX, -55% NASDAQ) for performance codes {500} u [520,584] with no dlret. dsf.ret is NOT delisting-inclusive.",
+    "missing_policy": "NaN is preserved and mirrored in miss__<feature>. fillna(0) is BANNED; imputation happens inside a model pipeline (median) or not at all (LightGBM)."
+  },
+  "prior": {
+    "version": "band_prior_v2/2026-09-01",
+    "source_receipt": "backend/data/optimus/tracker_backtest/exp_return_cross_section.json",
+    "unit_note": "ratio = mean_target / close; upside = ratio - 1. Bands are on RATIO.",
+    "value_note": "annualised EXCESS over the equal-weighted market, 143 months 2013-2024",
+    "hygiene": {
+      "min_price": 2.0,
+      "min_coverage": 2,
+      "on_failure": "prior 0.0 and has_opinion=False -- NO OPINION, not a bearish call"
+    },
+    "bands": [
+      {
+        "lo": null,
+        "hi": 1.5,
+        "label": "lt_1_5",
+        "annualised_excess": 0.0241
+      },
+      {
+        "lo": 1.5,
+        "hi": 3.0,
+        "label": "b_1_5_3",
+        "annualised_excess": 0.0574
+      },
+      {
+        "lo": 3.0,
+        "hi": 5.0,
+        "label": "b_3_5",
+        "annualised_excess": 0.1655
+      },
+      {
+        "lo": 5.0,
+        "hi": null,
+        "label": "toxic_ge_5",
+        "annualised_excess": -0.3777
+      }
+    ],
+    "in_sample_warning": "The band constants were fitted on 2013-2024 in full. As an OOS baseline the prior is FLATTERED -- it knows the test years. Beating it is therefore a hard test, not an easy one."
+  },
+  "table": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+  "written_utc": "2026-09-05T03:51:33+00:00"
+}

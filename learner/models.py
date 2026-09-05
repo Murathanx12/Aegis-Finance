@@ -153,19 +153,54 @@ def _fit_ridge(Xf, yf, Xv, yv):
     return best, {"alpha": best_alpha, "inner_val_mse": best_mse}
 
 
-def _fit_lgbm(Xf, yf, Xv, yv, classifier: bool = False):
+def _fit_lgbm(Xf, yf, Xv, yv, classifier: bool = False,
+              quantile: float | None = None):
+    """LightGBM, optionally with a PINBALL (quantile) objective.
+
+    WHY A QUANTILE HEAD IS A DIFFERENT QUESTION, NOT A TUNING KNOB
+    -------------------------------------------------------------
+    The squared-error head answers "what is this name's expected excess". A
+    concentrated top-50 book does not live on the expectation: it lives on the
+    right tail, and two names with the same mean and very different upper
+    quantiles are not the same holding. `objective="quantile", alpha=q` fits the
+    conditional q-th quantile under the pinball loss, so q = 0.9 ranks names by
+    "how good does this get when it goes well" and q = 0.1 by downside.
+
+    A quantile prediction is NOT a return forecast and must never be compared to
+    one on the same axis; it is a legal SORT KEY, which is all a top-k book
+    needs. `prediction_unit` says so for the caller that asks.
+
+    REFUSES rather than degrading: an installed lightgbm without the quantile
+    objective would otherwise return the mean head under a q-labelled name, and
+    the receipt would report three identical cells as a tail finding.
+    """
     if not _LGBM:
         raise RuntimeError("lightgbm is not installed")
+    if quantile is not None and classifier:
+        raise ValueError("a classifier has no quantile: P(excess > 0) is already a "
+                         "probability and a quantile of it is not a quantity")
     Model = lgb.LGBMClassifier if classifier else lgb.LGBMRegressor
-    m = Model(**LGBM_PARAMS)
+    params = dict(LGBM_PARAMS)
+    if quantile is not None:
+        q = float(quantile)
+        if not 0.0 < q < 1.0:
+            raise ValueError(f"quantile must be strictly inside (0, 1); got {q}")
+        params.update(objective="quantile", alpha=q)
+    m = Model(**params)
+    if quantile is not None and getattr(m, "objective", None) != "quantile":
+        raise RuntimeError(
+            "REFUSED: a quantile head was requested and this lightgbm did not accept "
+            "the quantile objective. Returning the mean head under a q-labelled name "
+            "would publish three identical cells as a tail finding.")
     cb = [lgb.early_stopping(40, verbose=False), lgb.log_evaluation(0)]
     if len(yv):
         m.fit(Xf, yf, eval_set=[(Xv, yv)], callbacks=cb)
-        best_it = int(getattr(m, "best_iteration_", 0) or LGBM_PARAMS["n_estimators"])
+        best_it = int(getattr(m, "best_iteration_", 0) or params["n_estimators"])
     else:
         m.fit(Xf, yf)
-        best_it = LGBM_PARAMS["n_estimators"]
-    return m, {"best_iteration": best_it}
+        best_it = params["n_estimators"]
+    return m, {"best_iteration": best_it, "objective": params.get("objective", "l2"),
+               "quantile_alpha": params.get("alpha")}
 
 
 def _fit_mlp(Xf, yf, Xv, yv):
@@ -238,7 +273,8 @@ def _predict_mlp(fitted, X):
 def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
                 feature_cols: list[str], horizon_months: int,
                 benchmark: str = "vw", return_model: bool = False,
-                shuffle_target: bool = False, shuffle_seed: int | None = None):
+                shuffle_target: bool = False, shuffle_seed: int | None = None,
+                quantile: float | None = None):
     """Fit one arm on `train`, predict EXCESS return on `test`.
 
     Returns (predicted excess, fit metadata) -- or (pred, meta, fitted) when
@@ -278,11 +314,13 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
     Xv, yv = Xall[val_m], yw[val_m]
     Xte = test[cols].to_numpy(dtype="float64")
 
+    if quantile is not None and kind != "lgbm":
+        raise ValueError(f"a quantile head is only defined for lgbm here; got {kind!r}")
     if kind == "ridge":
         model, meta = _fit_ridge(Xf, yf, Xv, yv)
         raw = model.predict(Xte)
     elif kind == "lgbm":
-        model, meta = _fit_lgbm(Xf, yf, Xv, yv)
+        model, meta = _fit_lgbm(Xf, yf, Xv, yv, quantile=quantile)
         raw = model.predict(Xte)
     elif kind == "mlp":
         model, meta = _fit_mlp(Xf, yf, Xv, yv)
@@ -294,7 +332,8 @@ def fit_predict(kind: str, arm: str, train: pd.DataFrame, test: pd.DataFrame,
     meta.update({"kind": kind, "arm": arm, "n_train": int(len(tr)),
                  "n_train_months": int(tr["month"].nunique()),
                  "winsor_bounds": bounds, "n_features": len(cols),
-                 "shuffled_null": bool(shuffle_target), "feature_cols": cols})
+                 "shuffled_null": bool(shuffle_target), "feature_cols": cols,
+                 "quantile": quantile})
     if shuffle_target:
         # which draw this was -- a null distribution is only auditable if every
         # draw names its seed (learner/nullbar.py wants >= 64 of these)

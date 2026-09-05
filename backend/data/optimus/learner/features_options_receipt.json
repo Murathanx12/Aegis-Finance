@@ -1,0 +1,352 @@
+{
+  "version": "features-options-1",
+  "window_requested": "1998-2024",
+  "window_built": "1998-2024",
+  "rows": 16055957,
+  "permnos": 8114,
+  "first_date": "1998-01-02",
+  "last_date": "2024-12-31",
+  "families": {
+    "iv_level": [
+      "atm_iv_30d"
+    ],
+    "iv_dynamics": [
+      "atm_iv_chg_1m"
+    ],
+    "informed_flow": [
+      "cp_iv_spread_30d"
+    ],
+    "tail_skew": [
+      "skew_25d_30d"
+    ],
+    "variance_premium": [
+      "iv_minus_rv_21d"
+    ]
+  },
+  "definitions": {
+    "atm_iv_30d": "mean(IV[30d, 50-delta call], IV[30d, 50-delta put])",
+    "atm_iv_chg_1m": "atm_iv_30d(t) - atm_iv_30d(t-21 sessions), voided across a gap of more than 45 calendar days",
+    "cp_iv_spread_30d": "IV[30d, 50-delta CALL] - IV[30d, 50-delta PUT]; positive = calls richer than puts (put-call parity violated on the call side)",
+    "skew_25d_30d": "IV[30d, 25-delta PUT] - IV[30d, 25-delta CALL]; positive = crash insurance dearer than upside, the usual sign for equities",
+    "iv_minus_rv_21d": "atm_iv_30d - annualised 21-session realised vol of the underlying from CRSP daily returns"
+  },
+  "non_null_rate": {
+    "atm_iv_30d": 1.0,
+    "atm_iv_chg_1m": 0.9799,
+    "cp_iv_spread_30d": 1.0,
+    "skew_25d_30d": 1.0,
+    "iv_minus_rv_21d": 0.9975
+  },
+  "summary_stats": {
+    "atm_iv_30d": {
+      "median": 0.437775,
+      "p05": 0.197081,
+      "p95": 1.118119
+    },
+    "atm_iv_chg_1m": {
+      "median": -0.002172,
+      "p05": -0.207808,
+      "p95": 0.21754
+    },
+    "cp_iv_spread_30d": {
+      "median": -0.002131,
+      "p05": -0.154089,
+      "p95": 0.148867
+    },
+    "skew_25d_30d": {
+      "median": 0.031395,
+      "p05": -0.278851,
+      "p95": 0.20626
+    },
+    "iv_minus_rv_21d": {
+      "median": 0.056354,
+      "p05": -0.266932,
+      "p95": 0.436835
+    }
+  },
+  "disk_coverage": {
+    "source": "optionm.vsurfd<year>, days=30, abs(delta) in {25,50} (pull-time filter)",
+    "dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds",
+    "n_files": 29,
+    "total_rows": 71132384,
+    "total_mb": 893.7,
+    "measured_window": [
+      "1996-01-04",
+      "2024-12-31"
+    ],
+    "years_present": [
+      1996,
+      1997,
+      1998,
+      1999,
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "missing_years_inside_window": [],
+    "by_year": [
+      {
+        "year": 1996,
+        "rows": 1721352,
+        "first_date": "1996-01-04",
+        "last_date": "1996-12-31",
+        "mb": 19.2
+      },
+      {
+        "year": 1997,
+        "rows": 2062816,
+        "first_date": "1997-01-02",
+        "last_date": "1997-12-31",
+        "mb": 22.8
+      },
+      {
+        "year": 1998,
+        "rows": 2308800,
+        "first_date": "1998-01-02",
+        "last_date": "1998-12-31",
+        "mb": 26.0
+      },
+      {
+        "year": 1999,
+        "rows": 2369760,
+        "first_date": "1999-01-04",
+        "last_date": "1999-12-31",
+        "mb": 26.5
+      },
+      {
+        "year": 2000,
+        "rows": 2163796,
+        "first_date": "2000-01-03",
+        "last_date": "2000-12-29",
+        "mb": 24.0
+      },
+      {
+        "year": 2001,
+        "rows": 1980552,
+        "first_date": "2001-01-02",
+        "last_date": "2001-12-31",
+        "mb": 21.4
+      },
+      {
+        "year": 2002,
+        "rows": 2004460,
+        "first_date": "2002-01-02",
+        "last_date": "2002-12-31",
+        "mb": 21.8
+      },
+      {
+        "year": 2003,
+        "rows": 1853784,
+        "first_date": "2003-01-02",
+        "last_date": "2003-12-31",
+        "mb": 20.8
+      },
+      {
+        "year": 2004,
+        "rows": 1951776,
+        "first_date": "2004-01-02",
+        "last_date": "2004-12-31",
+        "mb": 22.0
+      },
+      {
+        "year": 2005,
+        "rows": 2085108,
+        "first_date": "2005-01-03",
+        "last_date": "2005-12-30",
+        "mb": 23.5
+      },
+      {
+        "year": 2006,
+        "rows": 2171344,
+        "first_date": "2006-01-03",
+        "last_date": "2006-12-29",
+        "mb": 24.5
+      },
+      {
+        "year": 2007,
+        "rows": 2293332,
+        "first_date": "2007-01-03",
+        "last_date": "2007-12-31",
+        "mb": 25.6
+      },
+      {
+        "year": 2008,
+        "rows": 2325648,
+        "first_date": "2008-01-02",
+        "last_date": "2008-12-31",
+        "mb": 25.8
+      },
+      {
+        "year": 2009,
+        "rows": 2282400,
+        "first_date": "2009-01-02",
+        "last_date": "2009-12-31",
+        "mb": 24.6
+      },
+      {
+        "year": 2010,
+        "rows": 2316736,
+        "first_date": "2010-01-04",
+        "last_date": "2010-12-31",
+        "mb": 25.9
+      },
+      {
+        "year": 2011,
+        "rows": 2447192,
+        "first_date": "2011-01-03",
+        "last_date": "2011-12-30",
+        "mb": 29.7
+      },
+      {
+        "year": 2012,
+        "rows": 2487580,
+        "first_date": "2012-01-03",
+        "last_date": "2012-12-31",
+        "mb": 31.1
+      },
+      {
+        "year": 2013,
+        "rows": 2582048,
+        "first_date": "2013-01-02",
+        "last_date": "2013-12-31",
+        "mb": 31.9
+      },
+      {
+        "year": 2014,
+        "rows": 2697620,
+        "first_date": "2014-01-02",
+        "last_date": "2014-12-31",
+        "mb": 37.6
+      },
+      {
+        "year": 2015,
+        "rows": 2766272,
+        "first_date": "2015-01-02",
+        "last_date": "2015-12-31",
+        "mb": 38.4
+      },
+      {
+        "year": 2016,
+        "rows": 2840536,
+        "first_date": "2016-01-04",
+        "last_date": "2016-12-30",
+        "mb": 39.4
+      },
+      {
+        "year": 2017,
+        "rows": 2737184,
+        "first_date": "2017-01-03",
+        "last_date": "2017-12-29",
+        "mb": 37.0
+      },
+      {
+        "year": 2018,
+        "rows": 2704072,
+        "first_date": "2018-01-02",
+        "last_date": "2018-12-31",
+        "mb": 37.5
+      },
+      {
+        "year": 2019,
+        "rows": 2668172,
+        "first_date": "2019-01-02",
+        "last_date": "2019-12-31",
+        "mb": 37.1
+      },
+      {
+        "year": 2020,
+        "rows": 2676936,
+        "first_date": "2020-01-02",
+        "last_date": "2020-12-31",
+        "mb": 36.5
+      },
+      {
+        "year": 2021,
+        "rows": 3050124,
+        "first_date": "2021-01-04",
+        "last_date": "2021-12-31",
+        "mb": 47.1
+      },
+      {
+        "year": 2022,
+        "rows": 3321236,
+        "first_date": "2022-01-03",
+        "last_date": "2022-12-30",
+        "mb": 47.8
+      },
+      {
+        "year": 2023,
+        "rows": 3227168,
+        "first_date": "2023-01-03",
+        "last_date": "2023-12-29",
+        "mb": 44.5
+      },
+      {
+        "year": 2024,
+        "rows": 3034580,
+        "first_date": "2024-01-02",
+        "last_date": "2024-12-31",
+        "mb": 43.7
+      }
+    ],
+    "measured_how": "pyarrow row-group statistics on the `date` column; no rows decoded"
+  },
+  "surface_coordinate_coverage": {
+    "C25": 1.0,
+    "C50": 1.0,
+    "P25": 1.0,
+    "P50": 1.0
+  },
+  "surface_rows_before_link": 16062062,
+  "surface_secids_before_link": 8134,
+  "link": {
+    "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\link_optionm_crsp.parquet",
+    "table": "wrdsapps_link_crsp_optionm.opcrsphist",
+    "rule": "sdate <= date <= edate, interval validity applied per row",
+    "matched_rows": 16055957,
+    "match_rate": 0.9996,
+    "matched_secids": 8131,
+    "secids_on_the_surface": 8134,
+    "permno_date_collisions_deduped": 1711,
+    "tie_break": "lowest opcrsphist score, then lowest secid",
+    "why_the_rate_is_high": "the surface was pulled with WHERE secid = ANY(<secids of screened CRSP permnos>), so the file on disk was ALREADY bounded by this same link. A high match rate here restates the pull filter; it is not independent evidence that the link is good."
+  },
+  "realised_vol": {
+    "source": "crsp_dsf_<year>.parquet ret column",
+    "window_sessions": 21,
+    "min_sessions": 15,
+    "annualisation": 252,
+    "match_rate_on_linked_rows": 0.9975,
+    "join": "exact (permno, date); no asof, so a missing bar is NaN not a stale vol"
+  },
+  "lag_guard": {
+    "sessions": 21,
+    "max_gap_days": 45,
+    "lags_voided": 152735
+  },
+  "pit_note": "the surface at date t is an END-OF-DAY object (the pull manifest says treat it as known at t+1 open); `attach` therefore joins BACKWARD with allow_exact_matches=False, so a surface dated the same day the money moved is refused rather than used",
+  "not_used_note": "the month-end extraction at 'Aegis module/data/wrds_raw/optionm_vsurf_me' (2002-2024, 12 dates a year) is NOT the source here; month-end is a property of that pull's WHERE clause, not of OptionMetrics",
+  "built_utc": "2026-09-05T04:17:00+00:00"
+}

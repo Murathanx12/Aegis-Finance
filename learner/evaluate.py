@@ -180,7 +180,7 @@ def top_minus_bottom(df: pd.DataFrame, pred_col: str, y_col: str,
 def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
          cost_bps: float = COST_BPS_PER_SIDE, ret_col: str = "fwd_1m",
          mkt_col: str = "mkt_vw_1m", month_col: str = "month",
-         tradable_floor: float | None = None,
+         tradable_floor: float | None = None, hold_k: int | None = None,
          with_risk: bool = False, return_series: bool = False) -> dict:
     """Monthly top-k book, value- or equal-weighted, net of measured turnover.
 
@@ -188,7 +188,26 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
     exactly the same months, and the PAIRED monthly excess -- because comparing
     two terminal wealths is one draw of a correlated pair, not a test.
 
-    v2 additions, both OFF by default so v1's receipt is reproduced byte for
+    HYSTERESIS (`hold_k`), and why it is the cheapest thing in this file.
+    ---------------------------------------------------------------------
+    With `hold_k = None` the book is rebuilt from scratch every month: a name
+    that slips from rank 50 to rank 51 is sold and a name at rank 50 is bought,
+    and BOTH sides pay. Measured turnover on the top-50 books runs near 1.0 a
+    month, so at 25 bps a side the cost line alone is ~6%/yr -- which is larger
+    than most of the edges this repo has ever measured, and is why several
+    "signals" die between 10 and 25 bps.
+
+    `hold_k` makes the rule asymmetric: BUY at rank <= k, HOLD until rank >
+    `hold_k`. Nothing about the prediction changes; only the number of times the
+    book pays the spread. It is not a way to make a null look positive -- a
+    signal with no edge has nothing to hold on to, and its net simply moves
+    toward its gross -- but it is the difference between an edge that survives
+    costs and one that is eaten by them.
+
+    Requires `hold_k > k`; `hold_k == k` is the no-hysteresis rule written a
+    longer way, and a band that is not a band would read as one in the receipt.
+
+    v2 additions, all OFF by default so v1's receipt is reproduced byte for
     byte: `with_risk` appends the drawdown/tail block, `return_series` appends
     the monthly net and market series under `_series` so a caller can run a
     PAIRED difference test between two arms (which is the only honest way to
@@ -224,11 +243,32 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
     mo = d[month_col].astype(str).str.replace("-", "", regex=False).astype("int64")
     d["_tb"] = (d["permno"].astype("int64") * 2_654_435_761 + mo * 97 + TIE_SEED) % 1_000_003
 
+    if hold_k is not None and int(hold_k) <= int(k):
+        raise SystemExit(
+            f"REFUSED: hold_k={hold_k} must be strictly greater than k={k}. A hold band "
+            "that is not wider than the buy rank is the no-hysteresis rule written a "
+            "longer way, and the receipt would report a band where there is none.")
+
     rets, mkts, weights_by_month, names_per_month = {}, {}, {}, {}
+    held: set[int] = set()
     for m, chunk in d.groupby(month_col, sort=True):
-        sel = chunk.sort_values([pred_col, "_tb"], ascending=[False, True]).head(k)
+        ranked = chunk.sort_values([pred_col, "_tb"], ascending=[False, True])
+        if hold_k is None:
+            sel = ranked.head(k)
+        else:
+            # BUY at rank <= k, HOLD until rank > hold_k. Incumbents inside the
+            # band keep their slots (best-ranked first, so the book never holds a
+            # worse name in preference to a better incumbent); the remainder is
+            # filled from the top of the ranking. Book size stays k, so the only
+            # thing hysteresis changes is how often the book pays the spread.
+            band = ranked.head(int(hold_k))
+            keep = band[band["permno"].astype("int64").isin(held)].head(k)
+            fill = ranked[~ranked["permno"].astype("int64").isin(
+                set(keep["permno"].astype("int64")))].head(max(0, k - len(keep)))
+            sel = pd.concat([keep, fill]) if len(fill) else keep
         if sel.empty:
             continue
+        held = set(sel["permno"].astype("int64"))
         if weight == "vw" and "market_cap" in sel.columns and sel["market_cap"].notna().any():
             w = sel["market_cap"].fillna(sel["market_cap"].median()).clip(lower=0)
             w = w / w.sum() if w.sum() > 0 else pd.Series(1.0 / len(sel), index=sel.index)
@@ -267,6 +307,9 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
     res = {
         "months": int(len(net)),
         "k": k, "weight": weight,
+        "hold_k": hold_k,
+        "selection_rule": (f"top-{k} rebuilt every month" if hold_k is None
+                           else f"buy at rank <= {k}, hold until rank > {hold_k}"),
         "cost_bps_per_side": cost_bps,
         "tradable_floor_usd": tradable_floor,
         "rows_after_tradable_floor": int(len(d)),

@@ -1,0 +1,157 @@
+{
+  "version": "features-graph-1",
+  "source": "C:\\Users\\mrthn\\Aegis module\\runs\\MARKET-GRAPH-1\\edge_instances.parquet",
+  "source_rows": 10923,
+  "licence": "PRODUCT_EXPERIMENT",
+  "coverage": {
+    "filing_date_first": "2014-04-24",
+    "filing_date_last": "2024-06-26",
+    "source_as_of_date_first": "2015-03-31",
+    "source_as_of_date_last": "2024-06-28",
+    "as_of_minus_filing_days": {
+      "min": 1,
+      "median": 154.0,
+      "max": 428
+    },
+    "feature_date_first": "2014-05-01",
+    "feature_date_last": "2025-01-01",
+    "feature_months": 129,
+    "feature_years": 12,
+    "long_panel_years": 26,
+    "edges_by_filing_year": {
+      "2014": 222,
+      "2015": 1135,
+      "2016": 1097,
+      "2017": 1177,
+      "2018": 1141,
+      "2019": 1211,
+      "2020": 1319,
+      "2021": 1237,
+      "2022": 1076,
+      "2023": 926,
+      "2024": 382
+    },
+    "rows_by_year": [
+      {
+        "year": 2014,
+        "rows": 306,
+        "permnos": 74
+      },
+      {
+        "year": 2015,
+        "rows": 2021,
+        "permnos": 191
+      },
+      {
+        "year": 2016,
+        "rows": 2663,
+        "permnos": 232
+      },
+      {
+        "year": 2017,
+        "rows": 2754,
+        "permnos": 261
+      },
+      {
+        "year": 2018,
+        "rows": 2745,
+        "permnos": 250
+      },
+      {
+        "year": 2019,
+        "rows": 2692,
+        "permnos": 252
+      },
+      {
+        "year": 2020,
+        "rows": 2812,
+        "permnos": 266
+      },
+      {
+        "year": 2021,
+        "rows": 2976,
+        "permnos": 265
+      },
+      {
+        "year": 2022,
+        "rows": 2755,
+        "permnos": 266
+      },
+      {
+        "year": 2023,
+        "rows": 2462,
+        "permnos": 242
+      },
+      {
+        "year": 2024,
+        "rows": 2300,
+        "permnos": 218
+      },
+      {
+        "year": 2025,
+        "rows": 188,
+        "permnos": 188
+      }
+    ]
+  },
+  "max_age_days": 730,
+  "liveness_rule": "filing_date <= month_end <= filing_date + max_age_days; the source's own as-of `date` column is NOT used, because it runs 1-428 days after the filing and is a research cut date rather than an information event",
+  "relations": {
+    "oriented": 4177,
+    "symmetric": 6553,
+    "unoriented_dropped": 187,
+    "unmapped": 6,
+    "directed_rows": 6540,
+    "by_relation": {
+      "cust": 1289,
+      "supp": 1289,
+      "comp": 3338,
+      "assoc": 624
+    },
+    "permnos": 386
+  },
+  "rows": 26674,
+  "permnos": 386,
+  "families": {
+    "customer_momentum": [
+      "graph_cust_mom_1m_ew",
+      "graph_cust_mom_1m_cw"
+    ],
+    "supplier_momentum": [
+      "graph_supp_mom_1m_ew",
+      "graph_supp_mom_1m_cw"
+    ],
+    "competitor_momentum": [
+      "graph_comp_mom_1m_ew",
+      "graph_comp_mom_1m_cw"
+    ],
+    "association_momentum": [
+      "graph_assoc_mom_1m_ew",
+      "graph_assoc_mom_1m_cw"
+    ],
+    "graph_position": [
+      "graph_log_degree"
+    ]
+  },
+  "non_null_rate": {
+    "graph_cust_mom_1m_ew": 0.4129,
+    "graph_cust_mom_1m_cw": 0.4129,
+    "graph_supp_mom_1m_ew": 0.3922,
+    "graph_supp_mom_1m_cw": 0.3922,
+    "graph_comp_mom_1m_ew": 0.7418,
+    "graph_comp_mom_1m_cw": 0.7418,
+    "graph_assoc_mom_1m_ew": 0.2436,
+    "graph_assoc_mom_1m_cw": 0.2436,
+    "graph_log_degree": 1.0
+  },
+  "median_neighbours": {
+    "graph_n_cust": 1.0,
+    "graph_n_supp": 1.0,
+    "graph_n_comp": 2.0,
+    "graph_n_assoc": 1.0
+  },
+  "weight_note": "`_cw` weights by EXTRACTION CONFIDENCE (0.30-1.00), the only per-edge weight the source carries. There is no revenue share and no traded volume on these edges, so a value-weighted customer average is not available and `_cw` must not be read as one.",
+  "demean_note": "counterparty returns are RAW. Every test is cross-sectional within a month, so subtracting any month-constant leaves every rank and every within-month slope unchanged.",
+  "pit_note": "a row dated d aggregates the returns of the month ending d-1, over edges whose FILING date is <= d-1; a trade on the last day of a month receives the previous month's row",
+  "built_utc": "2026-09-05T04:14:48+00:00"
+}

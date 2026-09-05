@@ -503,6 +503,67 @@ def _sr_or_nan(x: np.ndarray) -> float:
     return float(a.mean() / a.std(ddof=1))
 
 
+# ------------------------------------------------ how much tape would it take?
+
+
+def power_note(returns: Sequence[float], periods_per_year: int = 12,
+               t_target: float = 2.0) -> dict:
+    """`n_periods`, the observed t, and THE YEARS OF TAPE t = 2 WOULD NEED.
+
+    WHY THIS BELONGS BESIDE EVERY SHARPE
+    ------------------------------------
+    A t-statistic on a mean return is `SR * sqrt(T)`. That single identity says
+    the thing the night lab of 2026-09-05 spent a night discovering: the best
+    learner cell was +14.4%/yr ahead of the market at a monthly Sharpe that
+    needed **16.1 years** of out-of-sample months to reach t = 2, and the panel
+    had 7.0. No model change moves that. Only tape does.
+
+    So a receipt that quotes a t without quoting `years_needed_for_t2` invites
+    the reader to treat an underpowered result as a negative one, which is a
+    different -- and usually wrong -- claim. `CANNOT DETERMINE` is the honest
+    verdict when `years_needed` exceeds `years_observed`; `NOISE` is only
+    honest when the tape was long enough for the effect to have shown up.
+
+    Inverting the identity: `T_needed = (t_target / SR)^2` periods. It is
+    reported as `None` where the Sharpe is non-positive -- a negative arm does
+    not "need" tape to become significant, it needs a different idea, and
+    printing a number there would read as a promise.
+    """
+    a = _clean(returns)
+    T = int(a.size)
+    if T < 2 or a.std(ddof=1) == 0:
+        return {"n_periods": T, "verdict": f"{CANNOT_DETERMINE} (fewer than 2 usable periods)"}
+    sr = float(a.mean() / a.std(ddof=1))
+    t_obs = sr * math.sqrt(T)
+    years_obs = T / float(periods_per_year)
+    if sr <= 0:
+        needed_periods = None
+        needed_years = None
+        reading = (f"the arm's mean is not positive (SR {sr:.4f}); no amount of tape makes a "
+                   "negative mean significant in the intended direction")
+    else:
+        needed_periods = (t_target / sr) ** 2
+        needed_years = needed_periods / float(periods_per_year)
+        reading = (f"t = {t_obs:.2f} on {years_obs:.1f} years; t = {t_target:g} would need "
+                   f"{needed_years:.1f} years at this Sharpe -- "
+                   f"{'ENOUGH TAPE' if needed_years <= years_obs else 'MORE TAPE THAN EXISTS HERE'}")
+    return {
+        "n_periods": T,
+        "periods_per_year": periods_per_year,
+        "n_oos_months": T if periods_per_year == 12 else None,
+        "sharpe_per_period": round(sr, 4),
+        "t_observed": round(float(t_obs), 4),
+        "years_observed": round(float(years_obs), 2),
+        "t_target": t_target,
+        "periods_needed_for_t_target": (round(float(needed_periods), 1)
+                                        if needed_periods is not None else None),
+        "years_needed_for_t2": (round(float(needed_years), 1)
+                                if needed_years is not None else None),
+        "powered": (bool(needed_years is not None and needed_years <= years_obs)),
+        "reading": reading,
+    }
+
+
 # --------------------------------------------------------------- the one call
 
 
@@ -511,7 +572,7 @@ def full_report(returns: Sequence[float], *, family: Mapping[str, Sequence[float
                 n_trials: int | None = None,
                 null_sharpes: Sequence[float] | None = None,
                 block: float = DEFAULT_BLOCK, n_boot: int = 1000,
-                seed: int = 0) -> dict:
+                seed: int = 0, periods_per_year: int = 12) -> dict:
     """Every test this module has, on one arm and its family, in one dict.
 
     Written so a night-lab job cannot quote one of the four and forget the other
@@ -525,6 +586,10 @@ def full_report(returns: Sequence[float], *, family: Mapping[str, Sequence[float
         "n_cells_looked_at": n_cells,
         "deflated_sharpe": deflated_sharpe(returns, n_trials=n_cells,
                                            null_sharpes=null_sharpes),
+        # Beside the Sharpe, never in a different receipt: how much tape a t = 2
+        # would have needed. Without it "NOISE" and "UNDERPOWERED" are printed
+        # in the same words and read as the same verdict.
+        "power": power_note(returns, periods_per_year=periods_per_year),
     }
     if paired_excess:
         out["spa"] = spa(paired_excess, block=block, n_boot=n_boot, seed=seed)
