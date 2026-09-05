@@ -2413,8 +2413,58 @@ def W9_survivor_books(variant: int = 0) -> dict:
     # What the DSR would have said had only the books been counted -- printed so
     # the correction is visible rather than asserted.
     inf_books_only = inference.deflated_sharpe(fam[best], n_trials=len(cells) or len(fam))
-    eras = era_sign_table(wide[best])
+
+    # THE VERDICT RESTS ON THE BOOK THAT COULD HAVE BEEN BOUGHT.
+    #
+    # The unfloored champion of this job was published as "+9.64%/yr at t 2.055,
+    # POWERED, worked seventeen years and stopped in 2016". Restricted to names
+    # over $3m/day above $5 -- this repo's OWN execution floor, which no book job
+    # was applying -- it is t 1.68 with 54% of its excess in five months, and its
+    # era pattern is 1999-2007 only rather than a decay. Two different books were
+    # being described by one set of numbers, and the one that decided the verdict
+    # was the one nobody could have traded.
+    #
+    # So the tradable series is computed for the champion and the verdict, the
+    # era table and the power block all come from IT. The unfloored numbers stay
+    # in the receipt, labelled, because the gap between them is itself the
+    # finding.
+    from learner import evaluate as _EV
+    tradable = None
+    try:
+        _sig = f"book_{best.split('|')[0]}"
+        _bps = float(best.split("|")[-1][:-3])
+        _sub = df[df["close"] >= 5.0]
+        _bk = _EV.book(_sub, _sig, k=50, weight="vw", cost_bps=_bps,
+                       ret_col="fwd_1m", mkt_col="mkt_vw_1m",
+                       tradable_floor=_EV.TRADABLE_DOLLAR_VOL, return_series=True)
+        _s = _bk.get("_series") or {}
+        _n, _m = _s.get("net"), _s.get("market")
+        if _n is not None and _m is not None and len(_n) and _n.index.equals(_m.index):
+            tradable = (_n - _m).astype("float64")
+    except Exception:                                                   # noqa: BLE001
+        tradable = None
+
+    graded = tradable if tradable is not None and len(tradable) >= 24 else wide[best]
+    graded_is_tradable = tradable is not None and len(tradable) >= 24
+    inf = inference.full_report(graded.tolist(), family=fam, paired_excess=fam,
+                                n_trials=n_trials, n_boot=500, seed=17)
+    eras = era_sign_table(graded)
     pw = inf.get("power", {})
+    # How much of the headline five months carry -- the question the neural lane
+    # showed this grid could not answer from `evaluate.book`'s default output.
+    _ex = graded.dropna()
+    _top5 = _ex.nlargest(5)
+    _rest = _ex.drop(_top5.index)
+    tail = {
+        "months": int(len(_ex)),
+        "top_5_months": [str(i) for i in _top5.index],
+        "share_of_excess_from_top_5_months": (round(float(_top5.sum() / _ex.sum()), 4)
+                                              if float(_ex.sum()) != 0 else None),
+        "annualised_excess_without_them_pct": round(float(_rest.mean()) * 1200, 3),
+        "t_without_them": (round(float(_rest.mean() /
+                                       (_rest.std(ddof=1) / np.sqrt(len(_rest)))), 3)
+                           if len(_rest) > 2 and _rest.std(ddof=1) else None),
+    }
     beat = [k for k, v in cells.items()
             if isinstance(v, dict) and "error" not in v
             and v.get("terminal_wealth_net") is not None
@@ -2438,6 +2488,15 @@ def W9_survivor_books(variant: int = 0) -> dict:
         "search_breadth_feature_job_variant_rows": len(examined),
         "n_trials_used_for_the_DSR": n_trials,
         "dsr_if_only_the_books_were_counted": inf_books_only.get("dsr"),
+        "graded_on_the_tradable_book": graded_is_tradable,
+        "grading_note": (
+            "the verdict, the era table and the power block are computed on the champion "
+            "restricted to names over $3m/day above $5 -- this repo's own execution floor. "
+            "The unfloored series is still in `cells` and in `execution_floor_check`. The "
+            "unfloored champion once published as t 2.055 / POWERED / 'decayed in 2016'; "
+            "the tradable one is t 1.68, 54% of it five months, and 1999-2007 only. Two "
+            "different books were being described by one set of numbers."),
+        "tail_concentration": tail,
         "why_the_bigger_family": (
             "n_trials counts the SCREENING that chose which features to book as well as the "
             "books themselves. Measured on this weekend's receipts, `target_rev_1m__xs` -- "

@@ -326,18 +326,18 @@
    "booked_direction": "high",
    "controlled_t_from_the_screen": 3.711,
    "deciles_pct": [
-    -0.307,
-    0.06,
-    0.175,
-    -0.041,
-    -0.074,
-    -0.174,
-    -0.068,
-    0.206,
-    0.329,
-    0.591
+    -0.351,
+    0.081,
+    0.17,
+    -0.043,
+    -0.082,
+    -0.173,
+    -0.078,
+    0.207,
+    0.342,
+    0.647
    ],
-   "top_minus_bottom_pct": 0.898,
+   "top_minus_bottom_pct": 0.998,
    "top_decile_turns_over": false,
    "effect_lives_in": "the TOP decile"
   }
@@ -351,9 +351,24 @@
   "coverage"
  ],
  "cells_looked_at": 28,
- "search_breadth_feature_job_variant_rows": 258,
- "n_trials_used_for_the_DSR": 286,
- "dsr_if_only_the_books_were_counted": 0.5029,
+ "search_breadth_feature_job_variant_rows": 263,
+ "n_trials_used_for_the_DSR": 291,
+ "dsr_if_only_the_books_were_counted": 0.6445,
+ "graded_on_the_tradable_book": true,
+ "grading_note": "the verdict, the era table and the power block are computed on the champion restricted to names over $3m/day above $5 -- this repo's own execution floor. The unfloored series is still in `cells` and in `execution_floor_check`. The unfloored champion once published as t 2.055 / POWERED / 'decayed in 2016'; the tradable one is t 1.68, 54% of it five months, and 1999-2007 only. Two different books were being described by one set of numbers.",
+ "tail_concentration": {
+  "months": 308,
+  "top_5_months": [
+   "2020-01",
+   "1999-11",
+   "2000-05",
+   "1999-12",
+   "2020-11"
+  ],
+  "share_of_excess_from_top_5_months": 0.5428,
+  "annualised_excess_without_them_pct": 3.128,
+  "t_without_them": 0.844
+ },
  "why_the_bigger_family": "n_trials counts the SCREENING that chose which features to book as well as the books themselves. Measured on this weekend's receipts, `target_rev_1m__xs` -- the best cell -- survived in ONE of W7's four variants while `log_dollar_vol_20d` survived in all four. A DSR over the book cells alone prices the second search and ignores the first, which flatters the thin-path survivor most.",
  "cells": {
   "cp_iv_spread_30d|high|10bps": {
@@ -908,20 +923,20 @@
    "weight": "vw",
    "cost_bps_per_side": 10,
    "tradable_floor_usd": null,
-   "rows_after_tradable_floor": 908211,
+   "rows_after_tradable_floor": 907769,
    "mean_names_per_month": 50.0,
    "mean_turnover": 0.958,
-   "terminal_wealth_net": 56.655,
-   "terminal_wealth_gross": 101.568,
+   "terminal_wealth_net": 85.324,
+   "terminal_wealth_gross": 152.814,
    "terminal_wealth_market_same_months": 13.0306,
-   "cagr_net": 0.1703,
+   "cagr_net": 0.1891,
    "cagr_market": 0.1052,
-   "mean_monthly_excess": 0.00803,
-   "annualised_excess": 0.0964,
-   "t_stat_paired_vs_market": 2.055,
-   "months_beating_market": 0.5292,
-   "worst_month_net": -0.4978,
-   "hit_rate": 0.5942
+   "mean_monthly_excess": 0.00912,
+   "annualised_excess": 0.1095,
+   "t_stat_paired_vs_market": 2.407,
+   "months_beating_market": 0.5455,
+   "worst_month_net": -0.4894,
+   "hit_rate": 0.6071
   },
   "target_rev_1m__xs|high|25bps": {
    "months": 308,
@@ -929,20 +944,20 @@
    "weight": "vw",
    "cost_bps_per_side": 25,
    "tradable_floor_usd": null,
-   "rows_after_tradable_floor": 908211,
+   "rows_after_tradable_floor": 907769,
    "mean_names_per_month": 50.0,
    "mean_turnover": 0.958,
-   "terminal_wealth_net": 23.5528,
-   "terminal_wealth_gross": 101.568,
+   "terminal_wealth_net": 35.524,
+   "terminal_wealth_gross": 152.814,
    "terminal_wealth_market_same_months": 13.0306,
-   "cagr_net": 0.131,
+   "cagr_net": 0.1492,
    "cagr_market": 0.1052,
-   "mean_monthly_excess": 0.00516,
-   "annualised_excess": 0.0619,
-   "t_stat_paired_vs_market": 1.32,
-   "months_beating_market": 0.4968,
-   "worst_month_net": -0.4989,
-   "hit_rate": 0.5909
+   "mean_monthly_excess": 0.00625,
+   "annualised_excess": 0.075,
+   "t_stat_paired_vs_market": 1.649,
+   "months_beating_market": 0.5097,
+   "worst_month_net": -0.4905,
+   "hit_rate": 0.6006
   }
  },
  "cells_beating_the_market_NET": [
@@ -981,67 +996,67 @@
   "cost_bps": 10.0,
   "floor_source": "evaluate.TRADABLE_DOLLAR_VOL -- this repo's execution floor",
   "no_floor": {
-   "terminal_wealth_net": 56.655,
+   "terminal_wealth_net": 85.324,
    "market": 13.0306,
-   "annualised_excess": 0.0964,
-   "t": 2.055,
+   "annualised_excess": 0.1095,
+   "t": 2.407,
    "months": 308
   },
   "dollar_vol_3m_house_floor": {
-   "terminal_wealth_net": 53.9232,
+   "terminal_wealth_net": 43.3034,
    "market": 13.0306,
-   "annualised_excess": 0.0773,
-   "t": 2.08,
+   "annualised_excess": 0.0728,
+   "t": 1.866,
    "months": 308
   },
   "dollar_vol_3m_and_close_ge_5": {
-   "terminal_wealth_net": 52.2859,
+   "terminal_wealth_net": 36.4405,
    "market": 13.0306,
-   "annualised_excess": 0.0774,
-   "t": 2.022,
+   "annualised_excess": 0.0673,
+   "t": 1.682,
    "months": 308
   },
-  "share_of_the_headline_that_is_unbuyable": 0.0785,
-  "survives_the_floor": true,
-  "reading": "t 2.055 unfloored, t 2.022 restricted to names over $3m/day above $5"
+  "share_of_the_headline_that_is_unbuyable": 0.5797,
+  "survives_the_floor": false,
+  "reading": "t 2.407 unfloored, t 1.682 restricted to names over $3m/day above $5"
  },
  "best_cell": "target_rev_1m__xs|high|10bps",
- "best_mean_monthly_excess_pct": 0.8032,
+ "best_mean_monthly_excess_pct": 0.9125,
  "inference": {
-  "n_cells_looked_at": 286,
+  "n_cells_looked_at": 291,
   "deflated_sharpe": {
-   "sharpe": 0.1171,
-   "sharpe_benchmark_sr0": 0.1644,
-   "n_trials": 286,
+   "sharpe": 0.0959,
+   "sharpe_benchmark_sr0": 0.1647,
+   "n_trials": 291,
    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
-   "skew": 0.588,
-   "kurtosis": 10.564,
+   "skew": -0.973,
+   "kurtosis": 12.528,
    "n_periods": 308,
-   "z": -0.844,
-   "dsr": 0.1993,
+   "z": -1.1399,
+   "dsr": 0.1272,
    "verdict": "WITHIN_SELECTION_NOISE",
-   "reading": "after 286 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.164; this arm's is 0.117."
+   "reading": "after 291 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.165; this arm's is 0.096."
   },
   "power": {
    "n_periods": 308,
    "periods_per_year": 12,
    "n_oos_months": 308,
-   "sharpe_per_period": 0.1171,
-   "t_observed": 2.0552,
+   "sharpe_per_period": 0.0959,
+   "t_observed": 1.6824,
    "years_observed": 25.67,
    "t_target": 2.0,
-   "periods_needed_for_t_target": 291.7,
-   "years_needed_for_t2": 24.3,
-   "years_needed_for_t2_exact": 24.307158672586635,
-   "powered_for_observed_effect": true,
+   "periods_needed_for_t_target": 435.3,
+   "years_needed_for_t2": 36.3,
+   "years_needed_for_t2_exact": 36.27247913146319,
+   "powered_for_observed_effect": false,
    "detectable_annual_excess": 0.03,
-   "reference_sharpe_per_period": 0.03645,
-   "years_needed_to_detect_that_effect": 250.9,
-   "mde_annual_excess_at_t_target": 0.0938,
-   "mde_reading": "on the 25.7 years actually held, the smallest annual excess this arm could have shown at t = 2 is 9.38%/yr",
+   "reference_sharpe_per_period": 0.04273,
+   "years_needed_to_detect_that_effect": 182.6,
+   "mde_annual_excess_at_t_target": 0.08001,
+   "mde_reading": "on the 25.7 years actually held, the smallest annual excess this arm could have shown at t = 2 is 8.00%/yr",
    "powered": false,
    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
-   "reading": "t = 2.06 on 25.7 years; t = 2 would need 24.3 years at this Sharpe -- ENOUGH TAPE"
+   "reading": "t = 1.68 on 25.7 years; t = 2 would need 36.3 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
   },
   "spa": {
    "best_arm": "target_rev_1m__xs|high|10bps",
@@ -1049,10 +1064,10 @@
    "n_periods": 308,
    "n_boot": 500,
    "block_periods": 4.0,
-   "t_spa": 2.1111,
-   "p_spa_consistent": 0.1257,
-   "p_spa_lower": 0.1537,
-   "p_spa_upper": 0.1038,
+   "t_spa": 2.4266,
+   "p_spa_consistent": 0.0639,
+   "p_spa_lower": 0.0778,
+   "p_spa_upper": 0.0619,
    "arm_means": {
     "cp_iv_spread_30d|high|10bps": -0.000243,
     "cp_iv_spread_30d|high|25bps": -0.002946,
@@ -1080,18 +1095,18 @@
     "ret_6m__xs|high|25bps": 0.003348,
     "consensus__xs|low|10bps": -0.005005,
     "consensus__xs|low|25bps": -0.005814,
-    "target_rev_1m__xs|high|10bps": 0.008032,
-    "target_rev_1m__xs|high|25bps": 0.005157
+    "target_rev_1m__xs|high|10bps": 0.009125,
+    "target_rev_1m__xs|high|25bps": 0.006251
    },
    "verdict": "WITHIN_SPA_NULL",
    "reading": "H0: no arm in this family has positive expected paired excess. p is the share of stationary-bootstrap worlds in which the BEST arm looks at least this good under that null."
   },
   "pbo": {
-   "pbo": 0.1429,
+   "pbo": 0.1143,
    "n_partitions": 70,
    "n_arms": 28,
    "n_periods": 308,
-   "median_logit": 1.3437,
+   "median_logit": 1.5686,
    "verdict": "SELECTION_IS_STABLE",
    "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
   }
@@ -1099,24 +1114,24 @@
  "era_sign_table": {
   "1999-2007": {
    "months": 105,
-   "mean_pct": 1.51,
-   "t": 2.349,
+   "mean_pct": 1.327,
+   "t": 2.233,
    "sign": 1
   },
   "2008-2015": {
    "months": 96,
-   "mean_pct": 0.9503,
-   "t": 1.807,
+   "mean_pct": 0.3215,
+   "t": 0.705,
    "sign": 1
   },
   "2016-2024": {
    "months": 107,
-   "mean_pct": -0.0224,
-   "t": -0.028,
-   "sign": -1
+   "mean_pct": 0.0239,
+   "t": 0.037,
+   "sign": 1
   },
-  "eras_with_a_positive_mean": 2,
-  "eras_with_a_negative_mean": 1,
+  "eras_with_a_positive_mean": 3,
+  "eras_with_a_negative_mean": 0,
   "eras_measured": 3,
   "holds_in_2_of_3": true,
   "same_sign_in_2_of_3": true,
@@ -1125,21 +1140,21 @@
  "decay_reading": {
   "decayed": true,
   "era_t": {
-   "1999-2007": 2.349,
-   "2008-2015": 1.807,
-   "2016-2024": -0.028
+   "1999-2007": 2.233,
+   "2008-2015": 0.705,
+   "2016-2024": 0.037
   },
-  "eras_alive_before_the_last": 2,
-  "last_era_t": -0.028,
-  "reading": "alive in 2 of the 2 earlier eras and flat in 2016-2024 (t -0.028) -- a DECAYED effect, not an absent one"
+  "eras_alive_before_the_last": 1,
+  "last_era_t": 0.037,
+  "reading": "alive in 1 of the 2 earlier eras and flat in 2016-2024 (t 0.037) -- a DECAYED effect, not an absent one"
  },
  "multiplicity_note": "booking all 14 survivors in ONE family is also the multiplicity fix: five screens each reporting 'my best cell' is a five-fold search whose deflation nobody was computing, and the DSR here is over the whole weekend's search, not one job's",
  "direction_note": "each feature is booked in the direction its SCREEN found. Trying both and keeping the better would double the family and hand the search a free sign.",
- "headline": "14 weekend survivors booked (28 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d', 'coverage']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.803%/month, DSR 0.1993, t2 needs 24.3y vs 25.67y",
- "verdict": "DECAYED (worked, then stopped)",
+ "headline": "14 weekend survivors booked (28 cells): 8 beat the market NET, 18 beat it GROSS; 6 of them have their effect in the BOTTOM decile (['cp_iv_spread_30d', 'skew_25d_30d', 'attention_z_5d', 'amihud_21d', 'ret_5d', 'coverage']), where a long top-50 book cannot reach it. Best target_rev_1m__xs|high|10bps at +0.912%/month, DSR 0.1272, t2 needs 36.3y vs 25.67y",
+ "verdict": "CANNOT DETERMINE (underpowered; this arm could only have shown an effect of 8.0%/yr or larger)",
  "licence": "PRODUCT_EXPERIMENT",
  "job": "W9_survivor_books",
  "run": 1,
  "variant": 0,
- "written_utc": "2026-09-05T05:47:13+00:00"
+ "written_utc": "2026-09-05T05:56:05+00:00"
 }
