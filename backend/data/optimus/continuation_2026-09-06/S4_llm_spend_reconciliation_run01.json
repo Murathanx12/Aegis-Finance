@@ -1,0 +1,69 @@
+{
+ "job": "S4_llm_spend_reconciliation",
+ "window": "2026-09-05T11:58Z (session start snapshot) -> end of session",
+ "session_cap_usd": 15.0,
+ "sub_caps": {
+  "2a_supply_chain": 10.0,
+  "2b_era_replay": 5.0,
+  "everything_else": 0.0
+ },
+ "deepseek": {
+  "provider_balance_before": 13.36,
+  "provider_balance_after": 9.38,
+  "PROVIDER_MEASURED_SPEND_USD": 3.98,
+  "telemetry_priced_usd": 2.2201,
+  "UNACCOUNTED_USD": 1.7599,
+  "telemetry_share_of_the_truth": 0.558,
+  "calls": {
+   "deepseek-v4-flash": 3371,
+   "deepseek-chat": 830
+  },
+  "tokens": {
+   "in": 12831684,
+   "out": 1433472
+  },
+  "note_on_the_model_string": "the extractor sends `deepseek-chat` (EXTRACT_MODEL, scripts/companyworld_extract.py:104) and the SERVER resolves it to `deepseek-v4-flash`, which the ledger records because the call site reads `resp.model`. The mandate's model was used; the two ledger rows are one model under two names."
+ },
+ "openai_gpt5_nano": {
+  "calls": 397,
+  "tokens": {
+   "in": 567540,
+   "out": 661638
+  },
+  "telemetry_priced_usd": 0.0,
+  "receipt_priced_usd": 0.1587,
+  "why_zero_in_the_ledger": "gpt-5-nano is absent from backend.config.LLM_PRICE_PER_MTOK, so every row lands as a LOWER BOUND with cost 0.00 and the audit reports it as 'unpriced'. The job's own receipt prices it from OpenAI's published list ($0.05/$0.40 per Mtok, $0.005 cached). OpenAI exposes no balance endpoint to this key, so that number is TELEMETRY, not a balance."
+ },
+ "TOTAL_SESSION_LLM_SPEND_USD": 4.14,
+ "against_cap": "under the $15.00 cap by a factor of 3.6",
+ "THE_FINDING": {
+  "statement": "our DeepSeek price table under-prices the provider by ~44%.",
+  "measured": {
+   "provider": 3.98,
+   "telemetry": 2.2201,
+   "ratio_true_to_table": 1.793
+  },
+  "table_now": {
+   "deepseek-v4-flash": {
+    "in": 0.14,
+    "cached_in": 0.0028,
+    "out": 0.28
+   }
+  },
+  "implied_rate_if_the_1_to_2_in_out_ratio_holds": {
+   "in_usd_per_mtok": 0.2535,
+   "out_usd_per_mtok": 0.5071,
+   "multiple_of_the_table": 1.81
+  },
+  "why_it_matters": "[[reference_deepseek_balance_is_the_truth]] says to trust the balance, and this session is a concrete measurement of how far the ledger sits from it. Every budget gate in this repo (research_budget.require) enforces a DOLLAR ceiling against the LEDGER. A ledger that reads 56% of the truth means a $10 gate stops at about $17.90 of real spend. The CALL ceiling is the hard one for exactly this reason and it did its job here.",
+  "NOT_FIXED_and_why": "I will not edit LLM_PRICE_PER_MTOK from an inferred rate. The implied number above assumes the table's 1:2 in/out ratio and a caching mix I cannot observe, and a wrong constant asserted confidently is worse than a known gap. The fix is to read DeepSeek's published price list with the network available and re-derive both legs, then re-price the ledger."
+ },
+ "spend_by_purpose": {
+  "companyworld_edges": 2.1195,
+  "era_replay_v2.decide": 0.1785,
+  "everything_else": 0.0,
+  "note": "telemetry attribution; the unaccounted $1.76 is not attributable by purpose"
+ },
+ "llm_calls_this_session": 4598,
+ "generated_utc": "2026-09-05T12:24:40.723965+00:00"
+}
