@@ -139,7 +139,7 @@ Receipts: `.../continuation_2026-09-06/S1_panel_split_contamination_recheck_run0
 | 2 | replace the share-basis gate's gap test with a level test, prove it by injection | **DONE before this session** — `long_panel.py` `LEVEL_FLOOR = 0.95` + `_injection_self_test` |
 | 3 | null `target_rev_1m`/`target_rev_3m` across a `cfacpr` move; re-issue | **DONE before this session, as a REBASE** — mean on split rows 3.12 -> 0.0675 |
 | 4 | add the EW-market and cap-matched-control rows | **DONE THIS SESSION** — `S2_size_matched_control_run01.json` |
-| 5 | re-run W10 through the runner so it has a durable receipt | **STILL OPEN.** Not attempted: the house rule is one lab job at a time and the GPU pass held the slot |
+| 5 | re-run W10 through the runner so it has a durable receipt | **DONE — and it was already done before this session.** 29 `W10_decay_autopsy_run*.json` exist, 13:30-17:00 on 09-05; the review's filesystem check was true at 13:07 and stale sixteen minutes later. I ran one more at 20:21 on the rebuilt panel to confirm |
 | 6 | downgrade "clear as an exclusion" (claim 4) or re-issue at the $2 floor | **DONE THIS SESSION** — struck at the point of use in `BUILD_WEEKEND_LAB_2026-09-06.md` FINDING 7; the exclusion leg is t −0.93, negative in 3 of 3 eras, and that is consistent-with, not established |
 
 Three corrections to the continuation prompt itself, each verified against a
@@ -403,5 +403,25 @@ its power/tail/era blocks are computed on the *champion* arm, not on
 `net_rev_4w`. Unfloored, `net_rev_4w|high|10bps` is TW 22.859 vs market 13.182,
 **+2.53%/yr t 1.038**; at 25 bps it is **−0.98%/yr, t −0.402**. The entire
 result is the cost assumption, and the draft says so in its own scoreboard.
+
+---
+
+## W10 RE-RUN ON THE REBUILT PANEL (review item 5)
+
+`W10_decay_autopsy_run01_v0.json`, 20:21. Same conclusion, better book:
+
+```
+gross TW 4.3086 vs market 4.8636 in 2016-2024   (the review's scratchpad: 3.6944 vs 4.8636)
+not_a_size_migration      equal-weighted t -0.381 in 2016-2024
+dispersion_intact         within-month sd 0.1065 vs 0.1048 (1.02x)
+still_alive_at_3m         3-month decile-spread t 3.78 in 2016-2024
+slower-rebalance cells alive in 2016-2024 at t >= 2: NONE
+verdict: AUTOPSY (arbitraged_away)
+```
+
+The market leg is identical to the digit (4.8636); only the book moved, and the
+share-basis rebase moved it **up**. The mechanism reading is unchanged: the
+signal still separates deciles at 3 months and no slower-rebalance book can
+monetise it.
 
 ---
