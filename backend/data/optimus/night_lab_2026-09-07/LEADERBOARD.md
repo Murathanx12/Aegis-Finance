@@ -1,6 +1,6 @@
 # NIGHT LAB 2026-09-07 — LEADERBOARD
 
-*regenerated 2026-09-06T17:40:10.990557+00:00 by `scripts/n7_memory_and_leaderboard.py`*
+*regenerated 2026-09-06T17:51:16.782803+00:00 by `scripts/n7_memory_and_leaderboard.py`*
 
 ## BEST SO FAR — beta-matched, family-corrected
 

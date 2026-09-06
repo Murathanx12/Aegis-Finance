@@ -943,8 +943,8 @@ conditional_evidence:
     one and why
   - IDEA cells are not exported -- fewer than two distinct observations is not evidence
   provenance:
-    observations_on_file: 101811
-    observations_counted: 101710
+    observations_on_file: 101992
+    observations_counted: 101891
     observations_superseded:
     - n: 101
       why: 'W7 matched-control LEAK: the control pool excluded future LOSERS as well as winners, so
@@ -952,7 +952,7 @@ conditional_evidence:
         the leaked receipts are in _superseded_leaked_control/. log_dollar_vol_20d went Holm 0.000178
         -> 0.158.'
     supersession_rules: 1
-    newest_observation_utc: '2026-09-06T17:40:10+00:00'
+    newest_observation_utc: '2026-09-06T17:51:16+00:00'
     rows_sha256: d5a93ce38a5c087f
   families_excluded:
     weekend-W7-matched-loser:

@@ -49,9 +49,7 @@
   "night_lab_2026-09-07/NIGHT_LAB_2026-09-07 / lane N6 / N6.3": 1
  },
  "evidence_memory_rows_total": 177,
- "receipts_ignored_as_scratch": [
-  "_n5_states_quick_test.json"
- ],
+ "receipts_ignored_as_scratch": [],
  "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_lab_2026-09-07\\LEADERBOARD.md",
  "best_so_far": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_lab_2026-09-07\\best_so_far.json",
  "cells_on_the_board": 166,
@@ -145,8 +143,8 @@
    },
    "idea_cells_not_exported": 486,
    "cells_exported": 4,
-   "observations_on_file": 101811,
-   "observations_counted": 101710,
+   "observations_on_file": 101992,
+   "observations_counted": 101891,
    "observations_superseded": {
     "W7 matched-control LEAK: the control pool excluded future LOSERS as well as winners, so any predictor of outcome DISPERSION differed from winners by construction. Fixed in 35915db; the leaked receipts are in _superseded_leaked_control/. log_dollar_vol_20d went Holm 0.000178 -> 0.158.": 101
    },
@@ -369,107 +367,107 @@
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n1_construction_books.json",
     "sha256": "270ecf9adca7ebe64e8be73757b770315cb91d0617e8f9864da1e287003a549b",
     "bytes": 486092,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n1d_monthly_refit_books.json",
     "sha256": "87b72fbd98142a4048be49ccbd671ebc1a0130a126c2171b5443c0b8f80b6b20",
     "bytes": 75511,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n2_ensemble.json",
     "sha256": "e2486ed924e071214ab38b6a9a0ae19a94422ed890e27536532a3f6be258eb4d",
     "bytes": 41450,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n3_edge_vs_floor_curve.json",
     "sha256": "f82c7c5941a510d18c446fa8142593cd3e61c7ad8822417e91807936d505ab9f",
     "bytes": 24684,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n3_populate_observe_tier.json",
     "sha256": "9c87f153872f92657beab0ce19ad0a4aaafbdff68b78ec165c067c5c705843b0",
     "bytes": 2490,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n3_reversal_cell_regrade.json",
     "sha256": "255d482b5c79035202313e2a1c594efada05776cad8a51c1311998cf60120221",
     "bytes": 9826,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n3_s28_band_regrade.json",
     "sha256": "ad348436c402d6a1998f0d0a1ffd2b33a5e9f04463d8fb4495d7990e0a414f06",
     "bytes": 4925,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n4_coverage_by_year.json",
     "sha256": "e214c06a36708a5b7aee276d6b45d83fde9b29cbcf93fcf5a65071ae173daa19",
     "bytes": 6646,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n4_event_table_build_run01.json",
     "sha256": "426e7ee1eb72b6fc91faadbabaf564ee80ee86dd885778b34100386f4fd5d990",
     "bytes": 19224,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n5_event_compression.json",
     "sha256": "864638cd85a5ce6c4efb79604f5276506bc49556d762087e881f57343eea2804",
     "bytes": 35911,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n5_states_third_null.json",
     "sha256": "272854030a135eb64ef7bd7f2f88589c778aeefe31d27598d864cc9766286e84",
     "bytes": 15160,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n5b_pretraining_status.json",
     "sha256": "b5c4caaa09e0207f2d6c6b4a413a6dfd33247ea8f0b1b82df91630057ec36ee7",
     "bytes": 4266,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n6_battery_v2.json",
     "sha256": "2da54d04e6d5a07a592a3a51a5b1149fa371442d53563e993fa54745e9eb7dfc",
     "bytes": 26824,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n6_battery_v2_fast.json",
     "sha256": "f127b658c4d878b175d8bd32e41ff6b0bbf2e2cffc56829938c9d4c8cb1b6c15",
     "bytes": 17351,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n6b_fantasy_exams_round2.json",
     "sha256": "796c5b53ac87acc21b9cd1b160b675b95dbe558d95f04606f79c2148082b0bfd",
     "bytes": 90173,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n6b_fantasy_exams_round2_dryrun.json",
     "sha256": "8eb5001f44e6d64dada3f3592b7f00675742220817856a4f12b6ae302a99b1c9",
     "bytes": 38536,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n6b_path_monte_carlo.json",
     "sha256": "75217bbc21f41f0fdfdf60939117f453cac7735a2e407e0b9c57b01161634b2a",
     "bytes": 12903,
-    "opened_utc": "2026-09-06T17:40:10+00:00"
+    "opened_utc": "2026-09-06T17:51:16+00:00"
    }
   ],
-  "git_commit": "625f5acf7640",
-  "generated_utc": "2026-09-06T17:40:12+00:00"
+  "git_commit": "f50b69b136f7",
+  "generated_utc": "2026-09-06T17:51:17+00:00"
  },
- "generated_utc": "2026-09-06T17:40:12.184911+00:00"
+ "generated_utc": "2026-09-06T17:51:17.989870+00:00"
 }
