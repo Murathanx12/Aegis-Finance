@@ -64,7 +64,9 @@ GRANDFATHERED: dict[str, str] = {
     "scenario_bridge_rerun_20260904.json": "predates module; same as its parent",
     "time_machine_arena.json": "S38 void (corrupted ratio); superseded by B1",
     "topn_concentration.json": "predates module; concentration study",
-    "toxic_band_short_20260904.json": "S38 void (future-reverse-split label); superseded by B1",
+    # "toxic_band_short_20260904.json" -- exemption RETIRED 2026-09-06: its
+    # market-shaped fields are string labels, which market_keys() no longer
+    # counts, so the receipt is not gated and an exemption would be pointless.
     "unsupervised_states_20260903.json": "S38 void under its own persistent null; superseded by B4",
     "upside_band_decontamination.json": "S38 void (named the wrong cause); superseded by B1",
 }
