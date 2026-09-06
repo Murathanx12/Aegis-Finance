@@ -1,0 +1,16 @@
+{
+  "benchmark_id": "spy_tr_yf_adjclose",
+  "provenance": {
+    "source": "yfinance",
+    "ticker": "SPY",
+    "construction": "pct_change of auto_adjust=True Close (total return)",
+    "dividends_included": true,
+    "network": true,
+    "fetched_utc": "2026-09-06T03:44:27.878486+00:00"
+  },
+  "rows": 7212,
+  "first": "1998-01-05",
+  "last": "2026-09-04",
+  "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
+  "note": "fetched ONCE on 2026-09-06 and pinned so every growth-book receipt reads the same tape offline. yfinance's `end` is EXCLUSIVE (S36 NAV bug), so the request ran to 2026-09-06 to obtain 2026-09-04."
+}

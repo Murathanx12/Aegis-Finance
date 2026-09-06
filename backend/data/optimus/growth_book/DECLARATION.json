@@ -1,0 +1,1090 @@
+{
+ "declaration": "GROWTH BOOK \u2014 generation 0",
+ "authority": "docs/ROADMAP_2026-09-07_GROWTH_BOOK_AMENDMENT.md \u00a73",
+ "licence": "PRODUCT_EXPERIMENT",
+ "objective": "maximize after-cost terminal wealth subject to maxDD <= 1.25 x SPY's maxDD over the same months, monthly CVaR5 <= 1.5 x SPY's, no month worse than -40%, gross <= 2.0x, financing at RF + 100 bps on borrowed notional",
+ "constraints": {
+  "max_drawdown_multiple_of_spy": 1.25,
+  "cvar5_multiple_of_spy": 1.5,
+  "worst_month_floor": -0.4,
+  "gross_cap": 2.0,
+  "financing_bps_over_rf": 100.0
+ },
+ "benchmark_set": [
+  "SPY total return (pinned daily tape, compounded over each book month's own window)",
+  "SPY total return LEVERED to the drawdown budget \u2014 the honest beta-only rival",
+  "the value-weighted tradable universe (mkt_vw_1m, the panel's own market leg)",
+  "the risk-free leg (pinned Fama-French daily RF)"
+ ],
+ "eras": {
+  "development_search": [
+   "1999-01",
+   "2015-12"
+  ],
+  "development_common_grading_window": [
+   "2004-01",
+   "2015-12"
+  ],
+  "why_common_window": "learner/long_panel.py spends 1999-2003 on the five-year walk-forward warm-up, so no model genome has a prediction before 2004-01. Ranking a 1999-start book against a 2004-start book ranks two different decades.",
+  "sealed_test": [
+   "2016-01",
+   "2024-12"
+  ],
+  "sealed_policy": "opened ONCE per frozen champion; every opening is appended to SEALED_ERA_OPENINGS.jsonl"
+ },
+ "cost_rates_bps_per_side": [
+  10.0,
+  25.0
+ ],
+ "ranking_metric": "leverage-neutral terminal wealth \u2014 the book run at SPY's own realised volatility with borrowed notional charged at RF + 100 bps \u2014 with raw TW, beta and maxDD printed beside it",
+ "overlays": {
+  "dd": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
+  "tg": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
+  "bsc": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0"
+ },
+ "book_k": 50,
+ "generation_0_genomes": [
+  {
+   "genome_id": "spy_bh",
+   "family": "index",
+   "base": "spy_bh",
+   "spec": {},
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "the benchmark, run as a genome so it sits in the same table as its rivals",
+   "sha256": "14ab79265835b5ef557e1a2c035c16c20d55091e634bc8c651105a030b794286"
+  },
+  {
+   "genome_id": "spy_trend",
+   "family": "index",
+   "base": "spy_trend",
+   "spec": {},
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "Faber 2007 / Moskowitz-Ooi-Pedersen 2012 time-series momentum",
+   "sha256": "c6619d29a0e91c7adad040a80a53f48dc8637dc416383c7f7753867c8878acb7"
+  },
+  {
+   "genome_id": "spy_volmgd",
+   "family": "index",
+   "base": "spy_volmgd",
+   "spec": {},
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "Moreira-Muir 2017",
+   "sha256": "b54b51cb36439ee376cf70a373d029313d1d579854d54405733602332f9fa4c4"
+  },
+  {
+   "genome_id": "mom_12_1",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "vw"
+   },
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "12-1 momentum, top-50 value weighted, floored universe",
+   "sha256": "af216efa7f0aaa3a317931d15aca391d43ff8de247410d9b2a5423a127855887"
+  },
+  {
+   "genome_id": "mom_12_1_ew",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "ew"
+   },
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "the equal-weight sibling: size is the difference, nothing else",
+   "sha256": "9ce7d6614edb16e5c94cd6bae7cb9fd3ae551ea5707eb0f99e39ab2f9b624ee9"
+  },
+  {
+   "genome_id": "mom_vol_scaled_signal",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_over_vol",
+    "weight": "vw"
+   },
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "vol-scaled momentum at the SIGNAL level: mom_12_1 / vol_60d",
+   "sha256": "0033e4ead7fe8178f1fee59ab9634c7057d5d0323fb6216393b9c992ae8ab5a9"
+  },
+  {
+   "genome_id": "quality_mom",
+   "family": "quality",
+   "base": "panel",
+   "spec": {
+    "pred_col": "quality_mom",
+    "weight": "vw"
+   },
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "profitability x momentum: cross-sectional rank(ROE) + rank(mom_12_1)",
+   "sha256": "d16d87becaa0efe8b326b6fd848f178302f91b8ad7c88e467418a70b3bce3127"
+  },
+  {
+   "genome_id": "lgbm_clf",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "the incumbent classifier head, walk-forward OOS on the floored panel",
+   "sha256": "375d4eee33cee5d3b315cd5a0550971aea1dc4c4554c0fceb42209b67aaf6b38"
+  },
+  {
+   "genome_id": "nn_pre_causal",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "nn_pre_causal_seedmean",
+    "weight": "vw"
+   },
+   "overlay": [],
+   "parent_ids": [],
+   "mutation_history": [],
+   "note": "the 8-seed causal-pretrained neural ensemble, SEED-MEAN judged",
+   "sha256": "51d02388e82b1fc1eebdbd14784d5bde8be4a490846a965d15895a0beadf119e"
+  },
+  {
+   "genome_id": "spy_bh|dd",
+   "family": "index",
+   "base": "spy_bh",
+   "spec": {},
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "spy_bh"
+   ],
+   "mutation_history": [],
+   "note": "the benchmark, run as a genome so it sits in the same table as its rivals + drawdown control",
+   "sha256": "7d50cdecce665e302e0d55b8a7e92e0b602d770a6d6a499fcfd608eb69a04ff9"
+  },
+  {
+   "genome_id": "spy_bh|tg",
+   "family": "index",
+   "base": "spy_bh",
+   "spec": {},
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "spy_bh"
+   ],
+   "mutation_history": [],
+   "note": "the benchmark, run as a genome so it sits in the same table as its rivals + trend gate",
+   "sha256": "6f51a28649e806d8e6b8797c1c96ad1c8277062767d558f758861b9cce1c94b0"
+  },
+  {
+   "genome_id": "spy_bh|dd+tg",
+   "family": "index",
+   "base": "spy_bh",
+   "spec": {},
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "spy_bh"
+   ],
+   "mutation_history": [],
+   "note": "the benchmark, run as a genome so it sits in the same table as its rivals + drawdown control + trend gate",
+   "sha256": "b70e67c428c4cb4dc722d052223b4298188083df6712cc28438fd7159ecb9469"
+  },
+  {
+   "genome_id": "spy_trend|dd",
+   "family": "index",
+   "base": "spy_trend",
+   "spec": {},
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "spy_trend"
+   ],
+   "mutation_history": [],
+   "note": "Faber 2007 / Moskowitz-Ooi-Pedersen 2012 time-series momentum + drawdown control",
+   "sha256": "788b21a8aac16dc5fb0e779c42fe3a970e843abdd23828af9e57a9c0b0d8424a"
+  },
+  {
+   "genome_id": "spy_trend|tg",
+   "family": "index",
+   "base": "spy_trend",
+   "spec": {},
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "spy_trend"
+   ],
+   "mutation_history": [],
+   "note": "Faber 2007 / Moskowitz-Ooi-Pedersen 2012 time-series momentum + trend gate",
+   "sha256": "4595af404411a96741bc1127c7342c68d26468320e8a9977301539a63f8dc985"
+  },
+  {
+   "genome_id": "spy_trend|dd+tg",
+   "family": "index",
+   "base": "spy_trend",
+   "spec": {},
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "spy_trend"
+   ],
+   "mutation_history": [],
+   "note": "Faber 2007 / Moskowitz-Ooi-Pedersen 2012 time-series momentum + drawdown control + trend gate",
+   "sha256": "fbcaa9188f258b1156fa0cadbec4472fe0dd9678471effafcd308af9b2f2df5e"
+  },
+  {
+   "genome_id": "spy_volmgd|dd",
+   "family": "index",
+   "base": "spy_volmgd",
+   "spec": {},
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "spy_volmgd"
+   ],
+   "mutation_history": [],
+   "note": "Moreira-Muir 2017 + drawdown control",
+   "sha256": "184e21b33f8088a20588ad3fed5aab8c8f4ce986d3b0da9a78f6fb0d855f450c"
+  },
+  {
+   "genome_id": "spy_volmgd|tg",
+   "family": "index",
+   "base": "spy_volmgd",
+   "spec": {},
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "spy_volmgd"
+   ],
+   "mutation_history": [],
+   "note": "Moreira-Muir 2017 + trend gate",
+   "sha256": "5fd6f49b434d39a47663683bceb9891a46e23756358e98dc33b17fe4a3323a84"
+  },
+  {
+   "genome_id": "spy_volmgd|dd+tg",
+   "family": "index",
+   "base": "spy_volmgd",
+   "spec": {},
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "spy_volmgd"
+   ],
+   "mutation_history": [],
+   "note": "Moreira-Muir 2017 + drawdown control + trend gate",
+   "sha256": "54df068d1766b07e6f9b187db18046e1454412f967edccdd0fb21d7a333ee5be"
+  },
+  {
+   "genome_id": "mom_12_1|dd",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "mom_12_1"
+   ],
+   "mutation_history": [],
+   "note": "12-1 momentum, top-50 value weighted, floored universe + drawdown control",
+   "sha256": "459beb7525567c1d604d0f9689b31fcf99fb7918cc3da29cf4cc500ae4a62375"
+  },
+  {
+   "genome_id": "mom_12_1|tg",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "vw"
+   },
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "mom_12_1"
+   ],
+   "mutation_history": [],
+   "note": "12-1 momentum, top-50 value weighted, floored universe + trend gate",
+   "sha256": "80f679f1d093d5bc176134dfc9f554ceca290624f1d4c84287a4da098188f104"
+  },
+  {
+   "genome_id": "mom_12_1|dd+tg",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "mom_12_1"
+   ],
+   "mutation_history": [],
+   "note": "12-1 momentum, top-50 value weighted, floored universe + drawdown control + trend gate",
+   "sha256": "b52cf905f7c6df1689c2a22431b21e5574b0e91351501a3869f8e4ed992f28e1"
+  },
+  {
+   "genome_id": "mom_12_1_ew|dd",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "ew"
+   },
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "mom_12_1_ew"
+   ],
+   "mutation_history": [],
+   "note": "the equal-weight sibling: size is the difference, nothing else + drawdown control",
+   "sha256": "6dc41e6b79e5eca2420cc428e4b744d638feca2660699000f0c480136dcd04be"
+  },
+  {
+   "genome_id": "mom_12_1_ew|tg",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "ew"
+   },
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "mom_12_1_ew"
+   ],
+   "mutation_history": [],
+   "note": "the equal-weight sibling: size is the difference, nothing else + trend gate",
+   "sha256": "15bdae92df4c2ef1708e75f74915364b79120cfc347edd8801945b530d52720a"
+  },
+  {
+   "genome_id": "mom_12_1_ew|dd+tg",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "ew"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "mom_12_1_ew"
+   ],
+   "mutation_history": [],
+   "note": "the equal-weight sibling: size is the difference, nothing else + drawdown control + trend gate",
+   "sha256": "43e63e794a72f722660f744b35f8f831985e02c821fd3cd8ef38a205852e75e1"
+  },
+  {
+   "genome_id": "mom_vol_scaled_signal|dd",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_over_vol",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "mom_vol_scaled_signal"
+   ],
+   "mutation_history": [],
+   "note": "vol-scaled momentum at the SIGNAL level: mom_12_1 / vol_60d + drawdown control",
+   "sha256": "621c0c2db9518f6121eae2e2f9cdf3f104e41f107b9b1785d99a8dffb3051ad4"
+  },
+  {
+   "genome_id": "mom_vol_scaled_signal|tg",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_over_vol",
+    "weight": "vw"
+   },
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "mom_vol_scaled_signal"
+   ],
+   "mutation_history": [],
+   "note": "vol-scaled momentum at the SIGNAL level: mom_12_1 / vol_60d + trend gate",
+   "sha256": "3f9a74ed27008494bb121401b4052904df807ef6afa3d509ecb410e17dd71091"
+  },
+  {
+   "genome_id": "mom_vol_scaled_signal|dd+tg",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_over_vol",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "mom_vol_scaled_signal"
+   ],
+   "mutation_history": [],
+   "note": "vol-scaled momentum at the SIGNAL level: mom_12_1 / vol_60d + drawdown control + trend gate",
+   "sha256": "9a792d74991e1b99fc21b415298c560b8a7256c3b25aa4461cad034e2c52fffa"
+  },
+  {
+   "genome_id": "quality_mom|dd",
+   "family": "quality",
+   "base": "panel",
+   "spec": {
+    "pred_col": "quality_mom",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "quality_mom"
+   ],
+   "mutation_history": [],
+   "note": "profitability x momentum: cross-sectional rank(ROE) + rank(mom_12_1) + drawdown control",
+   "sha256": "046a281561469150ad895d370643b569837fe2cf438fd5978ad6da9178f0ffed"
+  },
+  {
+   "genome_id": "quality_mom|tg",
+   "family": "quality",
+   "base": "panel",
+   "spec": {
+    "pred_col": "quality_mom",
+    "weight": "vw"
+   },
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "quality_mom"
+   ],
+   "mutation_history": [],
+   "note": "profitability x momentum: cross-sectional rank(ROE) + rank(mom_12_1) + trend gate",
+   "sha256": "2d4910165f665acb6c6318af5d3b16836d75220a8d60a802e44bc0d49926aa25"
+  },
+  {
+   "genome_id": "quality_mom|dd+tg",
+   "family": "quality",
+   "base": "panel",
+   "spec": {
+    "pred_col": "quality_mom",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "quality_mom"
+   ],
+   "mutation_history": [],
+   "note": "profitability x momentum: cross-sectional rank(ROE) + rank(mom_12_1) + drawdown control + trend gate",
+   "sha256": "5c673d480a2061eae4478f90268344b62b78c011a6a9b64caaccb91b570f9255"
+  },
+  {
+   "genome_id": "lgbm_clf|dd",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "lgbm_clf"
+   ],
+   "mutation_history": [],
+   "note": "the incumbent classifier head, walk-forward OOS on the floored panel + drawdown control",
+   "sha256": "87300e20a593295c83694e918260e71fee7c00afef86c05e26eabdc834ea2e88"
+  },
+  {
+   "genome_id": "lgbm_clf|tg",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "lgbm_clf"
+   ],
+   "mutation_history": [],
+   "note": "the incumbent classifier head, walk-forward OOS on the floored panel + trend gate",
+   "sha256": "00fed83bcdde20ddd4cbc1be5b314a3e221f1c23bbe23c1d12e38a066a7eee9c"
+  },
+  {
+   "genome_id": "lgbm_clf|dd+tg",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "lgbm_clf"
+   ],
+   "mutation_history": [],
+   "note": "the incumbent classifier head, walk-forward OOS on the floored panel + drawdown control + trend gate",
+   "sha256": "5032cc61448c086acdc0938ef03a13f80afd5909a5e545d250ea79a60b1b5231"
+  },
+  {
+   "genome_id": "nn_pre_causal|dd",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "nn_pre_causal_seedmean",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ],
+   "parent_ids": [
+    "nn_pre_causal"
+   ],
+   "mutation_history": [],
+   "note": "the 8-seed causal-pretrained neural ensemble, SEED-MEAN judged + drawdown control",
+   "sha256": "0e2b069258b50c3120ea6835d01df64bacd3ce8cb11439185624658beffec210"
+  },
+  {
+   "genome_id": "nn_pre_causal|tg",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "nn_pre_causal_seedmean",
+    "weight": "vw"
+   },
+   "overlay": [
+    "tg"
+   ],
+   "parent_ids": [
+    "nn_pre_causal"
+   ],
+   "mutation_history": [],
+   "note": "the 8-seed causal-pretrained neural ensemble, SEED-MEAN judged + trend gate",
+   "sha256": "7be593819ddc9899311fec2b1443f48877a92cd6238a52a39558d60d89a256d4"
+  },
+  {
+   "genome_id": "nn_pre_causal|dd+tg",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "nn_pre_causal_seedmean",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ],
+   "parent_ids": [
+    "nn_pre_causal"
+   ],
+   "mutation_history": [],
+   "note": "the 8-seed causal-pretrained neural ensemble, SEED-MEAN judged + drawdown control + trend gate",
+   "sha256": "3873d9cf2d52fc38ab89ad94e82d53f59c80c4844b28924210c1db4331e5b9a8"
+  },
+  {
+   "genome_id": "mom_12_1|bsc",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_12_1",
+    "weight": "vw"
+   },
+   "overlay": [
+    "bsc"
+   ],
+   "parent_ids": [
+    "mom_12_1"
+   ],
+   "mutation_history": [],
+   "note": "Barroso-Santa-Clara 2015 / Daniel-Moskowitz 2016 portfolio-level vol scaling",
+   "sha256": "892462af7a5adc64c6c84672988c6cc5ef6eb8dd18020c012720856fb4d5b77b"
+  },
+  {
+   "genome_id": "mom_vol_scaled_signal|bsc",
+   "family": "momentum",
+   "base": "panel",
+   "spec": {
+    "pred_col": "mom_over_vol",
+    "weight": "vw"
+   },
+   "overlay": [
+    "bsc"
+   ],
+   "parent_ids": [
+    "mom_vol_scaled_signal"
+   ],
+   "mutation_history": [],
+   "note": "Barroso-Santa-Clara 2015 / Daniel-Moskowitz 2016 portfolio-level vol scaling",
+   "sha256": "8c2733de733570d4bb327ac12d596d15d508d92ae15588ed45e48f7b947e1335"
+  },
+  {
+   "genome_id": "lgbm_clf|bsc",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": [
+    "bsc"
+   ],
+   "parent_ids": [
+    "lgbm_clf"
+   ],
+   "mutation_history": [],
+   "note": "Barroso-Santa-Clara 2015 / Daniel-Moskowitz 2016 portfolio-level vol scaling",
+   "sha256": "b0766c628e90eaa7dc8ec4e0551c63a3510cd11b0b0588985fe3a299dd295e7f"
+  },
+  {
+   "genome_id": "nn_pre_causal|bsc",
+   "family": "learner",
+   "base": "panel",
+   "spec": {
+    "pred_col": "nn_pre_causal_seedmean",
+    "weight": "vw"
+   },
+   "overlay": [
+    "bsc"
+   ],
+   "parent_ids": [
+    "nn_pre_causal"
+   ],
+   "mutation_history": [],
+   "note": "Barroso-Santa-Clara 2015 / Daniel-Moskowitz 2016 portfolio-level vol scaling",
+   "sha256": "e1b5de04cdba014e3e5cbe09181d3f697b0ae00bb78d9002b298e007a1d3c726"
+  },
+  {
+   "genome_id": "blend50_spy_trend+mom_12_1",
+   "family": "blend",
+   "base": "blend",
+   "spec": {
+    "legs": [
+     [
+      "spy_trend",
+      0.5
+     ],
+     [
+      "mom_12_1",
+      0.5
+     ]
+    ]
+   },
+   "overlay": [],
+   "parent_ids": [
+    "spy_trend",
+    "mom_12_1"
+   ],
+   "mutation_history": [],
+   "note": "50/50 of the trend-gated index and a selector, blended on RETURNS (each leg pays its own spread)",
+   "sha256": "f0566a8fc8c263278f18b4c406af5ac8b96e345aed9d77f061aa3d7709f067b5"
+  },
+  {
+   "genome_id": "blend50_spy_trend+quality_mom",
+   "family": "blend",
+   "base": "blend",
+   "spec": {
+    "legs": [
+     [
+      "spy_trend",
+      0.5
+     ],
+     [
+      "quality_mom",
+      0.5
+     ]
+    ]
+   },
+   "overlay": [],
+   "parent_ids": [
+    "spy_trend",
+    "quality_mom"
+   ],
+   "mutation_history": [],
+   "note": "50/50 of the trend-gated index and a selector, blended on RETURNS (each leg pays its own spread)",
+   "sha256": "5bc355253de5f14e471b8a3b1811e4ca485d4878f3d1b5e76cf3f7b1df239bf1"
+  },
+  {
+   "genome_id": "blend50_spy_trend+lgbm_clf",
+   "family": "blend",
+   "base": "blend",
+   "spec": {
+    "legs": [
+     [
+      "spy_trend",
+      0.5
+     ],
+     [
+      "lgbm_clf",
+      0.5
+     ]
+    ]
+   },
+   "overlay": [],
+   "parent_ids": [
+    "spy_trend",
+    "lgbm_clf"
+   ],
+   "mutation_history": [],
+   "note": "50/50 of the trend-gated index and a selector, blended on RETURNS (each leg pays its own spread)",
+   "sha256": "cf1105d46726ded0f7ec6ae0e76f2a06e63e231bd1a6a0d5f031866203af3a43"
+  },
+  {
+   "genome_id": "blend50_spy_trend+nn_pre_causal",
+   "family": "blend",
+   "base": "blend",
+   "spec": {
+    "legs": [
+     [
+      "spy_trend",
+      0.5
+     ],
+     [
+      "nn_pre_causal",
+      0.5
+     ]
+    ]
+   },
+   "overlay": [],
+   "parent_ids": [
+    "spy_trend",
+    "nn_pre_causal"
+   ],
+   "mutation_history": [],
+   "note": "50/50 of the trend-gated index and a selector, blended on RETURNS (each leg pays its own spread)",
+   "sha256": "984c2810a6470bd9a483492fa228c3421612237d708bd515835edd258e20d02a"
+  }
+ ],
+ "generation_0_size": 44,
+ "family_size_note": "the DSR deflates by every cell LOOKED AT: genomes x cost rates. That product is recorded on the summary receipt and is what n_trials is set to.",
+ "declared_utc": "2026-09-06T13:23:06.583405+00:00",
+ "universe": {
+  "applied_to": "THE TRAINING UNIVERSE as well as the graded book -- the model is fitted, standardised, pre-trained, early-stopped and graded on these rows only",
+  "dollar_volume_floor_usd_per_day": 3000000.0,
+  "dollar_volume_source": "expm1(log_dollar_vol_20d)",
+  "min_close_usd": 5.0,
+  "rows_before": 925757,
+  "rows_after": 530447,
+  "rows_removed": 395310,
+  "share_kept": 0.573,
+  "rows_with_unknown_dollar_volume_dropped": 51,
+  "rows_with_unknown_close_dropped": 0,
+  "months_before": 310,
+  "months_after": 310,
+  "median_names_per_month_after": 1794.0,
+  "rows_by_year": {
+   "1999": {
+    "panel": 19733,
+    "tradable": 9766
+   },
+   "2000": {
+    "panel": 34261,
+    "tradable": 16832
+   },
+   "2001": {
+    "panel": 34549,
+    "tradable": 15675
+   },
+   "2002": {
+    "panel": 32738,
+    "tradable": 15187
+   },
+   "2003": {
+    "panel": 32473,
+    "tradable": 16172
+   },
+   "2004": {
+    "panel": 35283,
+    "tradable": 19194
+   },
+   "2005": {
+    "panel": 37834,
+    "tradable": 20774
+   },
+   "2006": {
+    "panel": 39460,
+    "tradable": 22871
+   },
+   "2007": {
+    "panel": 39856,
+    "tradable": 24236
+   },
+   "2008": {
+    "panel": 38307,
+    "tradable": 21221
+   },
+   "2009": {
+    "panel": 34940,
+    "tradable": 17847
+   },
+   "2010": {
+    "panel": 35215,
+    "tradable": 19251
+   },
+   "2011": {
+    "panel": 35107,
+    "tradable": 19943
+   },
+   "2012": {
+    "panel": 34204,
+    "tradable": 18945
+   },
+   "2013": {
+    "panel": 33861,
+    "tradable": 20324
+   },
+   "2014": {
+    "panel": 35720,
+    "tradable": 22258
+   },
+   "2015": {
+    "panel": 36650,
+    "tradable": 22572
+   },
+   "2016": {
+    "panel": 35974,
+    "tradable": 21568
+   },
+   "2017": {
+    "panel": 35035,
+    "tradable": 22070
+   },
+   "2018": {
+    "panel": 35130,
+    "tradable": 22690
+   },
+   "2019": {
+    "panel": 35400,
+    "tradable": 21950
+   },
+   "2020": {
+    "panel": 35362,
+    "tradable": 22375
+   },
+   "2021": {
+    "panel": 38792,
+    "tradable": 26396
+   },
+   "2022": {
+    "panel": 41640,
+    "tradable": 24308
+   },
+   "2023": {
+    "panel": 40109,
+    "tradable": 22760
+   },
+   "2024": {
+    "panel": 38124,
+    "tradable": 23262
+   }
+  },
+  "floor_source": "learner.evaluate.TRADABLE_DOLLAR_VOL + learner.neural_long.TRADABLE_MIN_CLOSE",
+  "fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+  "columns_kept_for_this_job": 60,
+  "quality_coverage_share": 0.9591,
+  "quality_mom_coverage_share": 0.939
+ },
+ "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+ "stage_sources": {
+  "incumbents": {
+   "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+   "columns": [
+    "lgbm_clf",
+    "lgbm_raw"
+   ],
+   "non_null_share_first_column": 0.8572,
+   "first_year_with_a_prediction": "2004",
+   "rows": 530447,
+   "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+   "scope": {
+    "test_years": [
+     2004,
+     2024
+    ],
+    "n_test_years": 21,
+    "seeds": []
+   }
+  },
+  "nn_pre_causal": {
+   "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_nn_pre_causal.parquet",
+   "columns": [
+    "nn_pre_causal_s20260906",
+    "nn_pre_causal_s20260907",
+    "nn_pre_causal_s20260908",
+    "nn_pre_causal_s20260909",
+    "nn_pre_causal_s20260910",
+    "nn_pre_causal_s20260911",
+    "nn_pre_causal_s20260912",
+    "nn_pre_causal_s20260913",
+    "nn_pre_causal_seedmean"
+   ],
+   "non_null_share_first_column": 0.8572,
+   "first_year_with_a_prediction": "2004",
+   "rows": 530447,
+   "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+   "scope": {
+    "test_years": [
+     2004,
+     2024
+    ],
+    "n_test_years": 21,
+    "seeds": [
+     20260906,
+     20260907,
+     20260908,
+     20260909,
+     20260910,
+     20260911,
+     20260912,
+     20260913
+    ]
+   }
+  }
+ },
+ "quality_leg": {
+  "column": "roe_pit",
+  "source": "WRDS wrdsapps_finratio (early 1990-2012 + modern 2013-2024)",
+  "why_not_gprof": "gross profitability exists only from 2013-01 in this repo's pull and is absent for two thirds of the development era",
+  "coverage_share_of_panel_rows": 0.9591
+ },
+ "market_context": {
+  "months": 309,
+  "window": [
+   "1999-03",
+   "2024-11"
+  ],
+  "construction": "each market leg compounded over the book month's OWN window (entry_date[m], entry_date[m+1]] from the pinned daily tapes",
+  "spy_tape_sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57"
+ },
+ "family_cells_declared": 88,
+ "sha256": "0397b9bfae7d53c1333afe89228c962ee08a1cbf81d04a40d5a33216d6a57655",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g2_generation0.py",
+   "--quiet"
+  ],
+  "resolved_config": {
+   "job": "G2_generation0"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944,
+    "opened_utc": "2026-09-06T13:23:04+00:00",
+    "note": "the 1999-2024 long panel"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_incumbents.parquet",
+    "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
+    "bytes": 6225813,
+    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "note": "W3b stage predictions: incumbents"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_incumbents.json",
+    "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2",
+    "bytes": 9066,
+    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "note": "W3b stage meta: incumbents"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_nn_pre_causal.parquet",
+    "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
+    "bytes": 24015048,
+    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "note": "W3b stage predictions: nn_pre_causal"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_nn_pre_causal.json",
+    "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
+    "bytes": 74013,
+    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "note": "W3b stage meta: nn_pre_causal"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly_early.parquet",
+    "sha256": "51672ab7363507da27b1b871f611f5145edd655f37d9385dac90fb2ec7f08f2a",
+    "bytes": 12406449,
+    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly.parquet",
+    "sha256": "7a8d096b1aaaf7595f68c05247ceb4e86330d5aad3fe33a4f4cdc0d4a3f0bc30",
+    "bytes": 161579169,
+    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
+    "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
+    "bytes": 242158,
+    "opened_utc": "2026-09-06T13:23:06+00:00",
+    "note": "pinned SPY total return, daily"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.json",
+    "sha256": "ec70b6613a6ac232669597e483899c4c71244f14765b0b4c06f738ab717c9e2d",
+    "bytes": 663,
+    "opened_utc": "2026-09-06T13:23:06+00:00",
+    "note": "pin provenance"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "error": "MISSING",
+    "opened_utc": "2026-09-06T13:23:06+00:00",
+    "note": "pinned Fama-French daily RF"
+   }
+  ],
+  "git_commit": "4cd2101412b3",
+  "generated_utc": "2026-09-06T13:23:06+00:00"
+ }
+}
