@@ -1,0 +1,69 @@
+{
+ "tape": "event_table_v1",
+ "built_utc": "2026-09-06T17:11:53+00:00",
+ "rows": 993005,
+ "distinct_symbols": 31626,
+ "distinct_permnos_linked": 5516,
+ "permno_link_share": 0.2214,
+ "by_source": {
+  "ibes_surpsumu": 618419,
+  "edgar_8k": 276978,
+  "alpaca:benzinga": 80631,
+  "finnhub:Yahoo": 7576,
+  "finnhub:Benzinga": 3918,
+  "sec_ownership": 2380,
+  "finnhub:SeekingAlpha": 2035,
+  "finnhub:CNBC": 367,
+  "finnhub:ChartMill": 330,
+  "finnhub:MarketWatch": 114,
+  "finnhub:Finnhub": 91,
+  "finnhub:Fintel": 70,
+  "finnhub:DowJones": 36,
+  "company_ir:ir.solidpowerbattery.com": 10,
+  "company_ir:ir.porchgroup.com": 10,
+  "company_ir:ir.hubspot.com": 10,
+  "company_ir:www.sableoffshore.com": 10,
+  "company_ir:ir.amd.com": 10,
+  "company_ir:investors.micron.com": 10
+ },
+ "year_range_requested": [
+  2015,
+  2026
+ ],
+ "year_range_present": [
+  2015,
+  2026
+ ],
+ "pit_rule": "observed_at_utc = the time the row became AVAILABLE, never the event's own timestamp. tense=='future' corpus rows (scheduled/forward) are DROPPED, not reused under the backward bound -- a shared bound between a backward news window and a forward calendar is the S24 defect this table refuses to repeat.",
+ "schema": {
+  "permno": "CRSP permno, float, nullable. Best-effort link -- see permno_link_method.",
+  "permno_link_method": "'native' (already carried by the source, e.g. eightk_items.parquet's own permno column), 'crsp_stocknames_interval' (ticker matched against crsp__stocknames.parquet with namedt<=event_date<=nameenddt, shrcd in (10,11) preferred), or 'unresolved'.",
+  "symbol": "Upper-cased ticker as carried by the source. Always populated.",
+  "event_type": "Coarse label: '8K:<item codes>', 'earnings_surprise', 'news', 'ownership:<SC 13D|SC 13G>[.amendment]'.",
+  "event_time_utc": "When the thing HAPPENED (or, for IBES, when it became true -- see observed_at_utc note). NOT safe to condition a backtest on; use observed_at_utc.",
+  "observed_at_utc": "When the row became AVAILABLE. The ONLY column safe to filter a backtest on (observed_at_utc <= as_of).",
+  "observed_at_precision": "'timestamp' (true time-of-day known) or 'date' (only the calendar date is known; stamped 00:00 UTC).",
+  "source": "'edgar_8k' | 'ibes_surpsumu' | 'alpaca:<wire>' | 'finnhub:<outlet>' | 'sec_ownership'.",
+  "title": "News headline. Null for non-news rows. Body text is deliberately NOT carried (memory; not needed for surprise/reaction grading).",
+  "surprise_actual": "IBES actual EPS (surpsumu.actual). Null off earnings_surprise rows.",
+  "surprise_mean_estimate": "IBES consensus mean estimate at announcement (surpmean).",
+  "surprise_stdev": "IBES estimate dispersion (surpstdev).",
+  "surprise_suescore": "Standardized unexpected earnings: (actual-mean)/stdev, IBES's own computation (surpsumu.suescore).",
+  "eightk_items": "Comma-joined 8-K item codes (e.g. '2.02,9.01'). Null off 8-K rows.",
+  "ownership_form": "'SC 13D' | 'SC 13G' (normalised). Null off ownership rows.",
+  "ownership_amendment": "bool. Null off ownership rows.",
+  "independence_group": "Who is really speaking (news rows only; corpus.py's own field, e.g. 'wire:benzinga'). Lets a consumer dedupe syndicated wires.",
+  "year": "int16, derived from event_time_utc (or observed_at_utc if event_time_utc is null), for cheap year-partitioned coverage queries."
+ },
+ "sources": {
+  "edgar_8k": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\edgar_8k\\eightk_items.parquet",
+  "ibes_surpsumu": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\ibes__surpsumu.parquet",
+  "crsp_stocknames_linkage": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\crsp__stocknames.parquet",
+  "news_corpus": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\observations",
+  "sec_ownership": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\research\\ownership"
+ },
+ "known_absences": [
+  "Form 4 (insider transactions): no table entitled or on disk anywhere in either repo (searched backend/data/optimus/wrds/bulk and both repos' state/); tfn__s34type* is 13F institutional, not Form 4.",
+  "13D/13G: present but thin -- 7 days (2026-08-13..2026-08-20) from a smoke test of alpha/sources/edgar_ownership.py; a full backfill to 2015 is a separate ~4,000-calendar-day network job, not run here."
+ ]
+}
