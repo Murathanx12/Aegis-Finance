@@ -1,0 +1,1474 @@
+{
+ "job": "A2_retrain_cadence",
+ "lane": "A",
+ "question": "does refitting the champion more often buy anything after costs, or is the model's information static? Monthly vs quarterly vs annual vs frozen-once, walk-forward 2004-2024 on the floored long panel.",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "pipeline": "learner.models.fit_predict_proba -- the classifier head that IS the champion. Identical features, panel, floor, book and grader across all four cadences; ONLY the refit boundary differs.",
+ "memory_free_gb_before": 7.1,
+ "memory_floor_gb": 4.0,
+ "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+ "training_universe": {
+  "dollar_volume_floor_usd_per_day": 3000000.0,
+  "min_close_usd": 5.0,
+  "rows_before": 925757,
+  "rows_after": 530447,
+  "share_kept": 0.573,
+  "months_after": 310
+ },
+ "n_features": 50,
+ "feature_note": "dataset.feature_columns() (49) plus prior_1m, appended by fit_predict_proba -- exactly what run_lgbm_clf passes",
+ "refit_clocks": {
+  "monthly": {
+   "n_boundaries": 252,
+   "first": "2004-01-01",
+   "last": "2024-12-01"
+  },
+  "quarterly": {
+   "n_boundaries": 84,
+   "first": "2004-01-01",
+   "last": "2024-10-01"
+  },
+  "annual": {
+   "n_boundaries": 21,
+   "first": "2004-01-01",
+   "last": "2024-01-01"
+  },
+  "frozen_once": {
+   "n_boundaries": 1,
+   "first": "2004-01-01",
+   "last": "2004-01-01"
+  }
+ },
+ "risk_free_leg": {
+  "months_built": 309,
+  "months_missing": [
+   "2024-12"
+  ],
+  "mean_monthly": 0.001553,
+  "annualised_12x": 0.01864,
+  "declared": "0.0 on the months that could not be built, and they are named above -- never silently zero-filled",
+  "source": "learner.benchmark.cash() -- pinned FF daily RF, OFFLINE"
+ },
+ "fits": {
+  "monthly": {
+   "cadence": "monthly",
+   "n_refits": 246,
+   "n_refits_skipped_for_memory": 5,
+   "skipped": [
+    {
+     "cutoff": "2024-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.12 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-08-01",
+     "SKIPPED": true,
+     "why": "free memory 1.96 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-09-01",
+     "SKIPPED": true,
+     "why": "free memory 1.79 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-10-01",
+     "SKIPPED": true,
+     "why": "free memory 1.75 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-11-01",
+     "SKIPPED": true,
+     "why": "free memory 1.61 GB below the 4.0 GB floor"
+    }
+   ],
+   "rows_predicted": 444966,
+   "wall_seconds": 535.9,
+   "first_cutoff": "2004-01-01",
+   "last_cutoff": "2024-11-01",
+   "mean_seconds_per_fit": 2.15,
+   "folds": [
+    {
+     "cutoff": "2004-01-01",
+     "n_train": 72072,
+     "n_test": 1571,
+     "best_iteration": 1,
+     "seconds": 0.36
+    },
+    {
+     "cutoff": "2004-02-01",
+     "n_train": 73621,
+     "n_test": 1647,
+     "best_iteration": 1,
+     "seconds": 0.34
+    },
+    {
+     "cutoff": "2004-03-01",
+     "n_train": 75192,
+     "n_test": 1627,
+     "best_iteration": 1,
+     "seconds": 0.38
+    },
+    {
+     "cutoff": "2004-04-01",
+     "n_train": 76840,
+     "n_test": 1628,
+     "best_iteration": 1,
+     "seconds": 0.39
+    },
+    {
+     "cutoff": "2004-05-01",
+     "n_train": 78465,
+     "n_test": 1620,
+     "best_iteration": 1,
+     "seconds": 0.42
+    },
+    {
+     "cutoff": "2004-06-01",
+     "n_train": 80092,
+     "n_test": 1554,
+     "best_iteration": 1,
+     "seconds": 0.43
+    },
+    {
+     "cutoff": "2024-06-01",
+     "n_train": 514756,
+     "n_test": 1910,
+     "best_iteration": 172,
+     "seconds": 6.68
+    },
+    {
+     "cutoff": "2024-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.12 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-08-01",
+     "SKIPPED": true,
+     "why": "free memory 1.96 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-09-01",
+     "SKIPPED": true,
+     "why": "free memory 1.79 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-10-01",
+     "SKIPPED": true,
+     "why": "free memory 1.75 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2024-11-01",
+     "SKIPPED": true,
+     "why": "free memory 1.61 GB below the 4.0 GB floor"
+    }
+   ],
+   "folds_note": "every fold for annual/frozen_once; first and last six only for the monthly and quarterly sweeps, which have 252 and 84"
+  },
+  "quarterly": {
+   "cadence": "quarterly",
+   "n_refits": 32,
+   "n_refits_skipped_for_memory": 52,
+   "skipped": [
+    {
+     "cutoff": "2004-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.65 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2004-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.67 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2004-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.65 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2004-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.66 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2005-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.64 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2005-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.63 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2005-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.62 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2005-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.61 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2006-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.6 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2006-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.58 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2006-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.57 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2006-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.55 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2007-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.54 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2007-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.55 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2007-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.54 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2007-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.54 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2008-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.51 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2008-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.5 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2008-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.48 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2008-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.46 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2009-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.45 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2009-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.43 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2009-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.4 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2009-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.38 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2010-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.4 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2010-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.38 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2010-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.36 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2010-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.33 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2011-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.31 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2011-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.3 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2011-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.27 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2011-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.25 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2012-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.23 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2012-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.26 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2012-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.25 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2012-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.21 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2013-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.19 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2013-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.17 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2013-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.16 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2013-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.14 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2014-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.11 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2014-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.05 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2014-07-01",
+     "SKIPPED": true,
+     "why": "free memory 1.95 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2014-10-01",
+     "SKIPPED": true,
+     "why": "free memory 1.83 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2015-01-01",
+     "SKIPPED": true,
+     "why": "free memory 1.73 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2015-04-01",
+     "SKIPPED": true,
+     "why": "free memory 1.61 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2015-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.14 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2015-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.16 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2016-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.95 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2016-04-01",
+     "SKIPPED": true,
+     "why": "free memory 3.3 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2016-07-01",
+     "SKIPPED": true,
+     "why": "free memory 3.63 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2016-10-01",
+     "SKIPPED": true,
+     "why": "free memory 3.92 GB below the 4.0 GB floor"
+    }
+   ],
+   "rows_predicted": 183773,
+   "wall_seconds": 115.8,
+   "first_cutoff": "2004-01-01",
+   "last_cutoff": "2024-10-01",
+   "mean_seconds_per_fit": 3.53,
+   "folds": [
+    {
+     "cutoff": "2004-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.65 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2004-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.67 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2004-07-01",
+     "SKIPPED": true,
+     "why": "free memory 2.65 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2004-10-01",
+     "SKIPPED": true,
+     "why": "free memory 2.66 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2005-01-01",
+     "SKIPPED": true,
+     "why": "free memory 2.64 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2005-04-01",
+     "SKIPPED": true,
+     "why": "free memory 2.63 GB below the 4.0 GB floor"
+    },
+    {
+     "cutoff": "2023-07-01",
+     "n_train": 493898,
+     "n_test": 5669,
+     "best_iteration": 56,
+     "seconds": 3.24
+    },
+    {
+     "cutoff": "2023-10-01",
+     "n_train": 499631,
+     "n_test": 5579,
+     "best_iteration": 103,
+     "seconds": 4.21
+    },
+    {
+     "cutoff": "2024-01-01",
+     "n_train": 505175,
+     "n_test": 5779,
+     "best_iteration": 1,
+     "seconds": 2.34
+    },
+    {
+     "cutoff": "2024-04-01",
+     "n_train": 510896,
+     "n_test": 5730,
+     "best_iteration": 131,
+     "seconds": 5.16
+    },
+    {
+     "cutoff": "2024-07-01",
+     "n_train": 516676,
+     "n_test": 5864,
+     "best_iteration": 159,
+     "seconds": 5.8
+    },
+    {
+     "cutoff": "2024-10-01",
+     "n_train": 522513,
+     "n_test": 3878,
+     "best_iteration": 114,
+     "seconds": 5.24
+    }
+   ],
+   "folds_note": "every fold for annual/frozen_once; first and last six only for the monthly and quarterly sweeps, which have 252 and 84"
+  },
+  "annual": {
+   "cadence": "annual",
+   "n_refits": 21,
+   "n_refits_skipped_for_memory": 0,
+   "skipped": [],
+   "rows_predicted": 454708,
+   "wall_seconds": 46.7,
+   "first_cutoff": "2004-01-01",
+   "last_cutoff": "2024-01-01",
+   "mean_seconds_per_fit": 2.19,
+   "folds": [
+    {
+     "cutoff": "2004-01-01",
+     "n_train": 72072,
+     "n_test": 19192,
+     "best_iteration": 1,
+     "seconds": 0.45
+    },
+    {
+     "cutoff": "2005-01-01",
+     "n_train": 91102,
+     "n_test": 20766,
+     "best_iteration": 1,
+     "seconds": 0.51
+    },
+    {
+     "cutoff": "2006-01-01",
+     "n_train": 111737,
+     "n_test": 22862,
+     "best_iteration": 4,
+     "seconds": 0.61
+    },
+    {
+     "cutoff": "2007-01-01",
+     "n_train": 134498,
+     "n_test": 24223,
+     "best_iteration": 1,
+     "seconds": 0.78
+    },
+    {
+     "cutoff": "2008-01-01",
+     "n_train": 158731,
+     "n_test": 21216,
+     "best_iteration": 77,
+     "seconds": 1.57
+    },
+    {
+     "cutoff": "2009-01-01",
+     "n_train": 180403,
+     "n_test": 17845,
+     "best_iteration": 4,
+     "seconds": 1.13
+    },
+    {
+     "cutoff": "2010-01-01",
+     "n_train": 198199,
+     "n_test": 19248,
+     "best_iteration": 1,
+     "seconds": 1.17
+    },
+    {
+     "cutoff": "2011-01-01",
+     "n_train": 217322,
+     "n_test": 19938,
+     "best_iteration": 47,
+     "seconds": 1.63
+    },
+    {
+     "cutoff": "2012-01-01",
+     "n_train": 237311,
+     "n_test": 18940,
+     "best_iteration": 28,
+     "seconds": 1.52
+    },
+    {
+     "cutoff": "2013-01-01",
+     "n_train": 256290,
+     "n_test": 20323,
+     "best_iteration": 5,
+     "seconds": 1.4
+    },
+    {
+     "cutoff": "2014-01-01",
+     "n_train": 276362,
+     "n_test": 22254,
+     "best_iteration": 25,
+     "seconds": 1.79
+    },
+    {
+     "cutoff": "2015-01-01",
+     "n_train": 298533,
+     "n_test": 22568,
+     "best_iteration": 95,
+     "seconds": 2.91
+    },
+    {
+     "cutoff": "2016-01-01",
+     "n_train": 321134,
+     "n_test": 21560,
+     "best_iteration": 106,
+     "seconds": 3.31
+    },
+    {
+     "cutoff": "2017-01-01",
+     "n_train": 342665,
+     "n_test": 22063,
+     "best_iteration": 3,
+     "seconds": 1.76
+    },
+    {
+     "cutoff": "2018-01-01",
+     "n_train": 364727,
+     "n_test": 22683,
+     "best_iteration": 215,
+     "seconds": 5.21
+    },
+    {
+     "cutoff": "2019-01-01",
+     "n_train": 387442,
+     "n_test": 21948,
+     "best_iteration": 9,
+     "seconds": 2.08
+    },
+    {
+     "cutoff": "2020-01-01",
+     "n_train": 409385,
+     "n_test": 22372,
+     "best_iteration": 38,
+     "seconds": 3.0
+    },
+    {
+     "cutoff": "2021-01-01",
+     "n_train": 431596,
+     "n_test": 26394,
+     "best_iteration": 135,
+     "seconds": 4.86
+    },
+    {
+     "cutoff": "2022-01-01",
+     "n_train": 457739,
+     "n_test": 24306,
+     "best_iteration": 147,
+     "seconds": 5.09
+    },
+    {
+     "cutoff": "2023-01-01",
+     "n_train": 482400,
+     "n_test": 22756,
+     "best_iteration": 20,
+     "seconds": 2.9
+    },
+    {
+     "cutoff": "2024-01-01",
+     "n_train": 505175,
+     "n_test": 21251,
+     "best_iteration": 1,
+     "seconds": 2.38
+    }
+   ],
+   "folds_note": "every fold for annual/frozen_once; first and last six only for the monthly and quarterly sweeps, which have 252 and 84"
+  },
+  "frozen_once": {
+   "cadence": "frozen_once",
+   "n_refits": 1,
+   "n_refits_skipped_for_memory": 0,
+   "skipped": [],
+   "rows_predicted": 454708,
+   "wall_seconds": 0.8,
+   "first_cutoff": "2004-01-01",
+   "last_cutoff": "2004-01-01",
+   "mean_seconds_per_fit": 0.75,
+   "folds": [
+    {
+     "cutoff": "2004-01-01",
+     "n_train": 72072,
+     "n_test": 454708,
+     "best_iteration": 1,
+     "seconds": 0.75
+    }
+   ],
+   "folds_note": "every fold for annual/frozen_once; first and last six only for the monthly and quarterly sweeps, which have 252 and 84"
+  }
+ },
+ "memory_free_gb_after_fits": 7.57,
+ "reproduction_gate": {
+  "claim": "the annual cadence reproduces the lgbm_clf column in W3b's stage parquet -- same pipeline, same folds",
+  "rows_compared": 454708,
+  "rows_only_in_the_stage_file": 0,
+  "rows_only_in_this_job": 0,
+  "max_abs_deviation": 3e-08,
+  "mean_abs_deviation": 1e-08,
+  "pearson_correlation": 1.0,
+  "spearman_correlation": 1.0,
+  "storage_note": "W3b's stage parquet stores predictions as float32; the round-trip precision near a probability of 0.5 is ~6e-8, so a max deviation at that scale is the CAST, not the model.",
+  "verdict": "EXACT TO FLOAT32 STORAGE PRECISION",
+  "why_it_matters": "if annual does NOT reproduce the incumbent, the four cadences are still internally comparable (one pipeline, four clocks) but no row of this table can be quoted as a statement about the book the repo actually trades."
+ },
+ "cells": {
+  "monthly|10bps": {
+   "months": 246,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 444966,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.904,
+   "terminal_wealth_net": 27.17,
+   "terminal_wealth_gross": 42.1527,
+   "terminal_wealth_market_same_months": 12.8885,
+   "cagr_net": 0.1748,
+   "cagr_market": 0.1328,
+   "mean_monthly_excess": 0.00361,
+   "annualised_excess": 0.0433,
+   "t_stat_paired_vs_market": 1.682,
+   "months_beating_market": 0.5528,
+   "worst_month_net": -0.2149,
+   "hit_rate": 0.6301,
+   "PRIMARY_after_cost_terminal_wealth": 27.17,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0211,
+    "t_beta_minus_1_hac": 0.261,
+    "annualised_pct": 4.07,
+    "t_paired": 1.58,
+    "p_one_sided": 0.05703
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.335,
+    "t_paired": 1.682
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1519,
+     "t": -0.513,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4949,
+     "t": 1.793,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 102,
+     "mean_pct": 0.4237,
+     "t": 0.995,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "n_refits": 246
+  },
+  "monthly|25bps": {
+   "months": 246,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 444966,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.904,
+   "terminal_wealth_net": 14.0388,
+   "terminal_wealth_gross": 42.1527,
+   "terminal_wealth_market_same_months": 12.8885,
+   "cagr_net": 0.1375,
+   "cagr_market": 0.1328,
+   "mean_monthly_excess": 0.0009,
+   "annualised_excess": 0.0108,
+   "t_stat_paired_vs_market": 0.418,
+   "months_beating_market": 0.4919,
+   "worst_month_net": -0.2179,
+   "hit_rate": 0.626,
+   "PRIMARY_after_cost_terminal_wealth": 14.0388,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0203,
+    "t_beta_minus_1_hac": 0.252,
+    "annualised_pct": 0.824,
+    "t_paired": 0.32,
+    "p_one_sided": 0.37455
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 1.079,
+    "t_paired": 0.418
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.4245,
+     "t": -1.435,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.2124,
+     "t": 0.77,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 102,
+     "mean_pct": 0.1654,
+     "t": 0.388,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "n_refits": 246
+  },
+  "quarterly|10bps": {
+   "months": 95,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 183773,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.875,
+   "terminal_wealth_net": 6.0121,
+   "terminal_wealth_gross": 7.08,
+   "terminal_wealth_market_same_months": 3.723,
+   "cagr_net": 0.2543,
+   "cagr_market": 0.1806,
+   "mean_monthly_excess": 0.00606,
+   "annualised_excess": 0.0728,
+   "t_stat_paired_vs_market": 1.431,
+   "months_beating_market": 0.5684,
+   "worst_month_net": -0.2459,
+   "hit_rate": 0.7158,
+   "PRIMARY_after_cost_terminal_wealth": 6.0121,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0845,
+    "t_beta_minus_1_hac": 0.668,
+    "annualised_pct": 5.872,
+    "t_paired": 1.163,
+    "p_one_sided": 0.12246
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.276,
+    "t_paired": 1.431
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2008-2015": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2016-2024": {
+     "months": 95,
+     "mean_pct": 0.4894,
+     "t": 1.163,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 1,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": false,
+    "dominant_sign": 1
+   },
+   "n_refits": 32
+  },
+  "quarterly|25bps": {
+   "months": 95,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 183773,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.875,
+   "terminal_wealth_net": 4.7019,
+   "terminal_wealth_gross": 7.08,
+   "terminal_wealth_market_same_months": 3.723,
+   "cagr_net": 0.216,
+   "cagr_market": 0.1806,
+   "mean_monthly_excess": 0.00344,
+   "annualised_excess": 0.0413,
+   "t_stat_paired_vs_market": 0.811,
+   "months_beating_market": 0.5158,
+   "worst_month_net": -0.2489,
+   "hit_rate": 0.6947,
+   "PRIMARY_after_cost_terminal_wealth": 4.7019,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0843,
+    "t_beta_minus_1_hac": 0.668,
+    "annualised_pct": 2.727,
+    "t_paired": 0.539,
+    "p_one_sided": 0.2949
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.126,
+    "t_paired": 0.811
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2008-2015": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2016-2024": {
+     "months": 95,
+     "mean_pct": 0.2272,
+     "t": 0.539,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 1,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": false,
+    "dominant_sign": 1
+   },
+   "n_refits": 32
+  },
+  "annual|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.889,
+   "terminal_wealth_net": 22.6076,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1608,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00283,
+   "annualised_excess": 0.0339,
+   "t_stat_paired_vs_market": 1.225,
+   "months_beating_market": 0.5259,
+   "worst_month_net": -0.2746,
+   "hit_rate": 0.6454,
+   "PRIMARY_after_cost_terminal_wealth": 22.6076,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1782,
+    "t_beta_minus_1_hac": 2.03,
+    "annualised_pct": 1.126,
+    "t_paired": 0.418,
+    "p_one_sided": 0.33794
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.393,
+    "t_paired": 1.225
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1331,
+     "t": -0.415,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.4214,
+     "t": 1.227,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0983,
+     "t": -0.244,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "n_refits": 21
+  },
+  "annual|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.889,
+   "terminal_wealth_net": 11.6417,
+   "terminal_wealth_gross": 35.154,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.1245,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": 0.00016,
+   "annualised_excess": 0.0019,
+   "t_stat_paired_vs_market": 0.069,
+   "months_beating_market": 0.4701,
+   "worst_month_net": -0.2774,
+   "hit_rate": 0.6375,
+   "PRIMARY_after_cost_terminal_wealth": 11.6417,
+   "PRIMARY_beta_matched": {
+    "beta": 1.178,
+    "t_beta_minus_1_hac": 2.028,
+    "annualised_pct": -2.073,
+    "t_paired": -0.77,
+    "p_one_sided": 0.7794
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 0.191,
+    "t_paired": 0.069
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3975,
+     "t": -1.236,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.142,
+     "t": 0.414,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3544,
+     "t": -0.881,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "n_refits": 21
+  },
+  "frozen_once|10bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.8,
+   "terminal_wealth_net": 6.7658,
+   "terminal_wealth_gross": 10.0841,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.0957,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": -0.00307,
+   "annualised_excess": -0.0369,
+   "t_stat_paired_vs_market": -1.891,
+   "months_beating_market": 0.4303,
+   "worst_month_net": -0.3178,
+   "hit_rate": 0.6255,
+   "PRIMARY_after_cost_terminal_wealth": 6.7658,
+   "PRIMARY_beta_matched": {
+    "beta": 0.8425,
+    "t_beta_minus_1_hac": -1.68,
+    "annualised_pct": -1.681,
+    "t_paired": -0.902,
+    "p_one_sided": 0.81644
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": -3.685,
+    "t_paired": -1.891
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3116,
+     "t": -1.202,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0979,
+     "t": 0.365,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2767,
+     "t": -1.116,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "n_refits": 1
+  },
+  "frozen_once|25bps": {
+   "months": 251,
+   "k": 50,
+   "weight": "vw",
+   "cost_bps_per_side": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 454708,
+   "mean_names_per_month": 50.0,
+   "mean_turnover": 0.8,
+   "terminal_wealth_net": 3.7137,
+   "terminal_wealth_gross": 10.0841,
+   "terminal_wealth_market_same_months": 14.3778,
+   "cagr_net": 0.0647,
+   "cagr_market": 0.1359,
+   "mean_monthly_excess": -0.00547,
+   "annualised_excess": -0.0657,
+   "t_stat_paired_vs_market": -3.365,
+   "months_beating_market": 0.4064,
+   "worst_month_net": -0.3201,
+   "hit_rate": 0.6056,
+   "PRIMARY_after_cost_terminal_wealth": 3.7137,
+   "PRIMARY_beta_matched": {
+    "beta": 0.8426,
+    "t_beta_minus_1_hac": -1.678,
+    "annualised_pct": -4.564,
+    "t_paired": -2.445,
+    "p_one_sided": 0.99276
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": -6.566,
+    "t_paired": -3.365
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.538,
+     "t": -2.072,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.1397,
+     "t": -0.52,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.5254,
+     "t": -2.117,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "n_refits": 1
+  }
+ },
+ "ANSWER": {
+  "table": {
+   "monthly|10bps": {
+    "cadence": "monthly",
+    "n_refits": 246,
+    "after_cost_terminal_wealth": 27.17,
+    "market_terminal_wealth_same_months": 12.8885,
+    "beta_matched_annualised_pct": 4.07,
+    "t": 1.58,
+    "raw_market_annualised_pct": 4.335,
+    "mean_turnover": 0.904,
+    "months": 246,
+    "eras_positive": 2
+   },
+   "monthly|25bps": {
+    "cadence": "monthly",
+    "n_refits": 246,
+    "after_cost_terminal_wealth": 14.0388,
+    "market_terminal_wealth_same_months": 12.8885,
+    "beta_matched_annualised_pct": 0.824,
+    "t": 0.32,
+    "raw_market_annualised_pct": 1.079,
+    "mean_turnover": 0.904,
+    "months": 246,
+    "eras_positive": 2
+   },
+   "quarterly|10bps": {
+    "cadence": "quarterly",
+    "n_refits": 32,
+    "after_cost_terminal_wealth": 6.0121,
+    "market_terminal_wealth_same_months": 3.723,
+    "beta_matched_annualised_pct": 5.872,
+    "t": 1.163,
+    "raw_market_annualised_pct": 7.276,
+    "mean_turnover": 0.875,
+    "months": 95,
+    "eras_positive": 1
+   },
+   "quarterly|25bps": {
+    "cadence": "quarterly",
+    "n_refits": 32,
+    "after_cost_terminal_wealth": 4.7019,
+    "market_terminal_wealth_same_months": 3.723,
+    "beta_matched_annualised_pct": 2.727,
+    "t": 0.539,
+    "raw_market_annualised_pct": 4.126,
+    "mean_turnover": 0.875,
+    "months": 95,
+    "eras_positive": 1
+   },
+   "annual|10bps": {
+    "cadence": "annual",
+    "n_refits": 21,
+    "after_cost_terminal_wealth": 22.6076,
+    "market_terminal_wealth_same_months": 14.3778,
+    "beta_matched_annualised_pct": 1.126,
+    "t": 0.418,
+    "raw_market_annualised_pct": 3.393,
+    "mean_turnover": 0.889,
+    "months": 251,
+    "eras_positive": 1
+   },
+   "annual|25bps": {
+    "cadence": "annual",
+    "n_refits": 21,
+    "after_cost_terminal_wealth": 11.6417,
+    "market_terminal_wealth_same_months": 14.3778,
+    "beta_matched_annualised_pct": -2.073,
+    "t": -0.77,
+    "raw_market_annualised_pct": 0.191,
+    "mean_turnover": 0.889,
+    "months": 251,
+    "eras_positive": 1
+   },
+   "frozen_once|10bps": {
+    "cadence": "frozen_once",
+    "n_refits": 1,
+    "after_cost_terminal_wealth": 6.7658,
+    "market_terminal_wealth_same_months": 14.3778,
+    "beta_matched_annualised_pct": -1.681,
+    "t": -0.902,
+    "raw_market_annualised_pct": -3.685,
+    "mean_turnover": 0.8,
+    "months": 251,
+    "eras_positive": 1
+   },
+   "frozen_once|25bps": {
+    "cadence": "frozen_once",
+    "n_refits": 1,
+    "after_cost_terminal_wealth": 3.7137,
+    "market_terminal_wealth_same_months": 14.3778,
+    "beta_matched_annualised_pct": -4.564,
+    "t": -2.445,
+    "raw_market_annualised_pct": -6.566,
+    "mean_turnover": 0.8,
+    "months": 251,
+    "eras_positive": 0
+   }
+  },
+  "by_cost_rate": {
+   "10bps": {
+    "best_cadence_by_after_cost_terminal_wealth": "monthly|10bps",
+    "terminal_wealth_by_cadence": {
+     "monthly": 27.17,
+     "quarterly": 6.0121,
+     "annual": 22.6076,
+     "frozen_once": 6.7658
+    },
+    "beta_matched_excess_by_cadence": {
+     "monthly": 4.07,
+     "quarterly": 5.872,
+     "annual": 1.126,
+     "frozen_once": -1.681
+    },
+    "turnover_by_cadence": {
+     "monthly": 0.904,
+     "quarterly": 0.875,
+     "annual": 0.889,
+     "frozen_once": 0.8
+    },
+    "monthly_minus_frozen_terminal_wealth": 20.404,
+    "monthly_minus_frozen_beta_matched_pp": 5.751,
+    "refits_bought": "246 refits against 1",
+    "annual_minus_frozen_beta_matched_pp": 2.807
+   },
+   "25bps": {
+    "best_cadence_by_after_cost_terminal_wealth": "monthly|25bps",
+    "terminal_wealth_by_cadence": {
+     "monthly": 14.0388,
+     "quarterly": 4.7019,
+     "annual": 11.6417,
+     "frozen_once": 3.7137
+    },
+    "beta_matched_excess_by_cadence": {
+     "monthly": 0.824,
+     "quarterly": 2.727,
+     "annual": -2.073,
+     "frozen_once": -4.564
+    },
+    "turnover_by_cadence": {
+     "monthly": 0.904,
+     "quarterly": 0.875,
+     "annual": 0.889,
+     "frozen_once": 0.8
+    },
+    "monthly_minus_frozen_terminal_wealth": 10.325,
+    "monthly_minus_frozen_beta_matched_pp": 5.388,
+    "refits_bought": "246 refits against 1",
+    "annual_minus_frozen_beta_matched_pp": 2.491
+   }
+  },
+  "reading": "the question is `monthly_minus_frozen_*`. A model fitted once in 2004 and never touched is the null; if it earns what the monthly refit earns, the refit is ceremony and the model's information is STATIC. Note that all four cadences share one pipeline, so this compares refit frequency, not model families."
+ },
+ "family": {
+  "size_cadences": 4,
+  "size_cadences_x_costs": 8,
+  "size_actually_graded": 8,
+  "family_min_p_one_sided": 0.05703,
+  "family_max_p_one_sided": 0.99276,
+  "holm_adjusted": {
+   "monthly|10bps": 0.45624,
+   "quarterly|10bps": 0.85722,
+   "quarterly|25bps": 1.0,
+   "annual|10bps": 1.0,
+   "monthly|25bps": 1.0,
+   "annual|25bps": 1.0,
+   "frozen_once|10bps": 1.0,
+   "frozen_once|25bps": 1.0
+  }
+ },
+ "inference_by_cell": {
+  "monthly|10bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.699,
+   "dsr_over_8_cells": 0.5467,
+   "mde_annual_excess_at_t_2": 0.05151,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": null
+  },
+  "monthly|25bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.2319,
+   "dsr_over_8_cells": 0.1272,
+   "mde_annual_excess_at_t_2": 0.05153,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": null
+  },
+  "quarterly|10bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.5413,
+   "dsr_over_8_cells": 0.3821,
+   "mde_annual_excess_at_t_2": 0.10101,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": null
+  },
+  "quarterly|25bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.3034,
+   "dsr_over_8_cells": 0.1787,
+   "mde_annual_excess_at_t_2": 0.10115,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": null
+  },
+  "annual|10bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.2606,
+   "dsr_over_8_cells": 0.1463,
+   "mde_annual_excess_at_t_2": 0.05386,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": 0.4857
+  },
+  "annual|25bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.0373,
+   "dsr_over_8_cells": 0.0146,
+   "mde_annual_excess_at_t_2": 0.05384,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": 0.3429
+  },
+  "frozen_once|10bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.0243,
+   "dsr_over_8_cells": 0.0086,
+   "mde_annual_excess_at_t_2": 0.03728,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": 0.4857
+  },
+  "frozen_once|25bps": {
+   "dsr_over_the_4_cell_cadence_family": 0.0002,
+   "dsr_over_8_cells": 0.0,
+   "mde_annual_excess_at_t_2": 0.03733,
+   "power_verdict": null,
+   "pbo_within_the_cost_rate": 0.3429
+  }
+ },
+ "memory_free_gb_after": 8.43,
+ "headline": "reproduction gate: EXACT TO FLOAT32 STORAGE PRECISION. 10bps: TW by cadence {'monthly': 27.17, 'quarterly': 6.0121, 'annual': 22.6076, 'frozen_once': 6.7658}, monthly-minus-frozen 5.751pp beta-matched | 25bps: TW by cadence {'monthly': 14.0388, 'quarterly': 4.7019, 'annual': 11.6417, 'frozen_once': 3.7137}, monthly-minus-frozen 5.388pp beta-matched",
+ "wall_seconds": 706.7,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_a2_retrain_cadence.py"
+  ],
+  "resolved_config": {
+   "CADENCES": [
+    "monthly",
+    "quarterly",
+    "annual",
+    "frozen_once"
+   ],
+   "COSTS": [
+    10.0,
+    25.0
+   ],
+   "K": 50,
+   "WEIGHT": "vw",
+   "HORIZON": 1,
+   "FIRST_TEST_YEAR": 2004,
+   "LAST_TEST_YEAR": 2024,
+   "MIN_TRAIN_MONTHS": 24,
+   "MIN_FREE_GB": 4.0,
+   "NW_LAG": 4,
+   "FAMILY_CADENCES": 4,
+   "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\labor_day_lab_2026-09-07\\A2_retrain_cadence_run01.json"
+  },
+  "_inputs_opened": [
+   {
+    "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\train_table_long.parquet",
+    "exists": true,
+    "bytes": 418154944,
+    "mtime_utc": "2026-09-05T05:51:44+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   },
+   {
+    "path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\aegis_w3b_stage\\w3b_pred_incumbents.parquet",
+    "exists": true,
+    "bytes": 6225813,
+    "mtime_utc": "2026-09-05T14:24:06+00:00",
+    "sha256": "NOT HASHED (size+mtime only; see note)"
+   }
+  ],
+  "git_commit": "c6dd565",
+  "python": "3.12.10",
+  "generated_utc": "2026-09-05T15:41:16+00:00"
+ },
+ "generated_utc": "2026-09-05T15:41:16+00:00"
+}

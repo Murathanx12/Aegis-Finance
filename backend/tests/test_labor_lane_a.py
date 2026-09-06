@@ -398,3 +398,98 @@ def test_a4_reports_both_cost_rates_everywhere():
     rates = {c["cost_bps_per_side"] for c in rec["cells"].values()
              if "cost_bps_per_side" in c}
     assert rates == {10.0, 25.0}, f"costs are never omitted; got {rates}"
+
+
+# ------------------------------------------------------------------------- A2
+
+A2 = pytest.importorskip("scripts.labor_a2_retrain_cadence")
+
+
+def test_a2_the_refit_clocks_have_the_counts_they_claim():
+    assert len(A2.cutoffs("annual")) == 21          # 2004..2024
+    assert len(A2.cutoffs("quarterly")) == 21 * 4
+    assert len(A2.cutoffs("monthly")) == 21 * 12
+    assert len(A2.cutoffs("frozen_once")) == 1
+    assert A2.cutoffs("frozen_once")[0] == pd.Timestamp("2004-01-01")
+
+
+def test_a2_unknown_cadence_raises_rather_than_defaulting():
+    with pytest.raises(ValueError):
+        A2.cutoffs("fortnightly")
+
+
+def test_a2_no_training_row_matures_after_its_own_cutoff():
+    """THE LEAKAGE CHECK. A row whose 1m target matures ON or AFTER the cutoff
+    would hand the test window part of its own future."""
+    n = 400
+    entry = pd.date_range("2000-01-15", periods=n, freq="MS")
+    df = pd.DataFrame({
+        "entry_date": entry,
+        "mat_date_1m": entry + pd.Timedelta(days=30),
+        "month": entry.strftime("%Y-%m"),
+        "excess_vw_1m": np.linspace(-0.1, 0.1, n),
+    })
+    seen = 0
+    for c, tr, te in A2.folds(df, "annual"):
+        assert (df.loc[tr, "mat_date_1m"] < c).all(), f"leak at cutoff {c}"
+        assert (df.loc[te, "entry_date"] >= c).all()
+        seen += 1
+    assert seen > 0
+
+
+def test_a2_frozen_once_has_exactly_one_fold_covering_the_whole_test_window():
+    n = 400
+    entry = pd.date_range("2000-01-15", periods=n, freq="MS")
+    df = pd.DataFrame({
+        "entry_date": entry,
+        "mat_date_1m": entry + pd.Timedelta(days=30),
+        "month": entry.strftime("%Y-%m"),
+        "excess_vw_1m": np.linspace(-0.1, 0.1, n),
+    })
+    got = list(A2.folds(df, "frozen_once"))
+    assert len(got) == 1
+    c, tr, te = got[0]
+    assert c == pd.Timestamp("2004-01-01")
+    # its test side runs to the end of the sample, not to the next January
+    assert df.loc[te, "entry_date"].max() >= pd.Timestamp("2010-01-01")
+
+
+def test_a2_answer_computes_monthly_minus_frozen():
+    cells = {}
+    for cad, tw, ex in (("monthly", 30.0, 4.0), ("frozen_once", 10.0, 1.0)):
+        cells[f"{cad}|10bps"] = {
+            "terminal_wealth_net": tw, "terminal_wealth_market_same_months": 14.0,
+            "mean_turnover": 0.9, "months": 251,
+            "PRIMARY_beta_matched": {"annualised_pct": ex, "t_paired": 1.0},
+            "SECONDARY_raw_market": {"annualised_pct": ex + 2},
+            "era_table_on_the_beta_matched_excess": {"eras_with_a_positive_mean": 3}}
+    got = A2._answer(cells, {"monthly": {"n_refits": 252}, "frozen_once": {"n_refits": 1}})
+    b = got["by_cost_rate"]["10bps"]
+    assert b["monthly_minus_frozen_terminal_wealth"] == pytest.approx(20.0)
+    assert b["monthly_minus_frozen_beta_matched_pp"] == pytest.approx(3.0)
+    assert b["refits_bought"] == "252 refits against 1"
+
+
+def test_a2_receipt_reproduction_gate_is_reported_as_numbers_not_a_boolean():
+    rec = _receipt("A2_retrain_cadence_run01.json")
+    if rec is None or "reproduction_gate" not in rec:
+        pytest.skip("A2 receipt not present")
+    rg = rec["reproduction_gate"]
+    if rg.get("verdict") == "CANNOT DETERMINE":
+        pytest.skip("reproduction gate could not run")
+    for key in ("rows_compared", "max_abs_deviation", "pearson_correlation"):
+        assert key in rg
+    assert rg["verdict"] in {"BIT-EXACT", "EXACT TO FLOAT32 STORAGE PRECISION",
+                            "CLOSE BUT NOT EXACT", "DIFFERENT"}
+
+
+def test_a2_receipt_names_any_refit_skipped_for_memory():
+    """A fit skipped for memory silently would make one cadence a different
+    experiment from the others. It must be counted and named."""
+    rec = _receipt("A2_retrain_cadence_run01.json")
+    if rec is None or "fits" not in rec:
+        pytest.skip("A2 receipt not present")
+    for cad, meta in rec["fits"].items():
+        assert "n_refits_skipped_for_memory" in meta
+        if meta["n_refits_skipped_for_memory"]:
+            assert meta["skipped"], f"{cad} skipped fits with no named reason"
