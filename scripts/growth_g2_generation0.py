@@ -548,6 +548,14 @@ def _cpcv_rank_stability(M: np.ndarray, names: list[str], splits) -> dict:
     }
 
 
+def _first(d, *keys):
+    d = d or {}
+    for k in keys:
+        if d.get(k) is not None:
+            return d[k]
+    return None
+
+
 def leaderboard(graded: dict) -> list[dict]:
     rows = []
     for k, v in graded.items():
@@ -568,9 +576,15 @@ def leaderboard(graded: dict) -> list[dict]:
             "admissible_leverage": adm.get("leverage"),
             "tw_at_admissible_leverage": adm.get("terminal_wealth"),
             "p_ruin": (v.get("p_ruin") or {}).get("p_ruin"),
+            # READ EITHER KEY. G3 enlarges the family and names its columns
+            # accordingly (`..._over_gen0_plus_children`, `dsr_over_enlarged_
+            # family`); a reader that only knew G2's names printed None for
+            # every child and the leaderboard's DSR column silently emptied.
             "raw_p": (v.get("significance") or {}).get("raw_p_intercept_hac"),
-            "family_holm_p": (v.get("significance") or {}).get("family_holm_p"),
-            "dsr": (v.get("significance") or {}).get("dsr_over_family"),
+            "family_holm_p": _first(v.get("significance"), "family_holm_p",
+                                    "family_holm_p_over_gen0_plus_children"),
+            "dsr": _first(v.get("significance"), "dsr_over_family",
+                          "dsr_over_enlarged_family"),
             "verdict": v.get("verdict_growth"),
             "months": v.get("months"),
         })

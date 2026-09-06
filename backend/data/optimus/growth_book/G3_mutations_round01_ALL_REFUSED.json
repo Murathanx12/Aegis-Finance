@@ -1,0 +1,1167 @@
+{
+ "job": "G3_mutations",
+ "lane": "G growth book",
+ "licence": "PRODUCT_EXPERIMENT",
+ "question": "do LLM-proposed mutations of the five leading development genomes move the leverage-neutral terminal wealth, and what does the enlarged family cost the deflation?",
+ "declaration_sha256": "0397b9bfae7d53c1333afe89228c962ee08a1cbf81d04a40d5a33216d6a57655",
+ "sealed_era_openings": 0,
+ "sealed_era_touched_by_this_job": false,
+ "llm": {
+  "llm_calls": 1,
+  "llm_spend_usd": 0.004644,
+  "job_cap_usd": 3.0,
+  "model": "deepseek-v4-flash",
+  "prompt_tokens": 1173,
+  "completion_tokens": 3934,
+  "output_sha256": "4798b1ec1a8b3991",
+  "truncated": false,
+  "ledger_before_usd": 0.042198,
+  "ledger_after_usd": 0.046842,
+  "campaign_budget_usd": 30.0,
+  "prompt_chars": 3512,
+  "cap_usd": 3.0,
+  "role": "PROPOSER ONLY \u2014 every number below is computed by code"
+ },
+ "lint_prereg_note": "`scripts/lint_prereg.py` is referenced by `llm_research.generate_hypotheses`'s docstring and DOES NOT EXIST in this repository. The corpse rule is applied directly instead: a `parent_corpse_id` drawn from signal_registry's REJECTED/PERVERSE grades and a `distinct_claim` of >= 5 words, which is `research_daemon.assert_distinct_from_corpses` verbatim.",
+ "corpse_registry": [
+  {
+   "signal_id": "accruals",
+   "evidence_grade": "PERVERSE",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "analyst_target_upside_xs",
+   "evidence_grade": "PERVERSE",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "fda_approval_monthly",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "inst_ownership_level_13f",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "llm_stock_selection",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "momentum_12_1",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "momentum_spillover",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "options_ranking_raw",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "reversal_dip",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "trailing_stop_rule",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  },
+  {
+   "signal_id": "value_btm",
+   "evidence_grade": "REJECTED",
+   "permitted_role": "CLOSED"
+  }
+ ],
+ "parents": [
+  {
+   "genome_id": "lgbm_clf|dd",
+   "beta": 0.7763,
+   "leverage_neutral_tw": 4.431,
+   "raw_tw": 4.4116,
+   "max_drawdown": -0.44503,
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ]
+  },
+  {
+   "genome_id": "quality_mom|dd",
+   "beta": 0.7791,
+   "leverage_neutral_tw": 4.2154,
+   "raw_tw": 4.9241,
+   "max_drawdown": -0.39309,
+   "spec": {
+    "pred_col": "quality_mom",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd"
+   ]
+  },
+  {
+   "genome_id": "quality_mom",
+   "beta": 0.9974,
+   "leverage_neutral_tw": 3.6242,
+   "raw_tw": 4.8689,
+   "max_drawdown": -0.52874,
+   "spec": {
+    "pred_col": "quality_mom",
+    "weight": "vw"
+   },
+   "overlay": []
+  },
+  {
+   "genome_id": "lgbm_clf",
+   "beta": 1.0279,
+   "leverage_neutral_tw": 3.5132,
+   "raw_tw": 4.3891,
+   "max_drawdown": -0.58647,
+   "spec": {
+    "pred_col": "lgbm_clf",
+    "weight": "vw"
+   },
+   "overlay": []
+  },
+  {
+   "genome_id": "mom_vol_scaled_signal|dd+tg",
+   "beta": 0.363,
+   "leverage_neutral_tw": 3.4679,
+   "raw_tw": 2.9611,
+   "max_drawdown": -0.24998,
+   "spec": {
+    "pred_col": "mom_over_vol",
+    "weight": "vw"
+   },
+   "overlay": [
+    "dd",
+    "tg"
+   ]
+  }
+ ],
+ "mutation_grammar": {
+  "pred_col": [
+   "mom_12_1",
+   "mom_over_vol",
+   "quality_mom",
+   "lgbm_clf",
+   "nn_pre_causal_seedmean",
+   "roe_pit",
+   "ret_12m",
+   "vol_60d",
+   "log_market_cap",
+   "prior_1m"
+  ],
+  "k": [
+   10,
+   150
+  ],
+  "weight": [
+   "vw",
+   "ew"
+  ],
+  "hold_k": [
+   11,
+   400
+  ],
+  "overlay": [
+   "dd",
+   "tg",
+   "bsc"
+  ],
+  "dd_lookback_months": [
+   1,
+   12
+  ],
+  "dd_scale": [
+   0.05,
+   0.8
+  ],
+  "dd_floor": [
+   0.0,
+   0.95
+  ],
+  "bsc_lookback_months": [
+   3,
+   24
+  ],
+  "bsc_cap": [
+   0.25,
+   2.0
+  ]
+ },
+ "proposals_returned": 20,
+ "proposals_accepted": 0,
+ "proposals_refused": 20,
+ "refusals": [
+  {
+   "index": 0,
+   "proposal": {
+    "parent_id": "lgbm_clf|dd|10bps",
+    "mutation": {
+     "pred_col": "lgbm_clf",
+     "k": 60,
+     "weight": "vw",
+     "hold_k": 120,
+     "overlay": [
+      "dd",
+      "tg"
+     ],
+     "dd_lookback_months": 6,
+     "dd_scale": 0.3,
+     "dd_floor": 0.2,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "Adding a trend gate to the drawdown-scaled lgbm book should cut the worst left-tail months while keeping beta near 0.78.",
+    "parent_corpse_id": "trailing_stop_rule",
+    "distinct_claim": "This asks for a market-level gate, not a per-stock stop."
+   },
+   "refusal": "parent_id 'lgbm_clf|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 1,
+   "proposal": {
+    "parent_id": "quality_mom|dd|10bps",
+    "mutation": {
+     "pred_col": "quality_mom",
+     "k": 80,
+     "weight": "vw",
+     "hold_k": 160,
+     "overlay": [
+      "dd",
+      "bsc"
+     ],
+     "dd_lookback_months": 3,
+     "dd_scale": 0.5,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 6,
+     "bsc_cap": 1.5
+    },
+    "rationale": "Vol-targeting on top of drawdown scaling should reduce CVaR without sacrificing the quality premium's raw return.",
+    "parent_corpse_id": "momentum_12_1",
+    "distinct_claim": "This asks for a volatility target, not a momentum signal."
+   },
+   "refusal": "parent_id 'quality_mom|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 2,
+   "proposal": {
+    "parent_id": "lgbm_clf|10bps",
+    "mutation": {
+     "pred_col": "lgbm_clf",
+     "k": 40,
+     "weight": "vw",
+     "hold_k": 80,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 12,
+     "dd_scale": 0.2,
+     "dd_floor": 0.5,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A longer drawdown lookback with a higher floor should smooth the overlay's response and preserve more upside in the raw lgbm book.",
+    "parent_corpse_id": "reversal_dip",
+    "distinct_claim": "This asks for a persistent drawdown state, not a short-term reversal."
+   },
+   "refusal": "parent_id 'lgbm_clf|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 3,
+   "proposal": {
+    "parent_id": "quality_mom|10bps",
+    "mutation": {
+     "pred_col": "quality_mom",
+     "k": 100,
+     "weight": "ew",
+     "hold_k": 200,
+     "overlay": [
+      "dd",
+      "tg"
+     ],
+     "dd_lookback_months": 6,
+     "dd_scale": 0.4,
+     "dd_floor": 0.1,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "Equal-weighting the quality book with both drawdown and trend overlays should cut beta below 1 while keeping the quality edge.",
+    "parent_corpse_id": "value_btm",
+    "distinct_claim": "This asks for a quality score, not a value ratio."
+   },
+   "refusal": "parent_id 'quality_mom|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 4,
+   "proposal": {
+    "parent_id": "mom_vol_scaled_signal|dd+tg|10bps",
+    "mutation": {
+     "pred_col": "mom_over_vol",
+     "k": 150,
+     "weight": "vw",
+     "hold_k": 300,
+     "overlay": [
+      "dd",
+      "bsc"
+     ],
+     "dd_lookback_months": 9,
+     "dd_scale": 0.6,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 18,
+     "bsc_cap": 1.2
+    },
+    "rationale": "A wider book with a slower vol target should reduce turnover costs and keep the low-beta momentum edge.",
+    "parent_corpse_id": "momentum_spillover",
+    "distinct_claim": "This asks for own-book drawdown, not cross-sectional spillover."
+   },
+   "refusal": "parent_id 'mom_vol_scaled_signal|dd+tg|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 5,
+   "proposal": {
+    "parent_id": "lgbm_clf|dd|10bps",
+    "mutation": {
+     "pred_col": "nn_pre_causal_seedmean",
+     "k": 50,
+     "weight": "vw",
+     "hold_k": 100,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 4,
+     "dd_scale": 0.25,
+     "dd_floor": 0.3,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "Swapping to the neural net score may diversify the signal while keeping the same drawdown overlay shape.",
+    "parent_corpse_id": "llm_stock_selection",
+    "distinct_claim": "This asks for a causal net, not a language model."
+   },
+   "refusal": "parent_id 'lgbm_clf|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 6,
+   "proposal": {
+    "parent_id": "quality_mom|dd|10bps",
+    "mutation": {
+     "pred_col": "roe_pit",
+     "k": 70,
+     "weight": "vw",
+     "hold_k": 140,
+     "overlay": [
+      "dd",
+      "tg"
+     ],
+     "dd_lookback_months": 8,
+     "dd_scale": 0.35,
+     "dd_floor": 0.15,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "Using the ROE signal with a trend gate should keep the low-beta profile but add a different fundamental tilt.",
+    "parent_corpse_id": "accruals",
+    "distinct_claim": "This asks for profitability, not accrual manipulation."
+   },
+   "refusal": "parent_id 'quality_mom|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 7,
+   "proposal": {
+    "parent_id": "lgbm_clf|10bps",
+    "mutation": {
+     "pred_col": "ret_12m",
+     "k": 30,
+     "weight": "ew",
+     "hold_k": 60,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 2,
+     "dd_scale": 0.7,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A small equal-weight momentum book with aggressive drawdown scaling may produce a very low beta and high leverage-neutral TW.",
+    "parent_corpse_id": "momentum_12_1",
+    "distinct_claim": "This asks for a raw return score, not a risk-adjusted one."
+   },
+   "refusal": "parent_id 'lgbm_clf|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 8,
+   "proposal": {
+    "parent_id": "mom_vol_scaled_signal|dd+tg|10bps",
+    "mutation": {
+     "pred_col": "mom_over_vol",
+     "k": 120,
+     "weight": "ew",
+     "hold_k": 240,
+     "overlay": [
+      "dd",
+      "tg",
+      "bsc"
+     ],
+     "dd_lookback_months": 5,
+     "dd_scale": 0.5,
+     "dd_floor": 0.2,
+     "bsc_lookback_months": 9,
+     "bsc_cap": 1.8
+    },
+    "rationale": "Combining all three overlays on a wide equal-weight book should push the drawdown and CVaR constraints hard while keeping returns.",
+    "parent_corpse_id": "trailing_stop_rule",
+    "distinct_claim": "This asks for three simultaneous risk controls, not one stop."
+   },
+   "refusal": "parent_id 'mom_vol_scaled_signal|dd+tg|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 9,
+   "proposal": {
+    "parent_id": "quality_mom|10bps",
+    "mutation": {
+     "pred_col": "quality_mom",
+     "k": 90,
+     "weight": "vw",
+     "hold_k": 180,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 10,
+     "dd_scale": 0.15,
+     "dd_floor": 0.8,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A very high drawdown floor with a slow lookback should keep the book fully invested most of the time, boosting raw TW.",
+    "parent_corpse_id": "reversal_dip",
+    "distinct_claim": "This asks for a slow de-risking, not a sharp reversal."
+   },
+   "refusal": "parent_id 'quality_mom|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 10,
+   "proposal": {
+    "parent_id": "lgbm_clf|dd|10bps",
+    "mutation": {
+     "pred_col": "lgbm_clf",
+     "k": 45,
+     "weight": "vw",
+     "hold_k": 90,
+     "overlay": [
+      "dd",
+      "bsc"
+     ],
+     "dd_lookback_months": 7,
+     "dd_scale": 0.45,
+     "dd_floor": 0.1,
+     "bsc_lookback_months": 15,
+     "bsc_cap": 0.8
+    },
+    "rationale": "A tighter vol cap should reduce the book's effective beta further, improving the leverage-neutral metric.",
+    "parent_corpse_id": "options_ranking_raw",
+    "distinct_claim": "This asks for a model score, not option-implied ranks."
+   },
+   "refusal": "parent_id 'lgbm_clf|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 11,
+   "proposal": {
+    "parent_id": "quality_mom|dd|10bps",
+    "mutation": {
+     "pred_col": "prior_1m",
+     "k": 110,
+     "weight": "ew",
+     "hold_k": 220,
+     "overlay": [
+      "dd",
+      "tg"
+     ],
+     "dd_lookback_months": 3,
+     "dd_scale": 0.6,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "Using a short-term prior with a wide equal-weight book and trend gate may capture a different low-beta source.",
+    "parent_corpse_id": "momentum_12_1",
+    "distinct_claim": "This asks for a one-month prior, not a twelve-month momentum."
+   },
+   "refusal": "parent_id 'quality_mom|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 12,
+   "proposal": {
+    "parent_id": "lgbm_clf|10bps",
+    "mutation": {
+     "pred_col": "vol_60d",
+     "k": 20,
+     "weight": "vw",
+     "hold_k": 40,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 1,
+     "dd_scale": 0.8,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A tiny low-volatility book with aggressive drawdown scaling should have very low beta and high leverage-neutral TW.",
+    "parent_corpse_id": "reversal_dip",
+    "distinct_claim": "This asks for a volatility sort, not a price reversal."
+   },
+   "refusal": "parent_id 'lgbm_clf|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 13,
+   "proposal": {
+    "parent_id": "mom_vol_scaled_signal|dd+tg|10bps",
+    "mutation": {
+     "pred_col": "mom_over_vol",
+     "k": 130,
+     "weight": "vw",
+     "hold_k": 260,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 11,
+     "dd_scale": 0.2,
+     "dd_floor": 0.6,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A slow, high-floor drawdown overlay should preserve the raw book's returns while still cutting the worst drawdowns.",
+    "parent_corpse_id": "trailing_stop_rule",
+    "distinct_claim": "This asks for a state-dependent scale, not a fixed stop."
+   },
+   "refusal": "parent_id 'mom_vol_scaled_signal|dd+tg|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 14,
+   "proposal": {
+    "parent_id": "quality_mom|10bps",
+    "mutation": {
+     "pred_col": "log_market_cap",
+     "k": 100,
+     "weight": "ew",
+     "hold_k": 200,
+     "overlay": [
+      "dd",
+      "tg",
+      "bsc"
+     ],
+     "dd_lookback_months": 6,
+     "dd_scale": 0.3,
+     "dd_floor": 0.4,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.5
+    },
+    "rationale": "A size-based book with all overlays may provide a low-beta, diversified source that the quality book lacks.",
+    "parent_corpse_id": "value_btm",
+    "distinct_claim": "This asks for a size factor, not a value factor."
+   },
+   "refusal": "parent_id 'quality_mom|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 15,
+   "proposal": {
+    "parent_id": "lgbm_clf|dd|10bps",
+    "mutation": {
+     "pred_col": "lgbm_clf",
+     "k": 55,
+     "weight": "ew",
+     "hold_k": 110,
+     "overlay": [
+      "dd",
+      "tg"
+     ],
+     "dd_lookback_months": 5,
+     "dd_scale": 0.55,
+     "dd_floor": 0.05,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "Equal-weighting the lgbm book with a trend gate should reduce concentration risk and cut tail months.",
+    "parent_corpse_id": "llm_stock_selection",
+    "distinct_claim": "This asks for a gradient-boosted tree, not a language model."
+   },
+   "refusal": "parent_id 'lgbm_clf|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 16,
+   "proposal": {
+    "parent_id": "quality_mom|dd|10bps",
+    "mutation": {
+     "pred_col": "quality_mom",
+     "k": 75,
+     "weight": "vw",
+     "hold_k": 150,
+     "overlay": [
+      "dd",
+      "bsc"
+     ],
+     "dd_lookback_months": 4,
+     "dd_scale": 0.4,
+     "dd_floor": 0.25,
+     "bsc_lookback_months": 21,
+     "bsc_cap": 1.1
+    },
+    "rationale": "A longer vol-target lookback should smooth the overlay and reduce whipsaw costs.",
+    "parent_corpse_id": "momentum_spillover",
+    "distinct_claim": "This asks for own-book risk control, not spillover."
+   },
+   "refusal": "parent_id 'quality_mom|dd|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 17,
+   "proposal": {
+    "parent_id": "lgbm_clf|10bps",
+    "mutation": {
+     "pred_col": "nn_pre_causal_seedmean",
+     "k": 35,
+     "weight": "vw",
+     "hold_k": 70,
+     "overlay": [
+      "dd",
+      "tg",
+      "bsc"
+     ],
+     "dd_lookback_months": 8,
+     "dd_scale": 0.5,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.3
+    },
+    "rationale": "The neural net score with all three overlays should have a very different risk profile from the lgbm parent.",
+    "parent_corpse_id": "fda_approval_monthly",
+    "distinct_claim": "This asks for a continuous score, not a binary event."
+   },
+   "refusal": "parent_id 'lgbm_clf|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 18,
+   "proposal": {
+    "parent_id": "mom_vol_scaled_signal|dd+tg|10bps",
+    "mutation": {
+     "pred_col": "ret_12m",
+     "k": 140,
+     "weight": "ew",
+     "hold_k": 280,
+     "overlay": [
+      "dd",
+      "tg"
+     ],
+     "dd_lookback_months": 12,
+     "dd_scale": 0.1,
+     "dd_floor": 0.9,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A very wide raw momentum book with a nearly inactive drawdown overlay should test the pure momentum effect under a trend gate.",
+    "parent_corpse_id": "momentum_12_1",
+    "distinct_claim": "This asks for a raw 12-month return, not a scaled signal."
+   },
+   "refusal": "parent_id 'mom_vol_scaled_signal|dd+tg|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  },
+  {
+   "index": 19,
+   "proposal": {
+    "parent_id": "quality_mom|10bps",
+    "mutation": {
+     "pred_col": "roe_pit",
+     "k": 65,
+     "weight": "vw",
+     "hold_k": 130,
+     "overlay": [
+      "dd"
+     ],
+     "dd_lookback_months": 9,
+     "dd_scale": 0.65,
+     "dd_floor": 0.0,
+     "bsc_lookback_months": 12,
+     "bsc_cap": 1.0
+    },
+    "rationale": "A strong drawdown overlay on the ROE book should cut its beta substantially while keeping the profitability edge.",
+    "parent_corpse_id": "accruals",
+    "distinct_claim": "This asks for a profitability ratio, not an accrual measure."
+   },
+   "refusal": "parent_id 'quality_mom|10bps' is not one of the five leaders ['lgbm_clf', 'lgbm_clf|dd', 'mom_vol_scaled_signal|dd+tg', 'quality_mom', 'quality_mom|dd']"
+  }
+ ],
+ "children_evaluated": 0,
+ "cells_added": 0,
+ "family_cells_generation0": 88,
+ "family_cells_after_mutation": 88,
+ "family_holm_best_over_everything": 1.0,
+ "family_bh_fdr_best_over_everything": 0.692032,
+ "leaderboard_children_only": [],
+ "leaderboard_combined_top20": [
+  {
+   "cell": "lgbm_clf|dd|10bps",
+   "beta": 0.7763,
+   "intercept_annual_pct": 7.609,
+   "intercept_t_hac": 2.442,
+   "leverage_neutral_tw": 4.431,
+   "leverage_neutral_scale": 1.0042,
+   "raw_tw": 4.4116,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.44503,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.4512,
+   "tw_at_admissible_leverage": 6.7957,
+   "p_ruin": 0.297,
+   "raw_p": 0.014606,
+   "family_holm_p": 1.0,
+   "dsr": 0.2782,
+   "verdict": "FAILS: FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "quality_mom|dd|10bps",
+   "beta": 0.7791,
+   "intercept_annual_pct": 8.986,
+   "intercept_t_hac": 2.391,
+   "leverage_neutral_tw": 4.2154,
+   "leverage_neutral_scale": 0.8744,
+   "raw_tw": 4.9241,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.39309,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.6494,
+   "tw_at_admissible_leverage": 9.0185,
+   "p_ruin": 0.526,
+   "raw_p": 0.016803,
+   "family_holm_p": 1.0,
+   "dsr": 0.2535,
+   "verdict": "FAILS: FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "quality_mom|dd|25bps",
+   "beta": 0.7753,
+   "intercept_annual_pct": 7.59,
+   "intercept_t_hac": 2.015,
+   "leverage_neutral_tw": 3.6519,
+   "leverage_neutral_scale": 0.8773,
+   "raw_tw": 4.1651,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.40318,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.6094,
+   "tw_at_admissible_leverage": 6.6895,
+   "p_ruin": 0.539,
+   "raw_p": 0.043905,
+   "family_holm_p": 1.0,
+   "dsr": 0.1594,
+   "verdict": "FAILS: FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "quality_mom|10bps",
+   "beta": 0.9974,
+   "intercept_annual_pct": 8.218,
+   "intercept_t_hac": 2.032,
+   "leverage_neutral_tw": 3.6242,
+   "leverage_neutral_scale": 0.7511,
+   "raw_tw": 4.8689,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.52874,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.1738,
+   "tw_at_admissible_leverage": 5.7146,
+   "p_ruin": 0.503,
+   "raw_p": 0.042154,
+   "family_holm_p": 1.0,
+   "dsr": 0.2925,
+   "verdict": "FAILS: FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "lgbm_clf|10bps",
+   "beta": 1.0279,
+   "intercept_annual_pct": 6.828,
+   "intercept_t_hac": 1.979,
+   "leverage_neutral_tw": 3.5132,
+   "leverage_neutral_scale": 0.7975,
+   "raw_tw": 4.3891,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.58647,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.0283,
+   "tw_at_admissible_leverage": 4.5038,
+   "p_ruin": 0.42,
+   "raw_p": 0.047816,
+   "family_holm_p": 1.0,
+   "dsr": 0.306,
+   "verdict": "FAILS: FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "mom_vol_scaled_signal|dd+tg|10bps",
+   "beta": 0.363,
+   "intercept_annual_pct": 6.422,
+   "intercept_t_hac": 1.59,
+   "leverage_neutral_tw": 3.4679,
+   "leverage_neutral_scale": 1.2362,
+   "raw_tw": 2.9611,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.24998,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 2.0,
+   "tw_at_admissible_leverage": 5.2632,
+   "p_ruin": 0.415,
+   "raw_p": 0.111835,
+   "family_holm_p": 1.0,
+   "dsr": 0.0216,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "mom_vol_scaled_signal|tg|10bps",
+   "beta": 0.3784,
+   "intercept_annual_pct": 6.437,
+   "intercept_t_hac": 1.522,
+   "leverage_neutral_tw": 3.3605,
+   "leverage_neutral_scale": 1.1851,
+   "raw_tw": 2.9712,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.25898,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 2.0,
+   "tw_at_admissible_leverage": 5.1753,
+   "p_ruin": 0.501,
+   "raw_p": 0.128009,
+   "family_holm_p": 1.0,
+   "dsr": 0.0226,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "nn_pre_causal|dd|10bps",
+   "beta": 0.7954,
+   "intercept_annual_pct": 7.41,
+   "intercept_t_hac": 1.785,
+   "leverage_neutral_tw": 3.3188,
+   "leverage_neutral_scale": 0.8152,
+   "raw_tw": 4.0096,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.44922,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.4688,
+   "tw_at_admissible_leverage": 5.649,
+   "p_ruin": 0.579,
+   "raw_p": 0.074261,
+   "family_holm_p": 1.0,
+   "dsr": 0.1199,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "nn_pre_causal|bsc|10bps",
+   "beta": 0.8742,
+   "intercept_annual_pct": 8.55,
+   "intercept_t_hac": 1.535,
+   "leverage_neutral_tw": 3.2798,
+   "leverage_neutral_scale": 0.7134,
+   "raw_tw": 4.5093,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.38634,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.7666,
+   "tw_at_admissible_leverage": 7.2769,
+   "p_ruin": 0.884,
+   "raw_p": 0.124784,
+   "family_holm_p": 1.0,
+   "dsr": 0.1517,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "quality_mom|dd+tg|10bps",
+   "beta": 0.488,
+   "intercept_annual_pct": 6.892,
+   "intercept_t_hac": 1.427,
+   "leverage_neutral_tw": 3.2337,
+   "leverage_neutral_scale": 0.9972,
+   "raw_tw": 3.2412,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.28181,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 2.0,
+   "tw_at_admissible_leverage": 5.5259,
+   "p_ruin": 0.677,
+   "raw_p": 0.15358,
+   "family_holm_p": 1.0,
+   "dsr": 0.0377,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "quality_mom|25bps",
+   "beta": 0.9975,
+   "intercept_annual_pct": 6.883,
+   "intercept_t_hac": 1.696,
+   "leverage_neutral_tw": 3.214,
+   "leverage_neutral_scale": 0.7506,
+   "raw_tw": 4.1526,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.53773,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.1484,
+   "tw_at_admissible_leverage": 4.656,
+   "p_ruin": 0.504,
+   "raw_p": 0.089886,
+   "family_holm_p": 1.0,
+   "dsr": 0.1969,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "lgbm_clf|bsc|10bps",
+   "beta": 0.8029,
+   "intercept_annual_pct": 5.177,
+   "intercept_t_hac": 1.813,
+   "leverage_neutral_tw": 3.1867,
+   "leverage_neutral_scale": 0.9582,
+   "raw_tw": 3.3022,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.44895,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.4248,
+   "tw_at_admissible_leverage": 4.3225,
+   "p_ruin": 0.474,
+   "raw_p": 0.069832,
+   "family_holm_p": 1.0,
+   "dsr": 0.0909,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "mom_vol_scaled_signal|bsc|10bps",
+   "beta": 0.8172,
+   "intercept_annual_pct": 8.816,
+   "intercept_t_hac": 1.425,
+   "leverage_neutral_tw": 3.1792,
+   "leverage_neutral_scale": 0.6988,
+   "raw_tw": 4.4089,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.50855,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.2041,
+   "tw_at_admissible_leverage": 5.1789,
+   "p_ruin": 0.496,
+   "raw_p": 0.154157,
+   "family_holm_p": 1.0,
+   "dsr": 0.1257,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "quality_mom|tg|10bps",
+   "beta": 0.5173,
+   "intercept_annual_pct": 6.949,
+   "intercept_t_hac": 1.355,
+   "leverage_neutral_tw": 3.1132,
+   "leverage_neutral_scale": 0.9425,
+   "raw_tw": 3.2674,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.30335,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 2.0,
+   "tw_at_admissible_leverage": 5.3422,
+   "p_ruin": 0.744,
+   "raw_p": 0.175418,
+   "family_holm_p": 1.0,
+   "dsr": 0.0402,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "mom_vol_scaled_signal|dd|10bps",
+   "beta": 0.611,
+   "intercept_annual_pct": 5.644,
+   "intercept_t_hac": 1.425,
+   "leverage_neutral_tw": 3.0456,
+   "leverage_neutral_scale": 0.9913,
+   "raw_tw": 3.0667,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.40411,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.6553,
+   "tw_at_admissible_leverage": 4.4047,
+   "p_ruin": 0.563,
+   "raw_p": 0.154157,
+   "family_holm_p": 1.0,
+   "dsr": 0.0388,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "lgbm_clf|dd|25bps",
+   "beta": 0.7682,
+   "intercept_annual_pct": 4.418,
+   "intercept_t_hac": 1.428,
+   "leverage_neutral_tw": 3.0357,
+   "leverage_neutral_scale": 1.0137,
+   "raw_tw": 3.0084,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.46211,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.3926,
+   "tw_at_admissible_leverage": 3.7954,
+   "p_ruin": 0.332,
+   "raw_p": 0.153292,
+   "family_holm_p": 1.0,
+   "dsr": 0.0559,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "blend50_spy_trend+quality_mom|10bps",
+   "beta": 0.7269,
+   "intercept_annual_pct": 3.554,
+   "intercept_t_hac": 1.399,
+   "leverage_neutral_tw": 2.8499,
+   "leverage_neutral_scale": 1.103,
+   "raw_tw": 2.6914,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.36649,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.8076,
+   "tw_at_admissible_leverage": 3.8579,
+   "p_ruin": 0.513,
+   "raw_p": 0.161813,
+   "family_holm_p": 1.0,
+   "dsr": 0.032,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "nn_pre_causal|10bps",
+   "beta": 1.0601,
+   "intercept_annual_pct": 6.376,
+   "intercept_t_hac": 1.371,
+   "leverage_neutral_tw": 2.8478,
+   "leverage_neutral_scale": 0.6771,
+   "raw_tw": 3.8566,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.61744,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": false,
+   "admissible_leverage": 0.9561,
+   "tw_at_admissible_leverage": 3.7185,
+   "p_ruin": 0.481,
+   "raw_p": 0.170375,
+   "family_holm_p": 1.0,
+   "dsr": 0.1294,
+   "verdict": "FAILS: CONSTRAINTS+RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "mom_12_1|dd+tg|10bps",
+   "beta": 0.4824,
+   "intercept_annual_pct": 7.118,
+   "intercept_t_hac": 1.248,
+   "leverage_neutral_tw": 2.8348,
+   "leverage_neutral_scale": 0.8688,
+   "raw_tw": 3.1458,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.3103,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 2.0,
+   "tw_at_admissible_leverage": 4.7051,
+   "p_ruin": 0.851,
+   "raw_p": 0.212031,
+   "family_holm_p": 1.0,
+   "dsr": 0.033,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  },
+  {
+   "cell": "blend50_spy_trend+lgbm_clf|10bps",
+   "beta": 0.7421,
+   "intercept_annual_pct": 2.859,
+   "intercept_t_hac": 1.323,
+   "leverage_neutral_tw": 2.8314,
+   "leverage_neutral_scale": 1.1936,
+   "raw_tw": 2.5607,
+   "spy_tw": 2.0935,
+   "max_drawdown": -0.42494,
+   "maxdd_budget": -0.59923,
+   "constraints_pass": true,
+   "admissible_leverage": 1.54,
+   "tw_at_admissible_leverage": 3.3085,
+   "p_ruin": 0.336,
+   "raw_p": 0.185835,
+   "family_holm_p": 1.0,
+   "dsr": 0.0237,
+   "verdict": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO",
+   "months": 144
+  }
+ ],
+ "cells": {},
+ "memory_free_gb_before": 8.62,
+ "wall_seconds": 22.8,
+ "generated_utc": "2026-09-06T13:30:01.790803+00:00",
+ "headline": "beta 0.7763: after 0 evaluated mutations (20 refused) the leader of the combined family is lgbm_clf|dd|10bps at leverage-neutral TW 4.431; best child None at None; family 88 -> 88 cells, best Holm 1.0, LLM $0.0046",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g3_mutations.py"
+  ],
+  "resolved_config": {
+   "job": "G3_mutations",
+   "cap_usd": 3.0,
+   "max_mutations": 20,
+   "dry_run": false
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g2_generation0.json",
+    "sha256": "20b9ad1913df5ad12ae44e1f6a1b3209b6bc08aeba8d0fdd13bc098e191b01ac",
+    "bytes": 568429,
+    "opened_utc": "2026-09-06T13:29:40+00:00",
+    "note": "G2 generation-0 receipt"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/declaration.json",
+    "sha256": "8ea62ff95a9ac95af3f56c22117a9c768b3a545fb43df165a561a06412142a32",
+    "bytes": 29795,
+    "opened_utc": "2026-09-06T13:29:40+00:00",
+    "note": "the hashed declaration"
+   }
+  ],
+  "git_commit": "c906638ddb42",
+  "generated_utc": "2026-09-06T13:30:01+00:00"
+ }
+}
