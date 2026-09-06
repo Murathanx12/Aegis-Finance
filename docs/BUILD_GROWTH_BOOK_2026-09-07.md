@@ -206,4 +206,14 @@ disk, the only clean answer to PBO 0.6429 · `learner_run.py:236` and
   of every input actually opened (`backend/services/receipt_provenance.py`).
   `check_receipt(verify_hashes=False)` over all eight growth receipts: **0 hard
   findings on seven, 1 on `G4_CHAMPION_DECLARATION.json`** for the reason above.
-- **7 local commits on `main`, nothing pushed** — `a2e0ea2` (the ERAS refusal, queued from Labor Day B1), `c906638` G2, `dd436b2` G3, `46c08d6` G7, `cf9b95e` G4, `0dcf72e` G5, and this document with G6.
+- **7 local commits on `main`, nothing pushed** — `a2e0ea2` (the ERAS refusal,
+  queued from Labor Day B1), `c906638` G2, `dd436b2` G3, `46c08d6` G7,
+  `cf9b95e` G4, `0dcf72e` G5, `1a5bddb` G6 + this document.
+- **One caveat on the history:** a CONCURRENT session committed `d3b1175`
+  (a CI fix to `test_benchmark_canonical` / `test_companyworld_v1` /
+  `learner.benchmark.market_keys`) while this session's provenance fixes
+  were staged, and swept them into that commit. So the three provenance
+  defects above, the re-run receipts and the `slow` reproduction test are
+  in `d3b1175`, not in one of mine. Verified after the fact: 498 targeted
+  tests green across growth / benchmark / canonical / companyworld /
+  provenance, and the champion still rebuilds to `39ab3224c1a12e14…`.
