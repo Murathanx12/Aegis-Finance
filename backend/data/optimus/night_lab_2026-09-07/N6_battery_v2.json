@@ -1,0 +1,1003 @@
+{
+ "job": "N6_battery_v2",
+ "lane": "N6",
+ "question": "does the machine still recover a planted edge through N1's constructions and N2's ensemble -- and how SMALL an edge can it still see?",
+ "licence": "PRODUCT_EXPERIMENT",
+ "what_is_synthetic": "EVERYTHING. No number here is evidence about markets. A world this battery fails is a bug report.",
+ "config": {
+  "fast": false,
+  "n_names": 250,
+  "start_year": 1999,
+  "end_year": 2024,
+  "test_years": [
+   2005,
+   2006,
+   2007,
+   2008,
+   2009,
+   2010,
+   2011,
+   2012,
+   2013,
+   2014,
+   2015,
+   2016,
+   2017,
+   2018,
+   2019,
+   2020,
+   2021,
+   2022,
+   2023,
+   2024
+  ],
+  "kinds": [
+   "ridge",
+   "lgbm",
+   "lgbm_clf"
+  ],
+  "worlds": [
+   "linear",
+   "regime",
+   "graph",
+   "null"
+  ],
+  "idio_sd": 0.08,
+  "mkt_mu": 0.007,
+  "mkt_sd": 0.045,
+  "alpha_scale": 0.012,
+  "regime_share": 0.35,
+  "regime_alpha_multiplier": 2.5,
+  "n_customers": 4,
+  "seed": 20260907
+ },
+ "worlds": [
+  "linear",
+  "regime",
+  "graph",
+  "event",
+  "null"
+ ],
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "memory_free_gb_before": 3.87,
+ "fast": false,
+ "results": {
+  "linear": {
+   "world": "linear",
+   "meta": {
+    "world": "linear",
+    "planted": "excess[j+1] += 0.012 * xs_z(mom_12_1[j]) on every month",
+    "carrier": "mom_12_1",
+    "n_rows": 77750,
+    "n_names": 250,
+    "n_months": 311,
+    "months": [
+     "1999-01",
+     "2024-11"
+    ],
+    "regime_months": null,
+    "idio_sd_monthly": 0.08,
+    "alpha_scale": 0.012
+   },
+   "n_features": 49,
+   "oracle": {
+    "annualised_excess": 0.2036,
+    "t_stat_paired_vs_market": 20.965,
+    "months": 240,
+    "mean_monthly_excess": 0.016964,
+    "basis": "a book ranked on the TRUE planted alpha over the test years, at the same k, weight and cost as every measured cell. This is the planted effect in the units the MDE is quoted in."
+   },
+   "cells": {
+    "ridge": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.10171,
+      "median_ic": 0.10378,
+      "t_stat": 26.068,
+      "share_months_positive": 0.9667
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 16.913,
+       "t_paired_vs_market": 9.075,
+       "terminal_wealth_net": 119.8911,
+       "transfer_coefficient": 0.355,
+       "effective_names": 10.427
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 7.137,
+       "t_paired_vs_market": 9.065,
+       "terminal_wealth_net": 18.8677,
+       "transfer_coefficient": 0.5521,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.09267,
+      "median_ic": 0.09129,
+      "t_stat": 24.173,
+      "share_months_positive": 0.9458
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 16.556,
+       "t_paired_vs_market": 8.797,
+       "terminal_wealth_net": 113.1445,
+       "transfer_coefficient": 0.3594,
+       "effective_names": 10.147
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 7.202,
+       "t_paired_vs_market": 9.054,
+       "terminal_wealth_net": 19.1323,
+       "transfer_coefficient": 0.5495,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm_clf": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.08772,
+      "median_ic": 0.08663,
+      "t_stat": 22.242,
+      "share_months_positive": 0.9333
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 16.985,
+       "t_paired_vs_market": 9.239,
+       "terminal_wealth_net": 123.1605,
+       "transfer_coefficient": 0.3835,
+       "effective_names": 10.21
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.995,
+       "t_paired_vs_market": 8.837,
+       "terminal_wealth_net": 18.4757,
+       "transfer_coefficient": 0.5534,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "ENSEMBLE": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.09808,
+      "median_ic": 0.10172,
+      "t_stat": 25.309,
+      "share_months_positive": 0.9542
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 18.645,
+       "t_paired_vs_market": 9.914,
+       "terminal_wealth_net": 170.1924,
+       "transfer_coefficient": 0.3278,
+       "effective_names": 10.352
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 7.385,
+       "t_paired_vs_market": 9.254,
+       "terminal_wealth_net": 19.8581,
+       "transfer_coefficient": 0.5524,
+       "effective_names": 100.0
+      }
+     }
+    }
+   },
+   "n_oos_rows": 60000
+  },
+  "regime": {
+   "world": "regime",
+   "meta": {
+    "world": "regime",
+    "planted": "excess[j+1] += 0.0300 * xs_z(mom_12_1[j]) ONLY when |market return[j]| is in the top 35% of months; zero otherwise",
+    "carrier": "mom_12_1",
+    "n_rows": 77750,
+    "n_names": 250,
+    "n_months": 311,
+    "months": [
+     "1999-01",
+     "2024-11"
+    ],
+    "regime_months": 109,
+    "idio_sd_monthly": 0.08,
+    "alpha_scale": 0.012
+   },
+   "n_features": 49,
+   "oracle": {
+    "annualised_excess": 0.1727,
+    "t_stat_paired_vs_market": 9.551,
+    "months": 240,
+    "mean_monthly_excess": 0.014388,
+    "basis": "a book ranked on the TRUE planted alpha over the test years, at the same k, weight and cost as every measured cell. This is the planted effect in the units the MDE is quoted in."
+   },
+   "cells": {
+    "ridge": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.08692,
+      "median_ic": 0.05915,
+      "t_stat": 10.868,
+      "share_months_positive": 0.7208
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 13.661,
+       "t_paired_vs_market": 6.033,
+       "terminal_wealth_net": 58.4848,
+       "transfer_coefficient": 0.3558,
+       "effective_names": 10.561
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.767,
+       "t_paired_vs_market": 7.063,
+       "terminal_wealth_net": 16.9533,
+       "transfer_coefficient": 0.5539,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.07508,
+      "median_ic": 0.05624,
+      "t_stat": 9.883,
+      "share_months_positive": 0.6875
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 16.291,
+       "t_paired_vs_market": 7.479,
+       "terminal_wealth_net": 98.6638,
+       "transfer_coefficient": 0.3711,
+       "effective_names": 10.434
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.518,
+       "t_paired_vs_market": 6.843,
+       "terminal_wealth_net": 16.1452,
+       "transfer_coefficient": 0.5416,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm_clf": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.07391,
+      "median_ic": 0.05949,
+      "t_stat": 10.494,
+      "share_months_positive": 0.7
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 13.29,
+       "t_paired_vs_market": 5.912,
+       "terminal_wealth_net": 55.2548,
+       "transfer_coefficient": 0.3675,
+       "effective_names": 10.272
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.258,
+       "t_paired_vs_market": 6.764,
+       "terminal_wealth_net": 15.3599,
+       "transfer_coefficient": 0.5523,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "ENSEMBLE": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.08321,
+      "median_ic": 0.06109,
+      "t_stat": 10.667,
+      "share_months_positive": 0.7125
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 15.778,
+       "t_paired_vs_market": 6.685,
+       "terminal_wealth_net": 87.307,
+       "transfer_coefficient": 0.3256,
+       "effective_names": 10.287
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.263,
+       "t_paired_vs_market": 6.651,
+       "terminal_wealth_net": 15.4015,
+       "transfer_coefficient": 0.5466,
+       "effective_names": 100.0
+      }
+     }
+    }
+   },
+   "n_oos_rows": 60000
+  },
+  "graph": {
+   "world": "graph",
+   "meta": {
+    "world": "graph",
+    "planted": "excess[j+1] += 0.012 * xs_z(mean return of the name's 4 CUSTOMERS in month j) \u2014 carried only by features_graph's own columns",
+    "carrier": "graph_cust_mom_1m_ew",
+    "n_rows": 77750,
+    "n_names": 250,
+    "n_months": 311,
+    "months": [
+     "1999-01",
+     "2024-11"
+    ],
+    "regime_months": null,
+    "idio_sd_monthly": 0.08,
+    "alpha_scale": 0.012
+   },
+   "n_features": 58,
+   "oracle": {
+    "annualised_excess": 0.19,
+    "t_stat_paired_vs_market": 21.098,
+    "months": 240,
+    "mean_monthly_excess": 0.01583,
+    "basis": "a book ranked on the TRUE planted alpha over the test years, at the same k, weight and cost as every measured cell. This is the planted effect in the units the MDE is quoted in."
+   },
+   "cells": {
+    "ridge": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.13283,
+      "median_ic": 0.13321,
+      "t_stat": 31.565,
+      "share_months_positive": 0.975
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 18.349,
+       "t_paired_vs_market": 9.714,
+       "terminal_wealth_net": 163.0971,
+       "transfer_coefficient": 0.3549,
+       "effective_names": 9.935
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 7.435,
+       "t_paired_vs_market": 10.473,
+       "terminal_wealth_net": 20.376,
+       "transfer_coefficient": 0.5004,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.12311,
+      "median_ic": 0.11749,
+      "t_stat": 29.486,
+      "share_months_positive": 0.975
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 13.909,
+       "t_paired_vs_market": 7.251,
+       "terminal_wealth_net": 67.7084,
+       "transfer_coefficient": 0.3343,
+       "effective_names": 10.073
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.638,
+       "t_paired_vs_market": 9.178,
+       "terminal_wealth_net": 17.4179,
+       "transfer_coefficient": 0.4892,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm_clf": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.113,
+      "median_ic": 0.11097,
+      "t_stat": 26.527,
+      "share_months_positive": 0.95
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 14.363,
+       "t_paired_vs_market": 7.612,
+       "terminal_wealth_net": 73.8888,
+       "transfer_coefficient": 0.3393,
+       "effective_names": 9.909
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.325,
+       "t_paired_vs_market": 8.57,
+       "terminal_wealth_net": 16.323,
+       "transfer_coefficient": 0.4942,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "ENSEMBLE": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.12918,
+      "median_ic": 0.12592,
+      "t_stat": 30.991,
+      "share_months_positive": 0.975
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 16.234,
+       "t_paired_vs_market": 8.644,
+       "terminal_wealth_net": 108.2835,
+       "transfer_coefficient": 0.3166,
+       "effective_names": 9.962
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 6.885,
+       "t_paired_vs_market": 9.347,
+       "terminal_wealth_net": 18.2727,
+       "transfer_coefficient": 0.4803,
+       "effective_names": 100.0
+      }
+     }
+    }
+   },
+   "n_oos_rows": 60000
+  },
+  "event": {
+   "world": "event",
+   "meta": {
+    "world": "event",
+    "planted": "excess[j+1] += 0.0600 on the top 10% of net_rev_4w in month j, and 0 on the other 90%; demeaned within the month",
+    "carrier": "net_rev_4w",
+    "share_of_rows_carrying_the_edge": 0.1,
+    "alpha_scale_on_the_carrying_rows": 0.06,
+    "vw_market_leg_shift_bps_mean": -3.54,
+    "vw_market_leg_shift_bps_max": 53.661,
+    "ew_market_leg_shift": 0.0,
+    "note": "the alpha is demeaned inside each month, so the EW market leg is unchanged by construction and the VW leg moves only by w . alpha, printed above. A world that moved the market and called it selection would pass its own test for the wrong reason."
+   },
+   "n_features": 49,
+   "oracle": {
+    "annualised_excess": 0.2844,
+    "t_stat_paired_vs_market": 27.422,
+    "months": 240,
+    "mean_monthly_excess": 0.023701,
+    "basis": "a book ranked on the TRUE planted alpha over the test years, at the same k, weight and cost as every measured cell. This is the planted effect in the units the MDE is quoted in."
+   },
+   "cells": {
+    "ridge": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.10422,
+      "median_ic": 0.10336,
+      "t_stat": 26.791,
+      "share_months_positive": 0.9542
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 51.119,
+       "t_paired_vs_market": 23.804,
+       "terminal_wealth_net": 86561.9943,
+       "transfer_coefficient": 0.366,
+       "effective_names": 10.228
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 10.35,
+       "t_paired_vs_market": 13.636,
+       "terminal_wealth_net": 34.451,
+       "transfer_coefficient": 0.5249,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.11199,
+      "median_ic": 0.11394,
+      "t_stat": 28.297,
+      "share_months_positive": 0.9708
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 65.189,
+       "t_paired_vs_market": 33.006,
+       "terminal_wealth_net": 1258924.7513,
+       "transfer_coefficient": 0.5925,
+       "effective_names": 10.135
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 11.027,
+       "t_paired_vs_market": 14.705,
+       "terminal_wealth_net": 39.3369,
+       "transfer_coefficient": 0.4755,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm_clf": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.10647,
+      "median_ic": 0.0972,
+      "t_stat": 25.46,
+      "share_months_positive": 0.9625
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 65.189,
+       "t_paired_vs_market": 33.006,
+       "terminal_wealth_net": 1258924.7513,
+       "transfer_coefficient": 0.5828,
+       "effective_names": 10.135
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 10.052,
+       "t_paired_vs_market": 14.215,
+       "terminal_wealth_net": 32.4213,
+       "transfer_coefficient": 0.4925,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "ENSEMBLE": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.1084,
+      "median_ic": 0.11265,
+      "t_stat": 27.098,
+      "share_months_positive": 0.9667
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": 63.886,
+       "t_paired_vs_market": 32.272,
+       "terminal_wealth_net": 985626.8521,
+       "transfer_coefficient": 0.4014,
+       "effective_names": 10.192
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 10.996,
+       "t_paired_vs_market": 14.241,
+       "terminal_wealth_net": 39.0436,
+       "transfer_coefficient": 0.5708,
+       "effective_names": 100.0
+      }
+     }
+    }
+   },
+   "n_oos_rows": 60000
+  },
+  "null": {
+   "world": "null",
+   "meta": {
+    "world": "null",
+    "planted": "no alpha term at all \u2014 the matched control",
+    "carrier": null,
+    "n_rows": 77750,
+    "n_names": 250,
+    "n_months": 311,
+    "months": [
+     "1999-01",
+     "2024-11"
+    ],
+    "regime_months": null,
+    "idio_sd_monthly": 0.08,
+    "alpha_scale": 0.012
+   },
+   "n_features": 49,
+   "oracle": {
+    "annualised_excess": 0.0,
+    "t_stat_paired_vs_market": null,
+    "months": null,
+    "mean_monthly_excess": 0.0,
+    "basis": "NO alpha was planted. A book ranked on a constant is a tie-break ordering, not an oracle, and quoting its excess would invent a planted effect that does not exist."
+   },
+   "cells": {
+    "ridge": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.0091,
+      "median_ic": 0.00592,
+      "t_stat": 2.231,
+      "share_months_positive": 0.5417
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": -0.764,
+       "t_paired_vs_market": -0.386,
+       "terminal_wealth_net": 3.455,
+       "transfer_coefficient": 0.3564,
+       "effective_names": 10.116
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 1.143,
+       "t_paired_vs_market": 1.539,
+       "terminal_wealth_net": 5.5405,
+       "transfer_coefficient": 0.564,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.00098,
+      "median_ic": -0.00194,
+      "t_stat": 0.252,
+      "share_months_positive": 0.4875
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": -3.023,
+       "t_paired_vs_market": -1.655,
+       "terminal_wealth_net": 2.236,
+       "transfer_coefficient": 0.3541,
+       "effective_names": 10.251
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 0.383,
+       "t_paired_vs_market": 0.525,
+       "terminal_wealth_net": 4.7427,
+       "transfer_coefficient": 0.5068,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "lgbm_clf": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": -0.00182,
+      "median_ic": -0.00083,
+      "t_stat": -0.459,
+      "share_months_positive": 0.4958
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": -3.086,
+       "t_paired_vs_market": -1.56,
+       "terminal_wealth_net": 2.2192,
+       "transfer_coefficient": 0.357,
+       "effective_names": 10.111
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 0.638,
+       "t_paired_vs_market": 0.894,
+       "terminal_wealth_net": 4.9823,
+       "transfer_coefficient": 0.5029,
+       "effective_names": 100.0
+      }
+     }
+    },
+    "ENSEMBLE": {
+     "rank_ic": {
+      "months": 240,
+      "mean_ic": 0.0033,
+      "median_ic": 0.0022,
+      "t_stat": 0.838,
+      "share_months_positive": 0.5042
+     },
+     "books": {
+      "control_top10pct_vw": {
+       "k": 25,
+       "weight": "vw",
+       "hold_k": null,
+       "months": 240,
+       "annualised_excess_pct": -0.858,
+       "t_paired_vs_market": -0.412,
+       "terminal_wealth_net": 3.4719,
+       "transfer_coefficient": 0.3407,
+       "effective_names": 9.969
+      },
+      "broad_top40pct_ew_hysteresis": {
+       "k": 100,
+       "weight": "ew",
+       "hold_k": 200,
+       "months": 240,
+       "annualised_excess_pct": 1.149,
+       "t_paired_vs_market": 1.577,
+       "terminal_wealth_net": 5.546,
+       "transfer_coefficient": 0.5389,
+       "effective_names": 100.0
+      }
+     }
+    }
+   },
+   "n_oos_rows": 60000
+  }
+ },
+ "adjudication": {
+  "per_world": {
+   "linear": {
+    "planted": true,
+    "best_t": 9.914,
+    "best_cell": "ENSEMBLE|control_top10pct_vw",
+    "recovered_at_t2": true,
+    "verdict": "PASS (planted edge recovered)"
+   },
+   "regime": {
+    "planted": true,
+    "best_t": 7.479,
+    "best_cell": "lgbm|control_top10pct_vw",
+    "recovered_at_t2": true,
+    "verdict": "PASS (planted edge recovered)"
+   },
+   "graph": {
+    "planted": true,
+    "best_t": 10.473,
+    "best_cell": "ridge|broad_top40pct_ew_hysteresis",
+    "recovered_at_t2": true,
+    "verdict": "PASS (planted edge recovered)"
+   },
+   "event": {
+    "planted": true,
+    "best_t": 33.006,
+    "best_cell": "lgbm|control_top10pct_vw",
+    "recovered_at_t2": true,
+    "verdict": "PASS (planted edge recovered)"
+   },
+   "null": {
+    "planted": false,
+    "best_t": 1.577,
+    "best_cell": "ENSEMBLE|broad_top40pct_ew_hysteresis",
+    "recovered_at_t2": false,
+    "verdict": "PASS (null reads NOISE)"
+   }
+  },
+  "n_pass": 5,
+  "n_worlds": 5,
+  "ALL_PASS": true
+ },
+ "sensitivity_ladder": {
+  "rungs": {
+   "1.0x": {
+    "alpha_scale": 0.012,
+    "oracle_annualised_excess": 0.1819,
+    "broad_book_annualised_pct": 8.166,
+    "broad_book_t": 5.203,
+    "recovered_at_t2": true,
+    "rank_ic": {
+     "months": 108,
+     "mean_ic": 0.06802,
+     "median_ic": 0.06673,
+     "t_stat": 7.148,
+     "share_months_positive": 0.7778
+    }
+   },
+   "0.5x": {
+    "alpha_scale": 0.006,
+    "oracle_annualised_excess": 0.0883,
+    "broad_book_annualised_pct": 3.215,
+    "broad_book_t": 2.023,
+    "recovered_at_t2": true,
+    "rank_ic": {
+     "months": 108,
+     "mean_ic": 0.01894,
+     "median_ic": 0.02095,
+     "t_stat": 2.089,
+     "share_months_positive": 0.5833
+    }
+   },
+   "0.25x": {
+    "alpha_scale": 0.003,
+    "oracle_annualised_excess": 0.0415,
+    "broad_book_annualised_pct": 1.348,
+    "broad_book_t": 0.802,
+    "recovered_at_t2": false,
+    "rank_ic": {
+     "months": 108,
+     "mean_ic": 0.01185,
+     "median_ic": 0.00204,
+     "t_stat": 1.271,
+     "share_months_positive": 0.5093
+    }
+   },
+   "0.125x": {
+    "alpha_scale": 0.0015,
+    "oracle_annualised_excess": 0.0181,
+    "broad_book_annualised_pct": -0.447,
+    "broad_book_t": -0.283,
+    "recovered_at_t2": false,
+    "rank_ic": {
+     "months": 108,
+     "mean_ic": -0.00429,
+     "median_ic": -0.00896,
+     "t_stat": -0.473,
+     "share_months_positive": 0.4722
+    }
+   }
+  },
+  "smallest_multiple_recovered": 0.5,
+  "answers": "Fable's attack #5 on B1: a battery that only plants edges 6-11x the MDE proves the wiring, not the sensitivity",
+  "reading": "`smallest_multiple_recovered` is the smallest fraction of B1's planted scale this machine still separates from zero at t = 2 on a 9-year 120-name panel. None recovered means the floor is ABOVE 1.0x on this panel, which is a statement about the panel's length as much as the machine."
+ },
+ "headline": "5 of 5 worlds adjudicated correctly (ALL_PASS); smallest planted edge still recovered: 0.5x B1's scale",
+ "memory_free_gb_after": 4.76,
+ "wall_seconds": 189.1,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n6_battery_v2.py"
+  ],
+  "resolved_config": {
+   "fast": false,
+   "ladder": true,
+   "kinds": [
+    "ridge",
+    "lgbm",
+    "lgbm_clf"
+   ],
+   "event_carrier": "net_rev_4w",
+   "event_top_share": 0.1,
+   "ladder_multiples": [
+    1.0,
+    0.5,
+    0.25,
+    0.125
+   ]
+  },
+  "_inputs_opened": [],
+  "git_commit": "00645c275ad5",
+  "generated_utc": "2026-09-06T17:30:35+00:00"
+ },
+ "generated_utc": "2026-09-06T17:30:35.133416+00:00"
+}

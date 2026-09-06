@@ -1,0 +1,106 @@
+{
+ "job": "N5b_pretraining_status",
+ "lane": "N5",
+ "question": "is the self-supervised arm in the ensemble, and can it be re-trained tonight on N4/N5 features?",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "gpu": {
+  "designated_interpreter": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "source": "requirements-gpu.txt default",
+  "torch": "2.11.0+cu128",
+  "cuda_available": true,
+  "device_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "capability": [
+   12,
+   0
+  ],
+  "torch_file": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\torch\\__init__.py",
+  "python_executable": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "python_version": "3.12.10",
+  "status": "ok"
+ },
+ "frozen_arm": {
+  "status": "PRESENT",
+  "columns": [
+   "nn_pre_causal_s20260906",
+   "nn_pre_causal_s20260907",
+   "nn_pre_causal_s20260908",
+   "nn_pre_causal_s20260909",
+   "nn_pre_causal_s20260910",
+   "nn_pre_causal_s20260911",
+   "nn_pre_causal_s20260912",
+   "nn_pre_causal_s20260913",
+   "nn_pre_causal_seedmean"
+  ],
+  "n_seeds": 9,
+  "seed_mean_column": "nn_pre_causal_seedmean",
+  "scope": {
+   "test_years": [
+    2004,
+    2024
+   ],
+   "n_test_years": 21,
+   "seeds": [
+    20260906,
+    20260907,
+    20260908,
+    20260909,
+    20260910,
+    20260911,
+    20260912,
+    20260913
+   ]
+  },
+  "rows": 530447,
+  "written_utc": "2026-09-05T14:27:05.051729+00:00",
+  "recipe": "masked-feature self-supervised pre-training at the CAUSAL scope -- the `all` scope is a named look-ahead in learner/neural_long and may not carry a claim"
+ },
+ "in_the_ensemble": {
+  "stacked": true,
+  "coverage_share": 0.8572,
+  "mean_reliability_weight_share": 0.253,
+  "full_sample_beta_matched_pct_per_year": 3.111,
+  "its_own_book_beta": 1.3525,
+  "its_own_book_t": 1.192,
+  "is_a_lone_champion_anywhere": false,
+  "why_not": "N2 selects no arm. The ensemble's two weightings are both reported and the equal-weight one wins, so no arm -- this one included -- is ever quoted alone as the book."
+ },
+ "retraining_with_N4_N5_features": {
+  "verdict": "DEFERRED",
+  "blockers": [
+   "N4's event table exists but is a SEPARATE parquet on a symbol key; it has not been joined onto the long panel, so there is no event feature column for the pre-training to see",
+   "N5's event-compression features have not been written"
+  ],
+  "long_panel_present": true,
+  "what_would_change": "`dataset.feature_columns()` would gain the event and novelty columns and the pre-training corpus would cover them. Until those columns are ON the panel, re-running the recipe reproduces the arm we already have under a new name -- and its 8 seeds are frozen in the stage, so it would also cost the comparability of every cell graded against them tonight.",
+  "cost_estimate": "8 seeds x 21 folds on CUDA; W3's own run13 is the reference for the wall time"
+ },
+ "headline": "CUDA True on NVIDIA GeForce RTX 5060 Laptop GPU via python.exe (torch 2.11.0+cu128); the 8-seed self-supervised arm is PRESENT and IS stacked in the N2 ensemble (weight share 0.253), never a lone champion; re-training on N4/N5 features is DEFERRED -- 2 blocker(s)",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n5b_pretraining_status.py"
+  ],
+  "resolved_config": {
+   "default_gpu_python": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_nn_pre_causal.json",
+    "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
+    "bytes": 74013,
+    "opened_utc": "2026-09-06T17:26:47+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/night_lab_2026-09-07/n2_ensemble.json",
+    "sha256": "e2486ed924e071214ab38b6a9a0ae19a94422ed890e27536532a3f6be258eb4d",
+    "bytes": 41450,
+    "opened_utc": "2026-09-06T17:26:47+00:00"
+   }
+  ],
+  "git_commit": "00645c275ad5",
+  "generated_utc": "2026-09-06T17:26:47+00:00"
+ },
+ "generated_utc": "2026-09-06T17:26:47.521476+00:00"
+}

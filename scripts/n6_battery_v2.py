@@ -221,13 +221,23 @@ def run_world(cfg, world: str, *, cost_bps: float, log) -> dict:
         # B1's graph world carries its edge only through features_graph's own
         # columns, and its own attach step is what puts them on the frame.
         import tempfile
+
+        from learner import features_graph as FG
         scratch = Path(tempfile.mkdtemp(prefix="n6b_"))
+        # `synthetic_edges` writes a FILE, not into a directory, and
+        # `attach_graph_features` returns THREE things. The first version of
+        # this block passed the directory and unpacked two, and the graph world
+        # came back "REFUSED: features unavailable" -- which reads in a receipt
+        # exactly like a machine that cannot see graph edges, and was a
+        # call-site bug. Named here so it is not re-diagnosed.
         try:
             extra = built["extra"]
+            edge_path = scratch / "synthetic_edges.parquet"
             B1.synthetic_edges(cfg, extra["cust_of"], extra["permnos"],
-                               extra["months"], scratch)
-            df, gcols = B1.attach_graph_features(cfg, df, extra, scratch)
-            feature_cols = [c for c in feature_cols + list(gcols) if c in df.columns]
+                               extra["months"], edge_path)
+            df, _greceipt, _gnote = B1.attach_graph_features(cfg, df, extra, edge_path)
+            df = df.sort_index()
+            feature_cols = feature_cols + [c for c in FG.FEATURES if c in df.columns]
         except Exception as exc:                                    # noqa: BLE001
             return {"world": world, "status": "REFUSED",
                     "why": f"graph features unavailable: {type(exc).__name__}: {exc}"}
