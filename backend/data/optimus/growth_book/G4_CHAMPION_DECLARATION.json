@@ -1,0 +1,168 @@
+{
+ "declaration": "GROWTH BOOK \u2014 the frozen champion, before the sealed era is opened",
+ "authority": "docs/ROADMAP_2026-09-07_GROWTH_BOOK_AMENDMENT.md \u00a73/\u00a75",
+ "licence": "PRODUCT_EXPERIMENT",
+ "search_declaration_sha256": "0397b9bfae7d53c1333afe89228c962ee08a1cbf81d04a40d5a33216d6a57655",
+ "freeze_rule": {
+  "rule": "the genome whose 25 bps DEVELOPMENT cell has the highest leverage-neutral terminal wealth among cells that PASS the declared constraints",
+  "constraints_are": "A VETO",
+  "family_pbo_is": "A LABEL. PBO is a property of the search, not of an arm; read as a veto it opens the sealed era never, and an unasked question is not a result. It is carried on the champion and on every sentence about it.",
+  "selection_cost_bps": 25.0,
+  "claim_cost_bps": 25.0,
+  "why_the_same_rate": "selecting at 10 bps and claiming at 25 flatters whichever genome has the most turnover",
+  "sealed_era_openings_permitted": 1
+ },
+ "champion_genome_id": "m12_quality_mom|dd",
+ "champion_genome": {
+  "genome_id": "m12_quality_mom|dd",
+  "family": "quality/mutation",
+  "base": "panel",
+  "spec": {
+   "pred_col": "quality_mom",
+   "weight": "vw",
+   "k": 110,
+   "hold_k": 160,
+   "dd_lookback_months": 7,
+   "dd_scale": 0.3,
+   "dd_floor": 0.05,
+   "bsc_lookback_months": 24,
+   "bsc_cap": 1.8
+  },
+  "overlay": [
+   "dd",
+   "bsc"
+  ],
+  "parent_ids": [
+   "quality_mom|dd"
+  ],
+  "mutation_history": [
+   "quality_mom|dd -> m12_quality_mom|dd: bsc_cap=1.8, bsc_lookback_months=24, dd_floor=0.05, dd_lookback_months=7, dd_scale=0.3, hold_k=160, k=110, overlay=['dd', 'bsc'], pred_col=quality_mom, weight=vw"
+  ],
+  "note": "A wide book with a high vol cap and moderate drawdown scaling should keep the quality premium while only trimming the most extreme months.",
+  "sha256": "65007c0cf4ebab8a00adc95f928787e4fadee7b43b14b069daa89ac529296c79"
+ },
+ "champion_sha256": "39ab3224c1a12e144bdcef39e536342d7f8b43e3644bf0bf3ac2bf1af94cd9da",
+ "champion_sha256_covers": "the genome recipe plus every DEVELOPMENT monthly return at both cost rates, to 10 dp",
+ "development_evidence": {
+  "source": "mutation",
+  "cell": "m12_quality_mom|dd|25bps",
+  "beta": 0.765,
+  "intercept_annual_pct": 8.907,
+  "intercept_t_hac": 2.127,
+  "leverage_neutral_tw": 4.1027,
+  "raw_tw": 4.8165,
+  "spy_tw": 2.0935,
+  "max_drawdown": -0.36276,
+  "maxdd_budget": -0.59923,
+  "constraints_pass": true,
+  "months": 144
+ },
+ "family_cells_looked_at": 128,
+ "family_pbo": 0.6429,
+ "family_pbo_verdict": "SELECTION_IS_OVERFIT",
+ "family_holm_best": 1.0,
+ "frozen_utc": "2026-09-06T13:38:58.734249+00:00",
+ "sealed_era_openings_before_this_job": 0,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g4_seal.py"
+  ],
+  "resolved_config": {
+   "job": "G4_seal"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g2_generation0.json",
+    "sha256": "20b9ad1913df5ad12ae44e1f6a1b3209b6bc08aeba8d0fdd13bc098e191b01ac",
+    "bytes": 568429,
+    "opened_utc": "2026-09-06T13:38:54+00:00",
+    "note": "growth-book search receipt"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g3_mutations.json",
+    "sha256": "e2fc76387819b33cb67065148d79c00e792ef1c8b59fd634f670f694456895d6",
+    "bytes": 350192,
+    "opened_utc": "2026-09-06T13:38:54+00:00",
+    "note": "growth-book search receipt"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/declaration.json",
+    "sha256": "8ea62ff95a9ac95af3f56c22117a9c768b3a545fb43df165a561a06412142a32",
+    "bytes": 29795,
+    "opened_utc": "2026-09-06T13:38:54+00:00",
+    "note": "growth-book search receipt"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944,
+    "opened_utc": "2026-09-06T13:38:55+00:00",
+    "note": "the 1999-2024 long panel"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_incumbents.parquet",
+    "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
+    "bytes": 6225813,
+    "opened_utc": "2026-09-06T13:38:56+00:00",
+    "note": "W3b stage predictions: incumbents"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_incumbents.json",
+    "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2",
+    "bytes": 9066,
+    "opened_utc": "2026-09-06T13:38:56+00:00",
+    "note": "W3b stage meta: incumbents"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_nn_pre_causal.parquet",
+    "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
+    "bytes": 24015048,
+    "opened_utc": "2026-09-06T13:38:56+00:00",
+    "note": "W3b stage predictions: nn_pre_causal"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_nn_pre_causal.json",
+    "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
+    "bytes": 74013,
+    "opened_utc": "2026-09-06T13:38:56+00:00",
+    "note": "W3b stage meta: nn_pre_causal"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly_early.parquet",
+    "sha256": "51672ab7363507da27b1b871f611f5145edd655f37d9385dac90fb2ec7f08f2a",
+    "bytes": 12406449,
+    "opened_utc": "2026-09-06T13:38:56+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly.parquet",
+    "sha256": "7a8d096b1aaaf7595f68c05247ceb4e86330d5aad3fe33a4f4cdc0d4a3f0bc30",
+    "bytes": 161579169,
+    "opened_utc": "2026-09-06T13:38:56+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
+    "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
+    "bytes": 242158,
+    "opened_utc": "2026-09-06T13:38:57+00:00",
+    "note": "pinned SPY total return, daily"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.json",
+    "sha256": "ec70b6613a6ac232669597e483899c4c71244f14765b0b4c06f738ab717c9e2d",
+    "bytes": 663,
+    "opened_utc": "2026-09-06T13:38:57+00:00",
+    "note": "pin provenance"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "error": "MISSING",
+    "opened_utc": "2026-09-06T13:38:57+00:00",
+    "note": "pinned Fama-French daily RF"
+   }
+  ],
+  "git_commit": "46c08d68e966",
+  "generated_utc": "2026-09-06T13:38:58+00:00"
+ }
+}

@@ -175,6 +175,41 @@ def sealed(s: pd.Series, *, champion_id: str, champion_sha256: str,
     return s[(idx >= SEALED_START) & (idx <= SEALED_END)]
 
 
+def open_sealed_window(series: "dict[str, pd.Series]", *, champion_id: str,
+                       champion_sha256: str, reason: str,
+                       ledger: Optional[Path] = None) -> "dict[str, pd.Series]":
+    """ONE opening of the sealed window, covering every leg of one comparison.
+
+    An "opening" is the ACT of looking, not a call to a slicing function. The
+    book, its cost-rate twin, the SPY leg and the risk-free leg are four series
+    and one look, so they are one ledger line -- otherwise `sealed_era_openings`
+    counts function calls and the receipt's "1" would be an artefact of how the
+    comparison happened to be coded. The line records every key returned, so the
+    scope of the look is on the record too.
+    """
+    path = ledger or OPENINGS_LEDGER
+    path.parent.mkdir(parents=True, exist_ok=True)
+    out, scope = {}, {}
+    for name, s in series.items():
+        idx = pd.Index([str(x) for x in s.index])
+        sl = s[(idx >= SEALED_START) & (idx <= SEALED_END)]
+        out[name] = sl
+        scope[name] = {"months": int(len(sl)),
+                       "window": [str(sl.index[0]), str(sl.index[-1])] if len(sl) else None}
+    rec = {
+        "opened_utc": datetime.now(timezone.utc).isoformat(),
+        "champion_id": champion_id,
+        "champion_sha256": champion_sha256,
+        "reason": reason,
+        "era": [SEALED_START, SEALED_END],
+        "legs": scope,
+        "note": "one look at the window; every leg of one comparison is one opening",
+    }
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec) + "\n")
+    return out
+
+
 def openings_for(champion_id: str, ledger: Optional[Path] = None) -> int:
     path = ledger or OPENINGS_LEDGER
     if not path.exists():
@@ -385,8 +420,40 @@ OVERLAYS = {
 }
 
 
+#: the knobs a MUTATION may turn on an overlay, and the range it may turn them
+#: through. A mutation outside these bounds is refused rather than clipped: a
+#: proposal silently clipped to the boundary is a different proposal wearing the
+#: LLM's label, and the lineage would record the one that was not run.
+OVERLAY_PARAM_BOUNDS = {
+    "dd_lookback_months": (1, 12),
+    "dd_scale": (0.05, 0.80),
+    "dd_floor": (0.0, 0.95),
+    "bsc_lookback_months": (3, 24),
+    "bsc_cap": (0.25, GROSS_CAP),
+}
+
+
+def overlay_params(spec: Optional[dict] = None) -> dict:
+    """Defaults, overridden by a validated spec. REFUSES out of bounds."""
+    p = {"dd_lookback_months": DD_LOOKBACK_MONTHS, "dd_scale": DD_SCALE,
+         "dd_floor": DD_FLOOR, "bsc_lookback_months": VOL_BOOK_MONTHS,
+         "bsc_cap": VOL_EXPOSURE_CAP}
+    for k, v in (spec or {}).items():
+        if k not in OVERLAY_PARAM_BOUNDS:
+            continue
+        lo, hi = OVERLAY_PARAM_BOUNDS[k]
+        v = float(v)
+        if not (lo <= v <= hi):
+            raise SystemExit(
+                f"REFUSED: overlay parameter {k}={v} is outside [{lo}, {hi}]. "
+                "A proposal clipped to the boundary is a different proposal.")
+        p[k] = int(v) if k.endswith("_months") else v
+    return p
+
+
 def apply_overlays(net: pd.Series, ctx: pd.DataFrame, overlay: Sequence[str],
-                   *, cost_bps: float) -> tuple[pd.Series, dict]:
+                   *, cost_bps: float,
+                   params: Optional[dict] = None) -> tuple[pd.Series, dict]:
     """Compose overlays multiplicatively on the EXPOSURE, then charge once.
 
     Composing on exposure rather than on returns matters: two overlays applied
@@ -395,19 +462,20 @@ def apply_overlays(net: pd.Series, ctx: pd.DataFrame, overlay: Sequence[str],
     """
     if not overlay:
         return net, {"overlay": [], "note": "no overlay"}
+    p = overlay_params(params)
     rf = ctx["rf"].reindex(net.index).fillna(0.0)
     w = pd.Series(1.0, index=net.index)
     detail = {}
     for key in overlay:
         if key == "dd":
-            dd = _trailing_drawdown(net, DD_LOOKBACK_MONTHS)
-            wk = (1.0 - dd.abs() / DD_SCALE).clip(DD_FLOOR, 1.0)
+            dd = _trailing_drawdown(net, int(p["dd_lookback_months"]))
+            wk = (1.0 - dd.abs() / p["dd_scale"]).clip(p["dd_floor"], 1.0)
         elif key == "tg":
             wk = ctx["trend_on"].reindex(net.index).fillna(True).astype(float)
         elif key == "bsc":
-            v = _trailing_vol(net, VOL_BOOK_MONTHS)
+            v = _trailing_vol(net, int(p["bsc_lookback_months"]))
             tgt = v.expanding(min_periods=VOL_TARGET_MIN_HISTORY).median()
-            wk = (tgt / v).clip(0.0, VOL_EXPOSURE_CAP)
+            wk = (tgt / v).clip(0.0, p["bsc_cap"])
             wk = wk.fillna(1.0)
         else:
             raise SystemExit(f"REFUSED: unknown overlay {key!r}. "
@@ -419,6 +487,7 @@ def apply_overlays(net: pd.Series, ctx: pd.DataFrame, overlay: Sequence[str],
         w = w * wk
     out, meta = _exposure_return(net, rf, w, cost_bps=cost_bps)
     meta["overlay"] = list(overlay)
+    meta["overlay_params"] = p
     meta["per_overlay"] = detail
     return out, meta
 
@@ -636,8 +705,10 @@ __all__ = [
     "DEV_START", "DEV_END", "SEALED_START", "SEALED_END", "COMMON_DEV_START",
     "COST_RATES_BPS", "GROSS_CAP", "FINANCING_BPS", "BOOK_K", "OVERLAYS",
     "Genome", "SealedEraViolation",
-    "dev", "sealed", "assert_development_only", "sealed_openings", "openings_for",
+    "dev", "sealed", "open_sealed_window", "assert_development_only",
+    "sealed_openings", "openings_for",
     "market_context", "apply_overlays", "build_spy_base", "build_panel_base",
     "build_blend", "generation_zero", "declaration", "declaration_sha256",
+    "overlay_params", "OVERLAY_PARAM_BOUNDS",
     "OUT_DIR", "SPY_CSV", "DECLARATION", "OPENINGS_LEDGER",
 ]

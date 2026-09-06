@@ -1,0 +1,579 @@
+{
+ "job": "G4_seal",
+ "lane": "G growth book",
+ "licence": "PRODUCT_EXPERIMENT",
+ "question": "does the frozen champion beat SPY TR and levered-SPY at the same drawdown budget on 2016-2024, unseen in development, after 25 bps?",
+ "search_declaration_sha256": "0397b9bfae7d53c1333afe89228c962ee08a1cbf81d04a40d5a33216d6a57655",
+ "champion_declaration": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G4_CHAMPION_DECLARATION.json",
+ "champion_genome_id": "m12_quality_mom|dd",
+ "champion_sha256": "39ab3224c1a12e144bdcef39e536342d7f8b43e3644bf0bf3ac2bf1af94cd9da",
+ "champion_genome": {
+  "genome_id": "m12_quality_mom|dd",
+  "family": "quality/mutation",
+  "base": "panel",
+  "spec": {
+   "pred_col": "quality_mom",
+   "weight": "vw",
+   "k": 110,
+   "hold_k": 160,
+   "dd_lookback_months": 7,
+   "dd_scale": 0.3,
+   "dd_floor": 0.05,
+   "bsc_lookback_months": 24,
+   "bsc_cap": 1.8
+  },
+  "overlay": [
+   "dd",
+   "bsc"
+  ],
+  "parent_ids": [
+   "quality_mom|dd"
+  ],
+  "mutation_history": [
+   "quality_mom|dd -> m12_quality_mom|dd: bsc_cap=1.8, bsc_lookback_months=24, dd_floor=0.05, dd_lookback_months=7, dd_scale=0.3, hold_k=160, k=110, overlay=['dd', 'bsc'], pred_col=quality_mom, weight=vw"
+  ],
+  "note": "A wide book with a high vol cap and moderate drawdown scaling should keep the quality premium while only trimming the most extreme months.",
+  "sha256": "65007c0cf4ebab8a00adc95f928787e4fadee7b43b14b069daa89ac529296c79"
+ },
+ "freeze_rule": {
+  "rule": "the genome whose 25 bps DEVELOPMENT cell has the highest leverage-neutral terminal wealth among cells that PASS the declared constraints",
+  "constraints_are": "A VETO",
+  "family_pbo_is": "A LABEL. PBO is a property of the search, not of an arm; read as a veto it opens the sealed era never, and an unasked question is not a result. It is carried on the champion and on every sentence about it.",
+  "selection_cost_bps": 25.0,
+  "claim_cost_bps": 25.0,
+  "why_the_same_rate": "selecting at 10 bps and claiming at 25 flatters whichever genome has the most turnover",
+  "sealed_era_openings_permitted": 1
+ },
+ "sealed_era": [
+  "2016-01",
+  "2024-12"
+ ],
+ "sealed_era_openings": 1,
+ "sealed_era_openings_note": "read back from the append-only SEALED_ERA_OPENINGS.jsonl AFTER the call, not asserted. The book and each benchmark leg are one opening of the same window by the same frozen champion.",
+ "sealed_era_openings_all_champions": 1,
+ "development": {
+  "10bps": {
+   "label": "m12_quality_mom|dd|DEV|10bps",
+   "cost_bps_per_side": 10.0,
+   "months": 144,
+   "window": [
+    "2004-01",
+    "2015-12"
+   ],
+   "financing_bps_over_rf": 100.0,
+   "gross_cap": 2.0,
+   "beta": 0.7673,
+   "market_model": {
+    "beta": 0.7673,
+    "beta_t_vs_1": -1.403,
+    "intercept_monthly": 0.008198,
+    "intercept_annualised_pct": 9.838,
+    "intercept_t_hac": 2.358,
+    "n": 144,
+    "hac_lag": 4
+   },
+   "book": {
+    "terminal_wealth": 5.3842,
+    "cagr": 0.15061,
+    "max_drawdown": -0.35675,
+    "cvar_5": -0.12828,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.16886,
+    "realized_vol_annual": 0.19411,
+    "mean_monthly": 0.013333
+   },
+   "spy": {
+    "terminal_wealth": 2.0935,
+    "cagr": 0.06351,
+    "max_drawdown": -0.47938,
+    "cvar_5": -0.12826,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.24903,
+    "realized_vol_annual": 0.16811,
+    "mean_monthly": 0.00637
+   },
+   "rf_annualised_pct": 1.277,
+   "leverage_neutral": {
+    "scale": 0.8661,
+    "scale_uncapped": 0.8661,
+    "capped_by_gross": false,
+    "construction": "book scaled to SPY's realized vol over the same months; borrowed notional charged at RF + 100 bps, unused cash earns RF",
+    "terminal_wealth": 4.5081,
+    "cagr": 0.1337,
+    "max_drawdown": -0.31073,
+    "cvar_5": -0.1109,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.14571,
+    "realized_vol_annual": 0.16809,
+    "mean_monthly": 0.01169,
+    "vs_spy_terminal_wealth": 2.4146,
+    "beats_spy": true
+   },
+   "levered_spy_at_budget": {
+    "leverage": 1.3154,
+    "budget_maxdd": -0.599219,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 2.2401,
+    "cagr": 0.06952,
+    "max_drawdown": -0.59905,
+    "cvar_5": -0.16919,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.32806,
+    "realized_vol_annual": 0.22115,
+    "mean_monthly": 0.00778
+   },
+   "constraints": {
+    "maxdd_ok": true,
+    "cvar_ok": true,
+    "worst_month_ok": true,
+    "gross_ok": true,
+    "maxdd_budget": -0.59923,
+    "cvar_budget": -0.19239,
+    "worst_month_floor": -0.4,
+    "passes": true,
+    "objective": "maximize after-cost terminal wealth subject to maxDD <= 1.25 x SPY's maxDD over the same months, monthly CVaR5 <= 1.5 x SPY's, no month worse than -40%, gross <= 2.0x, financing at RF + 100 bps on borrowed notional"
+   },
+   "largest_admissible": {
+    "leverage": 1.8145,
+    "budget_maxdd": -0.599219,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 11.9283,
+    "cagr": 0.22946,
+    "max_drawdown": -0.59908,
+    "cvar_5": -0.23467,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.31034,
+    "realized_vol_annual": 0.35237,
+    "mean_monthly": 0.022648
+   },
+   "p_ruin": {
+    "p_ruin": 0.566,
+    "threshold": -0.5,
+    "n_boot": 1000,
+    "block_mean_periods": 4.0,
+    "seed": 20260907,
+    "horizon_months": 144,
+    "median_worst_drawdown": -0.51971,
+    "p95_worst_drawdown": -0.75804,
+    "construction": "stationary block bootstrap of the monthly series",
+    "computed_on": "the LARGEST ADMISSIBLE book (L=1.8145), not the unlevered series"
+   },
+   "headline": "beta 0.7673 (intercept 9.838%/yr, t 2.358): TW 5.3842 vs SPY 2.0935, maxDD -0.35675 vs budget -0.59923, leverage-neutral TW 4.5081 over 144 months at 10 bps"
+  },
+  "25bps": {
+   "label": "m12_quality_mom|dd|DEV|25bps",
+   "cost_bps_per_side": 25.0,
+   "months": 144,
+   "window": [
+    "2004-01",
+    "2015-12"
+   ],
+   "financing_bps_over_rf": 100.0,
+   "gross_cap": 2.0,
+   "beta": 0.765,
+   "market_model": {
+    "beta": 0.765,
+    "beta_t_vs_1": -1.414,
+    "intercept_monthly": 0.007422,
+    "intercept_annualised_pct": 8.907,
+    "intercept_t_hac": 2.127,
+    "n": 144,
+    "hac_lag": 4
+   },
+   "book": {
+    "terminal_wealth": 4.8165,
+    "cagr": 0.13997,
+    "max_drawdown": -0.36276,
+    "cvar_5": -0.12892,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.16979,
+    "realized_vol_annual": 0.19367,
+    "mean_monthly": 0.012545
+   },
+   "spy": {
+    "terminal_wealth": 2.0935,
+    "cagr": 0.06351,
+    "max_drawdown": -0.47938,
+    "cvar_5": -0.12826,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.24903,
+    "realized_vol_annual": 0.16811,
+    "mean_monthly": 0.00637
+   },
+   "rf_annualised_pct": 1.277,
+   "leverage_neutral": {
+    "scale": 0.868,
+    "scale_uncapped": 0.868,
+    "capped_by_gross": false,
+    "construction": "book scaled to SPY's realized vol over the same months; borrowed notional charged at RF + 100 bps, unused cash earns RF",
+    "terminal_wealth": 4.1027,
+    "cagr": 0.12484,
+    "max_drawdown": -0.31699,
+    "cvar_5": -0.11171,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.14685,
+    "realized_vol_annual": 0.16809,
+    "mean_monthly": 0.01103,
+    "vs_spy_terminal_wealth": 2.0091,
+    "beats_spy": true
+   },
+   "levered_spy_at_budget": {
+    "leverage": 1.3154,
+    "budget_maxdd": -0.599219,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 2.2401,
+    "cagr": 0.06952,
+    "max_drawdown": -0.59905,
+    "cvar_5": -0.16919,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.32806,
+    "realized_vol_annual": 0.22115,
+    "mean_monthly": 0.00778
+   },
+   "constraints": {
+    "maxdd_ok": true,
+    "cvar_ok": true,
+    "worst_month_ok": true,
+    "gross_ok": true,
+    "maxdd_budget": -0.59923,
+    "cvar_budget": -0.19239,
+    "worst_month_floor": -0.4,
+    "passes": true,
+    "objective": "maximize after-cost terminal wealth subject to maxDD <= 1.25 x SPY's maxDD over the same months, monthly CVaR5 <= 1.5 x SPY's, no month worse than -40%, gross <= 2.0x, financing at RF + 100 bps on borrowed notional"
+   },
+   "largest_admissible": {
+    "leverage": 1.7871,
+    "budget_maxdd": -0.599219,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 9.5825,
+    "cagr": 0.20723,
+    "max_drawdown": -0.59917,
+    "cvar_5": -0.23223,
+    "cvar_5_n_months": 7,
+    "worst_month": -0.30723,
+    "realized_vol_annual": 0.34627,
+    "mean_monthly": 0.020926
+   },
+   "p_ruin": {
+    "p_ruin": 0.576,
+    "threshold": -0.5,
+    "n_boot": 1000,
+    "block_mean_periods": 4.0,
+    "seed": 20260907,
+    "horizon_months": 144,
+    "median_worst_drawdown": -0.52453,
+    "p95_worst_drawdown": -0.76701,
+    "construction": "stationary block bootstrap of the monthly series",
+    "computed_on": "the LARGEST ADMISSIBLE book (L=1.7871), not the unlevered series"
+   },
+   "headline": "beta 0.765 (intercept 8.907%/yr, t 2.127): TW 4.8165 vs SPY 2.0935, maxDD -0.36276 vs budget -0.59923, leverage-neutral TW 4.1027 over 144 months at 25 bps"
+  }
+ },
+ "development_era_signs": {
+  "1999-2007": {
+   "months": 48,
+   "book_tw": 1.3541,
+   "spy_tw": 1.2437,
+   "mean_monthly_excess_pct": 0.34,
+   "sign": "POSITIVE"
+  },
+  "2008-2015": {
+   "months": 96,
+   "book_tw": 3.557,
+   "spy_tw": 1.6833,
+   "mean_monthly_excess_pct": 0.7564,
+   "sign": "POSITIVE"
+  },
+  "2016-2024": {
+   "verdict": "CANNOT DETERMINE (0 months)"
+  },
+  "_grid_source": "learner.evaluate.long_eras(), derived from learner.long_panel.ERAS \u2014 NOT evaluate.ERAS, which is 2016-2024 and would describe only the sealed era"
+ },
+ "sealed": {
+  "10bps": {
+   "label": "m12_quality_mom|dd|SEALED|10bps",
+   "cost_bps_per_side": 10.0,
+   "months": 107,
+   "window": [
+    "2016-01",
+    "2024-11"
+   ],
+   "financing_bps_over_rf": 100.0,
+   "gross_cap": 2.0,
+   "beta": 0.6711,
+   "market_model": {
+    "beta": 0.6711,
+    "beta_t_vs_1": -3.436,
+    "intercept_monthly": 0.004863,
+    "intercept_annualised_pct": 5.835,
+    "intercept_t_hac": 1.148,
+    "n": 107,
+    "hac_lag": 4
+   },
+   "book": {
+    "terminal_wealth": 3.9942,
+    "cagr": 0.16802,
+    "max_drawdown": -0.29639,
+    "cvar_5": -0.13379,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.29639,
+    "realized_vol_annual": 0.19027,
+    "mean_monthly": 0.014613
+   },
+   "spy": {
+    "terminal_wealth": 3.6707,
+    "cagr": 0.15701,
+    "max_drawdown": -0.30987,
+    "cvar_5": -0.13512,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.30987,
+    "realized_vol_annual": 0.18638,
+    "mean_monthly": 0.013755
+   },
+   "rf_annualised_pct": 1.893,
+   "leverage_neutral": {
+    "scale": 0.9796,
+    "scale_uncapped": 0.9796,
+    "capped_by_gross": false,
+    "construction": "book scaled to SPY's realized vol over the same months; borrowed notional charged at RF + 100 bps, unused cash earns RF",
+    "terminal_wealth": 3.9109,
+    "cagr": 0.16526,
+    "max_drawdown": -0.29029,
+    "cvar_5": -0.13103,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.29029,
+    "realized_vol_annual": 0.18639,
+    "mean_monthly": 0.014347,
+    "vs_spy_terminal_wealth": 0.2402,
+    "beats_spy": true
+   },
+   "levered_spy_at_budget": {
+    "leverage": 1.2471,
+    "budget_maxdd": -0.387334,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 4.4823,
+    "cagr": 0.18322,
+    "max_drawdown": -0.38714,
+    "cvar_5": -0.16903,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.38714,
+    "realized_vol_annual": 0.2325,
+    "mean_monthly": 0.016558
+   },
+   "constraints": {
+    "maxdd_ok": true,
+    "cvar_ok": true,
+    "worst_month_ok": true,
+    "gross_ok": true,
+    "maxdd_budget": -0.38734,
+    "cvar_budget": -0.20268,
+    "worst_month_floor": -0.4,
+    "passes": true,
+    "objective": "maximize after-cost terminal wealth subject to maxDD <= 1.25 x SPY's maxDD over the same months, monthly CVaR5 <= 1.5 x SPY's, no month worse than -40%, gross <= 2.0x, financing at RF + 100 bps on borrowed notional"
+   },
+   "largest_admissible": {
+    "leverage": 1.3037,
+    "budget_maxdd": -0.387334,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 5.2103,
+    "cagr": 0.20336,
+    "max_drawdown": -0.38726,
+    "cvar_5": -0.17516,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.38726,
+    "realized_vol_annual": 0.24796,
+    "mean_monthly": 0.018319
+   },
+   "p_ruin": {
+    "p_ruin": 0.1985,
+    "threshold": -0.5,
+    "n_boot": 2000,
+    "block_mean_periods": 4.0,
+    "seed": 20260907,
+    "horizon_months": 107,
+    "median_worst_drawdown": -0.38726,
+    "p95_worst_drawdown": -0.61972,
+    "construction": "stationary block bootstrap of the monthly series",
+    "computed_on": "the LARGEST ADMISSIBLE book (L=1.3037), not the unlevered series"
+   },
+   "headline": "beta 0.6711 (intercept 5.835%/yr, t 1.148): TW 3.9942 vs SPY 3.6707, maxDD -0.29639 vs budget -0.38734, leverage-neutral TW 3.9109 over 107 months at 10 bps"
+  },
+  "25bps": {
+   "label": "m12_quality_mom|dd|SEALED|25bps",
+   "cost_bps_per_side": 25.0,
+   "months": 107,
+   "window": [
+    "2016-01",
+    "2024-11"
+   ],
+   "financing_bps_over_rf": 100.0,
+   "gross_cap": 2.0,
+   "beta": 0.6681,
+   "market_model": {
+    "beta": 0.6681,
+    "beta_t_vs_1": -3.464,
+    "intercept_monthly": 0.004089,
+    "intercept_annualised_pct": 4.907,
+    "intercept_t_hac": 0.968,
+    "n": 107,
+    "hac_lag": 4
+   },
+   "book": {
+    "terminal_wealth": 3.6684,
+    "cagr": 0.15693,
+    "max_drawdown": -0.29663,
+    "cvar_5": -0.13485,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.29663,
+    "realized_vol_annual": 0.18991,
+    "mean_monthly": 0.013803
+   },
+   "spy": {
+    "terminal_wealth": 3.6707,
+    "cagr": 0.15701,
+    "max_drawdown": -0.30987,
+    "cvar_5": -0.13512,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.30987,
+    "realized_vol_annual": 0.18638,
+    "mean_monthly": 0.013755
+   },
+   "rf_annualised_pct": 1.893,
+   "leverage_neutral": {
+    "scale": 0.9814,
+    "scale_uncapped": 0.9814,
+    "capped_by_gross": false,
+    "construction": "book scaled to SPY's realized vol over the same months; borrowed notional charged at RF + 100 bps, unused cash earns RF",
+    "terminal_wealth": 3.6044,
+    "cagr": 0.15465,
+    "max_drawdown": -0.29109,
+    "cvar_5": -0.13232,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.29109,
+    "realized_vol_annual": 0.18639,
+    "mean_monthly": 0.013576,
+    "vs_spy_terminal_wealth": -0.0663,
+    "beats_spy": false
+   },
+   "levered_spy_at_budget": {
+    "leverage": 1.2471,
+    "budget_maxdd": -0.387334,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 4.4823,
+    "cagr": 0.18322,
+    "max_drawdown": -0.38714,
+    "cvar_5": -0.16903,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.38714,
+    "realized_vol_annual": 0.2325,
+    "mean_monthly": 0.016558
+   },
+   "constraints": {
+    "maxdd_ok": true,
+    "cvar_ok": true,
+    "worst_month_ok": true,
+    "gross_ok": true,
+    "maxdd_budget": -0.38734,
+    "cvar_budget": -0.20268,
+    "worst_month_floor": -0.4,
+    "passes": true,
+    "objective": "maximize after-cost terminal wealth subject to maxDD <= 1.25 x SPY's maxDD over the same months, monthly CVaR5 <= 1.5 x SPY's, no month worse than -40%, gross <= 2.0x, financing at RF + 100 bps on borrowed notional"
+   },
+   "largest_admissible": {
+    "leverage": 1.3027,
+    "budget_maxdd": -0.387334,
+    "binding": "DRAWDOWN_BUDGET",
+    "terminal_wealth": 4.6616,
+    "cagr": 0.18844,
+    "max_drawdown": -0.38728,
+    "cvar_5": -0.1764,
+    "cvar_5_n_months": 5,
+    "worst_month": -0.38728,
+    "realized_vol_annual": 0.2473,
+    "mean_monthly": 0.017252
+   },
+   "p_ruin": {
+    "p_ruin": 0.212,
+    "threshold": -0.5,
+    "n_boot": 2000,
+    "block_mean_periods": 4.0,
+    "seed": 20260907,
+    "horizon_months": 107,
+    "median_worst_drawdown": -0.38892,
+    "p95_worst_drawdown": -0.62758,
+    "construction": "stationary block bootstrap of the monthly series",
+    "computed_on": "the LARGEST ADMISSIBLE book (L=1.3027), not the unlevered series"
+   },
+   "headline": "beta 0.6681 (intercept 4.907%/yr, t 0.968): TW 3.6684 vs SPY 3.6707, maxDD -0.29663 vs budget -0.38734, leverage-neutral TW 3.6044 over 107 months at 25 bps"
+  }
+ },
+ "dsr_over_family_on_the_sealed_excess": {
+  "sharpe": 0.0011,
+  "sharpe_benchmark_sr0": 0.2541,
+  "n_trials": 128,
+  "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+  "skew": -1.152,
+  "kurtosis": 11.518,
+  "n_periods": 107,
+  "z": -2.6037,
+  "dsr": 0.0046,
+  "verdict": "WITHIN_SELECTION_NOISE",
+  "reading": "after 128 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.254; this arm's is 0.001."
+ },
+ "family_cells_looked_at": 128,
+ "family_pbo": 0.6429,
+ "family_pbo_verdict": "SELECTION_IS_OVERFIT",
+ "amendment_gate_5": {
+  "sealed_tw_at_budget_beats_levered_spy_at_budget": true,
+  "dsr_over_family_gt_0_95": false,
+  "positive_in_at_least_2_of_3_development_eras": true,
+  "constraints_pass_on_the_sealed_era": true,
+  "family_pbo_below_0_5": false,
+  "ALL_MET": false,
+  "failed": [
+   "dsr_over_family_gt_0_95",
+   "family_pbo_below_0_5"
+  ],
+  "_also_reported_not_part_of_the_gate": {
+   "unlevered_book_beats_spy_tr": false,
+   "unlevered_book_tw": 3.6684,
+   "spy_tr_tw": 3.6707,
+   "leverage_neutral_tw_beats_spy_tr": false,
+   "leverage_neutral_tw": 3.6044,
+   "book_at_budget_tw": 4.6616,
+   "book_leverage_at_budget": 1.3027,
+   "levered_spy_at_budget_tw": 4.4823,
+   "spy_leverage_at_budget": 1.2471
+  },
+  "_correction": "CORRECTED AFTER THE SEALED NUMBERS WERE VISIBLE, and the correction is recorded rather than absorbed. The gate as first written compared the UNLEVERED book's terminal wealth to LEVERED SPY's -- an unlevered book against a levered benchmark, which is not 'at equal drawdown budget' and is the exact confusion this whole module exists to stop. Amendment 5 says 'sealed-era TW > levered-SPY TW at EQUAL drawdown budget', so both sides are sized to the budget: `largest_admissible.terminal_wealth` against `levered_spy_at_budget.terminal_wealth`. BOTH readings are reported. The correction changes ONE sub-condition and does NOT change the verdict -- the DSR and PBO conditions fail either way -- which is the only reason it was safe to make after the fact. The sealed era was NOT re-opened: every number here comes from the single opening already on the ledger."
+ },
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "memory_free_gb_before": 8.85,
+ "wall_seconds": 6.4,
+ "generated_utc": "2026-09-06T13:38:59.173882+00:00",
+ "headline": "beta 0.6681 (intercept 4.907%/yr, HAC t 0.968): on 2016-2024, unseen in development, m12_quality_mom|dd returned 3.6684x vs SPY TR 3.6707x after 25 bps, at maxDD -0.29663 against SPY's -0.30987. SIZED TO THE SAME DRAWDOWN BUDGET the book runs 1.3027x for 4.6616x and levered SPY runs 1.2471x for 4.4823x. Leverage-neutral TW 3.6044. DSR 0.0046 over 128 cells; family PBO 0.6429; amendment 5 gate NOT MET -- failed dsr_over_family_gt_0_95, family_pbo_below_0_5",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g4_seal.py",
+   "--regate"
+  ],
+  "resolved_config": {
+   "job": "G4_seal",
+   "mode": "regate"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
+    "sha256": "37c5d014ff1ecf2cb4fd7c3ef917adab00fe8349455dee4971b434050527551a",
+    "bytes": 22543,
+    "opened_utc": "2026-09-06T13:40:53+00:00",
+    "note": "the sealed receipt whose verdict is being recomputed"
+   }
+  ],
+  "git_commit": "46c08d68e966",
+  "generated_utc": "2026-09-06T13:40:53+00:00"
+ },
+ "regated_utc": "2026-09-06T13:40:53.401852+00:00",
+ "sealed_era_reopened_by_this_correction": false
+}
