@@ -98,6 +98,13 @@ the wrong path. Fetch first, then check, and check the real path.
    jobs, a running test suite, ~1,676 already-billed LLM extractions, and the
    Optimus MCP server for the rest of the session. Kill by PID, from a PID you
    wrote down when you started the process, or don't kill.
+7. **A gate that reads a file's mtime is a gate on checkout time.** On a fresh
+   CI checkout every file is "written today", so a receipt-date gate that fell
+   back to `st_mtime` flagged a 2026-09-02 receipt as new and kept finance CI
+   red for two days while passing locally. Date a receipt by its own stamp,
+   else by the commit that added it (`git log --diff-filter=A`), never by the
+   filesystem. Same family: `cmd | tail` eats the exit code, so a `&&` chain
+   commits a red test.
 
 The long-form lessons behind this file (the farm's seven lessons, the feature
 list, layout, test table, retired lab) moved verbatim to
