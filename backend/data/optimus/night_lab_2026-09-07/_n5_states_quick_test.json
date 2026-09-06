@@ -1,0 +1,229 @@
+{
+  "job": "N5_states_third_null",
+  "lane": "N5.3",
+  "licence": "PRODUCT_EXPERIMENT",
+  "state_col": "state_k4",
+  "primary_target": "excess_vw_1m",
+  "prior_verdict": "REFUTED (void under its own bar) -- docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md claim 9: null 1 (legacy within-month) clears at p~0.000, null 2 (persistent circular-shift) FAILS at p=1.000 (observed spread below every draw) at k=3/4/5. 'the two nulls bracket a name-path confound neither controls.' This receipt runs the third.",
+  "params": {
+    "n_draws": 64,
+    "seed": 20260907
+  },
+  "llm_spend_usd": 0.0,
+  "llm_calls": 0,
+  "data": {
+    "rows_after_merge": 371848,
+    "distinct_permnos": 5358,
+    "distinct_months": 120,
+    "month_min": "2015-01",
+    "month_max": "2024-12"
+  },
+  "state_is_market_level": false,
+  "state_is_market_level_note": "checked directly: if state_k4 were constant within a month (market-level), null 1 (within-month shuffle) would be the identity by construction. It is NOT constant here -- state_k4 is a per-(permno, month) assignment, which is the object nulls 1-3 are all correctly defined for.",
+  "null_1_within_month_legacy": {
+    "statistic": "max-minus-min of per-state mean monthly excess",
+    "target": "excess_vw_1m",
+    "observed": 0.01391,
+    "null_shuffles": 64,
+    "null_mean": 0.001459,
+    "null_p95": 0.002523,
+    "null_max": 0.003187,
+    "percentile_of_observed_in_null": 1.0,
+    "p_value_one_sided": 0.0,
+    "beats_random_partition": true,
+    "null_bar": "LEGACY_SHUFFLED_RANKING (mis-specified, see learner/nullbar.py)"
+  },
+  "null_2_persistent_circular_shift": {
+    "statistic": "max-minus-min of per-state mean monthly excess",
+    "target": "excess_vw_1m",
+    "observed": 0.01391,
+    "null_shuffles": 64,
+    "null_mean": 0.021941,
+    "null_p95": 0.023687,
+    "null_max": 0.023813,
+    "percentile_of_observed_in_null": 0.0,
+    "p_value_one_sided": 1.0,
+    "beats_persistent_relabelling": false,
+    "null_bar": "PERSISTENCE_PRESERVING_CIRCULAR_SHIFT (learner/states.persistent_shuffled_null; supersedes the LEGACY within-month shuffle)"
+  },
+  "null_3_name_path_permutation": {
+    "statistic": "max-minus-min of per-state mean monthly excess (learner.states.spread_statistic)",
+    "target": "excess_vw_1m",
+    "observed": 0.01391,
+    "n_names": 5346,
+    "n_months": 119,
+    "n_rows_graded": 368613,
+    "n_draws_requested": 64,
+    "n_draws_usable": 64,
+    "mean_donor_coverage": 0.5812,
+    "coverage_note": "share of rows whose donor actually had a state assigned in that exact calendar month; a donor with no listing/coverage that month contributes no row to that draw's spread, same as a real cross-sectional gap would.",
+    "null_bar": "MODEL_NULL_PERCENTILE (>=64 fitted-on-shuffled draws, learner/nullbar.py)",
+    "null_summary": {
+      "n_draws": 64,
+      "p50": 0.002,
+      "p95": 0.004,
+      "min": 0.0,
+      "max": 0.005,
+      "sd": 0.001
+    },
+    "percentile_of_observed_in_null": 1.0,
+    "p_one_sided": 0.0154,
+    "beats_name_path_permutation": true,
+    "verdict": "CLEARS_MODEL_NULL"
+  },
+  "era_table": {
+    "by_era": {
+      "1999-2007": {
+        "months": 0,
+        "rows": 0,
+        "spread": null,
+        "note": "fewer than 6 months"
+      },
+      "2008-2015": {
+        "months": 12,
+        "rows": 36521,
+        "spread": 0.025821
+      },
+      "2016-2024": {
+        "months": 107,
+        "rows": 332092,
+        "spread": 0.012686
+      }
+    },
+    "eras_measured": 2,
+    "era_consistent_ratio_ge_0_5": false,
+    "note": "a spread is a range (max-min), non-negative by construction -- consistency means the eras agree in MAGNITUDE (min/max >= 0.5), not merely that all are positive, which is true of any partition whatsoever."
+  },
+  "secondary_target_excess_vw_3m": {
+    "null_1": {
+      "p_one_sided": 0.0
+    },
+    "null_2": {
+      "p_one_sided": 1.0,
+      "verdict": false
+    },
+    "null_3": {
+      "p_one_sided": 0.0154,
+      "verdict": "CLEARS_MODEL_NULL"
+    }
+  },
+  "final_verdict": {
+    "verdict": "CANNOT_DETERMINE",
+    "family_case": "NULL_2_ALONE_DISAGREES",
+    "p_null_1": 0.0,
+    "clears_null_1": true,
+    "p_null_2": 1.0,
+    "clears_null_2": false,
+    "observed_below_null_2_mean": true,
+    "p_null_3": 0.0154,
+    "clears_null_3": true,
+    "reasoning": "Null 3 clearing while null 2 does not is a genuinely different reading from the review's -- it would say the calendar-holding, donor-path-swapping test finds real name-return-timing signal that the time-shifting test's own within-name misalignment happens to mask. Reported as CANNOT DETERMINE rather than adjudicated here: a 3-null split decision on a screen is not a verdict this file is licensed to resolve into a claim.",
+    "family_id": "n5-states-k4-three-nulls",
+    "family_size": 1,
+    "family_max_p_note": "one state definition (k=4) tested; a family-max correction across k in {3,4,5,6,8} was NOT run here (out of scope/time for this lane) -- the review's claim 9 quotes k=3/4/5 all failing null 2, which is suggestive but not this receipt's own multiplicity-corrected number.",
+    "dsr_pbo_note": "not applicable: this is a cross-sectional spread statistic on a partition, not a book with a Sharpe ratio to deflate -- same rationale as scripts.weekend_lab_jobs.screen_verdict for a Fama-MacBeth screen.",
+    "mde_note": "the detectable floor IS the null's own p95: null 2's p95=0.023687, null 3's p95=0.004 (observed must clear this to be distinguishable from either null's own noise at alpha=0.05)."
+  },
+  "demotion": {
+    "instruction": "verdict is CANNOT DETERMINE (or worse): the four unsupervised states (state_k4 and its k-ladder siblings) are to be DEMOTED everywhere they are currently used as a live input -- i.e. treated as unvalidated / informational-only, never as a sizing, admission, or routing input, until a state definition clears all three nulls or a fourth, better null resolves the remaining disagreement.",
+    "usage_grep": {
+      "aegis_finance": {
+        "state_k4": [
+          "docs/STATES_2026-09-03_UNSUPERVISED_V1.md:350:1. Train a router on `state_k4` and grade it on **terminal wealth net of",
+          "learner/states.py:884:        S.persistent_shuffled_null(g, \"state_k4\", \"excess_vw_1m\","
+        ],
+        "STATE_SEMANTICS": [
+          "learner/potential_universe.py:139:STATE_SEMANTICS = {",
+          "learner/potential_universe.py:577:            \"semantics\": STATE_SEMANTICS},",
+          "learner/potential_universe.py:779:    \"CODE_VERSION\", \"V2_FROZEN_CHAMPION\", \"STATE_SEMANTICS\","
+        ],
+        "unsupervised_states_20260903": [
+          "backend/data/optimus/learner/states/README.md:14:`backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json`.",
+          "backend/tests/test_benchmark_canonical.py:70:    \"unsupervised_states_20260903.json\": \"S38 void under its own persistent null; superseded by B4\",",
+          "docs/DATA_MANIFEST.md:64:- `backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json` \u00e2\u20ac\u201d the",
+          "docs/HANDOFF_2026-09-03_S36_REVIEW_AND_BUILD.md:60:| Unsupervised states | 4 stable OOS states, p=0.000 vs 200 random partitions; state 0 \"broken lottery ticket\" (19%): mean -4.9%/3m t -3.4, worst-5% -75%, big-upside freq 21.7%; half the panel kills every model except lgbm_clf | `tracker_backtest/unsupervised_states_20260903.json` |",
+          "docs/HANDOFF_2026-09-04_S37_TO_FABLE51_REVIEW_MANDATE.md:49:| 9 | Unsupervised states: 4 OOS states; first consumer = SIZING (GPT) vs stop-width (handoff) \u00e2\u20ac\u201d unresolved tension | `unsupervised_states_20260903.json` | the new persistence-preserving null (`learner/states.py::persistent_shuffled_null`) has NOT been run over the sealed states result \u00e2\u20ac\u201d running it is fair game and could kill the states |",
+          "docs/INDEX.md:97:  them as evidence. `unsupervised_states_20260903` is CANNOT DETERMINE.",
+          "docs/INDEX.md:140:- **`STATES_2026-09-03_UNSUPERVISED_V1.md` \u00e2\u20ac\u201d the first unsupervised state learner.** Receipt: `backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json`. `PRODUCT_EXPERIMENT`. Representation fitted with **no future column reachable** (refused in code, tested both ways); 20 refit blocks, **371,848 company-vintages over 120 months** assigned strictly out of sample. **4 stable states** (matched-centroid drift 0.026 of separation; persistence 0.499 vs 0.25 random) that beat a within-month shuffled null at **every k, p = 0.000** \u00e2\u20ac\u201d and still separate returns **inside `lt_1_5`** (242,440 rows, p = 0.000), so they are not the band prior rediscovered. **The money question: `lgbm_clf` is the only arm established in all four states** (worst t 3.20); `mlp__raw` (t 0.94), `ridge__raw` (t 1.72) and the prior (t 0.12) all collapse in state 1 \u00e2\u20ac\u201d **half the panel**. Band held fixed, `mlp__raw` runs **+0.029 (t 2.05)** in the knife state and **\u00e2\u02c6\u20190.011 (t \u00e2\u02c6\u20190.87)** in the upgrade state: a routing signal, small and single-band. **NO state is profitable** \u00e2\u20ac\u201d this ranks loss and tail, not return. Market-regime layer is **CANNOT DETERMINE** (the shuffled-target null scores t 2.72 in one regime; the 3\u00e2\u20ac\u201c5 band's premium is not regime-conditional, p = 0.698). Autoencoder **NOT KEPT**. Code: `learner/states.py`, `scripts/learner_states_run.py`, `backend/tests/test_learner_states.py`. Assignments are parquet and NOT committed \u00e2\u20ac\u201d `DATA_MANIFEST.md`.",
+          "docs/SESSION_2026-09-03_SCOREBOARD_AND_ROADMAP_ADDENDUM.md:51:   `tracker_backtest/unsupervised_states_20260903.json`.",
+          "docs/STATES_2026-09-03_UNSUPERVISED_V1.md:5:`backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json`.",
+          "learner/potential_universe.py:135:STATES_RECEIPT = \"backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json\"",
+          "scripts/learner_states_run.py:9:    backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json",
+          "scripts/learner_states_run.py:67:           / \"unsupervised_states_20260903.json\")",
+          "scripts/learner_states_run.py:777:        \"`backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json`.\\n\","
+        ],
+        "company_states.parquet": [
+          "backend/data/optimus/learner/states/README.md:3:`company_states.parquet` -- one row per (permno, month) assigned OUT OF SAMPLE by a",
+          "docs/DATA_MANIFEST.md:51:| `backend/data/optimus/learner/states/company_states.parquet` | ~35.9 MB | `python -m scripts.learner_states_run` | rerun the script (~11 min) |",
+          "scripts/learner_states_run.py:12:    backend/data/optimus/learner/states/company_states.parquet",
+          "scripts/learner_states_run.py:489:                                else \"company_states.parquet\")",
+          "scripts/learner_states_run.py:557:                           else \"company_states.parquet\")",
+          "scripts/learner_states_run.py:768:        \"`company_states.parquet` -- one row per (permno, month) assigned OUT OF SAMPLE by a\\n\""
+        ],
+        "market_states.parquet": [
+          "backend/data/optimus/learner/states/README.md:10:`market_states.parquet` -- one row per month, `market_state` assigned by a KMeans",
+          "docs/DATA_MANIFEST.md:52:| `backend/data/optimus/learner/states/market_states.parquet` | ~7 KB | `python -m scripts.learner_states_run` | rerun the script |",
+          "scripts/learner_states_run.py:16:    backend/data/optimus/learner/states/market_states.parquet",
+          "scripts/learner_states_run.py:491:                               else \"market_states.parquet\")",
+          "scripts/learner_states_run.py:559:                            else \"market_states.parquet\")",
+          "scripts/learner_states_run.py:774:        \"`market_states.parquet` -- one row per month, `market_state` assigned by a KMeans\\n\""
+        ]
+      },
+      "aegis_alpha_terminal": []
+    },
+    "known_live_references": [
+      {
+        "file": "learner/potential_universe.py:125-142,577,698",
+        "what": "STATE_SEMANTICS tags + STATES_RECEIPT path, quoted into the 'whole_universe_refusals' / per-row 'state' block of every scorecard row",
+        "current_status": "ALREADY INERT for a different reason: a day file cannot supply the STATE_FEATURES columns, so `state.status` is CANNOT_DETERMINE on every row today regardless of this receipt. Demotion here is confirmatory, not a new restriction -- but the SEMANTICS TEXT ('broken-lottery-ticket', 'p=0.000 vs 200 random partitions') should be corrected or removed the next time that file is touched, since it quotes null 1 alone and reads as a validated finding."
+      },
+      {
+        "file": "scripts/weekend_lab_jobs.py (W8_states_three_nulls)",
+        "what": "measures MARKET-LEVEL states (a different object: one state per MONTH, not per (permno, month)) with its own three-null design",
+        "current_status": "not directly affected by this receipt (different object), but shares the same 'states' brand -- a reader should not infer market-level states are validated because this receipt is silent on them, nor infer they are demoted; W8's own receipts carry their own verdict."
+      },
+      {
+        "file": "docs/REVIEW_2026-09-04_FABLE51_VERDICTS.md claim 9 / claim 7 (allocator v1)",
+        "what": "the allocator v1 plan was already marked UNVALIDATED pending this null; this receipt does not lift that mark (it deepens the same finding)."
+      }
+    ]
+  },
+  "status": "OK",
+  "runtime_seconds": 16.5,
+  "memory": {
+    "free_gb_before_states_third_null_run": 5.02,
+    "free_gb_after": 2.79
+  },
+  "_provenance": {
+    "sys_argv": [
+      "C:\\Users\\mrthn\\aegis-finance\\scripts\\n5_states_third_null.py",
+      "--quick",
+      "--out",
+      "backend/data/optimus/night_lab_2026-09-07/_n5_states_quick_test.json"
+    ],
+    "resolved_config": {
+      "out": "backend/data/optimus/night_lab_2026-09-07/_n5_states_quick_test.json",
+      "n_draws": 200,
+      "seed": 20260907,
+      "quick": true
+    },
+    "_inputs_opened": [
+      {
+        "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/states/company_states.parquet",
+        "sha256": "139564d6d047921d37d43dc94c9920b02ef2498d25cf142932ee76213080fd17",
+        "bytes": 35894357,
+        "opened_utc": "2026-09-06T17:36:41+00:00",
+        "note": "OOS state assignments (this file's own object)"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table.parquet",
+        "sha256": "e3cdd0e308cbb2ebd1a0fa6eb47e91dff0037843998ea7a893f8f05798cc5385",
+        "bytes": 204021057,
+        "opened_utc": "2026-09-06T17:36:42+00:00",
+        "note": "monthly forward-excess-return targets"
+      }
+    ],
+    "git_commit": "813f64a8ad46",
+    "generated_utc": "2026-09-06T17:36:58+00:00"
+  }
+}

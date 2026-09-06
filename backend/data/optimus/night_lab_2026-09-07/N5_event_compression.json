@@ -1,0 +1,833 @@
+{
+  "job": "N5_event_compression",
+  "lane": "N5.1",
+  "licence": "PRODUCT_EXPERIMENT",
+  "snapshot_utc": "2026-09-06T17:32:37+00:00",
+  "params": {
+    "sim_threshold": 0.45,
+    "window_hours": 72.0,
+    "novelty_lookback": 100,
+    "max_features": 4000,
+    "n_null_draws": 200,
+    "seed": 20260907
+  },
+  "llm_spend_usd": 0.0,
+  "llm_calls": 0,
+  "corpus_dir_found": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\corpus\\observations",
+  "corpus_snapshot": {
+    "files_read": 87,
+    "news_rows_read": 137190,
+    "distinct_symbols": 156,
+    "observed_at_min": "2015-02-23 18:26:42+00:00",
+    "observed_at_max": "2026-08-29 13:00:34+00:00"
+  },
+  "compression": {
+    "raw_news_rows": 137190,
+    "n_canonical_events": 105494,
+    "compression_ratio": 1.3005,
+    "note": "TF-IDF title+body (600 chars), per-symbol time-windowed greedy nearest-centroid clustering (sim_threshold=0.45, window=72h). Catches exact-reformatted duplicate headlines; MISSES same-event stories with no shared vocabulary -- this ratio is a LOWER BOUND on true syndication compression, not a point estimate.",
+    "top_symbols_by_raw_rows": {
+      "SPY": {
+        "raw_rows": 38259,
+        "n_events": 28556,
+        "compression_ratio": 1.34
+      },
+      "NVDA": {
+        "raw_rows": 8433,
+        "n_events": 7072,
+        "compression_ratio": 1.192
+      },
+      "AMD": {
+        "raw_rows": 7245,
+        "n_events": 5158,
+        "compression_ratio": 1.405
+      },
+      "MU": {
+        "raw_rows": 6695,
+        "n_events": 4895,
+        "compression_ratio": 1.368
+      },
+      "MRVL": {
+        "raw_rows": 3718,
+        "n_events": 2617,
+        "compression_ratio": 1.421
+      },
+      "TSM": {
+        "raw_rows": 3161,
+        "n_events": 2191,
+        "compression_ratio": 1.443
+      },
+      "QQQ": {
+        "raw_rows": 2737,
+        "n_events": 1829,
+        "compression_ratio": 1.496
+      },
+      "CRM": {
+        "raw_rows": 2159,
+        "n_events": 1848,
+        "compression_ratio": 1.168
+      },
+      "AVGO": {
+        "raw_rows": 1969,
+        "n_events": 1700,
+        "compression_ratio": 1.158
+      },
+      "LULU": {
+        "raw_rows": 1650,
+        "n_events": 1320,
+        "compression_ratio": 1.25
+      }
+    },
+    "independent_source_count_summary": {
+      "mean": 1.032,
+      "share_multi_source": 0.0291
+    },
+    "dissemination_speed_summary": {
+      "n_with_speed": 14423,
+      "median_sources_per_hour": 0.2293
+    }
+  },
+  "eightk_secondary": {
+    "status": "OK",
+    "rows": 293619,
+    "distinct_accessions": 293610,
+    "distinct_tickers": 2594,
+    "compression_ratio": 1.0,
+    "note": "one accession number IS one filing event; SEC EDGAR cannot assign the same accession twice, so this pool is canonical already and clustering it would find nothing. Included for 'whatever backfill exists' completeness, not compressed."
+  },
+  "novelty_test": {
+    "novelty_source": "event_table_v1 (N4 lane; permno pre-resolved via crsp_stocknames_interval)",
+    "n_canonical_test_events": 19377,
+    "n_with_permno": 19377,
+    "n_matched_to_forward_return": 18071,
+    "forward_return_ceiling_note": "train_table.parquet ends 2024-12; only the corpus's 2015-2016 vintage has a matured forward return in-house. The 2025-2026 majority of the corpus is untestable against this target until a later panel pull exists.",
+    "family_id": "n5-event-compression-novelty",
+    "family_size": 1,
+    "null_test": {
+      "n_matched_events": 18071,
+      "observed_ic": 0.003663,
+      "observed_p_naive": 0.622488,
+      "n_draws_requested": 200,
+      "n_draws_usable": 200,
+      "null_bar": "MODEL_NULL_PERCENTILE (>=64 fitted-on-shuffled draws, learner/nullbar.py)",
+      "null_summary": {
+        "n_draws": 200,
+        "p50": -0.005,
+        "p95": 0.005,
+        "min": -0.021,
+        "max": 0.01,
+        "sd": 0.006
+      },
+      "percentile_of_observed": 0.92,
+      "p_one_sided": 0.0846,
+      "verdict": "WITHIN_MODEL_NULL"
+    },
+    "era_table": {
+      "by_year": {
+        "2015": {
+          "n": 2526,
+          "ic": 0.025103,
+          "p_naive": 0.207225
+        },
+        "2016": {
+          "n": 6652,
+          "ic": -0.002698,
+          "p_naive": 0.825885
+        },
+        "2017": {
+          "n": 6831,
+          "ic": 0.031204,
+          "p_naive": 0.009903
+        },
+        "2018": {
+          "n": 2061,
+          "ic": -0.014179,
+          "p_naive": 0.520005
+        },
+        "2022": {
+          "n": 1,
+          "ic": null,
+          "note": "fewer than 8 matched events"
+        }
+      },
+      "house_era_of_each_year": {
+        "2015": "2008-2015",
+        "2016": "2016-2024",
+        "2017": "2016-2024",
+        "2018": "2016-2024",
+        "2022": "2016-2024"
+      },
+      "note": "the standard three-era table (1999-2007/2008-2015/2016-2024) cannot be filled: this corpus's forward-return-matured window is 2015-2016 only, touching one year each of the last two named eras and none of the first. Reported by calendar year; era-consistency (>=2 of 3 same sign) is NOT assessable on 1-2 usable years and is not claimed.",
+      "eras_measured": 4,
+      "same_sign_years": false
+    },
+    "verdict": "WITHIN_MODEL_NULL",
+    "verdict_note": "this is a single-feature screen against one target, not a book: DSR/PBO/SPA (which deflate a SHARPE) do not apply. The bar here is the model-null percentile from learner/nullbar.py. Per house convention a screen never reaches NOVEL regardless of p-value."
+  },
+  "nemotron_probe": {
+    "status": "OK",
+    "latency_ms": 935.9,
+    "n_embeddings": 3,
+    "dim": 2048,
+    "model": "nvidia/nemotron-3-embed-1b",
+    "batch_requested": 3
+  },
+  "status": "OK",
+  "runtime_seconds": 194.0,
+  "memory": {
+    "free_gb_before_event_compression_run": 5.78,
+    "free_gb_after": 5.93
+  },
+  "_provenance": {
+    "sys_argv": [
+      "C:\\Users\\mrthn\\aegis-finance\\scripts\\n5_event_compression.py",
+      "--n-null-draws",
+      "200"
+    ],
+    "resolved_config": {
+      "out": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_lab_2026-09-07\\N5_event_compression.json",
+      "sim_threshold": 0.45,
+      "window_hours": 72.0,
+      "novelty_lookback": 100,
+      "max_features": 4000,
+      "n_null_draws": 200,
+      "seed": 20260907,
+      "quick": false,
+      "skip_nim_probe": false
+    },
+    "_inputs_opened": [
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-02.jsonl",
+        "sha256": "baf6b7faa44bc9b8a32d70daca3598dcb8bfb5a07ea5831d5f3b57bf0e25100d",
+        "bytes": 466,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-05.jsonl",
+        "sha256": "766dbac3c390a1046dfe5ac844dec34c124cbe22a04da8a353e7aef5a0c207c6",
+        "bytes": 886,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-06.jsonl",
+        "sha256": "ec705754f71df1a04a1edd0d5d85d4875a4c91b92a37bdecde81fd40d3ce58fd",
+        "bytes": 468,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-07.jsonl",
+        "sha256": "e5a8cdc4d5ac6d62876654437bcf8d3f1893432a62da3ebb975b92eeea8639b1",
+        "bytes": 940,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-08.jsonl",
+        "sha256": "544fdc95e7ad600cab914c7aacdc00dd5f28b6c5f20cc91ed04130bcfdc92d15",
+        "bytes": 432238,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-09.jsonl",
+        "sha256": "982196b5afc2270a05dc77b57712a26798cb0fac766a761d1240116841fabd04",
+        "bytes": 366457,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-10.jsonl",
+        "sha256": "1660eb658002e7321ae015b9a2a85fc4b84c7a407564036fd33bd9c2e7c53f69",
+        "bytes": 255605,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-11.jsonl",
+        "sha256": "50769171f33d71bb331d45e929b70f127cf78a667f8fbf25faf9af6625168d32",
+        "bytes": 405094,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-12.jsonl",
+        "sha256": "d1498fb52e4fc24f16a6d309424ff38d070ee905689bc64bd9782ade63a0c768",
+        "bytes": 405825,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-01.jsonl",
+        "sha256": "20c0ce0c4de5c3f9bebed210110ffcf61f70515cff4ee0be7a11d4d5e742d699",
+        "bytes": 362641,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-02.jsonl",
+        "sha256": "6df1f6337d7c78a9966f7037e3bd2913f72444c6c48837b81c363c1d639013e5",
+        "bytes": 372907,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-03.jsonl",
+        "sha256": "b448b344018806840c39927fa4ae50bda2b2eb686b0ad9cc4cdcd56d8029ca81",
+        "bytes": 447878,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-04.jsonl",
+        "sha256": "16d0ec5915f7aa8b10750fd5d132fccef087c00ad5018c5922434144e84356be",
+        "bytes": 266847,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-05.jsonl",
+        "sha256": "90b05730cd680b6a843db97fe6c0c812cd5f569a460360f96311bd0794cf3932",
+        "bytes": 408498,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-06.jsonl",
+        "sha256": "2e01ba6d3d8a8e560ff5898673ed64f0ef086eaa906d631e225f3a055f1d18b1",
+        "bytes": 438108,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-07.jsonl",
+        "sha256": "3f9c196eb5a9cc7225249cc365198b46a055127e038b5cdd7bed22838076e4e3",
+        "bytes": 289716,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-08.jsonl",
+        "sha256": "b1b447cb732d32d926c452def9183c923e7ec68fb96d4e1979a983d69c09e002",
+        "bytes": 624578,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-09.jsonl",
+        "sha256": "35dfdb4e517459c8357a99658c2ab8f11dafbfec8b61d9346f9738c0df5af7e4",
+        "bytes": 479555,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-10.jsonl",
+        "sha256": "bd9e350a6ebe48095f2703d64579c4f908fcd771a5568f3ff017f2522b687fe6",
+        "bytes": 402991,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-11.jsonl",
+        "sha256": "9248b6846c7ae85aa6fb78ddf5c79a2d8f8d34482e537e18bcbbd5398dfbeda9",
+        "bytes": 553667,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-12.jsonl",
+        "sha256": "6ed4e6065c5c8dd1ca630fe84550535cd21b55a1134912c9e5507f771a2753a2",
+        "bytes": 412914,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-01.jsonl",
+        "sha256": "e4eaa81b5d745d760c2e61a330b1a4211d64b1eacd7c8daef05d848679bcc953",
+        "bytes": 348301,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-02.jsonl",
+        "sha256": "b3874e1d1025f5b5c755bc6050fc87d4848c82bf3d3a119efa4d72e862015483",
+        "bytes": 390776,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-03.jsonl",
+        "sha256": "2fbdd6ac1a516373c979379f670603134e6e716f79fbd16ffef13c9a0c00be2f",
+        "bytes": 541358,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-04.jsonl",
+        "sha256": "1d059f825c52d5fe02c0abfa24cca25f63d8886afa63bcb6b1f3a0029dc6aed8",
+        "bytes": 256648,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-05.jsonl",
+        "sha256": "743fc12919adeb4e00b1cc009cb70a41b5185520dbf61caf0e7be8f4d153e407",
+        "bytes": 508958,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-06.jsonl",
+        "sha256": "6fb1a3149ac04893f0bf2f7d5bb3b93cf078be2856e8942e248be682322f89cf",
+        "bytes": 497907,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-07.jsonl",
+        "sha256": "141880b37131fbc29f1f6ed49dcca1a40ae39be40a539f4ef309056512230e05",
+        "bytes": 325690,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-08.jsonl",
+        "sha256": "e2748082d3d39b837c821e09d2add106695d207b63097f1394c861692dbf4f52",
+        "bytes": 515826,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-09.jsonl",
+        "sha256": "b8eabc57b632ff3a6bb3d7b6acab0169e2ae2f18d1e7bfd134ebe35ab885cefa",
+        "bytes": 418359,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-10.jsonl",
+        "sha256": "865f6f2597f9d196a5eed987c3beb2e13e44e6a526aabe825c2846f829980fe1",
+        "bytes": 405615,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-11.jsonl",
+        "sha256": "babcf1953774f91553bf46c5c8579edc7e7583a892ca1b7a7c3a8b039aa24d76",
+        "bytes": 607825,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-12.jsonl",
+        "sha256": "c7935ef4d6e1dac134e4a2a981b8e43b18ab83267d4b2a89bdd956de2e30aa43",
+        "bytes": 358374,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-01.jsonl",
+        "sha256": "29267375c76c98e4a52adf41e7499fbeefd348750dbe5acab8a0a310204aea5f",
+        "bytes": 403495,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-02.jsonl",
+        "sha256": "302d508d9de281946a2b6efe2a9caf31dbd141456d71ae201034c9825e1decca",
+        "bytes": 449241,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-03.jsonl",
+        "sha256": "c4977e3643e9c8b5fda775cbe58bd44780fc8b1e7be4fe48d2f1a293d0ecc3a9",
+        "bytes": 632311,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-04.jsonl",
+        "sha256": "e155c5ff66f84d251eff8e6d8a490fa68c3b41359821829aa9c2aaa8fa15dc94",
+        "bytes": 561200,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-05.jsonl",
+        "sha256": "73fedecfa2a8b10c1231b215080b5d0bc5fc8b2c29f885253737d82f0c22701c",
+        "bytes": 708169,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-06.jsonl",
+        "sha256": "39a6babba5e8959c7edf1cae7e529a2619b11d2911865ba31df6ec5439f8b635",
+        "bytes": 619181,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-07.jsonl",
+        "sha256": "a3d249422221ef8e029bf73d150c18e436e2188ddedd0211404468461ffdced5",
+        "bytes": 444850,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-08.jsonl",
+        "sha256": "7916a4a764f4d26a1b084d162a13b24ec4c887f862ee3b5f804bb71113842c64",
+        "bytes": 759471,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-09.jsonl",
+        "sha256": "4925410f5e5fc2954c0d5925b5fd12934ee7b5185cc1f9a15d2d00838878edc3",
+        "bytes": 629806,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-10.jsonl",
+        "sha256": "ed4fa4f594ec551451a8cba6ec2da9efc1d12be7f01f89164df51d3b69c9d919",
+        "bytes": 499016,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-11.jsonl",
+        "sha256": "1120a9c1974c3a7550e6fff8a2b96aecf3148ad16fd1056a5359c3cc0f6bb738",
+        "bytes": 643428,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-12.jsonl",
+        "sha256": "64eaa63bc34d1441626d1289f3a6846441a81d2238783dbd54d762da292619a5",
+        "bytes": 604886,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-01.jsonl",
+        "sha256": "6d2a30d0a8133b373ebafaf538bdca7e8e8355803243eb32ea09c5bdf8828563",
+        "bytes": 761960,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-02.jsonl",
+        "sha256": "c88ab3800575e0723921d45d75ff0f3e8d62f18157d4e10bc1eb89df99e7debf",
+        "bytes": 645702,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-03.jsonl",
+        "sha256": "d10e4d99eaf2633c72575cc45c07fa3ed019f6b2958a3435aa6b8bbbff11dff0",
+        "bytes": 685489,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-04.jsonl",
+        "sha256": "e3c1c2a0a61fefdee6e73551d9f518145f7dca4226f0fde8606a226fbd72e7d6",
+        "bytes": 493041,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-05.jsonl",
+        "sha256": "dffc86c7f9f3642dcebfb148e4fcfc28c3fc114911938c3eceb45fff0b6187e3",
+        "bytes": 874236,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-06.jsonl",
+        "sha256": "5e5c120cc959ce1f8f4f3bf2a02ab5a5df6c7bbe252215f0648b59c7d1a27789",
+        "bytes": 870078,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-07.jsonl",
+        "sha256": "52f6fdd0b449a99a2cdfdbeabe2cdf4edf800e3a1bcb3234fe2a6741eee3afc1",
+        "bytes": 648396,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-08.jsonl",
+        "sha256": "72834cd024b6693ba1c59d25f3af8cef6a0d8e2f50ea944875f1a79208cbe209",
+        "bytes": 988194,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-09.jsonl",
+        "sha256": "c2a2763730f3c994b86939c4043cbfb35457cd66377aeaef7c67a2b90ac2a405",
+        "bytes": 931953,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-10.jsonl",
+        "sha256": "25b4ab340522285cd3c09f0112c1738cdf1c89f2d0cc14587ae8141607b91173",
+        "bytes": 805832,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-11.jsonl",
+        "sha256": "07464fac7c056c725499813a5ad0353ba9c540e1bde51c3d289e4da740399674",
+        "bytes": 729331,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-12.jsonl",
+        "sha256": "e51090694983baf11dd90ead04c4eb1bc0afe135be71fb50e5ed738aaf237a7b",
+        "bytes": 792730,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-01.jsonl",
+        "sha256": "499e1d957037f1ff10349fb2472937e75e88b2aa635295e3862862d470297a1f",
+        "bytes": 787218,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-02.jsonl",
+        "sha256": "705f48ea390bfecd556a955936b3a19e9eb63a63f87e0f27ec42e97144914726",
+        "bytes": 932622,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-03.jsonl",
+        "sha256": "9bc6156e8326dbe86239e56acdd230e9a5b6a68cf37ee92bf1ff2402659efb21",
+        "bytes": 1571883,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-04.jsonl",
+        "sha256": "2282174db6c822936dfd73ff8e3af78c6bea11139933c812db5596a8d3ebf162",
+        "bytes": 1218405,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-05.jsonl",
+        "sha256": "7e66e30037ad6383597419a4fe313bdc60a4e3a3b8949a70af6cd492ddc4fdf9",
+        "bytes": 1449753,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-06.jsonl",
+        "sha256": "ae8599f46bee919a755469fd4a75003995bc4865eb8fd275cca21a0ab31ef7b3",
+        "bytes": 1390358,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-07.jsonl",
+        "sha256": "4db4ce081d9d77ecda5622950cc64aa0e3e87acdc8e7de76a1be5245f6ca97d6",
+        "bytes": 1092571,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-08.jsonl",
+        "sha256": "9bb4f6837792748a3ff0eaeb1d7a9c3144c2e6a5b09a57fe5d7489e05fb9124c",
+        "bytes": 1212931,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-09.jsonl",
+        "sha256": "f47524649e76a70dbfe95fb66e4acbd3d464510dc1656f30c5025d1d9dd60799",
+        "bytes": 1121341,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-09.jsonl",
+        "sha256": "fecd5c9a02455a20c9c1088d8cdbd3e2b3954ef1bc47a50e4e8f066c52e143f4",
+        "bytes": 590,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-06.jsonl",
+        "sha256": "f9a8aa6976424ff1f10db77bb278c14f5be7a809de5af1d7be7ec665f7bdd3e4",
+        "bytes": 2273,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-08.jsonl",
+        "sha256": "b3d096172670334aa39ca59047497ff8080e418fc5e8f77751e0967c5a2a7e53",
+        "bytes": 2578765,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-09.jsonl",
+        "sha256": "91eaa89accb87b37cba6bd74de3a4a788e8faa1bef4cb92c4182ce860fb87876",
+        "bytes": 3710531,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-10.jsonl",
+        "sha256": "7f41792e8adbd3ab8e2f0489d6cbe921d0035579210047e242ba7eaa1929d4d6",
+        "bytes": 3703852,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-11.jsonl",
+        "sha256": "eb1518561623af6f96c64980bdc70ffe1c849b89aabf72d4db2215f223b6de60",
+        "bytes": 3961790,
+        "opened_utc": "2026-09-06T17:32:37+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-12.jsonl",
+        "sha256": "37585e802f4aa63c2652c8340ddaf24471c3885670fcc1853354048956217f39",
+        "bytes": 3778214,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-01.jsonl",
+        "sha256": "664b0b84c7d29486fd118d0b2a1ddf3e9cf7f8ed844704c794c51c610010ceb5",
+        "bytes": 3018325,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-02.jsonl",
+        "sha256": "c042460843472673116ad3487555341105233492d5c095f79246ae27265d40b4",
+        "bytes": 3435528,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-03.jsonl",
+        "sha256": "e0f68374699994cba8a744fcbe081d2145a4b631da0e75a39c0114bf0e951930",
+        "bytes": 25052177,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-04.jsonl",
+        "sha256": "51a3762fa8fb9ba6f06303f902362e105010c692d78b8f0487b3d01e8072d0fb",
+        "bytes": 17554512,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-05.jsonl",
+        "sha256": "ee1f6d2255efe544eee9e3791fc4bb53b28f7832f797d25d87b1f08cc22b8a2e",
+        "bytes": 24374817,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-06.jsonl",
+        "sha256": "3d82756ca11d0145773fd96086370bf5ddb1b255e87ffe4acafe3a48b08b3360",
+        "bytes": 20767828,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-07.jsonl",
+        "sha256": "c14b2a7d42d694f112ae4ba43d5f00c447b19b701a48bf68a36717679d8ebf6e",
+        "bytes": 17400581,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-08.jsonl",
+        "sha256": "1af18a7b5818fe3ba8a1244003b76212ac9a5ccb89a444ab6246d04e3cb2bd21",
+        "bytes": 18417870,
+        "opened_utc": "2026-09-06T17:32:38+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-09.jsonl",
+        "sha256": "2c2c1c564fe17ba3f1a8f1e3a59ade39ed0a11798051f46b6a5e2bbb5752f335",
+        "bytes": 241049,
+        "opened_utc": "2026-09-06T17:32:39+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-10.jsonl",
+        "sha256": "b4ff1c4f09aa45b9b24534ec4ef949a1e47069ada42fe2e2d6f17a3849dc5041",
+        "bytes": 809009,
+        "opened_utc": "2026-09-06T17:32:39+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-11.jsonl",
+        "sha256": "edfc3811abbb2971e8c99fc75500507c1f2f59a80117072bde9a0ec6ec1413d6",
+        "bytes": 1621120,
+        "opened_utc": "2026-09-06T17:32:39+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-12.jsonl",
+        "sha256": "70769d02c99a82836c8407f49c731741e6741924c1442bb1427413ede09863b2",
+        "bytes": 190447,
+        "opened_utc": "2026-09-06T17:32:39+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2027-01.jsonl",
+        "sha256": "7829c590e6d80013b455c5682423e5ce2afde1867539196289c4f5eb831c8df0",
+        "bytes": 405394,
+        "opened_utc": "2026-09-06T17:32:39+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2027-02.jsonl",
+        "sha256": "25158f027e81f51a8c500d2d33c30ecc632906fa64153bf135f01ce00ad0e368",
+        "bytes": 1113892,
+        "opened_utc": "2026-09-06T17:32:39+00:00",
+        "note": "corpus observation shard"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/edgar_8k/eightk_rows.jsonl",
+        "sha256": "d99a1813954adc2bf61fdcff835e4beb387d7de0c024d1226ba8f036c54f6275",
+        "bytes": 90205160,
+        "opened_utc": "2026-09-06T17:34:44+00:00",
+        "note": "8-K filings, one row per accession"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/events/event_table_v1.parquet",
+        "sha256": "3c412d20fe7de903e4e37e9ef097cf965f8ca531416830a3dba9cef1b621732d",
+        "bytes": 21995354,
+        "opened_utc": "2026-09-06T17:34:45+00:00",
+        "note": "N4 event table (news rows for the novelty test)"
+      },
+      {
+        "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table.parquet",
+        "sha256": "e3cdd0e308cbb2ebd1a0fa6eb47e91dff0037843998ea7a893f8f05798cc5385",
+        "bytes": 204021057,
+        "opened_utc": "2026-09-06T17:35:49+00:00",
+        "note": "monthly forward-excess-return target (through 2024-12)"
+      }
+    ],
+    "git_commit": "813f64a8ad46",
+    "generated_utc": "2026-09-06T17:35:51+00:00"
+  }
+}
