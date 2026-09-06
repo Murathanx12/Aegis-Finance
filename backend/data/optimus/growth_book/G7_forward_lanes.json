@@ -1,0 +1,952 @@
+{
+ "item": "G7",
+ "licence": "PRODUCT_EXPERIMENT",
+ "title": "Forward lanes re-read under the product ruler (beta first)",
+ "mandate": [
+  "docs/ROADMAP_2026-09-07_GROWTH_BOOK_AMENDMENT.md",
+  "docs/CONTINUATION_2026-09-07b_GROWTH_BOOK_OPUS_PROMPT.md"
+ ],
+ "written_utc": "2026-09-06T13:31:44.425562+00:00",
+ "ruler": {
+  "beta_first": true,
+  "frequency": "daily (the finest common frequency; the lane windows are too short for a monthly regression)",
+  "min_obs": 20,
+  "hac_lag": 5,
+  "financing_bps_annual_over_rf": 100.0,
+  "financing_bps_passed_to_lever": 4.761905,
+  "gross_cap": 2.0,
+  "trading_days_per_year": 252,
+  "leverage_neutral": "the lane's series scaled to SPY's realized vol over the same sessions, borrowed notional financed at RF + 100 bps annualised, unused cash earning RF (learner.growth.lever)",
+  "reused_from": [
+   "learner.growth.market_model",
+   "learner.growth.lever",
+   "learner.growth.max_drawdown",
+   "learner.growth.terminal_wealth",
+   "learner.growth.cagr",
+   "learner.growth.realized_vol"
+  ],
+  "phrase_rule": "'beats SPY' is never written without beta, maxDD and the cost basis beside it (see `_headline`)"
+ },
+ "stale_mark_finding": {
+  "lanes_flagged": [
+   "balanced-ew-control",
+   "mirror",
+   "conviction"
+  ],
+  "n_flagged": 3,
+  "what_it_means": "these books load MORE on yesterday's market than on today's. A book cannot react to the market a day late; its marks can, and these do. So the ruler's contemporaneous beta is biased TOWARD ZERO for them and understates market exposure -- a stale mark HIDES beta, which is the one thing the amendment \u00a72.2 forbids. `beta_dimson` is the exposure to read; the OLS beta is the ruler's literal number. Both are in the table.",
+  "second_consequence": "smoothed marks also understate realized volatility, so the leverage-neutral rescale (SPY vol / book vol) is an UPPER bound for the flagged books and their leverage-neutral excess is flattered by an unknown amount.",
+  "threshold": 0.2,
+  "how_to_settle_it": "compare a lane's NAV against the same weights repriced at the session's official close. That is a mark-to-market question for the website lane job, not a question this table can answer, and it is stated as an open item rather than assumed either way."
+ },
+ "market_benchmark": {
+  "schema": 1,
+  "module": "learner.benchmark",
+  "benchmark_id": "spy_tr_yf_adjclose",
+  "freq": "D",
+  "overlapping": false,
+  "provenance": {
+   "construction": "pct_change of auto_adjust=True SPY Close, fetched once 2026-09-06 and PINNED to backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
+   "declared_only": true,
+   "freq": "D",
+   "pinned_sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
+   "network": false
+  },
+  "provenance_sha256": "282acff72cebe07d17f7627b57d957d83ea174e2656d5e9973114ab24be5171a",
+  "span": [
+   "1998-01-05",
+   "2026-09-04"
+  ],
+  "n_periods": 7212
+ },
+ "rf_extension": {
+  "source_benchmark": "cash_rf_pinned",
+  "stamp": {
+   "schema": 1,
+   "module": "learner.benchmark",
+   "benchmark_id": "cash_rf_pinned",
+   "freq": "D",
+   "overlapping": false,
+   "provenance": {
+    "source": "Fama-French daily research factors, PINNED vintage",
+    "path": "aegis-finance\\backend\\data\\ff_daily_pinned.csv.gz",
+    "vintage_date": "2026-07-29",
+    "sha256": "17a97adc5094c3053f469c7b2cced13503bd8d615048c97f72241e6238601323",
+    "dividends_included": true,
+    "network": false,
+    "construction": "RF (daily T-bill)",
+    "sliced_to": [
+     "1963-07-01",
+     "2026-05-29"
+    ]
+   },
+   "provenance_sha256": "56668aa7ccf85d34bda466b37f8352beeae262dc2d52910e75eae742bc4a28bd",
+   "span": [
+    "1963-07-01",
+    "2026-05-29"
+   ],
+   "n_periods": 15833
+  },
+  "last_observed": "2026-05-29",
+  "days_covered": 7144,
+  "days_carried_forward": 71,
+  "carried_daily_rf": 0.0002,
+  "carried_annualised_pct": 5.04,
+  "construction": "the last observed daily T-bill rate is held FLAT over days the pinned vintage does not cover; it is never interpolated, and every row carries the rf=0 sensitivity beside it"
+ },
+ "discovery": {
+  "website_lanes": {
+   "searched": [
+    {
+     "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\aegis_pi.db",
+     "kind": "sqlite paper_nav (canonical)",
+     "exists": true,
+     "paper_nav_rows": 0,
+     "lanes": []
+    },
+    {
+     "path": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+     "kind": "captured /api/pi/track-record",
+     "exists": true,
+     "lanes": [
+      "aggressive",
+      "balanced",
+      "balanced-ew-control",
+      "conservative",
+      "conservative-atr",
+      "conviction",
+      "mirror",
+      "smallmid-quality",
+      "tsmom-6040-control",
+      "tsmom-overlay"
+     ],
+     "expected_nav_date": "2026-08-18",
+     "inception_date": "2026-06-08"
+    },
+    {
+     "path": "C:\\Users\\mrthn\\aegis-finance\\.cache\\track_record.json",
+     "kind": "captured /api/pi/track-record",
+     "exists": true,
+     "lanes": [
+      "aggressive",
+      "balanced",
+      "balanced-ew-control",
+      "conservative",
+      "conservative-atr",
+      "conviction",
+      "mirror"
+     ],
+     "expected_nav_date": "2026-06-26",
+     "inception_date": "2026-06-08"
+    }
+   ],
+   "store": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "lanes_found": 10,
+   "canonical_store": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\aegis_pi.db",
+   "snapshot_expected_nav_date": "2026-08-18"
+  },
+  "hack_accounts": {
+   "repo": "C:\\Users\\mrthn\\aegis-alpha-terminal",
+   "repo_exists": true,
+   "searched": [
+    {
+     "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\benchmark_regret_20260903.json",
+     "exists": true,
+     "accounts": {
+      "hack1": 6,
+      "hack2": 6,
+      "hack3": 6,
+      "hack4": 6,
+      "hack5": 6,
+      "hack6": 6
+     }
+    }
+   ],
+   "accounts_found": 6,
+   "secondary_not_merged": [
+    {
+     "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\learning_report\\2026-09-02.json",
+     "exists": true,
+     "why_not_merged": "its session label is derived differently and disagrees with the primary series; merging would invent a return from a date bug"
+    },
+    {
+     "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\learning_report\\2026-09-03.json",
+     "exists": true,
+     "why_not_merged": "its session label is derived differently and disagrees with the primary series; merging would invent a return from a date bug"
+    },
+    {
+     "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\learning_report\\2026-09-04.json",
+     "exists": true,
+     "why_not_merged": "its session label is derived differently and disagrees with the primary series; merging would invent a return from a date bug"
+    },
+    {
+     "path": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\labor_day_lab_2026-09-07\\D1_connection_check_terminal.json",
+     "exists": true,
+     "why_not_merged": "its session label is derived differently and disagrees with the primary series; merging would invent a return from a date bug"
+    }
+   ],
+   "railway": "NOT CALLED. A local dated series exists; and the venue could not lengthen it either -- the accounts are ~6 sessions old, so the binding constraint is account AGE, not readability."
+  }
+ },
+ "counts": {
+  "rows": 16,
+  "readable": 7,
+  "cannot_determine": 9,
+  "website_lanes_expected": 10,
+  "hack_accounts_expected": 6
+ },
+ "rows": [
+  {
+   "beta": -0.0416,
+   "beta_t_vs_1": -12.665,
+   "beta_dimson": 0.1156,
+   "stale_marks_suspected": false,
+   "r2_vs_spy": 0.006,
+   "lane": "conservative",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 47,
+   "window": [
+    "2026-06-09",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": -15.374,
+   "raw_excess_total_pp": -2.497,
+   "lev_neutral_excess_ann_pct": -11.614,
+   "lev_neutral_excess_total_pp": -1.862,
+   "lev_neutral_excess_ann_pct_rf_zero": -6.523,
+   "maxdd_lane_pct": -2.33,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": 1.965,
+   "spy_total_return_pct": 4.462,
+   "lane_cagr_pct": 10.995,
+   "spy_cagr_pct": 26.368,
+   "lane_vol_pct": 7.616,
+   "spy_vol_pct": 14.18,
+   "intercept_daily": 0.000257,
+   "intercept_annualised_pct": 6.476,
+   "intercept_t_hac": 0.43,
+   "leverage_neutral": {
+    "scale": 1.8619,
+    "scale_uncapped": 1.8619,
+    "capped_by_gross": false,
+    "terminal_wealth": 1.026,
+    "cagr_pct": 14.754,
+    "max_drawdown_pct": -4.663,
+    "realized_vol_pct": 14.18,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 0.1156,
+    "beta_contemporaneous_joint": -0.0455,
+    "beta_on_lagged_market_joint": 0.105,
+    "beta_on_lead_market_joint": 0.0562,
+    "beta_on_lagged_market_univariate": 0.0969,
+    "beta_on_lagged_market_univariate_t_vs_1": -7.824,
+    "n": 45,
+    "stale_marks_suspected": false,
+    "verdict": "no lead-lag asymmetry large enough to suspect asynchronous marks",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": -0.0416,
+    "beta_t_vs_1": -12.665,
+    "intercept_monthly": 0.000257,
+    "intercept_annualised_pct": 0.309,
+    "intercept_t_hac": 0.43,
+    "n": 47,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 47 sessions is an annualisation of a 0.19-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta -0.0416 (t vs 1 = -12.665): conservative trails SPY by -2.497 pp raw over 47 sessions, maxDD -2.33% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -1.862 pp"
+  },
+  {
+   "beta": -0.0317,
+   "beta_t_vs_1": -12.041,
+   "beta_dimson": 0.1108,
+   "stale_marks_suspected": false,
+   "r2_vs_spy": 0.0035,
+   "lane": "balanced",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 47,
+   "window": [
+    "2026-06-09",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": -14.282,
+   "raw_excess_total_pp": -2.311,
+   "lev_neutral_excess_ann_pct": -9.401,
+   "lev_neutral_excess_total_pp": -1.495,
+   "lev_neutral_excess_ann_pct_rf_zero": -4.106,
+   "maxdd_lane_pct": -2.238,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": 2.151,
+   "spy_total_return_pct": 4.462,
+   "lane_cagr_pct": 12.086,
+   "spy_cagr_pct": 26.368,
+   "lane_vol_pct": 7.547,
+   "spy_vol_pct": 14.18,
+   "intercept_daily": 0.000288,
+   "intercept_annualised_pct": 7.258,
+   "intercept_t_hac": 0.501,
+   "leverage_neutral": {
+    "scale": 1.879,
+    "scale_uncapped": 1.879,
+    "capped_by_gross": false,
+    "terminal_wealth": 1.029662,
+    "cagr_pct": 16.968,
+    "max_drawdown_pct": -4.483,
+    "realized_vol_pct": 14.18,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 0.1108,
+    "beta_contemporaneous_joint": -0.0373,
+    "beta_on_lagged_market_joint": 0.0963,
+    "beta_on_lead_market_joint": 0.0519,
+    "beta_on_lagged_market_univariate": 0.0888,
+    "beta_on_lagged_market_univariate_t_vs_1": -8.054,
+    "n": 45,
+    "stale_marks_suspected": false,
+    "verdict": "no lead-lag asymmetry large enough to suspect asynchronous marks",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": -0.0317,
+    "beta_t_vs_1": -12.041,
+    "intercept_monthly": 0.000288,
+    "intercept_annualised_pct": 0.346,
+    "intercept_t_hac": 0.501,
+    "n": 47,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 47 sessions is an annualisation of a 0.19-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta -0.0317 (t vs 1 = -12.041): balanced trails SPY by -2.311 pp raw over 47 sessions, maxDD -2.238% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -1.495 pp"
+  },
+  {
+   "beta": -0.0267,
+   "beta_t_vs_1": -9.088,
+   "beta_dimson": 0.1374,
+   "stale_marks_suspected": false,
+   "r2_vs_spy": 0.0015,
+   "lane": "aggressive",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 47,
+   "window": [
+    "2026-06-09",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": -6.749,
+   "raw_excess_total_pp": -1.064,
+   "lev_neutral_excess_ann_pct": -0.627,
+   "lev_neutral_excess_total_pp": -0.097,
+   "lev_neutral_excess_ann_pct_rf_zero": 2.228,
+   "maxdd_lane_pct": -2.592,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": 3.398,
+   "spy_total_return_pct": 4.462,
+   "lane_cagr_pct": 19.619,
+   "spy_cagr_pct": 26.368,
+   "lane_vol_pct": 9.808,
+   "spy_vol_pct": 14.18,
+   "intercept_daily": 0.00055,
+   "intercept_annualised_pct": 13.86,
+   "intercept_t_hac": 0.777,
+   "leverage_neutral": {
+    "scale": 1.4458,
+    "scale_uncapped": 1.4458,
+    "capped_by_gross": false,
+    "terminal_wealth": 1.043647,
+    "cagr_pct": 25.741,
+    "max_drawdown_pct": -3.902,
+    "realized_vol_pct": 14.18,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 0.1374,
+    "beta_contemporaneous_joint": -0.0338,
+    "beta_on_lagged_market_joint": 0.1034,
+    "beta_on_lead_market_joint": 0.0678,
+    "beta_on_lagged_market_univariate": 0.0936,
+    "beta_on_lagged_market_univariate_t_vs_1": -6.276,
+    "n": 45,
+    "stale_marks_suspected": false,
+    "verdict": "no lead-lag asymmetry large enough to suspect asynchronous marks",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": -0.0267,
+    "beta_t_vs_1": -9.088,
+    "intercept_monthly": 0.00055,
+    "intercept_annualised_pct": 0.66,
+    "intercept_t_hac": 0.777,
+    "n": 47,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 47 sessions is an annualisation of a 0.19-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta -0.0267 (t vs 1 = -9.088): aggressive trails SPY by -1.064 pp raw over 47 sessions, maxDD -2.592% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -0.097 pp"
+  },
+  {
+   "beta": 0.0972,
+   "beta_t_vs_1": -8.818,
+   "beta_dimson": 0.6898,
+   "stale_marks_suspected": true,
+   "r2_vs_spy": 0.015,
+   "lane": "balanced-ew-control",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 45,
+   "window": [
+    "2026-06-11",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": -39.97,
+   "raw_excess_total_pp": -6.107,
+   "lev_neutral_excess_ann_pct": -41.251,
+   "lev_neutral_excess_total_pp": -6.333,
+   "lev_neutral_excess_ann_pct_rf_zero": -39.928,
+   "maxdd_lane_pct": -5.993,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": 0.34,
+   "spy_total_return_pct": 6.447,
+   "lane_cagr_pct": 1.921,
+   "spy_cagr_pct": 41.89,
+   "lane_vol_pct": 11.027,
+   "spy_vol_pct": 13.884,
+   "intercept_daily": -0.00022,
+   "intercept_annualised_pct": -5.544,
+   "intercept_t_hac": -0.236,
+   "leverage_neutral": {
+    "scale": 1.2592,
+    "scale_uncapped": 1.2592,
+    "capped_by_gross": false,
+    "terminal_wealth": 1.001139,
+    "cagr_pct": 0.64,
+    "max_drawdown_pct": -7.676,
+    "realized_vol_pct": 13.884,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF",
+    "caveat": "the denominator of this rescale is a volatility measured off the SAME asynchronous marks; smoothing understates vol, so the scale 1.2592 is an UPPER bound and the leverage-neutral excess beside it is flattered"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 0.6898,
+    "beta_contemporaneous_joint": 0.1192,
+    "beta_on_lagged_market_joint": 0.5747,
+    "beta_on_lead_market_joint": -0.0041,
+    "beta_on_lagged_market_univariate": 0.5823,
+    "beta_on_lagged_market_univariate_t_vs_1": -3.555,
+    "n": 43,
+    "stale_marks_suspected": true,
+    "verdict": "STALE MARKS SUSPECTED -- the book loads more on YESTERDAY'S market than on today's, so the contemporaneous beta beside it is biased TOWARD ZERO and understates market exposure. Read `beta_dimson` as the exposure and the OLS beta as the ruler's literal number.",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": 0.0972,
+    "beta_t_vs_1": -8.818,
+    "intercept_monthly": -0.00022,
+    "intercept_annualised_pct": -0.264,
+    "intercept_t_hac": -0.236,
+    "n": 45,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 45 sessions is an annualisation of a 0.18-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta 0.0972 (t vs 1 = -8.818): balanced-ew-control trails SPY by -6.107 pp raw over 45 sessions, maxDD -5.993% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -6.333 pp [STALE MARKS: beta on yesterday's market exceeds today's; Dimson beta 0.6898 is the exposure, and the vol used for the leverage-neutral rescale is smoothed, so that column flatters this book]"
+  },
+  {
+   "beta": 0.5563,
+   "beta_t_vs_1": -1.008,
+   "beta_dimson": 1.2105,
+   "stale_marks_suspected": true,
+   "r2_vs_spy": 0.0469,
+   "lane": "mirror",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 41,
+   "window": [
+    "2026-06-17",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": -92.409,
+   "raw_excess_total_pp": -22.148,
+   "lev_neutral_excess_ann_pct": -56.565,
+   "lev_neutral_excess_total_pp": -10.217,
+   "lev_neutral_excess_ann_pct_rf_zero": -58.471,
+   "maxdd_lane_pct": -24.65,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": -19.233,
+   "spy_total_return_pct": 2.915,
+   "lane_cagr_pct": -73.095,
+   "spy_cagr_pct": 19.314,
+   "lane_vol_pct": 33.941,
+   "spy_vol_pct": 13.212,
+   "intercept_daily": -0.005471,
+   "intercept_annualised_pct": -137.869,
+   "intercept_t_hac": -1.685,
+   "leverage_neutral": {
+    "scale": 0.3893,
+    "scale_uncapped": 0.3893,
+    "capped_by_gross": false,
+    "terminal_wealth": 0.926982,
+    "cagr_pct": -37.251,
+    "max_drawdown_pct": -9.909,
+    "realized_vol_pct": 13.212,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF",
+    "caveat": "the denominator of this rescale is a volatility measured off the SAME asynchronous marks; smoothing understates vol, so the scale 0.3893 is an UPPER bound and the leverage-neutral excess beside it is flattered"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 1.2105,
+    "beta_contemporaneous_joint": 0.493,
+    "beta_on_lagged_market_joint": 0.9767,
+    "beta_on_lead_market_joint": -0.2593,
+    "beta_on_lagged_market_univariate": 1.0222,
+    "beta_on_lagged_market_univariate_t_vs_1": 0.066,
+    "n": 39,
+    "stale_marks_suspected": true,
+    "verdict": "STALE MARKS SUSPECTED -- the book loads more on YESTERDAY'S market than on today's, so the contemporaneous beta beside it is biased TOWARD ZERO and understates market exposure. Read `beta_dimson` as the exposure and the OLS beta as the ruler's literal number.",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": 0.5563,
+    "beta_t_vs_1": -1.008,
+    "intercept_monthly": -0.005471,
+    "intercept_annualised_pct": -6.565,
+    "intercept_t_hac": -1.685,
+    "n": 41,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 41 sessions is an annualisation of a 0.16-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta 0.5563 (t vs 1 = -1.008): mirror trails SPY by -22.148 pp raw over 41 sessions, maxDD -24.65% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -10.217 pp [STALE MARKS: beta on yesterday's market exceeds today's; Dimson beta 1.2105 is the exposure, and the vol used for the leverage-neutral rescale is smoothed, so that column flatters this book]"
+  },
+  {
+   "beta": 0.7163,
+   "beta_t_vs_1": -1.071,
+   "beta_dimson": 1.9313,
+   "stale_marks_suspected": true,
+   "r2_vs_spy": 0.05,
+   "lane": "conviction",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 41,
+   "window": [
+    "2026-06-17",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": -45.237,
+   "raw_excess_total_pp": -7.68,
+   "lev_neutral_excess_ann_pct": -23.249,
+   "lev_neutral_excess_total_pp": -3.566,
+   "lev_neutral_excess_ann_pct_rf_zero": -26.523,
+   "maxdd_lane_pct": -21.277,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": -4.765,
+   "spy_total_return_pct": 2.915,
+   "lane_cagr_pct": -25.923,
+   "spy_cagr_pct": 19.314,
+   "lane_vol_pct": 42.32,
+   "spy_vol_pct": 13.212,
+   "intercept_daily": -0.001426,
+   "intercept_annualised_pct": -35.935,
+   "intercept_t_hac": -0.413,
+   "leverage_neutral": {
+    "scale": 0.3122,
+    "scale_uncapped": 0.3122,
+    "capped_by_gross": false,
+    "terminal_wealth": 0.993489,
+    "cagr_pct": -3.935,
+    "max_drawdown_pct": -6.775,
+    "realized_vol_pct": 13.212,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF",
+    "caveat": "the denominator of this rescale is a volatility measured off the SAME asynchronous marks; smoothing understates vol, so the scale 0.3122 is an UPPER bound and the leverage-neutral excess beside it is flattered"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 1.9313,
+    "beta_contemporaneous_joint": 0.6072,
+    "beta_on_lagged_market_joint": 1.399,
+    "beta_on_lead_market_joint": -0.0748,
+    "beta_on_lagged_market_univariate": 1.4259,
+    "beta_on_lagged_market_univariate_t_vs_1": 0.737,
+    "n": 39,
+    "stale_marks_suspected": true,
+    "verdict": "STALE MARKS SUSPECTED -- the book loads more on YESTERDAY'S market than on today's, so the contemporaneous beta beside it is biased TOWARD ZERO and understates market exposure. Read `beta_dimson` as the exposure and the OLS beta as the ruler's literal number.",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": 0.7163,
+    "beta_t_vs_1": -1.071,
+    "intercept_monthly": -0.001426,
+    "intercept_annualised_pct": -1.711,
+    "intercept_t_hac": -0.413,
+    "n": 41,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 41 sessions is an annualisation of a 0.16-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta 0.7163 (t vs 1 = -1.071): conviction trails SPY by -7.68 pp raw over 41 sessions, maxDD -21.277% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -3.566 pp [STALE MARKS: beta on yesterday's market exceeds today's; Dimson beta 1.9313 is the exposure, and the vol used for the leverage-neutral rescale is smoothed, so that column flatters this book]"
+  },
+  {
+   "beta": 0.0389,
+   "beta_t_vs_1": -9.09,
+   "beta_dimson": 0.1252,
+   "stale_marks_suspected": false,
+   "r2_vs_spy": 0.0056,
+   "lane": "conservative-atr",
+   "verdict": "OK",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 40,
+   "window": [
+    "2026-06-18",
+    "2026-08-18"
+   ],
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": 1.135,
+   "raw_excess_total_pp": 0.144,
+   "lev_neutral_excess_ann_pct": 28.215,
+   "lev_neutral_excess_total_pp": 3.307,
+   "lev_neutral_excess_ann_pct_rf_zero": 35.709,
+   "maxdd_lane_pct": -1.505,
+   "maxdd_spy_pct": -3.376,
+   "lane_total_return_pct": 4.36,
+   "spy_total_return_pct": 4.216,
+   "lane_cagr_pct": 30.85,
+   "spy_cagr_pct": 29.715,
+   "lane_vol_pct": 6.734,
+   "spy_vol_pct": 12.94,
+   "intercept_daily": 0.000843,
+   "intercept_annualised_pct": 21.244,
+   "intercept_t_hac": 1.358,
+   "leverage_neutral": {
+    "scale": 1.9216,
+    "scale_uncapped": 1.9216,
+    "capped_by_gross": false,
+    "terminal_wealth": 1.075233,
+    "cagr_pct": 57.93,
+    "max_drawdown_pct": -2.951,
+    "realized_vol_pct": 12.94,
+    "construction": "lane scaled to SPY's realized vol over the SAME sessions; borrowed notional charged at RF + 100 bps annualised (4.7619 passed to learner.growth.lever, which divides by 12); unused cash earns RF"
+   },
+   "stale_mark_diagnostic": {
+    "beta_dimson": 0.1252,
+    "beta_contemporaneous_joint": 0.0718,
+    "beta_on_lagged_market_joint": 0.0168,
+    "beta_on_lead_market_joint": 0.0366,
+    "beta_on_lagged_market_univariate": 0.0172,
+    "beta_on_lagged_market_univariate_t_vs_1": -11.944,
+    "n": 38,
+    "stale_marks_suspected": false,
+    "verdict": "no lead-lag asymmetry large enough to suspect asynchronous marks",
+    "construction": "Dimson (1979) sum of the {lead, contemporaneous, lag} market betas from one joint OLS; a DIAGNOSTIC, not the ruler"
+   },
+   "market_model_raw": {
+    "beta": 0.0389,
+    "beta_t_vs_1": -9.09,
+    "intercept_monthly": 0.000843,
+    "intercept_annualised_pct": 1.011,
+    "intercept_t_hac": 1.358,
+    "n": 40,
+    "hac_lag": 5,
+    "frequency_note": "learner.growth.market_model was written for MONTHLY series: its `intercept_monthly` here is PER DAY and its `intercept_annualised_pct` is annualised at 12, not 252. The row's own `intercept_annualised_pct` is the correct one."
+   },
+   "annualisation_note": "CAGR over 40 sessions is an annualisation of a 0.16-year window; it is a rate, not a forecast, and its standard error is large.",
+   "headline": "beta 0.0389 (t vs 1 = -9.09): conservative-atr beats SPY by 0.144 pp raw over 40 sessions, maxDD -1.505% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess 3.307 pp"
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "smallmid-quality",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 17 observations aligned with SPY and RF (the source series carries 17 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 17,
+   "window": null,
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 17 observations aligned with SPY and RF (the source series carries 17 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 17
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "tsmom-overlay",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 14 observations aligned with SPY and RF (the source series carries 14 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 14,
+   "window": null,
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 14 observations aligned with SPY and RF (the source series carries 14 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 14
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "tsmom-6040-control",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 14 observations aligned with SPY and RF (the source series carries 14 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-finance\\docs\\conviction_replay\\prod_reads_2026-08-19\\track_record_full.json",
+   "n_obs": 14,
+   "window": null,
+   "cost_basis": "website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 14 observations aligned with SPY and RF (the source series carries 14 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 14
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "hack1",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-alpha-terminal state/ local receipt (READ-ONLY)",
+   "n_obs": 4,
+   "window": null,
+   "cost_basis": "Alpaca PAPER account equity as reported by the venue: fills-as-filled, commission-free US equities, so the cost basis is realised slippage only and no explicit bps is applied on top",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 5
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "hack2",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-alpha-terminal state/ local receipt (READ-ONLY)",
+   "n_obs": 4,
+   "window": null,
+   "cost_basis": "Alpaca PAPER account equity as reported by the venue: fills-as-filled, commission-free US equities, so the cost basis is realised slippage only and no explicit bps is applied on top",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 5
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "hack3",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-alpha-terminal state/ local receipt (READ-ONLY)",
+   "n_obs": 4,
+   "window": null,
+   "cost_basis": "Alpaca PAPER account equity as reported by the venue: fills-as-filled, commission-free US equities, so the cost basis is realised slippage only and no explicit bps is applied on top",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 5
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "hack4",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-alpha-terminal state/ local receipt (READ-ONLY)",
+   "n_obs": 4,
+   "window": null,
+   "cost_basis": "Alpaca PAPER account equity as reported by the venue: fills-as-filled, commission-free US equities, so the cost basis is realised slippage only and no explicit bps is applied on top",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 5
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "hack5",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-alpha-terminal state/ local receipt (READ-ONLY)",
+   "n_obs": 4,
+   "window": null,
+   "cost_basis": "Alpaca PAPER account equity as reported by the venue: fills-as-filled, commission-free US equities, so the cost basis is realised slippage only and no explicit bps is applied on top",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 5
+  },
+  {
+   "beta": null,
+   "beta_t_vs_1": null,
+   "beta_dimson": null,
+   "stale_marks_suspected": null,
+   "r2_vs_spy": null,
+   "lane": "hack6",
+   "verdict": "CANNOT DETERMINE",
+   "why": "only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "source": "C:\\Users\\mrthn\\aegis-alpha-terminal state/ local receipt (READ-ONLY)",
+   "n_obs": 4,
+   "window": null,
+   "cost_basis": "Alpaca PAPER account equity as reported by the venue: fills-as-filled, commission-free US equities, so the cost basis is realised slippage only and no explicit bps is applied on top",
+   "raw_excess_ann_pct": null,
+   "raw_excess_total_pp": null,
+   "lev_neutral_excess_ann_pct": null,
+   "lev_neutral_excess_total_pp": null,
+   "maxdd_lane_pct": null,
+   "maxdd_spy_pct": null,
+   "headline": "CANNOT DETERMINE -- only 4 observations aligned with SPY and RF (the source series carries 5 returns); the floor is 20. Not interpolated, not extended.",
+   "n_source_returns": 5
+  }
+ ],
+ "headline": "7 of 16 forward books carry a readable NAV series; 9 say CANNOT DETERMINE; 3 of the readable ones (balanced-ew-control, mirror, conviction) load more on YESTERDAY'S market than today's, so their contemporaneous beta understates exposure. beta -0.0416 (t vs 1 = -12.665): conservative trails SPY by -2.497 pp raw over 47 sessions, maxDD -2.33% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -1.862 pp; beta -0.0317 (t vs 1 = -12.041): balanced trails SPY by -2.311 pp raw over 47 sessions, maxDD -2.238% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -1.495 pp; beta -0.0267 (t vs 1 = -9.088): aggressive trails SPY by -1.064 pp raw over 47 sessions, maxDD -2.592% vs SPY -3.376%, cost basis: website paper lane NAV, marked to market from recorded weights per the lane YAML; no extra bps applied here; LEVERAGE-NEUTRAL excess -0.097 pp",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g7_forward_lanes.py"
+  ],
+  "resolved_config": {
+   "financing_bps": {
+    "value": 100.0,
+    "source": "default"
+   },
+   "gross_cap": {
+    "value": 2.0,
+    "source": "default"
+   },
+   "hac_lag": {
+    "value": 5,
+    "source": "default"
+   },
+   "md": {
+    "value": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G7_forward_lanes.md",
+    "source": "default"
+   },
+   "min_obs": {
+    "value": 20,
+    "source": "default"
+   },
+   "out": {
+    "value": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G7_forward_lanes.json",
+    "source": "default"
+   },
+   "terminal_repo": {
+    "value": "C:\\Users\\mrthn\\aegis-alpha-terminal",
+    "source": "default"
+   },
+   "trading_days": {
+    "value": 252,
+    "source": "default"
+   }
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
+    "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
+    "bytes": 242158,
+    "opened_utc": "2026-09-06T13:31:43+00:00",
+    "note": "pinned SPY TR daily (G7 reads, never fetches)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.json",
+    "sha256": "ec70b6613a6ac232669597e483899c4c71244f14765b0b4c06f738ab717c9e2d",
+    "bytes": 663,
+    "opened_utc": "2026-09-06T13:31:43+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/aegis_pi.db",
+    "sha256": "26f0bf724fcf7d547e63045b93f2476ade368af8dd036241244f37bbb7b47e26",
+    "bytes": 647168,
+    "opened_utc": "2026-09-06T13:31:43+00:00",
+    "note": "canonical website paper lane NAV store (read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/docs/conviction_replay/prod_reads_2026-08-19/track_record_full.json",
+    "sha256": "61f79eadefb04555836486982797c8f99e352e64f115d728adcb0d37bffbe221",
+    "bytes": 38188,
+    "opened_utc": "2026-09-06T13:31:43+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/.cache/track_record.json",
+    "sha256": "194a28213eb2f4a6277239ea0a1a80c9d028076250c20d494fdb8c112ce1c291",
+    "bytes": 9321,
+    "opened_utc": "2026-09-06T13:31:43+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/benchmark_regret_20260903.json",
+    "sha256": "a44fb7a756f9184a3849a59d08d81d6db9479f5afb9745ec624493769e6b10be",
+    "bytes": 3734,
+    "opened_utc": "2026-09-06T13:31:43+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "sha256": "17a97adc5094c3053f469c7b2cced13503bd8d615048c97f72241e6238601323",
+    "bytes": 258431,
+    "opened_utc": "2026-09-06T13:31:44+00:00",
+    "note": "pinned Fama-French daily RF (learner.benchmark.cash)"
+   }
+  ],
+  "git_commit": "c906638ddb42",
+  "generated_utc": "2026-09-06T13:31:44+00:00"
+ }
+}
