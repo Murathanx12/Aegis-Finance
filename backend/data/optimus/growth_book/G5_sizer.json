@@ -642,13 +642,14 @@
  },
  "llm_spend_usd": 0.0,
  "llm_calls": 0,
- "memory_free_gb_before": 8.17,
- "wall_seconds": 18.1,
- "generated_utc": "2026-09-06T13:47:07.839256+00:00",
+ "memory_free_gb_before": 6.59,
+ "wall_seconds": 20.2,
+ "generated_utc": "2026-09-06T13:58:51.727343+00:00",
  "headline": "beta 0.6035 (NN) vs 0.897 (trailing vol) vs 0.7224 (flat): at the SAME drawdown budget over 202 development months at 25 bps, NN sizing reaches TW 1.0546 at 1.1416x, Moreira-Muir 3.7599 at 0.9922x, and the flat book 5.6264 at 1.332x. NN DSR 0.0073 over 11 sizer cells; MATURED = False",
  "_provenance": {
   "sys_argv": [
-   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g5_sizer.py"
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g5_sizer.py",
+   "--quiet"
   ],
   "resolved_config": {
    "job": "G5_sizer",
@@ -673,80 +674,81 @@
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
     "sha256": "2520e8b81c9ee4c46ee413c8b63c0160244afaf598cefd61c09c3e7d54eee327",
     "bytes": 20060,
-    "opened_utc": "2026-09-06T13:46:50+00:00",
+    "opened_utc": "2026-09-06T13:58:32+00:00",
     "note": "the frozen champion"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
     "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
     "bytes": 418154944,
-    "opened_utc": "2026-09-06T13:46:51+00:00",
+    "opened_utc": "2026-09-06T13:58:32+00:00",
     "note": "the 1999-2024 long panel"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_incumbents.parquet",
     "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
     "bytes": 6225813,
-    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "opened_utc": "2026-09-06T13:58:33+00:00",
     "note": "W3b stage predictions: incumbents"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_incumbents.json",
     "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2",
     "bytes": 9066,
-    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "opened_utc": "2026-09-06T13:58:33+00:00",
     "note": "W3b stage meta: incumbents"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_nn_pre_causal.parquet",
     "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
     "bytes": 24015048,
-    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "opened_utc": "2026-09-06T13:58:33+00:00",
     "note": "W3b stage predictions: nn_pre_causal"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_nn_pre_causal.json",
     "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
     "bytes": 74013,
-    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "opened_utc": "2026-09-06T13:58:33+00:00",
     "note": "W3b stage meta: nn_pre_causal"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly_early.parquet",
     "sha256": "51672ab7363507da27b1b871f611f5145edd655f37d9385dac90fb2ec7f08f2a",
     "bytes": 12406449,
-    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "opened_utc": "2026-09-06T13:58:33+00:00",
     "note": "WRDS wrdsapps_finratio, ROE leg"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly.parquet",
     "sha256": "7a8d096b1aaaf7595f68c05247ceb4e86330d5aad3fe33a4f4cdc0d4a3f0bc30",
     "bytes": 161579169,
-    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "opened_utc": "2026-09-06T13:58:33+00:00",
     "note": "WRDS wrdsapps_finratio, ROE leg"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
     "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
     "bytes": 242158,
-    "opened_utc": "2026-09-06T13:46:53+00:00",
+    "opened_utc": "2026-09-06T13:58:35+00:00",
     "note": "pinned SPY total return, daily"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.json",
     "sha256": "ec70b6613a6ac232669597e483899c4c71244f14765b0b4c06f738ab717c9e2d",
     "bytes": 663,
-    "opened_utc": "2026-09-06T13:46:53+00:00",
+    "opened_utc": "2026-09-06T13:58:35+00:00",
     "note": "pin provenance"
    },
    {
-    "path": "c:/users/mrthn/aegis-finance/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
-    "error": "MISSING",
-    "opened_utc": "2026-09-06T13:46:53+00:00",
+    "path": "c:/users/mrthn/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "sha256": "17a97adc5094c3053f469c7b2cced13503bd8d615048c97f72241e6238601323",
+    "bytes": 258431,
+    "opened_utc": "2026-09-06T13:58:35+00:00",
     "note": "pinned Fama-French daily RF"
    }
   ],
-  "git_commit": "cf9b95eb713a",
-  "generated_utc": "2026-09-06T13:47:07+00:00"
+  "git_commit": "0dcf72e657c8",
+  "generated_utc": "2026-09-06T13:58:51+00:00"
  }
 }

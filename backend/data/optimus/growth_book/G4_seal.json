@@ -565,6 +565,29 @@
   "_inputs_opened": [
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
+    "sha256": "2520e8b81c9ee4c46ee413c8b63c0160244afaf598cefd61c09c3e7d54eee327",
+    "bytes": 20060,
+    "opened_utc": "2026-09-06T13:58:53+00:00",
+    "note": "the sealed receipt whose verdict is being recomputed"
+   }
+  ],
+  "git_commit": "0dcf72e657c8",
+  "generated_utc": "2026-09-06T13:58:53+00:00"
+ },
+ "regated_utc": "2026-09-06T13:58:53.233180+00:00",
+ "sealed_era_reopened_by_this_correction": false,
+ "_provenance_of_the_run": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g4_seal.py",
+   "--regate"
+  ],
+  "resolved_config": {
+   "job": "G4_seal",
+   "mode": "regate"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
     "sha256": "37c5d014ff1ecf2cb4fd7c3ef917adab00fe8349455dee4971b434050527551a",
     "bytes": 22543,
     "opened_utc": "2026-09-06T13:40:53+00:00",
@@ -574,6 +597,6 @@
   "git_commit": "46c08d68e966",
   "generated_utc": "2026-09-06T13:40:53+00:00"
  },
- "regated_utc": "2026-09-06T13:40:53.401852+00:00",
- "sealed_era_reopened_by_this_correction": false
+ "provenance_of_the_run_is_also_in": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G4_CHAMPION_DECLARATION.json",
+ "provenance_note": "an earlier `--regate` replaced this receipt's `_provenance` before the clobber was fixed, so `_provenance_of_the_run` here is that regate's stamp and NOT the run's. The run's full input list -- same tracker, same process, written moments earlier -- is in G4_CHAMPION_DECLARATION.json. Recorded rather than reconstructed."
 }

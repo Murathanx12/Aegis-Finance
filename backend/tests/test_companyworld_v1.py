@@ -85,8 +85,18 @@ def test_edge_types_are_the_frozen_taxonomy_and_confidence_is_a_probability():
     assert df["confidence"].between(0.0, 1.0).all()
 
 
+def _name_index() -> "CW.NameIndex":
+    """The resolver reads CRSP stocknames from the local-only WRDS parquet.
+    On CI (no parquet) these tests SKIP loudly rather than FileNotFoundError --
+    this is what turned the finance CI red from 2026-09-05 to 09-06."""
+    if not Path(CW.STOCKNAMES).exists():
+        pytest.skip(f"crsp__stocknames.parquet not on this machine ({CW.STOCKNAMES}); "
+                    "local-only WRDS substrate, see docs/DATA_MANIFEST.md")
+    return CW.NameIndex()
+
+
 def test_the_resolver_refuses_a_generic_single_token():
-    idx = CW.NameIndex()
+    idx = _name_index()
     d = pd.Timestamp("2005-06-30")
     for name in ("General", "Union", "Global", "ABC"):
         p, route = idx.resolve(name, None, d, subject=10107)
@@ -96,7 +106,7 @@ def test_the_resolver_refuses_a_generic_single_token():
 
 
 def test_the_resolver_never_returns_the_subject_itself():
-    idx = CW.NameIndex()
+    idx = _name_index()
     d = pd.Timestamp("2005-06-30")
     # Microsoft's own permno is 10107; a filing that names itself must not
     # produce a self-edge through either the ticker or the name route.

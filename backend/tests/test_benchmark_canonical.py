@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -268,25 +269,53 @@ def test_market_keys_reports_paths_so_a_failure_is_actionable():
     assert "book.cagr_market" in paths
     assert "arms[0].excess_vw_1m" in paths
     assert not any("permno" in p for p in paths)
+    # A string under a market-shaped key is a label, not a market number.
+    assert bm.market_keys({"active_passive": "UNKNOWN", "benchmark": "SPY"}) == []
+    assert bm.market_keys({"active_passive": 0.42}) == ["active_passive"]
 
 
 # --------------------------------------------- the gate over real receipts
 
-def _declared_date(payload: dict, path: Path) -> _dt.date:
-    """The receipt's own date if it carries one, else the file's mtime.
+_DATE_KEYS = ("written_at_utc", "written_utc", "generated_at", "generated_utc",
+              "graded_utc", "run_utc", "created", "created_utc", "date",
+              "run_date", "as_of")
 
-    A receipt that declares its date is trusted about it; one that does not is
-    dated by the filesystem. Deriving the input rather than assuming it is the
-    house rule for guards.
-    """
-    for key in ("written_at_utc", "generated_at", "created", "created_utc",
-                "date", "run_date", "as_of"):
+
+def _git_first_commit_date(path: Path) -> _dt.date | None:
+    """When a receipt declares no date, the date it ENTERED the repo is the
+    honest one. The file mtime is NOT: on a fresh checkout (CI) every file's
+    mtime is the checkout time, which made every undated pre-gate receipt look
+    newly written and turned CI red from 2026-09-05 to 09-06 while the same
+    test passed locally. A guard derives its inputs or refuses; it does not
+    read the clock off the filesystem it happens to be sitting on."""
+    try:
+        out = subprocess.run(
+            ["git", "log", "--diff-filter=A", "--follow", "--format=%cI", "--", str(path)],
+            capture_output=True, text=True, timeout=30, cwd=str(path.parent),
+        ).stdout.strip().splitlines()
+    except Exception:  # noqa: BLE001 -- git absent: fall through to None
+        return None
+    if not out:
+        return None
+    try:
+        return _dt.date.fromisoformat(out[-1][:10])
+    except ValueError:
+        return None
+
+
+def _declared_date(payload: dict, path: Path) -> _dt.date:
+    """The receipt's own date if it carries one; else the date it entered git;
+    else (untracked file on a laptop) the file's mtime."""
+    for key in _DATE_KEYS:
         v = payload.get(key)
         if isinstance(v, str) and len(v) >= 10:
             try:
                 return _dt.date.fromisoformat(v[:10])
             except ValueError:
                 continue
+    committed = _git_first_commit_date(path)
+    if committed is not None:
+        return committed
     return _dt.date.fromtimestamp(path.stat().st_mtime)
 
 

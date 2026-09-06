@@ -170,3 +170,45 @@ def test_the_shipped_sealed_receipt_records_exactly_one_opening():
                       .read_text(encoding="utf-8"))
     assert decl["champion_sha256"] == d["champion_sha256"]
     assert decl["sealed_era_openings_before_this_job"] == 0
+
+
+# ------------------------------------------------- the frozen object itself
+
+@pytest.mark.slow
+def test_the_frozen_champion_rebuilds_to_its_recorded_hash():
+    """Rebuild the champion from the receipt and re-hash it. SLOW: loads the panel.
+
+    `champion_sha256` covers the genome recipe plus every development monthly
+    return at both cost rates to 10 dp. If the panel, the pinned tapes, the
+    overlay constants or the cost convention move, this goes red -- which is the
+    only thing that makes "frozen" mean anything. Marked slow because it reads
+    the 418 MB long panel; run it with
+    `AEGIS_IGNORE_DOTENV=1 python -m pytest backend/tests/test_growth_g4_seal.py -k rebuilds`.
+    """
+    import hashlib
+    p = GL.OUT_DIR / "G4_seal.json"
+    if not p.exists():
+        pytest.skip("G4 has not been run in this checkout")
+    from backend.services import receipt_provenance as RP
+    from scripts import growth_g2_generation0 as G2
+    from scripts import growth_g4_seal as G4mod
+
+    seal = json.loads(p.read_text(encoding="utf-8"))
+    g = seal["champion_genome"]
+    champ = GL.Genome(genome_id=g["genome_id"], family=g["family"], base=g["base"],
+                      spec=g["spec"], overlay=tuple(g["overlay"]),
+                      parent_ids=tuple(g["parent_ids"]),
+                      mutation_history=tuple(g["mutation_history"]), note=g["note"])
+    tracker = RP.InputTracker()
+    panel, _uni, _fp = G2.load_panel(tracker, verbose=False)
+    ctx = GL.market_context(panel, tracker)
+    dev = {b: GL.dev(G4mod.build_champion_series(champ, panel, ctx, b))
+           for b in GL.COST_RATES_BPS}
+    for b, s in dev.items():
+        GL.assert_development_only(s, f"the rebuilt champion @{b:.0f}bps")
+    payload = json.dumps(
+        {"genome": champ.to_json(),
+         "development": {f"{b:.0f}": [[m, round(float(v), 10)] for m, v in dev[b].items()]
+                         for b in sorted(dev)}},
+        sort_keys=True)
+    assert hashlib.sha256(payload.encode()).hexdigest() == seal["champion_sha256"]

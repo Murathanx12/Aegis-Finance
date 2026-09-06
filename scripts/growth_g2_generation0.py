@@ -465,7 +465,7 @@ def run(*, verbose: bool = True, argv=None) -> dict:
                      "declared drawdown budget with beta reported first — which "
                      "generation-0 genome leads on the DEVELOPMENT era?"),
         "declaration_sha256": sha,
-        "declaration_path": str(GL.DECLARATION),
+        "declaration_written_to": str(GL.DECLARATION),
         "sealed_era_openings": len(GL.sealed_openings()),
         "sealed_era_touched_by_this_job": False,
         "development_window": [GL.COMMON_DEV_START, GL.DEV_END],
@@ -488,7 +488,7 @@ def run(*, verbose: bool = True, argv=None) -> dict:
         "cpcv_rank_stability": cpcv,
         "leaderboard_by_leverage_neutral_tw": board,
         "cells": cells,
-        "series_cache": str(SERIES_CACHE),
+        "series_cache_written_to": str(SERIES_CACHE),
         "wall_seconds": round((datetime.now(timezone.utc) - t0).total_seconds(), 1),
         "generated_utc": datetime.now(timezone.utc).isoformat(),
     }

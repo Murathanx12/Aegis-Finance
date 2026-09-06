@@ -642,7 +642,12 @@ def market_keys(obj: object, _path: str = "") -> list[str]:
             if k == STAMP_KEY:
                 continue
             here = f"{_path}.{k}" if _path else str(k)
-            if is_market_key(str(k)) and not isinstance(v, (dict, list)) and v is not None:
+            # A market RETURN is a number. A string under a market-shaped key
+            # (13F `active_passive: "UNKNOWN"`, a prose `benchmark: "SPY"`) is
+            # a label, and flagging it turned CI red on 2026-09-06 over a
+            # receipt that quotes no market at all.
+            if (is_market_key(str(k)) and isinstance(v, (int, float))
+                    and not isinstance(v, bool)):
                 found.append(here)
             found.extend(market_keys(v, here))
     elif isinstance(obj, list):

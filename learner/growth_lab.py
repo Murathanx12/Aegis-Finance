@@ -248,9 +248,14 @@ def _rf_daily(tracker=None) -> pd.Series:
     from learner import benchmark as BM
     bm = BM.cash()
     if tracker is not None:
-        p = bm.provenance.get("path") if isinstance(bm.provenance, dict) else None
-        tracker.opened(REPO / p if p else REPO / "backend" / "data" / "ff_daily_pinned.csv.gz",
-                       note="pinned Fama-French daily RF")
+        # `bm.provenance["path"]` is relative to the REPO's PARENT, so
+        # `REPO / p` produced `aegis-finance/aegis-finance/backend/...` and the
+        # provenance checker correctly reported INPUTS_MISSING_ON_DISK for a
+        # file that HAD been opened. That is the W4b defect in miniature -- the
+        # record described the open instead of naming what was opened -- so the
+        # path is taken from `benchmark`'s own constant, which is the object the
+        # loader actually reads.
+        tracker.opened(BM._PINNED_CSV, note="pinned Fama-French daily RF")
     r = pd.Series(bm.returns).astype("float64")
     r.index = pd.to_datetime(r.index)
     return r.sort_index()

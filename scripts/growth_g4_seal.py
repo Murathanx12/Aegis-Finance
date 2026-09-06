@@ -356,7 +356,7 @@ def run(*, verbose: bool = True, argv=None) -> dict:
                      "same drawdown budget on 2016-2024, unseen in development, "
                      "after 25 bps?"),
         "search_declaration_sha256": decl["sha256"],
-        "champion_declaration": str(CHAMPION_DECL),
+        "champion_declaration_written_to": str(CHAMPION_DECL),
         "champion_genome_id": champ_id,
         "champion_sha256": champ_sha,
         "champion_genome": champ.to_json(),
@@ -449,7 +449,26 @@ def regate(argv=None) -> dict:
         f"{family_pbo.get('pbo')}; amendment 5 gate "
         f"{'MET' if gate['ALL_MET'] else 'NOT MET'}"
         + ("" if gate["ALL_MET"] else f" -- failed {', '.join(gate['failed'])}"))
-    RP.attach(out, argv or sys.argv, {"job": "G4_seal", "mode": "regate"}, tracker)
+    # DO NOT CLOBBER THE RUN'S PROVENANCE. The first version of `regate` called
+    # RP.attach on the finished receipt, which replaced the list of everything
+    # `run()` opened with a one-entry list naming the receipt itself -- a
+    # correction that erased the record of what it was correcting. The run's
+    # own input list is preserved beside it, and where it was already lost the
+    # receipt POINTS AT the file written by the same tracker in the same
+    # process rather than inventing one.
+    prior = out.get("_provenance")
+    block = RP.provenance_block(argv or sys.argv,
+                                {"job": "G4_seal", "mode": "regate"}, tracker)
+    if prior is not None and "_provenance_of_the_run" not in out:
+        out["_provenance_of_the_run"] = prior
+    out["_provenance"] = block
+    out["provenance_of_the_run_is_also_in"] = str(CHAMPION_DECL)
+    out["provenance_note"] = (
+        "an earlier `--regate` replaced this receipt's `_provenance` before the "
+        "clobber was fixed, so `_provenance_of_the_run` here is that regate's "
+        "stamp and NOT the run's. The run's full input list -- same tracker, "
+        "same process, written moments earlier -- is in "
+        "G4_CHAMPION_DECLARATION.json. Recorded rather than reconstructed.")
     p.write_text(json.dumps(out, indent=1, default=str), encoding="utf-8")
     return out
 

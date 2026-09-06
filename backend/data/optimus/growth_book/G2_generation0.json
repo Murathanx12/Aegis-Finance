@@ -4,8 +4,8 @@
  "licence": "PRODUCT_EXPERIMENT",
  "question": "under the PRODUCT ruler \u2014 after-cost terminal wealth at a declared drawdown budget with beta reported first \u2014 which generation-0 genome leads on the DEVELOPMENT era?",
  "declaration_sha256": "0397b9bfae7d53c1333afe89228c962ee08a1cbf81d04a40d5a33216d6a57655",
- "declaration_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\DECLARATION.json",
- "sealed_era_openings": 0,
+ "declaration_written_to": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\DECLARATION.json",
+ "sealed_era_openings": 1,
  "sealed_era_touched_by_this_job": false,
  "development_window": [
   "2004-01",
@@ -15,7 +15,7 @@
  "llm_spend_usd": 0.0,
  "llm_calls": 0,
  "network_calls": 0,
- "memory_free_gb_before": 8.67,
+ "memory_free_gb_before": 6.9,
  "universe": {
   "applied_to": "THE TRAINING UNIVERSE as well as the graded book -- the model is fitted, standardised, pre-trained, early-stopped and graded on these rows only",
   "dollar_volume_floor_usd_per_day": 3000000.0,
@@ -3603,6 +3603,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -3773,6 +3780,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -3945,6 +3959,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -4125,6 +4146,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -4299,6 +4327,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -4475,6 +4510,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -4655,6 +4697,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -4829,6 +4878,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -5005,6 +5061,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -5201,6 +5264,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -5391,6 +5461,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -5583,6 +5660,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -5779,6 +5863,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -5969,6 +6060,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -6161,6 +6259,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -6357,6 +6462,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -6547,6 +6659,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -6739,6 +6858,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -6935,6 +7061,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -7125,6 +7258,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -7317,6 +7457,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -7513,6 +7660,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -7703,6 +7857,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -7895,6 +8056,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -8091,6 +8259,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -8281,6 +8456,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -8473,6 +8655,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -8669,6 +8858,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -8859,6 +9055,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -9049,6 +9252,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -9239,6 +9449,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -11527,6 +11744,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -11697,6 +11921,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -11869,6 +12100,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -12049,6 +12287,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -12223,6 +12468,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -12399,6 +12651,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -12579,6 +12838,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -12753,6 +13019,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -12929,6 +13202,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -13125,6 +13405,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -13315,6 +13602,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -13507,6 +13801,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -13703,6 +14004,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -13893,6 +14201,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -14085,6 +14400,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -14281,6 +14603,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -14471,6 +14800,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -14663,6 +14999,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -14859,6 +15202,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -15049,6 +15399,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -15241,6 +15598,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -15437,6 +15801,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -15627,6 +15998,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -15819,6 +16197,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -16015,6 +16400,13 @@
      "overlay": [
       "dd"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -16205,6 +16597,13 @@
      "overlay": [
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "tg": {
        "description": "trend gate: exposure 1 when the pinned SPY TR index is at or above its 10-month moving average AT entry, else 0 (the proceeds earn RF)",
@@ -16397,6 +16796,13 @@
       "dd",
       "tg"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "dd": {
        "description": "drawdown control: exposure = clip(1 - |trailing 3m drawdown of the book| / 0.3, 0.25, 1.0), the drawdown lagged one month",
@@ -16593,6 +16999,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -16783,6 +17196,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -16973,6 +17393,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -17163,6 +17590,13 @@
      "overlay": [
       "bsc"
      ],
+     "overlay_params": {
+      "dd_lookback_months": 3,
+      "dd_scale": 0.3,
+      "dd_floor": 0.25,
+      "bsc_lookback_months": 6,
+      "bsc_cap": 2.0
+     },
      "per_overlay": {
       "bsc": {
        "description": "Barroso-Santa-Clara portfolio vol scaling: exposure = target / trailing 6-month annualised vol of the book, target = expanding median of that vol (PIT), capped at 2.0",
@@ -17874,9 +18308,9 @@
    "verdict_growth": "FAILS: RAW_P+FAMILY_HOLM+DSR_DEFLATION+PBO"
   }
  },
- "series_cache": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G2_genome_series.parquet",
- "wall_seconds": 17.7,
- "generated_utc": "2026-09-06T13:23:19.524224+00:00",
+ "series_cache_written_to": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G2_genome_series.parquet",
+ "wall_seconds": 19.5,
+ "generated_utc": "2026-09-06T13:57:39.509150+00:00",
  "headline": "beta 0.7763: lgbm_clf|dd|10bps leads generation 0 on 144 development months with leverage-neutral TW 4.431 vs SPY 2.0935 (raw TW 4.4116, maxDD -0.44503 vs budget -0.59923); family 88 cells, PBO 0.6429, best Holm 1.0",
  "_provenance": {
   "sys_argv": [
@@ -17899,73 +18333,74 @@
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
     "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
     "bytes": 418154944,
-    "opened_utc": "2026-09-06T13:23:04+00:00",
+    "opened_utc": "2026-09-06T13:57:22+00:00",
     "note": "the 1999-2024 long panel"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_incumbents.parquet",
     "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
     "bytes": 6225813,
-    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "opened_utc": "2026-09-06T13:57:23+00:00",
     "note": "W3b stage predictions: incumbents"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_incumbents.json",
     "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2",
     "bytes": 9066,
-    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "opened_utc": "2026-09-06T13:57:23+00:00",
     "note": "W3b stage meta: incumbents"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_nn_pre_causal.parquet",
     "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
     "bytes": 24015048,
-    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "opened_utc": "2026-09-06T13:57:23+00:00",
     "note": "W3b stage predictions: nn_pre_causal"
    },
    {
     "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_nn_pre_causal.json",
     "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
     "bytes": 74013,
-    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "opened_utc": "2026-09-06T13:57:23+00:00",
     "note": "W3b stage meta: nn_pre_causal"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly_early.parquet",
     "sha256": "51672ab7363507da27b1b871f611f5145edd655f37d9385dac90fb2ec7f08f2a",
     "bytes": 12406449,
-    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "opened_utc": "2026-09-06T13:57:23+00:00",
     "note": "WRDS wrdsapps_finratio, ROE leg"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly.parquet",
     "sha256": "7a8d096b1aaaf7595f68c05247ceb4e86330d5aad3fe33a4f4cdc0d4a3f0bc30",
     "bytes": 161579169,
-    "opened_utc": "2026-09-06T13:23:05+00:00",
+    "opened_utc": "2026-09-06T13:57:23+00:00",
     "note": "WRDS wrdsapps_finratio, ROE leg"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
     "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
     "bytes": 242158,
-    "opened_utc": "2026-09-06T13:23:06+00:00",
+    "opened_utc": "2026-09-06T13:57:24+00:00",
     "note": "pinned SPY total return, daily"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.json",
     "sha256": "ec70b6613a6ac232669597e483899c4c71244f14765b0b4c06f738ab717c9e2d",
     "bytes": 663,
-    "opened_utc": "2026-09-06T13:23:06+00:00",
+    "opened_utc": "2026-09-06T13:57:24+00:00",
     "note": "pin provenance"
    },
    {
-    "path": "c:/users/mrthn/aegis-finance/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
-    "error": "MISSING",
-    "opened_utc": "2026-09-06T13:23:06+00:00",
+    "path": "c:/users/mrthn/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "sha256": "17a97adc5094c3053f469c7b2cced13503bd8d615048c97f72241e6238601323",
+    "bytes": 258431,
+    "opened_utc": "2026-09-06T13:57:24+00:00",
     "note": "pinned Fama-French daily RF"
    }
   ],
-  "git_commit": "4cd2101412b3",
-  "generated_utc": "2026-09-06T13:23:19+00:00"
+  "git_commit": "0dcf72e657c8",
+  "generated_utc": "2026-09-06T13:57:39+00:00"
  }
 }
