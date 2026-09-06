@@ -1,0 +1,32 @@
+{
+ "job": "N3_populate_observe_tier",
+ "lane": "N3",
+ "question": "populate alpha.universe's OBSERVE_ONLY tier via build(scope=\"observe\")",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "status": "REFUSED",
+ "headline": "REFUSED (by design): live population needs a network call to the venue and broker credentials, outside this lane's offline scope. The size-aware code path is exercised and pinned offline instead -- see what_was_done_instead.",
+ "why": "`alpha.universe.build(scope=\"observe\")` (aegis-alpha-terminal, a SEPARATE repo) screens the venue's OWN live asset list and bars against the Alpaca API -- it needs a network call and broker credentials. This lane's mandate is offline research: 'no LLM API calls' and no network/keys touched, and the night-lab rules bar orders, seals and Railway changes outright. Live population is therefore out of scope for N3 and is not attempted.",
+ "what_was_done_instead": "the CODE PATH is exercised offline: `size_aware_execute_floor` and the `execution_authority(book_size_usd=...)` opt-in were added to aegis-alpha-terminal/alpha/universe.py and pinned by new checks in its own `tests_smoke_universe.py` (run this session, 0 failures) -- including the resurrection case (a $1m/day name is OBSERVE_ONLY under the flat $3m floor and FULL under a $100k book's size-aware $500k floor) and the refusal case (an unresolvable size-aware request returns CANNOT_DETERMINE, never a silent fallback to the flat floor).",
+ "files_touched_in_the_sibling_repo": [
+  "aegis-alpha-terminal/alpha/universe.py",
+  "aegis-alpha-terminal/tests_smoke_universe.py"
+ ],
+ "not_yet_true": "the STORED universe file (state/universe/HIGH_DISPERSION_US_v1_*.json) was built at the execute floor, so `load(scope=\"observe\")` still returns only execute-floor names until a human runs `build(scope=\"observe\")` against a live venue connection -- this was already documented as 'NOT YET TRUE' in that module before tonight and remains so; N3 did not change the stored file.",
+ "generated_utc": "2026-09-06T17:16:06.232640+00:00",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n3_size_aware_floors.py",
+   "--observe-tier",
+   "--s28-band"
+  ],
+  "resolved_config": {},
+  "_inputs_opened": [],
+  "git_commit": "e4252692c231",
+  "generated_utc": "2026-09-06T17:16:06+00:00"
+ },
+ "wall_seconds": 0.0,
+ "written_utc": "2026-09-06T17:16:06.232640+00:00"
+}

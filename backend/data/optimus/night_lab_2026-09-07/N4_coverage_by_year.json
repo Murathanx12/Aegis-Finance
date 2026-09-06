@@ -1,7 +1,7 @@
 {
  "job": "N4_coverage_by_year",
  "lane": "N4",
- "memory_free_gb_before": 4.88,
+ "memory_free_gb_before": 3.43,
  "status": "OK",
  "by_year": {
   "2015": {
@@ -29,12 +29,162 @@
     "alpaca:benzinga": 11159
    },
    "thin": false
+  },
+  "2017": {
+   "rows": 81485,
+   "distinct_symbols": 16427,
+   "distinct_permnos_linked": 3274,
+   "listed_common_stock_universe_proxy": 3829,
+   "share_of_universe_proxy_covered": 0.8551,
+   "by_source": {
+    "ibes_surpsumu": 52743,
+    "edgar_8k": 17491,
+    "alpaca:benzinga": 11251
+   },
+   "thin": false
+  },
+  "2018": {
+   "rows": 76535,
+   "distinct_symbols": 16432,
+   "distinct_permnos_linked": 3290,
+   "listed_common_stock_universe_proxy": 3812,
+   "share_of_universe_proxy_covered": 0.8631,
+   "by_source": {
+    "ibes_surpsumu": 52302,
+    "edgar_8k": 19994,
+    "alpaca:benzinga": 4239
+   },
+   "thin": false
+  },
+  "2019": {
+   "rows": 74591,
+   "distinct_symbols": 15980,
+   "distinct_permnos_linked": 3294,
+   "listed_common_stock_universe_proxy": 3817,
+   "share_of_universe_proxy_covered": 0.863,
+   "by_source": {
+    "ibes_surpsumu": 52487,
+    "edgar_8k": 22104
+   },
+   "thin": false
+  },
+  "2020": {
+   "rows": 78482,
+   "distinct_symbols": 15949,
+   "distinct_permnos_linked": 3302,
+   "listed_common_stock_universe_proxy": 3920,
+   "share_of_universe_proxy_covered": 0.8423,
+   "by_source": {
+    "ibes_surpsumu": 52039,
+    "edgar_8k": 26443
+   },
+   "thin": false
+  },
+  "2021": {
+   "rows": 81965,
+   "distinct_symbols": 16683,
+   "distinct_permnos_linked": 3682,
+   "listed_common_stock_universe_proxy": 4560,
+   "share_of_universe_proxy_covered": 0.8075,
+   "by_source": {
+    "ibes_surpsumu": 53901,
+    "edgar_8k": 28064
+   },
+   "thin": false
+  },
+  "2022": {
+   "rows": 83063,
+   "distinct_symbols": 17001,
+   "distinct_permnos_linked": 3811,
+   "listed_common_stock_universe_proxy": 4611,
+   "share_of_universe_proxy_covered": 0.8265,
+   "by_source": {
+    "ibes_surpsumu": 56269,
+    "edgar_8k": 26793,
+    "alpaca:benzinga": 1
+   },
+   "thin": false
+  },
+  "2023": {
+   "rows": 84333,
+   "distinct_symbols": 17154,
+   "distinct_permnos_linked": 3687,
+   "listed_common_stock_universe_proxy": 4420,
+   "share_of_universe_proxy_covered": 0.8342,
+   "by_source": {
+    "ibes_surpsumu": 56494,
+    "edgar_8k": 27839
+   },
+   "thin": false
+  },
+  "2024": {
+   "rows": 83511,
+   "distinct_symbols": 16836,
+   "distinct_permnos_linked": 3491,
+   "listed_common_stock_universe_proxy": 4158,
+   "share_of_universe_proxy_covered": 0.8396,
+   "by_source": {
+    "ibes_surpsumu": 54837,
+    "edgar_8k": 28674
+   },
+   "thin": false
+  },
+  "2025": {
+   "rows": 107986,
+   "distinct_symbols": 16233,
+   "distinct_permnos_linked": 170,
+   "listed_common_stock_universe_proxy": 0,
+   "share_of_universe_proxy_covered": null,
+   "by_source": {
+    "ibes_surpsumu": 53505,
+    "edgar_8k": 30171,
+    "alpaca:benzinga": 19568,
+    "finnhub:Yahoo": 2767,
+    "finnhub:Benzinga": 1125,
+    "finnhub:SeekingAlpha": 655,
+    "finnhub:MarketWatch": 74,
+    "finnhub:CNBC": 56,
+    "finnhub:Fintel": 41,
+    "finnhub:DowJones": 21,
+    "company_ir:ir.solidpowerbattery.com": 2,
+    "finnhub:Finnhub": 1
+   },
+   "thin": false
+  },
+  "2026": {
+   "rows": 95742,
+   "distinct_symbols": 15006,
+   "distinct_permnos_linked": 171,
+   "listed_common_stock_universe_proxy": 0,
+   "share_of_universe_proxy_covered": null,
+   "by_source": {
+    "ibes_surpsumu": 30890,
+    "alpaca:benzinga": 30359,
+    "edgar_8k": 22258,
+    "finnhub:Yahoo": 4809,
+    "finnhub:Benzinga": 2793,
+    "sec_ownership": 2380,
+    "finnhub:SeekingAlpha": 1380,
+    "finnhub:ChartMill": 330,
+    "finnhub:CNBC": 311,
+    "finnhub:Finnhub": 90,
+    "finnhub:MarketWatch": 40,
+    "finnhub:Fintel": 29,
+    "finnhub:DowJones": 15,
+    "company_ir:ir.hubspot.com": 10,
+    "company_ir:ir.porchgroup.com": 10,
+    "company_ir:ir.amd.com": 10,
+    "company_ir:www.sableoffshore.com": 10,
+    "company_ir:investors.micron.com": 10,
+    "company_ir:ir.solidpowerbattery.com": 8
+   },
+   "thin": false
   }
  },
  "thin_years": [],
  "thin_years_why": "A year is 'thin' (<100 rows) either because the news_backfill network pull had not reached that far back yet when this receipt was written (re-run after the pull progresses further -- it is resumable and append-only), or because a source structurally has no coverage there (13D/13G: everything before 2026-08-13; Form 4: everywhere -- see event_table_v1_manifest.json 'known_absences').",
  "universe_proxy_note": "'listed_common_stock_universe_proxy' = distinct CRSP permnos with shrcd in (10,11) and a name record active in that year -- an HONEST but LOOSE proxy for 'the tradable universe' (all listed common stock, not the $3m/day liquidity-floored research universe, which this job does not load to respect the RAM budget -- see module docstring). 'share_of_universe_proxy_covered' is computed on LINKED PERMNOS, not raw symbol counts -- distinct_symbols routinely exceeds the proxy universe because IBES alone covers many securities CRSP common stock does not (OTC, ADRs, multiple share classes); that is not a coverage number and is reported separately for transparency, not as a share.",
- "memory_free_gb_after": 4.82,
+ "memory_free_gb_after": 1.28,
  "_provenance": {
   "sys_argv": [
    "C:\\Users\\mrthn\\aegis-finance\\scripts\\n4_event_table.py",
@@ -42,7 +192,7 @@
    "--start-year",
    "2015",
    "--end-year",
-   "2016"
+   "2026"
   ],
   "resolved_config": {
    "start_year": {
@@ -50,25 +200,25 @@
     "source": "arg"
    },
    "end_year": {
-    "value": 2016,
+    "value": 2026,
     "source": "arg"
    }
   },
   "_inputs_opened": [
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/events/event_table_v1.parquet",
-    "sha256": "970206cf15ef063b75f85de42d26738fcb0a2619ffa5c565b904687998cbc8bb",
-    "bytes": 3492635,
-    "opened_utc": "2026-09-06T17:09:48+00:00"
+    "sha256": "3c412d20fe7de903e4e37e9ef097cf965f8ca531416830a3dba9cef1b621732d",
+    "bytes": 21995354,
+    "opened_utc": "2026-09-06T17:11:53+00:00"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/bulk/crsp__stocknames.parquet",
     "sha256": "8875036f25c6708cdbf68efdc6c3a8a61e5785fd79e6e10292349efd708c1e6f",
     "bytes": 1910034,
-    "opened_utc": "2026-09-06T17:09:49+00:00"
+    "opened_utc": "2026-09-06T17:11:54+00:00"
    }
   ],
-  "git_commit": "bdb132406a03",
-  "generated_utc": "2026-09-06T17:09:49+00:00"
+  "git_commit": "e4252692c231",
+  "generated_utc": "2026-09-06T17:11:54+00:00"
  }
 }

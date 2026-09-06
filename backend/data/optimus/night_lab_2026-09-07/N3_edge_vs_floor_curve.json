@@ -1,0 +1,917 @@
+{
+ "job": "N3_edge_vs_floor_curve",
+ "lane": "N3",
+ "question": "holding the SAME lgbm_clf ranking fixed, what happens to the graded edge as the execute floor moves from the flat $3m institutional line to the size-aware floor a $100k / $1m / $10m book actually needs, costed at the MEASURED TAQ spread for whichever liquidity band the floor falls into instead of a flat bps assumption?",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "test_years": [
+  2004,
+  2024
+ ],
+ "memory_free_gb_before": 4.66,
+ "floor_scenarios_usd": {
+  "institutional_flat_3m": 3000000.0,
+  "book_100000": 500000.0,
+  "book_1000000": 5000000.0,
+  "book_10000000": 50000000.0
+ },
+ "participation": 0.01,
+ "position_fraction": 0.05,
+ "build_sessions": 1.0,
+ "panel_rows_unfloored": 925757,
+ "panel_months": 310,
+ "lgbm_clf_fit": {
+  "wall_seconds": 74.4,
+  "n_folds": 21,
+  "n_features": 50
+ },
+ "memory_free_gb_after_fit": 3.26,
+ "cells": {
+  "institutional_flat_3m|measured_taq": {
+   "label": "institutional_flat_3m|measured_taq",
+   "cost_source": {
+    "verdict": "MEASURED",
+    "band": "1m-5m",
+    "round_trip_bps": 38.7,
+    "one_way_bps": 19.35,
+    "cost_pct_per_year_at_monthly_turnover": 4.64,
+    "n_measured": 30
+   },
+   "cost_bps_per_side_charged": 19.35,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 471303,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.91,
+   "terminal_wealth_net": 28.6334,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1081,
+    "t_beta_minus_1_hac": 1.142,
+    "annualised_pct": 2.795,
+    "t_paired": 1.019,
+    "p_one_sided": 0.15413
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.336,
+    "t_paired": 1.565
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.5326,
+     "t": -1.612,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.2586,
+     "t": -1.065,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 1.0172,
+     "t": 2.222,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "institutional_flat_3m|flat_10bps": {
+   "label": "institutional_flat_3m|flat_10bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 10.0
+   },
+   "cost_bps_per_side_charged": 10.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 471303,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.91,
+   "terminal_wealth_net": 43.6738,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1079,
+    "t_beta_minus_1_hac": 1.141,
+    "annualised_pct": 4.839,
+    "t_paired": 1.765,
+    "p_one_sided": 0.03875
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 6.378,
+    "t_paired": 2.304
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3678,
+     "t": -1.112,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0824,
+     "t": -0.34,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 1.185,
+     "t": 2.59,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "institutional_flat_3m|flat_25bps": {
+   "label": "institutional_flat_3m|flat_25bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 25.0
+   },
+   "cost_bps_per_side_charged": 25.0,
+   "tradable_floor_usd": 3000000.0,
+   "rows_after_tradable_floor": 471303,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.91,
+   "terminal_wealth_net": 22.1781,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1082,
+    "t_beta_minus_1_hac": 1.142,
+    "annualised_pct": 1.56,
+    "t_paired": 0.568,
+    "p_one_sided": 0.2849
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.103,
+    "t_paired": 1.119
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.6321,
+     "t": -1.914,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.365,
+     "t": -1.504,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.9159,
+     "t": 1.999,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_100000|measured_taq": {
+   "label": "book_100000|measured_taq",
+   "cost_source": {
+    "verdict": "MEASURED",
+    "band": "100k-1m",
+    "round_trip_bps": 148.9,
+    "one_way_bps": 74.45,
+    "cost_pct_per_year_at_monthly_turnover": 17.86,
+    "n_measured": 28
+   },
+   "cost_bps_per_side_charged": 74.45,
+   "tradable_floor_usd": 500000.0,
+   "rows_after_tradable_floor": 633101,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.914,
+   "terminal_wealth_net": 2.0371,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0897,
+    "t_beta_minus_1_hac": 0.97,
+    "annualised_pct": -9.629,
+    "t_paired": -3.279,
+    "p_one_sided": 0.99948
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": -8.35,
+    "t_paired": -2.826
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -1.4107,
+     "t": -4.15,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -1.4679,
+     "t": -6.371,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0675,
+     "t": 0.134,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_100000|flat_10bps": {
+   "label": "book_100000|flat_10bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 10.0
+   },
+   "cost_bps_per_side_charged": 10.0,
+   "tradable_floor_usd": 500000.0,
+   "rows_after_tradable_floor": 633101,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.914,
+   "terminal_wealth_net": 38.5521,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.087,
+    "t_beta_minus_1_hac": 0.948,
+    "annualised_pct": 4.544,
+    "t_paired": 1.556,
+    "p_one_sided": 0.05986
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 5.785,
+    "t_paired": 1.969
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.2555,
+     "t": -0.752,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.2469,
+     "t": -1.069,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 1.2244,
+     "t": 2.448,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_100000|flat_25bps": {
+   "label": "book_100000|flat_25bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 25.0
+   },
+   "cost_bps_per_side_charged": 25.0,
+   "tradable_floor_usd": 500000.0,
+   "rows_after_tradable_floor": 633101,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.914,
+   "terminal_wealth_net": 19.5077,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0876,
+    "t_beta_minus_1_hac": 0.953,
+    "annualised_pct": 1.246,
+    "t_paired": 0.426,
+    "p_one_sided": 0.33501
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 2.495,
+    "t_paired": 0.848
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.5244,
+     "t": -1.543,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.531,
+     "t": -2.301,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.9552,
+     "t": 1.908,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_1000000|measured_taq": {
+   "label": "book_1000000|measured_taq",
+   "cost_source": {
+    "verdict": "MEASURED",
+    "band": "5m-10m",
+    "round_trip_bps": 21.0,
+    "one_way_bps": 10.5,
+    "cost_pct_per_year_at_monthly_turnover": 2.52,
+    "n_measured": 30
+   },
+   "cost_bps_per_side_charged": 10.5,
+   "tradable_floor_usd": 5000000.0,
+   "rows_after_tradable_floor": 411059,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.9,
+   "terminal_wealth_net": 32.1308,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0917,
+    "t_beta_minus_1_hac": 1.06,
+    "annualised_pct": 3.397,
+    "t_paired": 1.369,
+    "p_one_sided": 0.08554
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.705,
+    "t_paired": 1.879
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.337,
+     "t": -1.05,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0778,
+     "t": -0.315,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.8851,
+     "t": 2.207,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_1000000|flat_10bps": {
+   "label": "book_1000000|flat_10bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 10.0
+   },
+   "cost_bps_per_side_charged": 10.0,
+   "tradable_floor_usd": 5000000.0,
+   "rows_after_tradable_floor": 411059,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.9,
+   "terminal_wealth_net": 32.857,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0916,
+    "t_beta_minus_1_hac": 1.059,
+    "annualised_pct": 3.507,
+    "t_paired": 1.413,
+    "p_one_sided": 0.07884
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.813,
+    "t_paired": 1.922
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.3284,
+     "t": -1.023,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0684,
+     "t": -0.276,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.8941,
+     "t": 2.23,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_1000000|flat_25bps": {
+   "label": "book_1000000|flat_25bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 25.0
+   },
+   "cost_bps_per_side_charged": 25.0,
+   "tradable_floor_usd": 5000000.0,
+   "rows_after_tradable_floor": 411059,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.9,
+   "terminal_wealth_net": 16.7908,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.0921,
+    "t_beta_minus_1_hac": 1.064,
+    "annualised_pct": 0.259,
+    "t_paired": 0.104,
+    "p_one_sided": 0.4585
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 1.573,
+    "t_paired": 0.627
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.5868,
+     "t": -1.829,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.3498,
+     "t": -1.413,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.6277,
+     "t": 1.561,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  },
+  "book_10000000|measured_taq": {
+   "label": "book_10000000|measured_taq",
+   "cost_source": {
+    "verdict": "MEASURED",
+    "band": "50m+",
+    "round_trip_bps": 6.7,
+    "one_way_bps": 3.35,
+    "cost_pct_per_year_at_monthly_turnover": 0.8,
+    "n_measured": 30
+   },
+   "cost_bps_per_side_charged": 3.35,
+   "tradable_floor_usd": 50000000.0,
+   "rows_after_tradable_floor": 141938,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.829,
+   "terminal_wealth_net": 41.0548,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1025,
+    "t_beta_minus_1_hac": 1.659,
+    "annualised_pct": 4.245,
+    "t_paired": 2.176,
+    "p_one_sided": 0.01478
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 5.707,
+    "t_paired": 2.874
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1511,
+     "t": -0.659,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1325,
+     "t": 0.556,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.7787,
+     "t": 2.641,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "book_10000000|flat_10bps": {
+   "label": "book_10000000|flat_10bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 10.0
+   },
+   "cost_bps_per_side_charged": 10.0,
+   "tradable_floor_usd": 50000000.0,
+   "rows_after_tradable_floor": 141938,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.829,
+   "terminal_wealth_net": 31.238,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1025,
+    "t_beta_minus_1_hac": 1.659,
+    "annualised_pct": 2.923,
+    "t_paired": 1.497,
+    "p_one_sided": 0.06718
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.384,
+    "t_paired": 2.207
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.2513,
+     "t": -1.095,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0198,
+     "t": 0.083,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.6663,
+     "t": 2.256,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 2,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   }
+  },
+  "book_10000000|flat_25bps": {
+   "label": "book_10000000|flat_25bps",
+   "cost_source": {
+    "verdict": "FLAT",
+    "one_way_bps": 25.0
+   },
+   "cost_bps_per_side_charged": 25.0,
+   "tradable_floor_usd": 50000000.0,
+   "rows_after_tradable_floor": 141938,
+   "mean_names_per_month": 50.0,
+   "months": 251,
+   "mean_turnover": 0.829,
+   "terminal_wealth_net": 16.8458,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "beta": 1.1025,
+    "t_beta_minus_1_hac": 1.658,
+    "annualised_pct": -0.06,
+    "t_paired": -0.031,
+    "p_one_sided": 0.51224
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 1.402,
+    "t_paired": 0.704
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.4775,
+     "t": -2.071,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.2345,
+     "t": -0.986,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.4128,
+     "t": 1.393,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   }
+  }
+ },
+ "edge_vs_floor_curve": [
+  {
+   "floor_scenario": "institutional_flat_3m",
+   "floor_usd": 3000000.0,
+   "taq_band": "1m-5m",
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "1m-5m",
+    "round_trip_bps": 38.7,
+    "one_way_bps": 19.35,
+    "cost_pct_per_year_at_monthly_turnover": 4.64,
+    "n_measured": 30
+   },
+   "cells": {
+    "measured_taq": {
+     "PRIMARY_beta_matched_annualised_pct": 2.795,
+     "PRIMARY_t": 1.019,
+     "rows_after_tradable_floor": 471303,
+     "mean_names_per_month": 50.0
+    },
+    "flat_10bps": {
+     "PRIMARY_beta_matched_annualised_pct": 4.839,
+     "PRIMARY_t": 1.765,
+     "rows_after_tradable_floor": 471303,
+     "mean_names_per_month": 50.0
+    },
+    "flat_25bps": {
+     "PRIMARY_beta_matched_annualised_pct": 1.56,
+     "PRIMARY_t": 0.568,
+     "rows_after_tradable_floor": 471303,
+     "mean_names_per_month": 50.0
+    }
+   }
+  },
+  {
+   "floor_scenario": "book_100000",
+   "floor_usd": 500000.0,
+   "taq_band": "100k-1m",
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "100k-1m",
+    "round_trip_bps": 148.9,
+    "one_way_bps": 74.45,
+    "cost_pct_per_year_at_monthly_turnover": 17.86,
+    "n_measured": 28
+   },
+   "cells": {
+    "measured_taq": {
+     "PRIMARY_beta_matched_annualised_pct": -9.629,
+     "PRIMARY_t": -3.279,
+     "rows_after_tradable_floor": 633101,
+     "mean_names_per_month": 50.0
+    },
+    "flat_10bps": {
+     "PRIMARY_beta_matched_annualised_pct": 4.544,
+     "PRIMARY_t": 1.556,
+     "rows_after_tradable_floor": 633101,
+     "mean_names_per_month": 50.0
+    },
+    "flat_25bps": {
+     "PRIMARY_beta_matched_annualised_pct": 1.246,
+     "PRIMARY_t": 0.426,
+     "rows_after_tradable_floor": 633101,
+     "mean_names_per_month": 50.0
+    }
+   }
+  },
+  {
+   "floor_scenario": "book_1000000",
+   "floor_usd": 5000000.0,
+   "taq_band": "5m-10m",
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "5m-10m",
+    "round_trip_bps": 21.0,
+    "one_way_bps": 10.5,
+    "cost_pct_per_year_at_monthly_turnover": 2.52,
+    "n_measured": 30
+   },
+   "cells": {
+    "measured_taq": {
+     "PRIMARY_beta_matched_annualised_pct": 3.397,
+     "PRIMARY_t": 1.369,
+     "rows_after_tradable_floor": 411059,
+     "mean_names_per_month": 50.0
+    },
+    "flat_10bps": {
+     "PRIMARY_beta_matched_annualised_pct": 3.507,
+     "PRIMARY_t": 1.413,
+     "rows_after_tradable_floor": 411059,
+     "mean_names_per_month": 50.0
+    },
+    "flat_25bps": {
+     "PRIMARY_beta_matched_annualised_pct": 0.259,
+     "PRIMARY_t": 0.104,
+     "rows_after_tradable_floor": 411059,
+     "mean_names_per_month": 50.0
+    }
+   }
+  },
+  {
+   "floor_scenario": "book_10000000",
+   "floor_usd": 50000000.0,
+   "taq_band": "50m+",
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "50m+",
+    "round_trip_bps": 6.7,
+    "one_way_bps": 3.35,
+    "cost_pct_per_year_at_monthly_turnover": 0.8,
+    "n_measured": 30
+   },
+   "cells": {
+    "measured_taq": {
+     "PRIMARY_beta_matched_annualised_pct": 4.245,
+     "PRIMARY_t": 2.176,
+     "rows_after_tradable_floor": 141938,
+     "mean_names_per_month": 50.0
+    },
+    "flat_10bps": {
+     "PRIMARY_beta_matched_annualised_pct": 2.923,
+     "PRIMARY_t": 1.497,
+     "rows_after_tradable_floor": 141938,
+     "mean_names_per_month": 50.0
+    },
+    "flat_25bps": {
+     "PRIMARY_beta_matched_annualised_pct": -0.06,
+     "PRIMARY_t": -0.031,
+     "rows_after_tradable_floor": 141938,
+     "mean_names_per_month": 50.0
+    }
+   }
+  }
+ ],
+ "family": {
+  "size": 12,
+  "family_min_p_one_sided": 0.01478,
+  "family_max_p_one_sided": 0.99948,
+  "holm_adjusted": {
+   "book_10000000|measured_taq": 0.17736,
+   "institutional_flat_3m|flat_10bps": 0.42625,
+   "book_100000|flat_10bps": 0.5986,
+   "book_10000000|flat_10bps": 0.60462,
+   "book_1000000|flat_10bps": 0.63072,
+   "book_1000000|measured_taq": 0.63072,
+   "institutional_flat_3m|measured_taq": 0.92478,
+   "institutional_flat_3m|flat_25bps": 1.0,
+   "book_100000|flat_25bps": 1.0,
+   "book_1000000|flat_25bps": 1.0,
+   "book_10000000|flat_25bps": 1.0,
+   "book_100000|measured_taq": 1.0
+  },
+  "best_cell": "book_10000000|measured_taq",
+  "n_cells_surviving_holm_at_0_05": 0
+ },
+ "inference_on_the_best_cell": {
+  "n_cells_looked_at": 12,
+  "deflated_sharpe": {
+   "sharpe": 0.1373,
+   "sharpe_benchmark_sr0": 0.1053,
+   "n_trials": 12,
+   "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+   "skew": 1.144,
+   "kurtosis": 6.405,
+   "n_periods": 251,
+   "z": 0.5438,
+   "dsr": 0.7067,
+   "verdict": "WITHIN_SELECTION_NOISE",
+   "reading": "after 12 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.105; this arm's is 0.137."
+  },
+  "power": {
+   "n_periods": 251,
+   "periods_per_year": 12,
+   "n_oos_months": 251,
+   "sharpe_per_period": 0.1373,
+   "t_observed": 2.1759,
+   "years_observed": 20.92,
+   "t_target": 2.0,
+   "periods_needed_for_t_target": 212.1,
+   "years_needed_for_t2": 17.7,
+   "years_needed_for_t2_exact": 17.671857844947727,
+   "powered_for_observed_effect": true,
+   "detectable_annual_excess": 0.03,
+   "reference_sharpe_per_period": 0.09706,
+   "years_needed_to_detect_that_effect": 35.4,
+   "mde_annual_excess_at_t_target": 0.03902,
+   "mde_reading": "on the 20.9 years actually held, the smallest annual excess this arm could have shown at t = 2 is 3.90%/yr",
+   "powered": false,
+   "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+   "reading": "t = 2.18 on 20.9 years; t = 2 would need 17.7 years at this Sharpe -- ENOUGH TAPE"
+  },
+  "pbo": {
+   "pbo": 0.0286,
+   "n_partitions": 70,
+   "n_arms": 12,
+   "n_periods": 251,
+   "median_logit": 2.4849,
+   "verdict": "SELECTION_IS_STABLE",
+   "reading": "share of in-sample/out-of-sample partitions in which the in-sample champion finished BELOW the out-of-sample median. 0.5 is a coin flip."
+  }
+ },
+ "scope_aware_verdict": {
+  "best_cell": "book_10000000|measured_taq",
+  "observed_effect_annual": 0.04245,
+  "mde_annual_at_t_2": 0.03902,
+  "verdict": "SEPARATED FROM ZERO"
+ },
+ "status": "OK",
+ "headline": "edge vs floor curve (beta-matched, measured TAQ cost): institutional_flat_3m@$3,000,000 (1m-5m): 2.795%/yr t=1.019, names/mo=50.0; book_100000@$500,000 (100k-1m): -9.629%/yr t=-3.279, names/mo=50.0; book_1000000@$5,000,000 (5m-10m): 3.397%/yr t=1.369, names/mo=50.0; book_10000000@$50,000,000 (50m+): 4.245%/yr t=2.176, names/mo=50.0 | family 12, family-max p 0.99948, 0 cells survive Holm",
+ "memory_free_gb_after": 3.74,
+ "wall_seconds": 82.9,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n3_size_aware_floors.py",
+   "--floor-curve"
+  ],
+  "resolved_config": {
+   "test_years": {
+    "value": [
+     2004,
+     2024
+    ],
+    "source": "default"
+   }
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/taq_spread_by_liquidity_band.json",
+    "sha256": "8b3991c950090a55fffbaaa88a20661499332174afcd98d8886a6c2867fde5fc",
+    "bytes": 100010,
+    "opened_utc": "2026-09-06T17:17:13+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944,
+    "opened_utc": "2026-09-06T17:17:13+00:00",
+    "note": "59 of the panel's columns"
+   }
+  ],
+  "git_commit": "e4252692c231",
+  "generated_utc": "2026-09-06T17:18:34+00:00"
+ },
+ "written_utc": "2026-09-06T17:18:34.244004+00:00"
+}

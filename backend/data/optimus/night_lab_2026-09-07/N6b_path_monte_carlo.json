@@ -1,0 +1,354 @@
+{
+ "item": "NIGHT_LAB_2026-09-07 / lane N6 / N6.3",
+ "title": "path Monte Carlo for the hack4 contract at 1x (and 1.3x)",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_at_utc": "2026-09-06T17:20:30+00:00",
+ "argv": [
+  "C:\\Users\\mrthn\\aegis-finance\\scripts\\n6b_path_monte_carlo.py"
+ ],
+ "git_commit": "e4252692c231",
+ "python": "3.12.10",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "memory_free_gb_before": 3.31,
+ "exact_champion_reconstruction": {
+  "attempted": false,
+  "available_by_memory_floor": false,
+  "note": "free memory 3.31 GB is below the 6.0 GB floor growth_g4_seal.py / growth_g5_sizer.py self-impose for this exact reload \u2014 the exact reconstruction is SKIPPED, not attempted"
+ },
+ "sealed_era_status": {
+  "champion_id": "m12_quality_mom|dd",
+  "sealed_era_openings_for_this_champion": 1,
+  "sealed_era_openings_permitted": 1,
+  "this_script_called_sealed_or_open_sealed_window": false,
+  "reading": "1 opening(s) already on the ledger (G4, 2026-09-06); this script reads already-written G4/G5 receipts for sealed-era context and does not call growth_lab.sealed() or open_sealed_window() itself"
+ },
+ "champion_id": "m12_quality_mom|dd",
+ "proxy_used": {
+  "column": "quality_mom|dd|{bps}bps",
+  "source_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\growth_book\\G2_genome_series.parquet",
+  "why_a_proxy": "the EXACT frozen champion is a mutation of this genome (custom k=110/hold_k=160/dd params plus a bsc overlay this parent lacks); reconstructing its exact series needs the same heavy panel reload G4/G5 self-gate at 6.0 GB free, currently unavailable \u2014 see exact_champion_reconstruction",
+  "development_window": [
+   "1999-03",
+   "2015-12"
+  ],
+  "n_months": 202,
+  "realised_summary": {
+   "10bps": {
+    "n_months": 202,
+    "mean_monthly": 0.010014,
+    "vol_annual": 0.21906,
+    "max_drawdown": -0.575441
+   },
+   "25bps": {
+    "n_months": 202,
+    "mean_monthly": 0.008828,
+    "vol_annual": 0.218555,
+    "max_drawdown": -0.590884
+   }
+  }
+ },
+ "cross_check_vs_exact_champion": {
+  "proxy_25bps_realised": {
+   "n_months": 202,
+   "mean_monthly": 0.008828,
+   "vol_annual": 0.218555,
+   "max_drawdown": -0.590884
+  },
+  "exact_champion_dev_202mo_25bps_from_G5": {
+   "beta": 0.7224,
+   "maxdd_unlevered": -0.46882,
+   "realized_vol": 0.19337,
+   "tw_unlevered": 4.599,
+   "note": "this arm IS the frozen champion at flat 1.0x with no extra sizing overlay \u2014 the closest thing to the exact champion's own raw dev-window summary this repo has already legitimately disclosed"
+  },
+  "reading": "compare maxdd_unlevered above: the proxy is missing the champion's bsc vol-cap overlay and the tighter hysteresis, so a gap here is EXPECTED, not a bug \u2014 it bounds how much to trust the simulated tail below"
+ },
+ "block_length": {
+  "n_months": 202,
+  "two_over_sqrt_n_noise_band": 0.1407,
+  "acf_raw_returns_lags_1_12": {
+   "1": 0.012,
+   "2": 0.0778,
+   "3": -0.0083,
+   "4": -0.0671,
+   "5": 0.0303,
+   "6": 0.0095,
+   "7": 0.0689,
+   "8": 0.0263,
+   "9": 0.0457,
+   "10": 0.0239,
+   "11": -0.0815,
+   "12": -0.1077
+  },
+  "acf_abs_returns_lags_1_12": {
+   "1": 0.0545,
+   "2": -0.1281,
+   "3": 0.0815,
+   "4": 0.1535,
+   "5": 0.1097,
+   "6": 0.0092,
+   "7": -0.0117,
+   "8": -0.0501,
+   "9": -0.003,
+   "10": 0.0489,
+   "11": 0.0731,
+   "12": -0.0344
+  },
+  "reading": "both ACFs are weak at every lag and mostly inside the +-0.141 noise band on this 202-month sample \u2014 no strong LINEAR persistence is detectable in this proxy series at this sample size",
+  "chosen_block_mean_periods": 6.0,
+  "house_default_block_mean_periods": 4.0,
+  "structural_holding_period_months": 7.62,
+  "why_not_iid_despite_weak_acf": "an i.i.d. bootstrap (block=1) UNDERSTATES drawdown risk by construction: it cannot produce a run of bad months longer than chance allows, and hold_k=160 sessions (~7.6 months) means consecutive book months share overlapping realised positions \u2014 dependence a linear ACF on NET turnover-smoothed returns is weak at detecting even when it is structurally present. 6 months is a stated compromise between the house default (4, used identically in G4_seal.json's sealed-era p_ruin), the structural holding period (~7.6, rounded down), and this sample's own honest (weak) ACF reading \u2014 not a value derived to three decimal places."
+ },
+ "block_length_sensitivity_1_0x": {
+  "block_1": {
+   "p_lose_half": 0.3982,
+   "median_worst_dd": -0.46274,
+   "p95_worst_dd": -0.70846
+  },
+  "block_4": {
+   "p_lose_half": 0.4208,
+   "median_worst_dd": -0.47129,
+   "p95_worst_dd": -0.72381
+  },
+  "block_6": {
+   "p_lose_half": 0.442,
+   "median_worst_dd": -0.48152,
+   "p95_worst_dd": -0.72764
+  },
+  "block_8": {
+   "p_lose_half": 0.4605,
+   "median_worst_dd": -0.4913,
+   "p95_worst_dd": -0.73779
+  },
+  "block_12": {
+   "p_lose_half": 0.466,
+   "median_worst_dd": -0.49766,
+   "p95_worst_dd": -0.73512
+  }
+ },
+ "bootstrap_construction": "stationary (geometric) block bootstrap, circular continuation \u2014 the exact mechanism in learner.growth.p_ruin, reimplemented here (not copied verbatim) so every resampled PATH can be kept for time-under-water, not only the ruin flag and two drawdown quantiles p_ruin itself reports",
+ "n_boot": 4000,
+ "seed": 20260907,
+ "cost_bps": 25.0,
+ "financing_bps_over_rf": 100.0,
+ "book_usd": 100000.0,
+ "results_by_leverage": {
+  "1.0x": {
+   "n_boot": 4000,
+   "horizon_months": 202,
+   "p_lose_half": 0.442,
+   "ruin_threshold": -0.5,
+   "drawdown_distribution": {
+    "median": -0.48152,
+    "p90": -0.67372,
+    "p95": -0.72764,
+    "worst": -0.90894
+   },
+   "time_under_water_months": {
+    "note": "longest single consecutive underwater streak per bootstrap path (below its own prior peak); median and p95 across paths",
+    "longest_streak_median": 64.0,
+    "longest_streak_p95": 163.0,
+    "longest_streak_worst": 201,
+    "total_months_underwater_median": 165.0,
+    "total_months_underwater_p95": 192.0
+   },
+   "worst_case_usd_at_100k": {
+    "median": -48152.0,
+    "p95": -72764.0,
+    "worst": -90894.0
+   },
+   "horizon_36mo_next_few_years": {
+    "n_boot": 4000,
+    "horizon_months": 36,
+    "p_lose_half": 0.0362,
+    "ruin_threshold": -0.5,
+    "drawdown_distribution": {
+     "median": -0.25288,
+     "p90": -0.42431,
+     "p95": -0.47735,
+     "worst": -0.75154
+    },
+    "time_under_water_months": {
+     "note": "longest single consecutive underwater streak per bootstrap path (below its own prior peak); median and p95 across paths",
+     "longest_streak_median": 15.0,
+     "longest_streak_p95": 34.0,
+     "longest_streak_worst": 35,
+     "total_months_underwater_median": 26.0,
+     "total_months_underwater_p95": 34.0
+    },
+    "worst_case_usd_at_100k": {
+     "median": -25288.0,
+     "p95": -47735.0,
+     "worst": -75154.0
+    }
+   }
+  },
+  "1.3x": {
+   "n_boot": 4000,
+   "horizon_months": 202,
+   "p_lose_half": 0.765,
+   "ruin_threshold": -0.5,
+   "drawdown_distribution": {
+    "median": -0.60199,
+    "p90": -0.79568,
+    "p95": -0.84507,
+    "worst": -0.96599
+   },
+   "time_under_water_months": {
+    "note": "longest single consecutive underwater streak per bootstrap path (below its own prior peak); median and p95 across paths",
+    "longest_streak_median": 71.0,
+    "longest_streak_p95": 177.0,
+    "longest_streak_worst": 201,
+    "total_months_underwater_median": 168.0,
+    "total_months_underwater_p95": 194.0
+   },
+   "worst_case_usd_at_100k": {
+    "median": -60199.0,
+    "p95": -84507.0,
+    "worst": -96599.0
+   },
+   "horizon_36mo_next_few_years": {
+    "n_boot": 4000,
+    "horizon_months": 36,
+    "p_lose_half": 0.1393,
+    "ruin_threshold": -0.5,
+    "drawdown_distribution": {
+     "median": -0.32614,
+     "p90": -0.53139,
+     "p95": -0.59382,
+     "worst": -0.85274
+    },
+    "time_under_water_months": {
+     "note": "longest single consecutive underwater streak per bootstrap path (below its own prior peak); median and p95 across paths",
+     "longest_streak_median": 16.0,
+     "longest_streak_p95": 34.0,
+     "longest_streak_worst": 35,
+     "total_months_underwater_median": 26.0,
+     "total_months_underwater_p95": 34.0
+    },
+    "worst_case_usd_at_100k": {
+     "median": -32614.0,
+     "p95": -59382.0,
+     "worst": -85274.0
+    }
+   }
+  }
+ },
+ "existing_context_read_not_recomputed": {
+  "note": "every figure below is READ from an existing receipt (G4_seal.json / G5_sizer.json / CONTRACT_DRAFT), not recomputed by this script",
+  "G4_development_common_window_2004_2015_144mo": {
+   "10bps": {
+    "beta": 0.7673,
+    "mean_monthly": 0.013333,
+    "maxdd": -0.35675,
+    "realized_vol_annual": 0.19411,
+    "worst_month": -0.16886
+   },
+   "25bps": {
+    "beta": 0.765,
+    "mean_monthly": 0.012545,
+    "maxdd": -0.36276,
+    "realized_vol_annual": 0.19367,
+    "worst_month": -0.16979
+   }
+  },
+  "G4_sealed_era_2016_2024_107mo": {
+   "10bps": {
+    "beta": 0.6711,
+    "mean_monthly": 0.014613,
+    "maxdd": -0.29639,
+    "realized_vol_annual": 0.19027,
+    "worst_month": -0.29639,
+    "p_ruin_at_largest_admissible_leverage": {
+     "p_ruin": 0.1985,
+     "threshold": -0.5,
+     "n_boot": 2000,
+     "block_mean_periods": 4.0,
+     "seed": 20260907,
+     "horizon_months": 107,
+     "median_worst_drawdown": -0.38726,
+     "p95_worst_drawdown": -0.61972,
+     "construction": "stationary block bootstrap of the monthly series",
+     "computed_on": "the LARGEST ADMISSIBLE book (L=1.3037), not the unlevered series"
+    }
+   },
+   "25bps": {
+    "beta": 0.6681,
+    "mean_monthly": 0.013803,
+    "maxdd": -0.29663,
+    "realized_vol_annual": 0.18991,
+    "worst_month": -0.29663,
+    "p_ruin_at_largest_admissible_leverage": {
+     "p_ruin": 0.212,
+     "threshold": -0.5,
+     "n_boot": 2000,
+     "block_mean_periods": 4.0,
+     "seed": 20260907,
+     "horizon_months": 107,
+     "median_worst_drawdown": -0.38892,
+     "p95_worst_drawdown": -0.62758,
+     "construction": "stationary block bootstrap of the monthly series",
+     "computed_on": "the LARGEST ADMISSIBLE book (L=1.3027), not the unlevered series"
+    }
+   }
+  },
+  "G5_development_full_window_1999_2015_202mo_flat_1x_25bps": {
+   "beta": 0.7224,
+   "maxdd_unlevered": -0.46882,
+   "realized_vol": 0.19337,
+   "tw_unlevered": 4.599,
+   "note": "this arm IS the frozen champion at flat 1.0x with no extra sizing overlay \u2014 the closest thing to the exact champion's own raw dev-window summary this repo has already legitimately disclosed"
+  },
+  "CONTRACT_DRAFT_worst_case_ladder_sec6": {
+   "source": "docs/CONTRACT_DRAFT_2026-09-07_GROWTH_BOOK.md \u00a76",
+   "basis": "prose states '1999-2024'; the 1.0x row's maxDD -46.88% matches G5's constant_1x_NULL maxdd_unlevered exactly (-0.46882), which is the 202-month 1999-2015 DEVELOPMENT window, not 1999-2024 \u2014 the caption is imprecise, the underlying window is the same development-only window this script uses. No script in this repo reproduces this table's exact construction; it is read here as-is.",
+   "rung_1_0x": {
+    "maxdd": -0.4688,
+    "worst_case_usd_100k": -46882,
+    "worst_month": -0.2966,
+    "p_lose_half": 0.232,
+    "median_worst_dd": -0.415
+   },
+   "rung_1_5x": {
+    "maxdd": -0.6544,
+    "worst_case_usd_100k": -65435,
+    "worst_month": -0.4464,
+    "p_lose_half": 0.797,
+    "median_worst_dd": -0.598
+   },
+   "rung_2_0x": {
+    "maxdd": -0.7829,
+    "worst_case_usd_100k": -78293,
+    "worst_month": -0.5961,
+    "p_lose_half": 0.985,
+    "median_worst_dd": -0.746,
+    "note": "REFUSED by the declaration; shown for the cost"
+   }
+  }
+ },
+ "headline": "PROXY (parent genome, dev-only, 202mo, 25bps), block=6.0mo, 4000 draws, full-history horizon: at 1.0x P(lose half) 0.442, median worst DD -0.48152, p95 -0.72764; at 1.3x P(lose half) 0.765, median worst DD -0.60199. Contract draft's own 1.0x row (exact champion, same window, unscripted): maxDD -46.88%, P(lose half) 0.232, median worst DD -41.5% \u2014 compare, do not average.",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n6b_path_monte_carlo.py"
+  ],
+  "resolved_config": {
+   "n_boot": 4000,
+   "block_mean_periods": 6.0,
+   "seed": 20260907,
+   "cost_bps": 25.0
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g2_genome_series.parquet",
+    "sha256": "f5ab6e84ec42496b4650f1933dc381067640dac21f9a2621647aebc0a65fb59f",
+    "bytes": 282896,
+    "opened_utc": "2026-09-06T17:20:30+00:00",
+    "note": "proxy genome series (parent, dev-only)"
+   }
+  ],
+  "git_commit": "e4252692c231",
+  "generated_utc": "2026-09-06T17:20:33+00:00"
+ }
+}

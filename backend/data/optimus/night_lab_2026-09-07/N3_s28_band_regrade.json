@@ -1,0 +1,169 @@
+{
+ "job": "N3_s28_band_regrade",
+ "lane": "N3",
+ "question": "S28 (2026-08-30) reported +6.98%/yr, t 2.22 in a $100k-$10m/day liquidity band, GROSS of costs. scripts/weekend_lab_jobs.py::W6b_liquidity_band replicated the WIDE band's shape out of sample but never netted a cost. This narrows the band to the exact TAQ 100k-1m band -- the part the $3m floor deletes -- and nets the MEASURED spread instead of assuming a flat rate.",
+ "prior_claim": "S28 2026-08-30 (+6.98%/yr t 2.22, 2013-2024, GROSS); W6b replication receipt is a night-lab-2026-09-06 job",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "memory_free_gb_before": 2.12,
+ "bands": [
+  {
+   "band": "100k-1m",
+   "dollar_vol_per_day": [
+    100000.0,
+    1000000.0
+   ],
+   "months": 309,
+   "name_months": 177708,
+   "gross_annualised_excess_vs_ew_rest_pct": 0.193,
+   "t_gross": 0.103,
+   "measured_cost": {
+    "verdict": "MEASURED",
+    "band": "100k-1m",
+    "round_trip_bps": 148.9,
+    "one_way_bps": 74.45,
+    "cost_pct_per_year_at_monthly_turnover": 17.86,
+    "n_measured": 28
+   },
+   "net_annualised_excess_pct": -17.667,
+   "survives_measured_cost": false
+  },
+  {
+   "band": "1m-5m",
+   "dollar_vol_per_day": [
+    1000000.0,
+    5000000.0
+   ],
+   "months": 309,
+   "name_months": 206813,
+   "gross_annualised_excess_vs_ew_rest_pct": 0.237,
+   "t_gross": 0.186,
+   "measured_cost": {
+    "verdict": "MEASURED",
+    "band": "1m-5m",
+    "round_trip_bps": 38.7,
+    "one_way_bps": 19.35,
+    "cost_pct_per_year_at_monthly_turnover": 4.64,
+    "n_measured": 30
+   },
+   "net_annualised_excess_pct": -4.403,
+   "survives_measured_cost": false
+  },
+  {
+   "band": "5m-10m",
+   "dollar_vol_per_day": [
+    5000000.0,
+    10000000.0
+   ],
+   "months": 309,
+   "name_months": 102870,
+   "gross_annualised_excess_vs_ew_rest_pct": 0.67,
+   "t_gross": 0.647,
+   "measured_cost": {
+    "verdict": "MEASURED",
+    "band": "5m-10m",
+    "round_trip_bps": 21.0,
+    "one_way_bps": 10.5,
+    "cost_pct_per_year_at_monthly_turnover": 2.52,
+    "n_measured": 30
+   },
+   "net_annualised_excess_pct": -1.85,
+   "survives_measured_cost": false
+  },
+  {
+   "band": "10m-50m",
+   "dollar_vol_per_day": [
+    10000000.0,
+    50000000.0
+   ],
+   "months": 309,
+   "name_months": 212653,
+   "gross_annualised_excess_vs_ew_rest_pct": 0.571,
+   "t_gross": 0.482,
+   "measured_cost": {
+    "verdict": "MEASURED",
+    "band": "10m-50m",
+    "round_trip_bps": 20.2,
+    "one_way_bps": 10.1,
+    "cost_pct_per_year_at_monthly_turnover": 2.43,
+    "n_measured": 30
+   },
+   "net_annualised_excess_pct": -1.859,
+   "survives_measured_cost": false
+  },
+  {
+   "band": "50m+",
+   "dollar_vol_per_day": [
+    50000000.0,
+    null
+   ],
+   "months": 309,
+   "name_months": 157479,
+   "gross_annualised_excess_vs_ew_rest_pct": -1.726,
+   "t_gross": -0.825,
+   "measured_cost": {
+    "verdict": "MEASURED",
+    "band": "50m+",
+    "round_trip_bps": 6.7,
+    "one_way_bps": 3.35,
+    "cost_pct_per_year_at_monthly_turnover": 0.8,
+    "n_measured": 30
+   },
+   "net_annualised_excess_pct": -2.526,
+   "survives_measured_cost": false
+  }
+ ],
+ "s28_100k_1m_band": {
+  "band": "100k-1m",
+  "dollar_vol_per_day": [
+   100000.0,
+   1000000.0
+  ],
+  "months": 309,
+  "name_months": 177708,
+  "gross_annualised_excess_vs_ew_rest_pct": 0.193,
+  "t_gross": 0.103,
+  "measured_cost": {
+   "verdict": "MEASURED",
+   "band": "100k-1m",
+   "round_trip_bps": 148.9,
+   "one_way_bps": 74.45,
+   "cost_pct_per_year_at_monthly_turnover": 17.86,
+   "n_measured": 28
+  },
+  "net_annualised_excess_pct": -17.667,
+  "survives_measured_cost": false
+ },
+ "status": "OK",
+ "headline": "S28's $100k-1m sub-band: gross 0.193%/yr t 0.103, measured TAQ cost 17.86%/yr, net -17.667%/yr -- DOES NOT SURVIVE the measured cost.",
+ "memory_free_gb_after": 2.07,
+ "wall_seconds": 3.9,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n3_size_aware_floors.py",
+   "--observe-tier",
+   "--s28-band"
+  ],
+  "resolved_config": {},
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944,
+    "opened_utc": "2026-09-06T17:16:09+00:00",
+    "note": "log_dollar_vol_20d, excess_vw_1m, month only"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/taq_spread_by_liquidity_band.json",
+    "sha256": "8b3991c950090a55fffbaaa88a20661499332174afcd98d8886a6c2867fde5fc",
+    "bytes": 100010,
+    "opened_utc": "2026-09-06T17:16:09+00:00"
+   }
+  ],
+  "git_commit": "e4252692c231",
+  "generated_utc": "2026-09-06T17:16:10+00:00"
+ },
+ "written_utc": "2026-09-06T17:16:10.145553+00:00"
+}

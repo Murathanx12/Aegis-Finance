@@ -1,0 +1,302 @@
+{
+ "job": "N3_reversal_cell_regrade",
+ "lane": "N3",
+ "question": "the L4 `down|q1|no_event` 5-session reversal cell (+0.579% at 10bps, +0.279% at 25bps, -0.221% at 50bps -- dies between 25 and 50bps) was never floor-restricted (it is a market-cap quintile, not a liquidity screen). Re-cut by a LAGGED dollar-volume floor and re-costed at the MEASURED TAQ spread for its liquidity band instead of a flat assumption, does it survive?",
+ "prior_cell": "scripts/night_lab_jobs.py::L4_reversal_by_size, backend/data/optimus/night_lab_2026-09-05/L4_reversal_by_size_run01.json",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "memory_free_gb_before": 4.17,
+ "n_mover_days_total": 258690,
+ "n_mover_days_with_dv20": 252725,
+ "by_floor": [
+  {
+   "floor_scenario": "institutional_flat_3m",
+   "floor_usd": 3000000.0,
+   "n_mover_days_admitted": 18336,
+   "n_distinct_days": 2936,
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "1m-5m",
+    "round_trip_bps": 38.7,
+    "one_way_bps": 19.35,
+    "cost_pct_per_year_at_monthly_turnover": 4.64,
+    "n_measured": 30
+   },
+   "flat_10bps": {
+    "one_way_bps": 10.0,
+    "mean_5session_pct": 0.771,
+    "t_naive": 4.613,
+    "t_nonoverlapping": 2.493,
+    "n_days_nonoverlapping": 588
+   },
+   "flat_25bps": {
+    "one_way_bps": 25.0,
+    "mean_5session_pct": 0.471,
+    "t_naive": 2.818,
+    "t_nonoverlapping": 1.647,
+    "n_days_nonoverlapping": 588
+   },
+   "flat_50bps": {
+    "one_way_bps": 50.0,
+    "mean_5session_pct": -0.029,
+    "t_naive": -0.173,
+    "t_nonoverlapping": 0.236,
+    "n_days_nonoverlapping": 588
+   },
+   "measured_taq": {
+    "one_way_bps": 19.35,
+    "mean_5session_pct": 0.584,
+    "t_naive": 3.494,
+    "t_nonoverlapping": 1.966,
+    "n_days_nonoverlapping": 588
+   }
+  },
+  {
+   "floor_scenario": "book_100000",
+   "floor_usd": 500000.0,
+   "n_mover_days_admitted": 96124,
+   "n_distinct_days": 3000,
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "100k-1m",
+    "round_trip_bps": 148.9,
+    "one_way_bps": 74.45,
+    "cost_pct_per_year_at_monthly_turnover": 17.86,
+    "n_measured": 28
+   },
+   "flat_10bps": {
+    "one_way_bps": 10.0,
+    "mean_5session_pct": 0.7971,
+    "t_naive": 9.795,
+    "t_nonoverlapping": 4.449,
+    "n_days_nonoverlapping": 600
+   },
+   "flat_25bps": {
+    "one_way_bps": 25.0,
+    "mean_5session_pct": 0.4971,
+    "t_naive": 6.109,
+    "t_nonoverlapping": 2.879,
+    "n_days_nonoverlapping": 600
+   },
+   "flat_50bps": {
+    "one_way_bps": 50.0,
+    "mean_5session_pct": -0.0029,
+    "t_naive": -0.035,
+    "t_nonoverlapping": 0.261,
+    "n_days_nonoverlapping": 600
+   },
+   "measured_taq": {
+    "one_way_bps": 74.45,
+    "mean_5session_pct": -0.4919,
+    "t_naive": -6.044,
+    "t_nonoverlapping": -2.299,
+    "n_days_nonoverlapping": 600
+   }
+  },
+  {
+   "floor_scenario": "book_1000000",
+   "floor_usd": 5000000.0,
+   "n_mover_days_admitted": 8953,
+   "n_distinct_days": 2618,
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "5m-10m",
+    "round_trip_bps": 21.0,
+    "one_way_bps": 10.5,
+    "cost_pct_per_year_at_monthly_turnover": 2.52,
+    "n_measured": 30
+   },
+   "flat_10bps": {
+    "one_way_bps": 10.0,
+    "mean_5session_pct": 1.0499,
+    "t_naive": 3.329,
+    "t_nonoverlapping": 1.152,
+    "n_days_nonoverlapping": 524
+   },
+   "flat_25bps": {
+    "one_way_bps": 25.0,
+    "mean_5session_pct": 0.7499,
+    "t_naive": 2.378,
+    "t_nonoverlapping": 0.628,
+    "n_days_nonoverlapping": 524
+   },
+   "flat_50bps": {
+    "one_way_bps": 50.0,
+    "mean_5session_pct": 0.2499,
+    "t_naive": 0.792,
+    "t_nonoverlapping": -0.244,
+    "n_days_nonoverlapping": 524
+   },
+   "measured_taq": {
+    "one_way_bps": 10.5,
+    "mean_5session_pct": 1.0399,
+    "t_naive": 3.297,
+    "t_nonoverlapping": 1.134,
+    "n_days_nonoverlapping": 524
+   }
+  },
+  {
+   "floor_scenario": "book_10000000",
+   "floor_usd": 50000000.0,
+   "n_mover_days_admitted": 349,
+   "n_distinct_days": 304,
+   "cost_lookup": {
+    "verdict": "MEASURED",
+    "band": "50m+",
+    "round_trip_bps": 6.7,
+    "one_way_bps": 3.35,
+    "cost_pct_per_year_at_monthly_turnover": 0.8,
+    "n_measured": 30
+   },
+   "flat_10bps": {
+    "one_way_bps": 10.0,
+    "mean_5session_pct": -2.0086,
+    "t_naive": -1.525,
+    "t_nonoverlapping": -0.875,
+    "n_days_nonoverlapping": 61
+   },
+   "flat_25bps": {
+    "one_way_bps": 25.0,
+    "mean_5session_pct": -2.3086,
+    "t_naive": -1.753,
+    "t_nonoverlapping": -0.966,
+    "n_days_nonoverlapping": 61
+   },
+   "flat_50bps": {
+    "one_way_bps": 50.0,
+    "mean_5session_pct": -2.8086,
+    "t_naive": -2.133,
+    "t_nonoverlapping": -1.118,
+    "n_days_nonoverlapping": 61
+   },
+   "measured_taq": {
+    "one_way_bps": 3.35,
+    "mean_5session_pct": -1.8756,
+    "t_naive": -1.424,
+    "t_nonoverlapping": -0.835,
+    "n_days_nonoverlapping": 61
+   }
+  }
+ ],
+ "any_cell_survives_measured_taq_cost": false,
+ "surviving_floor_scenarios": [],
+ "headline": "small-cap 5-session reversal, re-cut by a lagged dv20 floor and re-costed at measured TAQ spreads: 0 of 4 floor scenarios show a non-overlapping t >= 2 net of the measured cost. It does not come back to life -- the thinnest names cost MORE at the measured spread (100k-1m band: ~74.5bps one-way) than the flat 25bps this cell died between 25 and 50bps against, so a size-aware floor widens the ADMITTED universe but does not cheapen it.",
+ "memory_free_gb_after": 3.43,
+ "wall_seconds": 30.9,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n3_size_aware_floors.py",
+   "--reversal"
+  ],
+  "resolved_config": {
+   "years": {
+    "value": [
+     2013,
+     2014,
+     2015,
+     2016,
+     2017,
+     2018,
+     2019,
+     2020,
+     2021,
+     2022,
+     2023,
+     2024
+    ],
+    "source": "default"
+   }
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2013.parquet",
+    "sha256": "c8a896a2643d3fe1f182381cedf8f530f12d4251d553b8395d73015163a82750",
+    "bytes": 19112319,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2014.parquet",
+    "sha256": "9272d88cc6c20e8d8954e981eaec6fd60bf9cd0bb1e47545be45868198b089d2",
+    "bytes": 20275363,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2015.parquet",
+    "sha256": "2d05ec93c4abb5f60e320f6353e4feeda04b08f1ce02e04b301952bc61f64c8b",
+    "bytes": 20912617,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2016.parquet",
+    "sha256": "2ef77f78f3cb37e48595b49296b3cc7bbd0613963532b8fdbd0d3de5b06caca3",
+    "bytes": 20838365,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2017.parquet",
+    "sha256": "016e52053fe41542e686228b32d6594b68fb5e4c548ab012c6b2ea28ad04f043",
+    "bytes": 19913134,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2018.parquet",
+    "sha256": "7ab0f9c48f6a8a8f3ae761b1d00c620da040b2df2185b9a71a975f3c9d8c2e3d",
+    "bytes": 20489167,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2019.parquet",
+    "sha256": "383e0172cf443762e05be88f5966ce470fd553dbd53c5e00812bf666154b19c8",
+    "bytes": 21229996,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2020.parquet",
+    "sha256": "bf1068698d2b875e73a4ca801e6882df9e3606212a961e6bd1187b7c0375ce6d",
+    "bytes": 27050813,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2021.parquet",
+    "sha256": "68176d6fdbd03426bfd55b7a0c5749b2410065914fbe214bcd031c3dd83a281a",
+    "bytes": 29321920,
+    "opened_utc": "2026-09-06T17:14:02+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2022.parquet",
+    "sha256": "beb01b2c2cb2d065a9f6c86db9ac7e78cc851ac7477c67d74bd79127cb90084c",
+    "bytes": 31631474,
+    "opened_utc": "2026-09-06T17:14:03+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2023.parquet",
+    "sha256": "95350634d8e02a2c1c361e072c230d3b1fde0ae4300e325173e55e6c740e805a",
+    "bytes": 28767589,
+    "opened_utc": "2026-09-06T17:14:03+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2024.parquet",
+    "sha256": "1d6dfaf633ae5f0963a0cb1749ddf78da899e0d99fbe0bf05d8819a066594073",
+    "bytes": 27868531,
+    "opened_utc": "2026-09-06T17:14:03+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/edgar_8k/eightk_items.parquet",
+    "sha256": "dd0aafc85575391ee463bbce6b2e2c8d8f8d2e2697b2d745f96e2004f86b2be9",
+    "bytes": 10090360,
+    "opened_utc": "2026-09-06T17:14:05+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/taq_spread_by_liquidity_band.json",
+    "sha256": "8b3991c950090a55fffbaaa88a20661499332174afcd98d8886a6c2867fde5fc",
+    "bytes": 100010,
+    "opened_utc": "2026-09-06T17:14:31+00:00"
+   }
+  ],
+  "git_commit": "e4252692c231",
+  "generated_utc": "2026-09-06T17:14:31+00:00"
+ },
+ "written_utc": "2026-09-06T17:14:31.248862+00:00"
+}
