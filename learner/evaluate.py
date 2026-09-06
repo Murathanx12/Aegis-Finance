@@ -46,11 +46,32 @@ TIE_SEED = 20260902
 #: OBSERVE_ONLY, so a book that holds it is a backtest of something unbuyable.
 TRADABLE_DOLLAR_VOL = 3_000_000.0
 
+#: The DEFAULT era grid, and the reason it needs a coverage check beside it.
+#:
+#: These three windows were written for the 12-year panel (2013-2024) and they
+#: cover 2016-2024 and nothing else. Every published number under these names was
+#: measured with them, so the constant does NOT move -- a sealed receipt is
+#: sealed at its bucket names as well as at its numbers.
+#:
+#: What DID move is what happens when the data is wider than the grid. Graded
+#: against a 1999-2024 panel this table described its last nine years and said
+#: nothing at all about the other seventeen: the 1999-2015 rows matched no
+#: window, fell out of the loop, and left a receipt that looked complete
+#: (2026-09-07 Labor Day lab, lane B1). That is the house's "a gate that cannot
+#: go green" shape wearing a table's clothes. `grade_by_era` now DERIVES its
+#: coverage or REFUSES (CLAUDE.md), and `long_eras()` supplies the 1999-2024
+#: grid for callers on the long panel.
 ERAS: dict[str, tuple[int, int]] = {
     "2016-2018": (2016, 2018),
     "2019-2021": (2019, 2021),
     "2022-2024": (2022, 2024),
 }
+
+#: The share of rows allowed to fall outside every era before the era table
+#: stops being a description of the data it was handed. Declared, not implicit:
+#: a handful of stragglers at a window edge is a rounding fact, and seventeen
+#: years is a different panel.
+ERA_COVERAGE_FLOOR = 0.01
 
 
 def _t_from_series(s: pd.Series) -> float | None:
@@ -686,12 +707,104 @@ def grade(df: pd.DataFrame, pred_col: str, horizon_months: int,
     return out
 
 
+def long_eras() -> dict[str, tuple[int, int]]:
+    """The canonical 1999-2024 era grid, DERIVED from `learner.long_panel.ERAS`.
+
+    The weekend's verdict rule counts signs in three eras -- 1999-2007 /
+    2008-2015 / 2016-2024 -- and `learner/long_panel.py` owns that definition
+    precisely so "an era boundary that each job re-derives is an era boundary
+    each job can get subtly different". This function is the same sentence for
+    the grader: a caller on the long panel passes `eras=E.long_eras()` and gets
+    long_panel's boundaries, not a second copy of them that can drift.
+
+    Imported INSIDE the function on purpose: `learner.long_panel` imports the
+    dataset builder, and a module-level import here would make the grader depend
+    on the panel it grades.
+    """
+    from learner.long_panel import ERAS as _LONG_ERAS
+    return {str(name): (int(lo), int(hi)) for name, lo, hi in _LONG_ERAS}
+
+
+def era_coverage(df: pd.DataFrame, eras: dict[str, tuple[int, int]] | None = None,
+                 date_col: str = "entry_date") -> dict:
+    """How much of `df` the era grid actually describes -- derived, then judged.
+
+    An era table is a partition claim. When the grid is narrower than the data
+    the claim is false and the table is silent about it, which is worse than a
+    missing table: the reader has no way to see that seventeen years fell
+    between the buckets. So the count of unbucketed rows travels WITH the table,
+    and above `ERA_COVERAGE_FLOOR` the verdict is a refusal string rather than a
+    number nobody can check.
+    """
+    grid = dict(ERAS if eras is None else eras)
+    grid = {str(k): (int(lo), int(hi)) for k, (lo, hi) in grid.items()}
+    years = pd.to_datetime(df[date_col], errors="coerce").dt.year if len(df) else pd.Series(
+        dtype="float64")
+    n_tot = int(len(df))
+    inside = pd.Series(False, index=years.index) if n_tot else pd.Series(dtype=bool)
+    for _name, (lo, hi) in grid.items():
+        inside = inside | ((years >= lo) & (years <= hi))
+    n_in = int(inside.sum())
+    n_out = n_tot - n_in
+    share = round(float(n_out) / n_tot, 6) if n_tot else 0.0
+    finite = years.dropna()
+    data_range = ([int(finite.min()), int(finite.max())] if len(finite) else None)
+    grid_lo = min(lo for lo, _ in grid.values()) if grid else None
+    grid_hi = max(hi for _, hi in grid.values()) if grid else None
+    rng = f"{data_range[0]}-{data_range[1]}" if data_range else "an empty frame"
+
+    if n_tot == 0:
+        verdict = "CANNOT DETERMINE: the frame has no rows, so the grid covers nothing."
+    elif n_out == 0:
+        verdict = (f"OK: all {n_tot:,} rows fall inside the era grid "
+                   f"({grid_lo}-{grid_hi}); the era table describes the whole panel.")
+    elif share <= ERA_COVERAGE_FLOOR:
+        verdict = (f"OK: {n_out:,} of {n_tot:,} rows ({share * 100:.2f}%) fall outside "
+                   f"every era, at or below the {ERA_COVERAGE_FLOOR:.0%} floor; the era "
+                   f"table describes {grid_lo}-{grid_hi} of data spanning {rng}.")
+    else:
+        verdict = (f"REFUSED: {n_out:,} of {n_tot:,} rows ({share * 100:.2f}%) fall "
+                   f"outside every era in the grid; the era table would silently describe "
+                   f"only {grid_lo}-{grid_hi}. Pass eras=... covering {rng}.")
+    return {
+        "rows_total": n_tot,
+        "rows_in_an_era": n_in,
+        "rows_outside_every_era": int(n_out),
+        "share_outside": share,
+        "data_year_range": data_range,
+        "eras_used": {k: [lo, hi] for k, (lo, hi) in grid.items()},
+        "verdict": verdict,
+    }
+
+
 def grade_by_era(df: pd.DataFrame, pred_col: str, horizon_months: int,
-                 benchmark: str = "vw") -> dict:
+                 benchmark: str = "vw",
+                 eras: dict[str, tuple[int, int]] | None = None) -> dict:
+    """The era table, with the coverage of the grid it was computed under.
+
+    `eras=None` means the module `ERAS` -- unchanged, so every sealed receipt
+    reproduces byte for byte, with `_coverage` as the one ADDITIVE key. Pass
+    `eras=long_eras()` on the 1999-2024 panel.
+
+    DERIVES OR REFUSES. Rows that match no era used to vanish from the loop in
+    silence; now they are counted, and above `ERA_COVERAGE_FLOOR` the era
+    buckets are NOT returned at all -- a table that describes a ninth of the
+    panel while looking like the whole of it is the failure being fixed. The
+    refusal is a VALUE (callers write it into their receipt), except at 100%
+    outside, where a table computed on zero rows is worse than none and the
+    refusal is raised.
+    """
     y = f"excess_{benchmark}_{horizon_months}m"
-    out = {}
-    for era, (lo, hi) in ERAS.items():
-        sub = df[(df["entry_date"].dt.year >= lo) & (df["entry_date"].dt.year <= hi)]
+    grid = dict(ERAS if eras is None else eras)
+    cov = era_coverage(df, grid)
+    if cov["rows_total"] and cov["rows_in_an_era"] == 0:
+        raise SystemExit(cov["verdict"])
+    out: dict = {"_coverage": cov}
+    if cov["verdict"].startswith("REFUSED"):
+        return out
+    for era, (lo, hi) in grid.items():
+        yr = pd.to_datetime(df["entry_date"], errors="coerce").dt.year
+        sub = df[(yr >= lo) & (yr <= hi)]
         if sub.empty:
             continue
         row = {"rank_ic": rank_ic(sub, pred_col, y)}
@@ -736,6 +849,8 @@ def grade_by_band(df: pd.DataFrame, pred_col: str, horizon_months: int,
 __all__ = ["COST_BPS_PER_SIDE", "TRADABLE_DOLLAR_VOL", "ERAS", "rank_ic", "decile_table",
            "calibration_slope", "top_minus_bottom", "book", "grade", "grade_by_era",
            "grade_by_band",
+           # era coverage, additive: `ERAS` and every bucket number are unchanged.
+           "ERA_COVERAGE_FLOOR", "era_coverage", "long_eras",
            # v2, additive: v1's functions above are untouched.
            "max_drawdown", "risk_stats", "paired_difference", "overlapping_book",
            "hac_t", "block_t", "overlap_corrected", "monthly_ic_series"]
