@@ -202,7 +202,8 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
          cost_bps: float = COST_BPS_PER_SIDE, ret_col: str = "fwd_1m",
          mkt_col: str = "mkt_vw_1m", month_col: str = "month",
          tradable_floor: float | None = None, hold_k: int | None = None,
-         with_risk: bool = False, return_series: bool = False) -> dict:
+         with_risk: bool = False, return_series: bool = False,
+         return_weights: bool = False) -> dict:
     """Monthly top-k book, value- or equal-weighted, net of measured turnover.
 
     Returns terminal wealth NET and GROSS, the market's terminal wealth over
@@ -293,6 +294,17 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
         if weight == "vw" and "market_cap" in sel.columns and sel["market_cap"].notna().any():
             w = sel["market_cap"].fillna(sel["market_cap"].median()).clip(lower=0)
             w = w / w.sum() if w.sum() > 0 else pd.Series(1.0 / len(sel), index=sel.index)
+        elif weight == "rank":
+            # LINEARLY DECLINING IN THE BOOK'S OWN RANK. The middle construction
+            # between equal weight (which throws away the ordering the signal
+            # spent its whole life producing) and value weight (which replaces
+            # that ordering with market capitalisation). Weights are n, n-1, ...
+            # 1, normalised: an ordering expressed WITHOUT concentrating, and
+            # the reason it is here is that effective breadth is the term the
+            # fundamental law says we have been throwing away.
+            n_sel = len(sel)
+            raw = np.arange(n_sel, 0, -1, dtype="float64")
+            w = pd.Series(raw / raw.sum(), index=sel.index)
         else:
             w = pd.Series(1.0 / len(sel), index=sel.index)
         rets[m] = float((w * sel[ret_col]).sum())
@@ -360,6 +372,13 @@ def book(df: pd.DataFrame, pred_col: str, k: int = 50, weight: str = "vw",
     if return_series:
         res["_series"] = {"net": net, "gross": gross, "market": market,
                           "turnover": turnover}
+    if return_weights:
+        # THE FUNDAMENTAL LAW NEEDS THE WEIGHTS, NOT THE RETURNS. Effective
+        # breadth and the transfer coefficient are both statements about what
+        # the book HELD, and until this key existed neither was computable from
+        # a book receipt at all. Opt-in, because this function's DEFAULT key
+        # set is pinned by test to the receipt v1 wrote.
+        res["_weights"] = {m: dict(w) for m, w in weights_by_month.items()}
     return res
 
 
@@ -584,6 +603,17 @@ def overlapping_book(df: pd.DataFrame, pred_col: str, horizon_months: int,
         if weight == "vw" and "market_cap" in sel.columns and sel["market_cap"].notna().any():
             w = sel["market_cap"].fillna(sel["market_cap"].median()).clip(lower=0)
             w = w / w.sum() if w.sum() > 0 else pd.Series(1.0 / len(sel), index=sel.index)
+        elif weight == "rank":
+            # LINEARLY DECLINING IN THE BOOK'S OWN RANK. The middle construction
+            # between equal weight (which throws away the ordering the signal
+            # spent its whole life producing) and value weight (which replaces
+            # that ordering with market capitalisation). Weights are n, n-1, ...
+            # 1, normalised: an ordering expressed WITHOUT concentrating, and
+            # the reason it is here is that effective breadth is the term the
+            # fundamental law says we have been throwing away.
+            n_sel = len(sel)
+            raw = np.arange(n_sel, 0, -1, dtype="float64")
+            w = pd.Series(raw / raw.sum(), index=sel.index)
         else:
             w = pd.Series(1.0 / len(sel), index=sel.index)
         cohorts[m] = {"w": dict(zip(sel["permno"].astype(int), w.to_numpy())),
