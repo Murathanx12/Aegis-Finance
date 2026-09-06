@@ -1,0 +1,74 @@
+{
+ "job": "N4_coverage_by_year",
+ "lane": "N4",
+ "memory_free_gb_before": 4.88,
+ "status": "OK",
+ "by_year": {
+  "2015": {
+   "rows": 67416,
+   "distinct_symbols": 16140,
+   "distinct_permnos_linked": 3433,
+   "listed_common_stock_universe_proxy": 3997,
+   "share_of_universe_proxy_covered": 0.8589,
+   "by_source": {
+    "ibes_surpsumu": 50830,
+    "edgar_8k": 12532,
+    "alpaca:benzinga": 4054
+   },
+   "thin": false
+  },
+  "2016": {
+   "rows": 77896,
+   "distinct_symbols": 16268,
+   "distinct_permnos_linked": 3368,
+   "listed_common_stock_universe_proxy": 3905,
+   "share_of_universe_proxy_covered": 0.8625,
+   "by_source": {
+    "ibes_surpsumu": 52122,
+    "edgar_8k": 14615,
+    "alpaca:benzinga": 11159
+   },
+   "thin": false
+  }
+ },
+ "thin_years": [],
+ "thin_years_why": "A year is 'thin' (<100 rows) either because the news_backfill network pull had not reached that far back yet when this receipt was written (re-run after the pull progresses further -- it is resumable and append-only), or because a source structurally has no coverage there (13D/13G: everything before 2026-08-13; Form 4: everywhere -- see event_table_v1_manifest.json 'known_absences').",
+ "universe_proxy_note": "'listed_common_stock_universe_proxy' = distinct CRSP permnos with shrcd in (10,11) and a name record active in that year -- an HONEST but LOOSE proxy for 'the tradable universe' (all listed common stock, not the $3m/day liquidity-floored research universe, which this job does not load to respect the RAM budget -- see module docstring). 'share_of_universe_proxy_covered' is computed on LINKED PERMNOS, not raw symbol counts -- distinct_symbols routinely exceeds the proxy universe because IBES alone covers many securities CRSP common stock does not (OTC, ADRs, multiple share classes); that is not a coverage number and is reported separately for transparency, not as a share.",
+ "memory_free_gb_after": 4.82,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n4_event_table.py",
+   "--build",
+   "--start-year",
+   "2015",
+   "--end-year",
+   "2016"
+  ],
+  "resolved_config": {
+   "start_year": {
+    "value": 2015,
+    "source": "arg"
+   },
+   "end_year": {
+    "value": 2016,
+    "source": "arg"
+   }
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/events/event_table_v1.parquet",
+    "sha256": "970206cf15ef063b75f85de42d26738fcb0a2619ffa5c565b904687998cbc8bb",
+    "bytes": 3492635,
+    "opened_utc": "2026-09-06T17:09:48+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/bulk/crsp__stocknames.parquet",
+    "sha256": "8875036f25c6708cdbf68efdc6c3a8a61e5785fd79e6e10292349efd708c1e6f",
+    "bytes": 1910034,
+    "opened_utc": "2026-09-06T17:09:49+00:00"
+   }
+  ],
+  "git_commit": "bdb132406a03",
+  "generated_utc": "2026-09-06T17:09:49+00:00"
+ }
+}

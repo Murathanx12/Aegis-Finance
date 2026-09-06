@@ -1,0 +1,1315 @@
+{
+ "job": "N2_ensemble",
+ "lane": "N2",
+ "question": "does a SELECTION-FREE rank ensemble of every arm we have already trained beat the arms it is made of, and does weighting by trailing beta-matched reliability beat equal weight?",
+ "licence": "PRODUCT_EXPERIMENT",
+ "no_selection_claim": "no arm is chosen, dropped or tuned by this job, so the deflated Sharpe is computed with family = 1. THE INPUTS WERE SEARCHED: every arm exists because an earlier session fitted it, and that search is not corrected for here and cannot be.",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "models_fitted": 0,
+ "memory_free_gb_before": 3.87,
+ "smoke": false,
+ "universe_fingerprint_sha256": "616fa0a5dac735be025b8ee194c3f9e835df6235816339c78a2dba4cff30eaaa",
+ "training_universe": {
+  "dollar_volume_floor_usd_per_day": 3000000.0,
+  "min_close_usd": 5.0,
+  "rows_after": 530447,
+  "months_after": 310
+ },
+ "selector_sources": {
+  "stage": {
+   "incumbents": {
+    "status": "ok",
+    "columns": [
+     "lgbm_clf",
+     "lgbm_raw"
+    ],
+    "written_utc": "2026-09-05T14:24:06.795141+00:00"
+   },
+   "nn_pre_causal": {
+    "status": "ok",
+    "columns": [
+     "nn_pre_causal_s20260906",
+     "nn_pre_causal_s20260907",
+     "nn_pre_causal_s20260908",
+     "nn_pre_causal_s20260909",
+     "nn_pre_causal_s20260910",
+     "nn_pre_causal_s20260911",
+     "nn_pre_causal_s20260912",
+     "nn_pre_causal_s20260913",
+     "nn_pre_causal_seedmean"
+    ],
+    "written_utc": "2026-09-05T14:27:05.051729+00:00"
+   }
+  },
+  "oos_v2": {
+   "status": "ok",
+   "rows_matched": 205327,
+   "share_of_panel": 0.3871
+  },
+  "panel_native": {
+   "momentum": "mom_12_1__xs (cross-sectional rank)",
+   "revisions": "net_rev_4w__xs (cross-sectional rank)",
+   "revisions_target": "target_rev_1m__xs"
+  },
+  "quality_mom": {
+   "status": "ok",
+   "roe_coverage_share": 0.9591,
+   "quality_mom_coverage_share": 0.939
+  }
+ },
+ "arms_stacked": {
+  "lgbm_clf": {
+   "column": "lgbm_clf",
+   "coverage_share": 0.8572
+  },
+  "lgbm_raw": {
+   "column": "lgbm_raw",
+   "coverage_share": 0.8572
+  },
+  "nn_pre_causal": {
+   "column": "nn_pre_causal_seedmean",
+   "coverage_share": 0.8572
+  },
+  "ridge": {
+   "column": "ridge",
+   "coverage_share": 0.3871
+  },
+  "encoder": {
+   "column": "encoder",
+   "coverage_share": 0.3909
+  },
+  "revisions": {
+   "column": "revisions",
+   "coverage_share": 1.0
+  },
+  "momentum": {
+   "column": "momentum",
+   "coverage_share": 0.9667
+  },
+  "quality_mom": {
+   "column": "quality_mom",
+   "coverage_share": 0.939
+  }
+ },
+ "arms_absent": {
+  "options": "options_selector",
+  "behavioural": "behavioural_selector"
+ },
+ "risk_free_leg": {
+  "months_built": 309,
+  "months_missing": [
+   "2024-12"
+  ],
+  "mean_monthly": 0.001553,
+  "annualised_12x": 0.01864,
+  "declared": "0.0 on the months that could not be built, and they are named above -- never silently zero-filled",
+  "source": "learner.benchmark.cash() -- pinned FF daily RF, OFFLINE"
+ },
+ "reliability": {
+  "window_months": 36,
+  "beta_window_months": 36,
+  "definition": "trailing mean of the arm's beta-matched excess on its own top-100 EW hysteresis book at 10 bps, shifted one month so it is knowable at the start of the month it weights",
+  "mean_weight_share_by_arm": {
+   "lgbm_clf": 0.1993,
+   "lgbm_raw": 0.1834,
+   "nn_pre_causal": 0.253,
+   "ridge": 0.054,
+   "encoder": 0.2141,
+   "revisions": 0.2018,
+   "momentum": 0.1059,
+   "quality_mom": 0.1541
+  },
+  "months_with_no_positive_arm": 83,
+  "full_sample_mean_excess_by_arm_pct_per_year": {
+   "lgbm_clf": 0.392,
+   "lgbm_raw": -0.054,
+   "nn_pre_causal": 3.111,
+   "ridge": -4.945,
+   "encoder": -2.019,
+   "revisions": 0.641,
+   "momentum": -1.915,
+   "quality_mom": 0.589
+  }
+ },
+ "stacking": {
+  "rows": 530447,
+  "arm_count_distribution": {
+   "1": 2903,
+   "2": 3215,
+   "3": 67656,
+   "4": 9254,
+   "5": 7499,
+   "6": 241994,
+   "7": 3992,
+   "8": 193934
+  },
+  "rows_with_no_arm": 0,
+  "months_falling_back_to_equal_weight": 109
+ },
+ "scores_parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_lab_2026-09-07\\N2_ensemble_scores.parquet",
+ "cells": {
+  "lgbm_clf": {
+   "label": "lgbm_clf",
+   "beta": 1.2538,
+   "t_beta_minus_1_hac": 5.132,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 251,
+   "first_month": "2004-01",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.7023,
+   "implied_mean_holding_months": 1.42,
+   "annual_cost_line_pct": 1.685,
+   "terminal_wealth_net": 20.2512,
+   "terminal_wealth_gross": 28.7184,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": -0.393,
+    "t_paired": -0.2,
+    "p_one_sided": 0.579162
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 2.837,
+    "t_paired": 1.307
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.1048,
+     "t": -0.442,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.1779,
+     "t": 0.733,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.1894,
+     "t": -0.634,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.039495,
+     "ic_sd": 0.09081,
+     "t_ic": 6.89,
+     "months": 251,
+     "method": "spearman",
+     "share_positive": 0.6693
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 251,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.4126,
+     "months_measured": 251,
+     "months_skipped": 0,
+     "min": 0.2063,
+     "max": 0.7031,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.2538,
+    "realised_ir_annual": -0.0437,
+    "implied_ir_annual": 0.5645,
+    "realised_over_implied": -0.0774,
+    "active_months": 251,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.413 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "lgbm_raw": {
+   "label": "lgbm_raw",
+   "beta": 1.4944,
+   "t_beta_minus_1_hac": 6.001,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 251,
+   "first_month": "2004-01",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.612,
+   "implied_mean_holding_months": 1.63,
+   "annual_cost_line_pct": 1.469,
+   "terminal_wealth_net": 24.3954,
+   "terminal_wealth_gross": 33.0755,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": -1.147,
+    "t_paired": -0.385,
+    "p_one_sided": 0.649802
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 5.143,
+    "t_paired": 1.479
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": -0.146,
+     "t": -0.33,
+     "sign": -1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.1673,
+     "t": -0.456,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.0087,
+     "t": -0.02,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 3,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.030788,
+     "ic_sd": 0.089469,
+     "t_ic": 5.452,
+     "months": 251,
+     "method": "spearman",
+     "share_positive": 0.6375
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 251,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.3968,
+     "months_measured": 251,
+     "months_skipped": 0,
+     "min": 0.1493,
+     "max": 0.7366,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.4944,
+    "realised_ir_annual": -0.0841,
+    "implied_ir_annual": 0.4232,
+    "realised_over_implied": -0.1988,
+    "active_months": 251,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.397 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "nn_pre_causal": {
+   "label": "nn_pre_causal",
+   "beta": 1.3525,
+   "t_beta_minus_1_hac": 5.92,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 251,
+   "first_month": "2004-01",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.531,
+   "implied_mean_holding_months": 1.88,
+   "annual_cost_line_pct": 1.274,
+   "terminal_wealth_net": 46.4127,
+   "terminal_wealth_gross": 60.384,
+   "terminal_wealth_market_same_months": 14.3778,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": 2.982,
+    "t_paired": 1.192,
+    "p_one_sided": 0.116596
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.467,
+    "t_paired": 2.66
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 48,
+     "mean_pct": 0.5889,
+     "t": 1.471,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0716,
+     "t": 0.226,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.2545,
+     "t": 0.714,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.036931,
+     "ic_sd": 0.090516,
+     "t_ic": 6.464,
+     "months": 251,
+     "method": "spearman",
+     "share_positive": 0.6853
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 251,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.4049,
+     "months_measured": 251,
+     "months_skipped": 0,
+     "min": 0.2509,
+     "max": 0.5997,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.3525,
+    "realised_ir_annual": 0.2607,
+    "implied_ir_annual": 0.518,
+    "realised_over_implied": 0.5032,
+    "active_months": 251,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.405 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "ridge": {
+   "label": "ridge",
+   "beta": 1.4378,
+   "t_beta_minus_1_hac": 3.727,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 107,
+   "first_month": "2016-01",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.4709,
+   "implied_mean_holding_months": 2.12,
+   "annual_cost_line_pct": 1.13,
+   "terminal_wealth_net": 5.3352,
+   "terminal_wealth_gross": 5.8939,
+   "terminal_wealth_market_same_months": 4.8636,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": -4.147,
+    "t_paired": -0.951,
+    "p_one_sided": 0.829229
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.653,
+    "t_paired": 0.713
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2008-2015": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3455,
+     "t": -0.951,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 1,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": false,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.024838,
+     "ic_sd": 0.092327,
+     "t_ic": 2.783,
+     "months": 107,
+     "method": "spearman",
+     "share_positive": 0.6262
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 107,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.3387,
+     "months_measured": 107,
+     "months_skipped": 0,
+     "min": 0.1935,
+     "max": 0.543,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.4378,
+    "realised_ir_annual": -0.3185,
+    "implied_ir_annual": 0.2914,
+    "realised_over_implied": -1.093,
+    "active_months": 107,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.339 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "encoder": {
+   "label": "encoder",
+   "beta": 1.6005,
+   "t_beta_minus_1_hac": 3.044,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 107,
+   "first_month": "2016-01",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.458,
+   "implied_mean_holding_months": 2.18,
+   "annual_cost_line_pct": 1.099,
+   "terminal_wealth_net": 7.5202,
+   "terminal_wealth_gross": 8.2834,
+   "terminal_wealth_market_same_months": 4.8636,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": -1.42,
+    "t_paired": -0.216,
+    "p_one_sided": 0.585637
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 9.278,
+    "t_paired": 1.232
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2008-2015": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.1184,
+     "t": -0.216,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 0,
+    "eras_with_a_negative_mean": 1,
+    "eras_measured": 1,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": false,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.025371,
+     "ic_sd": 0.112501,
+     "t_ic": 2.333,
+     "months": 107,
+     "method": "spearman",
+     "share_positive": 0.5794
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 107,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.4174,
+     "months_measured": 107,
+     "months_skipped": 0,
+     "min": 0.1947,
+     "max": 0.6138,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.6005,
+    "realised_ir_annual": -0.0724,
+    "implied_ir_annual": 0.3668,
+    "realised_over_implied": -0.1975,
+    "active_months": 107,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.417 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "revisions": {
+   "label": "revisions",
+   "beta": 1.0556,
+   "t_beta_minus_1_hac": 1.614,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 309,
+   "first_month": "1999-03",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.8323,
+   "implied_mean_holding_months": 1.2,
+   "annual_cost_line_pct": 1.998,
+   "terminal_wealth_net": 31.0975,
+   "terminal_wealth_gross": 51.7519,
+   "terminal_wealth_market_same_months": 13.1817,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": 3.617,
+    "t_paired": 1.713,
+    "p_one_sided": 0.043392
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 4.164,
+    "t_paired": 1.963
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 1.2426,
+     "t": 3.588,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.0573,
+     "t": -0.234,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.3091,
+     "t": -1.083,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.01536,
+     "ic_sd": 0.103824,
+     "t_ic": 2.596,
+     "months": 308,
+     "method": "spearman",
+     "share_positive": 0.6136
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 309,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.3924,
+     "months_measured": 308,
+     "months_skipped": 1,
+     "min": 0.0208,
+     "max": 0.5851,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.0556,
+    "realised_ir_annual": 0.3375,
+    "implied_ir_annual": 0.2088,
+    "realised_over_implied": 1.6163,
+    "active_months": 309,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.392 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "momentum": {
+   "label": "momentum",
+   "beta": 1.4117,
+   "t_beta_minus_1_hac": 5.047,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 309,
+   "first_month": "1999-03",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.1958,
+   "implied_mean_holding_months": 5.11,
+   "annual_cost_line_pct": 0.47,
+   "terminal_wealth_net": 12.4468,
+   "terminal_wealth_gross": 14.0385,
+   "terminal_wealth_market_same_months": 13.1817,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": -0.742,
+    "t_paired": -0.197,
+    "p_one_sided": 0.578263
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.309,
+    "t_paired": 0.822
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.6662,
+     "t": 1.067,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.6925,
+     "t": -1.547,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.2172,
+     "t": -0.417,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.011988,
+     "ic_sd": 0.16965,
+     "t_ic": 1.242,
+     "months": 309,
+     "method": "spearman",
+     "share_positive": 0.5987
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 309,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.3947,
+     "months_measured": 309,
+     "months_skipped": 0,
+     "min": 0.3503,
+     "max": 0.5949,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.4117,
+    "realised_ir_annual": -0.0389,
+    "implied_ir_annual": 0.1639,
+    "realised_over_implied": -0.2374,
+    "active_months": 309,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.395 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "quality_mom": {
+   "label": "quality_mom",
+   "beta": 1.2005,
+   "t_beta_minus_1_hac": 4.554,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 309,
+   "first_month": "1999-03",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.1422,
+   "implied_mean_holding_months": 7.03,
+   "annual_cost_line_pct": 0.341,
+   "terminal_wealth_net": 25.517,
+   "terminal_wealth_gross": 27.8398,
+   "terminal_wealth_market_same_months": 13.1817,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": 1.897,
+    "t_paired": 0.969,
+    "p_one_sided": 0.166221
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 3.87,
+    "t_paired": 1.861
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 0.8762,
+     "t": 2.555,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": -0.2782,
+     "t": -1.156,
+     "sign": -1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": -0.162,
+     "t": -0.699,
+     "sign": -1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 2,
+    "eras_measured": 3,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": -1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.023724,
+     "ic_sd": 0.137342,
+     "t_ic": 3.036,
+     "months": 309,
+     "method": "spearman",
+     "share_positive": 0.6019
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 309,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.4645,
+     "months_measured": 309,
+     "months_skipped": 0,
+     "min": 0.3,
+     "max": 0.6906,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.2005,
+    "realised_ir_annual": 0.191,
+    "implied_ir_annual": 0.3817,
+    "realised_over_implied": 0.5003,
+    "active_months": 309,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.465 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "ENSEMBLE_reliability": {
+   "label": "ENSEMBLE_reliability",
+   "beta": 1.271,
+   "t_beta_minus_1_hac": 6.022,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 309,
+   "first_month": "1999-03",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.5414,
+   "implied_mean_holding_months": 1.85,
+   "annual_cost_line_pct": 1.299,
+   "terminal_wealth_net": 53.635,
+   "terminal_wealth_gross": 74.7095,
+   "terminal_wealth_market_same_months": 13.1817,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": 4.61,
+    "t_paired": 1.911,
+    "p_one_sided": 0.027972
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.276,
+    "t_paired": 2.808
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 1.0411,
+     "t": 2.615,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.073,
+     "t": 0.241,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0124,
+     "t": 0.039,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.031216,
+     "ic_sd": 0.125164,
+     "t_ic": 4.384,
+     "months": 309,
+     "method": "spearman",
+     "share_positive": 0.6375
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 309,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.4401,
+     "months_measured": 309,
+     "months_skipped": 0,
+     "min": 0.3735,
+     "max": 0.6498,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.271,
+    "realised_ir_annual": 0.3767,
+    "implied_ir_annual": 0.4759,
+    "realised_over_implied": 0.7915,
+    "active_months": 309,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.440 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  },
+  "ENSEMBLE_equal_weight": {
+   "label": "ENSEMBLE_equal_weight",
+   "beta": 1.1951,
+   "t_beta_minus_1_hac": 4.654,
+   "construction": "top-100 EW, hold until rank > 200, 10 bps",
+   "months": 309,
+   "first_month": "1999-03",
+   "last_month": "2024-11",
+   "cost_bps_per_side": 10.0,
+   "mean_names_per_month": 100.0,
+   "mean_turnover": 0.4865,
+   "implied_mean_holding_months": 2.06,
+   "annual_cost_line_pct": 1.168,
+   "terminal_wealth_net": 62.8693,
+   "terminal_wealth_gross": 84.6288,
+   "terminal_wealth_market_same_months": 13.1817,
+   "PRIMARY_beta_matched": {
+    "annualised_pct": 5.651,
+    "t_paired": 2.424,
+    "p_one_sided": 0.007679
+   },
+   "SECONDARY_raw_market": {
+    "annualised_pct": 7.571,
+    "t_paired": 3.116
+   },
+   "era_table_on_the_beta_matched_excess": {
+    "1999-2007": {
+     "months": 106,
+     "mean_pct": 1.1847,
+     "t": 2.988,
+     "sign": 1
+    },
+    "2008-2015": {
+     "months": 96,
+     "mean_pct": 0.0086,
+     "t": 0.026,
+     "sign": 1
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.1785,
+     "t": 0.697,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 3,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 3,
+    "holds_in_2_of_3": true,
+    "same_sign_in_2_of_3": true,
+    "dominant_sign": 1
+   },
+   "fundamental_law": {
+    "identity": "IR ~= IC x sqrt(BR) x TC  (Grinold-Kahn; TC after Clarke-de Silva-Thorley)",
+    "information_coefficient": {
+     "ic": 0.037666,
+     "ic_sd": 0.135217,
+     "t_ic": 4.897,
+     "months": 309,
+     "method": "spearman",
+     "share_positive": 0.6505
+    },
+    "effective_breadth": {
+     "mean_effective_names_per_month": 100.0,
+     "median": 100.0,
+     "min": 100.0,
+     "max": 100.0,
+     "months": 309,
+     "annual_breadth_upper_bound": 1200.0,
+     "note": "(sum w)^2 / sum w^2 -- an inverse-Herfindahl count of NAMES. Names are correlated, so BR_year = names x 12 is an UPPER BOUND on independent bets and `implied_ir_annual` is a ceiling."
+    },
+    "transfer_coefficient": {
+     "tc": 0.4601,
+     "months_measured": 309,
+     "months_skipped": 0,
+     "min": 0.392,
+     "max": 0.6498,
+     "benchmark": "equal weight over the month's admissible names",
+     "note": "corr(active realised weights, z(signal)) over ALL admissible names, not the holdings. Long-only, top-k, caps, floors and stops can only LOWER it."
+    },
+    "beta": 1.1951,
+    "realised_ir_annual": 0.4777,
+    "implied_ir_annual": 0.6003,
+    "realised_over_implied": 0.7956,
+    "active_months": 309,
+    "construction_verdict": "CONSTRUCTION_DEFECT (TC 0.460 < 0.5: the book expresses less than half of the bet its own signal implies; a signal verdict read from this book is a category error)"
+   }
+  }
+ },
+ "comparisons": {
+  "reliability_minus_equal_weight": {
+   "months": 309,
+   "annualised_pp": -1.041,
+   "t_paired": -0.907,
+   "reading": "if this is not positive, the reliability weighting bought nothing and equal weight is the honest ensemble"
+  },
+  "ensemble_minus_the_best_single_arm": {
+   "best_arm_in_hindsight": "revisions",
+   "months": 309,
+   "annualised_pp": 0.992,
+   "t_paired": 0.62,
+   "reading": "the arm is chosen IN HINDSIGHT, so this comparison is deliberately unfair to the ensemble; a small negative number here is the ensemble doing its job"
+  },
+  "ensemble_minus_the_AVERAGE_arm": {
+   "months": 309,
+   "annualised_pp": 1.803,
+   "t_paired": 1.549,
+   "reading": "the fair comparison: no arm is chosen on either side"
+  }
+ },
+ "inference": {
+  "ENSEMBLE_reliability": {
+   "n_cells_looked_at": 2,
+   "deflated_sharpe": {
+    "sharpe": 0.1087,
+    "sharpe_benchmark_sr0": 0.0296,
+    "n_trials": 2,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": 0.178,
+    "kurtosis": 6.205,
+    "n_periods": 309,
+    "z": 1.3914,
+    "dsr": 0.9179,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 2 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.030; this arm's is 0.109."
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.1087,
+    "t_observed": 1.9115,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 338.3,
+    "years_needed_for_t2": 28.2,
+    "years_needed_for_t2_exact": 28.19057027905824,
+    "powered_for_observed_effect": false,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.07077,
+    "years_needed_to_detect_that_effect": 66.6,
+    "mde_annual_excess_at_t_target": 0.04823,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 4.82%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 1.91 on 25.8 years; t = 2 would need 28.2 years at this Sharpe -- MORE TAPE THAN EXISTS HERE"
+   }
+  },
+  "ENSEMBLE_equal_weight": {
+   "n_cells_looked_at": 2,
+   "deflated_sharpe": {
+    "sharpe": 0.1379,
+    "sharpe_benchmark_sr0": 0.0296,
+    "n_trials": 2,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.098,
+    "kurtosis": 6.943,
+    "n_periods": 309,
+    "z": 1.8617,
+    "dsr": 0.9687,
+    "verdict": "CLEARS_DEFLATED_SHARPE",
+    "reading": "after 2 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.030; this arm's is 0.138."
+   },
+   "power": {
+    "n_periods": 309,
+    "periods_per_year": 12,
+    "n_oos_months": 309,
+    "sharpe_per_period": 0.1379,
+    "t_observed": 2.4238,
+    "years_observed": 25.75,
+    "t_target": 2.0,
+    "periods_needed_for_t_target": 210.4,
+    "years_needed_for_t2": 17.5,
+    "years_needed_for_t2_exact": 17.532050121129643,
+    "powered_for_observed_effect": true,
+    "detectable_annual_excess": 0.03,
+    "reference_sharpe_per_period": 0.0732,
+    "years_needed_to_detect_that_effect": 62.2,
+    "mde_annual_excess_at_t_target": 0.04663,
+    "mde_reading": "on the 25.8 years actually held, the smallest annual excess this arm could have shown at t = 2 is 4.66%/yr",
+    "powered": false,
+    "power_basis": "a pre-specified 3.0%/yr excess at this arm's own realised volatility -- NOT its observed Sharpe, which would make the flag equivalent to t >= 2",
+    "reading": "t = 2.42 on 25.8 years; t = 2 would need 17.5 years at this Sharpe -- ENOUGH TAPE"
+   }
+  }
+ },
+ "era_tables": {
+  "ENSEMBLE_reliability": {
+   "1999-2007": {
+    "months": 106,
+    "mean_pct": 1.0411,
+    "t": 2.615,
+    "sign": 1
+   },
+   "2008-2015": {
+    "months": 96,
+    "mean_pct": 0.073,
+    "t": 0.241,
+    "sign": 1
+   },
+   "2016-2024": {
+    "months": 107,
+    "mean_pct": 0.0124,
+    "t": 0.039,
+    "sign": 1
+   },
+   "eras_with_a_positive_mean": 3,
+   "eras_with_a_negative_mean": 0,
+   "eras_measured": 3,
+   "holds_in_2_of_3": true,
+   "same_sign_in_2_of_3": true,
+   "dominant_sign": 1
+  },
+  "ENSEMBLE_equal_weight": {
+   "1999-2007": {
+    "months": 106,
+    "mean_pct": 1.1847,
+    "t": 2.988,
+    "sign": 1
+   },
+   "2008-2015": {
+    "months": 96,
+    "mean_pct": 0.0086,
+    "t": 0.026,
+    "sign": 1
+   },
+   "2016-2024": {
+    "months": 107,
+    "mean_pct": 0.1785,
+    "t": 0.697,
+    "sign": 1
+   },
+   "eras_with_a_positive_mean": 3,
+   "eras_with_a_negative_mean": 0,
+   "eras_measured": 3,
+   "holds_in_2_of_3": true,
+   "same_sign_in_2_of_3": true,
+   "dominant_sign": 1
+  }
+ },
+ "arms_available_by_month": {
+  "min": 3,
+  "max": 8,
+  "first_month_with_all_arms": "2016-01",
+  "months_by_arm_count": {
+   "3": 58,
+   "4": 1,
+   "6": 144,
+   "8": 107
+  }
+ },
+ "full_ensemble_subperiod": {
+  "rule": ">= 6 arms present in the month (or one short of the maximum)",
+  "months": 107,
+  "ENSEMBLE_reliability": {
+   "months": 107,
+   "first_month": "2016-01",
+   "last_month": "2024-11",
+   "annualised_beta_matched_pct": 0.149,
+   "t_paired": 0.039,
+   "p_one_sided": 0.484565,
+   "era_table": {
+    "1999-2007": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2008-2015": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.0124,
+     "t": 0.039,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 1,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": false,
+    "dominant_sign": 1
+   }
+  },
+  "ENSEMBLE_equal_weight": {
+   "months": 107,
+   "first_month": "2016-01",
+   "last_month": "2024-11",
+   "annualised_beta_matched_pct": 2.142,
+   "t_paired": 0.697,
+   "p_one_sided": 0.24282,
+   "era_table": {
+    "1999-2007": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2008-2015": {
+     "months": 0,
+     "mean_pct": null,
+     "sign": null,
+     "note": "fewer than 6 months"
+    },
+    "2016-2024": {
+     "months": 107,
+     "mean_pct": 0.1785,
+     "t": 0.697,
+     "sign": 1
+    },
+    "eras_with_a_positive_mean": 1,
+    "eras_with_a_negative_mean": 0,
+    "eras_measured": 1,
+    "holds_in_2_of_3": false,
+    "same_sign_in_2_of_3": false,
+    "dominant_sign": 1
+   }
+  }
+ },
+ "headline": "ensemble (EQUAL-weighted -- the reliability weighting lost; top-100 EW hysteresis, 10 bps): beta 1.1951, beta-matched 5.651%/yr t 2.424 over 309 months, TW 62.8693 vs market 13.1817; vs the average arm 1.803pp",
+ "memory_free_gb_after": 4.0,
+ "wall_seconds": 19.8,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\n2_ensemble.py"
+  ],
+  "resolved_config": {
+   "reliability_months": 36,
+   "beta_months": 36,
+   "ensemble_k": 100,
+   "smoke": false
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944,
+    "opened_utc": "2026-09-06T17:02:52+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_incumbents.parquet",
+    "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
+    "bytes": 6225813,
+    "opened_utc": "2026-09-06T17:02:52+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_nn_pre_causal.parquet",
+    "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
+    "bytes": 24015048,
+    "opened_utc": "2026-09-06T17:02:52+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/oos_predictions_v2.parquet",
+    "sha256": "d9f9334b77c015a761232cf05df545ecc0ad08c3e86268df2538d5b9a23028cd",
+    "bytes": 153343444,
+    "opened_utc": "2026-09-06T17:02:53+00:00"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly_early.parquet",
+    "sha256": "51672ab7363507da27b1b871f611f5145edd655f37d9385dac90fb2ec7f08f2a",
+    "bytes": 12406449,
+    "opened_utc": "2026-09-06T17:02:53+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly.parquet",
+    "sha256": "7a8d096b1aaaf7595f68c05247ceb4e86330d5aad3fe33a4f4cdc0d4a3f0bc30",
+    "bytes": 161579169,
+    "opened_utc": "2026-09-06T17:02:53+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   }
+  ],
+  "git_commit": "bdb132406a03",
+  "generated_utc": "2026-09-06T17:03:11+00:00"
+ },
+ "generated_utc": "2026-09-06T17:03:11.181603+00:00"
+}

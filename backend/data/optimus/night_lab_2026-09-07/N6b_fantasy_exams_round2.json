@@ -1,0 +1,15 @@
+{
+ "item": "NIGHT_LAB_2026-09-07 / lane N6 / N6.2",
+ "status": "FAILED",
+ "dry_run": false,
+ "generated_at_utc": "2026-09-06T17:07:34.961336+00:00",
+ "argv": [
+  "C:\\Users\\mrthn\\aegis-finance\\scripts\\n6b_fantasy_exams_round2.py",
+  "--cap",
+  "3.00"
+ ],
+ "git_commit": "bdb132406a03",
+ "error": "ResearchBudgetExhausted: zero-yield rate 100.0% exceeds 40% over 50 resolvable calls (of 50 total) \u2014 halting for inspection: this campaign is buying tokens, not information",
+ "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\n6b_fantasy_exams_round2.py\", line 725, in main\n    rec = run(a.pairs, a.canaries, a.cap, a.dry_run, argv=sys.argv)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\mrthn\\aegis-finance\\scripts\\n6b_fantasy_exams_round2.py\", line 563, in run\n    budget_require(CAMPAIGN, since=run_start_iso)\n  File \"C:\\Users\\mrthn\\aegis-finance\\backend\\services\\research_budget.py\", line 202, in require\n    raise ResearchBudgetExhausted(st.reason or \"budget exhausted\")\nbackend.services.research_budget.ResearchBudgetExhausted: zero-yield rate 100.0% exceeds 40% over 50 resolvable calls (of 50 total) \u2014 halting for inspection: this campaign is buying tokens, not information\n",
+ "note": "a traceback is a receipt \u2014 including a refusal from the shared research_budget spend gate, which is not a bug to route around"
+}
