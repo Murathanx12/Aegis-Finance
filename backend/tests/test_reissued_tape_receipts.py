@@ -462,7 +462,15 @@ def test_the_holding_period_receipt_cites_its_sibling_by_a_hash_that_still_match
     p = REPO / sib["path"]
     if not p.exists():
         pytest.skip(f"{sib['path']} absent on this machine")
-    assert sib["sha256"] == hashlib.sha256(p.read_bytes()).hexdigest(), (
+    # The citation was hashed on the writer's platform (Windows, CRLF). A Linux
+    # checkout holds the same content with LF line endings, so the hash is
+    # accepted if it matches the bytes in EITHER line-ending form -- content
+    # identical modulo newlines is not a drifted receipt. (CI red 2026-09-06.)
+    raw = p.read_bytes()
+    lf = raw.replace(b"\r\n", b"\n")
+    crlf = lf.replace(b"\n", b"\r\n")
+    candidates = {hashlib.sha256(b).hexdigest() for b in (raw, lf, crlf)}
+    assert sib["sha256"] in candidates, (
         f"{sib['path']} has changed since holding_period_policy_20260905.json cited "
         "it. Re-run `python -m scripts.holding_period_policy` so the citation is "
         "true again -- do NOT edit the stored hash.")
