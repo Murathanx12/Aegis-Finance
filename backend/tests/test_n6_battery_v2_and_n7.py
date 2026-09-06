@@ -166,6 +166,20 @@ def test_normalise_maps_the_nights_own_key_names_and_loses_nothing():
     assert set(n["cells"]) == {"good", "rich_but_random", "no_t_at_all"}
 
 
+def test_a_receipt_that_uses_B1s_key_names_is_still_a_receipt():
+    """B1 and the N6b jobs write `item` + `title`, not `job`. The first version
+    of the guard demanded `job` and dropped four real receipts as "not a
+    receipt" -- the same failure `record_receipt` was fixed for last weekend,
+    reintroduced one layer up."""
+    from pathlib import Path
+    assert N7._identifies_a_receipt({"item": "N6b", "title": "x", "licence": "P"})
+    assert N7._identifies_a_receipt({"licence": "PRODUCT_EXPERIMENT"})
+    assert not N7._identifies_a_receipt({"rows": 3, "written_utc": "z"})
+    n = N7.normalise({"item": "N6b_path_monte_carlo", "licence": "P"},
+                     Path("N6b_path_monte_carlo.json"))
+    assert n["family_id"].endswith("N6b_path_monte_carlo")
+
+
 def test_a_skipped_or_refused_receipt_is_recorded_as_such_not_dropped():
     for st in ("SKIPPED", "REFUSED", "FAILED"):
         n = N7.normalise({"job": "J", "status": st, "headline": "because"},
@@ -206,3 +220,22 @@ def test_an_empty_night_says_so_instead_of_rendering_a_champion():
 def test_the_job_does_not_fold_its_own_output_back_into_the_memory():
     assert "N7_memory_and_leaderboard.json" in N7.SELF
     assert "best_so_far.json" in N7.SELF
+
+
+def test_scratch_receipts_are_skipped_because_they_share_the_real_jobs_name(tmp_path,
+                                                                            monkeypatch):
+    """`_n5_states_quick_test.json` carries `job: N5_states_third_null`, the same
+    name as the real receipt. Folding both records the family twice with two
+    disagreeing sample sizes and no way to tell which was the run."""
+    monkeypatch.setattr(N7, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(N7, "LEADERBOARD", tmp_path / "LEADERBOARD.md")
+    monkeypatch.setattr(N7, "BEST", tmp_path / "best_so_far.json")
+    (tmp_path / "N9_real.json").write_text(
+        json.dumps({"job": "N9", "status": "SKIPPED", "headline": "nothing here"}),
+        encoding="utf-8")
+    (tmp_path / "_N9_quick_test.json").write_text(
+        json.dumps({"job": "N9", "status": "SKIPPED", "headline": "scratch"}),
+        encoding="utf-8")
+    rec = N7.run(to_registry=False, verbose=False)
+    assert rec["receipts_read"] == ["N9_real.json"]
+    assert rec["receipts_ignored_as_scratch"] == ["_N9_quick_test.json"]

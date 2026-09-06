@@ -60,6 +60,19 @@ def _r(v, nd: int = 4):
     return round(f, nd) if math.isfinite(f) else None
 
 
+#: Any ONE of these makes a JSON file a receipt. `job` is this night's key,
+#: `item` + `title` is B1's, and `licence` is on every receipt the repo writes.
+RECEIPT_KEYS: tuple[str, ...] = ("job", "item", "licence")
+
+
+def _identifies_a_receipt(rec: dict) -> bool:
+    return any(k in rec for k in RECEIPT_KEYS)
+
+
+def _job_name(rec: dict, source: Path) -> str:
+    return str(rec.get("job") or rec.get("item") or source.stem)
+
+
 def _primary(cell: dict) -> dict:
     """The beta-matched block, whatever the job called it."""
     for k in ("PRIMARY_beta_matched", "primary_beta_matched", "beta_matched"):
@@ -77,7 +90,7 @@ def normalise(rec: dict, source: Path) -> dict | None:
     written out here rather than assumed. An unmapped key is a silently lost
     result, which is the failure this whole file exists to stop.
     """
-    job = rec.get("job") or source.stem
+    job = _job_name(rec, source)
     if rec.get("status") in ("SKIPPED", "REFUSED", "FAILED"):
         return {"family_id": f"night_lab_{NIGHT}/{job}", "job": job,
                 "verdict": f"{rec.get('status')} -- {rec.get('headline')}",
@@ -206,7 +219,13 @@ def run(*, to_registry: bool = True, verbose: bool = True) -> dict:
         "licence": "PRODUCT_EXPERIMENT",
         "llm_spend_usd": 0.0, "llm_calls": 0, "network_calls": 0,
     }
-    files = sorted(p for p in OUT_DIR.glob("*.json") if p.name not in SELF)
+    # `_`-prefixed files are the repo's own scratch convention (`_cells`,
+    # `_superseded_*`). A quick-test receipt carries the SAME `job` name as the
+    # real one, so folding it would record the family twice with the smaller
+    # sample's numbers -- the memory would then hold two rows that disagree and
+    # no way to tell which was the run.
+    files = sorted(p for p in OUT_DIR.glob("*.json")
+                   if p.name not in SELF and not p.name.startswith("_"))
     payloads, read, failed = [], [], []
     for p in files:
         try:
@@ -214,8 +233,14 @@ def run(*, to_registry: bool = True, verbose: bool = True) -> dict:
         except Exception as exc:                                    # noqa: BLE001
             failed.append({"file": p.name, "why": f"{type(exc).__name__}: {exc}"})
             continue
-        if not isinstance(rec, dict) or "job" not in rec:
-            failed.append({"file": p.name, "why": "not a receipt (no `job` key)"})
+        # THE LAB DOES NOT PRODUCE ONE SHAPE OF RECEIPT. The night lane writes
+        # `job`; the labor lane and the N6b jobs write B1's `item` + `title`.
+        # The first version of this guard demanded `job` and dropped FOUR real
+        # receipts as "not a receipt" -- the same failure `record_receipt` was
+        # fixed for last weekend, reintroduced one layer up.
+        if not isinstance(rec, dict) or not _identifies_a_receipt(rec):
+            failed.append({"file": p.name,
+                           "why": "not a receipt (no `job`, `item` or `licence`)"})
             continue
         tracker.opened(p)
         n = normalise(rec, p)
@@ -235,6 +260,8 @@ def run(*, to_registry: bool = True, verbose: bool = True) -> dict:
     out["evidence_memory_rows_total"] = sum(v for v in written.values()
                                             if isinstance(v, int))
 
+    out["receipts_ignored_as_scratch"] = sorted(
+        p.name for p in OUT_DIR.glob("_*.json"))
     families = {}
     for p in files:
         try:
@@ -243,10 +270,10 @@ def run(*, to_registry: bool = True, verbose: bool = True) -> dict:
             continue
         f = rec.get("family")
         if isinstance(f, dict) and f.get("size"):
-            families[f"night_lab_{NIGHT}/{rec.get('job') or p.stem}"] = f
+            families[f"night_lab_{NIGHT}/{_job_name(rec, p)}"] = f
         f2 = rec.get("transfer_coefficient_cost_family")
         if isinstance(f2, dict) and f2.get("size"):
-            families[f"night_lab_{NIGHT}/{rec.get('job') or p.stem}"
+            families[f"night_lab_{NIGHT}/{_job_name(rec, p)}"
                      "  [broad-vs-control deltas]"] = {
                 "size": f2.get("size"), "family_min_p": f2.get("family_min_p"),
                 "best_cell_holm_adjusted_p": f2.get("best_comparison_holm_adjusted_p"),

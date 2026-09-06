@@ -1,0 +1,69 @@
+{
+ "generated_utc": "2026-09-06T17:40:10.990557+00:00",
+ "night": "2026-09-07",
+ "best_by_beta_matched_t": {
+  "family": "night_lab_2026-09-07/N1_construction_books",
+  "cell": "ensemble_ew|k=50|vw|hold=none|10bps",
+  "beta": 1.1196,
+  "months": 309,
+  "beta_matched_pct_per_year": 8.628,
+  "t_paired": 2.58,
+  "p_one_sided": 0.004947,
+  "terminal_wealth_net": 101.8227,
+  "terminal_wealth_market": 13.1817,
+  "transfer_coefficient": 0.1773,
+  "effective_names": 13.345,
+  "is_family_best": true,
+  "family_size": null
+ },
+ "families": {
+  "night_lab_2026-09-07/N1_construction_books": {
+   "size": 160,
+   "family_min_p": 0.004947,
+   "family_max_p": 0.999123,
+   "best_cell": "ensemble_ew|k=50|vw|hold=none|10bps",
+   "best_cell_holm_adjusted_p": 0.79152,
+   "cells_surviving_holm_at_0.05": [],
+   "note": "one family for every cell this job built. The Holm column is the EXPORT standard (CANON \u00a763); a cell quoted without it is a screen."
+  },
+  "night_lab_2026-09-07/N1_construction_books  [broad-vs-control deltas]": {
+   "size": 100,
+   "family_min_p": 0.004884,
+   "best_cell_holm_adjusted_p": 0.4884,
+   "cells_surviving_holm_at_0.05": []
+  },
+  "night_lab_2026-09-07/N1d_monthly_refit_books": {
+   "size": 12,
+   "constructions_where_monthly_wins": 12,
+   "constructions_total": 12,
+   "median_pp_per_year": 1.204,
+   "family_min_p": 0.109793,
+   "family_max_p": 0.283369,
+   "best": "k=50|ew|hold=100|10bps",
+   "best_holm_adjusted_p": 1.0,
+   "surviving_holm_at_0.05": []
+  },
+  "night_lab_2026-09-07/N3_edge_vs_floor_curve": {
+   "size": 12,
+   "family_min_p_one_sided": 0.01478,
+   "family_max_p_one_sided": 0.99948,
+   "holm_adjusted": {
+    "book_10000000|measured_taq": 0.17736,
+    "institutional_flat_3m|flat_10bps": 0.42625,
+    "book_100000|flat_10bps": 0.5986,
+    "book_10000000|flat_10bps": 0.60462,
+    "book_1000000|flat_10bps": 0.63072,
+    "book_1000000|measured_taq": 0.63072,
+    "institutional_flat_3m|measured_taq": 0.92478,
+    "institutional_flat_3m|flat_25bps": 1.0,
+    "book_100000|flat_25bps": 1.0,
+    "book_1000000|flat_25bps": 1.0,
+    "book_10000000|flat_25bps": 1.0,
+    "book_100000|measured_taq": 1.0
+   },
+   "best_cell": "book_10000000|measured_taq",
+   "n_cells_surviving_holm_at_0_05": 0
+  }
+ },
+ "ranking_rule": "beta-matched t, with the family correction printed beside it. NOT terminal wealth -- that ranks on beta."
+}
