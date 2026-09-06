@@ -165,6 +165,15 @@ def ols_market_model(y, x, *, lag: int = NW_LAG) -> dict:
 
     alpha, beta = float(b[0]), float(b[1])
     resid_sd = float(resid.std(ddof=2)) if n > 2 else float("nan")
+    # A DEGENERATE fit (y is x up to floating point: residuals ~1e-17) makes
+    # every t a ratio of two rounding errors -- 16.7 on Linux, 0.0 on Windows
+    # for the same series (CI 2026-09-06). Declare it instead of reporting it.
+    degenerate = sst > 0 and ssr / sst < 1e-12
+    if degenerate:
+        alpha = 0.0 if abs(alpha) < 1e-9 else alpha
+        beta = 1.0 if abs(beta - 1.0) < 1e-9 else beta
+        se_ols = np.where(se_ols < 1e-12, np.inf, se_ols)
+        se_hac = np.where(se_hac < 1e-12, np.inf, se_hac)
     t_a_ols = alpha / se_ols[0] if se_ols[0] > 0 else None
     t_a_hac = alpha / se_hac[0] if se_hac[0] > 0 else None
     return {
@@ -191,6 +200,7 @@ def ols_market_model(y, x, *, lag: int = NW_LAG) -> dict:
         "residual_sd_monthly": round(resid_sd, 5),
         "residual_sd_annualised": round(resid_sd * math.sqrt(12.0), 5),
         "hac_note": "Bartlett kernel, no dof inflation; OLS se uses n - 2",
+        "degenerate_fit": bool(degenerate),
     }
 
 

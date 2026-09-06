@@ -31,7 +31,7 @@ provider, or writes into `continuation_2026-09-06/`.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import numpy as np
 import pandas as pd
@@ -213,7 +213,9 @@ def test_receipt_carries_provenance_with_non_empty_inputs_opened(name):
     hashed = [o for o in opened if o.get("sha256")]
     assert hashed, "_inputs_opened records no hashed input"
     for o in hashed:
-        assert Path(o["path"]).is_absolute(), o["path"]
+        # absolute on the platform that WROTE it: a receipt stamped on Windows
+        # is read on Linux CI (C:\... is not absolute to PosixPath) -- 2026-09-06
+        assert PureWindowsPath(o["path"]).is_absolute() or PurePosixPath(o["path"]).is_absolute(), o["path"]
         assert len(o["sha256"]) == 64
         assert o["bytes"] > 0
     assert rec.get("llm_spend_usd") == 0.0

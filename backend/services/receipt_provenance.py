@@ -62,6 +62,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from pathlib import PurePosixPath, PureWindowsPath
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -119,7 +120,15 @@ def normalise(path: str | os.PathLike[str]) -> str:
     `os.path.normcase` matters on Windows (this repo's dev machine) and is a
     no-op elsewhere, so the comparison is the same rule on both.
     """
-    return os.path.normcase(os.path.abspath(str(path))).replace("\\", "/")
+    s = str(path)
+    # A path stamped on Windows (C:\...) is read on Linux CI, where abspath would
+    # prepend the runner's cwd and normcase would not lowercase -- so the same
+    # file spelled on two platforms never matched and three provenance tests
+    # went red (2026-09-06). Absolute on EITHER platform stays as it is; the
+    # spelling is lowercased everywhere so the rule is one rule.
+    if not (PureWindowsPath(s).is_absolute() or PurePosixPath(s).is_absolute()):
+        s = os.path.abspath(s)
+    return s.replace("\\", "/").lower()
 
 
 class InputTracker:
@@ -434,7 +443,7 @@ def _matches_opened(stamped: str, opened: Sequence[str]) -> bool:
     # tracker recorded the absolute one. Suffix match on the normalised
     # spelling covers that without weakening the check: the W4b failure had a
     # different basename AND a different directory.
-    rel = os.path.normcase(str(stamped).replace("\\", "/")).replace("\\", "/")
+    rel = str(stamped).replace("\\", "/").lower()
     rel = rel.lstrip(".").lstrip("/")
     if not rel:
         return False

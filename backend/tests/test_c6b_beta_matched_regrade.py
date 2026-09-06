@@ -26,7 +26,7 @@ import math
 import os
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import numpy as np
 import pandas as pd
@@ -233,7 +233,7 @@ def test_receipt_carries_provenance_with_nonempty_inputs_opened():
         assert set(row) >= {"path", "sha256", "bytes"}
         assert len(row["sha256"]) == 64
         assert int(row["bytes"]) > 0
-        assert Path(row["path"]).is_absolute()
+        assert PureWindowsPath(row["path"]).is_absolute() or PurePosixPath(row["path"]).is_absolute(), row["path"]
     assert prov.get("git_commit")
     assert prov.get("generated_utc")
 

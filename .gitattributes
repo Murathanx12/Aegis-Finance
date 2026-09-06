@@ -1,0 +1,7 @@
+
+# 2026-09-07: receipts and sidecars are hashed; their bytes must be identical on every
+# platform. No CRLF/LF conversion for data files (a Linux CI checkout hashed differently
+# from the Windows worktree and a sealed-receipt integrity test went red).
+backend/data/optimus/**/*.json -text
+backend/data/optimus/**/*.jsonl -text
+backend/data/optimus/**/*.csv -text

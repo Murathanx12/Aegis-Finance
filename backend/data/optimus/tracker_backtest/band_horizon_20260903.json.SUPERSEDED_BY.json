@@ -12,5 +12,8 @@
   "panel_rebuild_receipt": "panel_rebuild_20260904.json",
   "written_by": "scripts/write_superseded_sidecars.py",
   "never_edit": "the sealed receipt is NOT edited and NOT deleted. Repairing a tamper-evident artefact is the tampering. Both sha256s are recorded here so a later reader can tell whether either file moved after this link was made.",
-  "no_return_fields_here_on_purpose": "this sidecar quotes no return numbers in any KEY. test_benchmark_canonical.py scans every *.json in this directory, and a sidecar carrying an old excess figure would need a canonical benchmark stamp for a number whose whole purpose is to be void."
+  "no_return_fields_here_on_purpose": "this sidecar quotes no return numbers in any KEY. test_benchmark_canonical.py scans every *.json in this directory, and a sidecar carrying an old excess figure would need a canonical benchmark stamp for a number whose whole purpose is to be void.",
+  "sealed_receipt_sha256_lf": "746e6c3a549346d24004ecd43fe763b9f30db3265d2412cd212e8871672384f0",
+  "superseded_by_sha256_lf": "01fc88050b7ec07c4d1dd6648f963c847078a1e90d80d06c35896e03e9d184f1",
+  "hash_scheme_note": "2026-09-07: `*_sha256` fields are SHA-256 over the raw bytes as written on Windows (CRLF). Git normalised the files to LF in the index, so a Linux checkout (CI) hashes differently and the sidecar test failed there while the sealed file was UNCHANGED. `*_sha256_lf` is SHA-256 over CRLF->LF normalised bytes and is platform-independent; it was added only after the raw hash was re-verified against the current bytes. Nothing in the sealed receipt was edited."
 }

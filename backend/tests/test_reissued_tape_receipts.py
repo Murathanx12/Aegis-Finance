@@ -289,6 +289,12 @@ def test_family_block_names_its_size_and_admits_the_correction_is_pending():
 
 # ============================================================ the receipts
 
+
+def _sha_lf(p: Path) -> str:
+    """SHA-256 over CRLF->LF normalised bytes (platform-independent)."""
+    return hashlib.sha256(p.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
 @pytest.mark.parametrize("old,new", sorted(REISSUED.items()))
 def test_every_reissued_receipt_names_what_it_supersedes(old, new):
     rec = _load(new)
@@ -399,15 +405,24 @@ def test_the_sealed_receipt_has_an_unedited_sidecar_pointing_at_its_replacement(
     assert side["sealed_receipt"] == old
     assert side["superseded_by"] == new
     assert side["status"].startswith("VOID")
-    digest = hashlib.sha256(old_p.read_bytes()).hexdigest()
-    assert side["sealed_receipt_sha256"] == digest, (
+    # Hash over CRLF->LF normalised bytes: the raw hash is a property of the
+    # checkout (Windows CRLF vs Linux LF), not of the receipt, and it turned CI
+    # red on 2026-09-06 while the sealed file was unchanged. A sidecar written
+    # before the `_lf` field existed is compared on its raw hash.
+    digest = _sha_lf(old_p)
+    recorded = side.get("sealed_receipt_sha256_lf") or side["sealed_receipt_sha256"]
+    if "sealed_receipt_sha256_lf" not in side:
+        digest = hashlib.sha256(old_p.read_bytes()).hexdigest()
+    assert recorded == digest, (
         f"{old} no longer hashes to what its sidecar recorded. Either the sealed "
         "receipt was EDITED (which is the tampering the sidecar exists to prevent) "
         "or the sidecar is stale. Do not repair by rewriting the hash.")
     new_p = RECEIPTS / new
     if new_p.exists():
-        assert side["superseded_by_sha256"] == hashlib.sha256(
-            new_p.read_bytes()).hexdigest(), (
+        recorded_new = side.get("superseded_by_sha256_lf") or side["superseded_by_sha256"]
+        digest_new = (_sha_lf(new_p) if "superseded_by_sha256_lf" in side
+                      else hashlib.sha256(new_p.read_bytes()).hexdigest())
+        assert recorded_new == digest_new, (
             f"{new} changed after {side_p.name} was written -- regenerate the sidecar")
 
 
