@@ -5,6 +5,10 @@ pydantic>=2.5.0
 
 # Data
 pandas>=2.2.0
+# pandas.read_parquet/to_parquet need an engine; eight test files use parquet
+# (skipping only when a LOCAL file is absent, not when the engine is). CI had
+# no engine until 2026-09-06.
+pyarrow>=15.0
 numpy>=1.26.0
 yfinance>=0.2.36
 fredapi>=0.5.1
