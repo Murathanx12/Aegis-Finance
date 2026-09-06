@@ -1,0 +1,752 @@
+{
+ "job": "G5_sizer",
+ "lane": "G growth book",
+ "licence": "PRODUCT_EXPERIMENT",
+ "question": "on the frozen champion, does a walk-forward quantile network sizing the book beat Moreira-Muir trailing-vol targeting on after-cost terminal wealth at equal maxDD?",
+ "champion_genome_id": "m12_quality_mom|dd",
+ "champion_sha256": "39ab3224c1a12e144bdcef39e536342d7f8b43e3644bf0bf3ac2bf1af94cd9da",
+ "sizer": {
+  "role": "SIZING, never selection",
+  "target": "next-month return distribution of ONE frozen book",
+  "quantiles": [
+   0.05,
+   0.5,
+   0.95
+  ],
+  "loss": "pinball (quantile) loss, three heads",
+  "exposure_rule": "fractional Kelly at 0.25: mu = q50 - rf, sigma = (q95 - q05) / (2 * 1.6449), exposure = f * mu / sigma^2 clipped to [0.0, 2.0] and then to the drawdown budget",
+  "baseline": "Moreira-Muir trailing-volatility targeting -- a PIT target vol over trailing realised vol, no learning",
+  "comparison": "after-cost terminal wealth AT EQUAL DRAWDOWN: both books re-levered to the same budget by growth.admissible_leverage before their wealths are compared",
+  "seeds": [
+   20260907,
+   20260908,
+   20260909,
+   20260910,
+   20260911,
+   20260912,
+   20260913,
+   20260914
+  ],
+  "object_judged": "the seed-MEAN forecast; every seed is a family cell",
+  "features": [
+   "spy_vol_21d",
+   "spy_vol_63d",
+   "spy_dd_12m",
+   "spy_mom_12_1",
+   "rf_level_annual",
+   "rf_change_12m",
+   "breadth_positive_1m",
+   "dispersion_1m",
+   "book_vol_6m",
+   "book_ret_3m",
+   "book_dd_12m"
+  ],
+  "sealed_era": "NEVER SEEN. This module has no path to growth_lab.sealed.",
+  "torch_available": true
+ },
+ "device": {
+  "torch_version": "2.11.0+cu128",
+  "cuda_available": true,
+  "cuda_requested": true,
+  "python_executable": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "python_version": "3.12.10",
+  "torch_file": "C:\\Users\\mrthn\\AppData\\Local\\Programs\\Python\\Python312\\Lib\\site-packages\\torch\\__init__.py",
+  "device_name": "NVIDIA GeForce RTX 5060 Laptop GPU",
+  "device_capability": "sm_120",
+  "vram_total_gb": 7.96,
+  "device_actually_used": "cuda",
+  "device_warning": null
+ },
+ "cuda_available": true,
+ "device_actually_used": "cuda",
+ "requirements_gpu_satisfied": true,
+ "development_window": [
+  "1999-03",
+  "2015-12"
+ ],
+ "development_months": 202,
+ "sealed_era_openings": 1,
+ "sealed_era_touched_by_this_job": false,
+ "walk_forward_folds": [
+  {
+   "train_months": [
+    "1999-03",
+    "2004-02"
+   ],
+   "test_months": [
+    "2004-03",
+    "2005-02"
+   ],
+   "n_train_windows": 36,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2005-02"
+   ],
+   "test_months": [
+    "2005-03",
+    "2006-02"
+   ],
+   "n_train_windows": 48,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2006-02"
+   ],
+   "test_months": [
+    "2006-03",
+    "2007-02"
+   ],
+   "n_train_windows": 60,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2007-02"
+   ],
+   "test_months": [
+    "2007-03",
+    "2008-02"
+   ],
+   "n_train_windows": 72,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2008-02"
+   ],
+   "test_months": [
+    "2008-03",
+    "2009-02"
+   ],
+   "n_train_windows": 84,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2009-02"
+   ],
+   "test_months": [
+    "2009-03",
+    "2010-02"
+   ],
+   "n_train_windows": 96,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2010-02"
+   ],
+   "test_months": [
+    "2010-03",
+    "2011-02"
+   ],
+   "n_train_windows": 108,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2011-02"
+   ],
+   "test_months": [
+    "2011-03",
+    "2012-02"
+   ],
+   "n_train_windows": 120,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2012-02"
+   ],
+   "test_months": [
+    "2012-03",
+    "2013-02"
+   ],
+   "n_train_windows": 132,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2013-02"
+   ],
+   "test_months": [
+    "2013-03",
+    "2014-02"
+   ],
+   "n_train_windows": 144,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2014-02"
+   ],
+   "test_months": [
+    "2014-03",
+    "2015-02"
+   ],
+   "n_train_windows": 156,
+   "n_test_months": 12
+  },
+  {
+   "train_months": [
+    "1999-03",
+    "2015-02"
+   ],
+   "test_months": [
+    "2015-03",
+    "2015-12"
+   ],
+   "n_train_windows": 168,
+   "n_test_months": 10
+  }
+ ],
+ "quantile_crossing_repair": "rows sorted across the three heads",
+ "cost_bps_per_side": 25.0,
+ "sizer_family_cells": 11,
+ "table": {
+  "constant_1x_NULL": {
+   "beta": 0.7224,
+   "intercept_annual_pct": 6.369,
+   "intercept_t_hac": 1.933,
+   "tw_unlevered": 4.599,
+   "maxdd_unlevered": -0.46882,
+   "leverage_at_budget": 1.332,
+   "tw_at_budget": 5.6264,
+   "maxdd_at_budget": -0.59918,
+   "leverage_neutral_tw": 4.2997,
+   "realized_vol": 0.19337,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 1.0,
+    "min": 1.0,
+    "max": 1.0,
+    "months_without_a_forecast": 0,
+    "mean_abs_change": 0.00495,
+    "overlay_cost_annual_pct": 0.0149
+   },
+   "dsr_over_sizer_family": 0.4206,
+   "dsr_block": {
+    "sharpe": 0.1002,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.023,
+    "kurtosis": 4.458,
+    "n_periods": 202,
+    "z": -0.2005,
+    "dsr": 0.4206,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is 0.100."
+   }
+  },
+  "trailing_vol_MOREIRA_MUIR": {
+   "beta": 0.897,
+   "intercept_annual_pct": 5.495,
+   "intercept_t_hac": 1.501,
+   "tw_unlevered": 3.775,
+   "maxdd_unlevered": -0.60272,
+   "leverage_at_budget": 0.9922,
+   "tw_at_budget": 3.7599,
+   "maxdd_at_budget": -0.59916,
+   "leverage_neutral_tw": 3.2367,
+   "realized_vol": 0.23598,
+   "constraints_pass": false,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 1.2234,
+    "min": 0.5393,
+    "max": 2.0,
+    "months_without_a_forecast": 29,
+    "mean_abs_change": 0.14762,
+    "overlay_cost_annual_pct": 0.4429
+   },
+   "dsr_over_sizer_family": 0.338,
+   "dsr_block": {
+    "sharpe": 0.0844,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.373,
+    "kurtosis": 4.694,
+    "n_periods": 202,
+    "z": -0.418,
+    "dsr": 0.338,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is 0.084."
+   }
+  },
+  "nn_seedmean_kelly": {
+   "beta": 0.6035,
+   "intercept_annual_pct": -1.7,
+   "intercept_t_hac": -0.543,
+   "tw_unlevered": 1.157,
+   "maxdd_unlevered": -0.51979,
+   "leverage_at_budget": 1.1416,
+   "tw_at_budget": 1.0546,
+   "maxdd_at_budget": -0.59914,
+   "leverage_neutral_tw": 1.1484,
+   "realized_vol": 0.17695,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.5952,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.1592,
+    "overlay_cost_annual_pct": 0.4776
+   },
+   "dsr_over_sizer_family": 0.0073,
+   "dsr_block": {
+    "sharpe": -0.0589,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": 0.167,
+    "kurtosis": 4.186,
+    "n_periods": 202,
+    "z": -2.4413,
+    "dsr": 0.0073,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is -0.059."
+   }
+  },
+  "nn_seed_20260907_kelly": {
+   "beta": 0.752,
+   "intercept_annual_pct": 0.082,
+   "intercept_t_hac": 0.02,
+   "tw_unlevered": 1.3582,
+   "maxdd_unlevered": -0.55953,
+   "leverage_at_budget": 1.0635,
+   "tw_at_budget": 1.295,
+   "maxdd_at_budget": -0.5989,
+   "leverage_neutral_tw": 1.5032,
+   "realized_vol": 0.24042,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.8645,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.19874,
+    "overlay_cost_annual_pct": 0.5962
+   },
+   "dsr_over_sizer_family": 0.0362,
+   "dsr_block": {
+    "sharpe": -0.0122,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.167,
+    "kurtosis": 7.542,
+    "n_periods": 202,
+    "z": -1.7971,
+    "dsr": 0.0362,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is -0.012."
+   }
+  },
+  "nn_seed_20260908_kelly": {
+   "beta": 0.7607,
+   "intercept_annual_pct": -0.941,
+   "intercept_t_hac": -0.256,
+   "tw_unlevered": 1.2094,
+   "maxdd_unlevered": -0.57771,
+   "leverage_at_budget": 1.0459,
+   "tw_at_budget": 1.1656,
+   "maxdd_at_budget": -0.59906,
+   "leverage_neutral_tw": 1.3422,
+   "realized_vol": 0.22602,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.9192,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.22634,
+    "overlay_cost_annual_pct": 0.679
+   },
+   "dsr_over_sizer_family": 0.0205,
+   "dsr_block": {
+    "sharpe": -0.0289,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.429,
+    "kurtosis": 5.613,
+    "n_periods": 202,
+    "z": -2.0434,
+    "dsr": 0.0205,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is -0.029."
+   }
+  },
+  "nn_seed_20260909_kelly": {
+   "beta": 0.663,
+   "intercept_annual_pct": 7.636,
+   "intercept_t_hac": 1.598,
+   "tw_unlevered": 4.8592,
+   "maxdd_unlevered": -0.46882,
+   "leverage_at_budget": 1.332,
+   "tw_at_budget": 5.7383,
+   "maxdd_at_budget": -0.59918,
+   "leverage_neutral_tw": 3.9731,
+   "realized_vol": 0.22909,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.8136,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.34102,
+    "overlay_cost_annual_pct": 1.0231
+   },
+   "dsr_over_sizer_family": 0.3557,
+   "dsr_block": {
+    "sharpe": 0.089,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": 0.669,
+    "kurtosis": 5.298,
+    "n_periods": 202,
+    "z": -0.3699,
+    "dsr": 0.3557,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is 0.089."
+   }
+  },
+  "nn_seed_20260910_kelly": {
+   "beta": 0.6064,
+   "intercept_annual_pct": 2.57,
+   "intercept_t_hac": 0.628,
+   "tw_unlevered": 2.073,
+   "maxdd_unlevered": -0.46882,
+   "leverage_at_budget": 1.3203,
+   "tw_at_budget": 1.8627,
+   "maxdd_at_budget": -0.59881,
+   "leverage_neutral_tw": 2.0488,
+   "realized_vol": 0.21657,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.7759,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.28899,
+    "overlay_cost_annual_pct": 0.867
+   },
+   "dsr_over_sizer_family": 0.0802,
+   "dsr_block": {
+    "sharpe": 0.0153,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.103,
+    "kurtosis": 7.908,
+    "n_periods": 202,
+    "z": -1.404,
+    "dsr": 0.0802,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is 0.015."
+   }
+  },
+  "nn_seed_20260911_kelly": {
+   "beta": 0.667,
+   "intercept_annual_pct": -4.011,
+   "intercept_t_hac": -1.151,
+   "tw_unlevered": 0.7409,
+   "maxdd_unlevered": -0.6729,
+   "leverage_at_budget": 0.8779,
+   "tw_at_budget": 0.8331,
+   "maxdd_at_budget": -0.59905,
+   "leverage_neutral_tw": 0.8239,
+   "realized_vol": 0.20119,
+   "constraints_pass": false,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.7536,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.18018,
+    "overlay_cost_annual_pct": 0.5405
+   },
+   "dsr_over_sizer_family": 0.0016,
+   "dsr_block": {
+    "sharpe": -0.0882,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": -0.668,
+    "kurtosis": 6.025,
+    "n_periods": 202,
+    "z": -2.9461,
+    "dsr": 0.0016,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is -0.088."
+   }
+  },
+  "nn_seed_20260912_kelly": {
+   "beta": 0.4646,
+   "intercept_annual_pct": -2.864,
+   "intercept_t_hac": -1.139,
+   "tw_unlevered": 0.9471,
+   "maxdd_unlevered": -0.46882,
+   "leverage_at_budget": 1.332,
+   "tw_at_budget": 0.7275,
+   "maxdd_at_budget": -0.59918,
+   "leverage_neutral_tw": 0.793,
+   "realized_vol": 0.14565,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.3586,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.15814,
+    "overlay_cost_annual_pct": 0.4744
+   },
+   "dsr_over_sizer_family": 0.0019,
+   "dsr_block": {
+    "sharpe": -0.0922,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": 0.194,
+    "kurtosis": 4.084,
+    "n_periods": 202,
+    "z": -2.8936,
+    "dsr": 0.0019,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is -0.092."
+   }
+  },
+  "nn_seed_20260913_kelly": {
+   "beta": 0.7055,
+   "intercept_annual_pct": 6.208,
+   "intercept_t_hac": 1.574,
+   "tw_unlevered": 4.1285,
+   "maxdd_unlevered": -0.46882,
+   "leverage_at_budget": 1.332,
+   "tw_at_budget": 4.7522,
+   "maxdd_at_budget": -0.59918,
+   "leverage_neutral_tw": 3.5887,
+   "realized_vol": 0.21782,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.8619,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.31743,
+    "overlay_cost_annual_pct": 0.9523
+   },
+   "dsr_over_sizer_family": 0.3028,
+   "dsr_block": {
+    "sharpe": 0.0788,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": 0.649,
+    "kurtosis": 4.685,
+    "n_periods": 202,
+    "z": -0.5163,
+    "dsr": 0.3028,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is 0.079."
+   }
+  },
+  "nn_seed_20260914_kelly": {
+   "beta": 0.6866,
+   "intercept_annual_pct": 4.171,
+   "intercept_t_hac": 1.06,
+   "tw_unlevered": 2.7889,
+   "maxdd_unlevered": -0.58405,
+   "leverage_at_budget": 1.0322,
+   "tw_at_budget": 2.796,
+   "maxdd_at_budget": -0.59906,
+   "leverage_neutral_tw": 2.601,
+   "realized_vol": 0.22271,
+   "constraints_pass": true,
+   "months": 202,
+   "cost_bps_per_side": 25.0,
+   "exposure": {
+    "mean": 0.7648,
+    "min": 0.0,
+    "max": 2.0,
+    "months_without_a_forecast": 60,
+    "mean_abs_change": 0.24422,
+    "overlay_cost_annual_pct": 0.7326
+   },
+   "dsr_over_sizer_family": 0.1591,
+   "dsr_block": {
+    "sharpe": 0.0441,
+    "sharpe_benchmark_sr0": 0.1144,
+    "n_trials": 11,
+    "null_sd_basis": "analytic 1/sqrt(T-1) -- only 0 null draws, below the 64 floor",
+    "skew": 0.145,
+    "kurtosis": 6.464,
+    "n_periods": 202,
+    "z": -0.9984,
+    "dsr": 0.1591,
+    "verdict": "WITHIN_SELECTION_NOISE",
+    "reading": "after 11 cells were looked at, the Sharpe a zero-edge search would be expected to produce is 0.114; this arm's is 0.044."
+   }
+  }
+ },
+ "verdict": {
+  "nn_beats_trailing_vol_at_equal_drawdown": false,
+  "nn_beats_the_flat_null_at_equal_drawdown": false,
+  "trailing_vol_beats_the_flat_null_at_equal_drawdown": false,
+  "nn_dsr_over_the_sizer_family_gt_0_95": false,
+  "seed_mean_beats_the_median_seed": false,
+  "MATURED": false,
+  "maturity_rule": "amendment \u00a73: the NN 'matures' when its vol targeting beats trailing-vol targeting on after-cost TW at equal maxDD with DSR > 0.95. This job tests the DEVELOPMENT half of that; the sealed half belongs to a later session and is NOT run here."
+ },
+ "seed_spread_tw_at_budget": {
+  "min": 0.7275,
+  "median": 1.5789,
+  "max": 5.7383,
+  "seed_mean_object": 1.0546
+ },
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "memory_free_gb_before": 8.17,
+ "wall_seconds": 18.1,
+ "generated_utc": "2026-09-06T13:47:07.839256+00:00",
+ "headline": "beta 0.6035 (NN) vs 0.897 (trailing vol) vs 0.7224 (flat): at the SAME drawdown budget over 202 development months at 25 bps, NN sizing reaches TW 1.0546 at 1.1416x, Moreira-Muir 3.7599 at 0.9922x, and the flat book 5.6264 at 1.332x. NN DSR 0.0073 over 11 sizer cells; MATURED = False",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\growth_g5_sizer.py"
+  ],
+  "resolved_config": {
+   "job": "G5_sizer",
+   "cost_bps": 25.0,
+   "seeds": [
+    20260907,
+    20260908,
+    20260909,
+    20260910,
+    20260911,
+    20260912,
+    20260913,
+    20260914
+   ],
+   "development_window": [
+    "1999-01",
+    "2015-12"
+   ]
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
+    "sha256": "2520e8b81c9ee4c46ee413c8b63c0160244afaf598cefd61c09c3e7d54eee327",
+    "bytes": 20060,
+    "opened_utc": "2026-09-06T13:46:50+00:00",
+    "note": "the frozen champion"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table_long.parquet",
+    "sha256": "d44e6e84468d4e08cee9cc5559bac3adf97b1d52247e742310f64b0397f31588",
+    "bytes": 418154944,
+    "opened_utc": "2026-09-06T13:46:51+00:00",
+    "note": "the 1999-2024 long panel"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_incumbents.parquet",
+    "sha256": "c01c954efcc352216046c73bd8d3b6d7702a25eb96dd44879ac2487fac321d22",
+    "bytes": 6225813,
+    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "note": "W3b stage predictions: incumbents"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_incumbents.json",
+    "sha256": "feb7cc5fa459900ed351d51ce790b9cc79a1de9a0b7ee48b2166818e516af9a2",
+    "bytes": 9066,
+    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "note": "W3b stage meta: incumbents"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_pred_nn_pre_causal.parquet",
+    "sha256": "b7c255b160635c4a9b2bc63ed8d5694ab96b2f2586c3d870bd297f13af0d49b2",
+    "bytes": 24015048,
+    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "note": "W3b stage predictions: nn_pre_causal"
+   },
+   {
+    "path": "c:/users/mrthn/appdata/local/temp/aegis_w3b_stage/w3b_meta_nn_pre_causal.json",
+    "sha256": "a28dcb32037fcb22cb7d82425569c3d72b37ddae8a73c1c34a1f1dc977e43271",
+    "bytes": 74013,
+    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "note": "W3b stage meta: nn_pre_causal"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly_early.parquet",
+    "sha256": "51672ab7363507da27b1b871f611f5145edd655f37d9385dac90fb2ec7f08f2a",
+    "bytes": 12406449,
+    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/finratio_monthly.parquet",
+    "sha256": "7a8d096b1aaaf7595f68c05247ceb4e86330d5aad3fe33a4f4cdc0d4a3f0bc30",
+    "bytes": 161579169,
+    "opened_utc": "2026-09-06T13:46:52+00:00",
+    "note": "WRDS wrdsapps_finratio, ROE leg"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.csv",
+    "sha256": "462fbf9499c044f64ea0277b008f724746a5f2b38ed8f669a45c4d1096213c57",
+    "bytes": 242158,
+    "opened_utc": "2026-09-06T13:46:53+00:00",
+    "note": "pinned SPY total return, daily"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/spy_tr_daily_pinned.json",
+    "sha256": "ec70b6613a6ac232669597e483899c4c71244f14765b0b4c06f738ab717c9e2d",
+    "bytes": 663,
+    "opened_utc": "2026-09-06T13:46:53+00:00",
+    "note": "pin provenance"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "error": "MISSING",
+    "opened_utc": "2026-09-06T13:46:53+00:00",
+    "note": "pinned Fama-French daily RF"
+   }
+  ],
+  "git_commit": "cf9b95eb713a",
+  "generated_utc": "2026-09-06T13:47:07+00:00"
+ }
+}
