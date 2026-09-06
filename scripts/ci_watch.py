@@ -80,15 +80,23 @@ def main(argv: list[str] | None = None) -> int:
     deadline = time.time() + 20 * 60
     while True:
         rs = runs(a.n, a.sha)
-        if not rs:
+        if not rs and not (a.wait and a.sha):
             return 2
         for r in rs:
             print(f"{r['head_sha'][:7]}  {r['status']:<12} {str(r['conclusion']):<9} {r['created_at']}  {r['name']}")
-        newest = rs[0]
-        if newest["status"] == "completed" or not a.wait or time.time() > deadline:
+        newest = rs[0] if rs else None
+        # With --sha --wait, a run that has not APPEARED yet is not a verdict:
+        # the first version of this script exited 0 on the previous commit's
+        # run because the pushed commit's run had not been created yet.
+        if newest is not None and newest["status"] == "completed":
             break
-        print("... newest run still in progress; polling again in 90s")
+        if not a.wait or time.time() > deadline:
+            break
+        print("... run not finished (or not created yet); polling again in 90s")
         time.sleep(90)
+    if not rs:
+        print("no run found for that sha within the wait window")
+        return 2
 
     newest = rs[0]
     if newest["status"] == "completed":

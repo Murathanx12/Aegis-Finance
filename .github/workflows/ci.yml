@@ -31,6 +31,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
           pip install ruff pip-audit
+          # Failed tests become GitHub annotations, which the PUBLIC API exposes
+          # (check-runs/{id}/annotations). Job LOGS need a token; annotations
+          # do not. Added 2026-09-07 after four red runs whose failing tests
+          # could not be read from any session without a token.
+          pip install pytest-github-actions-annotate-failures
       - name: Ruff (advisory)
         continue-on-error: true
         run: ruff check backend engine
@@ -51,7 +56,7 @@ jobs:
         # pre-registration cannot spend money against it.
         env:
           AEGIS_IIF1_PREREG_ABSENT_OK: "1"
-        run: python -m pytest backend/tests/ -m "not slow" -q
+        run: python -m pytest backend/tests/ -m "not slow" -q -rf -p pytest_github_actions_annotate_failures
 
   frontend:
     name: frontend (next build)

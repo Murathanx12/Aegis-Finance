@@ -105,6 +105,11 @@ the wrong path. Fetch first, then check, and check the real path.
    else by the commit that added it (`git log --diff-filter=A`), never by the
    filesystem. Same family: `cmd | tail` eats the exit code, so a `&&` chain
    commits a red test.
+8. **Watch CI after every push, from inside the session:**
+   `python -m scripts.ci_watch --wait` (public API, no token). CI was red on
+   eleven consecutive pushes (2026-09-05 → 09-06) and no session saw it,
+   because the only surface was an e-mail. A red CI is a session's first
+   task, not the next session's.
 
 The long-form lessons behind this file (the farm's seven lessons, the feature
 list, layout, test table, retired lab) moved verbatim to
