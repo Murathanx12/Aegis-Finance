@@ -153,6 +153,18 @@ fixture (`tests_smoke.py` never imports it); the news backfill is alive (PID
 rows with a real PIT red-test, the clock-skew guard in `alpha/runner.py`, E1,
 H1, S1 with executed tests, hack4's gate, the joined-panel numbers — verified.
 
-Terminal suite: ALL PASS on 09-08 (my run). **CI on `6c04baf`: RED**, two
-Linux-only tests (`test_r4_event_families` globbed local-only parquet; the
-journal route-authority test); fixed forward in the next commit, verdict below.
+Terminal suite: ALL PASS on 09-08 (my run). **CI on `6c04baf`: RED**, three
+Linux-only causes fixed forward over two commits, **green on `397bd4d`**
+(backend and frontend jobs both success, 2026-09-08):
+
+1. `test_journal_router` walked `app.routes` for the write surface; FastAPI
+   0.141 on CI (dev venv 0.135) wraps an included router in `_IncludedRouter`
+   with no `path`/`methods`, so the test read **zero** routes and would have
+   passed vacuously the other way. It now reads `app.openapi()["paths"]`.
+2. `test_r4_event_families` indexed an empty glob of local-only WRDS parquet;
+   it now asserts the function's own refusal branch on a fresh checkout.
+3. My balance snapshot appended two readings seven seconds apart; the
+   price-derivation reproduction test read every reading on disk and the
+   solver correctly refused the zero-token window. The test now reproduces
+   the receipt's own readings. Reproduced first in a `python:3.12` container
+   on a depth-1 clone, per the 09-06 lesson; the dev venv is not a reproduction.
