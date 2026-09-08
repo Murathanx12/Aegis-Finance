@@ -1,0 +1,1128 @@
+{
+ "job": "D2_reaction_mutations",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "dev_window": "1999..2015-12",
+ "holdout": "2016-2024, printed beside every cell, used to choose NOTHING",
+ "cells": {
+  "base_top_decile": {
+   "DEV": {
+    "label": "base_top_decile|DEV",
+    "beta": 1.4195,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 18468,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 56.88,
+    "share_of_sessions_invested": 0.9979,
+    "terminal_wealth_net": 4.6759,
+    "terminal_wealth_gross": 16.1815,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 9.497,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 27.806,
+    "sharpe_net": 0.465,
+    "max_drawdown_pct": -50.174,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 3.491,
+     "alpha_monthly_pct": 0.2909,
+     "t_nw": 0.832,
+     "p_two_sided": 0.40547905
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 6.279,
+     "t_nw": 1.411
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.048579,
+     "mde_abs": 0.009529,
+     "observed_abs": 0.002909,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 2190
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 6.083,
+      "t": 1.153,
+      "sign": 1,
+      "book_ann_pct": 13.851,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": 0.574,
+      "t": 0.087,
+      "sign": 1,
+      "book_ann_pct": 11.886,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "base_top_decile|HOLDOUT",
+    "beta": 1.4161,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 18468,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 63.95,
+    "share_of_sessions_invested": 1.0,
+    "terminal_wealth_net": 0.8049,
+    "terminal_wealth_gross": 1.6103,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -2.383,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 28.91,
+    "sharpe_net": 0.062,
+    "max_drawdown_pct": -55.459,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -18.899,
+     "alpha_monthly_pct": -1.5749,
+     "t_nw": -2.907,
+     "p_two_sided": 0.00364872
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -12.819,
+     "t_nw": -1.944
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.051127,
+     "mde_abs": 0.013783,
+     "observed_abs": -0.015749,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 83
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -18.899,
+      "t": -2.907,
+      "sign": -1,
+      "book_ann_pct": 1.794,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "z_scored_reaction_top_decile": {
+   "DEV": {
+    "label": "z_scored_reaction_top_decile|DEV",
+    "beta": 1.054,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 21455,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 65.73,
+    "share_of_sessions_invested": 0.9979,
+    "terminal_wealth_net": 6.5524,
+    "terminal_wealth_gross": 22.5831,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 11.692,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 19.506,
+    "sharpe_net": 0.666,
+    "max_drawdown_pct": -42.16,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 5.985,
+     "alpha_monthly_pct": 0.4987,
+     "t_nw": 2.13,
+     "p_two_sided": 0.03315282
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 6.344,
+     "t_nw": 2.29
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.030319,
+     "mde_abs": 0.005947,
+     "observed_abs": 0.004987,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 291
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 11.252,
+      "t": 3.098,
+      "sign": 1,
+      "book_ann_pct": 17.02,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": 0.06,
+      "t": 0.015,
+      "sign": 1,
+      "book_ann_pct": 8.459,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "z_scored_reaction_top_decile|HOLDOUT",
+    "beta": 1.1233,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 21455,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 74.98,
+    "share_of_sessions_invested": 1.0,
+    "terminal_wealth_net": 0.8606,
+    "terminal_wealth_gross": 1.7006,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -1.655,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 21.641,
+    "sharpe_net": 0.031,
+    "max_drawdown_pct": -44.454,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -15.742,
+     "alpha_monthly_pct": -1.3118,
+     "t_nw": -4.349,
+     "p_two_sided": 1.367e-05
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -13.94,
+     "t_nw": -3.869
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.034135,
+     "mde_abs": 0.009202,
+     "observed_abs": -0.013118,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 54
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -15.742,
+      "t": -4.349,
+      "sign": -1,
+      "book_ann_pct": 0.673,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_sue_agrees": {
+   "DEV": {
+    "label": "x_sue_agrees|DEV",
+    "beta": 1.4044,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 15884,
+    "mean_hold_sessions": 20.99,
+    "mean_open_positions": 49.62,
+    "share_of_sessions_invested": 0.9979,
+    "terminal_wealth_net": 4.7605,
+    "terminal_wealth_gross": 16.4769,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 9.613,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 27.684,
+    "sharpe_net": 0.469,
+    "max_drawdown_pct": -57.363,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 3.656,
+     "alpha_monthly_pct": 0.3047,
+     "t_nw": 0.88,
+     "p_two_sided": 0.37883259
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 6.345,
+     "t_nw": 1.445
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.048882,
+     "mde_abs": 0.009588,
+     "observed_abs": 0.003047,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 2020
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 6.056,
+      "t": 1.22,
+      "sign": 1,
+      "book_ann_pct": 13.741,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": 0.957,
+      "t": 0.141,
+      "sign": 1,
+      "book_ann_pct": 12.149,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_sue_agrees|HOLDOUT",
+    "beta": 1.4105,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 15884,
+    "mean_hold_sessions": 20.99,
+    "mean_open_positions": 53.81,
+    "share_of_sessions_invested": 0.9982,
+    "terminal_wealth_net": 1.0253,
+    "terminal_wealth_gross": 2.0489,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": 0.278,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 29.255,
+    "sharpe_net": 0.156,
+    "max_drawdown_pct": -56.327,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -16.034,
+     "alpha_monthly_pct": -1.3362,
+     "t_nw": -2.306,
+     "p_two_sided": 0.02109403
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -10.035,
+     "t_nw": -1.414
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.053057,
+     "mde_abs": 0.014303,
+     "observed_abs": -0.013362,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 124
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -16.034,
+      "t": -2.306,
+      "sign": -1,
+      "book_ann_pct": 4.578,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_price_ge_5": {
+   "DEV": {
+    "label": "x_price_ge_5|DEV",
+    "beta": 1.3488,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 17769,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 55.35,
+    "share_of_sessions_invested": 0.9979,
+    "terminal_wealth_net": 3.321,
+    "terminal_wealth_gross": 11.5165,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 7.316,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 25.834,
+    "sharpe_net": 0.404,
+    "max_drawdown_pct": -54.245,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 1.472,
+     "alpha_monthly_pct": 0.1227,
+     "t_nw": 0.421,
+     "p_two_sided": 0.67379558
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 3.791,
+     "t_nw": 1.01
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.043301,
+     "mde_abs": 0.008493,
+     "observed_abs": 0.001227,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 9776
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 4.499,
+      "t": 0.955,
+      "sign": 1,
+      "book_ann_pct": 11.88,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": -1.932,
+      "t": -0.379,
+      "sign": -1,
+      "book_ann_pct": 8.816,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_price_ge_5|HOLDOUT",
+    "beta": 1.3642,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 17769,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 60.36,
+    "share_of_sessions_invested": 1.0,
+    "terminal_wealth_net": 0.7449,
+    "terminal_wealth_gross": 1.4882,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -3.219,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 28.272,
+    "sharpe_net": 0.026,
+    "max_drawdown_pct": -52.617,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -19.189,
+     "alpha_monthly_pct": -1.5991,
+     "t_nw": -3.047,
+     "p_two_sided": 0.00231209
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -13.867,
+     "t_nw": -2.209
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.051215,
+     "mde_abs": 0.013807,
+     "observed_abs": -0.015991,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 81
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -19.189,
+      "t": -3.047,
+      "sign": -1,
+      "book_ann_pct": 0.747,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_small_half": {
+   "DEV": {
+    "label": "x_small_half|DEV",
+    "beta": 1.185,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 4447,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 12.84,
+    "share_of_sessions_invested": 0.8917,
+    "terminal_wealth_net": 16.9462,
+    "terminal_wealth_gross": 53.7789,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 18.113,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 47.042,
+    "sharpe_net": 0.552,
+    "max_drawdown_pct": -58.626,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 18.097,
+     "alpha_monthly_pct": 1.5081,
+     "t_nw": 1.451,
+     "p_two_sided": 0.14665408
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 19.327,
+     "t_nw": 1.568
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.124881,
+     "mde_abs": 0.024495,
+     "observed_abs": 0.015081,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 539
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 34.951,
+      "t": 1.726,
+      "sign": 1,
+      "book_ann_pct": 41.435,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": -0.864,
+      "t": -0.072,
+      "sign": -1,
+      "book_ann_pct": 8.579,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_small_half|HOLDOUT",
+    "beta": 1.6727,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 4447,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 20.15,
+    "share_of_sessions_invested": 0.9722,
+    "terminal_wealth_net": 0.384,
+    "terminal_wealth_gross": 0.7517,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -10.087,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 40.709,
+    "sharpe_net": -0.051,
+    "max_drawdown_pct": -76.952,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -26.518,
+     "alpha_monthly_pct": -2.2098,
+     "t_nw": -2.422,
+     "p_two_sided": 0.01541636
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -16.688,
+     "t_nw": -1.491
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.087976,
+     "mde_abs": 0.023717,
+     "observed_abs": -0.022098,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 125
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -26.518,
+      "t": -2.422,
+      "sign": -1,
+      "book_ann_pct": -2.075,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_large_half": {
+   "DEV": {
+    "label": "x_large_half|DEV",
+    "beta": 1.425,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 14021,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 45.41,
+    "share_of_sessions_invested": 0.9979,
+    "terminal_wealth_net": 3.8697,
+    "terminal_wealth_gross": 13.2429,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 8.285,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 27.241,
+    "sharpe_net": 0.429,
+    "max_drawdown_pct": -60.01,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 2.206,
+     "alpha_monthly_pct": 0.1839,
+     "t_nw": 0.588,
+     "p_two_sided": 0.55660682
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 5.031,
+     "t_nw": 1.203
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.045481,
+     "mde_abs": 0.008921,
+     "observed_abs": 0.001839,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 4804
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 2.498,
+      "t": 0.543,
+      "sign": 1,
+      "book_ann_pct": 10.296,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": 1.878,
+      "t": 0.308,
+      "sign": 1,
+      "book_ann_pct": 13.234,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_large_half|HOLDOUT",
+    "beta": 1.189,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 14021,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 44.6,
+    "share_of_sessions_invested": 0.9947,
+    "terminal_wealth_net": 0.7305,
+    "terminal_wealth_gross": 1.479,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -3.429,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 25.912,
+    "sharpe_net": -0.004,
+    "max_drawdown_pct": -52.027,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -17.488,
+     "alpha_monthly_pct": -1.4573,
+     "t_nw": -3.556,
+     "p_two_sided": 0.00037622
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -14.726,
+     "t_nw": -2.945
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.050277,
+     "mde_abs": 0.013554,
+     "observed_abs": -0.014573,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 94
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -17.488,
+      "t": -3.556,
+      "sign": -1,
+      "book_ann_pct": -0.113,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_prior_mom_negative": {
+   "DEV": {
+    "label": "x_prior_mom_negative|DEV",
+    "beta": 1.418,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 7872,
+    "mean_hold_sessions": 20.99,
+    "mean_open_positions": 22.7,
+    "share_of_sessions_invested": 0.9836,
+    "terminal_wealth_net": 2.1296,
+    "terminal_wealth_gross": 7.1588,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 4.547,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 33.601,
+    "sharpe_net": 0.293,
+    "max_drawdown_pct": -72.672,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 0.433,
+     "alpha_monthly_pct": 0.0361,
+     "t_nw": 0.069,
+     "p_two_sided": 0.94509721
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 3.212,
+     "t_nw": 0.496
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.073034,
+     "mde_abs": 0.014326,
+     "observed_abs": 0.000361,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 320832
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": -4.656,
+      "t": -0.516,
+      "sign": -1,
+      "book_ann_pct": 3.103,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": 6.159,
+      "t": 0.71,
+      "sign": 1,
+      "book_ann_pct": 17.459,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_prior_mom_negative|HOLDOUT",
+    "beta": 1.4722,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 7872,
+    "mean_hold_sessions": 20.99,
+    "mean_open_positions": 31.22,
+    "share_of_sessions_invested": 0.9863,
+    "terminal_wealth_net": 0.4141,
+    "terminal_wealth_gross": 0.8237,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -9.331,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 35.296,
+    "sharpe_net": -0.102,
+    "max_drawdown_pct": -71.477,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -25.107,
+     "alpha_monthly_pct": -2.0922,
+     "t_nw": -2.634,
+     "p_two_sided": 0.00843743
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -18.206,
+     "t_nw": -1.881
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.075358,
+     "mde_abs": 0.020315,
+     "observed_abs": -0.020922,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 102
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -25.107,
+      "t": -2.634,
+      "sign": -1,
+      "book_ann_pct": -3.592,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_prior_mom_positive": {
+   "DEV": {
+    "label": "x_prior_mom_positive|DEV",
+    "beta": 1.1468,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 10177,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 33.59,
+    "share_of_sessions_invested": 0.9841,
+    "terminal_wealth_net": 4.1312,
+    "terminal_wealth_gross": 14.0175,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 8.703,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 25.711,
+    "sharpe_net": 0.453,
+    "max_drawdown_pct": -47.068,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 4.037,
+     "alpha_monthly_pct": 0.3364,
+     "t_nw": 0.996,
+     "p_two_sided": 0.31934552
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 5.012,
+     "t_nw": 1.236
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.053325,
+     "mde_abs": 0.01046,
+     "observed_abs": 0.003364,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 1973
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 8.549,
+      "t": 1.536,
+      "sign": 1,
+      "book_ann_pct": 14.825,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": -1.04,
+      "t": -0.18,
+      "sign": -1,
+      "book_ann_pct": 8.099,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_prior_mom_positive|HOLDOUT",
+    "beta": 1.1725,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 10177,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 32.57,
+    "share_of_sessions_invested": 0.9788,
+    "terminal_wealth_net": 1.3812,
+    "terminal_wealth_gross": 2.7341,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": 3.653,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 28.221,
+    "sharpe_net": 0.269,
+    "max_drawdown_pct": -48.054,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -9.544,
+     "alpha_monthly_pct": -0.7953,
+     "t_nw": -1.454,
+     "p_two_sided": 0.14588267
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -7.023,
+     "t_nw": -1.075
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.060445,
+     "mde_abs": 0.016295,
+     "observed_abs": -0.007953,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 454
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -9.544,
+      "t": -1.454,
+      "sign": -1,
+      "book_ann_pct": 7.591,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "x_volume_surge_ge_2": {
+   "DEV": {
+    "label": "x_volume_surge_ge_2|DEV",
+    "beta": 1.337,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 13867,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 41.88,
+    "share_of_sessions_invested": 0.997,
+    "terminal_wealth_net": 10.981,
+    "terminal_wealth_gross": 37.121,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 15.137,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 27.783,
+    "sharpe_net": 0.644,
+    "max_drawdown_pct": -43.627,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": 8.992,
+     "alpha_monthly_pct": 0.7493,
+     "t_nw": 1.914,
+     "p_two_sided": 0.05567639
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 11.232,
+     "t_nw": 2.347
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.053006,
+     "mde_abs": 0.010397,
+     "observed_abs": 0.007493,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 393
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 13.213,
+      "t": 2.037,
+      "sign": 1,
+      "book_ann_pct": 20.53,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": 4.243,
+      "t": 0.64,
+      "sign": 1,
+      "book_ann_pct": 14.897,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "x_volume_surge_ge_2|HOLDOUT",
+    "beta": 1.3361,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 13867,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 49.67,
+    "share_of_sessions_invested": 1.0,
+    "terminal_wealth_net": 0.7776,
+    "terminal_wealth_gross": 1.5419,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -2.756,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 27.59,
+    "sharpe_net": 0.038,
+    "max_drawdown_pct": -52.796,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -18.473,
+     "alpha_monthly_pct": -1.5394,
+     "t_nw": -2.958,
+     "p_two_sided": 0.00309449
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -13.562,
+     "t_nw": -2.145
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.0497,
+     "mde_abs": 0.013398,
+     "observed_abs": -0.015394,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 82
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -18.473,
+      "t": -2.958,
+      "sign": -1,
+      "book_ann_pct": 1.051,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  },
+  "top_quintile": {
+   "DEV": {
+    "label": "top_quintile|DEV",
+    "beta": 1.302,
+    "months": 204,
+    "first_month": "1999-01",
+    "last_month": "2015-12",
+    "n_positions": 38538,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 118.35,
+    "share_of_sessions_invested": 0.9979,
+    "terminal_wealth_net": 2.674,
+    "terminal_wealth_gross": 9.314,
+    "terminal_wealth_market_same_months": 2.5076,
+    "cagr_net_pct": 5.956,
+    "cagr_market_pct": 5.557,
+    "ann_vol_pct": 23.862,
+    "sharpe_net": 0.361,
+    "max_drawdown_pct": -45.5,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -0.032,
+     "alpha_monthly_pct": -0.0027,
+     "t_nw": -0.01,
+     "p_two_sided": 0.99193423
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": 1.976,
+     "t_nw": 0.634
+    },
+    "mde_and_power": {
+     "n_blocks": 204,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.036185,
+     "mde_abs": 0.007098,
+     "observed_abs": -2.7e-05,
+     "powered_for_observed_effect": false,
+     "blocks_needed_for_observed_effect": 14436738
+    },
+    "eras": {
+     "1999-2007": {
+      "months": 108,
+      "beta_matched_ann_pct": 4.443,
+      "t": 1.155,
+      "sign": 1,
+      "book_ann_pct": 11.568,
+      "market_ann_pct": 5.472
+     },
+     "2008-2015": {
+      "months": 96,
+      "beta_matched_ann_pct": -5.066,
+      "t": -1.033,
+      "sign": -1,
+      "book_ann_pct": 5.31,
+      "market_ann_pct": 7.969
+     }
+    }
+   },
+   "HOLDOUT_2016_2024_not_used_to_choose": {
+    "label": "top_quintile|HOLDOUT",
+    "beta": 1.288,
+    "months": 108,
+    "first_month": "2016-01",
+    "last_month": "2024-12",
+    "n_positions": 38538,
+    "mean_hold_sessions": 20.98,
+    "mean_open_positions": 134.12,
+    "share_of_sessions_invested": 1.0,
+    "terminal_wealth_net": 0.8584,
+    "terminal_wealth_gross": 1.7151,
+    "terminal_wealth_market_same_months": 3.2938,
+    "cagr_net_pct": -1.682,
+    "cagr_market_pct": 14.162,
+    "ann_vol_pct": 24.545,
+    "sharpe_net": 0.055,
+    "max_drawdown_pct": -45.349,
+    "PRIMARY_beta_matched": {
+     "annualised_pct": -17.475,
+     "alpha_monthly_pct": -1.4562,
+     "t_nw": -3.696,
+     "p_two_sided": 0.00021871
+    },
+    "SECONDARY_raw_market": {
+     "annualised_pct": -13.266,
+     "t_nw": -2.723
+    },
+    "mde_and_power": {
+     "n_blocks": 108,
+     "alpha": 0.05,
+     "power": 0.8,
+     "sd_per_block": 0.037692,
+     "mde_abs": 0.010161,
+     "observed_abs": -0.014562,
+     "powered_for_observed_effect": true,
+     "blocks_needed_for_observed_effect": 53
+    },
+    "eras": {
+     "2016-2024": {
+      "months": 108,
+      "beta_matched_ann_pct": -17.475,
+      "t": -3.696,
+      "sign": -1,
+      "book_ann_pct": 1.347,
+      "market_ann_pct": 14.613
+     }
+    }
+   }
+  }
+ },
+ "family_dev": {
+  "n": 10,
+  "holm": {
+   "z_scored_reaction_top_decile": 0.3315282,
+   "x_volume_surge_ge_2": 0.50108751,
+   "x_small_half": 1.0,
+   "x_prior_mom_positive": 1.0,
+   "x_sue_agrees": 1.0,
+   "base_top_decile": 1.0,
+   "x_large_half": 1.0,
+   "x_price_ge_5": 1.0,
+   "x_prior_mom_negative": 1.0,
+   "top_quintile": 1.0
+  },
+  "bh_fdr": {
+   "n": 10,
+   "q": 0.05,
+   "rejected": [],
+   "adjusted": {
+    "top_quintile": 0.99193423,
+    "x_prior_mom_negative": 0.99193423,
+    "x_price_ge_5": 0.84224447,
+    "x_large_half": 0.7951526,
+    "base_top_decile": 0.67579842,
+    "x_sue_agrees": 0.67579842,
+    "x_prior_mom_positive": 0.67579842,
+    "x_small_half": 0.48884693,
+    "x_volume_surge_ge_2": 0.27838195,
+    "z_scored_reaction_top_decile": 0.27838195
+   }
+  }
+ },
+ "headline": "best DEV variant z_scored_reaction_top_decile: t 2.13 (Holm 0.3315282)",
+ "family_max_p": 1.0,
+ "verdict": "SCREEN on DEV; read the HOLDOUT column once, in the morning, for the top-3 only",
+ "elapsed_s": 38.5,
+ "written_utc": "2026-09-08T14:00:07+00:00",
+ "run": 1,
+ "exit_code": 0
+}
