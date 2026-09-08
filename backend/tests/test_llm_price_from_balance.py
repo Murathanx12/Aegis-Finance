@@ -327,8 +327,19 @@ def test_the_real_ledger_and_balance_still_derive_the_adopted_rates():
     it fails loudly if either input is edited under it."""
     if not der.LEDGER.exists() or not der.BALANCE.exists():
         pytest.skip("real ledger/balance not present in this checkout")
-    wins = der.windows_from_readings(der.read_balance_readings(der.BALANCE),
-                                     der.read_ledger(der.LEDGER))
+    # Reproduce the derivation from the readings the RECEIPT names, not from
+    # whatever the balance file holds today. A later balance probe (a routine
+    # `llm_cost_audit --snapshot`, 2026-09-08) appends readings the receipt
+    # never used; two reads seven seconds apart make a zero-token window and
+    # the solver correctly REFUSES it. The receipt's claim is about ITS
+    # windows, so the reproduction stops at the receipt's last reading.
+    last_used = max(der._dt(r["read_at"])
+                    for r in LLM_PRICE_DERIVATION["balance_readings"])
+    readings = [(t, v) for t, v in der.read_balance_readings(der.BALANCE)
+                if t <= last_used]
+    assert len(readings) == len(LLM_PRICE_DERIVATION["balance_readings"]), (
+        "the balance file no longer holds the readings the receipt was derived from")
+    wins = der.windows_from_readings(readings, der.read_ledger(der.LEDGER))
     got = der.solve_two_rate(wins)
     m = LLM_PRICE_DERIVATION["measured_usd_per_mtok"]
     assert got["in_usd_per_mtok"] == pytest.approx(m["in"], rel=1e-4)
