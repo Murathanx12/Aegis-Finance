@@ -187,9 +187,16 @@ class TestAsOfGateOverHttp:
 
 class TestWriteAuthority:
     def test_only_three_routes_write(self):
-        writes = sorted({r.path for r in app.routes
-                         if getattr(r, "path", "").startswith("/api/journal")
-                         and getattr(r, "methods", set()) - {"GET", "HEAD", "OPTIONS"}})
+        # Read the write surface from the OpenAPI schema, not from `app.routes`:
+        # FastAPI >= 0.141 (CI, 2026-09-08) wraps an included router in an
+        # `_IncludedRouter` with no `.path`/`.methods`, so walking `app.routes`
+        # found ZERO journal routes on Linux while the dev venv (0.135) found
+        # three -- a green suite that was reading nothing. The schema is the
+        # version-independent statement of which paths accept which verbs.
+        paths = app.openapi()["paths"]
+        writes = sorted(p for p, ops in paths.items()
+                        if p.startswith("/api/journal")
+                        and set(ops) - {"get", "head", "options"})
         assert writes == ["/api/journal/resolve", "/api/journal/terminal-state/sync",
                           "/api/journal/thesis"]
 

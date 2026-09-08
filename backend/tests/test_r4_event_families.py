@@ -186,5 +186,13 @@ def test_price_panel_bound_is_derived_from_the_files_not_asserted():
     b = R.price_panel_bound()
     years = sorted(int(p.stem.split("_")[-1])
                    for p in R.WRDS.glob("crsp_dsf_*.parquet"))
-    assert b["crsp_daily_years_on_disk"] == [years[0], years[-1]]
     assert b["n_year_files"] == len(years)
+    if not years:
+        # A fresh checkout (CI) has no local WRDS parquet. The bound must then
+        # say CANNOT DETERMINE (None), never a year it did not read -- the
+        # 2026-09-06 lesson: a gate that reads local-only files is a gate on
+        # the checkout, so it derives or refuses.
+        assert b["crsp_daily_years_on_disk"] is None
+        assert "?" in b["note"]
+        return
+    assert b["crsp_daily_years_on_disk"] == [years[0], years[-1]]
