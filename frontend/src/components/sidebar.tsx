@@ -26,6 +26,7 @@ import {
   Activity,
   Landmark,
   ShieldCheck,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -62,6 +63,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/stock", label: "Stock Analysis", icon: BarChart3, code: "GP" },
       { href: "/screener", label: "Screener", icon: ListFilter, code: "EQS" },
+      { href: "/candidates", label: "Candidates", icon: ClipboardList, code: "CAND" },
+      { href: "/journal", label: "Decision Journal", icon: NotebookPen, code: "JRNL" },
       { href: "/watchlist", label: "Watchlist", icon: Star, code: "WATCH" },
     ],
   },

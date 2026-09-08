@@ -233,7 +233,11 @@ def grade_all(df: pd.DataFrame, preds: pd.DataFrame, horizon: int,
         row = E.grade(sub, col, horizon, is_calibrated=calibrated,
                       with_books=full, k=BOOK_K)
         if full:
-            row["by_era"] = E.grade_by_era(sub, col, horizon)
+            # X6: the grid is DERIVED from this slice, never left to the
+            # module default -- bare, a 1999-2024 panel put 65% of its rows in
+            # no bucket and `grade_by_era` returned a refusal and no table.
+            row["by_era"] = E.grade_by_era(sub, col, horizon,
+                                           eras=E.eras_covering(sub))
             row["by_band"] = E.grade_by_band(sub, col, horizon)
         out[col] = row
     return out

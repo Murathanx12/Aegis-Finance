@@ -755,6 +755,39 @@ def long_eras() -> dict[str, tuple[int, int]]:
     return {str(name): (int(lo), int(hi)) for name, lo, hi in _LONG_ERAS}
 
 
+def eras_covering(df: pd.DataFrame, date_col: str = "entry_date"
+                  ) -> dict[str, tuple[int, int]]:
+    """The narrowest CANONICAL era grid that actually describes `df`.
+
+    X6 (2026-09-07). `grade_by_era` DERIVES or REFUSES, which was the right fix
+    -- and it left every caller that had passed nothing sitting on a refusal.
+    `scripts/learner_run.py` and `scripts/learner_v2_run.py` both called it bare,
+    so on the 1999-2024 long panel they wrote `{"_coverage": REFUSED...}` into a
+    receipt and no era table at all. A guard that turns a silent wrong answer
+    into a silent absent answer has moved the problem, not solved it.
+
+    So the grid is DERIVED FROM THE FRAME, from the two grids this repo owns and
+    never from a third one invented at the call site:
+
+      * `ERAS` (2016-2018 / 2019-2021 / 2022-2024) when the frame fits inside
+        it -- so every sealed 2016-2024 receipt reproduces byte for byte;
+      * `long_eras()` (1999-2007 / 2008-2015 / 2016-2024, derived from
+        `learner.long_panel.ERAS`) otherwise.
+
+    Neither covering the frame is a REFUSAL, not a third grid: a panel starting
+    before 1999 needs a boundary somebody has thought about, and the one thing
+    a helper must not do is pick one quietly.
+    """
+    for grid in (ERAS, long_eras()):
+        if not era_coverage(df, grid, date_col)["verdict"].startswith("REFUSED"):
+            return dict(grid)
+    cov = era_coverage(df, long_eras(), date_col)
+    raise SystemExit(
+        "no canonical era grid covers this frame -- "
+        f"{cov['verdict']} A new grid belongs in learner.long_panel.ERAS, "
+        "where one definition is shared, not in the caller.")
+
+
 def era_coverage(df: pd.DataFrame, eras: dict[str, tuple[int, int]] | None = None,
                  date_col: str = "entry_date") -> dict:
     """How much of `df` the era grid actually describes -- derived, then judged.
@@ -880,7 +913,7 @@ __all__ = ["COST_BPS_PER_SIDE", "TRADABLE_DOLLAR_VOL", "ERAS", "rank_ic", "decil
            "calibration_slope", "top_minus_bottom", "book", "grade", "grade_by_era",
            "grade_by_band",
            # era coverage, additive: `ERAS` and every bucket number are unchanged.
-           "ERA_COVERAGE_FLOOR", "era_coverage", "long_eras",
+           "ERA_COVERAGE_FLOOR", "era_coverage", "long_eras", "eras_covering",
            # v2, additive: v1's functions above are untouched.
            "max_drawdown", "risk_stats", "paired_difference", "overlapping_book",
            "hac_t", "block_t", "overlap_corrected", "monthly_ic_series"]

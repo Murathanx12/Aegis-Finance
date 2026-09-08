@@ -1,0 +1,16 @@
+{
+ "schema_version": 1,
+ "source": "gdelt_v2",
+ "cursors": {
+  "tail": {
+   "cursor": "20260907104500",
+   "updated_at": "2026-09-07T10:37:21+00:00",
+   "n_docs_total": 4
+  },
+  "window:20260907040000-20260907080000": {
+   "cursor": "20260907080000",
+   "updated_at": "2026-09-07T10:39:06+00:00",
+   "n_docs_total": 55
+  }
+ }
+}

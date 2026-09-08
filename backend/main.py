@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal
 
 logging.basicConfig(
     level=logging.INFO,
@@ -525,6 +525,19 @@ app.include_router(investment_committee.router)
 app.include_router(why_moved.router)
 app.include_router(risk_layer.router)
 app.include_router(arena.router)
+# H1 (Mode A): the candidate surface. READ-ONLY — serves the potential
+# universe, the tracker watchlist, the analyst band beside our own estimate
+# and the allocator's artefacts from local files, every response stamped
+# with its vintage. `backend/tests/test_candidates_router.py` proves the
+# router has no write path.
+app.include_router(candidates.router)
+# H2/H4/T2/H5 (Mode A): the human loop. The conviction journal becomes a
+# gradeable THESIS, every decision -- human AND machine -- is resolved at its
+# OWN horizon against four counterfactuals, and the execution repo's seals,
+# fills, refusals, autopsies and learning reports become visible through a
+# read-only mirror. Writes only append-only JSONL under backend/data/human_loop;
+# places nothing, seals nothing.
+app.include_router(journal.router)
 
 
 @app.get("/")

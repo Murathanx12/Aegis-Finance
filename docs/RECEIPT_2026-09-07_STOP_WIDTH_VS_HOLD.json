@@ -1,0 +1,381 @@
+{
+ "receipt": "STOP_WIDTH_VS_HOLD",
+ "day": "2026-09-07",
+ "question": "Why do the six paper books hold nothing, when `exits.evaluate` has honoured `min_normal_hold_sessions` since 2026-09-05?",
+ "answer": "Because the minimum hold was never the binding constraint. `HARD_RISK_LIMIT` is always legal and is checked ABOVE the hold, and the stop widths were profile constants unrelated to the volatility of the names the books were actually buying. On hack6 the stop sat at 0.98 daily standard deviations of its own holdings, so 56.3% of entries were stopped out before session 10 of a 21-session thesis.",
+ "method": "For every name in the 2026-09-07 sealed book, daily Alpaca closes (adjustment=all, SIP feed) from 2024-01-01. For every entry point the running return from entry is walked forward and the first session at which it touches -stop is recorded. P(stop before hold) is the share of entry points whose first touch falls at or before the contract's minimum hold; P(survive horizon) is the share never touched inside the horizon. This measures the EXIT RULE against the book's own names. It is not a strategy backtest and carries no return claim.",
+ "as_measured_before_the_change": {
+  "hack3": {
+   "stop": 0.08,
+   "min_hold": 10,
+   "horizon": 21,
+   "rows": [
+    {
+     "sym": "IVA",
+     "daily_sd": 0.038115596804392415,
+     "p_stop_before_hold": 0.40878378378378377,
+     "p_survive_horizon": 0.4831081081081081
+    },
+    {
+     "sym": "ARDX",
+     "daily_sd": 0.03087005779920846,
+     "p_stop_before_hold": 0.31756756756756754,
+     "p_survive_horizon": 0.5405405405405406
+    },
+    {
+     "sym": "PRVA",
+     "daily_sd": 0.01909316795238939,
+     "p_stop_before_hold": 0.17905405405405406,
+     "p_survive_horizon": 0.625
+    },
+    {
+     "sym": "INVA",
+     "daily_sd": 0.014829842935978178,
+     "p_stop_before_hold": 0.060810810810810814,
+     "p_survive_horizon": 0.7804054054054054
+    },
+    {
+     "sym": "TNXP",
+     "daily_sd": 0.04825380247747803,
+     "p_stop_before_hold": 0.5878378378378378,
+     "p_survive_horizon": 0.23648648648648649
+    },
+    {
+     "sym": "ASPI",
+     "daily_sd": 0.0647167608556495,
+     "p_stop_before_hold": 0.5844594594594594,
+     "p_survive_horizon": 0.28716216216216217
+    },
+    {
+     "sym": "DAKT",
+     "daily_sd": 0.022100548985941108,
+     "p_stop_before_hold": 0.14189189189189189,
+     "p_survive_horizon": 0.7601351351351351
+    },
+    {
+     "sym": "LENZ",
+     "daily_sd": 0.04765448997486513,
+     "p_stop_before_hold": 0.5472972972972973,
+     "p_survive_horizon": 0.27364864864864863
+    },
+    {
+     "sym": "ANIP",
+     "daily_sd": 0.01893602432265689,
+     "p_stop_before_hold": 0.07094594594594594,
+     "p_survive_horizon": 0.7466216216216216
+    },
+    {
+     "sym": "RRX",
+     "daily_sd": 0.035940906463786296,
+     "p_stop_before_hold": 0.19932432432432431,
+     "p_survive_horizon": 0.6418918918918919
+    }
+   ]
+  },
+  "hack6": {
+   "stop": 0.03,
+   "min_hold": 10,
+   "horizon": 21,
+   "rows": [
+    {
+     "sym": "ARDX",
+     "daily_sd": 0.03087005779920846,
+     "p_stop_before_hold": 0.6148648648648649,
+     "p_survive_horizon": 0.28716216216216217
+    },
+    {
+     "sym": "INVA",
+     "daily_sd": 0.014829842935978178,
+     "p_stop_before_hold": 0.5135135135135135,
+     "p_survive_horizon": 0.3344594594594595
+    },
+    {
+     "sym": "PRVA",
+     "daily_sd": 0.01909316795238939,
+     "p_stop_before_hold": 0.5371621621621622,
+     "p_survive_horizon": 0.3108108108108108
+    },
+    {
+     "sym": "MAZE",
+     "daily_sd": 0.04184316374950387,
+     "p_stop_before_hold": 0.5371621621621622,
+     "p_survive_horizon": 0.36824324324324326
+    },
+    {
+     "sym": "GPCR",
+     "daily_sd": 0.032750401894339636,
+     "p_stop_before_hold": 0.6554054054054054,
+     "p_survive_horizon": 0.2533783783783784
+    },
+    {
+     "sym": "NAMS",
+     "daily_sd": 0.034411764793164795,
+     "p_stop_before_hold": 0.5878378378378378,
+     "p_survive_horizon": 0.28378378378378377
+    },
+    {
+     "sym": "TREE",
+     "daily_sd": 0.039467129297742515,
+     "p_stop_before_hold": 0.5709459459459459,
+     "p_survive_horizon": 0.30067567567567566
+    },
+    {
+     "sym": "IMCR",
+     "daily_sd": 0.02090801966736194,
+     "p_stop_before_hold": 0.5641891891891891,
+     "p_survive_horizon": 0.30067567567567566
+    },
+    {
+     "sym": "AMSC",
+     "daily_sd": 0.047033548546400974,
+     "p_stop_before_hold": 0.6351351351351351,
+     "p_survive_horizon": 0.27364864864864863
+    },
+    {
+     "sym": "BUR",
+     "daily_sd": 0.05465601276177598,
+     "p_stop_before_hold": 0.6925675675675675,
+     "p_survive_horizon": 0.16891891891891891
+    },
+    {
+     "sym": "CALX",
+     "daily_sd": 0.02519798748207789,
+     "p_stop_before_hold": 0.5,
+     "p_survive_horizon": 0.2972972972972973
+    },
+    {
+     "sym": "ATR",
+     "daily_sd": 0.015375742157438182,
+     "p_stop_before_hold": 0.3918918918918919,
+     "p_survive_horizon": 0.44256756756756754
+    },
+    {
+     "sym": "EVLV",
+     "daily_sd": 0.03095103945966158,
+     "p_stop_before_hold": 0.5945945945945946,
+     "p_survive_horizon": 0.28716216216216217
+    },
+    {
+     "sym": "ULS",
+     "daily_sd": 0.02762400149548666,
+     "p_stop_before_hold": 0.4155405405405405,
+     "p_survive_horizon": 0.40878378378378377
+    },
+    {
+     "sym": "GRAB",
+     "daily_sd": 0.02217926401218638,
+     "p_stop_before_hold": 0.6385135135135135,
+     "p_survive_horizon": 0.21283783783783783
+    }
+   ]
+  }
+ },
+ "frontier_stop_vs_notional": {
+  "hack3": {
+   "n": 10,
+   "notional_now": 0.083,
+   "stop_now": 0.08,
+   "horizon": 63,
+   "min_hold": 21,
+   "mean_daily_sd": 0.03405111985723454,
+   "grid": [
+    {
+     "stop": 0.03,
+     "p_stop_before_hold": 0.7083881578947369,
+     "p_survive_horizon": 0.17894736842105263,
+     "notional_each_to_hold_worst_case": 0.083,
+     "gross": 0.8300000000000001,
+     "worst_case_frac": 0.024900000000000002
+    },
+    {
+     "stop": 0.05,
+     "p_stop_before_hold": 0.5917763157894737,
+     "p_survive_horizon": 0.25296052631578947,
+     "notional_each_to_hold_worst_case": 0.083,
+     "gross": 0.8300000000000001,
+     "worst_case_frac": 0.04150000000000001
+    },
+    {
+     "stop": 0.08,
+     "p_stop_before_hold": 0.43486842105263157,
+     "p_survive_horizon": 0.35328947368421054,
+     "notional_each_to_hold_worst_case": 0.08299999999999999,
+     "gross": 0.8299999999999998,
+     "worst_case_frac": 0.06639999999999999
+    },
+    {
+     "stop": 0.1,
+     "p_stop_before_hold": 0.3595394736842105,
+     "p_survive_horizon": 0.42105263157894735,
+     "notional_each_to_hold_worst_case": 0.0664,
+     "gross": 0.664,
+     "worst_case_frac": 0.0664
+    },
+    {
+     "stop": 0.12,
+     "p_stop_before_hold": 0.29720394736842104,
+     "p_survive_horizon": 0.4875,
+     "notional_each_to_hold_worst_case": 0.05533333333333334,
+     "gross": 0.5533333333333333,
+     "worst_case_frac": 0.0664
+    },
+    {
+     "stop": 0.15,
+     "p_stop_before_hold": 0.2268092105263158,
+     "p_survive_horizon": 0.569078947368421,
+     "notional_each_to_hold_worst_case": 0.04426666666666667,
+     "gross": 0.4426666666666667,
+     "worst_case_frac": 0.0664
+    },
+    {
+     "stop": 0.2,
+     "p_stop_before_hold": 0.15164473684210525,
+     "p_survive_horizon": 0.6677631578947368,
+     "notional_each_to_hold_worst_case": 0.0332,
+     "gross": 0.332,
+     "worst_case_frac": 0.0664
+    }
+   ]
+  },
+  "hack6": {
+   "n": 15,
+   "notional_now": 0.06,
+   "stop_now": 0.03,
+   "horizon": 42,
+   "min_hold": 21,
+   "mean_daily_sd": 0.03047940960031443,
+   "grid": [
+    {
+     "stop": 0.03,
+     "p_stop_before_hold": 0.683210405934309,
+     "p_survive_horizon": 0.23626825209489197,
+     "notional_each_to_hold_worst_case": 0.06,
+     "gross": 0.8999999999999999,
+     "worst_case_frac": 0.026999999999999996
+    },
+    {
+     "stop": 0.05,
+     "p_stop_before_hold": 0.5664377850867621,
+     "p_survive_horizon": 0.3167344480545193,
+     "notional_each_to_hold_worst_case": 0.036,
+     "gross": 0.5399999999999999,
+     "worst_case_frac": 0.026999999999999996
+    },
+    {
+     "stop": 0.08,
+     "p_stop_before_hold": 0.42027213426307036,
+     "p_survive_horizon": 0.43322479328944796,
+     "notional_each_to_hold_worst_case": 0.0225,
+     "gross": 0.33749999999999997,
+     "worst_case_frac": 0.026999999999999996
+    },
+    {
+     "stop": 0.1,
+     "p_stop_before_hold": 0.3366353747319593,
+     "p_survive_horizon": 0.5119278665557201,
+     "notional_each_to_hold_worst_case": 0.018,
+     "gross": 0.26999999999999996,
+     "worst_case_frac": 0.026999999999999996
+    },
+    {
+     "stop": 0.12,
+     "p_stop_before_hold": 0.26046769340336734,
+     "p_survive_horizon": 0.5874980490835408,
+     "notional_each_to_hold_worst_case": 0.015,
+     "gross": 0.22499999999999998,
+     "worst_case_frac": 0.026999999999999996
+    },
+    {
+     "stop": 0.15,
+     "p_stop_before_hold": 0.18354737367492527,
+     "p_survive_horizon": 0.6754973954494012,
+     "notional_each_to_hold_worst_case": 0.011999999999999999,
+     "gross": 0.17999999999999997,
+     "worst_case_frac": 0.026999999999999993
+    },
+    {
+     "stop": 0.2,
+     "p_stop_before_hold": 0.09996565740896993,
+     "p_survive_horizon": 0.7898941682669491,
+     "notional_each_to_hold_worst_case": 0.009,
+     "gross": 0.13499999999999998,
+     "worst_case_frac": 0.026999999999999996
+    }
+   ]
+  }
+ },
+ "declared_after_the_change": {
+  "hack1": {
+   "book": "hack1",
+   "n": 1,
+   "notional_each": 0.95,
+   "gross_over_equity": 0.95,
+   "stop_frac": 0.35,
+   "worst_case_frac": 0.3325,
+   "min_normal_hold_sessions": 21,
+   "expected_horizon_sessions": 126
+  },
+  "hack2": {
+   "book": "hack2",
+   "n": 8,
+   "notional_each": 0.06,
+   "gross_over_equity": 0.48,
+   "stop_frac": 0.08,
+   "worst_case_frac": 0.0384,
+   "min_normal_hold_sessions": 2,
+   "expected_horizon_sessions": 5
+  },
+  "hack3": {
+   "book": "hack3",
+   "n": 10,
+   "notional_each": 0.055,
+   "gross_over_equity": 0.55,
+   "stop_frac": 0.12,
+   "worst_case_frac": 0.066,
+   "min_normal_hold_sessions": 21,
+   "expected_horizon_sessions": 63
+  },
+  "hack4": {
+   "book": "hack4",
+   "n": 5,
+   "notional_each": 0.08,
+   "gross_over_equity": 0.4,
+   "stop_frac": 0.15,
+   "worst_case_frac": 0.06,
+   "min_normal_hold_sessions": 42,
+   "expected_horizon_sessions": 126
+  },
+  "hack5": {
+   "book": "hack5",
+   "n": 6,
+   "notional_each": 0.03,
+   "gross_over_equity": 0.18,
+   "stop_frac": 0.5,
+   "worst_case_frac": 0.09,
+   "min_normal_hold_sessions": 2,
+   "expected_horizon_sessions": 21,
+   "absolute_bound_frac": 0.18,
+   "bound_note": "long premium: the stop charges 9.00%, but the true bound is the whole premium, 18.00% of equity"
+  },
+  "hack6": {
+   "book": "hack6",
+   "n": 15,
+   "notional_each": 0.04,
+   "gross_over_equity": 0.6,
+   "stop_frac": 0.1,
+   "worst_case_frac": 0.06,
+   "min_normal_hold_sessions": 21,
+   "expected_horizon_sessions": 42
+  }
+ },
+ "worst_case_rule": "CLAUDE.md rule 4: n x notional% x stop%, and gross = sum|notional| / equity",
+ "caveats": [
+  "Path dependence is measured on CLOSES only; an intraday touch of the stop is not observed here, so P(stop before hold) is a LOWER bound on how often the stop fires.",
+  "The sample is roughly 20 months of one regime. It bounds nothing about 2008.",
+  "hack4's sealed book was EMPTY on 2026-09-07 (requires_catalyst=true, rank_distinct_values=0), so its row is DECLARED, not measured on its own names.",
+  "hack5 is a long-premium book: the stop charge and the true bound are different numbers and both are reported.",
+  "This receipt is about the EXIT RULE's ability to let a thesis run. It says nothing about whether any of these books has an edge, and no edge is claimed here."
+ ],
+ "licence": "PRODUCT_EXPERIMENT",
+ "written_utc": "2026-09-07T10:31:47.300735+00:00"
+}

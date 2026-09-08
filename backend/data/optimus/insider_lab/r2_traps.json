@@ -1,0 +1,362 @@
+{
+  "stage": "traps",
+  "traps": {
+    "where_the_events_live": {
+      "any_buy": {
+        "n_cells": 73213,
+        "size_grp_share": {
+          "micro": 0.4818,
+          "small": 0.2064,
+          "nano": 0.1513,
+          "large": 0.1033,
+          "mega": 0.0572
+        },
+        "median_me_musd": 265.83984375,
+        "median_dolvol_126d_usd": 1428154.25,
+        "share_above_3m_per_day": 0.3904361247319465,
+        "share_above_20m_per_day": 0.18540423148894322,
+        "share_above_100m_per_day": 0.0683485173398167
+      },
+      "opportunistic_buy": {
+        "n_cells": 16015,
+        "size_grp_share": {
+          "micro": 0.5366,
+          "small": 0.1794,
+          "nano": 0.1751,
+          "large": 0.0699,
+          "mega": 0.039
+        },
+        "median_me_musd": 194.7691192626953,
+        "median_dolvol_126d_usd": 646643.625,
+        "share_above_3m_per_day": 0.28916640649391195,
+        "share_above_20m_per_day": 0.12494536372151108,
+        "share_above_100m_per_day": 0.04121136434592569
+      },
+      "routine_buy": {
+        "n_cells": 5063,
+        "size_grp_share": {
+          "micro": 0.5566,
+          "small": 0.2088,
+          "nano": 0.1153,
+          "large": 0.0723,
+          "mega": 0.047
+        },
+        "median_me_musd": 278.2027282714844,
+        "median_dolvol_126d_usd": 665902.5625,
+        "share_above_3m_per_day": 0.261307525182698,
+        "share_above_20m_per_day": 0.1269998024886431,
+        "share_above_100m_per_day": 0.039699782737507405
+      },
+      "cluster_buy": {
+        "n_cells": 12155,
+        "size_grp_share": {
+          "micro": 0.5626,
+          "small": 0.2009,
+          "nano": 0.1325,
+          "large": 0.0737,
+          "mega": 0.0303
+        },
+        "median_me_musd": 233.92239379882812,
+        "median_dolvol_126d_usd": 1031134.75,
+        "share_above_3m_per_day": 0.30736322501028385,
+        "share_above_20m_per_day": 0.1304812834224599,
+        "share_above_100m_per_day": 0.03430686960098725
+      },
+      "any_sell": {
+        "n_cells": 128044,
+        "size_grp_share": {
+          "small": 0.2919,
+          "large": 0.2629,
+          "micro": 0.2361,
+          "mega": 0.1737,
+          "nano": 0.0354
+        },
+        "median_me_musd": 1839.6788330078125,
+        "median_dolvol_126d_usd": 15488376.0,
+        "share_above_3m_per_day": 0.7405891724719628,
+        "share_above_20m_per_day": 0.4513838992846209,
+        "share_above_100m_per_day": 0.19118428040361127
+      },
+      "universe": {
+        "n_cells": 769293,
+        "size_grp_share": {
+          "micro": 0.3674,
+          "small": 0.2416,
+          "large": 0.1654,
+          "nano": 0.1331,
+          "mega": 0.0925
+        },
+        "median_me_musd": 534.8692626953125,
+        "median_dolvol_126d_usd": 3994408.25,
+        "share_above_3m_per_day": 0.5288830133642188,
+        "share_above_20m_per_day": 0.2811906516762794,
+        "share_above_100m_per_day": 0.10564375342034829
+      }
+    },
+    "institutional_size_ladder": {
+      "none": {
+        "opportunistic_buy": {
+          "capm_beta": 0.9793731117609019,
+          "capm_alpha_bp_per_month": -40.12435995969813,
+          "capm_alpha_t_nw6": -1.1994136585286297,
+          "mean_excess_bp_per_month": 79.12726702262277,
+          "t_raw": 1.8847754981258462,
+          "n_months": 192
+        },
+        "routine_buy": {
+          "capm_beta": 0.6811266059730643,
+          "capm_alpha_bp_per_month": -16.10190122518392,
+          "capm_alpha_t_nw6": -0.6587841484096345,
+          "mean_excess_bp_per_month": 66.83426984979246,
+          "t_raw": 1.9414771056339413,
+          "n_months": 192
+        },
+        "any_buy": {
+          "capm_beta": 1.0949319567423703,
+          "capm_alpha_bp_per_month": -14.334411150146902,
+          "capm_alpha_t_nw6": -0.951470379559891,
+          "mean_excess_bp_per_month": 118.98803328749557,
+          "t_raw": 3.1589548547771584,
+          "n_months": 192
+        },
+        "any_sell": {
+          "capm_beta": 0.9586923563004436,
+          "capm_alpha_bp_per_month": 11.14671590939481,
+          "capm_alpha_t_nw6": 1.401078440262278,
+          "mean_excess_bp_per_month": 127.8801874448616,
+          "t_raw": 4.011825990902914,
+          "n_months": 192
+        },
+        "opp_minus_routine": {
+          "capm_beta": 0.2982465057878377,
+          "capm_alpha_bp_per_month": -24.022458734514206,
+          "capm_alpha_t_nw6": -0.7314909171096093,
+          "mean_excess_bp_per_month": 12.292997172830315,
+          "t_raw": 0.3381495815424461,
+          "n_months": 192
+        },
+        "universe_cells": 769293
+      },
+      "3m_house_floor": {
+        "opportunistic_buy": {
+          "capm_beta": 0.9520286539759646,
+          "capm_alpha_bp_per_month": -47.842138275381586,
+          "capm_alpha_t_nw6": -1.2981421741633032,
+          "mean_excess_bp_per_month": 68.07993938539407,
+          "t_raw": 1.5936328957100514,
+          "n_months": 192
+        },
+        "routine_buy": {
+          "capm_beta": 0.692520378458129,
+          "capm_alpha_bp_per_month": -4.973253674654026,
+          "capm_alpha_t_nw6": -0.17079855012011852,
+          "mean_excess_bp_per_month": 79.13569121550701,
+          "t_raw": 2.0701196694751913,
+          "n_months": 154
+        },
+        "any_buy": {
+          "capm_beta": 1.083815551448976,
+          "capm_alpha_bp_per_month": -14.371286357240852,
+          "capm_alpha_t_nw6": -0.9460869819985667,
+          "mean_excess_bp_per_month": 117.59758873944976,
+          "t_raw": 3.1445548169920694,
+          "n_months": 192
+        },
+        "any_sell": {
+          "capm_beta": 0.9547551577429321,
+          "capm_alpha_bp_per_month": 11.487975229442744,
+          "capm_alpha_t_nw6": 1.4267103561712131,
+          "mean_excess_bp_per_month": 127.74204077744928,
+          "t_raw": 4.017458386202967,
+          "n_months": 192
+        },
+        "opp_minus_routine": {
+          "capm_beta": 0.2700941432975109,
+          "capm_alpha_bp_per_month": -51.62683363850835,
+          "capm_alpha_t_nw6": -1.2688198287969907,
+          "mean_excess_bp_per_month": -18.822985375811896,
+          "t_raw": -0.4450879815758679,
+          "n_months": 154
+        },
+        "universe_cells": 381353
+      },
+      "20m": {
+        "opportunistic_buy": {
+          "capm_beta": 0.9402038664188377,
+          "capm_alpha_bp_per_month": -39.57227035461502,
+          "capm_alpha_t_nw6": -0.983332772433451,
+          "mean_excess_bp_per_month": 82.68701559518897,
+          "t_raw": 1.7621368986488333,
+          "n_months": 166
+        },
+        "routine_buy": {
+          "capm_beta": 0.5774267939392671,
+          "capm_alpha_bp_per_month": -131.78322462234104,
+          "capm_alpha_t_nw6": -3.281677671511242,
+          "mean_excess_bp_per_month": -73.61205914154513,
+          "t_raw": -1.1330586345902087,
+          "n_months": 32
+        },
+        "any_buy": {
+          "capm_beta": 1.0773731479591764,
+          "capm_alpha_bp_per_month": -12.301904434412547,
+          "capm_alpha_t_nw6": -0.7959721734916085,
+          "mean_excess_bp_per_month": 118.88252284702824,
+          "t_raw": 3.1868626932703914,
+          "n_months": 192
+        },
+        "any_sell": {
+          "capm_beta": 0.9494221558103453,
+          "capm_alpha_bp_per_month": 12.433593645352124,
+          "capm_alpha_t_nw6": 1.4784740663095883,
+          "mean_excess_bp_per_month": 128.0382956877409,
+          "t_raw": 4.037579092241936,
+          "n_months": 192
+        },
+        "opp_minus_routine": {
+          "capm_beta": 0.1759433285158714,
+          "capm_alpha_bp_per_month": 73.63434702241,
+          "capm_alpha_t_nw6": 1.3997548703023668,
+          "mean_excess_bp_per_month": 88.13492306878314,
+          "t_raw": 1.2091287139635885,
+          "n_months": 29
+        },
+        "universe_cells": 212424
+      },
+      "100m": {
+        "opportunistic_buy": {
+          "capm_beta": 1.0310667651859704,
+          "capm_alpha_bp_per_month": -50.736106177811244,
+          "capm_alpha_t_nw6": -0.7901496190429936,
+          "mean_excess_bp_per_month": 79.85104882035245,
+          "t_raw": 0.7647726566412374,
+          "n_months": 48
+        },
+        "any_buy": {
+          "capm_beta": 1.0559163796228175,
+          "capm_alpha_bp_per_month": -7.0420662743579685,
+          "capm_alpha_t_nw6": -0.4280704475487977,
+          "mean_excess_bp_per_month": 121.52971573107274,
+          "t_raw": 3.260337105407291,
+          "n_months": 192
+        },
+        "any_sell": {
+          "capm_beta": 0.9347649412308231,
+          "capm_alpha_bp_per_month": 13.659059303045861,
+          "capm_alpha_t_nw6": 1.355624455145196,
+          "mean_excess_bp_per_month": 127.47905165242058,
+          "t_raw": 4.032506013411909,
+          "n_months": 192
+        },
+        "universe_cells": 80796
+      }
+    },
+    "pead": {
+      "share_of_universe_near_earnings": 0.6319204776333595,
+      "share_of_buy_cells_near_earnings": 0.7850381762801688,
+      "share_of_sell_cells_near_earnings": 0.7826762675330355,
+      "splits": {
+        "near_earnings": {
+          "opportunistic_buy": {
+            "capm_beta": 1.0170591529310327,
+            "capm_alpha_bp_per_month": -83.73419993672171,
+            "capm_alpha_t_nw6": -2.412205873450088,
+            "mean_excess_bp_per_month": 40.10620089500619,
+            "t_raw": 0.8858252766608938,
+            "n_months": 192
+          },
+          "routine_buy": {
+            "capm_beta": 0.8129097463871882,
+            "capm_alpha_bp_per_month": -5.706341975332006,
+            "capm_alpha_t_nw6": -0.2142402566110179,
+            "mean_excess_bp_per_month": 91.11297450833341,
+            "t_raw": 2.1693300650340177,
+            "n_months": 189
+          },
+          "any_buy": {
+            "capm_beta": 1.0932310606960014,
+            "capm_alpha_bp_per_month": -24.329596205178095,
+            "capm_alpha_t_nw6": -1.5803342384693124,
+            "mean_excess_bp_per_month": 108.78574164721972,
+            "t_raw": 2.8383102688207207,
+            "n_months": 192
+          },
+          "opp_minus_routine": {
+            "capm_beta": 0.20902935807533884,
+            "capm_alpha_bp_per_month": -76.82781797782941,
+            "capm_alpha_t_nw6": -1.894872616701117,
+            "t_raw": -1.2261731454176816,
+            "n_months": 189
+          }
+        },
+        "away_from_earnings": {
+          "opportunistic_buy": {
+            "capm_beta": 0.8366231889939771,
+            "capm_alpha_bp_per_month": 3.519503903382173,
+            "capm_alpha_t_nw6": 0.07582890252991147,
+            "mean_excess_bp_per_month": 130.88677716707403,
+            "t_raw": 2.3772058702670953,
+            "n_months": 146
+          },
+          "routine_buy": {
+            "capm_beta": 0.6576926425749974,
+            "capm_alpha_bp_per_month": -64.85015761451571,
+            "capm_alpha_t_nw6": -1.2480518610532354,
+            "mean_excess_bp_per_month": 43.56486536716017,
+            "t_raw": 0.7725362317270664,
+            "n_months": 124
+          },
+          "any_buy": {
+            "capm_beta": 1.0537259008600435,
+            "capm_alpha_bp_per_month": 24.119951048403458,
+            "capm_alpha_t_nw6": 0.5504470084348082,
+            "mean_excess_bp_per_month": 152.42501329892747,
+            "t_raw": 2.9080220919497144,
+            "n_months": 192
+          },
+          "opp_minus_routine": {
+            "capm_beta": 0.17839303481539312,
+            "capm_alpha_bp_per_month": 83.36080196457556,
+            "capm_alpha_t_nw6": 1.8778340628615593,
+            "t_raw": 1.8629894756672873,
+            "n_months": 124
+          }
+        }
+      }
+    },
+    "by_size_group_ew": {
+      "large": {
+        "capm_beta": null,
+        "capm_alpha_bp_per_month": null,
+        "capm_alpha_t_nw6": null,
+        "mean_excess_bp_per_month": null,
+        "t_raw": null,
+        "n_months": 6
+      },
+      "micro": {
+        "capm_beta": 0.2994852643586586,
+        "capm_alpha_bp_per_month": 25.87679686914005,
+        "capm_alpha_t_nw6": 0.990710924989384,
+        "mean_excess_bp_per_month": 62.343088013060644,
+        "t_raw": 2.0769431970318597,
+        "n_months": 192
+      },
+      "nano": {
+        "capm_beta": -0.12588420677553555,
+        "capm_alpha_bp_per_month": -23.650834310950177,
+        "capm_alpha_t_nw6": -0.20599745734464248,
+        "mean_excess_bp_per_month": -40.086629690742605,
+        "t_raw": -0.342123183221989,
+        "n_months": 52
+      },
+      "small": {
+        "capm_beta": 0.2072383242568402,
+        "capm_alpha_bp_per_month": -30.12721699304019,
+        "capm_alpha_t_nw6": -0.7843251136099358,
+        "mean_excess_bp_per_month": -6.622247758609735,
+        "t_raw": -0.1443009510190901,
+        "n_months": 128
+      }
+    }
+  }
+}

@@ -22,12 +22,31 @@ Railway.** Receipts: `backend/data/optimus/night_lab_2026-09-07/`. CI was
 > is 1999-2007. **Holm over the 100-comparison delta family: 0.4884. Nothing
 > survives.**
 
-One column, two constructions, 1999–2024:
+One column, two constructions, 1999–2024 — **shown AT EQUAL COST**, because a
+construction effect and a cost effect quoted in one column is two experiments
+wearing one label. Corrected 2026-09-07 (X9): the original table put the 25 bps
+control beside the 10 bps broad book, so its 3.66 → 29.27 line was **8.0× of
+which the construction bought ~5.0× and the cost rate bought the rest**. The
+receipt is `N1_construction_books.json::cells`; the four cells are named.
+
+**At 25 bps** (`revisions|k=50|vw|hold=none|25bps` → `revisions|k=300|ew|hold=600|25bps`):
 
 | book on `revisions` | β | TC | eff. names | TW net | market | β-matched |
 |---|---|---|---|---|---|---|
-| top-50 VW, 25 bps (the incumbent) | 0.882 | 0.132 | 12.2 | **3.66** | 13.18 | −3.494%/yr t −1.54 |
-| top-300 EW hold-600, 10 bps | 1.086 | 0.587 | 299.4 | **29.27** | 13.18 | +2.964%/yr t 1.785 |
+| top-50 VW (the incumbent) | 0.882 | 0.132 | 12.2 | **3.66** | 13.18 | −3.494%/yr t −1.54 |
+| top-300 EW hold-600 | 1.0855 | 0.5869 | 299.4 | **18.14** | 13.18 | +1.096%/yr t 0.659 |
+
+**At 10 bps** (`revisions|k=50|vw|hold=none|10bps` → `revisions|k=300|ew|hold=600|10bps`):
+
+| book on `revisions` | β | TC | eff. names | TW net | market | β-matched |
+|---|---|---|---|---|---|---|
+| top-50 VW (the incumbent) | 0.8823 | 0.132 | 12.2 | **8.96** | 13.18 | −0.004%/yr t −0.002 |
+| top-300 EW hold-600 | 1.0861 | 0.5869 | 299.4 | **29.27** | 13.18 | +2.964%/yr t 1.785 |
+
+**`29.27` may never be quoted beside `3.66` as one comparison.** The same-cost
+pairs are **3.66 → 18.14 at 25 bps** (4.96×) and **8.96 → 29.27 at 10 bps**
+(3.27×). `backend/tests/test_x9_doc_numbers.py` fails if the two strings meet
+again in `docs/`.
 
 **RESULT IMPROVEMENT: a mechanism, not a claim.** The construction effect is
 era-stable; the alpha it uncovers is not. Level family 160 cells, family-min p
@@ -53,8 +72,13 @@ implied-vs-realised IR to every book; TC < 0.5 ⇒ `CONSTRUCTION_DEFECT`, i.e. t
 signal verdict is not readable from that book. Every term returns `None` with a
 reason rather than a zero it did not measure. `evaluate.book()` gains opt-in
 `return_weights` and `weight="rank"`; the default key set stays byte-identical to
-v1's receipt. **N1.3:** the index-hedged long-short hedges correctly (realised β
-0.00–0.05) and **loses — 19 of 20 cells negative**, all negative at 25 bps; best
+v1's receipt. **N1.3:** the index-hedged long-short hedges *mostly* correctly — realised β
+spans **−0.0605 … 0.4254** over the 20 cells: **14 of 20 sit inside |β| ≤ 0.05
+and six do not** — `momentum` −0.0601/−0.0605, `ridge` 0.2047/0.2056 and
+`encoder` 0.4238/0.4254 (each at both cost rates; the ridge and encoder cells are
+47-month windows, so those four carry real market exposure and their numbers are
+not a hedged book's). Corrected 2026-09-07: the earlier "0.00–0.05" was false for
+six cells. It **loses — 19 of 20 cells negative**, all negative at 25 bps; best
 +0.346%/yr over cash t 0.178. The **exclusion book** is the survivor shape:
 universe EW minus the bottom decile beats the EW universe by **+0.861pp/yr t
 2.487** at 10 bps (TW 18.72 vs 14.41), +0.482pp t 1.382 at 25 bps. **N1.4:**
@@ -88,8 +112,12 @@ $100k floor (measured ~74.5 bps one-way); S28's $100k–$1m band is gross +0.19%
 against a **17.86%/yr** cost line. Capacity is an advantage in what a small book
 *may* hold and a disadvantage in what it *costs* to hold.
 
-**N4 — the event-time table.** `event_table_v1.parquet`: **993,005 rows,
-2015-2024, 81–86%** of the CRSP-common proxy per year — IBES surprises 618,419 ·
+**N4 — the event-time table.** `event_table_v1.parquet`: **993,005 rows
+spanning 2015-2026** — **789,277 of them in 2015-2024**, 107,986 in 2025 and
+95,742 in 2026 — at **81–86%** of the CRSP-common proxy per year (2015-2024; the
+proxy is 0 for 2025-2026, so that share is `null` there and is not claimed;
+corrected 2026-09-07, the earlier "993,005 rows, 2015-2024" put a 2015-2026 count
+under a 2015-2024 label) — IBES surprises 618,419 ·
 8-K 276,978 · news 95,228 and growing · 13D/G 2,380. Three gaps stated, not
 papered over: **13D/G is effectively absent 2015-2024** (all rows from seven days
 in Aug 2026); **Form 4 is absent from both repos** (a guard test fails if a run
@@ -107,8 +135,10 @@ still fails (1.000)**. **FINAL VERDICT CANNOT_DETERMINE**, and a genuinely new
 split rather than a restatement. **The four states are DEMOTED to
 informational-only everywhere** — never a sizing, admission or routing input;
 `potential_universe.STATE_SEMANTICS` is already inert but its text quotes null 1
-alone and *reads* as validated. *Event compression:* 127,157 news rows → **97,949
-canonical events, ratio 1.298**, declared a **lower bound** (TF-IDF catches
+alone and *reads* as validated. *Event compression:* **137,190** news rows → **105,494
+canonical events, ratio 1.3005**, declared a **lower bound** (corrected
+2026-09-07 from a stale 127,157 → 97,949 / 1.298 snapshot; the receipt at HEAD is
+`N5_event_compression.json`) (TF-IDF catches
 reformatted duplicates, misses same-event stories with no shared vocabulary).
 NVIDIA NIM re-probed **OK in 935 ms** against the 09-05 receipt's
 CANNOT_DETERMINE at 30.2 s — transient network, not a dead key. Novelty on the
@@ -129,7 +159,9 @@ free when the edge is concentrated*, obtained where the answer was known, and a
 result about N4's whole programme. *Ladder:* the machine recovers B1's planted
 scale (t 5.20, IC 0.068) and **half of it** (t 2.02, IC 0.019), losing a quarter
 (0.80) and an eighth (−0.28) — Fable's attack #5 answered with a number.
-*Fantasy exams round 2:* 40 new event pairs, **40/40 monotone**, canary **0/8**;
+*Fantasy exams round 2:* 40 new event pairs, **40/40 monotone**, canary **END 0/8, FRONT
+1/8** (`CANARY-045-front` moved; round-1 rate was also 1/8 — corrected
+2026-09-07, the single "0/8" was the END arm only);
 the new clause-position control gives |Δp_up| END 0.305 vs FRONT 0.291, gap 0.014
 under a 0.02 bar → **POSITION-INSENSITIVE** (attack #6 answered). *Path MC,
 $100k at 1×* (proxy genome, block 6, 4,000 draws): **P(lose half) 0.442**, median

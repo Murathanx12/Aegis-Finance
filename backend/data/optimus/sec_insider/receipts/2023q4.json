@@ -1,0 +1,138 @@
+{
+ "quarter": "2023q4",
+ "zip_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\raw\\2023q4_form345.zip",
+ "zip_bytes": 8497639,
+ "zip_members": {
+  "DERIV_HOLDING.tsv": 1240535,
+  "DERIV_TRANS.tsv": 3532628,
+  "FOOTNOTES.tsv": 24954429,
+  "NONDERIV_HOLDING.tsv": 1550230,
+  "NONDERIV_TRANS.tsv": 6526354,
+  "OWNER_SIGNATURE.tsv": 3358910,
+  "REPORTINGOWNER.tsv": 6028745,
+  "SUBMISSION.tsv": 4132044,
+  "FORM_345_metadata.json": 39131,
+  "FORM_345_readme.htm": 393653
+ },
+ "submissions": 38108,
+ "reporting_owner_rows": 42436,
+ "rows": 92328,
+ "orphan_transactions_no_submission": 0,
+ "transactions_with_no_reporting_owner": 0,
+ "trans_code_counts": {
+  "S": 18058,
+  "A": 18053,
+  "M": 16372,
+  "P": 8401,
+  "F": 8188,
+  "D": 2924,
+  "G": 2569,
+  "J": 2326,
+  "C": 1520,
+  "X": 395,
+  "L": 349,
+  "U": 110,
+  "I": 52,
+  "W": 39,
+  "H": 8,
+  "E": 6
+ },
+ "unknown_codes": [],
+ "filing_date_min": "2023-10-02",
+ "filing_date_max": "2023-12-29",
+ "distinct_issuers": 4408,
+ "distinct_insiders": 22173,
+ "open_market_purchases": 10566,
+ "open_market_sales": 14143,
+ "plan_10b5_1_counts": {
+  "NO": 79004,
+  "YES": 13324
+ },
+ "plan_10b5_1_source_counts": {
+  "AFF10B5ONE": 92328
+ },
+ "trans_class_counts": {
+  "OPEN_MARKET_SALE": 22734,
+  "GRANT_AWARD": 18735,
+  "OPTION_EXERCISE": 17109,
+  "OPEN_MARKET_PURCHASE": 12361,
+  "TAX_OR_EXERCISE_WITHHOLDING": 8229,
+  "OTHER": 3561,
+  "DISPOSITION_TO_ISSUER": 3330,
+  "DERIVATIVE_CONVERSION": 2796,
+  "GIFT": 2776,
+  "SMALL_ACQUISITION": 349,
+  "TENDER": 234,
+  "PLAN_DISCRETIONARY": 52,
+  "INHERITANCE": 39,
+  "DERIVATIVE_EXPIRATION": 23
+ },
+ "observed_at_basis": "FILING_DATE_EOD_CONSERVATIVE",
+ "footnote_10b5_1_accessions": 0,
+ "footnotes_scanned": true,
+ "pit_check": {
+  "rows_checked": 92328,
+  "violations": 0,
+  "future_dated_transactions": 6,
+  "future_dated_examples": [
+   {
+    "accession": "0001213900-23-096094",
+    "trans_date": "2024-04-01",
+    "filing_date": "2023-12-15"
+   },
+   {
+    "accession": "0000900440-23-000108",
+    "trans_date": "2033-12-11",
+    "filing_date": "2023-12-13"
+   },
+   {
+    "accession": "0001628280-23-039558",
+    "trans_date": "2027-11-17",
+    "filing_date": "2023-11-17"
+   },
+   {
+    "accession": "0001628280-23-035012",
+    "trans_date": "2024-10-24",
+    "filing_date": "2023-10-24"
+   },
+   {
+    "accession": "0001140361-23-047044",
+    "trans_date": "2023-10-05",
+    "filing_date": "2023-10-04"
+   }
+  ]
+ },
+ "fabrication_check": {
+  "rows_checked": 92328,
+  "violations": 0,
+  "implausible_dates": 3,
+  "implausible_date_examples": [
+   "0000900440-23-000108: trans_date 2033-12-11 vs filing_date 2023-12-13",
+   "0001628280-23-039558: trans_date 2027-11-17 vs filing_date 2023-11-17",
+   "0000912282-23-000471: trans_date 0022-10-12 vs filing_date 2023-11-13"
+  ]
+ },
+ "link_counts": {
+  "crsp_stocknames_interval": 76610,
+  "REFUSED_TICKER_NOT_IN_CRSP": 15501,
+  "REFUSED_AMBIGUOUS_TICKER": 217
+ },
+ "link_rate": 0.8298,
+ "crsp_link_source": "crsp__stocknames.parquet rows=46108 vintage_end=2024-12-31",
+ "by_year": {
+  "2023": {
+   "rows": 92328,
+   "distinct_issuers": 4136,
+   "distinct_insiders": 22173,
+   "open_market_purchases": 10566,
+   "open_market_sales": 14143,
+   "rows_linked_to_permno": 76610,
+   "link_rate": 0.8298,
+   "link_refusals": {
+    "REFUSED_TICKER_NOT_IN_CRSP": 15501,
+    "REFUSED_AMBIGUOUS_TICKER": 217
+   }
+  }
+ },
+ "written_utc": "2026-09-07T10:39:48+00:00"
+}

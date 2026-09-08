@@ -1,0 +1,210 @@
+{
+ "job": "S1_strategy_interface_reproduction",
+ "lane": "S strategy interface",
+ "licence": "PRODUCT_EXPERIMENT",
+ "question": "do the composite arena book and the growth-book champion, expressed through `Strategy` and run through `run_one`, reproduce their sealed artefacts?",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "arena_composite": {
+  "strategy_id": "arena:ENGINE_BASELINE_v1",
+  "strategy_fingerprint": "844002bbe1948f37",
+  "identity_reproduced": {
+   "book_id": "ENGINE_BASELINE_v1",
+   "config_version": "arena-v1",
+   "config_hash": "641adafc38703b5c3c898103639cd9e7c1f3608275757b2c93ac74f5f71ef7db",
+   "policy_fingerprint": "576ea6240d3525cd95f89d3326c480049272b7268979e1c56289a530d80eac47",
+   "book_fingerprint": "39c7177b5d6e517c8f6795fc3d879132503a24501385ae4c20e57392ec714005",
+   "selector_identity": "arena_composite@3-universe_quality",
+   "composite_weight_fingerprint": "41b4bbfa5d3df8c8",
+   "validation_status": "PRODUCT_EXPERIMENT",
+   "reproduced_from": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\arena\\arena_books_v1.yaml"
+  },
+  "identity_sealed": {
+   "config_hash": "641adafc38703b5c3c898103639cd9e7c1f3608275757b2c93ac74f5f71ef7db",
+   "policy_fingerprint": "576ea6240d3525cd95f89d3326c480049272b7268979e1c56289a530d80eac47",
+   "book_fingerprint": "39c7177b5d6e517c8f6795fc3d879132503a24501385ae4c20e57392ec714005",
+   "config_version": "arena-v1"
+  },
+  "identity_diff": {
+   "n_compared": 4,
+   "n_same": 4,
+   "n_differ": 0,
+   "n_absent_from_run": 0,
+   "identical": true,
+   "differences": [],
+   "absent_from_run": [],
+   "ignored_keys": [
+    "_provenance",
+    "frozen_utc",
+    "generated_utc",
+    "opened_utc",
+    "regated_utc",
+    "wall_seconds"
+   ],
+   "reading": "`identical` means every field the sealed block declares was present in the run and equal to it. Timestamps and provenance are named in `ignored_keys` rather than silently skipped."
+  },
+  "selection": [
+   {
+    "ticker": "FIX00",
+    "rank": 1,
+    "score": 1.0
+   },
+   {
+    "ticker": "FIX01",
+    "rank": 2,
+    "score": 0.95
+   },
+   {
+    "ticker": "FIX02",
+    "rank": 3,
+    "score": 0.9
+   },
+   {
+    "ticker": "FIX03",
+    "rank": 4,
+    "score": 0.85
+   },
+   {
+    "ticker": "FIX04",
+    "rank": 5,
+    "score": 0.8
+   },
+   {
+    "ticker": "FIX05",
+    "rank": 6,
+    "score": 0.75
+   },
+   {
+    "ticker": "FIX06",
+    "rank": 7,
+    "score": 0.7
+   },
+   {
+    "ticker": "FIX07",
+    "rank": 8,
+    "score": 0.6499999999999999
+   },
+   {
+    "ticker": "FIX08",
+    "rank": 9,
+    "score": 0.6
+   },
+   {
+    "ticker": "FIX09",
+    "rank": 10,
+    "score": 0.55
+   },
+   {
+    "ticker": "FIX10",
+    "rank": 11,
+    "score": 0.5
+   },
+   {
+    "ticker": "FIX11",
+    "rank": 12,
+    "score": 0.44999999999999996
+   }
+  ],
+  "sealed_backtest_receipt_exists": false,
+  "why_no_backtest_diff": "the arena is a FORWARD paper engine. Its sealed artefact is its IDENTITY under scheme book-v1 (config_hash, policy_fingerprint, book_fingerprint) plus the deterministic selection; its NAV rows come from live marks and there is no sealed offline replay in this repository to diff against. Reported rather than manufactured."
+ },
+ "growth_champion": {
+  "strategy_id": "growth:m12_quality_mom|dd",
+  "development_cells": {
+   "10bps": {
+    "byte_identical": true,
+    "sha256_run": "c1663dde546196d926eeed5a24f46e01eb16270d5bc3d3d7187dc90773bbf16d",
+    "sha256_sealed": "c1663dde546196d926eeed5a24f46e01eb16270d5bc3d3d7187dc90773bbf16d",
+    "key_order_identical": true,
+    "serialiser": "json.dumps(obj, indent=1, default=str)",
+    "beta_run": 0.7673,
+    "beta_sealed": 0.7673,
+    "champion_sha256_declared": "39ab3224c1a12e144bdcef39e536342d7f8b43e3644bf0bf3ac2bf1af94cd9da",
+    "diff": {
+     "n_compared": 88,
+     "n_same": 88,
+     "n_differ": 0,
+     "n_absent_from_run": 0,
+     "identical": true,
+     "differences": [],
+     "absent_from_run": [],
+     "ignored_keys": [
+      "_provenance",
+      "frozen_utc",
+      "generated_utc",
+      "opened_utc",
+      "regated_utc",
+      "wall_seconds"
+     ],
+     "reading": "`identical` means every field the sealed block declares was present in the run and equal to it. Timestamps and provenance are named in `ignored_keys` rather than silently skipped."
+    },
+    "headline_run": "[PRODUCT_EXPERIMENT] growth:m12_quality_mom|dd @ 20 bps round trip, objective terminal_wealth_at_drawdown_budget: beta 0.7673, TW 5.3842, maxDD -0.35675, TC CANNOT DETERMINE; signal verdict CANNOT DETERMINE (TC not measured; a check that did not run is not a check that passed)",
+    "headline_sealed": "beta 0.7673 (intercept 9.838%/yr, t 2.358): TW 5.3842 vs SPY 2.0935, maxDD -0.35675 vs budget -0.59923, leverage-neutral TW 4.5081 over 144 months at 10 bps"
+   },
+   "25bps": {
+    "byte_identical": true,
+    "sha256_run": "e976d531892a215094af7238e8b21ce1a4995f5e5fc5818b0556870bcf1f2def",
+    "sha256_sealed": "e976d531892a215094af7238e8b21ce1a4995f5e5fc5818b0556870bcf1f2def",
+    "key_order_identical": true,
+    "serialiser": "json.dumps(obj, indent=1, default=str)",
+    "beta_run": 0.765,
+    "beta_sealed": 0.765,
+    "champion_sha256_declared": "39ab3224c1a12e144bdcef39e536342d7f8b43e3644bf0bf3ac2bf1af94cd9da",
+    "diff": {
+     "n_compared": 88,
+     "n_same": 88,
+     "n_differ": 0,
+     "n_absent_from_run": 0,
+     "identical": true,
+     "differences": [],
+     "absent_from_run": [],
+     "ignored_keys": [
+      "_provenance",
+      "frozen_utc",
+      "generated_utc",
+      "opened_utc",
+      "regated_utc",
+      "wall_seconds"
+     ],
+     "reading": "`identical` means every field the sealed block declares was present in the run and equal to it. Timestamps and provenance are named in `ignored_keys` rather than silently skipped."
+    },
+    "headline_run": "[PRODUCT_EXPERIMENT] growth:m12_quality_mom|dd @ 50 bps round trip, objective terminal_wealth_at_drawdown_budget: beta 0.765, TW 4.8165, maxDD -0.36276, TC CANNOT DETERMINE; signal verdict CANNOT DETERMINE (TC not measured; a check that did not run is not a check that passed)",
+    "headline_sealed": "beta 0.765 (intercept 8.907%/yr, t 2.127): TW 4.8165 vs SPY 2.0935, maxDD -0.36276 vs budget -0.59923, leverage-neutral TW 4.1027 over 144 months at 25 bps"
+   }
+  },
+  "sealed_era_block": {
+   "verdict": "REFUSED_BY_DESIGN",
+   "why": "the sealed era 2016-01..2024-12 is opened ONCE per frozen champion against an append-only ledger (SEALED_ERA_OPENINGS.jsonl), and this champion's count is already 1. `run_one` refuses a sealed window without an explicit authorisation and this script never passes one, so the `sealed` block of G4_seal.json is NOT reproduced here. That is correct behaviour, not a gap: a sealed receipt that could be re-run on demand would not be sealed."
+  }
+ },
+ "wall_seconds": 9.3,
+ "generated_utc": "2026-09-08T10:17:23.538275+00:00",
+ "headline": "arena identity reproduced: True; growth development cells reproduced BYTE-FOR-BYTE: True (2 cost cells); growth sealed era: REFUSED_BY_DESIGN (one opening per frozen champion)",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\run_one.py",
+   "--reproduce"
+  ],
+  "resolved_config": {
+   "job": "S1_strategy_interface_reproduction"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/arena/arena_books_v1.yaml",
+    "sha256": "5ae0eccc0c39b8dc0bf25f10a0b146d0f67d3dd9b89372bec832db8b49840362",
+    "bytes": 11606,
+    "opened_utc": "2026-09-08T10:17:14+00:00",
+    "note": "the arena book commitment"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
+    "sha256": "57e34fa6b8c6f1c6d01ae5de204b94acaa645b95f5857e32c8585f45cdd24481",
+    "bytes": 21191,
+    "opened_utc": "2026-09-08T10:17:14+00:00",
+    "note": "the sealed growth receipt being reproduced"
+   }
+  ],
+  "git_commit": "2b1290f3d6d5",
+  "generated_utc": "2026-09-08T10:17:23+00:00"
+ }
+}

@@ -1,0 +1,260 @@
+{
+ "receipt": "LIVE_TRANSFER_SEALED_TO_SUBMITTED",
+ "day": "2026-09-08",
+ "question": "Invariant 17 asks where information dies: prediction -> selection -> construction -> holding/exit. The construction tax has only ever been measured historically here. Where does it sit on the book that is about to trade, TODAY?",
+ "method": "The 2026-09-08 sealed book (sha f20929777f77fa55) states a target weight per name (`max_notional_each`). A DRY `scripts.run_pass` was run for hack3 and hack6 with the real sizer, the real admission gates and the real risk guards, and the share counts it would submit were recorded. Live notional = shares x last close. The transfer ratio is live notional / sealed notional per name. No orders were placed.",
+ "answer": "For these two books the SIZER LOSES NOTHING. Transfer ratio mean 1.00, sd 0.00, range 0.99-1.00 on both books; gross 83.0% -> 82.9% (hack3) and 90.0% -> 89.7% (hack6). The residual is share rounding, not construction.",
+ "so_what": "This LOCALISES the leak. Construction is not where these books lose information, so the four-stage chain's loss for the fleet sits in SELECTION (which names the seal picks) or in HOLDING/EXIT. That is consistent with the same day's other measurement: the stop sat at 0.98 daily sd on hack6 and stopped 56.3% of entries out before session 10 of a 21-session thesis (RECEIPT_2026-09-07_STOP_WIDTH_VS_HOLD.json). The exit stage is where to look.",
+ "important_caveat": "This is a ONE-DAY, TWO-BOOK, DRY measurement of the sizing step alone. It says nothing about fills, slippage or costs, which are a separate and unmeasured part of construction. A ratio of 1.00 here does NOT mean the realised book will match the seal -- it means the code that turns a weight into a share count is faithful.",
+ "also_measured_today": "Before the fix, the driver-concentration cap refused 6 of hack3's 10 names because all 10 resolved to the single bucket 'UNCLASSIFIED' (the theme seed is 70 symbols from 2026-08-28; the tracker universe is ~774 screened names). That is a guard binding on a data gap. With the sealed sector as a declared fallback, 10/10 and 15/15 pass with zero refusals.",
+ "books": {
+  "hack3": {
+   "equity": 90499.49,
+   "sealed_gross": 0.83,
+   "live_gross": 0.8287652228758416,
+   "gross_ratio": 0.9985123167178814,
+   "rows": [
+    {
+     "sym": "IVA",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7499.820000000001,
+     "sealed_w": 0.083,
+     "live_w": 0.08287140623665393,
+     "ratio": 0.9984506775500473,
+     "rank_value": 0.105711
+    },
+    {
+     "sym": "ARDX",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7507.08,
+     "sealed_w": 0.083,
+     "live_w": 0.08295162768320573,
+     "ratio": 0.9994172010024786,
+     "rank_value": 0.092482
+    },
+    {
+     "sym": "PRVA",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7499.58,
+     "sealed_w": 0.083,
+     "live_w": 0.08286875428800758,
+     "ratio": 0.9984187263615372,
+     "rank_value": 0.065587
+    },
+    {
+     "sym": "INVA",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7508.16,
+     "sealed_w": 0.083,
+     "live_w": 0.08296356145211425,
+     "ratio": 0.9995609813507741,
+     "rank_value": 0.061677
+    },
+    {
+     "sym": "TNXP",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7516.08,
+     "sealed_w": 0.083,
+     "live_w": 0.08305107575744348,
+     "ratio": 1.0006153705716083,
+     "rank_value": 0.060195
+    },
+    {
+     "sym": "ASPI",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7513.8,
+     "sealed_w": 0.083,
+     "live_w": 0.08302588224530326,
+     "ratio": 1.0003118342807622,
+     "rank_value": 0.049628
+    },
+    {
+     "sym": "DAKT",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7507.8,
+     "sealed_w": 0.083,
+     "live_w": 0.08295958352914475,
+     "ratio": 0.999513054568009,
+     "rank_value": 0.048385
+    },
+    {
+     "sym": "LENZ",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7479.8,
+     "sealed_w": 0.083,
+     "live_w": 0.08265018952040502,
+     "ratio": 0.9957854159084943,
+     "rank_value": 0.046306
+    },
+    {
+     "sym": "ANIP",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7479.150000000001,
+     "sealed_w": 0.083,
+     "live_w": 0.08264300715948786,
+     "ratio": 0.9956988814396127,
+     "rank_value": 0.041221
+    },
+    {
+     "sym": "RRX",
+     "sealed_usd": 7511.457670000001,
+     "live_usd": 7491.56,
+     "sealed_w": 0.083,
+     "live_w": 0.08278013500407572,
+     "ratio": 0.9973510241454905,
+     "rank_value": 0.038054
+    }
+   ],
+   "ratio_mean": 0.9985123167178814,
+   "ratio_sd": 0.0016520790951405977
+  },
+  "hack6": {
+   "equity": 91468.74,
+   "sealed_gross": 0.8999999999999999,
+   "live_gross": 0.8974222231551456,
+   "gross_ratio": 0.9971358035057175,
+   "rows": [
+    {
+     "sym": "ARDX",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5484.78,
+     "sealed_w": 0.06,
+     "live_w": 0.05996343668886222,
+     "ratio": 0.9993906114810371,
+     "rank_value": 16.180661
+    },
+    {
+     "sym": "INVA",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5481.8099999999995,
+     "sealed_w": 0.06,
+     "live_w": 0.05993096657940187,
+     "ratio": 0.9988494429900313,
+     "rank_value": 8.269437
+    },
+    {
+     "sym": "PRVA",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5474.9,
+     "sealed_w": 0.06,
+     "live_w": 0.059855421644596826,
+     "ratio": 0.9975903607432806,
+     "rank_value": 7.309998
+    },
+    {
+     "sym": "MAZE",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5477.89,
+     "sealed_w": 0.06,
+     "live_w": 0.05988811040799294,
+     "ratio": 0.9981351734665491,
+     "rank_value": 7.176313
+    },
+    {
+     "sym": "GPCR",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5444.1,
+     "sealed_w": 0.06,
+     "live_w": 0.05951869458352657,
+     "ratio": 0.9919782430587762,
+     "rank_value": 6.662284
+    },
+    {
+     "sym": "NAMS",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5486.4,
+     "sealed_w": 0.06,
+     "live_w": 0.05998114765765877,
+     "ratio": 0.999685794294313,
+     "rank_value": 6.166284
+    },
+    {
+     "sym": "TREE",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5471.55,
+     "sealed_w": 0.06,
+     "live_w": 0.05981879711035704,
+     "ratio": 0.9969799518392842,
+     "rank_value": 5.917417
+    },
+    {
+     "sym": "IMCR",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5455.63,
+     "sealed_w": 0.06,
+     "live_w": 0.059644748577492156,
+     "ratio": 0.9940791429582027,
+     "rank_value": 5.862835
+    },
+    {
+     "sym": "AMSC",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5466.75,
+     "sealed_w": 0.06,
+     "live_w": 0.05976632016577466,
+     "ratio": 0.9961053360962445,
+     "rank_value": 5.823421
+    },
+    {
+     "sym": "BUR",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5472.299999999999,
+     "sealed_w": 0.06,
+     "live_w": 0.059826996632948035,
+     "ratio": 0.997116610549134,
+     "rank_value": 5.692032
+    },
+    {
+     "sym": "CALX",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5465.92,
+     "sealed_w": 0.06,
+     "live_w": 0.059757246027440626,
+     "ratio": 0.9959541004573439,
+     "rank_value": 5.565392
+    },
+    {
+     "sym": "ATR",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5478.63,
+     "sealed_w": 0.06,
+     "live_w": 0.05989620060361605,
+     "ratio": 0.9982700100602676,
+     "rank_value": 5.564897
+    },
+    {
+     "sym": "EVLV",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5490.0,
+     "sealed_w": 0.06,
+     "live_w": 0.06002050536609556,
+     "ratio": 1.0003417561015928,
+     "rank_value": 5.4476
+    },
+    {
+     "sym": "ULS",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5463.42,
+     "sealed_w": 0.06,
+     "live_w": 0.05972991428547064,
+     "ratio": 0.9954985714245108,
+     "rank_value": 4.80106
+    },
+    {
+     "sym": "GRAB",
+     "sealed_usd": 5488.1244,
+     "live_usd": 5472.0,
+     "sealed_w": 0.06,
+     "live_w": 0.05982371682391164,
+     "ratio": 0.9970619470651941,
+     "rank_value": 4.732376
+    }
+   ],
+   "ratio_mean": 0.9971358035057175,
+   "ratio_sd": 0.0021355034048527255
+  }
+ },
+ "licence": "PRODUCT_EXPERIMENT",
+ "no_edge_claimed": true,
+ "written_utc": "2026-09-08T05:29:13.169649+00:00"
+}

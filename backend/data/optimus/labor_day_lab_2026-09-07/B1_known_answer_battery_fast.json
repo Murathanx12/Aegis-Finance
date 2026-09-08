@@ -3,12 +3,12 @@
  "title": "synthetic known-answer battery for the whole research machine",
  "licence": "PRODUCT_EXPERIMENT",
  "mode": "SYNTHETIC_WORLD \u2014 NOT MARKET EVIDENCE",
- "generated_at_utc": "2026-09-05T15:29:32+00:00",
+ "generated_at_utc": "2026-09-07T10:36:23+00:00",
  "argv": [
   "C:\\Users\\mrthn\\aegis-finance\\scripts\\labor_b1_known_answer_battery.py",
   "--fast"
  ],
- "git_commit": "729df522210d6dc9afabf857445370425a6b517c",
+ "git_commit": "2b1290f3d6d5948a7acea57123c613a8ac4d9fbb",
  "python": "3.12.10",
  "config": {
   "fast": true,
@@ -53,8 +53,8 @@
   },
   {
    "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\evaluate.py",
-   "bytes": 35480,
-   "mtime_utc": "2026-09-05T04:26:11+00:00",
+   "bytes": 45429,
+   "mtime_utc": "2026-09-07T10:30:12+00:00",
    "why": "machine stage: learner.evaluate"
   },
   {
@@ -65,8 +65,8 @@
   },
   {
    "path": "C:\\Users\\mrthn\\aegis-finance\\learner\\evidence_memory.py",
-   "bytes": 62410,
-   "mtime_utc": "2026-09-05T15:19:32+00:00",
+   "bytes": 63032,
+   "mtime_utc": "2026-09-07T10:34:37+00:00",
    "why": "machine stage: learner.evidence_memory"
   },
   {
@@ -99,7 +99,7 @@
  ],
  "safety": {
   "real_evidence_memory_touched": false,
-  "evidence_store_redirected_to": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\labor_b1_0cdvqy9u\\evidence_memory.jsonl",
+  "evidence_store_redirected_to": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\labor_b1_w824ka_6\\evidence_memory.jsonl",
   "graph_feature_parquet_written": false,
   "llm_calls": 0,
   "llm_spend_usd": 0.0
@@ -223,7 +223,7 @@
     "holds_in_2_of_3": true,
     "same_sign_in_2_of_3": true
    },
-   "verdict": "NOISE"
+   "verdict": "SEPARATED_NOT_SURVIVING (family-corrected Holm p 0.01543458; short of the export bar on DSR 0.9277)"
   },
   "linear::lgbm": {
    "t": 3.0147,
@@ -259,7 +259,7 @@
     "holds_in_2_of_3": true,
     "same_sign_in_2_of_3": true
    },
-   "verdict": "NOISE"
+   "verdict": "SEPARATED_NOT_SURVIVING (family-corrected Holm p 0.01543458; short of the export bar on DSR 0.9313)"
   },
   "linear::lgbm_clf": {
    "t": 2.9766,
@@ -295,7 +295,7 @@
     "holds_in_2_of_3": true,
     "same_sign_in_2_of_3": true
    },
-   "verdict": "NOISE"
+   "verdict": "SEPARATED_NOT_SURVIVING (family-corrected Holm p 0.01543458; short of the export bar on DSR 0.9459)"
   },
   "null::ridge": {
    "t": 0.1573,
@@ -407,7 +407,7 @@
   }
  },
  "evidence_memory": {
-  "store_path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\labor_b1_0cdvqy9u\\evidence_memory.jsonl",
+  "store_path": "C:\\Users\\mrthn\\AppData\\Local\\Temp\\labor_b1_w824ka_6\\evidence_memory.jsonl",
   "real_store_untouched": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\evidence_memory.jsonl",
   "states": {
    "linear": {
@@ -506,7 +506,7 @@
     "p_raw": 0.00257243,
     "p_holm": 0.01543458,
     "p_bh_fdr": 0.0062511,
-    "verdict": "NOISE",
+    "verdict": "SEPARATED_NOT_SURVIVING (family-corrected Holm p 0.01543458; short of the export bar on DSR 0.9313)",
     "evidence_state": "IDEA",
     "declared_state": "IDEA",
     "checks": {
@@ -544,13 +544,13 @@
   },
   "ALL_PASS": true,
   "findings": [
-   "FINDING [linear]: the arm's family-corrected p is 0.01543458 on a REAL planted edge and the verdict vocabulary still returns 'NOISE'. `verdict_from` has exactly two outcomes for a self-resolved arm \u2014 NOVEL (which needs the full DSR/SPA/PBO/era bar) or NOISE \u2014 so there is no word for 'significant, did not clear the deflation bar'. On short tape that reads as a false negative in the vocabulary, not in the numbers.",
-   "FINDING (not a miss): `learner/evaluate.ERAS` is hard-coded to 2016-2024. `grade_by_era` over a 1999-2024 panel reports three eras covering the last nine years and says nothing about the other seventeen \u2014 it does not refuse and it does not say what it dropped. This battery therefore derives its own eras. Not repaired here: evaluate.py is outside lane B's file ownership."
+   "RESOLVED [linear] (X5, 2026-09-07): family-corrected p 0.01543458 on a real planted edge now reads 'SEPARATED_NOT_SURVIVING (family-corrected Holm p 0.01543458; short of the export bar on DSR 0.9313)' instead of NOISE. The numbers did not move; the vocabulary gained the word between NOVEL and NOISE.",
+   "RESOLVED (X6, 2026-09-07): `learner/evaluate.ERAS` is still 2016-2024 BY DESIGN \u2014 a sealed receipt is sealed at its bucket names as well as its numbers \u2014 but `grade_by_era` now derives its coverage or REFUSES, and `evaluate.eras_covering(df)` picks the narrowest canonical grid that describes the frame, so no caller silently grades a 1999-2024 panel on its last nine years. This battery still derives its own eras, which is now the same answer rather than a private one."
   ]
  },
  "findings": [
-  "FINDING [linear]: the arm's family-corrected p is 0.01543458 on a REAL planted edge and the verdict vocabulary still returns 'NOISE'. `verdict_from` has exactly two outcomes for a self-resolved arm \u2014 NOVEL (which needs the full DSR/SPA/PBO/era bar) or NOISE \u2014 so there is no word for 'significant, did not clear the deflation bar'. On short tape that reads as a false negative in the vocabulary, not in the numbers.",
-  "FINDING (not a miss): `learner/evaluate.ERAS` is hard-coded to 2016-2024. `grade_by_era` over a 1999-2024 panel reports three eras covering the last nine years and says nothing about the other seventeen \u2014 it does not refuse and it does not say what it dropped. This battery therefore derives its own eras. Not repaired here: evaluate.py is outside lane B's file ownership."
+  "RESOLVED [linear] (X5, 2026-09-07): family-corrected p 0.01543458 on a real planted edge now reads 'SEPARATED_NOT_SURVIVING (family-corrected Holm p 0.01543458; short of the export bar on DSR 0.9313)' instead of NOISE. The numbers did not move; the vocabulary gained the word between NOVEL and NOISE.",
+  "RESOLVED (X6, 2026-09-07): `learner/evaluate.ERAS` is still 2016-2024 BY DESIGN \u2014 a sealed receipt is sealed at its bucket names as well as its numbers \u2014 but `grade_by_era` now derives its coverage or REFUSES, and `evaluate.eras_covering(df)` picks the narrowest canonical grid that describes the frame, so no caller silently grades a 1999-2024 panel on its last nine years. This battery still derives its own eras, which is now the same answer rather than a private one."
  ],
- "runtime_seconds": 3.0
+ "runtime_seconds": 1.9
 }

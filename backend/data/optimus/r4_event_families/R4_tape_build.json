@@ -1,0 +1,310 @@
+{
+ "ibes": {
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\ibes__surpsumu.parquet",
+  "rows_in_file": 4650942,
+  "rows_us_quarterly_eps": 552096,
+  "rows_linked_to_permno": 445470,
+  "link_share": 0.8069,
+  "link": "wrdsapps_link_crsp_ibes__ibcrsphist, score<=2, INTERVAL join on anndats",
+  "share_basis": "surpsumu is the UNADJUSTED summary; actual, surpmean and surpstdev are all from that one file, so SUE is basis-consistent. The price-scaled surprise divides the same unadjusted numerator by CRSP RAW prc (cfacpr NOT applied) -- the matching basis.",
+  "pit": "anndats is both the event and its availability (the actual EPS IS the announcement). DATE precision only: IBES surpsumu carries no time of day, so entry is the announcement session's CLOSE and every clock starts at +1."
+ },
+ "tape": {
+  "events_total": 339858,
+  "event_months_date_blocks": 312,
+  "distinct_permnos": 10954,
+  "first": "1999-01-01",
+  "last": "2024-12-30",
+  "market_model_fitted_share": 0.9485,
+  "cohorts": {
+   "1999-2003": {
+    "events": 73325,
+    "first": "1999-01-01",
+    "last": "2003-12-30",
+    "event_months_date_blocks": 60,
+    "skipped": {
+     "no_price_block": 80,
+     "no_session_on_or_after": 38,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9406,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     1997,
+     2004
+    ],
+    "elapsed_s": 31.8
+   },
+   "2004-2008": {
+    "events": 67620,
+    "first": "2004-01-05",
+    "last": "2008-12-30",
+    "event_months_date_blocks": 60,
+    "skipped": {
+     "no_price_block": 290,
+     "no_session_on_or_after": 19,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9477,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2002,
+     2009
+    ],
+    "elapsed_s": 23.4
+   },
+   "2009-2013": {
+    "events": 61331,
+    "first": "2009-01-05",
+    "last": "2013-12-30",
+    "event_months_date_blocks": 60,
+    "skipped": {
+     "no_price_block": 6,
+     "no_session_on_or_after": 153,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9589,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2007,
+     2014
+    ],
+    "elapsed_s": 21.1
+   },
+   "2014-2018": {
+    "events": 60172,
+    "first": "2014-01-02",
+    "last": "2018-12-31",
+    "event_months_date_blocks": 60,
+    "skipped": {
+     "no_price_block": 6,
+     "no_session_on_or_after": 704,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.943,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2012,
+     2019
+    ],
+    "elapsed_s": 24.8
+   },
+   "2019-2023": {
+    "events": 64666,
+    "first": "2019-01-03",
+    "last": "2023-12-29",
+    "event_months_date_blocks": 60,
+    "skipped": {
+     "no_price_block": 645,
+     "no_session_on_or_after": 18,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9471,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2017,
+     2024
+    ],
+    "elapsed_s": 20.6
+   },
+   "2024-2024": {
+    "events": 12744,
+    "first": "2024-01-02",
+    "last": "2024-12-30",
+    "event_months_date_blocks": 12,
+    "skipped": {
+     "no_price_block": 124,
+     "no_session_on_or_after": 5,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9816,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2022,
+     2024
+    ],
+    "elapsed_s": 5.7
+   }
+  }
+ }
+}

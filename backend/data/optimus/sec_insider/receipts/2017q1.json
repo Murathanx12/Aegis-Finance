@@ -1,0 +1,138 @@
+{
+ "quarter": "2017q1",
+ "zip_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\raw\\2017q1_form345.zip",
+ "zip_bytes": 14209324,
+ "zip_members": {
+  "DERIV_HOLDING.tsv": 3288878,
+  "DERIV_TRANS.tsv": 7365774,
+  "FOOTNOTES.tsv": 39852719,
+  "insider_transactions_metadata.json": 37339,
+  "insider_transactions_readme.htm": 745509,
+  "NONDERIV_HOLDING.tsv": 3079752,
+  "NONDERIV_TRANS.tsv": 11637259,
+  "OWNER_SIGNATURE.tsv": 5861117,
+  "REPORTINGOWNER.tsv": 10585109,
+  "SUBMISSION.tsv": 7279486
+ },
+ "submissions": 70217,
+ "reporting_owner_rows": 75076,
+ "rows": 171727,
+ "orphan_transactions_no_submission": 0,
+ "transactions_with_no_reporting_owner": 0,
+ "trans_code_counts": {
+  "A": 45648,
+  "M": 35401,
+  "F": 23025,
+  "S": 22868,
+  "P": 7168,
+  "J": 5050,
+  "D": 4806,
+  "G": 4165,
+  "C": 1563,
+  "L": 613,
+  "X": 587,
+  "I": 159,
+  "U": 104,
+  "W": 56,
+  "Z": 33,
+  "E": 18,
+  "O": 8,
+  "H": 3
+ },
+ "unknown_codes": [],
+ "filing_date_min": "2017-01-03",
+ "filing_date_max": "2017-03-31",
+ "distinct_issuers": 4794,
+ "distinct_insiders": 33654,
+ "open_market_purchases": 8502,
+ "open_market_sales": 26255,
+ "plan_10b5_1_counts": {
+  "UNKNOWN": 155298,
+  "YES": 16429
+ },
+ "plan_10b5_1_source_counts": {
+  "ABSENT": 155298,
+  "FOOTNOTE_TEXT": 16429
+ },
+ "trans_class_counts": {
+  "GRANT_AWARD": 46394,
+  "OPTION_EXERCISE": 36556,
+  "OPEN_MARKET_SALE": 35266,
+  "TAX_OR_EXERCISE_WITHHOLDING": 23049,
+  "OPEN_MARKET_PURCHASE": 10258,
+  "OTHER": 6319,
+  "DISPOSITION_TO_ISSUER": 5372,
+  "GIFT": 4274,
+  "DERIVATIVE_CONVERSION": 3152,
+  "SMALL_ACQUISITION": 639,
+  "TENDER": 173,
+  "PLAN_DISCRETIONARY": 159,
+  "INHERITANCE": 56,
+  "VOTING_TRUST": 33,
+  "DERIVATIVE_EXPIRATION": 27
+ },
+ "observed_at_basis": "FILING_DATE_EOD_CONSERVATIVE",
+ "footnote_10b5_1_accessions": 4802,
+ "footnotes_scanned": true,
+ "pit_check": {
+  "rows_checked": 171727,
+  "violations": 0,
+  "future_dated_transactions": 17,
+  "future_dated_examples": [
+   {
+    "accession": "0001127602-17-012033",
+    "trans_date": "2017-03-17",
+    "filing_date": "2017-03-16"
+   },
+   {
+    "accession": "0001056087-17-000035",
+    "trans_date": "2017-03-08",
+    "filing_date": "2017-03-03"
+   },
+   {
+    "accession": "0001140361-17-010008",
+    "trans_date": "2018-02-28",
+    "filing_date": "2017-03-01"
+   },
+   {
+    "accession": "0000707605-17-000024",
+    "trans_date": "2017-12-21",
+    "filing_date": "2017-03-01"
+   },
+   {
+    "accession": "0001179110-17-002842",
+    "trans_date": "2017-02-27",
+    "filing_date": "2017-02-21"
+   }
+  ]
+ },
+ "fabrication_check": {
+  "rows_checked": 171727,
+  "violations": 0,
+  "implausible_dates": 0,
+  "implausible_date_examples": []
+ },
+ "link_counts": {
+  "crsp_stocknames_interval": 143267,
+  "REFUSED_TICKER_NOT_IN_CRSP": 28146,
+  "REFUSED_AMBIGUOUS_TICKER": 314
+ },
+ "link_rate": 0.8343,
+ "crsp_link_source": "crsp__stocknames.parquet rows=46108 vintage_end=2024-12-31",
+ "by_year": {
+  "2017": {
+   "rows": 171727,
+   "distinct_issuers": 4441,
+   "distinct_insiders": 33654,
+   "open_market_purchases": 8502,
+   "open_market_sales": 26255,
+   "rows_linked_to_permno": 143267,
+   "link_rate": 0.8343,
+   "link_refusals": {
+    "REFUSED_TICKER_NOT_IN_CRSP": 28146,
+    "REFUSED_AMBIGUOUS_TICKER": 314
+   }
+  }
+ },
+ "written_utc": "2026-09-07T10:36:09+00:00"
+}

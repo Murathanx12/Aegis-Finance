@@ -1,0 +1,592 @@
+{
+ "placebo_offset_sessions": 40,
+ "tape": {
+  "events_total": 335226,
+  "event_months_date_blocks": 310,
+  "distinct_permnos": 10862,
+  "first": "1999-03-03",
+  "last": "2024-12-31",
+  "market_model_fitted_share": 0.9571,
+  "cohorts": {
+   "1999-2003": {
+    "events": 72594,
+    "first": "1999-03-03",
+    "last": "2004-12-29",
+    "event_months_date_blocks": 67,
+    "skipped": {
+     "no_price_block": 80,
+     "no_session_on_or_after": 769,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.952,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     1997,
+     2004
+    ],
+    "elapsed_s": 51.6
+   },
+   "2004-2008": {
+    "events": 67119,
+    "first": "2004-03-03",
+    "last": "2009-12-30",
+    "event_months_date_blocks": 62,
+    "skipped": {
+     "no_price_block": 290,
+     "no_session_on_or_after": 520,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9562,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2002,
+     2009
+    ],
+    "elapsed_s": 45.4
+   },
+   "2009-2013": {
+    "events": 60898,
+    "first": "2009-03-04",
+    "last": "2014-10-31",
+    "event_months_date_blocks": 66,
+    "skipped": {
+     "no_price_block": 6,
+     "no_session_on_or_after": 586,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9642,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2007,
+     2014
+    ],
+    "elapsed_s": 49.1
+   },
+   "2014-2018": {
+    "events": 59713,
+    "first": "2014-03-03",
+    "last": "2019-04-25",
+    "event_months_date_blocks": 61,
+    "skipped": {
+     "no_price_block": 6,
+     "no_session_on_or_after": 1163,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9521,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2012,
+     2019
+    ],
+    "elapsed_s": 49.1
+   },
+   "2019-2023": {
+    "events": 64212,
+    "first": "2019-03-04",
+    "last": "2024-02-28",
+    "event_months_date_blocks": 60,
+    "skipped": {
+     "no_price_block": 645,
+     "no_session_on_or_after": 472,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9569,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2017,
+     2024
+    ],
+    "elapsed_s": 43.4
+   },
+   "2024-2024": {
+    "events": 10690,
+    "first": "2024-02-29",
+    "last": "2024-12-31",
+    "event_months_date_blocks": 11,
+    "skipped": {
+     "no_price_block": 124,
+     "no_session_on_or_after": 2059,
+     "short_forward": 0
+    },
+    "market_model": {
+     "window_sessions": [
+      -260,
+      -21
+     ],
+     "min_sessions": 100,
+     "fitted_share": 0.9859,
+     "market": "EW CRSP common-stock daily return"
+    },
+    "clocks": {
+     "1": "sessions held, starting at the entry session",
+     "5": "sessions held, starting at the entry session",
+     "21": "sessions held, starting at the entry session",
+     "60": "sessions held, starting at the entry session",
+     "next_ann": "to the NEXT announcement, capped at 120 sessions"
+    },
+    "entry": {
+     "e2_PRIMARY": "enter at the close of session +1 -- PIT-safe whether the company reported intraday or after the bell",
+     "e1_SECONDARY": "enter at the close of session 0 -- `event_response_v1`'s convention; a LOOKAHEAD for an after-close reporter, and carried only so the one-session gap is visible",
+     "reaction": "reaction_01 = sessions 0 and +1 compounded"
+    },
+    "return_bases": {
+     "raw": "the name's own compounded return over the window",
+     "mkt": "raw minus the EW market compounded over the same sessions",
+     "bo": "raw minus BETA x market -- the pre-event market-model beta only, no alpha term. The clean expected-return decomposition.",
+     "ab": "raw minus (alpha + beta x market) -- the FULL fitted pre-event expectation. Over a long clock the alpha term compounds and it carries the name's own pre-announcement run-up, so `ab` is a momentum-charged upper bound on the correction, not the correction. Read `bo` and `ab` together or neither."
+    },
+    "sue_definitions": {
+     "sue": "(actual - surpmean) / surpstdev, all three from surpsumu (UNADJUSTED) -- PRIMARY",
+     "sue_ibes": "IBES's own suescore column, carried for cross-check",
+     "sue_price": "(actual - surpmean) / |CRSP raw prc| on day 0. cfacpr is NOT applied: an unadjusted numerator needs an unadjusted denominator (feedback_a_split_adjusted_numerator_over_a_raw_denominator)"
+    },
+    "daily_years_loaded": [
+     2022,
+     2024
+    ],
+    "elapsed_s": 9.6
+   }
+  }
+ },
+ "what_it_is": "the same machinery with session 0 moved 40 trading sessions AFTER the announcement -- same names, same era, no event. If the reaction signal survives here, it is a two-session price move, not an event family.",
+ "cells": {
+  "sue_pct|car_bo_5_e2": {
+   "label": "PLACEBO|sue_pct|car_bo_5_e2",
+   "BETA_FIRST": {
+    "mean_pre_event_beta_top_minus_bottom": -0.0212,
+    "mean_pre_event_DAILY_alpha_top_minus_bottom": 0.0012261,
+    "that_alpha_differential_over_60_sessions_pct": 7.3563,
+    "note": "pre-event market-model betas and alphas of the two extreme deciles. On `raw` and `mkt` neither is removed. On `bo` the BETA is removed and the alpha is not. On `ab` both are, and the alpha row above is the size of what `ab` takes off a 60-session clock -- read it before reading `ab`."
+   },
+   "date_blocks_n_effective": 310,
+   "events_used": 265257,
+   "mean_spread_pct_per_event": 0.1132,
+   "median_spread_pct": 0.0351,
+   "t_on_date_blocks": 1.074,
+   "p_two_sided": 0.28300244,
+   "share_of_blocks_positive": 0.5226,
+   "mde_and_power": {
+    "n_blocks": 310,
+    "alpha": 0.05,
+    "power": 0.8,
+    "sd_per_block": 0.018561,
+    "mde_abs": 0.002953,
+    "observed_abs": 0.001132,
+    "powered_for_observed_effect": false,
+    "blocks_needed_for_observed_effect": 2111
+   },
+   "eras": {
+    "1999-2007": {
+     "blocks": 106,
+     "mean_pct": 0.157,
+     "t": 0.789,
+     "sign": 1
+    },
+    "2008-2015": {
+     "blocks": 96,
+     "mean_pct": 0.076,
+     "t": 0.497,
+     "sign": 1
+    },
+    "2016-2024": {
+     "blocks": 108,
+     "mean_pct": 0.1032,
+     "t": 0.548,
+     "sign": 1
+    },
+    "eras_measured": 3,
+    "eras_same_sign_as_full": 3
+   }
+  },
+  "sue_pct|car_bo_21_e2": {
+   "label": "PLACEBO|sue_pct|car_bo_21_e2",
+   "BETA_FIRST": {
+    "mean_pre_event_beta_top_minus_bottom": -0.0212,
+    "mean_pre_event_DAILY_alpha_top_minus_bottom": 0.0012261,
+    "that_alpha_differential_over_60_sessions_pct": 7.3563,
+    "note": "pre-event market-model betas and alphas of the two extreme deciles. On `raw` and `mkt` neither is removed. On `bo` the BETA is removed and the alpha is not. On `ab` both are, and the alpha row above is the size of what `ab` takes off a 60-session clock -- read it before reading `ab`."
+   },
+   "date_blocks_n_effective": 309,
+   "events_used": 263838,
+   "mean_spread_pct_per_event": 0.3744,
+   "median_spread_pct": 0.6909,
+   "t_on_date_blocks": 1.28,
+   "p_two_sided": 0.20061134,
+   "share_of_blocks_positive": 0.6019,
+   "mde_and_power": {
+    "n_blocks": 309,
+    "alpha": 0.05,
+    "power": 0.8,
+    "sd_per_block": 0.05142,
+    "mde_abs": 0.008195,
+    "observed_abs": 0.003744,
+    "powered_for_observed_effect": false,
+    "blocks_needed_for_observed_effect": 1481
+   },
+   "eras": {
+    "1999-2007": {
+     "blocks": 106,
+     "mean_pct": 0.548,
+     "t": 0.961,
+     "sign": 1
+    },
+    "2008-2015": {
+     "blocks": 96,
+     "mean_pct": 0.5845,
+     "t": 1.476,
+     "sign": 1
+    },
+    "2016-2024": {
+     "blocks": 107,
+     "mean_pct": 0.0139,
+     "t": 0.027,
+     "sign": 1
+    },
+    "eras_measured": 3,
+    "eras_same_sign_as_full": 3
+   }
+  },
+  "reac_pct|car_bo_5_e2": {
+   "label": "PLACEBO|reac_pct|car_bo_5_e2",
+   "BETA_FIRST": {
+    "mean_pre_event_beta_top_minus_bottom": -0.0262,
+    "mean_pre_event_DAILY_alpha_top_minus_bottom": 0.0002111,
+    "that_alpha_differential_over_60_sessions_pct": 1.2667,
+    "note": "pre-event market-model betas and alphas of the two extreme deciles. On `raw` and `mkt` neither is removed. On `bo` the BETA is removed and the alpha is not. On `ab` both are, and the alpha row above is the size of what `ab` takes off a 60-session clock -- read it before reading `ab`."
+   },
+   "date_blocks_n_effective": 310,
+   "events_used": 319643,
+   "mean_spread_pct_per_event": -0.9081,
+   "median_spread_pct": -0.7633,
+   "t_on_date_blocks": -6.466,
+   "p_two_sided": 0.0,
+   "share_of_blocks_positive": 0.2935,
+   "mde_and_power": {
+    "n_blocks": 310,
+    "alpha": 0.05,
+    "power": 0.8,
+    "sd_per_block": 0.024729,
+    "mde_abs": 0.003935,
+    "observed_abs": -0.009081,
+    "powered_for_observed_effect": true,
+    "blocks_needed_for_observed_effect": 59
+   },
+   "eras": {
+    "1999-2007": {
+     "blocks": 106,
+     "mean_pct": -1.1349,
+     "t": -4.753,
+     "sign": -1
+    },
+    "2008-2015": {
+     "blocks": 96,
+     "mean_pct": -0.6577,
+     "t": -3.196,
+     "sign": -1
+    },
+    "2016-2024": {
+     "blocks": 108,
+     "mean_pct": -0.9082,
+     "t": -3.334,
+     "sign": -1
+    },
+    "eras_measured": 3,
+    "eras_same_sign_as_full": 3
+   }
+  },
+  "reac_pct|car_bo_21_e2": {
+   "label": "PLACEBO|reac_pct|car_bo_21_e2",
+   "BETA_FIRST": {
+    "mean_pre_event_beta_top_minus_bottom": -0.0262,
+    "mean_pre_event_DAILY_alpha_top_minus_bottom": 0.0002111,
+    "that_alpha_differential_over_60_sessions_pct": 1.2667,
+    "note": "pre-event market-model betas and alphas of the two extreme deciles. On `raw` and `mkt` neither is removed. On `bo` the BETA is removed and the alpha is not. On `ab` both are, and the alpha row above is the size of what `ab` takes off a 60-session clock -- read it before reading `ab`."
+   },
+   "date_blocks_n_effective": 309,
+   "events_used": 317878,
+   "mean_spread_pct_per_event": -0.5626,
+   "median_spread_pct": -0.3486,
+   "t_on_date_blocks": -2.04,
+   "p_two_sided": 0.04130321,
+   "share_of_blocks_positive": 0.4693,
+   "mde_and_power": {
+    "n_blocks": 309,
+    "alpha": 0.05,
+    "power": 0.8,
+    "sd_per_block": 0.048469,
+    "mde_abs": 0.007725,
+    "observed_abs": -0.005626,
+    "powered_for_observed_effect": false,
+    "blocks_needed_for_observed_effect": 583
+   },
+   "eras": {
+    "1999-2007": {
+     "blocks": 106,
+     "mean_pct": -1.0181,
+     "t": -2.096,
+     "sign": -1
+    },
+    "2008-2015": {
+     "blocks": 96,
+     "mean_pct": -0.6454,
+     "t": -1.361,
+     "sign": -1
+    },
+    "2016-2024": {
+     "blocks": 107,
+     "mean_pct": -0.0371,
+     "t": -0.079,
+     "sign": -1
+    },
+    "eras_measured": 3,
+    "eras_same_sign_as_full": 3
+   }
+  },
+  "gap|car_bo_5_e2": {
+   "label": "PLACEBO|gap|car_bo_5_e2",
+   "BETA_FIRST": {
+    "mean_pre_event_beta_top_minus_bottom": -0.0153,
+    "mean_pre_event_DAILY_alpha_top_minus_bottom": 0.0008734,
+    "that_alpha_differential_over_60_sessions_pct": 5.2402,
+    "note": "pre-event market-model betas and alphas of the two extreme deciles. On `raw` and `mkt` neither is removed. On `bo` the BETA is removed and the alpha is not. On `ab` both are, and the alpha row above is the size of what `ab` takes off a 60-session clock -- read it before reading `ab`."
+   },
+   "date_blocks_n_effective": 310,
+   "events_used": 265257,
+   "mean_spread_pct_per_event": 0.5062,
+   "median_spread_pct": 0.4846,
+   "t_on_date_blocks": 4.718,
+   "p_two_sided": 2.39e-06,
+   "share_of_blocks_positive": 0.6516,
+   "mde_and_power": {
+    "n_blocks": 310,
+    "alpha": 0.05,
+    "power": 0.8,
+    "sd_per_block": 0.018893,
+    "mde_abs": 0.003006,
+    "observed_abs": 0.005062,
+    "powered_for_observed_effect": true,
+    "blocks_needed_for_observed_effect": 110
+   },
+   "eras": {
+    "1999-2007": {
+     "blocks": 106,
+     "mean_pct": 0.8641,
+     "t": 5.296,
+     "sign": 1
+    },
+    "2008-2015": {
+     "blocks": 96,
+     "mean_pct": 0.4291,
+     "t": 2.746,
+     "sign": 1
+    },
+    "2016-2024": {
+     "blocks": 108,
+     "mean_pct": 0.2235,
+     "t": 1.014,
+     "sign": 1
+    },
+    "eras_measured": 3,
+    "eras_same_sign_as_full": 3
+   }
+  },
+  "gap|car_bo_21_e2": {
+   "label": "PLACEBO|gap|car_bo_21_e2",
+   "BETA_FIRST": {
+    "mean_pre_event_beta_top_minus_bottom": -0.0153,
+    "mean_pre_event_DAILY_alpha_top_minus_bottom": 0.0008734,
+    "that_alpha_differential_over_60_sessions_pct": 5.2402,
+    "note": "pre-event market-model betas and alphas of the two extreme deciles. On `raw` and `mkt` neither is removed. On `bo` the BETA is removed and the alpha is not. On `ab` both are, and the alpha row above is the size of what `ab` takes off a 60-session clock -- read it before reading `ab`."
+   },
+   "date_blocks_n_effective": 309,
+   "events_used": 263838,
+   "mean_spread_pct_per_event": 0.5712,
+   "median_spread_pct": 0.7831,
+   "t_on_date_blocks": 2.068,
+   "p_two_sided": 0.03864389,
+   "share_of_blocks_positive": 0.6149,
+   "mde_and_power": {
+    "n_blocks": 309,
+    "alpha": 0.05,
+    "power": 0.8,
+    "sd_per_block": 0.04855,
+    "mde_abs": 0.007738,
+    "observed_abs": 0.005712,
+    "powered_for_observed_effect": false,
+    "blocks_needed_for_observed_effect": 568
+   },
+   "eras": {
+    "1999-2007": {
+     "blocks": 106,
+     "mean_pct": 0.6556,
+     "t": 1.335,
+     "sign": 1
+    },
+    "2008-2015": {
+     "blocks": 96,
+     "mean_pct": 0.8341,
+     "t": 2.003,
+     "sign": 1
+    },
+    "2016-2024": {
+     "blocks": 107,
+     "mean_pct": 0.2516,
+     "t": 0.491,
+     "sign": 1
+    },
+    "eras_measured": 3,
+    "eras_same_sign_as_full": 3
+   }
+  }
+ }
+}

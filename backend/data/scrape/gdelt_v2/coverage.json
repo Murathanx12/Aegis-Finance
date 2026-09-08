@@ -1,0 +1,28 @@
+{
+ "source": "gdelt_v2",
+ "schema_version": 1,
+ "written_at": "2026-09-07T10:39:06+00:00",
+ "cursors": {
+  "tail": {
+   "cursor": "20260907104500",
+   "updated_at": "2026-09-07T10:37:21+00:00",
+   "n_docs_total": 4
+  },
+  "window:20260907040000-20260907080000": {
+   "cursor": "20260907080000",
+   "updated_at": "2026-09-07T10:39:06+00:00",
+   "n_docs_total": 55
+  }
+ },
+ "n_docs": 55,
+ "n_bytes": 49015304,
+ "by_fetch_day": {
+  "2026-09-07": 55
+ },
+ "by_http_status": {
+  "200": 55
+ },
+ "elapsed_s": 66.5,
+ "user_agent": "AegisFinanceResearchBot/1.0 (+https://github.com/Murathanx12/Aegis-Finance; research use; contact via repo issues)",
+ "note": "new=40 skipped=2 failed=0"
+}

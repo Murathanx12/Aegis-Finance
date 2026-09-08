@@ -45,6 +45,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 from backend import config as _config
+from backend.services import llm_language as _lang
 
 logger = logging.getLogger(__name__)
 
@@ -55,12 +56,22 @@ LEDGER_PATH = _config.build1_path("llm_ledger.jsonl")
 #: in code is a hope.
 CAMPAIGN_BUDGET_USD = 30.00
 
-#: DeepSeek published rates, USD per 1M tokens. Used to price the ledger; if
-#: they drift the ledger is wrong in a KNOWN direction and the note says so.
-PRICE_PER_MTOK = {
-    "deepseek-chat": {"in": 0.27, "out": 1.10},
-    "deepseek-reasoner": {"in": 0.55, "out": 2.19},
-}
+#: X7 (2026-09-07): THERE IS ONE PRICE TABLE AND IT LIVES IN `backend.config`.
+#:
+#: This module used to carry its own literal — `deepseek-chat 0.27/1.10`,
+#: `deepseek-reasoner 0.55/2.19` — the PUBLISHED list rates, copied by hand.
+#: `config.LLM_PRICE_PER_MTOK` was later re-derived from the provider's own
+#: BALANCE (0.169413 in / 1.284835 out for deepseek-chat, receipt
+#: `C3_deepseek_price_derivation_run01.json`) and the two tables then disagreed
+#: by 1.6x on the input leg and 1.2x on the output leg. Every call this module
+#: ledgered was priced at the wrong rate, and `llm_cost_audit` reconciled the
+#: ledger against a table the ledger had never used — so the audit could not
+#: see the gap it existed to find.
+#:
+#: A price table copied is a price table that drifts. This is now a REFERENCE,
+#: re-read at call time through `_config`, and `test_one_price_table.py` fails
+#: if a second rate table for a model `config` already prices appears anywhere.
+PRICE_PER_MTOK = _config.LLM_PRICE_PER_MTOK
 DEFAULT_MODEL = "deepseek-chat"
 
 
@@ -96,7 +107,15 @@ class LLMCall:
 
 
 def _price(model: str, pin: int, pout: int) -> float:
-    p = PRICE_PER_MTOK.get(model) or PRICE_PER_MTOK[DEFAULT_MODEL]
+    """Cost of one call, at `config.LLM_PRICE_PER_MTOK` READ AT CALL TIME.
+
+    Read through `_config` rather than through this module's alias so a test (or
+    a re-derivation) that swaps the table is actually obeyed. `cached_in` is not
+    applied: this module does not observe the cache split, so the number is an
+    UPPER bound on the input leg and the ledger errs in a known direction.
+    """
+    table = _config.LLM_PRICE_PER_MTOK
+    p = table.get(model) or table[DEFAULT_MODEL]
     return (pin * p["in"] + pout * p["out"]) / 1_000_000.0
 
 
@@ -156,13 +175,26 @@ def _mirror(call: LLMCall, *, prompt: str, schema_valid: bool) -> str:
 
 
 def available() -> tuple[bool, str]:
-    """Is any LLM path usable? Returns (ok, reason)."""
-    try:
-        from dotenv import load_dotenv
-        load_dotenv()
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("dotenv load failed (%s); relying on the ambient "
-                       "environment for keys", exc)
+    """Is any LLM path usable? Returns (ok, reason).
+
+    HONOURS `AEGIS_IGNORE_DOTENV`. It did not until 2026-09-07: it called
+    `load_dotenv()` unconditionally, which is the one thing `backend/config.py`
+    was changed to stop doing. The consequence was not theoretical -- under the
+    fast suite's `AEGIS_IGNORE_DOTENV=1` this function reloaded `.env`, found a
+    real DEEPSEEK_API_KEY, reported the provider available, and `ask()` then
+    opened a socket in a NON-SLOW test. That is a bug by CLAUDE.md's own rule,
+    and it stayed invisible only because every caller happened to be stubbed.
+    NEVER move `.env` to reproduce this; set the env var.
+    """
+    if os.getenv("AEGIS_IGNORE_DOTENV"):
+        logger.debug("AEGIS_IGNORE_DOTENV set; not loading .env")
+    else:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("dotenv load failed (%s); relying on the ambient "
+                           "environment for keys", exc)
     if os.getenv("DEEPSEEK_API_KEY"):
         return True, "deepseek"
     if os.getenv("ANTHROPIC_API_KEY"):
@@ -199,14 +231,31 @@ def ask(prompt: str, *, purpose: str, model: str = DEFAULT_MODEL,
             "https://api.deepseek.com/chat/completions",
             headers={"Authorization": f"Bearer {key}",
                      "Content-Type": "application/json"},
+            # `pin_messages` PREPENDS a system message here, because this call
+            # site sends a user turn and nothing else -- which is exactly the
+            # condition under which `deepseek-chat` picks its own output
+            # language. Found 2026-09-07 by the raw-HTTP arm of the language
+            # contract (`test_free_inference.py`): the older AST detector looks
+            # for `chat.completions.create`, this module builds the URL itself,
+            # so it sat in NO enumeration and was unpinned and unguarded for
+            # its whole life. Pinning is the request; `_lang.guard` below is
+            # the verdict.
             json={"model": model, "temperature": temperature,
                   "max_tokens": max_tokens,
-                  "messages": [{"role": "user", "content": full}]},
+                  "messages": _lang.pin_messages(
+                      [{"role": "user", "content": full}])},
             timeout=180)
         r.raise_for_status()
         body = r.json()
         choice = (body.get("choices") or [{}])[0]
-        text = (choice.get("message") or {}).get("content") or ""
+        # `guard` returns "" for a reply that is >10% non-Latin script, which
+        # lands in the nothing-came-back branch this function already has
+        # (`schema_valid=bool(text and text.strip())` below). The reply is
+        # DISCARDED -- not repaired and not retried -- and the tokens it burned
+        # are still ledgered, because a refusal rate needs a denominator.
+        text = _lang.guard(
+            "deepseek", purpose,
+            (choice.get("message") or {}).get("content") or "")
         # Read defensively: a vendor that omits the field must not take the
         # call down, and an absent finish_reason is reported as absent rather
         # than as "stop".

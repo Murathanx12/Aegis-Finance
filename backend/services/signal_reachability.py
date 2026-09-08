@@ -133,6 +133,18 @@ CLASSIFIED: dict[str, str] = {
         "row and not a client. Deliberately has NO caller in the request path: it has "
         "no trading authority and the router that would use it needs benchmark "
         "evidence that does not exist yet."),
+    "backend.vendor": (
+        "OK -- VERBATIM cross-repo source, never statically imported. "
+        "`backend/vendor/aat/alpha/` is a byte-identical mirror of the execution "
+        "repo's `alpha/human.py` (the Thesis schema) and `alpha/brains/base.py` "
+        "(the Forecast it returns). H2 says reuse that schema VERBATIM, so the "
+        "file keeps its own `from alpha.brains.base import Forecast` line and is "
+        "loaded BY PATH in `backend.services.human_thesis` -- which is why no "
+        "import edge exists for this audit to follow. It is deliberately NOT on "
+        "sys.path permanently: binding the name `alpha` to the execution repo "
+        "would put `alpha.brains`, the package that owns the broker client, one "
+        "import away from a request handler. Drift is caught by "
+        "`test_human_thesis.py::TestSchemaIsVerbatim`, not by this audit."),
     "backend.services.signal_reachability": (
         "OK — this module. It audits the graph it sits in; being inside its "
         "own answer is the one case where unreachable is correct."),

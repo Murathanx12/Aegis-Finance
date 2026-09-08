@@ -134,3 +134,85 @@ def test_cli_logs_a_decision(tmp_db, monkeypatch):
     assert rc == 0
     rows = list_personal_decisions(get_connection(tmp_db))
     assert len(rows) == 1 and rows[0]["ticker"] == "DKNG" and rows[0]["action"] == "trim"
+
+
+# ── H2: the journal → thesis bridge ───────────────────────────────────────────
+# A conviction row with a rationale and a 1-5 conviction can be REMEMBERED and
+# cannot be GRADED. These tests pin the bridge that turns the same decision into
+# a `Thesis` (the execution repo's schema, verbatim) and a PENDING row in the
+# four-counterfactual decision log — and, just as importantly, pin that a row
+# WITHOUT those fields is told so at the moment it is written.
+
+
+@pytest.fixture
+def isolated_journal(tmp_path, monkeypatch):
+    from backend.services import decision_log as dl
+    from backend.services import human_thesis as ht
+
+    monkeypatch.setattr(ht, "HUMAN_THESIS_LOG", tmp_path / "theses.jsonl")
+    monkeypatch.setattr(ht, "HUMAN_BOOK_LOG", tmp_path / "book.jsonl")
+    monkeypatch.setattr(dl, "DECISION_LOG_PATH", tmp_path / "decisions.jsonl")
+    monkeypatch.setattr(dl, "DECISION_GRADE_LOG_PATH", tmp_path / "grades.jsonl")
+    return tmp_path
+
+
+def _future_iso(days: int = 30) -> str:
+    """Derived from `today` — a literal date fails the day after it passes."""
+    import datetime as _dt
+
+    return (_dt.datetime.now(_dt.timezone.utc)
+            + _dt.timedelta(days=days)).isoformat(timespec="seconds")
+
+
+def test_a_decision_without_a_falsifier_says_it_cannot_be_graded(
+        tmp_db, client, isolated_journal):
+    body = client.post("/api/pi/conviction/decision", json=_payload()).json()
+    assert body["thesis"]["status"] == "NOT_CREATED"
+    assert "GRADED" in body["thesis"]["reason"]
+    assert "falsifier" in body["thesis"]["missing"]
+    assert not (isolated_journal / "theses.jsonl").exists()
+
+
+def test_a_decision_with_the_h2_fields_opens_a_thesis_and_a_pending_row(
+        tmp_db, client, isolated_journal):
+    body = client.post("/api/pi/conviction/decision", json=_payload(
+        ticker="NVDA", action="enter", direction="up", expected_move=0.06,
+        catalyst="Q3 FY27 print", catalyst_at_utc=_future_iso(30),
+        falsifier="Q4 revenue guide at or below $104bn, or GM guide below 74%",
+        horizon_sessions=63, min_normal_hold_sessions=21,
+        loss_budget_ref="thesis_3m_v1")).json()
+    t = body["thesis"]
+    assert t["status"] == "CREATED", t
+    assert t["brain"] == "human:murat"
+    assert (t["horizon_sessions"], t["min_normal_hold_sessions"],
+            t["loss_budget_ref"]) == (63, 21, "thesis_3m_v1")
+    assert t["decision_row_id"] and t["resolves_on"]
+    assert (isolated_journal / "theses.jsonl").exists()
+    assert (isolated_journal / "decisions.jsonl").exists()
+
+
+def test_an_immutable_decision_row_survives_a_refused_thesis(
+        tmp_db, client, isolated_journal):
+    """The decision row is written FIRST. Losing it because a falsifier was 14
+    characters long would be the write path punishing the honest half."""
+    r = client.post("/api/pi/conviction/decision", json=_payload(
+        direction="up", expected_move=0.06, catalyst="a print",
+        catalyst_at_utc=_future_iso(10), falsifier="too short"))
+    assert r.status_code == 200
+    assert r.json()["thesis"]["status"] == "REFUSED"
+    assert "falsifier" in r.json()["thesis"]["reason"]
+    conn = get_connection(tmp_db)
+    try:
+        assert len(list_personal_decisions(conn)) == 1
+    finally:
+        conn.close()
+
+
+def test_a_backdated_thesis_is_refused_but_the_decision_stands(
+        tmp_db, client, isolated_journal):
+    r = client.post("/api/pi/conviction/decision", json=_payload(
+        direction="up", expected_move=0.06, catalyst="already happened",
+        catalyst_at_utc=_future_iso(-5),
+        falsifier="Q4 revenue guide at or below $104bn, or GM below 74%"))
+    assert r.json()["thesis"]["status"] == "REFUSED"
+    assert "memory" in r.json()["thesis"]["reason"].lower()

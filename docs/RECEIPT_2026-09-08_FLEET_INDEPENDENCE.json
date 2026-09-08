@@ -1,0 +1,70 @@
+{
+ "receipt": "FLEET_BOOKS_ARE_NOT_INDEPENDENT_EVIDENCE",
+ "day": "2026-09-08",
+ "question": "The fleet exists so that 'was the balanced book or the diversified book right' is a number in a ledger rather than a memory of who argued louder. That only holds if the books are DIFFERENT. Are they?",
+ "method": "Today's sealed book (sha f20929777f77fa55) for hack3 (k=10) and hack6 (k=15). Name overlap by Jaccard. Each book's equal-weighted daily return over 380 sessions of Alpaca daily closes (adjustment=all), then Pearson correlation between the books and against SPY and IWM. No forecast, no book simulated, no edge claimed -- this is a measurement of the measuring apparatus.",
+ "answer": "BY HOLDINGS THEY LOOK DIFFERENT AND BY RETURNS THEY ARE NOT. They share only 3 of 22 distinct names (Jaccard 0.14), yet their equal-weighted returns correlate at rho 0.719 -- 52% of each other's variance. The shared variance does not come from shared names; it comes from a common factor.",
+ "the_factor_is_small_cap": "Both books correlate MORE with IWM than with SPY: hack3 rho 0.752 vs 0.605, hack6 rho 0.766 vs 0.675. These are largely a small-cap beta position, so any excess must be measured against IWM and not against SPY. This is the same shape as the standing finding that excess is a LOADING, not an intercept.",
+ "what_it_costs_the_design": "hack3 vs hack6 was built as the live test of a breadth ridge (k=10 against k=15). At rho 0.719 that comparison carries far less independent information than 'two accounts' suggests: the effective number of independent books is nearer one than two. Any ranking of the fleet's books against each other should state this, and n_effective should count accordingly.",
+ "caveats": [
+  "380 sessions of ONE regime; correlations are not stationary and this bounds nothing about a crisis, when they typically rise.",
+  "The EW book return ignores the actual weights, costs, entry timing and the exit rule. It measures the SELECTION's factor exposure, not the traded book's.",
+  "Only two books had holdings in today's seal (hack4 sealed EMPTY), so nothing here says anything about hack1, hack2, hack4 or hack5.",
+  "Correlation of equal-weighted baskets of small caps is high almost by construction; the informative part is that it is high DESPITE 86% distinct names."
+ ],
+ "measured": {
+  "sessions": 380,
+  "books": {
+   "hack3": [
+    "IVA",
+    "ARDX",
+    "PRVA",
+    "INVA",
+    "TNXP",
+    "ASPI",
+    "DAKT",
+    "LENZ",
+    "ANIP",
+    "RRX"
+   ],
+   "hack6": [
+    "ARDX",
+    "INVA",
+    "PRVA",
+    "MAZE",
+    "GPCR",
+    "NAMS",
+    "TREE",
+    "IMCR",
+    "AMSC",
+    "BUR",
+    "CALX",
+    "ATR",
+    "EVLV",
+    "ULS",
+    "GRAB"
+   ]
+  },
+  "overlap": {
+   "hack3|hack6": [
+    "ARDX",
+    "INVA",
+    "PRVA"
+   ]
+  },
+  "rho": {
+   "hack3|hack6": 0.7189573349766292
+  },
+  "rho_spy": {
+   "hack3": 0.6051762945410143,
+   "hack6": 0.6745673353446446
+  },
+  "rho_iwm": {
+   "hack3": 0.7515753490783987,
+   "hack6": 0.7660485205986773
+  }
+ },
+ "licence": "PRODUCT_EXPERIMENT",
+ "no_edge_claimed": true,
+ "written_utc": "2026-09-08T05:38:45.615827+00:00"
+}

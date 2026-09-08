@@ -88,7 +88,7 @@ number.** conservative-atr is the only positive raw excess — **+0.144 pp at be
 window out. The two lanes with real beta both lost heavily. And the beta column
 itself is **biased toward zero**: R² vs SPY is 0.0015-0.05 on all seven, which
 is not credible for an equity book, and Dimson lead/lag says why — `conviction`
-loads 0.66 on today's market and **1.50 on yesterday's**. A book cannot react a
+loads **0.6072** on today's market and **1.3990 on yesterday's** (joint Dimson OLS; Dimson sum 1.9313, lagged univariate 1.4259; corrected 2026-09-07 - the earlier 0.66 / 1.50 matched no field of `G7_forward_lanes.json`). A book cannot react a
 day late; its **marks** can. The lane NAV is marked on stale prices, and a stale
 mark *hides* beta — the one thing §2.2 forbids.
 

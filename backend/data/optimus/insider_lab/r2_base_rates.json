@@ -1,0 +1,518 @@
+{
+  "stage": "base_rates",
+  "source": "backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+  "rows": 3127624,
+  "window": [
+    "2006-01-04",
+    "2026-07-01"
+  ],
+  "families": {
+    "insider_open_market_sell": 1923246,
+    "insider_open_market_buy": 940379,
+    "insider_opportunistic_buy": 185555,
+    "insider_routine_buy": 78444
+  },
+  "per_year_family": {
+    "2006": {
+      "insider_open_market_buy": 75862,
+      "insider_open_market_sell": 242724,
+      "insider_opportunistic_buy": 25,
+      "insider_routine_buy": 20
+    },
+    "2007": {
+      "insider_open_market_buy": 132668,
+      "insider_open_market_sell": 282660,
+      "insider_opportunistic_buy": 588,
+      "insider_routine_buy": 115
+    },
+    "2008": {
+      "insider_open_market_buy": 175293,
+      "insider_open_market_sell": 164565,
+      "insider_opportunistic_buy": 16216,
+      "insider_routine_buy": 520
+    },
+    "2009": {
+      "insider_open_market_buy": 54887,
+      "insider_open_market_sell": 101864,
+      "insider_opportunistic_buy": 13441,
+      "insider_routine_buy": 3625
+    },
+    "2010": {
+      "insider_open_market_buy": 39142,
+      "insider_open_market_sell": 104384,
+      "insider_opportunistic_buy": 10362,
+      "insider_routine_buy": 3233
+    },
+    "2011": {
+      "insider_open_market_buy": 43802,
+      "insider_open_market_sell": 80454,
+      "insider_opportunistic_buy": 12550,
+      "insider_routine_buy": 5214
+    },
+    "2012": {
+      "insider_open_market_buy": 39948,
+      "insider_open_market_sell": 86679,
+      "insider_opportunistic_buy": 9073,
+      "insider_routine_buy": 6040
+    },
+    "2013": {
+      "insider_open_market_buy": 26283,
+      "insider_open_market_sell": 84856,
+      "insider_opportunistic_buy": 6320,
+      "insider_routine_buy": 4749
+    },
+    "2014": {
+      "insider_open_market_buy": 31788,
+      "insider_open_market_sell": 73952,
+      "insider_opportunistic_buy": 9491,
+      "insider_routine_buy": 6323
+    },
+    "2015": {
+      "insider_open_market_buy": 37413,
+      "insider_open_market_sell": 62088,
+      "insider_opportunistic_buy": 13429,
+      "insider_routine_buy": 7377
+    },
+    "2016": {
+      "insider_open_market_buy": 34263,
+      "insider_open_market_sell": 64048,
+      "insider_opportunistic_buy": 10357,
+      "insider_routine_buy": 5513
+    },
+    "2017": {
+      "insider_open_market_buy": 25502,
+      "insider_open_market_sell": 73307,
+      "insider_opportunistic_buy": 8069,
+      "insider_routine_buy": 4457
+    },
+    "2018": {
+      "insider_open_market_buy": 29087,
+      "insider_open_market_sell": 55224,
+      "insider_opportunistic_buy": 10476,
+      "insider_routine_buy": 3270
+    },
+    "2019": {
+      "insider_open_market_buy": 28816,
+      "insider_open_market_sell": 55035,
+      "insider_opportunistic_buy": 7726,
+      "insider_routine_buy": 3401
+    },
+    "2020": {
+      "insider_open_market_buy": 31044,
+      "insider_open_market_sell": 56386,
+      "insider_opportunistic_buy": 9171,
+      "insider_routine_buy": 3232
+    },
+    "2021": {
+      "insider_open_market_buy": 26195,
+      "insider_open_market_sell": 78330,
+      "insider_opportunistic_buy": 11487,
+      "insider_routine_buy": 2555
+    },
+    "2022": {
+      "insider_open_market_buy": 35170,
+      "insider_open_market_sell": 53763,
+      "insider_opportunistic_buy": 13179,
+      "insider_routine_buy": 4096
+    },
+    "2023": {
+      "insider_open_market_buy": 25391,
+      "insider_open_market_sell": 52763,
+      "insider_opportunistic_buy": 9295,
+      "insider_routine_buy": 4704
+    },
+    "2024": {
+      "insider_open_market_buy": 19556,
+      "insider_open_market_sell": 64031,
+      "insider_opportunistic_buy": 6248,
+      "insider_routine_buy": 4703
+    },
+    "2025": {
+      "insider_open_market_buy": 18031,
+      "insider_open_market_sell": 51821,
+      "insider_opportunistic_buy": 5655,
+      "insider_routine_buy": 3944
+    },
+    "2026": {
+      "insider_open_market_buy": 10238,
+      "insider_open_market_sell": 34312,
+      "insider_opportunistic_buy": 2397,
+      "insider_routine_buy": 1353
+    }
+  },
+  "buys_per_issuer_year": {
+    "n": 48521,
+    "mean": 15.693266832917706,
+    "std": 83.03768300631702,
+    "p1": 1.0,
+    "p5": 1.0,
+    "p10": 1.0,
+    "p25": 2.0,
+    "p50": 4.0,
+    "p75": 11.0,
+    "p90": 27.0,
+    "p95": 50.0,
+    "p99": 180.0,
+    "issuers_with_any_buy_median_per_year": 2974.0
+  },
+  "buy_rows_in_book_window": 761453,
+  "distinct_permnos_with_buy_per_month": {
+    "n": 193,
+    "mean": 383.01554404145077,
+    "std": 170.34867663743196,
+    "p1": 128.76,
+    "p5": 164.0,
+    "p10": 178.2,
+    "p25": 237.0,
+    "p50": 377.0,
+    "p75": 491.0,
+    "p90": 581.6000000000001,
+    "p95": 666.4,
+    "p99": 997.7599999999996
+  },
+  "distinct_symbols_with_buy_per_month": {
+    "n": 193,
+    "mean": 575.7823834196892,
+    "std": 222.88845841894337,
+    "p1": 228.04,
+    "p5": 270.0,
+    "p10": 294.8,
+    "p25": 403.0,
+    "p50": 558.0,
+    "p75": 722.0,
+    "p90": 826.4000000000001,
+    "p95": 921.9999999999998,
+    "p99": 1390.8799999999999
+  },
+  "dollar_value_by_family": {
+    "insider_open_market_buy": {
+      "n": 516771,
+      "mean": 123484085494.64139,
+      "std": 22272820507253.73,
+      "p1": 45.0,
+      "p5": 260.0,
+      "p10": 717.66,
+      "p25": 3495.0,
+      "p50": 20000.0,
+      "p75": 129329.0,
+      "p90": 994835.44,
+      "p95": 3253384.44,
+      "p99": 24999996.0
+    },
+    "insider_opportunistic_buy": {
+      "n": 159266,
+      "mean": 21210299490.829334,
+      "std": 4052757432017.4663,
+      "p1": 40.0,
+      "p5": 329.9637,
+      "p10": 875.0,
+      "p25": 3400.0,
+      "p50": 19680.0,
+      "p75": 170319.17250000002,
+      "p90": 1421379.3599999999,
+      "p95": 4590354.7125,
+      "p99": 23616059.60000025
+    },
+    "insider_routine_buy": {
+      "n": 71791,
+      "mean": 519634157.79464924,
+      "std": 70297983476.66673,
+      "p1": 7.384099999999997,
+      "p5": 120.0,
+      "p10": 440.00000000000006,
+      "p25": 1859.9024,
+      "p50": 8039.999999999999,
+      "p75": 33566.525,
+      "p90": 191250.0,
+      "p95": 668082.9,
+      "p99": 4998587.403000002
+    },
+    "insider_open_market_sell": {
+      "n": 1137230,
+      "mean": 29389797704.179256,
+      "std": 20201098292060.75,
+      "p1": 148.52320000000006,
+      "p5": 1192.0,
+      "p10": 3166.7999999999997,
+      "p25": 15154.2,
+      "p50": 106124.695,
+      "p75": 667128.14,
+      "p90": 4029811.83,
+      "p95": 18206865.6,
+      "p99": 228077359.24
+    }
+  },
+  "filing_lag_days_all": {
+    "n": 3127613,
+    "mean": 22.837517621265803,
+    "std": 163.5045115237384,
+    "p1": 1.0,
+    "p5": 1.0,
+    "p10": 1.0,
+    "p25": 2.0,
+    "p50": 3.0,
+    "p75": 5.0,
+    "p90": 6.0,
+    "p95": 58.0,
+    "p99": 427.0
+  },
+  "filing_lag_days_by_family": {
+    "insider_open_market_buy": {
+      "n": 940375,
+      "mean": 35.63757543533165,
+      "std": 197.3227115149747,
+      "p1": 1.0,
+      "p5": 1.0,
+      "p10": 1.0,
+      "p25": 2.0,
+      "p50": 3.0,
+      "p75": 5.0,
+      "p90": 31.0,
+      "p95": 165.0,
+      "p99": 750.0
+    },
+    "insider_open_market_sell": {
+      "n": 1923239,
+      "mean": 15.672985520780308,
+      "std": 134.05791736173674,
+      "p1": 1.0,
+      "p5": 1.0,
+      "p10": 1.0,
+      "p25": 2.0,
+      "p50": 3.0,
+      "p75": 5.0,
+      "p90": 6.0,
+      "p95": 14.0,
+      "p99": 288.0
+    },
+    "insider_opportunistic_buy": {
+      "n": 185555,
+      "mean": 28.53583573603514,
+      "std": 199.4370019779648,
+      "p1": 1.0,
+      "p5": 1.0,
+      "p10": 1.0,
+      "p25": 2.0,
+      "p50": 3.0,
+      "p75": 5.0,
+      "p90": 6.0,
+      "p95": 59.0,
+      "p99": 532.0
+    },
+    "insider_routine_buy": {
+      "n": 78444,
+      "mean": 31.568609453877926,
+      "std": 247.09290408938892,
+      "p1": 1.0,
+      "p5": 1.0,
+      "p10": 1.0,
+      "p25": 2.0,
+      "p50": 2.0,
+      "p75": 4.0,
+      "p90": 7.0,
+      "p95": 48.0,
+      "p99": 448.0
+    }
+  },
+  "filing_lag_days_by_year": {
+    "2006": {
+      "n": 318631,
+      "mean": 16.698227730509586,
+      "std": 129.25067632234806,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 355.0
+    },
+    "2007": {
+      "n": 416031,
+      "mean": 24.75695320781384,
+      "std": 119.00517359454439,
+      "p50": 3.0,
+      "p90": 42.0,
+      "p99": 249.0
+    },
+    "2008": {
+      "n": 356594,
+      "mean": 11.668152016018217,
+      "std": 93.29850865019858,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 211.0
+    },
+    "2009": {
+      "n": 173817,
+      "mean": 31.954492368410456,
+      "std": 158.0497897227474,
+      "p50": 3.0,
+      "p90": 11.0,
+      "p99": 850.0
+    },
+    "2010": {
+      "n": 157121,
+      "mean": 20.634078194512508,
+      "std": 134.8569965062759,
+      "p50": 3.0,
+      "p90": 7.0,
+      "p99": 371.0
+    },
+    "2011": {
+      "n": 142020,
+      "mean": 28.511251936346994,
+      "std": 160.44187181183753,
+      "p50": 3.0,
+      "p90": 17.0,
+      "p99": 559.0
+    },
+    "2012": {
+      "n": 141740,
+      "mean": 18.36470297728235,
+      "std": 124.79165052920068,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 368.0
+    },
+    "2013": {
+      "n": 122206,
+      "mean": 21.631646563998494,
+      "std": 145.24501814019882,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 519.0
+    },
+    "2014": {
+      "n": 121553,
+      "mean": 36.78041677293033,
+      "std": 235.94980281548163,
+      "p50": 3.0,
+      "p90": 7.0,
+      "p99": 868.0
+    },
+    "2015": {
+      "n": 120306,
+      "mean": 22.66082323408641,
+      "std": 156.84658288357713,
+      "p50": 3.0,
+      "p90": 8.0,
+      "p99": 460.84999999999127
+    },
+    "2016": {
+      "n": 114180,
+      "mean": 14.045629707479419,
+      "std": 87.11359798966328,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 324.20999999999185
+    },
+    "2017": {
+      "n": 111335,
+      "mean": 13.021861948174429,
+      "std": 94.29084598854689,
+      "p50": 3.0,
+      "p90": 5.0,
+      "p99": 287.0
+    },
+    "2018": {
+      "n": 98057,
+      "mean": 26.961624361340853,
+      "std": 143.54076052680907,
+      "p50": 3.0,
+      "p90": 7.0,
+      "p99": 727.0
+    },
+    "2019": {
+      "n": 94978,
+      "mean": 17.62688201478237,
+      "std": 121.31612746126632,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 346.0
+    },
+    "2020": {
+      "n": 99833,
+      "mean": 16.29019462502379,
+      "std": 111.23199176397668,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 336.0
+    },
+    "2021": {
+      "n": 118567,
+      "mean": 23.57329611105957,
+      "std": 134.8037976826333,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 610.0
+    },
+    "2022": {
+      "n": 106208,
+      "mean": 19.323798583910815,
+      "std": 267.1043729665538,
+      "p50": 3.0,
+      "p90": 5.0,
+      "p99": 306.0
+    },
+    "2023": {
+      "n": 92153,
+      "mean": 19.130663136305927,
+      "std": 117.91493995117904,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 367.0
+    },
+    "2024": {
+      "n": 94533,
+      "mean": 88.7857256196249,
+      "std": 486.26528975385696,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 3204.519999999902
+    },
+    "2025": {
+      "n": 79450,
+      "mean": 15.949339207048459,
+      "std": 179.89263760073652,
+      "p50": 3.0,
+      "p90": 5.0,
+      "p99": 245.0
+    },
+    "2026": {
+      "n": 48300,
+      "mean": 22.535983436853,
+      "std": 138.77869285225324,
+      "p50": 3.0,
+      "p90": 6.0,
+      "p99": 565.010000000002
+    }
+  },
+  "negative_lag_rows": 592,
+  "role_share_buys": {
+    "officer": 0.26124396384281107,
+    "director": 0.44673407288434086,
+    "tenpercent": 0.5292486863929882
+  },
+  "cmp_class_counts_book_window": {
+    "unclassifiable": 528287,
+    "opportunistic": 160674,
+    "routine": 72492
+  },
+  "plan_10b5_1_counts": {
+    "UNKNOWN": 2831929,
+    "NO": 295695
+  },
+  "cluster_buyers_dist": {
+    "n": 761453,
+    "mean": 4.6236944368201325,
+    "std": 6.820104635626378,
+    "p1": 1.0,
+    "p5": 1.0,
+    "p10": 1.0,
+    "p25": 1.0,
+    "p50": 2.0,
+    "p75": 6.0,
+    "p90": 10.0,
+    "p95": 15.0,
+    "p99": 43.0
+  },
+  "cluster_ge3_buy_rows_book_window": 348733,
+  "permno_link_rate_book_window": 0.6883786655249897
+}

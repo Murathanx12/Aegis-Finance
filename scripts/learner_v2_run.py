@@ -342,7 +342,9 @@ def grade_horizon(df: pd.DataFrame, preds: pd.DataFrame, horizon: int,
         if full_bands:
             row["by_band"] = E.grade_by_band(sub, col, horizon)
         if horizon == 1:
-            row["by_era"] = E.grade_by_era(sub, col, horizon)
+            # X6: derive the era grid from the slice being graded.
+            row["by_era"] = E.grade_by_era(sub, col, horizon,
+                                           eras=E.eras_covering(sub))
         out[col] = row
     return out, series
 

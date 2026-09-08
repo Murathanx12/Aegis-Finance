@@ -784,7 +784,159 @@ def _case_model_provider():
     return (_run, ProviderRefusal, "a provider with no credential")
 
 
+def _case_sec_insider_bulk():
+    """I1 — a quarterly SEC insider ZIP that is missing one of its tables.
+
+    The refusal that matters here is the one the news backfill did NOT have:
+    a quarter whose REPORTINGOWNER.tsv silently went missing would otherwise
+    parse to transactions with no insiders attached and write a green,
+    plausible, useless receipt. `_read_tsv` refuses at the member boundary
+    instead, so the loader records a FAILED quarter in its cursor and the
+    parquet is never written.
+    """
+    import tempfile
+    import zipfile
+    from pathlib import Path
+
+    from backend.services.sec_insider_bulk import (SUBMISSION_TSV,
+                                                   SecInsiderBulkError,
+                                                   parse_quarter_zip)
+
+    def _run():
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "2020q1_form345.zip"
+            with zipfile.ZipFile(p, "w") as z:
+                z.writestr(SUBMISSION_TSV,
+                           "ACCESSION_NUMBER\tFILING_DATE\tDOCUMENT_TYPE\n"
+                           "0000012345-20-000001\t05-FEB-2020\t4\n")
+            return parse_quarter_zip(p)
+
+    return (_run, SecInsiderBulkError, "a quarterly ZIP missing REPORTINGOWNER.tsv")
+
+
+def _case_scrape_store():
+    """Lane L — a document handed to the store with NO body.
+
+    `b""` with an HTTP status is a coverage FACT ("we looked, there was
+    nothing"); `None` is a bug, and storing it would erase the difference
+    between that and "we never looked" — the shape of the WRDS pull that
+    reported COMPLETE with seven tables never attempted.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from backend.services.scrape_store import ScrapeRefusal, ScrapeStore
+
+    def _run():
+        with tempfile.TemporaryDirectory() as d:
+            store = ScrapeStore("guard_contract_probe", root=Path(d))
+            store.bodies.mkdir(parents=True, exist_ok=True)
+            return store.put("http://example.invalid/1", 200, None)
+
+    return (_run, ScrapeRefusal, "a document with no body at all")
+
+
+def _case_free_inference():
+    """Lane L — a model that is not in the capability table.
+
+    An undeclared model is also an UNPRICED model, so calling it would record
+    `cost_usd=None` and make every spend total a lower bound. The refusal fires
+    before the wire, so this case makes no network call.
+    """
+    from backend.services.free_inference import complete
+    from backend.services.model_provider import ProviderRefusal
+
+    return (lambda: complete("nvidia_nim", "hi", model="meta/llama-3.3-70b"),
+            ProviderRefusal, "a model absent from the capability + price tables")
+
+
+def _case_local_review():
+    """Lane L — a REVIEW BATCH with no documents behind it.
+
+    `review_one` deliberately never raises (a failed document is a ROW), so the
+    guard sits one level up: a receipt computed over an empty batch would report
+    `docs_per_hour` and a DeepSeek counterfactual for a run that reviewed
+    nothing. A throughput number with no denominator is the thing this refuses.
+    """
+    from backend.services.local_review import EmptyBatch, throughput_receipt
+
+    return (lambda: throughput_receipt([], wall_s=1.0, backend="local_gguf"),
+            EmptyBatch, "a throughput receipt over zero documents")
+
+
+def _case_human_thesis():
+    """H2: a decision missing its falsifier cannot be graded, so it is refused.
+
+    The bridge's whole value is that the five omissions the conviction journal
+    tolerated (no falsifier, no catalyst date, no horizon, no declared hold, no
+    loss budget) each stop a row from entering the ledger. A bridge that
+    degraded to a partial thesis would produce rows the grader silently skips.
+    """
+    from backend.services.human_thesis import ThesisRefusal, build
+
+    return (lambda: build(symbol="NVDA", direction="up", expected_move=0.06,
+                          catalyst="a print", catalyst_at_utc="2099-01-01T00:00:00Z",
+                          reason="a reason long enough to keep",
+                          falsifier="", horizon_sessions=21,
+                          min_normal_hold_sessions=5, loss_budget_ref="human_v1"),
+            ThesisRefusal, "a thesis with no falsifier")
+
+
+def _case_decision_log():
+    """T2: a price with no named source is refused rather than graded.
+
+    This is the guard that keeps a missing benchmark from reading as 0.0 --
+    "SPY was flat" and "we never asked" are opposite facts and only one of them
+    makes the counterfactual free.
+    """
+    from backend.services.decision_log import (DecisionRefused, DecisionRow,
+                                               resolve)
+
+    row = DecisionRow(source="human:murat", symbol="AAA", direction="up",
+                      action="enter", decided_at_utc="2026-03-02T13:00:00+00:00",
+                      decision_day="2026-03-02", horizon_sessions=10,
+                      min_normal_hold_sessions=5, review_cadence_sessions=5,
+                      loss_budget_ref="human_v1")
+    return (lambda: resolve(row, as_of="2026-03-16",
+                            price_fn=lambda s, a, b: {"ok": True, "ret": 0.5}),
+            DecisionRefused, "a counterfactual price with no source")
+
+
+def _case_counterfactual_prices():
+    """A symbol no declared source can price REFUSES; it never returns zero."""
+    from backend.services.counterfactual_prices import PriceUnavailable, close_on
+
+    return (lambda: close_on("NOTATICKER", "2026-08-03",
+                             sources=("conviction_prices_csv",)),
+            PriceUnavailable, "a close no declared source can supply")
+
+
+def _case_terminal_state_reader():
+    """H5: an execution repo that is not on this machine refuses.
+
+    An empty mirror and an unreachable one look identical from a web page and
+    mean opposite things, so the sync must not produce the former for the
+    latter.
+    """
+    import tempfile
+    from pathlib import Path
+
+    from backend.services.terminal_state_reader import MirrorRefused, sync
+
+    tmp = Path(tempfile.mkdtemp())
+    return (lambda: sync(source=tmp / "no_such_state", mirror=tmp / "mirror"),
+            MirrorRefused, "a sync from an execution repo that is not here")
+
+
 CASES = {
+    "human_thesis": _case_human_thesis,
+    "decision_log": _case_decision_log,
+    "counterfactual_prices": _case_counterfactual_prices,
+    "terminal_state_reader": _case_terminal_state_reader,
+    "scrape_store": _case_scrape_store,
+    "free_inference": _case_free_inference,
+    "local_review": _case_local_review,
+    "sec_insider_bulk": _case_sec_insider_bulk,
     "model_provider": _case_model_provider,
     "aegis_panel": _case_aegis_panel,
     "signal_reachability": _case_signal_reachability,

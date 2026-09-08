@@ -54,6 +54,8 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 
+from backend.services import llm_language as _lang
+
 #: A provider is a row, not a class. `key_env` is the ONLY place its credential
 #: is named, so a missing key reports the variable the reader must set.
 PROVIDERS: dict[str, dict[str, str]] = {
@@ -104,15 +106,41 @@ PROVIDERS: dict[str, dict[str, str]] = {
     },
 }
 
-#: Appended to every system prompt. `deepseek-chat` code-switches to Chinese when
-#: no output language is named -- the parent bug was fixed centrally in
-#: `llm_analyzer._call_llm` after `explain_move.py` fixed it at ONE call site and
-#: every other caller inherited it for months. Same rule here: centrally, once.
-_LANGUAGE_PIN = " Respond in English."
+#: THE PIN IS IMPORTED, NOT RESTATED.
+#:
+#: This module used to carry its own copy, `_LANGUAGE_PIN = " Respond in
+#: English."` -- one word different from `llm_language.LANGUAGE_PIN` and, worse,
+#: a SECOND definition of a contract whose entire existence is owed to the same
+#: text having been written in two places. `explain_move.py` fixed the Chinese
+#: code-switch at one call site and six other callers inherited the bug; a
+#: private constant here was that bug in its larval stage. `llm_language` is the
+#: contract; this imports it, and `_guard_reply` below applies the RESPONSE half
+#: that this module was missing entirely.
+#:
+#: `test_llm_language_contract.py` did not catch it: its AST detector looks for
+#: `chat.completions.create` (the OpenAI SDK) and this module speaks raw urllib,
+#: so it was never in the enumeration. `test_free_inference.py` adds the
+#: raw-HTTP arm of that same enumeration.
+_LANGUAGE_PIN = _lang.LANGUAGE_PIN
 
 
 class ProviderRefusal(RuntimeError):
     """The provider was not configured, or its reply could not be trusted."""
+
+
+class LanguageRefused(ProviderRefusal):
+    """The reply came back and was not English. DISCARDED, never repaired.
+
+    Carries the `Reply` it refused, so the caller can still ACCOUNT for the
+    tokens the refused call burned. A refusal that loses its token count turns a
+    provider's refusal rate into a number with no denominator, and the rate is
+    the thing that decides whether the provider is fit for gradeable records.
+    """
+
+    def __init__(self, message: str, *, reply: "Reply", share: float) -> None:
+        super().__init__(message)
+        self.reply = reply
+        self.share = share
 
 
 @dataclass(frozen=True)
@@ -153,8 +181,17 @@ def configured(name: str) -> bool:
 
 def complete(name: str, prompt: str, *, system: str = "You are a precise research assistant.",
              model: str | None = None, max_tokens: int = 512,  # reasoning models need headroom
-             temperature: float = 0.2, timeout: int = 60) -> Reply:
-    """One chat completion. Same shape for every provider in `PROVIDERS`."""
+             temperature: float = 0.2, timeout: int = 60,
+             purpose: str = "model_provider",
+             provider_label: str | None = None) -> Reply:
+    """One chat completion. Same shape for every provider in `PROVIDERS`.
+
+    `provider_label` is the name the LANGUAGE REFUSAL is counted under. It
+    exists because the caller's idea of a provider and the transport's can
+    differ: `free_inference` calls the `nvidia` transport as backend
+    `nvidia_nim`, and a refusal rate filed under the wrong name is a rate
+    nobody can act on. Defaults to the transport name.
+    """
     spec = PROVIDERS[name] if name in PROVIDERS else None
     if spec is None:
         raise ProviderRefusal(f"unknown provider {name!r}; have {sorted(PROVIDERS)}")
@@ -166,7 +203,7 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
             "a benchmark ends up measuring the wrong one.")
     body = {
         "model": model or spec["default_model"],
-        "messages": [{"role": "system", "content": system + _LANGUAGE_PIN},
+        "messages": [{"role": "system", "content": _lang.pin(system)},
                      {"role": "user", "content": prompt}],
         "max_tokens": max_tokens,
         "temperature": temperature,
@@ -204,9 +241,23 @@ def complete(name: str, prompt: str, *, system: str = "You are a precise researc
             "answer -- a caller that treats it as text records a model saying nothing as a "
             f"model agreeing. Raw: {str(msg)[:200]}")
     usage = payload.get("usage") or {}
-    return Reply(provider=name, model=body["model"], text=text, latency_s=round(dt, 3),
-                 prompt_tokens=usage.get("prompt_tokens"),
-                 completion_tokens=usage.get("completion_tokens"))
+    reply = Reply(provider=name, model=body["model"], text=text, latency_s=round(dt, 3),
+                  prompt_tokens=usage.get("prompt_tokens"),
+                  completion_tokens=usage.get("completion_tokens"))
+    # THE RESPONSE HALF OF THE LANGUAGE CONTRACT, applied here and nowhere else.
+    # A pin is a REQUEST; a model that ignores it is precisely the failure being
+    # guarded, so a wire path that pins and then trusts whatever came back has
+    # implemented the polite half. Until 2026-09-07 this module did exactly that.
+    label = provider_label or name
+    share = _lang.non_latin_share(reply.text)
+    if _lang.refuse(label, purpose, reply.text):
+        raise LanguageRefused(
+            f"{label}/{reply.model} replied {share:.0%} non-Latin script "
+            f"(bar {_lang.NON_LATIN_BAR:.0%}) for purpose={purpose!r}. "
+            "DISCARDED -- not repaired, not retried. The tokens it burned are "
+            "on the exception (`.reply`) so the caller can still account them.",
+            reply=reply, share=share)
+    return reply
 
 
 def status(*, probe: bool = False, timeout: int = 30) -> dict[str, dict]:

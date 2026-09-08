@@ -25,6 +25,15 @@ commit.** An ignore rule without a manifest row is the bug.
 | `backend/data/optimus/graph/companyworld_work/` | ~31 MB | `scripts/companyworld_extract.py` (2026-09-06) | Per-document extraction records the run resumes from, plus cached 10-K bodies for 1,486 filings. | Re-run the extractor; re-buying the DeepSeek calls costs about **$2.12** |
 | `backend/data/optimus/graph/companyworld_inputs/` | ~57 MB | copied at run time | Two CRSP/Compustat link registries that ALREADY live under `backend/data/`. A second copy of a source is a second source. | Delete; the originals are the source |
 
+| `backend/data/optimus/sec_insider/raw/` | ~1.0 GB (82 ZIPs) | `python -m scripts.sec_insider_bulk_load pull` (2026-09-07, lane I1) | The SEC's own quarterly Insider Transactions data sets (Forms 3/4/5), 2006q1 → 2026q2, one ZIP of tab-delimited tables per quarter. **Free, no key, no entitlement.** | `python -m scripts.sec_insider_bulk_load pull --start 2006q1 --end 2026q2 --keep-raw` — resumable from `_cursor.json` |
+| `backend/data/optimus/sec_insider/parsed/*.parquet` | ~1.5 GB | same | One PIT-stamped transaction table per quarter (`observed_at_utc` = filing-day end, never the transaction date). | Same command; the parse is deterministic from the ZIP |
+
+The committed evidence for the insider tape is the **per-quarter receipts**
+(`backend/data/optimus/sec_insider/receipts/*.json`), the **cursor**
+(`_cursor.json`) and the **coverage-by-year receipt**
+(`coverage_by_year.json`) — plus `insider_events_v1_receipt.json` for the
+event-table rows. `docs/BUILD_2026-09-07b_I1_SEC_INSIDER.md` reads them.
+
 The derived, committed evidence for both is in
 `backend/data/optimus/tracker_backtest/` — `holder_h2_h3.json`,
 `holder_fingerprint_summary.json`, `ibes_status_rules_2013_2024.json`,

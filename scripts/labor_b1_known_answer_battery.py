@@ -603,7 +603,11 @@ def run_battery(cfg: Cfg) -> dict:
             paired_excess={k: sp.to_numpy(dtype="float64")},
             n_trials=len(cells), seed=cfg.seed)
         er = era_block(sp, eras)
-        verdict = WLJ.verdict_from(inf, er)
+        # X5 (2026-09-07): the family-corrected p travels INTO the verdict.
+        # Without it `verdict_from` has only NOVEL or NOISE for a
+        # self-resolved arm, and this battery's own planted edge at Holm
+        # 0.01543 read NOISE.
+        verdict = WLJ.verdict_from(inf, er, holm_p=fam["holm"][k])
         results[k] = {
             "t": tstats[k], "p_raw": round(pvals[k], 8),
             "p_holm": fam["holm"][k], "p_bh_fdr": fam["bh_fdr"][k],
@@ -901,6 +905,10 @@ def adjudicate(cfg: Cfg, worlds: dict, results: dict, mem: dict,
     for world, v in per_world.items():
         if world == "null":
             continue
+        # The 2026-09-06 defect, kept as a REGRESSION CHECK rather than deleted:
+        # a real planted edge that is family-significant may never read NOISE.
+        # X5 gave `verdict_from` the word it was missing; if the middle of the
+        # vocabulary is ever removed again, this fires again.
         if (str(v.get("verdict", "")).startswith("NOISE")
                 and (v.get("p_holm") or 1.0) < 0.05):
             findings.append(
@@ -912,13 +920,20 @@ def adjudicate(cfg: Cfg, worlds: dict, results: dict, mem: dict,
                 "word for 'significant, did not clear the deflation bar'. On "
                 "short tape that reads as a false negative in the vocabulary, "
                 "not in the numbers.")
+        elif str(v.get("verdict", "")).startswith("SEPARATED_NOT_SURVIVING"):
+            findings.append(
+                f"RESOLVED [{world}] (X5, 2026-09-07): family-corrected p "
+                f"{v['p_holm']} on a real planted edge now reads "
+                f"{v['verdict']!r} instead of NOISE. The numbers did not move; "
+                "the vocabulary gained the word between NOVEL and NOISE.")
     findings.append(
-        "FINDING (not a miss): `learner/evaluate.ERAS` is hard-coded to "
-        "2016-2024. `grade_by_era` over a 1999-2024 panel reports three eras "
-        "covering the last nine years and says nothing about the other "
-        "seventeen — it does not refuse and it does not say what it dropped. "
-        "This battery therefore derives its own eras. Not repaired here: "
-        "evaluate.py is outside lane B's file ownership.")
+        "RESOLVED (X6, 2026-09-07): `learner/evaluate.ERAS` is still 2016-2024 "
+        "BY DESIGN — a sealed receipt is sealed at its bucket names as well as "
+        "its numbers — but `grade_by_era` now derives its coverage or REFUSES, "
+        "and `evaluate.eras_covering(df)` picks the narrowest canonical grid "
+        "that describes the frame, so no caller silently grades a 1999-2024 "
+        "panel on its last nine years. This battery still derives its own eras, "
+        "which is now the same answer rather than a private one.")
     return {"declared": declared, "per_world": per_world,
             "ALL_PASS": all(v.get("PASS") for v in per_world.values()),
             "findings": findings}

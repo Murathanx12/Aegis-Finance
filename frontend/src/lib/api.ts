@@ -3491,3 +3491,488 @@ export function getRiskLayerExposure(
     HEAVY_TIMEOUT_MS,
   );
 }
+
+// ── Candidate surface (H1) — read-only, served from local artefacts ────────
+// Every response carries the VINTAGE of the file it was built from. A vintage
+// behind the tape is stamped STALE rather than rendered as today's opinion.
+
+export type Freshness = "FRESH" | "STALE" | "CANNOT_DETERMINE";
+
+export interface Vintage {
+  artefact: string;
+  status: "OK" | "ABSENT" | "NOT_REACHABLE" | "UNREADABLE";
+  day: string | null;
+  dated_by: "artefact_self_stamp" | "filename_stem" | null;
+  generated_at_utc: string | null;
+  source: string | null;
+  as_of_et: string;
+  as_of_utc: string;
+  age_calendar_days: number | null;
+  age_weekdays: number | null;
+  freshness: Freshness;
+  stale: boolean | null;
+  stale_reason: string | null;
+  fresh_max_age_weekdays: number;
+  version?: string | null;
+  licence?: string | null;
+  header_status?: string | null;
+  available_days?: string[];
+  personalities?: string[];
+  n_scorecards?: number;
+  n_symbols?: number | null;
+  n_candidates?: number | null;
+  status_histogram?: Record<string, number> | null;
+  counts?: Record<string, unknown>;
+  whole_universe_refusals?: Record<
+    string,
+    { refused_on?: number; of?: number; reason?: string }
+  >;
+  field_readability?: Record<
+    string,
+    { readable?: number; unreadable?: number; column_absent?: boolean }
+  >;
+  status_overlay?: {
+    applied: boolean;
+    n_rows_overlaid: number;
+    overlay_day: string | null;
+    reason: string | null;
+  };
+  note?: string;
+}
+
+export interface CandidateBand {
+  status: string;
+  close: number | null;
+  target_low: number | null;
+  target_mean: number | null;
+  target_high: number | null;
+  ratio: number | null;
+  upside: number | null;
+  upside_low: number | null;
+  upside_high: number | null;
+  band_label: string | null;
+  n_analysts: number | null;
+  coverage: number | null;
+  consensus: number | null;
+  target_source: string | null;
+  target_status: string | null;
+  note?: string;
+}
+
+export interface CandidateEstimate {
+  engine_prior_1m: number | null;
+  learner_v1: {
+    status: string | null;
+    score: number | null;
+    unit: string | null;
+    reasons: string[];
+    missing_inputs: string[];
+  };
+  p_beat: {
+    status: string | null;
+    raw: number | null;
+    debiased: number | null;
+    base_rate: number | null;
+    vs_base_rate: number | null;
+  };
+  learner_v2: { status: string | null; reason: string | null; champion: string | null };
+  state: { status: string | null; reason: string | null };
+}
+
+export interface CandidateRow {
+  symbol: string;
+  day: string;
+  observed_at: string | null;
+  sector: string | null;
+  exchange: string | null;
+  tradable: boolean | null;
+  shortable: boolean | null;
+  reason: {
+    verdict: string | null;
+    band: string | null;
+    headline: string | null;
+    engine_reasons: string[];
+    tracker_status: string | null;
+    tracker_reasons: string[];
+    tracker_blocked_by: string[];
+  };
+  band: CandidateBand;
+  our_estimate: CandidateEstimate;
+  disagreement: {
+    verdict: string | null;
+    engine_stance: string | null;
+    learner_stance: string | null;
+    sign_disagreement: boolean | null;
+    rank_gap: number | null;
+  };
+  execution: {
+    tier: string | null;
+    observe_only: boolean | null;
+    max_usd: number | null;
+    median_dollar_volume: number | null;
+    reason: string | null;
+  };
+  days_to_catalyst: { readable: boolean | null; value: number | null; units: string | null };
+  market_cap_usd: number | null;
+  ret_12m: number | null;
+  drawdown_60d: number | null;
+  realised_vol_20d: number | null;
+  past_winner: boolean | null;
+  pit: Record<string, unknown>;
+  falsifiers: { field?: string; op?: string; value?: number; then?: string }[];
+}
+
+export interface CandidateUniverseResponse {
+  version: string;
+  licence: string;
+  authority: string;
+  vintage: Vintage;
+  tracker_vintage: Vintage;
+  stale: boolean;
+  n_scorecards: number;
+  n_matched: number;
+  n_returned: number;
+  offset: number;
+  limit: number;
+  sort: { key: string; dir: string; missing_values: string };
+  filters: Record<string, unknown>;
+  facets: {
+    verdicts: string[];
+    tiers: string[];
+    statuses: string[];
+    sorts: string[];
+    sectors: string[];
+  };
+  counts: Record<string, unknown>;
+  whole_universe_refusals: Record<string, { refused_on?: number; of?: number; reason?: string }>;
+  field_readability: Record<
+    string,
+    { readable?: number; unreadable?: number; column_absent?: boolean }
+  >;
+  conventions: Record<string, unknown>;
+  rows: CandidateRow[];
+}
+
+export interface CandidateVintagesResponse {
+  version: string;
+  licence: string;
+  authority: string;
+  as_of_utc: string;
+  as_of_et: string;
+  worst_freshness: Freshness;
+  any_stale: boolean;
+  sources: Record<string, Vintage>;
+  how_to_refresh: Record<string, string>;
+}
+
+export interface WatchlistRow {
+  symbol: string;
+  status?: string;
+  sector?: string;
+  close?: number;
+  mean_target?: number;
+  target_low?: number;
+  target_high?: number;
+  upside?: number;
+  consensus?: number;
+  coverage?: number;
+  n_analysts_yf?: number;
+  market_cap_usd?: number;
+  median_dollar_volume?: number;
+  days_to_catalyst?: number;
+  ret_12m?: number;
+  drawdown_60d?: number;
+  past_winner?: boolean;
+  status_reasons?: string[];
+  status_blocked_by?: string[];
+}
+
+export interface CandidateWatchlistResponse {
+  version: string;
+  authority: string;
+  vintage: Vintage;
+  stale: boolean;
+  summary: Record<string, unknown>;
+  status_histogram: Record<string, number>;
+  n_symbols: number | null;
+  n_candidates: number | null;
+  n_matched: number;
+  n_returned: number;
+  facets: { statuses: string[]; sectors: string[] };
+  rows: WatchlistRow[];
+}
+
+export interface AllocatorSleeve {
+  sleeve: string;
+  gate?: string;
+  weight?: number;
+  binding_constraint?: string;
+  utility?: number;
+  u_components?: Record<
+    string,
+    { value?: number; unit?: string; note?: string; source?: string; basis?: string }
+  >;
+  [k: string]: unknown;
+}
+
+export interface CandidateAllocatorResponse {
+  version: string;
+  authority: string;
+  vintage: Vintage;
+  stale: boolean;
+  day: string | null;
+  personalities: string[];
+  artifacts: Record<
+    string,
+    {
+      artefact?: string;
+      version?: string;
+      licence?: string;
+      authority?: string;
+      day?: string;
+      personality?: string;
+      lambdas?: Record<string, unknown>;
+      allocations?: AllocatorSleeve[];
+      [k: string]: unknown;
+    }
+  >;
+}
+
+export interface CandidateUniverseQuery {
+  verdict?: string;
+  tier?: string;
+  status?: string;
+  sector?: string;
+  q?: string;
+  min_upside?: number;
+  min_p_beat?: number;
+  min_dollar_volume?: number;
+  max_days_to_catalyst?: number;
+  disagreement_only?: boolean;
+  catalyst_readable_only?: boolean;
+  sort?: string;
+  dir?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}
+
+function toCandidateQuery(params: Record<string, unknown>): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v === undefined || v === null || v === "" || v === false) continue;
+    sp.set(k, String(v));
+  }
+  const s = sp.toString();
+  return s ? `?${s}` : "";
+}
+
+export function getCandidateVintages() {
+  return fetchAPI<CandidateVintagesResponse>("/api/candidates/vintages");
+}
+
+export function getCandidateUniverse(query: CandidateUniverseQuery = {}) {
+  return fetchAPI<CandidateUniverseResponse>(
+    `/api/candidates/universe${toCandidateQuery(query as Record<string, unknown>)}`,
+    undefined,
+    HEAVY_TIMEOUT_MS,
+  );
+}
+
+export function getCandidateWatchlist(
+  query: { status?: string; sector?: string; q?: string; limit?: number; offset?: number } = {},
+) {
+  return fetchAPI<CandidateWatchlistResponse>(
+    `/api/candidates/watchlist${toCandidateQuery(query as Record<string, unknown>)}`,
+    undefined,
+    HEAVY_TIMEOUT_MS,
+  );
+}
+
+export function getCandidateAllocator(personality?: string) {
+  return fetchAPI<CandidateAllocatorResponse>(
+    `/api/candidates/allocator${toCandidateQuery({ personality })}`,
+  );
+}
+
+/* ── R6 / Mode A: the human loop (`/api/journal/*`) ─────────────────────────
+ * H2 (journal → thesis), T2/H4 (the four-counterfactual decision log) and H5
+ * (the read-only terminal-state mirror). Read paths only from the browser:
+ * the write endpoints are POSTs the page does not call today.
+ */
+
+export interface JournalGate {
+  rule: string;
+  have: number;
+  need: number;
+  met: boolean;
+}
+
+export interface JournalScoreboard {
+  version: string;
+  n_rows: number;
+  n_resolved: number;
+  n_pending: number;
+  n_fully_graded: number;
+  gate: JournalGate;
+  claim: string;
+  pnl: null | {
+    n: number;
+    mean_actual_ret: number;
+    mean_regret: Record<string, number | null>;
+    caveat: string;
+  };
+  pnl_withheld_because?: string;
+  process_metrics: {
+    taxonomy_histogram: Record<string, number>;
+    rows_by_mode: Record<string, number>;
+    counterfactual_coverage: Record<string, number>;
+    n_unclassified: number;
+  };
+}
+
+export interface JournalOverview extends JournalScoreboard {
+  licence: string;
+  authority: string;
+  mode: string;
+  brain: string;
+  schema_provenance: {
+    module: string;
+    file: string;
+    sha256: string;
+    is_vendored_mirror: boolean;
+    upstream: string;
+    note: string;
+  };
+  loss_budgets: Record<
+    string,
+    { book: string; positions_judged: number; expected_losers: number; note: string }
+  >;
+  taxonomy: Record<string, string>;
+  counterfactuals: string[];
+  benchmark: {
+    symbol: string;
+    account: string;
+    contract: string;
+    keys_present: boolean;
+    note: string;
+  };
+  price_sources: {
+    order: string[];
+    sources: Record<
+      string,
+      { available: boolean | null; reason: string | null; network: boolean; [k: string]: unknown }
+    >;
+    benchmark_note: string;
+    session_calendar: string;
+  };
+  scoreboard: JournalScoreboard;
+  terminal_mirror: JournalMirror;
+}
+
+export interface JournalMirror {
+  status: "OK" | "NEVER_SYNCED" | "SOURCE_UNREACHABLE";
+  mirror_dir: string;
+  source_present_on_this_machine: boolean;
+  synced_at_utc?: string | null;
+  n_files?: number | null;
+  n_bytes?: number | null;
+  n_skipped?: number | null;
+  reason?: string | null;
+  authority?: string;
+  not_mirrored_note?: string;
+  kinds: Record<string, { file: string; bytes: number }[]>;
+  how_to_refresh: string;
+}
+
+export interface JournalLeg {
+  leg: string;
+  available: boolean;
+  ret: number | null;
+  raw_ret?: number;
+  source: string;
+  reason: string | null;
+  pick?: string | null;
+}
+
+export interface JournalGrade {
+  decision_id: string;
+  source: string;
+  mode: "A" | "B";
+  symbol: string;
+  direction: string;
+  action: string;
+  decision_day: string;
+  resolves_on: string;
+  reviews_on: string;
+  session_calendar: string;
+  horizon_sessions: number;
+  min_normal_hold_sessions: number;
+  loss_budget_ref: string;
+  status: "PENDING" | "RESOLVED" | "UNGRADEABLE";
+  sign: number;
+  actual: JournalLeg | null;
+  actual_basis?: string;
+  counterfactuals: Record<string, JournalLeg> | null;
+  regret: Record<string, number | null> | null;
+  worst_regret: { leg: string; regret: number } | null;
+  fully_graded?: boolean;
+  price_sources?: string[];
+  taxonomy: { state: string; reason: string; sessions_held?: number | null };
+  reflection?: { status: string; text: string | null; cost_usd: number; backend?: string };
+  learnable_at_utc: string;
+}
+
+export interface JournalDecisionRow {
+  decision_id: string;
+  source: string;
+  mode: "A" | "B";
+  symbol: string;
+  direction: string;
+  action: string;
+  decision_day: string;
+  resolves_on: string;
+  reviews_on: string;
+  horizon_sessions: number;
+  min_normal_hold_sessions: number;
+  loss_budget_ref: string;
+  falsifier: string | null;
+  status: string;
+  thesis_id: string | null;
+}
+
+export interface JournalKnownAnswer {
+  n_cases: number;
+  n_pass: number;
+  n_fail: number;
+  all_pass: boolean;
+  note: string;
+  cases: { case: string; catches: string; got: unknown; want: unknown; pass: boolean }[];
+}
+
+export function getJournalOverview() {
+  return fetchAPI<JournalOverview>("/api/journal/");
+}
+
+export function getJournalDecisions(limit = 100) {
+  return fetchAPI<{ n: number; rows: JournalDecisionRow[]; note: string }>(
+    `/api/journal/decisions?limit=${limit}`,
+  );
+}
+
+export function getJournalGrades(asOf?: string) {
+  const q = asOf ? `?as_of=${encodeURIComponent(asOf)}` : "";
+  return fetchAPI<{
+    n: number;
+    n_withheld: number;
+    as_of: string | null;
+    lessons: JournalGrade[];
+  }>(`/api/journal/grades${q}`);
+}
+
+export function getJournalKnownAnswer() {
+  return fetchAPI<JournalKnownAnswer>("/api/journal/known-answer");
+}
+
+export function getJournalTerminalState() {
+  return fetchAPI<JournalMirror>("/api/journal/terminal-state");
+}

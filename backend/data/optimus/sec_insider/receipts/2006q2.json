@@ -1,0 +1,144 @@
+{
+ "quarter": "2006q2",
+ "zip_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\raw\\2006q2_form345.zip",
+ "zip_bytes": 14116730,
+ "zip_members": {
+  "DERIV_HOLDING.tsv": 4943103,
+  "DERIV_TRANS.tsv": 8717822,
+  "FOOTNOTES.tsv": 23586914,
+  "insider_transactions_metadata.json": 37339,
+  "insider_transactions_readme.htm": 745509,
+  "NONDERIV_HOLDING.tsv": 2976464,
+  "NONDERIV_TRANS.tsv": 16401541,
+  "OWNER_SIGNATURE.tsv": 5229879,
+  "REPORTINGOWNER.tsv": 10015457,
+  "SUBMISSION.tsv": 7456593
+ },
+ "submissions": 70295,
+ "reporting_owner_rows": 74564,
+ "rows": 215318,
+ "orphan_transactions_no_submission": 0,
+ "transactions_with_no_reporting_owner": 0,
+ "trans_code_counts": {
+  "S": 86152,
+  "A": 41879,
+  "M": 31881,
+  "P": 15912,
+  "J": 6884,
+  "D": 5413,
+  "F": 3687,
+  "G": 2261,
+  "C": 1975,
+  "X": 1784,
+  "I": 491,
+  "L": 302,
+  "U": 285,
+  "H": 238,
+  "W": 60,
+  "Z": 20,
+  "E": 19,
+  "O": 6
+ },
+ "unknown_codes": [],
+ "filing_date_min": "2006-04-03",
+ "filing_date_max": "2006-06-30",
+ "distinct_issuers": 6447,
+ "distinct_insiders": 34272,
+ "open_market_purchases": 20585,
+ "open_market_sales": 57576,
+ "plan_10b5_1_counts": {
+  "UNKNOWN": 176320,
+  "YES": 38998
+ },
+ "plan_10b5_1_source_counts": {
+  "ABSENT": 176320,
+  "FOOTNOTE_TEXT": 38998
+ },
+ "trans_class_counts": {
+  "OPEN_MARKET_SALE": 89630,
+  "GRANT_AWARD": 42313,
+  "OPTION_EXERCISE": 34555,
+  "OPEN_MARKET_PURCHASE": 22682,
+  "OTHER": 9310,
+  "DISPOSITION_TO_ISSUER": 5445,
+  "DERIVATIVE_CONVERSION": 3940,
+  "TAX_OR_EXERCISE_WITHHOLDING": 3687,
+  "GIFT": 2275,
+  "PLAN_DISCRETIONARY": 552,
+  "SMALL_ACQUISITION": 302,
+  "TENDER": 285,
+  "DERIVATIVE_EXPIRATION": 257,
+  "INHERITANCE": 63,
+  "VOTING_TRUST": 22
+ },
+ "observed_at_basis": "FILING_DATE_EOD_CONSERVATIVE",
+ "footnote_10b5_1_accessions": 4683,
+ "footnotes_scanned": true,
+ "pit_check": {
+  "rows_checked": 215318,
+  "violations": 0,
+  "future_dated_transactions": 99,
+  "future_dated_examples": [
+   {
+    "accession": "0001181431-06-039448",
+    "trans_date": "2006-07-03",
+    "filing_date": "2006-06-30"
+   },
+   {
+    "accession": "0001263557-06-000004",
+    "trans_date": "2006-07-03",
+    "filing_date": "2006-06-30"
+   },
+   {
+    "accession": "0001185920-06-000004",
+    "trans_date": "2006-07-03",
+    "filing_date": "2006-06-30"
+   },
+   {
+    "accession": "0001284710-06-000003",
+    "trans_date": "2006-07-03",
+    "filing_date": "2006-06-30"
+   },
+   {
+    "accession": "0001231426-06-000003",
+    "trans_date": "2006-07-03",
+    "filing_date": "2006-06-30"
+   }
+  ]
+ },
+ "fabrication_check": {
+  "rows_checked": 215318,
+  "violations": 0,
+  "implausible_dates": 8,
+  "implausible_date_examples": [
+   "0000949353-06-000391: trans_date 2016-06-15 vs filing_date 2006-06-21",
+   "0001140361-06-009413: trans_date 2009-02-28 vs filing_date 2006-06-20",
+   "0000867665-06-000027: trans_date 2009-04-19 vs filing_date 2006-04-21",
+   "0001209191-06-024748: trans_date 2016-04-17 vs filing_date 2006-04-19",
+   "0001209191-06-038609: trans_date 2016-06-27 vs filing_date 2006-06-29"
+  ]
+ },
+ "link_counts": {
+  "crsp_stocknames_interval": 181675,
+  "REFUSED_TICKER_NOT_IN_CRSP": 33082,
+  "REFUSED_AMBIGUOUS_TICKER": 561
+ },
+ "link_rate": 0.8438,
+ "crsp_link_source": "crsp__stocknames.parquet rows=46108 vintage_end=2024-12-31",
+ "by_year": {
+  "2006": {
+   "rows": 215318,
+   "distinct_issuers": 5770,
+   "distinct_insiders": 34272,
+   "open_market_purchases": 20585,
+   "open_market_sales": 57576,
+   "rows_linked_to_permno": 181675,
+   "link_rate": 0.8438,
+   "link_refusals": {
+    "REFUSED_TICKER_NOT_IN_CRSP": 33082,
+    "REFUSED_AMBIGUOUS_TICKER": 561
+   }
+  }
+ },
+ "written_utc": "2026-09-07T10:30:52+00:00"
+}

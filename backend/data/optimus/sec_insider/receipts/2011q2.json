@@ -1,0 +1,144 @@
+{
+ "quarter": "2011q2",
+ "zip_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\raw\\2011q2_form345.zip",
+ "zip_bytes": 11265081,
+ "zip_members": {
+  "DERIV_HOLDING.tsv": 3171431,
+  "DERIV_TRANS.tsv": 6222679,
+  "FOOTNOTES.tsv": 25679595,
+  "insider_transactions_metadata.json": 37339,
+  "insider_transactions_readme.htm": 745509,
+  "NONDERIV_HOLDING.tsv": 2397985,
+  "NONDERIV_TRANS.tsv": 9192876,
+  "OWNER_SIGNATURE.tsv": 4636806,
+  "REPORTINGOWNER.tsv": 8457639,
+  "SUBMISSION.tsv": 5978214
+ },
+ "submissions": 57671,
+ "reporting_owner_rows": 62008,
+ "rows": 136347,
+ "orphan_transactions_no_submission": 0,
+ "transactions_with_no_reporting_owner": 0,
+ "trans_code_counts": {
+  "A": 34154,
+  "S": 29237,
+  "M": 25793,
+  "P": 10391,
+  "F": 7154,
+  "D": 5481,
+  "J": 4301,
+  "G": 1643,
+  "C": 1492,
+  "X": 615,
+  "U": 375,
+  "I": 187,
+  "L": 90,
+  "E": 30,
+  "W": 27,
+  "H": 21,
+  "O": 11,
+  "Z": 9
+ },
+ "unknown_codes": [],
+ "filing_date_min": "2011-04-01",
+ "filing_date_max": "2011-06-30",
+ "distinct_issuers": 5262,
+ "distinct_insiders": 30348,
+ "open_market_purchases": 13216,
+ "open_market_sales": 22096,
+ "plan_10b5_1_counts": {
+  "UNKNOWN": 114728,
+  "YES": 21619
+ },
+ "plan_10b5_1_source_counts": {
+  "ABSENT": 114728,
+  "FOOTNOTE_TEXT": 21619
+ },
+ "trans_class_counts": {
+  "OPEN_MARKET_SALE": 36728,
+  "GRANT_AWARD": 34675,
+  "OPTION_EXERCISE": 26752,
+  "OPEN_MARKET_PURCHASE": 14209,
+  "TAX_OR_EXERCISE_WITHHOLDING": 7159,
+  "OTHER": 5696,
+  "DISPOSITION_TO_ISSUER": 5533,
+  "DERIVATIVE_CONVERSION": 3130,
+  "GIFT": 1668,
+  "TENDER": 406,
+  "PLAN_DISCRETIONARY": 187,
+  "SMALL_ACQUISITION": 91,
+  "DERIVATIVE_EXPIRATION": 77,
+  "INHERITANCE": 27,
+  "VOTING_TRUST": 9
+ },
+ "observed_at_basis": "FILING_DATE_EOD_CONSERVATIVE",
+ "footnote_10b5_1_accessions": 4412,
+ "footnotes_scanned": true,
+ "pit_check": {
+  "rows_checked": 136347,
+  "violations": 0,
+  "future_dated_transactions": 200,
+  "future_dated_examples": [
+   {
+    "accession": "0001209191-11-034815",
+    "trans_date": "2011-06-16",
+    "filing_date": "2011-06-15"
+   },
+   {
+    "accession": "0001181431-11-035911",
+    "trans_date": "2011-06-11",
+    "filing_date": "2011-06-09"
+   },
+   {
+    "accession": "0001181431-11-035911",
+    "trans_date": "2011-06-11",
+    "filing_date": "2011-06-09"
+   },
+   {
+    "accession": "0001181431-11-035911",
+    "trans_date": "2011-06-11",
+    "filing_date": "2011-06-09"
+   },
+   {
+    "accession": "0001181431-11-035911",
+    "trans_date": "2011-06-11",
+    "filing_date": "2011-06-09"
+   }
+  ]
+ },
+ "fabrication_check": {
+  "rows_checked": 136347,
+  "violations": 0,
+  "implausible_dates": 10,
+  "implausible_date_examples": [
+   "0001181431-11-030431: trans_date 2021-05-13 vs filing_date 2011-05-17",
+   "0000932440-11-000548: trans_date 2020-01-12 vs filing_date 2011-05-03",
+   "0000932440-11-000548: trans_date 2020-01-12 vs filing_date 2011-05-03",
+   "0000932440-11-000548: trans_date 2020-01-12 vs filing_date 2011-05-03",
+   "0000932440-11-000548: trans_date 2020-01-12 vs filing_date 2011-05-03"
+  ]
+ },
+ "link_counts": {
+  "crsp_stocknames_interval": 113009,
+  "REFUSED_TICKER_NOT_IN_CRSP": 23075,
+  "REFUSED_AMBIGUOUS_TICKER": 263
+ },
+ "link_rate": 0.8288,
+ "crsp_link_source": "crsp__stocknames.parquet rows=46108 vintage_end=2024-12-31",
+ "by_year": {
+  "2011": {
+   "rows": 136347,
+   "distinct_issuers": 4803,
+   "distinct_insiders": 30348,
+   "open_market_purchases": 13216,
+   "open_market_sales": 22096,
+   "rows_linked_to_permno": 113009,
+   "link_rate": 0.8288,
+   "link_refusals": {
+    "REFUSED_TICKER_NOT_IN_CRSP": 23075,
+    "REFUSED_AMBIGUOUS_TICKER": 263
+   }
+  }
+ },
+ "written_utc": "2026-09-07T10:33:34+00:00"
+}

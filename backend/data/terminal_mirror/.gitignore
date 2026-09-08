@@ -1,0 +1,7 @@
+# The mirror is DERIVED from another repository. Do not commit it: it would
+# duplicate 2.4 MB of the execution repo, go stale the day after, and put that
+# repo edit history into this one. A deploy populates it by running
+#   python -m backend.services.terminal_state_reader --sync
+# at build/boot, or by mounting a volume at this path.
+*
+!.gitignore

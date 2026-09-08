@@ -1,0 +1,32 @@
+{
+ "size_only": {
+  "monthly_r2_of_score_on_these": 0.1263,
+  "residual_spearman_vs_log_market_cap": 0.2489,
+  "within_decile_ic_top_minus_bottom": 0.14044,
+  "t": 10.301,
+  "mde_80": 0.0382,
+  "decile_1": 0.04746,
+  "decile_10": 0.1879
+ },
+ "size_vol_coverage_dollarvol": {
+  "monthly_r2_of_score_on_these": 0.1785,
+  "residual_spearman_vs_log_market_cap": 0.2175,
+  "within_decile_ic_top_minus_bottom": 0.1347,
+  "t": 9.552,
+  "mde_80": 0.03951,
+  "decile_1": 0.05811,
+  "decile_10": 0.19281
+ },
+ "raw_router": {
+  "within_decile_ic_top_minus_bottom": 0.09633,
+  "t": 7.025,
+  "mde_80": 0.03842
+ },
+ "minus_log_market_cap_alone": {
+  "within_decile_ic_top_minus_bottom": 0.08306,
+  "t": 5.014,
+  "mde_80": 0.04641,
+  "decile_1": 0.02906,
+  "decile_10": 0.11212
+ }
+}

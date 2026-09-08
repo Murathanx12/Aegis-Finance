@@ -1,0 +1,29 @@
+{
+  "stage": "spine",
+  "rows": 956972,
+  "months": 229,
+  "permnos": 10025,
+  "window": [
+    "2005-12-31",
+    "2024-12-31"
+  ],
+  "rows_with_any_buy": 95311,
+  "rows_with_any_sell": 158441,
+  "rows_with_opportunistic_buy": 16508,
+  "rows_with_routine_buy": 5142,
+  "rows_with_cluster_buy": 15735,
+  "tradable_share": 0.48594734224198827,
+  "tradable_share_of_buy_rows": 0.34934057978617367,
+  "filer_error_cells_dropped": 265,
+  "filer_error_rule": "buy_dollars_raw > market cap -> NaN, counted",
+  "panel_rows_dropped_no_permno": 177356,
+  "label": "ret_exc_lead1m (JKP delisting-aware excess return, month t+1)",
+  "pit": "filing observed inside month t -> portfolio formed at eom(t) -> earns month t+1. Strictly more conservative than next-session open.",
+  "universe_filters": "excntry=USA, common=1, primary_sec=1, exch_main=1, obs_main=1",
+  "execution_floor": {
+    "dolvol_126d_usd_per_day": 3000000.0,
+    "price_floor_usd": 5.0
+  },
+  "factors": "FF5+Mom+RF compounded from learner.benchmark pinned daily vintage",
+  "path": "backend\\data\\optimus\\insider_lab\\r2_spine.parquet"
+}

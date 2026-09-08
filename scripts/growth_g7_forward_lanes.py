@@ -184,6 +184,92 @@ def returns_from_nav(nav: pd.Series) -> pd.Series:
     return s.pct_change().dropna()
 
 
+#: How far the market has to move on a session before an UNCHANGED lane NAV is
+#: read as a carried mark rather than a real flat day. 10 bps on the daily SPY
+#: total return. Declared, not inline: a book really can be flat on a flat day,
+#: and calling that stale would delete real observations.
+STALE_MARK_MARKET_MOVE: float = 0.0010
+
+
+def mark_freshness(nav: pd.Series, market: pd.Series, *,
+                   market_move_floor: float = STALE_MARK_MARKET_MOVE
+                   ) -> pd.DataFrame:
+    """Per session: was this lane actually RE-MARKED at the official close?
+
+    X2 (2026-09-07). A lane NAV that repeats yesterday's level on a session
+    when the market moved was not re-marked; the previous close was carried
+    forward. G7 measured what that costs: `conviction` loads **0.6072** on
+    today's market and **1.3990** on yesterday's, so its OLS beta of 0.7163 is
+    biased toward zero and the Dimson sum is 1.9313. Under the product ruler
+    "beta is allowed, hidden beta is not" — and a carried mark hides it, because
+    a fabricated zero return on a day the market moved is a real observation of
+    zero covariance that never happened.
+
+    Columns: `level`, `repeats_previous`, `market_move`, `stale`.
+    `stale` is True where the level repeats and |market move| exceeds the floor.
+    """
+    s = pd.Series(nav, dtype="float64").dropna()
+    s = s[s > 0]
+    if not isinstance(s.index, pd.DatetimeIndex) and len(s):
+        s.index = pd.to_datetime(s.index)
+    s = s[~s.index.duplicated(keep="last")].sort_index()
+
+    m = pd.Series(market, dtype="float64").dropna()
+    if not isinstance(m.index, pd.DatetimeIndex) and len(m):
+        m.index = pd.to_datetime(m.index)
+    m = m[~m.index.duplicated(keep="last")].sort_index()
+
+    out = pd.DataFrame({"level": s})
+    out["repeats_previous"] = s.eq(s.shift(1)) & s.shift(1).notna()
+    out["market_move"] = m.reindex(out.index)
+    moved = out["market_move"].abs().gt(market_move_floor)
+    out["stale"] = out["repeats_previous"].astype(bool) & moved.fillna(False).astype(bool)
+    return out
+
+
+def admissible_returns_from_nav(nav: pd.Series, market: pd.Series, *,
+                                market_move_floor: float = STALE_MARK_MARKET_MOVE
+                                ) -> tuple[pd.Series, dict]:
+    """Returns from a NAV LEVEL series with every STALE MARK EXCLUDED.
+
+    TWO sessions go, not one, and the second is the one that is easy to miss:
+
+      * the CARRIED session itself, whose return is a fabricated 0.0%;
+      * the session AFTER a carried one, whose return spans the gap and is a
+        multi-session return being regressed on a one-session market.
+
+    Keeping the second would move the bias rather than remove it — the lag
+    loading would simply reappear on the surviving rows. So a return is
+    admissible only when BOTH its endpoints are fresh marks. Everything dropped
+    is counted and the counts travel on the row: a lane graded on fewer
+    observations than its NAV file appears to hold must say so, or the exclusion
+    is indistinguishable from a shorter history.
+    """
+    fresh = mark_freshness(nav, market, market_move_floor=market_move_floor)
+    raw = returns_from_nav(fresh["level"]).rename(None)
+    flag = fresh["stale"].astype(bool)
+    stale_at = fresh.index[flag]
+    prev_stale = set(fresh.index[flag.shift(1, fill_value=False).astype(bool)])
+    drop = set(stale_at) | prev_stale
+    kept = raw[~raw.index.isin(drop)]
+    note = {
+        "rule": ("a NAV level identical to the previous mark on a session when "
+                 f"|SPY TR| > {market_move_floor:.4%} was NOT re-marked at the "
+                 "official close; that session and the one after it are "
+                 "excluded from every number on this row, including beta"),
+        "marks": int(len(fresh)),
+        "stale_marks": int(len(stale_at)),
+        "share_stale": _r(float(len(stale_at)) / len(fresh), 4) if len(fresh) else None,
+        "returns_before_exclusion": int(len(raw)),
+        "returns_after_exclusion": int(len(kept)),
+        "returns_excluded": int(len(raw) - len(kept)),
+        "first_stale_mark": str(stale_at[0].date()) if len(stale_at) else None,
+        "last_stale_mark": str(stale_at[-1].date()) if len(stale_at) else None,
+        "market_move_floor": market_move_floor,
+    }
+    return kept, note
+
+
 def load_spy() -> tuple[pd.Series, dict]:
     """The PINNED SPY total-return tape. Offline; never fetched here."""
     p = _track(SPY_PINNED, note="pinned SPY TR daily (G7 reads, never fetches)")
@@ -339,6 +425,8 @@ def _refusal(lane: str, source: str, why: str, *,
         "beta_t_vs_1": None,
         "beta_dimson": None,
         "stale_marks_suspected": None,
+        "stale_marks_excluded": None,
+        "beta_admissible_as_exposure": None,
         "r2_vs_spy": None,
         "lane": lane,
         "verdict": "CANNOT DETERMINE",
@@ -367,7 +455,8 @@ def lane_row(lane: str, lane_returns: pd.Series, spy: pd.Series, rf: pd.Series,
              gross_cap: float = GROSS_CAP,
              hac_lag: int = HAC_LAG,
              trading_days: int = TRADING_DAYS,
-             rf_zero: Optional[pd.Series] = None) -> dict:
+             rf_zero: Optional[pd.Series] = None,
+             mark_note: Optional[Mapping[str, Any]] = None) -> dict:
     """One table row. BETA IS THE FIRST KEY, and that is a load-bearing fact.
 
     `lane_returns` are the lane's realised period returns (NOT levels; use
@@ -468,6 +557,21 @@ def lane_row(lane: str, lane_returns: pd.Series, spy: pd.Series, rf: pd.Series,
         "beta_t_vs_1": mm.get("beta_t_vs_1"),
         "beta_dimson": stale_diag.get("beta_dimson"),
         "stale_marks_suspected": stale_diag.get("stale_marks_suspected"),
+        # X2: how many marks this row THREW AWAY before estimating any of the
+        # numbers beside it. `None` means the caller handed returns rather than
+        # a NAV level series, so freshness could not be judged -- which is a
+        # different statement from "no stale marks" and is not collapsed into it.
+        "stale_marks_excluded": (dict(mark_note) if mark_note is not None
+                                 else None),
+        # X2: carried marks are gone from the series above, and the lead/lag
+        # test is re-run on what is LEFT. If the book STILL loads more on
+        # yesterday's market than on today's, the marks are stale in a way a
+        # level series cannot show -- every mark one session old, so nothing
+        # repeats and nothing is droppable -- and `beta` is then not this
+        # book's exposure. A consumer gates on this field rather than on a
+        # sentence inside `headline`.
+        "beta_admissible_as_exposure": (
+            not bool(stale_diag.get("stale_marks_suspected"))),
         # How much of this book SPY explains at all. A beta estimated at r2 ~ 0
         # is precise about a relationship that is barely there, and the
         # leverage-neutral rescale is then amplifying idiosyncratic noise to
@@ -806,12 +910,18 @@ def run(*, min_obs: int = MIN_OBS,
     for lane in list(WEBSITE_LANES) + [x for x in sorted(lanes)
                                        if x not in WEBSITE_LANES]:
         if lane in lanes:
+            # X2: the NAV is judged for FRESHNESS before it is differenced. A
+            # mark carried from the previous close is not an observation of a
+            # flat day, and leaving it in is what put 1.399 of `conviction`'s
+            # loading on YESTERDAY'S market.
+            lane_ret, lane_marks = admissible_returns_from_nav(lanes[lane], spy)
             rows.append(lane_row(
-                lane, returns_from_nav(lanes[lane]), spy, rf,
+                lane, lane_ret, spy, rf,
                 source=lane_source, cost_basis=LANE_COST_BASIS,
                 min_obs=min_obs, financing_bps_annual=financing_bps,
                 gross_cap=gross_cap, hac_lag=hac_lag,
-                trading_days=trading_days, rf_zero=rf_zero))
+                trading_days=trading_days, rf_zero=rf_zero,
+                mark_note=lane_marks))
         else:
             rows.append(_refusal(
                 lane, lane_source,
@@ -823,12 +933,14 @@ def run(*, min_obs: int = MIN_OBS,
     hack_source = f"{terminal_repo} state/ local receipt (READ-ONLY)"
     for account in HACK_ACCOUNTS:
         if account in hacks:
+            acct_ret, acct_marks = admissible_returns_from_nav(hacks[account], spy)
             rows.append(lane_row(
-                account, returns_from_nav(hacks[account]), spy, rf,
+                account, acct_ret, spy, rf,
                 source=hack_source, cost_basis=HACK_COST_BASIS,
                 min_obs=min_obs, financing_bps_annual=financing_bps,
                 gross_cap=gross_cap, hac_lag=hac_lag,
-                trading_days=trading_days, rf_zero=rf_zero))
+                trading_days=trading_days, rf_zero=rf_zero,
+                mark_note=acct_marks))
         else:
             rows.append(_refusal(
                 account, hack_source,

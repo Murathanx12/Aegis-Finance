@@ -1,0 +1,113 @@
+{
+ "receipt": "L3_known_answer",
+ "written_at": "2026-09-08T05:02:19+00:00",
+ "backend": "nvidia_nim",
+ "model": "(backend default)",
+ "n_docs": 6,
+ "n_correct": 2,
+ "n_nulls": 2,
+ "n_nulls_correctly_refused": 1,
+ "graded": [
+  {
+   "doc_id": "plant_earnings",
+   "want_status": "OK",
+   "want_event_type": "EARNINGS",
+   "got_status": "OK",
+   "got_event_type": "EARNINGS",
+   "entity": "Zhongtai Semiconductor Ltd",
+   "direction": "POSITIVE",
+   "confidence": 0.95,
+   "quote": "third-quarter revenue rose 34% to 2.1 billion yuan, beating the company's own guidance of ",
+   "correct": true
+  },
+  {
+   "doc_id": "plant_merger",
+   "want_status": "OK",
+   "want_event_type": "MERGER_ACQUISITION",
+   "got_status": "REFUSED_PROVIDER",
+   "got_event_type": null,
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": false
+  },
+  {
+   "doc_id": "plant_guidance_cut",
+   "want_status": "OK",
+   "want_event_type": "GUIDANCE",
+   "got_status": "REFUSED_PROVIDER",
+   "got_event_type": null,
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": false
+  },
+  {
+   "doc_id": "plant_management",
+   "want_status": "OK",
+   "want_event_type": "MANAGEMENT_CHANGE",
+   "got_status": "REFUSED_UNPARSEABLE",
+   "got_event_type": null,
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": false
+  },
+  {
+   "doc_id": "plant_null_weather",
+   "want_status": "REFUSED_NO_EVENT",
+   "want_event_type": "NO_EVENT",
+   "got_status": "REFUSED_UNPARSEABLE",
+   "got_event_type": null,
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": false
+  },
+  {
+   "doc_id": "plant_null_recipe",
+   "want_status": "REFUSED_NO_EVENT",
+   "want_event_type": "NO_EVENT",
+   "got_status": "REFUSED_NO_EVENT",
+   "got_event_type": "NO_EVENT",
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": true
+  }
+ ],
+ "throughput": {
+  "backend": "nvidia_nim",
+  "schema_version": 1,
+  "n_docs": 6,
+  "n_ok": 1,
+  "n_refusals": 5,
+  "by_status": {
+   "OK": 1,
+   "REFUSED_NO_EVENT": 1,
+   "REFUSED_PROVIDER": 2,
+   "REFUSED_UNPARSEABLE": 2
+  },
+  "tokens_in": 1643,
+  "tokens_out": 3686,
+  "wall_clock_s": 277.25,
+  "docs_per_hour": 77.9,
+  "seconds_per_doc": 46.208,
+  "output_tokens_per_s": 13.3,
+  "cost_usd": 0.0,
+  "cost_usd_str": "$0.00",
+  "deepseek_counterfactual_usd": 0.005014,
+  "deepseek_counterfactual_str": "$0.0050",
+  "saved_usd": 0.005014,
+  "price_table": "backend.config.LLM_PRICE_PER_MTOK",
+  "note": "cost_usd is 0.00 because the backend is free-tier; the REAL cost of the local path is wall clock, which is why it is printed beside the dollars and not instead of them"
+ },
+ "n_provider_failures": 2,
+ "wall_clock_s": 277.25,
+ "verdict": "CANNOT DETERMINE -- 2/6 documents never reached the model (REFUSED_PROVIDER; the NIM free tier returns HTTP 429 under load). Not a model result."
+}

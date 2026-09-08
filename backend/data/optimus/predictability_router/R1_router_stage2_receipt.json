@@ -1,0 +1,988 @@
+{
+ "lane": "R1_PREDICTABILITY_ROUTER_STAGE_2",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_utc": "2026-09-08T05:33:42.818457+00:00",
+ "primary_engine": "lgbm_clf__1m",
+ "reads": "R1_router_receipt.json",
+ "decile_tables": {
+  "lgbm_clf__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.05465,
+     "t_across_months": 4.015
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.01233,
+     "t_across_months": 1.502
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.01314,
+     "t_across_months": 1.966
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.02004,
+     "t_across_months": 3.054
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.03753,
+     "t_across_months": 4.278
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.05018,
+     "t_across_months": 4.473
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.08423,
+     "t_across_months": 5.924
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.11989,
+     "t_across_months": 5.845
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.18286,
+     "t_across_months": 6.891
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.42824,
+     "t_across_months": 10.096
+    }
+   ],
+   "top_minus_bottom": 0.37359,
+   "top_minus_bottom_t": 9.494,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "spearman_decile_vs_realised": 0.8182,
+   "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+   "mde_top_minus_bottom_80pct": 0.11026
+  },
+  "encoder_clf__residual__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.07927,
+     "t_across_months": 4.639
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.01784,
+     "t_across_months": 1.843
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.01414,
+     "t_across_months": 2.148
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.01976,
+     "t_across_months": 3.279
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.0325,
+     "t_across_months": 4.199
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.05352,
+     "t_across_months": 5.275
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.08197,
+     "t_across_months": 5.512
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.10061,
+     "t_across_months": 4.993
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.18304,
+     "t_across_months": 7.626
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.43323,
+     "t_across_months": 10.822
+    }
+   ],
+   "top_minus_bottom": 0.35396,
+   "top_minus_bottom_t": 8.416,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "spearman_decile_vs_realised": 0.8061,
+   "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+   "mde_top_minus_bottom_80pct": 0.11784
+  },
+  "mlp__raw__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.05036,
+     "t_across_months": 2.416
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.00521,
+     "t_across_months": 0.527
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.00607,
+     "t_across_months": 0.704
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.00256,
+     "t_across_months": 0.409
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.01804,
+     "t_across_months": 3.203
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.03548,
+     "t_across_months": 5.244
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.05003,
+     "t_across_months": 5.026
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.08331,
+     "t_across_months": 6.048
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.13684,
+     "t_across_months": 6.669
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.43476,
+     "t_across_months": 11.054
+    }
+   ],
+   "top_minus_bottom": 0.3844,
+   "top_minus_bottom_t": 8.396,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "spearman_decile_vs_realised": 0.7091,
+   "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+   "mde_top_minus_bottom_80pct": 0.12829
+  },
+  "ridge__raw__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.00978,
+     "t_across_months": 0.436
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.00079,
+     "t_across_months": 0.073
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.0079,
+     "t_across_months": -1.072
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.0019,
+     "t_across_months": 0.367
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.02189,
+     "t_across_months": 3.408
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.02343,
+     "t_across_months": 2.71
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.04593,
+     "t_across_months": 4.412
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.06971,
+     "t_across_months": 4.704
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.14842,
+     "t_across_months": 7.032
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.44136,
+     "t_across_months": 11.033
+    }
+   ],
+   "top_minus_bottom": 0.43158,
+   "top_minus_bottom_t": 9.796,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "spearman_decile_vs_realised": 0.9152,
+   "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+   "mde_top_minus_bottom_80pct": 0.12345
+  }
+ },
+ "oracle_ceiling": {
+  "lgbm_clf__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.1015,
+    "beta_t": 15.972,
+    "alpha_monthly": 0.02728,
+    "alpha_annualised": 0.3274,
+    "alpha_t": 6.907,
+    "alpha_p_two_sided": 0.0,
+    "r2": 0.7328,
+    "terminal_wealth_net": 49.9839,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.639,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.2443,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.0713
+   },
+   "vs_always_trade": {
+    "compared": "ORACLE(lgbm_clf__1m) minus ALWAYS(lgbm_clf__1m)",
+    "months": 95,
+    "mean_monthly_difference": 0.02204,
+    "annualised_difference": 0.2645,
+    "sd_monthly_difference": 0.02666,
+    "t_stat_paired": 8.06,
+    "p_two_sided": 0.0,
+    "share_months_ahead": 0.9579,
+    "mde_annualised_80pct": 0.092
+   },
+   "warning": "uses the REALISED label; a bound on what perfect abstention could have bought, never a strategy"
+  },
+  "encoder_clf__residual__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.2134,
+    "beta_t": 12.793,
+    "alpha_monthly": 0.03034,
+    "alpha_annualised": 0.3641,
+    "alpha_t": 5.585,
+    "alpha_p_two_sided": 0.0,
+    "r2": 0.6377,
+    "terminal_wealth_net": 71.7532,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.7156,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.2386,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.0842
+   },
+   "vs_always_trade": {
+    "compared": "ORACLE(encoder_clf__residual__1m) minus ALWAYS(encoder_clf__residual__1m)",
+    "months": 95,
+    "mean_monthly_difference": 0.01651,
+    "annualised_difference": 0.1981,
+    "sd_monthly_difference": 0.0203,
+    "t_stat_paired": 7.93,
+    "p_two_sided": 0.0,
+    "share_months_ahead": 0.9895,
+    "mde_annualised_80pct": 0.07
+   },
+   "warning": "uses the REALISED label; a bound on what perfect abstention could have bought, never a strategy"
+  },
+  "mlp__raw__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.3861,
+    "beta_t": 10.305,
+    "alpha_monthly": 0.03848,
+    "alpha_annualised": 0.4617,
+    "alpha_t": 4.994,
+    "alpha_p_two_sided": 0.0,
+    "r2": 0.5331,
+    "terminal_wealth_net": 161.4524,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.9007,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.3196,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.1052
+   },
+   "vs_always_trade": {
+    "compared": "ORACLE(mlp__raw__1m) minus ALWAYS(mlp__raw__1m)",
+    "months": 95,
+    "mean_monthly_difference": 0.03999,
+    "annualised_difference": 0.4799,
+    "sd_monthly_difference": 0.03861,
+    "t_stat_paired": 10.095,
+    "p_two_sided": 0.0,
+    "share_months_ahead": 1.0,
+    "mde_annualised_80pct": 0.1332
+   },
+   "warning": "uses the REALISED label; a bound on what perfect abstention could have bought, never a strategy"
+  },
+  "ridge__raw__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.4238,
+    "beta_t": 11.208,
+    "alpha_monthly": 0.03404,
+    "alpha_annualised": 0.4085,
+    "alpha_t": 4.679,
+    "alpha_p_two_sided": 1e-05,
+    "r2": 0.5746,
+    "terminal_wealth_net": 116.4187,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.8238,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.2959,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.1041
+   },
+   "vs_always_trade": {
+    "compared": "ORACLE(ridge__raw__1m) minus ALWAYS(ridge__raw__1m)",
+    "months": 95,
+    "mean_monthly_difference": 0.03056,
+    "annualised_difference": 0.3668,
+    "sd_monthly_difference": 0.03574,
+    "t_stat_paired": 8.336,
+    "p_two_sided": 0.0,
+    "share_months_ahead": 1.0,
+    "mde_annualised_80pct": 0.1233
+   },
+   "warning": "uses the REALISED label; a bound on what perfect abstention could have bought, never a strategy"
+  }
+ },
+ "inverse_arm": {
+  "lgbm_clf__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.0465,
+    "beta_t": 15.427,
+    "alpha_monthly": 0.00014,
+    "alpha_annualised": 0.0016,
+    "alpha_t": 0.035,
+    "alpha_p_two_sided": 0.97235,
+    "r2": 0.719,
+    "terminal_wealth_net": 3.7694,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.1825,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.3856,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.0684
+   },
+   "vs_always_trade": {
+    "compared": "INVERSE(lgbm_clf__1m) minus ALWAYS(lgbm_clf__1m)",
+    "months": 95,
+    "mean_monthly_difference": -0.00596,
+    "annualised_difference": -0.0715,
+    "sd_monthly_difference": 0.02565,
+    "t_stat_paired": -2.264,
+    "p_two_sided": 0.02585,
+    "share_months_ahead": 0.4316,
+    "mde_annualised_80pct": 0.0885
+   }
+  },
+  "encoder_clf__residual__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.177,
+    "beta_t": 18.161,
+    "alpha_monthly": 0.00449,
+    "alpha_annualised": 0.0539,
+    "alpha_t": 1.21,
+    "alpha_p_two_sided": 0.22938,
+    "r2": 0.7801,
+    "terminal_wealth_net": 6.6943,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.2715,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.2823,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.0738
+   },
+   "vs_always_trade": {
+    "compared": "INVERSE(encoder_clf__residual__1m) minus ALWAYS(encoder_clf__residual__1m)",
+    "months": 95,
+    "mean_monthly_difference": -0.00991,
+    "annualised_difference": -0.1189,
+    "sd_monthly_difference": 0.04061,
+    "t_stat_paired": -2.378,
+    "p_two_sided": 0.01944,
+    "share_months_ahead": 0.4,
+    "mde_annualised_80pct": 0.1401
+   }
+  },
+  "mlp__raw__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.2742,
+    "beta_t": 14.14,
+    "alpha_monthly": -0.00659,
+    "alpha_annualised": -0.079,
+    "alpha_t": -1.276,
+    "alpha_p_two_sided": 0.20513,
+    "r2": 0.6825,
+    "terminal_wealth_net": 2.4757,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.1213,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.4348,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.0854
+   },
+   "vs_always_trade": {
+    "compared": "INVERSE(mlp__raw__1m) minus ALWAYS(mlp__raw__1m)",
+    "months": 95,
+    "mean_monthly_difference": -0.00682,
+    "annualised_difference": -0.0818,
+    "sd_monthly_difference": 0.06145,
+    "t_stat_paired": -1.082,
+    "p_two_sided": 0.28223,
+    "share_months_ahead": 0.5263,
+    "mde_annualised_80pct": 0.212
+   }
+  },
+  "ridge__raw__1m": {
+   "grade": {
+    "months": 95,
+    "beta": 1.1982,
+    "beta_t": 14.6,
+    "alpha_monthly": -0.00306,
+    "alpha_annualised": -0.0367,
+    "alpha_t": -0.651,
+    "alpha_p_two_sided": 0.51651,
+    "r2": 0.6962,
+    "terminal_wealth_net": 3.2264,
+    "terminal_wealth_market_same_months": 3.723,
+    "cagr_net": 0.1595,
+    "cagr_market": 0.1806,
+    "max_drawdown_net": -0.3649,
+    "max_drawdown_market": -0.3331,
+    "monthly_sd": 0.0796
+   },
+   "vs_always_trade": {
+    "compared": "INVERSE(ridge__raw__1m) minus ALWAYS(ridge__raw__1m)",
+    "months": 95,
+    "mean_monthly_difference": -0.01006,
+    "annualised_difference": -0.1208,
+    "sd_monthly_difference": 0.05629,
+    "t_stat_paired": -1.743,
+    "p_two_sided": 0.08467,
+    "share_months_ahead": 0.3895,
+    "mde_annualised_80pct": 0.1942
+   }
+  }
+ },
+ "engine_routing": {
+  "engine_choice_share": {
+   "lgbm_clf__1m": 0.3348,
+   "encoder_clf__residual__1m": 0.2719,
+   "mlp__raw__1m": 0.1961,
+   "ridge__raw__1m": 0.1972
+  },
+  "arms": {
+   "ROUTED_ENGINE": {
+    "grade": {
+     "months": 95,
+     "beta": 1.2452,
+     "beta_t": 16.382,
+     "alpha_monthly": 0.00765,
+     "alpha_annualised": 0.0918,
+     "alpha_t": 1.757,
+     "alpha_p_two_sided": 0.08225,
+     "r2": 0.7427,
+     "terminal_wealth_net": 9.3946,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.3271,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.3154,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.08
+    }
+   },
+   "EW_ENSEMBLE": {
+    "grade": {
+     "months": 95,
+     "beta": 1.1873,
+     "beta_t": 8.95,
+     "alpha_monthly": 0.01891,
+     "alpha_annualised": 0.2269,
+     "alpha_t": 2.488,
+     "alpha_p_two_sided": 0.01462,
+     "r2": 0.4628,
+     "terminal_wealth_net": 22.0919,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.4784,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.3676,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.0967
+    }
+   }
+  },
+  "single_engines": {
+   "lgbm_clf__1m": {
+    "grade": {
+     "months": 95,
+     "beta": 1.1317,
+     "beta_t": 12.69,
+     "alpha_monthly": 0.00477,
+     "alpha_annualised": 0.0572,
+     "alpha_t": 0.933,
+     "alpha_p_two_sided": 0.35322,
+     "r2": 0.6339,
+     "terminal_wealth_net": 6.1695,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.2584,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.4291,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.0787
+    }
+   },
+   "encoder_clf__residual__1m": {
+    "grade": {
+     "months": 95,
+     "beta": 1.2544,
+     "beta_t": 11.575,
+     "alpha_monthly": 0.01319,
+     "alpha_annualised": 0.1583,
+     "alpha_t": 2.125,
+     "alpha_p_two_sided": 0.03623,
+     "r2": 0.5903,
+     "terminal_wealth_net": 15.0048,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.4079,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.3437,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.0905
+    }
+   },
+   "mlp__raw__1m": {
+    "grade": {
+     "months": 95,
+     "beta": 1.4557,
+     "beta_t": 8.557,
+     "alpha_monthly": -0.0026,
+     "alpha_annualised": -0.0312,
+     "alpha_t": -0.267,
+     "alpha_p_two_sided": 0.79021,
+     "r2": 0.4405,
+     "terminal_wealth_net": 3.3588,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.1654,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.6258,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.1215
+    }
+   },
+   "ridge__raw__1m": {
+    "grade": {
+     "months": 95,
+     "beta": 1.4938,
+     "beta_t": 10.349,
+     "alpha_monthly": 0.00239,
+     "alpha_annualised": 0.0287,
+     "alpha_t": 0.289,
+     "alpha_p_two_sided": 0.77328,
+     "r2": 0.5353,
+     "terminal_wealth_net": 6.3044,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.2618,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.5442,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.1131
+    }
+   }
+  },
+  "routed_vs_ew_ensemble": {
+   "compared": "routed-engine minus EW rank ensemble",
+   "months": 95,
+   "mean_monthly_difference": -0.01036,
+   "annualised_difference": -0.1243,
+   "sd_monthly_difference": 0.06394,
+   "t_stat_paired": -1.578,
+   "p_two_sided": 0.11781,
+   "share_months_ahead": 0.4316,
+   "mde_annualised_80pct": 0.2206
+  },
+  "routed_vs_each_engine": {
+   "lgbm_clf__1m": {
+    "compared": "routed-engine minus lgbm_clf__1m",
+    "months": 95,
+    "mean_monthly_difference": 0.00465,
+    "annualised_difference": 0.0558,
+    "sd_monthly_difference": 0.0518,
+    "t_stat_paired": 0.876,
+    "p_two_sided": 0.38347,
+    "share_months_ahead": 0.5158,
+    "mde_annualised_80pct": 0.1787
+   },
+   "encoder_clf__residual__1m": {
+    "compared": "routed-engine minus encoder_clf__residual__1m",
+    "months": 95,
+    "mean_monthly_difference": -0.00569,
+    "annualised_difference": -0.0683,
+    "sd_monthly_difference": 0.045,
+    "t_stat_paired": -1.232,
+    "p_two_sided": 0.22103,
+    "share_months_ahead": 0.4526,
+    "mde_annualised_80pct": 0.1552
+   },
+   "mlp__raw__1m": {
+    "compared": "routed-engine minus mlp__raw__1m",
+    "months": 95,
+    "mean_monthly_difference": 0.00696,
+    "annualised_difference": 0.0835,
+    "sd_monthly_difference": 0.09291,
+    "t_stat_paired": 0.73,
+    "p_two_sided": 0.46704,
+    "share_months_ahead": 0.5579,
+    "mde_annualised_80pct": 0.3205
+   },
+   "ridge__raw__1m": {
+    "compared": "routed-engine minus ridge__raw__1m",
+    "months": 95,
+    "mean_monthly_difference": 0.00138,
+    "annualised_difference": 0.0165,
+    "sd_monthly_difference": 0.08497,
+    "t_stat_paired": 0.158,
+    "p_two_sided": 0.87477,
+    "share_months_ahead": 0.4632,
+    "mde_annualised_80pct": 0.2931
+   }
+  },
+  "note": "'better than the best engine picked afterwards' is not a claim; the EW rank ensemble is the honest comparator because it needs no choice at all"
+ },
+ "primary_router_gain_importance_last_fold": [
+  {
+   "feature": "abs_u_c",
+   "split_importance": 740
+  },
+  {
+   "feature": "engine_disagree",
+   "split_importance": 574
+  },
+  {
+   "feature": "u_c",
+   "split_importance": 554
+  },
+  {
+   "feature": "vol_60d",
+   "split_importance": 515
+  },
+  {
+   "feature": "abs_mom_12_1",
+   "split_importance": 512
+  },
+  {
+   "feature": "range_52w",
+   "split_importance": 505
+  },
+  {
+   "feature": "abs_ret_3m",
+   "split_importance": 499
+  },
+  {
+   "feature": "dd_60d_mag",
+   "split_importance": 494
+  },
+  {
+   "feature": "vol_20d",
+   "split_importance": 458
+  },
+  {
+   "feature": "attention_z",
+   "split_importance": 452
+  },
+  {
+   "feature": "attention_z_5d",
+   "split_importance": 424
+  },
+  {
+   "feature": "log_market_cap",
+   "split_importance": 422
+  },
+  {
+   "feature": "abs_ret_1m",
+   "split_importance": 402
+  },
+  {
+   "feature": "dispersion",
+   "split_importance": 391
+  },
+  {
+   "feature": "abs_upside",
+   "split_importance": 370
+  },
+  {
+   "feature": "amihud_21d",
+   "split_importance": 327
+  },
+  {
+   "feature": "log_dollar_vol_20d",
+   "split_importance": 313
+  },
+  {
+   "feature": "disagreement",
+   "split_importance": 218
+  },
+  {
+   "feature": "sector_code",
+   "split_importance": 192
+  },
+  {
+   "feature": "abs_net_rev_4w",
+   "split_importance": 155
+  },
+  {
+   "feature": "log_coverage",
+   "split_importance": 127
+  },
+  {
+   "feature": "ins_activity_90d",
+   "split_importance": 97
+  },
+  {
+   "feature": "ins_buy_90d",
+   "split_importance": 83
+  },
+  {
+   "feature": "numest",
+   "split_importance": 72
+  },
+  {
+   "feature": "ins_sell_90d",
+   "split_importance": 43
+  },
+  {
+   "feature": "ins_opp_buy_90d",
+   "split_importance": 29
+  },
+  {
+   "feature": "ins_cluster_90d",
+   "split_importance": 28
+  },
+  {
+   "feature": "ins_any_90d",
+   "split_importance": 4
+  }
+ ],
+ "router_score_is": {
+  "log_market_cap": -0.2594,
+  "vol_60d": 0.2199,
+  "log_coverage": -0.2052,
+  "log_dollar_vol_20d": -0.2364,
+  "abs_u_c": 0.5234,
+  "engine_disagree": -0.2523,
+  "ins_activity_90d": -0.0719,
+  "attention_z": -0.0336,
+  "dispersion": 0.1286
+ },
+ "stage2_multiplicity": {
+  "cells_charged_here": 9,
+  "family_max_p": 0.28223,
+  "holm_export": {
+   "DECILE_TB::lgbm_clf__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "DECILE_TB::encoder_clf__residual__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "DECILE_TB::mlp__raw__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "DECILE_TB::ridge__raw__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "INVERSE::encoder_clf__residual__1m": {
+    "p_raw": 0.01944,
+    "p_holm": 0.0972,
+    "survives_holm_05": false
+   },
+   "INVERSE::lgbm_clf__1m": {
+    "p_raw": 0.02585,
+    "p_holm": 0.1034,
+    "survives_holm_05": false
+   },
+   "INVERSE::ridge__raw__1m": {
+    "p_raw": 0.08467,
+    "p_holm": 0.25401,
+    "survives_holm_05": false
+   },
+   "ROUTED_ENGINE_vs_EW": {
+    "p_raw": 0.11781,
+    "p_holm": 0.25401,
+    "survives_holm_05": false
+   },
+   "INVERSE::mlp__raw__1m": {
+    "p_raw": 0.28223,
+    "p_holm": 0.28223,
+    "survives_holm_05": false
+   }
+  },
+  "bh_fdr_screen_q10": {
+   "DECILE_TB::lgbm_clf__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.011111,
+    "survives_bh_10": true
+   },
+   "DECILE_TB::encoder_clf__residual__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.022222,
+    "survives_bh_10": true
+   },
+   "DECILE_TB::mlp__raw__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.033333,
+    "survives_bh_10": true
+   },
+   "DECILE_TB::ridge__raw__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.044444,
+    "survives_bh_10": true
+   },
+   "INVERSE::encoder_clf__residual__1m": {
+    "p_raw": 0.01944,
+    "bh_crit": 0.055556,
+    "survives_bh_10": true
+   },
+   "INVERSE::lgbm_clf__1m": {
+    "p_raw": 0.02585,
+    "bh_crit": 0.066667,
+    "survives_bh_10": true
+   },
+   "INVERSE::ridge__raw__1m": {
+    "p_raw": 0.08467,
+    "bh_crit": 0.077778,
+    "survives_bh_10": false
+   },
+   "ROUTED_ENGINE_vs_EW": {
+    "p_raw": 0.11781,
+    "bh_crit": 0.088889,
+    "survives_bh_10": false
+   },
+   "INVERSE::mlp__raw__1m": {
+    "p_raw": 0.28223,
+    "bh_crit": 0.1,
+    "survives_bh_10": false
+   }
+  },
+  "note": "stage two's cells are charged separately and the report adds both counts; the roadmap's invariant 16 charges every cell LOOKED AT, not every cell published"
+ },
+ "primary_decile_spread_by_era": {
+  "2017-2018": {
+   "months": 24,
+   "mean": 0.22874,
+   "t": 4.588,
+   "mde_80pct": 0.1397
+  },
+  "2019-2021": {
+   "months": 36,
+   "mean": 0.31017,
+   "t": 3.824,
+   "mde_80pct": 0.22726
+  },
+  "2022-2024": {
+   "months": 35,
+   "mean": 0.53815,
+   "t": 11.581,
+   "mde_80pct": 0.1302
+  }
+ },
+ "eras_declared": {
+  "2017-2018": [
+   "2017-01",
+   "2018-12"
+  ],
+  "2019-2021": [
+   "2019-01",
+   "2021-12"
+  ],
+  "2022-2024": [
+   "2022-01",
+   "2024-12"
+  ]
+ },
+ "runtime_seconds": 53.4
+}

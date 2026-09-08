@@ -1,0 +1,141 @@
+{
+ "quarter": "2026q1",
+ "zip_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\raw\\2026q1_form345.zip",
+ "zip_bytes": 13874904,
+ "zip_members": {
+  "DERIV_HOLDING.tsv": 3014509,
+  "DERIV_TRANS.tsv": 6110613,
+  "FOOTNOTES.tsv": 43870427,
+  "NONDERIV_HOLDING.tsv": 2729055,
+  "NONDERIV_TRANS.tsv": 11452996,
+  "OWNER_SIGNATURE.tsv": 5537136,
+  "REPORTINGOWNER.tsv": 10439470,
+  "SUBMISSION.tsv": 7487317,
+  "FORM_345_metadata.json": 39131,
+  "FORM_345_readme.htm": 393653
+ },
+ "submissions": 69259,
+ "reporting_owner_rows": 72211,
+ "rows": 152803,
+ "orphan_transactions_no_submission": 0,
+ "transactions_with_no_reporting_owner": 0,
+ "trans_code_counts": {
+  "A": 41387,
+  "M": 33657,
+  "F": 27048,
+  "S": 22940,
+  "P": 6130,
+  "D": 4002,
+  "J": 2502,
+  "C": 1697,
+  "G": 1516,
+  "L": 221,
+  "X": 211,
+  "E": 131,
+  "I": 86,
+  "U": 66,
+  "W": 38,
+  "(blank)": 4,
+  "H": 4,
+  "O": 2,
+  "Z": 1
+ },
+ "unknown_codes": [],
+ "filing_date_min": "2026-01-02",
+ "filing_date_max": "2026-03-31",
+ "distinct_issuers": 5306,
+ "distinct_insiders": 30071,
+ "open_market_purchases": 7302,
+ "open_market_sales": 13617,
+ "plan_10b5_1_counts": {
+  "NO": 133115,
+  "YES": 19688
+ },
+ "plan_10b5_1_source_counts": {
+  "AFF10B5ONE": 152803
+ },
+ "trans_class_counts": {
+  "GRANT_AWARD": 41964,
+  "OPTION_EXERCISE": 34960,
+  "TAX_OR_EXERCISE_WITHHOLDING": 27127,
+  "OPEN_MARKET_SALE": 27103,
+  "OPEN_MARKET_PURCHASE": 7924,
+  "DISPOSITION_TO_ISSUER": 4246,
+  "DERIVATIVE_CONVERSION": 3716,
+  "OTHER": 3270,
+  "GIFT": 1556,
+  "DERIVATIVE_EXPIRATION": 473,
+  "SMALL_ACQUISITION": 223,
+  "TENDER": 112,
+  "PLAN_DISCRETIONARY": 86,
+  "INHERITANCE": 38,
+  "UNKNOWN_CODE": 4,
+  "VOTING_TRUST": 1
+ },
+ "observed_at_basis": "FILING_DATE_EOD_CONSERVATIVE",
+ "footnote_10b5_1_accessions": 1,
+ "footnotes_scanned": true,
+ "pit_check": {
+  "rows_checked": 152803,
+  "violations": 0,
+  "future_dated_transactions": 15,
+  "future_dated_examples": [
+   {
+    "accession": "0001515184-26-000002",
+    "trans_date": "2028-03-19",
+    "filing_date": "2026-03-20"
+   },
+   {
+    "accession": "0001193125-26-106246",
+    "trans_date": "2026-03-15",
+    "filing_date": "2026-03-13"
+   },
+   {
+    "accession": "0001539838-26-000031",
+    "trans_date": "2026-03-08",
+    "filing_date": "2026-03-03"
+   },
+   {
+    "accession": "0001173514-26-000055",
+    "trans_date": "2026-03-27",
+    "filing_date": "2026-03-03"
+   },
+   {
+    "accession": "0001707826-26-000004",
+    "trans_date": "2026-03-27",
+    "filing_date": "2026-03-02"
+   }
+  ]
+ },
+ "fabrication_check": {
+  "rows_checked": 152803,
+  "violations": 0,
+  "implausible_dates": 4,
+  "implausible_date_examples": [
+   "0000906304-26-000054: trans_date 2002-03-24 vs filing_date 2026-03-25",
+   "0001919175-26-000004: trans_date 2002-02-26 vs filing_date 2026-03-02",
+   "0001774171-26-000002: trans_date 2002-02-24 vs filing_date 2026-02-25",
+   "0001193125-26-118517: trans_date 2029-02-19 vs filing_date 2026-03-23"
+  ]
+ },
+ "link_counts": {
+  "REFUSED_OUTSIDE_CRSP_VINTAGE": 152803
+ },
+ "link_rate": 0.0,
+ "crsp_link_source": "crsp__stocknames.parquet rows=46108 vintage_end=2024-12-31",
+ "by_year": {
+  "2026": {
+   "rows": 152803,
+   "distinct_issuers": 4309,
+   "distinct_insiders": 30071,
+   "open_market_purchases": 7302,
+   "open_market_sales": 13617,
+   "rows_linked_to_permno": 0,
+   "link_rate": 0.0,
+   "link_refusals": {
+    "REFUSED_OUTSIDE_CRSP_VINTAGE": 152803
+   }
+  }
+ },
+ "written_utc": "2026-09-07T10:40:56+00:00"
+}

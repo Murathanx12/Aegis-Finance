@@ -134,14 +134,54 @@ V2_RECEIPT_PATH = (REPO / "backend" / "data" / "optimus" / "tracker_backtest"
                    / "learner_v2_20260903.json")
 STATES_RECEIPT = "backend/data/optimus/tracker_backtest/unsupervised_states_20260903.json"
 
+#: Receipt for the THREE-NULL adjudication of the four states (N5.3).
+STATES_THIRD_NULL_RECEIPT = ("backend/data/optimus/night_lab_2026-09-07/"
+                             "N5_states_third_null.json")
+
 #: State semantics tags, from the states receipt + S36 scoreboard. Stored so a
 #: scorecard reader sees what a state MEANS even while assignment is refused.
+#:
+#: X8 (2026-09-07): THE STATUS COMES FIRST AND THE STATUS IS `CANNOT_DETERMINE`.
+#:
+#: This block used to end with "4 OOS states, k=4, **p=0.000 vs 200 random
+#: partitions**". That p is NULL 1 -- the LEGACY within-month shuffle, which
+#: `learner/nullbar.py` records as MIS-SPECIFIED -- quoted alone. Standing
+#: canon: **a null owes TWO tests.** The states have now had three, and they
+#: disagree: null 1 clears (p 0.000), **null 2, the persistence-preserving
+#: circular shift that SUPERSEDES null 1, FAILS at p 1.000**, and null 3, the
+#: name-path permutation, clears at p 0.005. `N5_states_third_null.json`'s own
+#: `final_verdict` is **CANNOT_DETERMINE / NULL_2_ALONE_DISAGREES**, and its
+#: `demotion` block names THIS FILE and asks for exactly this correction:
+#: the text "quotes null 1 alone and reads as a validated finding".
+#:
+#: So the tags stay -- a reader still needs to know what state 0 was DESCRIBED
+#: as -- and they travel with the verdict that governs them. The four states are
+#: INFORMATIONAL-ONLY: never a sizing, admission or routing input. On this
+#: surface that is confirmatory rather than new (a tracker day file cannot
+#: supply `STATE_FEATURES`, so `state.status` is CANNOT_DETERMINE on every row
+#: regardless), which is precisely why the TEXT had to be fixed: it was the only
+#: part of the block a reader could mistake for evidence.
 STATE_SEMANTICS = {
-    "0": "broken-lottery-ticket: mean -4.9%/3m t -3.4, worst-5% -75%, "
+    "status": "CANNOT_DETERMINE",
+    "admissibility": ("INFORMATIONAL-ONLY -- never a sizing, admission or "
+                      "routing input, until a state definition clears all "
+                      "three nulls or a fourth null resolves the "
+                      "disagreement"),
+    "0": "broken-lottery-ticket (DESCRIPTIVE TAG, not a validated state): "
+         "mean -4.9%/3m t -3.4, worst-5% -75%, "
          "big-upside freq 21.7% -- the lost-winners address",
     "receipt": STATES_RECEIPT,
-    "note": "4 OOS states, k=4, p=0.000 vs 200 random partitions; "
-            "half the panel kills every model except lgbm_clf",
+    "adjudication_receipt": STATES_THIRD_NULL_RECEIPT,
+    "nulls": {
+        "null_1_within_month_shuffle_LEGACY_MIS_SPECIFIED": "p 0.000 (clears)",
+        "null_2_persistence_preserving_circular_shift": "p 1.000 (FAILS)",
+        "null_3_name_path_permutation": "p 0.005 (clears)",
+        "verdict": "CANNOT_DETERMINE -- NULL_2_ALONE_DISAGREES",
+    },
+    "note": "4 OOS states, k=4. The three nulls DISAGREE and the governing "
+            "verdict is CANNOT_DETERMINE; null 1 alone is not validation "
+            "(it is the superseded, mis-specified bar). Half the panel kills "
+            "every model except lgbm_clf.",
 }
 
 # ------------------------------------------------------- execution capacity
@@ -777,6 +817,7 @@ def read_potential_universe(path: Path) -> dict:
 
 __all__ = [
     "CODE_VERSION", "V2_FROZEN_CHAMPION", "STATE_SEMANTICS",
+    "STATES_RECEIPT", "STATES_THIRD_NULL_RECEIPT",
     "OBSERVE_FLOOR_USD", "EXECUTE_FLOOR_USD", "MAX_ADV_PARTICIPATION",
     "CAPACITY_CONVENTION", "LIQUIDITY_COLUMN", "PIT_CLOSE_UTC_HOUR",
     "ENGINE_VERDICTS", "CAPACITY_TIERS", "SCORECARD_KEYS", "HEADER_KEYS",

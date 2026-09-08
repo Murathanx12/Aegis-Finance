@@ -588,13 +588,32 @@ class _FakeLLM:
 
 
 def _install_llm(monkeypatch, fake):
+    """Install the stub BOTH in `sys.modules` and as a package ATTRIBUTE.
+
+    `sys.modules` alone is not enough, and the gap is invisible until some other
+    test file imports the real module first. `beliefs.py` does
+    `from backend.services import llm_research`, and CPython's `_handle_fromlist`
+    resolves that with `getattr(backend.services, "llm_research")` when the
+    attribute already exists -- so once ANY module in the run has really
+    imported it, the package attribute wins and the stub is silently bypassed.
+    Six tests here went red the day `test_one_price_table.py` was added, which
+    imports `llm_research` at COLLECTION time (pytest imports every test module
+    before running any test), and the real `available()` then answered "ok".
+    A stub that can be bypassed by an unrelated file's import order is a stub
+    that makes a green suite mean nothing -- and in this case it let a
+    non-slow test reach for a live socket.
+    """
     import sys
     import types
+
+    import backend.services as _services
+
     mod = types.ModuleType("backend.services.llm_research")
     mod.available = fake.available
     mod.ask = fake.ask
     mod.parse_json_block = fake.parse_json_block
     monkeypatch.setitem(sys.modules, "backend.services.llm_research", mod)
+    monkeypatch.setattr(_services, "llm_research", mod, raising=False)
 
 
 def _day_state(tickers, day="2026-08-20", score=1.0):
@@ -690,7 +709,11 @@ def test_no_llm_is_a_status_never_a_silent_skip(root, monkeypatch):
     mod.available = lambda: (False, "no api key")
     mod.ask = None
     mod.parse_json_block = None
+    # Same reason as `_install_llm`: sys.modules alone is bypassed once the
+    # package attribute exists, which any earlier import in the run sets.
+    import backend.services as _services
     monkeypatch.setitem(sys.modules, "backend.services.llm_research", mod)
+    monkeypatch.setattr(_services, "llm_research", mod, raising=False)
     out = beliefs.daily_review(_day_state(["AAA"]), book_id="B",
                                holdings={"AAA"}, challengers=[],
                                llm_cfg={}, root=root)
@@ -1040,7 +1063,9 @@ def test_event_fetch_never_raises_and_reports_an_empty_result(monkeypatch):
         raise RuntimeError("feed down")
 
     mod.get_ticker_events = _boom
+    import backend.services as _services
     monkeypatch.setitem(sys.modules, "backend.services.event_intel", mod)
+    monkeypatch.setattr(_services, "event_intel", mod, raising=False)
     out = events.fetch(["AAA", "BBB"])
     assert out["status"] == "empty" and out["fetched_n"] == 0
     assert set(out["errors"]) == {"AAA", "BBB"}

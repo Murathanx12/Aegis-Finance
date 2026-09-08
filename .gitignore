@@ -199,3 +199,34 @@ backend/data/optimus/edgar_8k/*.jsonl
 # Data manifest: docs/DATA_MANIFEST.md.
 backend/data/optimus/graph/companyworld_work/
 backend/data/optimus/graph/companyworld_inputs/
+
+# I1 — SEC Insider Transactions bulk sets (2026-09-07). The RAW quarterly ZIPs
+# (~13 MB x 82 = ~1.0 GB) and the parsed per-quarter parquet are SUBSTRATE,
+# re-downloadable for free from sec.gov by `scripts/sec_insider_bulk_load.py`.
+# The committed evidence is the per-quarter receipts, the cursor and the
+# coverage-by-year receipt beside them. `*.parquet` is already ignored above.
+# Data manifest: docs/DATA_MANIFEST.md.
+backend/data/optimus/sec_insider/raw/
+backend/data/optimus/sec_insider/_load.log
+backend/data/optimus/sec_insider/_load.pid
+
+# ── Lane L (2026-09-07): scraped RAW BODIES are DATA, not receipts ──────────
+# `backend/data/scrape/<source>/` holds gzipped bodies straight off the wire,
+# an index, cursors, a log and a pid. It is regenerable by re-running the
+# puller and it grows without bound (GDELT's gkg stream alone is ~4.5 MB per
+# 15-minute stamp, ~430 MB/day), so it does not belong in git.
+#
+# So `bodies/` is ignored and the PROVENANCE is not: `index.jsonl`, `cursor.json`,
+# `pull.log` and `coverage.json` are small, are the evidence that a pull happened
+# and got where it says it got, and are what a resume reads. Ignoring those too
+# would leave the next session unable to tell an unfetched window from an
+# unrecorded one -- the same failure the 83.6% pull had.
+#
+# `pull.pid` is ignored: a pid is true of one machine for one run, and a
+# committed one would read as a live process on somebody else's box.
+#
+# `backend/data/optimus/free_inference_2026-09-07/` is RECEIPTS and is tracked.
+backend/data/scrape/*/bodies/
+backend/data/scrape/*/pull.pid
+.gdelt_bg.out
+.nim_bg.out

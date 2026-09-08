@@ -354,10 +354,90 @@ class ConvictionDecisionRequest(_BaseModel):
     late_entry: bool = False         # the action already happened; logged after the fact
     portfolio_snapshot: dict = _PydField(default_factory=dict)
 
+    # ── H2: the journal → thesis bridge ──────────────────────────────────────
+    # A conviction row with a rationale and a 1-5 conviction can be REMEMBERED
+    # and cannot be GRADED: it carries no falsifier, no catalyst date, no
+    # horizon and no declared hold. Supplying these turns the same decision into
+    # a `Thesis` (the execution repo's schema, verbatim) and a PENDING row in
+    # the four-counterfactual decision log under brain `human:murat`.
+    #
+    # They are OPTIONAL rather than required, and that is a deliberate,
+    # documented deviation from a literal reading of H2: this endpoint has live
+    # callers and an immutable table behind it, and breaking every existing
+    # journal write to enforce a new field would be a migration disguised as a
+    # feature. What is NOT optional is the honesty: a decision logged without
+    # them comes back with `thesis.status = "NOT_CREATED"` and the reason, so a
+    # row that cannot be graded says so at the moment it is written rather than
+    # six weeks later when somebody tries to grade it.
+    catalyst: Optional[str] = None
+    catalyst_at_utc: Optional[str] = None
+    falsifier: Optional[str] = None          # >= 15 chars
+    direction: Optional[str] = None          # up | down | none
+    expected_move: Optional[float] = None    # signed; required with a direction
+    horizon_sessions: Optional[int] = None
+    min_normal_hold_sessions: Optional[int] = None
+    loss_budget_ref: Optional[str] = None
+
+
+#: The five fields that, together, make a conviction row gradeable.
+_THESIS_FIELDS = ("catalyst", "catalyst_at_utc", "falsifier", "direction",
+                  "expected_move")
+
+
+def _bridge_to_thesis(body: "ConvictionDecisionRequest", decision_id: int) -> dict:
+    """Build + record the H2 thesis for a conviction row, or say why not.
+
+    Never raises: the immutable decision row has ALREADY been written when this
+    runs, and losing it because a falsifier was 14 characters long would be the
+    write path punishing the honest half of the request.
+    """
+    supplied = [f for f in _THESIS_FIELDS if getattr(body, f, None) is not None]
+    if not supplied:
+        return {"status": "NOT_CREATED",
+                "reason": ("no catalyst, falsifier or direction was supplied, so "
+                           "this row can be REMEMBERED and not GRADED. Send "
+                           "catalyst / catalyst_at_utc / falsifier / direction "
+                           "(+ expected_move) to open a thesis under "
+                           "brain `human:murat`."),
+                "missing": [f for f in _THESIS_FIELDS
+                            if getattr(body, f, None) is None]}
+    try:
+        from backend.services import decision_log as _dl
+        from backend.services import human_thesis as _ht
+
+        t = _ht.build(
+            symbol=body.ticker, direction=body.direction or "none",
+            catalyst=body.catalyst or "", catalyst_at_utc=body.catalyst_at_utc or "",
+            reason=body.rationale, falsifier=body.falsifier or "",
+            expected_move=body.expected_move,
+            conviction=min(1.5, max(0.01, float(body.conviction) / 5.0)),
+            horizon_sessions=body.horizon_sessions,
+            min_normal_hold_sessions=body.min_normal_hold_sessions,
+            loss_budget_ref=body.loss_budget_ref)
+        sealed = _ht.record(t, decision_id=decision_id)
+        row = _dl.from_thesis(t, action=body.action, entry_price=body.price,
+                              shares_delta=body.shares_delta)
+        written = _dl.record_decision(row)
+        return {"status": "CREATED", **sealed,
+                "decision_row_id": written["decision_id"],
+                "resolves_on": written["resolves_on"],
+                "conviction_mapping": ("the journal's 1-5 conviction is mapped to "
+                                       "the thesis scale (0, 1.5] as x/5; it is "
+                                       "recorded, never treated as a probability")}
+    except Exception as e:                                       # noqa: BLE001
+        return {"status": "REFUSED", "reason": str(e),
+                "note": ("the immutable decision row was written; only the "
+                         "thesis was refused. Fix the field and post a "
+                         "correction with amends_id.")}
+
 
 @router.post("/conviction/decision")
 async def log_conviction_decision(body: ConvictionDecisionRequest):
-    """Log a conviction-lane decision (immutable, forward-only). Returns the row id."""
+    """Log a conviction-lane decision (immutable, forward-only). Returns the row id.
+
+    When the H2 fields are supplied it also opens a `Thesis` and a PENDING
+    four-counterfactual decision row; see `_bridge_to_thesis`.
+    """
     def _write():
         from backend.db import get_connection, init_db, insert_personal_decision
         init_db()
@@ -374,7 +454,8 @@ async def log_conviction_decision(body: ConvictionDecisionRequest):
                 catalyst_dates=body.catalyst_dates, amends_id=body.amends_id,
                 late_entry=body.late_entry,
             )
-            return {"id": rid, "timestamp": ts, "late_entry": body.late_entry}
+            return {"id": rid, "timestamp": ts, "late_entry": body.late_entry,
+                    "thesis": _bridge_to_thesis(body, rid)}
         finally:
             conn.close()
 

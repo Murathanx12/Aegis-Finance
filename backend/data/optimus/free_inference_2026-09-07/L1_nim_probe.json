@@ -1,0 +1,160 @@
+{
+ "receipt": "L1_nim_probe",
+ "lane": "L \u2014 free inference + scrape-and-store + local review",
+ "probed_at_utc": "2026-09-07T10:32:04Z",
+ "endpoint": "https://integrate.api.nvidia.com/v1",
+ "key_env": "NVIDIA_API_KEY",
+ "key_value_recorded": false,
+ "models_listed": 81,
+ "list_latency_ms": 578.0,
+ "candidates_probed": 47,
+ "served": [
+  {
+   "model": "openai/gpt-oss-20b",
+   "seconds": 2.6,
+   "reply": "ready",
+   "tokens_in": 86,
+   "tokens_out": 32
+  },
+  {
+   "model": "nvidia/nemotron-3.5-lightning-30b-a3b",
+   "seconds": 3.8,
+   "reply": "ready",
+   "tokens_in": 33,
+   "tokens_out": 165
+  },
+  {
+   "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
+   "seconds": 1.0,
+   "reply": "ready",
+   "tokens_in": 33,
+   "tokens_out": 27
+  },
+  {
+   "model": "nvidia/nemotron-3-super-120b-a12b",
+   "seconds": 1.8,
+   "reply": "ready",
+   "tokens_in": 33,
+   "tokens_out": 19
+  },
+  {
+   "model": "nvidia/nemotron-3-ultra-550b-a55b",
+   "seconds": 41.7,
+   "reply": "ready",
+   "tokens_in": 33,
+   "tokens_out": 18
+  },
+  {
+   "model": "nvidia/ising-calibration-1.5-31b",
+   "seconds": 0.6,
+   "reply": "Ready.",
+   "tokens_in": 36,
+   "tokens_out": 3
+  },
+  {
+   "model": "nvidia/nemotron-3.5-content-safety",
+   "seconds": 0.8,
+   "reply": "User Safety: safe",
+   "tokens_in": 474,
+   "tokens_out": 5
+  },
+  {
+   "model": "meta/muse-glimmer-30b",
+   "seconds": 0.9,
+   "reply": "ready",
+   "tokens_in": 45,
+   "tokens_out": 93
+  },
+  {
+   "model": "minimaxai/minimax-m3",
+   "seconds": 0.7,
+   "reply": "ready",
+   "tokens_in": 175,
+   "tokens_out": 2
+  },
+  {
+   "model": "moonshotai/kimi-k3",
+   "seconds": 33.8,
+   "reply": "ready",
+   "tokens_in": 114,
+   "tokens_out": 45
+  },
+  {
+   "model": "google/gemma-4-31b-it",
+   "seconds": 51.7,
+   "reply": "ready",
+   "tokens_in": 35,
+   "tokens_out": 2
+  },
+  {
+   "model": "poolside/laguna-xs-2.1",
+   "seconds": 0.9,
+   "reply": "ready",
+   "tokens_in": 39,
+   "tokens_out": 2
+  }
+ ],
+ "n_served": 12,
+ "not_found_for_account_http_404": [
+  "01-ai/yi-large",
+  "ai21labs/jamba-1.5-large-instruct",
+  "aisingapore/sea-lion-7b-instruct",
+  "bigcode/starcoder2-15b",
+  "databricks/dbrx-instruct",
+  "deepseek-ai/deepseek-coder-6.7b-instruct",
+  "google/codegemma-7b",
+  "google/gemma-2b",
+  "google/gemma-3-12b-it",
+  "google/gemma-3-4b-it",
+  "ibm/granite-3.0-8b-instruct",
+  "ibm/granite-34b-code-instruct",
+  "meta/codellama-70b",
+  "meta/llama2-70b",
+  "microsoft/phi-3.5-moe-instruct",
+  "mistralai/mistral-7b-instruct-v0.3",
+  "mistralai/mistral-large",
+  "mistralai/mistral-large-2-instruct",
+  "mistralai/mixtral-8x22b-v0.1",
+  "moonshotai/kimi-k2.6",
+  "nv-mistralai/mistral-nemo-12b-instruct",
+  "nvidia/cosmos-reason2-8b",
+  "nvidia/llama-3.1-nemotron-51b-instruct",
+  "nvidia/llama-3.1-nemotron-70b-instruct",
+  "nvidia/llama-3.1-nemotron-ultra-253b-v1",
+  "nvidia/llama3-chatqa-1.5-70b",
+  "nvidia/mistral-nemo-minitron-8b-8k-instruct",
+  "nvidia/nemotron-4-340b-instruct",
+  "nvidia/nemotron-nano-3-30b-a3b",
+  "writer/palmyra-creative-122b",
+  "writer/palmyra-fin-70b-32k",
+  "zyphra/zamba2-7b-instruct"
+ ],
+ "n_not_found": 32,
+ "cannot_determine": [
+  {
+   "model": "deepseek-ai/deepseek-v4-flash-0731",
+   "why": "read timeout at 60 s AND at 200 s"
+  },
+  {
+   "model": "deepseek-ai/deepseek-v4-pro-0813",
+   "why": "read timeout at 60 s AND at 200 s"
+  },
+  {
+   "model": "mistralai/mistral-nemotron",
+   "why": "HTTP 500 with an empty body after 98.7 s"
+  }
+ ],
+ "transient": [
+  {
+   "model": "poolside/laguna-xs-2.1",
+   "why": "HTTP 503 'Worker local total request limit reached (42/32)' on attempt 1; answered in 0.9 s on attempt 2. One 503 is not evidence."
+  }
+ ],
+ "notes": [
+  "THE MODEL LIST IS THE CATALOGUE, NOT THE GRANT: 81 listed, 12 served, 32 returned 404 'Not found for account'.",
+  "This FALSIFIES the 2026-09-05 note in scripts/connection_check.py, which recorded minimax-m3, kimi-k3 and gemma-4-31b-it as unreachable and concluded ENTITLEMENT failure. All three answer on 2026-09-07.",
+  "A reasoning model (gpt-oss-20b) returns content='' and only reasoning_content at small max_tokens; 512 is the floor used here.",
+  "Cold starts are real: gemma-4-31b-it 51.7 s, nemotron-3-ultra 41.7 s, kimi-k3 33.8 s on first call.",
+  "Spend on this probe: $0.00 \u2014 NVIDIA free tier. DeepSeek was not called."
+ ]
+}

@@ -1,0 +1,1642 @@
+{
+ "lane": "R1_PREDICTABILITY_ROUTER_STAGE_3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_utc": "2026-09-08T05:46:40.793457+00:00",
+ "primary_engine": "lgbm_clf__1m",
+ "asks": "is the forecastable part of the label the mechanical rank-extremity term |u_c|, and does anything survive inside the region a long-only book can buy?",
+ "eras_declared": {
+  "2017-2018": [
+   "2017-01",
+   "2018-12"
+  ],
+  "2019-2021": [
+   "2019-01",
+   "2021-12"
+  ],
+  "2022-2024": [
+   "2022-01",
+   "2024-12"
+  ]
+ },
+ "A_within_decile_rank_ic_full_cross_section": {
+  "lgbm_clf__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.04573,
+     "t_across_months": 3.846
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.0255,
+     "t_across_months": 2.69
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02809,
+     "t_across_months": 2.857
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02348,
+     "t_across_months": 2.255
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.04076,
+     "t_across_months": 3.448
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.04484,
+     "t_across_months": 3.498
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.06524,
+     "t_across_months": 4.811
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.08493,
+     "t_across_months": 5.373
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.12736,
+     "t_across_months": 7.082
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.14206,
+     "t_across_months": 10.546
+    }
+   ],
+   "top_minus_bottom": 0.09633,
+   "top_minus_bottom_t": 7.025,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "mde_top_minus_bottom_80pct": 0.03842,
+   "spearman_decile_vs_realised": 0.7818
+  },
+  "encoder_clf__residual__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.06021,
+     "t_across_months": 5.137
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02975,
+     "t_across_months": 2.904
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02754,
+     "t_across_months": 3.15
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02375,
+     "t_across_months": 2.399
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.032,
+     "t_across_months": 2.904
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.04255,
+     "t_across_months": 3.603
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.05595,
+     "t_across_months": 4.419
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.07754,
+     "t_across_months": 5.733
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.13557,
+     "t_across_months": 8.658
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.15249,
+     "t_across_months": 12.055
+    }
+   ],
+   "top_minus_bottom": 0.09228,
+   "top_minus_bottom_t": 5.8,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "mde_top_minus_bottom_80pct": 0.04458,
+   "spearman_decile_vs_realised": 0.697
+  },
+  "mlp__raw__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.04164,
+     "t_across_months": 2.827
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02468,
+     "t_across_months": 2.265
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02035,
+     "t_across_months": 2.009
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.0094,
+     "t_across_months": 0.988
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.00725,
+     "t_across_months": 0.743
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02371,
+     "t_across_months": 2.455
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02446,
+     "t_across_months": 2.391
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.05522,
+     "t_across_months": 4.706
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.102,
+     "t_across_months": 6.992
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.12693,
+     "t_across_months": 12.857
+    }
+   ],
+   "top_minus_bottom": 0.08529,
+   "top_minus_bottom_t": 5.497,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "mde_top_minus_bottom_80pct": 0.04347,
+   "spearman_decile_vs_realised": 0.5152
+  },
+  "ridge__raw__1m": {
+   "n_bins": 10,
+   "months": 95,
+   "deciles": [
+    {
+     "decile": 1,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02912,
+     "t_across_months": 1.955
+    },
+    {
+     "decile": 2,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02122,
+     "t_across_months": 2.001
+    },
+    {
+     "decile": 3,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.00773,
+     "t_across_months": 0.781
+    },
+    {
+     "decile": 4,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.00544,
+     "t_across_months": 0.651
+    },
+    {
+     "decile": 5,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.02642,
+     "t_across_months": 2.905
+    },
+    {
+     "decile": 6,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.01758,
+     "t_across_months": 1.741
+    },
+    {
+     "decile": 7,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.03344,
+     "t_across_months": 3.056
+    },
+    {
+     "decile": 8,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.05271,
+     "t_across_months": 4.324
+    },
+    {
+     "decile": 9,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.10518,
+     "t_across_months": 6.846
+    },
+    {
+     "decile": 10,
+     "months": 95,
+     "mean_within_group_rank_ic": 0.13689,
+     "t_across_months": 14.155
+    }
+   ],
+   "top_minus_bottom": 0.10777,
+   "top_minus_bottom_t": 6.759,
+   "top_minus_bottom_p_two_sided": 0.0,
+   "mde_top_minus_bottom_80pct": 0.04468,
+   "spearman_decile_vs_realised": 0.7091
+  }
+ },
+ "A2_scored_by_abs_rank_alone": {
+  "lgbm_clf__1m": {
+   "label_decile_table": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00015,
+      "t_across_months": 0.276
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00531,
+      "t_across_months": 3.147
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00334,
+      "t_across_months": 0.929
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.02121,
+      "t_across_months": 4.099
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.02409,
+      "t_across_months": 2.899
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.04598,
+      "t_across_months": 4.053
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.08504,
+      "t_across_months": 5.557
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.15223,
+      "t_across_months": 7.117
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.25795,
+      "t_across_months": 8.921
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.36081,
+      "t_across_months": 9.352
+     }
+    ],
+    "top_minus_bottom": 0.36065,
+    "top_minus_bottom_t": 9.357,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "spearman_decile_vs_realised": 0.9879,
+    "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+    "mde_top_minus_bottom_80pct": 0.108
+   },
+   "within_decile_rank_ic": {
+    "n_bins": 10,
+    "months": 105,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 105,
+      "mean_within_group_rank_ic": 0.00449,
+      "t_across_months": 0.777
+     },
+     {
+      "decile": 2,
+      "months": 106,
+      "mean_within_group_rank_ic": 0.01791,
+      "t_across_months": 2.918
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.00581,
+      "t_across_months": 0.7
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.03291,
+      "t_across_months": 4.107
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.02929,
+      "t_across_months": 2.827
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.04063,
+      "t_across_months": 3.538
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.06592,
+      "t_across_months": 5.236
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.10408,
+      "t_across_months": 7.031
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.14566,
+      "t_across_months": 8.559
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.19416,
+      "t_across_months": 9.882
+     }
+    ],
+    "top_minus_bottom": 0.19193,
+    "top_minus_bottom_t": 9.408,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "mde_top_minus_bottom_80pct": 0.05716,
+    "spearman_decile_vs_realised": 0.9758
+   }
+  },
+  "encoder_clf__residual__1m": {
+   "label_decile_table": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00047,
+      "t_across_months": 0.846
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00301,
+      "t_across_months": 2.078
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00589,
+      "t_across_months": 2.004
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.01021,
+      "t_across_months": 1.951
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.02277,
+      "t_across_months": 3.108
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.04719,
+      "t_across_months": 4.839
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.07294,
+      "t_across_months": 5.0
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.1459,
+      "t_across_months": 7.047
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.23459,
+      "t_across_months": 8.416
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.39278,
+      "t_across_months": 11.28
+     }
+    ],
+    "top_minus_bottom": 0.39231,
+    "top_minus_bottom_t": 11.29,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "spearman_decile_vs_realised": 1.0,
+    "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+    "mde_top_minus_bottom_80pct": 0.09737
+   },
+   "within_decile_rank_ic": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.00443,
+      "t_across_months": 0.752
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.0115,
+      "t_across_months": 1.918
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.01185,
+      "t_across_months": 1.753
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.01837,
+      "t_across_months": 2.108
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.0236,
+      "t_across_months": 2.479
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.04699,
+      "t_across_months": 4.789
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.06443,
+      "t_across_months": 5.329
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.10499,
+      "t_across_months": 7.374
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.14519,
+      "t_across_months": 8.757
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.21657,
+      "t_across_months": 12.704
+     }
+    ],
+    "top_minus_bottom": 0.21214,
+    "top_minus_bottom_t": 12.122,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "mde_top_minus_bottom_80pct": 0.04904,
+    "spearman_decile_vs_realised": 1.0
+   }
+  },
+  "mlp__raw__1m": {
+   "label_decile_table": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_realised_ic_contribution": -0.00073,
+      "t_across_months": -1.418
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00146,
+      "t_across_months": 0.947
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_realised_ic_contribution": -0.00115,
+      "t_across_months": -0.366
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00132,
+      "t_across_months": 0.241
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.01438,
+      "t_across_months": 1.996
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.02335,
+      "t_across_months": 2.253
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.06242,
+      "t_across_months": 4.602
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.14032,
+      "t_across_months": 6.729
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.21523,
+      "t_across_months": 8.64
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.32184,
+      "t_across_months": 11.061
+     }
+    ],
+    "top_minus_bottom": 0.32257,
+    "top_minus_bottom_t": 11.086,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "spearman_decile_vs_realised": 0.9394,
+    "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+    "mde_top_minus_bottom_80pct": 0.08153
+   },
+   "within_decile_rank_ic": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_within_group_rank_ic": -0.00862,
+      "t_across_months": -1.52
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.0058,
+      "t_across_months": 0.878
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_within_group_rank_ic": -0.0004,
+      "t_across_months": -0.049
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.00447,
+      "t_across_months": 0.486
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.0129,
+      "t_across_months": 1.415
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.02415,
+      "t_across_months": 2.269
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.05058,
+      "t_across_months": 4.646
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.09523,
+      "t_across_months": 6.52
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.12653,
+      "t_across_months": 8.801
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.17753,
+      "t_across_months": 12.288
+     }
+    ],
+    "top_minus_bottom": 0.18615,
+    "top_minus_bottom_t": 12.254,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "mde_top_minus_bottom_80pct": 0.04256,
+    "spearman_decile_vs_realised": 0.9636
+   }
+  },
+  "ridge__raw__1m": {
+   "label_decile_table": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_realised_ic_contribution": -0.00047,
+      "t_across_months": -0.827
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00023,
+      "t_across_months": 0.153
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00478,
+      "t_across_months": 1.649
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00453,
+      "t_across_months": 1.002
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.00665,
+      "t_across_months": 0.85
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.02134,
+      "t_across_months": 2.233
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.04935,
+      "t_across_months": 3.838
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.10845,
+      "t_across_months": 5.178
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.19345,
+      "t_across_months": 7.196
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_realised_ic_contribution": 0.32241,
+      "t_across_months": 10.33
+     }
+    ],
+    "top_minus_bottom": 0.32287,
+    "top_minus_bottom_t": 10.376,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "spearman_decile_vs_realised": 0.9879,
+    "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+    "mde_top_minus_bottom_80pct": 0.08719
+   },
+   "within_decile_rank_ic": {
+    "n_bins": 10,
+    "months": 107,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 107,
+      "mean_within_group_rank_ic": -0.00602,
+      "t_across_months": -0.981
+     },
+     {
+      "decile": 2,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.00236,
+      "t_across_months": 0.393
+     },
+     {
+      "decile": 3,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.00875,
+      "t_across_months": 1.235
+     },
+     {
+      "decile": 4,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.00458,
+      "t_across_months": 0.623
+     },
+     {
+      "decile": 5,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.009,
+      "t_across_months": 0.923
+     },
+     {
+      "decile": 6,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.02228,
+      "t_across_months": 2.36
+     },
+     {
+      "decile": 7,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.03935,
+      "t_across_months": 3.813
+     },
+     {
+      "decile": 8,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.08032,
+      "t_across_months": 5.423
+     },
+     {
+      "decile": 9,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.12152,
+      "t_across_months": 7.791
+     },
+     {
+      "decile": 10,
+      "months": 107,
+      "mean_within_group_rank_ic": 0.17399,
+      "t_across_months": 10.797
+     }
+    ],
+    "top_minus_bottom": 0.18001,
+    "top_minus_bottom_t": 11.034,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "mde_top_minus_bottom_80pct": 0.04571,
+    "spearman_decile_vs_realised": 0.9879
+   }
+  }
+ },
+ "B_traded_region": {
+  "lgbm_clf__1m": {
+   "bins": 5,
+   "months": 95,
+   "names_per_month": 50,
+   "abs_u_c_sd_inside_region": 0.00474,
+   "abs_u_c_sd_full_cross_section": 0.14432,
+   "table": [
+    {
+     "bin": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.13896,
+     "mean_realised_excess_return": 0.00108,
+     "t_excess_across_months": 0.139
+    },
+    {
+     "bin": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.19339,
+     "mean_realised_excess_return": -0.00043,
+     "t_excess_across_months": -0.077
+    },
+    {
+     "bin": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.18187,
+     "mean_realised_excess_return": 0.00343,
+     "t_excess_across_months": 0.569
+    },
+    {
+     "bin": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.16426,
+     "mean_realised_excess_return": 0.00601,
+     "t_excess_across_months": 0.909
+    },
+    {
+     "bin": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.33691,
+     "mean_realised_excess_return": 0.01372,
+     "t_excess_across_months": 2.139
+    }
+   ],
+   "top_minus_bottom_label": 0.19795,
+   "top_minus_bottom_label_t": 2.403,
+   "top_minus_bottom_excess_return": 0.01264,
+   "top_minus_bottom_excess_return_t": 1.775,
+   "top_minus_bottom_excess_return_p": 0.07921,
+   "mde_excess_return_80pct": 0.01996,
+   "note": "the EXCESS RETURN column is the one the book spends: a monotone label column with a flat excess column means the router sorted rank extremity, not money"
+  },
+  "encoder_clf__residual__1m": {
+   "bins": 5,
+   "months": 95,
+   "names_per_month": 50,
+   "abs_u_c_sd_inside_region": 0.0047,
+   "abs_u_c_sd_full_cross_section": 0.14434,
+   "table": [
+    {
+     "bin": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.11771,
+     "mean_realised_excess_return": 0.00759,
+     "t_excess_across_months": 0.712
+    },
+    {
+     "bin": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.30539,
+     "mean_realised_excess_return": 0.01844,
+     "t_excess_across_months": 2.713
+    },
+    {
+     "bin": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.22025,
+     "mean_realised_excess_return": 0.00755,
+     "t_excess_across_months": 1.259
+    },
+    {
+     "bin": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.24001,
+     "mean_realised_excess_return": 0.00584,
+     "t_excess_across_months": 0.895
+    },
+    {
+     "bin": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.24841,
+     "mean_realised_excess_return": 0.00534,
+     "t_excess_across_months": 0.702
+    }
+   ],
+   "top_minus_bottom_label": 0.1307,
+   "top_minus_bottom_label_t": 1.402,
+   "top_minus_bottom_excess_return": -0.00225,
+   "top_minus_bottom_excess_return_t": -0.222,
+   "top_minus_bottom_excess_return_p": 0.82468,
+   "mde_excess_return_80pct": 0.02842,
+   "note": "the EXCESS RETURN column is the one the book spends: a monotone label column with a flat excess column means the router sorted rank extremity, not money"
+  },
+  "mlp__raw__1m": {
+   "bins": 5,
+   "months": 95,
+   "names_per_month": 50,
+   "abs_u_c_sd_inside_region": 0.0047,
+   "abs_u_c_sd_full_cross_section": 0.14434,
+   "table": [
+    {
+     "bin": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.05004,
+     "mean_realised_excess_return": 0.00913,
+     "t_excess_across_months": 0.659
+    },
+    {
+     "bin": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.05574,
+     "mean_realised_excess_return": 0.00017,
+     "t_excess_across_months": 0.018
+    },
+    {
+     "bin": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.0181,
+     "mean_realised_excess_return": -0.00449,
+     "t_excess_across_months": -0.466
+    },
+    {
+     "bin": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.08864,
+     "mean_realised_excess_return": 0.0016,
+     "t_excess_across_months": 0.143
+    },
+    {
+     "bin": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.00873,
+     "mean_realised_excess_return": 0.01109,
+     "t_excess_across_months": 0.935
+    }
+   ],
+   "top_minus_bottom_label": 0.04131,
+   "top_minus_bottom_label_t": 0.382,
+   "top_minus_bottom_excess_return": 0.00196,
+   "top_minus_bottom_excess_return_t": 0.138,
+   "top_minus_bottom_excess_return_p": 0.89023,
+   "mde_excess_return_80pct": 0.03966,
+   "note": "the EXCESS RETURN column is the one the book spends: a monotone label column with a flat excess column means the router sorted rank extremity, not money"
+  },
+  "ridge__raw__1m": {
+   "bins": 5,
+   "months": 95,
+   "names_per_month": 50,
+   "abs_u_c_sd_inside_region": 0.0047,
+   "abs_u_c_sd_full_cross_section": 0.14434,
+   "table": [
+    {
+     "bin": 1,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.07581,
+     "mean_realised_excess_return": -0.00675,
+     "t_excess_across_months": -0.527
+    },
+    {
+     "bin": 2,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.02723,
+     "mean_realised_excess_return": -0.00039,
+     "t_excess_across_months": -0.042
+    },
+    {
+     "bin": 3,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.08091,
+     "mean_realised_excess_return": -0.01102,
+     "t_excess_across_months": -1.041
+    },
+    {
+     "bin": 4,
+     "months": 95,
+     "mean_realised_ic_contribution": -0.00954,
+     "mean_realised_excess_return": -0.00857,
+     "t_excess_across_months": -0.944
+    },
+    {
+     "bin": 5,
+     "months": 95,
+     "mean_realised_ic_contribution": 0.05145,
+     "mean_realised_excess_return": 0.0016,
+     "t_excess_across_months": 0.147
+    }
+   ],
+   "top_minus_bottom_label": 0.12726,
+   "top_minus_bottom_label_t": 1.19,
+   "top_minus_bottom_excess_return": 0.00835,
+   "top_minus_bottom_excess_return_t": 0.594,
+   "top_minus_bottom_excess_return_p": 0.55404,
+   "mde_excess_return_80pct": 0.03942,
+   "note": "the EXCESS RETURN column is the one the book spends: a monotone label column with a flat excess column means the router sorted rank extremity, not money"
+  }
+ },
+ "C_state_only": {
+  "FS_S": {
+   "features": [
+    "log_coverage",
+    "numest",
+    "dispersion",
+    "disagreement",
+    "vol_20d",
+    "vol_60d",
+    "log_dollar_vol_20d",
+    "log_market_cap",
+    "amihud_21d",
+    "attention_z",
+    "attention_z_5d",
+    "abs_ret_1m",
+    "abs_ret_3m",
+    "abs_mom_12_1",
+    "abs_net_rev_4w",
+    "abs_upside",
+    "dd_60d_mag",
+    "range_52w",
+    "ins_activity_90d",
+    "ins_buy_90d",
+    "ins_sell_90d",
+    "ins_opp_buy_90d",
+    "ins_cluster_90d",
+    "ins_any_90d",
+    "engine_disagree",
+    "sector_code"
+   ],
+   "months": 95,
+   "mean_xs_spearman_score_vs_label": 0.06215,
+   "t_across_months": 8.081,
+   "spearman_score_vs_abs_u_c": 0.2306,
+   "label_decile_table": {
+    "n_bins": 10,
+    "months": 95,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.07367,
+      "t_across_months": 5.839
+     },
+     {
+      "decile": 2,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.04496,
+      "t_across_months": 4.493
+     },
+     {
+      "decile": 3,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.0482,
+      "t_across_months": 4.685
+     },
+     {
+      "decile": 4,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.04654,
+      "t_across_months": 4.801
+     },
+     {
+      "decile": 5,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.04634,
+      "t_across_months": 4.254
+     },
+     {
+      "decile": 6,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.06286,
+      "t_across_months": 5.706
+     },
+     {
+      "decile": 7,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.0602,
+      "t_across_months": 4.675
+     },
+     {
+      "decile": 8,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.06994,
+      "t_across_months": 5.029
+     },
+     {
+      "decile": 9,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.1438,
+      "t_across_months": 7.564
+     },
+     {
+      "decile": 10,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.40659,
+      "t_across_months": 9.733
+     }
+    ],
+    "top_minus_bottom": 0.33292,
+    "top_minus_bottom_t": 9.228,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "spearman_decile_vs_realised": 0.6,
+    "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+    "mde_top_minus_bottom_80pct": 0.10109
+   },
+   "within_decile_rank_ic": {
+    "n_bins": 10,
+    "months": 95,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.0691,
+      "t_across_months": 6.22
+     },
+     {
+      "decile": 2,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.0373,
+      "t_across_months": 3.568
+     },
+     {
+      "decile": 3,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.04249,
+      "t_across_months": 3.794
+     },
+     {
+      "decile": 4,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.03542,
+      "t_across_months": 3.286
+     },
+     {
+      "decile": 5,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.03487,
+      "t_across_months": 3.173
+     },
+     {
+      "decile": 6,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.0546,
+      "t_across_months": 4.687
+     },
+     {
+      "decile": 7,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.04977,
+      "t_across_months": 3.916
+     },
+     {
+      "decile": 8,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.0662,
+      "t_across_months": 4.915
+     },
+     {
+      "decile": 9,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.11368,
+      "t_across_months": 8.126
+     },
+     {
+      "decile": 10,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.1125,
+      "t_across_months": 10.369
+     }
+    ],
+    "top_minus_bottom": 0.0434,
+    "top_minus_bottom_t": 3.853,
+    "top_minus_bottom_p_two_sided": 0.00021,
+    "mde_top_minus_bottom_80pct": 0.03156,
+    "spearman_decile_vs_realised": 0.5273
+   },
+   "abstention_book_q30": {
+    "grade": {
+     "months": 95,
+     "beta": 1.0487,
+     "beta_t": 14.105,
+     "alpha_monthly": 0.00463,
+     "alpha_annualised": 0.0555,
+     "alpha_t": 1.087,
+     "alpha_p_two_sided": 0.28004,
+     "r2": 0.6815,
+     "terminal_wealth_net": 5.705,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.246,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.3357,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.0704
+    },
+    "vs_always_trade": {
+     "compared": "FS_S routed q30 minus always",
+     "months": 95,
+     "mean_monthly_difference": -0.00143,
+     "annualised_difference": -0.0172,
+     "sd_monthly_difference": 0.02008,
+     "t_stat_paired": -0.696,
+     "p_two_sided": 0.48793,
+     "share_months_ahead": 0.4737,
+     "mde_annualised_80pct": 0.0693
+    }
+   }
+  },
+  "FS_S0": {
+   "features": [
+    "log_coverage",
+    "numest",
+    "dispersion",
+    "disagreement",
+    "vol_20d",
+    "vol_60d",
+    "log_dollar_vol_20d",
+    "log_market_cap",
+    "amihud_21d",
+    "attention_z",
+    "attention_z_5d",
+    "abs_ret_1m",
+    "abs_ret_3m",
+    "abs_mom_12_1",
+    "abs_net_rev_4w",
+    "abs_upside",
+    "dd_60d_mag",
+    "range_52w",
+    "ins_activity_90d",
+    "ins_buy_90d",
+    "ins_sell_90d",
+    "ins_opp_buy_90d",
+    "ins_cluster_90d",
+    "ins_any_90d",
+    "sector_code"
+   ],
+   "months": 95,
+   "mean_xs_spearman_score_vs_label": 0.05199,
+   "t_across_months": 6.92,
+   "spearman_score_vs_abs_u_c": 0.2064,
+   "label_decile_table": {
+    "n_bins": 10,
+    "months": 95,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.07558,
+      "t_across_months": 5.854
+     },
+     {
+      "decile": 2,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.05288,
+      "t_across_months": 5.552
+     },
+     {
+      "decile": 3,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.06296,
+      "t_across_months": 5.635
+     },
+     {
+      "decile": 4,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.05398,
+      "t_across_months": 5.107
+     },
+     {
+      "decile": 5,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.06827,
+      "t_across_months": 5.971
+     },
+     {
+      "decile": 6,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.0564,
+      "t_across_months": 5.059
+     },
+     {
+      "decile": 7,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.06421,
+      "t_across_months": 5.236
+     },
+     {
+      "decile": 8,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.07772,
+      "t_across_months": 5.537
+     },
+     {
+      "decile": 9,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.16184,
+      "t_across_months": 7.779
+     },
+     {
+      "decile": 10,
+      "months": 95,
+      "mean_realised_ic_contribution": 0.32934,
+      "t_across_months": 8.476
+     }
+    ],
+    "top_minus_bottom": 0.25376,
+    "top_minus_bottom_t": 7.311,
+    "top_minus_bottom_p_two_sided": 0.0,
+    "spearman_decile_vs_realised": 0.6606,
+    "mde_annualised_na": "this table is an IC table; the MDE below is on the top-minus-bottom monthly series",
+    "mde_top_minus_bottom_80pct": 0.09725
+   },
+   "within_decile_rank_ic": {
+    "n_bins": 10,
+    "months": 95,
+    "deciles": [
+     {
+      "decile": 1,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.07543,
+      "t_across_months": 6.337
+     },
+     {
+      "decile": 2,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.04593,
+      "t_across_months": 4.689
+     },
+     {
+      "decile": 3,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.04921,
+      "t_across_months": 4.25
+     },
+     {
+      "decile": 4,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.04298,
+      "t_across_months": 3.854
+     },
+     {
+      "decile": 5,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.05386,
+      "t_across_months": 4.685
+     },
+     {
+      "decile": 6,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.04436,
+      "t_across_months": 3.896
+     },
+     {
+      "decile": 7,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.0587,
+      "t_across_months": 4.867
+     },
+     {
+      "decile": 8,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.0758,
+      "t_across_months": 5.831
+     },
+     {
+      "decile": 9,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.1181,
+      "t_across_months": 8.478
+     },
+     {
+      "decile": 10,
+      "months": 95,
+      "mean_within_group_rank_ic": 0.1041,
+      "t_across_months": 9.461
+     }
+    ],
+    "top_minus_bottom": 0.02867,
+    "top_minus_bottom_t": 2.365,
+    "top_minus_bottom_p_two_sided": 0.02008,
+    "mde_top_minus_bottom_80pct": 0.03397,
+    "spearman_decile_vs_realised": 0.6
+   },
+   "abstention_book_q30": {
+    "grade": {
+     "months": 95,
+     "beta": 1.0789,
+     "beta_t": 14.578,
+     "alpha_monthly": 0.00462,
+     "alpha_annualised": 0.0555,
+     "alpha_t": 1.091,
+     "alpha_p_two_sided": 0.27831,
+     "r2": 0.6956,
+     "terminal_wealth_net": 5.9161,
+     "terminal_wealth_market_same_months": 3.723,
+     "cagr_net": 0.2518,
+     "cagr_market": 0.1806,
+     "max_drawdown_net": -0.3491,
+     "max_drawdown_market": -0.3331,
+     "monthly_sd": 0.0717
+    },
+    "vs_always_trade": {
+     "compared": "FS_S0 routed q30 minus always",
+     "months": 95,
+     "mean_monthly_difference": -0.00097,
+     "annualised_difference": -0.0116,
+     "sd_monthly_difference": 0.02069,
+     "t_stat_paired": -0.456,
+     "p_two_sided": 0.64969,
+     "share_months_ahead": 0.4947,
+     "mde_annualised_80pct": 0.0714
+    }
+   }
+  }
+ },
+ "stage3_multiplicity": {
+  "cells_charged_here": 10,
+  "family_max_p": 0.89023,
+  "holm_export": {
+   "A_WITHIN_IC::lgbm_clf__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "A_WITHIN_IC::encoder_clf__residual__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "A_WITHIN_IC::mlp__raw__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "A_WITHIN_IC::ridge__raw__1m": {
+    "p_raw": 0.0,
+    "p_holm": 0.0,
+    "survives_holm_05": true
+   },
+   "B_TRADED_EXCESS::lgbm_clf__1m": {
+    "p_raw": 0.07921,
+    "p_holm": 0.47526,
+    "survives_holm_05": false
+   },
+   "C_BOOK::FS_S": {
+    "p_raw": 0.48793,
+    "p_holm": 1.0,
+    "survives_holm_05": false
+   },
+   "B_TRADED_EXCESS::ridge__raw__1m": {
+    "p_raw": 0.55404,
+    "p_holm": 1.0,
+    "survives_holm_05": false
+   },
+   "C_BOOK::FS_S0": {
+    "p_raw": 0.64969,
+    "p_holm": 1.0,
+    "survives_holm_05": false
+   },
+   "B_TRADED_EXCESS::encoder_clf__residual__1m": {
+    "p_raw": 0.82468,
+    "p_holm": 1.0,
+    "survives_holm_05": false
+   },
+   "B_TRADED_EXCESS::mlp__raw__1m": {
+    "p_raw": 0.89023,
+    "p_holm": 1.0,
+    "survives_holm_05": false
+   }
+  },
+  "bh_fdr_screen_q10": {
+   "A_WITHIN_IC::lgbm_clf__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.01,
+    "survives_bh_10": true
+   },
+   "A_WITHIN_IC::encoder_clf__residual__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.02,
+    "survives_bh_10": true
+   },
+   "A_WITHIN_IC::mlp__raw__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.03,
+    "survives_bh_10": true
+   },
+   "A_WITHIN_IC::ridge__raw__1m": {
+    "p_raw": 0.0,
+    "bh_crit": 0.04,
+    "survives_bh_10": true
+   },
+   "B_TRADED_EXCESS::lgbm_clf__1m": {
+    "p_raw": 0.07921,
+    "bh_crit": 0.05,
+    "survives_bh_10": false
+   },
+   "C_BOOK::FS_S": {
+    "p_raw": 0.48793,
+    "bh_crit": 0.06,
+    "survives_bh_10": false
+   },
+   "B_TRADED_EXCESS::ridge__raw__1m": {
+    "p_raw": 0.55404,
+    "bh_crit": 0.07,
+    "survives_bh_10": false
+   },
+   "C_BOOK::FS_S0": {
+    "p_raw": 0.64969,
+    "bh_crit": 0.08,
+    "survives_bh_10": false
+   },
+   "B_TRADED_EXCESS::encoder_clf__residual__1m": {
+    "p_raw": 0.82468,
+    "bh_crit": 0.09,
+    "survives_bh_10": false
+   },
+   "B_TRADED_EXCESS::mlp__raw__1m": {
+    "p_raw": 0.89023,
+    "bh_crit": 0.1,
+    "survives_bh_10": false
+   }
+  }
+ },
+ "traded_region_excess_spread_by_era": {
+  "2017-2018": {
+   "months": 24,
+   "mean_monthly": 0.00703,
+   "annualised": 0.0844,
+   "t": 1.103,
+   "mde_annualised_80pct": 0.2144
+  },
+  "2019-2021": {
+   "months": 36,
+   "mean_monthly": 0.00528,
+   "annualised": 0.0633,
+   "t": 0.813,
+   "mde_annualised_80pct": 0.2182
+  },
+  "2022-2024": {
+   "months": 35,
+   "mean_monthly": 0.02406,
+   "annualised": 0.2887,
+   "t": 1.364,
+   "mde_annualised_80pct": 0.5931
+  }
+ },
+ "runtime_seconds": 54.4
+}

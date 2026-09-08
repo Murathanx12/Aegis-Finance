@@ -222,8 +222,54 @@ def screen_verdict(survivors, tested: int, eras: dict, power: dict | None = None
     return "NOISE"
 
 
-def verdict_from(inf: dict, eras: dict) -> str:
-    """The bar, in one place. Every job calls this or explains why."""
+#: Family-corrected significance level at which an arm is SEPARATED from the
+#: null. Declared here rather than written inline so the one number a verdict
+#: turns on is greppable.
+SEPARATION_ALPHA = 0.05
+
+
+def verdict_from(inf: dict, eras: dict, *, holm_p: float | None = None) -> str:
+    """The bar, in one place. Every job calls this or explains why.
+
+    `holm_p` is the arm's FAMILY-CORRECTED p over the family it was searched in
+    (Holm, CANON §63 EXPORT). Optional, and its absence is not a failure — an
+    arm with no family has no correction to report — but supplying it is what
+    makes the middle of the vocabulary reachable.
+
+    X5 (2026-09-07). WHY THE MIDDLE EXISTS. The B1 known-answer battery planted
+    an edge that the machine then MEASURED correctly — `--fast`, linear world,
+    t 2.98-3.01, family-corrected **Holm p 0.01543**, BH-FDR 0.00625, observed
+    15.3%/yr against its own MDE of 10.3%/yr — and this function called it
+    **NOISE**, because a self-resolved arm had exactly two outcomes: NOVEL,
+    which needs DSR >= 0.95 AND SPA <= 0.10 AND PBO < 0.5 AND two of three eras,
+    or NOISE. That arm's DSR was 0.9277 on 36 months. On short tape the whole
+    vocabulary collapses onto the word for "there was nothing there", and the
+    battery filed it as a defect in the machine, which is what it is: a false
+    negative in the VOCABULARY, not in the numbers.
+
+    SEPARATED_NOT_SURVIVING is that missing word, and it is deliberately narrow:
+
+      * the arm RESOLVED ITSELF on this tape — its own observed effect cleared
+        the MDE (`power.powered_for_observed_effect`), so "underpowered" is not
+        the reading; and
+      * its family-corrected p is at or below `SEPARATION_ALPHA`, so it is
+        separated from the null AFTER multiplicity; and
+      * it did NOT clear the export bar — the deflated Sharpe, the SPA p, the
+        PBO or the era count.
+
+    It is NOT a promotion and it is NOT alpha. It says: *this is distinguishable
+    from zero and does not survive the bar a CLAIM has to survive.* It caps in
+    `evidence_memory.export_verdict` exactly as NOISE does, so nothing can be
+    promoted through it; what changes is that a reader is no longer told a real
+    planted effect was noise.
+
+    NOTE ON THE ROADMAP WORDING. The X5 row glosses this as "the t clears the
+    MDE but Holm does not". The receipt disagrees with the gloss: Holm p 0.0154
+    **does** clear 0.05 — what fails is the DEFLATION bar. The receipt wins, so
+    the condition implemented here is *separated after Holm, short of the export
+    bar*, which is also what the battery's own finding text asks for ("no word
+    for 'significant, did not clear the deflation bar'").
+    """
     dsr = (inf.get("deflated_sharpe") or {}).get("dsr")
     spa_p = (inf.get("spa") or {}).get("p_spa_consistent")
     pbo = (inf.get("pbo") or {}).get("pbo")
@@ -249,6 +295,26 @@ def verdict_from(inf: dict, eras: dict) -> str:
     resolved_itself = pw.get("powered_for_observed_effect") is True
     if dec.get("decayed") and resolved_itself:
         return "DECAYED (worked, then stopped)"
+    # SEPARATED FROM THE NULL, SHORT OF THE EXPORT BAR. Above the underpowered
+    # branch because an arm that resolved itself is not underpowered, and above
+    # NOISE because "indistinguishable from zero" is a different sentence from
+    # "distinguishable from zero and not defensible as a claim".
+    if (resolved_itself and isinstance(holm_p, (int, float))
+            and float(holm_p) <= SEPARATION_ALPHA):
+        short_of = []
+        if not isinstance(dsr, (int, float)) or dsr < 0.95:
+            short_of.append(f"DSR {dsr}" if isinstance(dsr, (int, float))
+                            else "DSR absent")
+        if not isinstance(spa_p, (int, float)) or spa_p > 0.10:
+            short_of.append(f"SPA p {spa_p}" if isinstance(spa_p, (int, float))
+                            else "SPA absent")
+        if isinstance(pbo, (int, float)) and pbo >= 0.5:
+            short_of.append(f"PBO {pbo}")
+        if not eras.get("holds_in_2_of_3"):
+            short_of.append("sign holds in fewer than 2 of 3 eras")
+        return (f"SEPARATED_NOT_SURVIVING (family-corrected Holm p "
+                f"{holm_p}; short of the export bar on "
+                f"{', '.join(short_of) or 'an unnamed leg'})")
     # `powered` is computed against a PRE-SPECIFIED effect (3%/yr at the arm's own
     # volatility), not against its observed Sharpe -- the observed version reduces
     # algebraically to `t >= 2`, which made this branch fire for every arm with

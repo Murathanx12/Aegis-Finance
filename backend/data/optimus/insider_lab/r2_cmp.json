@@ -1,0 +1,2802 @@
+{
+  "stage": "cmp_replication",
+  "prior": "CMP 2012: 82 bp/month VW long-short, 1989-2007, Thomson tape",
+  "window": [
+    2009,
+    2024
+  ],
+  "eras": {
+    "2009-2014": [
+      "2009-01-01",
+      "2014-12-31"
+    ],
+    "2015-2019": [
+      "2015-01-01",
+      "2019-12-31"
+    ],
+    "2020-2024": [
+      "2020-01-01",
+      "2024-12-31"
+    ]
+  },
+  "arms": {
+    "opportunistic_buy__vw": {
+      "label": "opportunistic_buy__vw",
+      "capm_beta": 0.9793731117609019,
+      "capm_beta_t": 10.677827990770039,
+      "capm_alpha_bp_per_month": -40.12435995969813,
+      "capm_alpha_t_ols": -1.3900252179684311,
+      "capm_alpha_t_nw6": -1.1994136585286297,
+      "capm_r2": 0.5625657948689808,
+      "ff6_alpha_bp_per_month": -13.726646345689893,
+      "ff6_alpha_t_nw6": -0.4239916092684193,
+      "ff6_loadings": {
+        "Mkt-RF": 0.7963224175502117,
+        "SMB": 0.15427984492266045,
+        "HML": 0.23175115150864367,
+        "RMW": -0.15011378523248942,
+        "CMA": -0.03019356518867322,
+        "Mom": -0.24513670672487953
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 10.066262804794325,
+        "SMB": 1.300352220404975,
+        "HML": 2.1709206391690477,
+        "RMW": -0.9229402289162947,
+        "CMA": -0.1669271359421474,
+        "Mom": -4.0976798205184295
+      },
+      "mean_excess_bp_per_month": 79.12726702262277,
+      "t_raw": 1.8847754981258462,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.058172422926139285,
+      "sharpe_annual": 0.47119387453146167,
+      "ann_excess_pct": 9.919602144632723,
+      "mde_bp_per_month_80pct_power": 117.63448878545702,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.9888343214204105,
+          "capm_alpha_bp_per_month": -1.218157409251913,
+          "capm_alpha_t_nw4": -0.020265285374950183,
+          "mean_excess_bp_per_month": 156.72025086484996,
+          "t_raw": 2.356081937604633
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.0638913526536138,
+          "capm_alpha_bp_per_month": -66.73938578007886,
+          "capm_alpha_t_nw4": -1.4249854490431129,
+          "mean_excess_bp_per_month": 28.408991789644016,
+          "t_raw": 0.43381418706690167
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.9318940823277527,
+          "capm_alpha_bp_per_month": -53.744066403215065,
+          "capm_alpha_t_nw4": -0.9088235910517412,
+          "mean_excess_bp_per_month": 45.53920280518145,
+          "t_raw": 0.5252377554031854
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 83.25520833333333,
+        "std": 33.68645810473749,
+        "p10": 45.0,
+        "p50": 80.0,
+        "p90": 123.9
+      }
+    },
+    "routine_buy__vw": {
+      "label": "routine_buy__vw",
+      "capm_beta": 0.6811266059730643,
+      "capm_beta_t": 9.341854993764365,
+      "capm_alpha_bp_per_month": -16.10190122518392,
+      "capm_alpha_t_ols": -0.5831486818472732,
+      "capm_alpha_t_nw6": -0.6587841484096345,
+      "capm_r2": 0.4046987547306343,
+      "ff6_alpha_bp_per_month": -19.648103507602208,
+      "ff6_alpha_t_nw6": -0.9114804005234267,
+      "ff6_loadings": {
+        "Mkt-RF": 0.706472103611806,
+        "SMB": 0.1116697979716813,
+        "HML": 0.25932828247773543,
+        "RMW": 0.16395772094250433,
+        "CMA": 0.25806007641282347,
+        "Mom": 0.13564045236142275
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 8.987247376273551,
+        "SMB": 0.7251206697750885,
+        "HML": 1.9094063132920385,
+        "RMW": 0.9089820565595566,
+        "CMA": 1.319195134011211,
+        "Mom": 1.8590244214128513
+      },
+      "mean_excess_bp_per_month": 66.83426984979246,
+      "t_raw": 1.9414771056339413,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.04769990878828751,
+      "sharpe_annual": 0.48536927640848526,
+      "ann_excess_pct": 8.321590112322275,
+      "mde_bp_per_month_80pct_power": 96.45729201528246,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.8333552543597121,
+          "capm_alpha_bp_per_month": 8.42176261764583,
+          "capm_alpha_t_nw4": 0.22763931369203733,
+          "mean_excess_bp_per_month": 141.52677277887128,
+          "t_raw": 2.6526461517452398
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.5567668750319154,
+          "capm_alpha_bp_per_month": -26.686007062502213,
+          "capm_alpha_t_nw4": -1.067860549983307,
+          "mean_excess_bp_per_month": 23.108048234325995,
+          "t_raw": 0.5307213599114305
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.6047602201795644,
+          "capm_alpha_bp_per_month": -57.20248569705944,
+          "capm_alpha_t_nw4": -0.9109929094967615,
+          "mean_excess_bp_per_month": 7.228196807800097,
+          "t_raw": 0.09368867613628441
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 26.286458333333332,
+        "std": 7.49842733656965,
+        "p10": 18.1,
+        "p50": 25.0,
+        "p90": 37.0
+      }
+    },
+    "unclassifiable_buy__vw": {
+      "label": "unclassifiable_buy__vw",
+      "capm_beta": 1.1207090085513978,
+      "capm_beta_t": 34.29399861018067,
+      "capm_alpha_bp_per_month": -14.808040683362009,
+      "capm_alpha_t_ols": -0.9968960112006865,
+      "capm_alpha_t_nw6": -0.9963595532159238,
+      "capm_r2": 0.8641218473395854,
+      "ff6_alpha_bp_per_month": -2.023301868057533,
+      "ff6_alpha_t_nw6": -0.15473846292109777,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0359329874957803,
+        "SMB": 0.14959043720214132,
+        "HML": 0.1174781236401446,
+        "RMW": -0.07869354494019809,
+        "CMA": 0.15485534071395962,
+        "Mom": -0.08967811847607488
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 33.43444331098335,
+        "SMB": 3.133047276285483,
+        "HML": 2.562182234506228,
+        "RMW": -0.9997714237136526,
+        "CMA": 2.8840718783110337,
+        "Mom": -1.7330641816692824
+      },
+      "mean_excess_bp_per_month": 121.6531006718497,
+      "t_raw": 3.138432475267596,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05371072417136372,
+      "sharpe_annual": 0.784608118816899,
+      "ann_excess_pct": 15.615851982666928,
+      "mde_bp_per_month_80pct_power": 108.61217845811983,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.1547832269124396,
+          "capm_alpha_bp_per_month": -21.43731081500577,
+          "capm_alpha_t_nw4": -1.120960984670922,
+          "mean_excess_bp_per_month": 163.0067571236914,
+          "t_raw": 2.680485066251954
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.0793982349189528,
+          "capm_alpha_bp_per_month": -22.542039186375728,
+          "capm_alpha_t_nw4": -1.1757811592896157,
+          "mean_excess_bp_per_month": 73.99318553181921,
+          "t_raw": 1.378997583469936
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.1127253212905175,
+          "capm_alpha_bp_per_month": -2.3669116730951973,
+          "capm_alpha_t_nw4": -0.06713196761486312,
+          "mean_excess_bp_per_month": 116.18197679364283,
+          "t_raw": 1.3503357609016653
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 328.5885416666667,
+        "std": 153.84728429103322,
+        "p10": 146.1,
+        "p50": 321.5,
+        "p90": 518.2
+      }
+    },
+    "any_buy__vw": {
+      "label": "any_buy__vw",
+      "capm_beta": 1.0949319567423703,
+      "capm_beta_t": 37.14363335785587,
+      "capm_alpha_bp_per_month": -14.334411150146902,
+      "capm_alpha_t_ols": -1.029243066023408,
+      "capm_alpha_t_nw6": -0.951470379559891,
+      "capm_r2": 0.8735033511720046,
+      "ff6_alpha_bp_per_month": -1.8327822894678454,
+      "ff6_alpha_t_nw6": -0.13950395149315226,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0103574075770942,
+        "SMB": 0.13935177388449055,
+        "HML": 0.15326188542916136,
+        "RMW": -0.052352372726018837,
+        "CMA": 0.11753018725194853,
+        "Mom": -0.08318364942358791
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 34.62018143188121,
+        "SMB": 3.098749460832169,
+        "HML": 3.845681963570876,
+        "RMW": -0.7165777091942647,
+        "CMA": 2.4920625258515883,
+        "Mom": -1.8095533713708305
+      },
+      "mean_excess_bp_per_month": 118.98803328749557,
+      "t_raw": 3.1589548547771584,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05219278618938732,
+      "sharpe_annual": 0.7897387136942896,
+      "ann_excess_pct": 15.251075744590903,
+      "mde_bp_per_month_80pct_power": 105.54265084458824,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.1278171316336012,
+          "capm_alpha_bp_per_month": -18.824061720550443,
+          "capm_alpha_t_nw4": -0.9058541363348256,
+          "mean_excess_bp_per_month": 161.3129326533965,
+          "t_raw": 2.7152627726076295
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.0826062493294777,
+          "capm_alpha_bp_per_month": -24.397552974757264,
+          "capm_alpha_t_nw4": -1.3317218860640636,
+          "mean_excess_bp_per_month": 72.4245782641274,
+          "t_raw": 1.3482897351038206
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.075234805784033,
+          "capm_alpha_bp_per_month": -2.4960410910887294,
+          "capm_alpha_t_nw4": -0.07141030442021543,
+          "mean_excess_bp_per_month": 112.05863707387947,
+          "t_raw": 1.3617391023496042
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 380.5364583333333,
+        "std": 166.78015979270413,
+        "p10": 177.2,
+        "p50": 374.5,
+        "p90": 574.6
+      }
+    },
+    "any_sell__vw": {
+      "label": "any_sell__vw",
+      "capm_beta": 0.9586923563004436,
+      "capm_beta_t": 40.78902495508466,
+      "capm_alpha_bp_per_month": 11.14671590939481,
+      "capm_alpha_t_ols": 1.320126783340168,
+      "capm_alpha_t_nw6": 1.401078440262278,
+      "capm_r2": 0.9350745202788959,
+      "ff6_alpha_bp_per_month": 4.71093957423444,
+      "ff6_alpha_t_nw6": 0.6401353959544183,
+      "ff6_loadings": {
+        "Mkt-RF": 0.9995863813799446,
+        "SMB": -0.02370148183921067,
+        "HML": -0.022910996336969587,
+        "RMW": 0.07711697657223862,
+        "CMA": -0.11806324273185342,
+        "Mom": 0.0787380732743479
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 40.713452045769884,
+        "SMB": -0.7150966269729724,
+        "HML": -0.469326652472662,
+        "RMW": 1.987922828204922,
+        "CMA": -1.6088235918460265,
+        "Mom": 2.808309541982776
+      },
+      "mean_excess_bp_per_month": 127.8801874448616,
+      "t_raw": 4.011825990902914,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.04416841257585682,
+      "sharpe_annual": 1.0029564977257286,
+      "ann_excess_pct": 16.472302276326612,
+      "mde_bp_per_month_80pct_power": 89.31600872844872,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.9135724974908165,
+          "capm_alpha_bp_per_month": -3.552476818002709,
+          "capm_alpha_t_nw4": -0.44310263928155924,
+          "mean_excess_bp_per_month": 142.36497666341847,
+          "t_raw": 3.0285456448092716
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.9415118686023439,
+          "capm_alpha_bp_per_month": 4.341495541473526,
+          "capm_alpha_t_nw4": 0.5671582150441105,
+          "mean_excess_bp_per_month": 88.54494971628912,
+          "t_raw": 1.9963174542493638
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.0060947343805484,
+          "capm_alpha_bp_per_month": 45.15542720480569,
+          "capm_alpha_t_nw4": 2.6463618904314674,
+          "mean_excess_bp_per_month": 152.34397605055617,
+          "t_raw": 2.071162497295025
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 665.390625,
+        "std": 266.3173883269017,
+        "p10": 304.3,
+        "p50": 698.0,
+        "p90": 1006.5
+      }
+    },
+    "no_insider_activity__vw": {
+      "label": "no_insider_activity__vw",
+      "capm_beta": 1.0318303876698973,
+      "capm_beta_t": 98.68865183052695,
+      "capm_alpha_bp_per_month": -5.8167915728148,
+      "capm_alpha_t_ols": -1.4338282671119456,
+      "capm_alpha_t_nw6": -1.352973394464785,
+      "capm_r2": 0.9863524987325003,
+      "ff6_alpha_bp_per_month": -2.481727320496965,
+      "ff6_alpha_t_nw6": -0.6407921713309002,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0110270048282122,
+        "SMB": 0.01141461270382016,
+        "HML": 0.01904451740706134,
+        "RMW": -0.03642812933684786,
+        "CMA": 0.002570513007370233,
+        "Mom": -0.03156039591268578
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 98.63245163310523,
+        "SMB": 0.5902085910181222,
+        "HML": 0.7362677417751834,
+        "RMW": -1.9594285196501313,
+        "CMA": 0.06811218758489426,
+        "Mom": -2.132449417005592
+      },
+      "mean_excess_bp_per_month": 119.82220241405925,
+      "t_raw": 3.587071515898417,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.04628581092651515,
+      "sharpe_annual": 0.8967678789746043,
+      "ann_excess_pct": 15.365137534222551,
+      "mde_bp_per_month_80pct_power": 93.59774670678797,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.059244205437609,
+          "capm_alpha_bp_per_month": -5.03415294494083,
+          "capm_alpha_t_nw4": -0.7127786358423785,
+          "mean_excess_bp_per_month": 164.15024949375123,
+          "t_raw": 3.043230855817899
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.0136040992277253,
+          "capm_alpha_bp_per_month": 0.09489432300049387,
+          "capm_alpha_t_nw4": 0.02163244096932859,
+          "mean_excess_bp_per_month": 90.74586662293112,
+          "t_raw": 1.9289002309034882
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.0175014479306943,
+          "capm_alpha_bp_per_month": -17.10312220114535,
+          "capm_alpha_t_nw4": -2.285123331271032,
+          "mean_excess_bp_per_month": 91.30068901578943,
+          "t_raw": 1.2701869563113088
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 3012.7447916666665,
+        "std": 457.06595864125285,
+        "p10": 2399.2,
+        "p50": 3027.5,
+        "p90": 3666.0
+      }
+    },
+    "opportunistic_buy__ew": {
+      "label": "opportunistic_buy__ew",
+      "capm_beta": 1.0554969193583834,
+      "capm_beta_t": 13.878005143202936,
+      "capm_alpha_bp_per_month": -15.588892141312229,
+      "capm_alpha_t_ols": -0.5446218608124165,
+      "capm_alpha_t_nw6": -0.575886646572026,
+      "capm_r2": 0.6030451311210359,
+      "ff6_alpha_bp_per_month": 37.33717324484351,
+      "ff6_alpha_t_nw6": 2.0564340560264327,
+      "ff6_loadings": {
+        "Mkt-RF": 0.7078685326296594,
+        "SMB": 0.7470326977242143,
+        "HML": 0.11886263802280117,
+        "RMW": -0.4471575331741282,
+        "CMA": -0.03570857883994172,
+        "Mom": -0.2999574950263322
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 14.25898520786766,
+        "SMB": 10.174433240496281,
+        "HML": 1.398945020140815,
+        "RMW": -3.814407111775739,
+        "CMA": -0.2787604998447614,
+        "Mom": -5.6711888149489855
+      },
+      "mean_excess_bp_per_month": 112.93181503024002,
+      "t_raw": 2.5842184475876198,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.060553283831231285,
+      "sharpe_annual": 0.6460546118969049,
+      "ann_excess_pct": 14.426061248835808,
+      "mde_bp_per_month_80pct_power": 122.4489926577709,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.0304056443582574,
+          "capm_alpha_bp_per_month": 68.16907139074247,
+          "capm_alpha_t_nw4": 2.3653237289052207,
+          "mean_excess_bp_per_month": 232.7473266366008,
+          "t_raw": 3.8692790889803175
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.9562527406678542,
+          "capm_alpha_bp_per_month": -31.28620889636919,
+          "capm_alpha_t_nw4": -0.96692748030197,
+          "mean_excess_bp_per_month": 54.23558484150214,
+          "t_raw": 0.89645460185019
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.1022382513237934,
+          "capm_alpha_bp_per_month": -83.56152302642407,
+          "capm_alpha_t_nw4": -1.2791460596579842,
+          "mean_excess_bp_per_month": 33.870081179732836,
+          "t_raw": 0.3293696641032531
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 83.25520833333333,
+        "std": 33.68645810473749,
+        "p10": 45.0,
+        "p50": 80.0,
+        "p90": 123.9
+      }
+    },
+    "routine_buy__ew": {
+      "label": "routine_buy__ew",
+      "capm_beta": 0.8444931770996724,
+      "capm_beta_t": 13.996983309400925,
+      "capm_alpha_bp_per_month": -11.326546907845845,
+      "capm_alpha_t_ols": -0.44007502854556463,
+      "capm_alpha_t_nw6": -0.47689657347257614,
+      "capm_r2": 0.546027969652781,
+      "ff6_alpha_bp_per_month": 22.852110163228005,
+      "ff6_alpha_t_nw6": 1.172231359482517,
+      "ff6_loadings": {
+        "Mkt-RF": 0.6233493893948165,
+        "SMB": 0.520410322926536,
+        "HML": 0.34399089116047454,
+        "RMW": -0.17339348988765813,
+        "CMA": -0.140132013291831,
+        "Mom": -0.09170751323162107
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 11.193966554941259,
+        "SMB": 4.414809334385851,
+        "HML": 3.082867400664862,
+        "RMW": -1.4625393913281937,
+        "CMA": -1.1017265354283605,
+        "Mom": -1.2077578757868963
+      },
+      "mean_excess_bp_per_month": 91.50166446048014,
+      "t_raw": 2.4902059726972037,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.050914834695705576,
+      "sharpe_annual": 0.6225514931743009,
+      "ann_excess_pct": 11.549994725892287,
+      "mde_bp_per_month_80pct_power": 102.95841654438148,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.9465957208263329,
+          "capm_alpha_bp_per_month": 47.01631133626609,
+          "capm_alpha_t_nw4": 1.5344291276813709,
+          "mean_excess_bp_per_month": 198.20829384313586,
+          "t_raw": 3.1758141276555936
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.7256628173774005,
+          "capm_alpha_bp_per_month": -4.44026661831219,
+          "capm_alpha_t_nw4": -0.17774596982435686,
+          "mean_excess_bp_per_month": 60.45887892311597,
+          "t_raw": 1.330110644730234
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.806357346746543,
+          "capm_alpha_bp_per_month": -90.41700397784707,
+          "capm_alpha_t_nw4": -1.6381151844644186,
+          "mean_excess_bp_per_month": -4.508320734327378,
+          "t_raw": -0.05795900523281718
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 26.286458333333332,
+        "std": 7.49842733656965,
+        "p10": 18.1,
+        "p50": 25.0,
+        "p90": 37.0
+      }
+    },
+    "unclassifiable_buy__ew": {
+      "label": "unclassifiable_buy__ew",
+      "capm_beta": 1.2635646128811797,
+      "capm_beta_t": 18.9743627269853,
+      "capm_alpha_bp_per_month": -30.579079149953476,
+      "capm_alpha_t_ols": -1.152248621078274,
+      "capm_alpha_t_nw6": -1.0839125603986617,
+      "capm_r2": 0.716925652053922,
+      "ff6_alpha_bp_per_month": 18.10837319804291,
+      "ff6_alpha_t_nw6": 1.2352281568109849,
+      "ff6_loadings": {
+        "Mkt-RF": 0.9232371025486618,
+        "SMB": 0.8570755919265649,
+        "HML": -0.020920994237335178,
+        "RMW": -0.34167020619900446,
+        "CMA": 0.14326236327160835,
+        "Mom": -0.29884521919344276
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 21.196096179554008,
+        "SMB": 11.365263347378052,
+        "HML": -0.25060359693112527,
+        "RMW": -4.09538016619869,
+        "CMA": 1.061057919596924,
+        "Mom": -7.96769667242825
+      },
+      "mean_excess_bp_per_month": 123.27662106673144,
+      "t_raw": 2.569302882527215,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.06648383031056922,
+      "sharpe_annual": 0.6423257206318037,
+      "ann_excess_pct": 15.838586795866828,
+      "mde_bp_per_month_80pct_power": 134.4415617862923,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.2341635463576117,
+          "capm_alpha_bp_per_month": 26.08101925734841,
+          "capm_alpha_t_nw4": 0.7784357531117014,
+          "mean_excess_bp_per_month": 223.2038555497282,
+          "t_raw": 3.2015495874492994
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.2414548102402008,
+          "capm_alpha_bp_per_month": -37.673811305471546,
+          "capm_alpha_t_nw4": -1.1845280387941868,
+          "mean_excess_bp_per_month": 73.3548296604092,
+          "t_raw": 1.072663747297256
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.2825447764087983,
+          "capm_alpha_bp_per_month": -85.41098670023537,
+          "capm_alpha_t_nw4": -1.2259394549463165,
+          "mean_excess_bp_per_month": 51.23033415669098,
+          "t_raw": 0.4675998712474688
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 328.5885416666667,
+        "std": 153.84728429103322,
+        "p10": 146.1,
+        "p50": 321.5,
+        "p90": 518.2
+      }
+    },
+    "any_buy__ew": {
+      "label": "any_buy__ew",
+      "capm_beta": 1.2270523735839922,
+      "capm_beta_t": 19.34955574676539,
+      "capm_alpha_bp_per_month": -29.402039719341605,
+      "capm_alpha_t_ols": -1.1416641270747514,
+      "capm_alpha_t_nw6": -1.078367092503564,
+      "capm_r2": 0.717210377640785,
+      "ff6_alpha_bp_per_month": 19.562064235274537,
+      "ff6_alpha_t_nw6": 1.3688736401663233,
+      "ff6_loadings": {
+        "Mkt-RF": 0.8885671648210722,
+        "SMB": 0.8277612215205699,
+        "HML": 0.005742587607436178,
+        "RMW": -0.35559763316894166,
+        "CMA": 0.10588572260597007,
+        "Mom": -0.2964743723411867
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 22.893305935621814,
+        "SMB": 12.05454032630962,
+        "HML": 0.07567791171743203,
+        "RMW": -4.474347272360746,
+        "CMA": 0.8455185219393231,
+        "Mom": -8.746110878604448
+      },
+      "mean_excess_bp_per_month": 120.00781254759849,
+      "t_raw": 2.576111633863609,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.06454988235921996,
+      "sharpe_annual": 0.6440279084659023,
+      "ann_excess_pct": 15.39053137813422,
+      "mde_bp_per_month_80pct_power": 130.53079157678079,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.202014003768771,
+          "capm_alpha_bp_per_month": 30.071121229707778,
+          "capm_alpha_t_nw4": 0.9635653788814943,
+          "mean_excess_bp_per_month": 222.0589743674492,
+          "t_raw": 3.268275687981797
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.1970929769308412,
+          "capm_alpha_bp_per_month": -35.435471505449414,
+          "capm_alpha_t_nw4": -1.2138492526213054,
+          "mean_excess_bp_per_month": 71.62569998633897,
+          "t_raw": 1.0905283178674159
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.2458962856087263,
+          "capm_alpha_bp_per_month": -88.12238925793393,
+          "capm_alpha_t_nw4": -1.3107669669649717,
+          "mean_excess_bp_per_month": 44.614429953165676,
+          "t_raw": 0.41910152235205755
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 380.5364583333333,
+        "std": 166.78015979270413,
+        "p10": 177.2,
+        "p50": 374.5,
+        "p90": 574.6
+      }
+    },
+    "any_sell__ew": {
+      "label": "any_sell__ew",
+      "capm_beta": 1.1702574286512641,
+      "capm_beta_t": 29.986903483375052,
+      "capm_alpha_bp_per_month": -36.740838917415346,
+      "capm_alpha_t_ols": -2.085466389713189,
+      "capm_alpha_t_nw6": -2.209047343638315,
+      "capm_r2": 0.8313527821152034,
+      "ff6_alpha_bp_per_month": -7.1095990412815055,
+      "ff6_alpha_t_nw6": -0.9546043338361958,
+      "ff6_loadings": {
+        "Mkt-RF": 0.9738021703356847,
+        "SMB": 0.7314809772712907,
+        "HML": -0.023788971151914945,
+        "RMW": -0.21085195494192566,
+        "CMA": -0.034303759988940016,
+        "Mom": -0.035679184239141515
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 42.93059415085804,
+        "SMB": 21.615418881916057,
+        "HML": -0.5096537257268673,
+        "RMW": -3.321086258934834,
+        "CMA": -0.6415680672096256,
+        "Mom": -1.6245288533130233
+      },
+      "mean_excess_bp_per_month": 105.75347778267457,
+      "t_raw": 2.5627185093002045,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05718002845243169,
+      "sharpe_annual": 0.6406796273250511,
+      "ann_excess_pct": 13.455197707300348,
+      "mde_bp_per_month_80pct_power": 115.62769912953486,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.1683488576384171,
+          "capm_alpha_bp_per_month": -18.58866017776401,
+          "capm_alpha_t_nw4": -1.00117647505986,
+          "mean_excess_bp_per_month": 168.02213486342424,
+          "t_raw": 2.717128350087176
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.123000098715438,
+          "capm_alpha_bp_per_month": -39.13690575629384,
+          "capm_alpha_t_nw4": -1.8056706724844138,
+          "mean_excess_bp_per_month": 61.297821095181725,
+          "t_raw": 1.0767555576839187
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.1898346134122422,
+          "capm_alpha_bp_per_month": -50.14007229517673,
+          "capm_alpha_t_nw4": -1.2002911245131407,
+          "mean_excess_bp_per_month": 76.62398005485073,
+          "t_raw": 0.8119534324163412
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 665.390625,
+        "std": 266.3173883269017,
+        "p10": 304.3,
+        "p50": 698.0,
+        "p90": 1006.5
+      }
+    },
+    "no_insider_activity__ew": {
+      "label": "no_insider_activity__ew",
+      "capm_beta": 1.222588770678667,
+      "capm_beta_t": 19.563535141902857,
+      "capm_alpha_bp_per_month": -43.96384140739824,
+      "capm_alpha_t_ols": -1.950093492890934,
+      "capm_alpha_t_nw6": -1.8898840665763799,
+      "capm_r2": 0.7666607834787621,
+      "ff6_alpha_bp_per_month": 1.4031653694857906,
+      "ff6_alpha_t_nw6": 0.13196474382206122,
+      "ff6_loadings": {
+        "Mkt-RF": 0.9211818925516809,
+        "SMB": 0.7806450941648465,
+        "HML": -0.020392580970379826,
+        "RMW": -0.3928338520274104,
+        "CMA": 0.046106960190599844,
+        "Mom": -0.23336907639116822
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 30.703987133879917,
+        "SMB": 15.40486241734136,
+        "HML": -0.47892669610160704,
+        "RMW": -6.768462040803422,
+        "CMA": 0.6381715424667903,
+        "Mom": -5.681345789165663
+      },
+      "mean_excess_bp_per_month": 104.90250818188912,
+      "t_raw": 2.3366952222107527,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.062206306508570126,
+      "sharpe_annual": 0.584173805552688,
+      "ann_excess_pct": 13.340606878118333,
+      "mde_bp_per_month_80pct_power": 125.7916843975737,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.3071643627029639,
+          "capm_alpha_bp_per_month": -7.494175102304475,
+          "capm_alpha_t_nw4": -0.25307746592684527,
+          "mean_excess_bp_per_month": 201.28848375745244,
+          "t_raw": 2.807211102634492
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.1878532734405287,
+          "capm_alpha_bp_per_month": -61.84908656821441,
+          "capm_alpha_t_nw4": -2.4941231741297174,
+          "mean_excess_bp_per_month": 44.385738516926594,
+          "t_raw": 0.710250822179369
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.166551486333351,
+          "capm_alpha_bp_per_month": -72.04955618563677,
+          "capm_alpha_t_nw4": -1.3296572774750348,
+          "mean_excess_bp_per_month": 52.23392995238867,
+          "t_raw": 0.5370828516654975
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 3012.8229166666665,
+        "std": 457.05316049006996,
+        "p10": 2399.2,
+        "p50": 3028.0,
+        "p90": 3666.0
+      }
+    },
+    "opp_minus_routine__vw": {
+      "label": "opp_minus_routine__vw",
+      "capm_beta": 0.2982465057878377,
+      "capm_beta_t": 3.1433103234435222,
+      "capm_alpha_bp_per_month": -24.022458734514206,
+      "capm_alpha_t_ols": -0.6589700488954953,
+      "capm_alpha_t_nw6": -0.7314909171096093,
+      "capm_r2": 0.06957655483965475,
+      "ff6_alpha_bp_per_month": 5.921457161912383,
+      "ff6_alpha_t_nw6": 0.17278232278107783,
+      "ff6_loadings": {
+        "Mkt-RF": 0.08985031393840515,
+        "SMB": 0.04261004695097925,
+        "HML": -0.02757713096909222,
+        "RMW": -0.3140715061749933,
+        "CMA": -0.28825364160149625,
+        "Mom": -0.3807771590863031
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 1.0217539981851076,
+        "SMB": 0.21705700780868942,
+        "HML": -0.17374665232472075,
+        "RMW": -1.461258256504689,
+        "CMA": -1.0556605281078104,
+        "Mom": -4.161103539994119
+      },
+      "mean_excess_bp_per_month": 12.292997172830315,
+      "t_raw": 0.3381495815424461,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05037320012881929,
+      "sharpe_annual": 0.08453739538561153,
+      "ann_excess_pct": 1.4851744166395342,
+      "mde_bp_per_month_80pct_power": 101.86313974174428,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.1554790670606983,
+          "capm_alpha_bp_per_month": -9.63992002689767,
+          "capm_alpha_t_nw4": -0.21537743273804313,
+          "mean_excess_bp_per_month": 15.193478085978704,
+          "t_raw": 0.3225728488341255
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.5071244776216982,
+          "capm_alpha_bp_per_month": -40.053378717576656,
+          "capm_alpha_t_nw4": -0.7605031552197271,
+          "mean_excess_bp_per_month": 5.3009435553180095,
+          "t_raw": 0.08386545744603459
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.3271338621481883,
+          "capm_alpha_bp_per_month": 3.4584192938443614,
+          "capm_alpha_t_nw4": 0.05392769950353892,
+          "mean_excess_bp_per_month": 38.31100599738137,
+          "t_raw": 0.49231967940609245
+        }
+      },
+      "eras_same_sign": false
+    },
+    "opp_minus_noactivity__vw": {
+      "label": "opp_minus_noactivity__vw",
+      "capm_beta": -0.05245727590899556,
+      "capm_beta_t": -0.5838054657895936,
+      "capm_alpha_bp_per_month": -34.30756838688324,
+      "capm_alpha_t_ols": -1.1705646305590813,
+      "capm_alpha_t_nw6": -1.0103709663569473,
+      "capm_r2": 0.0035662020439218844,
+      "ff6_alpha_bp_per_month": -11.24491902519282,
+      "ff6_alpha_t_nw6": -0.33748342562927985,
+      "ff6_loadings": {
+        "Mkt-RF": -0.21470458727800076,
+        "SMB": 0.14286523221884045,
+        "HML": 0.21270663410158158,
+        "RMW": -0.11368565589564145,
+        "CMA": -0.032764078196042434,
+        "Mom": -0.21357631081219483
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": -2.550200438705684,
+        "SMB": 1.1486497096018224,
+        "HML": 1.782669935813761,
+        "RMW": -0.6754482938372878,
+        "CMA": -0.16626387344413046,
+        "Mom": -3.3818581733238284
+      },
+      "mean_excess_bp_per_month": -40.6949353914365,
+      "t_raw": -1.4408958090881208,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.039134374748890775,
+      "sharpe_annual": -0.3602239522720302,
+      "ann_excess_pct": -4.775560294030646,
+      "mde_bp_per_month_80pct_power": 79.13633188992884,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": -0.0704098840171982,
+          "capm_alpha_bp_per_month": 3.815995535688932,
+          "capm_alpha_t_nw4": 0.06117976896834873,
+          "mean_excess_bp_per_month": -7.429998628901235,
+          "t_raw": -0.167569341781204
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.05028725342588834,
+          "capm_alpha_bp_per_month": -66.83428010307937,
+          "capm_alpha_t_nw4": -1.3716138992938718,
+          "mean_excess_bp_per_month": -62.33687483328711,
+          "t_raw": -1.4124037190005005
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": -0.0856073656029417,
+          "capm_alpha_bp_per_month": -36.64094420206971,
+          "capm_alpha_t_nw4": -0.6606665570152053,
+          "mean_excess_bp_per_month": -45.761486210607934,
+          "t_raw": -0.7892713725007462
+        }
+      },
+      "eras_same_sign": false
+    },
+    "buy_minus_sell__vw": {
+      "label": "buy_minus_sell__vw",
+      "capm_beta": 0.1362396004419268,
+      "capm_beta_t": 3.096073990649228,
+      "capm_alpha_bp_per_month": -25.48112705954174,
+      "capm_alpha_t_ols": -1.3866083949647088,
+      "capm_alpha_t_nw6": -1.270860271442808,
+      "capm_r2": 0.057853627316043155,
+      "ff6_alpha_bp_per_month": -6.543721863702167,
+      "ff6_alpha_t_nw6": -0.39398975995397767,
+      "ff6_loadings": {
+        "Mkt-RF": 0.010771026197149258,
+        "SMB": 0.16305325572370155,
+        "HML": 0.17617288176613066,
+        "RMW": -0.12946934929825749,
+        "CMA": 0.2355934299838024,
+        "Mom": -0.16192172269793664
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 0.27722865512561484,
+        "SMB": 2.9378287231052536,
+        "HML": 2.620669976917033,
+        "RMW": -1.713424540330355,
+        "CMA": 2.715083885815007,
+        "Mom": -3.2638793391669503
+      },
+      "mean_excess_bp_per_month": -8.892154157366045,
+      "t_raw": -0.4882743328944326,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.025234441790939238,
+      "sharpe_annual": -0.12206858322360814,
+      "ann_excess_pct": -1.0618552895502065,
+      "mde_bp_per_month_80pct_power": 51.02831394237261,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.2142446341427851,
+          "capm_alpha_bp_per_month": -15.271584902547799,
+          "capm_alpha_t_nw4": -0.5929119594395132,
+          "mean_excess_bp_per_month": 18.94795598997804,
+          "t_raw": 0.7905007248967526
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.14109438072713376,
+          "capm_alpha_bp_per_month": -28.739048516230756,
+          "capm_alpha_t_nw4": -1.3972313171595452,
+          "mean_excess_bp_per_month": -16.1203714521617,
+          "t_raw": -0.7168575787480737
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.06914007140348409,
+          "capm_alpha_bp_per_month": -47.651468295894325,
+          "capm_alpha_t_nw4": -0.9730890191311593,
+          "mean_excess_bp_per_month": -40.28533897667667,
+          "t_raw": -0.8881338248804641
+        }
+      },
+      "eras_same_sign": true
+    },
+    "buy_minus_noactivity__vw": {
+      "label": "buy_minus_noactivity__vw",
+      "capm_beta": 0.06310156907247262,
+      "capm_beta_t": 2.3308256010209365,
+      "capm_alpha_bp_per_month": -8.517619577332002,
+      "capm_alpha_t_ols": -0.5967910217412716,
+      "capm_alpha_t_nw6": -0.5677580688350655,
+      "capm_r2": 0.021371806360296453,
+      "ff6_alpha_bp_per_month": 0.6489450310292186,
+      "ff6_alpha_t_nw6": 0.045942070589403895,
+      "ff6_loadings": {
+        "Mkt-RF": -0.0006695972511179087,
+        "SMB": 0.12793716118067033,
+        "HML": 0.13421736802209938,
+        "RMW": -0.015924243389170867,
+        "CMA": 0.11495967424457904,
+        "Mom": -0.05162325351090313
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": -0.021113915784785012,
+        "SMB": 2.4390701438486655,
+        "HML": 2.883722362867526,
+        "RMW": -0.19140465054497144,
+        "CMA": 1.86608009545203,
+        "Mom": -0.9668233178261745
+      },
+      "mean_excess_bp_per_month": -0.8341691265637019,
+      "t_raw": -0.060107621863383906,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.019229818309532368,
+      "sharpe_annual": -0.015026905465845977,
+      "ann_excess_pct": -0.1000543826383482,
+      "mde_bp_per_month_80pct_power": 38.88594857311007,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.06857292619599259,
+          "capm_alpha_bp_per_month": -13.789908775609668,
+          "capm_alpha_t_nw4": -0.5850372833780928,
+          "mean_excess_bp_per_month": -2.8373168403546805,
+          "t_raw": -0.14748526514776494
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.06900215010175223,
+          "capm_alpha_bp_per_month": -24.492447297757717,
+          "capm_alpha_t_nw4": -1.219168371063774,
+          "mean_excess_bp_per_month": -18.321288358803717,
+          "t_raw": -0.8856417185898312
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.057733357853338725,
+          "capm_alpha_bp_per_month": 14.607081110056638,
+          "capm_alpha_t_nw4": 0.4818002743111145,
+          "mean_excess_bp_per_month": 20.75794805809006,
+          "t_raw": 0.6463572828902792
+        }
+      },
+      "eras_same_sign": false
+    },
+    "opp_minus_routine__ew": {
+      "label": "opp_minus_routine__ew",
+      "capm_beta": 0.21100374225871107,
+      "capm_beta_t": 3.0580678010887468,
+      "capm_alpha_bp_per_month": -4.262345233466352,
+      "capm_alpha_t_ols": -0.1780780096267476,
+      "capm_alpha_t_nw6": -0.2391335099092029,
+      "capm_r2": 0.0798876460239849,
+      "ff6_alpha_bp_per_month": 14.485063081615406,
+      "ff6_alpha_t_nw6": 0.7618141125361614,
+      "ff6_loadings": {
+        "Mkt-RF": 0.084519143234844,
+        "SMB": 0.22662237479767705,
+        "HML": -0.22512825313767293,
+        "RMW": -0.273764043286471,
+        "CMA": 0.10442343445188915,
+        "Mom": -0.20824998179471063
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 1.2602542081645454,
+        "SMB": 1.980464362507884,
+        "HML": -1.6754455684305376,
+        "RMW": -1.8008881184192647,
+        "CMA": 0.6551020034467808,
+        "Mom": -2.4856260613249277
+      },
+      "mean_excess_bp_per_month": 21.4301505697599,
+      "t_raw": 0.8928322180145795,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.033258754647735304,
+      "sharpe_annual": 0.22320805450364484,
+      "ann_excess_pct": 2.6021462254647965,
+      "mde_bp_per_month_80pct_power": 67.25483319810789,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.08380992353192411,
+          "capm_alpha_bp_per_month": 21.152760054476328,
+          "capm_alpha_t_nw4": 1.0359266892169436,
+          "mean_excess_bp_per_month": 34.53903279346489,
+          "t_raw": 1.1276781823664326
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.2305899232904535,
+          "capm_alpha_bp_per_month": -26.845942278056956,
+          "capm_alpha_t_nw4": -0.7354524118451335,
+          "mean_excess_bp_per_month": -6.223294081613806,
+          "t_raw": -0.15316692817191516
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.29588090457725075,
+          "capm_alpha_bp_per_month": 6.855480951422981,
+          "capm_alpha_t_nw4": 0.19520503651551638,
+          "mean_excess_bp_per_month": 38.37840191406018,
+          "t_raw": 0.7059467090013528
+        }
+      },
+      "eras_same_sign": false
+    },
+    "opp_minus_noactivity__ew": {
+      "label": "opp_minus_noactivity__ew",
+      "capm_beta": -0.16709185132028323,
+      "capm_beta_t": -3.6346473579382987,
+      "capm_alpha_bp_per_month": 28.37494926608603,
+      "capm_alpha_t_ols": 1.583567612423599,
+      "capm_alpha_t_nw6": 1.572810202962136,
+      "capm_r2": 0.0885486929843099,
+      "ff6_alpha_bp_per_month": 35.93400787535767,
+      "ff6_alpha_t_nw6": 1.842716765334466,
+      "ff6_loadings": {
+        "Mkt-RF": -0.21331335992202102,
+        "SMB": -0.0336123964406329,
+        "HML": 0.1392552189931819,
+        "RMW": -0.05432368114671839,
+        "CMA": -0.08181553903054212,
+        "Mom": -0.06658841863516318
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": -4.848626408222948,
+        "SMB": -0.5071071463392832,
+        "HML": 2.0902265693573323,
+        "RMW": -0.46738694965294647,
+        "CMA": -0.7732719458822207,
+        "Mom": -1.0163167119560097
+      },
+      "mean_excess_bp_per_month": 8.029306848350926,
+      "t_raw": 0.44474271054864906,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.025016113057813948,
+      "sharpe_annual": 0.11118567763716228,
+      "ann_excess_pct": 0.9677832353674587,
+      "mde_bp_per_month_80pct_power": 50.5868162770445,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": -0.276758718344707,
+          "capm_alpha_bp_per_month": 75.6632464930471,
+          "capm_alpha_t_nw4": 3.0043829064356173,
+          "mean_excess_bp_per_month": 31.458842879148364,
+          "t_raw": 1.2956436250858983
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": -0.23160053277267467,
+          "capm_alpha_bp_per_month": 30.56287767184523,
+          "capm_alpha_t_nw4": 1.0125247092556635,
+          "mean_excess_bp_per_month": 9.849846324575557,
+          "t_raw": 0.33427518645324406
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": -0.06431323500955759,
+          "capm_alpha_bp_per_month": -11.511966840787283,
+          "capm_alpha_t_nw4": -0.33439592814436175,
+          "mean_excess_bp_per_month": -18.36384877265586,
+          "t_raw": -0.4524167170555662
+        }
+      },
+      "eras_same_sign": false
+    },
+    "buy_minus_sell__ew": {
+      "label": "buy_minus_sell__ew",
+      "capm_beta": 0.05679494493272759,
+      "capm_beta_t": 1.3178416101289974,
+      "capm_alpha_bp_per_month": 7.338799198073927,
+      "capm_alpha_t_ols": 0.4433788670001062,
+      "capm_alpha_t_nw6": 0.4325212986647851,
+      "capm_r2": 0.012983118535879412,
+      "ff6_alpha_bp_per_month": 26.671663276556025,
+      "ff6_alpha_t_nw6": 1.9601592138988693,
+      "ff6_loadings": {
+        "Mkt-RF": -0.08523500551461262,
+        "SMB": 0.09628024424927831,
+        "HML": 0.02953155875935143,
+        "RMW": -0.14474567822701603,
+        "CMA": 0.14018948259491,
+        "Mom": -0.26079518810204527
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": -2.4018731175407417,
+        "SMB": 1.5330545459496536,
+        "HML": 0.3109096145361435,
+        "RMW": -1.7202074052287566,
+        "CMA": 1.2539824827834227,
+        "Mom": -6.8161749196774535
+      },
+      "mean_excess_bp_per_month": 14.254334764923929,
+      "t_raw": 0.8894504496371353,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.02220627988980473,
+      "sharpe_annual": 0.22236261240928382,
+      "ann_excess_pct": 1.7239943747559439,
+      "mde_bp_per_month_80pct_power": 44.904857856456466,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.03366514613035373,
+          "capm_alpha_bp_per_month": 48.659781407471925,
+          "capm_alpha_t_nw4": 2.187942855565482,
+          "mean_excess_bp_per_month": 54.03683950402491,
+          "t_raw": 2.4812278602354136
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.07409287821540299,
+          "capm_alpha_bp_per_month": 3.7014342508444487,
+          "capm_alpha_t_nw4": 0.1982884032207969,
+          "mean_excess_bp_per_month": 10.327878891157235,
+          "t_raw": 0.43728977511004385
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.05606167219648391,
+          "capm_alpha_bp_per_month": -37.982316962757196,
+          "capm_alpha_t_nw4": -0.912591451929632,
+          "mean_excess_bp_per_month": -32.009550101685086,
+          "t_raw": -0.8683715520424478
+        }
+      },
+      "eras_same_sign": false
+    },
+    "buy_minus_noactivity__ew": {
+      "label": "buy_minus_noactivity__ew",
+      "capm_beta": 0.004463602905325356,
+      "capm_beta_t": 0.15217846907601867,
+      "capm_alpha_bp_per_month": 14.561801688056732,
+      "capm_alpha_t_ols": 1.2928630841982456,
+      "capm_alpha_t_nw6": 1.2610457271010078,
+      "capm_r2": 0.00017543040281131628,
+      "ff6_alpha_bp_per_month": 18.15889886578871,
+      "ff6_alpha_t_nw6": 1.4975800003721107,
+      "ff6_loadings": {
+        "Mkt-RF": -0.03261472773060853,
+        "SMB": 0.04711612735572281,
+        "HML": 0.026135168577817225,
+        "RMW": 0.03723621885846826,
+        "CMA": 0.05977876241536931,
+        "Mom": -0.06310529595001763
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": -1.1204689340036975,
+        "SMB": 0.9774871870453412,
+        "HML": 0.4490803397301356,
+        "RMW": 0.49748168264609804,
+        "CMA": 0.7654525443036241,
+        "Mom": -1.8642792138179247
+      },
+      "mean_excess_bp_per_month": 15.10530436570938,
+      "t_raw": 1.394091681846679,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.015013735447036698,
+      "sharpe_annual": 0.3485229204616698,
+      "ann_excess_pct": 1.8277718415066868,
+      "mde_bp_per_month_80pct_power": 30.360315167114344,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": -0.10515035893419335,
+          "capm_alpha_bp_per_month": 37.56529633201246,
+          "capm_alpha_t_nw4": 2.7995336931608112,
+          "mean_excess_bp_per_month": 20.770490609996806,
+          "t_raw": 1.4578104342625153
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.009239703490312163,
+          "capm_alpha_bp_per_month": 26.41361506276502,
+          "capm_alpha_t_nw4": 1.723278459593595,
+          "mean_excess_bp_per_month": 27.23996146941237,
+          "t_raw": 1.7083434812475355
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.07934479927537487,
+          "capm_alpha_bp_per_month": -16.07283307229712,
+          "capm_alpha_t_nw4": -0.5546004237667304,
+          "mean_excess_bp_per_month": -7.619499999223014,
+          "t_raw": -0.2989292965478625
+        }
+      },
+      "eras_same_sign": false
+    }
+  },
+  "tradable_only": {
+    "opportunistic_buy__vw": {
+      "label": "opportunistic_buy__vw__tradable",
+      "capm_beta": 0.9520286539759646,
+      "capm_beta_t": 11.329693604771256,
+      "capm_alpha_bp_per_month": -47.842138275381586,
+      "capm_alpha_t_ols": -1.5442839375291335,
+      "capm_alpha_t_nw6": -1.2981421741633032,
+      "capm_r2": 0.5133911021554877,
+      "ff6_alpha_bp_per_month": -25.08730279052274,
+      "ff6_alpha_t_nw6": -0.6971863905390023,
+      "ff6_loadings": {
+        "Mkt-RF": 0.7938884820871117,
+        "SMB": 0.152595219965864,
+        "HML": 0.18925150968577364,
+        "RMW": -0.13055211170461223,
+        "CMA": 0.03661105024136457,
+        "Mom": -0.21234928468029401
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 9.115932358882075,
+        "SMB": 1.2067532555005278,
+        "HML": 1.7941294145535898,
+        "RMW": -0.7865171223533775,
+        "CMA": 0.20417372369730497,
+        "Mom": -3.3118933293938717
+      },
+      "mean_excess_bp_per_month": 68.07993938539407,
+      "t_raw": 1.5936328957100514,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.059194518039450014,
+      "sharpe_annual": 0.39840822392751285,
+      "ann_excess_pct": 8.482544116769253,
+      "mde_bp_per_month_80pct_power": 119.70133816350476,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.9290848486984941,
+          "capm_alpha_bp_per_month": -11.124107858362192,
+          "capm_alpha_t_nw4": -0.18077925841899645,
+          "mean_excess_bp_per_month": 137.27100644576402,
+          "t_raw": 2.094328962585614
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.0394908576172524,
+          "capm_alpha_bp_per_month": -56.96145635713292,
+          "capm_alpha_t_nw4": -1.046044297023913,
+          "mean_excess_bp_per_month": 36.004680038416495,
+          "t_raw": 0.5261092846145612
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.9294348262347024,
+          "capm_alpha_bp_per_month": -73.23643865504675,
+          "capm_alpha_t_nw4": -1.096298909616808,
+          "mean_excess_bp_per_month": 25.78482332595242,
+          "t_raw": 0.28846782524817877
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 21.427083333333332,
+        "std": 11.30189697432029,
+        "p10": 10.0,
+        "p50": 19.0,
+        "p90": 35.900000000000006
+      }
+    },
+    "routine_buy__vw": {
+      "label": "routine_buy__vw__tradable",
+      "capm_beta": 0.692520378458129,
+      "capm_beta_t": 7.346044606878926,
+      "capm_alpha_bp_per_month": -4.973253674654026,
+      "capm_alpha_t_ols": -0.15799257253337823,
+      "capm_alpha_t_nw6": -0.17079855012011852,
+      "capm_r2": 0.37837479393735396,
+      "ff6_alpha_bp_per_month": -14.649486320734459,
+      "ff6_alpha_t_nw6": -0.5389696099977784,
+      "ff6_loadings": {
+        "Mkt-RF": 0.7173218960980368,
+        "SMB": 0.18243905443507658,
+        "HML": 0.3162688813457434,
+        "RMW": 0.24929015297522822,
+        "CMA": 0.05407828440089779,
+        "Mom": 0.1426393674671816
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 7.727611752019918,
+        "SMB": 1.1390718907644557,
+        "HML": 1.429921760616457,
+        "RMW": 1.478778523564486,
+        "CMA": 0.23254333441227584,
+        "Mom": 1.8040238212697022
+      },
+      "mean_excess_bp_per_month": 79.13569121550701,
+      "t_raw": 2.0701196694751913,
+      "n_months": 154,
+      "n_effective": 154,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.04743919475840314,
+      "sharpe_annual": 0.57786409982459,
+      "ann_excess_pct": 9.920704606973697,
+      "mde_bp_per_month_80pct_power": 107.11371427240476,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2024-12-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 64,
+          "capm_beta": 0.8321856774549106,
+          "capm_alpha_bp_per_month": 9.864074946155988,
+          "capm_alpha_t_nw4": 0.2322484817136093,
+          "mean_excess_bp_per_month": 149.1145185654344,
+          "t_raw": 2.699247433646282
+        },
+        "2015-2019": {
+          "n_months": 53,
+          "capm_beta": 0.5608812105297211,
+          "capm_alpha_bp_per_month": -22.210409273164874,
+          "capm_alpha_t_nw4": -0.6759470846373128,
+          "mean_excess_bp_per_month": 25.419737902533814,
+          "t_raw": 0.5067371547865933
+        },
+        "2020-2024": {
+          "n_months": 37,
+          "capm_beta": 0.6153719591628377,
+          "capm_alpha_bp_per_month": -23.073168682946683,
+          "capm_alpha_t_nw4": -0.27743691346339244,
+          "mean_excess_bp_per_month": 35.03570676124283,
+          "t_raw": 0.33402905413180134
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 154,
+        "mean": 7.097402597402597,
+        "std": 1.8533470182859142,
+        "p10": 5.0,
+        "p50": 7.0,
+        "p90": 10.0
+      }
+    },
+    "unclassifiable_buy__vw": {
+      "label": "unclassifiable_buy__vw__tradable",
+      "capm_beta": 1.109508953812619,
+      "capm_beta_t": 34.26158028790188,
+      "capm_alpha_bp_per_month": -15.218891378267491,
+      "capm_alpha_t_ols": -1.0079696253723003,
+      "capm_alpha_t_nw6": -1.017146926890056,
+      "capm_r2": 0.8578109927163419,
+      "ff6_alpha_bp_per_month": -5.414182968705075,
+      "ff6_alpha_t_nw6": -0.3986706281304706,
+      "ff6_loadings": {
+        "Mkt-RF": 1.037957461316315,
+        "SMB": 0.12657487628552438,
+        "HML": 0.11662057904131273,
+        "RMW": -0.015906892404780826,
+        "CMA": 0.1315936156267825,
+        "Mom": -0.07670396055360962
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 31.816037238636184,
+        "SMB": 2.410409221210308,
+        "HML": 2.4744728934892044,
+        "RMW": -0.20027193277757918,
+        "CMA": 2.26237352974245,
+        "Mom": -1.312247704834986
+      },
+      "mean_excess_bp_per_month": 119.87849520988814,
+      "t_raw": 3.1124418894188612,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05336919417369676,
+      "sharpe_annual": 0.7781104723547153,
+      "ann_excess_pct": 15.372838568522251,
+      "mde_bp_per_month_80pct_power": 107.92154697571686,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.1260815689051094,
+          "capm_alpha_bp_per_month": -19.485481444992278,
+          "capm_alpha_t_nw4": -1.0735122976826086,
+          "mean_excess_bp_per_month": 160.37430570742126,
+          "t_raw": 2.695134577083603
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.083493295567687,
+          "capm_alpha_bp_per_month": -25.902564024075964,
+          "capm_alpha_t_nw4": -1.3145059356857713,
+          "mean_excess_bp_per_month": 70.99889957349781,
+          "t_raw": 1.3114203030662672
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.1075196525025974,
+          "capm_alpha_bp_per_month": -1.4700402955506424,
+          "capm_alpha_t_nw4": -0.041660250346940986,
+          "mean_excess_bp_per_month": 116.52424027584604,
+          "t_raw": 1.3570394462899258
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 119.97916666666667,
+        "std": 69.27945974643147,
+        "p10": 49.1,
+        "p50": 109.0,
+        "p90": 208.8
+      }
+    },
+    "any_buy__vw": {
+      "label": "any_buy__vw__tradable",
+      "capm_beta": 1.083815551448976,
+      "capm_beta_t": 37.89789405940208,
+      "capm_alpha_bp_per_month": -14.371286357240852,
+      "capm_alpha_t_ols": -1.0183812008374016,
+      "capm_alpha_t_nw6": -0.9460869819985667,
+      "capm_r2": 0.8682450366987652,
+      "ff6_alpha_bp_per_month": -4.846508704479742,
+      "ff6_alpha_t_nw6": -0.3588695511993603,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0125076396499264,
+        "SMB": 0.11534016461766089,
+        "HML": 0.152725415536007,
+        "RMW": 0.009848645814132029,
+        "CMA": 0.09841595593116576,
+        "Mom": -0.07099413207027527
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 33.56203790393881,
+        "SMB": 2.2914540303794806,
+        "HML": 3.6954879014238045,
+        "RMW": 0.13463582117634074,
+        "CMA": 1.8638139678709917,
+        "Mom": -1.3526210659936257
+      },
+      "mean_excess_bp_per_month": 117.59758873944976,
+      "t_raw": 3.1445548169920694,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.051819099465189665,
+      "sharpe_annual": 0.7861387042480174,
+      "ann_excess_pct": 15.061180262439633,
+      "mde_bp_per_month_80pct_power": 104.78699301643285,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.0993686416388662,
+          "capm_alpha_bp_per_month": -16.530026199323686,
+          "capm_alpha_t_nw4": -0.8292482964864939,
+          "mean_excess_bp_per_month": 159.06312384171625,
+          "t_raw": 2.7371521130680283
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.085923767846198,
+          "capm_alpha_bp_per_month": -26.89603203406832,
+          "capm_alpha_t_nw4": -1.45613639685987,
+          "mean_excess_bp_per_month": 70.22279914850523,
+          "t_raw": 1.2977490490016264
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.0703889581803496,
+          "capm_alpha_bp_per_month": -1.6603067792277335,
+          "capm_alpha_t_nw4": -0.047325233254831386,
+          "mean_excess_bp_per_month": 112.37809855892132,
+          "t_raw": 1.3695361543452653
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 134.83333333333334,
+        "std": 73.74147094764123,
+        "p10": 59.0,
+        "p50": 124.0,
+        "p90": 228.40000000000003
+      }
+    },
+    "any_sell__vw": {
+      "label": "any_sell__vw__tradable",
+      "capm_beta": 0.9547551577429321,
+      "capm_beta_t": 38.54273601268253,
+      "capm_alpha_bp_per_month": 11.487975229442744,
+      "capm_alpha_t_ols": 1.3330141396154338,
+      "capm_alpha_t_nw6": 1.4267103561712131,
+      "capm_r2": 0.9320284017064406,
+      "ff6_alpha_bp_per_month": 4.388646333100877,
+      "ff6_alpha_t_nw6": 0.5917713869508308,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0006664784078816,
+        "SMB": -0.03320396318353247,
+        "HML": -0.02017328303406589,
+        "RMW": 0.08171313617358639,
+        "CMA": -0.12361355169819488,
+        "Mom": 0.08593003355900836
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 40.85481772393364,
+        "SMB": -0.9952533419589689,
+        "HML": -0.408987992494475,
+        "RMW": 2.072216978754164,
+        "CMA": -1.6719297557323494,
+        "Mom": 2.898295014134208
+      },
+      "mean_excess_bp_per_month": 127.74204077744928,
+      "t_raw": 4.017458386202967,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.04405884190839245,
+      "sharpe_annual": 1.0043645965507417,
+      "ann_excess_pct": 16.453239191396385,
+      "mde_bp_per_month_80pct_power": 89.0944382865674,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.9053859377112283,
+          "capm_alpha_bp_per_month": -3.412853536820022,
+          "capm_alpha_t_nw4": -0.41159367576981026,
+          "mean_excess_bp_per_month": 141.19702779341245,
+          "t_raw": 3.0223705955535056
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.9412309032074078,
+          "capm_alpha_bp_per_month": 4.896717028867972,
+          "capm_alpha_t_nw4": 0.6338722552997328,
+          "mean_excess_bp_per_month": 89.07504326048262,
+          "t_raw": 2.0083130466288552
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.003866755190999,
+          "capm_alpha_bp_per_month": 45.790532034449335,
+          "capm_alpha_t_nw4": 2.6531096925326527,
+          "mean_excess_bp_per_month": 152.7417137138431,
+          "t_raw": 2.079027343133828
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 480.3541666666667,
+        "std": 203.2541533956941,
+        "p10": 212.70000000000002,
+        "p50": 514.5,
+        "p90": 741.0
+      }
+    },
+    "no_insider_activity__vw": {
+      "label": "no_insider_activity__vw__tradable",
+      "capm_beta": 1.0242264929564078,
+      "capm_beta_t": 107.58262585930821,
+      "capm_alpha_bp_per_month": -4.838828330595091,
+      "capm_alpha_t_ols": -1.2038651642473968,
+      "capm_alpha_t_nw6": -1.1521753838271498,
+      "capm_r2": 0.9864027250345275,
+      "ff6_alpha_bp_per_month": -2.580793340806308,
+      "ff6_alpha_t_nw6": -0.6690870548579431,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0106656892602963,
+        "SMB": -0.005946461412217052,
+        "HML": 0.01883785567661081,
+        "RMW": -0.027478596245499143,
+        "CMA": -0.00032943896710117826,
+        "Mom": -0.025133567532391154
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 95.72216764604515,
+        "SMB": -0.3002659239297256,
+        "HML": 0.7201688264037073,
+        "RMW": -1.415147053635843,
+        "CMA": -0.008652535883785622,
+        "Mom": -1.92905703707745
+      },
+      "mean_excess_bp_per_month": 119.87429092570204,
+      "t_raw": 3.6153650417388596,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.04594354595070091,
+      "sharpe_annual": 0.9038412604347149,
+      "ann_excess_pct": 15.372263392732055,
+      "mde_bp_per_month_80pct_power": 92.90562897412629,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.0430393787240526,
+          "capm_alpha_bp_per_month": -4.564449979300046,
+          "capm_alpha_t_nw4": -0.6501555723308162,
+          "mean_excess_bp_per_month": 162.03168819504054,
+          "t_raw": 3.0495995348539666
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.0105715397325425,
+          "capm_alpha_bp_per_month": 1.2772322861408225,
+          "capm_alpha_t_nw4": 0.29141557247539407,
+          "mean_excess_bp_per_month": 91.65698975277988,
+          "t_raw": 1.9534601569253145
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.014566288396863,
+          "capm_alpha_bp_per_month": -15.082574992391526,
+          "capm_alpha_t_nw4": -2.037082730039611,
+          "mean_excess_bp_per_month": 93.00852661548652,
+          "t_raw": 1.297923770074952
+        }
+      },
+      "eras_same_sign": false,
+      "names_per_month": {
+        "n": 192,
+        "mean": 1402.84375,
+        "std": 271.36645990768136,
+        "p10": 1092.4,
+        "p50": 1372.5,
+        "p90": 1759.4
+      }
+    },
+    "opp_minus_routine__vw": {
+      "label": "opp_minus_routine__vw__tradable",
+      "capm_beta": 0.2700941432975109,
+      "capm_beta_t": 2.788743933873698,
+      "capm_alpha_bp_per_month": -51.62683363850835,
+      "capm_alpha_t_ols": -1.1973747216986441,
+      "capm_alpha_t_nw6": -1.2688198287969907,
+      "capm_r2": 0.04702794893166662,
+      "ff6_alpha_bp_per_month": -20.897467409823978,
+      "ff6_alpha_t_nw6": -0.4888083192990407,
+      "ff6_loadings": {
+        "Mkt-RF": 0.09338143274411004,
+        "SMB": -0.014221935465717955,
+        "HML": -0.05420330312877776,
+        "RMW": -0.3205008355991327,
+        "CMA": -0.19132304879973544,
+        "Mom": -0.34204368979036637
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 1.1095378550157993,
+        "SMB": -0.05969903594960121,
+        "HML": -0.2433659618532028,
+        "RMW": -1.7250717141184992,
+        "CMA": -0.7533032851322499,
+        "Mom": -2.7822319684557986
+      },
+      "mean_excess_bp_per_month": -18.822985375811896,
+      "t_raw": -0.4450879815758679,
+      "n_months": 154,
+      "n_effective": 154,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.052481108281120355,
+      "sharpe_annual": -0.12424420172834115,
+      "ann_excess_pct": -2.2355202298242616,
+      "mde_bp_per_month_80pct_power": 118.49793120966298,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2024-12-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 64,
+          "capm_beta": 0.13392461252163443,
+          "capm_alpha_bp_per_month": -36.9080949108916,
+          "capm_alpha_t_nw4": -0.7113077940864665,
+          "mean_excess_bp_per_month": -14.498358465760303,
+          "t_raw": -0.27189052799449454
+        },
+        "2015-2019": {
+          "n_months": 53,
+          "capm_beta": 0.5215241912481616,
+          "capm_alpha_bp_per_month": -25.51416904309253,
+          "capm_alpha_t_nw4": -0.38676187150533764,
+          "mean_excess_bp_per_month": 18.773772001281028,
+          "t_raw": 0.2518195670705349
+        },
+        "2020-2024": {
+          "n_months": 37,
+          "capm_beta": 0.2656855321583267,
+          "capm_alpha_bp_per_month": -105.2466188902941,
+          "capm_alpha_t_nw4": -1.127097801270843,
+          "mean_excess_bp_per_month": -80.15823573335857,
+          "t_raw": -0.7518100910999218
+        }
+      },
+      "eras_same_sign": true
+    },
+    "buy_minus_sell__vw": {
+      "label": "buy_minus_sell__vw__tradable",
+      "capm_beta": 0.12906039370604425,
+      "capm_beta_t": 3.027265761979716,
+      "capm_alpha_bp_per_month": -25.85926158668358,
+      "capm_alpha_t_ols": -1.409571863242922,
+      "capm_alpha_t_nw6": -1.2723104110112875,
+      "capm_r2": 0.05239508946914595,
+      "ff6_alpha_bp_per_month": -9.235155037580602,
+      "ff6_alpha_t_nw6": -0.5413069169800844,
+      "ff6_loadings": {
+        "Mkt-RF": 0.011841161242044318,
+        "SMB": 0.1485441278011934,
+        "HML": 0.17289869857007256,
+        "RMW": -0.07186449035945425,
+        "CMA": 0.22202950762936102,
+        "Mom": -0.15692416562928424
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 0.30112237883869813,
+        "SMB": 2.511980484027042,
+        "HML": 2.5560296992624485,
+        "RMW": -0.960909697361094,
+        "CMA": 2.496887205090659,
+        "Mom": -2.9933130010594886
+      },
+      "mean_excess_bp_per_month": -10.144452037999507,
+      "t_raw": -0.5595976439797873,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.025119056927831448,
+      "sharpe_annual": -0.13989941099494682,
+      "ann_excess_pct": -1.210565105571737,
+      "mde_bp_per_month_80pct_power": 50.79498621245326,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.1939827039276376,
+          "capm_alpha_bp_per_month": -13.11717266250359,
+          "capm_alpha_t_nw4": -0.5345219250528592,
+          "mean_excess_bp_per_month": 17.86609604830378,
+          "t_raw": 0.7811017812646944
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.14469286463879036,
+          "capm_alpha_bp_per_month": -31.792749062936302,
+          "capm_alpha_t_nw4": -1.4848798759614057,
+          "mean_excess_bp_per_month": -18.852244111977416,
+          "t_raw": -0.806851095675864
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.06652220298935084,
+          "capm_alpha_bp_per_month": -47.450838813677095,
+          "capm_alpha_t_nw4": -0.9615675898476523,
+          "mean_excess_bp_per_month": -40.363615154921746,
+          "t_raw": -0.8898696503253081
+        }
+      },
+      "eras_same_sign": true
+    },
+    "buy_minus_noactivity__vw": {
+      "label": "buy_minus_noactivity__vw__tradable",
+      "capm_beta": 0.05958905849256875,
+      "capm_beta_t": 2.166216241964536,
+      "capm_alpha_bp_per_month": -9.53245802664576,
+      "capm_alpha_t_ols": -0.647318519864135,
+      "capm_alpha_t_nw6": -0.626561388272515,
+      "capm_r2": 0.017964762793399314,
+      "ff6_alpha_bp_per_month": -2.265715363673444,
+      "ff6_alpha_t_nw6": -0.15860186702904877,
+      "ff6_loadings": {
+        "Mkt-RF": 0.0018419503896297713,
+        "SMB": 0.12128662602987791,
+        "HML": 0.13388755985939604,
+        "RMW": 0.03732724205963098,
+        "CMA": 0.09874539489826711,
+        "Mom": -0.045860564537884146
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 0.05662724420439194,
+        "SMB": 2.0883511644782304,
+        "HML": 2.783032847681715,
+        "RMW": 0.4491584394758919,
+        "CMA": 1.4894565846760328,
+        "Mom": -0.8121735072004075
+      },
+      "mean_excess_bp_per_month": -2.2767021862522707,
+      "t_raw": -0.15927419588893632,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.019806667807216308,
+      "sharpe_annual": -0.03981854897223408,
+      "ann_excess_pct": -0.272862419231501,
+      "mde_bp_per_month_80pct_power": 40.05243592833602,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.0563292629148136,
+          "capm_alpha_bp_per_month": -11.965576220023646,
+          "capm_alpha_t_nw4": -0.5096528876401748,
+          "mean_excess_bp_per_month": -2.968564353324276,
+          "t_raw": -0.14833827147773487
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.07535222811365551,
+          "capm_alpha_bp_per_month": -28.173264320209185,
+          "capm_alpha_t_nw4": -1.3880493211745795,
+          "mean_excess_bp_per_month": -21.434190604274665,
+          "t_raw": -0.992141900667807
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.05582266978348713,
+          "capm_alpha_bp_per_month": 13.422268213163735,
+          "capm_alpha_t_nw4": 0.43773182194451316,
+          "mean_excess_bp_per_month": 19.369571943434796,
+          "t_raw": 0.591960731922782
+        }
+      },
+      "eras_same_sign": false
+    },
+    "opportunistic_buy__ew": {
+      "label": "opportunistic_buy__ew__tradable",
+      "capm_beta": 1.1970518027064538,
+      "capm_beta_t": 14.423399514540415,
+      "capm_alpha_bp_per_month": -67.94584203350672,
+      "capm_alpha_t_ols": -2.117127499036624,
+      "capm_alpha_t_nw6": -2.0704823490022264,
+      "capm_r2": 0.6085002397472681,
+      "ff6_alpha_bp_per_month": -24.549325534683597,
+      "ff6_alpha_t_nw6": -0.7786430362523938,
+      "ff6_loadings": {
+        "Mkt-RF": 0.9066936025263217,
+        "SMB": 0.7448171463305775,
+        "HML": 0.04257163094919844,
+        "RMW": -0.3295135990750193,
+        "CMA": -0.19553348611150273,
+        "Mom": -0.1874315591323663
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 13.872290874749401,
+        "SMB": 6.872418348907764,
+        "HML": 0.4462794672700335,
+        "RMW": -1.493668265225376,
+        "CMA": -1.4402899405850744,
+        "Mom": -2.2550596176772735
+      },
+      "mean_excess_bp_per_month": 77.81104402006402,
+      "t_raw": 1.5770797338871687,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.06836569070635033,
+      "sharpe_annual": 0.3942699334717922,
+      "ann_excess_pct": 9.747474336881456,
+      "mde_bp_per_month_80pct_power": 138.24700213909284,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.1629938574800498,
+          "capm_alpha_bp_per_month": -41.56557951955576,
+          "capm_alpha_t_nw4": -1.037301213176883,
+          "mean_excess_bp_per_month": 144.18990520017732,
+          "t_raw": 2.141199732724699
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.337163283026286,
+          "capm_alpha_bp_per_month": -34.48461324675391,
+          "capm_alpha_t_nw4": -0.7533422786322485,
+          "mean_excess_bp_per_month": 85.10364791207046,
+          "t_raw": 1.0850764056620559
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.162285478514417,
+          "capm_alpha_bp_per_month": -129.6508505246857,
+          "capm_alpha_t_nw4": -1.7177990025306213,
+          "mean_excess_bp_per_month": -5.821861534742121,
+          "t_raw": -0.052099534631457195
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 21.427083333333332,
+        "std": 11.30189697432029,
+        "p10": 10.0,
+        "p50": 19.0,
+        "p90": 35.900000000000006
+      }
+    },
+    "routine_buy__ew": {
+      "label": "routine_buy__ew__tradable",
+      "capm_beta": 1.1426074311320404,
+      "capm_beta_t": 10.656435748172129,
+      "capm_alpha_bp_per_month": -75.47163540877703,
+      "capm_alpha_t_ols": -2.1095197937256014,
+      "capm_alpha_t_nw6": -2.91776167842122,
+      "capm_r2": 0.5619251363649098,
+      "ff6_alpha_bp_per_month": -47.89155151959567,
+      "ff6_alpha_t_nw6": -1.8301684556755904,
+      "ff6_loadings": {
+        "Mkt-RF": 0.9108497951190242,
+        "SMB": 0.9706417768452114,
+        "HML": 0.1739049997045259,
+        "RMW": -0.03727445516064565,
+        "CMA": -0.085133928694069,
+        "Mom": -0.08946027088379149
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 9.424085574646176,
+        "SMB": 10.247386797870572,
+        "HML": 1.0136595411897378,
+        "RMW": -0.2180940296035774,
+        "CMA": -0.36822794555617655,
+        "Mom": -1.2397163244152476
+      },
+      "mean_excess_bp_per_month": 63.30190605745987,
+      "t_raw": 1.2230761103429177,
+      "n_months": 154,
+      "n_effective": 154,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.06422789135518311,
+      "sharpe_annual": 0.3414159026368988,
+      "ann_excess_pct": 7.866360186137666,
+      "mde_bp_per_month_80pct_power": 145.02118001738438,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2024-12-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 64,
+          "capm_beta": 1.3835385657401484,
+          "capm_alpha_bp_per_month": -68.60089515007294,
+          "capm_alpha_t_nw4": -2.240852255721166,
+          "mean_excess_bp_per_month": 162.9079667098266,
+          "t_raw": 2.0359489674391673
+        },
+        "2015-2019": {
+          "n_months": 53,
+          "capm_beta": 1.1277118105166644,
+          "capm_alpha_bp_per_month": -70.90629031952194,
+          "capm_alpha_t_nw4": -2.0917539845617994,
+          "mean_excess_bp_per_month": 24.859227402052873,
+          "t_raw": 0.3572409303682559
+        },
+        "2020-2024": {
+          "n_months": 37,
+          "capm_beta": 0.9029632462492706,
+          "capm_alpha_bp_per_month": -139.18891278701258,
+          "capm_alpha_t_nw4": -1.9117958052178212,
+          "mean_excess_bp_per_month": -53.92311861861861,
+          "t_raw": -0.4127538987545614
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 154,
+        "mean": 7.097402597402597,
+        "std": 1.8533470182859142,
+        "p10": 5.0,
+        "p50": 7.0,
+        "p90": 10.0
+      }
+    },
+    "unclassifiable_buy__ew": {
+      "label": "unclassifiable_buy__ew__tradable",
+      "capm_beta": 1.3300920065456927,
+      "capm_beta_t": 24.268759827223874,
+      "capm_alpha_bp_per_month": -58.941855814007056,
+      "capm_alpha_t_ols": -2.3633629582764257,
+      "capm_alpha_t_nw6": -2.2682638376250006,
+      "capm_r2": 0.7606333458345108,
+      "ff6_alpha_bp_per_month": -18.532496051248376,
+      "ff6_alpha_t_nw6": -1.2801353499815953,
+      "ff6_loadings": {
+        "Mkt-RF": 1.048164003044247,
+        "SMB": 0.8817666536585557,
+        "HML": 0.0778685162268602,
+        "RMW": -0.204780144151256,
+        "CMA": 0.09018403288821997,
+        "Mom": -0.13700639517558266
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 33.85555264870942,
+        "SMB": 10.49553276955953,
+        "HML": 1.1639019226816645,
+        "RMW": -2.124800270869893,
+        "CMA": 0.678549252083166,
+        "Mom": -4.079339592609835
+      },
+      "mean_excess_bp_per_month": 103.01443429851649,
+      "t_raw": 2.100869400267666,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.06794376998218499,
+      "sharpe_annual": 0.5252173500669166,
+      "ann_excess_pct": 13.086739219038668,
+      "mde_bp_per_month_80pct_power": 137.39380699612624,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.3338917987919412,
+          "capm_alpha_bp_per_month": -46.39667688374895,
+          "capm_alpha_t_nw4": -1.418838220917266,
+          "mean_excess_bp_per_month": 166.65493646281956,
+          "t_raw": 2.324329596461851
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.4757431272958919,
+          "capm_alpha_bp_per_month": -52.149240532708184,
+          "capm_alpha_t_nw4": -1.5426867279367997,
+          "mean_excess_bp_per_month": 79.83281188424563,
+          "t_raw": 1.024437787583368
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.2638554347326152,
+          "capm_alpha_bp_per_month": -84.70385993900365,
+          "capm_alpha_t_nw4": -1.3449414102224988,
+          "mean_excess_bp_per_month": 49.946313022306434,
+          "t_raw": 0.4661974200813685
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 119.97916666666667,
+        "std": 69.27945974643147,
+        "p10": 49.1,
+        "p50": 109.0,
+        "p90": 208.8
+      }
+    },
+    "any_buy__ew": {
+      "label": "any_buy__ew__tradable",
+      "capm_beta": 1.3150424479940037,
+      "capm_beta_t": 23.95251885214196,
+      "capm_alpha_bp_per_month": -57.992113918543374,
+      "capm_alpha_t_ols": -2.3908742311450446,
+      "capm_alpha_t_nw6": -2.3438056562076106,
+      "capm_r2": 0.7665679744513587,
+      "ff6_alpha_bp_per_month": -17.64488427800675,
+      "ff6_alpha_t_nw6": -1.3036658115968134,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0338707197625112,
+        "SMB": 0.868415520926296,
+        "HML": 0.07788261602926316,
+        "RMW": -0.2077647293630216,
+        "CMA": 0.0694128506798658,
+        "Mom": -0.13937498597091014
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 32.19451017928344,
+        "SMB": 11.49040127736866,
+        "HML": 1.3711183321596054,
+        "RMW": -2.211403845748147,
+        "CMA": 0.5953522864132474,
+        "Mom": -3.9782558418143594
+      },
+      "mean_excess_bp_per_month": 102.13169343424035,
+      "t_raw": 2.1149060216292455,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.06691447479255001,
+      "sharpe_annual": 0.5287265054073114,
+      "ann_excess_pct": 12.968226082220657,
+      "mde_bp_per_month_80pct_power": 135.31239784464952,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.3256929938029867,
+          "capm_alpha_bp_per_month": -42.5765031827365,
+          "capm_alpha_t_nw4": -1.4227742033596749,
+          "mean_excess_bp_per_month": 169.16558218563114,
+          "t_raw": 2.376266363534716
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.4512431069259975,
+          "capm_alpha_bp_per_month": -44.2534897050446,
+          "capm_alpha_t_nw4": -1.5446435420224296,
+          "mean_excess_bp_per_month": 85.53742055927665,
+          "t_raw": 1.1286949661529755
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.2474370134417732,
+          "capm_alpha_bp_per_month": -94.39139879339515,
+          "capm_alpha_t_nw4": -1.510656209901984,
+          "mean_excess_bp_per_month": 38.509568360186435,
+          "t_raw": 0.3649279504138175
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 134.83333333333334,
+        "std": 73.74147094764123,
+        "p10": 59.0,
+        "p50": 124.0,
+        "p90": 228.40000000000003
+      }
+    },
+    "any_sell__ew": {
+      "label": "any_sell__ew__tradable",
+      "capm_beta": 1.1640434038799026,
+      "capm_beta_t": 32.52823310760002,
+      "capm_alpha_bp_per_month": -27.741471687134254,
+      "capm_alpha_t_ols": -1.9615696202787969,
+      "capm_alpha_t_nw6": -2.0734649379395633,
+      "capm_r2": 0.8832963307729196,
+      "ff6_alpha_bp_per_month": -8.655663640253549,
+      "ff6_alpha_t_nw6": -1.2937268563595397,
+      "ff6_loadings": {
+        "Mkt-RF": 1.0355907381687466,
+        "SMB": 0.6244557585562598,
+        "HML": 0.005644717726410092,
+        "RMW": -0.08040589787528474,
+        "CMA": -0.09259674061975325,
+        "Mom": 0.061059579833196764
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 47.73446261922298,
+        "SMB": 21.692476673621915,
+        "HML": 0.15832024462501235,
+        "RMW": -1.5457669636348266,
+        "CMA": -2.3606749533714453,
+        "Mom": 3.3205489728386794
+      },
+      "mean_excess_bp_per_month": 113.99620532661497,
+      "t_raw": 2.862657632736242,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05517871707404231,
+      "sharpe_annual": 0.7156644081840604,
+      "ann_excess_pct": 14.570665626665136,
+      "mde_bp_per_month_80pct_power": 111.58070866471844,
+      "powered_for_observed_effect": true,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.1274792509391114,
+          "capm_alpha_bp_per_month": -10.239356922501196,
+          "capm_alpha_t_nw4": -0.5898238313403743,
+          "mean_excess_bp_per_month": 169.84367053513006,
+          "t_raw": 2.8643319069090003
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.1608000202069888,
+          "capm_alpha_bp_per_month": -31.723038607690512,
+          "capm_alpha_t_nw4": -1.8325005678623338,
+          "mean_excess_bp_per_month": 72.0922977329149,
+          "t_raw": 1.2642480123299418
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.1892768094692252,
+          "capm_alpha_bp_per_month": -39.954321172927244,
+          "capm_alpha_t_nw4": -1.2710714424508436,
+          "mean_excess_bp_per_month": 86.75030317976633,
+          "t_raw": 0.9624044199476847
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 480.3541666666667,
+        "std": 203.2541533956941,
+        "p10": 212.70000000000002,
+        "p50": 514.5,
+        "p90": 741.0
+      }
+    },
+    "no_insider_activity__ew": {
+      "label": "no_insider_activity__ew__tradable",
+      "capm_beta": 1.2253897344360343,
+      "capm_beta_t": 31.932455776332056,
+      "capm_alpha_bp_per_month": -42.41949296764918,
+      "capm_alpha_t_ols": -2.614697487308733,
+      "capm_alpha_t_nw6": -2.661767771468549,
+      "capm_r2": 0.8643839316125255,
+      "ff6_alpha_bp_per_month": -11.917974801419415,
+      "ff6_alpha_t_nw6": -2.779994047357041,
+      "ff6_loadings": {
+        "Mkt-RF": 1.018225154151173,
+        "SMB": 0.7028280132136472,
+        "HML": 0.042901216566456846,
+        "RMW": -0.17615964811102724,
+        "CMA": -0.01738889011766656,
+        "Mom": -0.0625107182877167
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 83.61637796003802,
+        "SMB": 28.532692691420266,
+        "HML": 1.6954172508364922,
+        "RMW": -3.982228196588317,
+        "CMA": -0.3875195218898935,
+        "Mom": -4.990374096374551
+      },
+      "mean_excess_bp_per_month": 106.78791099731333,
+      "t_raw": 2.5199746516060553,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.05871871365487206,
+      "sharpe_annual": 0.6299936629015138,
+      "ann_excess_pct": 13.594636596933519,
+      "mde_bp_per_month_80pct_power": 118.73918113571906,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 1.2623750974874435,
+          "capm_alpha_bp_per_month": -21.73306233280696,
+          "capm_alpha_t_nw4": -1.1521498488814021,
+          "mean_excess_bp_per_month": 179.89577398795836,
+          "t_raw": 2.713675489494895
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 1.2130857880327675,
+          "capm_alpha_bp_per_month": -39.181265212506844,
+          "capm_alpha_t_nw4": -2.1871916526872957,
+          "mean_excess_bp_per_month": 69.31021213272403,
+          "t_raw": 1.1518657667829033
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 1.1985684459806725,
+          "capm_alpha_bp_per_month": -72.55510930446303,
+          "capm_alpha_t_nw4": -1.8660275338681227,
+          "mean_excess_bp_per_month": 55.1394387602132,
+          "t_raw": 0.5935757804632036
+        }
+      },
+      "eras_same_sign": true,
+      "names_per_month": {
+        "n": 192,
+        "mean": 1402.84375,
+        "std": 271.36645990768136,
+        "p10": 1092.4,
+        "p50": 1372.5,
+        "p90": 1759.4
+      }
+    },
+    "opp_minus_routine__ew": {
+      "label": "opp_minus_routine__ew__tradable",
+      "capm_beta": 0.048271475248119824,
+      "capm_beta_t": 0.5158608735948733,
+      "capm_alpha_bp_per_month": 1.4662402793013054,
+      "capm_alpha_t_ols": 0.04244479224627784,
+      "capm_alpha_t_nw6": 0.0406051923226307,
+      "capm_r2": 0.002449575798911807,
+      "ff6_alpha_bp_per_month": 10.383701490125743,
+      "ff6_alpha_t_nw6": 0.2987858357634773,
+      "ff6_loadings": {
+        "Mkt-RF": 0.06928636840849778,
+        "SMB": -0.2639266377579059,
+        "HML": -0.029483230887325296,
+        "RMW": -0.26711657439617875,
+        "CMA": -0.2613719531524933,
+        "Mom": -0.0006162864093510051
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 0.7215906462702086,
+        "SMB": -1.7631257521114854,
+        "HML": -0.1261293826822144,
+        "RMW": -1.2011743346452912,
+        "CMA": -0.8177478237502838,
+        "Mom": -0.0056351498694608895
+      },
+      "mean_excess_bp_per_month": 7.328974399054512,
+      "t_raw": 0.22130569245393072,
+      "n_months": 154,
+      "n_effective": 154,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.041097081346437386,
+      "sharpe_annual": 0.06177643574990476,
+      "ann_excess_pct": 0.8830307180099473,
+      "mde_bp_per_month_80pct_power": 92.79375527326613,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2024-12-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 64,
+          "capm_beta": -0.1519011471023447,
+          "capm_alpha_bp_per_month": 6.883063204287923,
+          "capm_alpha_t_nw4": 0.163240788930585,
+          "mean_excess_bp_per_month": -18.534704360481108,
+          "t_raw": -0.5183120921180903
+        },
+        "2015-2019": {
+          "n_months": 53,
+          "capm_beta": 0.14879680010726193,
+          "capm_alpha_bp_per_month": 61.940253215599206,
+          "capm_alpha_t_nw4": 0.9520697153563599,
+          "mean_excess_bp_per_month": 74.57610793016245,
+          "t_raw": 1.1845998879173303
+        },
+        "2020-2024": {
+          "n_months": 37,
+          "capm_beta": 0.19726830414765067,
+          "capm_alpha_bp_per_month": -62.88864858152503,
+          "capm_alpha_t_nw4": -0.9120316751241384,
+          "mean_excess_bp_per_month": -44.26082658847092,
+          "t_raw": -0.5273946009112908
+        }
+      },
+      "eras_same_sign": false
+    },
+    "buy_minus_sell__ew": {
+      "label": "buy_minus_sell__ew__tradable",
+      "capm_beta": 0.1509990441141012,
+      "capm_beta_t": 4.006869181256347,
+      "capm_alpha_bp_per_month": -30.250642231409184,
+      "capm_alpha_t_ols": -1.739567737106378,
+      "capm_alpha_t_nw6": -1.7630842796400517,
+      "capm_r2": 0.07769145017027723,
+      "ff6_alpha_bp_per_month": -8.989220637753304,
+      "ff6_alpha_t_nw6": -0.6798586690917439,
+      "ff6_loadings": {
+        "Mkt-RF": -0.0017200184062347162,
+        "SMB": 0.243959762370036,
+        "HML": 0.07223789830285354,
+        "RMW": -0.12735883148773663,
+        "CMA": 0.16200959129961823,
+        "Mom": -0.20043456580410624
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": -0.04733539955795301,
+        "SMB": 3.3482896599090632,
+        "HML": 1.1194072990916988,
+        "RMW": -1.278409714628353,
+        "CMA": 1.5773011420763097,
+        "Mom": -5.502748112903584
+      },
+      "mean_excess_bp_per_month": -11.86451189237462,
+      "t_raw": -0.6811727542041808,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.024134773186701108,
+      "sharpe_annual": -0.1702931885510452,
+      "ann_excess_pct": -1.4144874735891433,
+      "mde_bp_per_month_80pct_power": 48.80459783109401,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.19821374286387572,
+          "capm_alpha_bp_per_month": -32.33714626023537,
+          "capm_alpha_t_nw4": -1.2909308139265794,
+          "mean_excess_bp_per_month": -0.6780883494988295,
+          "t_raw": -0.0310157587419865
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.2904430867190084,
+          "capm_alpha_bp_per_month": -12.530451097354085,
+          "capm_alpha_t_nw4": -0.6577246295385684,
+          "mean_excess_bp_per_month": 13.44512282636176,
+          "t_raw": 0.4650857456782676
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.05816020397254686,
+          "capm_alpha_bp_per_month": -54.43707762046782,
+          "capm_alpha_t_nw4": -1.291570699858044,
+          "mean_excess_bp_per_month": -48.240734819579885,
+          "t_raw": -1.2077452579623533
+        }
+      },
+      "eras_same_sign": true
+    },
+    "buy_minus_noactivity__ew": {
+      "label": "buy_minus_noactivity__ew__tradable",
+      "capm_beta": 0.08965271355796998,
+      "capm_beta_t": 2.9556163063205445,
+      "capm_alpha_bp_per_month": -15.572620950894363,
+      "capm_alpha_t_ols": -1.0766433896994654,
+      "capm_alpha_t_nw6": -1.1461406437339026,
+      "capm_r2": 0.041155737662295744,
+      "ff6_alpha_bp_per_month": -5.726909476587418,
+      "ff6_alpha_t_nw6": -0.43003052684025045,
+      "ff6_loadings": {
+        "Mkt-RF": 0.01564556561133834,
+        "SMB": 0.1655875077126483,
+        "HML": 0.03498139946280626,
+        "RMW": -0.03160508125199454,
+        "CMA": 0.08680174079753195,
+        "Mom": -0.07686426768319346
+      },
+      "ff6_loading_t_nw6": {
+        "Mkt-RF": 0.5399715874025661,
+        "SMB": 2.4113461399336846,
+        "HML": 0.6783112463575728,
+        "RMW": -0.34281505664555106,
+        "CMA": 0.7822658594313789,
+        "Mom": -2.1566321709480643
+      },
+      "mean_excess_bp_per_month": -4.656217563072966,
+      "t_raw": -0.32770268318006485,
+      "n_months": 192,
+      "n_effective": 192,
+      "n_effective_unit": "MONTHS (date blocks), never name-days",
+      "sd_monthly": 0.019688103404159194,
+      "sharpe_annual": -0.08192567079501621,
+      "ann_excess_pct": -0.5573174222187283,
+      "mde_bp_per_month_80pct_power": 39.81267863028631,
+      "powered_for_observed_effect": false,
+      "window": [
+        "2009-02-28",
+        "2025-01-31"
+      ],
+      "eras": {
+        "2009-2014": {
+          "n_months": 71,
+          "capm_beta": 0.0633178963155429,
+          "capm_alpha_bp_per_month": -20.843440849929493,
+          "capm_alpha_t_nw4": -1.0458014542929563,
+          "mean_excess_bp_per_month": -10.730191802327168,
+          "t_raw": -0.7150631855439501
+        },
+        "2015-2019": {
+          "n_months": 60,
+          "capm_beta": 0.23815731889322964,
+          "capm_alpha_bp_per_month": -5.07222449253771,
+          "capm_alpha_t_nw4": -0.271552158044516,
+          "mean_excess_bp_per_month": 16.22720842655261,
+          "t_raw": 0.6568331645570489
+        },
+        "2020-2024": {
+          "n_months": 60,
+          "capm_beta": 0.048868567461099494,
+          "capm_alpha_bp_per_month": -21.836289488931993,
+          "capm_alpha_t_nw4": -0.691139174293907,
+          "mean_excess_bp_per_month": -16.629870400026768,
+          "t_raw": -0.4901031446526744
+        }
+      },
+      "eras_same_sign": true
+    }
+  }
+}

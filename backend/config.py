@@ -1843,6 +1843,40 @@ LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
     "deepseek-chat": {"in": 0.169413, "cached_in": 0.00338826, "out": 1.284835},
     "deepseek-reasoner": {"in": 0.169413, "cached_in": 0.00338826,
                           "out": 1.284835},
+    # ── FREE TIER (2026-09-07). Zeros, and in THIS table on purpose. ────────
+    # A free model is not "no price"; it is a price of zero, and the difference
+    # decides what a total means. `llm_telemetry.price_call` returns None for a
+    # model it cannot find, callers treat None as "unpriced, this total is a
+    # LOWER BOUND", and a free call left out of the table would therefore make
+    # every spend figure it touched unreadable. A row of zeros keeps the token
+    # count, keeps the accounting, and makes the spend line read $0.00 — which
+    # is a LINE. An absent line and a $0.00 line look identical in a summary and
+    # mean opposite things.
+    #
+    # A second "free models" list beside this one would be two tables answering
+    # one question, which is roadmap X7's complaint. So `free_inference.
+    # is_free_model` DERIVES freeness from these zeros instead of declaring it.
+    #
+    # NVIDIA NIM free tier — the twelve models that actually SERVED this account
+    # on 2026-09-07 (81 were listed; the catalogue is not the grant). Receipt:
+    # backend/data/optimus/free_inference_2026-09-07/L1_nim_probe.json
+    "openai/gpt-oss-20b": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "nvidia/nemotron-3.5-lightning-30b-a3b": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "nvidia/nemotron-3-super-120b-a12b": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "nvidia/nemotron-3-ultra-550b-a55b": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "nvidia/ising-calibration-1.5-31b": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "nvidia/nemotron-3.5-content-safety": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "meta/muse-glimmer-30b": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "minimaxai/minimax-m3": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "moonshotai/kimi-k3": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "google/gemma-4-31b-it": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    "poolside/laguna-xs-2.1": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    # On-box llama.cpp. The electricity is real and is NOT metered per token;
+    # the honest per-token price is zero and the real cost is WALL CLOCK, which
+    # `local_review` reports beside the dollars rather than pretending into here.
+    "local": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+
     # Anthropic — used by llm_analyzer/copilot when ANTHROPIC_API_KEY is set.
     "claude-opus-5": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
     "claude-opus-4-8": {"in": 5.00, "cached_in": 0.50, "out": 25.00},
@@ -2248,3 +2282,178 @@ PI_PRICE_FETCH_END_OFFSET_DAYS = 1
 #: to work out which records were meant; the row is served on every poll, so
 #: the list is capped rather than unbounded.
 LEDGER_HEALTH_MAX_NAMED_OVERDUE = 20
+
+
+# ── H1: the candidate surface (read-only) ────────────────────────────────────
+# Roadmap `ROADMAP_2026-09-07_TWO_MODES_AMENDMENT.md` §2 H1. Mode A is Murat
+# deciding with the machine beside him; the machine's candidate list has lived
+# on disk as JSONL since 2026-09-03 with no way to look at it. These constants
+# name every path and every threshold the `/api/candidates/*` router reads, so
+# a deployment can move them without editing a router.
+#
+# READ-ONLY BY CONSTRUCTION: nothing under this heading is ever opened for
+# write. `backend/tests/test_candidates_router.py` proves it two ways (an HTTP
+# method audit and a source scan).
+
+#: Stamped into every candidate-surface response so a screenshot is datable.
+CANDIDATE_SURFACE_VERSION = "candidate_surface_v1/2026-09-07"
+
+#: One scorecard per observable company-vintage, written by
+#: `learner/potential_universe.py` via `scripts/potential_universe_run.py`.
+#: Line 1 is the header, lines 2..N are scorecards.
+CANDIDATE_POTENTIAL_UNIVERSE_DIR = OPTIMUS_LEDGER_DIR / "potential_universe"
+
+#: `learner/allocator.py` decision artefacts, `<day>_<personality>.json`.
+CANDIDATE_DECISION_ARTIFACT_DIR = OPTIMUS_LEDGER_DIR / "decision_artifacts"
+
+#: The EXECUTION repo's state directory. The website backend cannot see it from
+#: a container (grounding report A.5 gap 9), so it is an env var with a local
+#: default rather than a hardcoded path: absent ⇒ the tracker legs report
+#: NOT_REACHABLE instead of pretending the watchlist is empty. H5 replaces this
+#: with a synced directory; until then this is the only bridge.
+TERMINAL_STATE_DIR = Path(
+    os.getenv("AEGIS_TERMINAL_STATE_DIR",
+              str(Path.home() / "aegis-alpha-terminal" / "state")))
+
+#: Whole-market tracker watchlist: `<day>.jsonl` day files plus `latest.json`
+#: (schema `tracker-1`: summary + candidates).
+CANDIDATE_TRACKER_DIR = TERMINAL_STATE_DIR / "tracker"
+
+#: A vintage this many US WEEKDAYS behind today is FRESH; older is STALE.
+#: Weekdays, not calendar days, because the nightly job follows the tape: on a
+#: Monday the newest honest vintage is Friday's, and a calendar-day rule would
+#: paint every Monday red. That is the "a gate that cannot go green is a broken
+#: gate" lesson applied before the gate ships. No holiday calendar is consulted,
+#: so a vintage the day after a market holiday reads STALE by one day — a false
+#: alarm is the safe side of this particular error.
+CANDIDATE_VINTAGE_FRESH_MAX_AGE_WEEKDAYS = 1
+
+#: Page size ceiling for a candidate-list request. 3,056 scorecards at ~2 kB
+#: each is a 6 MB response; the page pages instead.
+CANDIDATE_PAGE_DEFAULT_LIMIT = 100
+CANDIDATE_PAGE_MAX_LIMIT = 500
+
+#: In-memory parse cache: how many distinct (path, mtime, size) artefacts to
+#: hold. Four artefacts × a couple of vintages; the cache is a dict, not a
+#: database (CLAUDE.md: "no database — this is a stateless API").
+CANDIDATE_CACHE_MAX_ENTRIES = 8
+
+
+# ── R6 / MODE A: the human loop (H2 · T2/H4 · H5) ────────────────────────────
+# `ROADMAP_2026-09-07_TWO_MODES_AMENDMENT.md` §2 H and T. Mode A (Murat decides,
+# the machine assists) and Mode B (the machine decides, Murat audits) are ONE
+# system at two authority levels, and Mode A is how Mode B gets its labels.
+# Every constant the journal bridge, the decision log, the four-counterfactual
+# grader and the terminal-state reader read lives here, never in a service file.
+
+#: Stamped onto every human-loop response and every stored row, so a screenshot
+#: and a JSONL line can both be dated and re-derived.
+HUMAN_LOOP_VERSION = "human_loop_v1/2026-09-08"
+
+#: Append-only storage for Mode A. JSONL files, not a table: CLAUDE.md forbids
+#: adding a database, and the immutable `personal_decisions` table already owns
+#: the conviction log. These files are the THESIS and the GRADE that hang off it.
+HUMAN_LOOP_DIR = DATA_DIR / "human_loop"
+HUMAN_THESIS_LOG = HUMAN_LOOP_DIR / "human_theses.jsonl"
+HUMAN_BOOK_LOG = HUMAN_LOOP_DIR / "human_book_entries.jsonl"
+DECISION_LOG_PATH = HUMAN_LOOP_DIR / "decision_log.jsonl"
+DECISION_GRADE_LOG_PATH = HUMAN_LOOP_DIR / "decision_grades.jsonl"
+
+#: The author, and therefore the brain name. `alpha/human.py::Thesis.brain`
+#: derives `human:<author>`; this constant exists so the string is declared once
+#: and a test can assert the sealed row carries exactly it.
+HUMAN_THESIS_AUTHOR = "murat"
+HUMAN_BOOK_BRAIN = f"human:{HUMAN_THESIS_AUTHOR}"
+
+#: The generator name written into a pre-open prediction-book row (schema
+#: `prediction-book-3`, `state/predictions/<day>.json`). The execution repo's
+#: rows carry `generator: "murat_rule_v1"`; a HUMAN row carries the brain.
+HUMAN_BOOK_GENERATOR = HUMAN_BOOK_BRAIN
+
+#: LOSS BUDGETS (invariant 19: declared before the first position). Keyed by the
+#: `loss_budget_ref` a thesis must name. Values are the roadmap's F table — the
+#: number of positions the book is JUDGED at and how many it EXPECTS to lose —
+#: so "an idea is retired by its book's scoreboard, never by its own first loss"
+#: is a lookup instead of an argument. `human_v1` is hack5, the HUMAN BOOK.
+LOSS_BUDGETS: dict[str, dict] = {
+    "human_v1": {"book": "hack5", "positions_judged": 20, "expected_losers": 8,
+                 "note": "the HUMAN BOOK (roadmap F, hack5). Judged per journal "
+                         "row; the 20 here is also the no-P&L-claim gate."},
+    "event_v1": {"book": "hack2", "positions_judged": 40, "expected_losers": 24,
+                 "note": "EVENT / day book, 1-3 sessions, min hold 0 BY DECLARATION."},
+    "thesis_3m_v1": {"book": "hack3", "positions_judged": 20, "expected_losers": 8,
+                     "note": "3-MONTH HOLD book, 63 sessions / 21 min hold."},
+    "thesis_6m_v1": {"book": "hack4", "positions_judged": 15, "expected_losers": 6,
+                     "note": "6-MONTH HOLD book, 126 sessions / 42 min hold."},
+    "ensemble_v1": {"book": "hack6", "positions_judged": 100, "expected_losers": 50,
+                    "note": "ENSEMBLE broad book, 42 sessions / 21 min hold."},
+}
+
+#: Default hold shape for a journal row that does not name one. A DEFAULT, not a
+#: silent one: the bridge stamps `horizon_source` so a row that took the default
+#: is distinguishable from a row that declared 21 on purpose.
+HUMAN_DEFAULT_HORIZON_SESSIONS = 21
+HUMAN_DEFAULT_MIN_HOLD_SESSIONS = 5
+HUMAN_DEFAULT_LOSS_BUDGET_REF = "human_v1"
+
+#: Sessions between scheduled reviews — the second counterfactual's clock.
+#: 21 sessions ≈ one month, matching hack3/hack6's declared monthly review.
+HUMAN_REVIEW_CADENCE_SESSIONS = 21
+
+#: THE HONESTY GATE. Under this many GRADED rows (four counterfactuals each) the
+#: surface reports PROCESS metrics only and says "a receipt, not a result".
+#: Roadmap §2 H gate.
+DECISION_LOG_MIN_GRADED_ROWS_FOR_PNL_CLAIM = 20
+
+#: Counterfactual price sources, TRIED IN THIS ORDER, and every answer names the
+#: one that served it. The `market` benchmark account (PA3I7VTCC0BM, contract
+#: PASSIVE_BETA_v1) holds SPY and its keys are NOT in this .env, so the SPY leg
+#: is computed from PRICE DATA and must say so. A source that cannot answer
+#: yields NOT_AVAILABLE with a reason — never 0.0, which reads as "flat" and is
+#: the difference between "SPY did nothing" and "we never asked".
+COUNTERFACTUAL_PRICE_SOURCES = (
+    "terminal_state_mirror",   # H5 mirror of the execution repo's marks
+    "conviction_prices_csv",   # backend/data/conviction_prices.csv (offline)
+    "yfinance_live",           # network; refused inside the fast suite
+)
+
+#: The benchmark the fourth counterfactual is measured against, and the account
+#: that holds it in paper. The account is named for provenance only — no key for
+#: it exists in this environment and nothing here tries to reach it.
+COUNTERFACTUAL_BENCHMARK_SYMBOL = "SPY"
+COUNTERFACTUAL_BENCHMARK_ACCOUNT = "PA3I7VTCC0BM"
+COUNTERFACTUAL_BENCHMARK_CONTRACT = "PASSIVE_BETA_v1"
+
+#: Free-inference backends for the 2-4 sentence reflection, in order. DeepSeek is
+#: NOT in this tuple and a test asserts it never enters: the reflection is a
+#: nice-to-have on a ~$9 balance reserved for the era replay.
+DECISION_REFLECTION_BACKENDS = ("local_gguf", "nvidia_nim")
+DECISION_REFLECTION_MAX_TOKENS = 220
+DECISION_REFLECTION_MIN_SENTENCES = 2
+DECISION_REFLECTION_MAX_SENTENCES = 4
+
+# ── H5: the terminal-state MIRROR (read-only) ────────────────────────────────
+#: Where the execution repo's artefacts are copied TO. The Docker backend mounts
+#: or ships this directory; it never sees `TERMINAL_STATE_DIR` itself.
+TERMINAL_MIRROR_DIR = DATA_DIR / "terminal_mirror"
+
+#: WHAT is mirrored. A whitelist, because `state/` is 2.4 GB and most of it is
+#: logs, caches and 16 MB of prediction books. Each entry is
+#: (relative path under state/, kind, max files kept). A directory not on this
+#: list is not synced and the receipt says how many were skipped.
+TERMINAL_MIRROR_ARTEFACTS: tuple[tuple[str, str, int], ...] = (
+    ("predictions/seals.jsonl", "seals", 1),
+    ("contracts", "contracts", 50),
+    ("autopsy", "autopsies", 30),
+    ("learning_report", "learning_reports", 30),
+    ("opportunity_recall", "opportunity_recall", 30),
+    ("refusal_regret.json", "refusals", 1),
+    ("fills.jsonl", "fills", 1),
+)
+
+#: Per-file ceiling for the mirror. `decisions.jsonl` is 18 MB and `fills.jsonl`
+#: 2.1 MB; a file over this is TRUNCATED FROM THE TAIL (newest lines) for a
+#: line-oriented artefact and SKIPPED for a JSON blob, and either way the
+#: receipt records which happened. A silently half-copied file is the failure
+#: this constant exists to make impossible.
+TERMINAL_MIRROR_MAX_BYTES = 8 * 1024 * 1024

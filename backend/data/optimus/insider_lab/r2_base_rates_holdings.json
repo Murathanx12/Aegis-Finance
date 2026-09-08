@@ -1,0 +1,22 @@
+{
+  "stage": "base_rates_holdings",
+  "source": "backend/data/optimus/sec_insider/parsed/*.parquet",
+  "open_market_purchase_rows": 761453,
+  "rows_with_usable_holding": 759084,
+  "share_missing_or_zero_holding": 0.0031111572217852324,
+  "trade_as_pct_of_post_trade_holding": {
+    "n": 759084,
+    "mean": 38.244085664475186,
+    "std": 6677.366522552572,
+    "p1": 3.1631967273718493e-06,
+    "p5": 1.9781395754994737e-05,
+    "p10": 0.00010567272312267124,
+    "p25": 0.0012559944392758473,
+    "p50": 0.009561748416696169,
+    "p75": 0.07613891521435233,
+    "p90": 0.3955147350455292,
+    "p95": 1.0,
+    "p99": 1.0
+  },
+  "note": "shares_owned_following is the reported holding AFTER the trade, so shares/owned_following is the share of the resulting stake that this trade bought. It is NOT a percent of net worth and it is missing or zero on the rows counted above."
+}

@@ -1,0 +1,111 @@
+{
+ "receipt": "L3_known_answer",
+ "written_at": "2026-09-08T04:54:06+00:00",
+ "backend": "local_gguf",
+ "model": "(backend default)",
+ "n_docs": 6,
+ "n_correct": 6,
+ "n_nulls": 2,
+ "n_nulls_correctly_refused": 2,
+ "graded": [
+  {
+   "doc_id": "plant_earnings",
+   "want_status": "OK",
+   "want_event_type": "EARNINGS",
+   "got_status": "OK",
+   "got_event_type": "EARNINGS",
+   "entity": "Zhongtai Semiconductor Ltd",
+   "direction": "POSITIVE",
+   "confidence": 0.9,
+   "quote": "third-quarter revenue rose 34% to 2.1 billion yuan, beating the company's own guidance of ",
+   "correct": true
+  },
+  {
+   "doc_id": "plant_merger",
+   "want_status": "OK",
+   "want_event_type": "MERGER_ACQUISITION",
+   "got_status": "OK",
+   "got_event_type": "MERGER_ACQUISITION",
+   "entity": "Marubishi Heavy Industries",
+   "direction": "UNCLEAR",
+   "confidence": 0.9,
+   "quote": "Marubishi Heavy Industries agreed to acquire the robotics division of Sanwa Precision for ",
+   "correct": true
+  },
+  {
+   "doc_id": "plant_guidance_cut",
+   "want_status": "OK",
+   "want_event_type": "GUIDANCE",
+   "got_status": "OK",
+   "got_event_type": "GUIDANCE",
+   "entity": "Nordlicht Automotive AG",
+   "direction": "NEGATIVE",
+   "confidence": 0.9,
+   "quote": "cut its full-year operating margin guidance to between 3.5% and 4.0%, from a previous rang",
+   "correct": true
+  },
+  {
+   "doc_id": "plant_management",
+   "want_status": "OK",
+   "want_event_type": "MANAGEMENT_CHANGE",
+   "got_status": "OK",
+   "got_event_type": "MANAGEMENT_CHANGE",
+   "entity": "Hanul Chemical",
+   "direction": "UNCLEAR",
+   "confidence": 0.8,
+   "quote": "Hanul Chemical said its chief executive, Park Jin-ho, will step down at the end of the mon",
+   "correct": true
+  },
+  {
+   "doc_id": "plant_null_weather",
+   "want_status": "REFUSED_NO_EVENT",
+   "want_event_type": "NO_EVENT",
+   "got_status": "REFUSED_NO_EVENT",
+   "got_event_type": "NO_EVENT",
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": true
+  },
+  {
+   "doc_id": "plant_null_recipe",
+   "want_status": "REFUSED_NO_EVENT",
+   "want_event_type": "NO_EVENT",
+   "got_status": "REFUSED_NO_EVENT",
+   "got_event_type": "NO_EVENT",
+   "entity": null,
+   "direction": null,
+   "confidence": null,
+   "quote": "",
+   "correct": true
+  }
+ ],
+ "throughput": {
+  "backend": "local_gguf",
+  "schema_version": 1,
+  "n_docs": 6,
+  "n_ok": 4,
+  "n_refusals": 2,
+  "by_status": {
+   "OK": 4,
+   "REFUSED_NO_EVENT": 2
+  },
+  "tokens_in": 2159,
+  "tokens_out": 470,
+  "wall_clock_s": 15.03,
+  "docs_per_hour": 1436.9,
+  "seconds_per_doc": 2.505,
+  "output_tokens_per_s": 31.3,
+  "cost_usd": 0.0,
+  "cost_usd_str": "$0.00",
+  "deepseek_counterfactual_usd": 0.00097,
+  "deepseek_counterfactual_str": "$0.0010",
+  "saved_usd": 0.00097,
+  "price_table": "backend.config.LLM_PRICE_PER_MTOK",
+  "note": "cost_usd is 0.00 because the backend is free-tier; the REAL cost of the local path is wall clock, which is why it is printed beside the dollars and not instead of them"
+ },
+ "n_provider_failures": 0,
+ "wall_clock_s": 15.03,
+ "verdict": "PASS"
+}

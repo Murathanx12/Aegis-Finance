@@ -1,0 +1,127 @@
+{
+ "quarter": "2020q3",
+ "zip_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\sec_insider\\raw\\2020q3_form345.zip",
+ "zip_bytes": 8765495,
+ "zip_members": {
+  "DERIV_HOLDING.tsv": 1534582,
+  "DERIV_TRANS.tsv": 3738203,
+  "FOOTNOTES.tsv": 26047071,
+  "insider_transactions_metadata.json": 37339,
+  "insider_transactions_readme.htm": 745509,
+  "NONDERIV_HOLDING.tsv": 1451344,
+  "NONDERIV_TRANS.tsv": 6709118,
+  "OWNER_SIGNATURE.tsv": 3440890,
+  "REPORTINGOWNER.tsv": 6218357,
+  "SUBMISSION.tsv": 4137616
+ },
+ "submissions": 39096,
+ "reporting_owner_rows": 43766,
+ "rows": 97694,
+ "orphan_transactions_no_submission": 0,
+ "transactions_with_no_reporting_owner": 0,
+ "trans_code_counts": {
+  "S": 22907,
+  "M": 18602,
+  "A": 18201,
+  "P": 7342,
+  "F": 5817,
+  "C": 3625,
+  "J": 2915,
+  "D": 1949,
+  "G": 1295,
+  "X": 246,
+  "I": 112,
+  "U": 70,
+  "L": 53,
+  "Z": 21,
+  "H": 13,
+  "W": 10,
+  "E": 8
+ },
+ "unknown_codes": [],
+ "filing_date_min": "2020-07-01",
+ "filing_date_max": "2020-09-30",
+ "distinct_issuers": 4244,
+ "distinct_insiders": 21735,
+ "open_market_purchases": 9247,
+ "open_market_sales": 11689,
+ "plan_10b5_1_counts": {
+  "UNKNOWN": 73891,
+  "YES": 23803
+ },
+ "plan_10b5_1_source_counts": {
+  "ABSENT": 73891,
+  "FOOTNOTE_TEXT": 23803
+ },
+ "trans_class_counts": {
+  "OPEN_MARKET_SALE": 26462,
+  "OPTION_EXERCISE": 19249,
+  "GRANT_AWARD": 19021,
+  "OPEN_MARKET_PURCHASE": 11109,
+  "DERIVATIVE_CONVERSION": 7951,
+  "TAX_OR_EXERCISE_WITHHOLDING": 5827,
+  "OTHER": 4283,
+  "DISPOSITION_TO_ISSUER": 2098,
+  "GIFT": 1379,
+  "PLAN_DISCRETIONARY": 112,
+  "TENDER": 78,
+  "SMALL_ACQUISITION": 53,
+  "DERIVATIVE_EXPIRATION": 41,
+  "VOTING_TRUST": 21,
+  "INHERITANCE": 10
+ },
+ "observed_at_basis": "FILING_DATE_EOD_CONSERVATIVE",
+ "footnote_10b5_1_accessions": 5213,
+ "footnotes_scanned": true,
+ "pit_check": {
+  "rows_checked": 97694,
+  "violations": 0,
+  "future_dated_transactions": 3,
+  "future_dated_examples": [
+   {
+    "accession": "0001209191-20-051553",
+    "trans_date": "2021-09-21",
+    "filing_date": "2020-09-22"
+   },
+   {
+    "accession": "0001209191-20-049139",
+    "trans_date": "2020-09-10",
+    "filing_date": "2020-09-02"
+   },
+   {
+    "accession": "0001214659-20-007422",
+    "trans_date": "2020-12-17",
+    "filing_date": "2020-08-21"
+   }
+  ]
+ },
+ "fabrication_check": {
+  "rows_checked": 97694,
+  "violations": 0,
+  "implausible_dates": 0,
+  "implausible_date_examples": []
+ },
+ "link_counts": {
+  "crsp_stocknames_interval": 83759,
+  "REFUSED_TICKER_NOT_IN_CRSP": 13647,
+  "REFUSED_AMBIGUOUS_TICKER": 288
+ },
+ "link_rate": 0.8574,
+ "crsp_link_source": "crsp__stocknames.parquet rows=46108 vintage_end=2024-12-31",
+ "by_year": {
+  "2020": {
+   "rows": 97694,
+   "distinct_issuers": 3840,
+   "distinct_insiders": 21735,
+   "open_market_purchases": 9247,
+   "open_market_sales": 11689,
+   "rows_linked_to_permno": 83759,
+   "link_rate": 0.8574,
+   "link_refusals": {
+    "REFUSED_TICKER_NOT_IN_CRSP": 13647,
+    "REFUSED_AMBIGUOUS_TICKER": 288
+   }
+  }
+ },
+ "written_utc": "2026-09-07T10:37:47+00:00"
+}
