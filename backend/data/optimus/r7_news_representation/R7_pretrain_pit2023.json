@@ -1,0 +1,100 @@
+{
+ "slice": "pit2023",
+ "documents": 140669,
+ "vocab": 19339,
+ "epochs": 11,
+ "steps": 5995,
+ "batch": 256,
+ "device": "cuda",
+ "params": 5189003,
+ "docs_with_a_positive_partner": 140577,
+ "log": [
+  {
+   "epoch": 0,
+   "mlm_loss": 8.1022,
+   "contrastive_loss": 4.5474,
+   "contrastive_acc": 0.0959,
+   "elapsed_s": 62.6
+  },
+  {
+   "epoch": 1,
+   "mlm_loss": 6.6672,
+   "contrastive_loss": 3.6146,
+   "contrastive_acc": 0.2095,
+   "elapsed_s": 122.8
+  },
+  {
+   "epoch": 2,
+   "mlm_loss": 6.2116,
+   "contrastive_loss": 3.1836,
+   "contrastive_acc": 0.2757,
+   "elapsed_s": 182.6
+  },
+  {
+   "epoch": 3,
+   "mlm_loss": 5.8686,
+   "contrastive_loss": 2.8893,
+   "contrastive_acc": 0.3244,
+   "elapsed_s": 242.6
+  },
+  {
+   "epoch": 4,
+   "mlm_loss": 5.5689,
+   "contrastive_loss": 2.6569,
+   "contrastive_acc": 0.366,
+   "elapsed_s": 302.4
+  },
+  {
+   "epoch": 5,
+   "mlm_loss": 5.2783,
+   "contrastive_loss": 2.4474,
+   "contrastive_acc": 0.4033,
+   "elapsed_s": 362.2
+  },
+  {
+   "epoch": 6,
+   "mlm_loss": 5.0061,
+   "contrastive_loss": 2.2758,
+   "contrastive_acc": 0.4386,
+   "elapsed_s": 422.0
+  },
+  {
+   "epoch": 7,
+   "mlm_loss": 4.7494,
+   "contrastive_loss": 2.1276,
+   "contrastive_acc": 0.4698,
+   "elapsed_s": 481.9
+  },
+  {
+   "epoch": 8,
+   "mlm_loss": 4.5312,
+   "contrastive_loss": 1.9772,
+   "contrastive_acc": 0.5007,
+   "elapsed_s": 541.8
+  },
+  {
+   "epoch": 9,
+   "mlm_loss": 4.3383,
+   "contrastive_loss": 1.8511,
+   "contrastive_acc": 0.5266,
+   "elapsed_s": 601.7
+  },
+  {
+   "epoch": 10,
+   "mlm_loss": 4.1684,
+   "contrastive_loss": 1.7486,
+   "contrastive_acc": 0.5518,
+   "elapsed_s": 661.5
+  }
+ ],
+ "wall_clock_s": 661.6,
+ "docs_per_hour": 8419984.0,
+ "checkpoint": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\r7_news_representation\\encoder_pit2023.pt",
+ "cutoff_month_exclusive": "2023-01",
+ "unk_rate": 0.0346,
+ "objectives": [
+  "masked_token_reconstruction_15pct",
+  "same_company_contrastive_infonce_45d"
+ ],
+ "returns_read": false
+}

@@ -1,0 +1,4528 @@
+{
+ "job": "U_archetypes",
+ "lane": "U1/U2/U3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run_utc": "2026-09-08T10:17:43+00:00",
+ "llm_spend_usd": 0.0,
+ "declared_before_any_result": {
+  "k_grid": [
+   6,
+   8,
+   10,
+   12,
+   16,
+   20,
+   24
+  ],
+  "primary_horizon_days": 5,
+  "secondary_horizons_exploratory": [
+   1,
+   21
+  ],
+  "family_size": 10,
+  "rank_rule": "archetype size, descending",
+  "eras": {
+   "E1_2015H1-2016H1": [
+    "2015-01",
+    "2016-06"
+   ],
+   "E2_2016H2-2017H1": [
+    "2016-07",
+    "2017-06"
+   ],
+   "E3_2017H2-2018H2": [
+    "2017-07",
+    "2018-12"
+   ]
+  },
+  "plant_multiple_of_mde": 3.0,
+  "plant_n": 400,
+  "seed": 20260908
+ },
+ "corpus": {
+  "event_table_rows": 993005,
+  "rows_with_title_and_permno_2015_2024": 21841,
+  "distinct_permnos": 91,
+  "distinct_symbols": 91,
+  "year_counts": {
+   "2015": 3051,
+   "2016": 8093,
+   "2017": 8116,
+   "2018": 2580,
+   "2022": 1
+  },
+  "limit": "only rows with BOTH a headline and a CRSP permno are testable by this route; the corpus is the terminal repo's 156-symbol news pull, so it is mega-cap-tech-heavy and any positive result is a REGIME finding until the E-lane backfill widens it"
+ },
+ "frame": {
+  "n_events_with_forward_return": 21841,
+  "horizon_days": 5,
+  "entry_convention": "close of the first trading day STRICTLY AFTER observed_at_utc",
+  "abnormal_return": "raw - beta_pre * market (market model, alpha 0)",
+  "market": "Ken French daily Mkt-RF + RF (pinned vintage 2026-07-29)",
+  "beta": "learner/beta_panel.parquet beta_pre, last value <= entry",
+  "blocks": "calendar month of entry",
+  "block_range": [
+   "2015-02",
+   "2022-10"
+  ],
+  "n_blocks": 38,
+  "events_dropped_by_reason": {
+   "no_permno_in_dsf": 0,
+   "entry_past_end_of_tape": 0,
+   "forward_return_not_finite": 0,
+   "market_date_missing": 0,
+   "market_forward_not_finite": 0
+  },
+  "n_events_offered": 21841,
+  "n_nan_daily_returns_in_dsf_treated_as_zero": 12,
+  "silent_drop_note": "every dropped event is counted by reason; a silent drop is the house failure mode"
+ },
+ "embedder": "nvidia/nemotron-3-embed-1b (NIM, free, 2048-dim)",
+ "U1_k_selection": {
+  "grid": [
+   6,
+   8,
+   10,
+   12,
+   16,
+   20,
+   24
+  ],
+  "rows": [
+   {
+    "k": 6,
+    "silhouette": 0.08274501534212371,
+    "n_clusters_nonempty": 6,
+    "size_min": 1488,
+    "size_max": 5253
+   },
+   {
+    "k": 8,
+    "silhouette": 0.06992108652271176,
+    "n_clusters_nonempty": 8,
+    "size_min": 1196,
+    "size_max": 5138
+   },
+   {
+    "k": 10,
+    "silhouette": 0.06908334350180786,
+    "n_clusters_nonempty": 10,
+    "size_min": 753,
+    "size_max": 4159
+   },
+   {
+    "k": 12,
+    "silhouette": 0.09122394634898118,
+    "n_clusters_nonempty": 12,
+    "size_min": 958,
+    "size_max": 3337
+   },
+   {
+    "k": 16,
+    "silhouette": 0.10486599076831163,
+    "n_clusters_nonempty": 16,
+    "size_min": 690,
+    "size_max": 2545
+   },
+   {
+    "k": 20,
+    "silhouette": 0.11141692798344871,
+    "n_clusters_nonempty": 20,
+    "size_min": 223,
+    "size_max": 2099
+   },
+   {
+    "k": 24,
+    "silhouette": 0.10781549660924299,
+    "n_clusters_nonempty": 24,
+    "size_min": 223,
+    "size_max": 1633
+   }
+  ],
+  "best_k": 20,
+  "n_looked_at": 7,
+  "note": "every k in the grid is a cell LOOKED AT (invariant 16)"
+ },
+ "U1_chosen_k": 20,
+ "U3_known_answer": {
+  "gate": "U3_KNOWN_ANSWER",
+  "k": 20,
+  "seed": 20260908,
+  "n_rows": 22641,
+  "n_ids": 22641,
+  "checks": {
+   "planted_family_clustered": true,
+   "null_family_clustered": true,
+   "planted_separated_after_holm": true,
+   "null_reads_noise": true
+  },
+  "recoverability_arithmetic": {
+   "planted_share_of_corpus": 0.01766706417561062,
+   "mean_cluster_size": 1132.05,
+   "largest_cluster": 2241,
+   "smallest_nonempty_cluster": 411,
+   "note": "a family of n events can only reach purity_floor if k is fine enough for a cluster of about n to exist; a failed recovery at a coarse k is a statement about k, not about the embedder"
+  },
+  "plant_mode": "templates",
+  "passed": true,
+  "planted_recovery": {
+   "f1": 0.9864364981504316,
+   "clusters": [
+    0
+   ],
+   "purity": 0.9732360097323601,
+   "recall": 1.0,
+   "size": 411,
+   "cluster": 0,
+   "n_clusters_used": 1,
+   "per_cluster": [
+    {
+     "cluster": 0,
+     "purity": 0.9732360097323601,
+     "n_family_in_cluster": 400,
+     "size": 411
+    },
+    {
+     "cluster": 1,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1507
+    },
+    {
+     "cluster": 2,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1005
+    },
+    {
+     "cluster": 3,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1349
+    },
+    {
+     "cluster": 4,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 908
+    },
+    {
+     "cluster": 5,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1520
+    },
+    {
+     "cluster": 6,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 968
+    },
+    {
+     "cluster": 7,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 472
+    },
+    {
+     "cluster": 8,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 971
+    },
+    {
+     "cluster": 9,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 468
+    },
+    {
+     "cluster": 10,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 952
+    },
+    {
+     "cluster": 11,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1088
+    }
+   ],
+   "criterion": "best cluster-matching F1 >= 0.8",
+   "recovered": true
+  },
+  "null_recovery": {
+   "f1": 0.9216589861751151,
+   "clusters": [
+    9
+   ],
+   "purity": 0.8547008547008547,
+   "recall": 1.0,
+   "size": 468,
+   "cluster": 9,
+   "n_clusters_used": 1,
+   "per_cluster": [
+    {
+     "cluster": 9,
+     "purity": 0.8547008547008547,
+     "n_family_in_cluster": 400,
+     "size": 468
+    },
+    {
+     "cluster": 0,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 411
+    },
+    {
+     "cluster": 1,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1507
+    },
+    {
+     "cluster": 2,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1005
+    },
+    {
+     "cluster": 3,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1349
+    },
+    {
+     "cluster": 4,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 908
+    },
+    {
+     "cluster": 5,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1520
+    },
+    {
+     "cluster": 6,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 968
+    },
+    {
+     "cluster": 7,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 472
+    },
+    {
+     "cluster": 8,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 971
+    },
+    {
+     "cluster": 10,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 952
+    },
+    {
+     "cluster": 11,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1088
+    }
+   ],
+   "criterion": "best cluster-matching F1 >= 0.8",
+   "recovered": true
+  },
+  "planted_grade": {
+   "beta_mean_pre_event": 1.0,
+   "n_events": 411,
+   "n_blocks": 38,
+   "n_effective": 38.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 2.6303516500161823,
+   "raw_mean_pp": 2.6303516500161823,
+   "mkt_mean_pp": 0.0,
+   "ar_t_ew": 8.31472736382074,
+   "ar_se_pp": 0.31634851449987855,
+   "ar_mean_vw_pp": 2.630351650016183,
+   "ar_t_vw": 8.314727363820744,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.8862773219948556,
+   "powered_for_observed_effect": true,
+   "p_two_sided": 5.439744550475921e-10,
+   "horizon_days": 5,
+   "tail": {
+    "n": 411,
+    "top1pct_n": 5,
+    "top1pct_share_of_sum": 0.04847823270689387,
+    "block_t": 8.31472736382074,
+    "max_abs_t_change_dropping_one_block": 0.9304119022595447,
+    "most_influential_block": "2022-10",
+    "n_blocks": 38
+   }
+  },
+  "null_grade": {
+   "beta_mean_pre_event": 1.0,
+   "n_events": 468,
+   "n_blocks": 38,
+   "n_effective": 38.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.15293402122998692,
+   "raw_mean_pp": 0.15293402122998692,
+   "mkt_mean_pp": 0.0,
+   "ar_t_ew": 0.5824013922338719,
+   "ar_se_pp": 0.2625921285033158,
+   "ar_mean_vw_pp": 0.15293402122998698,
+   "ar_t_vw": 0.5824013922338722,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.7356742256077107,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.5638288386903417,
+   "horizon_days": 5,
+   "tail": {
+    "n": 468,
+    "top1pct_n": 5,
+    "top1pct_share_of_sum": 2.75219424017187,
+    "block_t": 0.5824013922338719,
+    "max_abs_t_change_dropping_one_block": 0.5396986750941072,
+    "most_influential_block": "2017-05",
+    "n_blocks": 38
+   }
+  },
+  "family_correction": {
+   "screen_bh_fdr": {
+    "method": "benjamini-hochberg (SCREEN)",
+    "fdr": 0.05,
+    "family_size": 10,
+    "adjusted": {
+     "planted": 5.439744550475921e-09,
+     "null": 0.8036410294018435,
+     "cluster_1": 0.9298959824376654,
+     "cluster_2": 0.13784760222777412,
+     "cluster_3": 0.9298959824376654,
+     "cluster_4": 0.8036410294018435,
+     "cluster_5": 0.8036410294018435,
+     "cluster_6": 0.13784760222777412,
+     "cluster_7": 0.8036410294018435,
+     "cluster_8": 0.8036410294018435
+    },
+    "survivors": [
+     "planted"
+    ],
+    "n_survivors": 1,
+    "best_adjusted_p": 5.439744550475921e-09,
+    "threshold": 5.439744550475921e-10,
+    "n_dropped_non_finite": 0,
+    "computed_by": "backend.strategy.multipletesting (Vibe-Trading, MIT)"
+   },
+   "export_holm": {
+    "method": "holm-bonferroni (EXPORT)",
+    "alpha": 0.05,
+    "family_size": 10,
+    "adjusted": {
+     "planted": 5.439744550475921e-09,
+     "cluster_2": 0.3108477230306958,
+     "cluster_6": 0.3308342453466579,
+     "cluster_5": 1.0,
+     "cluster_4": 1.0,
+     "null": 1.0,
+     "cluster_7": 1.0,
+     "cluster_8": 1.0,
+     "cluster_3": 1.0,
+     "cluster_1": 1.0
+    },
+    "survivors": [
+     "planted"
+    ],
+    "n_survivors": 1,
+    "best_adjusted_p": 5.439744550475921e-09,
+    "n_dropped_non_finite": 0,
+    "dropped_non_finite": []
+   },
+   "screened_not_exported": [],
+   "reading": "SCREEN=BH-FDR admits a known false-discovery fraction and is for deciding what to look at next; EXPORT=Holm controls the family-wise error and is what a claim leaving this repository is judged by. `screened_not_exported` is the gap between 'worth another look' and 'defensible'.",
+   "declared_family_size": 10,
+   "p_values_supplied": 10,
+   "family_size_matches_declaration": true
+  },
+  "planted_drift_pp": 2.471743437307249,
+  "null_drift_pp": 0.0,
+  "realised_plant": {
+   "planted_target_pp": 2.471743437307249,
+   "planted_realised_pp": 2.6284221763518225,
+   "planted_noise_mean_in_se": 0.5327601959102028,
+   "null_realised_pp": 0.05472419187412029,
+   "event_sd": 0.05881773460079655
+  },
+  "note": "a discovery pipeline that has never recovered a planted answer is not evidence of anything",
+  "sd_block_corpus": 0.01893342717638234,
+  "plant_sizing": {
+   "event_sd": 0.05881773460079655,
+   "n_events": 400,
+   "cluster_mde": 0.008239144791024163,
+   "multiple": 3.0,
+   "drift": 0.02471743437307249,
+   "basis": "(z_alpha+z_power) * event_sd / sqrt(n_events)"
+  }
+ },
+ "embedder_calls": {
+  "calls": 0,
+  "seconds": 0.0,
+  "retries": 0
+ },
+ "embedder_distinct_texts_cached": 16822,
+ "U1_stability": {
+  "k": 20,
+  "n_pairs": 10,
+  "ari_mean": 0.5402282522849584,
+  "ari_min": 0.48832336496751083,
+  "seeds": [
+   1,
+   2,
+   3,
+   4,
+   5
+  ],
+  "subsample": 0.8
+ },
+ "U1_cluster_sizes": {
+  "0": 679,
+  "1": 1060,
+  "2": 1089,
+  "3": 778,
+  "4": 295,
+  "5": 1737,
+  "6": 717,
+  "7": 1031,
+  "8": 223,
+  "9": 922,
+  "10": 1717,
+  "11": 1733,
+  "12": 735,
+  "13": 881,
+  "14": 1476,
+  "15": 1288,
+  "16": 602,
+  "17": 2049,
+  "18": 2099,
+  "19": 730
+ },
+ "U1_silhouette_at_chosen_k": 0.11141692798344871,
+ "U1_labels": {
+  "0": {
+   "top_terms": [
+    "wkly",
+    "jan16",
+    "dec16",
+    "sweep",
+    "ref",
+    "purchases",
+    "ask",
+    "huge"
+   ],
+   "label": "Options call sweeps activity",
+   "direction": "LONG",
+   "parse": "OK",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=OK)",
+   "raw_tail": "  \"Line 1: a short noun phrase of at most eight words naming what these headlines have in common.\" OK.\n   \"Line 2: exactly one of LONG, SHORT, UNCLEAR -- the direction you would expect the stock to drift over the next week.\" OK.\n   \"Line 3: one sentence saying why.\" OK.\n\n   I'll make sure line 3 doesn't accidentally name a company. It won't.\n\n   Final check of the over-represented terms: wkly, jan"
+  },
+  "1": {
+   "top_terms": [
+    "dramexchange",
+    "nand",
+    "ryzen",
+    "gpu",
+    "chips",
+    "amd's",
+    "digitimes",
+    "dram"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "ets, buy/hold ratings. The over-represented terms emphasize semiconductor/chip/memory sector.\n\n   If I have to pick a direction for \"the stock\" - but which stock? The cluster doesn't focus on one company. The instruction says \"the direction you would expect the stock to drift over the next week.\" It might mean the overall sector or the common stock being discussed. Since many headlines are about N"
+  },
+  "2": {
+   "top_terms": [
+    "rallied",
+    "hitting",
+    "then",
+    "three",
+    "days",
+    "highs",
+    "watching",
+    "four"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "cts me to deduce from the cluster. Maybe UNCLEAR because it's mixed? But I must pick exactly one. Let's think like a research assistant: the headlines are about what stocks to watch, not necessarily a unified directional bet. But the prompt says \"the direction you would expect the stock to drift over the next week.\" It might be asking about the general market drift implied by these headlines. Many"
+  },
+  "3": {
+   "top_terms": [
+    "rises",
+    "climbs",
+    "afternoon",
+    "slides",
+    "slide",
+    "jumps",
+    "crude",
+    "plummet"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "ps: \"Mixed-direction market updates\" - but that's 3 words, okay. But do they all have mixed direction? Yes, some say \"Surges\", some \"Declines\", some just \"Top Volume Stocks\" without direction. But the over-represented terms suggest the cluster includes both rises and slides.\n\n   Let's find the most accurate common noun phrase:\n   - All are \"market update headlines\"\n   - All focus on \"volume stocks"
+  },
+  "4": {
+   "top_terms": [
+    "patients",
+    "binimetinib",
+    "encorafenib",
+    "drug",
+    "corevalve",
+    "mutant",
+    "lung",
+    "melanoma"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "s span: patients, binimetinib, encorafenib, drug, corevalve, mutant, lung, melanoma. These are a mix of specific drug names, disease areas, and general medical terms. The headlines cover both Array BioPharma (melanoma drug data) and Medtronic (cardiac/lung devices/studies). \n\n   What if the common theme is \"Healthcare sector earnings & updates\"? But that's too generic.\n\n   Let me think differently"
+  },
+  "5": {
+   "top_terms": [
+    "adj",
+    "eps",
+    "gaap",
+    "est",
+    "rev",
+    "sales",
+    "fy15",
+    "fy16"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": " Loss $0.19 Vs Est Loss $0.21, Sales $42.9M Vs Est $40.05M -> Beat on both (better loss, higher sales)\n   - NVIDIA: Adj. EPS $0.34, GAAP EPS $0.05, Sales $1.153B vs $1.01B Est. -> Beat on all\n   - Kratos Defense: Adj. Loss $0.02/Share vs Loss $0.04/Share Est., Sales $160.5M vs $185.4M Est. -> Beat on loss, miss on sales\n\n   Overall pattern: Many beats on EPS/loss estimates, mixed on sales. But the"
+  },
+  "6": {
+   "top_terms": [
+    "scheduled",
+    "august",
+    "2015",
+    "earnings",
+    "november",
+    "february",
+    "2016",
+    "december"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "drift is implied.\n\n   Does Line 3 need to be exactly one sentence? Yes. It is.\n   Does Line 2 need to be just the word? The prompt says \"exactly one of LONG, SHORT, UNCLEAR -- the direction you would expect the stock to drift over the next week.\" I'll output just \"UNCLEAR\" on that line, as it says \"exactly one of [those]\". Sometimes they want the word alone. I'll put \"UNCLEAR\" on its own line.\n\n  "
+  },
+  "7": {
+   "top_terms": [
+    "maintains",
+    "rating",
+    "coverage",
+    "initiates",
+    "overweight",
+    "raises",
+    "equal",
+    "target"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "ford (dividend yield price justification).\n\n   Maybe the commonality is simply \"market analyst notes\" or \"stock ratings\". But I need to choose the best fitting short noun phrase.\n\n   Let's look at the over-represented terms again: maintains, rating, coverage, initiates, overweight, raises, equal, target. These are all terms describing analyst actions/ratings. The cluster likely represents \"analyst"
+  },
+  "8": {
+   "top_terms": [
+    "recap",
+    "option",
+    "alert",
+    "october",
+    "july",
+    "benzinga's",
+    "from",
+    "september"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "\n   Line 3: The recaps describe alert events without conveying directional stock expectations.\n\n   Check constraints:\n   - Line 1: short noun phrase, max 8 words. \"Option Alert Recap Series\" = 4 words. OK.\n   - Line 2: exactly one of LONG, SHORT, UNCLEAR. I have \"UNCLEAR\". OK.\n   - Line 3: one sentence saying why. OK.\n   - Do not name any specific company. OK. I didn't name Benzinga or any stock.\n"
+  },
+  "9": {
+   "top_terms": [
+    "initiations",
+    "benzinga's",
+    "top",
+    "downgrades",
+    "upgrades",
+    "january",
+    "april",
+    "premarket"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": " expect the stock to drift over the next week.\" If I must pick one of LONG/SHORT/UNCLEAR, and the data has a mix but leans positive due to upgrade frequency, I could argue LONG. But the instruction says \"exactly one of LONG, SHORT, UNCLEAR -- the direction you would expect the stock to drift over the next week.\" It's a judgment call. Given the explicit over-represented terms include \"downgrades\" ("
+  },
+  "10": {
+   "top_terms": [
+    "bears",
+    "barron's",
+    "jim",
+    "cramer",
+    "minutes",
+    "his",
+    "more",
+    "lululemon"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "ners\n   6. J.P. Morgan: Stop Buying HubSpot\n   7. NYSE welcomes Planet Fitness (direct listing?)\n   8. Breaking: Russia hacked Pentagon (cybersecurity/geopolitical)\n   9. After-hours movers (Zynga, Nvidia, Nuance, Monster Beverage)\n   10-11. Oppenheimer upgrades Box to Outperform\n   12. Morning market gainers (duplicate)\n\n   Commonality: They are all financial news items from a single day's market"
+  },
+  "11": {
+   "top_terms": [
+    "peek",
+    "futures",
+    "preview",
+    "economic",
+    "jobless",
+    "fed",
+    "claims",
+    "ahead"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "icipation of economic data and earnings\". The headlines indeed cover earnings reports, analyst upgrades, economic data releases (jobless claims), futures, etc.\n\n   A good noun phrase: \"Earnings & Economic Data\" or \"Market-Earnings & Data\". But max 8 words, so I can be slightly longer if needed. Let's aim for something precise: \"Earnings, Upgrades and Economic Data\" (4 words). Or \"Financial News: E"
+  },
+  "12": {
+   "top_terms": [
+    "thursday's",
+    "moving",
+    "friday's",
+    "pre",
+    "session",
+    "tuesday's",
+    "wednesday's",
+    "monday's"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": " assume it's one. So \"After-hours pre-market stock moves\" = 4 words if hyphenated counts as one, but to be safe, I'll use spaces. I'll just make it 5-6 words max.\n\n   Let's decide on: \"After-hours stock moves weekly\" (4 words). Or \"Daily stock moves after-hours\" (4 words). But the headlines are specifically about after-hours/pre-market across weekdays.\n\n   Maybe: \"Stocks moving after-hours weekly\""
+  },
+  "13": {
+   "top_terms": [
+    "eye",
+    "performing",
+    "keep",
+    "worst",
+    "industries",
+    "must",
+    "watch",
+    "2015"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "tries\" (4)\n   - \"Industries performance and watch\" (4)\n   - \"Market watch on industries\" (4)\n\n   I think \"Industries under market watch\" is good. Or \"Stocks watching industry trends\". But \"stocks\" might be too specific since some headlines are about industries themselves.\n\n   Let's look at the second line requirement: \"exactly one of LONG, SHORT, UNCLEAR -- the direction you would expect the stock"
+  },
+  "14": {
+   "top_terms": [
+    "crowd",
+    "vetr",
+    "unusual",
+    "options",
+    "can",
+    "cloud",
+    "salesforce",
+    "netapp"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "d carefully: \"Over-represented terms: crowd, vetr, unusual, options, can, cloud, salesforce, netapp\". This might mean that if I look at the headlines, these terms are over-represented, or they are the key themes I should use to identify the cluster. Maybe I need to identify which headlines contain these terms, and the commonality is something like \"options activity and analyst ratings\" or \"unusual"
+  },
+  "15": {
+   "top_terms": [
+    "nordstrom",
+    "penney",
+    "department",
+    "store",
+    "retailers",
+    "discount",
+    "macy's",
+    "retailer"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": " the over-represented terms: nordstrom, penney, department, store, retailers, discount, macy's, retailer. These are all retail/department store related. The phrase should capture that.\n\n   Proposed output:\n   Line 1: Department store earnings outlook\n   Line 2: UNCLEAR\n   Line 3: Most notes describe Q2 department store earnings as likely uneventful with mixed ratings, suggesting neutral short-term"
+  },
+  "16": {
+   "top_terms": [
+    "downgraded",
+    "underperform",
+    "downgrade",
+    "standpoint",
+    "neutral",
+    "perform",
+    "raymond",
+    "downgrades"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "ommonality.\n\n   Now Line 2: exactly one of LONG, SHORT, UNCLEAR -- the direction you would expect the stock to drift over the next week.\n   If headlines are mostly downgrades to neutral/perform, what's the expected drift? Downgrades typically suggest bearish or negative outlook, but \"neutral\" ratings often mean expected sideways/mixed performance. The over-represented terms include \"underperform\","
+  },
+  "17": {
+   "top_terms": [
+    "disclosed",
+    "terms",
+    "contract",
+    "kratos",
+    "million",
+    "saic",
+    "offering",
+    "presenters"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "sclosed, terms, contract, kratos, million, saic, offering, presenters. Perhaps the cluster is about \"Contract offerings and disclosures\" or something. But \"kratos\" and \"presenters\" don't fit well.\n\n   Maybe I should ignore the over-represented terms as just metadata, and focus on the actual content. The user says \"Over-represented terms: ...\" maybe to help me identify the common theme, or maybe it"
+  },
+  "18": {
+   "top_terms": [
+    "street's",
+    "chatter",
+    "believes",
+    "takeover",
+    "merger",
+    "mobile",
+    "reuters",
+    "qualcomm"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": " But I need a short noun phrase (max 8 words).\n\n   Let's list potential phrases:\n   - \"Analyst views on stock moves\" (5 words)\n   - \"Wall Street chatter on sectors\" (5 words)\n   - \"Near-term analyst sentiment\" (4 words)\n   - \"Sector rotation and deals\" (4 words)\n   - \"Market chatter on stocks\" (4 words)\n   - \"Analyst ratings and deals\" (4 words)\n   - \"Stock momentum and chatter\" (4 words)\n\n   Wait"
+  },
+  "19": {
+   "top_terms": [
+    "changes",
+    "biggest",
+    "yesterday",
+    "gainers",
+    "losers",
+    "thursday",
+    "friday",
+    "movers"
+   ],
+   "label": null,
+   "direction": "TWO_SIDED",
+   "parse": "NO_DIRECTION_TOKEN",
+   "source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "raw_tail": "y of stock movement for a day. The commonality is \"daily stock movement reports\" or simply \"market movers\". I'll choose \"Daily stock movers\" as it's concise and accurate.\n\n   But let's be precise. Maybe \"Midday stock gainers/losers\" - but some are price target changes. \"Price target changes and movers\" - too long. \"Daily stock performance rankings\" (4 words). \"Financial stock movement headlines\" ("
+  }
+ },
+ "U2_corpse_register": {
+  "source": "backend\\data\\signal_registry.yaml",
+  "n_closed_signals_in_registry": 14,
+  "n_corpses_built": 14,
+  "n_blocking": 11,
+  "closed_signals_without_a_feature_map": [],
+  "grade_to_verdict": {
+   "REJECTED": "REFUTED_IN_SCOPE",
+   "PERVERSE": "REFUTED_IN_SCOPE",
+   "SHELF": "NOT_DETECTABLE_IN_SCOPE"
+  }
+ },
+ "U2_hypotheses_emitted": [
+  {
+   "hypothesis_id": "U-ARCH-A18-h5",
+   "archetype_id": "A18",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A18"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 2099,
+   "member_ids": [
+    "EV-000016",
+    "EV-000028",
+    "EV-000065",
+    "EV-000129",
+    "EV-000135",
+    "EV-000153",
+    "EV-000156",
+    "EV-000157",
+    "EV-000176",
+    "EV-000177",
+    "EV-000179",
+    "EV-000186",
+    "EV-000192",
+    "EV-000194",
+    "EV-000197",
+    "EV-000201",
+    "EV-000203",
+    "EV-000209",
+    "EV-000210",
+    "EV-000216",
+    "EV-000219",
+    "EV-000255",
+    "EV-000292",
+    "EV-000298",
+    "EV-000302"
+   ],
+   "label": "street's/chatter/believes/takeover",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "street's",
+    "chatter",
+    "believes",
+    "takeover",
+    "merger",
+    "mobile",
+    "reuters",
+    "qualcomm"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A17-h5",
+   "archetype_id": "A17",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A17"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 2049,
+   "member_ids": [
+    "EV-000001",
+    "EV-000020",
+    "EV-000023",
+    "EV-000036",
+    "EV-000040",
+    "EV-000056",
+    "EV-000083",
+    "EV-000111",
+    "EV-000119",
+    "EV-000130",
+    "EV-000148",
+    "EV-000167",
+    "EV-000178",
+    "EV-000190",
+    "EV-000223",
+    "EV-000231",
+    "EV-000244",
+    "EV-000245",
+    "EV-000272",
+    "EV-000273",
+    "EV-000277",
+    "EV-000322",
+    "EV-000324",
+    "EV-000325",
+    "EV-000338"
+   ],
+   "label": "disclosed/terms/contract/kratos",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "disclosed",
+    "terms",
+    "contract",
+    "kratos",
+    "million",
+    "saic",
+    "offering",
+    "presenters"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A05-h5",
+   "archetype_id": "A05",
+   "family": "events/earnings",
+   "precursor": {
+    "all": [
+     {
+      "feature": "earnings_surprise_sue",
+      "op": "in_archetype",
+      "value": "A05"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1737,
+   "member_ids": [
+    "EV-000007",
+    "EV-000022",
+    "EV-000034",
+    "EV-000035",
+    "EV-000038",
+    "EV-000043",
+    "EV-000055",
+    "EV-000060",
+    "EV-000062",
+    "EV-000071",
+    "EV-000072",
+    "EV-000074",
+    "EV-000131",
+    "EV-000159",
+    "EV-000191",
+    "EV-000199",
+    "EV-000200",
+    "EV-000263",
+    "EV-000265",
+    "EV-000266",
+    "EV-000267",
+    "EV-000314",
+    "EV-000315",
+    "EV-000351",
+    "EV-000352"
+   ],
+   "label": "adj/eps/gaap/est",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "adj",
+    "eps",
+    "gaap",
+    "est",
+    "rev",
+    "sales",
+    "fy15",
+    "fy16"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A11-h5",
+   "archetype_id": "A11",
+   "family": "events/earnings",
+   "precursor": {
+    "all": [
+     {
+      "feature": "earnings_surprise_sue",
+      "op": "in_archetype",
+      "value": "A11"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1733,
+   "member_ids": [
+    "EV-000025",
+    "EV-000027",
+    "EV-000054",
+    "EV-000061",
+    "EV-000063",
+    "EV-000107",
+    "EV-000108",
+    "EV-000170",
+    "EV-000173",
+    "EV-000202",
+    "EV-000234",
+    "EV-000235",
+    "EV-000259",
+    "EV-000260",
+    "EV-000261",
+    "EV-000262",
+    "EV-000297",
+    "EV-000312",
+    "EV-000313",
+    "EV-000319",
+    "EV-000334",
+    "EV-000347",
+    "EV-000348",
+    "EV-000349",
+    "EV-000350"
+   ],
+   "label": "peek/futures/preview/economic",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "peek",
+    "futures",
+    "preview",
+    "economic",
+    "jobless",
+    "fed",
+    "claims",
+    "ahead"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A10-h5",
+   "archetype_id": "A10",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A10"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1717,
+   "member_ids": [
+    "EV-000000",
+    "EV-000002",
+    "EV-000003",
+    "EV-000037",
+    "EV-000048",
+    "EV-000051",
+    "EV-000066",
+    "EV-000069",
+    "EV-000075",
+    "EV-000087",
+    "EV-000088",
+    "EV-000100",
+    "EV-000120",
+    "EV-000134",
+    "EV-000166",
+    "EV-000171",
+    "EV-000172",
+    "EV-000187",
+    "EV-000188",
+    "EV-000189",
+    "EV-000211",
+    "EV-000233",
+    "EV-000284",
+    "EV-000285",
+    "EV-000286"
+   ],
+   "label": "bears/barron's/jim/cramer",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "bears",
+    "barron's",
+    "jim",
+    "cramer",
+    "minutes",
+    "his",
+    "more",
+    "lululemon"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A14-h5",
+   "archetype_id": "A14",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A14"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1476,
+   "member_ids": [
+    "EV-000005",
+    "EV-000032",
+    "EV-000044",
+    "EV-000067",
+    "EV-000076",
+    "EV-000079",
+    "EV-000128",
+    "EV-000136",
+    "EV-000218",
+    "EV-000224",
+    "EV-000243",
+    "EV-000246",
+    "EV-000247",
+    "EV-000249",
+    "EV-000256",
+    "EV-000269",
+    "EV-000270",
+    "EV-000278",
+    "EV-000293",
+    "EV-000311",
+    "EV-000345",
+    "EV-000383",
+    "EV-000385",
+    "EV-000433",
+    "EV-000434"
+   ],
+   "label": "crowd/vetr/unusual/options",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "crowd",
+    "vetr",
+    "unusual",
+    "options",
+    "can",
+    "cloud",
+    "salesforce",
+    "netapp"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A15-h5",
+   "archetype_id": "A15",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A15"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1288,
+   "member_ids": [
+    "EV-000029",
+    "EV-000082",
+    "EV-000089",
+    "EV-000090",
+    "EV-000091",
+    "EV-000102",
+    "EV-000103",
+    "EV-000104",
+    "EV-000109",
+    "EV-000110",
+    "EV-000132",
+    "EV-000147",
+    "EV-000149",
+    "EV-000150",
+    "EV-000158",
+    "EV-000160",
+    "EV-000161",
+    "EV-000162",
+    "EV-000163",
+    "EV-000164",
+    "EV-000165",
+    "EV-000174",
+    "EV-000175",
+    "EV-000184",
+    "EV-000185"
+   ],
+   "label": "nordstrom/penney/department/store",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "nordstrom",
+    "penney",
+    "department",
+    "store",
+    "retailers",
+    "discount",
+    "macy's",
+    "retailer"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A02-h5",
+   "archetype_id": "A02",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A02"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1089,
+   "member_ids": [
+    "EV-000052",
+    "EV-000058",
+    "EV-000068",
+    "EV-000077",
+    "EV-000124",
+    "EV-000125",
+    "EV-000137",
+    "EV-000138",
+    "EV-000145",
+    "EV-000155",
+    "EV-000182",
+    "EV-000196",
+    "EV-000204",
+    "EV-000215",
+    "EV-000227",
+    "EV-000238",
+    "EV-000239",
+    "EV-000240",
+    "EV-000252",
+    "EV-000275",
+    "EV-000276",
+    "EV-000321",
+    "EV-000327",
+    "EV-000331",
+    "EV-000344"
+   ],
+   "label": "rallied/hitting/then/three",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "rallied",
+    "hitting",
+    "then",
+    "three",
+    "days",
+    "highs",
+    "watching",
+    "four"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A01-h5",
+   "archetype_id": "A01",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A01"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1060,
+   "member_ids": [
+    "EV-000004",
+    "EV-000010",
+    "EV-000011",
+    "EV-000012",
+    "EV-000019",
+    "EV-000073",
+    "EV-000078",
+    "EV-000080",
+    "EV-000081",
+    "EV-000084",
+    "EV-000086",
+    "EV-000168",
+    "EV-000214",
+    "EV-000254",
+    "EV-000258",
+    "EV-000299",
+    "EV-000451",
+    "EV-000452",
+    "EV-000453",
+    "EV-000598",
+    "EV-000867",
+    "EV-000868",
+    "EV-000983",
+    "EV-001012",
+    "EV-001040"
+   ],
+   "label": "dramexchange/nand/ryzen/gpu",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "dramexchange",
+    "nand",
+    "ryzen",
+    "gpu",
+    "chips",
+    "amd's",
+    "digitimes",
+    "dram"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A07-h5",
+   "archetype_id": "A07",
+   "family": "analyst",
+   "precursor": {
+    "all": [
+     {
+      "feature": "analyst_target_upside",
+      "op": "in_archetype",
+      "value": "A07"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 1031,
+   "member_ids": [
+    "EV-000006",
+    "EV-000024",
+    "EV-000049",
+    "EV-000085",
+    "EV-000092",
+    "EV-000099",
+    "EV-000112",
+    "EV-000113",
+    "EV-000114",
+    "EV-000115",
+    "EV-000116",
+    "EV-000118",
+    "EV-000139",
+    "EV-000141",
+    "EV-000180",
+    "EV-000205",
+    "EV-000206",
+    "EV-000208",
+    "EV-000253",
+    "EV-000271",
+    "EV-000281",
+    "EV-000309",
+    "EV-000316",
+    "EV-000361",
+    "EV-000371"
+   ],
+   "label": "maintains/rating/coverage/initiates",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "maintains",
+    "rating",
+    "coverage",
+    "initiates",
+    "overweight",
+    "raises",
+    "equal",
+    "target"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A09-h5",
+   "archetype_id": "A09",
+   "family": "analyst",
+   "precursor": {
+    "all": [
+     {
+      "feature": "analyst_target_upside",
+      "op": "in_archetype",
+      "value": "A09"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 922,
+   "member_ids": [
+    "EV-000008",
+    "EV-000013",
+    "EV-000014",
+    "EV-000026",
+    "EV-000030",
+    "EV-000031",
+    "EV-000041",
+    "EV-000046",
+    "EV-000064",
+    "EV-000093",
+    "EV-000096",
+    "EV-000097",
+    "EV-000098",
+    "EV-000101",
+    "EV-000105",
+    "EV-000121",
+    "EV-000122",
+    "EV-000140",
+    "EV-000142",
+    "EV-000207",
+    "EV-000225",
+    "EV-000226",
+    "EV-000250",
+    "EV-000251",
+    "EV-000282"
+   ],
+   "label": "initiations/benzinga's/top/downgrades",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "initiations",
+    "benzinga's",
+    "top",
+    "downgrades",
+    "upgrades",
+    "january",
+    "april",
+    "premarket"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A13-h5",
+   "archetype_id": "A13",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A13"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 881,
+   "member_ids": [
+    "EV-000047",
+    "EV-000050",
+    "EV-000059",
+    "EV-000106",
+    "EV-000143",
+    "EV-000144",
+    "EV-000152",
+    "EV-000154",
+    "EV-000169",
+    "EV-000288",
+    "EV-000307",
+    "EV-000308",
+    "EV-000367",
+    "EV-000368",
+    "EV-000369",
+    "EV-000370",
+    "EV-000401",
+    "EV-000402",
+    "EV-000403",
+    "EV-000404",
+    "EV-000425",
+    "EV-000469",
+    "EV-000483",
+    "EV-000484",
+    "EV-000516"
+   ],
+   "label": "eye/performing/keep/worst",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "eye",
+    "performing",
+    "keep",
+    "worst",
+    "industries",
+    "must",
+    "watch",
+    "2015"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A03-h5",
+   "archetype_id": "A03",
+   "family": "events/earnings",
+   "precursor": {
+    "all": [
+     {
+      "feature": "earnings_surprise_sue",
+      "op": "in_archetype",
+      "value": "A03"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 778,
+   "member_ids": [
+    "EV-000017",
+    "EV-000018",
+    "EV-000033",
+    "EV-000053",
+    "EV-000123",
+    "EV-000126",
+    "EV-000127",
+    "EV-000146",
+    "EV-000183",
+    "EV-000212",
+    "EV-000217",
+    "EV-000229",
+    "EV-000230",
+    "EV-000287",
+    "EV-000289",
+    "EV-000290",
+    "EV-000291",
+    "EV-000294",
+    "EV-000295",
+    "EV-000296",
+    "EV-000340",
+    "EV-000341",
+    "EV-000388",
+    "EV-000429",
+    "EV-000430"
+   ],
+   "label": "rises/climbs/afternoon/slides",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "rises",
+    "climbs",
+    "afternoon",
+    "slides",
+    "slide",
+    "jumps",
+    "crude",
+    "plummet"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A12-h5",
+   "archetype_id": "A12",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A12"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 735,
+   "member_ids": [
+    "EV-001181",
+    "EV-001798",
+    "EV-001944",
+    "EV-002170",
+    "EV-002455",
+    "EV-003087",
+    "EV-003088",
+    "EV-003089",
+    "EV-003452",
+    "EV-003461",
+    "EV-003499",
+    "EV-003529",
+    "EV-003924",
+    "EV-003925",
+    "EV-004044",
+    "EV-004045",
+    "EV-004100",
+    "EV-004226",
+    "EV-004276",
+    "EV-004297",
+    "EV-004311",
+    "EV-004350",
+    "EV-004351",
+    "EV-004379",
+    "EV-004405"
+   ],
+   "label": "thursday's/moving/friday's/pre",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "thursday's",
+    "moving",
+    "friday's",
+    "pre",
+    "session",
+    "tuesday's",
+    "wednesday's",
+    "monday's"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A19-h5",
+   "archetype_id": "A19",
+   "family": "analyst",
+   "precursor": {
+    "all": [
+     {
+      "feature": "analyst_target_upside",
+      "op": "in_archetype",
+      "value": "A19"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 730,
+   "member_ids": [
+    "EV-006034",
+    "EV-006179",
+    "EV-006184",
+    "EV-006276",
+    "EV-006289",
+    "EV-006290",
+    "EV-006323",
+    "EV-006342",
+    "EV-006355",
+    "EV-006419",
+    "EV-006427",
+    "EV-006457",
+    "EV-006500",
+    "EV-006521",
+    "EV-006529",
+    "EV-006569",
+    "EV-006577",
+    "EV-006660",
+    "EV-006661",
+    "EV-006704",
+    "EV-006717",
+    "EV-006807",
+    "EV-006823",
+    "EV-006840",
+    "EV-006848"
+   ],
+   "label": "changes/biggest/yesterday/gainers",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "changes",
+    "biggest",
+    "yesterday",
+    "gainers",
+    "losers",
+    "thursday",
+    "friday",
+    "movers"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A06-h5",
+   "archetype_id": "A06",
+   "family": "events/earnings",
+   "precursor": {
+    "all": [
+     {
+      "feature": "earnings_surprise_sue",
+      "op": "in_archetype",
+      "value": "A06"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 717,
+   "member_ids": [
+    "EV-000021",
+    "EV-000057",
+    "EV-000151",
+    "EV-000195",
+    "EV-000236",
+    "EV-000237",
+    "EV-000303",
+    "EV-000304",
+    "EV-000305",
+    "EV-000306",
+    "EV-000362",
+    "EV-000363",
+    "EV-000364",
+    "EV-000365",
+    "EV-000366",
+    "EV-000479",
+    "EV-000480",
+    "EV-000481",
+    "EV-000482",
+    "EV-000526",
+    "EV-000527",
+    "EV-000528",
+    "EV-000529",
+    "EV-000530",
+    "EV-000590"
+   ],
+   "label": "scheduled/august/2015/earnings",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "scheduled",
+    "august",
+    "2015",
+    "earnings",
+    "november",
+    "february",
+    "2016",
+    "december"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A00-h5",
+   "archetype_id": "A00",
+   "family": "options",
+   "precursor": {
+    "all": [
+     {
+      "feature": "options_surface_stat",
+      "op": "in_archetype",
+      "value": "A00"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "LONG",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 679,
+   "member_ids": [
+    "EV-000015",
+    "EV-000070",
+    "EV-000228",
+    "EV-000300",
+    "EV-000332",
+    "EV-000335",
+    "EV-000467",
+    "EV-000511",
+    "EV-000566",
+    "EV-000631",
+    "EV-000685",
+    "EV-000750",
+    "EV-000786",
+    "EV-000788",
+    "EV-000906",
+    "EV-001005",
+    "EV-001013",
+    "EV-001049",
+    "EV-001053",
+    "EV-001088",
+    "EV-001104",
+    "EV-001127",
+    "EV-001146",
+    "EV-001322",
+    "EV-001326"
+   ],
+   "label": "Options call sweeps activity",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=OK)",
+   "top_terms": [
+    "wkly",
+    "jan16",
+    "dec16",
+    "sweep",
+    "ref",
+    "purchases",
+    "ask",
+    "huge"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A16-h5",
+   "archetype_id": "A16",
+   "family": "analyst",
+   "precursor": {
+    "all": [
+     {
+      "feature": "analyst_target_upside",
+      "op": "in_archetype",
+      "value": "A16"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 602,
+   "member_ids": [
+    "EV-000039",
+    "EV-000042",
+    "EV-000045",
+    "EV-000094",
+    "EV-000095",
+    "EV-000117",
+    "EV-000133",
+    "EV-000181",
+    "EV-000220",
+    "EV-000221",
+    "EV-000222",
+    "EV-000241",
+    "EV-000242",
+    "EV-000248",
+    "EV-000412",
+    "EV-000544",
+    "EV-000762",
+    "EV-000787",
+    "EV-000864",
+    "EV-000921",
+    "EV-000940",
+    "EV-000948",
+    "EV-000964",
+    "EV-000970",
+    "EV-000990"
+   ],
+   "label": "downgraded/underperform/downgrade/standpoint",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "downgraded",
+    "underperform",
+    "downgrade",
+    "standpoint",
+    "neutral",
+    "perform",
+    "raymond",
+    "downgrades"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A04-h5",
+   "archetype_id": "A04",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A04"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 295,
+   "member_ids": [
+    "EV-000009",
+    "EV-000279",
+    "EV-000280",
+    "EV-000505",
+    "EV-000710",
+    "EV-000819",
+    "EV-000992",
+    "EV-001028",
+    "EV-001095",
+    "EV-001172",
+    "EV-001228",
+    "EV-001237",
+    "EV-001267",
+    "EV-001328",
+    "EV-001332",
+    "EV-001334",
+    "EV-001368",
+    "EV-001375",
+    "EV-001396",
+    "EV-001401",
+    "EV-001407",
+    "EV-001413",
+    "EV-001414",
+    "EV-001421",
+    "EV-001440"
+   ],
+   "label": "patients/binimetinib/encorafenib/drug",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "patients",
+    "binimetinib",
+    "encorafenib",
+    "drug",
+    "corevalve",
+    "mutant",
+    "lung",
+    "melanoma"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  },
+  {
+   "hypothesis_id": "U-ARCH-A08-h5",
+   "archetype_id": "A08",
+   "family": "events/other",
+   "precursor": {
+    "all": [
+     {
+      "feature": "event_text_archetype",
+      "op": "in_archetype",
+      "value": "A08"
+     },
+     {
+      "feature": "days_since_public",
+      "op": "<=",
+      "value": 1
+     }
+    ]
+   },
+   "direction": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "horizon_days": 5,
+   "proposed_action": "long_top_quintile_equal_weight",
+   "default_action": "hold_market",
+   "declared_scope": "AFFECTED",
+   "n_members": 223,
+   "member_ids": [
+    "EV-011575",
+    "EV-011576",
+    "EV-011596",
+    "EV-011636",
+    "EV-011637",
+    "EV-011664",
+    "EV-011695",
+    "EV-011712",
+    "EV-011744",
+    "EV-011745",
+    "EV-011746",
+    "EV-011747",
+    "EV-011790",
+    "EV-011847",
+    "EV-011891",
+    "EV-011892",
+    "EV-011926",
+    "EV-011927",
+    "EV-011928",
+    "EV-011951",
+    "EV-011952",
+    "EV-012006",
+    "EV-012007",
+    "EV-012032",
+    "EV-012033"
+   ],
+   "label": "recap/option/alert/october",
+   "label_source": "nvidia_nim/nvidia/nemotron-3.5-lightning-30b-a3b (free, $0.00, parse=NO_DIRECTION_TOKEN)",
+   "top_terms": [
+    "recap",
+    "option",
+    "alert",
+    "october",
+    "july",
+    "benzinga's",
+    "from",
+    "september"
+   ],
+   "prospectively_declared": true,
+   "rank_rule": "archetype size, descending -- fixed before grading",
+   "n_member_ids_shown": 25
+  }
+ ],
+ "U2_corpse_routes": {
+  "U-ARCH-A18-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A17-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A05-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "earnings_surprise_monthly"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A11-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "earnings_surprise_monthly"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A10-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A14-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A15-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A02-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A01-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A07-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "analyst_target_upside_xs"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A09-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "analyst_target_upside_xs"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A13-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A03-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "earnings_surprise_monthly"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A12-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A19-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "analyst_target_upside_xs"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A06-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "earnings_surprise_monthly"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A00-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "options_ranking_raw"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A16-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [
+    "analyst_target_upside_xs"
+   ],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A04-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  },
+  "U-ARCH-A08-h5": {
+   "outcome": "ALLOWED_WITH_PARENT_CONTROL",
+   "parent": "accruals",
+   "parent_control_required": true,
+   "reason": "mechanistically distinct from every CLOSING corpse; accruals is a mandatory control",
+   "corpses_that_block_nothing": [
+    {
+     "id": "earnings_surprise_monthly",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "issuance_payout",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    },
+    {
+     "id": "short_interest_level",
+     "verdict": "NOT_DETECTABLE_IN_SCOPE",
+     "scope": "AFFECTED"
+    }
+   ],
+   "note": "only REFUTED_IN_SCOPE and STRUCTURALLY_CLOSED can block, and the first blocks only inside its own scope",
+   "feature_overlap_corpses": [],
+   "action_pair_corpses": [
+    "accruals",
+    "analyst_target_upside_xs",
+    "fda_approval_monthly",
+    "inst_ownership_level_13f",
+    "llm_stock_selection",
+    "momentum_12_1",
+    "momentum_spillover",
+    "options_ranking_raw",
+    "reversal_dip",
+    "value_btm"
+   ],
+   "admitted": true
+  }
+ },
+ "U2_n_refused_by_corpse_check": 0,
+ "corpus_level_event_minus_control": {
+  "ar": {
+   "n_paired_blocks": 38,
+   "n_blocks_event_only": 0,
+   "n_blocks_control_only": 0,
+   "diff_mean_pp": -0.8479461757781607,
+   "diff_t": -3.0318946322415607,
+   "diff_se_pp": 0.2796753445060363,
+   "mde_pp": 0.7835343110387633,
+   "powered_for_observed_effect": true,
+   "p_two_sided": 0.004421519494868287,
+   "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+  },
+  "raw": {
+   "n_paired_blocks": 38,
+   "n_blocks_event_only": 0,
+   "n_blocks_control_only": 0,
+   "diff_mean_pp": -0.6811745029750383,
+   "diff_t": -2.7447565395880913,
+   "diff_se_pp": 0.24817301394507763,
+   "mde_pp": 0.695277847403073,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.00928828687363185,
+   "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+  },
+  "event_beta_mean": 1.2716309795202279,
+  "control_beta_mean": 1.2775605835616382,
+  "event_mkt_mean_pp": 0.21591990969597746,
+  "control_mkt_mean_pp": 0.18709020029681545,
+  "reading": "if this is non-zero, every archetype inherits it and the ten per-archetype differences are increments on top of it, not independent effects"
+ },
+ "cluster_assignment_csv": "U_archetypes_assignment.csv",
+ "grades": {
+  "U-ARCH-A18-h5": {
+   "beta_mean_pre_event": 1.2868204194429054,
+   "n_events": 2099,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": -0.42085977686394055,
+   "raw_mean_pp": -0.10772818001950665,
+   "mkt_mean_pp": 0.24094444883993077,
+   "ar_t_ew": -1.5248491457738835,
+   "ar_se_pp": 0.2760009264066236,
+   "ar_mean_vw_pp": -0.4007804640608218,
+   "ar_t_vw": -1.7620717668773485,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.773240115606282,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.13682429393561568,
+   "horizon_days": 5,
+   "tail": {
+    "n": 2099,
+    "top1pct_n": 21,
+    "top1pct_share_of_sum": 0.13136173204347862,
+    "block_t": -1.5248491457738835,
+    "max_abs_t_change_dropping_one_block": 0.5441340349858306,
+    "most_influential_block": "2016-02",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 716,
+      "n_blocks": 11,
+      "mean_pp": -0.10978202647516706,
+      "t": -0.1860458150255255,
+      "mde_pp": 1.6531610912350638,
+      "p_two_sided": 0.8561286233202637
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 800,
+      "n_blocks": 12,
+      "mean_pp": -0.6731948636033995,
+      "t": -1.5957876743585757,
+      "mde_pp": 1.1818694987344978,
+      "p_two_sided": 0.1388426695581221
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 583,
+      "n_blocks": 11,
+      "mean_pp": -0.4566628871733042,
+      "t": -1.0249863207079521,
+      "mde_pp": 1.248192262197079,
+      "p_two_sided": 0.32952492182382503
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": true,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2893957995762924,
+    "n_events": 20946,
+    "n_blocks": 37,
+    "n_effective": 37.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.6106690369336771,
+    "raw_mean_pp": 0.755678332368736,
+    "mkt_mean_pp": 0.10904215718560259,
+    "ar_t_ew": 2.1312852929542943,
+    "ar_se_pp": 0.286526181620291,
+    "ar_mean_vw_pp": 0.6106690369336771,
+    "ar_t_vw": 2.1312852929542943,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.8027275150297587,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.03996358826165374,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 3,
+    "diff_mean_pp": -0.8086135059965418,
+    "diff_t": -3.0206190254125813,
+    "diff_se_pp": 0.2676979450879591,
+    "mde_pp": 0.7499786058776433,
+    "powered_for_observed_effect": true,
+    "p_two_sided": 0.004843129835215814,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 3,
+    "diff_mean_pp": -0.8173550741768888,
+    "diff_t": -2.8784146462156577,
+    "diff_se_pp": 0.28396015676597924,
+    "mde_pp": 0.7955385777286085,
+    "powered_for_observed_effect": true,
+    "p_two_sided": 0.006961437764830058,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2893957995762924,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "NEGATIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "street's/chatter/believes/takeover",
+   "top_terms": [
+    "street's",
+    "chatter",
+    "believes",
+    "takeover",
+    "merger",
+    "mobile",
+    "reuters",
+    "qualcomm"
+   ]
+  },
+  "U-ARCH-A17-h5": {
+   "beta_mean_pre_event": 1.295840363251343,
+   "n_events": 2049,
+   "n_blocks": 35,
+   "n_effective": 35.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": -0.33008487286045474,
+   "raw_mean_pp": -0.03144050806635791,
+   "mkt_mean_pp": 0.21929385473163057,
+   "ar_t_ew": -1.05129495461383,
+   "ar_se_pp": 0.31397931799425793,
+   "ar_mean_vw_pp": -0.6992967792005712,
+   "ar_t_vw": -2.0856398575042667,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.8796398160859044,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.3005381101523467,
+   "horizon_days": 5,
+   "tail": {
+    "n": 2049,
+    "top1pct_n": 21,
+    "top1pct_share_of_sum": -3.278668780356882,
+    "block_t": -1.05129495461383,
+    "max_abs_t_change_dropping_one_block": 0.6248963275263741,
+    "most_influential_block": "2015-06",
+    "n_blocks": 35
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 721,
+      "n_blocks": 12,
+      "mean_pp": -0.6934952763007959,
+      "t": -0.879013515566828,
+      "mde_pp": 2.2103028912617084,
+      "p_two_sided": 0.39818912575443477
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 696,
+      "n_blocks": 12,
+      "mean_pp": -0.17794854937892265,
+      "t": -0.4908577375647337,
+      "mde_pp": 1.0156466678064513,
+      "p_two_sided": 0.6331726350017951
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 632,
+      "n_blocks": 11,
+      "mean_pp": -0.0996040583599358,
+      "t": -0.26657518933003116,
+      "mde_pp": 1.0467938080305854,
+      "p_two_sided": 0.7952124563482942
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": true,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2781112164100121,
+    "n_events": 21775,
+    "n_blocks": 38,
+    "n_effective": 38.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.7641883466662479,
+    "raw_mean_pp": 0.8754815986054204,
+    "mkt_mean_pp": 0.06685375579713616,
+    "ar_t_ew": 2.366059798859137,
+    "ar_se_pp": 0.32297930383446904,
+    "ar_mean_vw_pp": 0.7641883466662479,
+    "ar_t_vw": 2.366059798859137,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.9048540433790655,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.023327158960718814,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 35,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 3,
+    "diff_mean_pp": -0.5975944447464892,
+    "diff_t": -2.469617741076293,
+    "diff_se_pp": 0.24197851951211258,
+    "mde_pp": 0.6779234433659951,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.018704298830269406,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 35,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 3,
+    "diff_mean_pp": -0.5932684573028743,
+    "diff_t": -2.4670657748814673,
+    "diff_se_pp": 0.24047533038772687,
+    "mde_pp": 0.6737121309350879,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.018817241670002753,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2781112164100121,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "NEGATIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "disclosed/terms/contract/kratos",
+   "top_terms": [
+    "disclosed",
+    "terms",
+    "contract",
+    "kratos",
+    "million",
+    "saic",
+    "offering",
+    "presenters"
+   ]
+  },
+  "U-ARCH-A05-h5": {
+   "beta_mean_pre_event": 1.1892213962545741,
+   "n_events": 1737,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": -0.06575419097664059,
+   "raw_mean_pp": 0.1792151772187861,
+   "mkt_mean_pp": 0.1769362301697403,
+   "ar_t_ew": -0.2417939172949858,
+   "ar_se_pp": 0.27194311466661597,
+   "ar_mean_vw_pp": -0.04358397117353181,
+   "ar_t_vw": -0.1582729136904993,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.7618718102175913,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.8104361296884672,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1737,
+    "top1pct_n": 18,
+    "top1pct_share_of_sum": -4.0800389074085555,
+    "block_t": -0.2417939172949858,
+    "max_abs_t_change_dropping_one_block": 0.5071048631076303,
+    "most_influential_block": "2017-04",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 582,
+      "n_blocks": 11,
+      "mean_pp": 0.5517696310668053,
+      "t": 1.1723034956068614,
+      "mde_pp": 1.3186258063661103,
+      "p_two_sided": 0.26824590664335474
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 643,
+      "n_blocks": 12,
+      "mean_pp": -0.9767460578926391,
+      "t": -2.340205267999956,
+      "mde_pp": 1.1693150831938828,
+      "p_two_sided": 0.039158113759960755
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 512,
+      "n_blocks": 11,
+      "mean_pp": 0.31053129634282073,
+      "t": 0.7300693053199374,
+      "mde_pp": 1.1916401405401558,
+      "p_two_sided": 0.48210014470176576
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [
+     "E2_2016H2-2017H1"
+    ],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2779809369006714,
+    "n_events": 21790,
+    "n_blocks": 38,
+    "n_effective": 38.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.757059102742632,
+    "raw_mean_pp": 0.8687209225829782,
+    "mkt_mean_pp": 0.06701860758580853,
+    "ar_t_ew": 2.3386236506814546,
+    "ar_se_pp": 0.32371993780274627,
+    "ar_mean_vw_pp": 0.757059102742632,
+    "ar_t_vw": 2.3386236506814546,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.9069289925566236,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.024866445578792973,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 4,
+    "diff_mean_pp": -0.43238248735491275,
+    "diff_t": -1.4863514516706935,
+    "diff_se_pp": 0.2909019174899078,
+    "mde_pp": 0.8149865119604441,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.14667860874226799,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 4,
+    "diff_mean_pp": -0.5031469584326799,
+    "diff_t": -1.5603643780887793,
+    "diff_se_pp": 0.32245478395819455,
+    "mde_pp": 0.9033845562470886,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.128213836614064,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2779809369006714,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "NEGATIVE",
+   "direction_agreed": null,
+   "family": "events/earnings",
+   "label": "adj/eps/gaap/est",
+   "top_terms": [
+    "adj",
+    "eps",
+    "gaap",
+    "est",
+    "rev",
+    "sales",
+    "fy15",
+    "fy16"
+   ]
+  },
+  "U-ARCH-A11-h5": {
+   "beta_mean_pre_event": 1.2476486673581793,
+   "n_events": 1733,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.2310481454020757,
+   "raw_mean_pp": 0.5409068036242022,
+   "mkt_mean_pp": 0.21289312212341566,
+   "ar_t_ew": 0.989811906417662,
+   "ar_se_pp": 0.2334263145391811,
+   "ar_mean_vw_pp": 0.00454279206077345,
+   "ar_t_vw": 0.016434832813093034,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.6539637123315581,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.3294685440560691,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1733,
+    "top1pct_n": 18,
+    "top1pct_share_of_sum": 1.4102802624981645,
+    "block_t": 0.989811906417662,
+    "max_abs_t_change_dropping_one_block": 0.5298276538887543,
+    "most_influential_block": "2018-05",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 439,
+      "n_blocks": 11,
+      "mean_pp": 0.18544909761758532,
+      "t": 0.39785590068235976,
+      "mde_pp": 1.3058784592781885,
+      "p_two_sided": 0.6990971981420714
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 767,
+      "n_blocks": 12,
+      "mean_pp": -0.14458879819075932,
+      "t": -0.6867029316110234,
+      "mde_pp": 0.5898880302806149,
+      "p_two_sided": 0.5064881786810796
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 527,
+      "n_blocks": 11,
+      "mean_pp": 0.6864329498332951,
+      "t": 1.3757074357024401,
+      "mde_pp": 1.3978992593702886,
+      "p_two_sided": 0.19894058041891374
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2815068340098459,
+    "n_events": 21627,
+    "n_blocks": 38,
+    "n_effective": 38.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.7384500134999078,
+    "raw_mean_pp": 0.8522835279064448,
+    "mkt_mean_pp": 0.06770388169405482,
+    "ar_t_ew": 2.2807067602589846,
+    "ar_se_pp": 0.32378121833429097,
+    "ar_mean_vw_pp": 0.7384500134999078,
+    "ar_t_vw": 2.2807067602589846,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.9071006751879573,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.02841997086828522,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 4,
+    "diff_mean_pp": -0.11478175711668123,
+    "diff_t": -0.4775251445861327,
+    "diff_se_pp": 0.24036798568201406,
+    "mde_pp": 0.6734113955943203,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.6361359983196575,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 4,
+    "diff_mean_pp": -0.12308412621231452,
+    "diff_t": -0.4784813454154374,
+    "diff_se_pp": 0.2572391325004484,
+    "mde_pp": 0.7206773511334593,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.6354626234943287,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2815068340098459,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "events/earnings",
+   "label": "peek/futures/preview/economic",
+   "top_terms": [
+    "peek",
+    "futures",
+    "preview",
+    "economic",
+    "jobless",
+    "fed",
+    "claims",
+    "ahead"
+   ]
+  },
+  "U-ARCH-A10-h5": {
+   "beta_mean_pre_event": 1.211929870353742,
+   "n_events": 1717,
+   "n_blocks": 37,
+   "n_effective": 37.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.1310995996591478,
+   "raw_mean_pp": 0.4334736631482752,
+   "mkt_mean_pp": 0.20978045048412136,
+   "ar_t_ew": 0.43726154475967904,
+   "ar_se_pp": 0.2998196416545177,
+   "ar_mean_vw_pp": 0.23715948936785933,
+   "ar_t_vw": 0.8279737087635121,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.8399702761592239,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.6645336497793548,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1717,
+    "top1pct_n": 18,
+    "top1pct_share_of_sum": 0.2562847695472091,
+    "block_t": 0.43726154475967904,
+    "max_abs_t_change_dropping_one_block": 0.6761043516987464,
+    "most_influential_block": "2018-05",
+    "n_blocks": 37
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 553,
+      "n_blocks": 13,
+      "mean_pp": 0.6715049547337124,
+      "t": 1.2985758417215112,
+      "mde_pp": 1.4487242828863902,
+      "p_two_sided": 0.2184902115639363
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 731,
+      "n_blocks": 12,
+      "mean_pp": -0.5127809439957295,
+      "t": -1.6331298106044214,
+      "mde_pp": 0.8796603328774975,
+      "p_two_sided": 0.1307105878500557
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 432,
+      "n_blocks": 11,
+      "mean_pp": 0.05787720601449977,
+      "t": 0.08267637398132734,
+      "mde_pp": 1.9612365301908747,
+      "p_two_sided": 0.9357403801911522
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 1,
+    "blocks_outside_every_declared_era": [
+     "2022-10"
+    ],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2826727400967666,
+    "n_events": 21113,
+    "n_blocks": 38,
+    "n_effective": 38.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.7615252308706505,
+    "raw_mean_pp": 0.8760399346825073,
+    "mkt_mean_pp": 0.06783798377593271,
+    "ar_t_ew": 2.354503845771022,
+    "ar_se_pp": 0.3234334198427594,
+    "ar_mean_vw_pp": 0.7615252308706504,
+    "ar_t_vw": 2.3545038457710215,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.9061262880752005,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.023964693890515882,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 37,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 1,
+    "diff_mean_pp": -0.7421814031255055,
+    "diff_t": -2.1810175544773784,
+    "diff_se_pp": 0.3402913477710862,
+    "mde_pp": 0.9533552097672146,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.03579605002940762,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 37,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 1,
+    "diff_mean_pp": -0.5687630286263157,
+    "diff_t": -1.7447688041261624,
+    "diff_se_pp": 0.3259818878474108,
+    "mde_pp": 0.9132660383658656,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.0895578336283609,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2826727400967666,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "bears/barron's/jim/cramer",
+   "top_terms": [
+    "bears",
+    "barron's",
+    "jim",
+    "cramer",
+    "minutes",
+    "his",
+    "more",
+    "lululemon"
+   ]
+  },
+  "U-ARCH-A14-h5": {
+   "beta_mean_pre_event": 1.3660006335403865,
+   "n_events": 1476,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.14207953225572276,
+   "raw_mean_pp": 0.5012688146320582,
+   "mkt_mean_pp": 0.20299553148275068,
+   "ar_t_ew": 0.40372143012969663,
+   "ar_se_pp": 0.351924672936186,
+   "ar_mean_vw_pp": 0.24292024838289467,
+   "ar_t_vw": 0.6340071578640487,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.9859469615872597,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.6890218884492596,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1476,
+    "top1pct_n": 15,
+    "top1pct_share_of_sum": 0.2617680453516795,
+    "block_t": 0.40372143012969663,
+    "max_abs_t_change_dropping_one_block": 0.8765793787602696,
+    "most_influential_block": "2018-05",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 449,
+      "n_blocks": 11,
+      "mean_pp": -0.1355545227662317,
+      "t": -0.3666350335163384,
+      "mde_pp": 1.035819036680544,
+      "p_two_sided": 0.7215299220583554
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 654,
+      "n_blocks": 12,
+      "mean_pp": -0.635339782203548,
+      "t": -1.6466922813187197,
+      "mde_pp": 1.0809296688238133,
+      "p_two_sided": 0.12786288799826034
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 373,
+      "n_blocks": 11,
+      "mean_pp": 1.267807384869609,
+      "t": 1.4663054377899887,
+      "mde_pp": 2.422326438493282,
+      "p_two_sided": 0.17329262944584176
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2871930906052835,
+    "n_events": 20559,
+    "n_blocks": 36,
+    "n_effective": 36.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.3984401338260373,
+    "raw_mean_pp": 0.6309450584202837,
+    "mkt_mean_pp": 0.172714638039961,
+    "ar_t_ew": 1.750509356483483,
+    "ar_se_pp": 0.22761382699858584,
+    "ar_mean_vw_pp": 0.3984401338260373,
+    "ar_t_vw": 1.750509356483483,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.6376795331573606,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.08879279373574431,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 2,
+    "diff_mean_pp": -0.21243633093644856,
+    "diff_t": -0.5918663257858515,
+    "diff_se_pp": 0.3589261995170715,
+    "mde_pp": 1.0055623349604934,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.5579735551574156,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 2,
+    "diff_mean_pp": -0.17229722755763122,
+    "diff_t": -0.4683590143487468,
+    "diff_se_pp": 0.36787426371457904,
+    "mde_pp": 1.0306310993469565,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.6426068592587676,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2871930906052835,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "crowd/vetr/unusual/options",
+   "top_terms": [
+    "crowd",
+    "vetr",
+    "unusual",
+    "options",
+    "can",
+    "cloud",
+    "salesforce",
+    "netapp"
+   ]
+  },
+  "U-ARCH-A15-h5": {
+   "beta_mean_pre_event": 1.0164607376173116,
+   "n_events": 1288,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.16201744207247237,
+   "raw_mean_pp": 0.4295196768544252,
+   "mkt_mean_pp": 0.22471273027439118,
+   "ar_t_ew": 0.4362402484706805,
+   "ar_se_pp": 0.3713949885194087,
+   "ar_mean_vw_pp": 0.004202217535360523,
+   "ar_t_vw": 0.01418088291224699,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 1.040494709917211,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.6655032314943465,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1288,
+    "top1pct_n": 13,
+    "top1pct_share_of_sum": 0.2213887940687537,
+    "block_t": 0.4362402484706805,
+    "max_abs_t_change_dropping_one_block": 0.48879545650475076,
+    "most_influential_block": "2017-11",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 425,
+      "n_blocks": 11,
+      "mean_pp": 0.05367253266747254,
+      "t": 0.07947955015583337,
+      "mde_pp": 1.891910231563386,
+      "p_two_sided": 0.9382192254114101
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 547,
+      "n_blocks": 12,
+      "mean_pp": -0.5807117326220934,
+      "t": -1.3057170026875013,
+      "mde_pp": 1.2459923572644158,
+      "p_two_sided": 0.21829626372410624
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 316,
+      "n_blocks": 11,
+      "mean_pp": 1.08061236023518,
+      "t": 1.4340688324019444,
+      "mde_pp": 2.1110755261826313,
+      "p_two_sided": 0.18207377722230259
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.2598164673174232,
+    "n_events": 15415,
+    "n_blocks": 36,
+    "n_effective": 36.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.5988017136847279,
+    "raw_mean_pp": 0.8973731453898314,
+    "mkt_mean_pp": 0.19963842106555446,
+    "ar_t_ew": 2.49677785391428,
+    "ar_se_pp": 0.23982979212426406,
+    "ar_mean_vw_pp": 0.598801713684728,
+    "ar_t_vw": 2.4967778539142804,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.6719036004784442,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.01738882056526863,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 2,
+    "diff_mean_pp": -0.1841138607483936,
+    "diff_t": -0.4955067872506334,
+    "diff_se_pp": 0.37156677867111954,
+    "mde_pp": 1.0409759946668613,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.6235261870591428,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 2,
+    "diff_mean_pp": -0.24939887513603692,
+    "diff_t": -0.6379469443843705,
+    "diff_se_pp": 0.3909398380718181,
+    "mde_pp": 1.095251271513483,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.5279105140752897,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.2598164673174232,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "nordstrom/penney/department/store",
+   "top_terms": [
+    "nordstrom",
+    "penney",
+    "department",
+    "store",
+    "retailers",
+    "discount",
+    "macy's",
+    "retailer"
+   ]
+  },
+  "U-ARCH-A02-h5": {
+   "beta_mean_pre_event": 1.2459144782079397,
+   "n_events": 1089,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.07037112815346051,
+   "raw_mean_pp": 0.49817254271313355,
+   "mkt_mean_pp": 0.2956988126576795,
+   "ar_t_ew": 0.21394386970317758,
+   "ar_se_pp": 0.32892332110797246,
+   "ar_mean_vw_pp": 0.30610398451573295,
+   "ar_t_vw": 0.8856375813527135,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.9215067143087211,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.8319072659571388,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1089,
+    "top1pct_n": 11,
+    "top1pct_share_of_sum": 1.1807830342430907,
+    "block_t": 0.21394386970317758,
+    "max_abs_t_change_dropping_one_block": 0.6256242762830321,
+    "most_influential_block": "2018-05",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 387,
+      "n_blocks": 11,
+      "mean_pp": 0.13626110578207326,
+      "t": 0.3489059226662683,
+      "mde_pp": 1.0941261668634055,
+      "p_two_sided": 0.7343946952674213
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 468,
+      "n_blocks": 12,
+      "mean_pp": -0.018199500168861845,
+      "t": -0.02873049933120372,
+      "mde_pp": 1.7746802818268876,
+      "p_two_sided": 0.9775941617408624
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 234,
+      "n_blocks": 11,
+      "mean_pp": 0.10110365414919957,
+      "t": 0.14777072445832728,
+      "mde_pp": 1.916824215350468,
+      "p_two_sided": 0.8854607619749146
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.280110903567312,
+    "n_events": 21360,
+    "n_blocks": 38,
+    "n_effective": 38.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.7645881060232338,
+    "raw_mean_pp": 0.8810043386179571,
+    "mkt_mean_pp": 0.07005460194547723,
+    "ar_t_ew": 2.3622317589428645,
+    "ar_se_pp": 0.3236719272479,
+    "ar_mean_vw_pp": 0.7645881060232338,
+    "ar_t_vw": 2.3622317589428645,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.9067944868958528,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.023536632373148875,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 4,
+    "diff_mean_pp": -0.30467193659724895,
+    "diff_t": -0.9636838643021036,
+    "diff_se_pp": 0.3161534066131648,
+    "mde_pp": 0.8857307106235014,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.34221356246978146,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 4,
+    "diff_mean_pp": -0.19791811674213242,
+    "diff_t": -0.5603463537617548,
+    "diff_se_pp": 0.3532067540253545,
+    "mde_pp": 0.9895388210150966,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.5790278464209341,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.280110903567312,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "rallied/hitting/then/three",
+   "top_terms": [
+    "rallied",
+    "hitting",
+    "then",
+    "three",
+    "days",
+    "highs",
+    "watching",
+    "four"
+   ]
+  },
+  "U-ARCH-A01-h5": {
+   "beta_mean_pre_event": 1.8704116100695454,
+   "n_events": 1060,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.7498121635509719,
+   "raw_mean_pp": 1.186529875692967,
+   "mkt_mean_pp": 0.2175482043196647,
+   "ar_t_ew": 1.6903817894181903,
+   "ar_se_pp": 0.4435756278521248,
+   "ar_mean_vw_pp": 0.7038035370183793,
+   "ar_t_vw": 1.6516140176604346,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 1.2427149221056917,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.10038124269820513,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1060,
+    "top1pct_n": 11,
+    "top1pct_share_of_sum": 0.6806205080331411,
+    "block_t": 1.6903817894181903,
+    "max_abs_t_change_dropping_one_block": 0.3628080138363865,
+    "most_influential_block": "2018-05",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 128,
+      "n_blocks": 11,
+      "mean_pp": 0.6337144580280643,
+      "t": 0.8499636077193471,
+      "mde_pp": 2.0888012639502604,
+      "p_two_sided": 0.415231467738487
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 385,
+      "n_blocks": 12,
+      "mean_pp": 1.2394771641789801,
+      "t": 1.7662287469212077,
+      "mde_pp": 1.9660538916068955,
+      "p_two_sided": 0.10505783667237975
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 547,
+      "n_blocks": 11,
+      "mean_pp": 0.3317298683887799,
+      "t": 0.3674325812854104,
+      "mde_pp": 2.529360603878131,
+      "p_two_sided": 0.7209532962378049
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": true,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.4086320302016564,
+    "n_events": 9136,
+    "n_blocks": 35,
+    "n_effective": 35.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.9084605109451332,
+    "raw_mean_pp": 1.2842154122946186,
+    "mkt_mean_pp": 0.2530155416816556,
+    "ar_t_ew": 4.553012921995041,
+    "ar_se_pp": 0.19952952616419628,
+    "ar_mean_vw_pp": 0.9084605109451332,
+    "ar_t_vw": 4.553012921995041,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.5589989710786969,
+    "powered_for_observed_effect": true,
+    "p_two_sided": 6.473378543310368e-05,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 1,
+    "diff_mean_pp": -0.100172446380206,
+    "diff_t": -0.2424597542291264,
+    "diff_se_pp": 0.4131508204266438,
+    "mde_pp": 1.1574772313585306,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.8099245493406572,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 1,
+    "diff_mean_pp": -0.040047639414813214,
+    "diff_t": -0.08686583426460626,
+    "diff_se_pp": 0.46102866280915633,
+    "mde_pp": 1.2916110868525204,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.931303113369211,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.4086320302016564,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "events/other",
+   "label": "dramexchange/nand/ryzen/gpu",
+   "top_terms": [
+    "dramexchange",
+    "nand",
+    "ryzen",
+    "gpu",
+    "chips",
+    "amd's",
+    "digitimes",
+    "dram"
+   ]
+  },
+  "U-ARCH-A07-h5": {
+   "beta_mean_pre_event": 1.1861849914892675,
+   "n_events": 1031,
+   "n_blocks": 34,
+   "n_effective": 34.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 0.12643414643376089,
+   "raw_mean_pp": 0.605100013428164,
+   "mkt_mean_pp": 0.35638205927114297,
+   "ar_t_ew": 0.3794948759206711,
+   "ar_se_pp": 0.3331643045957502,
+   "ar_mean_vw_pp": 0.371179837758855,
+   "ar_t_vw": 1.501678898914798,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.93338819095834,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.7067516274025709,
+   "horizon_days": 5,
+   "tail": {
+    "n": 1031,
+    "top1pct_n": 11,
+    "top1pct_share_of_sum": 0.07724006303990032,
+    "block_t": 0.3794948759206711,
+    "max_abs_t_change_dropping_one_block": 0.5666258944548196,
+    "most_influential_block": "2016-10",
+    "n_blocks": 34
+   },
+   "eras": {
+    "eras": {
+     "E1_2015H1-2016H1": {
+      "n_events": 392,
+      "n_blocks": 11,
+      "mean_pp": 0.5009307158358957,
+      "t": 1.1970048123511223,
+      "mde_pp": 1.1724264383098637,
+      "p_two_sided": 0.2589104200095481
+     },
+     "E2_2016H2-2017H1": {
+      "n_events": 250,
+      "n_blocks": 12,
+      "mean_pp": -0.5694208108179728,
+      "t": -0.7451712237916589,
+      "mde_pp": 2.1408246528311397,
+      "p_two_sided": 0.47179032198407184
+     },
+     "E3_2017H2-2018H2": {
+      "n_events": 389,
+      "n_blocks": 11,
+      "mean_pp": 0.5110520758516993,
+      "t": 1.2226758920341239,
+      "mde_pp": 1.1710020216478674,
+      "p_two_sided": 0.24948581946922999
+     }
+    },
+    "n_eras_with_coverage": 3,
+    "n_events_outside_every_declared_era": 0,
+    "blocks_outside_every_declared_era": [],
+    "same_sign_in_all_covered": false,
+    "eras_significant_uncorrected": [],
+    "reading": "one era significant and the others not is a REGIME, not a finding; the pooled number hides it"
+   },
+   "matched_control": {
+    "beta_mean_pre_event": 1.284940877317732,
+    "n_events": 21492,
+    "n_blocks": 37,
+    "n_effective": 37.0,
+    "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+    "ar_mean_pp": 0.5827146791164013,
+    "raw_mean_pp": 0.7243563952601353,
+    "mkt_mean_pp": 0.10670625447461266,
+    "ar_t_ew": 2.0465297814114245,
+    "ar_se_pp": 0.2847330561271002,
+    "ar_mean_vw_pp": 0.5827146791164013,
+    "ar_t_vw": 2.0465297814114245,
+    "ew_vw_sign_agree": true,
+    "ew_vw_flag": null,
+    "mde_pp": 0.7977039211538142,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.04805961100680561,
+    "horizon_days": 5
+   },
+   "event_minus_control": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 3,
+    "diff_mean_pp": -0.2308986638976872,
+    "diff_t": -0.6941880728973939,
+    "diff_se_pp": 0.33261686985482924,
+    "mde_pp": 0.9318545058802944,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.49242267363831443,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "event_minus_control_raw": {
+    "n_paired_blocks": 34,
+    "n_blocks_event_only": 0,
+    "n_blocks_control_only": 3,
+    "diff_mean_pp": -0.0704412432875057,
+    "diff_t": -0.19013086056765766,
+    "diff_se_pp": 0.3704882157330757,
+    "mde_pp": 1.0379543086828333,
+    "powered_for_observed_effect": false,
+    "p_two_sided": 0.8503713570656428,
+    "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+   },
+   "control_beta_mean": 1.284940877317732,
+   "direction_declared": "TWO_SIDED",
+   "direction_source": "free model, from member titles only -- it never saw a return",
+   "realised_sign": "POSITIVE",
+   "direction_agreed": null,
+   "family": "analyst",
+   "label": "maintains/rating/coverage/initiates",
+   "top_terms": [
+    "maintains",
+    "rating",
+    "coverage",
+    "initiates",
+    "overweight",
+    "raises",
+    "equal",
+    "target"
+   ]
+  }
+ },
+ "primary_statistic": "paired block difference, EVENT minus matched control (same name, same month, no event) -- declared before the results were read",
+ "family_correction": {
+  "screen_bh_fdr": {
+   "method": "benjamini-hochberg (SCREEN)",
+   "fdr": 0.05,
+   "family_size": 10,
+   "adjusted": {
+    "U-ARCH-A18-h5": 0.04843129835215814,
+    "U-ARCH-A17-h5": 0.09352149415134703,
+    "U-ARCH-A05-h5": 0.36669652185567,
+    "U-ARCH-A11-h5": 0.7068177759107306,
+    "U-ARCH-A10-h5": 0.11932016676469206,
+    "U-ARCH-A14-h5": 0.7068177759107306,
+    "U-ARCH-A15-h5": 0.7068177759107306,
+    "U-ARCH-A02-h5": 0.6844271249395629,
+    "U-ARCH-A01-h5": 0.8099245493406572,
+    "U-ARCH-A07-h5": 0.7068177759107306
+   },
+   "survivors": [
+    "U-ARCH-A18-h5"
+   ],
+   "n_survivors": 1,
+   "best_adjusted_p": 0.04843129835215814,
+   "threshold": 0.004843129835215814,
+   "n_dropped_non_finite": 0,
+   "computed_by": "backend.strategy.multipletesting (Vibe-Trading, MIT)"
+  },
+  "export_holm": {
+   "method": "holm-bonferroni (EXPORT)",
+   "alpha": 0.05,
+   "family_size": 10,
+   "adjusted": {
+    "U-ARCH-A18-h5": 0.04843129835215814,
+    "U-ARCH-A17-h5": 0.16833868947242467,
+    "U-ARCH-A10-h5": 0.28636840023526094,
+    "U-ARCH-A05-h5": 1.0,
+    "U-ARCH-A02-h5": 1.0,
+    "U-ARCH-A07-h5": 1.0,
+    "U-ARCH-A14-h5": 1.0,
+    "U-ARCH-A15-h5": 1.0,
+    "U-ARCH-A11-h5": 1.0,
+    "U-ARCH-A01-h5": 1.0
+   },
+   "survivors": [
+    "U-ARCH-A18-h5"
+   ],
+   "n_survivors": 1,
+   "best_adjusted_p": 0.04843129835215814,
+   "n_dropped_non_finite": 0,
+   "dropped_non_finite": []
+  },
+  "screened_not_exported": [],
+  "reading": "SCREEN=BH-FDR admits a known false-discovery fraction and is for deciding what to look at next; EXPORT=Holm controls the family-wise error and is what a claim leaving this repository is judged by. `screened_not_exported` is the gap between 'worth another look' and 'defensible'.",
+  "declared_family_size": 10,
+  "p_values_supplied": 10,
+  "family_size_matches_declaration": true
+ },
+ "family_correction_secondary_raw_ar": {
+  "screen_bh_fdr": {
+   "method": "benjamini-hochberg (SCREEN)",
+   "fdr": 0.05,
+   "family_size": 10,
+   "adjusted": {
+    "U-ARCH-A18-h5": 0.6841214696780784,
+    "U-ARCH-A17-h5": 0.8236713601401728,
+    "U-ARCH-A05-h5": 0.8319072659571388,
+    "U-ARCH-A11-h5": 0.8236713601401728,
+    "U-ARCH-A10-h5": 0.8319072659571388,
+    "U-ARCH-A14-h5": 0.8319072659571388,
+    "U-ARCH-A15-h5": 0.8319072659571388,
+    "U-ARCH-A02-h5": 0.8319072659571388,
+    "U-ARCH-A01-h5": 0.6841214696780784,
+    "U-ARCH-A07-h5": 0.8319072659571388
+   },
+   "survivors": [],
+   "n_survivors": 0,
+   "best_adjusted_p": 0.6841214696780784,
+   "threshold": 0.0,
+   "n_dropped_non_finite": 0,
+   "computed_by": "backend.strategy.multipletesting (Vibe-Trading, MIT)"
+  },
+  "export_holm": {
+   "method": "holm-bonferroni (EXPORT)",
+   "alpha": 0.05,
+   "family_size": 10,
+   "adjusted": {
+    "U-ARCH-A01-h5": 1.0,
+    "U-ARCH-A18-h5": 1.0,
+    "U-ARCH-A17-h5": 1.0,
+    "U-ARCH-A11-h5": 1.0,
+    "U-ARCH-A10-h5": 1.0,
+    "U-ARCH-A15-h5": 1.0,
+    "U-ARCH-A14-h5": 1.0,
+    "U-ARCH-A07-h5": 1.0,
+    "U-ARCH-A05-h5": 1.0,
+    "U-ARCH-A02-h5": 1.0
+   },
+   "survivors": [],
+   "n_survivors": 0,
+   "best_adjusted_p": 1.0,
+   "n_dropped_non_finite": 0,
+   "dropped_non_finite": []
+  },
+  "screened_not_exported": [],
+  "reading": "SCREEN=BH-FDR admits a known false-discovery fraction and is for deciding what to look at next; EXPORT=Holm controls the family-wise error and is what a claim leaving this repository is judged by. `screened_not_exported` is the gap between 'worth another look' and 'defensible'.",
+  "declared_family_size": 10,
+  "p_values_supplied": 10,
+  "family_size_matches_declaration": true
+ },
+ "n_hypotheses_graded": 10,
+ "elapsed_s": 1350.0,
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\u_archetypes_run.py",
+   "--embedder",
+   "nim",
+   "--cache"
+  ],
+  "resolved_config": {
+   "cache": {
+    "value": true,
+    "source": "arg"
+   },
+   "continue_on_u3_fail": {
+    "value": false,
+    "source": "default"
+   },
+   "embedder": {
+    "value": "nim",
+    "source": "arg"
+   },
+   "k": {
+    "value": null,
+    "source": "default"
+   },
+   "no_label": {
+    "value": false,
+    "source": "default"
+   },
+   "out": {
+    "value": null,
+    "source": "default"
+   },
+   "plant": {
+    "value": null,
+    "source": "default"
+   },
+   "quick": {
+    "value": false,
+    "source": "default"
+   }
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/events/event_table_v1.parquet",
+    "sha256": "3c412d20fe7de903e4e37e9ef097cf965f8ca531416830a3dba9cef1b621732d",
+    "bytes": 21995354,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "the event table"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2015.parquet",
+    "sha256": "2d05ec93c4abb5f60e320f6353e4feeda04b08f1ce02e04b301952bc61f64c8b",
+    "bytes": 20912617,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2016.parquet",
+    "sha256": "2ef77f78f3cb37e48595b49296b3cc7bbd0613963532b8fdbd0d3de5b06caca3",
+    "bytes": 20838365,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2017.parquet",
+    "sha256": "016e52053fe41542e686228b32d6594b68fb5e4c548ab012c6b2ea28ad04f043",
+    "bytes": 19913134,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2018.parquet",
+    "sha256": "7ab0f9c48f6a8a8f3ae761b1d00c620da040b2df2185b9a71a975f3c9d8c2e3d",
+    "bytes": 20489167,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2019.parquet",
+    "sha256": "383e0172cf443762e05be88f5966ce470fd553dbd53c5e00812bf666154b19c8",
+    "bytes": 21229996,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2022.parquet",
+    "sha256": "beb01b2c2cb2d065a9f6c86db9ac7e78cc851ac7477c67d74bd79127cb90084c",
+    "bytes": 31631474,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/crsp_dsf_2023.parquet",
+    "sha256": "95350634d8e02a2c1c361e072c230d3b1fde0ae4300e325173e55e6c740e805a",
+    "bytes": 28767589,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "CRSP daily stock file"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/ff_daily_pinned.csv.gz",
+    "sha256": "17a97adc5094c3053f469c7b2cced13503bd8d615048c97f72241e6238601323",
+    "bytes": 258431,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "Ken French daily factors, pinned vintage"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/beta_panel.parquet",
+    "sha256": "0d35014cba2c6fd1a2de4488198615a2db6b82b3988fe949e62c68fc1e16584e",
+    "bytes": 104208847,
+    "opened_utc": "2026-09-08T10:17:43+00:00",
+    "note": "pre-event beta panel"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/signal_registry.yaml",
+    "sha256": "4a0964580d92fbefb850425fe188c9043ed69a0860e89d3ed7cff349cfe4a6ae",
+    "bytes": 53392,
+    "opened_utc": "2026-09-08T10:40:00+00:00",
+    "note": "the corpse register is derived from this"
+   }
+  ],
+  "git_commit": "7901d3bd8541",
+  "generated_utc": "2026-09-08T10:40:13+00:00"
+ }
+}

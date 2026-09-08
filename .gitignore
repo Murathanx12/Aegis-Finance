@@ -230,3 +230,19 @@ backend/data/scrape/*/bodies/
 backend/data/scrape/*/pull.pid
 .gdelt_bg.out
 .nim_bg.out
+
+# ── Lane R7 (2026-09-08): trained encoder WEIGHTS are DATA, not receipts ────
+# `backend/data/optimus/r7_news_representation/encoder_*.pt` are four self-
+# supervised transformer checkpoints (70 MB total). They are regenerable in
+# 11-109 minutes each from a corpus that lives in the OTHER repo, they carry no
+# evidence a reader needs, and a public repo is not a model registry.
+#
+# Everything else in that directory stays TRACKED and is small: the R7_*.json
+# receipts (every headline number in
+# docs/BUILD_2026-09-08_R7_NEWS_REPRESENTATION.md), the per-arm monthly CSVs
+# (83 rows each -- the IC, the book, the cost and the holdings of every test
+# month), and the per-slice vocabularies (which are the ONLY way to tell later
+# whether a PIT encoder's vocabulary was fitted on future text; ignoring those
+# would delete the evidence for the quietest leak this lane guards against).
+# The .parquet intermediates are already covered by the repo-wide `*.parquet`.
+backend/data/optimus/r7_news_representation/encoder_*.pt

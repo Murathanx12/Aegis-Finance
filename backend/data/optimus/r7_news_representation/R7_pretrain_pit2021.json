@@ -1,0 +1,156 @@
+{
+ "slice": "pit2021",
+ "documents": 83187,
+ "vocab": 12849,
+ "epochs": 19,
+ "steps": 5985,
+ "batch": 256,
+ "device": "cuda",
+ "params": 3936433,
+ "docs_with_a_positive_partner": 83108,
+ "log": [
+  {
+   "epoch": 0,
+   "mlm_loss": 8.4133,
+   "contrastive_loss": 4.8552,
+   "contrastive_acc": 0.0611,
+   "elapsed_s": 55.9
+  },
+  {
+   "epoch": 1,
+   "mlm_loss": 6.9381,
+   "contrastive_loss": 3.9899,
+   "contrastive_acc": 0.1603,
+   "elapsed_s": 115.7
+  },
+  {
+   "epoch": 2,
+   "mlm_loss": 6.5491,
+   "contrastive_loss": 3.4964,
+   "contrastive_acc": 0.2333,
+   "elapsed_s": 184.9
+  },
+  {
+   "epoch": 3,
+   "mlm_loss": 6.2993,
+   "contrastive_loss": 3.1532,
+   "contrastive_acc": 0.2895,
+   "elapsed_s": 248.2
+  },
+  {
+   "epoch": 4,
+   "mlm_loss": 6.0913,
+   "contrastive_loss": 2.8895,
+   "contrastive_acc": 0.3374,
+   "elapsed_s": 283.1
+  },
+  {
+   "epoch": 5,
+   "mlm_loss": 5.9118,
+   "contrastive_loss": 2.6455,
+   "contrastive_acc": 0.3764,
+   "elapsed_s": 324.2
+  },
+  {
+   "epoch": 6,
+   "mlm_loss": 5.7703,
+   "contrastive_loss": 2.4664,
+   "contrastive_acc": 0.4126,
+   "elapsed_s": 403.7
+  },
+  {
+   "epoch": 7,
+   "mlm_loss": 5.6349,
+   "contrastive_loss": 2.2734,
+   "contrastive_acc": 0.4507,
+   "elapsed_s": 485.6
+  },
+  {
+   "epoch": 8,
+   "mlm_loss": 5.5121,
+   "contrastive_loss": 2.11,
+   "contrastive_acc": 0.4838,
+   "elapsed_s": 564.6
+  },
+  {
+   "epoch": 9,
+   "mlm_loss": 5.4096,
+   "contrastive_loss": 1.9634,
+   "contrastive_acc": 0.511,
+   "elapsed_s": 635.8
+  },
+  {
+   "epoch": 10,
+   "mlm_loss": 5.2788,
+   "contrastive_loss": 1.8401,
+   "contrastive_acc": 0.5399,
+   "elapsed_s": 715.3
+  },
+  {
+   "epoch": 11,
+   "mlm_loss": 5.1577,
+   "contrastive_loss": 1.7267,
+   "contrastive_acc": 0.5664,
+   "elapsed_s": 793.0
+  },
+  {
+   "epoch": 12,
+   "mlm_loss": 5.0596,
+   "contrastive_loss": 1.6271,
+   "contrastive_acc": 0.5874,
+   "elapsed_s": 831.3
+  },
+  {
+   "epoch": 13,
+   "mlm_loss": 4.9702,
+   "contrastive_loss": 1.5297,
+   "contrastive_acc": 0.6094,
+   "elapsed_s": 868.1
+  },
+  {
+   "epoch": 14,
+   "mlm_loss": 4.8673,
+   "contrastive_loss": 1.4658,
+   "contrastive_acc": 0.6261,
+   "elapsed_s": 904.7
+  },
+  {
+   "epoch": 15,
+   "mlm_loss": 4.7757,
+   "contrastive_loss": 1.383,
+   "contrastive_acc": 0.6461,
+   "elapsed_s": 942.1
+  },
+  {
+   "epoch": 16,
+   "mlm_loss": 4.6584,
+   "contrastive_loss": 1.3323,
+   "contrastive_acc": 0.6589,
+   "elapsed_s": 977.7
+  },
+  {
+   "epoch": 17,
+   "mlm_loss": 4.5629,
+   "contrastive_loss": 1.2567,
+   "contrastive_acc": 0.6763,
+   "elapsed_s": 1011.6
+  },
+  {
+   "epoch": 18,
+   "mlm_loss": 4.471,
+   "contrastive_loss": 1.2086,
+   "contrastive_acc": 0.6895,
+   "elapsed_s": 1045.7
+  }
+ ],
+ "wall_clock_s": 1045.7,
+ "docs_per_hour": 5441234.0,
+ "checkpoint": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\r7_news_representation\\encoder_pit2021.pt",
+ "cutoff_month_exclusive": "2021-01",
+ "unk_rate": 0.0494,
+ "objectives": [
+  "masked_token_reconstruction_15pct",
+  "same_company_contrastive_infonce_45d"
+ ],
+ "returns_read": false
+}

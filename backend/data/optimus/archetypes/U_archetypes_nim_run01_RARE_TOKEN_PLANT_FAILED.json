@@ -1,0 +1,391 @@
+{
+ "job": "U_archetypes",
+ "lane": "U1/U2/U3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run_utc": "2026-09-08T05:41:35+00:00",
+ "llm_spend_usd": 0.0,
+ "declared_before_any_result": {
+  "k_grid": [
+   6,
+   8,
+   10,
+   12,
+   16,
+   20,
+   24
+  ],
+  "primary_horizon_days": 5,
+  "secondary_horizons_exploratory": [
+   1,
+   21
+  ],
+  "family_size": 10,
+  "rank_rule": "archetype size, descending",
+  "eras": {
+   "E1_2015H1-2016H1": [
+    "2015-01",
+    "2016-06"
+   ],
+   "E2_2016H2-2017H1": [
+    "2016-07",
+    "2017-06"
+   ],
+   "E3_2017H2-2018H2": [
+    "2017-07",
+    "2018-12"
+   ]
+  },
+  "plant_multiple_of_mde": 3.0,
+  "plant_n": 400,
+  "seed": 20260908
+ },
+ "corpus": {
+  "event_table_rows": 993005,
+  "rows_with_title_and_permno_2015_2024": 21841,
+  "distinct_permnos": 91,
+  "distinct_symbols": 91,
+  "year_counts": {
+   "2015": 3051,
+   "2016": 8093,
+   "2017": 8116,
+   "2018": 2580,
+   "2022": 1
+  },
+  "limit": "only rows with BOTH a headline and a CRSP permno are testable by this route; the corpus is the terminal repo's 156-symbol news pull, so it is mega-cap-tech-heavy and any positive result is a REGIME finding until the E-lane backfill widens it"
+ },
+ "frame": {
+  "n_events_with_forward_return": 21841,
+  "horizon_days": 5,
+  "entry_convention": "close of the first trading day STRICTLY AFTER observed_at_utc",
+  "abnormal_return": "raw - beta_pre * market (market model, alpha 0)",
+  "market": "Ken French daily Mkt-RF + RF (pinned vintage 2026-07-29)",
+  "beta": "learner/beta_panel.parquet beta_pre, last value <= entry",
+  "blocks": "calendar month of entry",
+  "block_range": [
+   "2015-02",
+   "2022-10"
+  ],
+  "n_blocks": 38
+ },
+ "embedder": "nvidia/nemotron-3-embed-1b (NIM, free, 2048-dim)",
+ "U3_known_answer": {
+  "gate": "U3_KNOWN_ANSWER",
+  "k": 12,
+  "seed": 20260908,
+  "n_rows": 22641,
+  "n_ids": 22641,
+  "checks": {
+   "planted_family_clustered": false,
+   "null_family_clustered": false,
+   "planted_separated_after_holm": true,
+   "null_reads_noise": false
+  },
+  "passed": false,
+  "planted_recovery": {
+   "clusters": [
+    4
+   ],
+   "cluster": 4,
+   "n_clusters_used": 1,
+   "purity": 0.5,
+   "recall": 1.0,
+   "size": 800,
+   "per_cluster": [
+    {
+     "cluster": 4,
+     "purity": 0.5,
+     "n_family_in_cluster": 400,
+     "size": 800
+    },
+    {
+     "cluster": 0,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 940
+    },
+    {
+     "cluster": 1,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1148
+    },
+    {
+     "cluster": 2,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1200
+    },
+    {
+     "cluster": 3,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 2315
+    },
+    {
+     "cluster": 5,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1756
+    },
+    {
+     "cluster": 6,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1555
+    },
+    {
+     "cluster": 7,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 3190
+    },
+    {
+     "cluster": 8,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 3530
+    },
+    {
+     "cluster": 9,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 756
+    },
+    {
+     "cluster": 10,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 2816
+    },
+    {
+     "cluster": 11,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 2635
+    }
+   ],
+   "recovered": false
+  },
+  "null_recovery": {
+   "clusters": [
+    4
+   ],
+   "cluster": 4,
+   "n_clusters_used": 1,
+   "purity": 0.5,
+   "recall": 1.0,
+   "size": 800,
+   "per_cluster": [
+    {
+     "cluster": 4,
+     "purity": 0.5,
+     "n_family_in_cluster": 400,
+     "size": 800
+    },
+    {
+     "cluster": 0,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 940
+    },
+    {
+     "cluster": 1,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1148
+    },
+    {
+     "cluster": 2,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1200
+    },
+    {
+     "cluster": 3,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 2315
+    },
+    {
+     "cluster": 5,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1756
+    },
+    {
+     "cluster": 6,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 1555
+    },
+    {
+     "cluster": 7,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 3190
+    },
+    {
+     "cluster": 8,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 3530
+    },
+    {
+     "cluster": 9,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 756
+    },
+    {
+     "cluster": 10,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 2816
+    },
+    {
+     "cluster": 11,
+     "purity": 0.0,
+     "n_family_in_cluster": 0,
+     "size": 2635
+    }
+   ],
+   "recovered": false
+  },
+  "planted_grade": {
+   "beta_mean_pre_event": 1.0,
+   "n_events": 800,
+   "n_blocks": 38,
+   "n_effective": 38.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 1.383266976769266,
+   "raw_mean_pp": 1.383266976769266,
+   "mkt_mean_pp": 0.0,
+   "ar_t_ew": 6.386445330854383,
+   "ar_se_pp": 0.21659419365674137,
+   "ar_mean_vw_pp": 1.383266976769266,
+   "ar_t_vw": 6.386445330854382,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.6068070912778243,
+   "powered_for_observed_effect": true,
+   "p_two_sided": 1.885750928335331e-07,
+   "horizon_days": 5,
+   "tail": {
+    "n": 800,
+    "top1pct_n": 8,
+    "top1pct_share_of_sum": 0.06393639703277083,
+    "block_t": 6.386445330854383,
+    "max_abs_t_change_dropping_one_block": 1.013383075202655,
+    "most_influential_block": "2017-07",
+    "n_blocks": 38
+   }
+  },
+  "null_grade": {
+   "beta_mean_pre_event": 1.0,
+   "n_events": 800,
+   "n_blocks": 38,
+   "n_effective": 38.0,
+   "n_effective_basis": "DATE BLOCKS (calendar months with >=1 event)",
+   "ar_mean_pp": 1.383266976769266,
+   "raw_mean_pp": 1.383266976769266,
+   "mkt_mean_pp": 0.0,
+   "ar_t_ew": 6.386445330854383,
+   "ar_se_pp": 0.21659419365674137,
+   "ar_mean_vw_pp": 1.383266976769266,
+   "ar_t_vw": 6.386445330854382,
+   "ew_vw_sign_agree": true,
+   "ew_vw_flag": null,
+   "mde_pp": 0.6068070912778243,
+   "powered_for_observed_effect": true,
+   "p_two_sided": 1.885750928335331e-07,
+   "horizon_days": 5,
+   "tail": {
+    "n": 800,
+    "top1pct_n": 8,
+    "top1pct_share_of_sum": 0.06393639703277083,
+    "block_t": 6.386445330854383,
+    "max_abs_t_change_dropping_one_block": 1.013383075202655,
+    "most_influential_block": "2017-07",
+    "n_blocks": 38
+   }
+  },
+  "family_correction": {
+   "screen_bh_fdr": {
+    "method": "benjamini-hochberg (SCREEN)",
+    "fdr": 0.05,
+    "family_size": 10,
+    "adjusted": {
+     "planted": 9.428754641676655e-07,
+     "null": 9.428754641676655e-07,
+     "cluster_0": 0.9351227038621311,
+     "cluster_1": 0.9351227038621311,
+     "cluster_2": 0.9351227038621311,
+     "cluster_3": 0.9351227038621311,
+     "cluster_5": 0.9488638178757478,
+     "cluster_6": 0.9351227038621311,
+     "cluster_7": 0.9351227038621311,
+     "cluster_8": 0.9351227038621311
+    },
+    "survivors": [
+     "null",
+     "planted"
+    ],
+    "n_survivors": 2,
+    "best_adjusted_p": 9.428754641676655e-07,
+    "threshold": 1.885750928335331e-07,
+    "n_dropped_non_finite": 0,
+    "computed_by": "backend.strategy.multipletesting (Vibe-Trading, MIT)"
+   },
+   "export_holm": {
+    "method": "holm-bonferroni (EXPORT)",
+    "alpha": 0.05,
+    "family_size": 10,
+    "adjusted": {
+     "planted": 1.885750928335331e-06,
+     "null": 1.885750928335331e-06,
+     "cluster_6": 1.0,
+     "cluster_0": 1.0,
+     "cluster_1": 1.0,
+     "cluster_2": 1.0,
+     "cluster_3": 1.0,
+     "cluster_8": 1.0,
+     "cluster_7": 1.0,
+     "cluster_5": 1.0
+    },
+    "survivors": [
+     "null",
+     "planted"
+    ],
+    "n_survivors": 2,
+    "best_adjusted_p": 1.885750928335331e-06,
+    "n_dropped_non_finite": 0,
+    "dropped_non_finite": []
+   },
+   "screened_not_exported": [],
+   "reading": "SCREEN=BH-FDR admits a known false-discovery fraction and is for deciding what to look at next; EXPORT=Holm controls the family-wise error and is what a claim leaving this repository is judged by. `screened_not_exported` is the gap between 'worth another look' and 'defensible'.",
+   "declared_family_size": 10,
+   "p_values_supplied": 10,
+   "family_size_matches_declaration": true
+  },
+  "planted_drift_pp": 2.471743437307249,
+  "null_drift_pp": 0.0,
+  "realised_plant": {
+   "planted_target_pp": 2.471743437307249,
+   "planted_realised_pp": 2.6284221763518225,
+   "planted_noise_mean_in_se": 0.5327601959102028,
+   "null_realised_pp": 0.05472419187412029,
+   "event_sd": 0.05881773460079655
+  },
+  "note": "a discovery pipeline that has never recovered a planted answer is not evidence of anything",
+  "sd_block_corpus": 0.01893342717638234,
+  "plant_sizing": {
+   "event_sd": 0.05881773460079655,
+   "n_events": 400,
+   "cluster_mde": 0.008239144791024163,
+   "multiple": 3.0,
+   "drift": 0.02471743437307249,
+   "basis": "(z_alpha+z_power) * event_sd / sqrt(n_events)"
+  }
+ },
+ "stopped": "U3 did not pass. Nothing downstream is believable, so the real archetypes were not graded. Re-run with --continue-on-u3-fail only to diagnose."
+}

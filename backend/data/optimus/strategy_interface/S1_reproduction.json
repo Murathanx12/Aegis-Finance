@@ -177,8 +177,8 @@
    "why": "the sealed era 2016-01..2024-12 is opened ONCE per frozen champion against an append-only ledger (SEALED_ERA_OPENINGS.jsonl), and this champion's count is already 1. `run_one` refuses a sealed window without an explicit authorisation and this script never passes one, so the `sealed` block of G4_seal.json is NOT reproduced here. That is correct behaviour, not a gap: a sealed receipt that could be re-run on demand would not be sealed."
   }
  },
- "wall_seconds": 9.3,
- "generated_utc": "2026-09-08T10:17:23.538275+00:00",
+ "wall_seconds": 8.7,
+ "generated_utc": "2026-09-08T10:30:00.590109+00:00",
  "headline": "arena identity reproduced: True; growth development cells reproduced BYTE-FOR-BYTE: True (2 cost cells); growth sealed era: REFUSED_BY_DESIGN (one opening per frozen champion)",
  "_provenance": {
   "sys_argv": [
@@ -193,18 +193,18 @@
     "path": "c:/users/mrthn/aegis-finance/backend/data/arena/arena_books_v1.yaml",
     "sha256": "5ae0eccc0c39b8dc0bf25f10a0b146d0f67d3dd9b89372bec832db8b49840362",
     "bytes": 11606,
-    "opened_utc": "2026-09-08T10:17:14+00:00",
+    "opened_utc": "2026-09-08T10:29:51+00:00",
     "note": "the arena book commitment"
    },
    {
     "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/growth_book/g4_seal.json",
     "sha256": "57e34fa6b8c6f1c6d01ae5de204b94acaa645b95f5857e32c8585f45cdd24481",
     "bytes": 21191,
-    "opened_utc": "2026-09-08T10:17:14+00:00",
+    "opened_utc": "2026-09-08T10:29:51+00:00",
     "note": "the sealed growth receipt being reproduced"
    }
   ],
-  "git_commit": "2b1290f3d6d5",
-  "generated_utc": "2026-09-08T10:17:23+00:00"
+  "git_commit": "7901d3bd8541",
+  "generated_utc": "2026-09-08T10:30:00+00:00"
  }
 }

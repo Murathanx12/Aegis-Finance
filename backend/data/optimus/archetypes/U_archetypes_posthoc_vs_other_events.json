@@ -1,0 +1,175 @@
+{
+ "job": "U_archetypes_posthoc_archetype_vs_other_events",
+ "sidecar_to": "U_archetypes_nim.json",
+ "run_utc": "2026-09-08T10:45:35+00:00",
+ "status": "POST-HOC DIAGNOSTIC \u2014 NOT the declared primary statistic, and it cannot carry a claim",
+ "why": "The declared primary was EVENT minus a matched NON-EVENT control, and one archetype (A18) survived Holm at 0.0484. But the CORPUS-LEVEL event-minus-control difference, which was computed in the same run and reported beside the ten, is -0.848pp at t -3.03 \u2014 statistically indistinguishable from A18's -0.809pp. So A18's survival is the corpus-wide 'a news day underperforms a quiet day in the same name-month' effect showing through a subset, not an archetype effect. This diagnostic asks the question that separates the two: is THIS archetype different from the OTHER EVENTS? It was computed after the results were read and is labelled post-hoc for that reason.",
+ "statistic": "paired block difference, archetype events minus all other events, same blocks",
+ "per_archetype": {
+  "U-ARCH-A18-h5": {
+   "diff_pp": -0.45,
+   "t": -1.99,
+   "p": 0.0544,
+   "mde": 0.633,
+   "pw": false,
+   "n": 2099
+  },
+  "U-ARCH-A17-h5": {
+   "diff_pp": -0.083,
+   "t": -0.47,
+   "p": 0.6397,
+   "mde": 0.493,
+   "pw": false,
+   "n": 2049
+  },
+  "U-ARCH-A05-h5": {
+   "diff_pp": -0.06,
+   "t": -0.23,
+   "p": 0.8215,
+   "mde": 0.74,
+   "pw": false,
+   "n": 1737
+  },
+  "U-ARCH-A11-h5": {
+   "diff_pp": 0.292,
+   "t": 1.26,
+   "p": 0.2176,
+   "mde": 0.651,
+   "pw": false,
+   "n": 1733
+  },
+  "U-ARCH-A10-h5": {
+   "diff_pp": -0.006,
+   "t": -0.03,
+   "p": 0.9786,
+   "mde": 0.649,
+   "pw": false,
+   "n": 1717
+  },
+  "U-ARCH-A14-h5": {
+   "diff_pp": 0.155,
+   "t": 0.46,
+   "p": 0.6507,
+   "mde": 0.949,
+   "pw": false,
+   "n": 1476
+  },
+  "U-ARCH-A15-h5": {
+   "diff_pp": 0.192,
+   "t": 0.54,
+   "p": 0.5902,
+   "mde": 0.99,
+   "pw": false,
+   "n": 1288
+  },
+  "U-ARCH-A02-h5": {
+   "diff_pp": 0.082,
+   "t": 0.26,
+   "p": 0.7959,
+   "mde": 0.881,
+   "pw": false,
+   "n": 1089
+  },
+  "U-ARCH-A01-h5": {
+   "diff_pp": 0.776,
+   "t": 1.77,
+   "p": 0.0861,
+   "mde": 1.229,
+   "pw": false,
+   "n": 1060
+  },
+  "U-ARCH-A07-h5": {
+   "diff_pp": 0.148,
+   "t": 0.51,
+   "p": 0.6115,
+   "mde": 0.806,
+   "pw": false,
+   "n": 1031
+  }
+ },
+ "family_correction": {
+  "screen_bh_fdr": {
+   "method": "benjamini-hochberg (SCREEN)",
+   "fdr": 0.05,
+   "family_size": 10,
+   "adjusted": {
+    "U-ARCH-A18-h5": 0.4305,
+    "U-ARCH-A17-h5": 0.9127777777777778,
+    "U-ARCH-A05-h5": 0.9127777777777778,
+    "U-ARCH-A11-h5": 0.7253333333333333,
+    "U-ARCH-A10-h5": 0.9786,
+    "U-ARCH-A14-h5": 0.9127777777777778,
+    "U-ARCH-A15-h5": 0.9127777777777778,
+    "U-ARCH-A02-h5": 0.9127777777777778,
+    "U-ARCH-A01-h5": 0.4305,
+    "U-ARCH-A07-h5": 0.9127777777777778
+   },
+   "survivors": [],
+   "n_survivors": 0,
+   "best_adjusted_p": 0.4305,
+   "threshold": 0.0,
+   "n_dropped_non_finite": 0,
+   "computed_by": "backend.strategy.multipletesting (Vibe-Trading, MIT)"
+  },
+  "export_holm": {
+   "method": "holm-bonferroni (EXPORT)",
+   "alpha": 0.05,
+   "family_size": 10,
+   "adjusted": {
+    "U-ARCH-A18-h5": 0.5439999999999999,
+    "U-ARCH-A01-h5": 0.7748999999999999,
+    "U-ARCH-A11-h5": 1.0,
+    "U-ARCH-A15-h5": 1.0,
+    "U-ARCH-A07-h5": 1.0,
+    "U-ARCH-A17-h5": 1.0,
+    "U-ARCH-A14-h5": 1.0,
+    "U-ARCH-A02-h5": 1.0,
+    "U-ARCH-A05-h5": 1.0,
+    "U-ARCH-A10-h5": 1.0
+   },
+   "survivors": [],
+   "n_survivors": 0,
+   "best_adjusted_p": 0.5439999999999999,
+   "n_dropped_non_finite": 0,
+   "dropped_non_finite": []
+  },
+  "screened_not_exported": [],
+  "reading": "SCREEN=BH-FDR admits a known false-discovery fraction and is for deciding what to look at next; EXPORT=Holm controls the family-wise error and is what a claim leaving this repository is judged by. `screened_not_exported` is the gap between 'worth another look' and 'defensible'.",
+  "declared_family_size": 10,
+  "p_values_supplied": 10,
+  "family_size_matches_declaration": true
+ },
+ "verdict": "ZERO of ten survive Holm and ZERO survive the BH-FDR screen; best Holm-adjusted p 0.544; not one archetype is powered for its own observed effect. The archetype partition carries no incremental information over 'an event happened' on this tape.",
+ "corpus_level_reference": {
+  "ar": {
+   "n_paired_blocks": 38,
+   "n_blocks_event_only": 0,
+   "n_blocks_control_only": 0,
+   "diff_mean_pp": -0.8479461757781607,
+   "diff_t": -3.0318946322415607,
+   "diff_se_pp": 0.2796753445060363,
+   "mde_pp": 0.7835343110387633,
+   "powered_for_observed_effect": true,
+   "p_two_sided": 0.004421519494868287,
+   "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+  },
+  "raw": {
+   "n_paired_blocks": 38,
+   "n_blocks_event_only": 0,
+   "n_blocks_control_only": 0,
+   "diff_mean_pp": -0.6811745029750383,
+   "diff_t": -2.7447565395880913,
+   "diff_se_pp": 0.24817301394507763,
+   "mde_pp": 0.695277847403073,
+   "powered_for_observed_effect": false,
+   "p_two_sided": 0.00928828687363185,
+   "reading": "event minus the same names in the same months without the event; this is the number the hypothesis lives on"
+  },
+  "event_beta_mean": 1.2716309795202279,
+  "control_beta_mean": 1.2775605835616382,
+  "event_mkt_mean_pp": 0.21591990969597746,
+  "control_mkt_mean_pp": 0.18709020029681545,
+  "reading": "if this is non-zero, every archetype inherits it and the ten per-archetype differences are increments on top of it, not independent effects"
+ },
+ "licence": "PRODUCT_EXPERIMENT"
+}

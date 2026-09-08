@@ -1,0 +1,44 @@
+{
+ "slice": "full",
+ "documents": 528223,
+ "vocab": 24000,
+ "epochs": 3,
+ "steps": 6000,
+ "batch": 256,
+ "device": "cuda",
+ "params": 6088576,
+ "docs_with_a_positive_partner": 526215,
+ "log": [
+  {
+   "epoch": 0,
+   "mlm_loss": 6.9632,
+   "contrastive_loss": 3.9366,
+   "contrastive_acc": 0.1952,
+   "elapsed_s": 392.4
+  },
+  {
+   "epoch": 1,
+   "mlm_loss": 5.5076,
+   "contrastive_loss": 3.1938,
+   "contrastive_acc": 0.2911,
+   "elapsed_s": 715.7
+  },
+  {
+   "epoch": 2,
+   "mlm_loss": 4.6176,
+   "contrastive_loss": 2.9299,
+   "contrastive_acc": 0.3285,
+   "elapsed_s": 6531.9
+  }
+ ],
+ "wall_clock_s": 6532.2,
+ "docs_per_hour": 873342.0,
+ "checkpoint": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\r7_news_representation\\encoder_full.pt",
+ "cutoff_month_exclusive": "2099-01",
+ "unk_rate": 0.0341,
+ "objectives": [
+  "masked_token_reconstruction_15pct",
+  "same_company_contrastive_infonce_45d"
+ ],
+ "returns_read": false
+}

@@ -279,3 +279,111 @@ python -m scripts.fleet --overlap                # cross-book concentration
 Expect hack3 ≈ 10 names and hack6 ≈ 15. hack2 and hack5 depend on their own
 brains finding something; hack4 will be empty until its catalyst filter is
 revisited. **hack1 is manage-only by declaration and should stay flat.**
+
+## 14. WHAT "FULL" ACTUALLY MEANS TODAY — measured, not hoped
+
+Every book was dry-run against the live seal with the real sizer, the real
+admission gates and the real risk guards. The honest expectation for the
+2026-09-08 open is **two books filling, not six**:
+
+| book | dry-run result | why |
+|---|---|---|
+| **hack3** | **10 of 10 admitted, zero refusals** | sealed book, driver fix landed; risk 0.41-0.78% per name |
+| **hack6** | **15 of 15 admitted, zero refusals** | as above; risk 0.30-0.56% per name |
+| hack4 | 0 | its sealed book is EMPTY (`requires_catalyst=true`, `rank_distinct_values=0`) |
+| hack2 | 0 | 10 forecasts, **all 10 refused on `evidence`**: the forecast disagrees with the options chain by only +0.1-0.8% of probability mass, and a DIRECTION claim cannot be expressed as the `long_straddle` the enumerator offers. This is the "measured edge only" book declining to trade when it has no measured edge — the mandate working, not a defect. |
+| hack5 | not verified | an options book cannot be honestly dry-run against a closed venue: the chain quotes are stale and the pass substitutes synthetic marks |
+| hack1 | 0 by declaration | manage-only; see §7 on the SPY question |
+
+So roughly **25 positions and ~$165k deployed of ~$575k**. That is the true
+answer to "make the accounts full", and it is smaller than the re-arm alone
+suggests. The remaining capital is idle for three DIFFERENT reasons — an empty
+selection (hack4), an honest no-trade verdict (hack2), and a declared mandate
+(hack1) — and only the first is a defect worth fixing.
+
+**A correction to §3's framing.** The re-arm was necessary and is not
+sufficient. Filling the fleet needs the selectors to produce admissible
+candidates, and today two of five armed books produce none.
+
+## 15. TWO PROCESS NOTES FROM THIS SESSION
+
+- **Do not run a live `run_pass` while `run_tests.py` is running.** The runner
+  fingerprints the production ledgers before and after the whole suite and fails
+  with `PRODUCTION LEDGER WRITTEN` if either grew. My concurrent hack2 dry pass
+  appended 41 `hack2/post_event_drift/refused` rows and tripped it. The guard was
+  right and the suite was not; the rows were NOT deleted, because editing a hash
+  chain is the tampering the guard exists to detect.
+- **The MMC second-selector prereg is BLOCKED at R13 and left that way**
+  (`Aegis module/TRIALS/PREREG_MMC_SECOND_SELECTOR.md`). The corpse check is
+  clean, but R13 wants effect and dispersion in PERCENTAGE POINTS and every MMC
+  number is correlation-space. The missing measurement is named in the document.
+  The power arithmetic that COULD be done says a forward-only trial needs
+  **109 months for `be_me`** — the screen is well-powered on 312 months of
+  history, and a two-year paper trial could never resolve it.
+
+## 16. hack4's EMPTY BOOK IS THE SAME DEFECT AS THE DRIVER CAP
+
+Diagnosed, not guessed. The seal authority's own log says it:
+
+```
+UNREADABLE clauses (a data gap, not a market): d_catalyst x776
+```
+
+**776 of the universe have an UNREADABLE catalyst clause.** hack4 is the ONLY
+book carrying `requires_catalyst: true` (hack3 and hack6 carry `false`), so it
+selects zero and seals `n_selected = 0`, `rank_distinct_values = 0`. hack3 on the
+same universe seals ten.
+
+So this is the third instance of one failure shape today: **a gate binding on a
+missing input rather than on the thing it guards.** The driver cap refused six
+names because a 70-symbol theme seed could not see a 774-name universe; hack4
+refuses its whole book because the catalyst calendar did not populate. The code
+already KNOWS the difference — it wrote "a data gap, not a market" — and then
+sealed an empty book anyway, which downstream reads as "no opportunities today".
+
+**The principled fix, for whoever takes it (NOT done today, deliberately).**
+`requires_catalyst` should distinguish ABSENT from FALSE. A name whose catalyst
+clause is unreadable is not a name without a catalyst; it is a name we could not
+assess. The book should either seal with the clause relaxed and SAY it relaxed
+it, or REFUSE to seal with a named data gap — a guard derives its inputs or
+refuses. An empty sealed book that is really a data outage is silence read as a
+decision, which is the house failure mode.
+
+Not changed before an open: hack4 seals empty either way today, so the fix is a
+LABELLING improvement with no trading effect, and seal behaviour is not something
+to alter in the last hours before a session. The catalyst calendar itself
+("catalyst calendar: 0 symbols carry a future dated row") is the upstream job to
+repair first.
+
+### 16a. The root cause was documented nine days ago
+
+`alpha/murat_rule.py` evaluates the clause as
+`d = None if cat is None else bool(cat <= CATALYST_MAX_CALENDAR_DAYS)` — so an
+absent catalyst date is `None`, i.e. **UNREADABLE**, not `False`. And the
+generator's own base-rate block already says why, in `why_not_measured`:
+
+> "(d) had an EMPTY forward-catalyst calendar until 2026-08-30, so
+> `days_to_next_catalyst` is null on essentially every panel row. **The live rule
+> is therefore STRICTER than the condition this base rate was measured under.**"
+
+`murat_rule.CONTRACT` lists `d_catalyst` under `clauses_not_measured`. So the
+generator DECLARES it cannot measure the clause — and hack4's book constraint
+`requires_catalyst: true` uses that same clause as a hard filter. A clause its
+own author marked "not measured" is gating a $99,476 account to zero positions.
+
+**This is not a market verdict and never was.** hack4 has been structurally
+unable to select for as long as the constraint has met the empty calendar. The
+sentence explaining it has been in the repository since 2026-08-30; nobody joined
+it to the empty book.
+
+Two fixes, in order of value:
+1. Populate the forward-catalyst calendar (the upstream job). Then the clause
+   becomes readable and hack4's declared experiment runs as designed.
+2. Until then, `requires_catalyst` must treat UNREADABLE as its own outcome:
+   either relax and SAY so on the seal, or refuse to seal with a named data gap.
+   Silently mapping "we could not assess" onto "it failed" is what produced an
+   empty book that reads like a market opinion.
+
+**Not changed here.** hack4's constraint is part of its declared, frozen
+contract, and altering a book's selection rule is Murat's call with the census in
+front of him — not a session's, and certainly not two hours before an open.

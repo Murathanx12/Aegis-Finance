@@ -1,0 +1,54 @@
+{
+ "job": "r7_build_panel",
+ "at": "2026-09-08T05:36:50+00:00",
+ "documents": 528223,
+ "documents_permno_linked": 266717,
+ "permno_link_share": 0.6539,
+ "labelled_cells": 9457,
+ "distinct_permnos": 135,
+ "distinct_months": 115,
+ "month_span": [
+  "2015-02",
+  "2024-11"
+ ],
+ "docs_per_cell_median": 7.0,
+ "target": "excess_vw_1m",
+ "label_ceiling": "2024-12",
+ "out": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\r7_news_representation\\panel.parquet",
+ "note": "train_table.parquet ends 2024-12, so every 2025/2026 document is PRE-TRAINING-ONLY and can never be scored. That is the whole point of the design: 524k unlabelled documents, ~10k labelled cells.",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\r7_news_representation.py",
+   "--build-panel"
+  ],
+  "resolved_config": {
+   "target": "excess_vw_1m",
+   "label_ceiling": "2024-12"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/r7_news_representation/docs.parquet",
+    "sha256": "822bbe51b40977fa5d4eed9390b048c40877669057c41665387bdb428debe6b7",
+    "bytes": 59991325,
+    "opened_utc": "2026-09-08T05:36:47+00:00",
+    "note": "news documents (built by --build-docs)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/bulk/crsp__stocknames_v2.parquet",
+    "sha256": "dd381bbe49ba52b5fd40da7d346f259e3ffce4f3430d3f2bada59c63a0f11c65",
+    "bytes": 2470682,
+    "opened_utc": "2026-09-08T05:36:47+00:00",
+    "note": "CRSP ticker->permno PIT intervals"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/learner/train_table.parquet",
+    "sha256": "e3cdd0e308cbb2ebd1a0fa6eb47e91dff0037843998ea7a893f8f05798cc5385",
+    "bytes": 204021057,
+    "opened_utc": "2026-09-08T05:36:48+00:00",
+    "note": "monthly forward excess return target (excess_vw_1m)"
+   }
+  ],
+  "git_commit": "2b1290f3d6d5",
+  "generated_utc": "2026-09-08T05:36:50+00:00"
+ }
+}

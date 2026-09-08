@@ -218,3 +218,97 @@ nothing until a CAPITAL_CANDIDATE gate is met, attended.
 | **U unsupervised route** | OPEN — embedder REACHABLE (roadmap §6 N5 row was wrong) | `N5_event_compression.json::nemotron_probe` |
 | **T TradingAgents port** | OPEN — clone at `C:\Users\mrthn\reference\TradingAgents` (v0.4.1, Apache-2.0) | `EXTERNAL_2026-09-07_FIVE_REPOS.md` §2 |
 | **S strategy interface** | OPEN — the highest-leverage item on the external list | `EXTERNAL_2026-09-07_FIVE_REPOS.md` §6-§7 |
+
+## 7. STATUS AFTER THE 2026-09-08 SESSION (nine lanes, Opus 5)
+
+Every row's evidence is a `BUILD_2026-09-0*` doc plus its receipts. Nothing below
+is a claim: three lanes are nulls with stated MDEs, and no book was promoted.
+
+| block | status | the one thing to know |
+|---|---|---|
+| **X hygiene** | **CLOSED** | Two of this roadmap's own glosses were wrong; the receipts won. |
+| **F fleet remap** | **DONE + DEPLOYED** | Five books ARMED on `382a6c4`; verified by dry run at 10/10 and 15/15, zero refusals. |
+| **premarket OFF** | **DONE** | Both pre-open passes behind one gate, skips logged. |
+| **H human mode** | **H1, H2, H4/T2, H5 DONE; H3 NOT** (attended) | The grader is known-answer 29/29 and **zero rows were seeded on purpose** — fabricating decisions would poison the only labelled dataset nobody else has. Gate stands at `have 0 / need 20`. |
+| **I investor data** | **I1 DONE; I2/I3 NOT** | 11,522,229 Form 4 transactions, free, 2006-2026. And the first result on it is a **negative**: the CMP spread is illiquidity, not edge (matched +2.7 bp t 0.15; above the $3m/day floor −18.8 bp). |
+| **E event pipeline** | **E1/E2 DONE; E3 as a declared SLICE** | The ≥90% gate is met only on reading D (IBES EPS, 95.1-98.2%); the news leg is REFUSED because CRSP ends 2024-12 and dense coverage starts 2025. **Entry convention carried 92.5% of the PEAD headline.** |
+| **S strategy interface** | **S1-S8 DONE** | The growth champion reproduces its sealed receipt byte-for-byte. **MMC is the useful number** — see below. |
+| **R era replay v2** | **NOT STARTED** | No longer blocked on a DeepSeek top-up: free local inference exists. |
+| **U unsupervised** | in flight | — |
+| **T TradingAgents port** | **NOT STARTED** | — |
+| **new: predictability router** | **MEASURED — one Holm-clean positive, one null** | Predictability IS forecastable (rank IC 0.046→0.142, t 7.03, all four engines). Routing on it does NOT beat always-trade (−1.64%/yr, MDE 5.70%/yr, 0/36 Holm). An oracle buys +26.5%/yr, so the mechanism is real and **our forecast of it dies at the truncation**. |
+| **new: news representation** | **NULL, with the structural reason** | A from-scratch self-supervised encoder on 528,223 headlines **loses to TF-IDF in every era**. Labelled overlap is 9,457 cells / 135 names, because the years with coverage have no prices. The year canary leaks loudly (29.75% vs 10%, p<1e-8). |
+
+### The MMC result, and why it is the most useful number here
+
+`COMPOSITE_WEIGHTS` names six signals and coverage is `{"1": 206, "6": 1}` —
+99.5% of names carry 12-1 momentum alone. That is THE BOTTLENECK this roadmap
+opens with, and until now "are its errors different errors?" had no number.
+
+On 1,456,439 name-months over **312 monthly eras** (n_effective = eras, canon
+§58), against a meta-model of `ret_12_1` (the composite as it actually is):
+
+| book | corr | MMC | t |
+|---|---|---|---|
+| `ret_12_1` (itself) | +0.0313 | **0.00000** | — |
+| `ivol_capm_252d` | +0.0313 | **+0.0238** | 3.49 |
+| `qmj` | +0.0257 | **+0.0190** | 4.27 |
+| `ope_be` | +0.0276 | **+0.0188** | 3.62 |
+| `be_me` | +0.0083 | **+0.0172** | 4.74 |
+| `at_gr1` | +0.0091 | **+0.0133** | 4.28 |
+
+**`be_me` and `at_gr1` have MMC LARGER than their own correlation** — they hedge
+momentum, so neutralising against the ensemble improves them. On this evidence
+they are the best candidates for the second independent selector the bottleneck
+section asks for. Caveats that bind: correlation space, gross, one panel, and
+this is NOT a portfolio result. It earns a pre-registered lane, not a book.
+
+### Two traps this session paid for
+
+1. **`seal-authority` has no Railway volume.** Redeploying it DESTROYS the
+   published seal and forces a ~100-minute rebuild. The loops had already synced
+   theirs so nothing operational was lost. Redeploy it after an open, never before.
+2. **`sync_once` short-circuits on a valid local seal**, so a corrected seal
+   reaches the fleet TOMORROW, never today. The only lever that reaches an
+   already-sealed book is `STOP_FRACTION_BY_PROFILE`, because a sealed contract
+   carries `stop_frac: null` and defers its width to that table.
+
+### U — CLOSED 2026-09-08, and the tape is the binding constraint
+
+`BUILD_2026-09-08_R3_ARCHETYPES.md`. **U3 passed only after failing once, and the
+failure is the more useful half.** With the real `nemotron-3-embed-1b` embedder
+the planted gate FAILED on run 01 (receipt kept, named
+`..._RARE_TOKEN_PLANT_FAILED.json`): the embedder put BOTH planted families into
+one cluster of exactly 800 at purity 0.50, because **it separates REGISTER — "is
+this a financial headline" — not two rare-token vocabularies.** The plant had to
+match the embedder's notion of similarity before the gate meant anything. A
+discovery pipeline validated with the wrong plant is validated against nothing.
+
+- **U1**: k=20 by silhouette (0.111). Reseed+resample **ARI 0.540** — partial
+  stability. Vocabulary-distinct clusters (options flow, semis supply chain,
+  takeover chatter) are stable; "general market movement" boundaries are not. So
+  it is **not an archetype set**, and is not reported as one.
+- **U2**: 20 typed hypotheses, precursor `(in archetype X) AND (days_since_public
+  <= 1)`, entry at the close of the first trading day STRICTLY after
+  `observed_at_utc` — **none buys the reaction it predicts**, which is the trap
+  that carried 92.5% of the PEAD headline in lane R4. 20/20 ALLOWED_WITH_PARENT_CONTROL
+  through `corpse_check`.
+- **Grades (family 10, beta first, date blocks)**: exactly one Holm survivor —
+  A18 takeover chatter, −0.809 pp/5d, t −3.02, Holm 0.0484. **And it is not an
+  archetype effect.** The corpus-level event-minus-control is −0.848 pp, t −3.03
+  — the same number, which every archetype inherits. Not a beta artefact
+  (β 1.272 vs 1.278). The post-hoc test that actually isolates the archetype
+  (event vs OTHER events) gives **0/10 Holm, 0/10 BH, none powered**.
+
+**THE BINDING CONSTRAINT, and it governs every text lane.** Of 993,005 event-table
+rows only **21,841 carry BOTH a headline and a CRSP permno** — 91 mega-cap tech
+names, 2015-2018, 38 date blocks. IBES rows have no text; 8-K rows have only item
+codes and 8% permno linkage. This is the same wall lane R7 hit from the other
+side (9,457 labelled cells, 135 names, because dense news is 2025-26 and CRSP
+ends 2024-12). **Two independent lanes measured the same gap: we do not have a
+joined text-and-return panel, and no amount of modelling substitutes for one.**
+That is the highest-value data item on this roadmap, ahead of any new mechanism.
+
+**Open, pre-registered**: does the corpus-level −0.85 pp survive a control
+matched on PRE-EVENT VOLATILITY and DOLLAR VOLUME, not just name and month? News
+clusters on days already moving, and this design does not remove that confound.

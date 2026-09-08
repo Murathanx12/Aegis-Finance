@@ -1,0 +1,61 @@
+{
+ "job": "r7_leak_gate",
+ "at": "2026-09-08T06:14:47+00:00",
+ "backend": "local_gguf",
+ "model": null,
+ "qwen_cutoff_month": "2023-10",
+ "canary": {
+  "n_asked_company": 400,
+  "company_hits": 7,
+  "company_top1": 0.0175,
+  "company_chance_uniform_over_labelled_universe": 0.0074,
+  "company_exact_binomial_p_greater": 0.03113,
+  "company_mde_80pct_above_chance_pp": 1.201,
+  "most_common_guess": [
+   [
+    "UNKNOWN",
+    353
+   ],
+   [
+    "GS",
+    5
+   ],
+   [
+    "MS",
+    4
+   ]
+  ],
+  "n_asked_year": 400,
+  "year_hits": 119,
+  "year_exact": 0.2975,
+  "year_chance_uniform_over_10_years": 0.1,
+  "year_exact_binomial_p_greater": 0.0,
+  "provider_failures": 0,
+  "reading": "the COMPANY line is the mask's own audit -- if a separate model can name the issuer from masked text, every arm above is contaminated. The YEAR line is a different leak and is reported beside it because a representation that knows the era knows the regime, which is not the same thing as knowing the business."
+ },
+ "memory_pre": {
+  "window": "PRE-cutoff (<= 2023-10)",
+  "n_graded": 300,
+  "accuracy": 0.52,
+  "share_answered_BEAT": 0.7933,
+  "base_rate_actually_positive": 0.4933,
+  "note": "a model that always says BEAT scores the base rate; the share it answers BEAT is printed so accuracy cannot be read without it"
+ },
+ "memory_post": {
+  "window": "POST-cutoff (2024-01 .. 2024-11)",
+  "n_graded": 300,
+  "accuracy": 0.5033,
+  "share_answered_BEAT": 0.78,
+  "base_rate_actually_positive": 0.4433,
+  "note": "a model that always says BEAT scores the base rate; the share it answers BEAT is printed so accuracy cannot be read without it"
+ },
+ "accuracy_drop_at_cutoff": 0.0167,
+ "mde_accuracy_drop_80pct_pp": 11.44,
+ "mde_reading": "with this many graded answers only a drop LARGER than this could have been detected at 80% power; a smaller observed drop is NOT evidence of no memory",
+ "verdict": "NO MEMORY DROP DETECTED at this sample size -- which is not the same as no memory; see the MDE.",
+ "provider_failures": 0,
+ "tokens_in": 145909,
+ "tokens_out": 4517,
+ "spend_usd": 0.0,
+ "wall_clock_s": 482.0
+}

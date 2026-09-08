@@ -1,0 +1,37 @@
+{
+ "job": "r7_prepare_masked",
+ "at": "2026-09-08T06:00:17+00:00",
+ "documents": 528223,
+ "tokens": 12796188,
+ "company_tokens_masked": 474769,
+ "mask_rate": 0.0371,
+ "docs_with_any_mask": 241829,
+ "out": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\r7_news_representation\\docs_masked.parquet",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\r7_news_representation.py",
+   "--prepare"
+  ],
+  "resolved_config": {
+   "co_token": "[co]"
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/r7_news_representation/docs.parquet",
+    "sha256": "822bbe51b40977fa5d4eed9390b048c40877669057c41665387bdb428debe6b7",
+    "bytes": 59991325,
+    "opened_utc": "2026-09-08T06:00:09+00:00",
+    "note": "news documents"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-finance/backend/data/optimus/wrds/bulk/crsp__stocknames_v2.parquet",
+    "sha256": "dd381bbe49ba52b5fd40da7d346f259e3ffce4f3430d3f2bada59c63a0f11c65",
+    "bytes": 2470682,
+    "opened_utc": "2026-09-08T06:00:10+00:00",
+    "note": "issuer names, for company-identity masking"
+   }
+  ],
+  "git_commit": "2b1290f3d6d5",
+  "generated_utc": "2026-09-08T06:00:17+00:00"
+ }
+}

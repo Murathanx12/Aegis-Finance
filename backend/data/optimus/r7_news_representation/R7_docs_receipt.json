@@ -1,0 +1,1037 @@
+{
+ "job": "r7_build_docs",
+ "at": "2026-09-08T05:36:31+00:00",
+ "shards": 142,
+ "lines_read": 698012,
+ "torn_lines_skipped": 0,
+ "documents": 528223,
+ "documents_with_body": 206380,
+ "documents_title_only": 321843,
+ "body_share": 0.3907,
+ "by_year": {
+  "2015": 3943,
+  "2016": 10766,
+  "2017": 10813,
+  "2018": 13832,
+  "2019": 18230,
+  "2020": 25603,
+  "2021": 27265,
+  "2022": 30217,
+  "2023": 32566,
+  "2024": 33493,
+  "2025": 182585,
+  "2026": 138910
+ },
+ "distinct_first_symbols": 6462,
+ "median_chars": 112,
+ "out": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\r7_news_representation\\docs.parquet",
+ "note": "61% of documents carry no body. This is HEADLINE-level modelling. No return is read by this step.",
+ "_provenance": {
+  "sys_argv": [
+   "C:\\Users\\mrthn\\aegis-finance\\scripts\\r7_news_representation.py",
+   "--build-docs"
+  ],
+  "resolved_config": {
+   "shards": 142,
+   "body_chars": 300
+  },
+  "_inputs_opened": [
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-02.jsonl",
+    "sha256": "baf6b7faa44bc9b8a32d70daca3598dcb8bfb5a07ea5831d5f3b57bf0e25100d",
+    "bytes": 466,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-05.jsonl",
+    "sha256": "766dbac3c390a1046dfe5ac844dec34c124cbe22a04da8a353e7aef5a0c207c6",
+    "bytes": 886,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-06.jsonl",
+    "sha256": "ec705754f71df1a04a1edd0d5d85d4875a4c91b92a37bdecde81fd40d3ce58fd",
+    "bytes": 468,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-07.jsonl",
+    "sha256": "e5a8cdc4d5ac6d62876654437bcf8d3f1893432a62da3ebb975b92eeea8639b1",
+    "bytes": 940,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-08.jsonl",
+    "sha256": "544fdc95e7ad600cab914c7aacdc00dd5f28b6c5f20cc91ed04130bcfdc92d15",
+    "bytes": 432238,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-09.jsonl",
+    "sha256": "982196b5afc2270a05dc77b57712a26798cb0fac766a761d1240116841fabd04",
+    "bytes": 366457,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-10.jsonl",
+    "sha256": "1660eb658002e7321ae015b9a2a85fc4b84c7a407564036fd33bd9c2e7c53f69",
+    "bytes": 255605,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-11.jsonl",
+    "sha256": "50769171f33d71bb331d45e929b70f127cf78a667f8fbf25faf9af6625168d32",
+    "bytes": 405094,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2015-12.jsonl",
+    "sha256": "d1498fb52e4fc24f16a6d309424ff38d070ee905689bc64bd9782ade63a0c768",
+    "bytes": 405825,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-01.jsonl",
+    "sha256": "20c0ce0c4de5c3f9bebed210110ffcf61f70515cff4ee0be7a11d4d5e742d699",
+    "bytes": 362641,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-02.jsonl",
+    "sha256": "6df1f6337d7c78a9966f7037e3bd2913f72444c6c48837b81c363c1d639013e5",
+    "bytes": 372907,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-03.jsonl",
+    "sha256": "b448b344018806840c39927fa4ae50bda2b2eb686b0ad9cc4cdcd56d8029ca81",
+    "bytes": 447878,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-04.jsonl",
+    "sha256": "16d0ec5915f7aa8b10750fd5d132fccef087c00ad5018c5922434144e84356be",
+    "bytes": 266847,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-05.jsonl",
+    "sha256": "90b05730cd680b6a843db97fe6c0c812cd5f569a460360f96311bd0794cf3932",
+    "bytes": 408498,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-06.jsonl",
+    "sha256": "2e01ba6d3d8a8e560ff5898673ed64f0ef086eaa906d631e225f3a055f1d18b1",
+    "bytes": 438108,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-07.jsonl",
+    "sha256": "3f9c196eb5a9cc7225249cc365198b46a055127e038b5cdd7bed22838076e4e3",
+    "bytes": 289716,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-08.jsonl",
+    "sha256": "b1b447cb732d32d926c452def9183c923e7ec68fb96d4e1979a983d69c09e002",
+    "bytes": 624578,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-09.jsonl",
+    "sha256": "f8951466df43eb98159243d391953a6ee04471e340ac72c5c8def4468f5ff5e9",
+    "bytes": 480270,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-10.jsonl",
+    "sha256": "bd9e350a6ebe48095f2703d64579c4f908fcd771a5568f3ff017f2522b687fe6",
+    "bytes": 402991,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-11.jsonl",
+    "sha256": "9248b6846c7ae85aa6fb78ddf5c79a2d8f8d34482e537e18bcbbd5398dfbeda9",
+    "bytes": 553667,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2016-12.jsonl",
+    "sha256": "dd44bcd9b4c496c1c8884ce3fd6b275e042f9592c0b60cb5aa960937733cd651",
+    "bytes": 413497,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-01.jsonl",
+    "sha256": "e4eaa81b5d745d760c2e61a330b1a4211d64b1eacd7c8daef05d848679bcc953",
+    "bytes": 348301,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-02.jsonl",
+    "sha256": "b3874e1d1025f5b5c755bc6050fc87d4848c82bf3d3a119efa4d72e862015483",
+    "bytes": 390776,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-03.jsonl",
+    "sha256": "2fbdd6ac1a516373c979379f670603134e6e716f79fbd16ffef13c9a0c00be2f",
+    "bytes": 541358,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-04.jsonl",
+    "sha256": "1d059f825c52d5fe02c0abfa24cca25f63d8886afa63bcb6b1f3a0029dc6aed8",
+    "bytes": 256648,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-05.jsonl",
+    "sha256": "31a781199224f6d064ca622da6daa17ef81bd768fcb29436c0ff0a6a1d5462d2",
+    "bytes": 509772,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-06.jsonl",
+    "sha256": "6fb1a3149ac04893f0bf2f7d5bb3b93cf078be2856e8942e248be682322f89cf",
+    "bytes": 497907,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-07.jsonl",
+    "sha256": "b393d22db8ecc314188827c6332c8c87b331c2913916ce7cdcc8b0b179c4a35a",
+    "bytes": 326337,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-08.jsonl",
+    "sha256": "e2748082d3d39b837c821e09d2add106695d207b63097f1394c861692dbf4f52",
+    "bytes": 515826,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-09.jsonl",
+    "sha256": "b8eabc57b632ff3a6bb3d7b6acab0169e2ae2f18d1e7bfd134ebe35ab885cefa",
+    "bytes": 418359,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-10.jsonl",
+    "sha256": "865f6f2597f9d196a5eed987c3beb2e13e44e6a526aabe825c2846f829980fe1",
+    "bytes": 405615,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-11.jsonl",
+    "sha256": "babcf1953774f91553bf46c5c8579edc7e7583a892ca1b7a7c3a8b039aa24d76",
+    "bytes": 607825,
+    "opened_utc": "2026-09-08T05:36:19+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2017-12.jsonl",
+    "sha256": "e80709bbd3e122fef0c9e13aa07dbebaadf4f8d51fdeda11ea5d117668fa7f9a",
+    "bytes": 359089,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-01.jsonl",
+    "sha256": "29267375c76c98e4a52adf41e7499fbeefd348750dbe5acab8a0a310204aea5f",
+    "bytes": 403495,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-02.jsonl",
+    "sha256": "302d508d9de281946a2b6efe2a9caf31dbd141456d71ae201034c9825e1decca",
+    "bytes": 449241,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-03.jsonl",
+    "sha256": "c4977e3643e9c8b5fda775cbe58bd44780fc8b1e7be4fe48d2f1a293d0ecc3a9",
+    "bytes": 632311,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-04.jsonl",
+    "sha256": "e155c5ff66f84d251eff8e6d8a490fa68c3b41359821829aa9c2aaa8fa15dc94",
+    "bytes": 561200,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-05.jsonl",
+    "sha256": "73fedecfa2a8b10c1231b215080b5d0bc5fc8b2c29f885253737d82f0c22701c",
+    "bytes": 708169,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-06.jsonl",
+    "sha256": "39a6babba5e8959c7edf1cae7e529a2619b11d2911865ba31df6ec5439f8b635",
+    "bytes": 619181,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-07.jsonl",
+    "sha256": "a3d249422221ef8e029bf73d150c18e436e2188ddedd0211404468461ffdced5",
+    "bytes": 444850,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-08.jsonl",
+    "sha256": "7916a4a764f4d26a1b084d162a13b24ec4c887f862ee3b5f804bb71113842c64",
+    "bytes": 759471,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-09.jsonl",
+    "sha256": "4925410f5e5fc2954c0d5925b5fd12934ee7b5185cc1f9a15d2d00838878edc3",
+    "bytes": 629806,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-10.jsonl",
+    "sha256": "ed4fa4f594ec551451a8cba6ec2da9efc1d12be7f01f89164df51d3b69c9d919",
+    "bytes": 499016,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-11.jsonl",
+    "sha256": "75b11ca1034c117f8e5627e0bdce84b103c64a681dac70fc3fdfb63568b12b7e",
+    "bytes": 644261,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2018-12.jsonl",
+    "sha256": "1bcc909c68bc777c6c722b2fd298b62b9897e3232499f55b9c16720f02203e11",
+    "bytes": 605522,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-01.jsonl",
+    "sha256": "6d2a30d0a8133b373ebafaf538bdca7e8e8355803243eb32ea09c5bdf8828563",
+    "bytes": 761960,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-02.jsonl",
+    "sha256": "c88ab3800575e0723921d45d75ff0f3e8d62f18157d4e10bc1eb89df99e7debf",
+    "bytes": 645702,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-03.jsonl",
+    "sha256": "d10e4d99eaf2633c72575cc45c07fa3ed019f6b2958a3435aa6b8bbbff11dff0",
+    "bytes": 685489,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-04.jsonl",
+    "sha256": "e3c1c2a0a61fefdee6e73551d9f518145f7dca4226f0fde8606a226fbd72e7d6",
+    "bytes": 493041,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-05.jsonl",
+    "sha256": "dffc86c7f9f3642dcebfb148e4fcfc28c3fc114911938c3eceb45fff0b6187e3",
+    "bytes": 874236,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-06.jsonl",
+    "sha256": "5e5c120cc959ce1f8f4f3bf2a02ab5a5df6c7bbe252215f0648b59c7d1a27789",
+    "bytes": 870078,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-07.jsonl",
+    "sha256": "52f6fdd0b449a99a2cdfdbeabe2cdf4edf800e3a1bcb3234fe2a6741eee3afc1",
+    "bytes": 648396,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-08.jsonl",
+    "sha256": "72834cd024b6693ba1c59d25f3af8cef6a0d8e2f50ea944875f1a79208cbe209",
+    "bytes": 988194,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-09.jsonl",
+    "sha256": "7b3a3f2125f44f39f38da2b46463a8906193c4af97833913bb9d2c15976e2e40",
+    "bytes": 933763,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-10.jsonl",
+    "sha256": "25b4ab340522285cd3c09f0112c1738cdf1c89f2d0cc14587ae8141607b91173",
+    "bytes": 805832,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-11.jsonl",
+    "sha256": "07464fac7c056c725499813a5ad0353ba9c540e1bde51c3d289e4da740399674",
+    "bytes": 729331,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2019-12.jsonl",
+    "sha256": "e51090694983baf11dd90ead04c4eb1bc0afe135be71fb50e5ed738aaf237a7b",
+    "bytes": 792730,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-01.jsonl",
+    "sha256": "499e1d957037f1ff10349fb2472937e75e88b2aa635295e3862862d470297a1f",
+    "bytes": 787218,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-02.jsonl",
+    "sha256": "90f781ff32258e2a7a269cd6a13cd1fd3c7c1ebe3fb6373d3a1e12e79a2f966e",
+    "bytes": 933362,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-03.jsonl",
+    "sha256": "9bc6156e8326dbe86239e56acdd230e9a5b6a68cf37ee92bf1ff2402659efb21",
+    "bytes": 1571883,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-04.jsonl",
+    "sha256": "2282174db6c822936dfd73ff8e3af78c6bea11139933c812db5596a8d3ebf162",
+    "bytes": 1218405,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-05.jsonl",
+    "sha256": "7e66e30037ad6383597419a4fe313bdc60a4e3a3b8949a70af6cd492ddc4fdf9",
+    "bytes": 1449753,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-06.jsonl",
+    "sha256": "ae8599f46bee919a755469fd4a75003995bc4865eb8fd275cca21a0ab31ef7b3",
+    "bytes": 1390358,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-07.jsonl",
+    "sha256": "4db4ce081d9d77ecda5622950cc64aa0e3e87acdc8e7de76a1be5245f6ca97d6",
+    "bytes": 1092571,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-08.jsonl",
+    "sha256": "9bb4f6837792748a3ff0eaeb1d7a9c3144c2e6a5b09a57fe5d7489e05fb9124c",
+    "bytes": 1212931,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-09.jsonl",
+    "sha256": "92b7fd008e139b826c33113f175df10bfccab668cb6730cd6c0e9898d54e96e8",
+    "bytes": 1122105,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-10.jsonl",
+    "sha256": "812e1de81c4466066d38eeadaf894b8e5c210a44ab308e8f6f5f02a16f8034f7",
+    "bytes": 1144726,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-11.jsonl",
+    "sha256": "4fc0e89f479ec1e243aa7aee99ea42d67bfe821cd764fa6edcb7b349c3bf79e8",
+    "bytes": 1642610,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2020-12.jsonl",
+    "sha256": "a2bd08657fc48656193a34ec01a9cc0f7bfa017e39521a62adc3ddb33d875f1f",
+    "bytes": 1627873,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-01.jsonl",
+    "sha256": "cda4ee0ec77dc8db10f81f205b38428798494ea0428c1845093e0c28b4862fab",
+    "bytes": 1404089,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-02.jsonl",
+    "sha256": "89404edfc3873eec36836786ecc2c87046305df835c24334dde741a9d5c0638b",
+    "bytes": 1318266,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-03.jsonl",
+    "sha256": "cfe3420d47821855924593fd0e203d3068273e7aae84fd067b5f53253a9a8249",
+    "bytes": 1706254,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-04.jsonl",
+    "sha256": "26bdefa5ff88a469e50f6cad14636c73b1eb1006ba15128b7b876179fe8c286f",
+    "bytes": 1332499,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-05.jsonl",
+    "sha256": "5d2a2acbcd360f24138b988adaab9597211f20dfefc4cb9ef0f8dad8370ddc5b",
+    "bytes": 1437236,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-06.jsonl",
+    "sha256": "813968a58d1a68010e9aece937806394f13298b495d7e76262712054b85963c0",
+    "bytes": 1526628,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-07.jsonl",
+    "sha256": "b785a32db526d5f40620f2fc55dbd5271207dbb1543f17d531253c0a1450a1e6",
+    "bytes": 1423187,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-08.jsonl",
+    "sha256": "dd5ba22cfe2ca01af145e5345f9f2d5a8e98de47594eca7469b9de84d63ae2a1",
+    "bytes": 1986798,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-09.jsonl",
+    "sha256": "a7707b62541d54f8e16691a091bc5d200401810b1461974fd72fac51070d0ca1",
+    "bytes": 1517810,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-10.jsonl",
+    "sha256": "1edb8befe75be7e8453e0f588124555bf61027b05e00604d14515cd41269f644",
+    "bytes": 1098238,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-11.jsonl",
+    "sha256": "1774b7d4351d4edc7c2089822b6690d4f8d129ad2205ec7ae4024b2146ee3b83",
+    "bytes": 1446545,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2021-12.jsonl",
+    "sha256": "574e9a8f40e1038973192c06e8ce9cbb3dd44ad3ba827b0b253ea2d02601b2b0",
+    "bytes": 1460358,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-01.jsonl",
+    "sha256": "61a2c8332518575029be84aa8526aa3d327c323b3c6dccc4e5d80d41761099e8",
+    "bytes": 1272297,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-02.jsonl",
+    "sha256": "4deea0ff4902ba577c0b7445bfc637323153cc9e3304187de6c33f987b077c8c",
+    "bytes": 1492016,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-03.jsonl",
+    "sha256": "f943b3304188ecf2e549f3dcbfdab5fabf370736e2c313c4f59b0d4244ef8c1f",
+    "bytes": 2251949,
+    "opened_utc": "2026-09-08T05:36:20+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-04.jsonl",
+    "sha256": "007f1ac4b1763136e644ecafd59e25ddd2360294ed78eab882e59bb54010dd9c",
+    "bytes": 1351112,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-05.jsonl",
+    "sha256": "7a9e49eb7620a02d4974d91468a464b3c787a093cf8fa77cb0c0802f9186925a",
+    "bytes": 1818548,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-06.jsonl",
+    "sha256": "e3924a6b8932035112e1c9fc470cc67863a6998bf280c779d9c1a466fed13049",
+    "bytes": 1683279,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-07.jsonl",
+    "sha256": "41bc645cff630a05e453203c831d9163e7b8b5e76003bc6d5f873d860f457d16",
+    "bytes": 1292453,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-08.jsonl",
+    "sha256": "fff36f275a4a0fdfe1512b592890a71dd03e044b430ede497aa9eb4b6b4f44b8",
+    "bytes": 2049071,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-09.jsonl",
+    "sha256": "e96111d57165531df82d2d27df1311c09ce521b60be2f8a20e31d36fe20dcfcc",
+    "bytes": 1674006,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-10.jsonl",
+    "sha256": "ae32048ea52f99f810a4b815dae531192c7f1e42410a7b44ab625c890faf9441",
+    "bytes": 1480511,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-11.jsonl",
+    "sha256": "b968685cfd62883a4851c409cabdf84ace5c0d3356970fda94935eb5fb1c9ae4",
+    "bytes": 1875443,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2022-12.jsonl",
+    "sha256": "b12e13b65b301928a941406f321e8837d72394c3dda1797e07383829d543d18f",
+    "bytes": 1498496,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-01.jsonl",
+    "sha256": "59477e46859183ac8a5d004e3b57260928cf64c6e703177313547cfc0be785ff",
+    "bytes": 1156351,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-02.jsonl",
+    "sha256": "7e1e1113a739d5a5d7aa8f13a771b6470bfb5086b9d8cdcf269ea217bf9b1cc6",
+    "bytes": 1226583,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-03.jsonl",
+    "sha256": "db6f8af1260914c646871922494bb05520ab5468fbf19c565b5d2fb56ebd1f55",
+    "bytes": 1985423,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-04.jsonl",
+    "sha256": "7a4aa4bce2e21443b303e8347d78939bbf4e708ed03786ff831d26a2b7833fe6",
+    "bytes": 1153443,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-05.jsonl",
+    "sha256": "9ee283e17f25bda45bd9e09fe573813be3b43cd2ec7105b6e2016158797540f6",
+    "bytes": 2348670,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-06.jsonl",
+    "sha256": "9a01457807a320086a48a6e37ae30c8f0d10b86482b1ad3f19d648b9bf51e9d6",
+    "bytes": 1975063,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-07.jsonl",
+    "sha256": "fb86a30310b6759bfc289a4c6f9dbc04b8499f1e8dc6e24a405a36daf30964a9",
+    "bytes": 1344747,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-08.jsonl",
+    "sha256": "a9a4666c29d99c4de04d86916367e96e0dc7c88b9d046e3bf51e93fc83a883a0",
+    "bytes": 2310446,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-09.jsonl",
+    "sha256": "afe1fc63d9d027bf9a1e8017b6103d49b91ad029249ae7244423b511ee8db72f",
+    "bytes": 1831390,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-10.jsonl",
+    "sha256": "c21636ba8c0ad74f68e761873e79b66140e03a3d94a8b52ad239c0d09afd801b",
+    "bytes": 1723760,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-11.jsonl",
+    "sha256": "b752c5d8cf1ae526c987bf91e8cc220bc34449a1d9348f293556f8b9cd2b743d",
+    "bytes": 2058153,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2023-12.jsonl",
+    "sha256": "285c4121c5920cd50960f71d056925ec9b631cecf396a44c14aca59b1625c805",
+    "bytes": 1672664,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-01.jsonl",
+    "sha256": "69488618342762ae1c8b396b7f34ebd47d18228980119be4ab0cd1ad3497720a",
+    "bytes": 1616084,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-02.jsonl",
+    "sha256": "4210ed0aa2e232b46aa4e7156191789557374c8f73387f38c1331a9c28f034bb",
+    "bytes": 1808281,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-03.jsonl",
+    "sha256": "9720953b40b2bc8b0e17dc4d4d744504a1566d121f7bc075ba841ce918d31afc",
+    "bytes": 2165766,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-04.jsonl",
+    "sha256": "7f0f6858ace33da4496cf0838bf5a68a8cbd5898a156d526fcb5ea603643e325",
+    "bytes": 1665647,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-05.jsonl",
+    "sha256": "e5ecf3a106281d049aaddffffaf7f450d0b2be146a0e6b28fc1e266e5fb1d98f",
+    "bytes": 2482949,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-06.jsonl",
+    "sha256": "ac4a7b89c25b1eb43e9be3bab3d37994ac7ed34e644d170cc1964e8929d4d408",
+    "bytes": 2006779,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-07.jsonl",
+    "sha256": "df647fe2bcb0bb2de3c6b9020574e4c568a9776624c5ba80ef38167a37ec9093",
+    "bytes": 1889343,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-08.jsonl",
+    "sha256": "d9d6e5a6ee0b2d605b4fc4fbafd03baee1f3bae675259ce7c933db8651e757b3",
+    "bytes": 2244227,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-09.jsonl",
+    "sha256": "dc8b81ab07c10d4811757cb1ee73c285db3f10795e34e6df21d8af028cdefa31",
+    "bytes": 1917625,
+    "opened_utc": "2026-09-08T05:36:21+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-10.jsonl",
+    "sha256": "49425d92f5d9be72ff4a0bc22875c61c22e4c2b701e9263768174010f23ec2ec",
+    "bytes": 1816245,
+    "opened_utc": "2026-09-08T05:36:22+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-11.jsonl",
+    "sha256": "fd702f048d213ca5d738bc58473be6bf14efd4aad40d453aef3ff60d2fd1442d",
+    "bytes": 2077470,
+    "opened_utc": "2026-09-08T05:36:22+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2024-12.jsonl",
+    "sha256": "459f46d9877549c1a1ca1422f35a31ee36a524d821fbd97554320ac3a06c5bc6",
+    "bytes": 489581,
+    "opened_utc": "2026-09-08T05:36:22+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-01.jsonl",
+    "sha256": "f1e2dc049168852f94b84193c008465e1fd8803dc149350b1cfb4e866eeddfa0",
+    "bytes": 16193040,
+    "opened_utc": "2026-09-08T05:36:22+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-02.jsonl",
+    "sha256": "9ee05a1e701f57f10d5b2242ca59988f61a14fde38d90686cc9932d84d5382b3",
+    "bytes": 17161763,
+    "opened_utc": "2026-09-08T05:36:22+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-03.jsonl",
+    "sha256": "76f2a1b22302cfa1054489dcecf0eabf8b31507c9033f22a2f68ae0349ab80db",
+    "bytes": 12143389,
+    "opened_utc": "2026-09-08T05:36:22+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-04.jsonl",
+    "sha256": "ec93176638dbbd8b63f7d1bc9623c92fde5d44f42e718d9cfc709629196543be",
+    "bytes": 12951113,
+    "opened_utc": "2026-09-08T05:36:23+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-05.jsonl",
+    "sha256": "3f95a54382c9a5d41d5d8cf8304cc032930a2f1c5a5a3f3ae62fa831435101fa",
+    "bytes": 20499667,
+    "opened_utc": "2026-09-08T05:36:23+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-06.jsonl",
+    "sha256": "0a3cd65159127f9c35e7ea9120d0e354c98aa775068b2dcf292a47a5fc418ea7",
+    "bytes": 2314277,
+    "opened_utc": "2026-09-08T05:36:23+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-08.jsonl",
+    "sha256": "b3d096172670334aa39ca59047497ff8080e418fc5e8f77751e0967c5a2a7e53",
+    "bytes": 2578765,
+    "opened_utc": "2026-09-08T05:36:23+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-09.jsonl",
+    "sha256": "ee33397a172a01f6a96daa32b42df2d52bec85fd8febe4fcb5c1a253e46af6d0",
+    "bytes": 6977186,
+    "opened_utc": "2026-09-08T05:36:23+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-10.jsonl",
+    "sha256": "3bdb9b690b8245a6a3b0b7f61ebf5efe16b888742fa052fdb59f2ef4add94151",
+    "bytes": 9650064,
+    "opened_utc": "2026-09-08T05:36:23+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-11.jsonl",
+    "sha256": "f444744b34b92f794d553cac01b573a3082fb32a79b36b49c61f53f1a84c894b",
+    "bytes": 9831084,
+    "opened_utc": "2026-09-08T05:36:24+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2025-12.jsonl",
+    "sha256": "44fb289f6e6d5a37338e27c666ebbf4f2efb78297caf2c93ed51339d3c96adff",
+    "bytes": 9557581,
+    "opened_utc": "2026-09-08T05:36:24+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-01.jsonl",
+    "sha256": "63f8a7a34b6209b49a437636d2f4a6bc35fffa532cff4a8029f42ace69a6e4a1",
+    "bytes": 3879024,
+    "opened_utc": "2026-09-08T05:36:24+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-02.jsonl",
+    "sha256": "fec9e01d0dadea21afaea9693b822bbdf8a5616eabc2a483dae93629fbe205e5",
+    "bytes": 8241765,
+    "opened_utc": "2026-09-08T05:36:24+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-03.jsonl",
+    "sha256": "ac1879650d2e6275e8ef870f61cec7e4a317e99e68a6037248123823629f6d1d",
+    "bytes": 31004177,
+    "opened_utc": "2026-09-08T05:36:24+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-04.jsonl",
+    "sha256": "a9797ce37e4aa71ba5c5297b3d76ba781157a7cb24b2c4ab75ac87782dd28630",
+    "bytes": 22426234,
+    "opened_utc": "2026-09-08T05:36:25+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-05.jsonl",
+    "sha256": "921e9fd77cace172d4f1f7b3753e503a932fdc810bccc43571e7380936550df6",
+    "bytes": 30393142,
+    "opened_utc": "2026-09-08T05:36:25+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-06.jsonl",
+    "sha256": "7e9dd3824b0035f6bae838201f3d35f24d1a70af470b171b057ab916604bf444",
+    "bytes": 26640773,
+    "opened_utc": "2026-09-08T05:36:25+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-07.jsonl",
+    "sha256": "d4ea471a44570cf09501837ce55ffd2b3af4ef7400c3b9642834f78431f1fba7",
+    "bytes": 39513264,
+    "opened_utc": "2026-09-08T05:36:26+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-08.jsonl",
+    "sha256": "a40023120d7c38798808a0249b3256e06150c0c6686920ee7841ce3c7f052333",
+    "bytes": 37598894,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-09.jsonl",
+    "sha256": "2c2c1c564fe17ba3f1a8f1e3a59ade39ed0a11798051f46b6a5e2bbb5752f335",
+    "bytes": 241049,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-10.jsonl",
+    "sha256": "b4ff1c4f09aa45b9b24534ec4ef949a1e47069ada42fe2e2d6f17a3849dc5041",
+    "bytes": 809009,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-11.jsonl",
+    "sha256": "edfc3811abbb2971e8c99fc75500507c1f2f59a80117072bde9a0ec6ec1413d6",
+    "bytes": 1621120,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2026-12.jsonl",
+    "sha256": "70769d02c99a82836c8407f49c731741e6741924c1442bb1427413ede09863b2",
+    "bytes": 190447,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2027-01.jsonl",
+    "sha256": "7829c590e6d80013b455c5682423e5ce2afde1867539196289c4f5eb831c8df0",
+    "bytes": 405394,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   },
+   {
+    "path": "c:/users/mrthn/aegis-alpha-terminal/state/corpus/observations/2027-02.jsonl",
+    "sha256": "25158f027e81f51a8c500d2d33c30ecc632906fa64153bf135f01ce00ad0e368",
+    "bytes": 1113892,
+    "opened_utc": "2026-09-08T05:36:27+00:00",
+    "note": "news corpus shard (terminal repo, read-only)"
+   }
+  ],
+  "git_commit": "2b1290f3d6d5",
+  "generated_utc": "2026-09-08T05:36:31+00:00"
+ }
+}
