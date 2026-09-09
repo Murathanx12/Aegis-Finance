@@ -30,7 +30,7 @@ unchanged).
 | 5 | **P6 bars + regret** (§10.4) | A-P6 | `prices_2025_26/bars.parquet` + receipt; `P6_regret_run01.json` | daily bars 2025-01→today for the tracker universe + SPY through the terminal repo's data credential (no order path imported); the six mandates replayed monthly from 2026-03; each vs what the account did vs SPY; opportunity capture |
 | 6 | **R2 pilot** (§10.5, GPU after C1) | A-R2 | `R2_monthly_llm_2022.json` | AMNESIA canary FIRST (real vs anonymised names); monthly + six-monthly cells on 2022, β first, shuffled-digest control |
 | 7 | **A0 control router** (§10.7) | A-A0 | `backend/routers/control.py` + tests | whitelist of job ids, PID file per run, STOP-then-kill-by-PID, no order path imported (AST test like `test_the_router_imports_no_broker`) |
-| carry | X: taskkill hook, 4th Sunday suite; F2: hack2 evidence gate as a declared threshold (draft for Murat); F4: hack4 v3 sector-rotation draft | A-X/F | — | — |
+| carry | X: taskkill hook, 4th Sunday suite; **terminal `tests_smoke.py` and `tests_smoke_equity.py` are red on 2026-09-09 without any code change** ("2 structures enumerated at 2026-09-09, none cleared the gates" in the runner.evaluate block -- a calendar-dated fixture; fix by deriving the date, never by editing the assertion); F2: hack2 evidence gate as a declared threshold (draft for Murat); F4: hack4 v3 sector-rotation draft. hack4 v2 itself is DONE in terminal `c96d146`; Murat's flip is the seal-authority redeploy | A-X/F | — | — |
 
 ## Verify before you report
 
