@@ -40,7 +40,25 @@ QUEUE: list[tuple[str, int]] = [
     ("D1_reaction_book", 90),
     ("D2_reaction_mutations", 150),
     ("G1_evolve", 8 * 60),
+    # added 2026-09-08 22:5x local, while G1 was still running. D1 graded every
+    # cell against ZERO while its own placebo -- same names, same construction,
+    # same 25 bps, dates shifted +40 sessions -- lost 14.868%/yr beta-matched.
+    # D3 differences every leg against its own control; N1 trains on the event
+    # level, where the construction cannot contaminate the label.
+    ("D3_matched_control_grid", 90),
+    ("N1_train_reaction_learner", 8 * 60),
+    ("D4_ls_robustness_and_decay", 120),
+    # the sealed window is opened ONCE, here, for G1's archive -- pre-declared
+    # in the 2026-09-08 roadmap section 2.4 as the morning job
+    ("G2_holdout_once", 90),
+    # 2026-09-09 (Murat): "randomize the backtest ... really randomized times ...
+    # see when it beats the S&P 500, what it was focusing on". Descriptive, no
+    # holdout, null = random genomes on the SAME windows.
+    ("RW1_random_windows", 60),
 ]
+
+#: jobs whose length is a time box, not a computation
+TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner"}
 
 
 def stopped() -> bool:
@@ -126,7 +144,7 @@ def run_job(job: str, run: int, timeout_min: int, extra: list[str]) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--job", help="run exactly one job and exit")
+    ap.add_argument("--job", help="run only these jobs, in QUEUE order (comma-separated)")
     ap.add_argument("--list", action="store_true")
     ap.add_argument("--hours", type=float, default=5.0, help="G1's time box")
     ap.add_argument("--run", type=int, default=1)
@@ -135,7 +153,13 @@ def main(argv: list[str] | None = None) -> int:
         for j, m in QUEUE:
             print(f"{j:28s} {m:4d} min")
         return 0
-    queue = [(j, m) for j, m in QUEUE if not a.job or j == a.job]
+    want = {j.strip() for j in a.job.split(",")} if a.job else None
+    if want:
+        unknown = want - {j for j, _ in QUEUE}
+        if unknown:
+            print(f"REFUSED: not in the queue: {sorted(unknown)}", flush=True)
+            return 2
+    queue = [(j, m) for j, m in QUEUE if want is None or j in want]
     print(f"NIGHT FACTORY {RUN_DATE}: {len(queue)} job(s); STOP file: {STOP}", flush=True)
     for job, minutes in queue:
         if stopped():
@@ -144,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
         run = a.run
         while _receipt_path(job, run).exists():
             run += 1
-        extra = ["--hours", str(a.hours)] if job == "G1_evolve" else []
+        extra = ["--hours", str(a.hours)] if job in TIMEBOXED else []
         print(f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] {job} run {run} (<= {minutes} min)", flush=True)
         payload = run_job(job, run, minutes, extra)
         append_leaderboard(job, run, payload)

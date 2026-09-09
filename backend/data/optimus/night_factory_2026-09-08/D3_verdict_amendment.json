@@ -1,0 +1,112 @@
+{
+ "amends": "D3_matched_control_grid_run01.json",
+ "why": "The receipt's own verdict string was stamped by a rule that counted era SIGNS. All three eras are positive in sign, so it printed PRODUCT_PROMISING -- while the era magnitudes are 28.705 -> 17.335 -> 2.112 %/yr and the newest era's t is 0.367. The guard now returns ERA_DECAYED for exactly this shape (night_factory_jobs._verdict_d3). The receipt is left byte-for-byte as written; this file carries the corrected reading.",
+ "written_utc": "2026-09-08T14:57:36+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "corrected_verdict": "ERA_DECAYED: the reaction long-short is real and clean in 1999-2015 and absent in 2016-2024. It is a finding about the old window, not a book to seal.",
+ "finding_1_the_exit_rule_is_NOT_earned": {
+  "claim_tested": "D1's bottom decile falls -20.013%/yr t -4.704 in all three eras -> an exit/avoid clause for hack3/hack6",
+  "the_control_that_was_missing": {
+   "cell": "placebo_bottom_decile|hold=21",
+   "beta_matched_pct_yr": -16.315,
+   "t_nw": -3.753,
+   "what_it_is": "identical names, identical book, identical 25 bps, announcement dates shifted +40 sessions -- zero event information"
+  },
+  "incremental": {
+   "cell": "bottom_minus_placebo_bottom|hold=21",
+   "beta_matched_pct_yr": -4.006,
+   "t_nw": -0.789,
+   "p_two_sided": 0.42989478,
+   "eras": {
+    "1999-2007": [
+     -19.052,
+     -2.429
+    ],
+    "2008-2015": [
+     0.386,
+     0.044
+    ],
+    "2016-2024": [
+     6.856,
+     0.789
+    ]
+   },
+   "all_holds_t": {
+    "5": -0.231,
+    "10": -0.345,
+    "21": -0.789,
+    "42": -1.387
+   }
+  },
+  "verdict": "NOT EARNED. Against its own matched control the bottom decile is -4.006%/yr t -0.789 (p 0.43), era signs flip, and no hold reaches |t| 1.4. The -20%/yr was the construction, which the placebo reproduces at -16.315%/yr. Do NOT put the bottom-decile exit clause in hack3/hack6's next seal."
+ },
+ "finding_2_the_long_short_is_real_but_old": {
+  "cell": "LS_announcement|hold=21",
+  "beta": -0.2192,
+  "beta_matched_pct_yr": 15.919,
+  "t_nw": 3.864,
+  "terminal_wealth_net": 20.1684,
+  "max_drawdown_pct": -54.726,
+  "ann_vol_pct": 21.084,
+  "months": 310,
+  "family_holm_max_p": 0.0321692,
+  "holm_all_four_holds": {
+   "LS_announcement|hold=21": 0.00044576,
+   "LS_announcement|hold=42": 0.00062592,
+   "LS_announcement|hold=5": 0.0321692,
+   "LS_announcement|hold=10": 0.0321692
+  },
+  "placebo_long_short_t": 0.02,
+  "eras": {
+   "1999-2007": [
+    28.705,
+    3.969
+   ],
+   "2008-2015": [
+    17.335,
+    2.37
+   ],
+   "2016-2024": [
+    2.112,
+    0.367
+   ]
+  },
+  "power": {
+   "n_blocks": 310,
+   "alpha": 0.05,
+   "power": 0.8,
+   "sd_per_block": 0.060034,
+   "mde_abs": 0.009553,
+   "observed_abs": 0.013266,
+   "powered_for_observed_effect": true,
+   "blocks_needed_for_observed_effect": 161
+  },
+  "verdict": "Clean on the pooled window: Holm max p 0.032 across all four holds, placebo LS t 0.02, powered (161 blocks needed, 310 on hand). But 2016-2024 is +2.112%/yr t 0.367. Real in the old window, absent in the one we would trade.",
+  "NOT_modelled": [
+   "stock borrow / locate cost on the short leg",
+   "short availability for the bottom decile (small, falling names)",
+   "the -54.7% drawdown is at 21% annualised vol -- this is not a low-risk spread"
+  ]
+ },
+ "finding_3_the_construction_carries_the_drag": {
+  "all_announcers_no_selection_hold21": {
+   "beta_matched_pct_yr": -7.7,
+   "t_nw": -4.063,
+   "beta": 1.211
+  },
+  "zero_cost_diagnostics": {
+   "ann_top": 3.586,
+   "ann_bottom": -12.035,
+   "plc_top": -7.363,
+   "plc_bottom": -8.887
+  },
+  "reading": "An equal-weight book of EVERY floored announcer loses 7.7%/yr beta-matched (t -4.063) with no selection at all. That is the number D1's cells should have been read against, and it is why grading a book against ZERO instead of against its own construction inverted the conclusion."
+ },
+ "what_changed_vs_the_2026-09-08_night_report": [
+  "'the LONG leg dies in construction' -> the long leg is the BEST cell against its control (+11.883%/yr t 1.735); it was the construction that died, and both legs share it",
+  "'the LOSERS carry the information (t -4.7)' -> the losers carry -4.006%/yr t -0.789 once their own control is subtracted; the t -4.7 was the construction",
+  "'exit rule + shadow puts for hack5' -> not earned on this evidence; nothing to harvest",
+  "NEW: the self-financing long-short at hold 21 is +15.919%/yr t 3.864, Holm-clean across four holds, placebo-flat -- and decays to zero by 2016-2024"
+ ]
+}

@@ -1,0 +1,50 @@
+{
+ "job": "C1_counterfactual_news",
+ "licence": "PRODUCT_EXPERIMENT",
+ "what": "anonymised real headlines + three one-change counterfactuals each; NO returns, NO outcomes",
+ "backend": "local_gguf",
+ "model": "local",
+ "written_utc": "2026-09-08T21:01:39+00:00",
+ "final": true,
+ "docs_attempted": 4839,
+ "docs_ok": 4669,
+ "refusals": {
+  "REFUSED_SCHEMA": 117,
+  "REFUSED_UNPARSEABLE": 53
+ },
+ "docs_per_hour": 691.2,
+ "wall_s": 25202.0,
+ "tokens_in": 2159930,
+ "tokens_out": 1409581,
+ "cost_usd": 0.0,
+ "deepseek_counterfactual_usd": 2.17699923,
+ "by_year": {
+  "2021": 910,
+  "2022": 1048,
+  "2023": 1099,
+  "2024": 1232,
+  "2020": 380
+ },
+ "event_types": {
+  "ANALYST": 853,
+  "EARNINGS": 718,
+  "MACRO": 949,
+  "GUIDANCE": 62,
+  "MANAGEMENT": 350,
+  "PRODUCT": 743,
+  "OTHER": 541,
+  "FINANCING": 134,
+  "REGULATORY": 201,
+  "LEGAL": 22,
+  "M&A": 96
+ },
+ "directions": {
+  "POSITIVE": 2423,
+  "NEGATIVE": 1393,
+  "UNCLEAR": 853
+ },
+ "rows_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-08\\C1_counterfactual_news.jsonl",
+ "headline": "4669 curriculum rows (4839 attempted) at 691 docs/hr, $0.00; refusals {'REFUSED_SCHEMA': 117, 'REFUSED_UNPARSEABLE': 53}",
+ "verdict": "DATASET (curriculum), not a result. Feeds the text arm of the NN lane once E0 joins returns.",
+ "family_max_p": null
+}

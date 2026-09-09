@@ -1,0 +1,442 @@
+{
+ "job": "G2_holdout_once",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "READ_ONCE": true,
+ "holdout": "2015-12 < month <= 2024-12",
+ "null_random_genomes": {
+  "n": 0,
+  "t_bm_p50": null,
+  "t_bm_p95": null,
+  "tw_p50": null
+ },
+ "archive_on_holdout": [
+  {
+   "key": "94083541c82ede71",
+   "dev_fitness": 6.21341,
+   "dev_t_bm": 4.727,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "95cbffbe9fdf5059",
+   "dev_fitness": 6.18763,
+   "dev_t_bm": 4.903,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "36d13416658e4d0a",
+   "dev_fitness": 6.10318,
+   "dev_t_bm": 4.901,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "98edebd226ded8bc",
+   "dev_fitness": 6.09488,
+   "dev_t_bm": 4.914,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "a9939c6ca744ced0",
+   "dev_fitness": 6.08159,
+   "dev_t_bm": 5.231,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "5e1b2e492bdf9a6d",
+   "dev_fitness": 6.07638,
+   "dev_t_bm": 4.639,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "89feac6c4078e77f",
+   "dev_fitness": 6.07629,
+   "dev_t_bm": 4.893,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "28a25814f2058cc8",
+   "dev_fitness": 6.05396,
+   "dev_t_bm": 4.665,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "6dccb4f69ed7ce7e",
+   "dev_fitness": 6.05333,
+   "dev_t_bm": 4.963,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "fedf3f56154571b7",
+   "dev_fitness": 6.04637,
+   "dev_t_bm": 4.692,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "94083541c82ede71",
+   "dev_fitness": 6.21341,
+   "dev_t_bm": 4.727,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "95cbffbe9fdf5059",
+   "dev_fitness": 6.18763,
+   "dev_t_bm": 4.903,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "98edebd226ded8bc",
+   "dev_fitness": 6.09488,
+   "dev_t_bm": 4.914,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "a9939c6ca744ced0",
+   "dev_fitness": 6.08159,
+   "dev_t_bm": 5.231,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "89feac6c4078e77f",
+   "dev_fitness": 6.07629,
+   "dev_t_bm": 4.893,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "831639eef6867849",
+   "dev_fitness": 6.02244,
+   "dev_t_bm": 5.374,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "5fe5ef2e504a615c",
+   "dev_fitness": 5.83127,
+   "dev_t_bm": 5.825,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "399fb5364dd828d6",
+   "dev_fitness": 5.68555,
+   "dev_t_bm": 4.995,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "c2ad93784d6509e5",
+   "dev_fitness": 5.62013,
+   "dev_t_bm": 4.836,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "6ec51495d00533a8",
+   "dev_fitness": 5.61266,
+   "dev_t_bm": 5.179,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "ba3f9311f8143aa0",
+   "dev_fitness": 5.5643,
+   "dev_t_bm": 4.887,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "bb05acb86883a697",
+   "dev_fitness": 5.54121,
+   "dev_t_bm": 4.766,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "f8b605ab83b37a44",
+   "dev_fitness": 5.52383,
+   "dev_t_bm": 5.341,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "fccc687578d57853",
+   "dev_fitness": 5.49208,
+   "dev_t_bm": 6.45,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "9ff870d21e28f315",
+   "dev_fitness": 5.38406,
+   "dev_t_bm": 5.604,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "e323a05c9bb47d11",
+   "dev_fitness": 5.32679,
+   "dev_t_bm": 6.032,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "627d832f926793ff",
+   "dev_fitness": 5.31489,
+   "dev_t_bm": 5.666,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "541945e619d11fc3",
+   "dev_fitness": 5.30911,
+   "dev_t_bm": 5.86,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "33eb75caddba4b06",
+   "dev_fitness": 5.30455,
+   "dev_t_bm": 5.392,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "8aff484723f2e7a4",
+   "dev_fitness": 5.29867,
+   "dev_t_bm": 5.863,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "8dfb03c1a4e88510",
+   "dev_fitness": 5.29597,
+   "dev_t_bm": 5.36,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "9c74c52254c5d49d",
+   "dev_fitness": 5.27506,
+   "dev_t_bm": 5.348,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "dc2b37fbfccd3eb9",
+   "dev_fitness": 5.2734,
+   "dev_t_bm": 5.464,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "be7e7c4e1d4209c2",
+   "dev_fitness": 5.19827,
+   "dev_t_bm": 5.676,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  },
+  {
+   "key": "eaf0dad0cc53fa15",
+   "dev_fitness": 5.18389,
+   "dev_t_bm": 5.449,
+   "holdout": {
+    "verdict": "REFUSED",
+    "why": "107 months",
+    "fitness": -9.0
+   },
+   "holdout_t_percentile_vs_random": null,
+   "holdout_tw_percentile_vs_random": null
+  }
+ ],
+ "headline": "35 archive genomes read on the holdout once against 0 random genomes",
+ "verdict": "see archive_on_holdout: a genome whose holdout t sits below the random p95 learned the exam",
+ "family_max_p": null,
+ "elapsed_s": 78.4,
+ "written_utc": "2026-09-09T00:24:23+00:00",
+ "run": 1,
+ "exit_code": 0
+}

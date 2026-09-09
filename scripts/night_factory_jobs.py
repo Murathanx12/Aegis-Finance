@@ -596,7 +596,7 @@ def crossover(a: dict, b: dict, rng: random.Random) -> dict:
     return c
 
 
-def evaluate_genome(dev: pd.DataFrame, g: dict) -> dict:
+def evaluate_genome(dev: pd.DataFrame, g: dict, min_months: int = 150) -> dict:
     from learner import evaluate as E
     sig = np.zeros(len(dev))
     for f, w in g["w"].items():
@@ -609,8 +609,11 @@ def evaluate_genome(dev: pd.DataFrame, g: dict) -> dict:
                    hold_k=hold_k, tradable_floor=g["floor"], with_risk=True, return_series=True)
     except SystemExit as exc:
         return {"verdict": "REFUSED", "why": str(exc)[:200], "fitness": -9.0}
-    if r.get("months", 0) < 150:
-        return {"verdict": "REFUSED", "why": f"{r.get('months')} months", "fitness": -9.0}
+    if r.get("months", 0) < min_months:
+        # this floor was written for the 202-month DEV window. The holdout is 107
+        # months, so a hard-coded 150 refuses EVERY genome on the sealed window --
+        # a gate that cannot go green. It travels with the window now.
+        return {"verdict": "REFUSED", "why": f"{r.get('months')} months < {min_months}", "fitness": -9.0}
     ser = r["_series"]
     net = ser["net"].astype("float64")
     mkt = ser["market"].reindex(net.index).astype("float64")
@@ -739,14 +742,15 @@ def G2_holdout_once(n_null: int = 200, seed: int = 7) -> dict:
     hold = df[df["month"] > DEV_LAST_MONTH].copy()
     del df
     rng = random.Random(seed)
-    null = [evaluate_genome(hold, random_genome(rng)) for _ in range(n_null)]
+    min_m = int(os.getenv("NIGHT_G2_MIN_MONTHS", "96"))     # 8 years of the 107 on offer
+    null = [evaluate_genome(hold, random_genome(rng), min_months=min_m) for _ in range(n_null)]
     null_t = np.array([v["t_beta_matched"] or 0.0 for v in null if v.get("verdict") == "OK"])
     null_tw = np.array([v["terminal_wealth_net"] for v in null if v.get("verdict") == "OK"])
     out_rows = []
     for row in (g1.get("top10_dev") or []) + (g1.get("pareto_dev") or []):
         if not row.get("genome"):
             continue
-        h = evaluate_genome(hold, row["genome"])
+        h = evaluate_genome(hold, row["genome"], min_months=min_m)
         out_rows.append({"key": row["key"], "dev_fitness": row.get("fitness"), "dev_t_bm": row.get("t_beta_matched"),
                          "holdout": h,
                          "holdout_t_percentile_vs_random": _r(float((null_t < (h.get("t_beta_matched") or 0.0)).mean()), 3),
@@ -758,12 +762,685 @@ def G2_holdout_once(n_null: int = 200, seed: int = 7) -> dict:
                                     "tw_p50": _r(float(np.median(null_tw)), 4) if len(null_tw) else None},
             "archive_on_holdout": out_rows,
             "headline": f"{len(out_rows)} archive genomes read on the holdout once against {len(null_t)} random genomes",
-            "verdict": "see archive_on_holdout: a genome whose holdout t sits below the random p95 learned the exam",
+            "verdict": (("REFUSED: the null bar is EMPTY -- every random genome was rejected before a "
+                         f"statistic was computed (min_months={min_m} vs a {len(hold['month'].unique()) if 'month' in hold else '?'}-month "
+                         "holdout). Nothing was read; this is not a holdout result.")
+                        if len(null_t) == 0 else
+                        "see archive_on_holdout: a genome whose holdout t sits below the random p95 learned the exam"),
             "family_max_p": None}
 
 
+# ------------------------------------------------- D3 / N1 shared book helpers
+
+def _synth(net, gross, n_open, n_positions=0, mean_hold=0.0) -> dict:
+    return {"net": np.asarray(net, dtype="float64"), "gross": np.asarray(gross, dtype="float64"),
+            "n_open": np.asarray(n_open, dtype="float64"),
+            "n_positions": int(n_positions), "mean_hold_sessions": float(mean_hold)}
+
+
+def _diff_book(a: dict, b: dict) -> dict:
+    """a - b on the sessions where BOTH legs are live.
+
+    Both legs are built by the SAME construction (same entry convention, same
+    equal weighting, same 25 bps, same universe), so whatever drag the
+    construction itself carries appears in both and cancels here. What survives
+    is the part attributable to the thing that differs between the legs.
+    """
+    both = (a["n_open"] > 0) & (b["n_open"] > 0)
+    return _synth(np.where(both, a["net"] - b["net"], 0.0),
+                  np.where(both, a["gross"] - b["gross"], 0.0),
+                  np.where(both, np.minimum(a["n_open"], b["n_open"]), 0.0),
+                  a["n_positions"] + b["n_positions"],
+                  (a["mean_hold_sessions"] + b["mean_hold_sessions"]) / 2.0)
+
+
+def _select_bottom(df: pd.DataFrame, share: float, floor: float | None = FLOOR_USD, col="rank") -> pd.DataFrame:
+    m = df[col].notna() & (df[col] <= share)
+    if floor is not None:
+        m &= df["dv21"] >= floor
+    return df[m]
+
+
+def _select_all(df: pd.DataFrame, floor: float | None = FLOOR_USD, col="rank") -> pd.DataFrame:
+    m = df[col].notna()
+    if floor is not None:
+        m &= df["dv21"] >= floor
+    return df[m]
+
+
+def _common_window(tape: Tape, a: pd.DataFrame, b: pd.DataFrame) -> tuple[int, int]:
+    fa, la = _window(tape, a, None, None)
+    fb, lb = _window(tape, b, None, None)
+    return max(fa, fb), min(la, lb)
+
+
+# ------------------------------------------------------------------------ D3
+
+def D3_matched_control_grid(smoke: bool = False) -> dict:
+    """Every announcement cell gets its OWN matched control, and the difference is graded.
+
+    D1 printed `PLACEBO_top_decile` (-14.868%/yr beta-matched, t -2.672) and then
+    graded every announcement cell against ZERO. The placebo carries no event
+    information -- same names, same construction, same costs, announcement dates
+    shifted +40 sessions -- so its -14.9%/yr IS the construction's own drag, and it
+    is the baseline every cell owes a comparison to. Two consequences D1 could not
+    see:
+
+      * there is no placebo BOTTOM decile anywhere, so the -20%/yr t -4.7 that the
+        proposed exit rule rests on has never met its matched control;
+      * the long-short book (top decile minus bottom decile, both announcements)
+        cancels the shared construction drag exactly and is TRADABLE. It is the
+        product form of R4's decile spread and has never been graded with costs,
+        in calendar time, with a beta.
+
+    Nothing here is chosen on an outcome: the primary family is fixed as the four
+    long-short holds before the job runs, and every other cell is labelled a
+    diagnostic and kept out of the multiplicity correction.
+    """
+    out = {"job": "D3_matched_control_grid", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+           "question": ("Which of D1's negative cells are the SIGNAL and which are the "
+                        "CONSTRUCTION? Difference every announcement leg against the same "
+                        "leg built on placebo dates, and grade the self-financing long-short."),
+           "corrects": ("D1_reaction_book_run01 graded every cell against zero while its own "
+                        "placebo lost -14.868%/yr beta-matched (t -2.672) through the identical "
+                        "book. Against that control the top decile is +10.7pp/yr and the bottom "
+                        "decile only -5.1pp/yr, which is the opposite ordering to the one the "
+                        "2026-09-08 night report drew from the same receipt."),
+           "conventions": {"legs": "top decile / bottom decile, PIT trailing-63-session rank, $3m/day floor",
+                           "control": "R4_placebo_offset40 -- same names, announcement dates +40 sessions",
+                           "difference": "graded only on sessions where BOTH legs are live",
+                           "PRIMARY_family": "LS_announcement at holds 5/10/21/42, fixed before the run",
+                           "diagnostics": "every cell tagged DIAGNOSTIC / ZERO_COST / CONSTRUCTION_BASELINE is outside the family and carries no Holm"}}
+    tape, years = _load_tape(smoke)
+    ann, plc = _events(tape, years, smoke)
+    ann["rank"] = pit_rank(ann)
+    plc["rank"] = pit_rank(plc)
+    first, last = _common_window(tape, ann, plc)
+    out["window"] = {"first_session_date": str(tape.dates[first])[:10],
+                     "last_session_date": str(tape.dates[last])[:10]}
+
+    cells: dict[str, dict] = {}
+    family_p: dict[str, float] = {}
+    for hold in (5, 10, 21, 42):
+        at = calendar_book(tape, _select(ann, 0.10), hold)
+        ab = calendar_book(tape, _select_bottom(ann, 0.10), hold)
+        pt_ = calendar_book(tape, _select(plc, 0.10), hold)
+        pb = calendar_book(tape, _select_bottom(plc, 0.10), hold)
+        g = grade_daily_book(tape, _diff_book(at, ab), label=f"LS_announcement|hold={hold}|25bps",
+                             first=first, last=last)
+        cells[f"LS_announcement|hold={hold}"] = g
+        cells[f"LS_placebo|hold={hold}|DIAGNOSTIC"] = grade_daily_book(
+            tape, _diff_book(pt_, pb), label=f"LS_placebo|hold={hold}", first=first, last=last)
+        cells[f"placebo_bottom_decile|hold={hold}|THE_MISSING_CONTROL"] = grade_daily_book(
+            tape, pb, label=f"placebo_bottom|hold={hold}", first=first, last=last)
+        cells[f"top_minus_placebo_top|hold={hold}|DIAGNOSTIC"] = grade_daily_book(
+            tape, _diff_book(at, pt_), label=f"top-plcTop|hold={hold}", first=first, last=last)
+        cells[f"bottom_minus_placebo_bottom|hold={hold}|DIAGNOSTIC"] = grade_daily_book(
+            tape, _diff_book(ab, pb), label=f"bot-plcBot|hold={hold}", first=first, last=last)
+        p = g.get("PRIMARY_beta_matched", {}).get("p_two_sided")
+        if p is not None:
+            family_p[f"LS_announcement|hold={hold}"] = p
+        bm = g.get("PRIMARY_beta_matched", {})
+        pbm = cells[f"LS_placebo|hold={hold}|DIAGNOSTIC"].get("PRIMARY_beta_matched", {})
+        cbm = cells[f"bottom_minus_placebo_bottom|hold={hold}|DIAGNOSTIC"].get("PRIMARY_beta_matched", {})
+        print(f"    H={hold:2d}  LS_ann beta {g.get('beta')} bm {bm.get('annualised_pct')}%/yr t {bm.get('t_nw')} "
+              f"TW {g.get('terminal_wealth_net')} DD {g.get('max_drawdown_pct')}% | LS_plc t {pbm.get('t_nw')} "
+              f"| bot-minus-its-control {cbm.get('annualised_pct')}%/yr t {cbm.get('t_nw')}", flush=True)
+
+    # the construction baseline: every floored announcer, no selection at all
+    cells["all_announcers|hold=21|CONSTRUCTION_BASELINE"] = grade_daily_book(
+        tape, calendar_book(tape, _select_all(ann), 21), label="all_announcers|hold=21",
+        first=first, last=last)
+    cells["all_placebo|hold=21|CONSTRUCTION_BASELINE"] = grade_daily_book(
+        tape, calendar_book(tape, _select_all(plc), 21), label="all_placebo|hold=21",
+        first=first, last=last)
+    base = cells["all_announcers|hold=21|CONSTRUCTION_BASELINE"].get("PRIMARY_beta_matched", {})
+    print(f"    construction baseline (every floored announcer, hold 21): "
+          f"{base.get('annualised_pct')}%/yr t {base.get('t_nw')}", flush=True)
+
+    # cost drag vs tilt drag: the same cells with the cost line switched off
+    for nm, sel in (("ann_top", _select(ann, 0.10)), ("ann_bottom", _select_bottom(ann, 0.10)),
+                    ("plc_top", _select(plc, 0.10)), ("plc_bottom", _select_bottom(plc, 0.10))):
+        cells[f"ZERO_COST|{nm}|hold=21"] = grade_daily_book(
+            tape, calendar_book(tape, sel, 21, cost_bps=0.0), label=f"ZERO_COST|{nm}",
+            first=first, last=last)
+    zc = cells["ZERO_COST|ann_top|hold=21"].get("PRIMARY_beta_matched", {})
+    print(f"    zero-cost diagnostic, ann_top hold 21: {zc.get('annualised_pct')}%/yr t {zc.get('t_nw')} "
+          f"(the same cell with 25 bps was -4.138%/yr)", flush=True)
+
+    ls21 = cells["LS_announcement|hold=21"]
+    lsp21 = cells["LS_placebo|hold=21|DIAGNOSTIC"]
+    b21 = cells["bottom_minus_placebo_bottom|hold=21|DIAGNOSTIC"]
+    out["cells"] = {k: _strip(v) for k, v in cells.items()}
+    out["family"] = {"n_cells": len(family_p), "holm": R.holm(family_p), "bh_fdr": R.bh_fdr(family_p),
+                     "members": "LS_announcement at 4 holds only; diagnostics excluded by design"}
+    out["family_max_p"] = max(out["family"]["holm"].values()) if family_p else None
+    lbm = ls21.get("PRIMARY_beta_matched", {})
+    out["headline"] = (f"long-short reaction decile, hold 21, 25bps both legs: beta {ls21.get('beta')}, "
+                       f"beta-matched {lbm.get('annualised_pct')}%/yr t {lbm.get('t_nw')}, "
+                       f"TW {ls21.get('terminal_wealth_net')}, DD {ls21.get('max_drawdown_pct')}%; "
+                       f"placebo LS t {lsp21.get('PRIMARY_beta_matched', {}).get('t_nw')}; "
+                       f"bottom-vs-its-own-control {b21.get('PRIMARY_beta_matched', {}).get('annualised_pct')}%/yr "
+                       f"t {b21.get('PRIMARY_beta_matched', {}).get('t_nw')}")
+    out["verdict"] = _verdict_d3(ls21, lsp21, b21)
+    out["what_the_morning_must_decide"] = (
+        "If bottom-vs-its-own-control is flat, the proposed bottom-decile EXIT clause has no "
+        "incremental content and must NOT go into hack3/hack6's next seal -- the -20%/yr was the "
+        "construction, which an exit rule cannot harvest. If the long-short is positive after "
+        "costs in all three eras while the placebo long-short is flat, the reaction book returns "
+        "as a LONG-SHORT product experiment, not as the long-only book D1 killed.")
+    return out
+
+
+def _verdict_d3(ls: dict, ls_plc: dict, bot_ctl: dict) -> str:
+    lbm = (ls.get("PRIMARY_beta_matched") or {})
+    t = lbm.get("t_nw") or 0.0
+    ann = lbm.get("annualised_pct") or 0.0
+    eras = ls.get("eras", {})
+    same = sum(1 for v in eras.values() if v["sign"] > 0)
+    pt = (ls_plc.get("PRIMARY_beta_matched") or {}).get("t_nw")
+    bt = (bot_ctl.get("PRIMARY_beta_matched") or {}).get("t_nw")
+    if not eras:
+        return "CANNOT DETERMINE"
+    if len(eras) < 2:
+        # a window short enough to hold one era cannot satisfy "every era"; saying so
+        # beats a green verdict that only means the sample was too short to disagree
+        return (f"CANNOT DETERMINE: only {len(eras)} era on this window; "
+                f"beta-matched {ann}%/yr t {t}")
+    if t > 2.5 and same == len(eras) and (pt is None or abs(pt) < 1.0):
+        # "every era same SIGN" is a weak test: +28.7%/yr, +17.3%/yr, +2.1%/yr all
+        # score sign +1 while the effect is plainly decaying out of the window the
+        # money would actually be traded in. Name the newest era before stamping.
+        newest_key = sorted(eras)[-1]
+        newest = eras[newest_key]
+        if (newest.get("t") or 0.0) < 1.0:
+            return (f"ERA_DECAYED: pooled long-short {ann}%/yr t {t} and the placebo does not "
+                    f"reproduce it, but the NEWEST era ({newest_key}) is "
+                    f"{newest.get('beta_matched_ann_pct')}%/yr t {newest.get('t')}. Same sign in "
+                    f"every era is not the same as alive today; this is a finding about the old "
+                    f"window, not a book to seal.")
+        return ("PRODUCT_PROMISING: the self-financing long-short survives 25 bps on both legs in "
+                "every era and the placebo long-short does not reproduce it")
+    if t > 1.5 and same >= 2 and ann > 0:
+        return "CONDITIONAL: long-short positive after costs but not in every era or not powered"
+    if bt is not None and bt < -2.0:
+        return ("CONDITIONAL: the long-short does not pay, but the bottom decile IS worse than its "
+                "own matched control -- the avoid/exit reading survives differencing")
+    if ann <= 0 and (bt is None or bt > -1.0):
+        return ("FAILED_VARIANT: differenced against its own control the reaction rank carries "
+                "neither a tradable spread nor an incremental exit rule; D1's negative cells were "
+                "the construction, which both legs share")
+    return "CONDITIONAL: mixed; read the cells"
+
+
+# ------------------------------------------------------------------------ N1
+
+N1_FEATSETS = {
+    # everything PIT-known at the close of the entry session
+    "all": ["reaction", "z_reaction", "rank", "sue", "log_dv21", "sd60", "mom_12_1",
+            "vsurge", "log_cap", "prc_e", "gap_prev"],
+    # the ablation that matters: strip every reaction-derived column. If this scores
+    # as well, the learner was trading size/momentum/volatility and the earnings
+    # event was decoration.
+    "no_reaction": ["sue", "log_dv21", "sd60", "mom_12_1", "vsurge", "log_cap", "prc_e", "gap_prev"],
+    # the opposite corner: only the event, no context
+    "reaction_only": ["reaction", "z_reaction", "rank", "sue"],
+}
+
+#: (horizon, featset, seed). The FIRST entry is the pre-specified primary; the rest
+#: are the grid. Nothing downstream is allowed to promote a later row over the first
+#: one on the strength of a holdout number.
+N1_PRIMARY = (21, "all", 0)
+
+
+def _n1_configs() -> list[tuple[int, str, int]]:
+    """The primary is always first and always the same. NIGHT_N1_SEEDS only widens
+    the seed axis, so a later pass measures seed stability without ever moving the
+    configuration the verdict is read from."""
+    seeds = tuple(int(x) for x in os.getenv("NIGHT_N1_SEEDS", "0,1,2").split(",") if x.strip())
+    cfgs = [N1_PRIMARY]
+    for hold in (21, 5, 10, 42):
+        for fs in ("all", "no_reaction", "reaction_only"):
+            for seed in seeds:
+                c = (hold, fs, seed)
+                if c not in cfgs:
+                    cfgs.append(c)
+    return cfgs
+
+
+def fwd_market_adjusted(tape: Tape, df: pd.DataFrame, horizon: int) -> np.ndarray:
+    """Gross compounded return from the close of e to the close of e+H, minus the
+    VW market over the SAME sessions.
+
+    This is the TRAINING target on purpose: costs belong to the book, not to the
+    label. A position that ends early (delisting, a gap in the block) is truncated
+    exactly the way `calendar_book` truncates it, so the label and the tradable
+    book agree on what "holding for H" means.
+    """
+    out = np.full(len(df), np.nan)
+    mkt = tape.mkt_vw
+    permno = df["permno"].to_numpy()
+    jj = df["j"].to_numpy()
+    ee = df["e"].to_numpy()
+    order = np.argsort(permno, kind="stable")      # one block slice per name, in name order
+    for pos in order:
+        p = int(permno[pos])
+        blk = tape.blocks.get(p)
+        if blk is None:
+            continue
+        s, e_ = blk
+        di = tape.di[s:e_]
+        ret = tape.ret[s:e_]
+        k0 = int(jj[pos]) + 1
+        if k0 >= len(di):
+            continue
+        k1 = min(len(di), k0 + horizon)
+        seg_di = di[k0:k1]
+        seg = ret[k0:k1]
+        bad = np.flatnonzero(np.diff(np.r_[int(ee[pos]), seg_di]) != 1)
+        if len(bad):
+            seg_di = seg_di[:bad[0]]
+            seg = seg[:bad[0]]
+        if len(seg) == 0:
+            continue
+        out[pos] = float(np.prod(1.0 + seg) - 1.0) - float(np.prod(1.0 + mkt[seg_di]) - 1.0)
+    return out
+
+
+def _n1_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["log_dv21"] = np.log1p(df["dv21"].clip(lower=0))
+    df["log_cap"] = np.log1p(df["cap_e"].abs())
+    df["prc_e"] = df["prc_e"].abs()
+    df = df.sort_values(["permno", "e"], kind="mergesort")
+    df["gap_prev"] = df.groupby("permno", sort=False)["e"].diff()
+    return df
+
+
+def _walk_forward(df: pd.DataFrame, feats: list[str], target: str, tape: Tape,
+                  horizon: int, seed: int, first_test_year: int = 2004) -> tuple[np.ndarray, list[dict]]:
+    """Purged walk-forward: train on every event that has already PAID OFF before
+    the test year opens, predict the test year, never look forward.
+
+    The embargo is the horizon itself. An event entered H sessions before the test
+    year starts is still open when the test year begins, so its label is contaminated
+    by test-period returns; those rows are dropped from training rather than trusted.
+    """
+    import lightgbm as lgb
+
+    pred = np.full(len(df), np.nan)
+    e = df["e"].to_numpy()
+    yr = df["year"].to_numpy()
+    X = df[feats].astype("float64").reset_index(drop=True)   # keep names: lgb warns on mixed input
+    y = df[target].to_numpy(dtype="float64")
+    years = sorted({int(v) for v in yr if v >= first_test_year})
+    folds = []
+    for Y in years:
+        start = tape.session_of(pd.Timestamp(f"{Y}-01-01"))
+        tr = (yr < Y) & (e <= start - (horizon + 5)) & np.isfinite(y)
+        te = yr == Y
+        if tr.sum() < 5000 or te.sum() < 50:
+            continue
+        m = lgb.LGBMRegressor(n_estimators=400, learning_rate=0.05, num_leaves=31,
+                              min_child_samples=200, subsample=0.8, subsample_freq=1,
+                              colsample_bytree=0.8, random_state=seed, n_jobs=4, verbose=-1)
+        m.fit(X.loc[tr], y[tr])
+        pred[te] = m.predict(X.loc[te])
+        folds.append({"test_year": int(Y), "n_train": int(tr.sum()), "n_test": int(te.sum())})
+    return pred, folds
+
+
+def _n1_books(tape: Tape, df: pd.DataFrame, horizon: int) -> dict:
+    """Rank the PREDICTION through the identical PIT machinery the reaction rank
+    uses, then trade the identical calendar-time book at the identical 25 bps."""
+    d = df[np.isfinite(df["pred"].to_numpy())].copy()
+    d["prank"] = pit_rank(d, col="pred")
+    top = calendar_book(tape, _select(d, 0.10, col="prank"), horizon)
+    bot = calendar_book(tape, _select_bottom(d, 0.10, col="prank"), horizon)
+    return {"long": top, "short": bot, "LS": _diff_book(top, bot)}
+
+
+def _n1_grade(tape: Tape, bks: dict, first: int, last: int, tag: str) -> dict:
+    return {f"{tag}|long_top_decile": grade_daily_book(tape, bks["long"], label=f"{tag}|long",
+                                                       first=first, last=last),
+            f"{tag}|long_short": grade_daily_book(tape, bks["LS"], label=f"{tag}|LS",
+                                                  first=first, last=last)}
+
+
+def _verdict_n1(ls: dict, ctl: dict, diff: dict) -> str:
+    """The learner owes the same two questions the reaction book owed: does it pay
+    after costs in every era, and does the identical pipeline fed dateless events
+    manufacture the same number?"""
+    lbm = (ls.get("PRIMARY_beta_matched") or {})
+    cbm = (ctl.get("PRIMARY_beta_matched") or {})
+    dbm = (diff.get("PRIMARY_beta_matched") or {})
+    t = lbm.get("t_nw") or 0.0
+    ann = lbm.get("annualised_pct") or 0.0
+    ct = cbm.get("t_nw")
+    eras = ls.get("eras", {})
+    same = sum(1 for v in eras.values() if v["sign"] > 0)
+    if not eras or len(eras) < 2:
+        return f"CANNOT DETERMINE: {len(eras)} era on this window; beta-matched {ann}%/yr t {t}"
+    if ct is not None and abs(ct) >= 2.0:
+        dt = dbm.get("t_nw")
+        return (f"CONSTRUCTION_SENSITIVE: the SAME pipeline trained on dateless placebo events "
+                f"produces a long-short at t {ct}, so the raw t {t} is not evidence about earnings. "
+                f"The differenced cell is {dbm.get('annualised_pct')}%/yr t {dt} -- that is the number "
+                f"that means anything, and it is what the morning should read.")
+    if t > 2.5 and same == len(eras) and (ct is None or abs(ct) < 1.0):
+        return ("PRODUCT_PROMISING: the learner's long-short survives 25 bps in every era and the "
+                "placebo-trained pipeline does not reproduce it")
+    if t > 1.5 and same >= 2 and ann > 0:
+        return "CONDITIONAL: learner long-short positive after costs but not in every era or not powered"
+    return ("FAILED_VARIANT: a learner with every PIT feature on the event does not turn the "
+            "reaction into a book that pays after costs")
+
+
+def N1_train_reaction_learner(hours: float = 3.0, smoke: bool = False) -> dict:
+    """Train a learner on the EVENT level, then trade its score through D1's book.
+
+    Why event level: D3 shows the calendar-time construction carries a large drag
+    that both the signal book and its placebo share. A model trained on BOOK returns
+    would spend its capacity learning that drag. The label here is the event's own
+    forward market-adjusted return, which the construction cannot contaminate; the
+    construction is then applied to the model's output, where it belongs, and the
+    result is differenced against a placebo learner trained the identical way.
+
+    DEV is 1999-2015. The holdout is printed for every configuration and used to
+    choose NOTHING -- the primary configuration is fixed in `N1_PRIMARY` before the
+    grid runs.
+    """
+    out = {"job": "N1_train_reaction_learner", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+           "question": ("Given everything PIT-knowable at the close of the session after an "
+                        "earnings print, can a learner rank the next H sessions better than the "
+                        "reaction percentile alone -- and does any of it survive the construction "
+                        "and its matched control?"),
+           "design": {"target": "gross compounded return e -> e+H minus VW market over the same sessions",
+                      "validation": "purged walk-forward by year, embargo = the horizon, first test year 2004",
+                      "model": "LightGBM regressor, 400 trees, NaN handled natively (no fillna)",
+                      "book": "identical to D1: PIT rank of the PREDICTION, top decile, $3m/day floor, 25 bps a side",
+                      "control": "the identical pipeline trained and traded on R4_placebo_offset40",
+                      "primary": f"hold={N1_PRIMARY[0]}, featset={N1_PRIMARY[1]}, seed={N1_PRIMARY[2]} -- fixed before the run",
+                      "holdout": "2016-2024 printed for every config, used to choose nothing"}}
+    tape, years = _load_tape(smoke)
+    ann, plc = _events(tape, years, smoke)
+    ann["rank"] = pit_rank(ann)
+    plc["rank"] = pit_rank(plc)
+    ann = _n1_features(ann)
+    plc = _n1_features(plc)
+    first, last = _common_window(tape, ann, plc)
+    dev_first, dev_last = _window(tape, ann, 1999, 2015)
+    hold_first, hold_last = _window(tape, ann, 2016, 2024)
+
+    # a smoke run must never poison the night's resume cache: the config key
+    # ("H21|all|s0") says nothing about which tape produced it
+    log_path = OUT / ("N1_configs_smoke.jsonl" if smoke else "N1_configs.jsonl")
+    done: dict[str, dict] = {}
+    if log_path.exists():
+        for line in log_path.open(encoding="utf-8"):
+            try:
+                row = json.loads(line)
+                done[row["key"]] = row["result"]
+            except Exception:  # noqa: BLE001
+                pass
+
+    targets: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+
+    def target_for(h: int):
+        if h not in targets:
+            t0 = time.time()
+            targets[h] = (fwd_market_adjusted(tape, ann, h), fwd_market_adjusted(tape, plc, h))
+            print(f"    target H={h}: built in {time.time() - t0:.0f}s", flush=True)
+        return targets[h]
+
+    t_end = time.time() + hours * 3600.0
+    ran = 0
+    for hold, fs, seed in _n1_configs():
+        if time.time() > t_end or (OUT / "STOP").exists():
+            print("    time box or STOP reached; ending the grid", flush=True)
+            break
+        key = f"H{hold}|{fs}|s{seed}"
+        if key in done:
+            continue
+        t0 = time.time()
+        ya, yp = target_for(hold)
+        ann["y"] = ya
+        plc["y"] = yp
+        feats = N1_FEATSETS[fs]
+        pa, folds = _walk_forward(ann, feats, "y", tape, hold, seed)
+        pp, _ = _walk_forward(plc, feats, "y", tape, hold, seed)
+        ann["pred"] = pa
+        plc["pred"] = pp
+        ba = _n1_books(tape, ann, hold)
+        bp = _n1_books(tape, plc, hold)
+        cells = {}
+        cells.update(_n1_grade(tape, ba, first, last, "learner_full"))
+        cells.update(_n1_grade(tape, bp, first, last, "placebo_learner_full|CONTROL"))
+        cells.update(_n1_grade(tape, ba, dev_first, dev_last, "learner_DEV"))
+        cells.update(_n1_grade(tape, ba, hold_first, hold_last, "learner_HOLDOUT|read_not_chosen"))
+        # the learner's long-short MINUS the same pipeline trained on dateless events:
+        # whatever the pipeline manufactures from no information is subtracted here
+        cells["learner_minus_control|long_short"] = grade_daily_book(
+            tape, _diff_book(ba["LS"], bp["LS"]), label="learner-control|LS", first=first, last=last)
+        ic = float(pd.Series(pa).corr(pd.Series(ann["y"].to_numpy()), method="spearman"))
+        res = {"config": {"hold": hold, "featset": fs, "seed": seed, "n_features": len(feats)},
+               "folds": len(folds), "n_scored": int(np.isfinite(pa).sum()),
+               "spearman_ic_pooled": _r(ic, 5),
+               "cells": {k: _strip(v) for k, v in cells.items()},
+               "elapsed_s": round(time.time() - t0, 1)}
+        done[key] = res
+        ran += 1
+        with log_path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"key": key, "result": res, "utc": _now()}, default=str) + "\n")
+        lf = cells["learner_full|long_short"].get("PRIMARY_beta_matched", {})
+        cf = cells["placebo_learner_full|CONTROL|long_short"].get("PRIMARY_beta_matched", {})
+        hf = cells["learner_HOLDOUT|read_not_chosen|long_short"].get("PRIMARY_beta_matched", {})
+        print(f"    {key:24s} IC {ic:+.4f}  LS {lf.get('annualised_pct')}%/yr t {lf.get('t_nw')} "
+              f"| control LS t {cf.get('t_nw')} | holdout LS {hf.get('annualised_pct')}%/yr t {hf.get('t_nw')} "
+              f"[{time.time() - t0:.0f}s]", flush=True)
+
+    pk = f"H{N1_PRIMARY[0]}|{N1_PRIMARY[1]}|s{N1_PRIMARY[2]}"
+    prim = done.get(pk)
+    out["configs_run_this_session"] = ran
+    out["configs_total"] = len(done)
+    out["grid"] = {k: {"ic": v.get("spearman_ic_pooled"),
+                       "LS_full_ann_pct": (v["cells"].get("learner_full|long_short", {})
+                                           .get("PRIMARY_beta_matched", {}).get("annualised_pct")),
+                       "LS_full_t": (v["cells"].get("learner_full|long_short", {})
+                                     .get("PRIMARY_beta_matched", {}).get("t_nw")),
+                       "LS_control_t": (v["cells"].get("placebo_learner_full|CONTROL|long_short", {})
+                                        .get("PRIMARY_beta_matched", {}).get("t_nw")),
+                       "LS_holdout_t": (v["cells"].get("learner_HOLDOUT|read_not_chosen|long_short", {})
+                                        .get("PRIMARY_beta_matched", {}).get("t_nw"))}
+                  for k, v in sorted(done.items())}
+    out["primary"] = prim
+    if prim:
+        ls = prim["cells"].get("learner_full|long_short", {})
+        ctl = prim["cells"].get("placebo_learner_full|CONTROL|long_short", {})
+        lbm = ls.get("PRIMARY_beta_matched", {})
+        cbm = ctl.get("PRIMARY_beta_matched", {})
+        out["headline"] = (f"primary {pk}: pooled Spearman IC {prim.get('spearman_ic_pooled')}; "
+                           f"long-short beta-matched {lbm.get('annualised_pct')}%/yr t {lbm.get('t_nw')}, "
+                           f"TW {ls.get('terminal_wealth_net')}, DD {ls.get('max_drawdown_pct')}%; "
+                           f"placebo learner LS t {cbm.get('t_nw')}")
+        out["verdict"] = _verdict_n1(ls, ctl, prim["cells"].get("learner_minus_control|long_short", {}))
+    else:
+        out["headline"] = f"{len(done)} configs on disk; the primary {pk} did not finish inside the time box"
+        out["verdict"] = "CANNOT DETERMINE"
+    out["family_max_p"] = None
+    out["note_on_multiplicity"] = (
+        "The grid is a SEARCH, not a family of claims: only the pre-specified primary carries a "
+        "verdict. Any other row that looks good is a candidate for a future pre-registered lane, "
+        "and its holdout column was read but chose nothing.")
+    return out
+
+
+# ------------------------------------------------------------------------ D4
+
+def _nw_se(x: np.ndarray, lag: int = NW_LAG_M) -> float | None:
+    x = np.asarray(x, dtype="float64")
+    x = x[np.isfinite(x)]
+    n = len(x)
+    if n < 12:
+        return None
+    u = x - x.mean()
+    s = float(np.dot(u, u)) / n
+    for L in range(1, lag + 1):
+        w = 1.0 - L / (lag + 1.0)
+        s += 2.0 * w * float(np.dot(u[L:], u[:-L])) / n
+    return math.sqrt(max(s, 1e-18) / n)
+
+
+def _ex_bm_series(cell: dict) -> tuple[np.ndarray, np.ndarray]:
+    """Monthly beta-matched excess and its month labels, from a graded cell."""
+    m = cell.get("_monthly")
+    if not m:
+        return np.empty(0), np.empty(0)
+    net = np.asarray(m["net"], dtype="float64")
+    mkt = np.asarray(m["market"], dtype="float64")
+    return net - (cell.get("beta") or 0.0) * mkt, np.asarray(m["months"])
+
+
+def _split_test(cell: dict, split: str = DEV_LAST_MONTH) -> dict:
+    """Is the newest era actually DIFFERENT, or just noisier?
+
+    Same-sign-every-era said yes to a book that pays 28.7%/yr then 2.1%/yr. The
+    honest question is whether the difference between the halves is itself
+    distinguishable from zero -- a decay you cannot measure is not a decay you
+    should act on, and one you can is a reason not to seal the book.
+    """
+    ex, months = _ex_bm_series(cell)
+    if len(ex) == 0:
+        return {"verdict": "CANNOT DETERMINE: no monthly series on the cell"}
+    a, b = ex[months <= split], ex[months > split]
+    if len(a) < 24 or len(b) < 24:
+        return {"verdict": f"CANNOT DETERMINE: {len(a)} / {len(b)} months either side of {split}"}
+    sa, sb = _nw_se(a), _nw_se(b)
+    if sa is None or sb is None:
+        return {"verdict": "CANNOT DETERMINE: Newey-West se undefined"}
+    diff = float(a.mean() - b.mean())
+    se = math.sqrt(sa ** 2 + sb ** 2)
+    t = diff / se if se > 0 else None
+    return {"early_ann_pct": _r(float(a.mean()) * 12 * 100, 3), "early_months": int(len(a)),
+            "late_ann_pct": _r(float(b.mean()) * 12 * 100, 3), "late_months": int(len(b)),
+            "decay_ann_pct": _r(diff * 12 * 100, 3), "t_of_difference": _r(t, 3),
+            "p_two_sided": R._p_two_sided(t),
+            "verdict": ("DECAY IS MEASURABLE: the two halves differ" if t is not None and t > 2.0 else
+                        "DECAY NOT ESTABLISHED: the halves are not distinguishable at this power -- "
+                        "the late window is weaker but the difference is inside the noise")}
+
+
+def D4_ls_robustness_and_decay(smoke: bool = False) -> dict:
+    """D3 found a long-short that is clean pooled and ~zero in 2016-2024. Two
+    questions decide whether that is a finding or an artefact, and both are free:
+
+      1. Is it robust to the construction knobs nobody chose on purpose -- the
+         cost rate, the liquidity floor, the decile width? A result that only
+         exists at one corner of that cube is a corner, not a mechanism.
+      2. Is the decay MEASURABLE, or is the newest era merely shorter and noisier?
+         "Same sign in every era" cannot tell those apart; a two-sample
+         Newey-West test on the halves can.
+
+    Every cell carries its placebo twin, so nothing here is read against zero --
+    which is the error this whole second queue exists to correct.
+    """
+    out = {"job": "D4_ls_robustness_and_decay", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+           "question": ("Does D3's +15.919%/yr t 3.864 long-short survive the construction knobs, "
+                        "and is its decay to +2.112%/yr in 2016-2024 measurable or noise?"),
+           "builds_on": "D3_matched_control_grid_run01.json / D3_verdict_amendment.json",
+           "conventions": {"cell": "long top decile, short bottom decile, calendar time, PIT trailing-63 rank",
+                           "control": "the identical grid on R4_placebo_offset40",
+                           "split": f"early <= {DEV_LAST_MONTH}, late after it",
+                           "note": "the SHORT leg's borrow cost is still not modelled anywhere in this grid"}}
+    tape, years = _load_tape(smoke)
+    ann, plc = _events(tape, years, smoke)
+    ann["rank"] = pit_rank(ann)
+    plc["rank"] = pit_rank(plc)
+    first, last = _common_window(tape, ann, plc)
+
+    def ls_cell(df, width, hold, cost, floor):
+        top = calendar_book(tape, _select(df, width, floor=floor), hold, cost_bps=cost)
+        bot = calendar_book(tape, _select_bottom(df, width, floor=floor), hold, cost_bps=cost)
+        return _diff_book(top, bot)
+
+    grid = {}
+    hold = 21
+    for cost in (0.0, 10.0, 25.0, 50.0):
+        for width in (0.05, 0.10, 0.20):
+            for floor in (0.0, 1_000_000.0, 3_000_000.0, 10_000_000.0):
+                key = f"cost={cost:g}|width={width:g}|floor={floor/1e6:g}m"
+                a = grade_daily_book(tape, ls_cell(ann, width, hold, cost, floor or None),
+                                     label=f"LS|{key}", first=first, last=last)
+                p = grade_daily_book(tape, ls_cell(plc, width, hold, cost, floor or None),
+                                     label=f"LSplc|{key}", first=first, last=last)
+                bm, pbm = a.get("PRIMARY_beta_matched", {}), p.get("PRIMARY_beta_matched", {})
+                st = _split_test(a)
+                grid[key] = {"beta": a.get("beta"), "ann_pct": bm.get("annualised_pct"),
+                             "t_nw": bm.get("t_nw"), "p": bm.get("p_two_sided"),
+                             "terminal_wealth_net": a.get("terminal_wealth_net"),
+                             "max_drawdown_pct": a.get("max_drawdown_pct"),
+                             "control_t": pbm.get("t_nw"), "control_ann_pct": pbm.get("annualised_pct"),
+                             "eras": {e: (v["beta_matched_ann_pct"], v["t"]) for e, v in a.get("eras", {}).items()},
+                             "split_test": st}
+                print(f"    {key:34s} {bm.get('annualised_pct'):>8}%/yr t {bm.get('t_nw'):>7} "
+                      f"| control t {pbm.get('t_nw'):>7} | late {st.get('late_ann_pct')}%/yr "
+                      f"| decay t {st.get('t_of_difference')}", flush=True)
+
+    base_key = "cost=25|width=0.1|floor=3m"
+    base = grid.get(base_key, {})
+    live = [k for k, v in grid.items() if (v.get("t_nw") or 0) > 2.0]
+    live_ctl = [k for k, v in grid.items() if abs(v.get("control_t") or 0) > 2.0]
+    # the year-by-year curve of D3's own cell, for the morning's eyes
+    a = grade_daily_book(tape, ls_cell(ann, 0.10, 21, 25.0, FLOOR_USD),
+                         label="LS|D3 primary", first=first, last=last)
+    ex, months = _ex_bm_series(a)
+    by_year = {}
+    for y in sorted({m[:4] for m in months}):
+        sel = np.array([m[:4] == y for m in months])
+        if sel.sum() >= 6:
+            by_year[y] = _r(float(ex[sel].mean()) * 12 * 100, 2)
+    out["grid"] = grid
+    out["cells_significant_of_total"] = f"{len(live)}/{len(grid)}"
+    out["control_cells_significant"] = f"{len(live_ctl)}/{len(grid)} (a placebo cell that goes significant is a warning, not a result)"
+    out["by_year_beta_matched_ann_pct"] = by_year
+    out["split_test_on_D3_primary"] = _split_test(a)
+    out["headline"] = (f"{len(live)}/{len(grid)} construction corners keep the long-short at |t|>2 "
+                       f"(placebo: {len(live_ctl)}/{len(grid)}); at D3's own corner "
+                       f"{base.get('ann_pct')}%/yr t {base.get('t_nw')}; decay "
+                       f"{out['split_test_on_D3_primary'].get('decay_ann_pct')}%/yr "
+                       f"t {out['split_test_on_D3_primary'].get('t_of_difference')}")
+    frac = len(live) / max(len(grid), 1)
+    st = out["split_test_on_D3_primary"]
+    # ~5% of 48 correlated cells firing in the PLACEBO grid is chance (2.4 expected);
+    # a placebo grid that lights up broadly means the construction, not the event.
+    expected_ctl = max(3, int(0.10 * len(grid)))
+    if len(live_ctl) > expected_ctl:
+        v = (f"CONTROL_ALSO_FIRES: {len(live)}/{len(grid)} corners survive, but so do "
+             f"{len(live_ctl)}/{len(grid)} PLACEBO corners (chance would be ~{0.05 * len(grid):.1f}). "
+             f"The grid is measuring the construction, not the event. ")
+    elif frac >= 0.7:
+        v = (f"ROBUST: {len(live)}/{len(grid)} corners survive and the placebo grid stays quiet "
+             f"({len(live_ctl)}/{len(grid)}). ")
+    elif frac >= 0.4:
+        v = (f"CONSTRUCTION_SENSITIVE: {len(live)}/{len(grid)} corners survive -- the effect "
+             f"depends on knobs nobody chose on evidence. ")
+    else:
+        v = (f"FAILED_VARIANT: only {len(live)}/{len(grid)} corners survive; D3's cell was a corner. ")
+    out["verdict"] = v + str(st.get("verdict"))
+    return out
+
+
+from scripts.night_rw_random_windows import RW1_random_windows   # noqa: E402  the 09-09 randomised windows
+
 JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reaction_mutations,
+        "RW1_random_windows": RW1_random_windows,
+        "D3_matched_control_grid": D3_matched_control_grid,
+        "N1_train_reaction_learner": N1_train_reaction_learner,
+        "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
         "G1_evolve": G1_evolve, "G2_holdout_once": G2_holdout_once}
+
+#: jobs that take a `--hours` time box rather than running to completion
+TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner"}
 
 
 def main(argv=None) -> int:
@@ -778,7 +1455,11 @@ def main(argv=None) -> int:
     fn = JOBS[a.job]
     if a.job == "G1_evolve":
         payload = fn(hours=a.hours)
-    elif a.job in ("D1_reaction_book", "D2_reaction_mutations"):
+    elif a.job == "N1_train_reaction_learner":
+        payload = fn(hours=a.hours, smoke=a.smoke)
+    elif a.job in ("D1_reaction_book", "D2_reaction_mutations", "D3_matched_control_grid", "D4_ls_robustness_and_decay"):
+        payload = fn(smoke=a.smoke)
+    elif a.job == "RW1_random_windows":
         payload = fn(smoke=a.smoke)
     else:
         payload = fn()
