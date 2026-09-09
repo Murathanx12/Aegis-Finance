@@ -115,6 +115,16 @@ Reading:
    (+0.16) and it is the worst in 2016-2024 (−0.22). Murat's heuristic had a decade,
    and the decade ended around 2016.
 
+**Correction from the second draw (seed 20260910, same generator, run by the
+day-run session):** the two draws agree on the ordering (Spearman 0.741 over the
+12 cells, same top cell) but a cell's excess over the null moves by 0.099 on
+average and 0.150 at most between draws. The "+0.19 in 2016-2024" cell reads
++0.115 on the second draw and its overall excess flips from +0.078 to −0.032:
+same sign late, half the size, overall sign does not survive. The one cell the
+two draws firmly agree on is the human-heuristic proxy's 2016-2024 (−0.217 and
+−0.089). One 240-window draw cannot adjudicate a 0.15 rule; §10.2 now requires
+pooled draws with the dispersion printed.
+
 What RW1 does not say: nothing here is a holdout, the G1 genome was read on the
 sealed window yesterday, and 240 windows overlap heavily (a 72-month window shares
 months with dozens of others), so the era columns are the honest unit, not the

@@ -566,9 +566,14 @@ night run, make it ready for Opus ... run the night run again for a whole day."*
 1. **No single split decides anything.** DEV/holdout stays for the *claim*; the
    *product* question is answered on **random windows**: a strategy is
    PRODUCT_PROMISING only if its β-matched win rate exceeds the random-genome null
-   on the same windows by ≥ 0.15 in **every** start era and at ≥ 3 of 7 lengths.
-   RW1 computes exactly this; G3's fitness becomes the median β-matched excess
-   across random DEV windows, not one 202-month number (the 548× was one window).
+   on the same windows by ≥ 0.15 in **every** start era and at ≥ 3 of 7 lengths,
+   **measured on pooled draws, never one draw** (amended 09-09 03:40Z: RW1's second
+   draw, seed 20260910, moved a cell's excess by 0.099 on average and 0.150 at
+   most — the same size as the rule — so the excess is computed over ≥ 3 draws
+   (≥ 720 windows) with the draw-to-draw dispersion printed beside it, and a
+   cell passes only if the excess minus that dispersion still clears 0.15).
+   RW1 computes the per-draw numbers; G3's fitness becomes the median β-matched
+   excess across random DEV windows, not one 202-month number (the 548× was one window).
 2. **Every cell is graded against its own matched control, never against zero.**
    D1's placebo was printed and not subtracted (§8.1). The night runner now
    refuses a `PRODUCT_PROMISING` stamp on any event cell without a `vs_control` field.
@@ -688,3 +693,169 @@ Queue for a whole day, in order (STOP file ends it between jobs):
 
 Attended, Murat only: hack4's v2 flip; hack2's evidence-gate flip; the H5
 pre-registration sign-off; the desktop packaging when A1 lands.
+
+## 11. THE 2026-09-09 DAY RUN — receipts
+
+Built and run by Opus 5 on 2026-09-09, $0 of paid LLM (every receipt
+`llm_spend_usd: 0.0`; R2 on local Qwen through llama-server). Six new jobs, all
+in the night queue and all reachable from the control router's whitelist:
+`RW2_event_windows`, `G3_evolve_v2`, `N2_learner_v3`, `P6_bars_and_regret`,
+`R2_monthly_llm`, `N1H5_prereg_read`.
+
+### 11.1 RW1 second draw — the protocol cannot yet resolve its own threshold
+
+`RW1_random_windows_run02.json`, seed 20260910, the same 240-window generator.
+
+| | draw 1 | draw 2 |
+|---|---|---|
+| top cell by excess over the null | `G1_best_dev_genome\|arena_k50_vw` +0.212 | the same cell, +0.362 |
+| Spearman rank correlation of the 12 cells | — | **0.741** |
+| mean absolute change in a cell's excess | — | **0.099** |
+| max absolute change | — | **0.150** |
+
+**§10.2's adopt threshold is "excess over the null ≥ +0.15 in every start
+era". The draw-to-draw noise of a 240-window draw is a mean of 0.099 and a max
+of 0.150 — the same size as the threshold.** A single draw therefore cannot
+adjudicate the rule the protocol was written around. Either the draw count goes
+up (RW1 costs 8 minutes, so 1,000+ windows is free) or the rule is read on
+POOLED draws with the dispersion printed. Until then, a cell at +0.19 and a
+cell at +0.11 are the same cell.
+
+Concretely, the cell §10.1 highlighted — the momentum + revisions + upside blend
+in the wide-band broad book, "+0.19 in 2016-2024" — reads **+0.115** on the
+second draw, and its overall excess flips from +0.078 to **−0.032**. Same sign
+in the late era, half the size, and the overall sign does not survive. The
+human-heuristic proxy's 2016-2024 cell is negative in both draws (−0.217,
+−0.089), which is the one ordering both draws agree on.
+
+### 11.2 RW2 — the event-clock books on the same windows, with their own control
+
+`RW2_event_windows_run01.json`: 240 windows × 2 signals × 3 liquidity floors ×
+3 borrow rates = 4,104 gradings in 127 s. Every cell carries `vs_control` (the
+identical pipeline on the +40-session placebo tape, same window). Borrow is
+charged daily on the sessions the short leg is open.
+
+At the tradable corner (**$10m/day floor, 200 bps/yr borrow**), median β-matched
+annualised, and the share of windows where the arm beats its own control:
+
+| start era | reaction LS | its control | diff | beats control |
+|---|---|---|---|---|
+| 1999-2007 (n 88) | +22.56 | +0.96 | **+23.62** | 93% |
+| 2008-2015 (n 82) | +12.97 | +4.25 | **+6.90** | 88% |
+| 2016-2024 (n 70) | −3.67 | +8.02 | **−13.20** | **24%** |
+
+| start era | N1 `H5\|all` LS | its control | diff | beats control |
+|---|---|---|---|---|
+| 1999-2007 (n 70) | +36.88 | +42.61 | **−2.79** | **44%** |
+| 2008-2015 (n 78) | +14.51 | −1.15 | **+19.59** | 80% |
+| 2016-2024 (n 59) | +16.32 | +23.88 | **−6.42** | **46%** |
+
+Two readings, both new:
+
+1. **The reaction long-short is not merely decayed after 2016 — its own control
+   beats it.** D4 established the effect dies above the $10m floor; RW2 adds
+   that in the modern era the dateless placebo earns *more* through the same
+   book. That is a construction, and the lane is closed in every form.
+2. **H5's pooled "+32.2%/yr t 2.92 after its control" is one era.** On windows,
+   the placebo-trained pipeline beats the learner in the earliest and the
+   latest era. N1's pooled control comparison could not see that, because a
+   pooled t averages over the eras it is made of.
+
+**Borrow is not the binding constraint** — 200 bps/yr moves these cells by about
+2 pp. The floor is: at floor $0 the H5 arm shows a median +87%/yr and *its
+control shows +18.9%/yr*. Everything interesting below $3m/day is microstructure
+that both arms share.
+
+### 11.3 G3 — evolve v2, and a drawdown budget that refused the index
+
+`scripts/night_g3_evolve_v2.py`. Four changes against G1 (§10.2): fitness is the
+median β-matched excess over the generation's own bank of 24 random DEV windows
+*minus the median of 6 random genomes on the same window*; the archive is one
+row per **lineage root** and is re-scored on a 60-window bank drawn from a seed
+the search never saw; the drawdown budget is a **refusal before any fitness is
+earned**; no holdout is read.
+
+The budget had to be fixed before it could bind. A flat `DD_BUDGET = 0.35` on
+the full 1999-2015 DEV path **refused 188 of 207 genomes** in the smoke run —
+because the VW market itself drew down **47.2%** over that window, so the
+declared budget refuses the benchmark. That is a gate that cannot go green. The
+limit now derives from the window:
+
+    limit = max(declared budget, the market's own drawdown on the same window)
+
+which on DEV is 0.4721. A book may lose as much as the index did and no more;
+where the market was calmer than 0.35, the declared budget binds instead. Both
+numbers are printed in the receipt so the reader sees which clause was active.
+
+Two smaller defects the smoke exposed and the run fixes: at `pop=8` the fixed
+"4 elites + 4 fresh" left **zero** slots for children (236 genomes in 236
+lineages — crossover was never tested), so the population shape now scales with
+`pop`; and ranking a genome by its **best** bank is selection on the outcome, so
+the archive ranks on the **median across the banks a genome actually met** and
+prints how many that was.
+
+### 11.4 P6 — the 2025-26 price panel exists, and the six books' first real regret
+
+`P6_bars_and_regret_run03.json`, `backend/data/optimus/prices_2025_26/bars.parquet`.
+
+**1,248,370 daily bars, 3,060 symbols, 421 sessions, 2025-01-01..2026-09-08,
+zero symbols missing, 32 MB.** The gap that stopped every forward evaluation in
+this repo is closed. One venue quirk is recorded: the free SIP plan answers
+`403 subscription does not permit querying recent SIP data` for **any** explicit
+`end` inside its delay window — including yesterday — but clips the window
+itself when `end` is omitted, so the puller sends no `end` and the receipt
+reports the last session actually served.
+
+The six paper books, over exactly the sessions each existed (2026-08-28 →
+2026-09-05, 6 sessions), against SPY on the same days:
+
+| book | book | SPY | regret |
+|---|---|---|---|
+| hack3 | **−9.50%** | −0.12% | **−9.38 pp** |
+| hack6 | **−8.53%** | −0.12% | **−8.41 pp** |
+| hack5 | −3.54% | −0.12% | −3.43 pp |
+| hack2 | −1.18% | −0.12% | −1.06 pp |
+| hack1 | −1.14% | −0.12% | −1.02 pp |
+| hack4 | −0.52% | −0.12% | −0.41 pp |
+
+The first version of that read compared **8 equity points against 62
+timestamps** — it filtered `equity` for falsy values and left `timestamp` whole,
+so every book was graded over 62 sessions of SPY while its equity covered 8, and
+all six read about 9 pp worse than they were. Pair first, then filter.
+
+**What P6 refuses.** A faithful monthly replay of the six mandates over 2025-26
+needs the tracker screen's own inputs (targets, consensus, revisions) for
+2025-26; the learner panel ends 2024-12 and the candidate snapshots on disk
+cover four dates. The replay is refused with that named missing input rather
+than run on a proxy. The accounts were created 2026-08-28, so "the past six
+months" does not exist for them either.
+
+**And what it warns about.** Every book built from the tracker universe
+(`EW_universe` +58.9%, `MOM_12_1` +27.7%, `REV_1M` +81.1%) is drawn from the
+**2026-09-01 screen** — every member survived to today. Those rows carry a
+`BIAS_WARNING` and are excluded from the headline; the index rows are the only
+honest bar. The reversal row is the worst case, because it buys the previous
+month's biggest losers, which is precisely the set most likely to have been
+delisted. An unbiased 2025-26 replay needs a point-in-time universe vintage per
+month. (The first version of `REV_1M` also carried a look-ahead — a formation
+window ending at lag 0 meant the signal for month *m* was minus the return *of*
+month *m*, and it printed −98.8%. The formation window now refuses any
+specification that would read the month it trades.)
+
+### 11.5 A0 — the control router
+
+`backend/routers/control.py` + `backend/tests/test_control_router_authority.py`
+(9 tests). `GET /api/control/{services,jobs,leaderboard,balances,runs/{pid}/log}`,
+`POST /api/control/{run/{job},night,stop/{pid},stop-file/clear}`. Three
+properties are pinned by AST test rather than intended: no broker or order
+symbol is importable; every spawn is an argv list with `shell=False` and a job
+id from the queue's **derived** whitelist (a job added to `QUEUE` is a button
+without touching the router); and nothing can be killed by image name — only a
+PID in the router's own run registry, after the STOP file is written. Every
+mutating route refuses with 403 unless `AEGIS_CONTROL_ENABLED=1`, so the router
+is inert on the Railway deployment and live only in the desktop shell.
+
+One note on the test itself: its first version grepped the raw source for `/IM`
+and failed on the docstring that explains **why** kill-by-image-name is banned.
+A gate that fires on its own rationale teaches the reader to delete the
+rationale, so it reads the AST and skips docstrings.

@@ -167,3 +167,14 @@ REJECTED (or CONDITIONAL if the read alone would have passed) in
 `NEGATIVE_RESULTS.md`. The pooled "+32.2 %/yr t 2.92" was 2008-2015; on windows
 the control wins the earliest and the latest era — the same shape as the
 reaction lane. No successor is registered by this annotation.
+
+## Amendment 2026-09-09 03:40Z — the floor-ratio reject clause is evaluated only where its denominator is positive (arithmetic clarified, threshold untouched)
+
+The clause *"the $10m floor removes more than half of the $3m-floor excess"* is
+a ratio, and the smoke run of `scripts/night_h5_prereg_read.py` produced a
+NEGATIVE $3m excess with a positive $10m one: a negative ratio would have
+tripped the reject for the opposite of the reason the clause exists. The
+clause is therefore evaluated only when the $3m excess is positive, and is
+recorded as `NOT_EVALUATED` with the $3m number printed beside it otherwise.
+The threshold (one half) is unchanged; no other clause changes. Written by
+Fable on the day-run session's report, before the read ran.
