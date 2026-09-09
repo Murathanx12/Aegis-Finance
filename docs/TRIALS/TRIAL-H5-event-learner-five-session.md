@@ -146,3 +146,24 @@ threshold of +8 %/yr that 252 blocks cannot resolve) and
 `UNDECLARED_SLICE_PURPOSE`. The registry row is
 `backend/services/portfolio_intelligence/h5_trial.py::ensure_h5_trial`, wired
 into backend startup beside the ARK and LPPLS trials.
+
+## Annotation 2026-09-09 03:25Z — RW2 read before the trial's single historical read (no change to hypothesis, metric, thresholds or window)
+
+The day-run session's `RW2_event_windows_run01.json` (240 random windows, the
+same generator and seed as RW1, every cell against its placebo-trained twin on
+the SAME window, borrow 0/50/200 bps) puts `N1_H5_all_LS | floor_10m | borrow200`
+at: 1999-2007 arm +36.9 %/yr vs control +42.6 (beats the control in 44 % of
+windows); 2008-2015 +14.5 vs −1.2 (80 %); 2016-2024 +16.3 vs +23.9 (46 %).
+Overall 58 % of windows over the control, median +10.45 %/yr; borrow barely
+moves it, the floor does (at floor $0 the control itself prints +18.9 %/yr).
+
+Under this document's own adopt clause — *"RW2 random-window excess win rate
+over the control ≥ +0.15 in every start era"* — the trial **cannot adopt**: the
+excess is −0.06 in 1999-2007 and −0.04 in 2016-2024. RW2 is descriptive (the
+windows were fitted on) and does not consume the sealed read; the single
+historical read `N1H5_prereg_read` may still be run once so the $10m-floor,
+100 bps-borrow number is on the record, and the trial is then closed as
+REJECTED (or CONDITIONAL if the read alone would have passed) in
+`NEGATIVE_RESULTS.md`. The pooled "+32.2 %/yr t 2.92" was 2008-2015; on windows
+the control wins the earliest and the latest era — the same shape as the
+reaction lane. No successor is registered by this annotation.
