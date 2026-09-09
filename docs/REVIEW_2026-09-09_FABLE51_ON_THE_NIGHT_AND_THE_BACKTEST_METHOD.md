@@ -141,6 +141,20 @@ drawdown −78% at 46% vol; no borrow cost. It goes to `pre-register-trial` with
 borrow line, a drawdown budget it can meet, the RW2 random-window read, and a
 capacity number at the $10m floor. Not a seal.
 
+## 4b. Same day, closed: TRIAL-H5 REJECTED, and the morning's RW1 cell retracted
+
+The registered read ran once. At the $10m floor with borrow, the learner's
+placebo-trained control earns +17.6 %/yr on its own (+3.3 %/yr at $3m), the
+difference is +20.8 %/yr at t 1.14, three reject clauses fire, no adopt clause
+passes. Lesson for every future control: **a control's level moves with the
+corner, so it is re-measured at every corner a decision could be taken at.** On
+three pooled RW1 draws (720 windows) under the amended rule, zero of twelve
+cells pass; the cell this review called the one live signal pools to +0.048 ±
+0.069 and is retracted. N2's data-net with the event columns is a
+FAILED_VARIANT (the gain was matrix capacity, not the print). R2's 2022 pilot
+passes the memory canary and is underpowered by construction; the 2015-2024 run
+is in flight. Details: roadmap §11.
+
 ## 5. Where the methodology goes overall (Murat's "see what we did, our approach was, how it needs to change")
 
 What we did for five months: measure one forecast on one long window, apply the

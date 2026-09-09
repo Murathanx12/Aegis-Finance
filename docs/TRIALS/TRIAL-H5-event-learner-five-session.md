@@ -178,3 +178,28 @@ clause is therefore evaluated only when the $3m excess is positive, and is
 recorded as `NOT_EVALUATED` with the $3m number printed beside it otherwise.
 The threshold (one half) is unchanged; no other clause changes. Written by
 Fable on the day-run session's report, before the read ran.
+
+## CLOSED 2026-09-09 — REJECTED
+
+The single registered read ran once (`night_factory_2026-09-08/N1H5_prereg_read_run01.json`,
+frozen configuration, seeds 0-12, 156 monthly blocks):
+
+| corner | learner | control | difference | t |
+|---|---|---|---|---|
+| $10m floor, 100 bps borrow (decides) | +26.31 %/yr | **+17.64 %/yr** | +20.79 %/yr | **1.142** |
+| $3m floor (reports) | +44.94 | +3.27 | +47.02 | 3.03 |
+
+Eras of the difference: +23.3 / **−7.7** / +42.0 %/yr (t 1.11 / −0.44 / 1.12).
+Three reject clauses fire (t < 1.5; the control's own seed-median +17.64 %/yr
+against the +4 %/yr ceiling — the machinery manufactures the spread; 44.2 % of
+the $3m excess survives the $10m floor) and zero of five adopt clauses pass
+(effect +20.8 vs the declared +31.0; a sign flip in 2008-2015; max DD −78 % vs
+the −45 % budget; the RW2 clause, as annotated). Both readings of "seed-median"
+reject (+20.79 %/yr element-wise, +9.00 %/yr median of per-seed estimates).
+
+**Verdict: REJECTED.** Recorded in `NEGATIVE_RESULTS.md` with the full table.
+The reusable lesson: the placebo-trained control earned +3 %/yr at the $3m
+floor and +18 %/yr at the $10m floor — a control's LEVEL moves with the corner,
+so a control must be re-measured at every corner a decision could be taken at.
+The original +44.5 %/yr was a $3m-floor, zero-borrow number. No successor
+registered. Stamped by Fable 5.1 (the registrant) on the day-run session's read.
