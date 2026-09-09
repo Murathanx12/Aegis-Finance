@@ -582,15 +582,21 @@ night run, make it ready for Opus ... run the night run again for a whole day."*
 
 ### 10.3 THE SIX ARMED BOOKS (Murat: six strategies, SPY as the index, not held)
 
-| book | strategy | horizon | universe | status / what it needs |
+| book | strategy | horizon / hold / stop | gross target (1x, no margin) | status at 03:15Z 09-09 |
 |---|---|---|---|---|
-| hack1 | **HUMAN** — Murat's decisions through `/api/journal/thesis` (Mode A), loop manages exits; graded against the four counterfactuals | per thesis | any | manage-only stays; Murat posts theses; gate `have 0 / need 20` |
-| hack2 | **EVENT 5-session** — `post_event_drift` (the one brain with a positive live counterfactual), contract 5/2/8% already frozen | 5 | window universe | ARMED but its evidence gate refuses everything (13/13). Opus lane F2: make the evidence gate a declared PRODUCT_EXPERIMENT threshold; Murat flips |
-| hack3 | **TRACKER balanced k=10** (upside × consensus) | 63/21 | tracker screen | **LIVE**, 8 positions |
-| hack4 | **TRACKER profit-max k=5** without `requires_catalyst` | 42 | tracker screen | v2 contract = **Murat's flip** (unchanged since 09-08) |
-| hack5 | **CONVEX options** (theme names, calls/spreads) | 5-21 | themes | LIVE, 1 position |
-| hack6 | **TRACKER diversified k=15** | 63/21 | window + themes | **LIVE**, 12 positions |
-| benchmark | **SPY index level** from Alpaca daily bars — compared, not held | — | — | `crossbook` reads SPY bars; the `market` account is optional |
+| hack1 | **THEME BASKET** — `theme_basket` brain (the one brain with a positive live counterfactual on the marks: +$3,564 on 7, hit 0.43), shares only | 21 / 5 / 10% | 8 × 12.5% = 100% | **v2 DEPLOYED** (terminal `5705648`; loop redeployed 03:12Z). Worst case −10%. Was the hand-entered SAFE index anchor, manage-only and empty since 09-04. Murat's own decisions still enter through `/api/journal/thesis` and are graded, not traded by a loop. |
+| hack2 | **EVENT 5-session** — `post_event_drift`, contract 5/2/8% | 5 / 2 / 8% | 8 × 12.5% = 100% (risk-sized at decision time) | ARMED; enters only within 3 sessions of a print; the 13 qualifying names on 09-08 were refused by the arbiter's evidence verdict — the reasons live in the Railway ledger (ssh host-key blocked from the laptop), so lane **F2** reads them from the loop's next session and drafts the declared threshold |
+| hack3 | **TRACKER balanced k=10** | 63 / 21 / 12% | 10 × 10% = 100% (was 83%) | LIVE, 8 positions; the new notional applies from the 09-09 seal |
+| hack4 | **TRACKER profit-max k=5**, v2 without `requires_catalyst` | 126 / 42 / **12%** (was 15%, tightened to pay for the 1.00 cap) | 5 × 20% = 100% (was 50%) | **v2 DEPLOYED** (seal-authority + loop redeployed 03:12Z); first non-empty seal is 2026-09-09's. Worst case −12%, inside the 12.5% fleet ceiling |
+| hack5 | **CONVEX options** | 21 / 2 / 50% of premium | premium bound 15% of equity (unchanged) | LIVE, 1 position |
+| hack6 | **TRACKER diversified k=15** | 42 / 21 / 10% | 15 × 6.67% = 100% (was 90%) | LIVE, 12 positions; new notional from the 09-09 seal |
+| benchmark | **SPY index level** — compared, not held | — | — | `crossbook` reads SPY bars |
+
+Alpaca paper allows 4× (buying power ~$395k on ~$99k). **None of it is used:**
+every book targets 100% of equity gross, and `tests_smoke_monday` pins "the
+gross cap is not LEVERAGE" (≤ 1.0) and a 12.5% fleet worst-case ceiling. Going
+to 2× is a separate flip: it doubles every worst case in this table (−20% to
+−24% per book, ~−$128k on the fleet) and needs those two pins changed on purpose.
 
 "Different industries" is served inside the tracker screens by sector (the driver
 map) rather than by dedicating a book to a sector: RW1 shows every selector's
