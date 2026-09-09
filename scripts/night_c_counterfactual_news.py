@@ -42,6 +42,7 @@ import argparse
 import glob
 import hashlib
 import json
+import os
 import re
 import sys
 import time
@@ -61,7 +62,15 @@ OUT.mkdir(parents=True, exist_ok=True)
 ROWS = OUT / "C1_counterfactual_news.jsonl"
 RECEIPT = OUT / "C1_counterfactual_news_receipt.json"
 CORPUS = Path(r"C:\Users\mrthn\aegis-alpha-terminal\state\corpus\observations")
-PRIORITY_YEARS = ("2020", "2021", "2022", "2023", "2024")
+# 2026-09-09: was ("2020".."2024") because only those years had CRSP prices, so
+# only their real headlines could ever be joined to a return. E1 ended that on
+# the night of 09-09 -- `text_return_panel/news_returns_2025_26.parquet` carries
+# 339,657 labelled cells over 3,031 symbols for 2025-01 -> 2026-09, from the
+# Alpaca bars P6 landed. The years worth teaching are now the years we can grade,
+# so 2025-26 goes first. Override with AEGIS_C1_PRIORITY_YEARS=2020,2021 to
+# rebuild the old ordering.
+PRIORITY_YEARS = tuple(
+    (os.getenv("AEGIS_C1_PRIORITY_YEARS") or "2025,2026,2024,2023,2022,2021,2020").split(","))
 MAX_BODY = 1500
 
 SYSTEM = ("You are a financial news editor building a training curriculum. Reply with ONE JSON "
@@ -118,7 +127,11 @@ def load_docs():
                 docs.append({"uid": d["uid"], "effective_at": d.get("effective_at") or "",
                              "title": d.get("title") or "", "body": d["body"][:MAX_BODY],
                              "symbols": list(d["symbols"])[:8], "source": d.get("source")})
-    docs.sort(key=lambda d: (0 if d["effective_at"][:4] in PRIORITY_YEARS else 1, _uid_order(d["uid"])))
+    # PRIORITY_YEARS is now an ORDER, not a set: rank by position in it, then by
+    # a hash of the uid so the sample inside a year is arbitrary but stable and
+    # a resumed run continues where the last one stopped.
+    rank = {y: i for i, y in enumerate(PRIORITY_YEARS)}
+    docs.sort(key=lambda d: (rank.get(d["effective_at"][:4], len(rank)), _uid_order(d["uid"])))
     return docs
 
 

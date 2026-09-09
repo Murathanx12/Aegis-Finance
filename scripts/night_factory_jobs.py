@@ -1432,15 +1432,38 @@ def D4_ls_robustness_and_decay(smoke: bool = False) -> dict:
 
 from scripts.night_rw_random_windows import RW1_random_windows   # noqa: E402  the 09-09 randomised windows
 
+
+def _lazy(module: str, attr: str):
+    """Resolve a job at CALL time, not at import time.
+
+    `night_rw2_event_windows` imports this module's event machinery, so importing
+    it from here at module scope makes `python -m scripts.night_rw2_event_windows`
+    a circular import: the partially initialised module has no `RW2_event_windows`
+    yet. Registering a loader keeps both entry points working -- the queue can
+    dispatch the job, and the job's own module can still be run directly.
+    """
+    def call(*a, **kw):
+        import importlib
+        return getattr(importlib.import_module(module), attr)(*a, **kw)
+    call.__name__ = attr
+    return call
+
+
 JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reaction_mutations,
         "RW1_random_windows": RW1_random_windows,
+        "RW2_event_windows": _lazy("scripts.night_rw2_event_windows", "RW2_event_windows"),
+        "G3_evolve_v2": _lazy("scripts.night_g3_evolve_v2", "G3_evolve_v2"),
+        "N2_learner_v3": _lazy("scripts.night_n2_learner_v3", "N2_learner_v3"),
+        "P6_bars_and_regret": _lazy("scripts.night_p6_bars_and_regret", "P6_bars_and_regret"),
+        "E1_news_return_panel": _lazy("scripts.night_e1_news_return_panel", "E1_news_return_panel"),
+        "C2_curriculum_transfer": _lazy("scripts.night_c2_curriculum_transfer", "C2_curriculum_transfer"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
         "G1_evolve": G1_evolve, "G2_holdout_once": G2_holdout_once}
 
 #: jobs that take a `--hours` time box rather than running to completion
-TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner"}
+TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 
 
 def main(argv=None) -> int:
@@ -1450,16 +1473,19 @@ def main(argv=None) -> int:
     ap.add_argument("--run", type=int, default=1)
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--hours", type=float, default=float(os.getenv("NIGHT_G1_HOURS", "5")))
+    ap.add_argument("--seed", type=int, default=20260909, help="RW1/RW2 window draw")
     a = ap.parse_args(argv)
     t0 = time.time()
     fn = JOBS[a.job]
-    if a.job == "G1_evolve":
+    if a.job in ("G1_evolve", "G3_evolve_v2"):
         payload = fn(hours=a.hours)
     elif a.job == "N1_train_reaction_learner":
         payload = fn(hours=a.hours, smoke=a.smoke)
     elif a.job in ("D1_reaction_book", "D2_reaction_mutations", "D3_matched_control_grid", "D4_ls_robustness_and_decay"):
         payload = fn(smoke=a.smoke)
-    elif a.job == "RW1_random_windows":
+    elif a.job in ("RW1_random_windows", "RW2_event_windows"):
+        payload = fn(seed=a.seed, smoke=a.smoke)
+    elif a.job == "N2_learner_v3":
         payload = fn(smoke=a.smoke)
     else:
         payload = fn()

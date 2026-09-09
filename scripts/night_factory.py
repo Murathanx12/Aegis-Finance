@@ -30,7 +30,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RUN_DATE = "2026-09-08"
+# 2026-09-09 (Murat, 23:0x local): "run the nightly sim ... make it pull every
+# news ... using the local LLM run sims again with made-up news so it can train
+# the nn and find logic, reason and learn". Tonight's queue is a different queue
+# in a different directory, so set both from the environment rather than forking
+# this file for every night.
+RUN_DATE = os.getenv("NIGHT_RUN_DATE", "2026-09-08")
 OUT = ROOT / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
 STOP = OUT / "STOP"
 LEADERBOARD = OUT / "LEADERBOARD.md"
@@ -55,10 +60,35 @@ QUEUE: list[tuple[str, int]] = [
     # see when it beats the S&P 500, what it was focusing on". Descriptive, no
     # holdout, null = random genomes on the SAME windows.
     ("RW1_random_windows", 60),
+    # 2026-09-09 DAY RUN (roadmap section 10.8). Every one of these answers a
+    # defect the 09-08 night's review named: RW2 puts the event-clock books on
+    # the same random windows with their own control and a borrow curve; G3
+    # replaces the single-window fitness with a distribution and makes the
+    # drawdown budget a refusal; N2 gives the data-net the event print beside a
+    # dateless control; P6 finally pulls the 2025-26 bars the repo never had.
+    ("RW2_event_windows", 60),
+    ("G3_evolve_v2", 5 * 60),
+    ("N2_learner_v3", 120),
+    ("P6_bars_and_regret", 60),
 ]
 
+# NIGHT_QUEUE="E1_news_return_panel:20,C2_curriculum_transfer:90" replaces the
+# queue above wholesale. An unknown job id is a REFUSAL at parse time, not a
+# job that silently never runs -- a queue that quietly drops a name is the
+# "gate that cannot go green" failure wearing a different hat.
+_env_queue = os.getenv("NIGHT_QUEUE")
+if _env_queue:
+    from scripts.night_factory_jobs import JOBS as _KNOWN_JOBS
+    QUEUE = []
+    for item in (x.strip() for x in _env_queue.split(",") if x.strip()):
+        name, _, mins = item.partition(":")
+        if name not in _KNOWN_JOBS:
+            raise SystemExit(f"NIGHT_QUEUE names an unknown job {name!r}; known: "
+                             f"{', '.join(sorted(_KNOWN_JOBS))}")
+        QUEUE.append((name, int(mins or 60)))
+
 #: jobs whose length is a time box, not a computation
-TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner"}
+TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 
 
 def stopped() -> bool:
@@ -80,13 +110,36 @@ def write_receipt(job: str, run: int, payload: dict) -> Path:
     return p
 
 
+TAGS = ("PRODUCT_PROMISING", "CONDITIONAL", "BETA_ONLY", "CONSTRUCTION_SENSITIVE", "CONTROL_ALSO_FIRES",
+        "FAILED_VARIANT", "ERA_DECAYED", "CANNOT DETERMINE", "TIMEOUT", "FAILED", "REFUSED",
+        "DEV ARCHIVE", "PANEL BUILT", "DESCRIPTIVE", "SCREEN", "READ_ONCE", "UNDERPOWERED",
+        "MEMORY_SUSPECTED", "REJECTED", "ADOPT")
+
+
 def _status(payload: dict) -> str:
+    """The verdict's OWN leading tag, not whichever tag appears first in a list.
+
+    The first version returned the first tag from a fixed tuple that occurred
+    ANYWHERE in the verdict text, so P6 -- which built the 2025-26 panel and then
+    explained that the six-mandate replay is REFUSED for a named missing input --
+    was filed on the board as REFUSED. A status that reads a word out of a
+    sentence about something else is worse than no status.
+    """
     v = str(payload.get("verdict") or "")
-    for tag in ("PRODUCT_PROMISING", "CONDITIONAL", "BETA_ONLY", "CONSTRUCTION_SENSITIVE", "FAILED_VARIANT", "CANNOT DETERMINE",
-                "TIMEOUT", "FAILED", "REFUSED", "DEV ARCHIVE", "SCREEN", "READ_ONCE"):
-        if tag in v:
-            return tag
-    return v[:24] or "--"
+    # earliest position wins; at the SAME position the LONGEST tag wins, or
+    # `FAILED_VARIANT` files itself as the much harsher `FAILED`
+    hits = sorted(((v.find(t), -len(t), t) for t in TAGS if t in v))
+    if hits:
+        return hits[0][2]
+    return v[:24].strip() or "--"
+
+
+def _cell(text: object, limit: int = 160) -> str:
+    """A markdown table cell. A `|` inside a headline splits the row into extra
+    columns -- RW1's own headline contains `genome|arena_k50_vw` and did exactly
+    that -- so pipes are escaped and newlines flattened."""
+    s = str(text if text is not None else "--")
+    return s.replace("|", "\\|").replace("\n", " ")[:limit]
 
 
 def append_leaderboard(job: str, run: int, payload: dict) -> None:
@@ -103,8 +156,8 @@ def append_leaderboard(job: str, run: int, payload: dict) -> None:
             "## PRODUCT_PROMISING (product ruler: beta first, terminal wealth at a drawdown budget)\n\n"
             "| job | run | status | headline | family max p | utc |\n"
             "|---|---|---|---|---|---|\n", encoding="utf-8")
-    row = (f"| {job} | {run} | {_status(payload)} | {str(payload.get('headline', '--'))[:160]} "
-           f"| {payload.get('family_max_p', '--')} | {payload.get('written_utc', '--')} |\n")
+    row = (f"| {job} | {run} | {_cell(_status(payload), 30)} | {_cell(payload.get('headline'))} "
+           f"| {_cell(payload.get('family_max_p'), 20)} | {_cell(payload.get('written_utc'), 30)} |\n")
     with LEADERBOARD.open("a", encoding="utf-8") as fh:
         fh.write(row)
 
