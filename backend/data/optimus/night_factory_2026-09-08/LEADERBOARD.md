@@ -22,3 +22,4 @@ typed status: PRODUCT_PROMISING / CONDITIONAL / BETA_ONLY / FAILED_VARIANT.
 | G1_evolve | 1 | DEV ARCHIVE | 40680 genomes evaluated on DEV; best fitness 6.21341 (TW 547.9409 vs mkt 2.7103, beta 1.1232, bm t 4.727, DD -0.3776) | None | 2026-09-08T21:00:09+00:00 |
 | G2_holdout_once | 1 | see archive_on_holdout:  | 35 archive genomes read on the holdout once against 0 random genomes | None | 2026-09-09T00:24:23+00:00 |
 | G2_holdout_once | 2 | see archive_on_holdout:  | 35 archive genomes read on the holdout once against 200 random genomes | None | 2026-09-09T00:26:34+00:00 |
+| RW1_random_windows | 1 | DESCRIPTIVE | 240 random windows x 6 strategies x 2 constructions; best excess beta-matched win rate over the null: G1_best_dev_genome_ALREADY_READ_ON_HOLDOUT|arena_k50_vw +0 | -- | 2026-09-09T02:18:38+00:00 |
