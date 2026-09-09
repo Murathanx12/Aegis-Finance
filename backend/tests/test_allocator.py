@@ -402,9 +402,17 @@ def test_write_and_reload_roundtrip(tmp_path):
     assert back["authority"].startswith("SHADOW_ONLY")
 
 
-def test_universe_refusal_is_visible_in_the_artifact():
+def test_universe_refusal_is_visible_in_the_artifact(tmp_path, monkeypatch):
     """No PotentialUniverse -> the artifact SAYS so instead of pretending the
-    universe was empty (absence of the input is not evidence about the world)."""
+    universe was empty (absence of the input is not evidence about the world).
+
+    `pu=None` makes the builder look for `PU_DIR / f"{day}.jsonl"`, and DAY is
+    today minus seven days -- so on 2026-09-09 it resolved to 2026-09-02, the
+    one day with a TRACKED vintage, and the test read OK on CI (CLAUDE.md
+    session-start rule 5: a fixture must never encode a calendar moment). The
+    directory is redirected to an empty one so "no vintage" is true by
+    construction, whatever the date."""
+    monkeypatch.setattr(A, "PU_DIR", tmp_path)
     art = A.build_decision_artifact(DAY, "balanced", pu=None,
                                     receipts=_receipts())
     assert art["universe"]["status"] == "REFUSED"
