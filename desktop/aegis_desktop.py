@@ -183,6 +183,9 @@ def main(argv: list[str] | None = None) -> int:
                     help="leave the model server running when the window closes")
     ap.add_argument("--headless", action="store_true",
                     help="start everything, print the report, exit -- for smoke tests and CI")
+    ap.add_argument("--serve", action="store_true",
+                    help="start everything and KEEP SERVING, no window -- for verifying a "
+                         "packaged build, or for running the engine on a machine with no display")
     ap.add_argument("--page", default="/desktop", help="path to open in the window")
     a = ap.parse_args(argv)
 
@@ -193,10 +196,25 @@ def main(argv: list[str] | None = None) -> int:
 
     report = {"utc": _now(), "port": port, "llama": llama}
 
-    if a.headless:
+    if a.headless or a.serve:
         ok, waited = wait_for_health(port)
         report |= {"health_ok": ok, "cold_start_s": waited,
-                   "total_s": round(time.time() - t0, 2), "mode": "headless"}
+                   "total_s": round(time.time() - t0, 2),
+                   "mode": "serve" if a.serve else "headless",
+                   "url": f"http://127.0.0.1:{port}/desktop"}
+        if a.serve:
+            # a packaged build cannot be probed by `--headless`, which reports and
+            # exits before anything can call it -- the first attempt to verify the
+            # .exe's routes got eight connection refusals for exactly that reason
+            print(json.dumps(report, indent=1, default=str), flush=True)
+            try:
+                while True:
+                    time.sleep(1.0)
+            except KeyboardInterrupt:
+                pass
+            if not a.keep_llama:
+                print(json.dumps({"llama_stop": stop_llama_if_owned()}, default=str), flush=True)
+            return 0
         if not a.keep_llama:
             report["llama_stop"] = stop_llama_if_owned()
         print(json.dumps(report, indent=1, default=str))
