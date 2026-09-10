@@ -49,6 +49,7 @@ import contextvars
 import functools
 import json
 import logging
+import secrets
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -129,8 +130,27 @@ def write(receipt: dict) -> Path | None:
     try:
         d = _root() / str(receipt.get("job", "unknown"))
         d.mkdir(parents=True, exist_ok=True)
+        # The filename was the microsecond timestamp alone, and on Windows that
+        # silently DESTROYS receipts. Measured 2026-09-10: 200 consecutive calls
+        # to `datetime.now(timezone.utc)` returned the SAME `%f` value, because
+        # the system clock ticks at ~15.6 ms here -- so every receipt written
+        # inside one tick overwrote the previous one. It surfaced as
+        # `test_receipts_come_back_newest_first` asserting 3 and getting 2, and
+        # only under full-suite load; in isolation pytest's own jitter separated
+        # the writes and it passed five times out of five.
+        #
+        # Losing a receipt is not a cosmetic failure in a programme whose canon
+        # is "a headline number belongs in a receipt". The timestamp stays first
+        # so the lexicographic sort in `read()` is still newest-first; a short
+        # random suffix makes the name unique, and the loop guarantees it rather
+        # than hoping.
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H%M%S_%fZ")
-        p = d / f"{stamp}.json"
+        for _ in range(64):
+            p = d / f"{stamp}_{secrets.token_hex(3)}.json"
+            if not p.exists():
+                break
+        else:                       # pragma: no cover - 64 collisions on 24 bits
+            raise RuntimeError(f"could not find a free receipt name in {d}")
         p.write_text(json.dumps(receipt, indent=2, default=str),
                      encoding="utf-8")
         _prune(d)

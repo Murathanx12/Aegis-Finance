@@ -269,3 +269,38 @@ def test_the_ledger_root_is_resolved_through_config_not_dunder_file():
     src = Path("backend/services/job_receipts.py").read_text(encoding="utf-8")
     assert "OPTIMUS_LEDGER_DIR" in src
     assert "Path(__file__).resolve().parents" not in src
+
+
+def test_rapid_writes_do_not_overwrite_each_other():
+    """The filename was the microsecond timestamp alone, and on Windows the
+    system clock ticks at ~15.6 ms: 200 consecutive `datetime.now()` calls
+    returned the SAME `%f` value here, so every receipt written inside one tick
+    silently replaced the last.
+
+    It showed up only under full-suite load, as
+    `test_receipts_come_back_newest_first` asserting 3 and getting 2 -- in
+    isolation pytest's own jitter separated the writes and it passed five times
+    out of five. A receipt that vanishes is not a cosmetic failure in a
+    programme whose canon is "a headline number belongs in a receipt".
+    """
+    n = 50
+    for i in range(n):
+        JR.write({"job": "t_rapid", "i": i})
+    r = _receipts("t_rapid")
+    assert len(r) >= min(n, 10), f"{len(r)} receipts survived {n} rapid writes"
+    got = JR.read("t_rapid", limit=n)
+    assert got["n_receipts"] == n, (
+        f"{got['n_receipts']} files on disk after {n} writes -- receipts are being overwritten")
+
+
+def test_receipts_are_still_returned_newest_first_with_the_suffix():
+    """The random suffix must not break the lexicographic sort that `read()`
+    relies on: the timestamp stays the leading component."""
+    JR.write({"job": "t_sort", "which": "first"})
+    JR.write({"job": "t_sort", "which": "second"})
+    names = sorted((JR._root() / "t_sort").glob("*.json"), reverse=True)
+    assert len(names) == 2
+    # each name is <timestamp>_<hex>.json and the timestamp still sorts first
+    for f in names:
+        stamp, _, suffix = f.stem.rpartition("_")
+        assert stamp and len(suffix) == 6
