@@ -232,3 +232,116 @@ def test_the_desktop_mount_is_off_unless_the_flag_is_set(monkeypatch) -> None:
 
     monkeypatch.delenv("AEGIS_DESKTOP", raising=False)
     assert mount_desktop_frontend(app)["mounted"] is False
+
+
+# ------------------------------------------------- the frozen build's job spawn
+
+def test_child_argv_is_unchanged_when_not_frozen(monkeypatch) -> None:
+    from backend.routers.control import child_argv
+
+    monkeypatch.setattr(control.sys, "frozen", False, raising=False)
+    argv = child_argv(["-m", "scripts.night_factory", "--job", "X"])
+    assert argv == [control.sys.executable, "-m", "scripts.night_factory", "--job", "X"]
+
+
+def test_a_frozen_build_prefers_a_real_interpreter(monkeypatch) -> None:
+    """The .exe deliberately does not bundle torch or the night jobs -- the
+    build that did produced a 27 GB dist directory that was mostly a second copy
+    of parquets already on disk. Jobs run under a Python that has the stack."""
+    from backend.routers.control import child_argv
+
+    monkeypatch.setattr(control.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(control, "job_python", lambda: r"C:\py\python.exe")
+    assert child_argv(["-m", "scripts.night_factory", "--job", "X"]) == \
+        [r"C:\py\python.exe", "-m", "scripts.night_factory", "--job", "X"]
+
+
+def test_a_frozen_build_falls_back_to_re_entering_itself(monkeypatch) -> None:
+    """With no interpreter to be found, `sys.executable` is AegisDesktop.exe,
+    which has no `-m` -- the job would die on an argparse error and the only
+    symptom would be an empty log. `--run-module` is the escape."""
+    from backend.routers.control import child_argv
+
+    monkeypatch.setattr(control.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(control, "job_python", lambda: None)
+    assert child_argv(["-m", "scripts.night_factory", "--job", "X"])[1:] == \
+        ["--run-module", "scripts.night_factory", "--job", "X"]
+
+
+def test_child_argv_passes_a_non_module_argv_through_unchanged(monkeypatch) -> None:
+    """EXTRA_JOBS is a dict a future session will add to; a non `-m` entry must
+    not be silently mangled into a --run-module it is not."""
+    from backend.routers.control import child_argv
+
+    monkeypatch.setattr(control.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(control, "job_python", lambda: None)
+    assert child_argv(["other.py", "--x"])[1:] == ["other.py", "--x"]
+
+
+def test_job_python_is_this_interpreter_when_not_frozen(monkeypatch) -> None:
+    monkeypatch.setattr(control.sys, "frozen", False, raising=False)
+    assert control.job_python() == control.sys.executable
+
+
+def test_the_spec_does_not_sweep_the_data_directory() -> None:
+    """`collect_data_files("backend")` pulled every parquet under
+    `backend/data/` into the bundle -- the 1.25M-row bar table, the 339,657-row
+    news panel -- and the dist directory reached 27 GB before it was stopped."""
+    # the spec's own docstring names the banned calls in order to explain them,
+    # so read the EXECUTABLE source -- the third time this session that a
+    # grep-shaped guard matched the comment rather than the code
+    spec_path = REPO / "desktop" / "AegisDesktop.spec"
+    code = executable_source(spec_path)
+    assert "collect_data_files" not in code
+    assert "collect_submodules" not in code
+    for heavy in ("torch", "transformers", "tensorflow"):
+        assert f'"{heavy}"' in code, f"{heavy} must be in excludes, not bundled"
+
+
+def test_every_spawn_site_goes_through_child_argv() -> None:
+    """A second `subprocess.Popen([sys.executable, "-m", ...])` added later would
+    work in development and break only in the packaged build."""
+    code = executable_source(Path(control.__file__))
+    assert "Popen([sys.executable" not in code, "spawn through child_argv, not sys.executable directly"
+    assert code.count("child_argv(") >= 3, "both spawn sites plus the definition"
+
+
+def test_the_shell_dispatches_run_module_before_argparse() -> None:
+    """`--run-module` is not a window launch, and importing pywebview to find
+    that out costs a five-hour night job its first seconds."""
+    from desktop import aegis_desktop as ad
+
+    src = (REPO / "desktop" / "aegis_desktop.py").read_text(encoding="utf-8")
+    body = src[src.index("def main("):]
+    assert body.index('"--run-module"') < body.index("ap = argparse.ArgumentParser")
+    assert callable(ad.dispatch_module)
+
+
+def test_the_spec_refuses_to_package_without_the_static_export() -> None:
+    """Packaging with no `frontend/out` yields an .exe whose window is empty --
+    a failure that looks like a crash and is not."""
+    spec = (REPO / "desktop" / "AegisDesktop.spec").read_text(encoding="utf-8")
+    assert "REFUSED" in spec and "index.html" in spec
+    # onedir, not onefile: a COLLECT step is what onedir produces, and
+    # `exclude_binaries=True` on the EXE is what makes it one. Asserting on the
+    # build graph beats grepping the prose that explains the choice.
+    assert "COLLECT(" in spec and "exclude_binaries=True" in spec
+
+
+def test_the_icon_exists_and_is_multi_size() -> None:
+    from PIL import Image
+
+    ico = REPO / "desktop" / "assets" / "aegis.ico"
+    assert ico.exists(), "run: python -m desktop.build_icon"
+    with Image.open(ico) as im:
+        sizes = {s for s in getattr(im, "ico", im).sizes()} if hasattr(im, "ico") else set(im.info.get("sizes", []))
+    # a single 256px image is downsampled by the shell to 16px and turns to mush
+    assert ico.stat().st_size > 10_000
+
+
+def test_the_shortcut_refuses_a_missing_target(tmp_path: Path) -> None:
+    from desktop.make_shortcut import create
+
+    out = create(tmp_path / "nope.exe", tmp_path / "i.ico", tmp_path / "s.lnk")
+    assert out["ok"] is False and out["action"] == "refused"
+    assert "does nothing" in out["reason"]

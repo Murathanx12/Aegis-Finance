@@ -110,6 +110,23 @@ the wrong path. Fetch first, then check, and check the real path.
    eleven consecutive pushes (2026-09-05 → 09-06) and no session saw it,
    because the only surface was an e-mail. A red CI is a session's first
    task, not the next session's.
+9. **Before crediting a night with discovery, check its overlap with the
+   previous run's log.** On 2026-09-10 the crashed `G3_evolve_v2` run was found
+   to be a bit-identical REPLAY: same declared seed, `bank_seed = seed +
+   1000*gen`, and **541 of its 541 distinct genomes were already in the previous
+   run's log** — overlap 1.000, discovery zero, and it died 93 generations
+   behind where the programme already stood. A fixed seed is what
+   reproducibility asks for WITHIN a run and what destroys accumulation ACROSS
+   runs; nothing in the code distinguished the two. `scripts/night_checkpoint.py`
+   now carries elites forward and draws every bank seed from outside the union
+   of every seed any night selected on.
+10. **A grep-shaped guard that cannot tell an explanation from an instance is a
+    broken guard.** Three tests failed on their first run this session by
+    matching the docstring that explains the banned pattern (`taskkill /IM`,
+    `.env`, `collect_data_files`), and a fourth matched `.env` inside
+    `os.environ`. Read the AST and skip docstrings
+    (`test_desktop_control_surface.executable_source`), or the next reader
+    deletes the rationale to make the suite green.
 
 The long-form lessons behind this file (the farm's seven lessons, the feature
 list, layout, test table, retired lab) moved verbatim to

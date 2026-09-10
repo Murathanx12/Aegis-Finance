@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import sys
 import time
@@ -254,15 +255,30 @@ def embed_corpus(texts, resume: bool = True, verbose: bool = True):
     digest = _sha1(f"{len(texts)}|" + _sha1("\x00".join(texts[::997])))
     config = {"model_id": MODEL_ID, "revision": MODEL_REVISION, "max_tokens": MAX_TOKENS,
               "n_texts": len(texts), "corpus_digest": digest, "chunk": CHUNK_TEXTS}
-    EMB_DIR.mkdir(parents=True, exist_ok=True)
-    ck = Checkpoint(EMB_DIR / "embed_checkpoint.json", config)
+    # One cache directory PER CORPUS. `Checkpoint` rightly refuses to resume when
+    # the configuration moved, and a single shared directory turns that correct
+    # refusal into a crash the first time a --smoke corpus (11k texts) is followed
+    # by the real one (162k) -- which is exactly what happened on the first
+    # attempt. Keying the directory by the corpus lets the two coexist, and the
+    # refusal goes back to meaning what it is for: the same corpus, changed.
+    cache = EMB_DIR / f"n{len(texts)}_{digest[:12]}"
+    cache.mkdir(parents=True, exist_ok=True)
+    ck = Checkpoint(cache / "embed_checkpoint.json", config)
 
     n_chunks = (len(texts) + CHUNK_TEXTS - 1) // CHUNK_TEXTS
     done = 0
+    prior_s = 0.0
     if resume and ck.exists():
-        done = int(ck.load().get("chunks_done") or 0)
+        state = ck.load()
+        done = int(state.get("chunks_done") or 0)
+        # GPU seconds spent by EARLIER sessions on this same corpus. Without this
+        # a resumed run reports the seconds it personally spent, which for a fully
+        # cached corpus is 0.0 -- a true statement about this process and a
+        # misleading one about the experiment.
+        prior_s = float(state.get("elapsed_s_total") or state.get("elapsed_s") or 0.0)
         if verbose:
-            print(f"[embed] resuming: {done}/{n_chunks} chunks already on disk", flush=True)
+            print(f"[embed] resuming: {done}/{n_chunks} chunks already on disk "
+                  f"({prior_s:.0f}s of encoding already paid)", flush=True)
 
     t0 = time.time()
     if done < n_chunks:
@@ -284,9 +300,10 @@ def embed_corpus(texts, resume: bool = True, verbose: bool = True):
                     h = model(**enc).last_hidden_state[:, 0]      # bge uses the CLS token
                     v = torch.nn.functional.normalize(h.float(), dim=-1)
                     vecs[i - lo:j - lo] = v.cpu().numpy()
-            np.save(EMB_DIR / f"chunk_{ci:05d}.npy", vecs.astype(np.float16))
-            ck.save({"chunks_done": ci + 1, "n_chunks": n_chunks,
-                     "texts_done": hi, "elapsed_s": round(time.time() - t0, 1)})
+            np.save(cache / f"chunk_{ci:05d}.npy", vecs.astype(np.float16))
+            ck.save({"chunks_done": ci + 1, "n_chunks": n_chunks, "texts_done": hi,
+                     "elapsed_s": round(time.time() - t0, 1),
+                     "elapsed_s_total": round(prior_s + time.time() - t0, 1)})
             if verbose:
                 print(f"[embed] chunk {ci + 1}/{n_chunks}  {hi}/{len(texts)} texts  "
                       f"{time.time() - t0:.0f}s", flush=True)
@@ -295,7 +312,7 @@ def embed_corpus(texts, resume: bool = True, verbose: bool = True):
             torch.cuda.empty_cache()
     wall = time.time() - t0
 
-    parts = [np.load(EMB_DIR / f"chunk_{ci:05d}.npy") for ci in range(n_chunks)]
+    parts = [np.load(cache / f"chunk_{ci:05d}.npy") for ci in range(n_chunks)]
     emb = np.concatenate(parts, axis=0).astype(np.float32)
     if emb.shape != (len(texts), EMBED_DIM):
         raise SystemExit(f"REFUSED: embedding cache is {emb.shape}, corpus is {len(texts)} x {EMBED_DIM}")
@@ -304,8 +321,11 @@ def embed_corpus(texts, resume: bool = True, verbose: bool = True):
             "dtype": "fp16 forward, fp16 cache, fp32 in memory", "params_millions": 33.36,
             "rows_embedded": int(len(texts)), "chunks": n_chunks,
             "encode_wall_clock_s": round(wall, 1),
-            "encode_wall_clock_s_note": "0 when every chunk was already cached",
-            "cost_usd": 0.0, "cache_dir": str(EMB_DIR)}
+            "encode_wall_clock_s_note": "this process only; 0 when every chunk was already cached",
+            "encode_wall_clock_s_all_sessions": round(prior_s + wall, 1),
+            "encode_texts_per_second": (round(len(texts) / (prior_s + wall), 1)
+                                        if (prior_s + wall) > 0 else None),
+            "cost_usd": 0.0, "cache_dir": str(cache), "corpus_digest": digest}
     return emb, info
 
 
@@ -332,6 +352,40 @@ def _spearman(a: np.ndarray, b: np.ndarray) -> float:
     return float((ra * rb).sum() / d) if d > 0 else float("nan")
 
 
+class _RidgePath:
+    """Every alpha in the grid from ONE pass over the data.
+
+    `sklearn.linear_model.Ridge` refits from scratch per alpha, which means the
+    n x d product is paid five times per arm per fold. With d = 384 the Gram
+    matrix is tiny, so the whole regularisation path comes out of a single
+    eigendecomposition of `Xc.T @ Xc` -- exactly the same estimator, ~15x less
+    wall clock. Checked against `Ridge(fit_intercept=True)` in
+    `backend/tests/test_n3_frozen_embedding_head.py`, because a hand-rolled
+    solver that silently disagrees with the library is worse than a slow one.
+    """
+
+    def __init__(self, X: np.ndarray, y: np.ndarray):
+        X = np.asarray(X, dtype=np.float64)
+        y = np.asarray(y, dtype=np.float64)
+        self.xbar = X.mean(axis=0)
+        self.ybar = float(y.mean())
+        Xc = X - self.xbar
+        yc = y - self.ybar
+        G = Xc.T @ Xc
+        self.c = Xc.T @ yc
+        s, V = np.linalg.eigh(G)                       # G is symmetric PSD
+        self.s = np.maximum(s, 0.0)
+        self.V = V
+        self.Vtc = V.T @ self.c
+
+    def coef(self, alpha: float) -> np.ndarray:
+        return self.V @ (self.Vtc / (self.s + float(alpha)))
+
+    def predict(self, X: np.ndarray, alpha: float) -> np.ndarray:
+        w = self.coef(alpha)
+        return (np.asarray(X, dtype=np.float64) - self.xbar) @ w + self.ybar
+
+
 def _fit_ridge(Xtr, ytr, Xte, dates_tr, alphas=ALPHAS):
     """Standardise on train, pick alpha on an INNER temporal split, refit, predict.
 
@@ -339,8 +393,6 @@ def _fit_ridge(Xtr, ytr, Xte, dates_tr, alphas=ALPHAS):
     at any point, including by the alpha choice -- an alpha tuned on the test
     fold is the test fold's t-statistic wearing a hyper-parameter's name.
     """
-    from sklearn.linear_model import Ridge
-
     mu, sd = Xtr.mean(axis=0), Xtr.std(axis=0)
     sd = np.where(sd < 1e-9, 1.0, sd)
     Xtr = (Xtr - mu) / sd
@@ -361,18 +413,17 @@ def _fit_ridge(Xtr, ytr, Xte, dates_tr, alphas=ALPHAS):
         if inner_tr.sum() > 50 and inner_va.sum() > 50:
             dva = pd.Series(dates_tr).to_numpy()[inner_va]
             yva = ytr_z[inner_va]
+            Xva = Xtr[inner_va]
+            groups = [dva == d for d in np.unique(dva)]
+            path = _RidgePath(Xtr[inner_tr], ytr_z[inner_tr])
             for a in alphas:
-                m = Ridge(alpha=a, fit_intercept=True)
-                m.fit(Xtr[inner_tr], ytr_z[inner_tr])
-                p = m.predict(Xtr[inner_va])
-                ics = [_spearman(p[dva == d], yva[dva == d]) for d in np.unique(dva)]
+                p = path.predict(Xva, a)
+                ics = [_spearman(p[g], yva[g]) for g in groups]
                 ics = [v for v in ics if np.isfinite(v)]
                 ic = float(np.mean(ics)) if ics else -np.inf
                 if ic > best_ic:
                     best_ic, best_alpha = ic, float(a)
-    model = Ridge(alpha=best_alpha, fit_intercept=True)
-    model.fit(Xtr, ytr_z)
-    return model.predict(Xte), best_alpha
+    return _RidgePath(Xtr, ytr_z).predict(Xte, best_alpha), best_alpha
 
 
 def _tfidf_svd(train_text, test_text, seed: int):
@@ -495,12 +546,19 @@ def run_folds(cells: pd.DataFrame, feats: dict, verbose: bool = True):
         prev = {}
         to, net = [], []
         for w, g in zip(dd[f"w_{arm}"].to_numpy(), dd[f"gross_{arm}"].to_numpy()):
-            w = w or {}
+            if not w:
+                # An UNGRADABLE date (too few tradable names) is not a liquidation.
+                # Charging `sum|w_prev - 0|` here would bill a full round trip the
+                # book never did, and would put that phantom into the mean turnover
+                # while leaving the net return NaN -- so the printed turnover would
+                # no longer be the turnover the printed net was charged on.
+                to.append(float("nan"))
+                net.append(float("nan"))
+                continue
             t = _turnover(prev, w)
             to.append(t)
             net.append(g - t * COST_BPS / 1e4 if np.isfinite(g) else float("nan"))
-            if w:
-                prev = w
+            prev = w
         dd[f"turnover_{arm}"] = to
         dd[f"net_{arm}"] = net
         dd.drop(columns=[f"w_{arm}"], inplace=True)
@@ -717,6 +775,27 @@ def main(argv=None) -> int:
     print(v)
     print(f"receipt: {out}")
     return 0
+
+
+def N3_frozen_embedding_head(smoke: bool = False, run: int = 1) -> dict:
+    """Adapter for `scripts.night_factory_jobs.JOBS`, which wants a payload back.
+
+    Registering N3 in the night factory needs exactly one line there:
+
+        "N3_frozen_embedding_head": _lazy("scripts.night_n3_frozen_embedding_head",
+                                          "N3_frozen_embedding_head"),
+
+    The factory writes whatever a job returns to its own receipt path, so this
+    runs the experiment against THAT path -- which keeps the incremental,
+    crash-safe writes -- and hands the finished payload back for the final write.
+    """
+    out = OUT_DIR / f"{JOB}_run{run:02d}{'_smoke' if smoke else ''}.json"
+    argv = ["--run", str(run), "--out", str(out)] + (["--smoke"] if smoke else [])
+    rc = main(argv)
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    if rc != 0:
+        payload.setdefault("status", "REFUSED")
+    return payload
 
 
 if __name__ == "__main__":

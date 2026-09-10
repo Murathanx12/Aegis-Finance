@@ -92,6 +92,66 @@ def whitelist() -> list[str]:
 
 # ------------------------------------------------------------- run registry
 
+def job_python() -> str | None:
+    """The interpreter that runs night jobs, or None with a reason.
+
+    The packaged app deliberately does NOT bundle the research stack. The first
+    build did -- `collect_data_files` on `backend`/`scripts`/`learner` swept
+    `backend/data/` into the bundle and `collect_submodules("scripts")` dragged
+    in torch with CUDA -- and produced a **27 GB** dist directory that was
+    mostly a second copy of parquets already on disk two directories away.
+
+    The app is a launcher for THIS machine's repo: it reads
+    `backend/data/optimus/**` at runtime and is not portable regardless. So the
+    .exe carries the window and the API, and night jobs run under a real Python
+    that already has torch, lightgbm and the rest.
+
+    Resolution order, and it REFUSES rather than guessing: `AEGIS_JOB_PYTHON`,
+    then a `.venv` beside the repo, then `python` on PATH.
+    """
+    if not getattr(sys, "frozen", False):
+        return sys.executable
+    import shutil
+    cand = os.getenv("AEGIS_JOB_PYTHON")
+    if cand and Path(cand).exists():
+        return cand
+    for rel in (".venv/Scripts/python.exe", ".venv/bin/python", "venv/Scripts/python.exe"):
+        p = REPO / rel
+        if p.exists():
+            return str(p)
+    found = shutil.which("python") or shutil.which("python3")
+    return found
+
+
+def child_argv(args: list[str]) -> list[str]:
+    """Build the argv for a night job.
+
+    Under a normal Python this is just `[sys.executable, *args]`. In the frozen
+    build `sys.executable` is `AegisDesktop.exe`, which has no `-m` and would
+    hand the module name to argparse as a positional -- every job launched from
+    the packaged app would die instantly, leaving an empty log and a "job
+    started" that never ran.
+
+    Two escapes exist and they are not equivalent:
+
+    * a real Python (`job_python()`), which has the research stack -- preferred;
+    * the .exe re-entering itself via `--run-module`, dispatched by
+      `desktop/aegis_desktop.py` before argparse. That path works for jobs whose
+      imports are all inside the bundle, and is the fallback when no interpreter
+      can be found.
+
+    A non `-m` argv is passed through unchanged rather than silently mangled.
+    """
+    if not getattr(sys, "frozen", False):
+        return [sys.executable, *args]
+    py = job_python()
+    if py:
+        return [py, *args]
+    if args[:1] == ["-m"]:
+        return [sys.executable, "--run-module", args[1], *args[2:]]
+    return [sys.executable, *args]
+
+
 def _run_path(pid: int) -> Path:
     return RUNS_DIR / f"run_{pid}.json"
 
@@ -219,7 +279,7 @@ def run_job(job: str, hours: float | None = None, run: int | None = None) -> dic
     log = NIGHT_DIR / f"control_{job}_{int(time.time())}.log"
     env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"}
     with log.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen([sys.executable, *args], cwd=str(REPO), stdout=fh,
+        proc = subprocess.Popen(child_argv(args), cwd=str(REPO), stdout=fh,
                                 stderr=subprocess.STDOUT, env=env, shell=False)
     rec = {"pid": proc.pid, "job": job, "argv": args, "log": str(log), "started_utc": _now()}
     _run_path(proc.pid).write_text(json.dumps(rec, indent=1), encoding="utf-8")
@@ -236,7 +296,7 @@ def run_night(hours: float = 4.0) -> dict:
     log = NIGHT_DIR / f"control_night_{int(time.time())}.log"
     env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"}
     with log.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen([sys.executable, "-m", "scripts.night_factory", "--hours", str(float(hours))],
+        proc = subprocess.Popen(child_argv(["-m", "scripts.night_factory", "--hours", str(float(hours))]),
                                 cwd=str(REPO), stdout=fh, stderr=subprocess.STDOUT, env=env, shell=False)
     rec = {"pid": proc.pid, "job": "NIGHT_QUEUE", "argv": ["-m", "scripts.night_factory"],
            "log": str(log), "started_utc": _now()}

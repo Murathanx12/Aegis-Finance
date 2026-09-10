@@ -1463,6 +1463,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # it belongs after the model server in any queue that includes it.
         "P7_pit_universe_vintage": _lazy("scripts.night_p7_pit_universe", "P7_pit_universe_vintage"),
         "R2_widened_panelB": _lazy("scripts.night_r2_monthly_llm", "R2_widened"),
+        # N3 2026-09-10: FAILED_VARIANT on its first run (the frozen embedding
+        # beats neither TF-IDF nor shuffled text). Registered anyway -- the
+        # panel grows nightly and the head is refit in minutes, so this is the
+        # cheapest standing check that the text ever starts carrying something.
+        "N3_frozen_embedding_head": _lazy("scripts.night_n3_frozen_embedding_head",
+                                          "N3_frozen_embedding_head"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,

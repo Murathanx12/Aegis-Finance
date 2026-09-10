@@ -149,7 +149,33 @@ def stop_llama_if_owned() -> dict:
     return ls.stop_if_owned()
 
 
+def dispatch_module(argv: list[str]) -> int:
+    """`AegisDesktop.exe --run-module scripts.night_factory --job X` -> run it.
+
+    Inside a PyInstaller build `sys.executable` is this .exe, not python.exe, so
+    the control router's `[sys.executable, "-m", "scripts.night_factory", ...]`
+    would hand `-m` to argparse and die instantly, leaving an empty log and a
+    "job started" that never ran. `control.child_argv` rewrites it to this flag
+    and this function is the other half.
+
+    `sys.argv` is rebuilt so the module's own argparse sees exactly what it
+    would have seen under `python -m`.
+    """
+    import runpy
+
+    module = argv[0]
+    sys.argv = [module, *argv[1:]]
+    runpy.run_module(module, run_name="__main__", alter_sys=True)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
+    # BEFORE argparse: a job re-entry is not a window launch, and every second
+    # spent importing pywebview here is a second of a five-hour night job.
+    raw = sys.argv[1:] if argv is None else argv
+    if raw[:1] == ["--run-module"]:
+        return dispatch_module(raw[1:])
+
     ap = argparse.ArgumentParser(description="Aegis Desktop")
     ap.add_argument("--port", type=int, default=0, help="0 = ask the OS for a free one")
     ap.add_argument("--no-llama", action="store_true", help="do not start the local model server")

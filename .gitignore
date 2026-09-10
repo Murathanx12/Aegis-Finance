@@ -266,3 +266,9 @@ backend/data/optimus/night_factory_*/*_smoke.json
 backend/data/optimus/night_factory_*/*_smoke.jsonl
 backend/data/optimus/night_factory_*/*_smoke/
 backend/data/optimus/night_factory_*/G3_checkpoint_run*.json
+
+# 2026-09-10 runtime state and derived caches, not results:
+# - the llama-server ownership note is a PID and a timestamp for THIS machine
+# - the frozen-encoder cache is 120 MB regenerated from the panel in minutes
+backend/data/optimus/llama_server_owner.json
+backend/data/optimus/text_return_panel/emb_*/

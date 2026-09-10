@@ -55,13 +55,43 @@ def test_no_shell_true_anywhere():
                         "subprocess in the control router must pass shell=False explicitly")
 
 
+#: the ONLY function whose return value may stand in for an argv list literal.
+#: It exists because the packaged .exe cannot run `-m` (see `child_argv`), and
+#: it is allowlisted BY NAME so that a future `subprocess.Popen(build_cmd(...))`
+#: whose builder joins a string is still caught.
+ARGV_BUILDERS = {"child_argv"}
+
+
 def test_every_spawn_passes_a_list_beginning_with_the_interpreter():
-    """`Popen`/`run` argv is a list literal, never a joined string."""
+    """`Popen`/`run` argv is a list, never a joined string.
+
+    A call is accepted only when it is one of `ARGV_BUILDERS`, and the companion
+    test below proves that builder returns a list -- so the guard keeps its
+    teeth rather than being widened to "any call" the first time an indirection
+    appears.
+    """
     for node in ast.walk(TREE):
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
                 and node.func.attr in {"Popen", "run"} and node.args:
-            assert isinstance(node.args[0], (ast.List, ast.Name)), (
+            arg = node.args[0]
+            if isinstance(arg, ast.Call):
+                name = getattr(arg.func, "id", None) or getattr(arg.func, "attr", None)
+                assert name in ARGV_BUILDERS, (
+                    f"a subprocess argv may come from a list literal, a name, or one of "
+                    f"{sorted(ARGV_BUILDERS)} -- not from {name!r}")
+                continue
+            assert isinstance(arg, (ast.List, ast.Name)), (
                 "the first argument of a subprocess call must be an argv list, not a string")
+
+
+def test_the_argv_builder_returns_a_list_and_never_a_string():
+    """`child_argv` is trusted by the test above; this is what earns that."""
+    from backend.routers.control import child_argv
+
+    for args in (["-m", "scripts.night_factory", "--job", "X"], ["other.py", "--x"]):
+        argv = child_argv(args)
+        assert isinstance(argv, list) and all(isinstance(x, str) for x in argv)
+        assert len(argv) == len(args) + 1        # exactly one interpreter prepended
 
 
 def _executable_strings() -> list[str]:
