@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import ast
 import json
+import os
 import re
 import sys
 import time
@@ -609,19 +610,30 @@ def test_the_shell_points_data_dir_at_backend_data_not_at_optimus() -> None:
     assert 'AEGIS_DATA_DIR", str(root / "backend" / "data" / "optimus")' not in code
 
 
-def test_data_dir_and_ledger_dir_do_not_double_up(monkeypatch, tmp_path: Path) -> None:
-    """The invariant itself, not just the caller: pointing AEGIS_DATA_DIR at
-    `<x>/backend/data` must put the ledger at `<x>/backend/data/optimus`."""
-    import importlib
+def test_data_dir_and_ledger_dir_do_not_double_up(tmp_path: Path) -> None:
+    """The invariant itself: `AEGIS_DATA_DIR=<x>/backend/data` must put the
+    ledger at `<x>/backend/data/optimus`, not `.../optimus/optimus`.
+
+    Checked in a SUBPROCESS. The first version reloaded `backend.config`
+    in-process, which replaces module-level objects -- and
+    `test_one_price_table.py` asserts `llm_research.PRICE_PER_MTOK IS
+    config.LLM_PRICE_PER_MTOK`, an IDENTITY check that a reload breaks for every
+    test that runs afterwards. It passed locally and turned CI red on e50f46d:
+    a test that mutates global module state is a test that fails somebody else,
+    somewhere else, depending on collection order.
+    """
+    import subprocess
 
     data = tmp_path / "backend" / "data"
     data.mkdir(parents=True)
-    monkeypatch.setenv("AEGIS_DATA_DIR", str(data))
-    monkeypatch.setenv("AEGIS_IGNORE_DOTENV", "1")
-    cfg = importlib.reload(importlib.import_module("backend.config"))
-    try:
-        assert Path(cfg.OPTIMUS_LEDGER_DIR) == data / "optimus"
-        assert "optimus" not in Path(cfg.DATA_DIR).name
-    finally:
-        monkeypatch.delenv("AEGIS_DATA_DIR", raising=False)
-        importlib.reload(cfg)
+    code = ("import os, sys; sys.path.insert(0, r'%s');"
+            "from backend import config as c;"
+            "print(c.OPTIMUS_LEDGER_DIR)" % REPO)
+    r = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True, text=True, timeout=120, shell=False,
+        env={**os.environ, "AEGIS_DATA_DIR": str(data), "AEGIS_IGNORE_DOTENV": "1"},
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0,
+    )
+    assert r.returncode == 0, r.stderr[-500:]
+    assert Path(r.stdout.strip()) == data / "optimus"
