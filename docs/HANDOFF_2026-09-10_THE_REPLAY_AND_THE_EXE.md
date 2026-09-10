@@ -17,7 +17,8 @@
 | independent selectors with evidence | **one** — unchanged, and the reason no router is permitted yet |
 | new actionable finding | **the night search was replaying itself.** 541/541 genome overlap between two consecutive G3 runs |
 | LLM spend | **$0.00** (every job local) |
-| tests | fast suite **7,924 passed / 20 skipped / 0 failed** (7,845 on 09-09). CI green on `452214f` |
+| tests | fast suite **7,953 passed / 20 skipped / 0 failed** (7,845 on 09-09). CI green through `512278c` |
+| defects found today | five, and **not one was caught by a failing test**: the replay · the archive discarding its best-measured genomes · `dollar_vol` look-ahead in the E1 panel AND in C2's universe screen · job receipts silently overwriting each other on a ~15.6 ms clock. Four were found by reading a job's own log against its own receipt; the fifth by taking a single "flaky" failure seriously |
 
 ---
 
