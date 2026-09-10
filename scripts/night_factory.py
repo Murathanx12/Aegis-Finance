@@ -89,6 +89,12 @@ if _env_queue:
 
 #: jobs whose length is a time box, not a computation
 TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
+#: mirrors `scripts.night_factory_jobs.RESUMABLE`; imported rather than retyped
+#: so the two cannot drift apart into a --resume that the dispatcher refuses.
+try:
+    from scripts.night_factory_jobs import RESUMABLE          # noqa: E402
+except Exception:                                             # noqa: BLE001
+    RESUMABLE = {"G3_evolve_v2"}
 
 
 def stopped() -> bool:
@@ -162,10 +168,54 @@ def append_leaderboard(job: str, run: int, payload: dict) -> None:
         fh.write(row)
 
 
-def run_job(job: str, run: int, timeout_min: int, extra: list[str]) -> dict:
+def _log_path(job: str, run: int) -> Path:
+    return OUT / f"{job}_run{run:02d}.log"
+
+
+def _is_crashed_stub(job: str, run: int) -> bool:
+    """True when the receipt at (job, run) is THIS file's stub for a job that
+    died without writing its own -- i.e. there is work on disk to continue.
+
+    `_receipt_path(job, run).exists()` alone was the whole test, so the crashed
+    G3 run of 2026-09-09 -- 3.1 hours, 1,945 evaluations, killed by the OS with
+    `exit 1073807364` (`DBG_TERMINATE_PROCESS`) -- looked exactly like a
+    completed run and the next night would have started at run 02 from zero.
+    """
+    p = _receipt_path(job, run)
+    if not p.exists():
+        return False
+    try:
+        payload = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    return (str(payload.get("verdict") or "") in {"FAILED", "TIMEOUT"}
+            and "no receipt" in str(payload.get("headline") or ""))
+
+
+def resolve_run(job: str, first_run: int) -> tuple[int, bool]:
+    """(run number, resume?) for the next attempt at `job`.
+
+    A run whose log is on disk and whose only receipt is the crash stub is
+    RESUMED under its own number. Bumping to n+1 would leave the crashed run's
+    checkpoint orphaned and its three hours unclaimed, which is what happened on
+    2026-09-09 and is the reason nothing accumulated overnight.
+    """
+    run = first_run
+    while _receipt_path(job, run).exists():
+        if _is_crashed_stub(job, run) and _log_path(job, run).exists():
+            return run, True
+        run += 1
+    if _log_path(job, run).exists():          # a log with no receipt at all
+        return run, True
+    return run, False
+
+
+def run_job(job: str, run: int, timeout_min: int, extra: list[str], resume: bool = False) -> dict:
     started = time.time()
     cmd = [sys.executable, "-m", "scripts.night_factory_jobs", job,
            "--out", str(_receipt_path(job, run)), "--run", str(run), *extra]
+    if resume:
+        cmd.append("--resume")
     log = OUT / f"{job}_run{run:02d}.log"
     OUT.mkdir(parents=True, exist_ok=True)
     try:
@@ -218,12 +268,20 @@ def main(argv: list[str] | None = None) -> int:
         if stopped():
             print("STOP file present; ending the night between jobs", flush=True)
             break
-        run = a.run
-        while _receipt_path(job, run).exists():
-            run += 1
+        run, resume = resolve_run(job, a.run)
+        if resume and job not in RESUMABLE:
+            # A job with a checkpoint gets continued; one without gets restarted
+            # and the receipt SAYS so, rather than the reader assuming the three
+            # hours in the log were carried forward.
+            print(f"    {job} run {run} crashed and has no checkpoint support; restarting from zero",
+                  flush=True)
+            resume = False
         extra = ["--hours", str(a.hours)] if job in TIMEBOXED else []
-        print(f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] {job} run {run} (<= {minutes} min)", flush=True)
-        payload = run_job(job, run, minutes, extra)
+        print(f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] {job} run {run} "
+              f"({'RESUME' if resume else 'fresh'}, <= {minutes} min)", flush=True)
+        payload = run_job(job, run, minutes, extra, resume=resume)
+        if resume:
+            payload["resumed"] = True
         append_leaderboard(job, run, payload)
         print(f"    -> {payload.get('verdict')}: {str(payload.get('headline'))[:150]}", flush=True)
     print("night queue done", flush=True)

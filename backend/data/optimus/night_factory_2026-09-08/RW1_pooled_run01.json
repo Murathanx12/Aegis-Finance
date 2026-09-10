@@ -1,0 +1,681 @@
+{
+ "job": "RW1_pooled",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "rule": "roadmap 10.2 item 1 as amended: pool >= 3 draws (>= 720 windows), print the draw-to-draw dispersion per cell, and a cell passes only if excess - dispersion >= 0.15 in EVERY start era",
+ "draws": [
+  {
+   "run": 1,
+   "seed": 20260909,
+   "n_windows": 240
+  },
+  {
+   "run": 2,
+   "seed": 20260910,
+   "n_windows": 240
+  },
+  {
+   "run": 3,
+   "seed": 20260911,
+   "n_windows": 240
+  }
+ ],
+ "draws_pooled": 3,
+ "windows_pooled": 720,
+ "enough_to_adjudicate": true,
+ "cells": {
+  "G1_best_dev_genome_ALREADY_READ_ON_HOLDOUT|arena_k50_vw": {
+   "overall": {
+    "per_draw": [
+     0.212,
+     0.362,
+     0.412
+    ],
+    "pooled_excess": 0.3283,
+    "dispersion_sd": 0.1041,
+    "excess_minus_dispersion": 0.2242,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.53,
+      0.528,
+      0.659
+     ],
+     "pooled_excess": 0.5723,
+     "dispersion_sd": 0.075,
+     "excess_minus_dispersion": 0.4972,
+     "clears_threshold": true
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.017,
+      0.255,
+      0.25
+     ],
+     "pooled_excess": 0.1741,
+     "dispersion_sd": 0.136,
+     "excess_minus_dispersion": 0.0381,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      0.04,
+      0.263,
+      0.249
+     ],
+     "pooled_excess": 0.184,
+     "dispersion_sd": 0.1249,
+     "excess_minus_dispersion": 0.0591,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 1,
+   "eras_measured": 3
+  },
+  "G1_best_dev_genome_ALREADY_READ_ON_HOLDOUT|broad_k100_ew_hold400_floor3m": {
+   "overall": {
+    "per_draw": [
+     0.199,
+     0.127,
+     0.238
+    ],
+    "pooled_excess": 0.1881,
+    "dispersion_sd": 0.0567,
+    "excess_minus_dispersion": 0.1314,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.311,
+      0.196,
+      0.354
+     ],
+     "pooled_excess": 0.2869,
+     "dispersion_sd": 0.0817,
+     "excess_minus_dispersion": 0.2051,
+     "clears_threshold": true
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.083,
+      -0.04,
+      0.059
+     ],
+     "pooled_excess": 0.0337,
+     "dispersion_sd": 0.0653,
+     "excess_minus_dispersion": -0.0316,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      0.194,
+      0.3,
+      0.343
+     ],
+     "pooled_excess": 0.2792,
+     "dispersion_sd": 0.0767,
+     "excess_minus_dispersion": 0.2025,
+     "clears_threshold": true
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 2,
+   "eras_measured": 3
+  },
+  "ensemble_3|arena_k50_vw": {
+   "overall": {
+    "per_draw": [
+     0.158,
+     0.291,
+     0.42
+    ],
+    "pooled_excess": 0.2894,
+    "dispersion_sd": 0.1313,
+    "excess_minus_dispersion": 0.1582,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.45,
+      0.485,
+      0.606
+     ],
+     "pooled_excess": 0.5137,
+     "dispersion_sd": 0.0821,
+     "excess_minus_dispersion": 0.4316,
+     "clears_threshold": true
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.017,
+      0.234,
+      0.348
+     ],
+     "pooled_excess": 0.1996,
+     "dispersion_sd": 0.168,
+     "excess_minus_dispersion": 0.0316,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.046,
+      0.059,
+      0.211
+     ],
+     "pooled_excess": 0.075,
+     "dispersion_sd": 0.1292,
+     "excess_minus_dispersion": -0.0542,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 1,
+   "eras_measured": 3
+  },
+  "ensemble_3|broad_k100_ew_hold400_floor3m": {
+   "overall": {
+    "per_draw": [
+     0.078,
+     -0.032,
+     0.097
+    ],
+    "pooled_excess": 0.0478,
+    "dispersion_sd": 0.0694,
+    "excess_minus_dispersion": -0.0216,
+    "sign_agrees_across_draws": false
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.073,
+      -0.054,
+      0.048
+     ],
+     "pooled_excess": 0.0223,
+     "dispersion_sd": 0.0674,
+     "excess_minus_dispersion": -0.0451,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      -0.015,
+      -0.094,
+      -0.006
+     ],
+     "pooled_excess": -0.0382,
+     "dispersion_sd": 0.0481,
+     "excess_minus_dispersion": -0.0864,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      0.194,
+      0.115,
+      0.362
+     ],
+     "pooled_excess": 0.2238,
+     "dispersion_sd": 0.1264,
+     "excess_minus_dispersion": 0.0974,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 0,
+   "eras_measured": 3
+  },
+  "human_heuristic_proxy|arena_k50_vw": {
+   "overall": {
+    "per_draw": [
+     0.053,
+     0.182,
+     0.337
+    ],
+    "pooled_excess": 0.1908,
+    "dispersion_sd": 0.1419,
+    "excess_minus_dispersion": 0.0489,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.166,
+      0.18,
+      0.364
+     ],
+     "pooled_excess": 0.2369,
+     "dispersion_sd": 0.1105,
+     "excess_minus_dispersion": 0.1264,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.163,
+      0.34,
+      0.467
+     ],
+     "pooled_excess": 0.3237,
+     "dispersion_sd": 0.1526,
+     "excess_minus_dispersion": 0.1711,
+     "clears_threshold": true
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.217,
+      -0.089,
+      0.06
+     ],
+     "pooled_excess": -0.0819,
+     "dispersion_sd": 0.1389,
+     "excess_minus_dispersion": -0.2208,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 1,
+   "eras_measured": 3
+  },
+  "human_heuristic_proxy|broad_k100_ew_hold400_floor3m": {
+   "overall": {
+    "per_draw": [
+     0.003,
+     -0.073,
+     0.092
+    ],
+    "pooled_excess": 0.0075,
+    "dispersion_sd": 0.083,
+    "excess_minus_dispersion": -0.0755,
+    "sign_agrees_across_draws": false
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.175,
+      0.076,
+      0.206
+     ],
+     "pooled_excess": 0.1525,
+     "dispersion_sd": 0.068,
+     "excess_minus_dispersion": 0.0845,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      -0.015,
+      -0.115,
+      0.037
+     ],
+     "pooled_excess": -0.0308,
+     "dispersion_sd": 0.0772,
+     "excess_minus_dispersion": -0.1081,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.191,
+      -0.256,
+      -0.015
+     ],
+     "pooled_excess": -0.154,
+     "dispersion_sd": 0.1245,
+     "excess_minus_dispersion": -0.2785,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 0,
+   "eras_measured": 3
+  },
+  "momentum_12_1|arena_k50_vw": {
+   "overall": {
+    "per_draw": [
+     0.028,
+     0.116,
+     0.178
+    ],
+    "pooled_excess": 0.1075,
+    "dispersion_sd": 0.0753,
+    "excess_minus_dispersion": 0.0321,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      -0.004,
+      -0.037,
+      0.08
+     ],
+     "pooled_excess": 0.0129,
+     "dispersion_sd": 0.0604,
+     "excess_minus_dispersion": -0.0475,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.066,
+      0.234,
+      0.283
+     ],
+     "pooled_excess": 0.1942,
+     "dispersion_sd": 0.1137,
+     "excess_minus_dispersion": 0.0805,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      0.026,
+      0.17,
+      0.174
+     ],
+     "pooled_excess": 0.1232,
+     "dispersion_sd": 0.0845,
+     "excess_minus_dispersion": 0.0388,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 0,
+   "eras_measured": 3
+  },
+  "momentum_12_1|broad_k100_ew_hold400_floor3m": {
+   "overall": {
+    "per_draw": [
+     -0.047,
+     -0.128,
+     -0.003
+    ],
+    "pooled_excess": -0.0592,
+    "dispersion_sd": 0.063,
+    "excess_minus_dispersion": -0.1222,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      -0.12,
+      -0.217,
+      -0.131
+     ],
+     "pooled_excess": -0.1561,
+     "dispersion_sd": 0.0532,
+     "excess_minus_dispersion": -0.2093,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      -0.063,
+      -0.157,
+      -0.028
+     ],
+     "pooled_excess": -0.083,
+     "dispersion_sd": 0.0668,
+     "excess_minus_dispersion": -0.1498,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      0.066,
+      0.078,
+      0.268
+     ],
+     "pooled_excess": 0.1372,
+     "dispersion_sd": 0.1135,
+     "excess_minus_dispersion": 0.0237,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 0,
+   "eras_measured": 3
+  },
+  "revisions_4w|arena_k50_vw": {
+   "overall": {
+    "per_draw": [
+     0.087,
+     0.17,
+     0.228
+    ],
+    "pooled_excess": 0.1616,
+    "dispersion_sd": 0.0712,
+    "excess_minus_dispersion": 0.0904,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.291,
+      0.322,
+      0.385
+     ],
+     "pooled_excess": 0.3327,
+     "dispersion_sd": 0.0481,
+     "excess_minus_dispersion": 0.2846,
+     "clears_threshold": true
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.066,
+      0.117,
+      0.196
+     ],
+     "pooled_excess": 0.1262,
+     "dispersion_sd": 0.0653,
+     "excess_minus_dispersion": 0.0608,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.146,
+      0.004,
+      0.004
+     ],
+     "pooled_excess": -0.0461,
+     "dispersion_sd": 0.0863,
+     "excess_minus_dispersion": -0.1324,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 1,
+   "eras_measured": 3
+  },
+  "revisions_4w|broad_k100_ew_hold400_floor3m": {
+   "overall": {
+    "per_draw": [
+     0.095,
+     -0.011,
+     0.155
+    ],
+    "pooled_excess": 0.0797,
+    "dispersion_sd": 0.0839,
+    "excess_minus_dispersion": -0.0042,
+    "sign_agrees_across_draws": false
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.368,
+      0.207,
+      0.406
+     ],
+     "pooled_excess": 0.327,
+     "dispersion_sd": 0.106,
+     "excess_minus_dispersion": 0.221,
+     "clears_threshold": true
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      -0.039,
+      -0.147,
+      -0.028
+     ],
+     "pooled_excess": -0.0713,
+     "dispersion_sd": 0.0656,
+     "excess_minus_dispersion": -0.1369,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.091,
+      -0.144,
+      0.023
+     ],
+     "pooled_excess": -0.071,
+     "dispersion_sd": 0.0854,
+     "excess_minus_dispersion": -0.1564,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 1,
+   "eras_measured": 3
+  },
+  "target_upside|arena_k50_vw": {
+   "overall": {
+    "per_draw": [
+     -0.072,
+     0.028,
+     0.078
+    ],
+    "pooled_excess": 0.0116,
+    "dispersion_sd": 0.0764,
+    "excess_minus_dispersion": -0.0647,
+    "sign_agrees_across_draws": false
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      0.007,
+      0.072,
+      0.185
+     ],
+     "pooled_excess": 0.088,
+     "dispersion_sd": 0.0903,
+     "excess_minus_dispersion": -0.0023,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      -0.056,
+      0.021,
+      0.033
+     ],
+     "pooled_excess": -0.0008,
+     "dispersion_sd": 0.0483,
+     "excess_minus_dispersion": -0.049,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.189,
+      -0.033,
+      -0.034
+     ],
+     "pooled_excess": -0.0853,
+     "dispersion_sd": 0.0895,
+     "excess_minus_dispersion": -0.1748,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 0,
+   "eras_measured": 3
+  },
+  "target_upside|broad_k100_ew_hold400_floor3m": {
+   "overall": {
+    "per_draw": [
+     -0.134,
+     -0.198,
+     -0.083
+    ],
+    "pooled_excess": -0.1383,
+    "dispersion_sd": 0.058,
+    "excess_minus_dispersion": -0.1963,
+    "sign_agrees_across_draws": true
+   },
+   "by_start_era": {
+    "1999-2007": {
+     "draws": 3,
+     "per_draw": [
+      -0.257,
+      -0.25,
+      -0.131
+     ],
+     "pooled_excess": -0.2125,
+     "dispersion_sd": 0.071,
+     "excess_minus_dispersion": -0.2834,
+     "clears_threshold": false
+    },
+    "2008-2015": {
+     "draws": 3,
+     "per_draw": [
+      0.022,
+      -0.168,
+      -0.039
+     ],
+     "pooled_excess": -0.0618,
+     "dispersion_sd": 0.097,
+     "excess_minus_dispersion": -0.1588,
+     "clears_threshold": false
+    },
+    "2016-2024": {
+     "draws": 3,
+     "per_draw": [
+      -0.163,
+      -0.163,
+      -0.072
+     ],
+     "pooled_excess": -0.1325,
+     "dispersion_sd": 0.0527,
+     "excess_minus_dispersion": -0.1852,
+     "clears_threshold": false
+    }
+   },
+   "PASSES_10.2_ITEM_1": false,
+   "eras_clearing": 0,
+   "eras_measured": 3
+  }
+ },
+ "cells_passing": [],
+ "headline": "3 draws, 720 windows; 0 of 12 cells clear 'excess - dispersion >= 0.15 in every era'; best by excess-minus-dispersion: G1_best_dev_genome_ALREADY_READ_ON_HOLDOUT|arena_k50_vw 0.2242",
+ "verdict": "NO CELL clears the threshold once its own draw-to-draw dispersion is subtracted",
+ "family_max_p": null,
+ "written_utc": "2026-09-09T03:54:36+00:00"
+}

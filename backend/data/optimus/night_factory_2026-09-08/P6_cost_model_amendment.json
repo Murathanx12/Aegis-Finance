@@ -1,0 +1,35 @@
+{
+ "amends": [
+  "P6_bars_and_regret_run01.json",
+  "P6_bars_and_regret_run02.json",
+  "P6_bars_and_regret_run03.json",
+  "P6_bars_and_regret_run04.json"
+ ],
+ "kind": "cost_model_amendment",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-10T06:22:13+00:00",
+ "scope": "the MOM_12_1 and REV_1M mechanical benchmark rows only; every INDEX_ row and EW_universe holds nothing and pays no cost, and the paper-account rows are realised broker fills, so neither is touched by this.",
+ "why": "benchmark_books charged `cost = 0.0025` once, on the fraction of the book that changed hands (`r.iloc[0] -= cost * turn`). A month that replaces a fraction `turn` SELLS turn and BUYS turn, so it pays 25 bps twice. The charge priced the buy and gave the sell away. Fixed in scripts/night_p6_bars_and_regret.py (cost = 2 * 0.0025) on 2026-09-10. This is the opposite sign of C2's defect -- an UNDERcharge on a realised-turnover model, not a flat charge -- and it makes a benchmark look better than it was, i.e. it made the bar our own books must clear too high, not too low.",
+ "the_affected_rows_as_published": {
+  "MOM_12_1": {
+   "sessions": 171,
+   "total_return_pct": 27.728,
+   "raw_excess_pct": 14.802,
+   "beta": 2.075,
+   "beta_matched_ann_pct": 4.631
+  },
+  "REV_1M": {
+   "sessions": 382,
+   "total_return_pct": 81.055,
+   "raw_excess_pct": 49.931,
+   "beta": 1.45,
+   "beta_matched_ann_pct": 16.462
+  }
+ },
+ "correction_derivable": false,
+ "why_not_derivable": "the monthly turnover series is not stored in the receipt -- only the graded daily series survives -- so the exact corrected numbers cannot be recomputed from what is on disk. They need a re-run, which needs the Alpaca data endpoint (the bars parquet is local, but the job re-fetches).",
+ "bound_that_IS_derivable": "the extra charge is 25 bps x turn a month with turn <= 1, so at most 0.25% a month = ~3.0%/yr, and it can only make these two rows WORSE. REV_1M's published +16.462%/yr beta-matched is therefore at least ~3pp too generous in the worst case; MOM_12_1's +4.631%/yr likewise. Both rows already carry a SURVIVORSHIP upper-bound warning that is larger than this correction.",
+ "headline": "AMENDMENT: P6's MOM_12_1 / REV_1M benchmark rows charged one side of a two-sided trade. Published beta-matched +4.631 and +16.462 %/yr are up to ~3pp too generous; the exact figures need a re-run (turnover is not stored).",
+ "family_max_p": null
+}

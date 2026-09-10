@@ -1,0 +1,44 @@
+{
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "G3_evolve_v2",
+ "run": 99,
+ "amends": "G3_evolve_v2_run01.json",
+ "provenance": "RECONSTRUCTED_FROM_EVALUATIONS",
+ "reconstructed_from": "backend/data/optimus/night_factory_2026-09-08/G3_evaluations.jsonl",
+ "why": "The 2026-09-09 run was killed by the OS at 02:2x local (exit 1073807364 = DBG_TERMINATE_PROCESS, the PC crash) after 11,102 s. It writes one receipt at exit, so night_factory's stub -- 'exited 1073807364 with no receipt' -- was all that survived. The per-evaluation log did survive; this receipt is rebuilt from it and is NOT a receipt the job wrote.",
+ "llm_spend_usd": 0.0,
+ "holdout": "2016-2024 NOT READ",
+ "run_as_logged": {
+  "utc_first": "2026-09-09T15:24:28+00:00",
+  "utc_last": "2026-09-09T18:28:50+00:00",
+  "generations_reached": 343,
+  "evaluations": 1945,
+  "distinct_genomes": 541,
+  "distinct_lineages": 202,
+  "genomes_meeting_2plus_banks": 158,
+  "best_median_fitness_pct_yr": 28.6372
+ },
+ "the_finding": {
+  "headline": "the crashed run rediscovered nothing: 541 of its 541 distinct genomes were already in the earlier run's log",
+  "earlier_run": {
+   "utc_first": "2026-09-09T03:16:15+00:00",
+   "utc_last": "2026-09-09T07:16:13+00:00",
+   "generations_reached": 436,
+   "evaluations": 2373,
+   "distinct_genomes": 595
+  },
+  "overlap_of_distinct_genomes": 541,
+  "overlap_fraction": 1.0,
+  "cause": "both runs used declared seed 20260909 and bank_seed = seed + 1000*gen, so both drew the same window banks, initialised the same population from the same rng and walked the same tree. The second run was a bit-identical replay of the first and died 93 generations BEHIND where the first had already reached (343 vs 436).",
+  "so_what": "the 3.1 hours were not lost to the crash; they were spent before the crash on work already done. A checkpoint alone would only have made the replay resumable. Fixed 2026-09-10: scripts/night_checkpoint.py carries the search across nights (elites forward, bank seeds drawn from outside every seed any night selected on) and night_factory.resolve_run resumes a crashed run under its own number."
+ },
+ "not_reconstructable": [
+  "the archive re-score on an unseen bank (needs the population and rng state the run held only in memory)",
+  "the full-DEV admissibility cache",
+  "the generation curve's timing"
+ ],
+ "headline": "RECONSTRUCTED: 1,945 evaluations over 343 generations, 541 distinct genomes -- ALL 541 already present in the 09-08 run's log (overlap 1.000). The night discovered nothing; the search was replaying itself.",
+ "verdict": "CANNOT DETERMINE from this run, and that is not the crash's fault. FAILED_VARIANT as a SEARCH: overlap 1.000 with the previous run means zero discovery. No archive row can be reconstructed, and none should be -- the run's contribution was nil before it died.",
+ "family_max_p": null,
+ "written_utc": "2026-09-10T06:34:44+00:00"
+}

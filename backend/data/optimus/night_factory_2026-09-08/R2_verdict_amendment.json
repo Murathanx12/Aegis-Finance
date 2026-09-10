@@ -1,0 +1,40 @@
+{
+ "amends": "R2_monthly_llm_2015_2024_run01.json",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-09T05:45:00+00:00",
+ "why": "the run stamped itself UNDERPOWERED against a PRE-HOC MDE whose standard error was 1.61x too large; the realised standard error resolves the effect it measured, so the stamp was wrong in the conservative direction and is corrected here rather than by editing the receipt",
+ "corrected_verdict": "CONDITIONAL",
+ "the_power_correction": {
+  "prehoc_MDE_ann_pct": 18.56,
+  "prehoc_implied_se_ann_pct": 6.63,
+  "realised_effect_ann_pct": 16.189,
+  "realised_t_nw_on_112_blocks": 3.922,
+  "realised_se_ann_pct": 4.128,
+  "prehoc_se_overstated_by": 1.61,
+  "MDE_recomputed_from_the_realised_se_ann_pct": 11.56,
+  "why_the_prehoc_estimate_was_wrong": "power_check derives the long-short's monthly sd from the median cross-sectional sd divided by sqrt(names per leg), which treats names inside a month as independent draws. The confidence-weighted book this job actually trades has lower dispersion than that proxy implies.",
+  "reading": "a power check is a DESIGN quantity computed before the data; once an effect is measured, its own standard error is the honest one. Both belong in the receipt, and the code now prints both."
+ },
+ "what_the_read_found": {
+  "cells": 7417,
+  "date_blocks": 112,
+  "span": "2015-2024",
+  "arm_masked_digest": {"sign_accuracy": 0.542, "long_short_ann_pct": 21.845, "t_nw_blocks": 6.215},
+  "control_shuffled_digest": {"sign_accuracy": 0.4911, "long_short_ann_pct": 5.656, "t_nw_blocks": 1.793},
+  "PRIMARY_read_minus_control_ann_pct": 16.189,
+  "PRIMARY_t_nw": 3.922,
+  "AMNESIA_gap_real_minus_masked": -0.0041
+ },
+ "why_this_is_CONDITIONAL_and_not_a_claim": [
+  "NO TRANSACTION COSTS anywhere in this grading. The arm's +21.845%/yr and the control's +5.656%/yr are GROSS. A monthly-rebalanced long-short over ~60 names would pay roughly 6%/yr at 25 bps a side on full turnover.",
+  "The PRIMARY number is a DIFFERENCE between two books that rebalance identically on the same dates, so costs very largely cancel in it -- the +16.189%/yr is approximately cost-robust even though the levels are not. That is an argument, not a measurement: turnover is not tracked by this job and should be.",
+  "The panel is 135 names and mega-cap skewed (NVDA, SPY, AMD dominate the document counts); this is not a cross-section.",
+  "One prompt, one digest construction, one model, one horizon. No multiplicity control, and the prompt was not pre-registered.",
+  "The shuffled-digest control itself earns +5.656%/yr at t 1.79, so the machinery is not inert; only the difference is interpretable.",
+  "The AMNESIA canary passes (-0.0041, masked marginally BETTER than real names), so the model is reading rather than recalling -- but the canary is 300 cells, not the whole read."
+ ],
+ "corrected_reading": "Over 2015-2024, a local 7B model reading only that month's ANONYMISED news digest calls the next month's market-adjusted direction better than the identical pipeline reading a digest from a random other month: +16.189%/yr, t 3.922 on 112 monthly date blocks, sign accuracy 0.542 against the control's 0.4911. The effect is above the MDE recomputed from its own standard error (11.56%/yr). It is CONDITIONAL, not a claim: gross of costs at the level, on a 135-name panel, from one unregistered prompt.",
+ "next_step": "pre-register the prompt, the digest construction and the book BEFORE widening; add turnover and a cost line; and widen the panel, which is the binding constraint at 135 names -- not the model.",
+ "family_max_p": null
+}

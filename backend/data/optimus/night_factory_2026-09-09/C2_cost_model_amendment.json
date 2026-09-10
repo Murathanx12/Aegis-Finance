@@ -1,0 +1,99 @@
+{
+ "amends": "C2_curriculum_transfer_run01.json",
+ "kind": "cost_model_amendment",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-10T06:21:09+00:00",
+ "why": "run01 charged a FLAT 100 bps on every date (2 * 25bps * 2 in _daily_returns, line 159 as written) -- the whole book sold and an entirely new one bought every session, whatever the book held. That is the CEILING of this book's cost, not its cost, and it printed net -221/-233/-237 %/yr, which is 25 bps x 2 sides x 2 legs x 252 sessions rather than anything the book did. The charge is now sum|w_t - w_(t-1)| x 25 bps on realised decile-membership turnover, with entry on the first date and liquidation on the last, and the turnover is printed beside every net number.",
+ "corrected_verdict": "CURRICULUM_NOT_EARNED: TRANSFER -150.708%/yr does not beat its own shuffled-label CONTROL -149.234%/yr -- the hidden layer is capacity, not the counterfactuals",
+ "verdict_unchanged": true,
+ "verdict_unchanged_why": "the cost is no longer a constant across arms (each arm holds different names, so each turns over differently), but the ordering is still the gross ordering: BASELINE > CONTROL > TRANSFER, and TRANSFER still fails to beat its own shuffled-label CONTROL. The made-up-news curriculum is NOT earned, exactly as run01 concluded.",
+ "how_this_was_measured": {
+  "rerun": "python -m scripts.night_c2_curriculum_transfer --max-curriculum-docs 4851",
+  "wall_s": 94.5,
+  "reproduction_check": "the gross line reproduces run01 EXACTLY (30.578 / 19.463 / 15.018 %/yr, t 1.779 / 1.379 / 1.102) and the old flat-cost net reproduces run01 EXACTLY (-221.422 / -232.537 / -236.982, kept as net_daily_liquidation), so the only thing that moved is the cost model.",
+  "why_max_curriculum_docs_4851": "C1 kept appending to C1_counterfactual_news.jsonl after run01: the file now yields 25,978 texts where run01 read 18,116. Reading the first 4,851 source rows restores run01's curriculum exactly (anon 4679 / sign_flip 4677 / actor_timing 4620 / escalation 4140). A --max-curriculum-docs flag was added for this; without it the file is read whole and the run is NOT comparable to run01.",
+  "cost_model": "realised_weight_turnover (scripts/night_c2_curriculum_transfer.turnover_costs)",
+  "turnover_definition": "traded / (2 x gross exposure), aggregated over dates rather than averaged as a ratio; 1.0 = the entire book sold and an entirely new one bought, which is what run01 charged unconditionally"
+ },
+ "corrected_numbers": {
+  "BASELINE": {
+   "gross_ann_pct": 30.578,
+   "gross_t": 1.779,
+   "net_ann_pct": -134.091,
+   "net_t": -7.847,
+   "net_mean_bps_per_date": -53.21,
+   "turnover_per_rebalance": 0.8144,
+   "turnover_per_day": 0.8144,
+   "traded_notional_per_date": 2.6138,
+   "mean_gross_exposure": 1.6048,
+   "realised_cost_bps_per_date": 65.34,
+   "run01_flat_cost_bps_per_date": 100.0,
+   "run01_net_ann_pct": -221.422,
+   "run01_net_t": -12.884,
+   "net_daily_liquidation_ann_pct": -221.422
+  },
+  "CONTROL": {
+   "gross_ann_pct": 19.463,
+   "gross_t": 1.379,
+   "net_ann_pct": -149.234,
+   "net_t": -10.56,
+   "net_mean_bps_per_date": -59.22,
+   "turnover_per_rebalance": 0.8537,
+   "turnover_per_day": 0.8537,
+   "traded_notional_per_date": 2.6777,
+   "mean_gross_exposure": 1.5683,
+   "realised_cost_bps_per_date": 66.94,
+   "run01_flat_cost_bps_per_date": 100.0,
+   "run01_net_ann_pct": -232.537,
+   "run01_net_t": -16.475,
+   "net_daily_liquidation_ann_pct": -232.537
+  },
+  "TRANSFER": {
+   "gross_ann_pct": 15.018,
+   "gross_t": 1.102,
+   "net_ann_pct": -150.708,
+   "net_t": -11.109,
+   "net_mean_bps_per_date": -59.8,
+   "turnover_per_rebalance": 0.861,
+   "turnover_per_day": 0.861,
+   "traded_notional_per_date": 2.6306,
+   "mean_gross_exposure": 1.5276,
+   "realised_cost_bps_per_date": 65.76,
+   "run01_flat_cost_bps_per_date": 100.0,
+   "run01_net_ann_pct": -236.982,
+   "run01_net_t": -17.389,
+   "net_daily_liquidation_ann_pct": -236.982
+  }
+ },
+ "what_the_turnover_says": "the book replaces 81-86% of its notional every session, so at 25 bps a side it pays 65-67 bps a DATE against a 6-12 bps a date gross edge. The corrected net is -134 to -151 %/yr, not -221 to -237. The reading does not change: a decile long-short re-ranked every session on news is not tradable at 25 bps a side; what changes is that the number is now derived from what the book traded instead of from an assumption.",
+ "a_second_finding_the_cost_model_exposed": "mean gross exposure is 1.53-1.60, not the 2.0 a one-unit-a-leg long-short implies: on the average date about 20% of the two legs cancels because the SAME symbol carries two headlines that the ridge ranks into opposite deciles. That netting is already inside the gross return (it is a mean of long rows minus a mean of short rows), and it is invisible under a flat charge. It is printed as mean_gross_exposure per arm.",
+ "label_caveat": "x_oc is open-to-close, so a carried name is modelled as held overnight while its return is measured inside the session only. `net` is therefore the LOWER cost bound and `net_daily_liquidation` the UPPER one.",
+ "also_measured_on_todays_larger_curriculum": {
+  "why": "the same fix run against the whole curriculum as it stands on 2026-09-10 (25,978 texts) -- a different experiment, not a correction of run01",
+  "curriculum_texts": 25978,
+  "verdict": "CURRICULUM_NOT_EARNED: TRANSFER -150.414%/yr does not beat its own shuffled-label CONTROL -142.291%/yr -- the hidden layer is capacity, not the counterfactuals",
+  "arms": {
+   "BASELINE": {
+    "gross_ann_pct": 36.846,
+    "gross_t": 2.08,
+    "net_ann_pct": -127.054,
+    "turnover_per_rebalance": 0.8184
+   },
+   "CONTROL": {
+    "gross_ann_pct": 26.795,
+    "gross_t": 1.895,
+    "net_ann_pct": -142.291,
+    "turnover_per_rebalance": 0.8526
+   },
+   "TRANSFER": {
+    "gross_ann_pct": 18.784,
+    "gross_t": 1.283,
+    "net_ann_pct": -150.414,
+    "turnover_per_rebalance": 0.8573
+   }
+  }
+ },
+ "family_max_p": null,
+ "headline": "AMENDMENT: C2's net line was a flat-100-bps-per-date artefact. On realised turnover (0.81-0.86 a rebalance, 65-67 bps a date) the arms are BASELINE -134.091 / CONTROL -149.234 / TRANSFER -150.708 %/yr; gross is unchanged and the verdict (curriculum NOT earned) stands."
+}

@@ -842,6 +842,18 @@ window ending at lag 0 meant the signal for month *m* was minus the return *of*
 month *m*, and it printed −98.8%. The formation window now refuses any
 specification that would read the month it trades.)
 
+**Beta beside the table, and why it refuses.** `P6_bars_and_regret_run04.json`
+adds each book's beta against SPY on its own sessions, because a return beside
+the index means nothing without the loading that produced it (the 09-07
+two-rulers rule). It is **not estimable on this window**: four paired sessions
+give hack3 0.413 +/- 0.762, hack6 0.244 +/- 0.253, hack5 0.182 +/- 2.205. Every
+standard error is comparable to or larger than its estimate, so the -9.50% and
+-8.53% cannot be split into market exposure versus selection. The narrower
+statement that IS supported: SPY was flat (-0.12%) across those days, so the
+losses did not come from market direction -- they came from the names held and
+the cost of entering them. The receipt prints the standard error next to every
+beta and says so in the row.
+
 ### 11.5 A0 — the control router
 
 `backend/routers/control.py` + `backend/tests/test_control_router_authority.py`
@@ -859,3 +871,278 @@ One note on the test itself: its first version grepped the raw source for `/IM`
 and failed on the docstring that explains **why** kill-by-image-name is banned.
 A gate that fires on its own rationale teaches the reader to delete the
 rationale, so it reads the AST and skips docstrings.
+
+### 11.6 N2 — the data-net does not learn from the earnings print
+
+`N2_learner_v3_run01.json`, `scripts/night_n2_learner_v3.py`. The first head of
+the multi-network lane (§10.6): the monthly data-net, given the one input it has
+never had — what the company's most recent earnings print did (`ev_reaction`,
+`ev_z_reaction`, a PIT trailing percentile, SUE, staleness, prints in the
+trailing year, the gap column) — beside a control that carries the **same eight
+columns drawn from the +40-session placebo tape**, so the comparison is
+information, not column count.
+
+Coverage is not the problem: **97.9% of the 925,757 panel rows carry a print
+within 400 days, median staleness 46 days.**
+
+Paired month by month over 251 months, top-100 EW, $3m floor, 25 bps a side:
+
+| | β-matched %/yr | t (NW) |
+|---|---|---|
+| v2, panel only | −10.66 | −2.34 |
+| v3, panel + event | −7.84 | −1.64 |
+| v3 CONTROL, panel + **dateless** event columns | −8.74 | −1.86 |
+| **v3 − v2 (paired)** | **+2.267** | 1.047 |
+| **control − v2 (paired)** | **+2.780** | 1.888 |
+| **incremental over control** | **−0.513** | — |
+
+**Adding eight dateless columns helps the book by +2.78%/yr; adding the real
+earnings print helps it by +2.27%/yr. The print is worth −0.51%/yr against its
+own control.** The apparent gain is capacity, not information — a regularisation
+effect from widening the feature matrix — and a run without the control arm
+would have reported "+2.3%/yr from event features" and been believed. This is
+the D1 lesson applied before the fact rather than after it.
+
+`FAILED_VARIANT`. The event-net stays a separate head (N1's lane); it does not
+join the data-net. Note also that all three arms **lose to the market** on this
+construction (terminal wealth 4.8-8.3 against 14.4 at β ≈ 1.75), so the paired
+difference is the only readable quantity here — the level is not a book.
+
+The PIT discipline is pinned by `backend/tests/test_n2_event_features_are_pit.py`
+(6 tests): a percentile may not move when a later value is appended, an
+announcement dated ON the entry date is not attached, a future print never
+reaches a past row, a print older than 400 days is blanked rather than carried,
+and a column present on only one tape is dropped from **both** so the control
+keeps its shape.
+
+### 11.7 R2 — the model is not remembering, and the panel is the constraint
+
+`R2_monthly_llm_2022_run01.json`, `scripts/night_r2_monthly_llm.py`, local Qwen
+through llama-server, **$0.00** (934,340 tokens in / 32,973 out; the same tokens
+would have cost $0.20 on DeepSeek). Zero refusals on 2,348 calls.
+
+The design puts the checks in the order that makes them mean something: power
+first, then the memory canary, then the read, then the shuffled-digest control.
+
+**Power first.** 2022 with `n_docs >= 3` is 1,054 cells — but 92.5 names inside
+one month share that month's market, so the observation unit is the monthly
+**date block** (canon §58) and there are **12** of them. Measured dispersion
+gives an **MDE of 51.25%/yr**. Nothing a news reader plausibly produces is that
+large, so the pilot was exploratory before a single prompt was sent.
+
+**The AMNESIA canary passes.** The same months read twice, once with the real
+text and the company's real name and once masked:
+
+| | sign accuracy | long-short %/yr | t (12 blocks) |
+|---|---|---|---|
+| real names (119 cells) | 0.5259 | +18.68 | 2.34 |
+| masked (120 cells) | 0.5391 | +21.46 | 2.48 |
+
+The gap is **−0.0132** — the model does *slightly worse* when it can see who the
+company is. There is no evidence it is recalling 2022 from training rather than
+reading the text, which is the one thing that would have made the whole lane
+uninterpretable.
+
+**The read, against its control.**
+
+| | cells | sign accuracy | long-short %/yr | t (12 blocks) |
+|---|---|---|---|---|
+| masked digest → direction | 1,054 | 0.5301 | +8.25 | 1.55 |
+| **shuffled** digest (control) | 1,054 | 0.5074 | +3.35 | 0.51 |
+| **read − control** | — | +0.0227 | **+4.90** | **1.155** |
+
+`UNDERPOWERED, EXPLORATORY`. The model reads slightly better than a digest from
+a random other month, and a digest from a random other month still earns
++3.35%/yr — which is the reason the control exists. At 12 blocks and an MDE of
+51%/yr, +4.9%/yr t 1.16 is a number, not evidence.
+
+**The binding constraint is the panel, not the model.** `r7_news_representation/panel.parquet`
+is 9,457 cells over **135 names and 115 months**, because only 65.4% of the
+528,223 documents link to a permno and CRSP's labels stop at 2024-12. Blocks are
+what buy power here, so the job now takes a **span** rather than a year: the
+2015-2024 read is 7,418 cells over **112 blocks**, which drops the MDE from
+51.25%/yr to **18.56%/yr**. That run is the one worth reading; the 2022 receipt
+stands as the pilot that measured why.
+
+One join note: the documents carry tickers and the panel is keyed by permno, so
+R2 reuses `r7_news_representation.resolve_permnos` — CRSP's point-in-time
+`namedt`/`nameenddt` interval join, the same crosswalk the panel was built with.
+A flat ticker→permno dictionary would inherit an earlier company's permno for a
+reused ticker, which is the share-basis failure this programme already paid for
+on 2026-09-04. The first version of this job refused rather than guess; reusing
+the panel's own crosswalk was the right answer, and the refusal path is still
+there for a checkout without it.
+
+### 11.8 TRIAL-H5 — the one registered read, and the trial closes REJECTED
+
+`N1H5_prereg_read_run01.json`, `scripts/night_h5_prereg_read.py`. The single
+historical computation `docs/TRIALS/TRIAL-H5-event-learner-five-session.md`
+permits, run once after its commit, on the frozen configuration and nothing
+else: hold 5, entry at the close of session +1, featureset `all`, LightGBM 400
+trees, purged walk-forward with a 5-session embargo from 2004, PIT rank 63 /
+pool 200, top and bottom deciles, 25 bps a side, **100 bps/yr borrow**, $10m to
+decide and $3m to report, seeds 0-12.
+
+**Primary — learner minus its placebo-trained control, $10m floor, borrow
+charged, 156 monthly blocks:**
+
+| | learner | control | difference | t (NW) |
+|---|---|---|---|---|
+| **$10m floor (decides)** | +26.31 | **+17.64** | **+20.79%/yr** | **1.142** |
+| $3m floor (reports) | +44.94 | +3.27 | +47.02%/yr | 3.03 |
+
+| era | difference | t | months |
+|---|---|---|---|
+| 2004-2007 | +23.30 | 1.11 | 36 |
+| 2008-2015 | **−7.74** | −0.44 | 53 |
+| 2016-2024 | +42.00 | 1.12 | 67 |
+
+**REJECTED**, on three independent reject clauses, with **zero of five** adopt
+clauses passing:
+
+- `t < 1.5` — **1.142**;
+- `the control's own seed-median > +4.0%/yr` — **+17.64%/yr**. At the tradable
+  floor the pipeline fed **dateless** events earns +17.6%/yr through the same
+  book. That is the clause the registration wrote for exactly this case: *the
+  machinery manufactures the spread*;
+- `the $10m floor removes more than half of the $3m excess` — **44.2% survives**.
+
+And for completeness the adopt side: the effect is +20.8 against a declared
++31.0; the sign flips in 2008-2015; the drawdown is **−78%** against a −45%
+budget; and the RW2 clause fails (§11.2).
+
+The single most informative line is the control's. At $3m it earns +3.27%/yr and
+the learner earns +44.94; at $10m the learner falls to +26.31 and **the control
+rises to +17.64**. The apparent edge lives below the liquidity floor, and above
+it the dateless twin catches most of the way up. N1's headline "+44.5%/yr, control
+t −0.45" was a $3m-floor, zero-borrow number; neither of those is the corner the
+money would trade in.
+
+Both readings of "seed-median" are printed because they differ and the
+conclusion should not depend on the choice: the element-wise median monthly
+series gives +20.79%/yr, the median of the thirteen per-seed estimates gives
++9.00%/yr. Both are far below the +31.0 adopt threshold and both reject.
+
+One clause needed an arithmetic fix, recorded as a formal amendment on the trial
+(finance `c24492d`) and repeated in the receipt so the two agree: *"the $10m
+floor removes more than half of the $3m excess"* is a ratio, and a ratio with a
+non-positive denominator is not a fraction of anything — a negative $3m excess
+beside a positive $10m one gives a negative ratio and would trip the clause for
+the opposite of its purpose. It is now evaluated only where the denominator is
+positive and reported `NOT_EVALUATED` otherwise, with the number printed.
+Threshold untouched. On this read the denominator is positive, so the clause was
+evaluated normally.
+
+`H5|all` goes to `NEGATIVE_RESULTS.md`. The same instrument is not re-run, and
+no successor is registered from this session.
+
+### 11.9 RW1 pooled — under the amended rule, nothing passes
+
+`RW1_pooled_run01.json`, `scripts/night_rw1_pooled.py`. Three draws (seeds
+20260909 / 20260910 / 20260911), **720 windows**, read under §10.2 as amended:
+pool the draws, print the draw-to-draw dispersion per cell, and a cell passes
+only if `excess − dispersion` still clears +0.15 **in every start era**.
+
+| cell | pooled excess | dispersion (sd) | excess − sd | eras clearing |
+|---|---|---|---|---|
+| G1 best DEV genome \| arena_k50_vw | +0.328 | 0.104 | +0.224 | 1 / 3 |
+| ensemble_3 \| arena_k50_vw | +0.289 | 0.131 | +0.158 | 1 / 3 |
+| G1 best DEV genome \| broad_k100 | +0.188 | 0.057 | +0.131 | 2 / 3 |
+| revisions_4w \| arena_k50_vw | +0.162 | 0.071 | +0.090 | 1 / 3 |
+| human_heuristic_proxy \| arena_k50_vw | +0.191 | 0.142 | +0.049 | 1 / 3 |
+| momentum_12_1 \| arena_k50_vw | +0.107 | 0.075 | +0.032 | 0 / 3 |
+| ensemble_3 \| broad_k100 | +0.048 | 0.069 | −0.022 | 0 / 3 |
+| target_upside \| broad_k100 | −0.138 | 0.058 | −0.196 | 0 / 3 |
+
+**0 of 12 cells clear the rule.** Per-cell dispersion runs 0.057 to 0.142 on 240
+windows a draw, which is why one draw could not adjudicate a +0.15 threshold.
+The top row is G1's own DEV genome, which was already read on the holdout and is
+not a candidate; the best genuine cell is `ensemble_3|arena_k50_vw` at +0.158
+after dispersion, and it clears in one era of three.
+
+The cell §10.1 called this morning's one live signal —
+`ensemble_3|broad_k100_ew_hold400_floor3m` — pools to **+0.048 ± 0.069**, i.e.
+**−0.022** after dispersion, clearing in **no** era. That reading is now
+retracted on three draws rather than argued about on one.
+
+### 11.10 G3 — the archive, and two defects in this job's own design
+
+`G3_evolve_run01.json` + `G3_verdict_amendment.json`. Full 4-hour box:
+**437 generations, 2,373 genome-evaluations, 5,348 drawdown refusals (69.3%),
+595 distinct genomes collapsing to 251 lineages (0.422).**
+
+| | |
+|---|---|
+| best on the **selection** banks | +28.637%/yr over the random-genome null |
+| best on the **archive** bank (a seed the search never saw) | **+20.261%/yr** |
+| shrinkage | **−8.376 pp (29%)** |
+| finalists holding up out of bank | **12 of 12** |
+| drawdown limit applied | 0.4721 (declared 0.35, market's own −0.4721) |
+| holdout | **not read** |
+
+The archive bank is the part worth keeping: twelve lineages, each re-scored on 60
+windows drawn from a seed the search never touched, all still positive, losing
+29% of their selection-bank excess in the move. Ancestry de-duplication does its
+job — a count over this archive is a count over 251 lineages, not over relatives,
+which is precisely what G2's "35/35" could not say.
+
+**The verdict is amended from `PRODUCT_PROMISING` to `CONDITIONAL`, for two
+defects in this file's own design.** Both are the same shape as the findings the
+day run made in other lanes, which is the uncomfortable part.
+
+1. **The null is not held to the arm's own gate.** `WindowBank` draws its six
+   null genomes with `random_genome()` and no admissibility check, while every
+   scored genome first had to survive the derived drawdown refusal — which
+   rejected **69.3%** of candidates. So the fitness is *an admissible genome
+   minus a typical genome*, and whatever the drawdown filter selects for beyond
+   drawdown itself is credited to the signal. Direction: inflates. Magnitude:
+   unmeasured. Fix: one line — apply `admissible()` to the null draws too.
+2. **The archive still ranks on one bank of luck.** Ranking by the median across
+   banks was the correction to ranking by the best bank — but the receipt's own
+   `finalist_basis` reads *"ALL lineages (only 3 met two banks)"*. For nearly
+   every lineage the median is a median of **one** draw, so a genome that drew a
+   lucky bank still outranks one tested twice. Fix: make `banks_met >= 2` an
+   eligibility condition rather than a preference, and re-score surviving elites
+   on a fixed audit bank each generation so the count accumulates.
+
+What survives both: the drawdown budget derived from the window is the right
+form and it bound hard — 69.3% refused, against the 91% starvation a flat 0.35
+produced and the ~0% a penalty term produces. And no holdout was read, so
+nothing here has been spent.
+
+### 11.11 What the day run changes, and what to fix next
+
+**Six defects found in this session's own new code**, every one of the same
+family as the six the morning review found in the night's:
+
+| where | defect | fixed |
+|---|---|---|
+| G3 | a flat 0.35 drawdown budget refuses the index itself (market drew −47.2%) | limit derives from the window |
+| G3 | at `pop=8`, "4 elites + 4 fresh" left zero slots for children | shape scales with `pop` |
+| G3 | ranking a genome by its **best** bank is selection on the outcome | ranks on the median across banks |
+| G3 | the null bar is not held to the arm's drawdown gate | **open** — one line |
+| G3 | finalists are mostly single-bank | **open** — make `banks_met>=2` eligibility |
+| RW2 | windows drawn across a span the loaded tape does not cover | span derives from the tape |
+| P6 | `REV_1M` formation window ended at lag 0 — the signal was the month's own return | refuses any window that reads the month it trades |
+| P6 | `equity` filtered, `timestamp` not — 8 points graded against 62 sessions of SPY | pair first, then filter |
+| P6 | survivor-screen books reported as benchmarks | `BIAS_WARNING`, excluded from the headline |
+| N2 | a control with fewer columns than the treatment | columns intersected across both tapes |
+| R2 | a pre-hoc MDE 1.61× too conservative stamped a t 3.9 result "underpowered" | realised SE printed beside it |
+| leaderboard | `REFUSED` matched inside a sentence about something else; a `\|` in a headline split the row | tag by position, cells escaped |
+
+**The five things worth doing next, in order of what they unblock:**
+
+1. **A point-in-time universe vintage per month for 2025-26.** It is the single
+   input blocking the six-mandate replay (§11.4) and it makes every 2025-26
+   benchmark honest instead of survivor-screened. Everything P6 refused turns on it.
+2. **Widen the joined text-and-return panel.** R2's read is the only positive
+   result of the day (+16.19%/yr over its own control, t 3.92 on 112 blocks) and
+   it sits on **135 names**. 65.4% of 528,223 documents link to a permno and
+   CRSP labels stop at 2024-12; the bars from §11.4 now cover 2025-26, so the
+   ceiling is the label join, not the text.
+3. **Costs and turnover in R2.** The levels are gross. The primary is a
+   difference between two identically-rebalanced books so costs largely cancel,
+   but that is an argument, not a measurement.
+4. **The two G3 one-liners**, then the §10.2 era rule on the survivors.
+5. **Pre-register R2's prompt and digest construction** before widening it. The
+   prompt was not registered, and it is now the only live lane.

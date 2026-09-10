@@ -1,0 +1,247 @@
+{
+ "job": "N1H5_prereg_read",
+ "trial": "TRIAL-H5-event-learner-five-session",
+ "licence": "RESEARCH_CLAIM candidate",
+ "llm_spend_usd": 0.0,
+ "READ_ONCE": true,
+ "registered_by": "docs/TRIALS/TRIAL-H5-event-learner-five-session.md (commit 9bc271b, annotated da14d39)",
+ "frozen_configuration": {
+  "hold_sessions": 5,
+  "entry": "close of session +1",
+  "featureset": "all",
+  "features": [
+   "reaction",
+   "z_reaction",
+   "sue",
+   "sd60",
+   "mom_12_1",
+   "vsurge",
+   "log_dv21",
+   "log_cap",
+   "prc_e",
+   "gap_prev"
+  ],
+  "model": "LightGBM 400 trees, N1 hyper-parameters",
+  "walk_forward": "purged by year, embargo = 5 sessions",
+  "first_test_year": 2004,
+  "pit_rank_window": 63,
+  "min_pool": 200,
+  "deciles": "top and bottom 10% of the PIT-ranked prediction",
+  "cost_bps_per_side": 25.0,
+  "borrow_bps_per_year": 100.0,
+  "floor_decide_usd": 10000000.0,
+  "floor_report_usd": 3000000.0,
+  "seeds": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ]
+ },
+ "PRIMARY_learner_minus_control_at_10m_floor": {
+  "seed_median_series_ann_pct": 20.786,
+  "t_nw": 1.142,
+  "months": 156,
+  "eras": {
+   "2004-2007": {
+    "months": 36,
+    "ann_pct": 23.295,
+    "t": 1.105,
+    "sign": 1
+   },
+   "2008-2015": {
+    "months": 53,
+    "ann_pct": -7.735,
+    "t": -0.438,
+    "sign": -1
+   },
+   "2016-2024": {
+    "months": 67,
+    "ann_pct": 42.0,
+    "t": 1.124,
+    "sign": 1
+   }
+  },
+  "learner": 26.314,
+  "control": 17.64,
+  "learner_max_drawdown": -0.7801,
+  "seed_median_of_per_seed_estimates_ann_pct": 8.996
+ },
+ "SECONDARY_at_3m_floor": {
+  "per_seed": [
+   {
+    "seed": 0,
+    "learner_ann_pct": 52.762,
+    "control_ann_pct": -3.863,
+    "diff_ann_pct": 54.74,
+    "diff_t": 2.898,
+    "months": 244,
+    "learner_max_dd": -0.9054
+   },
+   {
+    "seed": 1,
+    "learner_ann_pct": 44.943,
+    "control_ann_pct": 4.783,
+    "diff_ann_pct": 39.493,
+    "diff_t": 2.36,
+    "months": 244,
+    "learner_max_dd": -0.8079
+   },
+   {
+    "seed": 2,
+    "learner_ann_pct": 41.215,
+    "control_ann_pct": -1.285,
+    "diff_ann_pct": 42.282,
+    "diff_t": 2.7,
+    "months": 242,
+    "learner_max_dd": -0.6896
+   },
+   {
+    "seed": 3,
+    "learner_ann_pct": 46.907,
+    "control_ann_pct": 6.614,
+    "diff_ann_pct": 38.868,
+    "diff_t": 2.274,
+    "months": 245,
+    "learner_max_dd": -0.7686
+   },
+   {
+    "seed": 4,
+    "learner_ann_pct": 47.993,
+    "control_ann_pct": -7.139,
+    "diff_ann_pct": 54.746,
+    "diff_t": 3.471,
+    "months": 247,
+    "learner_max_dd": -0.8597
+   },
+   {
+    "seed": 5,
+    "learner_ann_pct": 41.733,
+    "control_ann_pct": 6.733,
+    "diff_ann_pct": 34.509,
+    "diff_t": 2.195,
+    "months": 247,
+    "learner_max_dd": -0.7851
+   },
+   {
+    "seed": 6,
+    "learner_ann_pct": 26.965,
+    "control_ann_pct": -7.983,
+    "diff_ann_pct": 36.525,
+    "diff_t": 1.953,
+    "months": 244,
+    "learner_max_dd": -0.9509
+   },
+   {
+    "seed": 7,
+    "learner_ann_pct": 41.786,
+    "control_ann_pct": 3.27,
+    "diff_ann_pct": 40.321,
+    "diff_t": 2.269,
+    "months": 244,
+    "learner_max_dd": -0.6924
+   },
+   {
+    "seed": 8,
+    "learner_ann_pct": 34.202,
+    "control_ann_pct": 9.515,
+    "diff_ann_pct": 23.637,
+    "diff_t": 1.45,
+    "months": 243,
+    "learner_max_dd": -0.7564
+   },
+   {
+    "seed": 9,
+    "learner_ann_pct": 46.175,
+    "control_ann_pct": -0.501,
+    "diff_ann_pct": 45.271,
+    "diff_t": 2.754,
+    "months": 246,
+    "learner_max_dd": -0.8243
+   },
+   {
+    "seed": 10,
+    "learner_ann_pct": 48.882,
+    "control_ann_pct": 5.99,
+    "diff_ann_pct": 43.378,
+    "diff_t": 2.584,
+    "months": 246,
+    "learner_max_dd": -0.7717
+   },
+   {
+    "seed": 11,
+    "learner_ann_pct": 39.307,
+    "control_ann_pct": -10.548,
+    "diff_ann_pct": 49.401,
+    "diff_t": 2.963,
+    "months": 244,
+    "learner_max_dd": -0.8023
+   },
+   {
+    "seed": 12,
+    "learner_ann_pct": 58.235,
+    "control_ann_pct": 7.112,
+    "diff_ann_pct": 51.112,
+    "diff_t": 2.866,
+    "months": 242,
+    "learner_max_dd": -0.7689
+   }
+  ],
+  "seed_median_of_per_seed_ann_pct": 42.282,
+  "seed_median_series_ann_pct": 47.017,
+  "seed_median_series_t_nw": 3.03,
+  "months": 227,
+  "eras": {
+   "2004-2007": {
+    "months": 47,
+    "ann_pct": 38.565,
+    "t": 2.854,
+    "sign": 1
+   },
+   "2008-2015": {
+    "months": 88,
+    "ann_pct": 48.362,
+    "t": 2.295,
+    "sign": 1
+   },
+   "2016-2024": {
+    "months": 92,
+    "ann_pct": 50.048,
+    "t": 1.578,
+    "sign": 1
+   }
+  },
+  "learner_seed_median_ann_pct": 44.943,
+  "control_seed_median_ann_pct": 3.27,
+  "learner_seed_median_max_dd": -0.7851
+ },
+ "share_of_3m_excess_kept_at_10m": 0.442,
+ "share_of_3m_excess_kept_at_10m_note": null,
+ "decision_checks": {
+  "adopt_effect_ge_31": false,
+  "adopt_t_ge_2.8": false,
+  "adopt_same_sign_in_every_era": false,
+  "adopt_max_dd_ge_-0.45": false,
+  "adopt_RW2_excess_ge_0.15_in_every_era": false,
+  "reject_effect_lt_4": false,
+  "reject_t_lt_1.5": true,
+  "reject_control_gt_4": true,
+  "reject_10m_floor_removes_over_half": true
+ },
+ "RW2_clause": "evaluated OUTSIDE this job from RW2_event_windows_run01.json: the excess win rate over the control is 0.44 in 1999-2007 and 0.46 in 2016-2024 at the $10m floor, so the registered clause 'RW2 excess >= +0.15 in every start era' already fails",
+ "headline": "TRIAL-H5 single registered read: learner minus control at the $10m floor with 100 bps borrow, seed-median over 13 seeds = 20.786%/yr t 1.142 on 156 monthly blocks (learner 26.314, control 17.64, max DD -0.7801); at the $3m floor 47.017%/yr t 3.03",
+ "verdict": "REJECTED: reject_t_lt_1.5, reject_control_gt_4, reject_10m_floor_removes_over_half. Primary (learner minus control, $10m floor, 100 bps borrow, seed-median): 20.786%/yr t 1.142. The trial closes and H5|all goes to NEGATIVE_RESULTS.md; the same instrument is not re-run.",
+ "family_max_p": null,
+ "elapsed_s": 865.2,
+ "written_utc": "2026-09-09T03:54:07+00:00",
+ "run": 1
+}

@@ -1,0 +1,64 @@
+{
+ "amends": "R2_monthly_llm_2015_2024_run01.json",
+ "amendment": "R2_cost_and_turnover_amendment",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-10T06:26:08+00:00",
+ "PREREGISTRATION": {
+  "trial": "r2-monthly-news-digest-read",
+  "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+  "pre_registered": "2026-09-10",
+  "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+  "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+  "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+  "model_identity": {
+   "backend": "local_gguf",
+   "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "size_bytes": 4683074240,
+   "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+   "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+   "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+   "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+  },
+  "cost_bps_per_side": 25.0,
+  "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+ },
+ "why": "TRIAL-R2 was pre-registered on 2026-09-10 and its primary metric is NET of costs on realised turnover. PANEL-A's receipt carries only GROSS numbers, and its own verdict amendment already said so: 'NO TRANSACTION COSTS anywhere in this grading ... turnover is not tracked by this job and should be.' This amendment records what the net line can and cannot be, and what was fixed so the question is answerable next time.",
+ "what_the_receipt_says_GROSS": {
+  "arm_ann_pct": 21.845,
+  "control_ann_pct": 5.656,
+  "difference_ann_pct": 16.189,
+  "t_nw": 3.922,
+  "blocks": 112
+ },
+ "what_the_net_line_IS_NOT_AVAILABLE": {
+  "verdict": "CANNOT DETERMINE without re-running the model",
+  "why": "the 2026-09-08 run held its ~15,000 per-cell answers in memory, graded them once and wrote a summary. The answers were never persisted, so the monthly weights cannot be reconstructed, so the realised turnover cannot be computed. Re-deriving it costs 5,854 s of inference and llama-server is not listening. A number is not reported here because there is no number to report -- a check that did not run is not a check that passed."
+ },
+ "what_CAN_be_said_without_the_answers": {
+  "max_turnover_per_rebalance": 2.0,
+  "why": "each month's weights satisfy sum|w| = 1, so sum_i |w_t,i - w_t-1,i| <= 2",
+  "cost_bps_per_side": 25.0,
+  "max_cost_drag_ann_pct_per_leg": 6.0,
+  "bound_on_the_arm_NET_ann_pct": [
+   15.845,
+   21.845
+  ],
+  "bound_on_the_control_NET_ann_pct": [
+   -0.344,
+   5.656
+  ],
+  "bound_on_the_DIFFERENCE_NET_ann_pct": [
+   10.189,
+   22.189
+  ],
+  "reading": "the arm's +21.845%/yr is at worst +15.845 net and the control's +5.656%/yr at worst -0.344; the difference is between +10.189 and +22.189%/yr. The bound on the DIFFERENCE is loose on purpose -- it assumes the two turnovers are maximally MISmatched, when in fact the two books hold the same cells on the same dates and both replace nearly all of their weights each month, so the realised cancellation will be near-total. That is the argument the 09-09 amendment made; it is still an argument, and it is bounded here rather than asserted."
+ },
+ "what_was_fixed_2026-09-10": [
+  "grade() charges sum|dw| * 25 bps a side per monthly rebalance and returns gross, net, turnover_per_rebalance and cost_drag_ann_pct; paired_vs() returns the gross AND net difference plus both turnovers and the cost effect on the difference.",
+  "every answer is now appended to an answers jsonl as it arrives, so any future run can be re-graded at any cost rate with `--regrade`, without the model and without tokens.",
+  "paired_vs() REFUSES when the two books do not share their month blocks, instead of zipping two different date sets into a 'paired' difference."
+ ],
+ "does_not_change": "PANEL-A's claim is unchanged and unchangeable by this file: CONDITIONAL, gross at the level, 135 mega-cap-skewed names, one prompt that was not registered when it ran. The registered decision now lives on PANEL-B.",
+ "family_max_p": null
+}

@@ -1,0 +1,46 @@
+{
+ "amends": "G3_evolve_run01.json",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-09T08:15:00+00:00",
+ "why": "the run stamped PRODUCT_PROMISING on a DEV-only archive whose null bar was not held to the same drawdown refusal as the arm, and whose finalists were mostly evaluated on ONE window bank; both inflate the excess and neither is visible in the headline",
+ "corrected_verdict": "CONDITIONAL",
+ "what_the_run_did": {
+  "generations": 437,
+  "genome_evaluations": 2373,
+  "dd_refusals_during_search": 5348,
+  "refusal_rate": 0.693,
+  "distinct_genomes": 595,
+  "distinct_lineages": 251,
+  "lineage_collapse_ratio": 0.422,
+  "dd_budget_declared": 0.35,
+  "dd_market_same_window": -0.4721,
+  "dd_limit_applied": 0.4721,
+  "best_selection_bank_excess_ann_pct": 28.637,
+  "best_archive_bank_excess_ann_pct": 20.261,
+  "selection_to_archive_shrinkage_pp": -8.376,
+  "finalists_holding_up_out_of_bank": "12 of 12"
+ },
+ "defect_1_the_null_is_not_held_to_the_arms_own_gate": {
+  "what": "WindowBank draws its 6 null genomes with random_genome() and no admissibility check, while every scored genome had to survive the derived drawdown refusal first. The refusal rejected 5,348 of 7,721 candidates (69.3%).",
+  "so": "the fitness is 'an ADMISSIBLE genome minus a TYPICAL genome', not admissible minus admissible. Whatever the drawdown filter selects for beyond drawdown itself is credited to the signal.",
+  "direction": "inflates the excess; the magnitude is unmeasured",
+  "fix": "apply the same admissible() gate to the null draws inside WindowBank.__init__ -- one line, and it makes the bar the arm's own population",
+  "family": "the same asymmetry RW2 and N2 found in other lanes on 2026-09-09, here in this job's own code"
+ },
+ "defect_2_the_archive_still_ranks_on_one_bank_of_luck": {
+  "what": "the archive ranks a genome by the MEDIAN of its fitness across the banks it met, which was the correction to ranking by its BEST bank. But the receipt's own finalist_basis reads 'ALL lineages (only 3 met two banks)'.",
+  "so": "for almost every lineage the median is a median of ONE draw, so a genome that drew a lucky bank still outranks a genome tested twice. The multi-bank robustness the design intended did not happen.",
+  "direction": "inflates the ranking, not necessarily the level",
+  "fix": "make banks_met >= 2 an ELIGIBILITY condition for the archive rather than a preference, and re-evaluate the surviving elites on a fixed audit bank each generation so the count accumulates"
+ },
+ "what_still_stands": [
+  "the archive bank is drawn from a seed the search never saw, and all 12 finalists keep a POSITIVE median excess on it -- that is a real within-DEV out-of-bank check and it is the number worth carrying: best +20.261%/yr against +28.637 on the selection banks, a shrinkage of 8.376 pp (29%).",
+  "the drawdown budget derived from the window is the correct form and it bound hard: 69.3% of candidates refused, against the 91% starvation a flat 0.35 produced and the ~0% a penalty term produces.",
+  "ancestry de-duplication works: 595 genomes collapse to 251 lineages (0.422), so a count over the archive is a count over lineages, not over relatives.",
+  "NO HOLDOUT WAS READ. 2016-2024 is untouched by this job."
+ ],
+ "corrected_reading": "G3 demonstrates the protocol change and produces a DEV archive whose finalists survive a window bank they were not selected on with a 29% shrinkage. It does NOT establish a product candidate: the null bar is easier than the arm's own gate, the finalists are mostly single-bank, and no era test or holdout has been applied. Treat the +20.261%/yr as an upper bound on a DEV-only quantity.",
+ "next_step": "re-run with the two one-line fixes above, then apply the roadmap 10.2 era rule (excess minus dispersion >= 0.15 in every start era) to the surviving lineages before any holdout is considered",
+ "family_max_p": null
+}

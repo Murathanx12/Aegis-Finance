@@ -1,0 +1,95 @@
+{
+ "job": "R2_monthly_llm",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "backend": "local_gguf",
+ "year": 2015,
+ "year_to": 2024,
+ "span": "2015-2024",
+ "min_docs_per_cell": 3,
+ "question": "Given only that month's news, can a local model call the next month's market-adjusted direction better than the identical pipeline reading a digest from a random other month?",
+ "POWER_FIRST": {
+  "date_blocks": 112,
+  "cells": 7418,
+  "median_names_per_month": 60.5,
+  "median_cross_sectional_sd": 0.1432,
+  "implied_long_short_monthly_sd": 0.0584,
+  "MDE_monthly_pct": 1.546,
+  "MDE_annualised_pct": 18.56,
+  "note": "the unit is the monthly date block, not the cell: names inside one month share the market and are not independent draws"
+ },
+ "AMNESIA_canary": {
+  "real_names": {
+   "label": "AMNESIA canary: REAL text",
+   "cells": 299,
+   "date_blocks": 110,
+   "directional_calls": 291,
+   "share_flat": 0.027,
+   "sign_accuracy": 0.5601,
+   "long_short_monthly_mean_pct": 3.8902,
+   "long_short_ann_pct": 46.683,
+   "t_nw_blocks": 3.029
+  },
+  "masked": {
+   "label": "AMNESIA canary: MASKED text",
+   "cells": 300,
+   "date_blocks": 110,
+   "directional_calls": 296,
+   "share_flat": 0.013,
+   "sign_accuracy": 0.5642,
+   "long_short_monthly_mean_pct": 3.3044,
+   "long_short_ann_pct": 39.653,
+   "t_nw_blocks": 2.557
+  },
+  "accuracy_gap_real_minus_masked": -0.0041,
+  "reading": "a POSITIVE gap means the model does better when it can see who the company is, which is recall of a year inside its training data, not reading of the text"
+ },
+ "arm_masked_read": {
+  "label": "masked digest -> direction",
+  "cells": 7417,
+  "date_blocks": 112,
+  "directional_calls": 7164,
+  "share_flat": 0.034,
+  "sign_accuracy": 0.542,
+  "long_short_monthly_mean_pct": 1.8204,
+  "long_short_ann_pct": 21.845,
+  "t_nw_blocks": 6.215
+ },
+ "control_shuffled_digest": {
+  "label": "shuffled digest (control)",
+  "cells": 7417,
+  "date_blocks": 112,
+  "directional_calls": 7168,
+  "share_flat": 0.034,
+  "sign_accuracy": 0.4911,
+  "long_short_monthly_mean_pct": 0.4714,
+  "long_short_ann_pct": 5.656,
+  "t_nw_blocks": 1.793
+ },
+ "PRIMARY_read_minus_control": {
+  "label": "read minus shuffled control",
+  "blocks": 112,
+  "mean_ann_pct": 16.189,
+  "t_nw": 3.922,
+  "arm_ann_pct": 21.845,
+  "control_ann_pct": 5.656
+ },
+ "usage": {
+  "tokens_in": 5098607,
+  "tokens_out": 216677,
+  "cost_usd": 0.0,
+  "deepseek_equivalent_usd": 1.1421645,
+  "refusals": {
+   "canary_real": 0,
+   "canary_masked": 0,
+   "arm": 0,
+   "control": 0
+  }
+ },
+ "headline": "2015-2024: 7417 cells over 112 month blocks; masked read 21.845%/yr vs shuffled control 5.656%/yr -> 16.189%/yr t 3.922; AMNESIA gap -0.0041; MDE 18.56%/yr",
+ "verdict": "UNDERPOWERED, EXPLORATORY: 112 month blocks give an MDE of 18.56%/yr; the measured control-relative effect is 16.189%/yr t 3.922. That is a number, not evidence -- the panel, not the model, is the binding constraint.",
+ "family_max_p": null,
+ "elapsed_s": 5854.2,
+ "written_utc": "2026-09-09T05:25:02+00:00",
+ "run": 1
+}

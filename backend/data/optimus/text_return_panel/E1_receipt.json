@@ -1,0 +1,56 @@
+{
+ "job": "E1_news_return_panel",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "what": "every 2025-26 corpus news row joined to the Alpaca bar of the first session whose OPEN is strictly after publication; two labels, each minus SPY",
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+ "wall_s": 39.3,
+ "funnel": {
+  "news_rows": 408218,
+  "no_symbol_bar": 79585,
+  "off_calendar": 0,
+  "no_bar_that_day": 225,
+  "dup": 0,
+  "kept": 339657
+ },
+ "rows": 339657,
+ "symbols": 3031,
+ "date_range": [
+  "2025-01-02",
+  "2026-09-08"
+ ],
+ "by_publish_position": {
+  "post_bell": 199577,
+  "pre_bell": 140080
+ },
+ "labels": {
+  "r_oc": {
+   "n": 339657,
+   "mean_bps": 4.75,
+   "sd_bps": 427.12,
+   "t": 6.479
+  },
+  "r_oo": {
+   "n": 338312,
+   "mean_bps": 15.84,
+   "sd_bps": 653.16,
+   "t": 14.106
+  },
+  "x_oc": {
+   "n": 339657,
+   "mean_bps": 1.7,
+   "sd_bps": 414.18,
+   "t": 2.389
+  },
+  "x_oo": {
+   "n": 338312,
+   "mean_bps": 9.29,
+   "sd_bps": 638.98,
+   "t": 8.46
+  }
+ },
+ "prior_best_panel": "9,457 labelled cells over 135 names (2026-09-08 news lane)",
+ "verdict": "PANEL BUILT",
+ "headline": "339,657 labelled text-and-return cells over 3,031 symbols, 2025-01-02..2026-09-08 -- the prior best was 9,457 over 135 names",
+ "written_utc": "2026-09-09T15:21:38+00:00"
+}

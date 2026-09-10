@@ -1,0 +1,123 @@
+{
+ "job": "N2_learner_v3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "question": "Does the DATA-NET learn more when it is told what the company's most recent earnings print did and how stale it is -- more than it learns from the same number of dateless columns?",
+ "panel_features": 22,
+ "event_features": [
+  "ev_reaction",
+  "ev_z_reaction",
+  "ev_reaction_pct",
+  "ev_sue",
+  "ev_sue_pct",
+  "ev_days_since",
+  "ev_count_12m",
+  "ev_gap"
+ ],
+ "target": "excess_vw_1m",
+ "first_test_year": 2004,
+ "seeds": [
+  0,
+  1,
+  2
+ ],
+ "book": "top-100 EW, hold band 400, $3m floor, 25.0 bps a side",
+ "control": "the identical pipeline with event features drawn from R4_placebo_offset40 -- same columns, same coverage, announcement dates shifted +40 sessions",
+ "arms": {
+  "v2_panel_only": {
+   "label": "v2_panel_only|seed0",
+   "months": 251,
+   "beta": 1.7192,
+   "ALPHA_RULER": {
+    "beta_matched_ann_pct": -10.658,
+    "t_nw": -2.344
+   },
+   "PRODUCT_RULER": {
+    "terminal_wealth_net": 4.7741,
+    "terminal_wealth_market": 14.3778,
+    "max_drawdown": -0.6982,
+    "within_dd_budget": false,
+    "market_max_drawdown": -0.4609
+   }
+  },
+  "v3_panel_plus_event": {
+   "label": "v3_panel_plus_event|seed0",
+   "months": 251,
+   "beta": 1.7575,
+   "ALPHA_RULER": {
+    "beta_matched_ann_pct": -8.936,
+    "t_nw": -2.022
+   },
+   "PRODUCT_RULER": {
+    "terminal_wealth_net": 7.8134,
+    "terminal_wealth_market": 14.3778,
+    "max_drawdown": -0.7053,
+    "within_dd_budget": false,
+    "market_max_drawdown": -0.4609
+   }
+  },
+  "v3_CONTROL_panel_plus_placebo_event": {
+   "label": "v3_CONTROL_panel_plus_placebo_event|seed0",
+   "months": 251,
+   "beta": 1.7799,
+   "ALPHA_RULER": {
+    "beta_matched_ann_pct": -8.743,
+    "t_nw": -1.858
+   },
+   "PRODUCT_RULER": {
+    "terminal_wealth_net": 8.2548,
+    "terminal_wealth_market": 14.3778,
+    "max_drawdown": -0.6791,
+    "within_dd_budget": false,
+    "market_max_drawdown": -0.4609
+   }
+  }
+ },
+ "seed_stability": {
+  "v2_panel_only": {
+   "seeds": 3,
+   "t_median": -2.344,
+   "ann_median_pct": -10.658,
+   "ann_min": -11.781,
+   "ann_max": -10.381
+  },
+  "v3_panel_plus_event": {
+   "seeds": 3,
+   "t_median": -1.644,
+   "ann_median_pct": -7.841,
+   "ann_min": -8.936,
+   "ann_max": -7.209
+  },
+  "v3_CONTROL_panel_plus_placebo_event": {
+   "seeds": 3,
+   "t_median": -1.858,
+   "ann_median_pct": -8.743,
+   "ann_min": -8.897,
+   "ann_max": -7.598
+  }
+ },
+ "paired": {
+  "v3_minus_v2": {
+   "label": "event features vs none",
+   "months_paired": 251,
+   "mean_diff_ann_pct": 2.267,
+   "t_nw": 1.047,
+   "share_of_months_v3_higher": 0.526
+  },
+  "v3control_minus_v2": {
+   "label": "the SAME number of dateless columns vs none",
+   "months_paired": 251,
+   "mean_diff_ann_pct": 2.78,
+   "t_nw": 1.888,
+   "share_of_months_v3_higher": 0.566
+  }
+ },
+ "incremental_over_control_ann_pct": -0.513,
+ "event_features_parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\learner\\event_features_v3.parquet",
+ "headline": "v3 (panel + event) vs v2 (panel only), paired over 251 months: 2.267%/yr t 1.047; the DATELESS control adds 2.78%/yr t 1.888; incremental -0.513%/yr",
+ "verdict": "FAILED_VARIANT: the event print does not change what the monthly data-net earns (2.267%/yr paired, t 1.047; control 2.78%/yr, incremental -0.513%/yr)",
+ "family_max_p": null,
+ "elapsed_s": 963.3,
+ "written_utc": "2026-09-09T03:39:31+00:00",
+ "run": 1
+}

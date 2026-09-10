@@ -928,7 +928,23 @@ def _case_terminal_state_reader():
             MirrorRefused, "a sync from an execution repo that is not here")
 
 
+def _case_r2_trial():
+    """TRIAL-R2's frozen prompt: an edited prompt is a NEW ARM, so refuse it.
+
+    The missing input here is the COMMITMENT: a prompt that does not hash to the
+    registered one means the run has no registration, and running it anyway
+    would reproduce exactly the defect the trial exists to close (PANEL-A's
+    +16.189%/yr came from a prompt nobody had frozen).
+    """
+    from backend.services.portfolio_intelligence.r2_trial import (
+        PROMPT, SYSTEM, FrozenPromptViolation, verify_frozen)
+    return (lambda: verify_frozen(SYSTEM, PROMPT + " Be concise."),
+            FrozenPromptViolation,
+            "a prompt that is not the registered one")
+
+
 CASES = {
+    "r2_trial": _case_r2_trial,
     "human_thesis": _case_human_thesis,
     "decision_log": _case_decision_log,
     "counterfactual_prices": _case_counterfactual_prices,

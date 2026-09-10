@@ -253,3 +253,16 @@ backend/data/optimus/night_factory_*/G1_evaluations.jsonl
 backend/data/optimus/night_factory_*/N1_configs*.jsonl
 backend/data/optimus/night_factory_*/C1_counterfactual_news.jsonl
 backend/data/optimus/night_factory_*/*.log
+# ...and for every evolutionary job after G1. The G1 line names G1, so G3's
+# evaluation log was NOT ignored and a `git add -A` would have committed it.
+# A rule that names one job is a rule that will be wrong at the next job.
+backend/data/optimus/night_factory_*/*_evaluations.jsonl
+# smoke receipts are test artefacts of a 4-year tape or a 25-symbol pull; they
+# carry job-shaped filenames and would otherwise read as results on the board
+backend/data/optimus/night_factory_*/*_smoke.json
+# 2026-09-10: the smoke rule missed the smoke JSONL and the smoke search state.
+# G3's per-evaluation log is appended to, so a smoke run's rows land in the same
+# family of file as a real run's; committing one puts test rows next to results.
+backend/data/optimus/night_factory_*/*_smoke.jsonl
+backend/data/optimus/night_factory_*/*_smoke/
+backend/data/optimus/night_factory_*/G3_checkpoint_run*.json

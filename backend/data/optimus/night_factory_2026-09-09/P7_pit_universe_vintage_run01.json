@@ -1,0 +1,656 @@
+{
+ "job": "P7_pit_universe_vintage",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "state": "DONE",
+ "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+ "floor_median_dollar_volume": 3000000.0,
+ "floor_source": "learner.evaluate.TRADABLE_DOLLAR_VOL",
+ "lookback_sessions": 20,
+ "index_proxies_excluded": [
+  "SPY",
+  "QQQ",
+  "IWM",
+  "RSP"
+ ],
+ "smoke": false,
+ "written_utc": "2026-09-10T06:13:06+00:00",
+ "per_month": {
+  "2025-01": {
+   "sessions": 20,
+   "month_first_session": "2025-01-02",
+   "month_last_session": "2025-01-31",
+   "liquidity_asof_session": null,
+   "names": 0,
+   "entered": 0,
+   "exited": 0,
+   "entered_examples": [],
+   "exited_examples": []
+  },
+  "2025-02": {
+   "sessions": 19,
+   "month_first_session": "2025-02-03",
+   "month_last_session": "2025-02-28",
+   "liquidity_asof_session": "2025-01-31",
+   "names": 2472,
+   "entered": 2472,
+   "exited": 0,
+   "entered_examples": [
+    "A",
+    "AA",
+    "AAL",
+    "AAMI",
+    "AAOI",
+    "AAON",
+    "AAP",
+    "AAPL"
+   ],
+   "exited_examples": []
+  },
+  "2025-03": {
+   "sessions": 21,
+   "month_first_session": "2025-03-03",
+   "month_last_session": "2025-03-31",
+   "liquidity_asof_session": "2025-02-28",
+   "names": 2492,
+   "entered": 68,
+   "exited": 48,
+   "entered_examples": [
+    "ACB",
+    "ACEL",
+    "ARKO",
+    "ATAI",
+    "ATEX",
+    "ATLC",
+    "ATRO",
+    "BBDC"
+   ],
+   "exited_examples": [
+    "ABAT",
+    "ACDC",
+    "AMPG",
+    "AMSF",
+    "ATS",
+    "BLX",
+    "BY",
+    "CABA"
+   ]
+  },
+  "2025-04": {
+   "sessions": 21,
+   "month_first_session": "2025-04-01",
+   "month_last_session": "2025-04-30",
+   "liquidity_asof_session": "2025-03-31",
+   "names": 2508,
+   "entered": 63,
+   "exited": 47,
+   "entered_examples": [
+    "ACDC",
+    "AMBP",
+    "AMSF",
+    "ASM",
+    "BCSF",
+    "BLX",
+    "BY",
+    "CGBD"
+   ],
+   "exited_examples": [
+    "AMTB",
+    "ATAI",
+    "ATLC",
+    "ATOM",
+    "BLZE",
+    "CCCC",
+    "CEPU",
+    "CLPT"
+   ]
+  },
+  "2025-05": {
+   "sessions": 21,
+   "month_first_session": "2025-05-01",
+   "month_last_session": "2025-05-30",
+   "liquidity_asof_session": "2025-04-30",
+   "names": 2497,
+   "entered": 47,
+   "exited": 58,
+   "entered_examples": [
+    "ABEO",
+    "ABUS",
+    "ABX",
+    "AEVA",
+    "AMTB",
+    "ANGI",
+    "ARIS",
+    "BFST"
+   ],
+   "exited_examples": [
+    "AMCX",
+    "ANNX",
+    "ARKO",
+    "AVO",
+    "BKKT",
+    "BNED",
+    "BWLP",
+    "CBL"
+   ]
+  },
+  "2025-06": {
+   "sessions": 20,
+   "month_first_session": "2025-06-02",
+   "month_last_session": "2025-06-30",
+   "liquidity_asof_session": "2025-05-30",
+   "names": 2517,
+   "entered": 63,
+   "exited": 43,
+   "entered_examples": [
+    "ALMS",
+    "ALNT",
+    "ALX",
+    "AMCX",
+    "AMLX",
+    "APEI",
+    "ASST",
+    "ATAI"
+   ],
+   "exited_examples": [
+    "ABUS",
+    "AMTB",
+    "AQST",
+    "ATEX",
+    "BFST",
+    "BRSP",
+    "CAC",
+    "CGNT"
+   ]
+  },
+  "2025-07": {
+   "sessions": 22,
+   "month_first_session": "2025-07-01",
+   "month_last_session": "2025-07-31",
+   "liquidity_asof_session": "2025-06-30",
+   "names": 2585,
+   "entered": 92,
+   "exited": 24,
+   "entered_examples": [
+    "ADUR",
+    "AGEN",
+    "AIP",
+    "ALMU",
+    "AQST",
+    "ATEX",
+    "ATLC",
+    "AVO"
+   ],
+   "exited_examples": [
+    "ACEL",
+    "ALMS",
+    "ASIX",
+    "ATOM",
+    "ATS",
+    "CCSI",
+    "CENT",
+    "CEPU"
+   ]
+  },
+  "2025-08": {
+   "sessions": 21,
+   "month_first_session": "2025-08-01",
+   "month_last_session": "2025-08-29",
+   "liquidity_asof_session": "2025-07-31",
+   "names": 2592,
+   "entered": 61,
+   "exited": 54,
+   "entered_examples": [
+    "ABAT",
+    "ABVX",
+    "ACEL",
+    "AEBI",
+    "AMRZ",
+    "AMTB",
+    "ANNX",
+    "ASIX"
+   ],
+   "exited_examples": [
+    "ABX",
+    "ACDC",
+    "ADUR",
+    "AMCX",
+    "ATLC",
+    "AVO",
+    "BBDC",
+    "CABA"
+   ]
+  },
+  "2025-09": {
+   "sessions": 21,
+   "month_first_session": "2025-09-02",
+   "month_last_session": "2025-09-30",
+   "liquidity_asof_session": "2025-08-29",
+   "names": 2615,
+   "entered": 66,
+   "exited": 43,
+   "entered_examples": [
+    "ABX",
+    "ACDC",
+    "ALM",
+    "AMBQ",
+    "AREC",
+    "ARX",
+    "ASA",
+    "ASMB"
+   ],
+   "exited_examples": [
+    "AGEN",
+    "AMBP",
+    "ANGO",
+    "ANNX",
+    "BAND",
+    "BCAX",
+    "BHRB",
+    "BNED"
+   ]
+  },
+  "2025-10": {
+   "sessions": 23,
+   "month_first_session": "2025-10-01",
+   "month_last_session": "2025-10-31",
+   "liquidity_asof_session": "2025-09-30",
+   "names": 2688,
+   "entered": 93,
+   "exited": 20,
+   "entered_examples": [
+    "ABUS",
+    "ADUR",
+    "AIIO",
+    "AMBP",
+    "ANGO",
+    "ANNX",
+    "ATLC",
+    "AVO"
+   ],
+   "exited_examples": [
+    "ACEL",
+    "AMTB",
+    "ATS",
+    "BVS",
+    "CBL",
+    "CBLL",
+    "CCSI",
+    "IIIN"
+   ]
+  },
+  "2025-11": {
+   "sessions": 19,
+   "month_first_session": "2025-11-03",
+   "month_last_session": "2025-11-28",
+   "liquidity_asof_session": "2025-10-31",
+   "names": 2703,
+   "entered": 62,
+   "exited": 47,
+   "entered_examples": [
+    "AAUC",
+    "ACHV",
+    "ALOY",
+    "AMTB",
+    "ANGX",
+    "ANRO",
+    "AVTX",
+    "BTQ"
+   ],
+   "exited_examples": [
+    "AEBI",
+    "AGRO",
+    "AMBQ",
+    "AVO",
+    "BRSP",
+    "BSBR",
+    "CSV",
+    "CTGO"
+   ]
+  },
+  "2025-12": {
+   "sessions": 22,
+   "month_first_session": "2025-12-01",
+   "month_last_session": "2025-12-31",
+   "liquidity_asof_session": "2025-11-28",
+   "names": 2726,
+   "entered": 59,
+   "exited": 36,
+   "entered_examples": [
+    "ACEL",
+    "AGRO",
+    "ALH",
+    "ALMS",
+    "ALTO",
+    "ATS",
+    "AVO",
+    "BFST"
+   ],
+   "exited_examples": [
+    "ACHV",
+    "ADUR",
+    "AIIO",
+    "ALLO",
+    "ALOY",
+    "BAND",
+    "BWLP",
+    "CADL"
+   ]
+  },
+  "2026-01": {
+   "sessions": 20,
+   "month_first_session": "2026-01-02",
+   "month_last_session": "2026-01-30",
+   "liquidity_asof_session": "2025-12-31",
+   "names": 2764,
+   "entered": 69,
+   "exited": 31,
+   "entered_examples": [
+    "ACRS",
+    "ADUR",
+    "AERO",
+    "ALLO",
+    "AMCX",
+    "BCAL",
+    "BELFA",
+    "BETA"
+   ],
+   "exited_examples": [
+    "ATS",
+    "BBUC",
+    "BFST",
+    "BGSI",
+    "BRUN",
+    "CAAP",
+    "CLFD",
+    "CMCO"
+   ]
+  },
+  "2026-02": {
+   "sessions": 19,
+   "month_first_session": "2026-02-02",
+   "month_last_session": "2026-02-27",
+   "liquidity_asof_session": "2026-01-30",
+   "names": 2797,
+   "entered": 61,
+   "exited": 28,
+   "entered_examples": [
+    "ACHV",
+    "ALRS",
+    "AMBQ",
+    "AMPG",
+    "ANDG",
+    "ASYS",
+    "ATS",
+    "BAND"
+   ],
+   "exited_examples": [
+    "ALTO",
+    "AMCX",
+    "ANGX",
+    "ANRO",
+    "ASMB",
+    "BLZE",
+    "CATX",
+    "CLYM"
+   ]
+  },
+  "2026-03": {
+   "sessions": 22,
+   "month_first_session": "2026-03-02",
+   "month_last_session": "2026-03-31",
+   "liquidity_asof_session": "2026-02-27",
+   "names": 2826,
+   "entered": 58,
+   "exited": 29,
+   "entered_examples": [
+    "AKTS",
+    "AMCX",
+    "ANRO",
+    "ARKO",
+    "AROW",
+    "ATOM",
+    "AVR",
+    "BATRA"
+   ],
+   "exited_examples": [
+    "ACHV",
+    "ALRS",
+    "AMPG",
+    "BBUC",
+    "CLFD",
+    "CRON",
+    "CYRX",
+    "DFNS"
+   ]
+  },
+  "2026-04": {
+   "sessions": 21,
+   "month_first_session": "2026-04-01",
+   "month_last_session": "2026-04-30",
+   "liquidity_asof_session": "2026-03-31",
+   "names": 2865,
+   "entered": 68,
+   "exited": 29,
+   "entered_examples": [
+    "AEBI",
+    "ALOY",
+    "ALTO",
+    "AVBH",
+    "AZN",
+    "BBUC",
+    "BHB",
+    "BOBS"
+   ],
+   "exited_examples": [
+    "ACB",
+    "AGL",
+    "AMCX",
+    "ARQQ",
+    "ASYS",
+    "BATRA",
+    "BCAL",
+    "BLZE"
+   ]
+  },
+  "2026-05": {
+   "sessions": 20,
+   "month_first_session": "2026-05-01",
+   "month_last_session": "2026-05-29",
+   "liquidity_asof_session": "2026-04-30",
+   "names": 2856,
+   "entered": 44,
+   "exited": 53,
+   "entered_examples": [
+    "ACHV",
+    "ACNB",
+    "AGEN",
+    "AGL",
+    "ALRS",
+    "ANGX",
+    "ARQQ",
+    "BATRA"
+   ],
+   "exited_examples": [
+    "ADUR",
+    "ARCT",
+    "ARDT",
+    "AROW",
+    "AVBH",
+    "BHB",
+    "BWMN",
+    "CCSI"
+   ]
+  },
+  "2026-06": {
+   "sessions": 21,
+   "month_first_session": "2026-06-01",
+   "month_last_session": "2026-06-30",
+   "liquidity_asof_session": "2026-05-29",
+   "names": 2936,
+   "entered": 104,
+   "exited": 24,
+   "entered_examples": [
+    "ADUR",
+    "ADV",
+    "AIIO",
+    "ALMR",
+    "AMCX",
+    "AMPG",
+    "ARCT",
+    "ARDT"
+   ],
+   "exited_examples": [
+    "ACNB",
+    "AGEN",
+    "AKTS",
+    "BATRA",
+    "BCAL",
+    "CCBG",
+    "CCNE",
+    "DBI"
+   ]
+  },
+  "2026-07": {
+   "sessions": 22,
+   "month_first_session": "2026-07-01",
+   "month_last_session": "2026-07-31",
+   "liquidity_asof_session": "2026-06-30",
+   "names": 2988,
+   "entered": 70,
+   "exited": 18,
+   "entered_examples": [
+    "ACB",
+    "ACNB",
+    "AIRJ",
+    "AKTS",
+    "AROW",
+    "AVBH",
+    "AYA",
+    "BCAL"
+   ],
+   "exited_examples": [
+    "AEBI",
+    "AERO",
+    "ARCT",
+    "CRBP",
+    "CRON",
+    "CUE",
+    "GIC",
+    "HELP"
+   ]
+  },
+  "2026-08": {
+   "sessions": 21,
+   "month_first_session": "2026-08-03",
+   "month_last_session": "2026-08-31",
+   "liquidity_asof_session": "2026-07-31",
+   "names": 3002,
+   "entered": 51,
+   "exited": 37,
+   "entered_examples": [
+    "AADX",
+    "AEBI",
+    "AGEN",
+    "AIBZ",
+    "BMNP",
+    "BMRC",
+    "BSP",
+    "CCXI"
+   ],
+   "exited_examples": [
+    "ASA",
+    "AURA",
+    "BFS",
+    "BGSI",
+    "CEPU",
+    "CION",
+    "CLW",
+    "CSAN"
+   ]
+  },
+  "2026-09": {
+   "sessions": 5,
+   "month_first_session": "2026-09-01",
+   "month_last_session": "2026-09-08",
+   "liquidity_asof_session": "2026-08-31",
+   "names": 2988,
+   "entered": 43,
+   "exited": 57,
+   "entered_examples": [
+    "AERO",
+    "ARCT",
+    "AURA",
+    "BATRA",
+    "BFS",
+    "BGSI",
+    "CION",
+    "CLW"
+   ],
+   "exited_examples": [
+    "ADV",
+    "AIBZ",
+    "AIIO",
+    "APGE",
+    "ATOM",
+    "AVBH",
+    "BCAL",
+    "BNED"
+   ]
+  }
+ },
+ "parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\pit_universe_vintage_2025_26.parquet",
+ "parquet_rows": 64176,
+ "symbols_considered": 3056,
+ "panel": {
+  "first_session": "2025-01-02",
+  "last_session": "2026-09-08",
+  "sessions": 421,
+  "bars": 1248370
+ },
+ "months_total": 21,
+ "months_gradable": 20,
+ "first_gradable_month": "2025-02",
+ "final_month": "2026-09",
+ "names_first_gradable_month": 2472,
+ "names_final_month": 2988,
+ "survivorship": {
+  "in_first_vintage_absent_from_final": 23,
+  "in_first_vintage_absent_from_final_by_cause": {
+   "stopped_trading": 3,
+   "below_dollar_vol_floor": 20
+  },
+  "in_any_earlier_vintage_absent_from_final": 68,
+  "in_any_earlier_vintage_absent_from_final_by_cause": {
+   "below_dollar_vol_floor": 65,
+   "stopped_trading": 3
+  },
+  "examples": [
+   "APGE",
+   "ATOM",
+   "BNED",
+   "CDZI",
+   "CEPU",
+   "CRNX",
+   "DBI",
+   "ECC",
+   "FFAI",
+   "FOR",
+   "GLP",
+   "GPRK",
+   "GRFS",
+   "HLX",
+   "HPK"
+  ]
+ },
+ "bar_source_survivor_screened": true,
+ "symbols_that_stopped_trading_inside_the_window": 3,
+ "symbols_that_stopped_trading_examples": [
+  "APGE",
+  "CRNX",
+  "HLX"
+ ],
+ "elapsed_s": 2.4,
+ "verdict": "PANEL BUILT, PARTIAL FIX. The LIQUIDITY look-ahead is repaired: membership is decided on the trailing-20-session median dollar volume as of each month's start, so a name liquid in 2025 and illiquid now is IN the early vintage and OUT of the late one. The SURVIVAL look-ahead is NOT repaired: only 3 of 3056 symbols in this bar panel ever stop trading, because the bar pull itself started from the 2026-09-01 screen. Any name delisted or acquired before 2026-09-01 has NO BARS AT ALL and cannot appear in any vintage. Read an equal-weight book over this vintage as still an UPPER bound on survival, and keep INDEX_RSP as the honest equal-weight bar until a listing-history source (CRSP delist codes, or an Alpaca assets snapshot taken BEFORE the window) is joined.",
+ "headline": "64,176 (month, symbol) rows over 3,056 symbols and 20 gradable months 2025-02..2026-09; 2,472 names in the first vintage vs 2,988 in the last; 23 are IN the first and OUT of the last ({'stopped_trading': 3, 'below_dollar_vol_floor': 20}); the bar source is ITSELF SURVIVOR-SCREENED -- 3 of 3056 symbols ever stop trading"
+}

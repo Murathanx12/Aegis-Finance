@@ -3209,3 +3209,46 @@ OTHER test was quietly depending on a real key.
 **The standing lesson, third restatement:** a simulator of another environment
 is only as good as the dimensions it models, and every dimension it omits looks
 exactly like a passing test.
+
+## The event-level learner at a five-session hold (TRIAL-H5) — REJECTED by its own registered rule
+
+Registered 2026-09-09 (`docs/TRIALS/TRIAL-H5-event-learner-five-session.md`,
+commit `9bc271b`), read once on 2026-09-09 by the named job `N1H5_prereg_read`,
+receipt `backend/data/optimus/night_factory_2026-09-08/N1H5_prereg_read_run01.json`.
+
+**What it was.** A LightGBM learner over every point-in-time feature of an IBES
+earnings announcement — reaction, z-scored reaction, PIT rank, SUE, liquidity,
+60-day vol, 12-1 momentum, volume surge, size, price, gap to the prior print —
+predicting the five-session market-excess return from the close of session +1,
+traded long-short on the top and bottom deciles of its own PIT-ranked
+prediction. The search that produced it printed **+44.5%/yr, t 4.31**, with a
+placebo-trained control at **t −0.45** and a differenced **+32.2%/yr, t 2.92**.
+It was the one live candidate out of the 2026-09-08 night.
+
+**What the registered read found**, at the corner the rule declared as deciding
+(**$10m/day liquidity floor, 100 bps/yr borrow on the short leg**, seeds 0-12,
+156 monthly date blocks):
+
+| | learner | its placebo-trained control | difference | t |
+|---|---|---|---|---|
+| **$10m floor (decides)** | +26.31%/yr | **+17.64%/yr** | **+20.79%/yr** | **1.14** |
+| $3m floor (reports) | +44.94%/yr | +3.27%/yr | +47.02%/yr | 3.03 |
+
+Rejected on three independent clauses, with zero of five adopt clauses passing:
+`t 1.14 < 1.5`; the control's own seed-median is **+17.64%/yr** against a +4.0
+ceiling; and only **44.2%** of the $3m excess survives the $10m floor. The eras
+are +23.3 / **−7.7** / +42.0 %/yr, so the sign is not stable; the drawdown is
+**−78%** against a −45% budget; and the random-window clause fails too — on 240
+seeded windows (`RW2_event_windows_run01.json`) the learner beats its own
+control in only **44%** of 1999-2007 starts and **46%** of 2016-2024 starts.
+
+**The lesson, and it is the reusable part.** The whole apparent edge lived below
+the tradability floor. At $3m/day the control earns +3.27%/yr and looks inert;
+at $10m/day it earns **+17.64%/yr** and catches most of the way up to the
+learner. The original +44.5% was a $3m-floor, zero-borrow number, and neither
+of those is the corner real money trades in. A control is not a flag to check
+once — it has to be re-measured at every construction corner the decision could
+be taken at, because *the control's own level moves with the corner*.
+
+`H5|all` is closed. The same instrument is not re-run, and no successor was
+registered from that session.

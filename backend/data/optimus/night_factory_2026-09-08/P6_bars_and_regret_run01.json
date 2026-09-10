@@ -1,0 +1,356 @@
+{
+ "job": "P6_bars_and_regret",
+ "written_utc": "2026-09-09T03:18:40+00:00",
+ "llm_spend_usd": 0.0,
+ "P6a": {
+  "job": "P6a_pull_bars",
+  "licence": "PRODUCT_EXPERIMENT",
+  "llm_spend_usd": 0.0,
+  "credential_source": "terminal repo .env, HACK3 (data endpoint only)",
+  "data_host": "https://data.alpaca.markets",
+  "feed": "sip",
+  "adjustment": "all (splits and dividends), so a return series is comparable to CRSP's",
+  "window": {
+   "start": "2025-01-01",
+   "end_requested": null,
+   "end_served": "2026-09-08",
+   "why_no_end": "the free SIP plan 403s on any explicit end inside its delay window; omitting it lets the venue clip and serve everything it is allowed to"
+  },
+  "universe": {
+   "universe_file": "C:\\Users\\mrthn\\aegis-alpha-terminal\\state\\universe\\HIGH_DISPERSION_US_v1_2026-09-01.json",
+   "universe_asof": "2026-09-01",
+   "members_total": 9668,
+   "after_floor_and_etf_filter": 3056,
+   "floor_median_dollar_volume": 3000000.0,
+   "symbols_pulled": 3056
+  },
+  "index_proxies": [
+   "SPY",
+   "QQQ",
+   "IWM",
+   "RSP"
+  ],
+  "bars": 1248370,
+  "symbols_with_bars": 3060,
+  "symbols_requested": 3060,
+  "symbols_with_no_bars": [],
+  "sessions": 421,
+  "median_bars_per_symbol": 421,
+  "parquet": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "parquet_mb": 32.48,
+  "headline": "1,248,370 daily bars for 3060 symbols over 421 sessions, 2025-01-01..2026-09-08",
+  "verdict": "PANEL BUILT: the 2025-26 price gap that blocked every forward evaluation is now on disk",
+  "elapsed_s": 375.4,
+  "written_utc": "2026-09-09T03:24:56+00:00"
+ },
+ "P6b": {
+  "job": "P6b_regret",
+  "licence": "PRODUCT_EXPERIMENT",
+  "llm_spend_usd": 0.0,
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "credential_source": "terminal repo .env, HACK3 (data endpoint only)",
+  "question": "Over the sessions the six paper books actually existed, what did each earn against SPY -- and over 2025-01 -> today, what would four mechanical books with no forecast have earned?",
+  "REFUSED_the_six_month_mandate_replay": {
+   "why": "a faithful replay of hack3/hack4/hack6 needs the tracker screen's inputs (analyst targets, consensus, revisions) for 2025-26; the learner panel ends 2024-12 and the candidate snapshots on disk cover four dates, not six months",
+   "missing_input": "a 2025-26 IBES/target panel joined to these bars",
+   "what_would_unblock_it": "the target-and-consensus vintages for 2025-01..today at monthly frequency",
+   "note": "the accounts themselves were created 2026-08-28, so their realised history is days. Reporting a 'six-month' book result from them would be a claim about a window that does not exist."
+  },
+  "mechanical_benchmarks_2025_to_today": {
+   "INDEX_SPY": {
+    "label": "hold SPY",
+    "sessions": 420,
+    "first": "2025-01-03",
+    "last": "2026-09-08",
+    "total_return_pct": 33.264,
+    "market_return_pct": 33.264,
+    "raw_excess_pct": 0.0,
+    "beta": 1.0,
+    "beta_matched_ann_pct": -0.0,
+    "ann_vol_pct": 17.27,
+    "max_drawdown_pct": -18.756
+   },
+   "INDEX_QQQ": {
+    "label": "hold QQQ",
+    "sessions": 420,
+    "first": "2025-01-03",
+    "last": "2026-09-08",
+    "total_return_pct": 41.839,
+    "market_return_pct": 33.264,
+    "raw_excess_pct": 8.576,
+    "beta": 1.243,
+    "beta_matched_ann_pct": 0.25,
+    "ann_vol_pct": 22.58,
+    "max_drawdown_pct": -22.768
+   },
+   "INDEX_IWM": {
+    "label": "hold IWM",
+    "sessions": 420,
+    "first": "2025-01-03",
+    "last": "2026-09-08",
+    "total_return_pct": 35.312,
+    "market_return_pct": 33.264,
+    "raw_excess_pct": 2.049,
+    "beta": 1.059,
+    "beta_matched_ann_pct": 0.593,
+    "ann_vol_pct": 21.26,
+    "max_drawdown_pct": -23.748
+   },
+   "INDEX_RSP": {
+    "label": "hold RSP",
+    "sessions": 420,
+    "first": "2025-01-03",
+    "last": "2026-09-08",
+    "total_return_pct": 27.226,
+    "market_return_pct": 33.264,
+    "raw_excess_pct": -6.037,
+    "beta": 0.773,
+    "beta_matched_ann_pct": 1.134,
+    "ann_vol_pct": 15.24,
+    "max_drawdown_pct": -15.959
+   },
+   "EW_universe": {
+    "label": "equal weight, the whole tracker universe",
+    "sessions": 420,
+    "first": "2025-01-03",
+    "last": "2026-09-08",
+    "total_return_pct": 58.859,
+    "market_return_pct": 33.264,
+    "raw_excess_pct": 25.596,
+    "beta": 1.028,
+    "beta_matched_ann_pct": 10.572,
+    "ann_vol_pct": 20.15,
+    "max_drawdown_pct": -22.044
+   },
+   "MOM_12_1": {
+    "label": "MOM_12_1, monthly formed, top decile EW, 25 bps",
+    "sessions": 171,
+    "first": "2026-01-02",
+    "last": "2026-09-08",
+    "total_return_pct": 27.728,
+    "market_return_pct": 12.927,
+    "raw_excess_pct": 14.802,
+    "beta": 2.075,
+    "beta_matched_ann_pct": 4.631,
+    "ann_vol_pct": 38.99,
+    "max_drawdown_pct": -21.266
+   },
+   "REV_1M": {
+    "label": "REV_1M, monthly formed, top decile EW, 25 bps",
+    "sessions": 401,
+    "first": "2025-02-03",
+    "last": "2026-09-08",
+    "total_return_pct": -98.806,
+    "market_return_pct": 29.459,
+    "raw_excess_pct": -128.266,
+    "beta": 1.538,
+    "beta_matched_ann_pct": -298.011,
+    "ann_vol_pct": 34.46,
+    "max_drawdown_pct": -98.789
+   }
+  },
+  "paper_accounts_realised": {
+   "hack1": {
+    "points": 7,
+    "first_utc": "2026-08-28",
+    "last_utc": "2026-09-05",
+    "equity_first": 100000.0,
+    "equity_last": 98859.47,
+    "total_return_pct": -1.1405,
+    "equity_series": [
+     100000.0,
+     99250.36,
+     99250.91,
+     99168.87,
+     99168.87,
+     99022.65,
+     98859.47
+    ],
+    "timestamps": [
+     "2026-08-28",
+     "2026-08-29",
+     "2026-09-01",
+     "2026-09-02",
+     "2026-09-03",
+     "2026-09-04",
+     "2026-09-05"
+    ]
+   },
+   "hack2": {
+    "points": 7,
+    "first_utc": "2026-08-28",
+    "last_utc": "2026-09-05",
+    "equity_first": 100000.0,
+    "equity_last": 98820.5,
+    "total_return_pct": -1.1795,
+    "equity_series": [
+     100000.0,
+     99238.52,
+     99238.52,
+     99238.52,
+     99238.52,
+     98954.3,
+     98820.5
+    ],
+    "timestamps": [
+     "2026-08-28",
+     "2026-08-29",
+     "2026-09-01",
+     "2026-09-02",
+     "2026-09-03",
+     "2026-09-04",
+     "2026-09-05"
+    ]
+   },
+   "hack3": {
+    "points": 7,
+    "first_utc": "2026-08-28",
+    "last_utc": "2026-09-05",
+    "equity_first": 100000.0,
+    "equity_last": 90499.49,
+    "total_return_pct": -9.5005,
+    "equity_series": [
+     100000.0,
+     91107.45,
+     90511.36,
+     89511.82,
+     90289.92,
+     90640.41,
+     90499.49
+    ],
+    "timestamps": [
+     "2026-08-28",
+     "2026-08-29",
+     "2026-09-01",
+     "2026-09-02",
+     "2026-09-03",
+     "2026-09-04",
+     "2026-09-05"
+    ]
+   },
+   "hack4": {
+    "points": 7,
+    "first_utc": "2026-08-28",
+    "last_utc": "2026-09-05",
+    "equity_first": 100000.0,
+    "equity_last": 99475.52,
+    "total_return_pct": -0.5245,
+    "equity_series": [
+     100000.0,
+     99079.7,
+     99614.34,
+     98434.73,
+     99600.87,
+     99412.15,
+     99475.52
+    ],
+    "timestamps": [
+     "2026-08-28",
+     "2026-08-29",
+     "2026-09-01",
+     "2026-09-02",
+     "2026-09-03",
+     "2026-09-04",
+     "2026-09-05"
+    ]
+   },
+   "hack5": {
+    "points": 7,
+    "first_utc": "2026-08-28",
+    "last_utc": "2026-09-05",
+    "equity_first": 100000.0,
+    "equity_last": 96455.01,
+    "total_return_pct": -3.545,
+    "equity_series": [
+     100000.0,
+     91758.81,
+     90270.81,
+     90695.33,
+     91675.33,
+     95645.33,
+     96455.01
+    ],
+    "timestamps": [
+     "2026-08-28",
+     "2026-08-29",
+     "2026-09-01",
+     "2026-09-02",
+     "2026-09-03",
+     "2026-09-04",
+     "2026-09-05"
+    ]
+   },
+   "hack6": {
+    "points": 7,
+    "first_utc": "2026-08-28",
+    "last_utc": "2026-09-05",
+    "equity_first": 100000.0,
+    "equity_last": 91468.74,
+    "total_return_pct": -8.5313,
+    "equity_series": [
+     100000.0,
+     90706.04,
+     90706.04,
+     90706.04,
+     91340.87,
+     91719.78,
+     91468.74
+    ],
+    "timestamps": [
+     "2026-08-28",
+     "2026-08-29",
+     "2026-09-01",
+     "2026-09-02",
+     "2026-09-03",
+     "2026-09-04",
+     "2026-09-05"
+    ]
+   }
+  },
+  "regret_vs_spy_over_the_same_sessions": {
+   "hack1": {
+    "spy_same_days_pct": -0.118,
+    "book_pct": -1.1405,
+    "regret_pct_vs_spy": -1.022,
+    "sessions": 6
+   },
+   "hack2": {
+    "spy_same_days_pct": -0.118,
+    "book_pct": -1.1795,
+    "regret_pct_vs_spy": -1.061,
+    "sessions": 6
+   },
+   "hack3": {
+    "spy_same_days_pct": -0.118,
+    "book_pct": -9.5005,
+    "regret_pct_vs_spy": -9.382,
+    "sessions": 6
+   },
+   "hack4": {
+    "spy_same_days_pct": -0.118,
+    "book_pct": -0.5245,
+    "regret_pct_vs_spy": -0.406,
+    "sessions": 6
+   },
+   "hack5": {
+    "spy_same_days_pct": -0.118,
+    "book_pct": -3.545,
+    "regret_pct_vs_spy": -3.427,
+    "sessions": 6
+   },
+   "hack6": {
+    "spy_same_days_pct": -0.118,
+    "book_pct": -8.5313,
+    "regret_pct_vs_spy": -8.413,
+    "sessions": 6
+   }
+  },
+  "headline": "benchmarks 2025-01..today: best mechanical book EW_universe at 58.859% vs SPY 33.264%; worst live book vs SPY on its own sessions: hack3 -9.38 pp over 6 sessions",
+  "verdict": "DESCRIPTIVE. The mechanical bar is on disk for 2025-26; the six-mandate replay is REFUSED for a named missing input, and the accounts' realised window is days, not months.",
+  "family_max_p": null,
+  "elapsed_s": 6.2,
+  "written_utc": "2026-09-09T03:25:02+00:00"
+ },
+ "headline": "1,248,370 daily bars for 3060 symbols over 421 sessions, 2025-01-01..2026-09-08 | benchmarks 2025-01..today: best mechanical book EW_universe at 58.859% vs SPY 33.264%; worst live book vs SPY on its own sessions: hack3 -9.38 pp over 6 sessions",
+ "verdict": "PANEL BUILT: the 2025-26 price gap that blocked every forward evaluation is now on disk | DESCRIPTIVE. The mechanical bar is on disk for 2025-26; the six-mandate replay is REFUSED for a named missing input, and the accounts' realised window is days, not months."
+}

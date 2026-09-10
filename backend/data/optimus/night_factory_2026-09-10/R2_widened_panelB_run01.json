@@ -1,0 +1,86 @@
+{
+ "job": "R2_monthly_llm_widened",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "backend": "local_gguf",
+ "trial": "r2-monthly-news-digest-read",
+ "PREREGISTRATION": {
+  "trial": "r2-monthly-news-digest-read",
+  "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+  "pre_registered": "2026-09-10",
+  "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+  "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+  "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+  "model_identity": {
+   "backend": "local_gguf",
+   "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "size_bytes": 4683074240,
+   "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+   "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+   "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+   "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+  },
+  "cost_bps_per_side": 25.0,
+  "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+ },
+ "question": "Given only that month's ANONYMISED news, does a local 7B call the next month's SPY-adjusted direction better than the identical pipeline reading a digest from a random other month -- on a panel the 135-name read never saw?",
+ "does_not_restate": "PANEL-A (2015-2024, 135 names) keeps exactly the claim its own amendment gave it; this receipt is a separate experiment",
+ "construction": {
+  "news_rows": 339657,
+  "symbol_month_groups": 36791,
+  "with_a_forward_label": 34960,
+  "cells_at_min_docs": 18501,
+  "min_docs_per_cell": 3,
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "market_symbol": "SPY",
+  "convention": "enter at the first open of M+1, exit at the first open of M+2, minus SPY over the same two opens",
+  "symbols_with_a_label": 3060,
+  "label_rows": 59348,
+  "dropped_for_a_calendar_gap": 0
+ },
+ "POWER_FIRST": {
+  "date_blocks": 19,
+  "cells": 18501,
+  "median_names_per_month": 912.0,
+  "median_cross_sectional_sd": 0.1739,
+  "implied_long_short_monthly_sd": 0.0182,
+  "MDE_monthly_pct": 1.171,
+  "MDE_annualised_pct": 14.05,
+  "note": "the unit is the monthly date block, not the cell: names inside one month share the market and are not independent draws"
+ },
+ "masking": {
+  "documents_in_digests": 106499,
+  "documents_with_at_least_one_masked_token": 44638,
+  "mask_hit_rate": 0.4191,
+  "cells_whose_symbol_has_a_CRSP_issuer_name": 15802,
+  "note": "a document with no masked token is one where neither the ticker nor an issuer-name token appeared in its text -- common for a headline that never names the company -- but a HIGH rate of them would be a mask leak"
+ },
+ "digests": {
+  "masked": 18501,
+  "real": 18501
+ },
+ "cost_model": {
+  "cost_bps_per_side": 25.0,
+  "charged_on": "realised turnover sum|dw| per monthly rebalance"
+ },
+ "cost_bound_before_the_read": {
+  "max_turnover_per_rebalance": 2.0,
+  "why": "each month's weights satisfy sum|w| = 1, so sum_i |w_t,i - w_t-1,i| <= 2 however different the two months are",
+  "max_cost_drag_ann_pct_per_leg": 6.0,
+  "max_cost_effect_on_the_DIFFERENCE_ann_pct": 6.0,
+  "reading": "the levels cannot lose more than 6%/yr to costs and the difference cannot move by more than 6%/yr either -- and it will move by far less, because the arm and the control rebalance the same cells on the same dates. The bound is arithmetic; the realised numbers are measured by the read and printed beside the gross ones"
+ },
+ "pending_when_the_reader_is_up": [
+  "the AMNESIA canary on the WIDENED cells (300 real-name reads against 300 masked reads of the same cells) -- a widened result with no re-run canary is not a result",
+  "the arm: 18501 masked digests -> DIRECTION/CONFIDENCE",
+  "the shuffled-digest control: the same 18501 cells, each given a digest from a different month (rng seed 20260909)",
+  "the primary: arm minus control by monthly block, gross AND net of 25 bps a side on realised turnover, with both turnovers printed",
+  "one command: python -m scripts.night_r2_monthly_llm --panel widened --run 1"
+ ],
+ "verdict": "PENDING_MODEL: everything that does not need the reader is built and checked; the reader is not answering, and this job does not start it (the desktop shell owns llama-server). Probe said: ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+ "headline": "PANEL-B ready: 18501 cells over 19 month blocks, 18501 masked digests, mask hit rate 0.4191; NO model call was made",
+ "elapsed_s": 21.6,
+ "written_utc": "2026-09-10T06:42:29+00:00",
+ "run": 1
+}

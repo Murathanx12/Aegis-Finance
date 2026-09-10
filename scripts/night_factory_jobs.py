@@ -1457,6 +1457,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "P6_bars_and_regret": _lazy("scripts.night_p6_bars_and_regret", "P6_bars_and_regret"),
         "E1_news_return_panel": _lazy("scripts.night_e1_news_return_panel", "E1_news_return_panel"),
         "C2_curriculum_transfer": _lazy("scripts.night_c2_curriculum_transfer", "C2_curriculum_transfer"),
+        # 2026-09-10: P7 gives the 2025-26 replay a point-in-time universe (the
+        # liquidity look-ahead only -- the bar source is itself survivor-screened,
+        # which its receipt says out loud). R2_widened needs llama-server UP, so
+        # it belongs after the model server in any queue that includes it.
+        "P7_pit_universe_vintage": _lazy("scripts.night_p7_pit_universe", "P7_pit_universe_vintage"),
+        "R2_widened_panelB": _lazy("scripts.night_r2_monthly_llm", "R2_widened"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
@@ -1464,6 +1470,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
 
 #: jobs that take a `--hours` time box rather than running to completion
 TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
+
+
+#: jobs whose script checkpoints per unit of work and accepts `--resume`.
+#: Grow this as long jobs gain checkpoints; a job NOT in here is restarted from
+#: zero, which is honest but wasteful, and the receipt says which happened.
+RESUMABLE = {"G3_evolve_v2"}
 
 
 def main(argv=None) -> int:
@@ -1474,10 +1486,21 @@ def main(argv=None) -> int:
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--hours", type=float, default=float(os.getenv("NIGHT_G1_HOURS", "5")))
     ap.add_argument("--seed", type=int, default=20260909, help="RW1/RW2 window draw")
+    # 2026-09-10: a job that can continue a killed run. Only jobs listed in
+    # `RESUMABLE` accept it -- forwarding --resume to a job whose function has no
+    # such parameter is a TypeError three hours into the night, which is exactly
+    # the class of failure this flag exists to prevent.
+    ap.add_argument("--resume", action="store_true")
     a = ap.parse_args(argv)
+    if a.resume and a.job not in RESUMABLE:
+        print(f"REFUSED: {a.job} has no checkpoint to resume from "
+              f"(resumable jobs: {sorted(RESUMABLE)})", flush=True)
+        return 2
     t0 = time.time()
     fn = JOBS[a.job]
-    if a.job in ("G1_evolve", "G3_evolve_v2"):
+    if a.job == "G3_evolve_v2":
+        payload = fn(hours=a.hours, resume=a.resume, run=a.run)
+    elif a.job == "G1_evolve":
         payload = fn(hours=a.hours)
     elif a.job == "N1_train_reaction_learner":
         payload = fn(hours=a.hours, smoke=a.smoke)

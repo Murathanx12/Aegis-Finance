@@ -1,0 +1,140 @@
+{
+ "job": "C2_curriculum_transfer",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "label": "x_oc",
+ "question": "does pretraining on INVENTED counterfactual news help predict REAL excess returns, beyond an identical net pretrained on the same curriculum with shuffled labels?",
+ "curriculum": {
+  "texts": 18116,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-08\\C1_counterfactual_news.jsonl",
+  "max_docs": 4851,
+  "kinds": {
+   "anon": 4679,
+   "sign_flip": 4677,
+   "actor_timing": 4620,
+   "escalation": 4140
+  },
+  "class_balance": {
+   "0": 8254,
+   "2": 7360,
+   "1": 2502
+  },
+  "fit_acc_true": 0.6147,
+  "fit_acc_shuffled": 0.4836
+ },
+ "panel": {
+  "rows": 336587,
+  "symbols": 3018,
+  "dates": 421,
+  "range": [
+   "2025-01-02",
+   "2026-09-08"
+  ],
+  "dollar_vol_floor": 3000000.0
+ },
+ "construction": {
+  "decile_long_short_equal_weight": true,
+  "cost_bps_per_side": 25.0,
+  "cost_note": "sum|w_t - w_{t-1}| x 25 bps on REALISED decile-membership turnover: a name in the same leg on two consecutive sessions is carried and pays nothing. Entry on the first date and liquidation on the last are charged. `turnover_per_rebalance` = 1.0 would mean the whole book replaced, which is the flat 100 bps/date run01 charged unconditionally and is kept as `net_daily_liquidation`.",
+  "cost_model": "realised_weight_turnover",
+  "turnover_definition": "traded / (2 x gross exposure); 1.0 = the entire book sold and an entirely new one bought",
+  "label_caveat": "x_oc is open-to-close, so a carried name is modelled as held overnight while its return is measured inside the session only. `net` is therefore the LOWER cost bound and `net_daily_liquidation` the UPPER one.",
+  "amended_utc": "2026-09-10",
+  "unit": "one portfolio return per DATE",
+  "folds": 5,
+  "walk_forward": "train on all earlier dates, read the next block once"
+ },
+ "arms": {
+  "BASELINE": {
+   "gross": {
+    "n_dates": 350,
+    "mean_bps": 12.13,
+    "ann_pct": 30.578,
+    "t": 1.779
+   },
+   "net": {
+    "n_dates": 350,
+    "mean_bps": -53.21,
+    "ann_pct": -134.091,
+    "t": -7.847
+   },
+   "net_daily_liquidation": {
+    "n_dates": 350,
+    "mean_bps": -87.87,
+    "ann_pct": -221.422,
+    "t": -12.884
+   },
+   "cost_bps_per_side": 25.0,
+   "turnover_per_rebalance": 0.8144,
+   "turnover_per_day": 0.8144,
+   "mean_turnover_ratio_per_date": 0.8152,
+   "traded_notional_per_date": 2.6138,
+   "mean_gross_exposure": 1.6048,
+   "mean_cost_bps_per_date": 65.34,
+   "flat_cost_bps_per_date_run01": 100.0,
+   "median_names_per_date": 846
+  },
+  "TRANSFER": {
+   "gross": {
+    "n_dates": 350,
+    "mean_bps": 5.96,
+    "ann_pct": 15.018,
+    "t": 1.102
+   },
+   "net": {
+    "n_dates": 350,
+    "mean_bps": -59.8,
+    "ann_pct": -150.708,
+    "t": -11.109
+   },
+   "net_daily_liquidation": {
+    "n_dates": 350,
+    "mean_bps": -94.04,
+    "ann_pct": -236.982,
+    "t": -17.389
+   },
+   "cost_bps_per_side": 25.0,
+   "turnover_per_rebalance": 0.861,
+   "turnover_per_day": 0.861,
+   "mean_turnover_ratio_per_date": 0.8628,
+   "traded_notional_per_date": 2.6306,
+   "mean_gross_exposure": 1.5276,
+   "mean_cost_bps_per_date": 65.76,
+   "flat_cost_bps_per_date_run01": 100.0,
+   "median_names_per_date": 846
+  },
+  "CONTROL": {
+   "gross": {
+    "n_dates": 350,
+    "mean_bps": 7.72,
+    "ann_pct": 19.463,
+    "t": 1.379
+   },
+   "net": {
+    "n_dates": 350,
+    "mean_bps": -59.22,
+    "ann_pct": -149.234,
+    "t": -10.56
+   },
+   "net_daily_liquidation": {
+    "n_dates": 350,
+    "mean_bps": -92.28,
+    "ann_pct": -232.537,
+    "t": -16.475
+   },
+   "cost_bps_per_side": 25.0,
+   "turnover_per_rebalance": 0.8537,
+   "turnover_per_day": 0.8537,
+   "mean_turnover_ratio_per_date": 0.8545,
+   "traded_notional_per_date": 2.6777,
+   "mean_gross_exposure": 1.5683,
+   "mean_cost_bps_per_date": 66.94,
+   "flat_cost_bps_per_date_run01": 100.0,
+   "median_names_per_date": 846
+  }
+ },
+ "verdict": "CURRICULUM_NOT_EARNED: TRANSFER -150.708%/yr does not beat its own shuffled-label CONTROL -149.234%/yr -- the hidden layer is capacity, not the counterfactuals",
+ "headline": "TRANSFER -150.708%/yr net vs shuffled-label CONTROL -149.234 vs no-pretrain BASELINE -134.091, on 336,587 cells / 421 dates, at 0.861 realised turnover a rebalance and 25 bps a side",
+ "wall_s": 94.5,
+ "written_utc": "2026-09-10T06:19:35+00:00"
+}

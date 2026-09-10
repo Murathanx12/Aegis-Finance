@@ -1,0 +1,96 @@
+{
+ "job": "C2_curriculum_transfer",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "label": "x_oc",
+ "question": "does pretraining on INVENTED counterfactual news help predict REAL excess returns, beyond an identical net pretrained on the same curriculum with shuffled labels?",
+ "curriculum": {
+  "texts": 18116,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-08\\C1_counterfactual_news.jsonl",
+  "kinds": {
+   "anon": 4679,
+   "sign_flip": 4677,
+   "actor_timing": 4620,
+   "escalation": 4140
+  },
+  "class_balance": {
+   "0": 8254,
+   "2": 7360,
+   "1": 2502
+  },
+  "fit_acc_true": 0.6147,
+  "fit_acc_shuffled": 0.4836
+ },
+ "panel": {
+  "rows": 336587,
+  "symbols": 3018,
+  "dates": 421,
+  "range": [
+   "2025-01-02",
+   "2026-09-08"
+  ],
+  "dollar_vol_floor": 3000000.0
+ },
+ "construction": {
+  "decile_long_short_equal_weight": true,
+  "cost_bps_per_side": 25.0,
+  "cost_note": "a flat 100 bps per date, i.e. full daily turnover on both legs. It is a CONSTANT and identical across arms, so it moves every level and no ranking; read gross for the size of the effect and net for whether it survives a book that re-ranks every session",
+  "unit": "one portfolio return per DATE",
+  "folds": 5,
+  "walk_forward": "train on all earlier dates, read the next block once"
+ },
+ "arms": {
+  "BASELINE": {
+   "gross": {
+    "n_dates": 350,
+    "mean_bps": 12.13,
+    "ann_pct": 30.578,
+    "t": 1.779
+   },
+   "net": {
+    "n_dates": 350,
+    "mean_bps": -87.87,
+    "ann_pct": -221.422,
+    "t": -12.884
+   },
+   "median_names_per_date": 846
+  },
+  "TRANSFER": {
+   "gross": {
+    "n_dates": 350,
+    "mean_bps": 5.96,
+    "ann_pct": 15.018,
+    "t": 1.102
+   },
+   "net": {
+    "n_dates": 350,
+    "mean_bps": -94.04,
+    "ann_pct": -236.982,
+    "t": -17.389
+   },
+   "median_names_per_date": 846
+  },
+  "CONTROL": {
+   "gross": {
+    "n_dates": 350,
+    "mean_bps": 7.72,
+    "ann_pct": 19.463,
+    "t": 1.379
+   },
+   "net": {
+    "n_dates": 350,
+    "mean_bps": -92.28,
+    "ann_pct": -232.537,
+    "t": -16.475
+   },
+   "median_names_per_date": 846
+  }
+ },
+ "verdict": "CURRICULUM_NOT_EARNED: TRANSFER -236.982%/yr does not beat its own shuffled-label CONTROL -232.537%/yr -- the hidden layer is capacity, not the counterfactuals",
+ "headline": "TRANSFER -236.982%/yr net vs shuffled-label CONTROL -232.537 vs no-pretrain BASELINE -221.422, on 336,587 cells / 421 dates",
+ "wall_s": 151.5,
+ "written_utc": "2026-09-09T15:24:11+00:00",
+ "elapsed_s": 153.2,
+ "run": 1,
+ "exit_code": 0
+}
