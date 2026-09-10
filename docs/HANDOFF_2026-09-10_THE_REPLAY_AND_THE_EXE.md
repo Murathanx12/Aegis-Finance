@@ -280,6 +280,19 @@ events" has now been tried in its most defensible form and did not fire.
    If the frozen embedding does not beat TF-IDF, that is the result; S45 put the
    prior there.
 5. **Do not add a router.** One independent selector with evidence.
+6. **Chunk the evidence memory before it blocks a push.** Murat, 2026-09-10:
+   *"maybe separate the memory into chunks... or find a much better method of
+   compacting. we can put it in a different repo or somewhere else too?"*
+   `evidence_memory.jsonl` is **62.14 MB** and GitHub warned on the push of
+   `6485b73`; the hard reject is 100 MB and the file grows every night, so this
+   is a deadline. Options weighed in
+   `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.md` section 3b. The
+   recommendation is **monthly rotation with the live chunk untracked** --
+   sealed months are written once, which is the shape git is good at and the
+   shape an evidence record should have. **Compaction is refused**: a log that
+   summarises itself is not an evidence log, and dropping a row nobody thought
+   mattered is the receipt-overwrite bug with better manners. Split by each
+   row's OWN stamp, never by file mtime.
 
 ---
 

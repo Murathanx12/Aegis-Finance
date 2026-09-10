@@ -162,6 +162,57 @@ This is running now as `scripts/night_n3_frozen_embedding_head.py`.
 
 ---
 
+## 3b. THE EVIDENCE MEMORY IS 62 MB AND GROWING (Murat, 2026-09-10)
+
+> "maybe separate the memory into chunks in the next session or find a much
+> better method of compacting. we can put it in a different repo or somewhere
+> else too?"
+
+**The fact.** `backend/data/optimus/learner/evidence_memory.jsonl` is **62.14 MB**
+and GitHub warned on the push of `6485b73`: *"larger than GitHub's recommended
+maximum file size of 50.00 MB"*. The recommendation is 50 MB; the **hard reject
+is 100 MB**. It is append-only and every night adds to it, so this is a deadline,
+not a preference — at the current rate it will refuse a push, and the session
+that hits it will be the one that has something urgent to ship.
+
+**What the real cost is, stated precisely.** It is not disk. It is that a
+tracked, append-only file which changes every night gives git a new blob per
+commit. Git delta-compresses text appends well, so the pack does not grow by
+62 MB a night — but the *working copy* is 62 MB, every clone pays it, CI's
+checkout pays it, and the blob crosses the hard limit on its own eventually.
+
+**Four options, and the one to take.**
+
+| option | what it buys | what it costs |
+|---|---|---|
+| **Monthly rotation** — `evidence_memory_2026-09.jsonl`, sealed at month end | each chunk is written once and never again, so git stores it once and the diff churn stops; bounded file size; nothing is lost | a reader must glob instead of opening one path |
+| **Compaction** — dedupe / summarise old rows | smallest result | it DESTROYS evidence, and this repo's whole discipline is that a record is not rewritten. A compaction that drops a row nobody thought mattered is the receipt-overwrite bug with better manners |
+| **Git LFS** | the file can grow | LFS quota, an extra install step for every clone, and CI needs it too. It postpones the question rather than answering it |
+| **Move it out of this repo** — to `optimus` | CLAUDE.md already says `optimus` **is the memory**: the MCP brain over `brain/index.db` that ingests both repos' `docs/` and session memory. Evidence memory is arguably in the wrong repo today | commits move between repos only by hand, so a nightly writer here would have to push there |
+
+**Recommendation: rotate monthly, and stop tracking the live chunk.** Sealed
+months are committed once and never touched again — which is exactly the shape
+git is good at, and exactly the shape an evidence record should have. The
+current month's file is `.gitignore`d while it is being written and committed
+when it is sealed, so the daily churn disappears entirely. Compaction is
+refused: an evidence log that summarises itself is not an evidence log.
+
+Whether it ALSO belongs in `optimus` is a separate question and a real one — but
+it is a question about ownership, and the size problem has a deadline. Rotate
+first; move later if the answer is yes.
+
+**Work items:**
+1. `learner/evidence_memory.py` (or wherever the append lives — grep
+   `evidence_memory.jsonl`): write to `evidence_memory_<YYYY-MM>.jsonl`; readers
+   glob the directory and concatenate in filename order.
+2. A one-shot migration that splits the existing 62 MB by each row's own
+   timestamp — **by the row's stamp, never by file mtime**; a checkout makes
+   every file "written today" (CLAUDE.md protocol §7).
+3. `.gitignore` the current month; commit sealed months.
+4. A test that the reader returns the same rows across the split as before it,
+   and that a row is never dropped.
+5. Report the resulting sizes in a receipt.
+
 ## 4. WHAT MUST NOT REGRESS (added to the 09-09 and 09-10 lists)
 
 9. **A model swap opens a new arm; it never updates an existing lane's number.**
