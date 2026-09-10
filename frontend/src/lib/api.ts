@@ -1,4 +1,26 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * Where the API lives.
+ *
+ * In the packaged desktop app: **SAME ORIGIN, always.** FastAPI serves both the
+ * pages and `/api/*` from one process on a port the shell picks at launch, and
+ * every byte of data the app needs is already on this machine.
+ *
+ * This is not a preference, it is a bug fix. `NEXT_PUBLIC_*` is INLINED by Next
+ * at build time, so `.env.local`'s
+ * `NEXT_PUBLIC_API_URL=https://aegis-finance-production.up.railway.app` was
+ * compiled into the exported bundle: the desktop build's control pages were
+ * same-origin (they use `lib/control-api.ts`) while every other page in the app
+ * called Railway from a `127.0.0.1:<port>` origin — slow when the server is
+ * cold, cross-origin, and billable. Reported 2026-09-10 as "the app has API
+ * fetch error ... everything on the local model should be on the pc".
+ *
+ * The desktop flag is set by `next.config.ts` under `AEGIS_DESKTOP_BUILD=1`,
+ * which also blanks `NEXT_PUBLIC_API_URL` so a stale value cannot leak back in.
+ */
+export const API_BASE =
+  process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1"
+    ? ""
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Backend serves stale-while-revalidate, so a healthy response is fast; a
 // request stuck this long means a cold recompute and should fail visibly

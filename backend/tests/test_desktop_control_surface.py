@@ -370,3 +370,76 @@ def test_the_shell_finds_the_checkout_from_source(monkeypatch) -> None:
     monkeypatch.setattr(ad.sys, "frozen", False, raising=False)
     root = ad.repo_root()
     assert root is not None and (root / "backend").is_dir() and (root / "scripts").is_dir()
+
+
+# ------------------------------------------------- no console windows on screen
+
+DESKTOP_PATH_MODULES = (
+    "backend/services/llama_server.py",
+    "backend/routers/control.py",
+    "desktop/aegis_desktop.py",
+    "desktop/make_shortcut.py",
+)
+
+
+def test_nothing_on_the_desktop_path_spawns_a_visible_console():
+    """Murat, 2026-09-10, on the packaged app: "random cmds popup and close".
+
+    `AegisDesktop.exe` is built with `console=False`, so it has no console of its
+    own -- and Windows gives any CONSOLE subprocess launched from such a process
+    a brand-new console WINDOW. `netstat`, `tasklist`, `taskkill` and
+    `nvidia-smi` are all console programs, and three of them run on the Services
+    page's three-second poll (`pid_on_port`, `pid_alive`, `vram`). That is three
+    black windows flashing every three seconds.
+
+    `CREATE_NO_WINDOW` is a per-call keyword, easy to add to nine sites and just
+    as easy to forget on the tenth -- so it lives in `quiet_subprocess` and this
+    test forbids calling `subprocess` directly on the desktop path.
+    """
+    offenders = []
+    for rel in DESKTOP_PATH_MODULES:
+        tree = ast.parse((REPO / rel).read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                    and node.func.attr in {"run", "Popen", "call", "check_output"}
+                    and getattr(node.func.value, "id", "") == "subprocess"):
+                offenders.append(f"{rel}:{node.lineno}")
+    assert not offenders, (
+        "these call subprocess directly and will flash a console window in the "
+        f"packaged app; use backend.services.quiet_subprocess: {offenders}")
+
+
+def test_the_quiet_helper_always_sets_the_no_window_flag(monkeypatch):
+    from backend.services import quiet_subprocess as qsp
+
+    seen: dict = {}
+
+    def fake_run(args, **kw):
+        seen.update(kw)
+        return None
+
+    monkeypatch.setattr(qsp.subprocess, "run", fake_run)
+    qsp.run(["cmd"], timeout=1)
+    assert seen["shell"] is False
+    assert seen["creationflags"] & qsp.CREATE_NO_WINDOW == qsp.CREATE_NO_WINDOW
+
+
+def test_the_quiet_helper_preserves_extra_creation_flags(monkeypatch):
+    """The model server needs its OWN process group so a stop reaches it and not
+    the backend. Suppressing the window must not drop that."""
+    from backend.services import quiet_subprocess as qsp
+
+    seen: dict = {}
+    monkeypatch.setattr(qsp.subprocess, "Popen", lambda a, **kw: seen.update(kw))
+    qsp.popen(["cmd"], creationflags=qsp.NEW_PROCESS_GROUP)
+    assert seen["creationflags"] & qsp.CREATE_NO_WINDOW == qsp.CREATE_NO_WINDOW
+    assert seen["creationflags"] & qsp.NEW_PROCESS_GROUP == qsp.NEW_PROCESS_GROUP
+
+
+def test_the_quiet_helper_refuses_a_shell():
+    """Refused, not silently overridden: a shell invocation here is a defect and
+    quietly flipping it would hide the mistake."""
+    from backend.services import quiet_subprocess as qsp
+
+    with pytest.raises(ValueError):
+        qsp.run(["cmd"], shell=True)

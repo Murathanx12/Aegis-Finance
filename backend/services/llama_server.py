@@ -46,6 +46,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from backend.services import quiet_subprocess as qsp
+
 REPO = Path(__file__).resolve().parents[2]
 
 try:                                            # config is the home for parameters
@@ -160,8 +162,8 @@ def pid_on_port(port: int = LLAMA_PORT) -> int | None:
             pass
     if sys.platform == "win32":
         try:
-            out = subprocess.run(["netstat", "-ano", "-p", "TCP"], capture_output=True,
-                                 text=True, timeout=10, shell=False).stdout
+            out = qsp.run(["netstat", "-ano", "-p", "TCP"], capture_output=True,
+                          text=True, timeout=10).stdout
         except (OSError, subprocess.SubprocessError):
             return None
         for line in out.splitlines():
@@ -180,8 +182,8 @@ def pid_alive(pid: int) -> bool:
         return False
     if sys.platform == "win32":
         try:
-            out = subprocess.run(["tasklist", "/FI", f"PID eq {int(pid)}", "/NH"],
-                                 capture_output=True, text=True, timeout=10, shell=False).stdout
+            out = qsp.run(["tasklist", "/FI", f"PID eq {int(pid)}", "/NH"],
+                          capture_output=True, text=True, timeout=10).stdout
         except (OSError, subprocess.SubprocessError):
             return False
         return str(int(pid)) in out
@@ -202,9 +204,9 @@ def vram() -> dict | None:
     if not exe:
         return None
     try:
-        out = subprocess.run([exe, "--query-gpu=memory.used,memory.total,name",
-                              "--format=csv,noheader,nounits"],
-                             capture_output=True, text=True, timeout=10, shell=False).stdout.strip()
+        out = qsp.run([exe, "--query-gpu=memory.used,memory.total,name",
+                       "--format=csv,noheader,nounits"],
+                      capture_output=True, text=True, timeout=10).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return None
     line = out.splitlines()[0] if out else ""
@@ -303,13 +305,10 @@ def start(wait_s: float = 90.0) -> dict:
         cmd += ["--n-cpu-moe", str(LLAMA_N_CPU_MOE)]
     log = LLAMA_HOME / "server.log"
     log.parent.mkdir(parents=True, exist_ok=True)
-    flags = 0
-    if sys.platform == "win32":
-        # own process group so a stop reaches the server and not this backend
-        flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0)
     with log.open("a", encoding="utf-8") as fh:
-        proc = subprocess.Popen(cmd, stdout=fh, stderr=subprocess.STDOUT,  # noqa: S603 - fixed argv, shell=False
-                                shell=False, creationflags=flags, cwd=str(LLAMA_HOME))
+        # its OWN process group, so a stop reaches the server and not this backend
+        proc = qsp.popen(cmd, stdout=fh, stderr=subprocess.STDOUT,
+                         creationflags=qsp.NEW_PROCESS_GROUP, cwd=str(LLAMA_HOME))
     _write_owner({"pid": proc.pid, "started_utc": _now(), "model": LLAMA_MODEL.name,
                   "cmd": cmd, "port": LLAMA_PORT})
     if wait_s <= 0:
@@ -369,8 +368,8 @@ def stop(*, allow_foreign: bool = False, grace_s: float = STOP_GRACE_S) -> dict:
     escalated = False
     try:
         if sys.platform == "win32":
-            subprocess.run(["taskkill", "/PID", str(int(pid))], capture_output=True,  # noqa: S603/S607
-                           text=True, timeout=15, shell=False)
+            qsp.run(["taskkill", "/PID", str(int(pid))], capture_output=True,
+                    text=True, timeout=15)
         else:
             os.kill(int(pid), signal.SIGTERM)
     except (OSError, subprocess.SubprocessError) as exc:
@@ -382,8 +381,8 @@ def stop(*, allow_foreign: bool = False, grace_s: float = STOP_GRACE_S) -> dict:
         escalated = True
         try:
             if sys.platform == "win32":
-                subprocess.run(["taskkill", "/PID", str(int(pid)), "/F"], capture_output=True,  # noqa: S603/S607
-                               text=True, timeout=15, shell=False)
+                qsp.run(["taskkill", "/PID", str(int(pid)), "/F"], capture_output=True,
+                        text=True, timeout=15)
             else:
                 os.kill(int(pid), signal.SIGKILL)
         except (OSError, subprocess.SubprocessError) as exc:

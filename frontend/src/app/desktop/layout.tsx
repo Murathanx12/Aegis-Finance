@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Activity, MessageSquare, Moon, Server } from "lucide-react";
+import { DesktopGuide } from "@/components/desktop/guide";
 import { cn } from "@/lib/utils";
 
 /**
@@ -37,7 +38,7 @@ export default function DesktopLayout({ children }: { children: React.ReactNode 
         </p>
       </div>
 
-      <nav className="flex flex-wrap gap-1 border-b border-border pb-2">
+      <nav className="flex flex-wrap items-center gap-1 border-b border-border pb-2">
         {TABS.map((t) => {
           const active = pathname === t.href;
           const Icon = t.icon;
@@ -57,6 +58,11 @@ export default function DesktopLayout({ children }: { children: React.ReactNode 
             </Link>
           );
         })}
+        {/* The first-run guide, and the only way back to it. A dialog that can
+            be seen exactly once is a dialog nobody can re-read. */}
+        <div className="ml-auto">
+          <DesktopGuide />
+        </div>
       </nav>
 
       {children}

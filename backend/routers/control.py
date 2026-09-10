@@ -40,6 +40,8 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
 
+from backend.services import quiet_subprocess as qsp  # noqa: E402
+
 router = APIRouter(prefix="/api/control", tags=["control"])
 
 def _repo_root() -> Path:
@@ -192,8 +194,8 @@ def _alive(pid: int) -> bool:
         return False
     try:
         if os.name == "nt":
-            r = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"],
-                               capture_output=True, text=True, timeout=10, shell=False)
+            r = qsp.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"],
+                        capture_output=True, text=True, timeout=10)
             return str(pid) in (r.stdout or "")
         os.kill(pid, 0)
         return True
@@ -298,8 +300,8 @@ def run_job(job: str, hours: float | None = None, run: int | None = None) -> dic
     log = NIGHT_DIR / f"control_{job}_{int(time.time())}.log"
     env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"}
     with log.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen(child_argv(args), cwd=str(REPO), stdout=fh,
-                                stderr=subprocess.STDOUT, env=env, shell=False)
+        proc = qsp.popen(child_argv(args), cwd=str(REPO), stdout=fh,
+                         stderr=subprocess.STDOUT, env=env)
     rec = {"pid": proc.pid, "job": job, "argv": args, "log": str(log), "started_utc": _now()}
     _run_path(proc.pid).write_text(json.dumps(rec, indent=1), encoding="utf-8")
     return {"started": True, **rec}
@@ -315,8 +317,8 @@ def run_night(hours: float = 4.0) -> dict:
     log = NIGHT_DIR / f"control_night_{int(time.time())}.log"
     env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"}
     with log.open("w", encoding="utf-8") as fh:
-        proc = subprocess.Popen(child_argv(["-m", "scripts.night_factory", "--hours", str(float(hours))]),
-                                cwd=str(REPO), stdout=fh, stderr=subprocess.STDOUT, env=env, shell=False)
+        proc = qsp.popen(child_argv(["-m", "scripts.night_factory", "--hours", str(float(hours))]),
+                         cwd=str(REPO), stdout=fh, stderr=subprocess.STDOUT, env=env)
     rec = {"pid": proc.pid, "job": "NIGHT_QUEUE", "argv": ["-m", "scripts.night_factory"],
            "log": str(log), "started_utc": _now()}
     _run_path(proc.pid).write_text(json.dumps(rec, indent=1), encoding="utf-8")
@@ -343,8 +345,8 @@ def stop(pid: int, force_after_s: float = 0.0) -> dict:
     if force_after_s > 0 and _alive(pid):
         try:
             if os.name == "nt":
-                subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
-                               capture_output=True, timeout=20, shell=False)
+                qsp.run(["taskkill", "/PID", str(pid), "/T", "/F"],
+                        capture_output=True, timeout=20)
             else:
                 os.kill(pid, signal.SIGTERM)
             killed = True
@@ -591,6 +593,32 @@ def fleet() -> dict:
     except Exception as exc:  # noqa: BLE001
         return {"utc": _now(), "error": f"{type(exc).__name__}: {exc}", "lanes": [],
                 "note": "the NAV table could not be read; nothing is inferred from that"}
+    if not series:
+        # No local NAV rows. The lanes are marked to market by the remote
+        # deployment, so this is the ordinary state of a local checkout -- say
+        # so, and offer the cached snapshot if one was pulled, rather than
+        # rendering an empty table that looks like a flat programme.
+        snap = paper_snapshot()
+        return {
+            "utc": _now(), "lanes": [], "source": "none",
+            "local_nav_rows": 0,
+            "snapshot": snap,
+            # the SPY correction travels even when there is nothing to compare:
+            # the page heading says "vs SPY" in every state, so the payload has
+            # to carry the correction in every state too
+            "benchmark": {"lane": FLEET_BENCHMARK_LANE, "present": False, "n_days": 0,
+                          "since_inception_pct": None,
+                          "caveat": ("no local NAV rows to difference against. Note also that the "
+                                     "benchmark is an EQUAL-WEIGHT CONTROL LANE, not SPY -- a "
+                                     "lane-relative number printed under a 'vs SPY' heading is a "
+                                     "benchmark-relative number in an absolute structure.")},
+            "min_days_for_estimable": FLEET_MIN_DAYS,
+            "note": ("This machine has no paper NAV rows: the lanes are marked to market by the "
+                     "remote deployment. That is not a result and must not be read as one. "
+                     "Pull once with POST /api/control/paper-snapshot/refresh (one request, "
+                     "cached to disk, nothing polls it) -- or ignore it: every other page, "
+                     "the night factory and the local model work entirely offline."),
+        }
     bench_series = series.get(FLEET_BENCHMARK_LANE)
     bench = _daily_returns(bench_series) if bench_series else None
     lanes = [_excess_row(k, v, bench) for k, v in sorted(series.items())
@@ -616,3 +644,89 @@ def fleet() -> dict:
                  "Where `estimable` is false the mean is not an estimate of anything and must "
                  "not be rendered as one."),
     }
+
+
+# --------------------------------------------------------------------------
+# Paper-account data: LOCAL first, remote only when asked.
+#
+# Murat, 2026-09-10: "everything on the local model should be on the pc ...
+# it can pull paper account data from railway maybe i dont want to increase the
+# expense on the servers."
+#
+# So: the fleet endpoint reads the LOCAL NAV table and nothing else. The paper
+# lanes are marked to market by the Railway deployment, so a local checkout has
+# no rows -- and rather than silently reaching across the network on every page
+# load, this is ONE endpoint the user clicks, which makes ONE request and caches
+# the answer to disk. The fleet payload then says which it used and how old it is.
+#
+# The cost is stated in the response rather than implied: one HTTP GET per
+# click, no polling, no background sync.
+# --------------------------------------------------------------------------
+
+#: the deployment that marks the paper lanes to market. Read-only; no orders.
+PAPER_SOURCE_URL = os.getenv(
+    "AEGIS_PAPER_SOURCE_URL", "https://aegis-finance-production.up.railway.app")
+PAPER_CACHE = REPO / "backend" / "data" / "optimus" / "paper_snapshot.json"
+
+
+@router.get("/paper-snapshot")
+def paper_snapshot() -> dict:
+    """What the last pull returned, and how old it is. Never fetches."""
+    if not PAPER_CACHE.exists():
+        return {"utc": _now(), "cached": False, "source": PAPER_SOURCE_URL,
+                "note": ("no snapshot on disk. The paper lanes are marked to market by the "
+                         "remote deployment, so a local checkout has no NAV rows until you "
+                         "pull once via POST /api/control/paper-snapshot/refresh.")}
+    try:
+        blob = json.loads(PAPER_CACHE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {"utc": _now(), "cached": False, "error": f"{type(exc).__name__}: {exc}",
+                "path": str(PAPER_CACHE)}
+    fetched = blob.get("fetched_utc")
+    age_h = None
+    if fetched:
+        try:
+            age_h = round((datetime.now(timezone.utc)
+                           - datetime.fromisoformat(fetched)).total_seconds() / 3600.0, 2)
+        except ValueError:
+            age_h = None
+    return {"utc": _now(), "cached": True, "fetched_utc": fetched, "age_hours": age_h,
+            "source": blob.get("source"), "lanes": blob.get("lanes") or {},
+            "inception_date": blob.get("inception_date"), "age_days": blob.get("age_days"),
+            "note": "a cached read. Nothing was fetched to answer this."}
+
+
+@router.post("/paper-snapshot/refresh")
+def paper_snapshot_refresh(timeout_s: float = 30.0) -> dict:
+    """Pull the paper lanes once, from the deployment that marks them.
+
+    ONE request. No polling, no background sync, no orders -- this reads
+    `/api/health/full` and keeps the `track_record` block. The user asked not to
+    add server expense, so the cost is exactly one GET per click and the
+    response says so.
+    """
+    _require_enabled()
+    import urllib.error
+    import urllib.request
+    url = f"{PAPER_SOURCE_URL.rstrip('/')}/api/health/full"
+    started = time.time()
+    try:
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=timeout_s) as fh:   # noqa: S310 - fixed https host
+            payload = json.loads(fh.read())
+    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError) as exc:
+        return {"ok": False, "utc": _now(), "source": url,
+                "error": f"{type(exc).__name__}: {exc}"[:300],
+                "note": ("nothing was cached and nothing local was changed. The app works "
+                         "without this; only the paper-lane figures need it.")}
+    tr = payload.get("track_record") or {}
+    lanes = tr.get("lanes") or {}
+    blob = {"fetched_utc": _now(), "source": url, "lanes": lanes,
+            "inception_date": tr.get("inception_date"), "age_days": tr.get("age_days"),
+            "requests_made": 1}
+    PAPER_CACHE.parent.mkdir(parents=True, exist_ok=True)
+    PAPER_CACHE.write_text(json.dumps(blob, indent=1), encoding="utf-8")
+    return {"ok": True, "utc": _now(), "source": url, "n_lanes": len(lanes),
+            "elapsed_s": round(time.time() - started, 2), "cached_to": str(PAPER_CACHE),
+            "requests_made": 1,
+            "note": "one GET. Nothing polls this; it refreshes only when you ask."}

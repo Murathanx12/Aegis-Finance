@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FunctionBadge } from "@/components/function-badge";
 import { useWatchlist, WatchlistEntry } from "@/hooks/use-watchlist";
-import { getWorldMarkets, WorldMarketRow } from "@/lib/api";
+import { API_BASE, getWorldMarkets, WorldMarketRow } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Plus, X, Star, ArrowRight } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// API_BASE is imported, not redeclared. This page had its own copy, and the
+// desktop build blanks NEXT_PUBLIC_API_URL -- so the local copy fell through to
+// a hard-coded :8000 while the shell serves on a port the OS picks at launch,
+// and this one page would have failed every fetch in the packaged app.
 
 export default function WatchlistPage() {
   const { entries, ready, add, remove } = useWatchlist();

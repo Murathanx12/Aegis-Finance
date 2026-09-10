@@ -22,7 +22,17 @@ const nextConfig: NextConfig = DESKTOP_BUILD
       trailingSlash: true,
       // Reaches the browser bundle: the desktop pages must call the SAME origin
       // that served them (the shell picks a free port), not an absolute :8000.
-      env: { NEXT_PUBLIC_AEGIS_DESKTOP_BUILD: "1" },
+      //
+      // `NEXT_PUBLIC_API_URL` is blanked here on purpose. Next INLINES every
+      // `NEXT_PUBLIC_*` at build time, so `.env.local`'s Railway URL was
+      // compiled into the exported bundle and every page outside `/desktop`
+      // called Railway from the packaged app — the "API fetch error" of
+      // 2026-09-10. Blanking it at the config level means no stale `.env` on
+      // any machine can put a remote host back into a desktop build.
+      env: {
+        NEXT_PUBLIC_AEGIS_DESKTOP_BUILD: "1",
+        NEXT_PUBLIC_API_URL: "",
+      },
     }
   : {
       output: "standalone",

@@ -30,6 +30,10 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from backend.services import quiet_subprocess as qsp  # noqa: E402
 DIST_EXE = REPO / "dist" / "AegisDesktop" / "AegisDesktop.exe"
 ICON = REPO / "desktop" / "assets" / "aegis.ico"
 SHORTCUT_NAME = "Aegis.lnk"
@@ -81,8 +85,8 @@ def create(target: Path, icon: Path, dest: Path, *, force: bool = False) -> dict
         "$l.Description = 'Aegis - local research desktop'; "
         "$l.Save()"
     )
-    r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
-                       capture_output=True, text=True, timeout=60, shell=False)
+    r = qsp.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
+                capture_output=True, text=True, timeout=60)
     if r.returncode != 0 or not dest.exists():
         return {"ok": False, "action": "failed", "reason": (r.stderr or r.stdout or "").strip()[:400]}
     return {"ok": True, "action": "created", "shortcut": str(dest), "target": str(target),
@@ -93,8 +97,8 @@ def _target_of(lnk: Path) -> str | None:
     ps = ("$s = New-Object -ComObject WScript.Shell; "
           f"$s.CreateShortcut('{lnk}').TargetPath")
     try:
-        r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
-                           capture_output=True, text=True, timeout=60, shell=False)
+        r = qsp.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
+                    capture_output=True, text=True, timeout=60)
     except (OSError, subprocess.SubprocessError):
         return None
     return (r.stdout or "").strip() or None
