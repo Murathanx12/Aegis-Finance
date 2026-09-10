@@ -557,3 +557,71 @@ def test_binding_reports_failure_rather_than_claiming_success() -> None:
     the child in fact survived, which is worse than no binding at all."""
     out = ls.bind_lifetime(0)                      # PID 0 can never be opened
     assert out["bound"] is False and out.get("reason")
+
+
+# ------------------------------------------------- the splash must swap to the app
+
+def test_the_page_swap_runs_after_the_gui_loop_starts() -> None:
+    """Reported 2026-09-10 as "the exe didnt open timed out". The engine was
+    never the problem: the app's own log shows the backend answering in 2.30 s
+    on both launches, and one of them closed cleanly and stopped the model
+    server. The window simply never left the splash.
+
+    `when_ready` ran on a raw `threading.Thread` started BEFORE
+    `webview.start()`. Health came back in about two seconds and `load_url` was
+    called into a window whose GUI loop did not exist yet, so the call went
+    nowhere and the splash counted up forever -- which reads exactly like a
+    hang. `webview.start(func)` is pywebview's documented contract: the function
+    runs once the window exists.
+    """
+    code = executable_source(REPO / "desktop" / "aegis_desktop.py")
+    assert "webview.start(when_ready)" in code, (
+        "the readiness callback must be handed to webview.start(), not run on a "
+        "thread that races the GUI loop")
+    assert "threading.Thread(target=when_ready" not in code
+
+
+def test_the_page_swap_cannot_fail_silently() -> None:
+    """An exception in a daemon thread of a `console=False` build goes to a
+    stderr that does not exist. The first version had no try/except and logged
+    nothing about health or the load, so the log could not tell "engine slow"
+    from "window stuck" -- which is the whole diagnosis."""
+    src = (REPO / "desktop" / "aegis_desktop.py").read_text(encoding="utf-8")
+    body = src[src.index("def when_ready"):src.index("stopped_once")]
+    assert "except Exception" in body, "a silent splash is the worst outcome"
+    assert "health_ok=%s" in body, "the health result must reach the log"
+    assert 'log.info("loaded %s"' in body, "the page swap must reach the log"
+
+
+def test_the_shell_points_data_dir_at_backend_data_not_at_optimus() -> None:
+    """`config.DATA_DIR` IS `AEGIS_DATA_DIR`, and `OPTIMUS_LEDGER_DIR` is
+    `DATA_DIR / "optimus"`. Setting the variable one level too deep produced
+    `backend/data/optimus/optimus/` with copies of `beliefs.jsonl` and
+    `predictions.jsonl` in it.
+
+    Found 2026-09-10 by noticing a stray untracked directory -- nothing failed,
+    because writing real records to a plausible wrong path is silent by
+    construction. That is the same failure family as the app's empty database
+    inside the bundle: a path that resolves somewhere believable and wrong.
+    """
+    code = executable_source(REPO / "desktop" / "aegis_desktop.py")
+    assert 'str(root / "backend" / "data")' in code
+    assert 'AEGIS_DATA_DIR", str(root / "backend" / "data" / "optimus")' not in code
+
+
+def test_data_dir_and_ledger_dir_do_not_double_up(monkeypatch, tmp_path: Path) -> None:
+    """The invariant itself, not just the caller: pointing AEGIS_DATA_DIR at
+    `<x>/backend/data` must put the ledger at `<x>/backend/data/optimus`."""
+    import importlib
+
+    data = tmp_path / "backend" / "data"
+    data.mkdir(parents=True)
+    monkeypatch.setenv("AEGIS_DATA_DIR", str(data))
+    monkeypatch.setenv("AEGIS_IGNORE_DOTENV", "1")
+    cfg = importlib.reload(importlib.import_module("backend.config"))
+    try:
+        assert Path(cfg.OPTIMUS_LEDGER_DIR) == data / "optimus"
+        assert "optimus" not in Path(cfg.DATA_DIR).name
+    finally:
+        monkeypatch.delenv("AEGIS_DATA_DIR", raising=False)
+        importlib.reload(cfg)

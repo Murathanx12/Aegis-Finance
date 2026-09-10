@@ -174,7 +174,13 @@ def start_backend(port: int) -> threading.Thread:
     root = repo_root()
     if root:
         os.environ.setdefault("AEGIS_REPO_ROOT", str(root))
-        os.environ.setdefault("AEGIS_DATA_DIR", str(root / "backend" / "data" / "optimus"))
+        # `backend/data`, NOT `backend/data/optimus`. `config.DATA_DIR` is this
+        # value and `OPTIMUS_LEDGER_DIR` is `DATA_DIR / "optimus"`, so pointing
+        # it one level too deep created `backend/data/optimus/optimus/` and put
+        # `beliefs.jsonl` and `predictions.jsonl` in it. Found 2026-09-10 by a
+        # stray untracked directory, not by anything failing -- writing real
+        # records to a plausible wrong path is silent by construction.
+        os.environ.setdefault("AEGIS_DATA_DIR", str(root / "backend" / "data"))
 
     def run() -> None:
         import uvicorn
@@ -301,19 +307,50 @@ def main(argv: list[str] | None = None) -> int:
                                    min_size=(900, 620), background_color="#0b0d10")
 
     def when_ready() -> None:
-        ok, waited = wait_for_health(port)
-        report["health_ok"] = ok
-        report["cold_start_s"] = waited
-        if ok:
-            window.load_url(f"http://127.0.0.1:{port}{a.page}")
-        else:
-            window.load_html(
-                "<body style='background:#0b0d10;color:#e6e8ea;font:14px system-ui;padding:32px'>"
-                f"<h2>The engine did not answer within the timeout ({waited}s).</h2>"
-                "<p>Nothing was started that needs stopping. Run "
-                "<code>python -m desktop.aegis_desktop --headless</code> from the repo to see why.</p>")
+        """Swap the splash for the app. Runs AFTER the GUI loop is up.
 
-    threading.Thread(target=when_ready, name="aegis-splash", daemon=True).start()
+        2026-09-10, reported as "the exe didnt open timed out". The engine was
+        never the problem -- the log shows the backend answering in 2.3 s on
+        both launches, and one of them closed cleanly and stopped the model. The
+        window simply never left the splash.
+
+        This used to run on a raw `threading.Thread` started BEFORE
+        `webview.start()`. Health came back in about two seconds, `load_url` was
+        called into a window whose GUI loop had not been created yet, and the
+        call went nowhere. The splash then counted up forever, which reads
+        exactly like a hang.
+
+        `webview.start(func)` is the documented contract: pywebview runs `func`
+        on its own thread once the window exists. And the body is wrapped,
+        because an exception in a daemon thread of a `console=False` build goes
+        to a stderr that does not exist -- which is why the first version of
+        this failed in total silence.
+        """
+        try:
+            ok, waited = wait_for_health(port)
+            report["health_ok"] = ok
+            report["cold_start_s"] = waited
+            log.info("health_ok=%s after %.2fs", ok, waited)
+            if ok:
+                url = f"http://127.0.0.1:{port}{a.page}"
+                window.load_url(url)
+                log.info("loaded %s", url)
+            else:
+                log.error("health never answered within %.0fs; showing the failure page", waited)
+                window.load_html(
+                    "<body style='background:#0b0d10;color:#e6e8ea;font:14px system-ui;padding:32px'>"
+                    f"<h2>The engine did not answer within the timeout ({waited}s).</h2>"
+                    f"<p>Nothing was started that needs stopping.</p>"
+                    f"<p>The app's own log is at<br><code>{_log_path()}</code></p>")
+        except Exception as exc:  # noqa: BLE001 - a silent splash is the worst outcome
+            log.exception("when_ready failed: %s", exc)
+            try:
+                window.load_html(
+                    "<body style='background:#0b0d10;color:#e6e8ea;font:14px system-ui;padding:32px'>"
+                    f"<h2>The window could not load the app.</h2><pre>{type(exc).__name__}: {exc}</pre>"
+                    f"<p>Log: <code>{_log_path()}</code></p>")
+            except Exception:  # noqa: BLE001
+                pass
 
     stopped_once: list[bool] = []
 
@@ -347,7 +384,11 @@ def main(argv: list[str] | None = None) -> int:
     window.events.closing += lambda: shutdown("window-closing")
     atexit.register(lambda: shutdown("atexit"))
     try:
-        webview.start()
+        # `webview.start(func)` -- the func runs on pywebview's own thread once
+        # the window exists. Starting it as a bare thread beforehand is what put
+        # `load_url` into a window that did not exist yet and left the splash up
+        # forever.
+        webview.start(when_ready)
     finally:
         shutdown("after-start")
     return 0
