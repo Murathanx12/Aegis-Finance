@@ -51,6 +51,17 @@ backend/data/aegis_pi.db-shm
 
 # APScheduler job store (binary runtime state — churns on every scheduler run)
 backend/data/apscheduler_jobs.db
+# 2026-09-10: the same two runtime databases, at the path they ACTUALLY live at
+# now. `AEGIS_DATA_DIR` points the app at `backend/data/optimus/`, so the rules
+# above -- written for `backend/data/` -- stopped matching, and a `git add -A`
+# swept both binaries into a43b351. A gitignore rule that names a path is only
+# as good as the last time the path moved.
+backend/data/optimus/aegis_pi.db
+backend/data/optimus/aegis_pi.db-wal
+backend/data/optimus/aegis_pi.db-shm
+backend/data/optimus/apscheduler_jobs.db
+backend/data/optimus/apscheduler_jobs.db-wal
+backend/data/optimus/apscheduler_jobs.db-shm
 backend/data/apscheduler_jobs.db-wal
 backend/data/apscheduler_jobs.db-shm
 
