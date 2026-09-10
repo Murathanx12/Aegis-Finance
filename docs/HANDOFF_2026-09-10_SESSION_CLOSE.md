@@ -18,8 +18,8 @@ research half, in detail) → `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.m
 | independent selectors with evidence | **one** — unchanged; still the reason no router is permitted |
 | new actionable finding | **the night search was replaying itself**: 541/541 genome overlap between consecutive G3 runs |
 | LLM spend | **$0.00** — every job local |
-| tests | fast suite **7,957 passed / 20 skipped / 0 failed** (7,845 at session start) |
-| CI | green through `202b421`; later commits are docs, gitignore and desktop code |
+| tests | fast suite **7,966 passed / 20 skipped / 0 failed** (7,845 at session start) |
+| CI | **green on `96f1204`**, the final commit. It went RED once, on `e50f46d`, from a test I wrote that reloaded `backend.config` — see defect #12 |
 | what shipped | **Aegis Desktop**: one-click app, local-only, model server the OS cannot let outlive it |
 
 ---
@@ -60,7 +60,7 @@ research half, in detail) → `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.m
 
 ---
 
-## 2. ELEVEN DEFECTS, AND NOT ONE WAS CAUGHT BY A FAILING TEST
+## 2. TWELVE DEFECTS, AND NOT ONE WAS CAUGHT BY A TEST THAT WAS ALREADY FAILING
 
 | # | defect | how it was found |
 |---|---|---|
@@ -75,6 +75,7 @@ research half, in detail) → `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.m
 | 9 | the vendored schema was **dropped** from the bundle | smoke test, failed loudly with the path |
 | 10 | the **ownership note** was written inside the bundle → the model server outlived the app | **Murat closed the app**; diagnosed from the process table |
 | 11 | `AEGIS_DATA_DIR` one level too deep → `optimus/optimus/` | a stray untracked directory at session close |
+| 12 | **mine, introduced today**: a test that reloaded `backend.config` rebound `LLM_PRICE_PER_MTOK`, breaking a later test's IDENTITY assertion | CI, on the commit that claimed the session was closed |
 
 **The pattern.** Five of these (#8, #9, #10, #11, and the frozen `-m` spawn) are
 one defect wearing different clothes: **a path that resolves somewhere
@@ -82,6 +83,14 @@ believable and wrong inside the frozen build**. I fixed the first and did not
 generalise, so Murat found the third. It is now a category to check, and the app
 writes `backend/data/optimus/aegis_desktop.log` so the next one is a ten-second
 read rather than a forensic dig.
+
+**Defect #12 is the one to read twice.** It is the only one I introduced, and I
+had flagged the risk to myself while writing it -- "reloading config mid-suite
+could corrupt state for other tests" -- then took the short path anyway. It is
+order-dependent, so it passed locally and failed on CI. That is the same
+signature as #7 (the receipt overwrite): a failure visible only under one
+interleaving, and easy to re-run and call flaky. Fixed by checking the invariant
+in a subprocess, which touches no in-process module state.
 
 **Two more worth carrying.** #10 also needed a *second* fix: with ownership
 repaired, a hard kill still leaked, because every shutdown hook runs user code
