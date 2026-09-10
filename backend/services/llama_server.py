@@ -48,7 +48,27 @@ from pathlib import Path
 
 from backend.services import quiet_subprocess as qsp
 
-REPO = Path(__file__).resolve().parents[2]
+def _repo_root() -> Path:
+    """The checkout, honouring `AEGIS_REPO_ROOT` the way the control router does.
+
+    2026-09-10, found the hard way. `Path(__file__).parents[2]` is `_internal`
+    inside the frozen app, so the packaged build wrote its ownership note into
+    the BUNDLE while every other process -- and every later run of the app --
+    looked for it in the repo. The consequence was the exact failure this module
+    exists to prevent: Murat closed the app and llama-server PID 8012 kept
+    running with 5,495 MiB of VRAM mapped. Its parent process was the app, so it
+    was unambiguously ours; without a readable owner file `status()` called it
+    `foreign` and `stop_if_owned()` correctly, uselessly, left it alone.
+
+    A guard that reads state from a path the writer cannot reach is not a guard.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parents[2]
+
+
+REPO = _repo_root()
 
 try:                                            # config is the home for parameters
     from backend import config as _cfg
@@ -277,7 +297,120 @@ def status() -> dict:
 
 # ------------------------------------------------------------------ start/stop
 
-def start(wait_s: float = 90.0) -> dict:
+# ------------------------------------------------------------ lifetime binding
+
+#: The Windows job object that ties the model server's life to ours. Held at
+#: module scope so the handle stays open for the life of the process -- closing
+#: it is what triggers the kill, so a local variable would kill the server the
+#: moment `start()` returned.
+_JOB_HANDLE = None
+
+
+def bind_lifetime(pid: int) -> dict:
+    """Make the OS kill `pid` when THIS process dies, however it dies.
+
+    2026-09-10, measured after the first fix was not enough. The app registers a
+    shutdown on the window's `closing` event, on `atexit`, and on the return
+    from the window loop -- and NONE of them run when the process is terminated
+    rather than closed. Tested: `Stop-Process` on the packaged app left
+    llama-server up with 5,095 MiB still mapped, because `TerminateProcess`
+    executes no user code at all. A promise kept only on the tidy path is not
+    the promise that was asked for.
+
+    A job object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` moves the guarantee
+    into the kernel: when the last handle to the job closes -- which happens
+    when this process exits for ANY reason, including a hard kill, a crash, or
+    the power going -- Windows terminates every process in it.
+
+    Returns a dict rather than raising: failing to bind is worth reporting and
+    is not worth refusing to start a model server over. On POSIX this is a
+    no-op and says so.
+    """
+    global _JOB_HANDLE
+    if sys.platform != "win32":
+        return {"bound": False, "reason": "not Windows; the app stops it on exit instead"}
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        # ctypes defaults every restype to c_int, which TRUNCATES a 64-bit
+        # HANDLE. It happened to work here because the handles were small
+        # (348, 368), and that is exactly the kind of latent bug that only
+        # appears on a busier machine. Declared explicitly instead.
+        k32.CreateJobObjectW.restype = wintypes.HANDLE
+        k32.CreateJobObjectW.argtypes = [wintypes.LPVOID, wintypes.LPCWSTR]
+        k32.OpenProcess.restype = wintypes.HANDLE
+        k32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        k32.AssignProcessToJobObject.restype = wintypes.BOOL
+        k32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        k32.SetInformationJobObject.restype = wintypes.BOOL
+        k32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int,
+                                                wintypes.LPVOID, wintypes.DWORD]
+        k32.CloseHandle.argtypes = [wintypes.HANDLE]
+
+        class _BASIC(ctypes.Structure):
+            _fields_ = [("PerProcessUserTimeLimit", ctypes.c_int64),
+                        ("PerJobUserTimeLimit", ctypes.c_int64),
+                        ("LimitFlags", wintypes.DWORD),
+                        ("MinimumWorkingSetSize", ctypes.c_size_t),
+                        ("MaximumWorkingSetSize", ctypes.c_size_t),
+                        ("ActiveProcessLimit", wintypes.DWORD),
+                        ("Affinity", ctypes.POINTER(ctypes.c_ulong)),
+                        ("PriorityClass", wintypes.DWORD),
+                        ("SchedulingClass", wintypes.DWORD)]
+
+        class _IO(ctypes.Structure):
+            _fields_ = [("ReadOperationCount", ctypes.c_uint64),
+                        ("WriteOperationCount", ctypes.c_uint64),
+                        ("OtherOperationCount", ctypes.c_uint64),
+                        ("ReadTransferCount", ctypes.c_uint64),
+                        ("WriteTransferCount", ctypes.c_uint64),
+                        ("OtherTransferCount", ctypes.c_uint64)]
+
+        class _EXT(ctypes.Structure):
+            _fields_ = [("BasicLimitInformation", _BASIC),
+                        ("IoInfo", _IO),
+                        ("ProcessMemoryLimit", ctypes.c_size_t),
+                        ("JobMemoryLimit", ctypes.c_size_t),
+                        ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                        ("PeakJobMemoryUsed", ctypes.c_size_t)]
+
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000
+        JobObjectExtendedLimitInformation = 9
+        PROCESS_SET_QUOTA, PROCESS_TERMINATE = 0x0100, 0x0001
+
+        if _JOB_HANDLE is None:
+            h = k32.CreateJobObjectW(None, None)
+            if not h:
+                return {"bound": False, "reason": f"CreateJobObject failed ({ctypes.get_last_error()})"}
+            info = _EXT()
+            info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            if not k32.SetInformationJobObject(
+                    h, JobObjectExtendedLimitInformation,
+                    ctypes.byref(info), ctypes.sizeof(info)):
+                return {"bound": False,
+                        "reason": f"SetInformationJobObject failed ({ctypes.get_last_error()})"}
+            _JOB_HANDLE = h
+
+        ph = k32.OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, False, int(pid))
+        if not ph:
+            return {"bound": False, "reason": f"OpenProcess({pid}) failed ({ctypes.get_last_error()})"}
+        try:
+            ok = k32.AssignProcessToJobObject(_JOB_HANDLE, ph)
+            if not ok:
+                return {"bound": False,
+                        "reason": f"AssignProcessToJobObject failed ({ctypes.get_last_error()})"}
+        finally:
+            k32.CloseHandle(ph)
+        return {"bound": True,
+                "note": ("the OS will terminate the model server when this process exits, "
+                         "including on a hard kill -- no user code has to run")}
+    except Exception as exc:  # noqa: BLE001
+        return {"bound": False, "reason": f"{type(exc).__name__}: {exc}"}
+
+
+def start(wait_s: float = 90.0, bind: bool = True) -> dict:
     """Start the server, but only when the port is free.
 
     Refusing to start a second copy is not politeness: two servers means two
@@ -309,14 +442,16 @@ def start(wait_s: float = 90.0) -> dict:
         # its OWN process group, so a stop reaches the server and not this backend
         proc = qsp.popen(cmd, stdout=fh, stderr=subprocess.STDOUT,
                          creationflags=qsp.NEW_PROCESS_GROUP, cwd=str(LLAMA_HOME))
+    bound = bind_lifetime(proc.pid) if bind else {"bound": False, "reason": "bind=False"}
     _write_owner({"pid": proc.pid, "started_utc": _now(), "model": LLAMA_MODEL.name,
-                  "cmd": cmd, "port": LLAMA_PORT})
+                  "cmd": cmd, "port": LLAMA_PORT, "lifetime_bound": bound})
     if wait_s <= 0:
         # the desktop shell starts it and gets on with opening the window; a
         # multi-GB model loads while the splash is up. "starting" is a state,
         # and calling it "timeout" -- which the first build did -- reads as a
         # failure of a process that is loading perfectly well.
         return {"ok": True, "action": "starting", "pid": proc.pid, "ready": False,
+                "lifetime_bound": bound,
                 "note": "not waited on; poll /api/control/llama until ready is true",
                 "status": status()}
     deadline = time.time() + wait_s

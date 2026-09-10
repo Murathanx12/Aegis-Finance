@@ -29,7 +29,9 @@ model server, and it stops the one it started.
 from __future__ import annotations
 
 import argparse
+import atexit
 import json
+import logging
 import os
 import socket
 import sys
@@ -93,6 +95,39 @@ def repo_root() -> Path | None:
     return None
 
 
+#: Where the app writes what it did. A `console=False` build has nowhere for
+#: stdout to go, so without this the shutdown path -- the one thing Murat asked
+#: for -- is unobservable: it cannot be shown to work, only to have not visibly
+#: failed. Kept beside the repo so it survives a rebuild of `dist/`.
+def _log_path() -> Path:
+    # `repo_root()`, not `os.getenv("AEGIS_REPO_ROOT")`: the log is opened before
+    # `start_backend()` sets that variable, so reading the env here would put the
+    # log inside the bundle on exactly the frozen build it exists to explain.
+    base = repo_root() or REPO
+    d = base / "backend" / "data" / "optimus"
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+        return d / "aegis_desktop.log"
+    except OSError:
+        return Path.home() / "aegis_desktop.log"
+
+
+log = logging.getLogger("aegis.desktop")
+
+
+def _init_log() -> Path:
+    p = _log_path()
+    try:
+        h = logging.FileHandler(p, encoding="utf-8")
+        h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+        log.addHandler(h)
+        log.setLevel(logging.INFO)
+        log.propagate = False
+    except OSError:
+        pass
+    return p
+
+
 def free_port() -> int:
     """A port the OS just told us is free.
 
@@ -153,7 +188,7 @@ def start_backend(port: int) -> threading.Thread:
     return th
 
 
-def maybe_start_llama(enabled: bool = True) -> dict:
+def maybe_start_llama(enabled: bool = True, keep: bool = False) -> dict:
     if not enabled:
         return {"action": "skipped", "reason": "--no-llama"}
     try:
@@ -169,7 +204,13 @@ def maybe_start_llama(enabled: bool = True) -> dict:
         return {"action": "unavailable",
                 "reason": f"binary_present={st['binary_present']} model_present={st['model_present']}",
                 "model_path": st["model_path"], "binary_path": st["binary_path"]}
-    return ls.start(wait_s=0.0) | {"action_note": "started in the background; poll /api/control/llama"}
+    # `bind` ties the server's life to this process AT THE KERNEL, so it dies
+    # with the app however the app dies -- window close, crash, or Task Manager.
+    # Every shutdown hook in this file runs user code, and `TerminateProcess`
+    # runs none: measured, a force-kill left the server up with 5,095 MiB mapped.
+    # `--keep-llama` opts out, because then the server is meant to outlive us.
+    return ls.start(wait_s=0.0, bind=not keep) | {
+        "action_note": "started in the background; poll /api/control/llama"}
 
 
 def stop_llama_if_owned() -> dict:
@@ -221,11 +262,14 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
 
     t0 = time.time()
+    logfile = _init_log()
+    log.info("start argv=%s", sys.argv[1:])
     port = a.port or free_port()
     start_backend(port)
-    llama = maybe_start_llama(enabled=not a.no_llama)
+    llama = maybe_start_llama(enabled=not a.no_llama, keep=a.keep_llama)
 
-    report = {"utc": _now(), "port": port, "llama": llama}
+    report = {"utc": _now(), "port": port, "llama": llama, "log": str(logfile)}
+    log.info("backend on %s; llama=%s", port, json.dumps(llama, default=str)[:300])
 
     if a.headless or a.serve:
         ok, waited = wait_for_health(port)
@@ -271,20 +315,41 @@ def main(argv: list[str] | None = None) -> int:
 
     threading.Thread(target=when_ready, name="aegis-splash", daemon=True).start()
 
-    def on_closing() -> None:
-        # Murat 2026-09-10: auto-close the model server when the app shuts.
-        # `stop_if_owned` leaves a server Aegis did not start alone.
-        if not a.keep_llama:
-            out = stop_llama_if_owned()
-            print(json.dumps({"llama_stop": out}, default=str), flush=True)
+    stopped_once: list[bool] = []
 
-    window.events.closing += on_closing
-    webview.start()
-    # a belt-and-braces stop: `closing` does not fire on every platform/teardown
-    # path, and leaving 5 GB of VRAM mapped after the window is gone is the exact
-    # complaint this app was asked to fix
-    if not a.keep_llama:
-        stop_llama_if_owned()
+    def shutdown(where: str) -> None:
+        """Stop the model server we started. Idempotent, and it LOGS.
+
+        2026-09-10: the app was closed and llama-server PID 8012 stayed up with
+        5,495 MiB mapped. Its parent process was the app, so it was ours -- but
+        the frozen build had written its ownership note inside the bundle
+        (`llama_server.REPO` resolved to `_internal`), so nothing could read it
+        back and `stop_if_owned` saw a "foreign" server and left it alone.
+
+        The reason that took a forensic dig rather than a glance is that this
+        function used to `print()`, and a `console=False` build has nowhere for
+        stdout to go. An app whose shutdown path is invisible cannot be said to
+        work; it can only be said to have not visibly failed.
+        """
+        if a.keep_llama or stopped_once:
+            return
+        stopped_once.append(True)
+        try:
+            out = stop_llama_if_owned()
+        except Exception as exc:  # noqa: BLE001 - never block the app from closing
+            out = {"action": "error", "reason": f"{type(exc).__name__}: {exc}"}
+        log.info("shutdown(%s): %s", where, json.dumps(out, default=str))
+
+    # Three paths, because they do not all fire. `closing` is the normal one;
+    # the return from `webview.start()` covers a teardown that skips it; and
+    # atexit covers an interpreter exit that skips both. Idempotent, so belt and
+    # braces cost one no-op.
+    window.events.closing += lambda: shutdown("window-closing")
+    atexit.register(lambda: shutdown("atexit"))
+    try:
+        webview.start()
+    finally:
+        shutdown("after-start")
     return 0
 
 

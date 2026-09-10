@@ -17,7 +17,10 @@ Three invariants are pinned here, each because something already went wrong:
 from __future__ import annotations
 
 import ast
+import json
 import re
+import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -443,3 +446,114 @@ def test_the_quiet_helper_refuses_a_shell():
 
     with pytest.raises(ValueError):
         qsp.run(["cmd"], shell=True)
+
+
+# --------------------------------------------- the ownership note must be findable
+
+def test_the_owner_file_follows_the_repo_root(tmp_path: Path, monkeypatch) -> None:
+    """2026-09-10, found in the field. `llama_server.REPO` was
+    `Path(__file__).parents[2]`, which inside the frozen app is `_internal` --
+    so the packaged build wrote its ownership note into the BUNDLE, and nothing
+    else could read it back.
+
+    The consequence was the exact failure this module exists to prevent: Murat
+    closed the app and llama-server PID 8012 kept running with 5,495 MiB mapped.
+    The OS said its parent process was the app, so it was unambiguously ours;
+    with no readable owner file `status()` called it `foreign` and
+    `stop_if_owned()` correctly, uselessly, left it alone.
+
+    A guard that reads state from a path its writer cannot reach is not a guard.
+    """
+    monkeypatch.setenv("AEGIS_REPO_ROOT", str(tmp_path))
+    assert ls._repo_root() == tmp_path.resolve()
+
+
+def test_the_shell_logs_because_a_windowed_build_has_no_stdout() -> None:
+    """`console=False` means `print()` goes nowhere. The shutdown path -- the one
+    thing that was asked for -- was therefore unobservable: it could not be shown
+    to work, only to have not visibly failed. Diagnosing the leak above needed
+    the process table because the app had left no record of what it did."""
+    from desktop import aegis_desktop as ad
+
+    code = executable_source(REPO / "desktop" / "aegis_desktop.py")
+    assert "logging.FileHandler" in code
+    assert "atexit.register" in code, "closing does not fire on every teardown path"
+    assert code.count("shutdown(") >= 4, "closing + atexit + after-start + the definition"
+    assert callable(ad._log_path)
+
+
+def test_the_shutdown_is_idempotent(monkeypatch) -> None:
+    """Three call paths are wired on purpose; they must not stop it three times."""
+    from desktop import aegis_desktop as ad
+
+    calls: list[int] = []
+    monkeypatch.setattr(ad, "stop_llama_if_owned", lambda: calls.append(1) or {"action": "none"})
+    code = executable_source(REPO / "desktop" / "aegis_desktop.py")
+    assert "stopped_once" in code, "the guard that makes the three paths safe"
+
+
+# ------------------------------------------------ the OS enforces the lifetime
+
+@pytest.mark.skipif(sys.platform != "win32", reason="job objects are a Windows mechanism")
+def test_a_bound_child_dies_with_this_process_even_on_a_hard_kill(tmp_path: Path) -> None:
+    """The three shutdown hooks -- window `closing`, `atexit`, and the return
+    from the window loop -- all run USER CODE, and `TerminateProcess` runs none.
+    Measured 2026-09-10: `Stop-Process` on the packaged app left llama-server up
+    with 5,095 MiB still mapped.
+
+    A job object with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE` moves the promise into
+    the kernel. This spawns a real child in a real subprocess, force-kills the
+    parent, and asserts the child is gone -- because a guarantee about process
+    lifetime cannot be tested with a mock.
+    """
+    script = tmp_path / "parent.py"
+    script.write_text(
+        "import json, os, subprocess, sys, time\n"
+        f"sys.path.insert(0, r'{REPO}')\n"
+        "from backend.services import llama_server as L\n"
+        "p = subprocess.Popen([sys.executable, '-c', 'import time;time.sleep(300)'],\n"
+        "                     creationflags=0x08000000)\n"
+        f"open(r'{tmp_path / 'ids.json'}', 'w').write("
+        "json.dumps({'parent': os.getpid(), 'child': p.pid, 'bind': L.bind_lifetime(p.pid)}))\n"
+        "time.sleep(300)\n", encoding="utf-8")
+
+    import subprocess as sp
+    parent = sp.Popen([sys.executable, str(script)],
+                      creationflags=getattr(sp, "CREATE_NO_WINDOW", 0))
+    ids_file = tmp_path / "ids.json"
+    try:
+        # poll for CONTENT, not existence: `open(..., "w")` creates the file
+        # before it writes, so an existence check races the write and the first
+        # run of this test failed on an empty file
+        ids = None
+        for _ in range(300):
+            try:
+                ids = json.loads(ids_file.read_text(encoding="utf-8"))
+                break
+            except (OSError, json.JSONDecodeError):
+                time.sleep(0.1)
+        assert ids is not None, "the parent never recorded its child"
+        assert ids["bind"]["bound"] is True, ids["bind"]
+        child = int(ids["child"])
+        assert ls.pid_alive(child), "the child should be running before the kill"
+
+        parent.kill()                              # TerminateProcess: no user code runs
+        parent.wait(timeout=30)
+        for _ in range(100):
+            if not ls.pid_alive(child):
+                break
+            time.sleep(0.1)
+        assert not ls.pid_alive(child), (
+            "the child outlived a hard kill of its parent -- the kernel guarantee is not in place, "
+            "and every shutdown hook in the shell runs user code that a TerminateProcess skips")
+    finally:
+        if parent.poll() is None:
+            parent.kill()
+
+
+def test_binding_reports_failure_rather_than_claiming_success() -> None:
+    """`bound: False` with a reason beats a note that says the OS will handle it
+    when it will not. The first version of this returned a cheerful note while
+    the child in fact survived, which is worse than no binding at all."""
+    out = ls.bind_lifetime(0)                      # PID 0 can never be opened
+    assert out["bound"] is False and out.get("reason")

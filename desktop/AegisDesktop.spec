@@ -31,6 +31,8 @@ The app is a launcher for THIS machine's repo -- it reads
 otherwise is what cost the 27 GB.
 """
 
+import subprocess
+import sys
 from pathlib import Path
 
 REPO = Path(SPECPATH).resolve().parent          # noqa: F821 - SPECPATH is injected
@@ -46,6 +48,33 @@ if not (_out / "index.html").exists():
         f"    cd frontend && AEGIS_DESKTOP_BUILD=1 npx next build\n"
         f"Packaging without it produces an .exe whose window is empty, which is "
         f"the kind of failure that looks like a crash and is not."
+    )
+
+# A running AegisDesktop.exe holds its own directory open, and PyInstaller's
+# COLLECT step wipes the target first -- so a rebuild while the app is open dies
+# with `PermissionError: [WinError 5] Access is denied` forty lines deep in
+# `_make_clean_directory`, which names the directory but not the reason. Say the
+# reason here, at the top, before five minutes of analysis are spent.
+_running = []
+if sys.platform == "win32":
+    try:
+        _out_dir = str((REPO / "dist" / "AegisDesktop").resolve()).lower()
+        _tasks = subprocess.run(
+            ["tasklist", "/FI", "IMAGENAME eq AegisDesktop.exe", "/NH"],
+            capture_output=True, text=True, timeout=15, shell=False,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)).stdout
+        if "AegisDesktop.exe" in _tasks:
+            _running.append(_tasks.strip().splitlines()[0].strip())
+    except (OSError, subprocess.SubprocessError):
+        pass
+if _running and str(DISTPATH).lower().endswith("dist"):        # noqa: F821 - injected
+    raise SystemExit(
+        "REFUSED: AegisDesktop.exe is running, and it holds the directory this build "
+        "would wipe:\n    " + "\n    ".join(_running) + "\n"
+        "Close the app, or build alongside it with a staging path:\n"
+        "    python -m PyInstaller desktop/AegisDesktop.spec --noconfirm --distpath dist/next\n"
+        "then swap the folders once it is closed. Never kill it to unblock a build -- it may be "
+        "running a night job."
     )
 
 datas = [
