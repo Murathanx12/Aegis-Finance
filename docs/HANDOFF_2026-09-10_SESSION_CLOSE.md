@@ -1,4 +1,4 @@
-# HANDOFF 2026-09-10 (session close) — the app, the replay, and eleven defects
+# HANDOFF 2026-09-10 (session close) — the app, the replay, and twelve defects
 
 **From:** the Opus builder session of 2026-09-10.
 **Read order:** this file → `HANDOFF_2026-09-10_THE_REPLAY_AND_THE_EXE.md` (the
