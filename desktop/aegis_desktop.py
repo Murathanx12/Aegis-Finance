@@ -71,6 +71,28 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def repo_root() -> Path | None:
+    """The real checkout, or None if it cannot be found.
+
+    Running from source this is just the parent of `desktop/`. In the frozen
+    build `REPO` above points inside the bundle, so the checkout is found from
+    `AEGIS_REPO_ROOT` if set, then from the .exe's own location (the dist
+    directory sits at `<repo>/dist/AegisDesktop/`), then from the working
+    directory. Returning None rather than guessing lets the caller leave the
+    default in place instead of pointing the app at a wrong tree.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and (Path(env) / "backend").is_dir():
+        return Path(env).resolve()
+    if not getattr(sys, "frozen", False):
+        return REPO
+    here = Path(sys.executable).resolve()
+    for cand in (*here.parents, Path.cwd(), *Path.cwd().parents):
+        if (cand / "backend" / "data").is_dir() and (cand / "scripts").is_dir():
+            return cand
+    return None
+
+
 def free_port() -> int:
     """A port the OS just told us is free.
 
@@ -109,6 +131,15 @@ def start_backend(port: int) -> threading.Thread:
     os.environ.setdefault("AEGIS_DESKTOP", "1")
     os.environ.setdefault("AEGIS_CONTROL_ENABLED", "1")
     os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    # Point the app at the REAL checkout. Inside the frozen build `REPO` would
+    # otherwise resolve to `<dist>/_internal`, and the first packaged run proved
+    # it: it created a fresh empty `aegis_pi.db` inside the bundle and would
+    # have shown a programme with no receipts, no lanes and no history -- an
+    # empty app that looks like a working one, which is the house failure mode.
+    root = repo_root()
+    if root:
+        os.environ.setdefault("AEGIS_REPO_ROOT", str(root))
+        os.environ.setdefault("AEGIS_DATA_DIR", str(root / "backend" / "data" / "optimus"))
 
     def run() -> None:
         import uvicorn

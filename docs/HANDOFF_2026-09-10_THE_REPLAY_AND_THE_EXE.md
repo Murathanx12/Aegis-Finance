@@ -214,9 +214,20 @@ arm. **Verdict: FAILED_VARIANT.**
 **Two by-products worth more than the arm.**
 
 1. **The E1 panel's `dollar_vol` column is a look-ahead** — it is the ENTRY
-   session's own close × volume, i.e. information from the session being traded.
-   N3 ignores it and recomputes `pit_dv_21` from bars, with a test pinning that.
-   **Anything else that has read `dollar_vol` off that panel needs checking.**
+   session's own close × volume, i.e. information from the session being traded
+   (written at `night_e1_news_return_panel.py:192`). N3 ignores it and
+   recomputes `pit_dv_21` from bars, with a test pinning that.
+
+   **It has one other reader, and it is C2.** `night_c2_curriculum_transfer.py:138`
+   screens the panel with `dollar_vol >= 3,000,000`, so C2's UNIVERSE is
+   look-ahead-contaminated. Filed as
+   `night_factory_2026-09-09/C2_universe_lookahead_note.json`. The screen is
+   applied once, before the split, so all three arms trade the identical
+   universe and a term common to every arm does not move a difference — the
+   09-09 RANKING (BASELINE > CONTROL > TRANSFER) stands on the same argument
+   that let the flat-cost verdict stand. **The LEVELS are contaminated and must
+   not be quoted alone.** Settling it means re-running C2 on `pit_dv_21`; that
+   has NOT been done.
 2. PIT re-verified on all 339,657 rows: **0 violations**, minimum lag under two
    seconds, median 17.6 hours from publication to the entry open.
 

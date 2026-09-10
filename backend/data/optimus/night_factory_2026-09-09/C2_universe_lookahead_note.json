@@ -1,0 +1,20 @@
+{
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "C2_curriculum_transfer",
+ "run": 98,
+ "amends": [
+  "C2_curriculum_transfer_run01.json",
+  "C2_cost_model_amendment.json"
+ ],
+ "kind": "UNIVERSE_LOOKAHEAD_NOTE",
+ "found_by": "N3_frozen_embedding_head, 2026-09-10, as a by-product",
+ "what": "`scripts/night_c2_curriculum_transfer.py:138` filters the E1 panel with `df[df['dollar_vol'] >= DOLLAR_VOL_FLOOR]` (3,000,000). N3 established that the panel's `dollar_vol` column, written at `night_e1_news_return_panel.py:192`, is the ENTRY SESSION's own close x volume -- information from the session being traded. C2's liquidity screen is therefore a look-ahead in the UNIVERSE, not in the label.",
+ "does_it_change_the_verdict": "Almost certainly NOT the ranking. The filter is applied ONCE to the panel, before the split, so BASELINE, CONTROL and TRANSFER all trade the identical universe and the contamination is common to all three. The 09-09 verdict is a comparison between them -- BASELINE +30.6%/yr t 1.78 > CONTROL +19.5 > TRANSFER +15.0 -- and a term common to every arm does not move a difference. This is the same argument that let the flat-cost verdict stand.\nIt DOES contaminate the LEVELS: a universe screened on the traded session's own volume is richer in names that turned out to be active that day, and every absolute number from C2 inherits that. No absolute C2 figure should be quoted without this note.",
+ "what_would_settle_it": "Re-run C2 with the screen on `pit_dv_21` (N3's PIT replacement, trailing 21 sessions ending strictly before the entry open) and compare the three arms' LEVELS. If the ranking survives, say so with the receipt; if it does not, the 09-09 verdict is withdrawn, not adjusted.",
+ "not_done_here": "the re-run. This note records the defect; it does not repair the numbers.",
+ "verdict": "CANNOT DETERMINE the corrected levels without a re-run. The RANKING that carries the 09-09 verdict is unaffected by a term common to all three arms, and that reasoning is stated here so a reader can disagree with it rather than discover it.",
+ "headline": "C2's liquidity screen uses the panel's `dollar_vol`, which is the entry session's own close x volume -- a universe look-ahead common to all three arms. Ranking stands; levels are contaminated and must not be quoted alone.",
+ "family_max_p": null,
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-10T08:17:22+00:00"
+}

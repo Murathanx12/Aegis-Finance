@@ -42,7 +42,26 @@ from fastapi import APIRouter, HTTPException
 
 router = APIRouter(prefix="/api/control", tags=["control"])
 
-REPO = Path(__file__).resolve().parent.parent.parent
+def _repo_root() -> Path:
+    """The repository the control plane reads and writes.
+
+    Inside a PyInstaller build `__file__` is `<dist>/_internal/backend/routers/`,
+    so the default resolves to `_internal` -- and the packaged app then looked
+    for night receipts in a directory that does not exist and reported an empty
+    programme with a straight face. Measured on the first packaged run:
+    `Database initialized at <dist>/_internal/backend/data/aegis_pi.db`, a fresh
+    empty database beside a repo full of real ones.
+
+    `AEGIS_REPO_ROOT` is set by the desktop shell to the real checkout. The
+    fallback stays the source layout, which is correct when running from source.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parent.parent.parent
+
+
+REPO = _repo_root()
 NIGHT_DIR = REPO / "backend" / "data" / "optimus" / "night_factory_2026-09-08"
 RUNS_DIR = REPO / "backend" / "data" / "optimus" / "control_runs"
 BALANCE_FILE = REPO / "backend" / "data" / "optimus" / "deepseek_balance.jsonl"

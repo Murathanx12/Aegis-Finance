@@ -345,3 +345,28 @@ def test_the_shortcut_refuses_a_missing_target(tmp_path: Path) -> None:
     out = create(tmp_path / "nope.exe", tmp_path / "i.ico", tmp_path / "s.lnk")
     assert out["ok"] is False and out["action"] == "refused"
     assert "does nothing" in out["reason"]
+
+
+# ------------------------------------------------- the packaged app's data root
+
+def test_the_control_plane_honours_an_explicit_repo_root(tmp_path: Path, monkeypatch) -> None:
+    """Inside the bundle the default resolves to `<dist>/_internal`, and the
+    first packaged run created a fresh empty `aegis_pi.db` there beside a repo
+    full of real ones. An app that shows no receipts because it is looking in
+    the wrong tree looks exactly like an app with nothing to show."""
+    monkeypatch.setenv("AEGIS_REPO_ROOT", str(tmp_path))
+    assert control._repo_root() == tmp_path.resolve()
+
+
+def test_an_invalid_repo_root_falls_back_rather_than_pointing_nowhere(monkeypatch) -> None:
+    monkeypatch.setenv("AEGIS_REPO_ROOT", r"C:\definitely\not\a\directory")
+    assert control._repo_root() == Path(control.__file__).resolve().parent.parent.parent
+
+
+def test_the_shell_finds_the_checkout_from_source(monkeypatch) -> None:
+    from desktop import aegis_desktop as ad
+
+    monkeypatch.delenv("AEGIS_REPO_ROOT", raising=False)
+    monkeypatch.setattr(ad.sys, "frozen", False, raising=False)
+    root = ad.repo_root()
+    assert root is not None and (root / "backend").is_dir() and (root / "scripts").is_dir()
