@@ -21,7 +21,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control
 
 logging.basicConfig(
     level=logging.INFO,
@@ -328,6 +328,13 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning("H5 trial pre-registration failed (non-fatal): %s", e)
         try:
+            from backend.services.portfolio_intelligence.r2_trial import (
+                ensure_r2_trial,
+            )
+            await asyncio.to_thread(ensure_r2_trial)
+        except Exception as e:
+            logger.warning("R2 trial pre-registration failed (non-fatal): %s", e)
+        try:
             from backend.services.portfolio_intelligence.smartgrowth import (
                 ensure_smartgrowth_trial,
             )
@@ -545,6 +552,43 @@ app.include_router(candidates.router)
 # read-only mirror. Writes only append-only JSONL under backend/data/human_loop;
 # places nothing, seals nothing.
 app.include_router(journal.router)
+# Aegis Desktop control plane (roadmap 2026-09-08 section 10.7): reads are always on,
+# every mutating route refuses unless AEGIS_CONTROL_ENABLED=1, so this is inert on Railway.
+app.include_router(control.router)
+
+
+def mount_desktop_frontend(application: "FastAPI") -> dict:
+    """Serve the exported Next.js build from FastAPI, for the desktop app ONLY.
+
+    The shipped .exe is one process on one port: PyInstaller bundles Python and
+    nothing else, and there is no Node runtime to install. Railway keeps its own
+    frontend deploy, so the mount is gated on AEGIS_DESKTOP=1 and is inert
+    everywhere else.
+
+    Mounted LAST and at "/", because `StaticFiles(html=True)` at the root
+    swallows every unmatched path -- including `/api/*` if it were mounted
+    first. The API routes are registered above; this only ever sees what they
+    did not claim.
+
+    A missing `frontend/out` is REPORTED, not ignored: a desktop build that
+    silently serves nothing is the house failure mode (a page that loads blank
+    and blames the browser).
+    """
+    if os.getenv("AEGIS_DESKTOP", "") != "1":
+        return {"mounted": False, "reason": "AEGIS_DESKTOP is not 1"}
+    from pathlib import Path as _Path
+
+    from fastapi.staticfiles import StaticFiles
+
+    out = _Path(os.getenv("AEGIS_DESKTOP_FRONTEND",
+                          str(_Path(__file__).resolve().parent.parent / "frontend" / "out")))
+    if not (out / "index.html").exists():
+        logger.warning("AEGIS_DESKTOP=1 but no export at %s -- the window will show the API only. "
+                       "Build it with: cd frontend && AEGIS_DESKTOP_BUILD=1 npx next build", out)
+        return {"mounted": False, "reason": f"no index.html at {out}", "path": str(out)}
+    application.mount("/", StaticFiles(directory=str(out), html=True), name="desktop")
+    logger.info("desktop frontend mounted from %s", out)
+    return {"mounted": True, "path": str(out)}
 
 
 @app.get("/")

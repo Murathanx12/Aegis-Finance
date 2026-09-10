@@ -27,6 +27,7 @@ import {
   Landmark,
   ShieldCheck,
   ClipboardList,
+  MonitorCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -86,6 +87,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/copilot", label: "Copilot", icon: Sparkles, code: "AI" },
       { href: "/workspace", label: "Workspace", icon: LayoutGrid, code: "WORK" },
+      { href: "/desktop", label: "Aegis Desktop", icon: MonitorCog, code: "DESK" },
       { href: "/dev", label: "Dev", icon: LayoutGrid, code: "DEV" },
       { href: "/about", label: "About", icon: Info, code: "ABOUT" },
     ],

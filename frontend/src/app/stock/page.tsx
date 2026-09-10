@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { validateTicker } from "@/lib/validation";
+import { POPULAR_TICKERS as POPULAR } from "@/lib/tickers";
 
-const POPULAR = ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA", "JPM", "JNJ", "V", "UNH", "XOM"];
 
 export default function StockPage() {
   const [ticker, setTicker] = useState("");
