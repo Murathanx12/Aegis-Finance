@@ -249,6 +249,32 @@ checkout; `.env` was copied to `dist/AegisDesktop/_internal/` (local, gitignored
 with the old dist. **Chunk 3 gains O8 (the uncapped universe page) and O9 (instance ownership + no
 Railway scheduler on the laptop).**
 
+**Chunk 2 landed (validated 2026-09-11 afternoon, CI green on `571bf98`):** `8e3a69c` the suite's ledger
+guard (the run exits 1 if any test writes the evidence ledger), `73f7a2b` E6 rotation (102,029 rows in →
+102,029 out, split by each row's own stamp; the live month untracked), `ae073ca` the thin launcher (1,058
+MB → 37 MB; pull → pip-if-hash-changed → export-if-frontend-changed → shell from the checkout's venv,
+under a job object; `git_head` on `/api/health`; ownership by PID; scheduler and warm loops off in
+desktop mode unless `AEGIS_DESKTOP_SCHEDULER=1`), `f7bf875` an env leak in its own test, and in the
+terminal repo `e613082` the handoff brought to 09-11. Suite 7,983 → 8,063.
+
+**Chunk 3 landed (validated 2026-09-11 evening; one agent died mid-T1 on an auth error and a second
+resumed from the tree):** `0175297` **T0 — the root cause of every failed launch today**: a windowless
+process (pythonw, `console=False`) has `sys.stdout is None` and uvicorn's log formatter calls
+`sys.stdout.isatty()` before binding; streams are now bound to the app log and `use_colors=False` is
+passed; the launcher redirects both child streams; pywebview pinned in `requirements.txt` (the venv
+lacked it). `1b8e257`/`5a25e97` T1 one `__ticker__` shell serves every symbol (and answers HEAD).
+`9f8e25f` T2 `cache_swr_202`: desktop heavy endpoints answer 202 with progress until the cache fills
+(56 names: 232.7 s cold). `e5af37b` T2b the desktop screener over the real universe: tier 1 all 3,056
+scorecards at 0.1 s, tier 2 the top 200 by `p_beat` through the Monte Carlo in 10.2 min (a full deep
+pass would be ~2.8 h); the Railway path keeps its 80-name cap, pinned both ways by an AST test.
+`e2207d1` T3+T4 the universe page (`potential_universe/2026-09-02.jsonl`, 3,056 rows, joined with
+books, the analyst snapshot and the last review) and the board (`/tree`, `/file`, `/app-log`,
+`/ledger`; `.env` and secrets refused by name before resolution, then the checkout sandbox).
+`a6d8a39` T5 a closed month left untracked fails a test and warns on the night plan. Suite 8,063 →
+8,107. **Upstream fact for Murat:** the scorecard vintage is 2026-09-02 because the terminal repo's
+newest tracker day file is 2026-09-02; refresh = run the tracker there, then
+`python -m scripts.potential_universe_run`.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
