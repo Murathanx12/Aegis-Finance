@@ -597,3 +597,12 @@ half; the chunk table above is the resume point.
 26. **The agency shows options with twins and worst cases; a human picks; the
     un-chosen options are graded as shadows.**
 27. **Social data generates hypotheses; it never adjudicates.**
+28. **Every result is compared to an outside reference and tested against the past** (Murat,
+    09-11: *"when we have any results compare it to firms and other results; test it from the
+    past to see how it differed from reality"*). A number the engine produces for today
+    (a target, a forecast, a book's expected return) is shown beside the external comparator
+    it has (the consensus target, the arena's settlement, the benchmark lane, the published
+    paper's figure) AND beside the same method's historical error against realised outcomes,
+    per era. A method with no backtest of its own past errors prints CANNOT DETERMINE for
+    its hit rate; it does not print a bare point. The price-target audit (O11), the Brier
+    ledger (M4) and Headline Arena (M6) are the three instruments of this rule.

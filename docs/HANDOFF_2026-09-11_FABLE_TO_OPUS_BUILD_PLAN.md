@@ -275,6 +275,24 @@ books, the analyst snapshot and the last review) and the board (`/tree`, `/file`
 newest tracker day file is 2026-09-02; refresh = run the tracker there, then
 `python -m scripts.potential_universe_run`.
 
+**Chunk 3b landed (validated 2026-09-11 night):** `2d4ca31` O5 the Morning click (seven declared
+steps, one receipt per day; a real run on this machine took 389 s and exposed three defects, fixed) +
+O6 Ask with read-only tools (deterministic router; the AST test walks both modules for no write, no
+subprocess, no broker, no POST; M3's hindsight-safe retrieval with its three tests); `2940d1a` O11 the
+52-week target with **no caps** (`STOCK_CAGR_CAPS` gone; the consensus clip replaced by an isotonic map
+that is the identity until fitted and says so; the 12-month figure is `paths[252]` of the same
+simulation, never a root) + M4 Murphy's Brier split on the board; `9e83cfc` three defects the full
+suite found; `51953d5` (Fable) a band wholly above spot is withheld with its reason (NVDA's p10 was
+$234.93 on a $218.36 stock — the error quantiles are pooled per bucket and not yet conditioned on the
+upside tercile; that conditioning is chunk 3c's first item). **The IBES backtest ran**: 390,368 cells,
+7,439 names, 228 months (2005-2023), walk-forward — de-biased target MAE 45.3 / hit 48.4% vs consensus
+48.8 / 39.2% in POOLED and better in **every** era; **the drift-only control beats both on MAE in every
+era** (37.6 pooled), which is the bar `TRIAL-CALIBRATED-TARGET-UPSIDE-1` (drafted, UNSIGNED) must clear.
+Audit on the six names: NVDA's gap to the consensus is `HORIZON_MISMATCH +165.6pp`. **The launcher was
+rebuilt after T0 and verified from a no-console launch** (`Start-Process`): backend up in 2.32 s, the
+board's routes answering, FRED 23/23 with keys visible, one scheduled job (the ledger resolver), stopped
+by the launcher's PID with nothing left running.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
