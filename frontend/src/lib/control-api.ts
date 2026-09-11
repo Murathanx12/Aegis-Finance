@@ -247,6 +247,11 @@ export interface AskResponse {
   cost_usd?: number;
   /** present only when the local model is not ready; names the fix */
   refusal?: string;
+  /** true when THIS request started the model server (only ever with start=true) */
+  started?: boolean;
+  /** wall-clock seconds spent waiting for the model to answer /health */
+  waited_s?: number;
+  start_result?: Record<string, unknown> | null;
   llama?: LlamaStatus;
   [k: string]: unknown;
 }
@@ -334,16 +339,29 @@ export const stopLlama = (allowForeign = false) =>
  * the endpoint ever moves to a body model, one retry finds it rather than
  * showing the user a 422 they cannot act on.
  */
-export async function ask(question: string): Promise<AskResponse> {
+export async function ask(
+  question: string,
+  opts: { start?: boolean } = {},
+): Promise<AskResponse> {
+  // `start=true` is only ever sent from an explicit button press: starting a
+  // multi-GB model server is a decision about the machine's VRAM, and the
+  // endpoint never takes it on its own. The wait is long because a cold load
+  // is, so the timeout has to outlast it.
+  const startQ = opts.start ? "&start=true" : "";
+  const timeout = opts.start ? 300_000 : 180_000;
   try {
     return await post<AskResponse>(
-      `/ask?question=${encodeURIComponent(question)}`,
+      `/ask?question=${encodeURIComponent(question)}${startQ}`,
       undefined,
-      180_000,
+      timeout,
     );
   } catch (e) {
     if (e instanceof ControlError && e.status === 422) {
-      return await post<AskResponse>("/ask", { question }, 180_000);
+      return await post<AskResponse>(
+        "/ask",
+        opts.start ? { question, start: true } : { question },
+        timeout,
+      );
     }
     throw e;
   }

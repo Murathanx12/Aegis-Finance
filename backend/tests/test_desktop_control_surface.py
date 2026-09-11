@@ -27,6 +27,7 @@ from pathlib import Path
 import pytest
 
 from backend.routers import control
+from backend.services import free_inference as fi
 from backend.services import llama_server as ls
 
 REPO = Path(__file__).resolve().parents[2]
@@ -193,6 +194,80 @@ def test_ask_refuses_rather_than_erroring_when_the_model_is_down(monkeypatch) ->
     out = control.ask(question="what happened last night?")
     assert out["ok"] is False and out["answer"] is None
     assert "Start it from the Services page" in out["refusal"]
+
+
+def test_ask_starts_the_model_only_when_it_is_asked_to(monkeypatch) -> None:
+    """`start=true` is the Ask page's button. Without it the route answers the
+    way it always did: a refusal that names the fix and starts nothing."""
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
+    calls: list[float] = []
+    monkeypatch.setattr(ls, "status", lambda: {"ready": False, "detail": "not running",
+                                               "listening": False, "model": None})
+    monkeypatch.setattr(ls, "start", lambda **kw: calls.append(kw.get("wait_s", 0)) or {})
+    out = control.ask(question="what happened last night?")
+    assert out["ok"] is False and out["started"] is False
+    assert calls == [], "a question is not consent to start a multi-GB model server"
+
+
+def test_ask_starts_the_model_and_waits_for_it(monkeypatch) -> None:
+    """Down, then ready after a few polls: the answer is an ANSWER, not a
+    refusal telling the user to start a server that is already loading.
+
+    `listening` is not `ready` -- llama-server binds its port in about half a
+    second with a fraction of the weights resident -- so the route polls
+    readiness rather than the socket.
+    """
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
+    monkeypatch.setattr(control, "ASK_POLL_S", 0.01)
+    state = {"polls": 0, "started": False}
+
+    def fake_status() -> dict:
+        if state["started"]:
+            state["polls"] += 1
+        ready = state["started"] and state["polls"] >= 3
+        return {"ready": ready, "listening": state["started"], "model": "qwen.gguf",
+                "detail": "ready" if ready else "loading"}
+
+    def fake_start(wait_s: float = 90.0, bind: bool = True) -> dict:
+        state["started"] = True
+        return {"ok": True, "action": "starting", "pid": 4242, "ready": False}
+
+    monkeypatch.setattr(ls, "status", fake_status)
+    monkeypatch.setattr(ls, "start", fake_start)
+    monkeypatch.setattr(fi, "complete", lambda **kw: type("R", (), {"text": "an answer"})())
+
+    out = control.ask(question="what does the G3 receipt say?", start=True, wait_s=5)
+    assert out["ok"] is True and out["answer"] == "an answer"
+    assert out["started"] is True
+    assert isinstance(out["waited_s"], float)
+
+
+def test_ask_never_starts_over_a_foreign_listener(monkeypatch) -> None:
+    """A server Aegis did not start may be several GB into somebody else's job.
+    Starting a second copy means two sets of weights resident and neither
+    works. The route waits for it and starts nothing -- and it never stops
+    anything at all."""
+    monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
+    monkeypatch.setattr(control, "ASK_POLL_S", 0.01)
+    started: list[dict] = []
+    monkeypatch.setattr(ls, "status", lambda: {"ready": False, "listening": True,
+                                               "foreign": True, "started_by_aegis": False,
+                                               "model": "someone-elses.gguf",
+                                               "detail": "bound but still loading"})
+    monkeypatch.setattr(ls, "start", lambda **kw: started.append(kw) or {"ok": True})
+    out = control.ask(question="anything", start=True, wait_s=0.05)
+    assert started == [], "a foreign listener must never be started over"
+    assert out["ok"] is False and out["started"] is False
+    assert out["waited_s"] >= 0.0
+
+
+def test_ask_holds_no_stop_path(monkeypatch) -> None:
+    """The route may start a server. It may never stop one: closing somebody
+    else's job is not something an answer is allowed to do."""
+    src = (REPO / "backend" / "routers" / "control.py").read_text(encoding="utf-8")
+    body = src[src.index("def ask("):src.index("# ------", src.index("def ask("))]
+    for banned in ("ls.stop", "stop_if_owned", "taskkill"):
+        assert banned not in body, f"the ask path must not be able to {banned}"
 
 
 def test_ask_requires_control_enabled(monkeypatch) -> None:

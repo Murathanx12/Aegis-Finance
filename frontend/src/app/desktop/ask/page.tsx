@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Send, ShieldOff } from "lucide-react";
+import { BookOpen, Power, Send, ShieldOff } from "lucide-react";
 import { ApiState, DASH, RawPayload } from "@/components/desktop/primitives";
 import {
   ask,
@@ -44,9 +44,14 @@ export default function AskAegisPage() {
   // Same three-state reading as the Services page: bound is not ready.
   const phase = st == null ? "unknown" : st.ready ? "ready" : st.listening ? "loading" : "down";
 
+  // The local model's files. `model_present === false` is the one case a start
+  // button cannot fix, and the refusal already says so — offering to start a
+  // server whose weights are not on disk is a button that can only fail.
+  const filesPresent = st == null || (st.model_present !== false && st.binary_present !== false);
+
   const send = useMutation({
-    mutationFn: (q: string) => ask(q),
-    onMutate: (q) => {
+    mutationFn: ({ q, start }: { q: string; start: boolean }) => ask(q, { start }),
+    onMutate: ({ q }) => {
       const id = nextId.current++;
       setTurns((t) => [...t, { id, question: q, data: null, error: null }]);
       return { id };
@@ -63,11 +68,17 @@ export default function AskAegisPage() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [turns]);
 
-  const submit = () => {
+  const submit = (start = false) => {
     const q = question.trim();
     if (!q || send.isPending) return;
     setQuestion("");
-    send.mutate(q);
+    send.mutate({ q, start });
+  };
+
+  /** Re-send a question that was refused, this time asking for a start. */
+  const retryWithStart = (q: string) => {
+    if (send.isPending) return;
+    send.mutate({ q, start: true });
   };
 
   return (
@@ -153,6 +164,23 @@ export default function AskAegisPage() {
                           {d?.refusal ??
                             "the local model is not ready, so no answer was produced"}
                         </p>
+                        {typeof d?.waited_s === "number" && d.waited_s > 0 ? (
+                          <p className="text-[11px] text-muted-foreground">
+                            waited {d.waited_s}s for the model to answer /health
+                            {d.started ? " after starting it" : ""}.
+                          </p>
+                        ) : null}
+                        {filesPresent && d?.started !== true ? (
+                          <Button
+                            size="xs"
+                            variant="outline"
+                            disabled={send.isPending}
+                            onClick={() => retryWithStart(t.question)}
+                          >
+                            <Power className="size-3.5" />
+                            Start the local model and ask again
+                          </Button>
+                        ) : null}
                         <Button size="xs" variant="outline" asChild>
                           <Link href="/desktop">Start the local model on the Services page</Link>
                         </Button>
@@ -225,6 +253,21 @@ export default function AskAegisPage() {
               <Send className="size-3.5" />
               {send.isPending ? "asking…" : "Ask"}
             </Button>
+            {phase === "down" && filesPresent ? (
+              // One click instead of two pages: the endpoint starts the server
+              // and waits for it before answering. It is a separate button
+              // because starting a multi-GB model is a decision, not a default.
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!question.trim() || send.isPending}
+                onClick={() => submit(true)}
+                title="starts llama-server, waits up to 90s for it to load, then answers"
+              >
+                <Power className="size-3.5" />
+                Start the local model and ask
+              </Button>
+            ) : null}
           </form>
 
           {phase === "down" || phase === "loading" ? (

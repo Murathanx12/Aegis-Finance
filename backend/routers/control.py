@@ -452,8 +452,44 @@ def _ask_context(max_chars: int = 12000) -> dict:
     return {"text": text[:max_chars], "sources": used, "truncated": truncated}
 
 
+#: how often readiness is polled while a model loads. A constant so a test can
+#: shorten it; a multi-GB model takes tens of seconds, and a tighter poll buys
+#: nothing but CPU.
+ASK_POLL_S = float(os.getenv("AEGIS_ASK_POLL_S", "1.0"))
+
+
+def _wait_until_ready(ls, budget_s: float) -> bool:
+    """Poll `status()` until the model answers, or the budget runs out.
+
+    `listening` is not `ready`: llama-server binds its port in about half a
+    second with a fifth of the weights resident, and a question sent in that
+    window used to come back as a refusal telling the user to start a server
+    that was already starting. Waiting is the honest answer to "loading".
+    """
+    deadline = time.time() + max(0.0, budget_s)
+    while True:
+        if ls.status().get("ready"):
+            return True
+        if time.time() >= deadline:
+            return False
+        time.sleep(min(ASK_POLL_S, max(0.0, deadline - time.time())))
+
+
 @router.post("/ask")
-def ask(question: str, backend: str = "local_gguf", max_tokens: int = 700) -> dict:
+def ask(question: str, backend: str = "local_gguf", max_tokens: int = 700,
+        start: bool = False, wait_s: float = 90.0) -> dict:
+    """Answer from the receipts, and — only when asked — start the model first.
+
+    `start=true` is the Ask page's button, not a default: starting a multi-GB
+    server is a decision about somebody's VRAM, so it is taken by a person and
+    the payload says whether it happened (`started`) and what it cost in
+    wall-clock seconds (`waited_s`).
+
+    The foreign-server rule is unchanged and is structural here: a start is
+    attempted ONLY when nothing is listening. A server Aegis did not start may
+    be several GB into somebody else's job; this route never starts over it and
+    never stops anything at all.
+    """
     _require_enabled()
     q = (question or "").strip()
     if not q:
@@ -461,13 +497,33 @@ def ask(question: str, backend: str = "local_gguf", max_tokens: int = 700) -> di
     from backend.services import free_inference as fi
     from backend.services import llama_server as ls
     st = ls.status()
+    started = False
+    waited_s = 0.0
+    start_result: dict | None = None
+    if backend == "local_gguf" and not st.get("ready"):
+        budget = max(0.0, min(float(wait_s), 600.0))
+        t0 = time.time()
+        if st.get("listening"):
+            # somebody's server -- ours or not -- is loading. Wait; start nothing.
+            _wait_until_ready(ls, budget)
+        elif start:
+            start_result = ls.start(wait_s=budget)
+            started = bool(start_result.get("ok")) and start_result.get("action") in {
+                "started", "starting"}
+            if started:
+                _wait_until_ready(ls, max(0.0, budget - (time.time() - t0)))
+        waited_s = round(time.time() - t0, 1)
+        st = ls.status()
     if backend == "local_gguf" and not st.get("ready"):
         # a refusal that names the fix, rather than a 500 from a dead socket
+        fix = ("Start it from the Services page (or POST /api/control/llama/start)."
+               if not start else
+               "It was asked to start and is not answering yet; the log is at "
+               "~/llama/server.log.")
         return {"ok": False, "answer": None, "utc": _now(),
-                "refusal": ("the local model is not ready: "
-                            + str(st.get("detail"))
-                            + ". Start it from the Services page (or POST /api/control/llama/start)."),
-                "llama": st}
+                "refusal": "the local model is not ready: " + str(st.get("detail")) + ". " + fix,
+                "started": started, "waited_s": waited_s,
+                "start_result": start_result, "llama": st}
     ctx = _ask_context()
     prompt = (f"{ASK_SYSTEM}\n\n"
               f"--- RECEIPTS ON DISK (this is your only source of numbers) ---\n"
@@ -481,6 +537,7 @@ def ask(question: str, backend: str = "local_gguf", max_tokens: int = 700) -> di
     text = getattr(reply, "text", None) or getattr(reply, "content", None) or str(reply)
     return {"ok": True, "utc": _now(), "question": q, "answer": text,
             "backend": backend, "model": st.get("model"),
+            "started": started, "waited_s": waited_s,
             "context_sources": ctx["sources"], "context_truncated": ctx["truncated"],
             "authority": "READER ONLY: this endpoint cannot run, seal, arm or order anything",
             "cost_usd": 0.0}
