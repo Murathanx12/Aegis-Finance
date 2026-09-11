@@ -238,6 +238,17 @@ fake N9 receipts from `tmp_path` to a function that appends its summary row to t
 65 MB ledger (one was discarded on 09-11). Give the writer a store parameter (or monkeypatch `STORE`
 in the test), and add a guard test that the fast suite leaves `evidence_memory.jsonl` byte-identical.
 
+**Found live 2026-09-11 13:46-13:56 (Murat ran the old .exe twice):** the 09-10 bundle's backend thread
+dies before binding a port, deterministically (two runs, `health never answered within 242s`), while
+`python -m desktop.aegis_desktop --headless --no-llama` from source reports `health_ok` in 1.55 s with
+`configured: ["deepseek"]`. The old build has no stderr, so the cause is unrecoverable from it; the
+launcher (chunk 2) runs the shell from source and captures the child's stderr. Also found: a second
+instance's `stop_if_owned` killed the first instance's model server (ownership is per checkout) — roadmap
+O9. Interim: a desktop shortcut `Aegis (source).lnk` runs `pythonw -m desktop.aegis_desktop` from the
+checkout; `.env` was copied to `dist/AegisDesktop/_internal/` (local, gitignored) and should be deleted
+with the old dist. **Chunk 3 gains O8 (the uncapped universe page) and O9 (instance ownership + no
+Railway scheduler on the laptop).**
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits

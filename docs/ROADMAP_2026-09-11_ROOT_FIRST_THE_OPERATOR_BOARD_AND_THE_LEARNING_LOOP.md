@@ -222,6 +222,8 @@ Gates outrank dates. Nothing below is dated. Each lane names what blocks it.
 | **O5** | **One click = Morning.** `POST /api/control/morning`: pull news (lane N jobs, incremental), build the digest, mark every paper book, write the pre-open forecast rows (lane B5), refresh the coverage card, then hand the operator the Ask page with today's brief loaded. One receipt for the run; every step's status in it; a step that did nothing says so (invariant 15). | the receipt lists each step with rows written; a network-less run refuses each network step by name |
 | **O6** | **Ask Aegis reads the project.** Read-only tools on the local model, retrieval-first: `read_file(path)` bounded to the checkout and `docs/`, `receipt(job, run)`, `leaderboard()`, `night_status()`, `git_log(path, n)`, `fleet()`, `ledger_summary()`, `coverage()`. Router is deterministic (a path or a job id in the question routes to the tool; else `docs/INDEX.md` + the last handoff + today's receipts as context). **No write tool exists**; the AST test extends to "no file open for writing, no subprocess, no broker" in the ask module. Answers quote the receipt path. Second prompt: "what do you think happens today?" answers from the pre-open forecast rows the model itself wrote in O5, so the answer is graded tomorrow. | "what is the NN doing right now?" returns the live N-lane job's log tail and its last receipt line; "look at scripts/night_g3_evolve_v2.py" returns the file's docstring and `git log -3` |
 | **O7** | The Ask page starts the model when it is down and the operator asks (`/api/control/llama/start`, wait, then answer) instead of refusing; foreign-server rule unchanged. `R2 panel B` runs from the app once the model is up. | panel B receipt no longer says `PENDING_MODEL` |
+| **O8** | **The universe, uncapped** (Murat, 09-11: *"I want it to show all the stocks — first time I opened I saw the 3,000+, and all of our reviews + analyst reviews"*). One board page: every name in the tracker universe (3,056 on 09-09) with our scorecard (the sealed upside × consensus fields the tracker books already read), the analyst consensus snapshot (N-E), the last event and its typed class (L2 when it exists), the book(s) holding it, and our last review sentence with its receipt. Server-side paging and search over the full set; no cap anywhere on the path (`routers/news.py:63`'s 15 was a news-feed cap and stays there). | the page's row count equals the universe file's row count, printed beside it |
+| **O9** | **Two Aegis instances in one checkout must not fight** (found live 09-11: a headless source run's `stop_if_owned` killed the model server the running .exe had started, because the ownership note is per checkout). Ownership carries the owner PID and start time; `stop_if_owned` stops only for its own PID or a dead owner. The desktop backend does **not** start the twelve Railway scheduler jobs or the warm loops unless `AEGIS_DESKTOP_SCHEDULER=1` — a keyed laptop must not mark a second track record or spend DeepSeek in parallel with Railway. | two instances: the second reports `left_alone: owned by pid N` |
 
 ### Lane N — whole-market news, no LLM in the pull (blocks L, E, B3)
 
@@ -473,6 +475,57 @@ What Aegis already does better and keeps: benchmark-relative evaluation with the
 benchmark's own drawdown (Qanat has none by design), zero cost refused by
 construction, matched controls per era, DSR/PBO, a night search that carries
 elites and advances seeds (population-based training by another name).
+
+## 11b. The afternoon's three research notes (repos, social, patents + data), by lane
+
+Notes: `research_notes/2026-09-11/research_repos.md`, `research_social.md`,
+`research_patents_data.md`.
+
+**Repos worth integration hours** (all MIT, all active): `alpacahq/alpaca-mcp-server`
+(official; paper-account operations in natural language → O, B); `dgunning/edgartools`
+(typed EDGAR/XBRL/Form 4/13F with a rate limiter → N, E); `Metaculus/forecasting-tools`
+(Brier and calibration utilities → M); the EDT dataset's **11-type corporate-event
+taxonomy** as L2's starting vocabulary; `openevolve` (Apache-2.0, 7.3k) as the reference
+the night search is compared against (E5); `Agent-Trading-Arena` (EMNLP 2025) for an
+honest self-play tournament protocol (B). Method only, no code: the "self-evolving
+agent" repos with big star counts carry no clear licence and no OOS discipline.
+
+**Social:** essentially no 2025-26 "I built a trading agent" post publishes audited
+live P&L vs SPY with costs; the two loudest X track records dissolve into a few lucky
+picks when checked. Threads is unindexed; X needs a paid key. Daily feeds that are
+free and legal for **hypothesis generation only**: r/algotrading and r/SecurityAnalysis
+by RSS, Composer's public symphony leaderboard, QuantConnect's verified live strategies,
+the Quantocracy aggregator, AltIndex's composite alt-data list. One design detail
+worth copying from a third-party Serenity follower: **notify-only mode before any
+execution**. Practitioner claims that survive skepticism map onto lanes we already
+run (PEAD as a regime gate, insider clusters as a composite, job postings) — each
+enters as a typed hypothesis with a control (invariant 27).
+
+**Patents as design sources** (not legal advice): six are expired or abandoned and
+free to mine — tax-loss harvesting with correlated substitutes (US6687681), per-asset
+marginal contribution to **drawdown** as the risk-budget unit (US20150206244; exactly
+protocol §4's worst case), multi-period stochastic programming with utility as a
+function of wealth (US8768810; the terminal-wealth objective), Goldman's macro-shock →
+sector → company cascade "Wavefront" (US7949590; invariant 4's sensor), an
+order-difficulty lookup for execution (US8719148), lifecycle leverage glide paths
+(US20090018969; the four personalities). Active ones (Google attention US10452978,
+Citadel toxicity, Refinitiv sentiment, Franklin Templeton goals-based allocation
+US11100587) are ideas to read, not claims to copy; use Apache-2.0 implementations and
+inherit their patent grant. JPMorgan's pending US20260111964 (LoRA-tuned LLM with
+multi-horizon monotonic ratings) validates a pattern this repo already uses.
+
+**Data acquisition, the five with the most information per dollar for an
+event-driven engine that has CRSP/IBES/TAQ to 2024:** (1) **daily options-implied-move
+snapshots** — free (Alpaca Basic, CBOE delayed JSON, yfinance chains), and nobody sells
+the history, so it compounds from the day the job starts; (2) **SEC XBRL `companyfacts`
+with `filed` dates** — true PIT fundamentals, free, 10 req/s, via `edgartools`; (3)
+**SEC Form 25/15** as the free delisting source for 2025-26 (P7's survival look-ahead);
+(4) congress disclosures (official, free); (5) **AKShare** for CN/HK at zero marginal
+cost. Daily schedule in HKT: 06:00 Asia EOD + delistings · 08:00 EDGAR diff + earnings
+calendar · 22:00 options snapshot · 05:00 US EOD + 8-K/Form 25 + congress. All under
+every free limit. No clean free transcript source exists (ToS); budget a small paid
+tier if transcripts matter. `pytrends` is fragile; Wikipedia pageviews' official API is
+not. These are chunk 4's data-acquisition tasks (Sonnet).
 
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
