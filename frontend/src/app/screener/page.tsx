@@ -314,7 +314,7 @@ export default function ScreenerPage() {
           </Card>
           <Card>
             <CardContent className="p-3">
-              <p className="text-[10px] text-muted-foreground uppercase">Avg Expected Return</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Avg 5Y Return (total)</p>
               <p className="text-xl font-bold tabular-nums">
                 {(summaryStocks.reduce((a, s) => a + s.expected_return, 0) / summaryStocks.length).toFixed(1)}%
               </p>
@@ -395,7 +395,7 @@ export default function ScreenerPage() {
                       currentDir={sortDir}
                       onSort={handleSort}
                       className="text-right"
-                      tooltip="Expected annualized return over 5 years from Monte Carlo simulation"
+                      tooltip="The MEAN of the 5-year terminal Monte Carlo distribution - a TOTAL over five years, not an annualised rate, and not comparable to a 12-month analyst target. The 52-week figure lives on each stock's own page (roadmap O11)."
                     />
                     <SortHeader
                       label="Sharpe"

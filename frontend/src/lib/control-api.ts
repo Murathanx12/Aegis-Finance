@@ -492,6 +492,65 @@ export interface LedgerResponse {
   n_open?: number | null;
   graded_last_24h?: number | null;
   graded_note?: string;
+  /** Murphy's decomposition (M4). `overall.bins` is the reliability diagram;
+   *  `decomposition: "insufficient_n"` means the board draws nothing rather
+   *  than drawing a curve through four points. */
+  decomposition?: CalibrationReport;
+}
+
+export interface CalibrationBin {
+  bin_id: number;
+  p_lo: number;
+  p_hi: number;
+  n: number;
+  mean_forecast: number;
+  mean_outcome: number;
+  outcome_se: number;
+  overconfidence: number;
+}
+
+export interface CalibrationSlice {
+  n?: number;
+  brier?: number;
+  brier_binned?: number;
+  binning_residual?: number;
+  base_rate?: number;
+  climatology_brier?: number;
+  beats_climatology?: boolean;
+  reliability?: number;
+  resolution?: number;
+  uncertainty?: number;
+  identity_check_abs_error?: number;
+  decomposition?: string;
+  reason?: string;
+  n_bins?: number;
+  bins?: CalibrationBin[];
+  group_key?: string;
+  model?: string;
+  note?: string;
+}
+
+export interface CalibrationReport {
+  as_of?: string;
+  available?: boolean;
+  error?: string;
+  group_by?: string;
+  n_resolved?: number;
+  min_per_bin?: number;
+  min_n_for_decomposition?: number;
+  overall?: CalibrationSlice;
+  rolling?: CalibrationSlice & { window?: string };
+  base_rate_row?: CalibrationSlice & { pit?: boolean; n_no_history?: number };
+  persistence?: {
+    persistence?: string;
+    r?: number;
+    n_pairs?: number;
+    quarters_scored?: number;
+    min_pairs?: number;
+    bss_by_quarter?: Record<string, number>;
+    reason?: string;
+  };
+  groups?: Record<string, CalibrationSlice>;
 }
 
 export const getUniverse = (opts: {

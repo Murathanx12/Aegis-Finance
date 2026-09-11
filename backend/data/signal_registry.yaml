@@ -163,6 +163,58 @@ signals:
       (the picker version is dead).
     last_updated: 2026-08-11
 
+  - signal_id: calibrated_target_upside
+    family: analyst
+    mechanism: >
+      The consensus 12-month target's implied upside, de-biased by the optimism
+      measured on data strictly before the observation (per sector x cap tier x
+      volatility bucket) and mapped through a monotone isotonic table from raw
+      upside to realised 12-month return fit on the same PIT panel. Reported
+      with an empirical p10/p90 band from that bucket's own error distribution.
+    description: >
+      What replaced the clip chain in stock_analyzer on 2026-09-11. NOT the raw
+      level, and NOT permitted to rank anything.
+    research_status: IN_USE
+    evidence_grade: OBSERVATIONAL
+    permitted_role: RISK_INPUT
+    allowed_in_pm: true
+    reliability_weight: null   # UNCALIBRATED as a PICKER -- see known_failure
+    horizon: 12mo
+    universe: any name with a consensus target on the tape
+    data_grade: >
+      yfinance consensus for the live value; IBES ptgsumu 2005-2023 (390,368
+      consensus cells, 7,439 names, 228 months) for the bias and the map.
+    known_effect: >
+      MEASURED ON FORECAST ACCURACY, NOT ON MONEY. Walk-forward over 2005-2023,
+      fitting only on months already closed: the de-biased target beats the raw
+      consensus in EVERY era -- pooled MAE 45.29% vs 48.82%, bias +3.41pp vs
+      +17.71pp, 12-month hit rate 48.35% vs 39.20%. The improvement is the
+      de-biasing; it is not a return.
+    known_failure: >
+      THE NAIVE CONTROL BEATS BOTH. `current price x (1 + trailing mean realised
+      12-month return)` has a LOWER MAE than the de-biased target in all four
+      eras (37.58% vs 45.29% pooled), which is the reason this signal is a
+      RISK_INPUT and not a picker: a target more accurate than Wall Street's is
+      still less accurate than assuming the market's own drift. Its
+      cross-sectional ancestor, `analyst_target_upside_xs`, is PERVERSE/CLOSED
+      at -8 to -18%/yr GROSS (ANALYST-IBES-1). No return claim of any kind has
+      been measured for this signal.
+    receipts:
+      - "backend/data/optimus/tracker_backtest/price_target_backtest_2026-09-11.json"
+      - "backend/data/optimus/price_target/calibration_2026-09-11.json"
+      - "docs/research_notes/2026-09-11/spec_price_targets.md"
+    implementation_notes: >
+      `backend/services/price_target.py`, surfaced as `price_target_12m` on the
+      stock payload and as a display column on the screener. It may SIZE a name
+      already chosen and it may be a column the user sorts by hand; it may not
+      enter `ranking_score`, and `rank_invariance()` is the enforcement. A
+      promotion to PICKER requires TRIAL-CALIBRATED-TARGET-UPSIDE-1
+      (docs/TRIALS/, UNSIGNED as of 2026-09-11) to clear its own decision rule,
+      with the drift control named above as the bar -- not the raw consensus.
+    distinct_from:
+      - analyst_target_upside_xs
+    last_updated: 2026-09-11
+
   - signal_id: analyst_target_revision
     family: analyst
     mechanism: >

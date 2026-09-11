@@ -940,6 +940,7 @@ def ledger() -> dict:
             out[key] = fn()
         except Exception as e:  # noqa: BLE001  a read degrades to a report, never an exception
             out[key] = {"error": f"{type(e).__name__}: {e}"}
+    rows: list[dict] = []
     try:
         rows = BS.read_predictions()
         out["n_open"] = sum(1 for r in rows
@@ -949,6 +950,18 @@ def ledger() -> dict:
         out["n_open"] = None
         out["graded_last_24h"] = None
         out["graded_note"] = f"{type(e).__name__}: {e}"
+
+    # MURPHY'S DECOMPOSITION (M4). A flat Brier answers two questions at once and
+    # the answers point in opposite directions: a forecaster that always says the
+    # base rate is perfectly RELIABLE and has zero RESOLUTION, and the flat score
+    # cannot tell it from one that is genuinely informative. The board draws the
+    # reliability diagram from `overall.bins`; below 45 resolved records the
+    # payload says `insufficient_n` rather than drawing one.
+    try:
+        from backend.services import calibration as CAL
+        out["decomposition"] = CAL.report(rows)
+    except Exception as e:  # noqa: BLE001  a read degrades to a report
+        out["decomposition"] = {"available": False, "error": f"{type(e).__name__}: {e}"}
     return out
 
 

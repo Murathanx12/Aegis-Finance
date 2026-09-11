@@ -1491,6 +1491,84 @@ export interface ScenarioResult {
   prob_loss: number;
 }
 
+
+/** `price_target_12m` — one 52-week target, its legs, and what it may not do. */
+export interface PriceTargetLeg {
+  available: boolean;
+  value?: number | null;
+  weight?: number;
+  reason?: string;
+  basis?: string | null;
+  justified_multiple?: number;
+  peer_median_multiple?: number;
+  shrinkage_weight?: number;
+  n_peers?: number;
+  wacc?: number;
+  terminal_growth?: number;
+  terminal_value_share_pct?: number | null;
+  beta?: number | null;
+  beta_source?: string;
+  raw_consensus_upside_pct?: number;
+  debias_applied_pp?: number;
+  debiased_upside_pct?: number;
+  bias_source?: string | null;
+  n_analysts?: number | null;
+  [k: string]: unknown;
+}
+
+export interface PriceTarget12m {
+  ticker?: string;
+  as_of?: string;
+  available: boolean;
+  reason?: string;
+  horizon?: string;
+  horizon_note?: string;
+  target_12m?: {
+    point: number;
+    return_pct: number;
+    uncalibrated_point?: number;
+    uncalibrated_return_pct?: number;
+    calibration?: string;
+    n_knots?: number;
+    note?: string;
+    p10: number | null;
+    p50: number;
+    p90: number | null;
+    basis?: string;
+    widened?: boolean;
+    p10_floored_at_zero?: boolean;
+  };
+  legs?: Record<string, PriceTargetLeg>;
+  weights?: Record<string, number>;
+  weights_source?: string;
+  bucket?: string;
+  calibration?: {
+    bucket?: string;
+    bucket_level?: string;
+    bucket_level_note?: string;
+    fitted?: boolean;
+    n_backtest_obs?: number | null;
+    mae_pct?: number | null;
+    hit_rate_12m_pct?: number | null;
+    last_refit?: string | null;
+    source?: string | null;
+    note?: string | null;
+  };
+  consensus_reference?: {
+    target: number | null;
+    n_analysts: number | null;
+    raw_upside_pct: number | null;
+  };
+  engine_usage?: {
+    rank_bearing: boolean;
+    registry_role: string;
+    reason: string;
+    signal_id?: string;
+    trial?: string;
+  };
+  vs_our_old_method?: Record<string, unknown>;
+}
+
 export interface StockAnalysis {
   ticker: string;
   name: string;
@@ -1504,13 +1582,31 @@ export interface StockAnalysis {
   hist_drift: number;
   capped_drift: number;
   volatility: number;
+  /** The FIVE-YEAR terminal cross-section. `expected_return` keeps its old name
+   *  for every existing caller; the `_5y` aliases exist so a page can print a
+   *  horizon it did not have to infer from a variable name. */
   expected_return: number;
   median_return: number;
+  expected_return_5y?: number;
+  median_return_5y?: number;
+  /** The TWELVE-MONTH cross-section of the SAME paths (roadmap O11). Comparable
+   *  to a consensus target on both dimensions — horizon AND statistic. Never
+   *  derived from a multi-year figure by a root, a power or a division. */
+  expected_return_12m?: number;
+  median_return_12m?: number;
+  p10_return_12m?: number;
+  p90_return_12m?: number;
+  mc_horizon_years?: number;
+  mc_path_ceiling_pct?: number;
+  mc_path_ceiling_note?: string;
   p05_price: number;
   p95_price: number;
   prob_loss_5y: number;
   avg_max_drawdown: number;
   sharpe: number;
+  /** The 52-week price target (roadmap O11): three legs, weights, an empirical
+   *  band and the authority statement that keeps it out of any ranking. */
+  price_target_12m?: PriceTarget12m | null;
   analyst_targets: AnalystTargets | null;
   recommendations: Recommendations | null;
   holders: HoldersData | null;

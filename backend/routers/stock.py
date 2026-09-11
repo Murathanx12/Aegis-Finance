@@ -943,6 +943,18 @@ def _analyze_stock(ticker: str) -> dict:
         val_summary = get_valuation_summary(ticker)
         if val_summary:
             result["relative_valuation"] = val_summary
+            # THE TARGET, RECOMPUTED WITH PEERS (O11). `analyze_stock` already
+            # attached a target built from two legs, because the screener path
+            # does not fetch peers and leg A said so by name. The stock page DOES
+            # have peers by this line -- they were just fetched for the valuation
+            # summary -- so the justified-multiple leg fires here at no extra
+            # request, and the weights change accordingly.
+            try:
+                from backend.services.price_target import target_for_analysis
+                result["price_target_12m"] = target_for_analysis(
+                    result, valuation=val_summary)
+            except Exception as e:  # noqa: BLE001
+                logger.debug("price target with peers skip %s: %s", ticker, e)
     except Exception as e:
         logger.debug("relative valuation skip %s: %s", ticker, e)
 

@@ -123,6 +123,14 @@ class ReachabilityUnknowable(ReachabilityRefused):
 #:           gap rather than quietly excused, because the whole point of this
 #:           module is that "unreachable and nobody knew" stops happening.
 CLASSIFIED: dict[str, str] = {
+    "backend.services.ledger_retrieval": (
+        "OK -- M3's hindsight-safe retrieval gate, shipped BEFORE the store it "
+        "guards (roadmap 2026-09-11). M2's `learned_rules.jsonl` does not exist "
+        "yet, so nothing calls this today, and that is the point: a retrieval "
+        "gate written after the first rule is written is a gate written after "
+        "the first leak. It is exercised by `test_ask_authority.py`'s three "
+        "directional tests and becomes reachable the day the distillation job "
+        "lands. Reclassify or delete it if M2 is abandoned."),
     "backend.tests": (
         "OK — the suite. It reaches the system, not the other way round."),
     "backend.services.copy_lab": (

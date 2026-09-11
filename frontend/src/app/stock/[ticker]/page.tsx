@@ -137,80 +137,240 @@ function KeyStatsGrid({ stats, currentPrice }: { stats: Record<string, number | 
   );
 }
 
-function AnalystVsModelCard({ stock }: { stock: StockAnalysis }) {
-  const targets = stock.analyst_targets;
-  if (!targets || targets.mean == null) return null;
+function pct(v: number | null | undefined, digits = 1): string {
+  return v == null || !Number.isFinite(v) ? "\u2014" : `${v >= 0 ? "+" : ""}${v.toFixed(digits)}%`;
+}
 
-  const analystReturn12m = ((targets.mean / stock.current_price) - 1) * 100;
-  // The analyst target is a consensus MEAN, so compare it to the model's
-  // MEAN return; the lognormal median sits ~0.5σ² per year lower and made
-  // the model look artificially bearish. Median stays in the 5Y block below.
-  const model5yMedian = stock.median_return;
-  const model5yMean = stock.expected_return;
-  const modelAnnualized = (Math.pow(1 + model5yMean / 100, 1 / 5) - 1) * 100;
-  const medianAnnualized = (Math.pow(1 + model5yMedian / 100, 1 / 5) - 1) * 100;
-  const analystCount = stock.recommendations
-    ? stock.recommendations.strongBuy + stock.recommendations.buy + stock.recommendations.hold + stock.recommendations.sell + stock.recommendations.strongSell
-    : 0;
+function money(v: number | null | undefined, digits = 2): string {
+  return v == null || !Number.isFinite(v) ? "\u2014" : `$${v.toFixed(digits)}`;
+}
+
+const LEG_LABEL: Record<string, string> = {
+  multiple_based: "Justified multiple",
+  dcf_lite: "DCF-lite",
+  consensus_debiased: "Consensus, de-biased",
+};
+
+/**
+ * THE 52-WEEK TARGET (roadmap O11).
+ *
+ * What this card replaced, and why the change is worth reading: the old
+ * "12-Month Outlook" put the MEAN of a FIVE-YEAR Monte Carlo beside a TWELVE-
+ * MONTH consensus target, then took its fifth root to produce a "1Y est.".
+ * Different horizon AND different statistic -- on ADBE the 5-year mean and
+ * median did not agree on the SIGN. The fifth root is gone; the 12-month figure
+ * is the 12-month cross-section of the same simulation, and the target is a
+ * valuation with an empirical band rather than a simulation average.
+ *
+ * Every number here either has a source or is an em dash. p10/p90 is null when
+ * no error distribution was fitted for this name's bucket, and the card prints
+ * the dash -- an invented band reads as measured uncertainty.
+ */
+function PriceTargetCard({ stock }: { stock: StockAnalysis }) {
+  const pt = stock.price_target_12m;
+  if (!pt) return null;
+  if (!pt.available || !pt.target_12m) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-medium text-muted-foreground">
+            52-Week Price Target
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">&mdash; {pt.reason}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  const t = pt.target_12m;
+  const cal = pt.calibration ?? {};
+  const cons = pt.consensus_reference ?? {
+    target: null,
+    n_analysts: null,
+    raw_upside_pct: null,
+  };
+  const consLeg = pt.legs?.consensus_debiased;
+  const legs = Object.entries(pt.legs ?? {});
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
-          Model vs Analyst Comparison
-          <InfoTooltip text="Fair comparison: both columns show 12-month MEAN expected returns. Analyst target is Wall Street consensus (historically optimistic); Model return is the mean annualized from our 5-year Monte Carlo, which bakes in crash risk. The risk-adjusted median projection is shown separately below." />
+          52-Week Price Target
+          <InfoTooltip text="Built the way sell-side targets are built: a justified forward multiple, a three-stage DCF, and the consensus de-biased by the optimism measured on 1.33M graded IBES targets. Combined by inverse-error weights wherever an error has actually been measured. It is a central estimate with a wide, fat-tailed band, never a promise." />
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* 12-Month Fair Comparison */}
-        <div>
-          <p className="text-sm text-muted-foreground mb-3 uppercase tracking-wide">12-Month Outlook</p>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="text-center space-y-2 rounded-lg bg-muted/20 p-4">
-              <p className="text-sm text-muted-foreground uppercase">Analyst Target</p>
-              <p className="text-3xl font-bold tabular-nums">${targets.mean.toFixed(0)}</p>
-              <p className={`text-base font-semibold tabular-nums ${analystReturn12m >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                {analystReturn12m >= 0 ? "+" : ""}{analystReturn12m.toFixed(1)}% upside
-              </p>
-              <div className="text-sm text-muted-foreground">
-                Range: ${targets.low?.toFixed(0) ?? "?"} — ${targets.high?.toFixed(0) ?? "?"}
-              </div>
-              {analystCount > 0 && (
-                <p className="text-xs text-muted-foreground">{analystCount} analysts</p>
-              )}
-            </div>
-            <div className="text-center space-y-2 rounded-lg bg-muted/20 p-4">
-              <p className="text-sm text-muted-foreground uppercase">Our Model (1Y est.)</p>
-              <p className="text-3xl font-bold tabular-nums">{modelAnnualized >= 0 ? "+" : ""}{modelAnnualized.toFixed(1)}%</p>
-              <p className={`text-base font-semibold tabular-nums ${modelAnnualized >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-                annualized from 5Y MC
-              </p>
-              <div className="text-sm text-muted-foreground">
-                Based on jump-diffusion Monte Carlo
-              </div>
-            </div>
+      <CardContent className="space-y-5">
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-2 rounded-lg bg-muted/20 p-4 text-center">
+            <p className="text-sm uppercase text-muted-foreground">Our 52-week target</p>
+            <p className="text-3xl font-bold tabular-nums">{money(t.point)}</p>
+            <p
+              className={`text-base font-semibold tabular-nums ${
+                t.return_pct >= 0 ? "text-emerald-400" : "text-red-400"
+              }`}
+            >
+              {pct(t.return_pct)} upside
+            </p>
+            <p className="text-sm text-muted-foreground">
+              p10 {money(t.p10)} &mdash; p90 {money(t.p90)}
+            </p>
+            <p className="text-[11px] text-muted-foreground">{t.basis ?? "\u2014"}</p>
+          </div>
+          <div className="space-y-2 rounded-lg bg-muted/20 p-4 text-center">
+            <p className="text-sm uppercase text-muted-foreground">Wall Street consensus</p>
+            <p className="text-3xl font-bold tabular-nums">{money(cons.target)}</p>
+            <p
+              className={`text-base font-semibold tabular-nums ${
+                (cons.raw_upside_pct ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
+              }`}
+            >
+              {pct(cons.raw_upside_pct)} raw upside
+            </p>
+            <p className="text-sm text-muted-foreground">
+              de-biased: {pct(consLeg?.debiased_upside_pct)}
+              {consLeg?.debias_applied_pp != null
+                ? ` (${consLeg.debias_applied_pp.toFixed(1)}pp)`
+                : ""}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {cons.n_analysts ? `${cons.n_analysts} analysts` : "\u2014"}
+            </p>
           </div>
         </div>
 
-        {/* 5-Year Monte Carlo Projection */}
         <div>
-          <p className="text-sm text-muted-foreground mb-3 uppercase tracking-wide">5-Year Monte Carlo Projection</p>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg bg-muted/20 p-3 text-center">
-              <p className="text-xs text-muted-foreground uppercase">Bear (5th %ile)</p>
-              <p className="text-xl font-bold text-red-400 tabular-nums">${stock.p05_price.toFixed(0)}</p>
-            </div>
-            <div className="rounded-lg bg-muted/20 p-3 text-center">
-              <p className="text-xs text-muted-foreground uppercase">Median Return</p>
-              <p className="text-xl font-bold tabular-nums">{model5yMedian >= 0 ? "+" : ""}{model5yMedian.toFixed(1)}%</p>
-              <p className="text-xs text-muted-foreground">~{medianAnnualized.toFixed(1)}%/yr</p>
-            </div>
-            <div className="rounded-lg bg-muted/20 p-3 text-center">
-              <p className="text-xs text-muted-foreground uppercase">Bull (95th %ile)</p>
-              <p className="text-xl font-bold text-emerald-400 tabular-nums">${stock.p95_price.toFixed(0)}</p>
-            </div>
+          <p className="mb-2 text-sm uppercase tracking-wide text-muted-foreground">
+            Method weights &mdash; {pt.weights_source ?? "\u2014"}
+          </p>
+          <div className="space-y-1 text-sm">
+            {legs.map(([name, leg]) => (
+              <div key={name} className="flex items-baseline justify-between gap-3">
+                <span className="text-muted-foreground">{LEG_LABEL[name] ?? name}</span>
+                <span className="tabular-nums">
+                  {leg.available ? money(leg.value as number) : "\u2014"}
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {leg.available
+                      ? `w ${((leg.weight ?? 0) * 100).toFixed(0)}%`
+                      : String(leg.reason ?? "").slice(0, 90)}
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+          {pt.legs?.dcf_lite?.available ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              DCF terminal value is{" "}
+              {pt.legs.dcf_lite.terminal_value_share_pct?.toFixed(0) ?? "\u2014"}% of its
+              total, at a {((pt.legs.dcf_lite.wacc ?? 0) * 100).toFixed(1)}% discount rate
+              (beta source: {pt.legs.dcf_lite.beta_source ?? "\u2014"}).
+            </p>
+          ) : null}
+        </div>
+
+        <div className="rounded-lg border border-border/60 p-3 text-xs text-muted-foreground">
+          <p>
+            This method has hit its 12-month target{" "}
+            <span className="font-semibold text-foreground">
+              {cal.hit_rate_12m_pct != null ? `${cal.hit_rate_12m_pct.toFixed(0)}%` : "\u2014"}
+            </span>{" "}
+            of the time on {cal.bucket ?? "this bucket"}
+            {cal.n_backtest_obs ? ` (${cal.n_backtest_obs.toLocaleString()} observations)` : ""}.
+            {cal.bucket_level && cal.bucket_level !== "exact"
+              ? ` Read from ${cal.bucket_level_note}.`
+              : ""}
+          </p>
+          <p className="mt-1">
+            Calibration: {t.calibration ?? "\u2014"}
+            {cal.last_refit ? ` \u00b7 last refit ${String(cal.last_refit).slice(0, 10)}` : ""}
+          </p>
+          {pt.engine_usage ? (
+            <p className="mt-1">
+              <span className="font-medium text-foreground">
+                {pt.engine_usage.registry_role}, not a ranking input.
+              </span>{" "}
+              {pt.engine_usage.reason}
+            </p>
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * FIVE-YEAR PATH RISK -- what the Monte Carlo is actually good at.
+ *
+ * The simulation keeps the PATH: drawdown, probability of loss, the tails. It is
+ * no longer the source of a headline "expected return" shown beside a 12-month
+ * consensus. The 12-month row below is the 252-bar cross-section of these same
+ * paths, printed beside the terminal one so neither horizon can pretend to be
+ * the other.
+ */
+function PathRiskCard({ stock }: { stock: StockAnalysis }) {
+  const years = stock.mc_horizon_years ?? 5;
+  const mean5 = stock.expected_return_5y ?? stock.expected_return;
+  const med5 = stock.median_return_5y ?? stock.median_return;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-medium text-muted-foreground flex items-center">
+          {years}-Year Path Risk
+          <InfoTooltip text="The jump-diffusion simulation's job: drawdown, probability of loss, tails. Its terminal mean is NOT a price target and is not comparable to a 12-month consensus - different horizon and different statistic." />
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="rounded-lg bg-muted/20 p-3 text-center">
+            <p className="text-xs uppercase text-muted-foreground">Avg max drawdown</p>
+            <p className="text-xl font-bold tabular-nums text-red-400">
+              {pct(stock.avg_max_drawdown)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-muted/20 p-3 text-center">
+            <p className="text-xs uppercase text-muted-foreground">
+              P(loss over {years}y)
+            </p>
+            <p className="text-xl font-bold tabular-nums">{stock.prob_loss_5y.toFixed(0)}%</p>
+          </div>
+          <div className="rounded-lg bg-muted/20 p-3 text-center">
+            <p className="text-xs uppercase text-muted-foreground">
+              Bear / bull ({years}y)
+            </p>
+            <p className="text-xl font-bold tabular-nums">
+              {money(stock.p05_price, 0)} &mdash; {money(stock.p95_price, 0)}
+            </p>
           </div>
         </div>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="rounded-lg bg-muted/10 p-3">
+            <p className="text-xs uppercase text-muted-foreground">12 months (same paths)</p>
+            <p className="tabular-nums">
+              mean {pct(stock.expected_return_12m)} &middot; median{" "}
+              {pct(stock.median_return_12m)}
+            </p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              p10 {pct(stock.p10_return_12m)} &middot; p90 {pct(stock.p90_return_12m)}
+            </p>
+          </div>
+          <div className="rounded-lg bg-muted/10 p-3">
+            <p className="text-xs uppercase text-muted-foreground">{years} years (terminal)</p>
+            <p className="tabular-nums">
+              mean {pct(mean5)} &middot; median {pct(med5)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              The mean sits above the median because compounding is right-skewed. Neither is
+              a 12-month figure and neither is annualised into one.
+            </p>
+          </div>
+        </div>
+        {stock.mc_path_ceiling_pct != null ? (
+          <p className="text-[11px] text-muted-foreground">
+            Simulated prices are bounded at +{stock.mc_path_ceiling_pct.toFixed(0)}% inside the
+            path simulation. {stock.mc_path_ceiling_note}
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -601,8 +761,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
           {/* Key Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <MetricCard label="Current Price" value={fmtMoney(stockData.current_price, 2)} />
-            <MetricCard label="Expected Return (5Y)" value={fmtSigned(stockData.expected_return, 1)} suffix="%" color={(stockData.expected_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean return across all Monte Carlo simulations over 5 years" />
-            <MetricCard label="Median Return" value={fmtSigned(stockData.median_return, 1)} suffix="%" tooltip="50th percentile return. More robust to outliers than the mean" />
+            <MetricCard label="Expected Return (12M)" value={fmtSigned(stockData.expected_return_12m ?? null, 1)} suffix="%" color={(stockData.expected_return_12m ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean of the 252-bar cross-section of the same simulation. Computed on the 12-month horizon directly, never backed out of a 5-year figure by a root or a division." />
+            <MetricCard label="Expected Return (5Y)" value={fmtSigned(stockData.expected_return, 1)} suffix="%" color={(stockData.expected_return ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"} tooltip="Mean of the FIVE-YEAR terminal distribution. Right-skewed by compounding, so it sits above the median, and it is not comparable to a 12-month consensus target." />
             <MetricCard label="Volatility" value={fmtNum(stockData.volatility, 1)} suffix="%" tooltip="Annualized historical volatility. Higher = more price swings" />
             <MetricCard label="Beta" value={fmtNum(stockData.beta, 2)} tooltip="Sensitivity to market moves. Beta > 1 = amplifies market swings" />
             <MetricCard label="Sharpe Ratio" value={fmtNum(stockData.sharpe, 2)} color={(stockData.sharpe ?? 0) > 0.5 ? "text-emerald-400" : (stockData.sharpe ?? 0) > 0 ? "text-amber-400" : "text-red-400"} tooltip="Risk-adjusted return. Above 0.5 = decent, above 1.0 = excellent" />
@@ -657,14 +817,17 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
                   PE: {stockData.pe_ratio?.toFixed(1) ?? "N/A"} | Analyst Target: ${stockData.analyst_target?.toFixed(0) ?? "N/A"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Drift: {fmtPct(stockData.capped_drift, 1)} (capped from {fmtPct(stockData.hist_drift, 1)})
+                  Drift: {fmtPct(stockData.capped_drift, 1)} (shrunk and blended from {fmtPct(stockData.hist_drift, 1)}; nothing is capped &mdash; the consensus goes through the calibration map)
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Analyst vs Model Comparison */}
-          <AnalystVsModelCard stock={stockData} />
+          {/* THE 52-WEEK TARGET (O11), and the simulation demoted to path risk.
+              These two replaced one card that put a 5-year Monte Carlo mean
+              beside a 12-month consensus and then took its fifth root. */}
+          <PriceTargetCard stock={stockData} />
+          <PathRiskCard stock={stockData} />
 
           {/* Analyst Consensus — right after analyst comparison */}
           {stockData.recommendations && (

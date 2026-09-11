@@ -383,7 +383,14 @@ def simulate_paths(
         # Concatenate original + antithetic paths
         prices = np.hstack([prices, prices_anti])
 
-    # Apply return cap
+    # PATH CEILING — the ONE ceiling that survived the 2026-09-11 de-capping
+    # (roadmap O11). It bounds a simulated random walk's excursion: a
+    # jump-diffusion path with fat-tailed innovations can wander to absurd
+    # multiples of the starting price over 1,260 daily steps, and those paths
+    # dominate a MEAN. It is NOT a cap on a forecast — the 52-week target
+    # (`services/price_target.py`) passes through no clip at all, and the four
+    # return caps that used to sit in `stock_analyzer` are gone. Callers surface
+    # this as `mc_path_ceiling_pct` so a reader can see it was applied.
     max_return = sim_cfg.get("max_5y_return", 3.0)
     max_price = start_price * (1 + max_return)
     prices = np.clip(prices, 0.01, max_price)

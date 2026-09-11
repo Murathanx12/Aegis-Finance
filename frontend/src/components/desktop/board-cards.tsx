@@ -23,6 +23,7 @@ import {
   type FileResponse,
   type FleetResponse,
   type LeaderboardResponse,
+  type CalibrationReport,
   type LedgerResponse,
   type MorningResponse,
   type MorningStep,
@@ -162,6 +163,41 @@ export function LedgerCard() {
                 ))
               )}
             </div>
+            {/* MURPHY'S SPLIT (M4). A flat Brier cannot tell a forecaster
+                that always says the base rate (perfectly reliable, zero
+                resolution) from one that is genuinely informative. */}
+            <div className="mt-3 border-t border-border pt-2">
+              <p className="text-xs text-muted-foreground">Calibration</p>
+              <div className="mt-1 flex items-start gap-3">
+                <ReliabilityDiagram slice={data?.decomposition?.overall} />
+                <div className="min-w-0 flex-1">
+                  <Field label="reliability (lower is better)"
+                         value={n(data?.decomposition?.overall?.reliability, 4)} />
+                  <Field label="resolution (higher is better)"
+                         value={n(data?.decomposition?.overall?.resolution, 4)} />
+                  <Field label="uncertainty (the sample's own base rate)"
+                         value={n(data?.decomposition?.overall?.uncertainty, 4)} />
+                  <Field label="beats climatology"
+                         value={
+                           typeof data?.decomposition?.overall?.beats_climatology === "boolean" ? (
+                             <Badge variant={data.decomposition.overall.beats_climatology ? "outline" : "secondary"}>
+                               {data.decomposition.overall.beats_climatology ? "yes" : "no"}
+                             </Badge>
+                           ) : null
+                         } />
+                  <Field label="base-rate control (PIT)"
+                         value={`${n(data?.decomposition?.base_rate_row?.brier, 4)} (n=${n(
+                           data?.decomposition?.base_rate_row?.n, 0)})`} mono />
+                  <Field label="persistence r (quarter to quarter)"
+                         value={
+                           data?.decomposition?.persistence?.persistence === "ok"
+                             ? `${n(data.decomposition.persistence.r, 3)} (${n(
+                                 data.decomposition.persistence.n_pairs, 0)} pairs)`
+                             : `${DASH} ${data?.decomposition?.persistence?.persistence ?? ""}`
+                         } />
+                </div>
+              </div>
+            </div>
             <p className="mt-2 text-[10px] text-muted-foreground">{data?.graded_note}</p>
             <Receipt path={data?.path} />
             <RawPayload data={data} />
@@ -169,6 +205,67 @@ export function LedgerCard() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+
+/**
+ * THE RELIABILITY DIAGRAM (M4), as inline SVG.
+ *
+ * x = what the forecaster said, y = what happened. The diagonal is perfect
+ * calibration; a point above it means the forecaster was UNDER-confident at
+ * that level and below it means over-confident. Each point carries its bin's
+ * binomial standard error as a vertical whisker, because a bin of eighteen and
+ * a bin of eight hundred should not look alike.
+ *
+ * It draws NOTHING when the decomposition was refused. A curve through four
+ * points is a picture of four points.
+ */
+function ReliabilityDiagram({ slice }: { slice: CalibrationReport["overall"] }) {
+  const bins = slice?.bins ?? [];
+  if (!slice || slice.decomposition !== "ok" || bins.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {DASH} {slice?.reason ?? "no decomposition yet"}
+      </p>
+    );
+  }
+  const S = 160;
+  const pad = 18;
+  const x = (v: number) => pad + v * (S - 2 * pad);
+  const y = (v: number) => S - pad - v * (S - 2 * pad);
+  return (
+    <svg
+      viewBox={`0 0 ${S} ${S}`}
+      className="h-40 w-40"
+      role="img"
+      aria-label="Reliability diagram: forecast probability against realised outcome rate"
+    >
+      <rect x={pad} y={pad} width={S - 2 * pad} height={S - 2 * pad}
+            fill="none" stroke="currentColor" strokeOpacity={0.18} />
+      <line x1={x(0)} y1={y(0)} x2={x(1)} y2={y(1)}
+            stroke="currentColor" strokeOpacity={0.3} strokeDasharray="3 3" />
+      {bins.map((b) => (
+        <g key={b.bin_id}>
+          <line
+            x1={x(b.mean_forecast)}
+            y1={y(Math.max(0, b.mean_outcome - b.outcome_se))}
+            x2={x(b.mean_forecast)}
+            y2={y(Math.min(1, b.mean_outcome + b.outcome_se))}
+            stroke="currentColor"
+            strokeOpacity={0.45}
+          />
+          <circle cx={x(b.mean_forecast)} cy={y(b.mean_outcome)} r={2.5}
+                  fill="currentColor" />
+        </g>
+      ))}
+      <text x={pad} y={S - 4} fontSize={7} fill="currentColor" fillOpacity={0.6}>
+        said
+      </text>
+      <text x={2} y={pad + 6} fontSize={7} fill="currentColor" fillOpacity={0.6}>
+        happened
+      </text>
+    </svg>
   );
 }
 
