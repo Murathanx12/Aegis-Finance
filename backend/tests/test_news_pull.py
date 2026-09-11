@@ -457,6 +457,16 @@ def test_pull_all_writes_a_summary_and_names_its_red_sources(corpus):
     assert Path(out["receipt_path"]).exists()
 
 
+def test_two_sources_from_the_same_provider_are_spaced_further_apart():
+    """Reddit 429'd the second sub on 2026-09-11 because it followed the first
+    half a second later. A provider rate-limits by IP, not by our loop."""
+    same = np_._gap_before("reddit_securityanalysis_rss", "reddit_algotrading_rss")
+    different = np_._gap_before("reddit_algotrading_rss", "nikkei_asia_rss")
+    assert same == pytest.approx(4.0), "same provider: twice its own interval"
+    assert different == pytest.approx(2.0)
+    assert np_._gap_before("not_a_source", "nikkei_asia_rss") == 0.5
+
+
 def test_the_cli_lists_the_registry(capsys):
     assert np_.main(["--list"]) == 0
     printed = capsys.readouterr().out

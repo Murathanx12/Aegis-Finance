@@ -988,6 +988,24 @@ def _emit(receipt: dict, src: registry.NewsSource) -> None:
     receipt["receipt_path"] = str(p)
 
 
+def _gap_before(next_id: str, prev_id: str) -> float:
+    """Seconds to wait between two sources.
+
+    A per-source `min_interval_s` paces calls WITHIN a source and says nothing
+    about the gap between two sources that share a provider — and a provider
+    rate-limits by IP, not by our loop structure. On 2026-09-11
+    `reddit_securityanalysis_rss` 429'd because it followed
+    `reddit_algotrading_rss` half a second later. Consecutive sources from the
+    same provider now wait twice that provider's interval.
+    """
+    try:
+        nxt, prev = registry.get(next_id), registry.get(prev_id)
+    except registry.UnknownSource:
+        return 0.5
+    same = nxt.provider.split()[0].lower() == prev.provider.split()[0].lower()
+    return max(0.5, nxt.min_interval_s * (2.0 if same else 1.0))
+
+
 def pull_all(source_ids: Iterable[str] | None = None, ctx: RunContext | None = None) -> dict:
     """Every pullable source in registry order, each with its own receipt."""
     t0 = time.time()
@@ -1009,7 +1027,7 @@ def pull_all(source_ids: Iterable[str] | None = None, ctx: RunContext | None = N
         except registry.UnknownSource as e:
             per.append({"source": sid, "status": "REFUSED", "failures": [str(e)]})
         if i + 1 < len(ids) and (ctx is None or ctx.paced):
-            _sleep(0.5)
+            _sleep(_gap_before(ids[i + 1], sid))
     red = [r["source"] for r in per if r.get("status") == "RED"]
     refused = [r["source"] for r in per if r.get("status") == "REFUSED"]
     total_new = sum(int(r.get("new", 0)) for r in per)
