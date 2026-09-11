@@ -377,6 +377,60 @@ def test_gdelt_429_records_the_missing_ngrams_fallback(corpus):
     assert any("NGrams 3.0 bulk fallback is NOT implemented" in f for f in rec["failures"])
 
 
+# ------------------------------------------------------- bounds on a hung call
+
+
+def test_a_hung_third_party_call_times_out_instead_of_stopping_the_sweep():
+    """Found live on 2026-09-11: the pull sat on ONE Yahoo socket for five
+    minutes with 0.1s of CPU. `_http_get` passes a timeout to urllib; yfinance
+    goes through curl_cffi with a session we do not own, so the bound has to be
+    a watchdog. The hung thread is a daemon — it cannot hold the process open.
+    """
+    import threading
+
+    release = threading.Event()
+
+    def never_returns():
+        release.wait(30)
+        return "too late"
+
+    t0 = __import__("time").time()
+    with pytest.raises(np_.CallTimeout, match="no response in"):
+        np_.call_with_timeout(never_returns, 0.2, "stuck call")
+    assert __import__("time").time() - t0 < 5, "the watchdog did not fire"
+    release.set()
+
+
+def test_the_watchdog_passes_a_normal_result_and_a_normal_error_through():
+    assert np_.call_with_timeout(lambda: 42, 5, "fine") == 42
+    with pytest.raises(np_.FetchError, match="ValueError"):
+        np_.call_with_timeout(lambda: (_ for _ in ()).throw(ValueError("nope")), 5, "bad")
+
+
+def test_a_source_stops_at_its_wall_clock_budget_and_says_so(corpus):
+    """A nightly job must finish. A source that cannot deliver in its budget
+    stops with what it has and resumes from its cursor next run."""
+    items = json.loads(fixture_bytes("yfinance_ticker_news.json"))
+
+    class Slow(StubCtx):
+        def yf_news(self, symbol):
+            self._t0 -= 999  # the budget is already spent by the next check
+            return items
+
+    ctx = Slow(b"", paced=False, budget_s=1.0)
+    ctx._universe = ["AAA", "BBB", "CCC"]
+    rec = np_.pull_source("yfinance_ticker_news", ctx)
+    assert rec["calls"] == 1, "the sweep stopped after the budget was spent"
+    assert any("wall-clock budget" in f for f in rec["failures"])
+    assert rec["new"] == 2, "and it KEPT what it had already fetched"
+
+
+def test_a_zero_budget_means_unbounded(corpus):
+    ctx = np_.RunContext(budget_s=0.0)
+    ctx._t0 -= 10_000
+    assert ctx.budget_spent(np_.FetchResult()) is False
+
+
 # ---------------------------------------------------------------- receipts
 
 

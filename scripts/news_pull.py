@@ -64,6 +64,7 @@ import json
 import os
 import re
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -207,6 +208,51 @@ def finnhub_key_name() -> str | None:
 
 class FetchError(RuntimeError):
     """A network or parse failure for one call. Recorded, never raised past the source."""
+
+
+class CallTimeout(FetchError):
+    """One third-party call outlived its watchdog. The sweep continues."""
+
+
+def call_with_timeout(fn, timeout_s: float, what: str):
+    """Run `fn()` with a hard wall-clock bound, on a DAEMON thread.
+
+    `_http_get` passes a timeout to urllib, so our own HTTP is bounded. A
+    third-party library's own session is not: `yfinance.Ticker(...).news` goes
+    through curl_cffi, and on 2026-09-11 the live pull sat on one ESTABLISHED
+    socket to Yahoo for five minutes with 0.1s of CPU and no way to stop. This
+    repo has paid for an unbounded third-party call before — the 2.5 h suite
+    hang that `backend/tests/conftest.py` was written about.
+
+    The hung thread is NOT killed (Python cannot), which is why it is a daemon:
+    it cannot hold the process open at exit, and the sweep moves to the next
+    symbol instead of waiting on it for ever.
+    """
+    box: dict = {}
+
+    def run():
+        try:
+            box["value"] = fn()
+        except BaseException as e:  # noqa: BLE001 — the caller records the string
+            box["error"] = e
+
+    t = threading.Thread(target=run, daemon=True, name=f"news_pull:{what}")
+    t.start()
+    t.join(timeout_s)
+    if t.is_alive():
+        raise CallTimeout(f"{what}: no response in {timeout_s:.0f}s (thread abandoned)")
+    if "error" in box:
+        raise FetchError(f"{what}: {type(box['error']).__name__}: {box['error']}")
+    return box.get("value")
+
+
+#: Hard bound on ONE `Ticker.news` call. Yahoo is unofficial and has no SLA.
+YF_CALL_TIMEOUT_S = 25.0
+
+#: Default wall-clock budget per source when the CLI does not set one. A
+#: nightly job must finish; a source that cannot deliver inside its budget
+#: stops with what it has and resumes from its cursor next run.
+SOURCE_BUDGET_S = 600.0
 
 
 def _http_get(url: str, *, headers: dict | None = None, timeout: float = 45.0) -> bytes:
@@ -646,7 +692,12 @@ class RunContext:
     max_rows: int | None = None
     resume: bool = False
     paced: bool = True
+    #: Wall-clock budget for ONE source. A fetcher checks it the same way it
+    #: checks `max_rows`, and a source that exceeds it stops with what it has.
+    #: See `SOURCE_BUDGET_S` for why this is not optional.
+    budget_s: float = 0.0
     cursor: dict = field(default_factory=dict)
+    _t0: float = field(default_factory=time.time)
     _universe: list[str] | None = None
 
     # -- effects (each one is mocked in tests) ---------------------------
@@ -658,14 +709,39 @@ class RunContext:
 
     def yf_news(self, symbol: str) -> list[dict]:
         import yfinance as yf
-        return list(yf.Ticker(symbol).news or [])
+
+        def pull():
+            return list(yf.Ticker(symbol).news or [])
+
+        return call_with_timeout(pull, YF_CALL_TIMEOUT_S, f"yfinance {symbol}") or []
 
     # -- pacing and budget ----------------------------------------------
     def pace(self, src: registry.NewsSource) -> float:
         return src.min_interval_s if self.paced else 0.0
 
     def budget_spent(self, res: FetchResult) -> bool:
-        return bool(self.max_rows) and len(res.items) >= self.max_rows
+        """Has this source spent its row budget OR its wall-clock budget?
+
+        The wall-clock half was added on 2026-09-11 after the live pull hung:
+        `yfinance.Ticker(...).news` goes through curl_cffi with no timeout of
+        ours, Yahoo held the connection open, and the whole sweep sat on one
+        ESTABLISHED socket for five minutes with 0.1s of CPU. `_http_get` has
+        a timeout; a third-party library's own session does not, and this repo
+        has paid for that once already (the 2.5 h suite hang, conftest.py).
+        """
+        if self.max_rows and len(res.items) >= self.max_rows:
+            return True
+        if self.budget_s and (time.time() - self._t0) > self.budget_s:
+            res.failures.append(
+                f"source wall-clock budget of {self.budget_s:.0f}s spent; stopping with "
+                f"{len(res.items)} rows. This is a BUDGET, not a failure — the next "
+                f"run resumes from the cursor.")
+            return True
+        return False
+
+    def restart_clock(self) -> None:
+        """Start this source's wall-clock budget. Called once per source."""
+        self._t0 = time.time()
 
     # -- inputs ----------------------------------------------------------
     def universe_symbols(self) -> list[str]:
@@ -820,6 +896,7 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
         return receipt
 
     fetcher = FETCHERS[src.parser]
+    ctx.restart_clock()
     res = fetcher(src, ctx)
     receipt["calls"] = res.calls
     receipt["failures"].extend(res.failures)
@@ -920,7 +997,7 @@ def pull_all(source_ids: Iterable[str] | None = None, ctx: RunContext | None = N
         c = RunContext(
             since=(ctx.since if ctx else ""), until=(ctx.until if ctx else ""),
             max_rows=(ctx.max_rows if ctx else None), resume=(ctx.resume if ctx else False),
-            paced=(ctx.paced if ctx else True),
+            paced=(ctx.paced if ctx else True), budget_s=(ctx.budget_s if ctx else 0.0),
         )
         if ctx is not None:
             c.http_get = ctx.http_get            # type: ignore[method-assign]
@@ -971,6 +1048,8 @@ def main(argv=None) -> int:
     ap.add_argument("--resume", action="store_true", help="continue from the source's cursor")
     ap.add_argument("--max-rows", type=int, default=None, help="cap NEW rows per source")
     ap.add_argument("--no-pace", action="store_true", help="skip inter-call sleeps (tests only)")
+    ap.add_argument("--budget-s", type=float, default=SOURCE_BUDGET_S,
+                    help="wall-clock budget per source; 0 disables (default %(default)s)")
     ap.add_argument("--list", action="store_true", help="print the registry and exit")
     a = ap.parse_args(argv)
 
@@ -982,7 +1061,7 @@ def main(argv=None) -> int:
         return 0
 
     ctx = RunContext(since=a.since, until=a.until, max_rows=a.max_rows,
-                     resume=a.resume, paced=not a.no_pace)
+                     resume=a.resume, paced=not a.no_pace, budget_s=a.budget_s)
     if a.source == "all":
         out = pull_all(ctx=ctx)
     else:
