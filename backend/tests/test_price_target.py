@@ -189,6 +189,25 @@ def test_a_price_can_never_go_below_zero():
     assert "cannot be negative" in band["basis"]
 
 
+def test_a_band_wholly_above_spot_is_withheld_not_shown():
+    """NVDA's first live run: p10 $234.93 on a $218.36 stock. A pooled error
+    bucket gives a top-of-range name a band centred on the bucket's typical
+    name, so the whole band can sit above spot -- a claim of near-certain gain
+    the data never made. Until the quantiles are conditioned on the upside
+    tercile, the band is withheld and says why; p50 stands (withholding is not
+    a clip)."""
+    cohort = {"error_quantiles": {"p10": -0.05, "p90": 0.60, "n": 500}}
+    band = PT.interval(current_price=218.36, point_return=0.50, cohort=cohort)
+    assert band["p10"] is None and band["p90"] is None
+    assert band.get("band_withheld") is True
+    assert "above" in band["basis"] and "spot" in band["basis"]
+    assert band["p50"] == round(218.36 * 1.5, 4)
+    # and a band that straddles spot is untouched
+    ok = PT.interval(current_price=218.36, point_return=0.50,
+                     cohort={"error_quantiles": {"p10": -0.70, "p90": 0.60, "n": 500}})
+    assert ok["p10"] is not None and ok.get("band_withheld") is None
+
+
 def test_an_unfitted_bucket_falls_back_to_a_coarser_one_and_names_the_level():
     """NVDA and MU resolved to `Technology|mega|vol_high`, which the fit does not
     contain, because the backtest buckets on MONTHLY vol and the live path on

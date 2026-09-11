@@ -534,6 +534,19 @@ def interval(*, current_price: float, point_return: float,
     if floored:
         out["p10_floored_at_zero"] = True
         out["basis"] += "; p10 truncated at 0 (a price cannot be negative)"
+    # A BAND WHOLLY ABOVE SPOT IS A CLAIM THE DATA DID NOT MAKE. NVDA's first
+    # live run printed p10 $234.93 on a $218.36 stock: the error quantiles are
+    # pooled over a bucket, so a name at the top of the upside range inherits a
+    # band centred on the bucket's typical name (Asquith-Mikhail-Au: error grows
+    # with implied upside). Until the quantiles are conditioned on the upside
+    # tercile the way the calibration map already is, such a band is withheld
+    # and the row says why. Withholding is not a clip: p50 stands.
+    if out["p10"] > current_price:
+        out.update({"p10": None, "p90": None, "band_withheld": True,
+                    "basis": (f"withheld: the pooled band's p10 "
+                              f"({current_price * (1.0 + point_return + lo_w):.2f}) sits above "
+                              f"spot ({current_price:.2f}); error quantiles are not yet conditioned "
+                              f"on the upside tercile, so this band would overstate certainty")})
     return out
 
 
