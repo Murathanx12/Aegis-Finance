@@ -81,6 +81,11 @@ async def _prewarm_cache():
         set_cache_status("failed", str(e))
         _note_no_fred_fetch(f"cache prewarm failed: {e}")
 
+    if _desktop_background_off():
+        logger.info("desktop mode: PI fast-lane prewarm and the endpoint warm "
+                    "loop are NOT started (AEGIS_DESKTOP_SCHEDULER=1 to start them)")
+        return
+
     # Background warm of PI fast-lane metrics so /compare is instant.
     # Heavy walk-forward replays are NOT prewarmed — they run on-demand from
     # the dedicated /replay page (where users explicitly opt in to the wait).
@@ -227,6 +232,27 @@ async def _prewarm_pi_fast_lanes():
         logger.info("PI fast-lane prewarm: %d/%d succeeded", ok, len(jobs))
     except Exception as e:
         logger.warning("PI fast-lane prewarm failed (non-fatal): %s", e)
+
+
+def _desktop_background_off() -> bool:
+    """True when this process is the laptop app and must not run the fleet's loops.
+
+    THE COST THIS PREVENTS, and it became real on 2026-09-11. Until chunk 1 the
+    packaged app could not read `.env` at all, so every keyed background job
+    failed closed and nobody noticed the loops were registered. With the repo
+    root fixed the desktop process has the same keys Railway has -- which means
+    the laptop would quietly start running the deployment's schedule: twelve
+    APScheduler jobs (`pi_daily_digest` and `pi_why_moved` among them, both LLM
+    callers on a paid DeepSeek key), the PI fast-lane prewarm, and the endpoint
+    warm loop that exists to keep a SERVER's caches hot. None of that is what a
+    window on a laptop is for, and two schedulers writing the same paper NAV
+    rows is worse than one.
+
+    `AEGIS_DESKTOP_SCHEDULER=1` turns them back on for the case where the laptop
+    IS the deployment.
+    """
+    return (os.getenv("AEGIS_DESKTOP", "") == "1"
+            and os.getenv("AEGIS_DESKTOP_SCHEDULER", "") != "1")
 
 
 @asynccontextmanager
@@ -470,11 +496,15 @@ async def lifespan(app: FastAPI):
                 logger.error("Arena seeding failed: %s", e, exc_info=True)
     asyncio.create_task(_init_lanes())
 
-    try:
-        from backend.services.portfolio_intelligence.scheduler import setup_scheduler
-        setup_scheduler()
-    except Exception as e:
-        logger.warning("PI scheduler setup failed (non-fatal): %s", e)
+    if _desktop_background_off():
+        logger.info("desktop mode: the APScheduler jobs are NOT registered "
+                    "(AEGIS_DESKTOP_SCHEDULER=1 to register them)")
+    else:
+        try:
+            from backend.services.portfolio_intelligence.scheduler import setup_scheduler
+            setup_scheduler()
+        except Exception as e:
+            logger.warning("PI scheduler setup failed (non-fatal): %s", e)
 
     yield
 
@@ -657,6 +687,36 @@ app.include_router(_optimus_ledger.router)
 app.include_router(_prediction_markets.router)
 
 
+#: Resolved once, at import, and cached: `git rev-parse HEAD` is a subprocess
+#: and `/api/health` is polled every 250 ms by the desktop splash.
+_GIT_HEAD: str | None = None
+
+
+def git_head() -> str | None:
+    """The commit the RUNNING CODE came from, or None with nothing invented.
+
+    This is the acceptance test for the thin launcher (roadmap O1): the .exe
+    pulls the checkout and starts the shell from it, and the only way to see
+    from outside that the served code is the pulled code is to ask the server
+    what HEAD it is running. A frozen build reports None -- honestly, because a
+    bundle has no HEAD -- and that is itself the signal that the old
+    architecture is running.
+    """
+    global _GIT_HEAD
+    if _GIT_HEAD is not None:
+        return _GIT_HEAD or None
+    import subprocess
+    from pathlib import Path as _P
+    root = os.getenv("AEGIS_REPO_ROOT") or str(_P(__file__).resolve().parent.parent)
+    try:
+        out = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root,
+                             capture_output=True, text=True, timeout=10)
+        _GIT_HEAD = out.stdout.strip() if out.returncode == 0 else ""
+    except (OSError, subprocess.SubprocessError):
+        _GIT_HEAD = ""
+    return _GIT_HEAD or None
+
+
 @app.get("/api/health")
 async def health():
     cs = cache_status()
@@ -666,6 +726,7 @@ async def health():
         "cache_ready": cache_ready(),
         "cache_status": cs["status"],
         "cache_error": cs.get("error"),
+        "git_head": git_head(),
     }
 
 

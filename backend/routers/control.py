@@ -129,19 +129,17 @@ def job_python() -> str | None:
 
     Resolution order, and it REFUSES rather than guessing: `AEGIS_JOB_PYTHON`,
     then a `.venv` beside the repo, then `python` on PATH.
+
+    THE ORDER LIVES IN `desktop/_interp.py` AND IS IMPORTED, not repeated. The
+    launcher (`desktop/launcher.py`) has to answer the same question before it
+    can start anything at all, and two copies of a resolution order drift the
+    moment one of them learns about a new venv layout. `desktop/_interp` imports
+    the standard library only, so this adds nothing to the control plane.
     """
-    if not getattr(sys, "frozen", False):
-        return sys.executable
-    import shutil
-    cand = os.getenv("AEGIS_JOB_PYTHON")
-    if cand and Path(cand).exists():
-        return cand
-    for rel in (".venv/Scripts/python.exe", ".venv/bin/python", "venv/Scripts/python.exe"):
-        p = REPO / rel
-        if p.exists():
-            return str(p)
-    found = shutil.which("python") or shutil.which("python3")
-    return found
+    if str(Path(__file__).resolve().parent.parent.parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+    from desktop._interp import resolve
+    return resolve(REPO)[0]
 
 
 def child_argv(args: list[str]) -> list[str]:

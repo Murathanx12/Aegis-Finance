@@ -37,6 +37,7 @@ import socket
 import sys
 import threading
 import time
+import traceback
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -149,6 +150,26 @@ def _storage_dir() -> Path:
 
 log = logging.getLogger("aegis.desktop")
 
+#: Filled by `start_backend`'s thread if it dies. Read by the report (and so by
+#: the launcher's receipt, which embeds the report) -- a window that never
+#: loaded must be able to say WHY without a second launch.
+BACKEND_ERROR: dict = {}
+
+
+def report_path() -> Path:
+    """Where this shell writes what it did. Beside the log, in the checkout."""
+    return _log_path().with_name("aegis_desktop_report.json")
+
+
+def write_report(report: dict) -> Path | None:
+    p = report_path()
+    try:
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(report, indent=1, default=str), encoding="utf-8")
+        return p
+    except OSError:
+        return None
+
 
 def _init_log() -> Path:
     p = _log_path()
@@ -218,11 +239,25 @@ def start_backend(port: int) -> threading.Thread:
         os.environ.setdefault("AEGIS_DATA_DIR", str(root / "backend" / "data"))
 
     def run() -> None:
-        import uvicorn
+        # EVERY LINE OF THIS BODY WAS UNWRAPPED UNTIL 2026-09-11, and the frozen
+        # build proved what that costs: the thread died on import, the window
+        # counted to 242 s and gave up, `aegis_desktop.log` held the start line
+        # and NOTHING ELSE, and diagnosing it needed a process table and two
+        # more launches. A daemon thread that raises in a `console=False` build
+        # writes its traceback to a stderr that does not exist. `BaseException`,
+        # not `Exception`: a `SystemExit` from deep inside uvicorn's config is
+        # exactly as silent and exactly as fatal.
+        try:
+            import uvicorn
 
-        from backend.main import app, mount_desktop_frontend
-        mount_desktop_frontend(app)          # after every API route is registered
-        uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+            from backend.main import app, mount_desktop_frontend
+            mount_desktop_frontend(app)      # after every API route is registered
+            uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+        except BaseException as exc:         # noqa: BLE001 - see above
+            BACKEND_ERROR["error"] = f"{type(exc).__name__}: {exc}"
+            BACKEND_ERROR["traceback"] = traceback.format_exc()
+            log.exception("backend thread died: %s", exc)
+            raise
 
     th = threading.Thread(target=run, name="aegis-uvicorn", daemon=True)
     th.start()
@@ -263,7 +298,17 @@ def stop_llama_if_owned() -> dict:
 
 
 def dispatch_module(argv: list[str]) -> int:
-    """`AegisDesktop.exe --run-module scripts.night_factory --job X` -> run it.
+    """RETIRED BY THE LAUNCHER (2026-09-11); kept for one release.
+
+    `desktop/launcher.py` is what PyInstaller freezes now, and it starts this
+    shell under the CHECKOUT'S interpreter -- so `sys.executable` is a real
+    python, `-m` works, and `control.child_argv`'s frozen branch is never
+    reached. Deleting it in the same commit that added the launcher would mean
+    the old `dist/AegisDesktop.exe` on Murat's desktop loses its job dispatch
+    the moment it is next run. Delete it, and its tests, once the launcher has
+    run for a week.
+
+    `AegisDesktop.exe --run-module scripts.night_factory --job X` -> run it.
 
     Inside a PyInstaller build `sys.executable` is this .exe, not python.exe, so
     the control router's `[sys.executable, "-m", "scripts.night_factory", ...]`
@@ -312,7 +357,9 @@ def main(argv: list[str] | None = None) -> int:
     llama = maybe_start_llama(enabled=not a.no_llama, keep=a.keep_llama)
 
     report = {"utc": _now(), "port": port, "llama": llama, "log": str(logfile),
-              "storage": str(storage), "repo_root": str(repo_root() or REPO)}
+              "storage": str(storage), "repo_root": str(repo_root() or REPO),
+              "pid": os.getpid(), "frozen": bool(getattr(sys, "frozen", False))}
+    write_report(report)
     log.info("backend on %s; llama=%s", port, json.dumps(llama, default=str)[:300])
 
     if a.headless or a.serve:
@@ -321,6 +368,8 @@ def main(argv: list[str] | None = None) -> int:
                    "total_s": round(time.time() - t0, 2),
                    "mode": "serve" if a.serve else "headless",
                    "url": f"http://127.0.0.1:{port}/desktop"}
+        if BACKEND_ERROR:
+            report["backend_error"] = dict(BACKEND_ERROR)
         # The acceptance line for the root fix (handoff 2026-09-11 s1.1): the
         # packaged app used to report NO configured provider, because its
         # `.env` was a file inside `_internal` that does not exist. Read it
@@ -332,6 +381,11 @@ def main(argv: list[str] | None = None) -> int:
             report["llm_providers"] = llm_usage()["providers"]
         except Exception as exc:  # noqa: BLE001 - a report that cannot be built must say why
             report["llm_providers"] = {"error": f"{type(exc).__name__}: {exc}"}
+        # AFTER the provider block: the early write happens before the health
+        # probe and before `llm_providers`, so a reader of the report file (the
+        # launcher's receipt embeds it) would otherwise see a half-filled report
+        # and conclude the shell never finished starting.
+        write_report(report)
         if a.serve:
             # a packaged build cannot be probed by `--headless`, which reports and
             # exits before anything can call it -- the first attempt to verify the
@@ -379,6 +433,9 @@ def main(argv: list[str] | None = None) -> int:
             ok, waited = wait_for_health(port)
             report["health_ok"] = ok
             report["cold_start_s"] = waited
+            if BACKEND_ERROR:
+                report["backend_error"] = dict(BACKEND_ERROR)
+            write_report(report)
             log.info("health_ok=%s after %.2fs", ok, waited)
             if ok:
                 url = f"http://127.0.0.1:{port}{a.page}"
@@ -386,9 +443,14 @@ def main(argv: list[str] | None = None) -> int:
                 log.info("loaded %s", url)
             else:
                 log.error("health never answered within %.0fs; showing the failure page", waited)
+                why = (f"<pre style='white-space:pre-wrap;color:#f85149'>"
+                       f"{BACKEND_ERROR.get('error')}</pre>" if BACKEND_ERROR else
+                       "<p>The engine thread did not report an error, which means it is "
+                       "still importing or the port was taken.</p>")
                 window.load_html(
                     "<body style='background:#0b0d10;color:#e6e8ea;font:14px system-ui;padding:32px'>"
                     f"<h2>The engine did not answer within the timeout ({waited}s).</h2>"
+                    f"{why}"
                     f"<p>Nothing was started that needs stopping.</p>"
                     f"<p>The app's own log is at<br><code>{_log_path()}</code></p>")
         except Exception as exc:  # noqa: BLE001 - a silent splash is the worst outcome

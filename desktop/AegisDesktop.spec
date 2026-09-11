@@ -1,34 +1,47 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for Aegis Desktop.
+"""PyInstaller spec for Aegis Desktop -- the LAUNCHER, not the app.
 
-    cd frontend && AEGIS_DESKTOP_BUILD=1 npx next build
     python -m PyInstaller desktop/AegisDesktop.spec --noconfirm
 
-`--onedir`, deliberately. A onefile build unpacks the whole bundle to a temp
-directory on every launch, which turns a 0.75 s cold start into tens of seconds
-and is what antivirus heuristics flag hardest. The cost is a folder instead of a
-single file, which a desktop shortcut hides anyway.
+WHAT CHANGED ON 2026-09-11, AND WHY THE FILE IS NOW SHORT
+=========================================================
+This spec used to freeze the whole backend: `backend/**` walked file by file,
+the static frontend export, the vendored schema mirror, a size ceiling, an
+eight-megabyte walker and a list of hidden imports for routers reached by
+string. 1.1 GB of dist directory. It bought two things, and both were bad:
 
-WHAT IS AND IS NOT IN THE BUNDLE, and why -- the first attempt got this wrong
-and produced a **27 GB** dist directory before it was stopped:
+* **the app could not update itself** -- every change needed a rebuild; and
+* **a path that resolves differently when frozen** became a defect FAMILY, six
+  instances by 09-11: an empty database inside the bundle, the vendored schema
+  dropped, the llama ownership note written where nothing could read it back (so
+  a model server outlived the app with 5 GB mapped), `AEGIS_DATA_DIR` one level
+  too deep, the frozen `-m` spawn, and `.env` invisible to `config.py` so the
+  packaged app ran with NO API KEYS while looking perfectly healthy.
 
-* IN: the window (pywebview), the API (`backend`), and the static frontend
-  export. That is what a click on the shortcut has to start.
-* OUT: `backend/data/**`. `collect_data_files("backend")` swept every parquet --
-  the 1.25M-row bar table, the 339,657-row news panel, `train_table_long` --
-  into the bundle. The app READS those from the repo at runtime; a second copy
-  inside the .exe is pure duplication that also goes stale the moment a night
-  job writes.
-* OUT: torch, transformers, and the `scripts`/`learner` packages.
-  `collect_submodules("scripts")` imports every night job at analysis time and
-  drags in torch with CUDA (~2.5 GB) for jobs the WINDOW never runs. Night jobs
-  are spawned as subprocesses by `backend.routers.control.job_python()`, which
-  resolves a real interpreter that already has that stack, and refuses
-  audibly if it cannot find one.
+So the .exe is now `desktop/launcher.py` and its two stdlib-only companions. It
+finds the checkout, pulls it, and runs `python -m desktop.aegis_desktop` under
+the CHECKOUT'S interpreter. `backend/`, `scripts/`, `learner/`, the frontend
+export and the data are read from the repository at runtime, as they always
+were in practice. **Nothing that is not frozen can have a frozen-path defect.**
 
-The app is a launcher for THIS machine's repo -- it reads
-`backend/data/optimus/**` at runtime and was never portable. Pretending
-otherwise is what cost the 27 GB.
+WHAT IS IN THE BUNDLE
+* `desktop/launcher.py`, `desktop/_interp.py`, pywebview (for the one window the
+  launcher can draw itself: the refusal page when no checkout is found).
+* the icon.
+
+WHAT IS NOT
+* `backend/`, `scripts/`, `learner/`, `frontend/out`, `backend/vendor`,
+  `backend/data/config`, uvicorn, fastapi, sklearn, pyarrow, apscheduler --
+  every one of them is imported by the SHELL, which runs from the checkout.
+
+`--onedir`, still deliberately: a onefile build unpacks to a temp directory on
+every launch, which is both slow and the hardest thing for antivirus heuristics
+to swallow.
+
+THE STALE-EXPORT REFUSAL IS GONE, on purpose. It existed because the bundle
+carried `frontend/out` and an empty one produced a window showing raw JSON. The
+launcher serves the checkout's export and rebuilds it when `frontend/` has
+changed, so the build no longer has an opinion about it.
 """
 
 import subprocess
@@ -37,28 +50,14 @@ from pathlib import Path
 
 REPO = Path(SPECPATH).resolve().parent          # noqa: F821 - SPECPATH is injected
 
-# ---------------------------------------------------------------- data files
-# Without `frontend/out` the window shows the API's JSON root and nothing else.
-# `mount_desktop_frontend` degrades honestly (logs, reports `mounted: False`),
-# but the build should never get that far -- so fail LOUDLY here.
-_out = REPO / "frontend" / "out"
-if not (_out / "index.html").exists():
-    raise SystemExit(
-        f"REFUSED: no static export at {_out}. Build it first:\n"
-        f"    cd frontend && AEGIS_DESKTOP_BUILD=1 npx next build\n"
-        f"Packaging without it produces an .exe whose window is empty, which is "
-        f"the kind of failure that looks like a crash and is not."
-    )
-
 # A running AegisDesktop.exe holds its own directory open, and PyInstaller's
 # COLLECT step wipes the target first -- so a rebuild while the app is open dies
 # with `PermissionError: [WinError 5] Access is denied` forty lines deep in
 # `_make_clean_directory`, which names the directory but not the reason. Say the
-# reason here, at the top, before five minutes of analysis are spent.
+# reason here, at the top, before the analysis is spent.
 _running = []
 if sys.platform == "win32":
     try:
-        _out_dir = str((REPO / "dist" / "AegisDesktop").resolve()).lower()
         _tasks = subprocess.run(
             ["tasklist", "/FI", "IMAGENAME eq AegisDesktop.exe", "/NH"],
             capture_output=True, text=True, timeout=15, shell=False,
@@ -67,93 +66,44 @@ if sys.platform == "win32":
             _running.append(_tasks.strip().splitlines()[0].strip())
     except (OSError, subprocess.SubprocessError):
         pass
-if _running and str(DISTPATH).lower().endswith("dist"):        # noqa: F821 - injected
+if _running and str(DISTPATH).lower().rstrip("\\/").endswith("dist"):   # noqa: F821
     raise SystemExit(
         "REFUSED: AegisDesktop.exe is running, and it holds the directory this build "
         "would wipe:\n    " + "\n    ".join(_running) + "\n"
         "Close the app, or build alongside it with a staging path:\n"
-        "    python -m PyInstaller desktop/AegisDesktop.spec --noconfirm --distpath dist/next\n"
+        "    python -m PyInstaller desktop/AegisDesktop.spec --noconfirm --distpath dist_next\n"
         "then swap the folders once it is closed. Never kill it to unblock a build -- it may be "
         "running a night job."
     )
 
 datas = [
-    (str(_out), "frontend/out"),
     (str(REPO / "desktop" / "assets"), "desktop/assets"),
 ]
-# Small configuration the services read at import time. Named explicitly, one
-# directory at a time: a glob here is how `backend/data` got swept last time.
-for rel in ("backend/data/config", "backend/data/lanes"):
-    p = REPO / rel
-    if p.exists():
-        datas.append((str(p), rel))
 
-# Non-.py files under `backend/` that the code opens BY PATH rather than
-# importing -- the vendored `alpha/human.py` schema mirror, the trained crash
-# model artefacts. PyInstaller bundles modules, not files a module reads, so
-# dropping the blanket `collect_data_files` lost these: the first .exe started,
-# imported `backend.services.human_thesis`, and died with
-# `SchemaUnavailable: the vendored thesis schema is missing`. It failed loudly
-# with the full path, which is the only reason this took one smoke test to find.
-#
-# `backend/data` and `backend/tests` are skipped BY NAME. That skip is the whole
-# safety property: without it this walk is the 27 GB build again, and the size
-# ceiling below is the second line of defence.
-# `backend/vendor/` is copied WHOLE, `.py` files included, and it is the one
-# place where that is right. It holds a byte-identical mirror of the execution
-# repo's `alpha/human.py`, which `human_thesis._load_mirror` loads by inserting
-# the directory on `sys.path` and importing from there -- so PyInstaller's
-# analyser never sees the import and bundles nothing, while the `.py` skip below
-# would drop the files even if it had. The first two builds both died on
-# `SchemaUnavailable: the vendored thesis schema is missing at <path>` for
-# exactly this reason.
-_vendor = REPO / "backend" / "vendor"
-if _vendor.exists():
-    datas.append((str(_vendor), "backend/vendor"))
-
-_SKIP_TOP = {"data", "tests", "vendor", "__pycache__", ".pytest_cache"}
-_SKIP_SUFFIX = {".py", ".pyc", ".pyo", ".md", ".log"}
-_MAX_MB = 8                 # a data file larger than this does not belong in an app bundle
-for _p in (REPO / "backend").rglob("*"):
-    if not _p.is_file():
-        continue
-    _parts = _p.relative_to(REPO / "backend").parts
-    if _parts[0] in _SKIP_TOP or "__pycache__" in _parts:
-        continue
-    if _p.suffix.lower() in _SKIP_SUFFIX or _p.name == "Dockerfile":
-        continue
-    if _p.stat().st_size > _MAX_MB * 1024 * 1024:
-        raise SystemExit(
-            f"REFUSED: {_p.relative_to(REPO)} is {_p.stat().st_size / 1e6:.0f} MB. "
-            f"Data that large belongs in the repo the app reads at runtime, not inside "
-            f"the bundle -- a copy in the .exe is stale the moment a night job writes it."
-        )
-    datas.append((str(_p), str(_p.parent.relative_to(REPO)).replace("\\", "/")))
-
-# ------------------------------------------------------------ hidden imports
-# The API's routers are imported by name in `backend/main.py`, so the analyser
-# finds them. These are the ones reached through strings or plugin registries.
 hiddenimports = [
-    "uvicorn.logging", "uvicorn.loops.auto", "uvicorn.protocols.http.auto",
-    "uvicorn.protocols.websockets.auto", "uvicorn.lifespan.on",
-    "apscheduler.jobstores.sqlalchemy", "apscheduler.triggers.cron",
-    "apscheduler.triggers.interval", "apscheduler.executors.pool",
-    "sklearn.utils._typedefs", "sklearn.neighbors._partition_nodes",
-    "pyarrow.parquet",
+    # pywebview picks its platform backend at runtime through a string.
+    "webview.platforms.edgechromium",
 ]
 
 excludes = [
-    # the window is WebView2; a bundled Qt/GTK toolkit adds ~100 MB for nothing
-    "PyQt5", "PyQt6", "PySide2", "PySide6", "tkinter",
-    # research stack: night jobs run under a real interpreter (see job_python)
+    # THE WHOLE APP. Every one of these is imported by the shell, which runs
+    # from the checkout under a real interpreter. Listing them is not belt and
+    # braces: pywebview pulls in `typing_extensions` and friends, and without
+    # the excludes PyInstaller's analyser follows `desktop.aegis_desktop` --
+    # which `launcher.py` names only as a STRING, so it should not be followed
+    # at all, and is listed here so that a future import cannot make it so.
+    "backend", "scripts", "learner", "desktop.aegis_desktop",
+    "uvicorn", "fastapi", "starlette", "pydantic",
+    "pandas", "numpy", "scipy", "sklearn", "lightgbm", "pyarrow", "yfinance",
+    "apscheduler", "sqlalchemy", "statsmodels",
     "torch", "torchvision", "torchaudio", "transformers", "sentence_transformers",
     "tensorflow", "tensorboard", "datasets", "accelerate",
-    # dev-only
+    "PyQt5", "PyQt6", "PySide2", "PySide6", "tkinter",
     "matplotlib", "notebook", "IPython", "pytest", "_pytest", "PyInstaller",
 ]
 
 a = Analysis(                                            # noqa: F821
-    [str(REPO / "desktop" / "aegis_desktop.py")],
+    [str(REPO / "desktop" / "launcher.py")],
     pathex=[str(REPO)],
     binaries=[],
     datas=datas,
@@ -175,7 +125,7 @@ exe = EXE(                                               # noqa: F821
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,               # UPX compression is the other big antivirus trigger
-    console=False,           # no terminal window; the shell logs to files
+    console=False,           # no terminal window; the launcher logs to files
     disable_windowed_traceback=False,
     icon=str(REPO / "desktop" / "assets" / "aegis.ico"),
 )

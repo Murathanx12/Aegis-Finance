@@ -34,7 +34,15 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend.services import quiet_subprocess as qsp  # noqa: E402
-DIST_EXE = REPO / "dist" / "AegisDesktop" / "AegisDesktop.exe"
+#: The shortcut target. `dist/` is where a finished build lives; `dist_next/` is
+#: the staging path used when the app is RUNNING and PyInstaller cannot wipe
+#: `dist/` (2026-09-11: the thin launcher was built to `dist_next` while the old
+#: build was open). The staging build is preferred only when `dist/` has nothing
+#: in it -- pointing the desktop shortcut at a staging directory that gets
+#: deleted is a double-click that does nothing.
+_DIST = REPO / "dist" / "AegisDesktop" / "AegisDesktop.exe"
+_NEXT = REPO / "dist_next" / "AegisDesktop" / "AegisDesktop.exe"
+DIST_EXE = _DIST if _DIST.exists() or not _NEXT.exists() else _NEXT
 ICON = REPO / "desktop" / "assets" / "aegis.ico"
 SHORTCUT_NAME = "Aegis.lnk"
 

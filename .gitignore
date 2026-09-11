@@ -299,3 +299,17 @@ backend/data/optimus/webview_profile/
 # see `scripts/evidence_memory_rotate.py`.
 backend/data/optimus/learner/evidence_memory_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl
 backend/data/optimus/learner/evidence_memory_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl.tmp
+
+# 2026-09-11 (O1, the thin launcher). `dist/` and `build/` were already ignored;
+# the staging paths are not covered by those rules and a 37 MB bundle plus its
+# analysis cache would otherwise be swept in by a `git add -A`. The staging path
+# exists because PyInstaller's COLLECT wipes its target first, so a rebuild
+# while the app is open dies with a permission error forty lines deep.
+dist_next/
+build_next/
+
+# What the launcher and the shell WROTE on this machine, this launch: which
+# checkout was found, whether the pull was skipped, the port, the model server's
+# PID. Per-machine runtime state, useful for ten seconds, never shared.
+backend/data/optimus/launch_receipt.json
+backend/data/optimus/aegis_desktop_report.json

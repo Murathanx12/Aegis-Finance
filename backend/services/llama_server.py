@@ -443,8 +443,15 @@ def start(wait_s: float = 90.0, bind: bool = True) -> dict:
         proc = qsp.popen(cmd, stdout=fh, stderr=subprocess.STDOUT,
                          creationflags=qsp.NEW_PROCESS_GROUP, cwd=str(LLAMA_HOME))
     bound = bind_lifetime(proc.pid) if bind else {"bound": False, "reason": "bind=False"}
+    # `owner_pid` is THIS process, not the server's. The note lives in the
+    # checkout, so before this line every Aegis instance in the same checkout
+    # read it and believed the server was its own -- and on 2026-09-11 a second,
+    # headless instance started for diagnosis called `stop_if_owned()` on exit
+    # and killed the model server (PID 53112) that Murat's running .exe had
+    # started. Ownership is per PROCESS; the file is merely where it is written.
     _write_owner({"pid": proc.pid, "started_utc": _now(), "model": LLAMA_MODEL.name,
-                  "cmd": cmd, "port": LLAMA_PORT, "lifetime_bound": bound})
+                  "cmd": cmd, "port": LLAMA_PORT, "lifetime_bound": bound,
+                  "owner_pid": os.getpid(), "owner_started_utc": _now()})
     if wait_s <= 0:
         # the desktop shell starts it and gets on with opening the window; a
         # multi-GB model loads while the splash is up. "starting" is a state,
@@ -531,12 +538,38 @@ def stop(*, allow_foreign: bool = False, grace_s: float = STOP_GRACE_S) -> dict:
             "note": "terminated by PID; never by image name", "status": after}
 
 
+def owning_instance(owner: dict | None = None) -> dict:
+    """Which Aegis PROCESS owns the running server, and is it still alive?
+
+    `{"owner_pid": int|None, "is_me": bool, "owner_alive": bool}`.
+    """
+    o = _read_owner() if owner is None else owner
+    try:
+        pid = int(o.get("owner_pid") or 0)
+    except (TypeError, ValueError):
+        pid = 0
+    return {"owner_pid": pid or None,
+            "is_me": bool(pid) and pid == os.getpid(),
+            "owner_alive": bool(pid) and pid_alive(pid)}
+
+
 def stop_if_owned() -> dict:
     """What the desktop shell calls on exit.
 
-    Murat asked for auto-close on shutdown. It applies to a server Aegis
+    Murat asked for auto-close on shutdown. It applies to a server THIS PROCESS
     started; one that was already running is left alone, because closing a
     window is not consent to kill somebody else's 8 GB job.
+
+    "THIS PROCESS", NOT "THIS CHECKOUT" -- the distinction cost a model server on
+    2026-09-11. The ownership note is a file under `backend/data/optimus`, so a
+    second instance running from the same checkout (a headless run started to
+    diagnose the first) read the note, saw `started_by_aegis`, and killed the
+    server the .exe in the foreground was using. `started_by_aegis` answers "did
+    an Aegis start this?"; only `owner_pid` answers "did *I*?".
+
+    An owner PID that is no longer alive is not a veto: the instance that
+    started the server is gone, the server is orphaned, and `status()` has
+    already checked that the recorded server PID is the one holding the socket.
     """
     st = status()
     if not st["listening"]:
@@ -545,7 +578,12 @@ def stop_if_owned() -> dict:
         return {"ok": True, "action": "left_running",
                 "reason": "the server was already running when Aegis started; not ours to stop",
                 "pid": st["pid"]}
-    return stop(allow_foreign=False)
+    inst = owning_instance()
+    if inst["owner_pid"] and not inst["is_me"] and inst["owner_alive"]:
+        return {"ok": True, "action": "left_alone",
+                "reason": f"owned by another Aegis instance pid {inst['owner_pid']}",
+                "pid": st["pid"], "owner_pid": inst["owner_pid"], "my_pid": os.getpid()}
+    return stop(allow_foreign=False) | {"owner": inst}
 
 
 def main() -> int:                                            # tiny CLI for the shell and for humans
