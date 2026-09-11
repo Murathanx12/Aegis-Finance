@@ -27,7 +27,8 @@ from fastapi import APIRouter, HTTPException
 
 from functools import partial
 
-from backend.cache import cache_get, cache_set, cache_swr
+from backend.cache import (cache_get, cache_set, cache_swr, cache_swr_202,
+                           computing_or, report_progress)
 from backend.config import config
 
 router = APIRouter(prefix="/api/stock", tags=["stock"])
@@ -42,9 +43,9 @@ _TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 async def get_stock_screener():
     """Top stocks screener — batch analysis of watchlist stocks."""
     try:
-        return await cache_swr(
+        return computing_or(await cache_swr_202(
             "stock_screener", _CACHE_TTL["ttl_stock"], _screener
-        )
+        ))
     except Exception as e:
         logger.error("stock screener failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -343,12 +344,18 @@ def _screener() -> dict:
             return None
 
     stocks = []
+    # `report_progress` is what lets the desktop app say "computing 31/80"
+    # rather than spinning for two minutes and timing out. It is a NO-OP
+    # anywhere else (deployed API, the warm loop, a direct call, a test):
+    # it writes only when this thread was started by `_refresh_in_background`.
+    report_progress(0, len(sorted_tickers))
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_analyze_one, t): t for t in sorted_tickers}
-        for future in as_completed(futures):
+        for done, future in enumerate(as_completed(futures), start=1):
             result = future.result()
             if result is not None:
                 stocks.append(result)
+            report_progress(done, len(sorted_tickers))
 
     elapsed = time.perf_counter() - t0
     logger.info(

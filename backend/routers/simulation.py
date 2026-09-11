@@ -14,7 +14,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from functools import partial
 
-from backend.cache import cache_get, cache_set, cache_swr
+from backend.cache import cache_get, cache_set, cache_swr_202, computing_or
 from backend.config import config
 
 router = APIRouter(prefix="/api/simulation", tags=["simulation"])
@@ -31,10 +31,10 @@ async def get_sp500_projection(
     """S&P 500 scenario-weighted Monte Carlo projection."""
     cache_key = f"sp500_projection:{n_sims}:{years}"
     try:
-        return await cache_swr(
+        return computing_or(await cache_swr_202(
             cache_key, _CACHE_TTL["ttl_simulation"],
             partial(_run_sp500_projection, n_sims, years),
-        )
+        ))
     except Exception as e:
         logger.error("sp500 projection failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -193,9 +193,9 @@ def _run_sp500_projection(n_sims: int, years: int) -> dict:
 async def get_scenario_results():
     """Individual scenario breakdown with metrics."""
     try:
-        return await cache_swr(
+        return computing_or(await cache_swr_202(
             "scenario_results", _CACHE_TTL["ttl_simulation"], _compute_scenarios
-        )
+        ))
     except Exception as e:
         logger.error("scenarios failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))

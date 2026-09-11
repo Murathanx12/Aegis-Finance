@@ -165,14 +165,22 @@ _swr_inflight: set[str] = set()
 _swr_lock = threading.Lock()
 
 
-def _refresh_in_background(key: str, compute_sync) -> None:
-    """Recompute key in a daemon thread; one in-flight refresh per key."""
+def _refresh_in_background(key: str, compute_sync) -> bool:
+    """Recompute key in a daemon thread; one in-flight refresh per key.
+
+    Returns True if THIS call started the thread, False if one was already
+    running for the key. The caller uses that to answer "computing" without
+    starting a second copy of a two-minute job.
+    """
     with _swr_lock:
         if key in _swr_inflight:
-            return
+            return False
         _swr_inflight.add(key)
+        _progress.pop(key, None)
+        _failures.pop(key, None)
 
     def _run():
+        _progress_key.key = key
         try:
             result = compute_sync()
             if result is not None:
@@ -180,11 +188,130 @@ def _refresh_in_background(key: str, compute_sync) -> None:
                 logger.info("SWR background refresh completed: %s", key)
         except Exception as e:
             logger.warning("SWR background refresh failed for %s: %s", key, e)
+            with _swr_lock:
+                _failures[key] = f"{type(e).__name__}: {e}"
         finally:
+            _progress_key.key = None
             with _swr_lock:
                 _swr_inflight.discard(key)
+                _progress.pop(key, None)
 
     threading.Thread(target=_run, name=f"swr-{key[:40]}", daemon=True).start()
+    return True
+
+
+# ── "computing", for the desktop app ──────────────────────────────────────────
+#
+# On Railway a warm loop keeps every heavy cache hot, so `cache_swr` almost
+# never reaches its synchronous branch. In the DESKTOP app that loop is off by
+# design (`_desktop_background_off`) -- a laptop should not run a Monte Carlo
+# every ten minutes -- so the first request for the 80-ticker screener IS the
+# cold compute, it takes about two minutes, and the browser gave up at
+# `FETCH_TIMEOUT_MS = 45_000` with a red error ("stock screener doesn't work",
+# Murat 2026-09-11).
+#
+# A spinner that times out is worse than a slow answer AND worse than an honest
+# "computing 31/80": the work was running the whole time, in a thread the user
+# could not see, and the second attempt threw away the first one's progress.
+# So: start it once, say so, and let the client come back.
+
+#: key -> {"done": int, "total": int}, while a background compute is running.
+_progress: dict[str, dict] = {}
+#: key -> the last background failure, so a client is told rather than polling
+#: a job that will never land.
+_failures: dict[str, str] = {}
+#: The key the CURRENT thread is computing, so `report_progress` needs no
+#: argument and a compute function need not know it is being cached.
+_progress_key = threading.local()
+
+
+def report_progress(done: int, total: int) -> None:
+    """Called BY a heavy compute to say how far along it is. A no-op when the
+    compute is not running under `_refresh_in_background` (a direct call, the
+    warm loop, a test), which is why call sites need no guard."""
+    key = getattr(_progress_key, "key", None)
+    if not key:
+        return
+    with _swr_lock:
+        _progress[key] = {"done": int(done), "total": int(total)}
+
+
+def computing_state(key: str) -> Optional[dict]:
+    """The `{state, job, progress}` body for `key`, or None if nothing runs."""
+    with _swr_lock:
+        if key not in _swr_inflight:
+            return None
+        return {"state": "computing", "job": key,
+                "progress": dict(_progress.get(key) or {"done": 0, "total": 0})}
+
+
+def desktop_mode() -> bool:
+    """True inside the packaged app, where the warm loops do not run."""
+    import os
+    return os.getenv("AEGIS_DESKTOP", "") == "1"
+
+
+async def cache_swr_202(key: str, ttl: int, compute_sync, max_stale: int = 86400):
+    """`cache_swr`, except that in DESKTOP mode a cold cache answers `202
+    {"state": "computing", ...}` instead of blocking the request for minutes.
+
+    Everywhere else this IS `cache_swr`, byte for byte -- the deployed API keeps
+    its stale-while-revalidate behaviour and no client sees a 202.
+
+    The computation starts exactly once per key (`_refresh_in_background`
+    dedupes on `_swr_inflight`), writes into the SAME cache the endpoint reads,
+    and the next poll is an ordinary 200. A failure is reported as a 503 with
+    the reason rather than an endless poll.
+    """
+    if not desktop_mode():
+        return await cache_swr(key, ttl, compute_sync, max_stale)
+
+    value, age = cache_peek(key, max_stale)
+    if value is not None and age is not None and age <= ttl:
+        return value
+    if value is not None:
+        _refresh_in_background(key, compute_sync)
+        return value          # stale, but an answer
+
+    _refresh_in_background(key, compute_sync)
+    state = computing_state(key)
+    if state is None:
+        # It finished between the start and this read -- rare, and the right
+        # answer is the value, not a 202 the client would poll once for.
+        value, _ = cache_peek(key, max_stale)
+        if value is not None:
+            return value
+        with _swr_lock:
+            failed = _failures.get(key)
+        if failed:
+            # Returned, not raised: a route's `except Exception -> 500` would
+            # relabel a background failure as a server error, and the client
+            # needs to stop polling either way.
+            return _Computing({"state": "failed", "job": key, "detail": failed}, status=503)
+        state = {"state": "computing", "job": key, "progress": {"done": 0, "total": 0}}
+    return _Computing(state)
+
+
+class _Computing:
+    """Marker: the route should answer `status` with `body`, not 200."""
+
+    __slots__ = ("body", "status")
+
+    def __init__(self, body: dict, status: int = 202):
+        self.body, self.status = body, status
+
+
+def computing_or(result):
+    """Turn what `cache_swr_202` returned into a response.
+
+    A plain value passes straight through (FastAPI serialises it as before); a
+    `_Computing` marker becomes a real 202 so the client can tell "not yet"
+    from "broken" by STATUS, not by sniffing the body.
+    """
+    if isinstance(result, _Computing):
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=result.status, content=result.body)
+    return result
 
 
 async def cache_swr(key: str, ttl: int, compute_sync, max_stale: int = 86400):

@@ -17,6 +17,8 @@
  * The desktop flag is set by `next.config.ts` under `AEGIS_DESKTOP_BUILD=1`,
  * which also blanks `NEXT_PUBLIC_API_URL` so a stale value cannot leak back in.
  */
+import { setComputing } from "./computing";
+
 export const API_BASE =
   process.env.NEXT_PUBLIC_AEGIS_DESKTOP_BUILD === "1"
     ? ""
@@ -30,12 +32,45 @@ export const API_BASE =
 const FETCH_TIMEOUT_MS = 45_000;
 export const HEAVY_TIMEOUT_MS = 120_000;
 
+// The desktop app runs no warm loops, so a cold heavy endpoint (the 80-ticker
+// screener, Monte Carlo, regime, crash) answers `202 {state:"computing",...}`
+// and keeps working in the background. We poll rather than fail: the work IS
+// happening, and the old behaviour — a 45 s timeout, a red error, a retry that
+// discarded the running compute — was the bug. Each poll is a fresh request
+// with its own timeout; only the TOTAL wait is bounded here.
+const COMPUTING_POLL_MS = 2_000;
+const COMPUTING_MAX_WAIT_MS = 10 * 60_000;
+
 async function fetchAPI<T>(
   path: string,
   options?: RequestInit,
   timeoutMs: number = FETCH_TIMEOUT_MS,
 ): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const deadline = Date.now() + COMPUTING_MAX_WAIT_MS;
+  for (;;) {
+    const res = await fetchOnce(path, options, timeoutMs);
+    if (res.status !== 202) {
+      setComputing(path, null);
+      return handle<T>(res);
+    }
+    let body: { progress?: { done?: number; total?: number } } = {};
+    try { body = await res.json(); } catch { /* a 202 with no body still means "wait" */ }
+    setComputing(path, {
+      done: Number(body?.progress?.done ?? 0),
+      total: Number(body?.progress?.total ?? 0),
+    });
+    if (Date.now() > deadline) {
+      setComputing(path, null);
+      throw new Error(
+        `API error: ${path} is still computing after ${Math.round(COMPUTING_MAX_WAIT_MS / 60_000)} minutes`,
+      );
+    }
+    await new Promise((r) => setTimeout(r, COMPUTING_POLL_MS));
+  }
+}
+
+function fetchOnce(path: string, options?: RequestInit, timeoutMs: number = FETCH_TIMEOUT_MS) {
+  return fetch(`${API_BASE}${path}`, {
     ...options,
     signal: options?.signal ?? AbortSignal.timeout(timeoutMs),
     headers: {
@@ -43,7 +78,9 @@ async function fetchAPI<T>(
       ...options?.headers,
     },
   });
+}
 
+async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     // Surface the backend's `detail` (e.g. "Did you mean MRVL?") — the bare
     // status line made every failure look identical to the user.

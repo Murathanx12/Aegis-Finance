@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getStockScreener } from "@/lib/api";
+import { useComputing } from "@/lib/use-computing";
 import type { ScreenerStock } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -180,6 +181,9 @@ export default function ScreenerPage() {
     queryFn: getStockScreener,
     staleTime: staleTimes.stock,
   });
+  // In the desktop app the first screener call IS the cold 80-ticker compute.
+  // The server answers 202 and keeps going; this is how far it has got.
+  const computing = useComputing("/api/stock/screener");
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -314,6 +318,15 @@ export default function ScreenerPage() {
         <CardContent>
           {isLoading ? (
             <div className="space-y-3">
+              {computing && (
+                <p className="text-sm text-muted-foreground" role="status">
+                  {computing.total > 0
+                    ? `Computing ${computing.done}/${computing.total} stocks`
+                    : "Computing the market signal"}
+                  {" — the first run analyses the whole screener universe on this "}
+                  {"machine and takes a few minutes. It is cached afterwards."}
+                </p>
+              )}
               {Array.from({ length: 12 }).map((_, i) => (
                 <Skeleton key={i} className="h-8 w-full" />
               ))}

@@ -13,7 +13,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from backend.cache import cache_get, cache_set, cache_swr
+from backend.cache import cache_get, cache_set, cache_swr, cache_swr_202, computing_or
 from backend.config import config
 
 router = APIRouter(prefix="/api", tags=["market"])
@@ -26,9 +26,9 @@ _CACHE_TTL = config["cache"]
 async def get_market_status():
     """Unified market state: regime, risk score, VIX, yield curve, crash prob."""
     try:
-        return await cache_swr(
+        return computing_or(await cache_swr_202(
             "market_status", _CACHE_TTL["ttl_market"], _compute_market_status
-        )
+        ))
     except Exception as e:
         logger.error("market-status failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -378,9 +378,9 @@ async def get_brain_digest():
 async def get_market_signal_endpoint():
     """Composite market buy/sell signal."""
     try:
-        return await cache_swr(
+        return computing_or(await cache_swr_202(
             "market_signal", _CACHE_TTL["ttl_market"], _compute_market_signal
-        )
+        ))
     except Exception as e:
         logger.error("market signal failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
