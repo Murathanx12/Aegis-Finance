@@ -316,6 +316,19 @@ def test_gdelt_is_paced_from_the_registry_not_from_the_docs():
     assert np_.RunContext(paced=False).pace(src) == 0.0
 
 
+def test_the_theme_queries_are_built_from_the_real_basket_shape():
+    """`themes: {<name>: {members: [{ticker, ...}]}}` — NOT a bare symbol list.
+
+    A first pass here read `body["symbols"]`, produced zero theme queries, and
+    looked exactly like a working sweep: GDELT ran its six region queries and
+    nobody would have noticed the five theme queries were missing.
+    """
+    q = np_.RunContext().theme_queries()
+    assert len(q) >= 5, "the theme sweep silently produced nothing"
+    assert any("NVDA" in x for x in q)
+    assert all(x.startswith("(") and " OR " in x for x in q)
+
+
 def test_gdelt_429_records_the_missing_ngrams_fallback(corpus):
     class Limited(StubCtx):
         def http_get(self, url, headers=None):

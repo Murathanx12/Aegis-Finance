@@ -664,7 +664,15 @@ class RunContext:
         return out
 
     def theme_queries(self) -> list[str]:
-        """One OR-of-tickers GDELT query per basket in `theme_baskets.yaml`."""
+        """One OR-of-tickers GDELT query per basket in `theme_baskets.yaml`.
+
+        The basket shape is `themes: {<name>: {members: [{ticker, available_from}]}}`
+        — NOT a bare symbol list, which is what a first pass here assumed, and
+        which silently produced zero theme queries while looking like it worked.
+        A shape that yields nothing is returned as an explicit empty list only
+        when the FILE is missing; a file that parses but matches no member is a
+        bug, so `themes` is read for `members[].ticker` explicitly.
+        """
         p = Path(_config.BACKEND_DIR) / "data" / "theme_baskets.yaml"
         if not p.exists():
             return []
@@ -673,14 +681,20 @@ class RunContext:
             payload = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         except Exception:  # noqa: BLE001
             return []
-        themes = payload.get("themes") or payload
+        themes = payload.get("themes") or {}
         out = []
         if isinstance(themes, dict):
-            for name, body in themes.items():
-                syms = body.get("symbols") if isinstance(body, dict) else body
-                if isinstance(syms, list) and syms:
-                    joined = " OR ".join(str(s) for s in syms[:12])
-                    out.append(f"({joined})")
+            for body in themes.values():
+                members = body.get("members") if isinstance(body, dict) else None
+                syms: list[str] = []
+                for m in members or []:
+                    t = m.get("ticker") if isinstance(m, dict) else m
+                    if isinstance(t, str) and t.strip():
+                        syms.append(t.strip())
+                if syms:
+                    # GDELT's query length is bounded; 10 names per theme is
+                    # plenty to catch the theme's news without a 414.
+                    out.append("(" + " OR ".join(syms[:10]) + ")")
         return out
 
 
