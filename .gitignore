@@ -283,3 +283,7 @@ backend/data/optimus/night_factory_*/G3_checkpoint_run*.json
 # - the frozen-encoder cache is 120 MB regenerated from the panel in minutes
 backend/data/optimus/llama_server_owner.json
 backend/data/optimus/text_return_panel/emb_*/
+
+# The desktop window's browser profile (localStorage). Per-machine state that exists
+# so the guide and the tour are dismissed ONCE; nothing in it is shareable.
+backend/data/optimus/webview_profile/

@@ -576,7 +576,9 @@ def test_the_page_swap_runs_after_the_gui_loop_starts() -> None:
     runs once the window exists.
     """
     code = executable_source(REPO / "desktop" / "aegis_desktop.py")
-    assert "webview.start(when_ready)" in code, (
+    # `when_ready` as the FIRST positional argument; the call also carries the
+    # storage arguments now, so the check is the contract, not the whole line.
+    assert "webview.start(when_ready" in code, (
         "the readiness callback must be handed to webview.start(), not run on a "
         "thread that races the GUI loop")
     assert "threading.Thread(target=when_ready" not in code
@@ -637,3 +639,68 @@ def test_data_dir_and_ledger_dir_do_not_double_up(tmp_path: Path) -> None:
     )
     assert r.returncode == 0, r.stderr[-500:]
     assert Path(r.stdout.strip()) == data / "optimus"
+
+
+# ------------------------------------------- the window remembers what it was told
+
+def test_the_window_is_not_opened_in_private_mode() -> None:
+    """pywebview 6.2.1 defaults `private_mode=True`, which is an incognito
+    window: `localStorage` goes to a temporary profile and is discarded when the
+    process ends. Reported 2026-09-11 as the guide and the tour coming back on
+    every launch -- the flag that says "seen it" never survived the window that
+    wrote it. Both arguments are required; either alone is still amnesia.
+    """
+    code = executable_source(REPO / "desktop" / "aegis_desktop.py")
+    assert "private_mode=False" in code
+    assert "storage_path=" in code
+
+
+def test_the_storage_profile_is_never_inside_the_bundle(tmp_path: Path, monkeypatch) -> None:
+    """A profile under `_internal` is deleted by the next rebuild of `dist/`,
+    which is the frozen-path family again: correct from source, silently
+    amnesiac when packaged. Simulated here rather than argued: `sys.frozen` and
+    `sys._MEIPASS` set, the checkout pointed at a real directory."""
+    from desktop import aegis_desktop as ad
+
+    checkout = tmp_path / "checkout"
+    (checkout / "backend" / "data").mkdir(parents=True)
+    (checkout / "scripts").mkdir()
+    bundle = tmp_path / "dist" / "AegisDesktop" / "_internal"
+    bundle.mkdir(parents=True)
+
+    monkeypatch.setattr(ad.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(ad.sys, "_MEIPASS", str(bundle), raising=False)
+    monkeypatch.setenv("AEGIS_REPO_ROOT", str(checkout))
+
+    d = ad._storage_dir()
+    assert "_internal" not in d.parts, f"the browser profile is inside the bundle: {d}"
+    assert Path(bundle) not in d.parents
+    assert d == checkout.resolve() / "backend" / "data" / "optimus" / "webview_profile"
+    assert d.is_dir(), "the profile directory must exist before the window asks for it"
+
+
+def test_a_frozen_build_that_cannot_find_its_checkout_stores_outside_the_bundle(
+        tmp_path: Path, monkeypatch) -> None:
+    """The case that matters: frozen, no `AEGIS_REPO_ROOT`, no checkout beside
+    the .exe. Falling back to `REPO` would put the profile inside `_internal`,
+    so the fallback is the home directory instead -- a real place that survives
+    a rebuild."""
+    from desktop import aegis_desktop as ad
+
+    bundle = tmp_path / "dist" / "AegisDesktop" / "_internal"
+    bundle.mkdir(parents=True)
+    monkeypatch.setattr(ad.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(ad.sys, "_MEIPASS", str(bundle), raising=False)
+    monkeypatch.setattr(ad, "REPO", bundle / "backend", raising=False)
+    monkeypatch.delenv("AEGIS_REPO_ROOT", raising=False)
+    monkeypatch.setattr(ad, "repo_root", lambda: None)
+
+    d = ad._storage_dir()
+    assert "_internal" not in d.parts, f"the browser profile is inside the bundle: {d}"
+
+
+def test_the_storage_path_is_logged_because_a_windowed_build_has_no_stdout() -> None:
+    """If the guide comes back anyway, the first question is which profile the
+    window actually used. An answer that is not in the log is not an answer."""
+    code = executable_source(REPO / "desktop" / "aegis_desktop.py")
+    assert 'log.info("storage %s"' in code

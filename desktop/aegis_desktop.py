@@ -112,6 +112,41 @@ def _log_path() -> Path:
         return Path.home() / "aegis_desktop.log"
 
 
+def _storage_dir() -> Path:
+    """Where the window keeps `localStorage`, and why it is not the default.
+
+    pywebview 6.2.1 starts with `private_mode=True`. That is an incognito
+    window: `localStorage` is written to a temporary profile and thrown away
+    when the process ends. The visible symptom, reported 2026-09-11, is that the
+    desktop guide and the tour come back on EVERY launch -- the flag that says
+    "you have seen this" never survived the window that set it.
+
+    The profile also has to live in the CHECKOUT, not in the bundle. A path
+    under `_internal` is deleted by the next rebuild of `dist/`, which is the
+    frozen-path family again: correct from source, silently amnesiac when
+    packaged. So if the base we found IS inside the bundle -- a frozen build
+    that could not find its checkout -- the profile goes to the home directory
+    rather than somewhere a rebuild will erase.
+    """
+    base = repo_root() or REPO
+    meipass = getattr(sys, "_MEIPASS", None)
+    in_bundle = "_internal" in base.parts
+    if meipass:
+        try:
+            base.relative_to(Path(meipass).resolve())
+            in_bundle = True
+        except ValueError:
+            pass
+    d = (Path.home() / ".aegis" / "webview_profile" if in_bundle
+         else base / "backend" / "data" / "optimus" / "webview_profile")
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        d = Path.home() / ".aegis" / "webview_profile"
+        d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 log = logging.getLogger("aegis.desktop")
 
 
@@ -270,11 +305,14 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
     logfile = _init_log()
     log.info("start argv=%s", sys.argv[1:])
+    storage = _storage_dir()
+    log.info("storage %s", storage)
     port = a.port or free_port()
     start_backend(port)
     llama = maybe_start_llama(enabled=not a.no_llama, keep=a.keep_llama)
 
-    report = {"utc": _now(), "port": port, "llama": llama, "log": str(logfile)}
+    report = {"utc": _now(), "port": port, "llama": llama, "log": str(logfile),
+              "storage": str(storage), "repo_root": str(repo_root() or REPO)}
     log.info("backend on %s; llama=%s", port, json.dumps(llama, default=str)[:300])
 
     if a.headless or a.serve:
@@ -283,6 +321,17 @@ def main(argv: list[str] | None = None) -> int:
                    "total_s": round(time.time() - t0, 2),
                    "mode": "serve" if a.serve else "headless",
                    "url": f"http://127.0.0.1:{port}/desktop"}
+        # The acceptance line for the root fix (handoff 2026-09-11 s1.1): the
+        # packaged app used to report NO configured provider, because its
+        # `.env` was a file inside `_internal` that does not exist. Read it
+        # here rather than inferred: `configured` is the list of keys that are
+        # actually non-empty, and `declared_but_empty` is the row that once
+        # read as configured and was not.
+        try:
+            from backend.services.llm_analyzer import llm_usage
+            report["llm_providers"] = llm_usage()["providers"]
+        except Exception as exc:  # noqa: BLE001 - a report that cannot be built must say why
+            report["llm_providers"] = {"error": f"{type(exc).__name__}: {exc}"}
         if a.serve:
             # a packaged build cannot be probed by `--headless`, which reports and
             # exits before anything can call it -- the first attempt to verify the
@@ -388,7 +437,10 @@ def main(argv: list[str] | None = None) -> int:
         # the window exists. Starting it as a bare thread beforehand is what put
         # `load_url` into a window that did not exist yet and left the splash up
         # forever.
-        webview.start(when_ready)
+        # `private_mode=False` + an explicit `storage_path`: without both, the
+        # window is incognito and every "don't show me this again" is forgotten
+        # when it closes.
+        webview.start(when_ready, private_mode=False, storage_path=str(storage))
     finally:
         shutdown("after-start")
     return 0
