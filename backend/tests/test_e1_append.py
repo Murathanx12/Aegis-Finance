@@ -144,6 +144,71 @@ def test_a_pit_violation_refuses_the_whole_append(env, monkeypatch):
     assert "do NOT relax the check" in rec["next_test"]
 
 
+def test_a_native_stamp_backfill_anchors_on_its_own_published_stamp(env):
+    """Found on the live Alpaca backfill, 2026-09-11.
+
+    The backfill starts at 2015-01-01, so every one of its rows carries
+    `first_seen_utc = today`. Anchoring those on first_seen would date 2015
+    news to tomorrow's open — not conservative, nonsense. `native_stamp` means
+    the provider's own stamp is trustworthy, so it is the anchor.
+    """
+    days = _bars(env)
+    entry = days[-5]
+    published = datetime(entry.year, entry.month, entry.day, 12, 0, tzinfo=timezone.utc)
+    row = _row("acc-backfill", datetime.now(timezone.utc))   # seen TODAY
+    row["published_utc"] = published.isoformat(timespec="seconds")
+    row["pit_grade"] = "native_stamp"
+    _corpus(env, "sec_edgar_8k_current_atom", [row])
+
+    rec = e1.E1_append()
+    assert rec["rows_appended"] == 1, rec["headline"]
+    assert rec["anchors_used"]["published_utc"] == 1
+    df = pd.read_parquet(env / "optimus" / "text_return_panel" / "news_returns_2025_26.parquet")
+    assert df.iloc[0]["entry_date"] == entry.isoformat()
+    assert df.iloc[0]["pit_anchor_field"] == "published_utc"
+
+
+def test_a_first_seen_only_row_still_anchors_on_our_own_stamp(env):
+    """GDELT's `seendate` is a crawl time it may move; ours is not."""
+    days = _bars(env)
+    entry = days[-5]
+    seen = datetime(entry.year, entry.month, entry.day, 12, 0, tzinfo=timezone.utc)
+    row = _row("gdelt-1", seen, source="gdelt_doc_v2")
+    row["published_utc"] = "2015-01-01T00:00:00+00:00"   # the provider's, not ours
+    row["pit_grade"] = "first_seen_only"
+    _corpus(env, "gdelt_doc_v2", [row])
+
+    rec = e1.E1_append()
+    assert rec["rows_appended"] == 1
+    assert rec["anchors_used"]["first_seen_utc"] == 1
+    df = pd.read_parquet(env / "optimus" / "text_return_panel" / "news_returns_2025_26.parquet")
+    assert df.iloc[0]["entry_date"] == entry.isoformat(), \
+        "the 2015 provider stamp must NOT have been used"
+
+
+def test_a_publication_before_the_calendar_is_off_calendar_not_session_zero(env):
+    """The ten-year look-ahead the backfill would have produced.
+
+    `_entry_session` used `searchsorted`, which clamps a date before the first
+    session to index 0 — so a 2015 headline with 2025-26 bars was labelled at
+    the first 2025 session and counted as `kept`.
+    """
+    days = _bars(env)
+    row = _row("acc-ancient", datetime.now(timezone.utc))
+    row["published_utc"] = "2015-01-05T13:00:00+00:00"
+    row["pit_grade"] = "native_stamp"
+    _corpus(env, "sec_edgar_8k_current_atom", [row])
+
+    rec = e1.E1_append()
+    assert rec["rows_appended"] == 0, "a 2015 row must not be labelled on a 2026 bar"
+    assert rec["funnel"]["pending_future_session"] == 1
+
+    # ...and the primitive itself, stated directly.
+    import numpy as np
+    sessions = np.sort(np.array([pd.Timestamp(d) for d in days], dtype="datetime64[ns]"))
+    assert e1._entry_session("2015-01-05T13:00:00+00:00", "", sessions) == (None, None)
+
+
 def test_the_watermark_stops_a_second_append_from_duplicating(env):
     days = _bars(env)
     entry = days[-5]

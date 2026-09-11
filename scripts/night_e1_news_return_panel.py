@@ -132,6 +132,13 @@ def _entry_session(observed_at, effective_at, sessions):
             return None, None
     day = ts.normalize().tz_localize(None)
     before_bell = (ts.hour, ts.minute) < (9, 30)
+    # A publication BEFORE the calendar's first session is off-calendar, not
+    # session[0]. Found 2026-09-11 on the Alpaca backfill, which starts at
+    # 2015-01-01 while these bars start 2025-01-02: without this clause every
+    # one of those 2015 rows would have been labelled at the 2025-01-02 open —
+    # a ten-year look-ahead that the funnel would have counted as `kept`.
+    if len(sessions) and np.datetime64(day) < sessions[0]:
+        return None, None
     i = int(np.searchsorted(sessions, np.datetime64(day), side="left"))
     if not (i < len(sessions) and sessions[i] == np.datetime64(day) and before_bell):
         i = int(np.searchsorted(sessions, np.datetime64(day), side="right"))
@@ -322,6 +329,31 @@ def _skipped_sources(label_sources) -> list[str]:
     return [s for s in news_registry.ids() if s not in label_sources]
 
 
+def _anchor(row) -> tuple[str, str]:
+    """THE PIT anchor for one corpus row, and the field it came from.
+
+    The two labelling grades need different anchors, and using one rule for
+    both breaks one of them:
+
+    * `native_stamp` -> `published_utc`. The grade's whole content is that the
+      provider's own first-publish stamp is trustworthy and is not silently
+      backfilled. Anchoring these on `first_seen_utc` instead would date every
+      row of a BACKFILL to the day we downloaded it — the Alpaca backfill
+      begins at 2015-01-01, so its rows would have been labelled at tomorrow's
+      open, which is not conservative, it is nonsense.
+    * `first_seen_only` -> `first_seen_utc`. Here the provider's stamp is a
+      crawl time it may move, so the only anchor we control is our own.
+
+    A native_stamp row with no `published_utc` falls back to `first_seen_utc`
+    and says so, because a missing stamp is not a trustworthy one.
+    """
+    grade = (row.get("pit_grade") or "").strip()
+    pub = (row.get("published_utc") or "").strip()
+    if grade == "native_stamp" and pub:
+        return pub, "published_utc"
+    return (row.get("first_seen_utc") or "").strip(), "first_seen_utc"
+
+
 def _corpus_rows(sources, since_iso: str, max_rows=None):
     """Corpus rows newer than the watermark, from the labelling sources only."""
     from scripts.news_pull import corpus_dir
@@ -351,11 +383,12 @@ def _pit_verify(rows, per) -> list[str]:
     """Independent second pass. Returns the violations, named."""
     bad = []
     for r in rows:
-        seen = pd.Timestamp(r["first_seen_utc"])
-        seen = seen.tz_localize("UTC") if seen.tzinfo is None else seen.tz_convert("UTC")
+        anchor = pd.Timestamp(r["pit_anchor_utc"])
+        anchor = anchor.tz_localize("UTC") if anchor.tzinfo is None else anchor.tz_convert("UTC")
         bell = (pd.Timestamp(r["entry_date"]).tz_localize(ET) + pd.Timedelta(hours=9, minutes=30))
-        if not bell.tz_convert("UTC") > seen:
-            bad.append(f"{r['symbol']} {r['entry_date']}: entry bell {bell} is not after first_seen {seen}")
+        if not bell.tz_convert("UTC") > anchor:
+            bad.append(f"{r['symbol']} {r['entry_date']}: entry bell {bell} is not after "
+                       f"the {r['pit_anchor_field']} anchor {anchor}")
         g = per.get(r["symbol"])
         if g is not None and pd.notna(r.get("pit_dv_21")):
             day = pd.Timestamp(r["entry_date"])
@@ -412,7 +445,8 @@ def E1_append(max_rows=None) -> dict:
         if not syms:
             stats["no_ticker"] += 1
             continue
-        day, pos = _entry_session(d.get("first_seen_utc") or "", "", sessions)
+        anchor, anchor_field = _anchor(d)
+        day, pos = _entry_session(anchor, "", sessions)
         for s in syms[:8]:
             s = str(s).strip().upper()
             if s not in have:
@@ -452,6 +486,7 @@ def E1_append(max_rows=None) -> dict:
                 "uid": d.get("raw_id"), "symbol": s,
                 "first_seen_utc": d.get("first_seen_utc") or "",
                 "published_utc": d.get("published_utc") or "",
+                "pit_anchor_utc": anchor, "pit_anchor_field": anchor_field,
                 "entry_date": day.date().isoformat(), "publish_position": pos,
                 "source": d.get("source"), "pit_grade": d.get("pit_grade"),
                 "independence_group": d.get("source"),
@@ -468,8 +503,17 @@ def E1_append(max_rows=None) -> dict:
     receipt = {
         "job": "E1_append", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
         "what": ("corpus rows from label_source sources only, labelled at the first "
-                 "session OPEN strictly after OUR first_seen_utc, each minus SPY, "
+                 "session OPEN strictly after the row's PIT anchor, each minus SPY, "
                  "with pit_dv_21 from the 21 sessions BEFORE the entry"),
+        "pit_anchor_rule": (
+            "native_stamp -> published_utc (the grade asserts the provider's own stamp "
+            "is trustworthy, and anchoring a BACKFILL on first_seen would date 2015 news "
+            "to today); first_seen_only -> first_seen_utc (the provider's stamp is a "
+            "crawl time it may move, so only our own anchor is safe)"),
+        "anchors_used": {
+            f: sum(1 for r in new_rows if r["pit_anchor_field"] == f)
+            for f in ("published_utc", "first_seen_utc")
+        } if new_rows else {},
         "label_sources": sources,
         "skipped_index_state_sources": _skipped_sources(sources),
         "watermark_first_seen_utc": watermark or None,
