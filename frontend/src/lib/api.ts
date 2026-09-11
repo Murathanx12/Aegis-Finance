@@ -1856,6 +1856,20 @@ export interface ScreenerResponse {
     composite_score: number;
     reasons: string[];
   };
+  // Provenance of the universe the screener actually ran over. Present on the
+  // desktop path (the tracker universe, 3,056 names) and absent on the
+  // deployed one (55-56 curated S&P names) -- so the page can stop claiming a
+  // breadth it does not have. "It shows only 56 stocks -- I thought we
+  // analyzed all the stocks in the market" (Murat, 2026-09-11).
+  universe_name?: string;
+  universe_source?: string;
+  universe_day?: string;
+  universe_rows?: number;
+  /** Names that got the full Monte Carlo pass; the rest carry the scorecard. */
+  deep_analysed?: number | null;
+  deep_target?: number | null;
+  deep_pending?: number;
+  horizon?: string;
 }
 
 export interface SectorsResponse {

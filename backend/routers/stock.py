@@ -28,7 +28,7 @@ from fastapi import APIRouter, HTTPException
 from functools import partial
 
 from backend.cache import (cache_get, cache_set, cache_swr, cache_swr_202,
-                           computing_or, report_progress)
+                           computing_or, desktop_mode, report_progress)
 from backend.config import config
 
 router = APIRouter(prefix="/api/stock", tags=["stock"])
@@ -43,15 +43,35 @@ _TICKER_RE = re.compile(r"^[A-Z0-9.\-]{1,10}$")
 async def get_stock_screener():
     """Top stocks screener — batch analysis of watchlist stocks."""
     try:
+        # In the DESKTOP app the screener runs over the real universe (3,056
+        # names, tier 1 instant, the top 200 deeply analysed) instead of the 56
+        # curated S&P names the deployed API screens. The deployed path is
+        # untouched: 3,056 Monte Carlos on every TTL is a bill, not a feature.
+        compute = _screener_desktop if desktop_mode() else _screener
         return computing_or(await cache_swr_202(
-            "stock_screener", _CACHE_TTL["ttl_stock"], _screener
+            "stock_screener", _CACHE_TTL["ttl_stock"], compute
         ))
     except Exception as e:
         logger.error("stock screener failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def _screener() -> dict:
+def _screener(tickers: set[str] | None = None, *, on_batch=None,
+              batch_size: int = 25, extra: dict | None = None) -> dict:
+    """The deep screener: Monte Carlo, signal and technicals per name.
+
+    `tickers` overrides the curated list. The default is 55-56 curated S&P
+    names (`stock_universe.sectors` x `screener_per_sector`, capped at
+    `screener_max_tickers`), which is what "Stocks Analyzed 56" counts -- and
+    what Murat read as the whole market on 2026-09-11 ("I thought we analyzed
+    all the stocks in the market"). The desktop path passes the real universe's
+    top names instead; see `_screener_desktop`.
+
+    `on_batch(stocks)` is called every `batch_size` completions with the rows
+    finished SO FAR, so a caller can publish partial results while a long run
+    is still going. Nothing is called when it is None, which is the deployed
+    path.
+    """
     from backend.services.stock_analyzer import analyze_stock, DEFAULT_WATCHLIST, SECTOR_STOCK_MAP
     from backend.services.signal_engine import get_stock_signal
 
@@ -61,17 +81,20 @@ def _screener() -> dict:
     # Compute sector 3-month momentum for each sector ETF
     sector_momentum = _compute_sector_momentum()
 
-    # Build full list: DEFAULT_WATCHLIST + top picks from each sector
     universe_cfg = config.get("stock_universe", {})
-    per_sector = universe_cfg.get("screener_per_sector", 5)
-    max_tickers = universe_cfg.get("screener_max_tickers", 80)
-    all_tickers = set(DEFAULT_WATCHLIST)
-    for sector_tickers in SECTOR_STOCK_MAP.values():
-        for t in sector_tickers[:per_sector]:
-            all_tickers.add(t)
-    # Performance guard: cap total tickers
-    if len(all_tickers) > max_tickers:
-        all_tickers = set(sorted(all_tickers)[:max_tickers])
+    if tickers is not None:
+        all_tickers = {str(t).upper() for t in tickers if t}
+    else:
+        # Build full list: DEFAULT_WATCHLIST + top picks from each sector
+        per_sector = universe_cfg.get("screener_per_sector", 5)
+        max_tickers = universe_cfg.get("screener_max_tickers", 80)
+        all_tickers = set(DEFAULT_WATCHLIST)
+        for sector_tickers in SECTOR_STOCK_MAP.values():
+            for t in sector_tickers[:per_sector]:
+                all_tickers.add(t)
+        # Performance guard: cap total tickers
+        if len(all_tickers) > max_tickers:
+            all_tickers = set(sorted(all_tickers)[:max_tickers])
 
     # Extract crash probability for MC jump rate modulation
     crash_3m_pct = market_sig.get("_crash_3m_pct")
@@ -356,6 +379,11 @@ def _screener() -> dict:
             if result is not None:
                 stocks.append(result)
             report_progress(done, len(sorted_tickers))
+            if on_batch is not None and (done % max(1, batch_size) == 0):
+                try:
+                    on_batch(list(stocks), done, len(sorted_tickers))
+                except Exception as e:  # noqa: BLE001  publishing must not kill the run
+                    logger.warning("screener on_batch failed at %d: %s", done, e)
 
     elapsed = time.perf_counter() - t0
     logger.info(
@@ -377,10 +405,10 @@ def _screener() -> dict:
     # Falls back to Sharpe if opportunity_score is not available
     stocks.sort(key=lambda x: x.get("opportunity_score", x.get("sharpe", 0)), reverse=True)
 
-    return _public_screener_payload(stocks, market_sig, signal_analytics)
+    return _public_screener_payload(stocks, market_sig, signal_analytics, extra)
 
 
-def _public_screener_payload(stocks, market_sig, signal_analytics=None) -> dict:
+def _public_screener_payload(stocks, market_sig, signal_analytics=None, extra=None) -> dict:
     """Assemble the screener response with a JSON-safe market signal.
 
     Underscore keys on market_sig are internal plumbing (numpy HMM arrays,
@@ -394,6 +422,10 @@ def _public_screener_payload(stocks, market_sig, signal_analytics=None) -> dict:
     result = {"stocks": stocks, "count": len(stocks), "market_signal": public_sig}
     if signal_analytics:
         result["signal_analytics"] = signal_analytics
+    # `extra` carries the provenance the page prints beside the count:
+    # which universe, how many names are in it, how many got the deep pass.
+    if extra:
+        result.update(extra)
     # JSON safety net: one NaN/inf float anywhere in one row 500s the WHOLE
     # endpoint at serialization (2026-07-26 outage, phase 2). NaN means
     # "missing" → None. Applied last so no field can sneak past.
@@ -1764,3 +1796,195 @@ async def get_stock_grades(ticker: str):
     except Exception as e:
         logger.error("factor grades failed for %s: %s", ticker, e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ===========================================================================
+# THE SCREENER OVER THE REAL UNIVERSE, IN THE DESKTOP APP (O10b / O8)
+# ===========================================================================
+#
+# Murat, 2026-09-11: "it shows only 56 stocks -- I thought we analyzed all the
+# stocks in the market."
+#
+# He was right about the number and right to be surprised. `_screener`'s default
+# universe is `stock_universe.sectors` x `screener_per_sector: 5`, capped at
+# `screener_max_tickers: 80`, which dedupes to 56 curated S&P names. The real
+# universe is the tracker's 3,056, and the scorecard for every one of them is
+# already on disk in `backend/data/optimus/potential_universe/<day>.jsonl`.
+#
+# WHY TWO TIERS, WITH THE ARITHMETIC. The deep pass per name is a Monte Carlo
+# plus a yfinance history plus technicals. Measured on this laptop on
+# 2026-09-11 with a cleared cache: 56 names in 232.7 s wall (about 185 s of
+# fan-out at 8 workers), i.e. ~3.3 s per name. 3,056 names is therefore about
+# 2.8 HOURS and 3,056 network fetches -- not a page load, and not something to
+# run because a button was clicked.
+#
+# So:
+#   tier 1  every one of the 3,056 names, from the scorecard file. No network,
+#           no Monte Carlo, ~0.2 s. Published to the cache IMMEDIATELY, so the
+#           page shows the whole universe within a second of the first request.
+#   tier 2  the top `DESKTOP_DEEP_NAMES` by our own p_beat get the full deep
+#           pass, merged into the tier-1 rows and republished every 25 names,
+#           so the table fills in while it runs (~11 min for 200).
+#
+# The Monte Carlo columns are EM DASHES on a name that has not had the deep
+# pass. They are not approximated from the cheap fields: a Sharpe ratio that
+# was never computed must not appear as a number.
+#
+# The deployed API keeps the 80-name cap and this function is never called
+# there -- one warm loop recomputing 3,056 Monte Carlos every TTL is a bill,
+# not a feature.
+
+#: How many names get the full Monte Carlo pass in the desktop app. 200 x 3.3 s
+#: is about 11 minutes, inside the 20-minute budget; 3,056 would be 2.8 hours.
+DESKTOP_DEEP_NAMES = 200
+
+#: Republish cadence for the deep tier, in names.
+DESKTOP_DEEP_BATCH = 25
+
+
+def _universe_scorecards():
+    """(scorecards, meta) for the tracker universe, or ([], meta-with-reason).
+
+    Read through `routers/candidates`' loaders, which already own this file --
+    a second reader of one file is how two pages start disagreeing about how
+    many names there are.
+    """
+    try:
+        from backend import config as _cfg
+        from backend.routers import candidates as CAND
+        day, header, scorecards, vintage = CAND._load_potential_universe(None)
+    except Exception as e:  # noqa: BLE001
+        return [], {"universe_source": None, "universe_rows": 0,
+                    "universe_error": f"{type(e).__name__}: {e}"}
+    src = _cfg.CANDIDATE_POTENTIAL_UNIVERSE_DIR / f"{day}.jsonl"
+    try:
+        from backend.routers.control import REPO as _REPO
+        src_rel = src.resolve().relative_to(_REPO.resolve()).as_posix()
+    except Exception:  # noqa: BLE001
+        src_rel = str(src)
+    return scorecards, {
+        "universe_source": src_rel,
+        "universe_day": day,
+        "universe_rows": len(scorecards),
+        "universe_vintage": vintage,
+        "universe_counts": header.get("counts") or {},
+    }
+
+
+def _cheap_row(sc: dict) -> dict:
+    """One universe row WITHOUT a Monte Carlo. Every deep field is None.
+
+    None, not 0 and not an estimate: the page renders None as an em dash, and
+    the one thing this row must never do is look like a measured Sharpe."""
+    ep = sc.get("engine_prior") or {}
+    ident = sc.get("identity") or {}
+    ex = sc.get("execution") or {}
+    pb = sc.get("p_beat") or {}
+    v1 = sc.get("learner_v1") or {}
+    return {
+        "ticker": sc.get("symbol"),
+        "name": sc.get("symbol"),
+        "sector": ident.get("sector") or "Unknown",
+        "analysed": "scorecard",
+        "upside": ep.get("upside"),
+        "ratio": ep.get("ratio"),
+        "engine_verdict": ep.get("verdict"),
+        "p_beat": pb.get("debiased"),
+        "learner_score": v1.get("score"),
+        "median_dollar_volume": ex.get("median_dollar_volume"),
+        "execution_tier": ex.get("tier"),
+        "current_price": None,
+        "expected_return": None,
+        "sharpe": None,
+        "prob_loss": None,
+        "volatility": None,
+        "beta": None,
+        "crash_prob_3m": None,
+        "signal": None,
+    }
+
+
+def _deep_rank(row: dict) -> tuple:
+    """Which names earn the Monte Carlo. Our own estimate first, then capacity.
+
+    `p_beat` is the debiased P(excess > 0) the learner already wrote for every
+    name; `median_dollar_volume` breaks ties toward names that can actually be
+    traded. Both are on the scorecard, so this ranking costs nothing and --
+    unlike ranking on `upside` -- is not dominated by two-analyst micro caps
+    whose target is a factor of twenty above the price.
+    """
+    pb = row.get("p_beat")
+    dv = row.get("median_dollar_volume")
+    return (pb if isinstance(pb, (int, float)) else -1.0,
+            dv if isinstance(dv, (int, float)) else -1.0)
+
+
+def _screener_desktop() -> dict:
+    """The desktop screener: all 3,056 names, the top ones deeply analysed."""
+    from backend.cache import cache_set, report_progress
+
+    scorecards, meta = _universe_scorecards()
+    if not scorecards:
+        # No universe file in this checkout -- fall back to the curated list
+        # and SAY SO, rather than serving 56 names labelled as the market.
+        logger.warning("desktop screener: no universe scorecards (%s); "
+                       "falling back to the curated list",
+                       meta.get("universe_error"))
+        return _screener(extra={**meta, "universe_name": "curated S&P sample (fallback)",
+                                "deep_analysed": None, "deep_target": None,
+                                "deep_pending": 0})
+
+    cheap = {r["ticker"]: r for r in (_cheap_row(sc) for sc in scorecards) if r["ticker"]}
+    ordered = sorted(cheap.values(), key=_deep_rank, reverse=True)
+    deep_target = min(DESKTOP_DEEP_NAMES, len(ordered))
+    top = [r["ticker"] for r in ordered[:deep_target]]
+
+    base_extra = {
+        **meta,
+        "universe_name": "tracker universe (potential_universe scorecards)",
+        "deep_target": deep_target,
+        "horizon": ("5-year Monte Carlo for the deeply analysed names; every other "
+                    "row carries the tracker scorecard only, and its Monte Carlo "
+                    "columns are em dashes"),
+    }
+
+    def _publish(deep_rows: list[dict], done: int) -> None:
+        # The market signal a partial publish carries is whatever is ALREADY
+        # cached -- never recomputed here (it is a minute of work) and never
+        # invented. An absent one is an empty dict, which the page em-dashes.
+        from backend.cache import cache_peek
+        sig, _age = cache_peek("market_signal", 86_400)
+        merged = dict(cheap)
+        for d in deep_rows:
+            t = d.get("ticker")
+            if t:
+                merged[t] = {**merged.get(t, {}), **d, "analysed": "deep"}
+
+        rows = sorted(merged.values(),
+                      key=lambda r: (r.get("analysed") != "deep",
+                                     -(r.get("opportunity_score")
+                                       or r.get("sharpe") or 0.0)))
+        payload = _public_screener_payload(
+            rows, sig if isinstance(sig, dict) else {}, None,
+            {**base_extra, "deep_analysed": done,
+             "deep_pending": max(0, deep_target - done)})
+        cache_set("stock_screener", payload)
+
+    # TIER 1 -- the whole universe, in the cache, before anything slow starts.
+    report_progress(0, deep_target)
+    _publish([], 0)
+
+    deep = _screener(tickers=set(top), on_batch=lambda rows, done, total: _publish(rows, done),
+                     batch_size=DESKTOP_DEEP_BATCH)
+    deep_rows = deep.get("stocks") or []
+    merged = dict(cheap)
+    for d in deep_rows:
+        t = d.get("ticker")
+        if t:
+            merged[t] = {**merged.get(t, {}), **d, "analysed": "deep"}
+    rows = sorted(merged.values(),
+                  key=lambda r: (r.get("analysed") != "deep",
+                                 -(r.get("opportunity_score") or r.get("sharpe") or 0.0)))
+    return _public_screener_payload(
+        rows, deep.get("market_signal") or {}, deep.get("signal_analytics"),
+        {**base_extra, "deep_analysed": len(deep_rows), "deep_pending": 0})

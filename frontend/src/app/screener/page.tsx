@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { getStockScreener } from "@/lib/api";
 import { useComputing } from "@/lib/use-computing";
 import type { ScreenerStock } from "@/lib/api";
@@ -180,6 +181,10 @@ export default function ScreenerPage() {
     queryKey: queryKeys.stock.screener,
     queryFn: getStockScreener,
     staleTime: staleTimes.stock,
+    // While the deep tier is still running the server republishes the payload
+    // every 25 names, so the table fills in instead of sitting on tier 1.
+    refetchInterval: (q) =>
+      (q.state.data?.deep_pending ?? 0) > 0 ? 10_000 : false,
   });
   // In the desktop app the first screener call IS the cold 80-ticker compute.
   // The server answers 202 and keeps going; this is how far it has got.
@@ -235,8 +240,38 @@ export default function ScreenerPage() {
     <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Stock Screener</h1>
+        {/* The subtitle names the universe that was ACTUALLY screened. It used
+            to say "Top S&P 500 stocks" over 56 curated names, which is how
+            "it shows only 56 stocks -- I thought we analyzed all the stocks in
+            the market" happened (Murat, 2026-09-11). */}
         <p className="text-sm text-muted-foreground">
-          Top S&P 500 stocks ranked by risk-adjusted 5-year expected return
+          {data?.universe_name
+            ? `${data.universe_name} — ${data.universe_rows ?? "?"} names, ranked by our scorecard`
+            : "A curated S&P sample ranked by risk-adjusted 5-year expected return"}
+        </p>
+        {data?.universe_source && (
+          <p className="font-mono text-[10px] text-muted-foreground">
+            {data.universe_source}
+            {data.universe_day ? ` · vintage ${data.universe_day}` : ""}
+          </p>
+        )}
+        {data?.horizon && (
+          <p className="text-[11px] text-muted-foreground">{data.horizon}</p>
+        )}
+        {typeof data?.deep_pending === "number" && data.deep_pending > 0 && (
+          <p className="text-[11px] text-amber-500" role="status">
+            Deep analysis {data.deep_analysed ?? 0}/{data.deep_target ?? "?"} — the
+            Monte Carlo columns fill in as it runs; a name that has not had the
+            deep pass shows an em dash rather than a guess.
+          </p>
+        )}
+        <p className="mt-1 text-xs text-muted-foreground">
+          Looking for every name we track, with our review and the analyst
+          consensus?{" "}
+          <Link href="/candidates" className="underline">
+            Candidates
+          </Link>{" "}
+          lists the whole universe.
         </p>
       </div>
 
@@ -245,7 +280,21 @@ export default function ScreenerPage() {
           <Card>
             <CardContent className="p-3">
               <p className="text-[10px] text-muted-foreground uppercase">Stocks Analyzed</p>
-              <p className="text-xl font-bold tabular-nums">{summaryStocks.length}</p>
+              <p className="text-xl font-bold tabular-nums">
+                {summaryStocks.length}
+                {typeof data?.universe_rows === "number" && (
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {" "}/ {data.universe_rows}
+                  </span>
+                )}
+              </p>
+              {/* The denominator is the universe file's own row count. Without it
+                  "56" read as the whole market. */}
+              {typeof data?.deep_analysed === "number" && (
+                <p className="text-[10px] text-muted-foreground">
+                  {data.deep_analysed} deeply analysed
+                </p>
+              )}
             </CardContent>
           </Card>
           <Card>
