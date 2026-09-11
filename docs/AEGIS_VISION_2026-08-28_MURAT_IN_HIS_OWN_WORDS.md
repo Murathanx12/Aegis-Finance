@@ -274,3 +274,53 @@ Kept close to verbatim; the corrections and the plan are in
 **The two sentences the roadmap is built on:** *"go to the root"* and *"what we
 thought versus what happened."* Everything else is an expression of one of
 those two.
+
+### 6b. The same day, an hour later — the problem statement, in his words
+
+> "We need profit improvements. Research improvements are good, but my main
+> point is not a research paper; it's an investing tool I can use, that can
+> make investments on my behalf for good profits, and an engine I can interact
+> with — like my own investing agency: I say I want to invest for X time with X
+> money; it gives me options, guides me. Go to the problem statement. It's for
+> an AVERAGE PERSON to invest, create a portfolio and protect their money. What
+> investors with capital under $1M face: no data, no info, no experience, no
+> time. The engine should control the portfolio by itself so it can make its own
+> money. It learns through its own investments. I don't have the time nor a
+> mind as big as an LLM, so I want to hand everything off to it, and control
+> and maximise profits myself."
+
+> "Check investment news, strategies, how hedge funds and investors move,
+> patents, books, theories; check X, Threads, social media. The engine should
+> do this by itself every time I open it, or daily. Or the person says 'help me
+> create a portfolio' — with their input and Aegis's guidance a portfolio is
+> created: allocation per stock, risk, hold time. Every day we review the
+> market and the portfolios, gather data and help them: this stock is still
+> hold, sell, or buy more, based on the news or the future events that might
+> happen."
+
+> "I want Aegis NOT to be afraid of making mistakes. Thousands of paper
+> accounts, checked daily, all different, all testing a strategy — made up from
+> the data we have acquired: news, backtests, historical data. We have news for
+> the past and WRDS data; run thousands of backtests, random or with new
+> theories, so every run it can learn; it can make a theory and find points;
+> save the results after each run; at the end of the whole chunk of sims, where
+> it beats the S&P 500 we look at what it did and whether it is actually real.
+> Check negative results again — I don't want to kill any good ideas.
+> Continuous learning, self-attention, memory."
+
+> "Use the LLM in the backtests with the made-up news, so we can compare what
+> it thought with what it did. The resulting data and math can be CONTEXT for
+> the LLMs — feed Optimus or the brain module a text or md file with everything
+> we learned — or the text-to-number data we got can build the NN or our model.
+> We can't build an LLM and that's not what we're asking; see what
+> methodologies are needed and what we can do."
+
+> "Sonnet for research and data acquisition, Opus 5 for building, and you as
+> the central unit check their work and validate. Divide the work into chunks
+> and one by one let's move on with them."
+
+**What changed in the objective:** nothing — `OPTIMUS_OBJECTIVE.md` §0 already
+says portfolio utility under a declared personality for Murat's capital AND a
+public tool others run at their utility. What changed in the **priority
+order**: the tool for an average person is now the deliverable the roadmap is
+measured against, and research is what keeps that tool from learning nonsense.

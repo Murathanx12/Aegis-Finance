@@ -325,3 +325,185 @@ book's grade arrives one cadence at a time) and statistical power (2025-26 is
     its Lookahead Propensity result** or is not quoted.
 22. **A forecast the model writes is graded by a job it cannot see**
     (`record_outcome` returns `None`; that stays).
+
+---
+---
+
+# AMENDMENT (2026-09-11, later the same day) — the investing agency, the memory, and the reopened LLM-in-the-backtest lane
+
+Murat, an hour after the roots above (VISION §6b): *"not a research paper — an
+investing tool that makes investments on my behalf and an engine I can interact
+with; my own investing agency; for an average person with under $1M: no data, no
+info, no experience, no time; thousands of paper accounts, all different; don't
+kill good ideas; use the LLM in the backtests with made-up news; the results
+become context for the brain or numbers for the net."* Three more Sonnet agents
+answered (notes: `research_notes/2026-09-11/research_agency.md`,
+`research_learning_loop.md`, `research_qanat.md`). This amendment adds four
+lanes and re-orders execution into chunks.
+
+## 7. THE PROBLEM STATEMENT — what an average investor is actually losing, and what nothing sells them
+
+The research put numbers on Murat's sentence. Barber & Odean (J. Finance 2000):
+66,465 households earned 16.4%/yr against 17.9% for the market, and the
+highest-turnover quintile earned 11.4% — **activity costs ~6.5 pp/yr**. Barber
+& Odean (RFS 2008): individuals are net *buyers* of attention-grabbing stocks
+because they can only sell what they own. Kumar (2009): lottery-stock chasers
+lose 2-3 pp/yr. Morningstar's 2015-24 gap is −1.2 pp/yr, −2.1 for volatile
+funds (contested by Fulkerson et al. 2026 as partly mechanical). Robo-advisors
+fixed diversification, rebalancing bands and tax-loss harvesting and **do not
+pick stocks, read news, or make hold/sell/buy calls**. Composer automates rules
+the user must write; Public Alpha and Robinhood Cortex are research layers;
+ai-hedge-fund and TradingAgents have the multi-agent shape and no audited
+record. **No surveyed product does both goal intake ("X money for Y time" →
+allocation, risk, hold time) and daily autonomous review.** That is the gap,
+and it is the deliverable.
+
+Eight classic rules an agency would be tempted to encode (Graham net-nets,
+Piotroski, Greenblatt, Antonacci, Faber GTAA, O'Shaughnessy, Dalio all-weather,
+Bogle arithmetic) **all decayed, reversed, or drew down hard exactly when tested
+out of sample after costs** (Piotroski's literal rule: −9.5 to −11.8%/yr in
+recent decades; GTAA's own ETF closed in 2017; all-weather −22% in 2022). So the
+library enters as **competing, individually falsifiable paper books**, never as
+rules the engine trusts — which is lane B's design already.
+
+Social data: X is pay-per-read since Feb 2026; Reddit's Nov-2025 policy requires
+pre-approval and bars ML use without permission; StockTwits labels 30-50% of
+posts. Renault (2017): StockTwits sentiment predicts the *last half hour of the
+same day*; WSB peak-attention entries averaged −8.5%. **Social signals are a
+cheap secondary layer for hypothesis generation, never adjudication.** 13F
+copying stays thin (Cohen-Polk-Silli best ideas do not overlap across managers;
+the 45-day lag), as our own TRIAL-ARK/CONGRESS/INSIDER lanes are finding.
+
+Regulatory boundary, stated and not advised: SEC IM Guidance 2017-02 governs
+tools that advise *others* for compensation; a personal tool one person runs on
+their own account sits outside that definition. **Before any multi-user
+distribution, this is a question for counsel, and the README says so.**
+
+## 8. Lane A — the agency (goal intake, the daily review, the hold/sell/buy-more call)
+
+| id | item | control / acceptance |
+|---|---|---|
+| **A1** | **Intake = an IPS.** `POST /api/agency/intake` takes `{capital, horizon_months, personality ∈ four, constraints[], liquidity_need}` and returns an Investment Policy Statement (the CFA five-part shape: facts, objectives and constraints, risk ability vs willingness, eligible universe, review cadence) as a frozen JSON with a hash. The LLM drafts the prose; the engine fills every number. | the IPS hash is on every book the intake creates |
+| **A2** | **Options, not one answer.** From one IPS the engine proposes three books (lane B) — preservation / balanced / aggressive expressions of the same IPS — each with its twin, worst case in dollars (`n × notional% × stop%`), expected drawdown at the declared budget, and the hold rule. Murat picks one; the other two are held as **shadow books** so the choice itself is graded. | the un-chosen books are marked and shown beside the chosen one |
+| **A3** | **The daily review** is the Morning click (O5) applied per book: for each holding, `{hold, sell, buy_more, trim}` with a probability, the news and events that moved it (typed events from L2, upcoming prints from the calendar), and the forecast row written BEFORE the call is shown (B5). The call is a proposal; in paper it executes; a real-money path does not exist and stays attended. | every call has a forecast row; every forecast row is graded |
+| **A4** | **Protect first.** Drawdown budget per book from the IPS; a breach flips the book to its preservation twin's construction, logged, reversible by a human. This is the "protect its money" half, and it is a rule the engine derives from the IPS, not a parameter. | breach → receipt → the board shows it in red |
+| **A5** | **Explain in plain words.** Every number the agency shows has a one-sentence explanation the local model writes from the receipt, and the receipt path. The average investor reads the sentence; the sceptic reads the path. | — |
+
+Lane A sits on lanes B (books), O (the board), N (news) and M (memory). It does
+not need lane E to ship: an agency that runs the book library with twins and
+grades itself is already better than a rule set, because it can say which rule
+is currently working.
+
+## 9. Lane M — the memory that learns (the ledger the LLM reads and the net consumes)
+
+The literature's one consistent answer (Reflexion, ExpeL, Voyager, FinCon,
+FactorMiner 2026) is that agents improve without weight updates by storing
+**graded experience** and retrieving it — and its one consistent failure is
+**over-trust of retrieved experience** and **hindsight contamination**. Nobody
+scores verbal reflections with a proper scoring rule; we will.
+
+| id | item | control |
+|---|---|---|
+| **M1** | **One ledger schema** for every forecast the system makes (book, name, scenario, rule): `id, made_utc, decision_date, resolution_date, horizon, mechanism_id, hypothesis_text, policy_hash, inputs_used (PIT provenance), llm_provider, prompt_hash, probability, confidence, benchmark, control_twin_id, control_construction, outcome, vs_benchmark, vs_control, costs_charged (bool, rate), brier, calibration_bucket, LAP_score, anonymization_gap, era_tag, licence, n_effective_trials_at_time, notes_text, embedding_id`. `belief_state.PredictionRecord` is extended, not replaced. | the base-rate forecaster (p = base rate) is a row in the same ledger |
+| **M2** | **Distillation, ExpeL-style, from winner vs matched loser.** A night job diffs graded pairs (a book vs its twin; a rule that paid vs the same rule in the era it did not) and writes candidate **rules as text with their own Brier**: a rule is a forecast about future forecasts and is graded like one. Output: `backend/data/optimus/brain/LEARNED_<YYYY-MM>.md` — the markdown Murat asked for, fed to Optimus — and `learned_rules.jsonl` for retrieval. | a rule must generalise to a held-out mechanism family or it is `NOT_GENERALISED`; a shuffled-pair distillation produces the noise floor |
+| **M3** | **Retrieval that cannot see hindsight.** When the model is asked for a forecast at date t, it may retrieve only rules whose `resolution_date < t` and whose Brier was computed on data before t. Enforced in the retriever, tested both ways. | the same forecast with retrieval off |
+| **M4** | **Calibration on the board:** Brier split into calibration and resolution (Murphy 1973), reliability diagram per model and per mechanism, rolling; Tetlock-style persistence check (does last quarter's calibration predict this quarter's?). | the base-rate row |
+| **M5** | **Numeric side:** the ledger's numeric fields are a training table; **GBM is the mandatory control for any net** (Gu-Kelly-Xiu 2020: trees and shallow nets lead; no attention/memory architecture has beaten that bar on cross-sectional returns). A Decision-Transformer-style model conditioned on the four personalities is a permitted experiment against that control, not a default. | GBM on the same table |
+
+## 10. Lane X — the LLM inside the backtest, REOPENED with workarounds and a protocol
+
+The 09-11 morning text over-closed this. What the receipts close, precisely:
+FINSABER (KDD 2026) closes the LLM **as the trader** (daily, named large caps,
+after commissions); Glasserman-Lin close the **per-headline daily** long-short;
+C2 closes **pre-training a representation** on made-up news. "Profit Mirage"
+(arXiv:2510.07920) and "The Alpha Illusion" (arXiv:2605.16895) add the numbers:
+FinMem's returns fall ~72% and QuantAgent's Sharpe ~51% across the training
+cutoff; TradingAgents' Sharpe goes 0.43 → 0.22 and QuantAgent's negative once
+frictions are charged. None of that closes the mechanism. The workarounds, each
+with its control, and the protocol that makes an LLM-in-history experiment
+legitimate:
+
+**The protocol (P1-P6, from "The Alpha Illusion", adopted):** temporal
+integrity (anonymised, date-shifted placebo, and where possible a time-locked
+model such as ChronoGPT as the same-era control); dynamic universe (P7 vintage);
+**direction-flip test** (flip the news sign, the forecast must flip); Expected
+Calibration Error reported; full frictions; disaggregated agents. Plus
+**Lookahead Propensity** (L3) on every pre-cutoff read, and the **anonymisation
+gap measured** (arXiv:2511.15364: anonymisation can destroy more signal than the
+bias it prevents — R2's anonymised read is compared to a raw read on the same
+dates, not assumed costless).
+
+| id | workaround | what it reuses | control |
+|---|---|---|---|
+| **X1** | **Horizon and hold rule.** The per-headline read at 5 and 21 sessions with a hold rule, not next-open daily. The same signal that dies at 1.8 turnover/day can pay at monthly turnover (R2 is the existence proof). | E1 panel, N3 code | shuffled text, per era; 25 bps on realised turnover |
+| **X2** | **Belief elasticity as a feature.** C1's 1,962 counterfactual rows (sign flip, ×3 escalation, …) are shown to the model beside the real headline on the same day; the **change in its forecast** is a number per name-day — how much the belief depends on the news, not the calendar. The direction-flip test becomes a feature. Feeds the tabular head (E1). | C1 rows, R2 prompt | the elasticity from a date-shifted placebo pair |
+| **X3** | **Scenario forecasts.** For each name in a book, the model writes k plausible next-session headlines with probabilities ("these are the things that might happen"); the engine prices each by historical analogue (typed event × era); the forecast row stores the scenario set; the ledger grades which scenario reality picked and the Brier of the set. Murat's "probabilities, not confidence", as a graded object. | belief_state, L2 vocabulary | a base-rate scenario set (the era's unconditional event frequencies) |
+| **X4** | **Regime-conditional use.** FINSABER's failure is asymmetric (right in bulls, wrong in bears): route the LLM read through a market sensor (the NVDA/SPY sensor of invariant 4) and grade routed vs unrouted. | RW1 windows | the unrouted read |
+| **X5** | **The LLM as an auditable information interface, never the allocator** — the Alpha Illusion authors' own recommendation and our invariant 5. Every X-lane output is a feature or a forecast row; the engine sizes, costs and gates. | contract.py | — |
+
+**Reopening closed hypotheses without p-hacking (lane X's licence to look
+again):** McLean-Pontiff (2016) split factor decay into ~26% overfitting and
+~58% publication crowding — a `DEPRIORITIZED` idea is re-opened only with a
+stated reason of which kind it was; re-tests run on **new data only** under
+O'Brien-Fleming alpha spending (already in `iif1_read_gate.py`; transplant it to
+a generic `retest_gate`). "Don't kill good ideas" becomes a procedure, not a
+mood: any corpse can be re-registered with (a) the receipt it must rebut,
+(b) the new data it will use, (c) the spending boundary. Value's 2020-22 revival
+is the worked example of why.
+
+## 11. Joins from Qanat and Fidetolabs Notes (what to take, what we already do better)
+
+Qanat (`fidetolabs/qanat`, MIT, created 2026-09-05, one contributor) is a DAG
+backtest engine with an MCP server so an LLM can author, run and compare alphas
+itself, under a **stage contract** (raw is source-only, data flows forward only,
+one weights stage per alpha, no alpha reads another's weights, every table has a
+producer) that makes leakage structurally impossible; it declines to compute a
+benchmark. Fidetolabs Notes is a cadence of pre-registered replications of
+published papers with negative results published.
+
+| take | as | cost |
+|---|---|---|
+| a standing **"adjudicate one published anomaly"** cadence, pre-registered, negatives published | lane B books from §7's library + `pre-register-trial`; one per week as a night job | cheap |
+| a **read-only MCP surface** over the joined panel, the farm and the leaderboard, so an agent can query without the ability to write (Qanat's `--read-only` as a structural gate) | extend the Optimus MCP with `panel_query`, `farm_query`, `receipt` tools; O6's tool set becomes the same surface | cheap |
+| **decay-blended target weights** (`w_t = λ w_{t-1} + (1-λ) target`) as a first-class cost-control parameter swept with `fee_bps` | `portfolio_farm.Policy` gains `decay`; control λ = 0 | cheap |
+| a **typed stage contract** over farm → arms → lanes, so one weights artefact drives backtest AND paper (today two stacks) | big; after lane B, because B1's `PaperBook` is that artefact | big |
+| an **externally anchored, tamper-evident forecast ledger** (NeuPortal anchors to Bitcoin via OpenTimestamps); our ledger hash chain has been broken since 2026-08-25 and never repaired | first repair the chain in the open (write the break into the record, restart the chain from a signed epoch), then consider anchoring | medium |
+
+What Aegis already does better and keeps: benchmark-relative evaluation with the
+benchmark's own drawdown (Qanat has none by design), zero cost refused by
+construction, matched controls per era, DSR/PBO, a night search that carries
+elites and advances seeds (population-based training by another name).
+
+## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
+
+Roles, from Murat: *"Sonnet for research and data acquisition, Opus 5 for
+building, you as the central unit check their work and validate; divide the work
+into chunks and one by one move on."* Each chunk ends with: Opus commits
+locally, Fable reviews the diff, runs the fast suite, pushes, watches CI.
+
+| chunk | contents | gate to the next |
+|---|---|---|
+| **1** (running 2026-09-11) | O2 config root + frozen-path family test · O3 storage · O7 ask starts the model | suite green, CI green, Murat relaunches and the guide stays dismissed |
+| **2** | O1 thin launcher · E6 evidence-memory rotation (deadline) · F1 terminal handoff | the .exe on a stale checkout pulls and serves the new HEAD |
+| **3** | O4 board · O5 Morning · O6 Ask-with-tools (Sonnet builds the read-only MCP surface of §11 as data-acquisition work) | every board card shows a receipt path or an em dash |
+| **4** | N-A corpus writer + N-B registry + N-C nightly join (Sonnet: source-by-source pulls and the N-D name table; Opus: the writer and the tests) | coverage card shows Asia rows with `first_seen_utc` |
+| **5** | B1-B5 books with twins + M1 ledger schema + M3 hindsight-safe retrieval | the first `origin=human_text` book has a twin and a graded forecast |
+| **6** | A1-A5 the agency intake, options, daily review, protect-first | Murat states a goal and receives three graded options |
+| **7** | X1-X4 LLM-in-backtest workarounds under P1-P6 + L3 Lookahead Propensity + the anonymisation gap | each receipt carries LAP and the flip test |
+| **8** | M2 distillation → `LEARNED_<month>.md` for Optimus · M4 calibration on the board · E5 DSR/PBO stopping rules · §11 cheap joins | the first rule with its own Brier |
+| **9** | E1-E4 heads against GBM · L4 Qwen3 as a new arm · the stage contract (big) | a head beats GBM and its three controls, or the result is filed |
+
+**Compaction rule for the validating session:** summarise when context passes
+half; the chunk table above is the resume point.
+
+## 13. MUST NOT REGRESS (added by the amendment)
+
+23. **`FAILED_VARIANT` closes a route; the mechanism is re-opened by procedure**
+    (§10): name the receipt to rebut, the new data, the spending boundary.
+24. **An LLM read over history carries P1-P6, its LAP score and its
+    anonymisation gap**, or it is not quoted.
+25. **A rule the memory learns is a forecast and carries a Brier.** Retrieval
+    at date t sees only rules resolved before t.
+26. **The agency shows options with twins and worst cases; a human picks; the
+    un-chosen options are graded as shadows.**
+27. **Social data generates hypotheses; it never adjudicates.**

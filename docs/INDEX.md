@@ -44,6 +44,15 @@ Big local artefacts that are deliberately NOT committed are catalogued in
   conformal intervals, DSR/PBO stopping rules, evidence-memory rotation (65 MB, deadline). Builder contract:
   `HANDOFF_2026-09-11_FABLE_TO_OPUS_BUILD_PLAN.md`. Murat's words: VISION file §6. Agent notes:
   `research_notes/2026-09-11/`. The 09-10 roadmap below is folded in as lanes L and E.
+  **AMENDED the same evening (§7-§13):** the problem statement quantified (activity costs retail ~6.5 pp/yr;
+  robo-advisors never pick or review; no product does goal intake AND daily control; the eight classic
+  rules all decay OOS after costs → a library of competing paper books, not rules); lane **A** the agency
+  (IPS intake → three graded options with twins and worst cases → daily hold/sell/buy-more with a forecast
+  row → protect-first); lane **M** the memory (one ledger schema, ExpeL distillation into
+  `brain/LEARNED_<month>.md` with every rule carrying a Brier, hindsight-safe retrieval, GBM the mandatory
+  control for any net); lane **X** LLM-in-the-backtest REOPENED under the P1-P6 protocol (horizon/hold,
+  belief elasticity from C1's counterfactuals, scenario forecasts, regime routing); joins from Qanat/Notes;
+  and §12 the nine execution chunks (Sonnet researches, Opus builds, Fable validates).
 - `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.md` — SUPERSEDED 2026-09-11 (folded into lanes L/E
   above); keep for §3b's evidence-memory options and the Qwen3 measurements.
 

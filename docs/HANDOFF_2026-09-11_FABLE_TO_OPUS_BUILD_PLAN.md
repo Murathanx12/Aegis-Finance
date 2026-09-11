@@ -215,6 +215,34 @@ In `scripts/night_*.py` pattern, each with a receipt and `next_test`:
 - Do not rebuild the 1.1 GB onedir. Phase 1.3 replaces it.
 - Never `taskkill /IM`; never move `.env`; never `--no-verify`.
 
+## 6b. AMENDED THE SAME EVENING — chunks, and four more lanes
+
+Murat re-stated the problem (VISION §6b): an investing agency for an average person, thousands of paper
+books as data accumulation, the LLM inside the backtest, results as context for the brain. The roadmap's
+amendment (§7-§13) adds lane **A** (goal intake → three graded options → daily hold/sell/buy-more with a
+forecast row → protect-first), lane **M** (one ledger schema; ExpeL-style distillation into
+`brain/LEARNED_<month>.md` with each rule carrying its own Brier; hindsight-safe retrieval; GBM as the
+mandatory control for any net), lane **X** (LLM-in-backtest REOPENED: horizon/hold rule, belief
+elasticity from C1's counterfactual rows, scenario forecasts, regime routing — all under the P1-P6
+protocol, Lookahead Propensity and a measured anonymisation gap), and the cheap joins from Qanat/Notes
+(published-anomaly cadence, read-only MCP surface, decay-blended weights).
+
+**Chunk 1 landed (validated by Fable 2026-09-11):** `110aec1` config root + `test_frozen_path_family.py`
+(24 allow-listed hits, 10 of them `_PENDING_LAUNCHER` — the launcher retires them), `6f9c265` storage
+survives the window (+ `llm_providers` in the headless report: `configured: ["deepseek"]` from source),
+`ae71a37` ask starts the model only when nothing is listening. Suite 7,966 → 7,983. Not verified: the
+packaged .exe (not rebuilt; chunk 2 replaces it) and the relaunch acceptance (Murat).
+**Defect found during validation, for chunk 2:** `backend/tests/test_n6_battery_v2_and_n7.py:233` feeds
+fake N9 receipts from `tmp_path` to a function that appends its summary row to the LIVE
+`learner/evidence_memory.py:STORE` — every suite run adds a `SKIPPED -- nothing here` row to a tracked
+65 MB ledger (one was discarded on 09-11). Give the writer a store parameter (or monkeypatch `STORE`
+in the test), and add a guard test that the fast suite leaves `evidence_memory.jsonl` byte-identical.
+
+**Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
+X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
+chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
+locally → Fable reviews the diff, runs the fast suite, pushes, `ci_watch --wait`.
+
 ## 7. SESSION ORDER
 
 1. Protocol (briefing, verified state, `brain_query` "thin launcher desktop", `aegis_postmortems`).
