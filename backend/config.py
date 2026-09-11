@@ -18,8 +18,45 @@ from dotenv import load_dotenv
 
 # ── Project root ──────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path(__file__).parent.parent
-BACKEND_DIR = Path(__file__).parent
+
+def _repo_root() -> Path:
+    """The checkout this configuration describes.
+
+    Mirrors `backend.routers.control._repo_root` deliberately: inside a
+    PyInstaller build `__file__` is `<dist>/_internal/backend/config.py`, so the
+    default root resolves to `_internal` -- a directory that has no `.env`, no
+    trained models and no `backend/data`. The packaged app therefore ran with
+    EVERY key absent and said nothing, because `load_dotenv` on a missing file
+    is a silent no-op (the frozen-path defect family, 2026-09-10).
+
+    `AEGIS_REPO_ROOT` is set by the desktop shell to the real checkout. The
+    fallback stays the source layout, which is correct when running from source.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parent.parent
+
+
+PROJECT_ROOT = _repo_root()
+
+#: Where this module physically sits. Identical to `PROJECT_ROOT / "backend"` on
+#: every source run; they differ ONLY inside a frozen build whose shell pointed
+#: `AEGIS_REPO_ROOT` at the checkout.
+_MODULE_BACKEND_DIR = Path(__file__).resolve().parent
+
+#: `BACKEND_DIR` follows the ROOT, so `DATA_DIR` below (and everything keyed off
+#: it) reads the checkout's `backend/data` rather than a fresh empty tree inside
+#: the bundle. Unchanged for source runs by construction.
+BACKEND_DIR = (PROJECT_ROOT / "backend") if os.getenv("AEGIS_REPO_ROOT") else _MODULE_BACKEND_DIR
+
+#: MODEL_DIR follows BACKEND_DIR, i.e. the checkout — NOT the bundle. It is read
+#: only for TRAINED ARTEFACTS (`crash_model.pkl`, `conformal_scores.pkl`), and
+#: those are gitignored (`.gitignore` line 14), so they are trained into the
+#: checkout and are never in a bundle built anywhere else. The Python modules
+#: that live in the same directory (`garch.py`, `hmm.py`) are imported by
+#: package name and do not travel through this path, so pointing it at the
+#: checkout cannot break an import.
 MODEL_DIR = BACKEND_DIR / "models"
 
 # ── BUILD1 artefacts: found, never assumed ────────────────────────────────────
