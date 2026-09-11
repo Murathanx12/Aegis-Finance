@@ -31,7 +31,13 @@ REPO = Path(__file__).resolve().parents[2]
 #: Every ledger file the suite must leave alone: the legacy monolith, the
 #: monthly files it rotated into (E6), and the supersessions log.
 LEDGER_DIR = REPO / "backend" / "data" / "optimus" / "learner"
-PATTERN = "evidence_memory*.jsonl"
+
+#: The observation stream (monolith + monthly files after the 2026-09-11 split),
+#: the supersessions log, and the DERIVED state snapshot. The snapshot is in the
+#: list because `evidence_memory.snapshot()` writes it as a side effect of being
+#: called -- a test that merely asks the memory what it believes rewrites a
+#: tracked 213 KB file, which is exactly the shape of defect this guard is for.
+PATTERNS = ("evidence_memory*.jsonl", "evidence_memory_state.json")
 
 
 def fingerprint(directory: Path | None = None) -> dict[str, tuple[int, str]]:
@@ -40,7 +46,8 @@ def fingerprint(directory: Path | None = None) -> dict[str, tuple[int, str]]:
     out: dict[str, tuple[int, str]] = {}
     if not d.is_dir():
         return out
-    for p in sorted(d.glob(PATTERN)):
+    seen = {q for pat in PATTERNS for q in d.glob(pat)}
+    for p in sorted(seen):
         try:
             data = p.read_bytes()
         except OSError:

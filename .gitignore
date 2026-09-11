@@ -287,3 +287,15 @@ backend/data/optimus/text_return_panel/emb_*/
 # The desktop window's browser profile (localStorage). Per-machine state that exists
 # so the guide and the tour are dismissed ONCE; nothing in it is shareable.
 backend/data/optimus/webview_profile/
+
+# 2026-09-11 (E6): the evidence ledger rotated into MONTHLY files. The single
+# `evidence_memory.jsonl` was 65.16 MB over 102,029 rows and grew every night;
+# GitHub rejects a blob at 100. The LIVE month is the one being appended to, so
+# it is ignored -- committing it would recreate the same growing blob under a
+# new name. A month that has CLOSED is sealed and added once, deliberately:
+#     git add -f backend/data/optimus/learner/evidence_memory_2026-09.jsonl
+# (a rule here never applies to an already-tracked file, so a sealed month stays
+# tracked for good). The split is by each row's own `utc`, never by mtime --
+# see `scripts/evidence_memory_rotate.py`.
+backend/data/optimus/learner/evidence_memory_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl
+backend/data/optimus/learner/evidence_memory_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl.tmp

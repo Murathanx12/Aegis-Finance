@@ -65,6 +65,20 @@ believe before we changed the bar", which is the question every retrospective
 actually asks. It is greppable, diffable, and survives a killed job with
 everything written up to that moment intact.
 
+ONE FILE A MONTH, SPLIT BY EACH ROW'S OWN STAMP (E6, 2026-09-11)
+================================================================
+The single `evidence_memory.jsonl` reached **65.16 MB over 102,029 rows** and
+grew every night the factory ran; GitHub refuses a blob at 100 MB. The two ways
+out were compaction and rotation, and **compaction is refused** -- summarising
+rows destroys the one question an append-only store exists to answer. So a row
+is written to `evidence_memory_<YYYY-MM>.jsonl` for the month **its own `utc`
+names**, never the file's mtime (a fresh CI checkout writes every file today;
+that is how a receipt-date gate kept finance CI red for two days). `read_all()`
+concatenates the legacy monolith, if it is still on disk, and then every monthly
+file in filename order, so no consumer in the repo knows the split happened.
+The live month is gitignored; a closed month is sealed and committed once.
+`scripts/evidence_memory_rotate.py` did the one-shot migration and is idempotent.
+
 ...AND SUPERSEDABLE, AT ONE PLACE ONLY
 ======================================
 Append-only with no supersession lets a RETRACTED experiment keep voting, which
@@ -88,13 +102,25 @@ reason, and the count of cells being withheld.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 STORE_DIR = REPO / "backend" / "data" / "optimus" / "learner"
+
+#: THE LEGACY MONOLITH. Kept as a NAME for one release so that anything holding
+#: `EM.STORE` -- three tests and `labor_b1_known_answer_battery`, which swaps it
+#: for a scratch path -- keeps working, and so that a checkout that still has
+#: the single file on disk is still read in full. Nothing writes to it any more.
 STORE = STORE_DIR / "evidence_memory.jsonl"
 STATE_SNAPSHOT = STORE_DIR / "evidence_memory_state.json"
+
+#: `evidence_memory_2026-09.jsonl` and nothing else. The pattern is a REGEX
+#: rather than a glob because `evidence_memory*.jsonl` also matches
+#: `evidence_memory_supersessions.jsonl`, and folding the retraction log into
+#: the observation stream would let every retraction vote as an observation.
+_MONTH_FILE = re.compile(r"^evidence_memory_(\d{4}-\d{2})\.jsonl$")
 
 VERSION = "evidence-memory-1"
 
@@ -151,6 +177,66 @@ def _now() -> str:
 
 # ------------------------------------------------------------------ recording
 
+def month_of(row: dict) -> tuple[str, str]:
+    """`(YYYY-MM, source)` for one row, from THE ROW'S OWN STAMP.
+
+    Not the file's mtime. A fresh CI checkout writes every file today, so an
+    mtime-dated split would file a 2026-08 observation under the month somebody
+    happened to clone the repo -- the defect family that kept finance CI red for
+    two days (protocol §7). A row whose stamp will not parse is filed under the
+    wall clock and SAYS SO in the row it writes, because an observation silently
+    filed under the wrong month is indistinguishable from one made that month.
+    """
+    raw = str(row.get("utc") or "")
+    m = re.match(r"^(\d{4})-(\d{2})", raw)
+    if m and 1 <= int(m.group(2)) <= 12:
+        return f"{m.group(1)}-{m.group(2)}", "row_stamp"
+    return _now()[:7], "wall_clock_at_write"
+
+
+def store_for_month(month: str) -> Path:
+    return STORE_DIR / f"evidence_memory_{month}.jsonl"
+
+
+def active_store() -> Path:
+    """Where a row written NOW lands. Derived from `STORE_DIR` on every call and
+    never cached, so a test that redirects `STORE_DIR` redirects the writer."""
+    return store_for_month(_now()[:7])
+
+
+def store_files(directory: Path | None = None) -> list[Path]:
+    """Every file `read_all` concatenates: legacy monolith first, then months.
+
+    Order matters. `state_of` reads `rows[-1]["utc"]` as `last_seen` and the
+    supersession check compares stamps, so the stream has to come out in the
+    order it was written. Filename order IS stamp order for the monthly files,
+    and the monolith is by construction older than the split that produced it.
+    """
+    d = Path(directory) if directory is not None else STORE_DIR
+    legacy = d / STORE.name
+    months = sorted((q for q in d.glob("evidence_memory_*.jsonl")
+                     if _MONTH_FILE.match(q.name)), key=lambda q: q.name)
+    return ([legacy] if legacy.exists() else []) + months
+
+
+def append(row: dict, *, directory: Path | None = None) -> Path:
+    """Append ONE row to the month its own stamp names. Returns the file used."""
+    d = Path(directory) if directory is not None else STORE_DIR
+    month, source = month_of(row)
+    if source != "row_stamp":
+        row = dict(row, month_source=source)
+    path = d / f"evidence_memory_{month}.jsonl"
+    d.mkdir(parents=True, exist_ok=True)
+    # `newline` is set EXPLICITLY. Text mode on Windows translates to CRLF,
+    # which is why the 65 MB monolith was 102,029 bytes larger than its own
+    # rows: one extra byte a line, written on this laptop and read on Linux
+    # CI. A ledger whose bytes depend on the OS that appended them cannot be
+    # hashed across machines (`reference_ci_red_two_days_five_linux_causes`).
+    with path.open("a", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+    return path
+
+
 def observe(family_id: str, cell: str, *, n_months, sharpe=None, dsr=None,
             spa_p=None, pbo=None, verdict=None, powered=None,
             years_needed_for_t2=None, years_observed=None,
@@ -175,9 +261,7 @@ def observe(family_id: str, cell: str, *, n_months, sharpe=None, dsr=None,
         "net_beats_market": net_beats_market,
         "note": note,
     }
-    STORE_DIR.mkdir(parents=True, exist_ok=True)
-    with STORE.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps(row, default=str) + "\n")
+    append(row)
     return row
 
 
@@ -366,17 +450,27 @@ def live_rows(rows: list[dict] | None = None,
 
 
 def read_all() -> list[dict]:
-    if not STORE.exists():
-        return []
+    """Every observation, across the legacy monolith and every monthly file.
+
+    The 2026-09-11 split (E6) is invisible here on purpose: the single file was
+    65.16 MB and growing nightly, GitHub rejects a blob at 100, and every
+    consumer in this repo reads the store through this function. Compaction was
+    REFUSED -- no row is summarised, deduped or dropped, only filed.
+    """
     out = []
-    for line in STORE.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
+    for path in store_files():
         try:
-            out.append(json.loads(line))
-        except json.JSONDecodeError:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
             continue
+        for line in text.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
     return out
 
 
@@ -1076,7 +1170,7 @@ def _render_block(rows: list[dict], meta: dict) -> str:
     import yaml
     payload = {
         "generated_by": "python -m learner.evidence_memory --to-registry",
-        "source": "backend/data/optimus/learner/evidence_memory.jsonl",
+        "source": "backend/data/optimus/learner/evidence_memory_<YYYY-MM>.jsonl",
         "schema": "conditional-evidence-1",
         "read_only_until": (
             "B9. Nothing in backend/services/signal_registry.py reads this "

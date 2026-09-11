@@ -1,0 +1,39 @@
+{
+ "job": "evidence_memory_rotate",
+ "lane": "E6",
+ "licence": "PRODUCT_EXPERIMENT",
+ "utc": "2026-09-11T05:55:10+00:00",
+ "question": "did every row of the monolith reach the month its own stamp names?",
+ "compaction": "REFUSED -- no row summarised, deduped or dropped",
+ "dated_by": "each row's own `utc`, never the filesystem",
+ "directory": "backend/data/optimus/learner",
+ "live_month": "2026-09",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "monolith": {
+  "path": "backend/data/optimus/learner/evidence_memory.jsonl",
+  "bytes": 65162313,
+  "sha256": "16aab5382d4f427e24b8224cea57aad4fa67ab95592489dd827fdb8ee4e0ad09",
+  "rows": 102029
+ },
+ "rows_in": 102029,
+ "rows_without_a_parseable_stamp": 0,
+ "months": {
+  "2026-09": {
+   "path": "backend/data/optimus/learner/evidence_memory_2026-09.jsonl",
+   "rows": 102029,
+   "bytes": 65060284,
+   "sha256": "5bb02a068a190e48132b4c1fb8d76f4ce67987c7d782afd4716e1b2a1342dc61",
+   "sealed": false,
+   "action": "identical"
+  }
+ },
+ "rows_out": 102029,
+ "rows_in_equals_rows_out": true,
+ "sealed_months": [],
+ "untracked_live_month": "2026-09",
+ "status": "OK",
+ "monolith_deleted": true,
+ "headline": "102029 rows -> 1 month file(s): 2026-09 102029 rows (identical)"
+}

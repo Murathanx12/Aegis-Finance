@@ -118,7 +118,8 @@ def test_the_n7_scratch_receipt_test_no_longer_touches_the_live_ledger(tmp_path,
 
 @pytest.mark.parametrize("name", ["evidence_memory.jsonl",
                                   "evidence_memory_2026-09.jsonl",
-                                  "evidence_memory_supersessions.jsonl"])
+                                  "evidence_memory_supersessions.jsonl",
+                                  "evidence_memory_state.json"])
 def test_the_pattern_matches_every_shape_of_ledger_file(name, tmp_path):
     (tmp_path / name).write_text("{}\n", encoding="utf-8")
     assert name in ledger_guard.fingerprint(tmp_path)

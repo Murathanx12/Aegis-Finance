@@ -245,9 +245,11 @@ def test_the_memory_append_goes_through_the_sanctioned_api(tmp_path: Path, night
     p = P.write_plan(plan, night)
     assert p.name == "NIGHT_PLAN_2026-09-02_run01.json"
     P.append_memory(plan, p)
-    rows = [json.loads(x) for x in
-            (tmp_path / "evidence_memory.jsonl").read_text(encoding="utf-8").splitlines() if x]
+    # Through the reader, not a filename. The ledger rotated into monthly files
+    # on 2026-09-11 (E6) and the store is now "whatever `read_all` returns".
+    rows = EM.read_all()
     assert len(rows) == 1
+    assert EM.active_store().name.startswith("evidence_memory_")
     assert rows[0]["job"] == "night_queue_plan"
     assert "requires_human_veto" in rows[0]["verdict"]
     # the run number is bumped, never overwritten

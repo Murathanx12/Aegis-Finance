@@ -8,7 +8,8 @@ IT PLANS. IT RUNS NOTHING.
 ==========================
 This module has no `subprocess`, no order path, no seal, no arm, and it never
 imports the broker. It reads receipts, derives a proposed queue, writes ONE
-receipt and appends ONE observation to `learner/evidence_memory.jsonl`. The
+receipt and appends ONE observation to the evidence memory (the current
+month's `evidence_memory_<YYYY-MM>.jsonl`). The
 receipt carries `requires_human_veto: true` because a machine that can both
 propose the next night and start it has closed the only loop that was
 deliberately left open.
@@ -576,7 +577,8 @@ def main(argv=None) -> int:
     print(f"\nplan receipt: {p}", flush=True)
     if not a.no_memory:
         append_memory(plan, p)
-        print("appended 1 observation to learner/evidence_memory.jsonl", flush=True)
+        from learner import evidence_memory as _EM
+        print(f"appended 1 observation to {_EM.active_store()}", flush=True)
     return 0
 
 
