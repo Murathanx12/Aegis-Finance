@@ -107,8 +107,13 @@ def test_no_reader_of_the_registry_consumes_conditional_evidence():
         Path("backend/tests/test_evidence_registry_export.py"),
         Path("backend/tests/test_evidence_memory_superseded.py"),
     }
+    # `.claude` holds AGENT GIT WORKTREES -- a second, complete copy of this
+    # repository, including this very file. Without it the scan finds its own
+    # allow-listed sources under a different path and the guard fails for every
+    # session that runs an agent with `isolation: worktree`. Measured
+    # 2026-09-11: two hits, both inside `.claude/worktrees/agent-aaf50045.../`.
     skip_dirs = {".git", ".venv", "venv", "node_modules", "__pycache__",
-                 "site-packages", "frontend", "docs"}
+                 "site-packages", "frontend", "docs", ".claude"}
     hits, scanned = [], 0
     for p in REPO.rglob("*.py"):
         rel = p.relative_to(REPO)

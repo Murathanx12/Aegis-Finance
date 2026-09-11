@@ -45,16 +45,33 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterable
 
 logger = logging.getLogger(__name__)
 
+
+def _repo_root() -> Path:
+    """The checkout, honouring `AEGIS_REPO_ROOT`.
+
+    Not `Path(__file__)`-rooted: inside the packaged app `__file__` is under
+    `_internal/`, which is empty, so a path built that way reads a directory
+    that does not exist and returns nothing WITHOUT failing. Defect family #14;
+    `test_frozen_path_family.py` is the gate, and it caught this module on its
+    first suite run.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parent.parent.parent
+
+
 #: Where M2's distilled rules will live. Read-only from here; this module never
 #: creates it, and its absence is an empty retrieval rather than an error.
-LEARNED_RULES = (Path(__file__).resolve().parent.parent
-                 / "data" / "optimus" / "brain" / "learned_rules.jsonl")
+LEARNED_RULES = (_repo_root() / "backend" / "data" / "optimus" / "brain"
+                 / "learned_rules.jsonl")
 
 #: The reason a candidate was dropped, per clause. Returned in the report so a
 #: retrieval that came back thin can be explained without re-running it.

@@ -232,21 +232,33 @@ def base_rate_row(rows: Sequence[dict]) -> dict:
     honest answer available to a forecaster with no history, and they are
     counted separately so the row can be read for what it is.
     """
+    # O(n log n), AND THE REASON IS NOT TIDINESS.
+    #
+    # The first version filtered the whole resolved history for every record --
+    # quadratic. It ran in milliseconds on this machine because the local ledger
+    # has 24,828 records and ZERO resolved ones, which is exactly the shape of a
+    # check that works only on an empty set: it would have gone quadratic on the
+    # first day the resolver caught up, inside a route the board polls. Two
+    # sorted passes and a running sum instead.
     ordered = sorted(rows, key=lambda r: str(r.get("made_at") or ""))
+    closed = sorted(
+        ((d, float(r["outcome"])) for r in rows
+         for d in [_as_date(r.get("resolved_at"))] if d is not None),
+        key=lambda t: t[0])
     ps, os_, n_no_history = [], [], 0
-    history: list[tuple[date, float]] = []   # (resolved_at, outcome)
+    i, run_sum, run_n = 0, 0.0, 0
     for r in ordered:
-        made = _as_date(r.get("made_at"))
-        prior = [o for d, o in history if made is None or d <= made]
-        if prior:
-            ps.append(float(np.mean(prior)))
+        made = _as_date(r.get("made_at")) or date.max
+        while i < len(closed) and closed[i][0] <= made:
+            run_sum += closed[i][1]
+            run_n += 1
+            i += 1
+        if run_n:
+            ps.append(run_sum / run_n)
         else:
             ps.append(0.5)
             n_no_history += 1
         os_.append(float(r["outcome"]))
-        rd = _as_date(r.get("resolved_at"))
-        if rd is not None:
-            history.append((rd, float(r["outcome"])))
     dec = brier_decomposition(ps, os_)
     dec.update({"model": "base_rate_forecaster", "n_no_history": n_no_history,
                 "pit": True,

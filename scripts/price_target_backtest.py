@@ -318,6 +318,26 @@ def score(df, by: str | None = None) -> list[dict]:
     return out
 
 
+def _quantiles(ours, consensus_signed) -> dict:
+    """The band's source, named. The de-biased arm's errors when they exist."""
+    import numpy as np
+
+    if ours is not None and ours.size >= MIN_BUCKET_OBS:
+        signed = -ours          # realised - predicted
+        return {"p10": round(float(np.percentile(signed, 10)), 6),
+                "p50": round(float(np.percentile(signed, 50)), 6),
+                "p90": round(float(np.percentile(signed, 90)), 6),
+                "n": int(signed.size), "source": "debiased_arm_walk_forward"}
+    return {"p10": round(float(np.percentile(consensus_signed, 10)), 6),
+            "p50": round(float(np.percentile(consensus_signed, 50)), 6),
+            "p90": round(float(np.percentile(consensus_signed, 90)), 6),
+            "n": int(np.asarray(consensus_signed).size),
+            "source": ("raw_consensus_fallback -- the walk-forward had too few "
+                       "de-biased observations in this bucket, so the band is the "
+                       "consensus's width around a de-biased point and is WIDER "
+                       "than the arm's own history would justify")}
+
+
 def fit_calibration(df, panel) -> dict:
     """The artefact the live service reads. Fit on the FULL sample, on purpose.
 
@@ -328,6 +348,18 @@ def fit_calibration(df, panel) -> dict:
     `fit_window: full_sample_through <date>` on its face.
     """
     import numpy as np
+
+    # The walk-forward's OWN errors, per bucket. The band must be built from the
+    # error of the prediction it is drawn around: using the raw consensus's error
+    # width for a DE-BIASED point double-counts the bias we just removed, and
+    # produced a p10 ABOVE spot on NVDA in the first live audit.
+    ours_err: dict = {}
+    if df is not None and len(df):
+        for key, gg in df.groupby("bucket", sort=False):
+            e = (gg["ours"] - gg["realized"]).to_numpy(dtype=float)
+            e = e[np.isfinite(e)]
+            if e.size:
+                ours_err[str(key)] = e
 
     buckets: dict[str, dict] = {}
     for key, g in panel.groupby("bucket", sort=True):
@@ -361,10 +393,14 @@ def fit_calibration(df, panel) -> dict:
             "mae_pct": round(100.0 * float(np.mean(np.abs(err))), 3),
             "hit_rate_12m_pct": round(100.0 * float(np.mean(real >= imp)), 2),
             "hit_rate_anytime_pct": None,
-            "error_quantiles": {"p10": round(float(np.percentile(-err, 10)), 6),
-                                "p50": round(float(np.percentile(-err, 50)), 6),
-                                "p90": round(float(np.percentile(-err, 90)), 6),
-                                "n": int(n)},
+            # `-err` is `realised - predicted`: what to ADD to a point estimate to
+            # reach the outcome. The de-biased arm's own errors where the
+            # walk-forward has them; the raw consensus's only as a named fallback.
+            "error_quantiles": _quantiles(ours_err.get(key), -err),
+            "error_quantiles_consensus": {"p10": round(float(np.percentile(-err, 10)), 6),
+                                          "p50": round(float(np.percentile(-err, 50)), 6),
+                                          "p90": round(float(np.percentile(-err, 90)), 6),
+                                          "n": int(n)},
             "isotonic": [[round(x, 6), round(y, 6)] for x, y in zip(xs, ys)],
             # ONLY leg C was backtested on this panel. The other two keep the
             # prior thirds and the service says `prior_unbacktested`; writing a

@@ -197,3 +197,21 @@ def test_the_ledger_route_carries_the_decomposition():
     # either a report or a named failure -- never a missing key, which a card
     # cannot tell from a zero
     assert "n_resolved" in d or "error" in d
+
+
+def test_the_base_rate_control_is_not_quadratic():
+    """The first version filtered the whole history per record. It ran fast on
+    this machine only because the local ledger has 24,828 records and ZERO
+    resolved ones -- a check that works on an empty set. A route the board polls
+    must not go quadratic the day the resolver catches up."""
+    import time
+
+    n = 8000
+    rows = [_rec(i, 0.5, i % 2,
+                 f"2026-{1 + (i % 12):02d}-01", f"2026-{1 + (i % 12):02d}-15")
+            for i in range(n)]
+    t0 = time.time()
+    row = CAL.base_rate_row(rows)
+    elapsed = time.time() - t0
+    assert row["n"] == n
+    assert elapsed < 3.0, f"{n} records took {elapsed:.1f}s -- that is the quadratic shape"

@@ -68,6 +68,13 @@ def _repo_root() -> Path:
 REPO = _repo_root()
 MORNING_DIR = REPO / "backend" / "data" / "optimus" / "morning"
 
+#: Lane N-A's corpus writer (chunk 4). Held behind a NAME rather than built
+#: inline in the coverage step, because a test that asserts "this source is
+#: still PENDING" against a hard-coded live path encodes a filesystem moment --
+#: and this one went red the hour another agent's `news_pull` first created the
+#: directory. Same family as CLAUDE.md rule 5's calendar-moment fixtures.
+NEWS_CORPUS_DIR = REPO / "backend" / "data" / "optimus" / "news_corpus"
+
 #: The steps, in order, as (id, docstring-ish one-liner). The runner walks this
 #: tuple; a step that raises still produces its row. Adding a step here without
 #: a handler is a KeyError at import-time in `_HANDLERS`, which is the point.
@@ -594,10 +601,24 @@ def step_coverage(ctx: dict) -> dict:
     else:
         sources.append({"source": "analyst_snapshots", "rows_today": None,
                         "path": str(snaps), "note": "no local snapshot file"})
-    corpus_writer = REPO / "backend" / "data" / "optimus" / "news_corpus"
+    corpus_writer = NEWS_CORPUS_DIR
+    shards = sorted(corpus_writer.rglob(f"{day}.jsonl")) if corpus_writer.is_dir() else []
+    # ROWS, not files. The first version counted shard FILES under a key called
+    # `rows_today`, which is a card printing "1" for a source that wrote 4,000
+    # rows -- the quiet kind of wrong this board exists to not do.
+    corpus_rows = None
+    if corpus_writer.is_dir():
+        corpus_rows = 0
+        for s in shards:
+            try:
+                corpus_rows += sum(
+                    1 for ln in s.read_text(encoding="utf-8", errors="replace").splitlines()
+                    if ln.strip())
+            except OSError:
+                continue
     sources.append({"source": "news_corpus (lane N-A)",
-                    "rows_today": None if not corpus_writer.is_dir() else sum(
-                        1 for _ in corpus_writer.rglob(f"{day}.jsonl")),
+                    "rows_today": corpus_rows,
+                    "shards_today": len(shards),
                     "path": str(corpus_writer),
                     "note": ("PENDING: the corpus writer is chunk 4. An absent source "
                              "is not a source that returned zero.")})

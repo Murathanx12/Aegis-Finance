@@ -186,12 +186,33 @@ def test_grade_reports_nothing_to_do_rather_than_ok_with_zeros(tmp_path, monkeyp
     assert row["status"] == "nothing_to_do" and row["pending"] == 3
 
 
-def test_coverage_distinguishes_a_pending_source_from_an_empty_one(offline, tmp_path):
+def test_coverage_distinguishes_a_pending_source_from_an_empty_one(
+        offline, tmp_path, monkeypatch):
+    """A source that does not exist yet and a source that returned zero are
+    different facts. The directory is monkeypatched because asserting "still
+    PENDING" against the live path encodes a FILESYSTEM moment -- this test went
+    red the hour lane N's puller first created `news_corpus/`."""
+    monkeypatch.setattr(M, "NEWS_CORPUS_DIR", tmp_path / "not_yet")
     r = _run(tmp_path)
     row = next(x for x in r["steps"] if x["step"] == "coverage")
     assert row["status"] == "ok"
     pend = next(s for s in row["sources"] if s["source"].startswith("news_corpus"))
     assert pend["rows_today"] is None and "PENDING" in pend["note"]
+
+
+def test_coverage_counts_the_corpus_once_the_writer_exists(offline, tmp_path, monkeypatch):
+    """The other half, so the first test cannot pass by the directory never
+    arriving: with a shard for today the row is a COUNT, not a dash."""
+    d = tmp_path / "corpus_writer" / "gdelt"
+    d.mkdir(parents=True)
+    (d / "2026-09-11.jsonl").write_text(
+        json.dumps({"a": 1}) + chr(10) + json.dumps({"a": 2}), encoding="utf-8")
+    monkeypatch.setattr(M, "NEWS_CORPUS_DIR", tmp_path / "corpus_writer")
+    r = _run(tmp_path)
+    row = next(x for x in r["steps"] if x["step"] == "coverage")
+    got = next(s for s in row["sources"] if s["source"].startswith("news_corpus"))
+    assert got["rows_today"] == 2, "two ROWS -- the key says rows, so it counts rows"
+    assert got["shards_today"] == 1
 
 
 def test_latest_receipt_reads_the_newest_run_and_never_runs_anything(offline, tmp_path):
