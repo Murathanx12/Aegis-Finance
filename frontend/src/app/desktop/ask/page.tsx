@@ -12,8 +12,10 @@ import {
   ask,
   errorText,
   getLlama,
+  getMorning,
   isNotBuilt,
   type AskResponse,
+  type MorningResponse,
 } from "@/lib/control-api";
 
 interface Turn {
@@ -39,6 +41,20 @@ export default function AskAegisPage() {
     refetchInterval: 15_000,
     retry: false,
   });
+
+  // TODAY'S BRIEF (O5 -> O6). The morning's own receipt, loaded when the page
+  // opens, so "what do you think happens today?" has something behind it before
+  // it is asked. When the morning has not run the panel says so and points at
+  // the button rather than leaving the reader to wonder.
+  const morning = useQuery<MorningResponse>({
+    queryKey: ["control", "morning"],
+    queryFn: () => getMorning(),
+    retry: false,
+  });
+  const forecastStep = (morning.data?.steps ?? []).find((s) => s.step === "forecasts");
+  const forecastRows = Array.isArray(forecastStep?.rows)
+    ? (forecastStep?.rows as Array<Record<string, unknown>>)
+    : [];
 
   const st = llama.data;
   // Same three-state reading as the Services page: bound is not ready.
@@ -116,6 +132,42 @@ export default function AskAegisPage() {
             </span>
           </p>
 
+          {/* Today's brief, from the morning receipt. Rows or an em dash — never
+              a sentence generated here, which would be a forecast in no ledger. */}
+          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs">
+            <p className="mb-1 font-medium text-foreground">Today&rsquo;s brief</p>
+            {morning.isLoading ? (
+              <p className="text-muted-foreground">loading the morning receipt…</p>
+            ) : morning.data?.ran === false || !morning.data ? (
+              <p className="text-muted-foreground">
+                {DASH} the morning has not run today. Run it from the board and this
+                panel fills with the forecast rows it wrote.
+              </p>
+            ) : forecastRows.length === 0 ? (
+              <p className="text-muted-foreground">
+                {DASH} the morning ran ({morning.data.date} run {morning.data.run}) and
+                wrote no forecast row.{" "}
+                {String(forecastStep?.reason ?? "")}
+              </p>
+            ) : (
+              <ul className="space-y-0.5 font-mono text-[11px] text-muted-foreground">
+                {forecastRows.map((r, i) => (
+                  <li key={i}>
+                    {String(r.lane)} beats {String(r.benchmark)}
+                    {r.benchmark_is_fallback ? " (an index, not a twin)" : ""}: p ={" "}
+                    {String(r.probability)} · {String(r.basis)} ·{" "}
+                    {String(r.n_paired_days)} paired sessions
+                  </li>
+                ))}
+              </ul>
+            )}
+            {morning.data?.path_rel ? (
+              <p className="mt-1 break-all font-mono text-[10px] text-muted-foreground">
+                {morning.data.path_rel}
+              </p>
+            ) : null}
+          </div>
+
           <div className="space-y-3">
             {turns.length === 0 ? (
               <p className="text-xs text-muted-foreground">
@@ -150,6 +202,17 @@ export default function AskAegisPage() {
                       {d?.context_truncated ? (
                         <Badge variant="secondary" className="text-[10px]">
                           context truncated
+                        </Badge>
+                      ) : null}
+                      {d?.tool ? (
+                        <Badge variant="outline" className="font-mono text-[10px]">
+                          tool: {d.tool}
+                          {d.tool_arg ? ` ${d.tool_arg}` : ""}
+                        </Badge>
+                      ) : null}
+                      {d?.answered_by === "ledger" ? (
+                        <Badge variant="outline" className="text-[10px]">
+                          from the ledger — no model called
                         </Badge>
                       ) : null}
                     </div>
@@ -204,6 +267,12 @@ export default function AskAegisPage() {
                     ) : d?.answer ? (
                       <p className="mt-2 border-t border-border/60 pt-1.5 text-[11px] font-medium text-muted-foreground">
                         {AUTHORITY_FALLBACK}
+                      </p>
+                    ) : null}
+
+                    {d?.routed_because ? (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        routed because {d.routed_because}
                       </p>
                     ) : null}
 

@@ -2,25 +2,30 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiState, DASH, Field, RawPayload, fmtBytes } from "@/components/desktop/primitives";
 import {
+  errorText,
   getAppLog,
   getFile,
   getFleet,
   getLeaderboard,
   getLedger,
+  getMorning,
   getTree,
   getUniverse,
+  runMorning,
   type AppLogResponse,
   type FileResponse,
   type FleetResponse,
   type LeaderboardResponse,
   type LedgerResponse,
+  type MorningResponse,
+  type MorningStep,
   type TreeResponse,
   type UniverseResponse,
 } from "@/lib/control-api";
@@ -363,6 +368,127 @@ export function CodeCard() {
   );
 }
 
+// ------------------------------------------------------------------- morning
+
+/**
+ * ONE CLICK = MORNING (O5).
+ *
+ * The table below is the receipt, not a summary of it: one row per DECLARED
+ * step, in declared order, with the step's own five-valued status. A step that
+ * refused shows the precondition it named. `nothing_to_do` is rendered
+ * differently from `ok` on purpose — "it ran and there was nothing" and "it ran
+ * and here are the counts" are different facts, and a green tick on both is how
+ * a card starts lying quietly.
+ */
+const STATUS_TONE: Record<string, "ok" | "quiet" | "warn"> = {
+  ok: "ok",
+  nothing_to_do: "quiet",
+  skipped: "quiet",
+  refused: "warn",
+  error: "warn",
+};
+
+function StepStatus({ status }: { status: string }) {
+  const tone = STATUS_TONE[status] ?? "quiet";
+  return (
+    <Badge
+      variant={tone === "ok" ? "outline" : tone === "warn" ? "destructive" : "secondary"}
+      className="font-mono text-[10px]"
+    >
+      {status}
+    </Badge>
+  );
+}
+
+function stepDetail(row: MorningStep): string {
+  const bits: string[] = [];
+  for (const k of ["n_written", "n_symbols", "headlines", "n_lanes", "due",
+                   "newly_resolved", "rows_on_day", "n_sources_with_rows"]) {
+    const v = row[k];
+    if (typeof v === "number") bits.push(`${k} ${v}`);
+  }
+  const why = row.reason ?? row.note;
+  if (typeof why === "string" && why) bits.push(why);
+  return bits.join(" · ");
+}
+
+export function MorningCard() {
+  const qc = useQueryClient();
+  const [note, setNote] = useState<string | null>(null);
+  const latest = useQuery<MorningResponse>({
+    queryKey: ["control", "morning"],
+    queryFn: () => getMorning(),
+  });
+  const run = useMutation({
+    mutationFn: () => runMorning(true),
+    onSuccess: (d) => {
+      setNote(`run ${d.run ?? "?"} finished in ${d.elapsed_s ?? "?"}s`);
+      qc.setQueryData(["control", "morning"], { ...d, ran: true });
+      qc.invalidateQueries({ queryKey: ["control", "ledger"] });
+    },
+    onError: (e) => setNote(`refused — ${errorText(e)}`),
+  });
+  const d = latest.data;
+  const steps = d?.steps ?? [];
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm">Morning</CardTitle>
+        <Button size="sm" onClick={() => run.mutate()} disabled={run.isPending}>
+          {run.isPending ? "running…" : "Run the morning"}
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {latest.error ? (
+          <ApiState error={latest.error} what="the morning receipt" />
+        ) : latest.isLoading ? (
+          <Skeleton className="h-24 w-full" />
+        ) : d?.ran === false ? (
+          <p className="text-xs text-muted-foreground">
+            {DASH} {d.note}
+            <span className="mt-1 block font-mono text-[10px]">
+              {(d.declared_steps ?? []).join(" → ")}
+            </span>
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-baseline gap-3 text-xs text-muted-foreground">
+              <span>
+                {d?.date ?? DASH} · run {d?.run ?? DASH} ·{" "}
+                {typeof d?.elapsed_s === "number" ? `${d.elapsed_s}s` : DASH}
+              </span>
+            </div>
+            <table className="mt-2 w-full text-[11px]">
+              <tbody>
+                {steps.map((row) => (
+                  <tr key={row.step} className="border-b border-border/50 align-top">
+                    <td className="py-1 pr-2 font-mono">{row.step}</td>
+                    <td className="py-1 pr-2">
+                      <StepStatus status={row.status} />
+                    </td>
+                    <td className="py-1 text-muted-foreground">{stepDetail(row)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Receipt path={d?.path_rel ?? d?.path} />
+            <RawPayload data={d} />
+          </>
+        )}
+        {note ? (
+          <p className="mt-2 break-all font-mono text-[10px] text-muted-foreground">{note}</p>
+        ) : null}
+        {run.isPending ? (
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            It pulls the news, builds the digest, marks every lane, writes one forecast
+            row per lane and grades what is due. Minutes, not seconds.
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ------------------------------------------------------------------- app log
 
 export function AppLogCard() {
@@ -406,6 +532,7 @@ export function AppLogCard() {
 export function BoardCards() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <MorningCard />
       <UniverseCard />
       <LedgerCard />
       <FleetSummaryCard />

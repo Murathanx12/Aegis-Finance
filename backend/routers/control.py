@@ -420,128 +420,6 @@ def llama_stop_if_owned() -> dict:
 # --------------------------------------------------------------------------
 
 #: the assistant's whole authority, stated to the model itself
-ASK_SYSTEM = (
-    "You are the Aegis desktop assistant. You READ receipts and explain them. "
-    "You have no authority: you cannot run jobs, seal books, arm lanes, size positions "
-    "or place orders, and you must never imply otherwise. "
-    "Every number you state must appear in the context you were given; if a number is "
-    "not there, say you do not have it rather than estimating. "
-    "If a result has a control, quote the control beside it. If an estimate has a "
-    "standard error, quote it. Answer in English."
-)
-
-
-def _ask_context(max_chars: int = 12000) -> dict:
-    """The receipts the assistant is allowed to see, newest night first."""
-    import glob
-    parts: list[str] = []
-    used: list[str] = []
-    board = NIGHT_DIR / "LEADERBOARD.md"
-    nights = sorted(glob.glob(str(NIGHT_DIR.parent / "night_factory_*")), reverse=True)
-    for night in nights[:2]:
-        b = Path(night) / "LEADERBOARD.md"
-        if b.exists():
-            parts.append(f"### {Path(night).name} leaderboard\n{b.read_text(encoding='utf-8')}")
-            used.append(str(b))
-    if not parts and board.exists():
-        parts.append(board.read_text(encoding="utf-8"))
-        used.append(str(board))
-    text = "\n\n".join(parts)
-    truncated = len(text) > max_chars
-    return {"text": text[:max_chars], "sources": used, "truncated": truncated}
-
-
-#: how often readiness is polled while a model loads. A constant so a test can
-#: shorten it; a multi-GB model takes tens of seconds, and a tighter poll buys
-#: nothing but CPU.
-ASK_POLL_S = float(os.getenv("AEGIS_ASK_POLL_S", "1.0"))
-
-
-def _wait_until_ready(ls, budget_s: float) -> bool:
-    """Poll `status()` until the model answers, or the budget runs out.
-
-    `listening` is not `ready`: llama-server binds its port in about half a
-    second with a fifth of the weights resident, and a question sent in that
-    window used to come back as a refusal telling the user to start a server
-    that was already starting. Waiting is the honest answer to "loading".
-    """
-    deadline = time.time() + max(0.0, budget_s)
-    while True:
-        if ls.status().get("ready"):
-            return True
-        if time.time() >= deadline:
-            return False
-        time.sleep(min(ASK_POLL_S, max(0.0, deadline - time.time())))
-
-
-@router.post("/ask")
-def ask(question: str, backend: str = "local_gguf", max_tokens: int = 700,
-        start: bool = False, wait_s: float = 90.0) -> dict:
-    """Answer from the receipts, and — only when asked — start the model first.
-
-    `start=true` is the Ask page's button, not a default: starting a multi-GB
-    server is a decision about somebody's VRAM, so it is taken by a person and
-    the payload says whether it happened (`started`) and what it cost in
-    wall-clock seconds (`waited_s`).
-
-    The foreign-server rule is unchanged and is structural here: a start is
-    attempted ONLY when nothing is listening. A server Aegis did not start may
-    be several GB into somebody else's job; this route never starts over it and
-    never stops anything at all.
-    """
-    _require_enabled()
-    q = (question or "").strip()
-    if not q:
-        raise HTTPException(status_code=422, detail="question is empty")
-    from backend.services import free_inference as fi
-    from backend.services import llama_server as ls
-    st = ls.status()
-    started = False
-    waited_s = 0.0
-    start_result: dict | None = None
-    if backend == "local_gguf" and not st.get("ready"):
-        budget = max(0.0, min(float(wait_s), 600.0))
-        t0 = time.time()
-        if st.get("listening"):
-            # somebody's server -- ours or not -- is loading. Wait; start nothing.
-            _wait_until_ready(ls, budget)
-        elif start:
-            start_result = ls.start(wait_s=budget)
-            started = bool(start_result.get("ok")) and start_result.get("action") in {
-                "started", "starting"}
-            if started:
-                _wait_until_ready(ls, max(0.0, budget - (time.time() - t0)))
-        waited_s = round(time.time() - t0, 1)
-        st = ls.status()
-    if backend == "local_gguf" and not st.get("ready"):
-        # a refusal that names the fix, rather than a 500 from a dead socket
-        fix = ("Start it from the Services page (or POST /api/control/llama/start)."
-               if not start else
-               "It was asked to start and is not answering yet; the log is at "
-               "~/llama/server.log.")
-        return {"ok": False, "answer": None, "utc": _now(),
-                "refusal": "the local model is not ready: " + str(st.get("detail")) + ". " + fix,
-                "started": started, "waited_s": waited_s,
-                "start_result": start_result, "llama": st}
-    ctx = _ask_context()
-    prompt = (f"{ASK_SYSTEM}\n\n"
-              f"--- RECEIPTS ON DISK (this is your only source of numbers) ---\n"
-              f"{ctx['text']}\n"
-              f"--- END RECEIPTS ---\n\n"
-              f"Question: {q}\n")
-    try:
-        reply = fi.complete(backend=backend, prompt=prompt, max_tokens=int(max_tokens))
-    except Exception as exc:  # noqa: BLE001 - surface the reason, never a blank page
-        raise HTTPException(status_code=502, detail=f"{type(exc).__name__}: {exc}") from exc
-    text = getattr(reply, "text", None) or getattr(reply, "content", None) or str(reply)
-    return {"ok": True, "utc": _now(), "question": q, "answer": text,
-            "backend": backend, "model": st.get("model"),
-            "started": started, "waited_s": waited_s,
-            "context_sources": ctx["sources"], "context_truncated": ctx["truncated"],
-            "authority": "READER ONLY: this endpoint cannot run, seal, arm or order anything",
-            "cost_usd": 0.0}
-
-
 # --------------------------------------------------------------------------
 # Fleet vs the benchmark, with the uncertainty attached to every estimate.
 #
@@ -754,14 +632,26 @@ def paper_snapshot() -> dict:
 
 @router.post("/paper-snapshot/refresh")
 def paper_snapshot_refresh(timeout_s: float = 30.0) -> dict:
+    """The route. The gate is here; the one GET is in `paper_snapshot_fetch`."""
+    _require_enabled()
+    return paper_snapshot_fetch(timeout_s=timeout_s)
+
+
+def paper_snapshot_fetch(timeout_s: float = 30.0) -> dict:
     """Pull the paper lanes once, from the deployment that marks them.
 
     ONE request. No polling, no background sync, no orders -- this reads
     `/api/health/full` and keeps the `track_record` block. The user asked not to
     add server expense, so the cost is exactly one GET per click and the
     response says so.
+
+    SPLIT FROM THE ROUTE on 2026-09-11: the morning click calls this in-process,
+    and a service calling a ROUTE inherits that route's `_require_enabled()`
+    gate -- which the first real morning run hit, reporting
+    `403 the control plane is disabled` for a step that had already been
+    authorised by the route the operator clicked. A gate belongs at the edge,
+    once.
     """
-    _require_enabled()
     import urllib.error
     import urllib.request
     url = f"{PAPER_SOURCE_URL.rstrip('/')}/api/health/full"
@@ -1060,6 +950,55 @@ def ledger() -> dict:
         out["graded_last_24h"] = None
         out["graded_note"] = f"{type(e).__name__}: {e}"
     return out
+
+
+# ===========================================================================
+# ONE CLICK = MORNING (O5)
+# ===========================================================================
+#
+# The button runs `services/morning.py` IN THIS PROCESS. Not a subprocess, and
+# not a scheduler job: in desktop mode the twelve APScheduler jobs are
+# deliberately not registered (`main.py::_desktop_background_off`), so the
+# laptop has no clock at all and the operator IS the clock. The step list, the
+# statuses and the receipt shape all live in the service; this route's whole job
+# is to be the one place that refuses when the control plane is off.
+
+
+@router.post("/morning")
+def morning(network: bool = True) -> dict:
+    """Run the morning, write one receipt, hand back the step table.
+
+    `network=false` is for a machine that has none: every network step then
+    reports `skipped` with the caller named, rather than spending a minute
+    timing out into a refusal that says the same thing more slowly.
+    """
+    _require_enabled()
+    from backend.services import morning as M
+    receipt = M.run_morning(do_network=bool(network))
+    receipt["path_rel"] = _rel(receipt.get("path"))
+    return receipt
+
+
+@router.get("/morning")
+def morning_latest(day: str | None = None) -> dict:
+    """Today's newest morning receipt, or a row saying it has not run.
+
+    A READ. The Ask page loads this before answering "what happens today?", and
+    the board renders its step table -- so "the morning has not run" has to be a
+    200 with a reason, not a 404 the page has to interpret.
+    """
+    from backend.services import morning as M
+    blob = M.latest_receipt(day)
+    if blob is None:
+        return {"utc": _now(), "ran": False, "date": day or _now()[:10],
+                "dir": _rel(M.MORNING_DIR),
+                "declared_steps": [s for s, _ in M.STEPS],
+                "note": ("no morning receipt for this day. POST /api/control/morning "
+                         "runs it; nothing here runs it for you.")}
+    blob["ran"] = True
+    blob["utc"] = _now()
+    blob["path_rel"] = _rel(blob.get("path"))
+    return blob
 
 
 # ===========================================================================

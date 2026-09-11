@@ -22,7 +22,7 @@ from backend.cache import cache_clear, set_cache_status, cache_ready, cache_stat
 from backend.config import config
 from backend.middleware import add_timing_middleware
 from backend.observability import install_log_buffer
-from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control
+from backend.routers import market, crash, simulation, stock, sector, portfolio, news, savings, backtest, correlation, options, drift, analytics, copilot, bond, events, event_intel, markets, crypto, portfolio_intelligence, pm, investment_committee, why_moved, risk_layer, arena, candidates, journal, control, control_ask
 
 logging.basicConfig(
     level=logging.INFO,
@@ -498,8 +498,22 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(_init_lanes())
 
     if _desktop_background_off():
-        logger.info("desktop mode: the APScheduler jobs are NOT registered "
-                    "(AEGIS_DESKTOP_SCHEDULER=1 to register them)")
+        # ONE job comes back, and only one. The morning click (O5) writes
+        # forecast rows to the LOCAL predictions.jsonl, and a forecast nobody
+        # grades is an unreadable ledger -- R4's "what we thought vs what
+        # happened does not close on the laptop" is exactly this gap. The
+        # resolver spends nothing but a price fetch, writes only outcomes onto
+        # records that already exist, and is idempotent. The other eleven jobs
+        # (two of them paid DeepSeek callers) stay off.
+        logger.info("desktop mode: the deployment's APScheduler jobs are NOT "
+                    "registered (AEGIS_DESKTOP_SCHEDULER=1 to register them); "
+                    "the ledger resolver is")
+        try:
+            from backend.services.portfolio_intelligence.scheduler import (
+                setup_desktop_scheduler)
+            setup_desktop_scheduler()
+        except Exception as e:
+            logger.warning("desktop scheduler setup failed (non-fatal): %s", e)
     else:
         try:
             from backend.services.portfolio_intelligence.scheduler import setup_scheduler
@@ -586,6 +600,11 @@ app.include_router(journal.router)
 # Aegis Desktop control plane (roadmap 2026-09-08 section 10.7): reads are always on,
 # every mutating route refuses unless AEGIS_CONTROL_ENABLED=1, so this is inert on Railway.
 app.include_router(control.router)
+# The assistant answers from its OWN module (roadmap O6). Split out so an AST test
+# can prove a negative over a narrow file: no write, no subprocess, no broker and
+# no outbound POST in the ask path. `control.py` spawns night jobs, so that proof
+# could never be made over it.
+app.include_router(control_ask.router)
 
 
 def mount_desktop_frontend(application: "FastAPI") -> dict:

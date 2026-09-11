@@ -253,6 +253,18 @@ export interface AskResponse {
   waited_s?: number;
   start_result?: Record<string, unknown> | null;
   llama?: LlamaStatus;
+  /** Which read tool the DETERMINISTIC router picked, and why (O6). The model
+   *  does not choose its tools, so this is auditable: the same question always
+   *  retrieves the same receipts. */
+  tool?: string;
+  tool_arg?: string | null;
+  routed_because?: string;
+  tools_available?: string[];
+  /** "ledger" when the answer came from the morning's forecast rows with no
+   *  model in the path at all; "local_model" otherwise. */
+  answered_by?: string;
+  morning_has_run?: boolean;
+  n_forecast_rows?: number;
   [k: string]: unknown;
 }
 
@@ -509,6 +521,48 @@ export const getAppLog = (tail = 200) =>
   controlFetch<AppLogResponse>(`/app-log?tail=${tail}`);
 
 export const getLedger = () => controlFetch<LedgerResponse>("/ledger", undefined, 30_000);
+
+// ------------------------------------------------------------------- morning
+
+export interface MorningStep {
+  step: string;
+  /** One of ok | nothing_to_do | refused | error | skipped. A refusal names
+   *  the missing precondition; "nothing_to_do" is not "ok with zeros". */
+  status: string;
+  what?: string;
+  reason?: string;
+  note?: string;
+  utc?: string;
+  [k: string]: unknown;
+}
+
+export interface MorningResponse {
+  utc?: string;
+  ran?: boolean;
+  date?: string;
+  run?: number;
+  path?: string;
+  path_rel?: string;
+  dir?: string;
+  note?: string;
+  elapsed_s?: number;
+  network_requested?: boolean;
+  declared_steps?: string[];
+  steps?: MorningStep[];
+  read_me_first?: string;
+}
+
+/** The newest morning receipt for a day, or `{ran:false}`. A read. */
+export const getMorning = (day?: string) =>
+  controlFetch<MorningResponse>(`/morning${day ? `?day=${encodeURIComponent(day)}` : ""}`);
+
+/** Run the morning. Minutes, not seconds: it marks the books and grades. */
+export const runMorning = (network = true) =>
+  controlFetch<MorningResponse>(
+    `/morning?network=${network ? "true" : "false"}`,
+    { method: "POST" },
+    10 * 60_000,
+  );
 
 // ------------------------------------------------- tolerant field readers
 // For payloads whose exact keys are not fixed yet. Each returns null when no

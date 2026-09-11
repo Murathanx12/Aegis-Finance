@@ -79,6 +79,63 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_prediction_markets",
 })
 
+#: THE DESKTOP JOB SET (roadmap O5/B5, 2026-09-11).
+#:
+#: Desktop mode registers NOTHING by default -- twelve jobs, two of them paid
+#: DeepSeek callers, are a deployment's schedule and not what a window on a
+#: laptop is for. But the morning click now WRITES forecast rows to the local
+#: `predictions.jsonl`, and a forecast nobody grades is an unreadable ledger
+#: (R4: "what we thought vs what happened exists and does not close on the
+#: laptop"). So exactly one job comes back: the resolver. It spends nothing but
+#: a price fetch, it writes only outcomes onto records that already exist, and
+#: it is idempotent -- a run with nothing due writes a receipt saying so.
+DESKTOP_JOB_IDS: frozenset[str] = frozenset({"pi_ledger_resolve"})
+
+#: Which declaration `scheduler_jobs_health()` compares against. Set by whichever
+#: setup function actually ran, because a canary that compares the desktop's one
+#: job against the deployment's twelve reports eleven missing jobs forever --
+#: a permanent red line beside real ones, which is how a reader learns to skim
+#: red lines (`monday_gate_check`, CLAUDE.md).
+_expected_ids: frozenset[str] = EXPECTED_JOB_IDS
+
+
+def setup_desktop_scheduler():
+    """The laptop's schedule: the ledger resolver, and nothing else.
+
+    Same cron as the deployment's (16:30 ET plus three catch-up retries) and the
+    same function, so a record graded here and a record graded on Railway are
+    graded by identical code. Returns the scheduler, or None when APScheduler is
+    absent -- which is a report, not an exception: the app runs without it and
+    the morning click grades in-process anyway.
+    """
+    global _scheduler, _expected_ids
+
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from apscheduler.triggers.cron import CronTrigger
+    except ImportError:
+        logger.warning("APScheduler not installed — desktop scheduler disabled")
+        return None
+
+    # A MEMORY job store, on purpose. The SQLAlchemy store is shared with the
+    # deployment's job set on a mounted volume; a desktop process writing into
+    # it would leave a one-job declaration behind for the next replica to fail
+    # to deserialize, which is the NIGHT-13 defect in reverse.
+    _scheduler = AsyncIOScheduler()
+    _scheduler.add_job(
+        _ledger_resolve,
+        CronTrigger(hour="16-19", minute=30, timezone="US/Eastern"),
+        id="pi_ledger_resolve",
+        name="Prediction-ledger auto-resolution (desktop)",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
+    _scheduler.start()
+    _expected_ids = DESKTOP_JOB_IDS
+    logger.info("desktop scheduler: %d job(s) registered (%s)",
+                len(DESKTOP_JOB_IDS), ", ".join(sorted(DESKTOP_JOB_IDS)))
+    return _scheduler
+
 
 def setup_scheduler():
     """Set up APScheduler with SQLite persistence.
@@ -526,7 +583,7 @@ def scheduler_jobs_health() -> dict:
     and a health endpoint that repairs the thing it measures can never report
     that the thing was broken.
     """
-    expected = sorted(EXPECTED_JOB_IDS)
+    expected = sorted(_expected_ids)
     if _scheduler is None:
         # NOT "everything is missing": with no scheduler there is no job set to
         # compare, and fabricating five missing jobs would drown the real signal
@@ -542,8 +599,8 @@ def scheduler_jobs_health() -> dict:
         return {"status": "unavailable", "expected": expected, "actual": [],
                 "missing": [], "unexpected": [], "error": str(e),
                 "reason": "the live job set could not be read"}
-    missing = sorted(EXPECTED_JOB_IDS - set(actual))
-    unexpected = sorted(set(actual) - EXPECTED_JOB_IDS)
+    missing = sorted(_expected_ids - set(actual))
+    unexpected = sorted(set(actual) - _expected_ids)
     row = {"status": "ok" if not (missing or unexpected) else "DEGRADED",
            "expected": expected, "actual": actual,
            "missing": missing, "unexpected": unexpected}
@@ -604,10 +661,11 @@ def scheduler_health() -> dict:
 
 def shutdown_scheduler():
     """Gracefully shut down the scheduler."""
-    global _scheduler
+    global _scheduler, _expected_ids
     if _scheduler is not None:
         _scheduler.shutdown(wait=False)
         _scheduler = None
+        _expected_ids = EXPECTED_JOB_IDS
         logger.info("Portfolio Intelligence scheduler stopped")
 
 

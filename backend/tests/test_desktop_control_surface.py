@@ -26,7 +26,7 @@ from pathlib import Path
 
 import pytest
 
-from backend.routers import control
+from backend.routers import control, control_ask
 from backend.services import free_inference as fi
 from backend.services import llama_server as ls
 
@@ -183,15 +183,15 @@ def test_the_fleet_payload_says_its_benchmark_is_not_spy() -> None:
 
 def test_the_assistant_is_told_it_has_no_authority() -> None:
     for phrase in ("cannot run", "seal", "arm", "place orders"):
-        assert phrase in control.ASK_SYSTEM
-    assert "not there, say you do not have it" in control.ASK_SYSTEM
+        assert phrase in control_ask.ASK_SYSTEM
+    assert "not there, say you do not have it" in control_ask.ASK_SYSTEM
 
 
 def test_ask_refuses_rather_than_erroring_when_the_model_is_down(monkeypatch) -> None:
     monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
     monkeypatch.setattr(ls, "status", lambda: {"ready": False, "detail": "not running",
                                                "listening": False, "model": None})
-    out = control.ask(question="what happened last night?")
+    out = control_ask.ask(question="what happened last night?")
     assert out["ok"] is False and out["answer"] is None
     assert "Start it from the Services page" in out["refusal"]
 
@@ -204,7 +204,7 @@ def test_ask_starts_the_model_only_when_it_is_asked_to(monkeypatch) -> None:
     monkeypatch.setattr(ls, "status", lambda: {"ready": False, "detail": "not running",
                                                "listening": False, "model": None})
     monkeypatch.setattr(ls, "start", lambda **kw: calls.append(kw.get("wait_s", 0)) or {})
-    out = control.ask(question="what happened last night?")
+    out = control_ask.ask(question="what happened last night?")
     assert out["ok"] is False and out["started"] is False
     assert calls == [], "a question is not consent to start a multi-GB model server"
 
@@ -218,7 +218,7 @@ def test_ask_starts_the_model_and_waits_for_it(monkeypatch) -> None:
     readiness rather than the socket.
     """
     monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
-    monkeypatch.setattr(control, "ASK_POLL_S", 0.01)
+    monkeypatch.setattr(control_ask, "ASK_POLL_S", 0.01)
     state = {"polls": 0, "started": False}
 
     def fake_status() -> dict:
@@ -236,8 +236,13 @@ def test_ask_starts_the_model_and_waits_for_it(monkeypatch) -> None:
     monkeypatch.setattr(ls, "start", fake_start)
     monkeypatch.setattr(fi, "complete", lambda **kw: type("R", (), {"text": "an answer"})())
 
-    out = control.ask(question="what does the G3 receipt say?", start=True, wait_s=5)
-    assert out["ok"] is True and out["answer"] == "an answer"
+    out = control_ask.ask(question="what does the G3 receipt say?", start=True, wait_s=5)
+    assert out["ok"] is True
+    # The answer now ENDS with a sources line computed from the files actually
+    # opened (O6). A model asked to cite its sources invents one; a list built
+    # from the paths that were read cannot.
+    assert out["answer"].startswith("an answer")
+    assert out["answer"].rstrip().splitlines()[-1].startswith("sources: ")
     assert out["started"] is True
     assert isinstance(out["waited_s"], float)
 
@@ -248,14 +253,14 @@ def test_ask_never_starts_over_a_foreign_listener(monkeypatch) -> None:
     works. The route waits for it and starts nothing -- and it never stops
     anything at all."""
     monkeypatch.setenv("AEGIS_CONTROL_ENABLED", "1")
-    monkeypatch.setattr(control, "ASK_POLL_S", 0.01)
+    monkeypatch.setattr(control_ask, "ASK_POLL_S", 0.01)
     started: list[dict] = []
     monkeypatch.setattr(ls, "status", lambda: {"ready": False, "listening": True,
                                                "foreign": True, "started_by_aegis": False,
                                                "model": "someone-elses.gguf",
                                                "detail": "bound but still loading"})
     monkeypatch.setattr(ls, "start", lambda **kw: started.append(kw) or {"ok": True})
-    out = control.ask(question="anything", start=True, wait_s=0.05)
+    out = control_ask.ask(question="anything", start=True, wait_s=0.05)
     assert started == [], "a foreign listener must never be started over"
     assert out["ok"] is False and out["started"] is False
     assert out["waited_s"] >= 0.0
@@ -264,8 +269,8 @@ def test_ask_never_starts_over_a_foreign_listener(monkeypatch) -> None:
 def test_ask_holds_no_stop_path(monkeypatch) -> None:
     """The route may start a server. It may never stop one: closing somebody
     else's job is not something an answer is allowed to do."""
-    src = (REPO / "backend" / "routers" / "control.py").read_text(encoding="utf-8")
-    body = src[src.index("def ask("):src.index("# ------", src.index("def ask("))]
+    src = (REPO / "backend" / "routers" / "control_ask.py").read_text(encoding="utf-8")
+    body = src[src.index("def ask("):]
     for banned in ("ls.stop", "stop_if_owned", "taskkill"):
         assert banned not in body, f"the ask path must not be able to {banned}"
 
@@ -273,7 +278,7 @@ def test_ask_holds_no_stop_path(monkeypatch) -> None:
 def test_ask_requires_control_enabled(monkeypatch) -> None:
     monkeypatch.delenv("AEGIS_CONTROL_ENABLED", raising=False)
     with pytest.raises(Exception) as exc:
-        control.ask(question="hello")
+        control_ask.ask(question="hello")
     assert "403" in str(exc.value) or "AEGIS_CONTROL_ENABLED" in str(exc.value)
 
 
