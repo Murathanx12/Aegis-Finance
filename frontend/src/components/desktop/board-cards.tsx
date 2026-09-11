@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ApiState, DASH, Field, RawPayload, fmtBytes } from "@/components/desktop/primitives";
 import {
   getAppLog,
+  getCoverage,
   getFile,
   getFleet,
   getLeaderboard,
@@ -17,6 +18,7 @@ import {
   getTree,
   getUniverse,
   type AppLogResponse,
+  type CoverageResponse,
   type FileResponse,
   type FleetResponse,
   type LeaderboardResponse,
@@ -407,11 +409,195 @@ export function BoardCards() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <UniverseCard />
+      <CoverageCard />
       <LedgerCard />
       <FleetSummaryCard />
       <NightCard />
       <CodeCard />
       <AppLogCard />
     </div>
+  );
+}
+
+// ------------------------------------------------------------- N-F coverage
+
+/**
+ * THE COVERAGE CARD (N-F).
+ *
+ * "Asia first" was a sentence in four documents and a number in none. This card
+ * is the number: rows per region, rows today, the age of the newest row, and
+ * the sources that are RED or were never pulled — named, because a region that
+ * shows zero because nobody ran the pull and a region that shows zero because
+ * its feed died are different problems with the same appearance.
+ *
+ * Two display rules follow the board's one rule (every number names its
+ * receipt, or it is an em dash):
+ *
+ * - a source with `label_source: false` is drawn with a muted `breadth` badge.
+ *   Those rows may never label a return (invariant 20), and the card is where a
+ *   reader is most likely to forget that.
+ * - `NEVER_PULLED` is its own state, distinct from `NO_ROWS` and from `RED`.
+ */
+
+function ageLabel(hours: number | null | undefined): string {
+  if (typeof hours !== "number" || !Number.isFinite(hours)) return DASH;
+  if (hours < 1) return `${Math.round(hours * 60)}m`;
+  if (hours < 48) return `${hours.toFixed(1)}h`;
+  return `${(hours / 24).toFixed(1)}d`;
+}
+
+const STATUS_TONE: Record<string, string> = {
+  OK: "text-emerald-600 dark:text-emerald-400",
+  RED: "text-red-600 dark:text-red-400",
+  STALE: "text-amber-600 dark:text-amber-400",
+  REFUSED: "text-amber-600 dark:text-amber-400",
+  NO_ROWS: "text-muted-foreground",
+  NEVER_PULLED: "text-muted-foreground",
+  NOT_IMPLEMENTED: "text-muted-foreground",
+};
+
+export function CoverageCard() {
+  const [open, setOpen] = useState(false);
+  const { data, error, isLoading } = useQuery<CoverageResponse>({
+    queryKey: ["control", "coverage"],
+    queryFn: getCoverage,
+    refetchInterval: 60_000,
+  });
+
+  const pullable = (data?.sources ?? []).filter((s) => s.implemented);
+  const shown = open ? pullable : pullable.filter((s) => s.rows_total > 0 || s.status === "RED");
+
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">News coverage</CardTitle>
+        <Button size="sm" variant="ghost" onClick={() => setOpen((v) => !v)}>
+          {open ? "only active" : "all sources"}
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {error ? (
+          <ApiState error={error} what="news coverage" />
+        ) : isLoading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : !data?.available ? (
+          <p className="text-xs text-muted-foreground">
+            {DASH} {data?.error ?? "the source registry could not be read"}
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {data.totals?.rows_total?.toLocaleString() ?? DASH}
+                </p>
+                <p className="text-xs text-muted-foreground">corpus rows</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {data.asia_first?.rows_total?.toLocaleString() ?? DASH}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  from Asia ({(data.asia_first?.regions ?? []).join(" ") || DASH})
+                </p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold tabular-nums">
+                  {data.totals?.rows_today?.toLocaleString() ?? DASH}
+                </p>
+                <p className="text-xs text-muted-foreground">today</p>
+              </div>
+            </div>
+
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Badge variant="outline">
+                {data.totals?.implemented ?? DASH}/{data.totals?.sources ?? DASH} sources pullable
+              </Badge>
+              <Badge variant="outline">
+                {(data.totals?.label_sources ?? []).length} may label a return
+              </Badge>
+              {typeof data.totals?.mean_resolution_rate === "number" ? (
+                <Badge variant="outline">
+                  {(data.totals.mean_resolution_rate * 100).toFixed(0)}% resolved to a symbol
+                </Badge>
+              ) : null}
+              {(data.totals?.red ?? []).length ? (
+                <Badge variant="destructive">{(data.totals?.red ?? []).length} RED</Badge>
+              ) : null}
+            </div>
+
+            {shown.length ? (
+              <div className="mt-3 overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead className="text-muted-foreground">
+                    <tr className="text-left">
+                      <th className="py-1 pr-3 font-normal">source</th>
+                      <th className="py-1 pr-3 font-normal">region</th>
+                      <th className="py-1 pr-3 text-right font-normal">rows</th>
+                      <th className="py-1 pr-3 text-right font-normal">today</th>
+                      <th className="py-1 pr-3 text-right font-normal">age</th>
+                      <th className="py-1 pr-3 text-right font-normal">resolved</th>
+                      <th className="py-1 font-normal">status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono">
+                    {shown.map((s) => (
+                      <tr key={s.id} className="border-t border-border/40">
+                        <td className="py-1 pr-3">
+                          {s.id}
+                          {s.label_source ? null : (
+                            <span className="ml-1 text-[9px] text-muted-foreground">breadth</span>
+                          )}
+                        </td>
+                        <td className="py-1 pr-3">{s.region}</td>
+                        <td className="py-1 pr-3 text-right tabular-nums">
+                          {s.rows_total.toLocaleString()}
+                        </td>
+                        <td className="py-1 pr-3 text-right tabular-nums">{s.rows_today}</td>
+                        <td className="py-1 pr-3 text-right tabular-nums">
+                          {ageLabel(s.last_row_age_hours)}
+                        </td>
+                        <td className="py-1 pr-3 text-right tabular-nums">
+                          {typeof s.resolution_rate === "number"
+                            ? `${(s.resolution_rate * 100).toFixed(0)}%`
+                            : DASH}
+                        </td>
+                        <td className={`py-1 ${STATUS_TONE[s.status] ?? ""}`}>
+                          {s.status}
+                          {s.flags.length ? (
+                            <span className="ml-1 text-[9px] text-muted-foreground">
+                              {s.flags[0].slice(0, 60)}
+                            </span>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground">
+                {DASH} no source has written a row yet. Run{" "}
+                <code className="font-mono">python -m scripts.news_pull --source all --resume</code>
+                {(data.totals?.never_pulled ?? []).length
+                  ? ` — ${(data.totals?.never_pulled ?? []).length} sources have never been pulled.`
+                  : null}
+              </p>
+            )}
+
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              {data.analyst_snapshots?.days ?? 0} analyst snapshot day(s)
+              {data.analyst_snapshots?.series_starts
+                ? `, series starts ${data.analyst_snapshots.series_starts}`
+                : ""}
+              {" · "}
+              name table names {String(data.name_table?.named_symbols ?? DASH)} of{" "}
+              {String(data.name_table?.issuer_rows ?? DASH)} symbols
+            </p>
+            <Receipt path={data.corpus_dir} />
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
