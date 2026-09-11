@@ -1,0 +1,743 @@
+# ---------------------------------------------------------------------------
+# N-B — THE SOURCE REGISTRY for lane N (whole-market news, no LLM in the pull).
+#
+# Roadmap 2026-09-11 §3 N-B: "a source not in the registry cannot be pulled
+# (refusal at parse)". `backend/services/news_registry.py` loads and validates
+# this file; `scripts/news_pull.py` refuses any `--source` id that is not here,
+# and `GET /api/control/coverage` reads it for the board's coverage card.
+#
+# Built from the 2026-09-11 lane-N probe
+# (`docs/research_notes/2026-09-11/lane_n/REPORT.md` + its `news_sources.yaml`
+# draft), WITH the five corrections that probe filed against the roadmap:
+#
+#   1. SEC EDGAR's current-filings feed is `action=getcurrent`. The obvious
+#      guess `action=getcompany` (no CIK) returns an EMPTY feed — 0 entries,
+#      200 OK. That is exactly the failure the "two zero runs is RED" rule
+#      exists to catch, and it would have been mis-read as a dead feed.
+#   2. GDELT's documented "one request per 5 s" is optimistic: the probe 429'd
+#      3 of 5 queries at 6 s spacing. `min_interval_s: 20` below, not 5.
+#   3. Nikkei Asia's feed is RSS 1.0 / RDF, not RSS 2.0. A namespace-naive
+#      `findall(".//item")` returns ZERO items — again indistinguishable from a
+#      dead source unless the parser is named. Hence `parser: rss1_rdf`.
+#   4. AKShare has NO HK news function (24 `stock_hk_*` exports, none a news
+#      feed). The draft's `akshare_hk_news` row is deliberately NOT carried
+#      here: a registry row for a function that does not exist is a promise the
+#      writer cannot keep.
+#   5. The ADR name table's four fixes (LPL = LG Display not LG Corp;
+#      MRAAY = Murata not Mitsubishi; MUFG=8306.T / MFG=8411.T; CAJ delisted)
+#      live in `backend/data/news_entities/asia_adrs.csv`, not here.
+#
+# FIELDS (all required on every source; `news_registry` refuses a row missing
+# any of them, which is how a half-added source fails loudly):
+#   id                 unique; the `--source` argument
+#   provider           who serves it
+#   region             US | EU | HK | CN | JP | KR | SG | IN | GLOBAL
+#   language           en | zh | ja | ko | multi
+#   tier               1 | 2 | 3 | social_hypothesis
+#   licence            what we are allowed to do with it
+#   method             api | rss | lib
+#   parser             which parser in scripts/news_pull.py reads it, or `none`
+#   endpoint_or_feed   the URL or the call
+#   auth               "none", or "key:ENV_NAME + key:ENV_NAME" — NAMES ONLY,
+#                      never a value; receipts print the source name, not a key
+#   rate_limit         prose, for a human
+#   min_interval_s     seconds the writer sleeps between calls to this source
+#   pit_grade          native_stamp | first_seen_only | index_state
+#   stamp_field        the provider's own timestamp field, or "none"
+#   stamp_tz           its timezone
+#   ticker_tags        does the provider tag symbols itself
+#   body_available     is there a body, or only a headline
+#   label_source       may a return EVER be labelled from this source's rows
+#   implemented        can `scripts/news_pull.py` pull it TODAY
+#   implemented_note   if not, why — so "0 rows" is never a mystery
+#   notes              everything else
+#
+# pit_grade legend (invariant 20):
+#   native_stamp    the provider's own first-publish stamp is trustworthy and
+#                   is not silently backfilled — safe to LABEL from.
+#   first_seen_only no trustworthy provider stamp; OUR OWN `first_seen_utc`,
+#                   written at write time, is the only safe PIT anchor. Still
+#                   labellable, because we wrote the anchor ourselves.
+#   index_state     the feed reflects CURRENT index/search state and can be
+#                   reordered, edited or backfilled by the provider after the
+#                   fact. NEVER a label source. Breadth and coverage only.
+#
+# THE HARD RULE, enforced in `news_registry.validate()` and pinned by test:
+#   pit_grade == index_state  =>  label_source MUST be false.
+#
+# OMITTED ON PURPOSE (asked for, no free machine-readable feed found):
+#   * Composer symphony pages — the public marketplace is a rendered web app;
+#     no public JSON or RSS endpoint was found in the 09-11 research pass.
+#   * QuantConnect verified live strategies — same; the listing is behind the
+#     app, not an API.
+#   * AltIndex's composite alt-data list — a vendor page, not a feed.
+#   Each would be a scraper, not a source, and a scraper belongs in a lane with
+#   its own receipt. They are listed here so the next reader knows they were
+#   considered and why they are absent.
+# ---------------------------------------------------------------------------
+
+version: "news_sources_v1/2026-09-11"
+licence: PRODUCT_EXPERIMENT
+
+sources:
+
+  # =====================================================================
+  # TIER 1 — native stamp, or our own first-seen anchor. These may label.
+  # =====================================================================
+
+  - id: alpaca_benzinga_news
+    provider: Alpaca (Benzinga-sourced)
+    region: GLOBAL
+    language: en
+    tier: 1
+    licence: Alpaca Market Data Agreement (bundled with the brokerage account; Benzinga content)
+    method: api
+    parser: alpaca_news
+    endpoint_or_feed: "https://data.alpaca.markets/v1beta1/news"
+    auth: "key:APCA_API_KEY_ID + key:APCA_API_SECRET_KEY (fallback: the terminal repo's .env AAT_HACK*_KEY_ID / _SECRET_KEY, data endpoint only)"
+    rate_limit: "200 req/min free tier"
+    min_interval_s: 0.4
+    pit_grade: native_stamp
+    stamp_field: created_at
+    stamp_tz: "UTC (ISO 8601, Z-suffixed)"
+    ticker_tags: true
+    body_available: true
+    label_source: true
+    implemented: true
+    implemented_note: >
+      Pullable only when a key RESOLVES. Neither APCA_API_KEY_ID nor
+      APCA_API_SECRET_KEY exists in this environment, so the writer REFUSES
+      this source BY NAME (it does not crash, and it does not silently write
+      zero rows — the receipt carries `failures: ["no credential ..."]` and the
+      source is not counted as a zero-row run).
+    notes: >
+      The only source in this registry that is simultaneously native-stamp,
+      ticker-tagged AND body-bearing, which is why N-A orders it first. History
+      to 2015, ~130 articles/day. Cursor: `created_at`, incremental — the 83.6%
+      backfill stalled in an earlier session precisely because there was no
+      cursor file.
+
+  - id: gdelt_doc_v2
+    provider: GDELT Project
+    region: GLOBAL
+    language: multi
+    tier: 1
+    licence: "free, public (GDELT terms of use; attribution requested)"
+    method: api
+    parser: gdelt_doc
+    endpoint_or_feed: "https://api.gdeltproject.org/api/v2/doc/doc"
+    auth: none
+    rate_limit: >
+      Documented "one request every 5 s"; PROBED 2026-09-11 to be optimistic —
+      3 of 5 queries spaced 6 s apart still 429'd. `min_interval_s: 20` is the
+      empirically observed safe cadence, not the documented one. On a 429 the
+      writer backs off (doubling from the interval) and records the failure;
+      the documented bulk fallback is NGrams 3.0, which is NOT implemented here
+      and is named in the receipt when the paced path exhausts.
+    min_interval_s: 20
+    pit_grade: first_seen_only
+    stamp_field: seendate
+    stamp_tz: "UTC, YYYYMMDDTHHMMSSZ"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    queries:
+      - "sourcecountry:HK"
+      - "sourcecountry:CH"
+      - "sourcecountry:JA"
+      - "sourcecountry:KS"
+      - "sourcecountry:SN"
+      - "sourcecountry:IN"
+    notes: >
+      `seendate` is GDELT's crawl/index time, not a publisher's first-publish
+      stamp — hence first_seen_only, and we write our own `first_seen_utc`
+      beside it. FIPS country codes, NOT ISO: CH is China (not Switzerland), JA
+      Japan, KS South Korea, SN Singapore, HK Hong Kong, IN India. mode=artlist,
+      format=json, maxrecords<=250. Rolling 3-month window only. Headline + URL,
+      no body, no tickers — entity resolution (N-D) supplies the symbols or the
+      row keeps `tickers: []` and is counted unresolved.
+
+  - id: sec_edgar_8k_current_atom
+    provider: SEC EDGAR
+    region: US
+    language: en
+    tier: 1
+    licence: "public domain (US government work)"
+    method: api
+    parser: edgar_atom
+    endpoint_or_feed: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&company=&dateb=&owner=include&count=100&output=atom"
+    auth: none
+    rate_limit: "10 req/s per IP, SEC-wide; a descriptive User-Agent header with a contact address is REQUIRED"
+    min_interval_s: 1.0
+    pit_grade: native_stamp
+    stamp_field: updated
+    stamp_tz: "US/Eastern (filing acceptance time)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: >
+      CORRECTION vs the roadmap's phrasing: `action=getcompany` with no CIK
+      returns an EMPTY feed; `action=getcurrent` is the current-events feed.
+      Title is "8-K - COMPANY NAME (CIK) (Filer)"; summary carries the Filed
+      date, AccNo, Size and the Item numbers. Item 2.02 (Results of Operations)
+      is tagged `entity_tags: ["8-K:2.02"]` by the writer — a free,
+      vendor-independent earnings-announcement PIT marker. `raw_id` is the
+      accession number. No ticker in the feed; the company name goes through
+      N-D's resolver and the CIK is kept in `entity_tags` as `cik:NNNNNNN`.
+
+  - id: yfinance_ticker_news
+    provider: Yahoo Finance (via yfinance, unofficial)
+    region: GLOBAL
+    language: en
+    tier: 1
+    licence: "unofficial; yfinance itself is Apache-2.0 (the library, not the data)"
+    method: lib
+    parser: yfinance_news
+    endpoint_or_feed: "yfinance.Ticker(symbol).news"
+    auth: none
+    rate_limit: "none documented; PROBED 4 tickers at 1 s pacing, all OK, 10 items each"
+    min_interval_s: 1.0
+    pit_grade: first_seen_only
+    stamp_field: "content.pubDate"
+    stamp_tz: "UTC (ISO 8601 Z-suffixed)"
+    ticker_tags: true
+    body_available: true
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: >
+      10 items per call is a fixed page size, not a day's volume — this is a
+      per-symbol supplement, never a primary breadth source. The body is a
+      ~130-character blurb. `raw_id` is `content.canonicalUrl` (falling back to
+      the item id). The symbol list is the tracker universe file; `--max-rows`
+      bounds a run, because 3,056 symbols at 1 s is ~51 minutes.
+
+  # =====================================================================
+  # TIER 2 — breadth. index_state: coverage counts, NEVER labels.
+  # =====================================================================
+
+  - id: google_news_rss_en_us
+    provider: Google News
+    region: US
+    language: en
+    tier: 2
+    licence: "no published ToS grant for automated pulls; breadth-only use, headline + link"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
+    auth: none
+    rate_limit: "none observed at 10 combos per pull"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "A live top-stories feed, not an archive: a once-a-day pull under-samples. NEVER a label source."
+
+  - id: google_news_rss_en_gb
+    provider: Google News
+    region: EU
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-GB&gl=GB&ceid=GB:en"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 38 items."
+
+  - id: google_news_rss_en_hk
+    provider: Google News
+    region: HK
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-HK&gl=HK&ceid=HK:en"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 38 items. The Asia-first HK leg."
+
+  - id: google_news_rss_en_sg
+    provider: Google News
+    region: SG
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-SG&gl=SG&ceid=SG:en"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 38 items."
+
+  - id: google_news_rss_en_in
+    provider: Google News
+    region: IN
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 38 items."
+
+  - id: google_news_rss_en_au
+    provider: Google News
+    region: GLOBAL
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-AU&gl=AU&ceid=AU:en"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 38 items."
+
+  - id: google_news_rss_zh_cn
+    provider: Google News
+    region: CN
+    language: zh
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: >
+      PROBED 2026-09-11: 200, 26 items — thinner than the en-* combos,
+      plausibly because google.com is blocked inside China and this edition is
+      served from outside. The CN breadth leg.
+
+  - id: google_news_rss_zh_tw
+    provider: Google News
+    region: GLOBAL
+    language: zh
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=TW:zh-Hant"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 34 items."
+
+  - id: google_news_rss_ja_jp
+    provider: Google News
+    region: JP
+    language: ja
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 30 items."
+
+  - id: google_news_rss_ko_kr
+    provider: Google News
+    region: KR
+    language: ko
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "PROBED 2026-09-11: 200, 34 items."
+
+  - id: nikkei_asia_rss
+    provider: Nikkei Asia
+    region: JP
+    language: en
+    tier: 2
+    licence: "publisher RSS terms — headline + link, no body redistribution"
+    method: rss
+    parser: rss1_rdf
+    endpoint_or_feed: "https://asia.nikkei.com/rss/feed/nar"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: "dc:date"
+    stamp_tz: "unverified — not present in the probe's sample"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: >
+      RSS 1.0 / RDF, NOT RSS 2.0 — items are `{http://purl.org/rss/1.0/}item`
+      elements under `rdf:RDF`, so a namespace-naive `.//item` finds zero and
+      looks exactly like a dead feed. `parser: rss1_rdf` names the fix so the
+      next reader does not misdiagnose it. Pan-Asia in practice (China, HK,
+      Vietnam, Japan in a 50-item sample), despite the JP region tag.
+
+  # =====================================================================
+  # TIER social_hypothesis — invariant 27: social data GENERATES hypotheses,
+  # it never adjudicates. index_state by construction; label_source false.
+  # These rows exist to be read by a human or typed into a hypothesis, never
+  # to move a number. The E1 append skips them because it reads only
+  # `label_source: true`.
+  # =====================================================================
+
+  - id: reddit_algotrading_rss
+    provider: Reddit (r/algotrading)
+    region: GLOBAL
+    language: en
+    tier: social_hypothesis
+    licence: "Reddit public RSS; non-commercial read, attribution; no bulk redistribution"
+    method: rss
+    parser: atom_generic
+    endpoint_or_feed: "https://www.reddit.com/r/algotrading/new/.rss"
+    auth: none
+    rate_limit: "public feed; be conservative — a descriptive User-Agent is required or Reddit 429s"
+    min_interval_s: 2.0
+    pit_grade: index_state
+    stamp_field: updated
+    stamp_tz: "UTC (Atom, ISO 8601)"
+    ticker_tags: false
+    body_available: true
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: >
+      Reddit's `.rss` is ATOM 1.0, not RSS 2.0 — `<entry>` under the Atom
+      namespace. The systematic-strategy sub; the 09-11 social research pass
+      found essentially no 2025-26 post publishing audited live P&L vs SPY with
+      costs, so every row here is a hypothesis with no evidence attached.
+
+  - id: reddit_securityanalysis_rss
+    provider: Reddit (r/SecurityAnalysis)
+    region: GLOBAL
+    language: en
+    tier: social_hypothesis
+    licence: "Reddit public RSS; non-commercial read, attribution"
+    method: rss
+    parser: atom_generic
+    endpoint_or_feed: "https://www.reddit.com/r/SecurityAnalysis/new/.rss"
+    auth: none
+    rate_limit: "public feed; descriptive User-Agent required"
+    min_interval_s: 2.0
+    pit_grade: index_state
+    stamp_field: updated
+    stamp_tz: "UTC (Atom, ISO 8601)"
+    ticker_tags: false
+    body_available: true
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "The highest signal-to-noise of the large finance subs per the 09-11 pass (fundamental deep dives). Hypothesis generation only."
+
+  - id: quantocracy_rss
+    provider: Quantocracy (quant blog aggregator)
+    region: GLOBAL
+    language: en
+    tier: social_hypothesis
+    licence: "public aggregator RSS; links to third-party blogs"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://quantocracy.com/feed/"
+    auth: none
+    rate_limit: "none observed"
+    min_interval_s: 2.0
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: true
+    label_source: false
+    implemented: true
+    implemented_note: ""
+    notes: "The daily quant-blog aggregator — a link farm to other people's claims. Hypothesis generation only, invariant 27."
+
+  # =====================================================================
+  # DOCUMENTED, NOT PULLABLE — every one of these is here so that its
+  # ABSENCE from a receipt is explained rather than mysterious.
+  # =====================================================================
+
+  - id: akshare_stock_news_em
+    provider: AKShare (wraps the Eastmoney search API)
+    region: CN
+    language: zh
+    tier: 2
+    licence: "AKShare MIT (the library); Eastmoney data — research use, commercial use caution"
+    method: lib
+    parser: none
+    endpoint_or_feed: "akshare.stock_news_em(symbol=...)"
+    auth: none
+    rate_limit: "unofficial curl_cffi scrape; no documented cap"
+    min_interval_s: 3.0
+    pit_grade: index_state
+    stamp_field: "fa bu shi jian (publish time)"
+    stamp_tz: "unverified, likely UTC+8"
+    ticker_tags: true
+    body_available: true
+    label_source: false
+    implemented: false
+    implemented_note: >
+      akshare is NOT INSTALLED in this environment and installing it is a
+      separate decision (it pulls a large dependency tree). Per-symbol only —
+      up to 100 items per stock code — so a whole-market sweep is 3,056 scrapes
+      against a search endpoint with a hard-coded cookie in the library source.
+      Google News zh-CN + GDELT sourcecountry:CH cover more CN breadth for far
+      less engineering risk in the meantime.
+    notes: "Recorded so a CN coverage gap has a named cause."
+
+  - id: akshare_stock_news_main_cx
+    provider: AKShare (wraps the Caixin data portal)
+    region: CN
+    language: zh
+    tier: 2
+    licence: "AKShare MIT (the library); Caixin content — publisher terms apply"
+    method: lib
+    parser: none
+    endpoint_or_feed: "akshare.stock_news_main_cx()"
+    auth: none
+    rate_limit: "unofficial scrape, fixed pageSize=100"
+    min_interval_s: 3.0
+    pit_grade: index_state
+    stamp_field: none
+    stamp_tz: "n/a"
+    ticker_tags: false
+    body_available: true
+    label_source: false
+    implemented: false
+    implemented_note: "akshare not installed. The function drops every timestamp column before returning, so it is index_state with NO native stamp at all."
+    notes: "Whole-market Caixin feed (macro/financial focus), not per-symbol."
+
+  - id: hkexnews_rss
+    provider: HKEX
+    region: HK
+    language: en
+    tier: 3
+    licence: "unknown — no feed URL confirmed"
+    method: rss
+    parser: none
+    endpoint_or_feed: "NOT VERIFIED"
+    auth: none
+    rate_limit: "unknown"
+    min_interval_s: 2.0
+    pit_grade: index_state
+    stamp_field: none
+    stamp_tz: "n/a"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: false
+    implemented_note: "No public HKEXnews RSS/Atom URL was confirmed in the 09-11 probe. The alternatives are a paid Issuer Information Feed or a scraper; both are their own decision."
+    notes: "HK breadth today comes from google_news_rss_en_hk + GDELT sourcecountry:HK + Nikkei Asia."
+
+  - id: finnhub_company_news
+    provider: Finnhub
+    region: GLOBAL
+    language: en
+    tier: 2
+    licence: "free tier ToS"
+    method: api
+    parser: none
+    endpoint_or_feed: "https://finnhub.io/api/v1/company-news"
+    auth: "key:FINNHUB_API_KEY (fallback name: AAT_FINNHUB_API_KEY)"
+    rate_limit: "60 calls/min free tier"
+    min_interval_s: 1.0
+    pit_grade: native_stamp
+    stamp_field: datetime
+    stamp_tz: "UTC (unix epoch)"
+    ticker_tags: true
+    body_available: true
+    label_source: true
+    implemented: false
+    implemented_note: "No FINNHUB_API_KEY and no AAT_FINNHUB_API_KEY resolves in this environment. Refusal is BY NAME — no key value is ever printed."
+    notes: "Would be a native-stamp, ticker-tagged, body-bearing second leg beside Alpaca, for free."
+
+  - id: finnhub_recommendation_trends
+    provider: Finnhub
+    region: GLOBAL
+    language: en
+    tier: 2
+    licence: "free tier ToS"
+    method: api
+    parser: none
+    endpoint_or_feed: "https://finnhub.io/api/v1/stock/recommendation"
+    auth: "key:FINNHUB_API_KEY (fallback name: AAT_FINNHUB_API_KEY)"
+    rate_limit: "60 calls/min free tier"
+    min_interval_s: 1.0
+    pit_grade: native_stamp
+    stamp_field: period
+    stamp_tz: "UTC (monthly)"
+    ticker_tags: true
+    body_available: false
+    label_source: false
+    implemented: false
+    implemented_note: "Key absent. This is N-E's second leg and is pulled by scripts/analyst_snapshot.py, never by the corpus writer — it is not a news row."
+    notes: "Finnhub keeps only ~4 months of recommendation history server-side, which is exactly why N-E snapshots daily from day one."
+
+  - id: yfinance_recommendations
+    provider: Yahoo Finance (via yfinance, unofficial)
+    region: GLOBAL
+    language: en
+    tier: 3
+    licence: "unofficial scrape"
+    method: lib
+    parser: none
+    endpoint_or_feed: "yfinance.Ticker(symbol).recommendations / .analyst_price_targets"
+    auth: none
+    rate_limit: "not separately probed"
+    min_interval_s: 1.0
+    pit_grade: index_state
+    stamp_field: period
+    stamp_tz: "n/a (relative periods: '0m', '-1m')"
+    ticker_tags: true
+    body_available: false
+    label_source: false
+    implemented: false
+    implemented_note: "Pulled by scripts/analyst_snapshot.py (N-E), not by the corpus writer — it is a consensus snapshot, not a news row."
+    notes: >
+      index_state because the endpoint reflects Yahoo's CURRENT consensus, not
+      a dated history. The PIT series is built by OUR daily snapshot, and it
+      therefore starts the day the job starts. The receipt says so.
+
+  - id: wikipedia_pageviews
+    provider: Wikimedia Foundation
+    region: GLOBAL
+    language: multi
+    tier: 1
+    licence: "CC0, official Wikimedia REST API"
+    method: api
+    parser: none
+    endpoint_or_feed: "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{project}/{access}/{agent}/{article}/daily/{start}/{end}"
+    auth: none
+    rate_limit: "generous"
+    min_interval_s: 0.5
+    pit_grade: index_state
+    stamp_field: timestamp
+    stamp_tz: "UTC (YYYYMMDDHH)"
+    ticker_tags: false
+    body_available: false
+    label_source: false
+    implemented: false
+    implemented_note: "A COVERAGE SENSOR, not a news source: it emits a daily count, not a document. It has no place in a JSONL of news rows and the corpus writer refuses it."
+    notes: "Attention proxy to sit beside a name's news-row count. Daily granularity back to 2015."
+
+  - id: greenhouse_lever_ashby_ats
+    provider: "Greenhouse / Lever / Ashby public job boards"
+    region: GLOBAL
+    language: en
+    tier: 3
+    licence: "public unauthenticated JSON endpoints, read-only public postings"
+    method: api
+    parser: none
+    endpoint_or_feed: "https://boards-api.greenhouse.io/v1/boards/{token}/jobs | https://api.lever.co/v0/postings/{company} | https://api.ashbyhq.com/posting-api/job-board/{company}"
+    auth: none
+    rate_limit: "not probed"
+    min_interval_s: 1.0
+    pit_grade: first_seen_only
+    stamp_field: updated_at
+    stamp_tz: "varies by provider, generally UTC"
+    ticker_tags: false
+    body_available: true
+    label_source: false
+    implemented: false
+    implemented_note: >
+      This is N-G (TRIAL-HIRING-PIVOT-1), a pre-registered trial with its own
+      collector — `scripts/hiring_pull.py`, not built here. The prereg comes
+      BEFORE the collector writes a label, so `label_source` stays false until
+      that file exists. No LinkedIn, ever.
+    notes: "Needs a company -> board-token mapping table that does not exist yet."
