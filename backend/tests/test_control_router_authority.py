@@ -248,11 +248,23 @@ def test_the_board_routes_do_not_write():
                     f"{node.name} opens a file for writing")
 
 
-def test_a_traversal_or_absolute_path_outside_the_checkout_is_403_naming_the_path(client):
+def test_a_traversal_or_absolute_path_outside_the_checkout_is_403_naming_the_path(client, tmp_path):
     """The refusal NAMES the path. A bare 403 from a file viewer sends the
-    reader to the network tab to find out what they asked for."""
+    reader to the network tab to find out what they asked for.
+
+    The absolute case is built from `tmp_path`, not typed. The first version
+    typed `C:/Windows/System32/drivers/etc/hosts`, which is absolute on the
+    machine that wrote it and a RELATIVE path on the Linux runner -- where it
+    joined onto the checkout, passed the sandbox honestly, and produced a 404
+    "no file at ..." that the test read as a missing refusal. CI went red on
+    2026-09-11 for a fixture, not a defect (protocol: a calendar or a platform
+    baked into a fixture is a test that fails somewhere else).
+    """
+    outside = tmp_path / "hosts"
+    outside.write_text("127.0.0.1 localhost\n", encoding="utf-8")
+    assert outside.is_absolute()
     for bad in ("../../../../etc/passwd", "..", "../../..",
-                "C:/Windows/System32/drivers/etc/hosts", "/etc/passwd"):
+                outside.as_posix(), "/etc/passwd"):
         r = client.get("/api/control/file", params={"path": bad})
         assert r.status_code == 403, (bad, r.status_code, r.text[:200])
         detail = r.json()["detail"]
