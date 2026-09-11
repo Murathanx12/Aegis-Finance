@@ -39,6 +39,8 @@ import socket
 
 import pytest
 
+from backend.tests import ledger_guard
+
 _REAL_CONNECT = socket.socket.connect
 _REAL_CREATE_CONNECTION = socket.create_connection
 _LOOPBACK = {"127.0.0.1", "::1", "localhost", "0.0.0.0"}
@@ -48,6 +50,36 @@ _BLOCK_MESSAGE = (
     "Unit tests must be offline — mark it @pytest.mark.slow (or .network) "
     "or mock the fetch. (This is the 2.5h-hang bug class.)"
 )
+
+
+#: Filled by `pytest_sessionstart`, read by `pytest_sessionfinish`. A plain
+#: module dict rather than a fixture because the check has to bracket the WHOLE
+#: run, including collection errors and tests in modules that were never
+#: imported -- a session-scoped fixture only brackets the tests that request it.
+_LEDGER_AT_START: dict = {}
+
+
+def pytest_sessionstart(session):
+    _LEDGER_AT_START.clear()
+    _LEDGER_AT_START.update(ledger_guard.fingerprint())
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Fail the RUN (not a test) if the suite appended to the evidence ledger.
+
+    See `backend/tests/ledger_guard.py` for the defect. It is a session hook
+    rather than a test because the offending write can come from any test in
+    any module, and the run's verdict is what has to change -- a green suite
+    that dirtied a tracked 65 MB append-only ledger is not a green suite.
+    """
+    diffs = ledger_guard.differences(_LEDGER_AT_START, ledger_guard.fingerprint())
+    if not diffs:
+        return
+    print("")
+    print(ledger_guard.FAILURE_HEADER)
+    for line in diffs:
+        print("  " + line)
+    session.exitstatus = 1
 
 
 def pytest_configure(config):

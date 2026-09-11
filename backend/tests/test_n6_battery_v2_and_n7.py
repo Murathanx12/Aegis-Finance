@@ -230,6 +230,14 @@ def test_scratch_receipts_are_skipped_because_they_share_the_real_jobs_name(tmp_
     monkeypatch.setattr(N7, "OUT_DIR", tmp_path)
     monkeypatch.setattr(N7, "LEADERBOARD", tmp_path / "LEADERBOARD.md")
     monkeypatch.setattr(N7, "BEST", tmp_path / "best_so_far.json")
+    # AND THE MEMORY, WHICH IS THE POINT OF THE THREE LINES ABOVE AND WAS
+    # MISSED. `N7.run` folds every receipt it read into `evidence_memory`, so
+    # redirecting only the receipt directory left the fake `SKIPPED -- nothing
+    # here` row landing in the LIVE 65 MB tracked ledger on every suite run
+    # (found 2026-09-11; `backend/tests/ledger_guard.py` is now the gate).
+    from learner import evidence_memory as EM
+    monkeypatch.setattr(EM, "STORE_DIR", tmp_path)
+    monkeypatch.setattr(EM, "STORE", tmp_path / "evidence_memory.jsonl")
     (tmp_path / "N9_real.json").write_text(
         json.dumps({"job": "N9", "status": "SKIPPED", "headline": "nothing here"}),
         encoding="utf-8")
