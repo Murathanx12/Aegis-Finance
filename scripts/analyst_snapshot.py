@@ -290,8 +290,27 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         rows.append(_row(sym, day, observed.isoformat(timespec="seconds"), got))
         if CHECKPOINT_EVERY and (i + 1) % CHECKPOINT_EVERY == 0:
             _flush()
+            rate = (time.time() - t0) / (i + 1)
+            # The parquet alone is a number with no provenance. A checkpoint
+            # writes its own PARTIAL receipt so a killed sweep is still
+            # readable: how far it got, at what rate, and that it is partial.
+            try:
+                (out_dir() / f"{day}_receipt.json").write_text(json.dumps({
+                    "job": "analyst_snapshot", "status": "PARTIAL",
+                    "date": day, "path": str(path),
+                    "symbols_requested": len(symbols), "rows": len(rows),
+                    "by_status": dict(counts),
+                    "rate_s_per_symbol": round(rate, 3),
+                    "projected_total_min": round(rate * len(symbols) / 60.0, 1),
+                    "note": ("written at a checkpoint; the run had not finished. "
+                             "The parquet holds the symbols reached so far."),
+                    "written_utc": _now().isoformat(timespec="seconds"),
+                }, indent=1, default=str), encoding="utf-8")
+            except Exception:  # noqa: BLE001 — a receipt must not end the sweep
+                pass
             print(f"  checkpoint {i + 1}/{len(symbols)} symbols "
-                  f"({(time.time() - t0) / (i + 1):.2f}s/symbol) -> {path}", flush=True)
+                  f"({rate:.2f}s/symbol, ~{rate * len(symbols) / 60:.0f} min total) -> {path}",
+                  flush=True)
 
     written = False
     write_note = ""

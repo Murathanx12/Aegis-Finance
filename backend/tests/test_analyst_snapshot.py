@@ -133,6 +133,12 @@ def test_a_killed_sweep_leaves_a_valid_partial_parquet(data_dir, monkeypatch):
     assert len(df) == 2, "the last checkpoint before the kill survived"
     assert list(df.columns) == list(snap.COLUMNS)
 
+    # ...and a parquet with no receipt is a number with no provenance.
+    rec = json.loads((snap.out_dir() / f"{day}_receipt.json").read_text(encoding="utf-8"))
+    assert rec["status"] == "PARTIAL"
+    assert rec["rows"] == 2 and rec["symbols_requested"] == 4
+    assert rec["rate_s_per_symbol"] is not None
+
 
 def test_no_universe_file_is_zero_rows_not_a_crash(tmp_path, monkeypatch):
     monkeypatch.setattr(snap._config, "DATA_DIR", tmp_path, raising=False)
