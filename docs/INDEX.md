@@ -30,6 +30,23 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
+- **`ROADMAP_2026-09-11_ROOT_FIRST_THE_OPERATOR_BOARD_AND_THE_LEARNING_LOOP.md` — ACTIVE (adopted 2026-09-11).**
+  Five ROOTS before any product: (R1) the packaged app runs without a single API key — `backend/config.py:21,97`
+  roots `.env` on `__file__`, which is the bundle when frozen, and pywebview's `private_mode=True` default
+  wipes the guide's dismissal every launch; (R2) one selector with evidence, and the external survey finds
+  nobody with better; (R3) the news loop is a dashboard fetch, not a corpus, and Asia is not in it; (R4)
+  `belief_state`'s 24,828 forecasts are graded on Railway, 0 of them locally; (R5) intent enters only through
+  terminal sessions. Lanes: **O** thin launcher + developer board + Morning click + a read-only Ask;
+  **N** GDELT/Google-News-RSS/Alpaca/AKShare corpus writer with `first_seen_utc` and a source registry,
+  the E1 join as a nightly append, TRIAL-HIRING-PIVOT-1; **L** R2 panel B, typed-event extraction, the
+  Lookahead-Propensity test, Qwen3 as a new arm; **B** thousands of paper books = frozen contract + cadence
+  + control twin + forecast row, from a sentence; **E** typed-event head, 5-21d embedding retry, adaptive
+  conformal intervals, DSR/PBO stopping rules, evidence-memory rotation (65 MB, deadline). Builder contract:
+  `HANDOFF_2026-09-11_FABLE_TO_OPUS_BUILD_PLAN.md`. Murat's words: VISION file §6. Agent notes:
+  `research_notes/2026-09-11/`. The 09-10 roadmap below is folded in as lanes L and E.
+- `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.md` — SUPERSEDED 2026-09-11 (folded into lanes L/E
+  above); keep for §3b's evidence-memory options and the Qwen3 measurements.
+
 - **`BUILD_WEEKEND_LAB_2026-09-06.md` — the weekend lab's result (2026-09-06).** Read it for the ANSWER to "does a longer tape resolve the learner" (no: DSR 0.197 -> 0.293 on 2.2x the months) and, more usefully, for **five methodological findings that bind every future screen in this repo**: a regression coefficient is not a book; a matched control must not be picked on the outcome; apply the execution floor before believing a book; a power flag built on the observed effect is the t-test; pass count is not evidence count. Its own headline is RETRACTED inside it, with both sets of numbers. Paired with `REVIEW_2026-09-06_CODE.md` and `REVIEW_2026-09-06_ATTACK_ON_THE_WEEKEND.md`, which found the defects.
 
 - **AMENDMENT (2026-09-07): `ROADMAP_2026-09-07_GROWTH_BOOK_AMENDMENT.md`** — the second ruler: after-cost terminal wealth at a declared drawdown budget, β reported and allowed; the alpha ruler stays for claims. Read WITH the roadmap.

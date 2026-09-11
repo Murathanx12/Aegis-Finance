@@ -200,3 +200,77 @@ fame, beta, size and headline volume first. The graph is what lets it learn
   changes) · TIER 1 current roadmap · TIER 2 findings with receipts · ARCHIVE
   (dated handoffs/roadmaps, digest only). A new session reads TIER 0 and the
   current TIER 1, and retrieves TIER 2/ARCHIVE by question.
+
+## 6. What Murat asked for on 2026-09-11 (after using the desktop app for two sessions)
+
+Kept close to verbatim; the corrections and the plan are in
+`ROADMAP_2026-09-11_ROOT_FIRST_THE_OPERATOR_BOARD_AND_THE_LEARNING_LOOP.md`.
+
+> "We are always focusing on so much of the product, but never the problem.
+> What are the problems? We need to go to the root with everything we are
+> doing. From the root, step by step, decide what we are building on."
+
+> "The exe: it shows like 30 news, some of the APIs don't seem connected, the
+> UI was really difficult to understand. I don't want it to take the tour every
+> time I open it — first time, then don't show it again. The product is not
+> ready, so the app should always update itself when I want to use it; I want
+> it to log everything. Make it much, much easier: a DEVELOPER BOARD where I can
+> see the Python code files. Rather than opening VS Code and running the
+> systems again — I open the PC, one click, it downloads all the news, anything
+> it can find; click, it starts the simulations; I see the showcase of the NN."
+
+> "I want to interact with an AI agent inside the dashboard: 'what do you
+> think will happen today?', a summary; 'look at the project', 'look at the NN,
+> what is it doing right now'. Use the local model. It can READ the project but
+> not UPDATE anything. Data synthesis, questions about the basics of the
+> project."
+
+> "First: NEWS COVERAGE. All the news from Asia to the West, starting with
+> Yahoo Finance. World Monitor on GitHub was great for this; there is a God's
+> Eye repo; any repo about pulling all the news. When news happens, how do we
+> learn it, pull it, have the built-in LLM process it and give sentiment, how do
+> I talk to it and come to a conclusion, and how does that conclusion become
+> NUMERICAL data automatically. I don't want to open Claude Code every time to
+> input values with code. It should converse with me, make decisions, build the
+> portfolio: 'I want a very high-risk, cheap, industry-focused portfolio' — it
+> creates it and HOLDS it on a paper account. Every time I open the app on
+> Wi-Fi it fetches new prices and says: with the current news and this
+> portfolio, this is the action to take."
+
+> "After news coverage: the neural network — self-learning, self-attention.
+> Check open-source patents (Google, self-attention). Encoder-decoder — not an
+> LLM, but news coverage and tokenisation might be useful. Improve the engine
+> and the decision-making model much, much better. It should run infinite
+> backtests and LEARN from all of them, because our backtest results are
+> terrible — we are picking up on noise. Check how other projects' backtests won
+> against the S&P 500: Alpaca hackathon winners, LinkedIn, GitHub."
+
+> "Something very different with the news: not only all the important news and
+> what Yahoo analysts do — what the holders' sentiment normally is, their
+> average moves. One agent goes to LinkedIn and checks what companies are
+> NEWLY HIRING, whether their focus is changing, whether they are making a new
+> product. Adobe and Autodesk have dropped a lot because of AI; like GoPro they
+> might pivot — they have the data and the infrastructure, they will focus on
+> AI to make shareholders happy. Great companies with potential not yet
+> discovered. There is so much uncertainty; this is a gamble, but if it works it
+> pays a lot."
+
+> "I want the engine to say: not 'I'm 90% confident this is happening' — THESE
+> are the probabilities of what might happen, these are the signals, can it
+> happen, will it happen, should we take the risk, is it worth it — and then
+> decide with the portfolios it creates on the six paper accounts. I want MANY
+> paper accounts, maybe thousands: some checked daily, some every 30 minutes,
+> some every three months, so it's less computationally heavy, and it sees what
+> it THOUGHT versus what it LEARNED. Not that more accounts is better — this is
+> DATA ACCUMULATION: what we thought vs what happened, to relearn our progress."
+
+> "First check all the services code we made, make sure everything is connected
+> and up to date. I'm okay with spending more money now — detailed services,
+> maybe an extra device for a larger model later; not now. Give the roadmap and
+> the context to the Claude Code in my terminal; it works on the project, I do
+> only what it can't. Don't give me tasks Claude Code can do better than me.
+> Research agents on Sonnet so they don't spend credits; build on Opus."
+
+**The two sentences the roadmap is built on:** *"go to the root"* and *"what we
+thought versus what happened."* Everything else is an expression of one of
+those two.
