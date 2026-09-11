@@ -69,7 +69,16 @@ if str(REPO) not in sys.path:
 
 from backend import config as _config  # noqa: E402
 from backend.services import news_entities as entities  # noqa: E402
-from scripts.news_pull import finnhub_key_name, universe_path  # noqa: E402
+from scripts.news_pull import (  # noqa: E402
+    call_with_timeout, finnhub_key_name, universe_path,
+)
+
+#: Hard bound on ONE yfinance property read. Yahoo is unofficial and has no
+#: SLA: on 2026-09-11 a `Ticker.news` call held an ESTABLISHED socket for five
+#: minutes with no timeout of ours. A guard that protects only the news path
+#: protects nothing here — this sweep is ~70 minutes and reads three
+#: properties per symbol, so it is the MORE exposed of the two.
+YF_PROPERTY_TIMEOUT_S = 25.0
 
 COLUMNS = (
     "symbol", "date", "observed_utc", "source",
@@ -118,7 +127,8 @@ def fetch_yfinance(symbol: str) -> dict:
     t = yf.Ticker(symbol)
     out: dict[str, Any] = {"status": "ok", "error": ""}
     try:
-        info = t.info or {}
+        info = call_with_timeout(lambda: t.info or {}, YF_PROPERTY_TIMEOUT_S,
+                                 f"{symbol}.info") or {}
     except Exception as e:  # noqa: BLE001
         info = {}
         out["error"] = f"info: {type(e).__name__}: {e}"
@@ -128,7 +138,8 @@ def fetch_yfinance(symbol: str) -> dict:
     out["n_analysts"] = info.get("numberOfAnalystOpinions")
     out["current_price"] = info.get("currentPrice") or info.get("regularMarketPrice")
     try:
-        tgt = t.analyst_price_targets or {}
+        tgt = call_with_timeout(lambda: t.analyst_price_targets or {},
+                                YF_PROPERTY_TIMEOUT_S, f"{symbol}.analyst_price_targets") or {}
         if isinstance(tgt, dict):
             out["target_low"] = tgt.get("low")
             out["target_mean"] = tgt.get("mean")
@@ -138,7 +149,8 @@ def fetch_yfinance(symbol: str) -> dict:
     except Exception as e:  # noqa: BLE001
         out["error"] = (out["error"] + " | " if out["error"] else "") + f"targets: {type(e).__name__}: {e}"
     try:
-        rec = t.recommendations
+        rec = call_with_timeout(lambda: t.recommendations, YF_PROPERTY_TIMEOUT_S,
+                                f"{symbol}.recommendations")
         if rec is not None and hasattr(rec, "empty") and not rec.empty:
             row = rec.iloc[0].to_dict()
             out["rec_period"] = str(row.get("period", ""))
