@@ -474,12 +474,48 @@ def build_plan(dirs: list[Path], *, closed_ids: set[str] | None = None,
         "night_queue_env": (f'NIGHT_QUEUE="{paste}"' if queue else None),
         "refused": refused,
         "cannot_determine": cannot_determine,
+        "warnings": _standing_warnings(),
         "notes_for_the_human": notes,
         "verdict": ("PLAN PROPOSED" if queue else "PLAN EMPTY"),
         "headline": (f"{len(queue)} row(s) proposed, {len(refused)} refused, "
                      f"{len(cannot_determine)} CANNOT DETERMINE, from {len(records)} receipt(s) "
                      f"over {len(dirs)} night(s)"),
     }
+
+
+def _standing_warnings() -> list[dict]:
+    """Things that are silently wrong and that nothing else would print.
+
+    The night plan is read every morning, which makes it the cheapest place to
+    put a check whose failure mode is nobody noticing. It stays a WARNING and
+    never a refusal: the plan proposes work, and an unsealed month does not
+    make tonight's queue wrong.
+
+    First entry (E6): a CLOSED month of the evidence ledger that git does not
+    track. The live month is gitignored on purpose; a month that has closed is
+    sealed once, by hand, on the 1st -- and "by hand, on the 1st" is precisely
+    the step that does not happen, with no red anywhere when it doesn't.
+    """
+    out: list[dict] = []
+    try:
+        from scripts.evidence_memory_rotate import untracked_closed_months
+        rec = untracked_closed_months()
+    except Exception as e:                       # never take the plan down for a warning
+        return [{"warning": "evidence_memory_seal",
+                 "state": "CANNOT DETERMINE",
+                 "detail": f"{type(e).__name__}: {e}"}]
+    if not rec["checked"]:
+        return [{"warning": "evidence_memory_seal",
+                 "state": "CANNOT DETERMINE", "detail": rec["reason"]}]
+    for m in rec["months"]:
+        out.append({
+            "warning": "evidence_memory_seal",
+            "state": "UNSEALED",
+            "detail": (f"{m['file']} ({m['rows']} rows) is a CLOSED month "
+                       f"({m['month']}) that git does not track"),
+            "fix": m["command"],
+        })
+    return out
 
 
 def _plan_path(out_dir: Path, plan_date: str) -> Path:

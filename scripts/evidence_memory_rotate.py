@@ -94,6 +94,64 @@ def month_of_line(line: str) -> str | None:
     return f"{m.group(1)}-{m.group(2)}" if m else None
 
 
+def untracked_closed_months(directory: Path | None = None, *,
+                            now: datetime | None = None) -> dict:
+    """Month files for a CLOSED month that git does not track.
+
+    The live month is `.gitignore`d on purpose -- committing it would recreate
+    the 65 MB blob under a new name -- and a month that has closed is meant to
+    be sealed once, by hand:
+
+        git add -f backend/data/optimus/learner/evidence_memory_2026-09.jsonl
+
+    "By hand, on the 1st" is exactly the kind of step that is not done, and the
+    failure is SILENT: the ignore rule keeps working, the reader keeps reading
+    the local file, and the month is simply missing for everyone else and gone
+    the day the laptop is reimaged. Nothing is red, and a month of the ledger
+    has left the repository.
+
+    Returns `{"checked", "reason", "months"}`. A guard DERIVES its inputs or
+    REFUSES: when `git ls-files` cannot be run (no git, not a checkout, a
+    sandbox), `checked` is False with the reason, and the caller must report
+    CANNOT DETERMINE rather than "nothing to do".
+    """
+    import subprocess
+
+    d = Path(directory) if directory is not None else EM.STORE_DIR
+    stamp = now or datetime.now(timezone.utc)
+    current = f"{stamp:%Y-%m}"
+
+    on_disk = []
+    for q in sorted(d.glob("evidence_memory_*.jsonl")):
+        m = re.match(r"^evidence_memory_(\d{4}-\d{2})\.jsonl$", q.name)
+        if m and m.group(1) < current:       # lexicographic == chronological
+            on_disk.append((m.group(1), q))
+    if not on_disk:
+        return {"checked": True, "reason": None, "months": []}
+
+    try:
+        out = subprocess.run(["git", "ls-files", "--", str(d)],
+                             cwd=str(REPO), capture_output=True, text=True,
+                             timeout=30, check=True).stdout
+    except Exception as e:
+        return {"checked": False,
+                "reason": f"git ls-files failed ({type(e).__name__}: {e}); "
+                          f"cannot tell a sealed month from a forgotten one",
+                "months": []}
+
+    tracked = {line.strip().rsplit("/", 1)[-1] for line in out.splitlines() if line.strip()}
+    missing = []
+    for month, q in on_disk:
+        if q.name not in tracked:
+            missing.append({
+                "month": month,
+                "file": _rel(q),
+                "rows": sum(1 for _ in q.open(encoding="utf-8", errors="replace")),
+                "command": f"git add -f {_rel(q)}",
+            })
+    return {"checked": True, "reason": None, "months": missing}
+
+
 def split(text: str) -> tuple[dict[str, list[str]], list[tuple[int, str]], int]:
     """`({month: [line, ...]}, [(lineno, line), ...unstamped], rows_in)`.
 

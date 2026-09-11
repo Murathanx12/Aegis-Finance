@@ -266,3 +266,80 @@ def test_the_live_month_is_gitignored():
                for pat in lines), (
         f"{rel} is not ignored; the live month grows nightly and the 100 MB "
         f"blob limit is the reason this lane exists")
+
+
+# ------------------------------------------- a sealed month cannot be forgotten
+
+def test_a_closed_month_on_disk_must_be_tracked():
+    """The live month is ignored on purpose; a CLOSED month is sealed once, by
+    hand, on the 1st -- and "by hand, on the 1st" is the step that does not get
+    done. The failure is silent: the ignore rule keeps working, the reader keeps
+    reading the local file, and the month is simply absent for everyone else and
+    gone the day the laptop is reimaged.
+
+    This is the check nothing else makes. It names the file AND the command."""
+    rec = ROT.untracked_closed_months()
+    if not rec["checked"]:
+        pytest.skip(f"cannot determine: {rec['reason']}")
+    assert not rec["months"], (
+        "a CLOSED month of the evidence ledger is on disk and untracked:\n  "
+        + "\n  ".join(f"{m['file']} ({m['rows']} rows, month {m['month']}) "
+                      f"-> run: {m['command']}" for m in rec["months"]))
+
+
+def test_the_check_finds_a_forgotten_month_and_ignores_the_live_one(tmp_path, monkeypatch):
+    """The gate above passes today because nothing is forgotten yet, which is
+    exactly when a gate is worth nothing. Drive it against a directory where a
+    month IS forgotten, and prove the LIVE month is not reported -- a warning
+    that fires every day of every month teaches the reader to skim it."""
+    live = f"{datetime.now(timezone.utc):%Y-%m}"
+    for name in (f"evidence_memory_{live}.jsonl",
+                 "evidence_memory_2026-07.jsonl",
+                 "evidence_memory_2026-08.jsonl",
+                 "not_an_evidence_file.jsonl"):
+        (tmp_path / name).write_text(
+            '{"utc": "2026-07-05T00:00:00+00:00"}\n', encoding="utf-8")
+
+    class _Done:
+        # `git ls-files` claims July is tracked and August is not.
+        stdout = "backend/data/optimus/learner/evidence_memory_2026-07.jsonl\n"
+
+    import subprocess
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Done())
+    rec = ROT.untracked_closed_months(tmp_path)
+    assert rec["checked"] and rec["reason"] is None
+    months = [m["month"] for m in rec["months"]]
+    assert months == ["2026-08"], months
+    assert rec["months"][0]["command"].startswith("git add -f ")
+    assert live not in " ".join(months)
+
+
+def test_the_check_refuses_rather_than_reporting_clean_when_git_is_unavailable(tmp_path, monkeypatch):
+    """A guard DERIVES its inputs or REFUSES. "git is not here" must not read
+    as "every month is sealed" -- that is the shape of a gate that can only
+    ever be green."""
+    (tmp_path / "evidence_memory_2026-08.jsonl").write_text("{}\n", encoding="utf-8")
+
+    import subprocess
+
+    def _boom(*a, **k):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(subprocess, "run", _boom)
+    rec = ROT.untracked_closed_months(tmp_path)
+    assert rec["checked"] is False
+    assert "git ls-files failed" in rec["reason"]
+    assert rec["months"] == []
+
+
+def test_the_night_plan_carries_the_warning():
+    """The plan is read every morning, which makes it the cheapest surface for
+    a check whose failure mode is nobody noticing. It is a WARNING, never a
+    refusal -- an unsealed month does not make tonight's queue wrong."""
+    from scripts import night_queue_plan as NQP
+
+    warnings = NQP._standing_warnings()
+    assert isinstance(warnings, list)
+    for w in warnings:
+        assert w["warning"] == "evidence_memory_seal"
+        assert w["state"] in {"UNSEALED", "CANNOT DETERMINE"}
