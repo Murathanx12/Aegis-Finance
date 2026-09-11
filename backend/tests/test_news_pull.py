@@ -367,6 +367,19 @@ def test_the_theme_queries_are_built_from_the_real_basket_shape():
     assert all(x.startswith("(") and " OR " in x for x in q)
 
 
+def test_every_gdelt_row_carries_the_query_that_found_it(corpus):
+    """One source, many queries: the registry region for `gdelt_doc_v2` is
+    GLOBAL, so without this tag the coverage card can only count its Asian rows
+    as GLOBAL — which is why `asia_first` calls itself a floor."""
+    ctx = StubCtx(fixture_bytes("gdelt_doc.json"), paced=False, max_rows=3)
+    np_.pull_source("gdelt_doc_v2", ctx)
+    rows = [json.loads(x) for x in
+            next((corpus / "gdelt_doc_v2").glob("*.jsonl")).read_text(encoding="utf-8").splitlines()]
+    assert rows, "no rows written"
+    for row in rows:
+        assert any(t.startswith("gdelt_query:sourcecountry:") for t in row["entity_tags"])
+
+
 def test_gdelt_429_records_the_missing_ngrams_fallback(corpus):
     class Limited(StubCtx):
         def http_get(self, url, headers=None):

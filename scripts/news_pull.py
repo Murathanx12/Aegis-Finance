@@ -516,7 +516,15 @@ def fetch_gdelt(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
         })
         try:
             res.calls += 1
-            res.items.extend(parse_gdelt_doc(ctx.http_get(url)))
+            got = parse_gdelt_doc(ctx.http_get(url))
+            # Tag every row with the QUERY that found it. The registry's region
+            # for gdelt_doc_v2 is GLOBAL (one source, many queries), so without
+            # this the coverage card can only count GDELT's Asian rows as
+            # GLOBAL — which is why `asia_first` says it is a floor, not a
+            # ceiling. The tag is what a later version aggregates on.
+            for item in got:
+                item.setdefault("entity_tags", []).append(f"gdelt_query:{q}")
+            res.items.extend(got)
         except FetchError as e:
             msg = str(e)
             res.failures.append(f"{q}: {msg}")
