@@ -1,11 +1,12 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getStockAnalysis, getStockShap, getStockSignal, getStockAnalysts, resolveTicker } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
+import { DESKTOP_TICKER_SHELL } from "@/lib/tickers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -455,12 +456,35 @@ function AnalystConsensus({ recommendations }: { recommendations: { strongBuy: n
 
 export default function StockDetailPage({ params }: { params: Promise<{ ticker: string }> }) {
   const { ticker } = use(params);
-  const upperTicker = decodeURIComponent(ticker).toUpperCase();
+  const pathname = usePathname();
+  // In the DESKTOP export this page is pre-rendered ONCE, at
+  // `/stock/__ticker__`, and FastAPI serves it for every symbol that has no
+  // folder of its own. The route param is then the sentinel, not the symbol,
+  // so the symbol comes from the URL the browser actually has.
+  //
+  // Via state + an effect, and NOT by reading `usePathname()` straight into the
+  // render: the pre-rendered HTML says `__TICKER__`, so a first client render
+  // that already said `PLTR` is a hydration mismatch -- React #418, measured in
+  // the packaged app on 2026-09-11 -- and React answers it by discarding the
+  // server markup for the whole subtree. Both sides render the skeleton once;
+  // the symbol arrives on the commit after.
+  const isShell = ticker === DESKTOP_TICKER_SHELL;
+  const [shellTicker, setShellTicker] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isShell) return;
+    const seg = (pathname ?? "").split("/").filter(Boolean)[1];
+    if (seg) setShellTicker(seg);
+  }, [isShell, pathname]);
+  const routeTicker = isShell ? shellTicker : ticker;
+  const upperTicker = routeTicker ? decodeURIComponent(routeTicker).toUpperCase() : "";
+  // False for exactly one render, and only in the desktop export's shell.
+  const ready = upperTicker.length > 0;
   const router = useRouter();
 
   const { data: stockData, isLoading: stockLoading, error: stockError, refetch: stockRefetch } = useQuery({
     queryKey: queryKeys.stock.analysis(upperTicker),
     queryFn: () => getStockAnalysis(upperTicker),
+    enabled: ready,
     staleTime: staleTimes.stock,
   });
 
@@ -470,7 +494,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const { data: resolveData } = useQuery({
     queryKey: ["resolve", upperTicker],
     queryFn: () => resolveTicker(upperTicker),
-    enabled: analysisNotFound,
+    enabled: ready && analysisNotFound,
     staleTime: Infinity,
   });
   const suggested = resolveData?.match && resolveData.match.ticker !== upperTicker
@@ -481,13 +505,27 @@ export default function StockDetailPage({ params }: { params: Promise<{ ticker: 
   const { data: shapData, isLoading: shapLoading } = useQuery({
     queryKey: queryKeys.stock.shap(upperTicker),
     queryFn: () => getStockShap(upperTicker),
+    enabled: ready,
     staleTime: staleTimes.stock,
   });
   const { data: signalData } = useQuery({
     queryKey: queryKeys.stock.signal(upperTicker),
     queryFn: () => getStockSignal(upperTicker),
+    enabled: ready,
     staleTime: staleTimes.stock,
   });
+
+  // Every hook above runs unconditionally; only the OUTPUT is withheld. This is
+  // the shell's pre-rendered body, and also its first client render.
+  if (!ready) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-slide-up">

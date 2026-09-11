@@ -11,6 +11,7 @@ Usage:
 
 import logging
 import os
+import re
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -616,9 +617,82 @@ def mount_desktop_frontend(application: "FastAPI") -> dict:
         logger.warning("AEGIS_DESKTOP=1 but no export at %s -- the window will show the API only. "
                        "Build it with: cd frontend && AEGIS_DESKTOP_BUILD=1 npx next build", out)
         return {"mounted": False, "reason": f"no index.html at {out}", "path": str(out)}
-    application.mount("/", StaticFiles(directory=str(out), html=True), name="desktop")
-    logger.info("desktop frontend mounted from %s", out)
-    return {"mounted": True, "path": str(out)}
+    shell = _mount_stock_shell(application, out)
+
+    class _ExportFiles(StaticFiles):
+        """`StaticFiles`, but a path it cannot even COMPARE to the root is a 404.
+
+        Starlette's own traversal guard is `os.path.commonpath([full, root])`,
+        and on Windows that RAISES `ValueError: Paths don't have the same drive`
+        for some crafted segments (`/stock/....%2f%2fx`) instead of refusing
+        them -- a 500 out of the guard rather than a refusal. Nothing escaped
+        (measured 2026-09-11), but a request that cannot be shown to be inside
+        the export is not served from it.
+        """
+
+        def lookup_path(self, path):                          # noqa: ANN001, ANN201
+            try:
+                return super().lookup_path(path)
+            except ValueError:
+                return "", None
+
+    application.mount("/", _ExportFiles(directory=str(out), html=True), name="desktop")
+    logger.info("desktop frontend mounted from %s (stock shell: %s)", out, shell["reason"])
+    return {"mounted": True, "path": str(out), "stock_shell": shell}
+
+
+#: The `[ticker]` route the desktop export pre-renders as a blank shell. Any
+#: symbol that has no folder of its own is served from it.
+DESKTOP_TICKER_SHELL = "__ticker__"
+
+#: What a URL segment may be before we will look for a folder named after it.
+#: Not a security boundary on its own -- a path parameter cannot contain "/" --
+#: but it keeps `..` and every other surprise out of the `out/stock` join.
+_TICKER_SEGMENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,15}$")
+
+
+def _mount_stock_shell(application: "FastAPI", out) -> dict:
+    """Serve `/stock/<ANY SYMBOL>` in the desktop app, from ONE pre-rendered page.
+
+    `output: "export"` has no server, so a dynamic segment only exists at the
+    paths `generateStaticParams` named -- twelve of them. Searching for anything
+    else in the packaged app 404'd ("when I search a stock I get 404",
+    2026-09-11), and the universe is ~3,000 names.
+
+    Pre-rendering all of them is the other fix and it is the worse one: a build
+    that emits 3,000 near-identical shells, several hundred MB of `out/`, and a
+    404 again the day a new symbol lists. The detail page fetches EVERYTHING
+    client-side from `/api/stock/{ticker}`, so one shell that reads its symbol
+    from the URL serves every name -- including names that did not exist when
+    the bundle was built.
+
+    Registered BEFORE the StaticFiles mount (which would answer first, with a
+    404) and after every `/api/*` route, which live under a different prefix.
+    A symbol that DOES have its own folder is still served from that folder, so
+    the twelve pre-rendered pages keep their head start.
+    """
+    from fastapi.responses import FileResponse
+
+    shell = out / "stock" / DESKTOP_TICKER_SHELL / "index.html"
+    if not shell.exists():
+        # Not fatal, and not silent: an export built before this existed still
+        # serves its twelve names, and the log says why the rest will 404.
+        logger.warning("no %s -- only the pre-rendered symbols will resolve. "
+                       "Rebuild with: cd frontend && AEGIS_DESKTOP_BUILD=1 npx next build",
+                       shell)
+        return {"enabled": False, "reason": f"no shell at {shell}"}
+
+    async def _stock_detail(ticker: str):
+        if _TICKER_SEGMENT.match(ticker):
+            concrete = out / "stock" / ticker.upper() / "index.html"
+            if concrete.exists():
+                return FileResponse(str(concrete), media_type="text/html")
+        return FileResponse(str(shell), media_type="text/html")
+
+    for path in ("/stock/{ticker}", "/stock/{ticker}/"):
+        application.add_api_route(path, _stock_detail, methods=["GET"],
+                                  include_in_schema=False)
+    return {"enabled": True, "reason": "one shell for every symbol", "shell": str(shell)}
 
 
 @app.get("/")

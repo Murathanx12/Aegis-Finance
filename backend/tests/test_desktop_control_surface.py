@@ -804,3 +804,96 @@ def test_the_storage_path_is_logged_because_a_windowed_build_has_no_stdout() -> 
     window actually used. An answer that is not in the log is not an answer."""
     code = executable_source(REPO / "desktop" / "aegis_desktop.py")
     assert 'log.info("storage %s"' in code
+
+
+# --------------------------------------- every symbol resolves in the packaged app
+
+def _export(tmp_path, symbols=("NVDA",), shell=True):
+    """A miniature `frontend/out`: an index, some pre-rendered symbols, a shell.
+
+    Built in a SUBDIRECTORY so that `tmp_path` itself is outside the served root
+    -- the traversal test needs somewhere no request may ever reach."""
+    tmp_path = tmp_path / "out"
+    tmp_path.mkdir(exist_ok=True)
+    (tmp_path / "index.html").write_text("<html>home</html>", encoding="utf-8")
+    for sym in symbols:
+        d = tmp_path / "stock" / sym
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text(f"<html>prerendered {sym}</html>", encoding="utf-8")
+    if shell:
+        from backend.main import DESKTOP_TICKER_SHELL
+        d = tmp_path / "stock" / DESKTOP_TICKER_SHELL
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "index.html").write_text("<html>shell</html>", encoding="utf-8")
+    return tmp_path
+
+
+def _mounted_app(tmp_path, monkeypatch, **kw):
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from backend.main import mount_desktop_frontend
+
+    out = _export(tmp_path, **kw)
+    monkeypatch.setenv("AEGIS_DESKTOP", "1")
+    monkeypatch.setenv("AEGIS_DESKTOP_FRONTEND", str(out))
+    application = FastAPI()
+
+    @application.get("/api/stock/{ticker}")
+    async def _api_stock(ticker: str):                       # noqa: ANN202
+        return {"ticker": ticker.upper(), "source": "api"}
+
+    info = mount_desktop_frontend(application)
+    return TestClient(application), info
+
+
+def test_a_symbol_with_no_pre_rendered_page_is_served_the_shell(tmp_path, monkeypatch):
+    """"When I search a stock I get 404" (Murat, 2026-09-11). The export names
+    twelve symbols and the universe is ~3,000."""
+    client, info = _mounted_app(tmp_path, monkeypatch)
+    assert info["mounted"] and info["stock_shell"]["enabled"]
+    for path in ("/stock/PLTR/", "/stock/PLTR"):
+        r = client.get(path)
+        assert r.status_code == 200, path
+        assert "shell" in r.text
+        assert r.headers["content-type"].startswith("text/html")
+
+
+def test_a_pre_rendered_symbol_keeps_its_own_page(tmp_path, monkeypatch):
+    client, _ = _mounted_app(tmp_path, monkeypatch)
+    assert "prerendered NVDA" in client.get("/stock/NVDA/").text
+
+
+def test_the_api_still_wins_over_the_static_mount(tmp_path, monkeypatch):
+    """The mount is LAST and the shell route is under `/stock`, not `/api`.
+    If this ever inverts, every data call in the app returns HTML."""
+    client, _ = _mounted_app(tmp_path, monkeypatch)
+    r = client.get("/api/stock/NVDA")
+    assert r.status_code == 200 and r.json() == {"ticker": "NVDA", "source": "api"}
+
+
+def test_an_export_without_a_shell_still_mounts_and_says_so(tmp_path, monkeypatch):
+    """An `out/` built before the shell existed serves its twelve names rather
+    than refusing -- but the reason is in the return value, not only the log."""
+    client, info = _mounted_app(tmp_path, monkeypatch, shell=False)
+    assert info["mounted"] and info["stock_shell"]["enabled"] is False
+    assert "no shell at" in info["stock_shell"]["reason"]
+    assert client.get("/stock/NVDA/").status_code == 200
+
+
+def test_a_traversal_segment_never_reaches_outside_the_export(tmp_path, monkeypatch):
+    """`out/` is a directory on the user's disk and the app answers on
+    localhost. A segment is not a filename until it has been checked: the
+    shell route joins `ticker` onto `out/stock`, so `..` must lose.
+
+    The first version of this test put the decoy INSIDE `out/` and failed on
+    `NVDA%2F..%2F..%2Fsecret.html` -- which was the test being wrong, not the
+    route: that path normalises to a file the export is there to serve. The
+    decoy now lives one level ABOVE the served root, where a hit is a breach."""
+    (tmp_path / "secret.html").write_text("<html>not yours</html>", encoding="utf-8")
+    client, _ = _mounted_app(tmp_path, monkeypatch)
+    for bad in ("..", "..%2f..%2fsecret.html", "NVDA%2F..%2F..%2Fsecret.html",
+                "%2e%2e%2f%2e%2e%2fsecret.html", "....%2f%2fsecret.html"):
+        r = client.get(f"/stock/{bad}")
+        assert "not yours" not in r.text, bad
+        assert r.status_code in (200, 404), (bad, r.status_code)

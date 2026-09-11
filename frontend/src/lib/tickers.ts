@@ -12,3 +12,15 @@ export const POPULAR_TICKERS = [
   "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META",
   "TSLA", "JPM", "JNJ", "V", "UNH", "XOM",
 ] as const;
+
+/**
+ * The one extra route the DESKTOP export pre-renders: a blank `[ticker]` shell
+ * that reads its symbol from the browser's URL instead of from the build.
+ *
+ * `output: "export"` can only emit the paths named above, so a packaged app
+ * 404'd on every other symbol -- and the universe is ~3,000 names. The detail
+ * page fetches everything from `/api/stock/{ticker}` at runtime, so one shell
+ * serves them all, including symbols that did not exist at build time.
+ * `mount_desktop_frontend` (backend/main.py) hands `/stock/<ANY>` to this page.
+ */
+export const DESKTOP_TICKER_SHELL = "__ticker__";
