@@ -859,6 +859,16 @@ def test_a_symbol_with_no_pre_rendered_page_is_served_the_shell(tmp_path, monkey
         assert r.headers["content-type"].startswith("text/html")
 
 
+def test_head_resolves_too_because_the_router_prefetches_with_head(tmp_path, monkeypatch):
+    """Next probes a link target with HEAD before it will soft-navigate. A
+    GET-only route answers those 404 -- measured in the browser on 2026-09-11:
+    28 HEAD 404s from one page of the universe table, while the same URLs
+    returned 200 to curl, which is why the first pass missed it."""
+    client, _ = _mounted_app(tmp_path, monkeypatch)
+    for path in ("/stock/PLTR/", "/stock/PLTR", "/stock/NVDA/"):
+        assert client.head(path).status_code == 200, path
+
+
 def test_a_pre_rendered_symbol_keeps_its_own_page(tmp_path, monkeypatch):
     client, _ = _mounted_app(tmp_path, monkeypatch)
     assert "prerendered NVDA" in client.get("/stock/NVDA/").text

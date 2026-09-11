@@ -689,8 +689,13 @@ def _mount_stock_shell(application: "FastAPI", out) -> dict:
                 return FileResponse(str(concrete), media_type="text/html")
         return FileResponse(str(shell), media_type="text/html")
 
+    # HEAD as well as GET. Next's link prefetcher probes a target with HEAD
+    # before it will soft-navigate, and a GET-only route answers those 404
+    # (measured in the browser on 2026-09-11: 28 HEAD 404s from one page of the
+    # universe table, while the same URLs returned 200 to curl). A 404 there
+    # tells the router the page does not exist.
     for path in ("/stock/{ticker}", "/stock/{ticker}/"):
-        application.add_api_route(path, _stock_detail, methods=["GET"],
+        application.add_api_route(path, _stock_detail, methods=["GET", "HEAD"],
                                   include_in_schema=False)
     return {"enabled": True, "reason": "one shell for every symbol", "shell": str(shell)}
 
