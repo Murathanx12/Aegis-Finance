@@ -1336,3 +1336,226 @@ def universe(offset: int = 0, limit: int = 100, q: str | None = None,
         "conventions": header.get("conventions") or {},
         "rows": page,
     }
+
+
+# ===========================================================================
+# N-F — COVERAGE. "Asia first" becomes a number on the board.
+# ===========================================================================
+# Roadmap 2026-09-11 §3 N-F: per region and per source — last row age, rows
+# today, 7-day trend, resolution rate, RED flags.
+#
+# Every number here is DERIVED from files on disk (the corpus day-files, the
+# per-source cursors, the newest receipt) rather than from anything a pull
+# reported into memory. That is the point: a coverage card that believed the
+# pull's own summary would keep showing yesterday's success long after the pull
+# stopped running. A source with no directory at all reports `rows_total: 0`
+# and `status: NEVER_PULLED` — never an em dash that might be a zero.
+
+#: A source is RED after this many consecutive zero-row runs. Read from the
+#: cursor, which is the only thing that survives between runs.
+COVERAGE_RED_ZERO_RUNS = 2
+
+#: How many days of per-day counts the trend carries.
+COVERAGE_TREND_DAYS = 7
+
+#: A source whose newest row is older than this is STALE even if it never
+#: recorded a zero-row run — a feed that 500s every time never records one.
+COVERAGE_STALE_HOURS = 48
+
+
+def _corpus_root() -> Path:
+    from backend import config as _cfg
+    return Path(_cfg.DATA_DIR) / "optimus" / "news_corpus"
+
+
+def _newest_receipt(root: Path, source_id: str) -> dict:
+    d = root / "_receipts"
+    if not d.is_dir():
+        return {}
+    files = sorted(d.glob(f"*_{source_id}.json"))
+    if not files:
+        return {}
+    try:
+        return json.loads(files[-1].read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _last_first_seen(path: Path) -> str:
+    """The newest `first_seen_utc` in a day-file, read from the LAST lines.
+
+    Rows are appended in write order, so the last line is the newest. Reading
+    the whole corpus for this would make the card O(corpus) per request.
+    """
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return ""
+    for line in reversed(lines[-5:]):
+        try:
+            return json.loads(line).get("first_seen_utc") or ""
+        except Exception:  # noqa: BLE001
+            continue
+    return ""
+
+
+def _coverage_for_source(src, root: Path, today: str, trend_days: list[str]) -> dict:
+    d = root / src.id
+    files = sorted(d.glob("*.jsonl")) if d.is_dir() else []
+    by_day: dict[str, int] = {}
+    rows_total = 0
+    for f in files:
+        try:
+            with f.open(encoding="utf-8", errors="replace") as fh:
+                n = sum(1 for _ in fh)
+        except OSError:
+            n = 0
+        rows_total += n
+        by_day[f.stem] = n
+
+    cursor: dict = {}
+    cpath = root / "_cursors" / f"{src.id}.json"
+    if cpath.exists():
+        try:
+            cursor = json.loads(cpath.read_text(encoding="utf-8"))
+        except Exception:  # noqa: BLE001
+            cursor = {}
+    receipt = _newest_receipt(root, src.id)
+
+    newest = _last_first_seen(files[-1]) if files else ""
+    age_h = None
+    if newest:
+        try:
+            ts = datetime.fromisoformat(newest.replace("Z", "+00:00"))
+            age_h = round((datetime.now(timezone.utc) - ts).total_seconds() / 3600.0, 2)
+        except ValueError:
+            age_h = None
+
+    zeros = int(cursor.get("consecutive_zero_runs", 0) or 0)
+    flags: list[str] = []
+    if not src.implemented or src.parser == "none":
+        status = "NOT_IMPLEMENTED"
+        flags.append(src.implemented_note[:200] or "not implemented")
+    elif not files and not cursor:
+        status = "NEVER_PULLED"
+    elif zeros >= COVERAGE_RED_ZERO_RUNS:
+        status = "RED"
+        flags.append(f"{zeros} consecutive zero-row runs")
+    elif receipt.get("status") == "REFUSED":
+        status = "REFUSED"
+        flags.append((receipt.get("failures") or ["refused"])[0][:200])
+    elif age_h is not None and age_h > COVERAGE_STALE_HOURS:
+        status = "STALE"
+        flags.append(f"newest row is {age_h:.0f}h old")
+    elif not files:
+        status = "NO_ROWS"
+    else:
+        status = "OK"
+
+    return {
+        "id": src.id, "provider": src.provider, "region": src.region,
+        "language": src.language, "tier": src.tier,
+        "pit_grade": src.pit_grade, "label_source": src.label_source,
+        "implemented": src.implemented,
+        "rows_total": rows_total,
+        "rows_today": by_day.get(today, 0),
+        "trend_7d": [by_day.get(day, 0) for day in trend_days],
+        "last_row_utc": newest or None,
+        "last_row_age_hours": age_h,
+        "last_run_utc": cursor.get("last_run_utc"),
+        "runs": int(cursor.get("runs", 0) or 0),
+        "consecutive_zero_runs": zeros,
+        "resolution_rate": receipt.get("resolution_rate"),
+        "status": status,
+        "flags": flags,
+    }
+
+
+@router.get("/coverage")
+def coverage() -> dict:
+    """N-F: per-source and per-region news coverage, derived from disk."""
+    try:
+        from backend.services import news_entities, news_registry
+        sources = news_registry.load()
+        meta = news_registry.meta()
+    except Exception as e:  # noqa: BLE001 — a read degrades to a report, never a 500
+        return {"utc": _now(), "available": False,
+                "error": f"{type(e).__name__}: {e}",
+                "sources": [], "regions": [], "totals": {}}
+
+    root = _corpus_root()
+    now = datetime.now(timezone.utc)
+    today = now.date().isoformat()
+    trend_days = [(now.date() - timedelta(days=i)).isoformat()
+                  for i in range(COVERAGE_TREND_DAYS - 1, -1, -1)]
+
+    per = [_coverage_for_source(s, root, today, trend_days) for s in sources]
+
+    regions: dict[str, dict] = {}
+    for row in per:
+        r = regions.setdefault(row["region"], {
+            "region": row["region"], "sources": 0, "implemented": 0,
+            "rows_total": 0, "rows_today": 0, "red": [], "never_pulled": [],
+            "last_row_age_hours": None,
+        })
+        r["sources"] += 1
+        r["implemented"] += 1 if row["implemented"] else 0
+        r["rows_total"] += row["rows_total"]
+        r["rows_today"] += row["rows_today"]
+        if row["status"] in ("RED", "STALE", "REFUSED"):
+            r["red"].append(row["id"])
+        if row["status"] == "NEVER_PULLED":
+            r["never_pulled"].append(row["id"])
+        age = row["last_row_age_hours"]
+        if age is not None and (r["last_row_age_hours"] is None or age < r["last_row_age_hours"]):
+            r["last_row_age_hours"] = age
+
+    rated = [r["resolution_rate"] for r in per if r["resolution_rate"] is not None]
+    asia = [r for r in per if r["region"] in ("HK", "CN", "JP", "KR", "SG", "IN")]
+
+    snap_dir = root.parent / "analyst_snapshots"
+    snaps = sorted(p.stem for p in snap_dir.glob("*.parquet")) if snap_dir.is_dir() else []
+
+    return {
+        "utc": _now(),
+        "available": True,
+        "registry": meta,
+        "corpus_dir": str(root),
+        "corpus_exists": root.is_dir(),
+        "sources": per,
+        "regions": sorted(regions.values(), key=lambda r: -r["rows_total"]),
+        "totals": {
+            "sources": len(per),
+            "implemented": sum(1 for r in per if r["implemented"]),
+            "rows_total": sum(r["rows_total"] for r in per),
+            "rows_today": sum(r["rows_today"] for r in per),
+            "red": [r["id"] for r in per if r["status"] in ("RED", "STALE", "REFUSED")],
+            "never_pulled": [r["id"] for r in per if r["status"] == "NEVER_PULLED"],
+            "label_sources": [r["id"] for r in per if r["label_source"]],
+            "mean_resolution_rate": round(sum(rated) / len(rated), 4) if rated else None,
+        },
+        "asia_first": {
+            "regions": sorted({r["region"] for r in asia}),
+            "rows_total": sum(r["rows_total"] for r in asia),
+            "rows_today": sum(r["rows_today"] for r in asia),
+            "note": ("'Asia first' as a NUMBER rather than a sentence. It counts every "
+                     "source whose registry region is HK/CN/JP/KR/SG/IN; a GLOBAL source "
+                     "that happens to carry Asian rows is not counted, so this is a "
+                     "floor, not a ceiling."),
+        },
+        "name_table": news_entities.stats(),
+        "analyst_snapshots": {
+            "dir": str(snap_dir), "days": len(snaps),
+            "series_starts": snaps[0] if snaps else None,
+            "latest": snaps[-1] if snaps else None,
+            "note": ("the analyst series starts the day the job first ran — yfinance "
+                     "serves a current snapshot and Finnhub keeps ~4 months, so there "
+                     "is no earlier history to fetch, only history to accumulate"),
+        },
+        "rules": {
+            "red_after_zero_runs": COVERAGE_RED_ZERO_RUNS,
+            "stale_after_hours": COVERAGE_STALE_HOURS,
+            "label_rule": ("a source with pit_grade `index_state` may never label a "
+                           "return (invariant 20); it is breadth on this card only"),
+        },
+    }

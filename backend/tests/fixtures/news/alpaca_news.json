@@ -1,0 +1,30 @@
+{
+  "_fixture_note": "RECONSTRUCTED from the documented Alpaca v1beta1/news schema, NOT captured: no APCA_API_KEY_ID / APCA_API_SECRET_KEY resolves in this environment, so the 2026-09-11 probe could not call the endpoint. It pins the envelope (news[] + next_page_token), the created_at stamp and the symbols[] tags.",
+  "news": [
+    {
+      "id": 40123456,
+      "headline": "Nvidia denies report that it cancelled a Blackwell order",
+      "author": "Benzinga Newsdesk",
+      "created_at": "2026-09-11T12:31:05Z",
+      "updated_at": "2026-09-11T12:31:05Z",
+      "summary": "The company called the report inaccurate in a statement.",
+      "content": "<p>Nvidia said the report was inaccurate.</p>",
+      "url": "https://www.benzinga.com/news/26/09/40123456/nvidia-denies-report",
+      "symbols": ["NVDA"],
+      "source": "benzinga"
+    },
+    {
+      "id": 40123457,
+      "headline": "Kroger beats on same-store sales, raises guidance",
+      "author": "Benzinga Newsdesk",
+      "created_at": "2026-09-11T12:45:22Z",
+      "updated_at": "2026-09-11T12:45:22Z",
+      "summary": "Q2 identical sales rose 2.8%.",
+      "content": "<p>Kroger raised its full-year outlook.</p>",
+      "url": "https://www.benzinga.com/news/26/09/40123457/kroger-beats",
+      "symbols": ["KR"],
+      "source": "benzinga"
+    }
+  ],
+  "next_page_token": null
+}

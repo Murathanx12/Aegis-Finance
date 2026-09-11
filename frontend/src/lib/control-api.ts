@@ -683,3 +683,78 @@ export function pickArray(o: unknown, keys: string[]): unknown[] | null {
   }
   return null;
 }
+
+// ------------------------------------------------------------- N-F coverage
+
+/** One registry source's coverage, as `/api/control/coverage` reports it. */
+export interface CoverageSource {
+  id: string;
+  provider: string;
+  region: string;
+  language: string;
+  tier: string;
+  pit_grade: "native_stamp" | "first_seen_only" | "index_state" | string;
+  label_source: boolean;
+  implemented: boolean;
+  rows_total: number;
+  rows_today: number;
+  trend_7d: number[];
+  last_row_utc: string | null;
+  last_row_age_hours: number | null;
+  last_run_utc: string | null;
+  runs: number;
+  consecutive_zero_runs: number;
+  resolution_rate: number | null;
+  status: string;
+  flags: string[];
+}
+
+export interface CoverageRegion {
+  region: string;
+  sources: number;
+  implemented: number;
+  rows_total: number;
+  rows_today: number;
+  red: string[];
+  never_pulled: string[];
+  last_row_age_hours: number | null;
+}
+
+export interface CoverageResponse {
+  utc: string;
+  available: boolean;
+  error?: string;
+  registry?: { version?: string; licence?: string; path?: string };
+  corpus_dir?: string;
+  corpus_exists?: boolean;
+  sources: CoverageSource[];
+  regions: CoverageRegion[];
+  totals: {
+    sources?: number;
+    implemented?: number;
+    rows_total?: number;
+    rows_today?: number;
+    red?: string[];
+    never_pulled?: string[];
+    label_sources?: string[];
+    mean_resolution_rate?: number | null;
+  };
+  asia_first?: {
+    regions: string[];
+    rows_total: number;
+    rows_today: number;
+    note: string;
+  };
+  name_table?: UnknownPayload;
+  analyst_snapshots?: {
+    dir?: string;
+    days?: number;
+    series_starts?: string | null;
+    latest?: string | null;
+    note?: string;
+  };
+  rules?: UnknownPayload;
+}
+
+export const getCoverage = () =>
+  controlFetch<CoverageResponse>("/coverage", undefined, 60_000);

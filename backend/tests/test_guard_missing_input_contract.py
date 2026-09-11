@@ -943,7 +943,22 @@ def _case_r2_trial():
             "a prompt that is not the registered one")
 
 
+def _case_news_registry():
+    """N-B: a source id nobody registered cannot be pulled.
+
+    The missing input is the REGISTRATION. `scripts/news_pull.py` resolves
+    every `--source` through `news_registry.get`, so an unregistered id must
+    refuse BEFORE a byte leaves the machine — roadmap 2026-09-11 N-B's
+    "refusal at parse". Answering anyway would mean a collector writing rows
+    under a source whose PIT grade, licence and label rights nobody declared.
+    """
+    from backend.services.news_registry import UnknownSource, get
+    return (lambda: get("a_source_nobody_registered"),
+            UnknownSource, "a news source id that is not in the registry")
+
+
 CASES = {
+    "news_registry": _case_news_registry,
     "r2_trial": _case_r2_trial,
     "human_thesis": _case_human_thesis,
     "decision_log": _case_decision_log,

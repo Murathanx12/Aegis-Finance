@@ -1456,6 +1456,11 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "N2_learner_v3": _lazy("scripts.night_n2_learner_v3", "N2_learner_v3"),
         "P6_bars_and_regret": _lazy("scripts.night_p6_bars_and_regret", "P6_bars_and_regret"),
         "E1_news_return_panel": _lazy("scripts.night_e1_news_return_panel", "E1_news_return_panel"),
+        # N-C 2026-09-11: the join as a NIGHTLY APPEND. Reads only the corpus
+        # sources the registry marks `label_source: true`, anchors on the
+        # `first_seen_utc` WE wrote, and refuses the whole append on a single
+        # PIT violation. Cheap enough to run after every pull.
+        "E1_append": _lazy("scripts.night_e1_news_return_panel", "E1_append"),
         "C2_curriculum_transfer": _lazy("scripts.night_c2_curriculum_transfer", "C2_curriculum_transfer"),
         # 2026-09-10: P7 gives the 2025-26 replay a point-in-time universe (the
         # liquidity look-ahead only -- the bar source is itself survivor-screened,
