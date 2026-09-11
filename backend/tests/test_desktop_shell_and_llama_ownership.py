@@ -18,6 +18,7 @@ from __future__ import annotations
 import ast
 import json
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -220,3 +221,124 @@ def test_health_reports_the_checkouts_head():
     head = git_head()
     assert head is None or (len(head) == 40 and all(c in "0123456789abcdef"
                                                     for c in head))
+
+
+# ------------------------------------------- the windowless process has no stdout
+
+def test_bind_std_streams_gives_a_windowless_process_a_stdout(tmp_path, monkeypatch):
+    """`pythonw.exe` and a `console=False` build both set both streams to None."""
+    from desktop import aegis_desktop as ad
+
+    monkeypatch.setattr(ad, "_log_path", lambda: tmp_path / "aegis_desktop.log")
+    monkeypatch.setattr(ad, "_STD_STREAM_FILE", None)
+    real_out, real_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout = None
+        sys.stderr = None
+        rec = ad.bind_std_streams()
+        assert rec["bound"] == ["stdout", "stderr"]
+        assert sys.stdout is sys.stderr          # one handle, not two on one file
+        assert sys.stdout.isatty() is False      # the call that used to raise
+        sys.stdout.write("hello from a process with no console\n")
+        again = ad.bind_std_streams()            # idempotent
+        assert again["bound"] == []
+    finally:
+        try:
+            if ad._STD_STREAM_FILE is not None:
+                ad._STD_STREAM_FILE.close()
+        finally:
+            sys.stdout, sys.stderr = real_out, real_err
+            ad._STD_STREAM_FILE = None
+    assert "hello from a process with no console" in (
+        tmp_path / "aegis_desktop.log").read_text(encoding="utf-8")
+
+
+def test_uvicorn_configures_its_logging_when_stdout_is_none(tmp_path, monkeypatch):
+    """The actual regression, run through uvicorn's own code.
+
+    `uvicorn.Config(...).configure_logging()` is what raised
+    `AttributeError: 'NoneType' object has no attribute 'isatty'` at
+    `uvicorn/logging.py:44` -- BEFORE the socket was bound, which is why the
+    splash timed out at 242 s with an empty log. Constructing the Config with
+    the shell's own kwargs is the cheapest way to keep the fix honest against a
+    future uvicorn.
+    """
+    import uvicorn
+
+    from desktop import aegis_desktop as ad
+
+    monkeypatch.setattr(ad, "_log_path", lambda: tmp_path / "aegis_desktop.log")
+    monkeypatch.setattr(ad, "_STD_STREAM_FILE", None)
+    real_out, real_err = sys.stdout, sys.stderr
+    try:
+        sys.stdout = None
+        sys.stderr = None
+        ad.bind_std_streams()
+        cfg = uvicorn.Config(app=lambda scope, receive, send: None,
+                             port=0, **ad.UVICORN_KWARGS)
+        cfg.configure_logging()                  # raised AttributeError before
+    finally:
+        try:
+            if ad._STD_STREAM_FILE is not None:
+                ad._STD_STREAM_FILE.close()
+        finally:
+            sys.stdout, sys.stderr = real_out, real_err
+            ad._STD_STREAM_FILE = None
+
+
+def test_the_shell_binds_the_streams_before_it_imports_uvicorn():
+    """AST, not grep: the docstring above `bind_std_streams` names uvicorn too."""
+    from desktop import aegis_desktop as ad
+    fn = next(n for n in ast.walk(ast.parse(Path(ad.__file__).read_text(encoding="utf-8")))
+              if isinstance(n, ast.FunctionDef) and n.name == "start_backend")
+    calls = [n for n in ast.walk(fn) if isinstance(n, ast.Call)]
+    binds = [n for n in calls
+             if isinstance(n.func, ast.Name) and n.func.id == "bind_std_streams"]
+    assert binds, "start_backend no longer binds stdout/stderr"
+    imports = [n for n in ast.walk(fn) if isinstance(n, ast.Import)
+               for al in n.names if al.name == "uvicorn"]
+    assert imports and binds[0].lineno < imports[0].lineno
+    assert ad.UVICORN_KWARGS["use_colors"] is False, (
+        "uvicorn asks sys.stdout.isatty() unless use_colors is True or False")
+
+
+def test_the_launcher_sends_both_child_streams_to_the_log():
+    from desktop import launcher
+    fn = next(n for n in ast.walk(ast.parse(
+        Path(launcher.__file__).read_text(encoding="utf-8")))
+        if isinstance(n, ast.FunctionDef) and n.name == "spawn_shell")
+    popen = next(n for n in ast.walk(fn) if isinstance(n, ast.Call)
+                 and isinstance(n.func, ast.Attribute) and n.func.attr == "Popen")
+    kw = {k.arg: k.value for k in popen.keywords}
+    assert isinstance(kw["stdout"], ast.Name) and kw["stdout"].id == "fh", (
+        "the child's stdout is not the log: a windowless parent gives it None")
+    assert not (isinstance(kw["stdout"], ast.Attribute) and kw["stdout"].attr == "PIPE")
+
+
+@pytest.mark.slow
+def test_pythonw_starts_the_whole_shell_and_reaches_health(tmp_path):
+    """The end-to-end proof, under the interpreter that has no console.
+
+    Marked slow because it starts a real server in a real subprocess: it imports
+    pandas, lightgbm and pyarrow and binds a port. Every FAST test above pins one
+    link of the chain; this one pins that the chain holds.
+    """
+    import subprocess
+
+    pyw = Path(sys.executable).with_name("pythonw.exe")
+    if not pyw.exists():
+        pytest.skip(f"no pythonw beside {sys.executable}")
+    report = REPO / "backend" / "data" / "optimus" / "aegis_desktop_report.json"
+    before = report.read_text(encoding="utf-8") if report.exists() else None
+    env = dict(os.environ, AEGIS_REPO_ROOT=str(REPO), PYTHONIOENCODING="utf-8")
+    try:
+        subprocess.run([str(pyw), "-m", "desktop.aegis_desktop", "--headless",
+                        "--no-llama"], cwd=str(REPO), env=env, timeout=420,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                       check=False)
+        payload = json.loads(report.read_text(encoding="utf-8"))
+        assert payload.get("health_ok") is True, payload.get("backend_error")
+        assert payload.get("std_streams", {}).get("bound") == ["stdout", "stderr"]
+    finally:
+        if before is not None:
+            report.write_text(before, encoding="utf-8")

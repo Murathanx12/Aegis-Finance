@@ -1,3 +1,14 @@
 # Railway/Railpack fallback entrypoint.
 # Canonical backend dependencies remain in backend/requirements.txt.
 -r backend/requirements.txt
+
+# The desktop shell's one window. NOT in backend/requirements.txt on purpose:
+# Railway serves the API and has no display, and a GUI toolkit on a headless
+# dyno is weight nobody uses. It belongs HERE because this is the file the
+# desktop launcher installs (desktop/launcher.py step 3), and on 2026-09-11 the
+# frozen launcher started the shell under the checkout's .venv, which had every
+# research dependency and no pywebview -- the backend came up, mounted the
+# frontend, prewarmed its caches, and then the shell died on
+# `ModuleNotFoundError: No module named 'webview'`. Invisible from source,
+# where the system interpreter happened to have it installed by hand.
+pywebview>=5.0

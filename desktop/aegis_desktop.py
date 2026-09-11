@@ -155,6 +155,9 @@ log = logging.getLogger("aegis.desktop")
 #: loaded must be able to say WHY without a second launch.
 BACKEND_ERROR: dict = {}
 
+#: What `bind_std_streams` did, for the report.
+STD_STREAMS: dict = {}
+
 
 def report_path() -> Path:
     """Where this shell writes what it did. Beside the log, in the checkout."""
@@ -210,6 +213,66 @@ def wait_for_health(port: int, timeout_s: float = 240.0) -> tuple[bool, float]:
     return False, round(time.time() - t0, 2)
 
 
+#: Passed to `uvicorn.run` beside the app and the port.
+#:
+#: `use_colors=False` is NOT cosmetic. uvicorn's `ColourizedFormatter` decides
+#: whether to emit ANSI by calling `sys.stdout.isatty()` **unless** `use_colors`
+#: is explicitly True or False -- and in a windowless process `sys.stdout` is
+#: `None`, so the default asks `None.isatty()` and `Config.configure_logging()`
+#: raises `AttributeError` BEFORE the socket is bound. Stating the answer means
+#: the question is never asked. `log_config` is left at uvicorn's default on
+#: purpose: its handlers resolve `ext://sys.stderr` at configure time, which is
+#: the file we just bound, so uvicorn's own startup lines land in the app log.
+UVICORN_KWARGS = {"host": "127.0.0.1", "log_level": "warning", "use_colors": False}
+
+#: The file object `bind_std_streams` installed, if it installed one. Module
+#: level so a second call is a no-op and so the report can say it happened.
+_STD_STREAM_FILE = None
+
+
+def bind_std_streams() -> dict:
+    """Give a windowless process a real stdout and stderr, or nothing starts.
+
+    THE ROOT CAUSE OF EVERY FAILED LAUNCH OF 2026-09-11, verified twice on the
+    old .exe and once under `pythonw -m desktop.aegis_desktop` at 14:40:
+
+        AttributeError: 'NoneType' object has no attribute 'isatty'
+        uvicorn/logging.py:44  self.use_colors = sys.stdout.isatty()
+
+    `pythonw.exe` and a `console=False` PyInstaller build both hand the process
+    `sys.stdout is None` and `sys.stderr is None` -- there is no console to
+    write to, so CPython gives it nothing rather than a broken handle. uvicorn
+    then dies inside `Config.configure_logging()`, before binding, in a daemon
+    thread whose traceback has nowhere to go: the splash counted to 242 s and
+    the log held the start line and nothing else.
+
+    Two independent fixes, because either alone is one dependency change from
+    silent again: bind the streams to the app log HERE, and tell uvicorn the
+    answer to the question in `UVICORN_KWARGS`. Binding is also the one that
+    rescues every OTHER library that assumes a stdout exists.
+
+    One file object serves both streams: two append handles on one file
+    interleave badly on Windows, and there is nothing to gain from separating
+    them when both ends are the same log.
+    """
+    global _STD_STREAM_FILE
+    missing = [n for n in ("stdout", "stderr") if getattr(sys, n, None) is None]
+    if not missing:
+        return {"bound": [], "reason": "stdout and stderr already exist"}
+    path = _log_path()
+    if _STD_STREAM_FILE is None:
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            _STD_STREAM_FILE = open(path, "a", encoding="utf-8",  # noqa: SIM115 lives for the process
+                                    errors="replace", buffering=1)
+        except OSError as exc:
+            return {"bound": [], "error": f"{type(exc).__name__}: {exc}", "path": str(path)}
+    for name in missing:
+        setattr(sys, name, _STD_STREAM_FILE)
+    log.info("bound %s to %s (windowless process had none)", "+".join(missing), path)
+    return {"bound": missing, "path": str(path)}
+
+
 def start_backend(port: int) -> threading.Thread:
     """uvicorn in a daemon thread inside this process.
 
@@ -222,6 +285,9 @@ def start_backend(port: int) -> threading.Thread:
     os.environ.setdefault("AEGIS_DESKTOP", "1")
     os.environ.setdefault("AEGIS_CONTROL_ENABLED", "1")
     os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+    # BEFORE anything imports uvicorn. See `bind_std_streams`: without this the
+    # thread below dies on `None.isatty()` and the window never loads.
+    STD_STREAMS.update(bind_std_streams())
     # Point the app at the REAL checkout. Inside the frozen build `REPO` would
     # otherwise resolve to `<dist>/_internal`, and the first packaged run proved
     # it: it created a fresh empty `aegis_pi.db` inside the bundle and would
@@ -252,7 +318,7 @@ def start_backend(port: int) -> threading.Thread:
 
             from backend.main import app, mount_desktop_frontend
             mount_desktop_frontend(app)      # after every API route is registered
-            uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+            uvicorn.run(app, port=port, **UVICORN_KWARGS)
         except BaseException as exc:         # noqa: BLE001 - see above
             BACKEND_ERROR["error"] = f"{type(exc).__name__}: {exc}"
             BACKEND_ERROR["traceback"] = traceback.format_exc()
@@ -358,7 +424,8 @@ def main(argv: list[str] | None = None) -> int:
 
     report = {"utc": _now(), "port": port, "llama": llama, "log": str(logfile),
               "storage": str(storage), "repo_root": str(repo_root() or REPO),
-              "pid": os.getpid(), "frozen": bool(getattr(sys, "frozen", False))}
+              "pid": os.getpid(), "frozen": bool(getattr(sys, "frozen", False)),
+              "std_streams": dict(STD_STREAMS)}
     write_report(report)
     log.info("backend on %s; llama=%s", port, json.dumps(llama, default=str)[:300])
 

@@ -411,17 +411,25 @@ def spawn_shell(root: Path, argv: list[str]) -> dict:
     p = log_path(root)
     p.parent.mkdir(parents=True, exist_ok=True)
     fh = p.open("a", encoding="utf-8", errors="replace", newline="\n")
-    fh.write(f"{_now()} LAUNCHER child stderr follows\n")
+    fh.write(f"{_now()} LAUNCHER child stdout+stderr follow\n")
     fh.flush()
     creation = 0x08000000 if sys.platform == "win32" else 0      # CREATE_NO_WINDOW
+    # BOTH streams to the log, and NEITHER to a pipe. Two reasons, one of which
+    # was the failure of 2026-09-11: (1) this launcher is a GUI-subsystem .exe
+    # with no console, so a child that inherits its stdout gets `None`, and any
+    # library that asks `sys.stdout.isatty()` -- uvicorn's log formatter does --
+    # raises before the server binds, in a thread whose traceback goes nowhere;
+    # (2) a `PIPE` that nobody reads fills its buffer and then blocks the child
+    # forever. Nothing here ever read `proc.stdout`, so that was the second bug
+    # waiting for a chattier shell.
     proc = subprocess.Popen(argv, cwd=str(root), env=env,
-                            stdout=subprocess.PIPE, stderr=fh, text=True,
+                            stdout=fh, stderr=subprocess.STDOUT, text=True,
                             creationflags=creation)
     bound = _assign(handle, proc.pid)
     return {"proc": proc, "job_handle": handle, "log": fh,
             "record": {"step": "shell", "utc": _now(), "argv": argv,
                        "pid": proc.pid, "job_object": jrec, "bound": bound,
-                       "stderr_to": str(p)}}
+                       "stdout_to": str(p), "stderr_to": str(p)}}
 
 
 # ------------------------------------------------------------------ the refusal
