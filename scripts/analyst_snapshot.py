@@ -225,6 +225,17 @@ def update_name_table(learned: dict[str, str]) -> dict:
             "note": "existing primary_name values are never overwritten"}
 
 
+#: Rows are flushed to the parquet every this many symbols.
+#:
+#: A 3,056-symbol sweep is ~70 minutes at the rate the 09-11 probe measured
+#: (1.38 s/name). A job that only writes at exit loses the whole run to one
+#: crash, one reboot or one kill — which is exactly what happened to
+#: `G3_evolve_v2` on 2026-09-10, and the lesson was "checkpoint per unit of
+#: work", not "hope". The partial file is a valid snapshot of the symbols
+#: reached; the receipt says how many that was.
+CHECKPOINT_EVERY = 250
+
+
 def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
              fetch: Callable[[str], dict] | None = None,
              update_names: bool = True) -> dict:
@@ -238,6 +249,18 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
     learned: dict[str, str] = {}
     errors: list[str] = []
     counts = {"ok": 0, "partial": 0, "empty": 0, "error": 0}
+    path = out_dir() / f"{day}.parquet"
+
+    def _flush() -> bool:
+        if not rows:
+            return False
+        try:
+            import pandas as pd
+            out_dir().mkdir(parents=True, exist_ok=True)
+            pd.DataFrame(rows, columns=list(COLUMNS)).to_parquet(path, index=False)
+            return True
+        except Exception:  # noqa: BLE001 — a failed checkpoint must not end the sweep
+            return False
 
     for i, sym in enumerate(symbols):
         if i and pace_s:
@@ -253,8 +276,11 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         if name:
             learned[sym] = name
         rows.append(_row(sym, day, observed.isoformat(timespec="seconds"), got))
+        if CHECKPOINT_EVERY and (i + 1) % CHECKPOINT_EVERY == 0:
+            _flush()
+            print(f"  checkpoint {i + 1}/{len(symbols)} symbols "
+                  f"({(time.time() - t0) / (i + 1):.2f}s/symbol) -> {path}", flush=True)
 
-    path = out_dir() / f"{day}.parquet"
     written = False
     write_note = ""
     if rows:

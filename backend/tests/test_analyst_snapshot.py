@@ -110,6 +110,30 @@ def test_the_name_table_is_filled_but_never_overwritten(data_dir, monkeypatch, t
     assert "Apple Inc." not in text
 
 
+def test_a_killed_sweep_leaves_a_valid_partial_parquet(data_dir, monkeypatch):
+    """A 70-minute sweep that only wrote at exit would lose everything to one
+    kill — the G3 lesson of 2026-09-10. It checkpoints instead."""
+    pytest.importorskip("pandas")
+    pytest.importorskip("pyarrow")
+    monkeypatch.setattr(snap, "CHECKPOINT_EVERY", 2)
+    seen = []
+
+    def dying_fetch(symbol):
+        seen.append(symbol)
+        if len(seen) > 3:
+            raise KeyboardInterrupt("pretend the process was killed")
+        return dict(FAKE.get(symbol, {"status": "empty", "company_name": ""}))
+
+    with pytest.raises(KeyboardInterrupt):
+        snap.snapshot(max_symbols=4, pace_s=0, fetch=dying_fetch, update_names=False)
+
+    import pandas as pd
+    day = snap._now().date().isoformat()
+    df = pd.read_parquet(snap.out_dir() / f"{day}.parquet")
+    assert len(df) == 2, "the last checkpoint before the kill survived"
+    assert list(df.columns) == list(snap.COLUMNS)
+
+
 def test_no_universe_file_is_zero_rows_not_a_crash(tmp_path, monkeypatch):
     monkeypatch.setattr(snap._config, "DATA_DIR", tmp_path, raising=False)
     rec = snap.snapshot(max_symbols=5, pace_s=0, fetch=fake_fetch, update_names=False)
