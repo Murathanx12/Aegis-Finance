@@ -1,0 +1,34 @@
+{
+  "articles": [
+    {
+      "url": "https://terms.naver.com/entry.naver?docId=1670782&cid=50801&categoryId=50804",
+      "url_mobile": "",
+      "title": "과공비례",
+      "seendate": "20260619T033000Z",
+      "socialimage": "https://dbscthumb-phinf.pstatic.net/1627_000_1/20121119193535930_23CYUGCHI.jpg",
+      "domain": "terms.naver.com",
+      "language": "Korean",
+      "sourcecountry": "South Korea"
+    },
+    {
+      "url": "https://terms.naver.com/entry.naver?docId=3397760&cid=58143&categoryId=58143",
+      "url_mobile": "",
+      "title": "레테",
+      "seendate": "20260619T033000Z",
+      "socialimage": "https://dbscthumb-phinf.pstatic.net/4178_000_1/20151214115616552_XBVEQD7DY.jpg",
+      "domain": "terms.naver.com",
+      "language": "Korean",
+      "sourcecountry": "South Korea"
+    },
+    {
+      "url": "https://www.scmp.com/business/companies/article/3999001/tsmc-hong-kong-listing",
+      "url_mobile": "",
+      "title": "Taiwan Semiconductor Manufacturing lifts capex as Hong Kong investors pile in",
+      "seendate": "20260911T041500Z",
+      "socialimage": "",
+      "domain": "scmp.com",
+      "language": "English",
+      "sourcecountry": "Hong Kong"
+    }
+  ]
+}

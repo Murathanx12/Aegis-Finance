@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:media="http://search.yahoo.com/mrss/">
+  <category term="algotrading" label="r/algotrading"/>
+  <updated>2026-09-11T08:41:12+00:00</updated>
+  <id>/r/algotrading/new/.rss</id>
+  <link rel="self" href="https://www.reddit.com/r/algotrading/new/.rss" type="application/atom+xml"/>
+  <title>newest submissions : algotrading</title>
+  <entry>
+    <author><name>/u/example_one</name></author>
+    <content type="html">&lt;div&gt;Backtested a 12-1 momentum screen on the S&amp;amp;P 1500 and the edge disappears after 25bps of costs.&lt;/div&gt;</content>
+    <id>t3_1abcxyz</id>
+    <link href="https://www.reddit.com/r/algotrading/comments/1abcxyz/momentum_after_costs/"/>
+    <updated>2026-09-11T08:12:00+00:00</updated>
+    <published>2026-09-11T08:12:00+00:00</published>
+    <title>Momentum after costs: my 12-1 screen dies at 25bps</title>
+  </entry>
+  <entry>
+    <author><name>/u/example_two</name></author>
+    <content type="html">&lt;div&gt;Anyone using free SEC EDGAR 8-K Item 2.02 as an earnings trigger instead of a vendor calendar?&lt;/div&gt;</content>
+    <id>t3_1abcxzz</id>
+    <link href="https://www.reddit.com/r/algotrading/comments/1abcxzz/edgar_8k_as_an_earnings_trigger/"/>
+    <updated>2026-09-11T06:55:41+00:00</updated>
+    <published>2026-09-11T06:55:41+00:00</published>
+    <title>EDGAR 8-K Item 2.02 as a free earnings trigger?</title>
+  </entry>
+</feed>

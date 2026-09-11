@@ -1,0 +1,30 @@
+[
+  {
+    "id": "8f5c1b2a-0000-4000-8000-000000000001",
+    "content": {
+      "id": "8f5c1b2a-0000-4000-8000-000000000001",
+      "contentType": "STORY",
+      "title": "SpaceX stock rises with data center overhaul, budding UK defense deal in focus",
+      "description": "Shares moved on two separate reports.",
+      "summary": "Shares moved on two separate reports about the company's data center plans and a UK defense contract.",
+      "pubDate": "2026-09-10T16:00:39Z",
+      "displayTime": "2026-09-10T16:00:39Z",
+      "provider": {"displayName": "Yahoo Finance"},
+      "canonicalUrl": {"url": "https://finance.yahoo.com/news/spacex-stock-rises-160039.html"}
+    }
+  },
+  {
+    "id": "8f5c1b2a-0000-4000-8000-000000000002",
+    "content": {
+      "id": "8f5c1b2a-0000-4000-8000-000000000002",
+      "contentType": "STORY",
+      "title": "Treasury yields rise as investors raise bets on Fed rate hike: AlphaCheck",
+      "description": "The two-year led the move.",
+      "summary": "The two-year led the move as traders repriced the path of policy into year end.",
+      "pubDate": "2026-09-10T13:56:52Z",
+      "displayTime": "2026-09-10T13:56:52Z",
+      "provider": {"displayName": "Yahoo Finance"},
+      "canonicalUrl": {"url": "https://finance.yahoo.com/news/treasury-yields-rise-135652.html"}
+    }
+  }
+]

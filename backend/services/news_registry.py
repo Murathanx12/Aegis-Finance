@@ -146,17 +146,19 @@ class NewsSource:
 
 
 def registry_path() -> Path:
-    """`backend/data/news_sources.yaml`, following `AEGIS_DATA_DIR`.
+    """`backend/data/news_sources.yaml` — from the IMAGE, not from `DATA_DIR`.
 
-    The registry is CODE-SHAPED data (it changes with the pull scripts, not with
-    the market), so it lives beside the repo's other shipped data files and is
-    read through `config.DATA_DIR` like everything else — a frozen build and a
-    source checkout must resolve it the same way
-    ([[feedback-a-path-that-resolves-differently-when-frozen-is-a-defect-family]]).
+    Deliberately NOT under `AEGIS_DATA_DIR`, for the same reason
+    `paper_portfolios.yaml` is not (`config.py:105-115`): the registry is
+    immutable, version-controlled data that ships with the code, and a
+    persistence volume mounted over `DATA_DIR` must never be able to shadow it.
+    A pull run with `AEGIS_DATA_DIR` pointed at another checkout writes its
+    CORPUS there and still reads THIS registry — which is what we want, because
+    the registry belongs to the commit that defined the parsers.
+
+    `_config.BACKEND_DIR` is read at CALL time so a test can repoint it.
     """
-    # Read the attribute at CALL time, never bind it at import time: a test
-    # that points `config.DATA_DIR` at a tmp_path must be able to.
-    return Path(_config.DATA_DIR) / "news_sources.yaml"
+    return Path(_config.BACKEND_DIR) / "data" / "news_sources.yaml"
 
 
 _CACHE: dict[str, Any] = {}
