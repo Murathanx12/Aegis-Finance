@@ -53,6 +53,10 @@ Big local artefacts that are deliberately NOT committed are catalogued in
   control for any net); lane **X** LLM-in-the-backtest REOPENED under the P1-P6 protocol (horizon/hold,
   belief elasticity from C1's counterfactuals, scenario forecasts, regime routing); joins from Qanat/Notes;
   and §12 the nine execution chunks (Sonnet researches, Opus builds, Fable validates).
+  **Session close 2026-09-11: `HANDOFF_2026-09-11_SESSION_CLOSE_ROOT_FIRST.md`** — five chunks landed
+  in one day (launcher, ledger rotation, the windowless-stdout root cause, the board, the universe, the
+  Morning click, Ask with tools, the 52-week target with its IBES backtest, the news corpus with 6,581
+  rows from 17 sources), fourteen defects found live, tonight's queue, and tomorrow's order.
 - `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.md` — SUPERSEDED 2026-09-11 (folded into lanes L/E
   above); keep for §3b's evidence-memory options and the Qwen3 measurements.
 

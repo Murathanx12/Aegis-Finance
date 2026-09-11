@@ -1,0 +1,1207 @@
+{
+  "n_sampled": 200,
+  "n_ok": 200,
+  "elapsed_s": 276.5,
+  "results": [
+    {
+      "symbol": "A",
+      "shortName": "Agilent Technologies, Inc.",
+      "status": "OK",
+      "latency_s": 3.607
+    },
+    {
+      "symbol": "AA",
+      "shortName": "Alcoa Corporation",
+      "status": "OK",
+      "latency_s": 1.332
+    },
+    {
+      "symbol": "AADX",
+      "shortName": "Applied Aerospace & Defense, In",
+      "status": "OK",
+      "latency_s": 1.314
+    },
+    {
+      "symbol": "AAL",
+      "shortName": "American Airlines Group, Inc.",
+      "status": "OK",
+      "latency_s": 1.702
+    },
+    {
+      "symbol": "AAMI",
+      "shortName": "Acadian Asset Management Inc.",
+      "status": "OK",
+      "latency_s": 1.335
+    },
+    {
+      "symbol": "AAOI",
+      "shortName": "Applied Optoelectronics, Inc.",
+      "status": "OK",
+      "latency_s": 1.327
+    },
+    {
+      "symbol": "AAON",
+      "shortName": "AAON, Inc.",
+      "status": "OK",
+      "latency_s": 1.559
+    },
+    {
+      "symbol": "AAP",
+      "shortName": "Advance Auto Parts Inc.",
+      "status": "OK",
+      "latency_s": 1.306
+    },
+    {
+      "symbol": "AAPL",
+      "shortName": "Apple Inc.",
+      "status": "OK",
+      "latency_s": 1.355
+    },
+    {
+      "symbol": "AAUC",
+      "shortName": "Allied Gold Corporation",
+      "status": "OK",
+      "latency_s": 1.342
+    },
+    {
+      "symbol": "AB",
+      "shortName": "AllianceBernstein Holding L.P.",
+      "status": "OK",
+      "latency_s": 1.354
+    },
+    {
+      "symbol": "ABAT",
+      "shortName": "American Battery Technology Com",
+      "status": "OK",
+      "latency_s": 1.514
+    },
+    {
+      "symbol": "ABBV",
+      "shortName": "AbbVie Inc.",
+      "status": "OK",
+      "latency_s": 1.328
+    },
+    {
+      "symbol": "ABCB",
+      "shortName": "Ameris Bancorp",
+      "status": "OK",
+      "latency_s": 1.33
+    },
+    {
+      "symbol": "ABCL",
+      "shortName": "AbCellera Biologics Inc.",
+      "status": "OK",
+      "latency_s": 1.469
+    },
+    {
+      "symbol": "ABEO",
+      "shortName": "Abeona Therapeutics Inc.",
+      "status": "OK",
+      "latency_s": 1.314
+    },
+    {
+      "symbol": "ABEV",
+      "shortName": "Ambev S.A.",
+      "status": "OK",
+      "latency_s": 1.529
+    },
+    {
+      "symbol": "ABG",
+      "shortName": "Asbury Automotive Group Inc",
+      "status": "OK",
+      "latency_s": 1.306
+    },
+    {
+      "symbol": "ABM",
+      "shortName": "ABM Industries Incorporated",
+      "status": "OK",
+      "latency_s": 1.341
+    },
+    {
+      "symbol": "ABNB",
+      "shortName": "Airbnb, Inc.",
+      "status": "OK",
+      "latency_s": 1.512
+    },
+    {
+      "symbol": "ABSI",
+      "shortName": "Absci Corporation",
+      "status": "OK",
+      "latency_s": 1.369
+    },
+    {
+      "symbol": "ABT",
+      "shortName": "Abbott Laboratories",
+      "status": "OK",
+      "latency_s": 1.653
+    },
+    {
+      "symbol": "ABUS",
+      "shortName": "Arbutus Biopharma Corporation",
+      "status": "OK",
+      "latency_s": 1.598
+    },
+    {
+      "symbol": "ABVX",
+      "shortName": "Abivax SA",
+      "status": "OK",
+      "latency_s": 1.32
+    },
+    {
+      "symbol": "ABX",
+      "shortName": "Abacus Global Management, Inc.",
+      "status": "OK",
+      "latency_s": 1.31
+    },
+    {
+      "symbol": "ACA",
+      "shortName": "Arcosa, Inc.",
+      "status": "OK",
+      "latency_s": 1.564
+    },
+    {
+      "symbol": "ACAD",
+      "shortName": "ACADIA Pharmaceuticals Inc.",
+      "status": "OK",
+      "latency_s": 1.392
+    },
+    {
+      "symbol": "ACB",
+      "shortName": "Aurora Cannabis Inc.",
+      "status": "OK",
+      "latency_s": 1.327
+    },
+    {
+      "symbol": "ACDC",
+      "shortName": "ProFrac Holding Corp.",
+      "status": "OK",
+      "latency_s": 1.339
+    },
+    {
+      "symbol": "ACEL",
+      "shortName": "Accel Entertainment, Inc.",
+      "status": "OK",
+      "latency_s": 1.336
+    },
+    {
+      "symbol": "ACGL",
+      "shortName": "Arch Capital Group Ltd.",
+      "status": "OK",
+      "latency_s": 1.3
+    },
+    {
+      "symbol": "ACHC",
+      "shortName": "Acadia Healthcare Company, Inc.",
+      "status": "OK",
+      "latency_s": 1.364
+    },
+    {
+      "symbol": "ACHR",
+      "shortName": "Archer Aviation Inc.",
+      "status": "OK",
+      "latency_s": 1.299
+    },
+    {
+      "symbol": "ACHV",
+      "shortName": "Achieve Life Sciences, Inc.",
+      "status": "OK",
+      "latency_s": 1.41
+    },
+    {
+      "symbol": "ACI",
+      "shortName": "Albertsons Companies, Inc.",
+      "status": "OK",
+      "latency_s": 1.353
+    },
+    {
+      "symbol": "ACIW",
+      "shortName": "ACI Worldwide, Inc.",
+      "status": "OK",
+      "latency_s": 1.322
+    },
+    {
+      "symbol": "ACLS",
+      "shortName": "Axcelis Technologies, Inc.",
+      "status": "OK",
+      "latency_s": 1.316
+    },
+    {
+      "symbol": "ACM",
+      "shortName": "AECOM",
+      "status": "OK",
+      "latency_s": 1.316
+    },
+    {
+      "symbol": "ACMR",
+      "shortName": "ACM Research, Inc.",
+      "status": "OK",
+      "latency_s": 1.35
+    },
+    {
+      "symbol": "ACN",
+      "shortName": "Accenture plc",
+      "status": "OK",
+      "latency_s": 1.3
+    },
+    {
+      "symbol": "ACNB",
+      "shortName": "ACNB Corporation",
+      "status": "OK",
+      "latency_s": 1.393
+    },
+    {
+      "symbol": "ACRS",
+      "shortName": "Aclaris Therapeutics, Inc.",
+      "status": "OK",
+      "latency_s": 1.31
+    },
+    {
+      "symbol": "ACT",
+      "shortName": "Enact Holdings, Inc.",
+      "status": "OK",
+      "latency_s": 1.479
+    },
+    {
+      "symbol": "ACVA",
+      "shortName": "ACV Auctions Inc.",
+      "status": "OK",
+      "latency_s": 1.316
+    },
+    {
+      "symbol": "AD",
+      "shortName": "Array Digital Infrastructure, I",
+      "status": "OK",
+      "latency_s": 1.3
+    },
+    {
+      "symbol": "ADBE",
+      "shortName": "Adobe Inc.",
+      "status": "OK",
+      "latency_s": 1.318
+    },
+    {
+      "symbol": "ADC",
+      "shortName": "Agree Realty Corporation",
+      "status": "OK",
+      "latency_s": 1.344
+    },
+    {
+      "symbol": "ADEA",
+      "shortName": "Adeia Inc.",
+      "status": "OK",
+      "latency_s": 1.334
+    },
+    {
+      "symbol": "ADI",
+      "shortName": "Analog Devices, Inc.",
+      "status": "OK",
+      "latency_s": 1.326
+    },
+    {
+      "symbol": "ADM",
+      "shortName": "Archer-Daniels-Midland Company",
+      "status": "OK",
+      "latency_s": 1.341
+    },
+    {
+      "symbol": "ADMA",
+      "shortName": "ADMA Biologics Inc",
+      "status": "OK",
+      "latency_s": 1.314
+    },
+    {
+      "symbol": "ADNT",
+      "shortName": "Adient plc",
+      "status": "OK",
+      "latency_s": 1.295
+    },
+    {
+      "symbol": "ADP",
+      "shortName": "Automatic Data Processing, Inc.",
+      "status": "OK",
+      "latency_s": 1.298
+    },
+    {
+      "symbol": "ADPT",
+      "shortName": "Adaptive Biotechnologies Corpor",
+      "status": "OK",
+      "latency_s": 1.317
+    },
+    {
+      "symbol": "ADSK",
+      "shortName": "Autodesk, Inc.",
+      "status": "OK",
+      "latency_s": 1.356
+    },
+    {
+      "symbol": "ADT",
+      "shortName": "ADT Inc.",
+      "status": "OK",
+      "latency_s": 1.305
+    },
+    {
+      "symbol": "ADTN",
+      "shortName": "ADTRAN Holdings, Inc.",
+      "status": "OK",
+      "latency_s": 1.466
+    },
+    {
+      "symbol": "ADUR",
+      "shortName": "Aduro Clean Technologies Inc.",
+      "status": "OK",
+      "latency_s": 1.365
+    },
+    {
+      "symbol": "ADUS",
+      "shortName": "Addus HomeCare Corporation",
+      "status": "OK",
+      "latency_s": 1.502
+    },
+    {
+      "symbol": "ADV",
+      "shortName": "Advantage Solutions Inc.",
+      "status": "OK",
+      "latency_s": 1.41
+    },
+    {
+      "symbol": "AEBI",
+      "shortName": "Aebi Schmidt Holding AG",
+      "status": "OK",
+      "latency_s": 1.304
+    },
+    {
+      "symbol": "AEE",
+      "shortName": "Ameren Corporation",
+      "status": "OK",
+      "latency_s": 1.321
+    },
+    {
+      "symbol": "AEG",
+      "shortName": "Aegon Ltd. New York Registry Sh",
+      "status": "OK",
+      "latency_s": 1.34
+    },
+    {
+      "symbol": "AEHR",
+      "shortName": "Aehr Test Systems",
+      "status": "OK",
+      "latency_s": 1.474
+    },
+    {
+      "symbol": "AEIS",
+      "shortName": "Advanced Energy Industries, Inc",
+      "status": "OK",
+      "latency_s": 1.367
+    },
+    {
+      "symbol": "AEM",
+      "shortName": "Agnico Eagle Mines Limited",
+      "status": "OK",
+      "latency_s": 1.489
+    },
+    {
+      "symbol": "AEO",
+      "shortName": "American Eagle Outfitters, Inc.",
+      "status": "OK",
+      "latency_s": 1.294
+    },
+    {
+      "symbol": "AEP",
+      "shortName": "American Electric Power Company",
+      "status": "OK",
+      "latency_s": 1.474
+    },
+    {
+      "symbol": "AER",
+      "shortName": "AerCap Holdings N.V.",
+      "status": "OK",
+      "latency_s": 1.31
+    },
+    {
+      "symbol": "AERO",
+      "shortName": "Grupo Aeromexico, S.A.B. de C.V",
+      "status": "OK",
+      "latency_s": 1.295
+    },
+    {
+      "symbol": "AES",
+      "shortName": "The AES Corporation",
+      "status": "OK",
+      "latency_s": 1.329
+    },
+    {
+      "symbol": "AESI",
+      "shortName": "Atlas Energy Solutions Inc.",
+      "status": "OK",
+      "latency_s": 1.298
+    },
+    {
+      "symbol": "AEVA",
+      "shortName": "Aeva Technologies, Inc.",
+      "status": "OK",
+      "latency_s": 1.322
+    },
+    {
+      "symbol": "AFG",
+      "shortName": "American Financial Group, Inc.",
+      "status": "OK",
+      "latency_s": 1.661
+    },
+    {
+      "symbol": "AFL",
+      "shortName": "AFLAC Incorporated",
+      "status": "OK",
+      "latency_s": 1.399
+    },
+    {
+      "symbol": "AFRM",
+      "shortName": "Affirm Holdings, Inc.",
+      "status": "OK",
+      "latency_s": 1.306
+    },
+    {
+      "symbol": "AG",
+      "shortName": "First Majestic Silver Corp.",
+      "status": "OK",
+      "latency_s": 1.471
+    },
+    {
+      "symbol": "AGCO",
+      "shortName": "AGCO Corporation",
+      "status": "OK",
+      "latency_s": 1.365
+    },
+    {
+      "symbol": "AGEN",
+      "shortName": "Agenus Inc.",
+      "status": "OK",
+      "latency_s": 1.554
+    },
+    {
+      "symbol": "AGI",
+      "shortName": "Alamos Gold Inc.",
+      "status": "OK",
+      "latency_s": 1.322
+    },
+    {
+      "symbol": "AGIO",
+      "shortName": "Agios Pharmaceuticals, Inc.",
+      "status": "OK",
+      "latency_s": 1.355
+    },
+    {
+      "symbol": "AGL",
+      "shortName": "agilon health, inc.",
+      "status": "OK",
+      "latency_s": 1.323
+    },
+    {
+      "symbol": "AGM",
+      "shortName": "Federal Agricultural Mortgage C",
+      "status": "OK",
+      "latency_s": 1.499
+    },
+    {
+      "symbol": "AGNC",
+      "shortName": "AGNC Investment Corp.",
+      "status": "OK",
+      "latency_s": 1.502
+    },
+    {
+      "symbol": "AGNT",
+      "shortName": "AGNT, Inc.",
+      "status": "OK",
+      "latency_s": 1.304
+    },
+    {
+      "symbol": "AGO",
+      "shortName": "Assured Guaranty Ltd.",
+      "status": "OK",
+      "latency_s": 1.488
+    },
+    {
+      "symbol": "AGRO",
+      "shortName": "Adecoagro S.A.",
+      "status": "OK",
+      "latency_s": 1.305
+    },
+    {
+      "symbol": "AGX",
+      "shortName": "Argan, Inc.",
+      "status": "OK",
+      "latency_s": 1.364
+    },
+    {
+      "symbol": "AGYS",
+      "shortName": "Agilysys, Inc.",
+      "status": "OK",
+      "latency_s": 1.382
+    },
+    {
+      "symbol": "AHCO",
+      "shortName": "AdaptHealth Corp.",
+      "status": "OK",
+      "latency_s": 1.324
+    },
+    {
+      "symbol": "AHR",
+      "shortName": "American Healthcare REIT, Inc.",
+      "status": "OK",
+      "latency_s": 1.387
+    },
+    {
+      "symbol": "AI",
+      "shortName": "C3.ai, Inc.",
+      "status": "OK",
+      "latency_s": 1.344
+    },
+    {
+      "symbol": "AIBZ",
+      "shortName": "Bitzero Holdings Inc.",
+      "status": "OK",
+      "latency_s": 1.347
+    },
+    {
+      "symbol": "AIG",
+      "shortName": "American International Group, I",
+      "status": "OK",
+      "latency_s": 1.346
+    },
+    {
+      "symbol": "AIIO",
+      "shortName": "Robo.ai Inc.",
+      "status": "OK",
+      "latency_s": 1.304
+    },
+    {
+      "symbol": "AIN",
+      "shortName": "Albany International Corporatio",
+      "status": "OK",
+      "latency_s": 1.308
+    },
+    {
+      "symbol": "AIOT",
+      "shortName": "PowerFleet, Inc.",
+      "status": "OK",
+      "latency_s": 1.308
+    },
+    {
+      "symbol": "AIP",
+      "shortName": "Arteris, Inc.",
+      "status": "OK",
+      "latency_s": 1.555
+    },
+    {
+      "symbol": "AIR",
+      "shortName": "AAR Corp.",
+      "status": "OK",
+      "latency_s": 1.69
+    },
+    {
+      "symbol": "AIRJ",
+      "shortName": "AirJoule Technologies Corporati",
+      "status": "OK",
+      "latency_s": 1.335
+    },
+    {
+      "symbol": "AIT",
+      "shortName": "Applied Industrial Technologies",
+      "status": "OK",
+      "latency_s": 1.353
+    },
+    {
+      "symbol": "AIZ",
+      "shortName": "Assurant, Inc.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "AJG",
+      "shortName": "Arthur J. Gallagher & Co.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "AKAM",
+      "shortName": "Akamai Technologies, Inc.",
+      "status": "OK",
+      "latency_s": 1.552
+    },
+    {
+      "symbol": "AKTS",
+      "shortName": "Aktis Oncology, Inc.",
+      "status": "OK",
+      "latency_s": 1.307
+    },
+    {
+      "symbol": "ALAB",
+      "shortName": "Astera Labs, Inc.",
+      "status": "OK",
+      "latency_s": 1.384
+    },
+    {
+      "symbol": "ALB",
+      "shortName": "Albemarle Corporation",
+      "status": "OK",
+      "latency_s": 1.308
+    },
+    {
+      "symbol": "ALC",
+      "shortName": "Alcon Inc.",
+      "status": "OK",
+      "latency_s": 1.313
+    },
+    {
+      "symbol": "ALG",
+      "shortName": "Alamo Group, Inc.",
+      "status": "OK",
+      "latency_s": 1.371
+    },
+    {
+      "symbol": "ALGM",
+      "shortName": "Allegro MicroSystems, Inc.",
+      "status": "OK",
+      "latency_s": 1.364
+    },
+    {
+      "symbol": "ALGN",
+      "shortName": "Align Technology, Inc.",
+      "status": "OK",
+      "latency_s": 1.352
+    },
+    {
+      "symbol": "ALGT",
+      "shortName": "Allegiant Travel Company",
+      "status": "OK",
+      "latency_s": 1.328
+    },
+    {
+      "symbol": "ALH",
+      "shortName": "Alliance Laundry Holdings Inc.",
+      "status": "OK",
+      "latency_s": 1.31
+    },
+    {
+      "symbol": "ALHC",
+      "shortName": "Alignment Healthcare, Inc.",
+      "status": "OK",
+      "latency_s": 1.357
+    },
+    {
+      "symbol": "ALIT",
+      "shortName": "Alight, Inc.",
+      "status": "OK",
+      "latency_s": 1.351
+    },
+    {
+      "symbol": "ALK",
+      "shortName": "Alaska Air Group, Inc.",
+      "status": "OK",
+      "latency_s": 1.365
+    },
+    {
+      "symbol": "ALKS",
+      "shortName": "Alkermes plc",
+      "status": "OK",
+      "latency_s": 1.328
+    },
+    {
+      "symbol": "ALKT",
+      "shortName": "Alkami Technology, Inc.",
+      "status": "OK",
+      "latency_s": 1.323
+    },
+    {
+      "symbol": "ALL",
+      "shortName": "Allstate Corporation (The)",
+      "status": "OK",
+      "latency_s": 1.348
+    },
+    {
+      "symbol": "ALLE",
+      "shortName": "Allegion plc",
+      "status": "OK",
+      "latency_s": 1.379
+    },
+    {
+      "symbol": "ALLO",
+      "shortName": "Allogene Therapeutics, Inc.",
+      "status": "OK",
+      "latency_s": 1.332
+    },
+    {
+      "symbol": "ALLY",
+      "shortName": "Ally Financial Inc.",
+      "status": "OK",
+      "latency_s": 1.312
+    },
+    {
+      "symbol": "ALM",
+      "shortName": "Almonty Industries Inc.",
+      "status": "OK",
+      "latency_s": 1.344
+    },
+    {
+      "symbol": "ALMR",
+      "shortName": "Alamar Biosciences, Inc.",
+      "status": "OK",
+      "latency_s": 1.339
+    },
+    {
+      "symbol": "ALMS",
+      "shortName": "Alumis Inc.",
+      "status": "OK",
+      "latency_s": 1.567
+    },
+    {
+      "symbol": "ALMU",
+      "shortName": "Aeluma, Inc.",
+      "status": "OK",
+      "latency_s": 1.427
+    },
+    {
+      "symbol": "ALNT",
+      "shortName": "Allient Inc.",
+      "status": "OK",
+      "latency_s": 1.305
+    },
+    {
+      "symbol": "ALNY",
+      "shortName": "Alnylam Pharmaceuticals, Inc.",
+      "status": "OK",
+      "latency_s": 1.319
+    },
+    {
+      "symbol": "ALOY",
+      "shortName": "REalloys Inc.",
+      "status": "OK",
+      "latency_s": 1.394
+    },
+    {
+      "symbol": "ALRM",
+      "shortName": "Alarm.com Holdings, Inc.",
+      "status": "OK",
+      "latency_s": 1.32
+    },
+    {
+      "symbol": "ALRS",
+      "shortName": "Alerus Financial Corporation",
+      "status": "OK",
+      "latency_s": 1.31
+    },
+    {
+      "symbol": "ALSN",
+      "shortName": "Allison Transmission Holdings, ",
+      "status": "OK",
+      "latency_s": 1.414
+    },
+    {
+      "symbol": "ALT",
+      "shortName": "Altimmune, Inc.",
+      "status": "OK",
+      "latency_s": 1.392
+    },
+    {
+      "symbol": "ALTO",
+      "shortName": "Alto Ingredients, Inc.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "ALV",
+      "shortName": "Autoliv, Inc.",
+      "status": "OK",
+      "latency_s": 1.34
+    },
+    {
+      "symbol": "ALX",
+      "shortName": "Alexander's, Inc.",
+      "status": "OK",
+      "latency_s": 1.379
+    },
+    {
+      "symbol": "AM",
+      "shortName": "Antero Midstream Corporation",
+      "status": "OK",
+      "latency_s": 1.309
+    },
+    {
+      "symbol": "AMAL",
+      "shortName": "Amalgamated Financial Corp.",
+      "status": "OK",
+      "latency_s": 1.337
+    },
+    {
+      "symbol": "AMAT",
+      "shortName": "Applied Materials, Inc.",
+      "status": "OK",
+      "latency_s": 1.317
+    },
+    {
+      "symbol": "AMBA",
+      "shortName": "Ambarella, Inc.",
+      "status": "OK",
+      "latency_s": 1.378
+    },
+    {
+      "symbol": "AMBP",
+      "shortName": "Ardagh Metal Packaging S.A.",
+      "status": "OK",
+      "latency_s": 1.307
+    },
+    {
+      "symbol": "AMBQ",
+      "shortName": "Ambiq Micro, Inc.",
+      "status": "OK",
+      "latency_s": 1.308
+    },
+    {
+      "symbol": "AMC",
+      "shortName": "AMC Entertainment Holdings, Inc",
+      "status": "OK",
+      "latency_s": 1.308
+    },
+    {
+      "symbol": "AMCR",
+      "shortName": "Amcor plc",
+      "status": "OK",
+      "latency_s": 1.328
+    },
+    {
+      "symbol": "AMCX",
+      "shortName": "AMC Global Media Inc.",
+      "status": "OK",
+      "latency_s": 1.374
+    },
+    {
+      "symbol": "AMD",
+      "shortName": "Advanced Micro Devices, Inc.",
+      "status": "OK",
+      "latency_s": 1.301
+    },
+    {
+      "symbol": "AME",
+      "shortName": "AMETEK, Inc.",
+      "status": "OK",
+      "latency_s": 1.298
+    },
+    {
+      "symbol": "AMG",
+      "shortName": "Affiliated Managers Group, Inc.",
+      "status": "OK",
+      "latency_s": 1.383
+    },
+    {
+      "symbol": "AMGN",
+      "shortName": "Amgen Inc.",
+      "status": "OK",
+      "latency_s": 1.309
+    },
+    {
+      "symbol": "AMH",
+      "shortName": "American Homes 4 Rent",
+      "status": "OK",
+      "latency_s": 1.307
+    },
+    {
+      "symbol": "AMKR",
+      "shortName": "Amkor Technology, Inc.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "AMLX",
+      "shortName": "Amylyx Pharmaceuticals, Inc.",
+      "status": "OK",
+      "latency_s": 1.302
+    },
+    {
+      "symbol": "AMN",
+      "shortName": "AMN Healthcare Services Inc",
+      "status": "OK",
+      "latency_s": 1.353
+    },
+    {
+      "symbol": "AMP",
+      "shortName": "Ameriprise Financial, Inc.",
+      "status": "OK",
+      "latency_s": 1.318
+    },
+    {
+      "symbol": "AMPG",
+      "shortName": "Amplitech Group, Inc.",
+      "status": "OK",
+      "latency_s": 1.303
+    },
+    {
+      "symbol": "AMPH",
+      "shortName": "Amphastar Pharmaceuticals, Inc.",
+      "status": "OK",
+      "latency_s": 1.308
+    },
+    {
+      "symbol": "AMPL",
+      "shortName": "Amplitude, Inc.",
+      "status": "OK",
+      "latency_s": 1.305
+    },
+    {
+      "symbol": "AMPX",
+      "shortName": "Amprius Technologies, Inc.",
+      "status": "OK",
+      "latency_s": 1.38
+    },
+    {
+      "symbol": "AMR",
+      "shortName": "Alpha Metallurgical Resources, ",
+      "status": "OK",
+      "latency_s": 1.309
+    },
+    {
+      "symbol": "AMRC",
+      "shortName": "Ameresco, Inc.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "AMRX",
+      "shortName": "Amneal Pharmaceuticals, Inc.",
+      "status": "OK",
+      "latency_s": 1.331
+    },
+    {
+      "symbol": "AMRZ",
+      "shortName": "Amrize Ltd",
+      "status": "OK",
+      "latency_s": 1.314
+    },
+    {
+      "symbol": "AMSC",
+      "shortName": "American Superconductor Corpora",
+      "status": "OK",
+      "latency_s": 1.314
+    },
+    {
+      "symbol": "AMSF",
+      "shortName": "AMERISAFE, Inc.",
+      "status": "OK",
+      "latency_s": 1.412
+    },
+    {
+      "symbol": "AMT",
+      "shortName": "American Tower Corporation (REI",
+      "status": "OK",
+      "latency_s": 1.442
+    },
+    {
+      "symbol": "AMTB",
+      "shortName": "Amerant Bancorp Inc.",
+      "status": "OK",
+      "latency_s": 1.315
+    },
+    {
+      "symbol": "AMTM",
+      "shortName": "Amentum Holdings, Inc.",
+      "status": "OK",
+      "latency_s": 1.32
+    },
+    {
+      "symbol": "AMX",
+      "shortName": "America Movil, S.A.B. de C.V.",
+      "status": "OK",
+      "latency_s": 1.346
+    },
+    {
+      "symbol": "AMZN",
+      "shortName": "Amazon.com, Inc.",
+      "status": "OK",
+      "latency_s": 1.312
+    },
+    {
+      "symbol": "AN",
+      "shortName": "AutoNation, Inc.",
+      "status": "OK",
+      "latency_s": 1.323
+    },
+    {
+      "symbol": "ANAB",
+      "shortName": "AnaptysBio, Inc.",
+      "status": "OK",
+      "latency_s": 1.36
+    },
+    {
+      "symbol": "ANDE",
+      "shortName": "The Andersons, Inc.",
+      "status": "OK",
+      "latency_s": 1.377
+    },
+    {
+      "symbol": "ANDG",
+      "shortName": "Andersen Group Inc.",
+      "status": "OK",
+      "latency_s": 2.277
+    },
+    {
+      "symbol": "ANET",
+      "shortName": "Arista Networks, Inc.",
+      "status": "OK",
+      "latency_s": 1.373
+    },
+    {
+      "symbol": "ANF",
+      "shortName": "Abercrombie & Fitch Company",
+      "status": "OK",
+      "latency_s": 1.437
+    },
+    {
+      "symbol": "ANGI",
+      "shortName": "Angi Inc.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "ANGO",
+      "shortName": "AngioDynamics, Inc.",
+      "status": "OK",
+      "latency_s": 1.369
+    },
+    {
+      "symbol": "ANGX",
+      "shortName": "Angel Studios, Inc.",
+      "status": "OK",
+      "latency_s": 1.489
+    },
+    {
+      "symbol": "ANIP",
+      "shortName": "ANI Pharmaceuticals, Inc.",
+      "status": "OK",
+      "latency_s": 1.356
+    },
+    {
+      "symbol": "ANNX",
+      "shortName": "Annexon, Inc.",
+      "status": "OK",
+      "latency_s": 1.316
+    },
+    {
+      "symbol": "ANRO",
+      "shortName": "Alto Neuroscience, Inc.",
+      "status": "OK",
+      "latency_s": 1.49
+    },
+    {
+      "symbol": "AON",
+      "shortName": "Aon plc",
+      "status": "OK",
+      "latency_s": 1.34
+    },
+    {
+      "symbol": "AORT",
+      "shortName": "Artivion, Inc.",
+      "status": "OK",
+      "latency_s": 1.414
+    },
+    {
+      "symbol": "AOS",
+      "shortName": "A.O. Smith Corporation",
+      "status": "OK",
+      "latency_s": 1.523
+    },
+    {
+      "symbol": "AOSL",
+      "shortName": "Alpha and Omega Semiconductor L",
+      "status": "OK",
+      "latency_s": 1.344
+    },
+    {
+      "symbol": "APA",
+      "shortName": "APA Corporation",
+      "status": "OK",
+      "latency_s": 1.485
+    },
+    {
+      "symbol": "APAM",
+      "shortName": "Artisan Partners Asset Manageme",
+      "status": "OK",
+      "latency_s": 1.317
+    },
+    {
+      "symbol": "APD",
+      "shortName": "Air Products and Chemicals, Inc",
+      "status": "OK",
+      "latency_s": 1.34
+    },
+    {
+      "symbol": "APEI",
+      "shortName": "American Public Education, Inc.",
+      "status": "OK",
+      "latency_s": 1.472
+    },
+    {
+      "symbol": "APG",
+      "shortName": "APi Group Corporation",
+      "status": "OK",
+      "latency_s": 1.318
+    },
+    {
+      "symbol": "APGE",
+      "shortName": "Apogee Therapeutics, Inc.",
+      "status": "OK",
+      "latency_s": 1.391
+    },
+    {
+      "symbol": "APH",
+      "shortName": "Amphenol Corporation",
+      "status": "OK",
+      "latency_s": 1.304
+    },
+    {
+      "symbol": "APLD",
+      "shortName": "Applied Digital Corporation",
+      "status": "OK",
+      "latency_s": 1.296
+    },
+    {
+      "symbol": "APLE",
+      "shortName": "Apple Hospitality REIT, Inc.",
+      "status": "OK",
+      "latency_s": 1.305
+    },
+    {
+      "symbol": "APO",
+      "shortName": "Apollo Global Management, Inc. ",
+      "status": "OK",
+      "latency_s": 1.507
+    },
+    {
+      "symbol": "APOG",
+      "shortName": "Apogee Enterprises, Inc.",
+      "status": "OK",
+      "latency_s": 1.311
+    },
+    {
+      "symbol": "APP",
+      "shortName": "Applovin Corporation",
+      "status": "OK",
+      "latency_s": 1.3
+    },
+    {
+      "symbol": "APPF",
+      "shortName": "AppFolio, Inc.",
+      "status": "OK",
+      "latency_s": 1.312
+    },
+    {
+      "symbol": "APPN",
+      "shortName": "Appian Corporation",
+      "status": "OK",
+      "latency_s": 1.325
+    },
+    {
+      "symbol": "APPS",
+      "shortName": "Digital Turbine, Inc.",
+      "status": "OK",
+      "latency_s": 1.472
+    }
+  ]
+}

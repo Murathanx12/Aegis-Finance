@@ -1,0 +1,32 @@
+us_symbol,local_symbol,local_exchange,source_country,us_short_name_yfinance,us_exchange_yfinance,verified,notes
+BABA,9988.HK,HKEX,CN,Alibaba Group Holding Limited,NYQ,YES,Alibaba; NYSE ADR + HK primary listing (dual primary since 2019/2022 conversion)
+TSM,2330.TW,TWSE,TW,Taiwan Semiconductor Manufactur,NYQ,YES,TSMC; NYSE ADR + Taiwan primary
+SONY,6758.T,TSE,JP,Sony Group Corporation,NYQ,YES,Sony Group; NYSE ADR + Tokyo primary
+TM,7203.T,TSE,JP,Toyota Motor Corporation,NYQ,YES,Toyota Motor; NYSE ADR + Tokyo primary
+PDD,,,CN,PDD Holdings Inc.,NMS,YES,"PDD Holdings (Pinduoduo/Temu); NASDAQ ADR, no confirmed HK dual listing found"
+JD,9618.HK,HKEX,CN,"JD.com, Inc.",NMS,YES,JD.com; NASDAQ ADR + HK secondary listing
+NTES,9999.HK,HKEX,CN,"NetEase, Inc.",NMS,YES,NetEase; NASDAQ ADR + HK secondary listing
+BIDU,9888.HK,HKEX,CN,"Baidu, Inc.",NMS,YES,Baidu; NASDAQ ADR + HK secondary listing
+TCOM,9961.HK,HKEX,CN,Trip.com Group Limited,NMS,YES,Trip.com Group; NASDAQ + HK secondary listing
+LI,2015.HK,HKEX,CN,Li Auto Inc.,NMS,YES,Li Auto; NASDAQ ADR + HK secondary listing
+NIO,9866.HK,HKEX,CN,NIO Inc.,NYQ,YES,NIO Inc; NYSE ADR + HK secondary listing
+XPEV,9868.HK,HKEX,CN,XPeng Inc.,NYQ,YES,XPeng; NYSE ADR + HK secondary listing
+BILI,9626.HK,HKEX,CN,Bilibili Inc.,NMS,YES,Bilibili; NASDAQ ADR + HK secondary listing
+HDB,,NSE/BSE,IN,HDFC Bank Limited,NYQ,YES,"HDFC Bank; NYSE ADR, India primary listing (HDFCBANK.NS)"
+IBN,,NSE/BSE,IN,ICICI Bank Limited,NYQ,YES,"ICICI Bank; NYSE ADR, India primary listing (ICICIBANK.NS)"
+WIT,,NSE/BSE,IN,Wipro Limited,NYQ,YES,"Wipro; NYSE ADR, India primary listing (WIPRO.NS)"
+INFY,,NSE/BSE,IN,Infosys Limited,NYQ,YES,"Infosys; NYSE ADR, India primary listing (INFY.NS)"
+SE,,,SG,Sea Limited,NYQ,YES,"Sea Limited; NYSE listing, Singapore-headquartered, no separate local listing found"
+GRAB,,,SG,Grab Holdings Limited,NMS,YES,"Grab Holdings; NASDAQ listing, Singapore-headquartered, no separate local listing found"
+CPNG,,,KR,"Coupang, Inc.",NYQ,YES,"Coupang; NYSE listing, Korea-headquartered, no separate local listing found"
+KB,105560.KS,KRX,KR,KB Financial Group Inc,NYQ,YES,KB Financial Group; NYSE ADR + Korea primary
+SHG,055550.KS,KRX,KR,Shinhan Financial Group Co Ltd,NYQ,YES,Shinhan Financial Group; NYSE ADR + Korea primary
+LPL,034220.KS,KRX,KR,"LG Display Co, Ltd AMERICAN DEP",NYQ,YES,LG Display Co Ltd (NOT LG Corp — LPL is LG Display's NYSE ADR ticker); NYSE ADR + Korea primary
+SKM,017670.KS,KRX,KR,"SK Telecom Co., Ltd.",NYQ,YES,SK Telecom; NYSE ADR + Korea primary
+MFG,8411.T,TSE,JP,"Mizuho Financial Group, Inc. Sp",NYQ,YES,Mizuho Financial Group; NYSE ADR + Tokyo primary (TSE code 8411)
+MUFG,8306.T,TSE,JP,"Mitsubishi UFJ Financial Group,",NYQ,YES,Mitsubishi UFJ Financial Group; NYSE ADR + Tokyo primary (TSE code 8306)
+SMFG,8316.T,TSE,JP,Sumitomo Mitsui Financial Group,NYQ,YES,Sumitomo Mitsui Financial Group; NYSE ADR + Tokyo primary
+NMR,8604.T,TSE,JP,Nomura Holdings Inc,NYQ,YES,Nomura Holdings; NYSE ADR + Tokyo primary
+HMC,7267.T,TSE,JP,"Honda Motor Company, Ltd.",NYQ,YES,Honda Motor; NYSE ADR + Tokyo primary
+CAJ,7751.T,TSE,JP,,,DELISTED,"Canon Inc NYSE ADR ticker CAJ — yfinance confirms ""possibly delisted; no price data found"" on a 5-day history pull (2026-09-11); Canon's NYSE ADR appears to have been delisted, consistent with the broader trend of Japanese issuers dropping NYSE ADR listings for OTC/Pink Sheets to cut Sarbanes-Oxley compliance cost. Tokyo primary listing (7751.T) is presumably still live but not independently re-verified here."
+MRAAY,6981.T,TSE,JP,Murata Manufacturing Inc.,PNK,YES,"CORRECTED: ticker MRAAY is Murata Manufacturing's OTC ADR (confirmed by yfinance shortName), NOT Mitsubishi Corp as originally guessed in this probe's candidate list — Mitsubishi Corp's real ADR ticker is MSBHY. Murata Manufacturing's TSE code is 6981, not 8058 (8058 is Mitsubishi Corp's TSE code, which was the source of the original mix-up)."

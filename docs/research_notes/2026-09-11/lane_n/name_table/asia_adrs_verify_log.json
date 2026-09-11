@@ -1,0 +1,250 @@
+[
+  {
+    "symbol": "BABA",
+    "short_name": "Alibaba Group Holding Limited",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 3.05
+  },
+  {
+    "symbol": "TSM",
+    "short_name": "Taiwan Semiconductor Manufactur",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.51
+  },
+  {
+    "symbol": "SONY",
+    "short_name": "Sony Group Corporation",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.35
+  },
+  {
+    "symbol": "TM",
+    "short_name": "Toyota Motor Corporation",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.33
+  },
+  {
+    "symbol": "PDD",
+    "short_name": "PDD Holdings Inc.",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.36
+  },
+  {
+    "symbol": "JD",
+    "short_name": "JD.com, Inc.",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.56
+  },
+  {
+    "symbol": "NTES",
+    "short_name": "NetEase, Inc.",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.34
+  },
+  {
+    "symbol": "BIDU",
+    "short_name": "Baidu, Inc.",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.36
+  },
+  {
+    "symbol": "TCOM",
+    "short_name": "Trip.com Group Limited",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.32
+  },
+  {
+    "symbol": "LI",
+    "short_name": "Li Auto Inc.",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.37
+  },
+  {
+    "symbol": "NIO",
+    "short_name": "NIO Inc.",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.37
+  },
+  {
+    "symbol": "XPEV",
+    "short_name": "XPeng Inc.",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.3
+  },
+  {
+    "symbol": "BILI",
+    "short_name": "Bilibili Inc.",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.31
+  },
+  {
+    "symbol": "HDB",
+    "short_name": "HDFC Bank Limited",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.31
+  },
+  {
+    "symbol": "IBN",
+    "short_name": "ICICI Bank Limited",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.32
+  },
+  {
+    "symbol": "WIT",
+    "short_name": "Wipro Limited",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.32
+  },
+  {
+    "symbol": "INFY",
+    "short_name": "Infosys Limited",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.31
+  },
+  {
+    "symbol": "SE",
+    "short_name": "Sea Limited",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.36
+  },
+  {
+    "symbol": "GRAB",
+    "short_name": "Grab Holdings Limited",
+    "currency": "USD",
+    "exchange": "NMS",
+    "status": "OK",
+    "latency_s": 1.34
+  },
+  {
+    "symbol": "CPNG",
+    "short_name": "Coupang, Inc.",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.33
+  },
+  {
+    "symbol": "KB",
+    "short_name": "KB Financial Group Inc",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.39
+  },
+  {
+    "symbol": "SHG",
+    "short_name": "Shinhan Financial Group Co Ltd",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.53
+  },
+  {
+    "symbol": "LPL",
+    "short_name": "LG Display Co, Ltd AMERICAN DEP",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.55
+  },
+  {
+    "symbol": "SKM",
+    "short_name": "SK Telecom Co., Ltd.",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.38
+  },
+  {
+    "symbol": "MFG",
+    "short_name": "Mizuho Financial Group, Inc. Sp",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.38
+  },
+  {
+    "symbol": "MUFG",
+    "short_name": "Mitsubishi UFJ Financial Group,",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.49
+  },
+  {
+    "symbol": "SMFG",
+    "short_name": "Sumitomo Mitsui Financial Group",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.34
+  },
+  {
+    "symbol": "NMR",
+    "short_name": "Nomura Holdings Inc",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.37
+  },
+  {
+    "symbol": "HMC",
+    "short_name": "Honda Motor Company, Ltd.",
+    "currency": "USD",
+    "exchange": "NYQ",
+    "status": "OK",
+    "latency_s": 1.39
+  },
+  {
+    "symbol": "CAJ",
+    "short_name": null,
+    "currency": null,
+    "exchange": null,
+    "status": "EMPTY_INFO",
+    "latency_s": 1.49
+  },
+  {
+    "symbol": "MRAAY",
+    "short_name": "Murata Manufacturing Inc.",
+    "currency": "USD",
+    "exchange": "PNK",
+    "status": "OK",
+    "latency_s": 1.51
+  }
+]

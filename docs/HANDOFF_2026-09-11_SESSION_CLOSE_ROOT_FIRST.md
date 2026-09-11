@@ -1,0 +1,109 @@
+# HANDOFF 2026-09-11 (session close) — root first: five chunks in one day, and the loop that grades itself
+
+**From:** Fable 5.1 as the validating session; Sonnet did the research (nine reports), Opus did the
+building (chunks 1, 2, 3, 3b, 4 — the last two agents were cut by the account's session limit at
+22:50 HKT after committing their work). $0 LLM spend by the programme itself.
+**Read order:** this file → `ROADMAP_2026-09-11_ROOT_FIRST_THE_OPERATOR_BOARD_AND_THE_LEARNING_LOOP.md`
+(the one TIER 1 roadmap: roots R1-R5, lanes O/N/L/B/E/F/A/M/X, §12 chunks) →
+`HANDOFF_2026-09-11_FABLE_TO_OPUS_BUILD_PLAN.md` §6b (what each chunk landed, with commits) →
+`AEGIS_VISION_2026-08-28_MURAT_IN_HIS_OWN_WORDS.md` §6 and §6b (Murat's two briefs today, verbatim)
+→ `CLAUDE.md`.
+
+---
+
+## 0. RESULTS SCOREBOARD
+
+| | |
+|---|---|
+| **RESULT IMPROVEMENT** | **NONE on strategies.** No book moved; no lane promoted. |
+| **the one measured result of the day** | the **52-week target backtest** (390,368 IBES cells, 7,439 names, 228 months 2005-2023, walk-forward): the de-biased consensus beats the raw consensus on MAE and hit rate in **every** era (pooled MAE 45.3 vs 48.8, hit 48.4% vs 39.2%), and **a drift-only control beats both on MAE in every era** (37.6 pooled). That drift bar is what `TRIAL-CALIBRATED-TARGET-UPSIDE-1` (drafted, UNSIGNED) must clear. |
+| best historical net strategy vs market | none surviving its own control above the tradability floor (unchanged) |
+| best forward paper strategy | none; the six books were −4.43% aggregate in week one (09-09); no newer venue read this session |
+| only live lane | **R2** (local 7B, anonymised monthly digest) +16.19%/yr over its shuffled control, t 3.92; panel B still `PENDING_MODEL` (the model server was down all day; started at close for tonight's queue) |
+| independent selectors with evidence | **one** — unchanged |
+| **defects found live and fixed** | (1) the packaged app ran with **no API keys** (`config.py` rooted `.env` on `__file__`); (2) the guide repeated because pywebview's private mode wiped storage; (3) **every failed launch was `sys.stdout.isatty()` in a windowless process** (uvicorn dies before binding; the old build, the pythonw shortcut); (4) a second Aegis instance's `stop_if_owned` killed the first's model server (ownership was per checkout); (5) a test appended to the live evidence ledger on every suite run; (6) the desktop backend ran Railway's twelve scheduled jobs on the laptop; (7) the stock page 404'd on all but twelve symbols; (8) heavy endpoints timed out at 45 s on a cold laptop; (9) "Stocks Analyzed 56" was five curated names per sector; (10) the page's "expected return" was a 5-year simulation mean beside a 1-year consensus, with the consensus clipped to a 30% mega-cap ceiling; (11) a ten-year look-ahead the Alpaca backfill would have written (a 2015 headline labelled at the 2025-01-02 open); (12) the capped yfinance sweep re-pulled the same 300 names for ever; (13) the GDELT theme sweep produced nothing and looked healthy; (14) NVDA's p10 sat above spot (band withheld with reason). |
+| tests | **7,966 → 8,201 on `68d6154`** (my run); chunk 4 adds 111 lane-N tests; **merged tree `4f59721`: 8,314 passed / 20 skipped / 0 failed** (my run, 574 s) |
+| CI | green through `68d6154`; one red (`823fbf1`, a Windows-absolute path in a sandbox test) fixed in `64a9197`; the merge `4f59721` is being watched |
+| **data pulled tonight (lane N, first real run)** | Alpaca/Benzinga **3,799** rows (the 2015 backfill resumed from a cursor — the 83.6% stall is fixed) · GDELT 1,019 · SEC EDGAR 8-K current 409 · yfinance news 793 · Google News ×10 regions 352 (zh-CN, zh-TW, ja, ko, en-HK, en-SG, en-IN, en-AU, en-GB, en-US) · Nikkei Asia 50 · r/algotrading 25 · r/SecurityAnalysis 25 · Quantocracy 10 — **6,581 rows, 17 sources, every row with `first_seen_utc`**; analyst snapshot day 1: 250 symbols (PARTIAL, Yahoo throttled at ~3 s/symbol) |
+| E1 append | 0 rows appended from 6,014 corpus rows: 808 await the next session's bars, 2,562 predate the 2025-01-02 bar table (the backfill's 2015 rows), 0 PIT violations |
+| the app | **`Aegis.lnk` → `dist/AegisDesktop/AegisDesktop.exe`, the thin launcher (37 MB)**, rebuilt after the stdout fix and verified from a no-console launch: backend up in 2.3 s, keys visible, one scheduled job |
+| evidence memory | rotated into monthly files (102,029 rows in → 102,029 out); the live month is untracked; a closed month left untracked fails a test |
+
+---
+
+## 1. WHAT LANDED, BY CHUNK (commits in the build plan §6b)
+
+- **Chunk 1** — config root honours `AEGIS_REPO_ROOT`; an AST gate over every `__file__`-rooted path
+  (24 allow-listed, 10 of them retired by the launcher); browser storage persists; Ask starts the model.
+- **Chunk 2** — the thin launcher (pull → pip-if-hash-changed → export-if-frontend-changed → the shell
+  from the checkout's venv under a job object; `git_head` on `/api/health`); ledger rotation; ownership
+  by PID; scheduler and warm loops off in desktop mode; the suite's ledger guard; the terminal repo's
+  handoff brought to 09-11 (`aegis-alpha-terminal` `e613082`).
+- **Chunk 3** — T0 the windowless-stdout fix; one `__ticker__` shell for every symbol; `cache_swr_202`
+  (202 + progress instead of a timeout); the desktop screener over the 3,056-name universe in two tiers
+  (all scorecards at 0.1 s, the top 200 by `p_beat` through the Monte Carlo in 10.2 min); the universe
+  page; the board (`/tree`, `/file`, `/app-log`, `/ledger`; secrets refused by name); the sealed-month
+  guard.
+- **Chunk 3b** — the Morning click (seven declared steps, one receipt per day; a real run: 389 s);
+  Ask with read-only tools and a deterministic router; M3 hindsight-safe retrieval; **O11 the 52-week
+  target with no caps** (isotonic calibration in place of every clip; the 12-month figure is
+  `paths[252]`, never a root; the audit script; the IBES backtest above); M4 Murphy's Brier split on
+  the board.
+- **Chunk 4** — the source registry (24 sources, `pit_grade` enforced; an id not in it cannot be
+  pulled); the corpus writer with cursors, dedupe, receipts, the zero-twice RED rule; entity resolution
+  with a counted refusal (name table 230 of 3,056 named — the analyst snapshot's `--update-name-table`
+  closes it); the daily analyst snapshot with checkpoints; the E1 nightly append with a PIT anchor per
+  grade and re-verification; the coverage card; **the real pulls**.
+
+## 2. WHAT THE RESEARCH SAID (nine Sonnet reports, all under `research_notes/2026-09-11/`)
+
+News coverage (GDELT → Google News RSS regions → Alpaca → AKShare; World Monitor is AGPL, take its
+schema; God's Eye is sensors, not news) · nobody outside has multi-year net OOS evidence vs SPY ·
+attention nets: the next text design is typed events + a tabular head, not a new encoder; GBM is the
+mandatory control for any net · Qanat/Notes joins (read-only MCP surface, published-anomaly cadence,
+decay-blended weights) · the average-investor problem quantified (activity costs ~6.5 pp/yr; robo-
+advisors never pick or review; no product does goal intake AND daily control; the eight classic rules
+all decay OOS after costs) · the learning loop (ExpeL winner-vs-loser distillation; "Profit Mirage"/
+"Alpha Illusion" P1-P6 protocol; the anonymisation gap must be measured) · repos (Alpaca MCP,
+edgartools, Metaculus forecasting-tools, the EDT event taxonomy) · social (no audited P&L anywhere; X
+pay-per-read, Reddit bars ML use; notify-only before execution) · patents and data (six expired patents
+to mine; SEC XBRL `filed` dates; Form 25/15 delistings; daily options-implied-move snapshots) ·
+Headline Arena (a fit as read-only independent settlement, ledger first; perpetual licence on
+submitted text; registration is Murat's) · idea round 2 (the TAQ cost model, the Frazzini
+disposition-overhang conditioner reached by two angles independently, low-SI × high-turnover
+long-only, insider clusters by length, the abstention book vs the buy-and-hold receipt) · two specs a
+builder can implement: `spec_events_and_calibration.md` (39 event types + `no_event`, the JSON schema,
+a 20-row golden set, Murphy's decomposition, the ledger fields, the retrieval predicate) and
+`spec_price_targets.md` (built in 3b).
+
+## 3. TONIGHT'S QUEUE (started at close, from the terminal — the "from the app" acceptance is tomorrow's)
+
+`NIGHT_QUEUE="P6_bars_and_regret:60,E1_append:30,N3_frozen_embedding_head:60,R2_widened_panelB:150,G3_evolve_v2:240"`,
+the model server started unbound beforehand. P6 refreshes the bars to today (they ended 09-08), E1
+labels the 808 pending rows, N3 refits on the grown panel, R2 finally reads panel B (the AMNESIA canary
+must be re-run before its number is quoted), G3 resumes from its search state with seeds outside the
+union. Receipts under `night_factory_2026-09-11/`. **Check the overlap against the previous G3 log
+before crediting discovery** (protocol §9).
+
+## 4. FOR TOMORROW (chunk 3c, then 5), in order
+
+1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.
+2. **Condition the target's error quantiles on the upside tercile** (NVDA's band was withheld for this);
+   then the page shows the band again. Run `scripts/price_target_audit.py` on Murat's names.
+3. **Run the Morning from the app** (the launcher, then the board's button) and the night queue from
+   the app — the acceptance test that was deferred twice.
+4. **Analyst snapshot day 2** with `--update-name-table` (names the other 2,826 symbols, which lifts
+   GDELT/EDGAR resolution from ~3%); re-run `news_pull --source all --resume` (the GDELT theme sweep
+   fires for the first time; Alpaca continues the backfill; give the backfill `--since 2025-01-01`
+   until older bars exist, or pull older bars).
+5. **Chunk 5** — books with twins (B1-B5), the M1 ledger fields, Headline Arena (M6; Murat registers).
+6. **Terminal repo:** the tracker's newest day file is 2026-09-02, so the scorecard vintage is
+   2026-09-02 — run the tracker there, then `python -m scripts.potential_universe_run`.
+7. **Do not** quote the target backtest's per-era table without the drift control beside it; do not
+   rank on the calibrated upside before the prereg is signed; do not add a router.
+
+## 5. MUST NOT REGRESS (added today; cumulative list in the roadmap §6 and §13)
+
+17-28 in the roadmap. The two that cost the most today: **a windowless process has no stdout** (bind
+the streams, never ask `isatty`; test with `Start-Process`), and **ownership is per process, not per
+checkout**.

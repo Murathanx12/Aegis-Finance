@@ -1,0 +1,562 @@
+# Lane N-B — source registry draft, in World Monitor's shape.
+# Built 2026-09-11 by the lane-N data-acquisition probe (read-only on the repo;
+# this file lives in the scratchpad, not backend/data/news_sources.yaml — the
+# Opus builder in chunk 4 copies/adapts what it wants).
+#
+# Fields per source: id, provider, region, language, tier, licence, method,
+# endpoint_or_feed, auth, rate_limit, pit_grade, stamp_field, stamp_tz,
+# ticker_tags, body_available, notes.
+#
+# pit_grade legend (roadmap N-B / invariant 20):
+#   native_stamp   — the provider's own first-publish timestamp is trustworthy
+#                     and is never silently backfilled/edited (safe to LABEL).
+#   first_seen_only — no trustworthy native stamp; only OUR OWN first_seen_utc
+#                     (written at ingest) is safe to use as the PIT anchor.
+#   index_state    — the feed reflects current index/search state, can be
+#                     edited/reordered/backfilled after the fact by the
+#                     provider; NEVER a label source (invariant 20), breadth
+#                     only.
+
+sources:
+
+  # ---------------------------------------------------------------------
+  # Alpaca / Benzinga — the PIT-grade, ticker-tagged feed (already in stack
+  # partially; finish the 83.6% backfill per N-A). NOT probed here: no
+  # ALPACA_API_KEY_ID / ALPACA_API_SECRET_KEY in this environment.
+  # ---------------------------------------------------------------------
+  - id: alpaca_benzinga_news
+    provider: Alpaca (Benzinga-sourced)
+    region: GLOBAL
+    language: en
+    tier: 1
+    licence: Alpaca Market Data Agreement (bundled with brokerage account; Benzinga content)
+    method: api
+    endpoint_or_feed: "https://data.alpaca.markets/v1beta1/news"
+    auth: "key:ALPACA_API_KEY_ID + key:ALPACA_API_SECRET_KEY"
+    rate_limit: "200 req/min free tier (10k on unlimited plan)"
+    pit_grade: native_stamp
+    stamp_field: created_at
+    stamp_tz: UTC (ISO 8601, Z-suffixed)
+    ticker_tags: true
+    body_available: true
+    notes: >
+      History to 2015, ~130 articles/day historically. Already the PIT-grade
+      backbone in this stack (news_intelligence.py does not yet call it — the
+      GDELT+yfinance module is the CURRENT implementation; Alpaca News is the
+      N-A corpus writer's first source in order). Not probed: both env keys
+      absent (AEGIS_IGNORE_DOTENV-style probe was not attempted; .env is off
+      limits per task instructions). Resume cursor: created_at (incremental).
+
+  # ---------------------------------------------------------------------
+  # GDELT DOC 2.0
+  # ---------------------------------------------------------------------
+  - id: gdelt_doc_v2
+    provider: GDELT Project
+    region: GLOBAL
+    language: multi (65 languages)
+    tier: 1
+    licence: free, public (GDELT terms of use; attribution requested, no redistribution restriction found)
+    method: api
+    endpoint_or_feed: "https://api.gdeltproject.org/api/v2/doc/doc"
+    auth: none
+    rate_limit: >
+      Undocumented hard limit; docs say "one request every 5 seconds" but
+      PROBED 2026-09-11 shows that is optimistic — 3 of 5 sequential queries
+      spaced 6s apart (after ~12-15s of their own latency) still 429'd with
+      "Please limit requests to one every 5 seconds". Effective safe cadence
+      observed closer to >=15-20s between requests, or a longer backoff after
+      any 429. news_intelligence.py's existing 1.0s stagger between its own
+      three calls is UNDER this — matches its own 429-storm postmortem note
+      (2026-07-16) and should be widened, not just staggered.
+    pit_grade: first_seen_only
+    stamp_field: seendate
+    stamp_tz: "UTC, format YYYYMMDDTHHMMSSZ (e.g. 20260807T034500Z)"
+    ticker_tags: false
+    body_available: false
+    notes: >
+      Returns url/url_mobile/title/seendate/socialimage/domain/language/
+      sourcecountry only — headline + URL, no body. seendate is GDELT's
+      "when we saw it" (a crawl/index timestamp), not a guaranteed
+      first-publish time, hence first_seen_only not native_stamp: write our
+      own first_seen_utc at ingest alongside it. One query template per
+      region: `sourcecountry:<FIPS>` (HK, CH=China, JA=Japan, KS=Korea are
+      GDELT's FIPS codes, NOT ISO — CH is China, not Switzerland in this
+      scheme). One query template per theme, reading names from
+      backend/data/theme_baskets.yaml (5 themes found: ai_compute, energy_oil,
+      batteries_minerals, quantum, pharma_biotech) — build an OR-of-tickers
+      query per theme, e.g. `(NVDA OR AVGO OR AMD OR ...)`. mode=artlist,
+      format=json, maxrecords<=250 per call. Rolling 3-month window only;
+      NGrams 3.0 bulk is the documented fallback for older/higher-volume pulls.
+
+  # ---------------------------------------------------------------------
+  # Google News RSS sweep
+  # ---------------------------------------------------------------------
+  - id: google_news_rss_en_us
+    provider: Google News
+    region: US
+    language: en
+    tier: 2
+    licence: "no published ToS grant for automated pulls; widely scraped, breadth-only use"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en-US"
+    auth: none
+    rate_limit: "none observed (unlimited-ish); PROBED: 10/10 region combos returned 200 within 1-2s each"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (e.g. Fri, 11 Sep 2026 07:00:00 GMT)"
+    ticker_tags: false
+    body_available: false
+    notes: "NEVER a label source (index_state). Breadth/coverage sensor only. See sibling en-GB/en-HK/... rows below for the other 9 hl/gl/ceid combos actually probed."
+
+  - id: google_news_rss_en_gb
+    provider: Google News
+    region: EU
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-GB&gl=GB&ceid=en-GB"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 38 items."
+
+  - id: google_news_rss_en_hk
+    provider: Google News
+    region: HK
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-HK&gl=HK&ceid=en-HK"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 38 items. Asia-first breadth leg."
+
+  - id: google_news_rss_en_sg
+    provider: Google News
+    region: SG
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-SG&gl=SG&ceid=en-SG"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 38 items."
+
+  - id: google_news_rss_en_in
+    provider: Google News
+    region: IN
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=en-IN"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 38 items."
+
+  - id: google_news_rss_en_au
+    provider: Google News
+    region: GLOBAL
+    language: en
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=en-AU&gl=AU&ceid=en-AU"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 38 items."
+
+  - id: google_news_rss_zh_cn
+    provider: Google News
+    region: CN
+    language: zh
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=zh-CN"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: >
+      PROBED 200, 26 items (fewer than the en-* combos — Google News' CN edition
+      is thinner, plausibly because google.com itself is blocked inside China
+      and this feed is served from outside the firewall). Asia-first, CN leg.
+
+  - id: google_news_rss_zh_tw
+    provider: Google News
+    region: GLOBAL
+    language: zh
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=zh-TW&gl=TW&ceid=zh-TW"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 34 items."
+
+  - id: google_news_rss_ja_jp
+    provider: Google News
+    region: JP
+    language: ja
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=ja&gl=JP&ceid=ja"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 30 items."
+
+  - id: google_news_rss_ko_kr
+    provider: Google News
+    region: KR
+    language: ko
+    tier: 2
+    licence: "same as google_news_rss_en_us"
+    method: rss
+    endpoint_or_feed: "https://news.google.com/rss?hl=ko&gl=KR&ceid=ko"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: pubDate
+    stamp_tz: "RFC 822"
+    ticker_tags: false
+    body_available: false
+    notes: "PROBED 200, 34 items."
+
+  # ---------------------------------------------------------------------
+  # AKShare — CN A-share + HK
+  # ---------------------------------------------------------------------
+  - id: akshare_stock_news_em
+    provider: AKShare (wraps Eastmoney search API)
+    region: CN
+    language: zh
+    tier: 2
+    licence: "AKShare MIT (library); underlying Eastmoney data — academic/research use flagged by AKShare's own docs, commercial use caution"
+    method: lib
+    endpoint_or_feed: "akshare.stock_news_em(symbol='603777')  [module akshare/news/news_stock.py]"
+    auth: none
+    rate_limit: "unofficial scrape (curl_cffi against search-api-web.eastmoney.com); no documented cap, be conservative"
+    pit_grade: index_state
+    stamp_field: "发布时间 (publish time, renamed from 'date')"
+    stamp_tz: "unverified — likely China Standard Time (UTC+8), NOT independently confirmed in this probe (akshare not installed; not network-probed, function source read from GitHub instead)"
+    ticker_tags: true
+    body_available: true
+    notes: >
+      NOT PROBED (akshare not installed locally; per task instructions,
+      installing into the checkout's venv is not allowed — recorded "not
+      installed" and function name read from GitHub source instead, 2026-09-11).
+      Returns up to 100 most-recent news items PER STOCK CODE via an
+      Eastmoney search-API scrape: columns 关键词(keyword)/新闻标题(title)/
+      新闻内容(content)/发布时间(date)/文章来源(source)/新闻链接(url). Per-symbol
+      only — no whole-market sweep function found under this name; call once
+      per CN A-share symbol in the universe.
+
+  - id: akshare_stock_news_main_cx
+    provider: AKShare (wraps Caixin 财新 data portal)
+    region: CN
+    language: zh
+    tier: 2
+    licence: "AKShare MIT (library); Caixin content — publisher's own terms apply"
+    method: lib
+    endpoint_or_feed: "akshare.stock_news_main_cx()  [module akshare/stock/stock_news_cx.py]"
+    auth: none
+    rate_limit: "unofficial scrape against cxdata.caixin.com; pageSize=100 fixed page, no documented cap"
+    pit_grade: index_state
+    stamp_field: none
+    stamp_tz: n/a
+    ticker_tags: false
+    body_available: true
+    notes: >
+      NOT PROBED (same reason as akshare_stock_news_em). Read from GitHub
+      source: the function keeps only tag/summary/url columns from the API
+      response — NO timestamp field survives into the returned DataFrame, so
+      this is index_state by construction even before considering edit/backfill
+      risk; our own first_seen_utc is the only usable stamp. Whole-market
+      Caixin feed (financial/macro focus), not per-symbol.
+
+  - id: akshare_hk_news
+    provider: AKShare
+    region: HK
+    language: zh/en
+    tier: 3
+    licence: n/a
+    method: lib
+    endpoint_or_feed: "NONE FOUND — no dedicated HK news function exists in akshare's public API"
+    auth: none
+    rate_limit: n/a
+    pit_grade: index_state
+    stamp_field: n/a
+    stamp_tz: n/a
+    ticker_tags: false
+    body_available: false
+    notes: >
+      Searched akshare's __init__.py (7,097 lines, GitHub main branch,
+      2026-09-11) for every stock_hk_* export: 24 HK functions exist
+      (spot/hist/valuation/dividend/hot-rank/etc.) but none is a news feed.
+      stock_news_em(symbol=<HK code>) MAY return results (Eastmoney's search
+      covers HK-listed names under some codes) but this is unverified — flag
+      as a probe-when-installed item, not a confirmed source. Practical HK
+      news path for now: google_news_rss_en_hk + GDELT sourcecountry:HK +
+      HKEXnews RSS (below) + Nikkei Asia RSS's HK coverage.
+
+  # ---------------------------------------------------------------------
+  # SEC EDGAR
+  # ---------------------------------------------------------------------
+  - id: sec_edgar_8k_current_atom
+    provider: SEC EDGAR
+    region: US
+    language: en
+    tier: 1
+    licence: public domain (US government work)
+    method: api
+    endpoint_or_feed: >
+      https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&company=&dateb=&owner=include&count=40&output=atom
+    auth: none
+    rate_limit: "10 req/s per IP (SEC-wide guidance); compliant User-Agent header required (AppName contact@email)"
+    pit_grade: native_stamp
+    stamp_field: updated (Atom entry) / "Filed:" in the summary HTML
+    stamp_tz: "US/Eastern (e.g. 2026-09-11T07:00:21-04:00)"
+    ticker_tags: false
+    body_available: false
+    notes: >
+      IMPORTANT CORRECTION vs the roadmap's phrasing "SEC EDGAR Atom (8-K
+      current feed)": action=getcompany (no CIK) returns an EMPTY feed
+      (probed: 0 entries) — that action requires a company name/CIK. The
+      correct current-events feed is action=getcurrent (probed: 200, 40
+      entries, e.g. EXELIXIS INC 8-K filed 2026-09-11 Item 8.01). Title
+      carries "8-K - COMPANY NAME (CIK) (Filer)"; summary carries Filed date,
+      AccNo, Size, and the Item numbers (e.g. "Item 2.02: Results of
+      Operations...") — Item 2.02 is the N-E-adjacent earnings-announcement
+      signal per research_patents_data.md. No ticker in the feed — CIK only;
+      needs a CIK->symbol join (SEC's own company_tickers.json, not probed
+      here, is the free join table). Entity id for N-D: CIK.
+
+  # ---------------------------------------------------------------------
+  # Nikkei Asia RSS
+  # ---------------------------------------------------------------------
+  - id: nikkei_asia_rss
+    provider: Nikkei Asia
+    region: JP
+    language: en
+    tier: 2
+    licence: "publisher RSS terms — typically headline+link only, no redistribution of body"
+    method: rss
+    endpoint_or_feed: "https://asia.nikkei.com/rss/feed/nar"
+    auth: none
+    rate_limit: "none observed"
+    pit_grade: index_state
+    stamp_field: "dc:date (RDF/RSS 1.0 'date' element, NOT a plain <item><pubDate>)"
+    stamp_tz: unverified (not present in the 10-row sample pulled; feed is RSS 1.0/RDF, not RSS 2.0)
+    ticker_tags: false
+    body_available: false
+    notes: >
+      CORRECTION: this is RSS 1.0 / RDF, not RSS 2.0 — items are
+      <rdf:RDF><channel>...<item> elements namespaced under
+      http://purl.org/rss/1.0/, NOT plain <item> children of <channel> as in
+      RSS 2.0. A naive `root.findall(".//item")` (no namespace handling)
+      returns ZERO matches, which is what happened on the first probe attempt
+      before the parser was fixed. PROBED (fixed): 200, 50 items, e.g.
+      "Chinese Nvidia challenger Enflame jumps 179% in Shanghai market debut"
+      (asia.nikkei.com/business/markets/ipo/...). Pan-Asia coverage (China,
+      HK, Vietnam, Japan all appeared in the 50-item sample), not JP-only —
+      region tag above is a simplification.
+
+  - id: hkexnews_rss
+    provider: HKEX
+    region: HK
+    language: en/zh
+    tier: 3
+    licence: unknown — not fetched in this probe
+    method: rss
+    endpoint_or_feed: "NOT VERIFIED — no public HKEXnews RSS URL was confirmed in this pass (network probe not attempted; research_news.md flags a paid Issuer Information Feed + Apify scrapers as the alternatives, and 'defer')"
+    auth: none
+    rate_limit: unknown
+    pit_grade: index_state
+    stamp_field: unknown
+    stamp_tz: unknown
+    ticker_tags: false
+    body_available: false
+    notes: >
+      DEFERRED per research_news.md's own recommendation ("SGX/TDnet/KIND:
+      defer"; HKEXnews similar). Not probed here — record as a follow-up: try
+      https://www1.hkexnews.hk/search/titlesearch.xhtml and look for an RSS/
+      Atom link before building a scraper.
+
+  # ---------------------------------------------------------------------
+  # Finnhub — NOT PROBED, key absent
+  # ---------------------------------------------------------------------
+  - id: finnhub_company_news
+    provider: Finnhub
+    region: GLOBAL
+    language: en
+    tier: 2
+    licence: "free tier ToS"
+    method: api
+    endpoint_or_feed: "https://finnhub.io/api/v1/company-news?symbol=<SYM>&from=<YYYY-MM-DD>&to=<YYYY-MM-DD>"
+    auth: "key:FINNHUB_API_KEY"
+    rate_limit: "60 calls/min free tier"
+    pit_grade: native_stamp
+    stamp_field: datetime (unix epoch, UTC)
+    stamp_tz: UTC
+    ticker_tags: true
+    body_available: true
+    notes: "not probed: key absent (FINNHUB_API_KEY not set in this environment)."
+
+  - id: finnhub_recommendation_trends
+    provider: Finnhub
+    region: GLOBAL
+    language: en
+    tier: 2
+    licence: "free tier ToS"
+    method: api
+    endpoint_or_feed: "https://finnhub.io/api/v1/stock/recommendation?symbol=<SYM>"
+    auth: "key:FINNHUB_API_KEY"
+    rate_limit: "60 calls/min free tier"
+    pit_grade: native_stamp
+    stamp_field: period (monthly)
+    stamp_tz: UTC
+    ticker_tags: true
+    body_available: false
+    notes: >
+      not probed: key absent. N-E's stated reason for daily snapshotting: only
+      4 months of recommendation-trend history is retained server-side, so a
+      series that starts the day the job starts must say so (roadmap wording).
+
+  # ---------------------------------------------------------------------
+  # yfinance
+  # ---------------------------------------------------------------------
+  - id: yfinance_ticker_news
+    provider: Yahoo Finance (via yfinance, unofficial)
+    region: GLOBAL
+    language: en (mostly)
+    tier: 3
+    licence: unofficial scrape, no published API terms; yfinance itself is Apache-2.0 (the library, not the data)
+    method: lib
+    endpoint_or_feed: "yfinance.Ticker(symbol).news  [yfinance 1.1.0]"
+    auth: none
+    rate_limit: "none documented; PROBED 4 tickers (NVDA, BABA, TSM, 9988.HK) sequentially with 1s pacing, all 200, 10 items each, 0.5-2.9s latency"
+    pit_grade: first_seen_only
+    stamp_field: "content.pubDate (nested under content.pubDate; also content.displayTime)"
+    stamp_tz: "UTC, ISO 8601 Z-suffixed (e.g. 2026-09-10T16:00:39Z)"
+    ticker_tags: true
+    body_available: true
+    notes: >
+      PROBED: schema is item={id, content:{...}} — content.summary/description
+      is a short blurb only (observed body_len ~129-143 chars on NVDA rows),
+      NOT full article text. content.provider.displayName carries publisher.
+      Already used in backend/services/news_intelligence.py:fetch_stock_news
+      exactly this way. HK-listed dual symbol (9988.HK for BABA) returns 10
+      items same as the US ticker — worth probing whether HK-suffix tickers
+      surface LOCAL-LANGUAGE HK press (not verified in this small sample; all
+      10 observed titles were English/global-wire).
+
+  - id: yfinance_recommendations
+    provider: Yahoo Finance (via yfinance, unofficial)
+    region: GLOBAL
+    language: en
+    tier: 3
+    licence: unofficial scrape
+    method: lib
+    endpoint_or_feed: "yfinance.Ticker(symbol).recommendations / .analyst_price_targets"
+    auth: none
+    rate_limit: "not separately probed in this pass (news probe only pulled .news)"
+    pit_grade: index_state
+    stamp_field: "period (e.g. '0m','-1m') — relative, not an absolute date"
+    stamp_tz: n/a
+    ticker_tags: true
+    body_available: false
+    notes: >
+      N-E's yfinance leg. index_state because the endpoint reflects Yahoo's
+      CURRENT consensus snapshot, not a dated history — snapshot it daily
+      yourself to build a PIT series (same caveat as the options-chain
+      snapshot idea in research_patents_data.md).
+
+  # ---------------------------------------------------------------------
+  # Wikipedia pageviews — coverage sensor, NEVER a news/label source
+  # ---------------------------------------------------------------------
+  - id: wikipedia_pageviews
+    provider: Wikimedia Foundation
+    region: GLOBAL
+    language: multi
+    tier: 1
+    licence: "CC0 / public API, official Wikimedia REST API"
+    method: api
+    endpoint_or_feed: "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{project}/{access}/{agent}/{article}/daily/{start}/{end}"
+    auth: none
+    rate_limit: "generous, undocumented hard cap; PROBED 1 article (Nvidia, en.wikipedia, 2026-09-01..2026-09-10) — 200, 10 daily rows, 0.63s latency"
+    pit_grade: index_state
+    stamp_field: timestamp (YYYYMMDDHH)
+    stamp_tz: UTC
+    ticker_tags: false
+    body_available: false
+    notes: >
+      COVERAGE SENSOR, NOT A NEWS/LABEL SOURCE (per task instructions — mark
+      explicitly). Daily granularity back to 2015. Use: attention proxy
+      alongside a name's news-row count, not as an event feed itself.
+
+  # ---------------------------------------------------------------------
+  # Not sourced from a named provider above but referenced in the roadmap
+  # ---------------------------------------------------------------------
+  - id: greenhouse_lever_ashby_ats
+    provider: "Greenhouse / Lever / Ashby (public ATS job boards)"
+    region: GLOBAL
+    language: en
+    tier: 3
+    licence: "public unauthenticated JSON endpoints, no ToS violation for read-only public postings"
+    method: api
+    endpoint_or_feed: >
+      Greenhouse: https://boards-api.greenhouse.io/v1/boards/{token}/jobs ;
+      Lever: https://api.lever.co/v0/postings/{company} ;
+      Ashby: https://api.ashbyhq.com/posting-api/job-board/{company}
+    auth: none
+    rate_limit: "not probed in this pass (N-G is a separate pre-registered trial; token discovery is the bottleneck, not rate limits)"
+    pit_grade: first_seen_only
+    stamp_field: "updated_at (Greenhouse) / createdAt (Lever) / varies (Ashby)"
+    stamp_tz: varies by provider, generally UTC
+    ticker_tags: false
+    body_available: true
+    notes: >
+      This is TRIAL-HIRING-PIVOT-1 (N-G)'s data source, listed for completeness
+      — not part of the N-B whole-market news registry proper. Requires a
+      company->board-token mapping table (not built here).
