@@ -31,11 +31,12 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -785,3 +786,601 @@ def paper_snapshot_refresh(timeout_s: float = 30.0) -> dict:
             "elapsed_s": round(time.time() - started, 2), "cached_to": str(PAPER_CACHE),
             "requests_made": 1,
             "note": "one GET. Nothing polls this; it refreshes only when you ask."}
+
+
+# ===========================================================================
+# THE DEVELOPER BOARD (O4) -- four read-only routes, and nothing that writes
+# ===========================================================================
+#
+# The board is the desktop app's home page: services, the night, the fleet, the
+# ledger, the code, the log. Its one rule is that every card shows a number WITH
+# the path of the receipt it came from, or an em dash. A card that renders a
+# plausible number from nowhere is the house failure mode in a nicer font.
+#
+# All four are GETs. None takes a parameter that reaches a shell or a write, and
+# the two that take a path resolve it inside the checkout or refuse BY NAME.
+
+#: The subtrees the file viewer will list. A short, named set rather than "the
+#: whole repo": the viewer exists to read the code that runs the programme, and
+#: `backend/data/` is gigabytes of parquet nobody wants paged into a browser.
+TREE_ROOTS: dict[str, Path] = {
+    "scripts": REPO / "scripts",
+    "learner": REPO / "learner",
+    "backend/services": REPO / "backend" / "services",
+}
+
+#: Suffixes the viewer will return. Everything else is refused BY TYPE rather
+#: than truncated: a 40 MB parquet read as text is not a file view, it is a
+#: hung browser.
+_VIEWABLE_SUFFIXES = frozenset({".py", ".md", ".txt", ".json", ".yaml", ".yml",
+                                ".toml", ".cfg", ".ini", ".sql", ".ts", ".tsx"})
+
+#: 512 KB. The longest module under the declared roots is well inside it.
+FILE_MAX_BYTES = 512 * 1024
+
+#: Never served, at any path, whatever the sandbox says.
+#:
+#: The sandbox below confines every read to the checkout -- but `.env` IS in the
+#: checkout, and this router answers on a localhost port a browser page can
+#: reach. A file viewer that will hand back `DEEPSEEK_API_KEY=...` is not
+#: read-only in any sense that matters. Secrets are refused by NAME, before the
+#: path is resolved, and the refusal says which rule fired.
+_NEVER_SERVED: tuple[str, ...] = (".env", "/.git/", "id_rsa", ".pem", ".key",
+                                  "credential", "secret", "/.ssh/")
+
+
+def _git() -> str:
+    return os.getenv("GIT_EXECUTABLE") or "git"
+
+
+def _rel(p) -> str:
+    """Repo-relative and forward-slashed.
+
+    An absolute Windows path in a receipt was one of the five causes of the
+    two days of CI red in September, and it reads as somebody else's machine
+    on every card that prints it."""
+    try:
+        return Path(p).resolve().relative_to(REPO.resolve()).as_posix()
+    except (ValueError, OSError):
+        return str(p)
+
+
+def _tree_root_of(p: Path) -> str | None:
+    """The declared root `p` lives under, or None if it lives under none."""
+    for name, root in TREE_ROOTS.items():
+        try:
+            p.relative_to(root)
+            return name
+        except ValueError:
+            continue
+    return None
+
+
+def _resolve_in_checkout(path: str) -> Path:
+    """A request path -> an absolute path inside the checkout, or a refusal.
+
+    The refusal NAMES the path. A bare "403 Forbidden" from a file viewer sends
+    the reader to the network tab to find out what they asked for.
+    """
+    raw = (path or "").strip().replace("\\", "/")
+    if not raw:
+        raise HTTPException(status_code=422, detail="path is required")
+    probe = "/" + raw.lower().lstrip("/")
+    for pat in _NEVER_SERVED:
+        if pat in probe:
+            raise HTTPException(
+                status_code=403,
+                detail=(f"refused: {raw!r} matches the never-served rule {pat!r}. "
+                        f"This viewer answers on localhost to a page in a browser; "
+                        f"secrets are refused by name, not by hoping nobody asks."))
+    candidate = Path(raw)
+    resolved = (candidate if candidate.is_absolute() else REPO / candidate).resolve()
+    try:
+        resolved.relative_to(REPO.resolve())
+    except ValueError:
+        raise HTTPException(
+            status_code=403,
+            detail=(f"refused: {raw!r} resolves to {resolved}, which is outside "
+                    f"the checkout at {REPO}")) from None
+    return resolved
+
+
+@router.get("/tree")
+def tree(root: str = "scripts") -> dict:
+    """List one declared subtree. Names and sizes only -- no content."""
+    base = TREE_ROOTS.get(root)
+    if base is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(f"unknown root {root!r}. Declared roots: "
+                    f"{', '.join(sorted(TREE_ROOTS))}"))
+    if not base.is_dir():
+        return {"utc": _now(), "root": root, "path": _rel(base), "exists": False,
+                "roots": sorted(TREE_ROOTS), "files": [], "n_files": 0,
+                "max_bytes": FILE_MAX_BYTES,
+                "note": f"{base} is not a directory in this checkout"}
+    files = []
+    for p in sorted(base.rglob("*")):
+        if "__pycache__" in p.parts or not p.is_file():
+            continue
+        if p.suffix.lower() not in _VIEWABLE_SUFFIXES:
+            continue
+        try:
+            size = p.stat().st_size
+        except OSError:
+            continue
+        files.append({"path": p.relative_to(REPO).as_posix(), "name": p.name,
+                      "bytes": size, "too_big": size > FILE_MAX_BYTES})
+    return {"utc": _now(), "root": root, "path": _rel(base), "exists": True,
+            "roots": sorted(TREE_ROOTS), "n_files": len(files), "files": files,
+            "max_bytes": FILE_MAX_BYTES}
+
+
+@router.get("/file")
+def file(path: str) -> dict:
+    """One file's text, plus the last three commits that touched it.
+
+    `git log -3` is the half that makes this a code viewer rather than a text
+    box: "when did this last change, and what for" is the question a reader
+    actually has, and it is not in the file.
+    """
+    p = _resolve_in_checkout(path)
+    rel = p.relative_to(REPO.resolve()).as_posix()
+    if not p.is_file():
+        raise HTTPException(status_code=404, detail=f"no file at {rel}")
+    if p.suffix.lower() not in _VIEWABLE_SUFFIXES:
+        raise HTTPException(
+            status_code=415,
+            detail=(f"refused: {rel} is a {p.suffix or 'suffixless'} file. This "
+                    f"viewer serves text; a binary read as text is a hung "
+                    f"browser, not a file view."))
+    size = p.stat().st_size
+    if size > FILE_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=(f"refused: {rel} is {size} bytes, over the {FILE_MAX_BYTES} "
+                    f"byte cap. Open it in an editor."))
+    text = p.read_text(encoding="utf-8", errors="replace")
+    commits: list[str] = []
+    git_note = None
+    try:
+        out = qsp.run([_git(), "log", "-3", "--format=%h %ad %s", "--date=short",
+                       "--", rel],
+                      cwd=str(REPO), capture_output=True, text=True, timeout=20)
+        if out.returncode == 0:
+            commits = [ln for ln in (out.stdout or "").splitlines() if ln.strip()]
+            if not commits:
+                git_note = "no commit in this checkout has touched this path"
+        else:
+            git_note = (out.stderr or "").strip()[:300] or f"git exited {out.returncode}"
+    except Exception as e:  # noqa: BLE001  a checkout without git still serves the file
+        git_note = f"{type(e).__name__}: {e}"
+    return {"utc": _now(), "path": rel, "abs": str(p), "bytes": size,
+            "lines": len(text.splitlines()), "text": text,
+            "root": _tree_root_of(p), "commits": commits,
+            # Never empty-by-omission: "no commits" and "git could not be run"
+            # are different answers, and [] cannot tell them apart.
+            "git_note": git_note}
+
+
+@router.get("/app-log")
+def app_log(tail: int = 200) -> dict:
+    """The last lines of `aegis_desktop.log`.
+
+    A `console=False` build has nowhere for stdout to go, which is why this log
+    exists at all -- and why it belongs on the board. The shutdown path and the
+    backend's start line are observable nowhere else.
+    """
+    tail = max(1, min(int(tail), 5000))
+    p = REPO / "backend" / "data" / "optimus" / "aegis_desktop.log"
+    if not p.exists():
+        return {"utc": _now(), "path": _rel(p), "exists": False, "lines": [],
+                "note": ("no log yet. It is written by the desktop shell, so a "
+                         "backend started any other way has none.")}
+    try:
+        raw = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        size = p.stat().st_size
+    except OSError as e:
+        return {"utc": _now(), "path": _rel(p), "exists": True, "lines": [],
+                "error": f"{type(e).__name__}: {e}"}
+    return {"utc": _now(), "path": _rel(p), "exists": True, "bytes": size,
+            "n_lines_total": len(raw), "tail": tail, "lines": raw[-tail:]}
+
+
+def _graded_within(rows: list[dict], hours: int = 24) -> int:
+    """How many records were GRADED in the last `hours`.
+
+    Counted here rather than read off the health row, which reports totals:
+    "42 resolved ever" and "0 resolved yesterday" are the same number on a dead
+    resolver, and the second is the one that says the loop is alive.
+
+    `resolved_at` is written as a DATE (`str(today)`), so a same-day grade has
+    no time of day at all. A bare date counts if it is today or yesterday --
+    the coarsest honest reading of "in the last 24 hours" the field supports,
+    and the card says `resolved_at is a date` beside it.
+    """
+    now = datetime.now(timezone.utc)
+    cutoff_dt = now - timedelta(hours=hours)
+    cutoff_d = cutoff_dt.date()
+    n = 0
+    for r in rows:
+        if r.get("outcome") is None:
+            continue
+        stamp = str(r.get("resolved_at") or "").strip()
+        if not stamp:
+            continue
+        try:
+            if len(stamp) <= 10:
+                if datetime.fromisoformat(stamp).date() >= cutoff_d:
+                    n += 1
+                continue
+            when = datetime.fromisoformat(stamp.replace("Z", "+00:00"))
+            if when.tzinfo is None:
+                when = when.replace(tzinfo=timezone.utc)
+            if when >= cutoff_dt:
+                n += 1
+        except ValueError:
+            continue
+    return n
+
+
+@router.get("/ledger")
+def ledger() -> dict:
+    """The forecast ledger's health and calibration, from `belief_state`.
+
+    Open forecasts, what was graded in the last 24 h, and Brier by MODEL -- the
+    slice that answers "is the local model any better than the engine", which is
+    the reason forecasts are written down at all. `n_resolved: 0` is reported as
+    such and never smoothed into a Brier of 0.5.
+    """
+    try:
+        from backend.services import belief_state as BS
+    except Exception as e:  # noqa: BLE001
+        return {"utc": _now(), "available": False,
+                "error": f"{type(e).__name__}: {e}"}
+
+    path = getattr(BS, "PREDICTIONS", None)
+    out: dict = {"utc": _now(), "available": True,
+                 "path": _rel(path) if path else None,
+                 "exists": bool(path and Path(path).exists()),
+                 "graded_note": "resolved_at is a DATE, so 'last 24h' is today or yesterday"}
+    for key, fn in (("health", BS.ledger_health),
+                    ("calibration_by_model", lambda: BS.calibration(by="model"))):
+        try:
+            out[key] = fn()
+        except Exception as e:  # noqa: BLE001  a read degrades to a report, never an exception
+            out[key] = {"error": f"{type(e).__name__}: {e}"}
+    try:
+        rows = BS.read_predictions()
+        out["n_open"] = sum(1 for r in rows
+                            if r.get("outcome") is None and not r.get("void_reason"))
+        out["graded_last_24h"] = _graded_within(rows, 24)
+    except Exception as e:  # noqa: BLE001
+        out["n_open"] = None
+        out["graded_last_24h"] = None
+        out["graded_note"] = f"{type(e).__name__}: {e}"
+    return out
+
+
+# ===========================================================================
+# THE UNIVERSE, UNCAPPED (O8)
+# ===========================================================================
+#
+# Murat, 2026-09-11: "I want it to show all the stocks -- first time I opened I
+# saw the 3,000+, and all of our reviews + analyst reviews."
+#
+# The scorecard for every name already exists:
+# `backend/data/optimus/potential_universe/<day>.jsonl` -- one header row plus
+# ONE ROW PER SYMBOL (3,056 on the 2026-09-02 vintage), each carrying the
+# engine's ratio/upside, the learner's score, p_beat and the execution tier.
+# `routers/candidates.py` already loads, merges and pages it, so this route
+# REUSES those loaders rather than growing a second reader of the same file --
+# two readers of one file is how two pages start disagreeing about how many
+# names there are.
+#
+# What this route adds on top of `/api/candidates/universe` is the three
+# board-only columns: which paper book holds the name, the analyst snapshot we
+# have on disk, and the last thing WE said about it. Each is em-dashed when
+# absent; none of them is ever inferred.
+
+#: Local analyst snapshots (`backend/data/analyst_snapshots.jsonl`). Small, and
+#: on the 1 = STRONG BUY Yahoo scale -- the OPPOSITE of the tracker's
+#: `consensus` (5 = strong buy). Both are surfaced, each with its scale named,
+#: because a page that prints "1.56" beside "4.15" without saying which way is
+#: up has published two numbers and no fact.
+ANALYST_SNAPSHOTS = REPO / "backend" / "data" / "analyst_snapshots.jsonl"
+
+#: How many night directories the "last review" index reads. Bounded on
+#: purpose: this is a UI convenience, and walking every receipt in the repo to
+#: fill a column would make the first page load the slowest thing in the app.
+REVIEW_INDEX_NIGHTS = 3
+
+#: A one- or two-character ticker matches inside ordinary prose ("A", "ON",
+#: "IT", "SO"), so the review index would attach a sentence about something
+#: else to it. Those names get an em dash instead of a wrong sentence.
+REVIEW_MIN_SYMBOL_LEN = 3
+
+_UNIVERSE_CACHE: dict[str, tuple[float, object]] = {}
+_UNIVERSE_CACHE_TTL_S = 300.0
+
+
+def _memo(key: str, build):
+    """A 5-minute memo for the three joins. Rebuilt, never stale-forever: the
+    books change when a lane rebalances and the receipts change every night."""
+    now = time.time()
+    hit = _UNIVERSE_CACHE.get(key)
+    if hit and now - hit[0] < _UNIVERSE_CACHE_TTL_S:
+        return hit[1]
+    value = build()
+    _UNIVERSE_CACHE[key] = (now, value)
+    return value
+
+
+def _books_by_symbol() -> dict[str, list[str]]:
+    """symbol -> the paper books holding it, from the volume DB. SELECT only.
+
+    `/api/control/paper-snapshot` cannot answer this: it caches the remote
+    deployment's `track_record` block, which is NAV per lane and carries no
+    tickers at all. The names live in `paper_positions`, and `closed_at IS
+    NULL` is that table's liveness filter (the MTM engine reads the same one;
+    omitting it once made every name look duplicated).
+    """
+    out: dict[str, list[str]] = {}
+    try:
+        from backend.db import get_connection
+    except Exception:  # noqa: BLE001
+        return out
+    try:
+        conn = get_connection()
+    except Exception:  # noqa: BLE001  no DB in this checkout -- every cell em-dashes
+        return out
+    try:
+        rows = conn.execute(
+            "SELECT portfolio_id, ticker FROM paper_positions "
+            "WHERE closed_at IS NULL").fetchall()
+    except Exception:  # noqa: BLE001
+        rows = []
+    finally:
+        conn.close()
+    for r in rows:
+        try:
+            sym = str(r["ticker"] or "").upper()
+            lane = str(r["portfolio_id"] or "")
+        except Exception:  # noqa: BLE001
+            continue
+        if sym and lane and lane not in out.setdefault(sym, []):
+            out[sym].append(lane)
+    return {k: sorted(v) for k, v in out.items()}
+
+
+def _analyst_snapshots() -> dict[str, dict]:
+    """ticker -> the newest local analyst snapshot row."""
+    out: dict[str, dict] = {}
+    if not ANALYST_SNAPSHOTS.exists():
+        return out
+    try:
+        lines = ANALYST_SNAPSHOTS.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return out
+    for ln in lines:
+        ln = ln.strip()
+        if not ln:
+            continue
+        try:
+            row = json.loads(ln)
+        except json.JSONDecodeError:
+            continue
+        sym = str(row.get("ticker") or "").upper()
+        if not sym:
+            continue
+        prev = out.get(sym)
+        if prev is None or str(row.get("observed_at") or "") >= str(prev.get("observed_at") or ""):
+            out[sym] = row
+    return out
+
+
+def _sentences(text: str) -> list[str]:
+    parts = re.split(r"(?<=[.;])\s+|\n+", text)
+    return [p.strip() for p in parts if p.strip()]
+
+
+def _walk_strings(obj, out: list[str], budget: int = 4000) -> None:
+    if len(out) >= budget:
+        return
+    if isinstance(obj, str):
+        if len(obj) > 20:
+            out.append(obj)
+    elif isinstance(obj, dict):
+        for v in obj.values():
+            _walk_strings(v, out, budget)
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            _walk_strings(v, out, budget)
+
+
+def _review_index() -> dict[str, dict]:
+    """symbol -> {"sentence", "receipt"} from the newest night receipts.
+
+    "The last review" is a sentence WE wrote, with the receipt it came from --
+    which is the only version of that column worth having. A generated
+    paraphrase with no receipt path is the thing the board exists not to show.
+
+    The index is built over the newest `REVIEW_INDEX_NIGHTS` night directories,
+    ordered by the DATE IN THEIR NAME and never by mtime: on a fresh checkout
+    every file was written today, and a receipt dated from the filesystem is
+    the defect that kept CI red for two days (protocol section 7).
+    """
+    base = REPO / "backend" / "data" / "optimus"
+    if not base.is_dir():
+        return {}
+    nights = sorted((d for d in base.glob("night_factory_*") if d.is_dir()),
+                    key=lambda d: d.name, reverse=True)[:REVIEW_INDEX_NIGHTS]
+    index: dict[str, dict] = {}
+    for night in nights:
+        for p in sorted(night.glob("*.json")):
+            try:
+                blob = json.loads(p.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            strings: list[str] = []
+            _walk_strings(blob, strings)
+            rel = p.relative_to(REPO).as_posix()
+            for s in strings:
+                for sent in _sentences(s):
+                    for sym in set(re.findall(r"\b[A-Z]{%d,6}\b" % REVIEW_MIN_SYMBOL_LEN, sent)):
+                        # Newest night wins; within a night, the first hit wins.
+                        if sym not in index:
+                            index[sym] = {"sentence": sent[:400], "receipt": rel}
+    return index
+
+
+_UNIVERSE_SORTS = ("upside", "symbol", "p_beat", "consensus", "dollar_volume",
+                   "market_cap", "ret_12m")
+
+
+@router.get("/universe")
+def universe(offset: int = 0, limit: int = 100, q: str | None = None,
+             sort: str = "upside", dir: str = "desc", day: str | None = None) -> dict:
+    """Every name in the tracker universe, paged and searched SERVER-side.
+
+    The header prints `rows_shown / universe_rows` and the two are computed
+    from the same file, so a page that shows 100 of 3,056 says so and a page
+    that has silently lost 2,900 names cannot look complete.
+    """
+    if sort not in _UNIVERSE_SORTS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"unknown sort {sort!r}. Allowed: {sorted(_UNIVERSE_SORTS)}")
+    if dir not in ("asc", "desc"):
+        raise HTTPException(status_code=422, detail="dir must be asc or desc")
+    limit = max(1, min(int(limit), 500))
+    offset = max(0, int(offset))
+
+    try:
+        from backend.routers import candidates as CAND
+    except Exception as e:  # noqa: BLE001
+        raise HTTPException(status_code=503,
+                            detail=f"the candidates reader is unavailable: {e}") from None
+    try:
+        pu_day, header, scorecards, pu_vin = CAND._load_potential_universe(day)
+        _, tracker_by_symbol, tr_vin = CAND._load_tracker_day(pu_day)
+    except HTTPException:
+        raise
+    except Exception as e:  # noqa: BLE001  a read degrades to a report
+        return {"utc": _now(), "available": False,
+                "error": f"{type(e).__name__}: {e}",
+                "universe_source": None, "universe_rows": 0, "rows": []}
+
+    # `backend.config` the MODULE, not its `config` dict: the candidate paths
+    # are module attributes, and importing the dict here once returned a dict
+    # and an AttributeError.
+    from backend import config as _cfg
+    source = _cfg.CANDIDATE_POTENTIAL_UNIVERSE_DIR / f"{pu_day}.jsonl"
+    try:
+        src_rel = source.resolve().relative_to(REPO.resolve()).as_posix()
+    except ValueError:
+        src_rel = str(source)
+
+    books = _memo("books", _books_by_symbol)
+    snaps = _memo("analyst_snapshots", _analyst_snapshots)
+    reviews = _memo("reviews", _review_index)
+
+    rows = []
+    needle = (q or "").strip().upper()
+    for sc in scorecards:
+        sym = str(sc.get("symbol") or "")
+        if needle and needle not in sym.upper():
+            continue
+        base = CAND._row(sc, tracker_by_symbol.get(sym), tr_vin["status"])
+        band = base["band"]
+        snap = snaps.get(sym.upper())
+        rows.append({
+            "symbol": sym,
+            "sector": base["sector"],
+            "exchange": base["exchange"],
+            "verdict": base["reason"]["verdict"],
+            "tracker_status": base["reason"]["tracker_status"],
+            # OUR scorecard: the sealed upside and the consensus the books read.
+            "upside": band["upside"],
+            "ratio": band["ratio"],
+            "consensus_tracker": band["consensus"],
+            "consensus_scale": "5 = STRONG BUY (tracker)",
+            "n_analysts": band["n_analysts"],
+            "coverage": band["coverage"],
+            "p_beat": base["our_estimate"]["p_beat"]["debiased"],
+            "learner_score": base["our_estimate"]["learner_v1"]["score"],
+            "median_dollar_volume": base["execution"]["median_dollar_volume"],
+            "execution_tier": base["execution"]["tier"],
+            "market_cap_usd": base["market_cap_usd"],
+            "ret_12m": base["ret_12m"],
+            # The local analyst snapshot, on the OTHER scale, named as such.
+            "analyst_snapshot": ({
+                "observed_at": snap.get("observed_at"),
+                "target_mean": snap.get("target_mean"),
+                "consensus_rating": snap.get("consensus_rating"),
+                "consensus_label": snap.get("consensus_label"),
+                "n_analysts": snap.get("n_analysts"),
+                "scale": "1 = STRONG BUY (Yahoo)",
+                "source": ANALYST_SNAPSHOTS.name,
+            } if snap else None),
+            "books": books.get(sym.upper()) or [],
+            # L2 has not landed; the column exists and is honest about it.
+            "last_event": None,
+            "last_review": reviews.get(sym.upper()),
+        })
+
+    key = {
+        "symbol": lambda r: (r["symbol"] or ""),
+        "upside": lambda r: r["upside"],
+        "p_beat": lambda r: r["p_beat"],
+        "consensus": lambda r: r["consensus_tracker"],
+        "dollar_volume": lambda r: r["median_dollar_volume"],
+        "market_cap": lambda r: r["market_cap_usd"],
+        "ret_12m": lambda r: r["ret_12m"],
+    }[sort]
+    reverse = dir == "desc"
+    # Missing values sort LAST in both directions -- a None that sorts first
+    # puts the names we know least about at the top of a ranked page.
+    rows.sort(key=lambda r: (key(r) is None, key(r) if key(r) is not None else 0),
+              reverse=False)
+    if reverse:
+        known = [r for r in rows if key(r) is not None]
+        unknown = [r for r in rows if key(r) is None]
+        known.reverse()
+        rows = known + unknown
+
+    page = rows[offset: offset + limit]
+    return {
+        "utc": _now(),
+        "available": True,
+        "universe_source": src_rel,
+        "universe_day": pu_day,
+        "universe_rows": len(scorecards),
+        "n_matched": len(rows),
+        "rows_shown": len(page),
+        "offset": offset,
+        "limit": limit,
+        "sort": {"key": sort, "dir": dir,
+                 "missing_values": "sorted last in both directions"},
+        "q": q,
+        "sorts": sorted(_UNIVERSE_SORTS),
+        "vintage": pu_vin,
+        "tracker_vintage": tr_vin,
+        "joins": {
+            "books": {"source": "paper_positions (volume DB), closed_at IS NULL",
+                      "n_symbols": len(books)},
+            "analyst_snapshot": {"source": ANALYST_SNAPSHOTS.relative_to(REPO).as_posix(),
+                                 "exists": ANALYST_SNAPSHOTS.exists(),
+                                 "n_symbols": len(snaps)},
+            "last_review": {"source": f"the newest {REVIEW_INDEX_NIGHTS} night_factory_* directories",
+                            "n_symbols": len(reviews),
+                            "note": (f"symbols shorter than {REVIEW_MIN_SYMBOL_LEN} "
+                                     f"characters are not indexed: they match ordinary "
+                                     f"prose, and a wrong sentence is worse than an em dash")},
+            "last_event": {"source": None,
+                           "note": "lane L2 (typed events) has not landed; this column is em dashes"},
+        },
+        "counts": header.get("counts") or {},
+        "conventions": header.get("conventions") or {},
+        "rows": page,
+    }

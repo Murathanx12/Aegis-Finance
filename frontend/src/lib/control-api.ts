@@ -367,6 +367,149 @@ export async function ask(
   }
 }
 
+// ------------------------------------------------------- the board (O4 / O8)
+// Five read-only GETs. Every shape below mirrors `backend/routers/control.py`
+// field for field; nothing is added here that the router does not return.
+
+export interface UniverseRow {
+  symbol: string;
+  sector: string | null;
+  exchange: string | null;
+  verdict: string | null;
+  tracker_status: string | null;
+  upside: number | null;
+  ratio: number | null;
+  consensus_tracker: number | null;
+  consensus_scale: string;
+  n_analysts: number | null;
+  coverage: number | null;
+  p_beat: number | null;
+  learner_score: number | null;
+  median_dollar_volume: number | null;
+  execution_tier: string | null;
+  market_cap_usd: number | null;
+  ret_12m: number | null;
+  analyst_snapshot: {
+    observed_at?: string | null;
+    target_mean?: number | null;
+    consensus_rating?: number | null;
+    consensus_label?: string | null;
+    n_analysts?: number | null;
+    scale: string;
+    source: string;
+  } | null;
+  books: string[];
+  last_event: string | null;
+  last_review: { sentence: string; receipt: string } | null;
+}
+
+export interface UniverseResponse {
+  utc: string;
+  available: boolean;
+  error?: string;
+  /** The file the rows came from. Printed on the page beside the count. */
+  universe_source: string | null;
+  universe_day?: string;
+  /** Rows IN THE FILE. Must equal what the header prints as the denominator. */
+  universe_rows: number;
+  n_matched: number;
+  rows_shown: number;
+  offset: number;
+  limit: number;
+  q: string | null;
+  sort: { key: string; dir: string; missing_values: string };
+  sorts: string[];
+  vintage?: UnknownPayload;
+  tracker_vintage?: UnknownPayload;
+  joins?: UnknownPayload;
+  rows: UniverseRow[];
+}
+
+export interface TreeFile {
+  path: string;
+  name: string;
+  bytes: number;
+  too_big: boolean;
+}
+
+export interface TreeResponse {
+  utc: string;
+  root: string;
+  path: string;
+  exists: boolean;
+  roots: string[];
+  n_files: number;
+  files: TreeFile[];
+  max_bytes: number;
+  note?: string;
+}
+
+export interface FileResponse {
+  utc: string;
+  path: string;
+  abs: string;
+  bytes: number;
+  lines: number;
+  text: string;
+  root: string | null;
+  commits: string[];
+  /** Null when git ran and found commits; a reason otherwise. Never omitted. */
+  git_note: string | null;
+}
+
+export interface AppLogResponse {
+  utc: string;
+  path: string;
+  exists: boolean;
+  lines: string[];
+  bytes?: number;
+  n_lines_total?: number;
+  tail?: number;
+  note?: string;
+  error?: string;
+}
+
+export interface LedgerResponse {
+  utc: string;
+  available: boolean;
+  error?: string;
+  path: string | null;
+  exists: boolean;
+  health?: UnknownPayload;
+  calibration_by_model?: UnknownPayload;
+  n_open?: number | null;
+  graded_last_24h?: number | null;
+  graded_note?: string;
+}
+
+export const getUniverse = (opts: {
+  offset?: number;
+  limit?: number;
+  q?: string;
+  sort?: string;
+  dir?: "asc" | "desc";
+} = {}) => {
+  const p = new URLSearchParams();
+  if (opts.offset) p.set("offset", String(opts.offset));
+  if (opts.limit) p.set("limit", String(opts.limit));
+  if (opts.q) p.set("q", opts.q);
+  if (opts.sort) p.set("sort", opts.sort);
+  if (opts.dir) p.set("dir", opts.dir);
+  const qs = p.toString();
+  return controlFetch<UniverseResponse>(`/universe${qs ? `?${qs}` : ""}`, undefined, 60_000);
+};
+
+export const getTree = (root: string) =>
+  controlFetch<TreeResponse>(`/tree?root=${encodeURIComponent(root)}`);
+
+export const getFile = (path: string) =>
+  controlFetch<FileResponse>(`/file?path=${encodeURIComponent(path)}`, undefined, 30_000);
+
+export const getAppLog = (tail = 200) =>
+  controlFetch<AppLogResponse>(`/app-log?tail=${tail}`);
+
+export const getLedger = () => controlFetch<LedgerResponse>("/ledger", undefined, 30_000);
+
 // ------------------------------------------------- tolerant field readers
 // For payloads whose exact keys are not fixed yet. Each returns null when no
 // candidate key is present, so the caller renders "—" and never a placeholder.

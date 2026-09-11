@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, MessageSquare, Moon, Server } from "lucide-react";
+import { Activity, LayoutDashboard, MessageSquare, Moon, Globe } from "lucide-react";
 import { DesktopGuide } from "@/components/desktop/guide";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,12 @@ import { cn } from "@/lib/utils";
  * test keeps it that way.
  */
 const TABS = [
-  { href: "/desktop", label: "Services", icon: Server },
+  // The BOARD is first (O4): in the desktop app the landing page is the
+  // operator's own surface, not the website's marketing dashboard. The
+  // universe sits beside it because "show me all the stocks" is the second
+  // thing asked of this app and the first thing it could not do.
+  { href: "/desktop", label: "Board", icon: LayoutDashboard },
+  { href: "/desktop/universe", label: "Universe", icon: Globe },
   { href: "/desktop/night", label: "Night runs", icon: Moon },
   { href: "/desktop/fleet", label: "Fleet vs SPY", icon: Activity },
   { href: "/desktop/ask", label: "Ask Aegis", icon: MessageSquare },

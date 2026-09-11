@@ -30,6 +30,7 @@ import {
   type LlamaStatus,
   type ServicesResponse,
 } from "@/lib/control-api";
+import { BoardCards } from "@/components/desktop/board-cards";
 
 /**
  * The local model has FOUR states, and only one of them is "up".
@@ -494,6 +495,12 @@ export default function DesktopServicesPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      {/* THE BOARD (O4). The desktop app's home page is the operator's own
+          surface: the universe, the ledger, the fleet with its standard error,
+          last night, the code that runs it and the log it writes. Every card
+          prints a number with its receipt path, or an em dash. */}
+      <BoardCards />
     </div>
   );
 }
