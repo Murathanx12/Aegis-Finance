@@ -291,6 +291,44 @@ def test_yfinance_news_fetcher(corpus):
     assert row["body"], "the ~130-char blurb is the body"
 
 
+def test_the_yfinance_sweep_rotates_so_the_tail_is_ever_covered(corpus):
+    """3,056 symbols at 1 s is ~51 min, so a nightly run is capped. If every
+    capped run started at symbol 0, the alphabetical prefix would be re-pulled
+    for ever and the tail never covered once — the fixed-seed replay shape."""
+    items = json.loads(fixture_bytes("yfinance_ticker_news.json"))
+
+    class YF(StubCtx):
+        def __init__(self, **kw):
+            super().__init__(b"", **kw)
+            self.asked: list[str] = []
+
+        def yf_news(self, symbol):
+            self.asked.append(symbol)
+            return items
+
+    first = YF(paced=False, max_rows=2)
+    first._universe = ["AAA", "BBB", "CCC", "DDD"]
+    np_.pull_source("yfinance_ticker_news", first)
+    assert first.asked == ["AAA"]
+    cur = json.loads((corpus / "_cursors" / "yfinance_ticker_news.json").read_text(encoding="utf-8"))
+    assert cur["next_offset"] == 1
+
+    second = YF(paced=False, max_rows=2, resume=True)
+    second._universe = ["AAA", "BBB", "CCC", "DDD"]
+    np_.pull_source("yfinance_ticker_news", second)
+    assert second.asked == ["BBB"], "the second run must NOT re-pull AAA"
+
+    # ...and it wraps rather than running off the end.
+    (corpus / "_cursors" / "yfinance_ticker_news.json").write_text(
+        json.dumps({"next_offset": 3, "runs": 9}), encoding="utf-8")
+    third = YF(paced=False, max_rows=2, resume=True)
+    third._universe = ["AAA", "BBB", "CCC", "DDD"]
+    np_.pull_source("yfinance_ticker_news", third)
+    assert third.asked == ["DDD"]
+    cur = json.loads((corpus / "_cursors" / "yfinance_ticker_news.json").read_text(encoding="utf-8"))
+    assert cur["next_offset"] == 0
+
+
 def test_yfinance_without_a_universe_refuses(corpus):
     ctx = StubCtx(b"", paced=False)
     ctx._universe = []

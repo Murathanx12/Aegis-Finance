@@ -430,6 +430,10 @@ class FetchResult:
     refused: str = ""
     #: The stamp a `--resume` should continue from next time, if the source has one.
     next_cursor: str = ""
+    #: Where a symbol-by-symbol sweep should START next time. See
+    #: `fetch_yfinance_news`: without it, every capped run re-pulls the same
+    #: alphabetical prefix and the rest of the universe is never covered.
+    next_offset: int | None = None
 
 
 def _sleep(seconds: float) -> None:
@@ -563,15 +567,29 @@ def fetch_alpaca(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
 
 
 def fetch_yfinance_news(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
-    """`Ticker(symbol).news` over the tracker universe, paced and row-capped."""
+    """`Ticker(symbol).news` over the tracker universe, paced and row-capped.
+
+    THE SWEEP ROTATES. 3,056 symbols at the registry's 1 s pacing is ~51
+    minutes, so a nightly run is capped with `--max-rows` and covers a few
+    hundred names. Starting every capped run at symbol 0 means the
+    alphabetical prefix is re-pulled for ever and the tail of the universe is
+    never covered once — the same shape as the fixed seed that made every
+    `G3_evolve_v2` night a bit-identical replay (2026-09-10). The cursor
+    therefore carries `next_offset`, and each run continues where the last one
+    stopped, wrapping at the end.
+    """
     res = FetchResult()
     symbols = ctx.universe_symbols()
     if not symbols:
         res.refused = f"REFUSED: no universe file at {universe_path()} — nothing to iterate"
         return res
-    for i, sym in enumerate(symbols):
+    start = int(ctx.cursor.get("next_offset", 0) or 0) % len(symbols)
+    order = symbols[start:] + symbols[:start]
+    consumed = 0
+    for i, sym in enumerate(order):
         if ctx.budget_spent(res):
             break
+        consumed = i + 1
         if i:
             _sleep(ctx.pace(src))
         try:
@@ -595,6 +613,10 @@ def fetch_yfinance_news(src: registry.NewsSource, ctx: "RunContext") -> FetchRes
                 })
         except Exception as e:  # noqa: BLE001 — one bad symbol must not end the sweep
             res.failures.append(f"{sym}: {type(e).__name__}: {e}")
+    res.next_offset = (start + consumed) % len(symbols)
+    res.failures.append(
+        f"swept {consumed} symbols starting at universe index {start} "
+        f"({order[0] if order else '--'}); next run starts at {res.next_offset}")
     return res
 
 
@@ -866,10 +888,14 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
         "source": src.id,
         "last_run_utc": _iso(started),
         "next_cursor": res.next_cursor or ctx.cursor.get("next_cursor", ""),
+        "next_offset": (res.next_offset if res.next_offset is not None
+                        else ctx.cursor.get("next_offset", 0)),
         "consecutive_zero_runs": zeros,
         "runs": int(ctx.cursor.get("runs", 0)) + 1,
         "rows_written_total": int(ctx.cursor.get("rows_written_total", 0)) + receipt["new"],
-        "note": "next_cursor is only meaningful for sources with a native incremental cursor (Alpaca's created_at).",
+        "note": ("next_cursor is only meaningful for sources with a native incremental "
+                 "cursor (Alpaca's created_at); next_offset is where a symbol-by-symbol "
+                 "sweep resumes, so a capped run does not re-pull the same prefix for ever."),
     })
 
     receipt["wall_s"] = round(time.time() - t0, 2)
