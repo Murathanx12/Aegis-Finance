@@ -146,11 +146,21 @@ def test_a_dead_backend_thread_writes_a_log_line_and_a_report(tmp_path, monkeypa
     handler = logging.FileHandler(tmp_path / "aegis_desktop.log", encoding="utf-8")
     ad.log.addHandler(handler)
     ad.log.setLevel(logging.INFO)
+    # `start_backend` sets AEGIS_DESKTOP / AEGIS_CONTROL_ENABLED / AEGIS_REPO_ROOT
+    # / AEGIS_DATA_DIR on `os.environ` DIRECTLY -- correctly, because uvicorn and
+    # every router read them -- and `monkeypatch` cannot undo what the code under
+    # test wrote. The first version of this test left AEGIS_DATA_DIR pointing at
+    # a tmp_path for the rest of the session, and six later tests in three other
+    # files went DEGRADED because the ledger they health-check was suddenly
+    # somewhere with no history in it. Snapshot and restore.
+    before = dict(os.environ)
     try:
         th = ad.start_backend(0)
         th.join(timeout=20)
     finally:
         monkeypatch.undo()
+        os.environ.clear()
+        os.environ.update(before)
         ad.log.removeHandler(handler)
         handler.close()
 

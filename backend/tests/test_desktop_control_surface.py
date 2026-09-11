@@ -396,15 +396,40 @@ def test_the_shell_dispatches_run_module_before_argparse() -> None:
     assert callable(ad.dispatch_module)
 
 
-def test_the_spec_refuses_to_package_without_the_static_export() -> None:
-    """Packaging with no `frontend/out` yields an .exe whose window is empty --
-    a failure that looks like a crash and is not."""
+def test_the_spec_refuses_to_wipe_a_running_apps_directory() -> None:
+    """The static-export refusal this test used to check is RETIRED, on purpose.
+
+    It existed because the bundle CARRIED `frontend/out`, so building without an
+    export produced an .exe whose window showed the API's raw JSON -- a failure
+    that looks like a crash and is not. Since 2026-09-11 the .exe is a launcher:
+    it serves the CHECKOUT's export and rebuilds it when `frontend/` has moved,
+    so the build no longer has an opinion about it, and a refusal that can no
+    longer fire is a gate that teaches the reader to skim gates.
+
+    What the spec must still refuse is real: PyInstaller's COLLECT wipes its
+    target directory first, and a running AegisDesktop.exe holds that directory
+    open -- so a rebuild while the app is open dies with a permission error
+    forty lines deep, naming the directory and not the reason.
+    """
     spec = (REPO / "desktop" / "AegisDesktop.spec").read_text(encoding="utf-8")
-    assert "REFUSED" in spec and "index.html" in spec
+    assert "REFUSED" in spec and "AegisDesktop.exe is running" in spec
+    assert "distpath dist_next" in spec, "the refusal must name the way out"
     # onedir, not onefile: a COLLECT step is what onedir produces, and
     # `exclude_binaries=True` on the EXE is what makes it one. Asserting on the
     # build graph beats grepping the prose that explains the choice.
     assert "COLLECT(" in spec and "exclude_binaries=True" in spec
+
+
+def test_the_spec_freezes_the_launcher_and_not_the_backend() -> None:
+    """The architectural claim of O1, as a test: `backend/` is not in the
+    bundle, so none of it can resolve a path differently when frozen."""
+    from backend.tests.test_desktop_control_surface import executable_source
+    code = executable_source(REPO / "desktop" / "AegisDesktop.spec")
+    assert "launcher.py" in code
+    assert "aegis_desktop.py" not in code.split("excludes = [", 1)[0]
+    excludes = code.split("excludes = [", 1)[1].split("]", 1)[0]
+    for mod in ("backend", "scripts", "learner", "uvicorn", "fastapi", "pandas"):
+        assert f'"{mod}"' in excludes, mod
 
 
 def test_the_icon_exists_and_is_multi_size() -> None:
