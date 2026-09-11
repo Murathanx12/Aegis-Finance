@@ -138,12 +138,12 @@ def _entry_session(observed_at, effective_at, sessions):
     # one of those 2015 rows would have been labelled at the 2025-01-02 open —
     # a ten-year look-ahead that the funnel would have counted as `kept`.
     if len(sessions) and np.datetime64(day) < sessions[0]:
-        return None, None
+        return None, "before_calendar"
     i = int(np.searchsorted(sessions, np.datetime64(day), side="left"))
     if not (i < len(sessions) and sessions[i] == np.datetime64(day) and before_bell):
         i = int(np.searchsorted(sessions, np.datetime64(day), side="right"))
     if i >= len(sessions):
-        return None, None
+        return None, "after_calendar"
     return pd.Timestamp(sessions[i]), ("pre_bell" if before_bell else "post_bell")
 
 
@@ -420,8 +420,13 @@ def E1_append(max_rows=None) -> dict:
 
     sources = _label_sources()
     raw = _corpus_rows(sources, watermark, max_rows)
+    # `before_calendar` and `pending_future_session` are OPPOSITE causes and were
+    # one counter until the first live run put 3,370 rows in it: the Alpaca
+    # backfill's 2015 rows (older than the bars) and tonight's rows (newer than
+    # the bars) are not the same problem and do not have the same fix.
     stats = {"corpus_rows": len(raw), "no_ticker": 0, "no_symbol_bar": 0,
-             "pending_future_session": 0, "no_bar_that_day": 0, "dup": 0, "kept": 0}
+             "before_calendar": 0, "pending_future_session": 0,
+             "no_bar_that_day": 0, "dup": 0, "kept": 0}
 
     if not BARS().exists():
         return {
@@ -457,9 +462,13 @@ def E1_append(max_rows=None) -> dict:
                 stats["dup"] += 1
                 continue
             if day is None:
-                # Off the END of the session calendar: the entry session has not
-                # happened yet. Normal for a row pulled tonight.
-                stats["pending_future_session"] += 1
+                # Two opposite causes, counted apart. `before_calendar`: the row
+                # predates the bars (the Alpaca backfill starts 2015; these bars
+                # start 2025) and needs OLDER bars. `pending_future_session`: the
+                # row is newer than the last bar and needs the NEXT session —
+                # the normal state of anything pulled tonight.
+                stats["before_calendar" if pos == "before_calendar"
+                      else "pending_future_session"] += 1
                 continue
             g = per[s]
             if day not in g.index:
@@ -550,20 +559,24 @@ def E1_append(max_rows=None) -> dict:
     else:
         receipt["panel_rows_after"] = int(len(existing))
 
-    pending = stats["pending_future_session"]
+    pending, ancient = stats["pending_future_session"], stats["before_calendar"]
     receipt["verdict"] = "APPENDED" if new_rows else ("NOTHING TO DO" if not raw else "PENDING")
     receipt["headline"] = (
         f"{len(new_rows):,} rows appended from {len(raw):,} corpus rows over "
         f"{len(sources)} labelling sources; {pending:,} awaiting a session that "
-        f"has not happened yet; 0 PIT violations"
+        f"has not happened yet; {ancient:,} older than the first bar; "
+        f"0 PIT violations"
     )
     # The planner is starved without this (2026-09-10 §5): a receipt says what
     # the NEXT run should ask, not only what this one found.
     receipt["next_test"] = (
-        "re-run after the next session's bars land to label the pending rows; "
-        "when the panel passes ~20k labelled cells over 2+ months, run "
-        "N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls"
-        if pending else
+        ("re-run after the next session's bars land to label the pending rows"
+         + (f"; {ancient:,} rows PREDATE the bars (the Alpaca backfill starts "
+            f"2015-01-01 and prices_2025_26 starts 2025-01-02) and need older "
+            f"bars or a --since on the backfill" if ancient else "")
+         + "; when the panel passes ~20k labelled cells over 2+ months, run "
+           "N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls")
+        if (pending or ancient) else
         "pull more corpus (scripts/news_pull.py --source all --resume), then re-run"
     )
     (out_dir / "E1_append_receipt.json").write_text(

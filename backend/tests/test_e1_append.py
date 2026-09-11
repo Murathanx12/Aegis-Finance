@@ -117,6 +117,7 @@ def test_a_row_pulled_tonight_is_pending_not_dropped(env):
     rec = e1.E1_append()
     assert rec["rows_appended"] == 0
     assert rec["funnel"]["pending_future_session"] == 1
+    assert rec["funnel"]["before_calendar"] == 0
     assert rec["verdict"] == "PENDING"
     assert "awaiting a session that has not happened yet" in rec["headline"]
 
@@ -201,12 +202,17 @@ def test_a_publication_before_the_calendar_is_off_calendar_not_session_zero(env)
 
     rec = e1.E1_append()
     assert rec["rows_appended"] == 0, "a 2015 row must not be labelled on a 2026 bar"
-    assert rec["funnel"]["pending_future_session"] == 1
+    # Counted APART from the rows that are merely newer than the last bar: those
+    # two need opposite fixes (older bars vs the next session), and the first
+    # live run put 3,370 rows into one counter before they were split.
+    assert rec["funnel"]["before_calendar"] == 1
+    assert rec["funnel"]["pending_future_session"] == 0
+    assert "older than the first bar" in rec["headline"]
 
     # ...and the primitive itself, stated directly.
     import numpy as np
     sessions = np.sort(np.array([pd.Timestamp(d) for d in days], dtype="datetime64[ns]"))
-    assert e1._entry_session("2015-01-05T13:00:00+00:00", "", sessions) == (None, None)
+    assert e1._entry_session("2015-01-05T13:00:00+00:00", "", sessions) == (None, "before_calendar")
 
 
 def test_the_watermark_stops_a_second_append_from_duplicating(env):
