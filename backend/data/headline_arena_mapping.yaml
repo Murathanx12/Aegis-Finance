@@ -1,0 +1,121 @@
+# HEADLINE ARENA — the frozen sensor -> target mapping (roadmap M6)
+#
+# WHAT THIS IS
+# ============
+# Headline Arena settles daily direction challenges on macro targets. Its value
+# to this programme is NOT its leaderboard: it is a record settled by a party
+# that is not us, on shared targets, with a public curve. That is the one thing
+# self-measurement cannot buy.
+#
+# So the mapping from our sensors to a direction and a confidence is
+# PRE-REGISTERED here, before the first submission, and the file's own
+# `prereg_hash` is checked by a test. Changing a rule changes the hash, which
+# makes the change visible instead of arriving as "the mapping we always used".
+#
+# WHAT THIS IS NOT
+# ================
+# It is not a fitted model and it was not tuned on anything. These are simple,
+# defensible priors -- risk-on/risk-off and a volatility regime -- written down
+# in advance precisely so that a near-coin-flip result is a RESULT rather than a
+# disappointment to be explained away. The arena's own top agent is near
+# coin-flip; expecting more from five rules would be the story arriving before
+# the evidence.
+#
+# THE SCORE MUST NEVER TOUCH THE CONFIDENCE
+# =========================================
+# The arena's financial track scores `50 +- 50 * confidence`, which rewards
+# stating a confidence higher than you hold. The confidence posted here is the
+# one already written into our own ledger, verbatim and unadjusted. Anything
+# else would corrupt the only measurement the exercise is for.
+#
+# CAVEATS THAT TRAVEL WITH EVERY SUBMISSION (roadmap M6)
+# ======================================================
+#  * their terms take a perpetual, sublicensable licence to submitted text, so
+#    `reasoning` is treated as PUBLIC and non-recallable -- never a thesis, a
+#    holding, or anything about the book;
+#  * no legal entity or jurisdiction is named; the plugin is a one-maintainer
+#    repository;
+#  * the financial track is not Brier-scored (Brier/CRPS are the Civic track);
+#  * registration is ATTENDED -- a magic link to Murat's e-mail. No credential
+#    exists in this environment and nothing here creates one.
+
+version: 1
+licence: PRODUCT_EXPERIMENT
+frozen_utc: "2026-09-12T00:00:00+00:00"
+mechanism_id: headline_arena_v1
+
+# The sha256 (16 hex) of the `sensors` + `targets` blocks below, canonicalised.
+# `scripts/headline_arena_daily.py --verify-prereg` recomputes it, and
+# `test_headline_arena.py` fails if the file and the hash disagree.
+prereg_hash: "e70b4fff23c0c6a7"
+
+# Where the API lives. Read from here rather than hardcoded in the script so a
+# base-URL change is a visible edit to a pre-registered file.
+api:
+  base_url: "https://headlinearena.com"
+  list_challenges: "/api/v1/eval/challenges"
+  submit: "/api/v1/eval/challenges/{challenge_id}/predict"
+  settlement: "/api/v1/eval/challenges/{challenge_id}"
+  # The dead zone is READ FROM EACH CHALLENGE (`dead_zone_pct`), never assumed.
+  # A hardcoded threshold would silently disagree with the venue the day they
+  # change it, and every disagreement would land on our side of the ledger.
+  dead_zone: from_challenge
+
+sensors:
+  spy_mom_21:
+    source: local_bars
+    symbol: SPY
+    formula: "close[-1] / close[-22] - 1"
+    standardise: "divide by the standard deviation of the same statistic over
+      the trailing 252 sessions"
+  vol_regime:
+    source: local_bars
+    symbol: SPY
+    formula: "std(daily returns, 21) / std(daily returns, 252)"
+    standardise: "centred on 1.0; z = (ratio - 1) / 0.25"
+  nvda_vs_spy_5:
+    source: local_bars
+    formula: "NVDA 5-session return minus SPY 5-session return"
+    standardise: "divide by the standard deviation of the same spread over the
+      trailing 252 sessions"
+    note: "the mega-cap is a SENSOR, not the trade (strategic invariants)"
+
+# direction: +1 = up, -1 = down. `confidence` is |z| / 2, clipped.
+confidence:
+  formula: "min(0.60, max(0.05, abs(z) / 2))"
+  floor: 0.05
+  ceiling: 0.60
+  why_capped: "the score is 50 +- 50*confidence, so an uncapped confidence is a
+    bet on the scoring rule rather than a statement about the world"
+
+targets:
+  - id: ES
+    name: "S&P 500 futures"
+    grade_symbol: "ES=F"
+    sensor: spy_mom_21
+    direction: "sign(z)"
+    prior: "trend following at a one-month horizon"
+  - id: CL
+    name: "WTI crude"
+    grade_symbol: "CL=F"
+    sensor: spy_mom_21
+    direction: "sign(z)"
+    prior: "crude tracks risk appetite"
+  - id: ZN
+    name: "10-year note futures"
+    grade_symbol: "ZN=F"
+    sensor: spy_mom_21
+    direction: "-sign(z)"
+    prior: "duration rallies when equities fall"
+  - id: GC
+    name: "gold"
+    grade_symbol: "GC=F"
+    sensor: vol_regime
+    direction: "sign(z)"
+    prior: "gold bid in an elevated volatility regime"
+  - id: DXY
+    name: "US dollar index"
+    grade_symbol: "DX-Y.NYB"
+    sensor: vol_regime
+    direction: "sign(z)"
+    prior: "the dollar bid in stress"
