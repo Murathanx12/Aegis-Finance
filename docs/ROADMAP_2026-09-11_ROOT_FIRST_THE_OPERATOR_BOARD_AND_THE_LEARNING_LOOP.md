@@ -272,6 +272,17 @@ day is nothing to sqlite; thousands of Alpaca accounts is impossible.
 | **E3** | **Probabilities, not confidence**: adaptive conformal intervals on whichever head has a positive control-adjusted IC; the board shows the interval and its realised coverage. | naive-coverage baseline; realised coverage per vol regime |
 | **E4** | ADWIN-gated rolling refit vs fixed-window refit, both graded. | the fixed window |
 | **E5** | **Stopping rules for the night factory**: deflated Sharpe and PBO on G3's evaluations log; a lineage that fails DSR at its trial count is `DEPRIORITIZED`, not deleted. "Infinite backtests that learn" = the night factory + `SearchState` (elites across nights, seeds outside the union) + these rules. | the random-genome null on the same windows (RW1) |
+**Measured 2026-09-13 (E1, run 1, h=5, keyword-proxy events, no model calls, 938 s):** neither head's
+typed-event arm beats the SHUFFLED-event control — LightGBM EVENT−SHUFFLE IC +0.0009 (t 0.17),
+StockMixer EVENT−SHUFFLE IC +0.0029 (t 0.46), Holm p 1.0 over 276 date blocks (≈55 independent, the
+5-session labels overlap). **FAILED_VARIANT for the keyword proxy, not for typed events**: L2 has typed
+none of these cells, so this is a verdict on a keyword lookup over the 39-id vocabulary. StockMixer
+beats GBM on the identical table (IC +0.0111, t 2.01 over 276 blocks; ≈0.9 once the overlap divides
+it) — an architecture difference, and not evidence of text because SHUFFLE keeps the gap. Every net
+line is negative at 1.3-1.9 turnover/day × 25 bps; levels are not the verdict. Receipt
+`night_factory_2026-09-13/E1_event_head_run01.json`. Next test is the receipt's own: L2's LLM typing
+over the same cells, graded through the identical table and controls.
+
 | **E6** | **Evidence memory rotation** (deadline): monthly files split by each row's own stamp, live month untracked, sealed months committed once; a test that the reader returns every row across the split. Compaction refused. | row count before = row count after |
 
 ### Lane F — the fleet (attended)

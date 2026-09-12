@@ -230,7 +230,12 @@ before crediting discovery** (protocol §9).
   +0.40%/mo net vs the unconditioned reaction book, t 2.13, positive in all four eras — CONDITIONAL
   (Holm at family size 4 not cleared; the two registered falsifiers are the next test)**; D refused by
   registration. Detail in the roadmap §11c. RESULT IMPROVEMENT: NONE.
-- **Next:** read E1's receipt; run C's two falsifiers (a night job, CPU only); once the model server is up under the night rules (TdrDelay
+- **E1 landed 06:27 (16 min):** the keyword-proxy event table beats nothing — EVENT−SHUFFLE IC
+  +0.0009 (GBM) and +0.0029 (StockMixer), Holm p 1.0; **FAILED_VARIANT for the proxy, the typed-event
+  question stays open until L2 types the cells** (the receipt's own `next_test`). StockMixer beats GBM
+  on the identical table (t 2.01 nominal, ≈0.9 after the 5-session overlap); SHUFFLE keeps that gap, so
+  it is the architecture, not the text. Detail in the roadmap lane E.
+- **Next:** run C's two falsifiers (a night job, CPU only); once the model server is up under the night rules (TdrDelay
   attended), run in order: R2 panel B, `L2_typed_events` (then re-run E1 on typed rows), the
   anonymisation gap, the recall probe, L4's idle measurement, M2's rule text; add an `ANALYST` type to
   the vocabulary before X2 uses C1; the B/B′ re-seed; the attended items unchanged.
