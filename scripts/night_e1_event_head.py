@@ -82,6 +82,22 @@ def _feature_matrices(cells: pd.DataFrame, ev: pd.DataFrame, seed: int):
     return mats, meta
 
 
+def _predicted_spread(pred: np.ndarray, tradable: np.ndarray) -> float:
+    """The head's OWN forecast of the book's gross return for that date.
+
+    The same names, the same decile and the same tradability filter the book
+    uses, so `pred_*` and `gross_*` in the daily file are a forecast and its
+    realisation on one scale -- which is what E3's intervals need and what a
+    trailing average of past returns would NOT be.
+    """
+    if int(tradable.sum()) < n3.MIN_NAMES_BOOK:
+        return float("nan")
+    p = pred[tradable]
+    k = max(1, int(round(len(p) * n3.DECILE)))
+    order = np.argsort(-p)
+    return float(p[order[:k]].mean() - p[order[-k:]].mean())
+
+
 def run_folds(cells: pd.DataFrame, mats: dict, embargo: int, seed: int = SEED,
               verbose: bool = True, with_mixer: bool = True):
     """Purged expanding walk-forward by month, embargo = max(5, horizon)."""
@@ -140,6 +156,7 @@ def run_folds(cells: pd.DataFrame, mats: dict, embargo: int, seed: int = SEED,
                 row[f"ic_{model}_{arm}"] = n3._spearman(p[k], y_te[k])
                 g, w = n3._book_day(p[k], y_te[k], s_te[k], t_te[k])
                 row[f"gross_{model}_{arm}"] = g
+                row[f"pred_{model}_{arm}"] = _predicted_spread(p[k], t_te[k])
                 row[f"w_{model}_{arm}"] = w
             daily.append(row)
         fold_log.append({"test_month": mo, "n_train": int(tr.sum()), "n_test": int(te.sum()),

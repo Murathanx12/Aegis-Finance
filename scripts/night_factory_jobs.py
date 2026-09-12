@@ -1488,6 +1488,13 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # a PROXY until L2's extraction exists and every receipt says so.
         # AEGIS_E1_HORIZON picks 5 or 21.
         "E1_event_head": _lazy("scripts.night_e1_event_head", "E1_event_head"),
+        # E3 2026-09-13, chunk 9: adaptive conformal intervals (Gibbs-Candes
+        # 2021 + Barber et al. 2023 recency weights), graded by REALISED
+        # coverage per volatility tercile. Runs on whichever head first shows a
+        # positive control-adjusted IC and, until one does, on the GBM control
+        # arm -- saying so, because a check that cannot go green is broken.
+        "E3_adaptive_conformal": _lazy("scripts.night_e3_adaptive_conformal",
+                                       "E3_adaptive_conformal"),
         # 2026-09-12, chunk 5b T3: the historical leg of lane B's first four
         # books. Three of the four cannot decide on the 2025-26 ticker bars
         # (their panels are CRSP-permno-keyed and CRSP ends 2024-12-31), so
