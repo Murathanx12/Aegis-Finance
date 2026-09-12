@@ -225,7 +225,12 @@ before crediting discovery** (protocol §9).
 - **Running at close (05:35, detached, CPU only, no model):** `B_first_books_replay:90` (the four
   books' first 1990-2024 read vs their twins, per era, Holm within the family) then `E1_event_head:150`
   (the full two-model run on the proxy). Receipts under `night_factory_2026-09-13/`.
-- **Next:** read those two receipts; once the model server is up under the night rules (TdrDelay
+- **The replay landed 06:12 (14 min):** A loses to its random twin (−0.54%/mo, t −2.26, every era);
+  B is null and its same-day falsifier is null too; **C, the disposition-overhang conditioner, is
+  +0.40%/mo net vs the unconditioned reaction book, t 2.13, positive in all four eras — CONDITIONAL
+  (Holm at family size 4 not cleared; the two registered falsifiers are the next test)**; D refused by
+  registration. Detail in the roadmap §11c. RESULT IMPROVEMENT: NONE.
+- **Next:** read E1's receipt; run C's two falsifiers (a night job, CPU only); once the model server is up under the night rules (TdrDelay
   attended), run in order: R2 panel B, `L2_typed_events` (then re-run E1 on typed rows), the
   anonymisation gap, the recall probe, L4's idle measurement, M2's rule text; add an `ANALYST` type to
   the vocabulary before X2 uses C1; the B/B′ re-seed; the attended items unchanged.

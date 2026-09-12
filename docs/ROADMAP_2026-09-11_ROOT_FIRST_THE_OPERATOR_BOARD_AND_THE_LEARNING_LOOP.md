@@ -615,6 +615,20 @@ fees) — pre-register it only to close it with evidence; S&P inclusion (7.4% �
 **Where these enter the chunks:** #1 in chunk 4 (data), #2/#3/#4/#7 as the first `origin=night_job`
 books in chunk 5 (each with its twin), #5 in chunk 4, #6/#10 in chunk 7, #8/#9 in chunk 9.
 
+**First historical read, 2026-09-13 (`night_factory_2026-09-13/B_first_books_replay_run01.json`;
+1990-2024, 420 months, 18,684 permnos, twins turnover-matched, flat 25 bps pending 5c's curve — no
+LEVEL quotable, differences only):** **A** (low SI × high turnover) −0.54%/mo net vs its random twin,
+t −2.26, negative in all four eras — loses to a random book at the same turnover; **B** (insider
+clusters 4-5 days) −0.14%/mo, t −0.08, and the same-day falsifier arm −0.16%/mo — length conditioning
+not supported (the draft's own rule: a point estimate ≤ 0 is not rescued by under-power); **C** (the
+disposition-overhang conditioner) **+0.40%/mo net vs the UNCONDITIONED reaction book, t 2.13, p 0.033,
+positive in all four eras** (t 0.29 / 1.64 / 1.53 / 1.07) — not Holm-significant at the declared
+family size (α 0.0167), so **CONDITIONAL**, not PRODUCT_PROMISING; its two registered falsifiers decide
+(the sign-flip placebo Frazzini reports at ~0, and momentum orthogonalisation: `mom_12_1` must die with
+overhang on the right-hand side); **D** refused by registration (forward-only; the 24th monthly block is
+its earliest read). No verdict clears Holm: **RESULT IMPROVEMENT: NONE**; C is the first candidate in
+this repo with the right shape (a difference against its own control, same sign in every era).
+
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
 Roles, from Murat: *"Sonnet for research and data acquisition, Opus 5 for

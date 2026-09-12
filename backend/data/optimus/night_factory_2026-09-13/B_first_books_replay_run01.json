@@ -1,0 +1,270 @@
+{
+ "job": "B_first_books_replay",
+ "family": "NIGHT_JOB_BOOKS_2026_09",
+ "licence": "PRODUCT_EXPERIMENT",
+ "window": [
+  1990,
+  2024
+ ],
+ "smoke": false,
+ "max_names": null,
+ "months_in_panel": 420,
+ "permnos_in_panel": 18684,
+ "cost_curve": "flat_25bps_pending_5c",
+ "cost_bps_per_side": 25.0,
+ "cost_caveat": "a placeholder until chunk 5c's TAQ curve lands. NEGATIVE_RESULTS \u00a725 already has two rulers disagreeing 3.4-9.1x on this segment; no LEVEL here may be quoted as measured.",
+ "books": [
+  {
+   "book": "si_low_turnover_high_v1",
+   "book_id": "book:1934ec97aa4b1620",
+   "prereg": "TRIAL-DRAFT-A-si-low-turnover-high-v1 (UNSIGNED)",
+   "primary_metric": "net_monthly_excess_vs_random_twin",
+   "confirm_slice": "2011-2024",
+   "ran": true,
+   "result": {
+    "label": "si_low_turnover_high_v1",
+    "twin": "random_universe",
+    "k": 50,
+    "seed": 6452,
+    "twin_turnover_matched": true,
+    "n_blocks": 417,
+    "median_names_selected": 50,
+    "mean_book_net_monthly": 0.000868,
+    "mean_twin_net_monthly": 0.006275,
+    "mean_excess_net_monthly": -0.005407,
+    "nw_lag2_t": -2.2603,
+    "p_two_sided": 0.023803,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_bps_per_side": 25.0
+   },
+   "by_era": {
+    "1990-1999": {
+     "n_blocks": 117,
+     "mean_excess_net_monthly": -0.003043,
+     "nw_lag2_t": -1.2024
+    },
+    "2000-2009": {
+     "n_blocks": 120,
+     "mean_excess_net_monthly": -0.001893,
+     "nw_lag2_t": -0.4036
+    },
+    "2010-2016": {
+     "n_blocks": 84,
+     "mean_excess_net_monthly": -0.009941,
+     "nw_lag2_t": -2.2099
+    },
+    "2017-2024": {
+     "n_blocks": 96,
+     "mean_excess_net_monthly": -0.008714,
+     "nw_lag2_t": -1.2687
+    }
+   },
+   "declared_mde_monthly": 0.00685,
+   "declared_effect_size": 0.01,
+   "next_test": "re-measure the SAME double sort at a $10M dollar-volume floor. TRIAL-H5's lesson is that a corner-dependent control must be re-measured at every corner, and this book's decision rule closes it as FAILED_VARIANT if the $10M cell fails while the $3M cell passes.",
+   "smoke": false
+  },
+  {
+   "book": "insider_cluster_length_v1",
+   "book_id": "book:625c391913d9718c",
+   "prereg": "TRIAL-DRAFT-B-insider-cluster-length-v1 (UNSIGNED)",
+   "primary_metric": "net_bhar_22_90_vs_random_active_twin",
+   "confirm_slice": "2017-2024",
+   "ran": true,
+   "spans": [
+    4,
+    5
+   ],
+   "result": {
+    "n_blocks": 212,
+    "mean_bhar_excess_vs_twin": -0.001354,
+    "nw_lag2_t": -0.0778,
+    "p_two_sided": 0.937952,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_note": "both legs pay the same one round trip per event at the flat rate, so the DIFFERENCE is cost-neutral by construction here; the LEVEL of each leg is not, and chunk 5c's curve is what makes the level quotable"
+   },
+   "by_era": {
+    "1990-1999": {
+     "n_blocks": 0,
+     "verdict": "too few blocks to report a mean"
+    },
+    "2000-2009": {
+     "n_blocks": 46,
+     "mean_excess_net_monthly": 0.061131,
+     "nw_lag2_t": 1.4718
+    },
+    "2010-2016": {
+     "n_blocks": 81,
+     "mean_excess_net_monthly": -0.012987,
+     "nw_lag2_t": -0.5341
+    },
+    "2017-2024": {
+     "n_blocks": 85,
+     "mean_excess_net_monthly": -0.024084,
+     "nw_lag2_t": -0.8897
+    }
+   },
+   "declared_mde_per_block": 0.0717,
+   "power_warning": "the registered MDE (7.17%) is ABOVE the published effect (5.0%): a non-significant result here is CONDITIONAL, never FAILED_VARIANT, unless the point estimate is <= 0",
+   "next_test": "the same-day arm. The length-conditioning claim is falsified if span-0 clusters BEAT non-cluster purchases, whatever the 4-5 day arm did, and that test does not need the 7.17% the mean test needs.",
+   "smoke": false
+  },
+  {
+   "book": "insider_cluster_same_day_v1",
+   "book_id": "book:4359eba886a8a505",
+   "prereg": "TRIAL-DRAFT-B-insider-cluster-length-v1 (UNSIGNED)",
+   "primary_metric": "net_bhar_22_90_vs_random_active_twin",
+   "confirm_slice": "2017-2024",
+   "ran": true,
+   "spans": [
+    0
+   ],
+   "result": {
+    "n_blocks": 223,
+    "mean_bhar_excess_vs_twin": -0.001574,
+    "nw_lag2_t": -0.392,
+    "p_two_sided": 0.695087,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_note": "both legs pay the same one round trip per event at the flat rate, so the DIFFERENCE is cost-neutral by construction here; the LEVEL of each leg is not, and chunk 5c's curve is what makes the level quotable"
+   },
+   "by_era": {
+    "1990-1999": {
+     "n_blocks": 0,
+     "verdict": "too few blocks to report a mean"
+    },
+    "2000-2009": {
+     "n_blocks": 48,
+     "mean_excess_net_monthly": 0.002552,
+     "nw_lag2_t": 0.3988
+    },
+    "2010-2016": {
+     "n_blocks": 84,
+     "mean_excess_net_monthly": -0.002115,
+     "nw_lag2_t": -0.4114
+    },
+    "2017-2024": {
+     "n_blocks": 91,
+     "mean_excess_net_monthly": -0.00325,
+     "nw_lag2_t": -0.4142
+    }
+   },
+   "declared_mde_per_block": 0.0717,
+   "power_warning": "the registered MDE (7.17%) is ABOVE the published effect (5.0%): a non-significant result here is CONDITIONAL, never FAILED_VARIANT, unless the point estimate is <= 0",
+   "next_test": "the same-day arm. The length-conditioning claim is falsified if span-0 clusters BEAT non-cluster purchases, whatever the 4-5 day arm did, and that test does not need the 7.17% the mean test needs.",
+   "smoke": false
+  },
+  {
+   "book": "disposition_overhang_conditioner_v0",
+   "book_id": "book:a82e6e453c14c241",
+   "prereg": "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0 (UNSIGNED)",
+   "primary_metric": "conditioned_minus_unconditioned",
+   "confirm_slice": "1995-2024",
+   "ran": true,
+   "event_sign": "v0: sign(numup - numdown), IBES EPS fpi=1, at statpers",
+   "result": {
+    "label": "disposition_overhang_conditioner_v0",
+    "twin": "unconditioned_reaction_book_v0",
+    "k": 30,
+    "seed": 43054,
+    "twin_turnover_matched": false,
+    "n_blocks": 395,
+    "median_names_selected": 30,
+    "mean_book_net_monthly": 0.011877,
+    "mean_twin_net_monthly": 0.007899,
+    "mean_excess_net_monthly": 0.003978,
+    "nw_lag2_t": 2.1283,
+    "p_two_sided": 0.03331,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_bps_per_side": 25.0
+   },
+   "by_era": {
+    "1990-1999": {
+     "n_blocks": 95,
+     "mean_excess_net_monthly": 0.00112,
+     "nw_lag2_t": 0.286
+    },
+    "2000-2009": {
+     "n_blocks": 120,
+     "mean_excess_net_monthly": 0.006669,
+     "nw_lag2_t": 1.6358
+    },
+    "2010-2016": {
+     "n_blocks": 84,
+     "mean_excess_net_monthly": 0.004111,
+     "nw_lag2_t": 1.528
+    },
+    "2017-2024": {
+     "n_blocks": 96,
+     "mean_excess_net_monthly": 0.003327,
+     "nw_lag2_t": 1.0685
+    }
+   },
+   "declared_mde_monthly": 0.00724,
+   "declared_effect_size": 0.01,
+   "next_test": "the two FALSIFIERS, either of which closes the book whatever the primary metric says: the sign-flip placebo (long good-news/large-LOSS, short bad-news/large-GAIN, which Frazzini reports at ~0) and the momentum orthogonalisation (mom_12_1 must DIE with overhang on the right-hand side).",
+   "smoke": false
+  },
+  {
+   "book": "abstention_book_v0",
+   "book_id": "book:b109c8861c43e3c6",
+   "prereg": "TRIAL-DRAFT-D-abstention-book-v0 (UNSIGNED)",
+   "ran": false,
+   "refused": "Book D has NO HISTORICAL LEG, by registration rather than by accident. Its `slice_purpose` is CONFIRM forward-only, its `slice_period` is 2026-10-01..2028-09-30, and its own decision rule forbids reading the risk-coverage curve before 24 monthly blocks have accrued. Replaying it on CRSP would be exactly the backfilled forward evidence the three licences prohibit.",
+   "primary_metric": "terminal_wealth_at_equal_drawdown_vs_always_invested_twin",
+   "next_test": "the first cadence pass after seeding writes its first NAV row; the twenty-fourth monthly block is the earliest date any number from it may be read."
+  }
+ ],
+ "receipts": [
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\first_books\\replay\\si_low_turnover_high_v1_2026-09-12T215811Z.json",
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\first_books\\replay\\insider_cluster_length_v1_2026-09-12T215811Z.json",
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\first_books\\replay\\insider_cluster_same_day_v1_2026-09-12T215811Z.json",
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\first_books\\replay\\disposition_overhang_conditioner_v0_2026-09-12T215811Z.json",
+  "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\first_books\\replay\\abstention_book_v0_2026-09-12T215811Z.json"
+ ],
+ "holm": {
+  "family": "NIGHT_JOB_BOOKS_2026_09",
+  "declared_family_size": 4,
+  "legs_with_a_p_value": [
+   "disposition_overhang_conditioner_v0",
+   "insider_cluster_length_v1",
+   "si_low_turnover_high_v1"
+  ],
+  "legs_without": [
+   "abstention_book_v0"
+  ],
+  "per_leg": {
+   "si_low_turnover_high_v1": {
+    "p_raw": 0.023803,
+    "holm_alpha": 0.0125,
+    "rejects_at_holm": false
+   },
+   "disposition_overhang_conditioner_v0": {
+    "p_raw": 0.03331,
+    "holm_alpha": 0.016667,
+    "rejects_at_holm": false
+   },
+   "insider_cluster_length_v1": {
+    "p_raw": 0.937952,
+    "holm_alpha": 0.025,
+    "rejects_at_holm": false
+   }
+  },
+  "note": "Holm is computed against the DECLARED family size, not the number of legs that happened to run. A leg that could not run does not make the correction cheaper for the ones that did."
+ },
+ "n_ran": 4,
+ "n_refused": 1,
+ "headline": "4/5 legs ran over 1990-2024; si_low_turnover_high -0.005407; insider_cluster_length -0.001354; insider_cluster_same_day -0.001574; disposition_overhang_conditioner 0.003978",
+ "verdict": "read each book against its own pre-registration's decision rule, under the family Holm block above",
+ "elapsed_s": 829.3,
+ "written_utc": "2026-09-12T22:11:58+00:00",
+ "run": 1,
+ "stage": "pnl",
+ "awake_s": 829.3,
+ "slept_s": 0.0,
+ "box_s": 5400.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 41012,
+ "killed_pids": [],
+ "exit_code": 0
+}
