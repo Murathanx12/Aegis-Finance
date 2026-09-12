@@ -1,0 +1,387 @@
+{
+ "job": "X4_regime_route",
+ "lane": "X",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "model_calls": 0,
+ "question": "Does admitting R2's monthly read only in the sensor's risk-on regime beat the SAME read admitted in every block?",
+ "sensor": {
+  "module": "backend.services.market_sensor",
+  "inputs": {
+   "trend": "SPY close from bars.parquet, 21-session total return",
+   "vix": "FRED VIXCLS via DataFetcher.fetch_fred_data"
+  },
+  "thresholds": {
+   "trend_lookback_sessions": 21,
+   "trend_up_if": "trailing 21-session total return STRICTLY greater than 0",
+   "trend_tie": "a trailing return of exactly 0 is TREND_DOWN",
+   "vix_regime_line": 20.0,
+   "vix_low_if": "VIX strictly below 20.0",
+   "vix_tie": "VIX exactly 20.00 is VIX_HIGH -- the line is 'below 20 is calm'",
+   "source_of_the_line": "CBOE/FRED's own conventional VIX regime level, fixed in advance. NOT fitted on any outcome in this repository",
+   "risk_on_cell": "TREND_UP x VIX_LOW",
+   "risk_off_cells": "every other observed cell (TREND_DOWN, or VIX_HIGH, or both)"
+  },
+  "states": [
+   "risk_on",
+   "risk_off",
+   "unknown"
+  ],
+  "refuses": "by name, when either leg is unobserved. A trend-only answer is never reported as a regime"
+ },
+ "control": "the UNROUTED read over the identical window -- never a naive benchmark, because the question is what the routing contributes",
+ "status": "EXPLORATORY_IN_SAMPLE",
+ "why_exploratory": "this looks at PANEL-B's existing blocks, which is permitted under PRODUCT_EXPERIMENT's explore-dirty licence; the rule it suggests is evaluated OUT OF SAMPLE on new blocks before it is believed, and nothing here admits or promotes anything (spec section 5.2)",
+ "regime_by_month": {
+  "2025-01": {
+   "as_of": "2025-01-01",
+   "regime": "unknown",
+   "cell": null,
+   "reason": "no SPY session on or before 2025-01-01"
+  },
+  "2025-02": {
+   "as_of": "2025-02-01",
+   "trend_return": null,
+   "vix_observed_at": "2025-01-31",
+   "regime": "unknown",
+   "cell": null,
+   "trend": null,
+   "vix": 16.43,
+   "reason": "the 21-session SPY trend is unobserved"
+  },
+  "2025-03": {
+   "as_of": "2025-03-01",
+   "trend_return": -0.012676,
+   "vix_observed_at": "2025-02-28",
+   "regime": "risk_off",
+   "cell": "TREND_DOWN x VIX_LOW",
+   "trend": "TREND_DOWN",
+   "vix_cell": "VIX_LOW",
+   "vix": 19.63,
+   "reason": null
+  },
+  "2025-05": {
+   "as_of": "2025-05-01",
+   "trend_return": -0.004447,
+   "vix_observed_at": "2025-05-01",
+   "regime": "risk_off",
+   "cell": "TREND_DOWN x VIX_HIGH",
+   "trend": "TREND_DOWN",
+   "vix_cell": "VIX_HIGH",
+   "vix": 24.6,
+   "reason": null
+  },
+  "2025-06": {
+   "as_of": "2025-06-01",
+   "trend_return": 0.062854,
+   "vix_observed_at": "2025-05-30",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 18.57,
+   "reason": null
+  },
+  "2025-07": {
+   "as_of": "2025-07-01",
+   "trend_return": 0.051033,
+   "vix_observed_at": "2025-07-01",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 16.83,
+   "reason": null
+  },
+  "2025-08": {
+   "as_of": "2025-08-01",
+   "trend_return": 0.002053,
+   "vix_observed_at": "2025-08-01",
+   "regime": "risk_off",
+   "cell": "TREND_UP x VIX_HIGH",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_HIGH",
+   "vix": 20.38,
+   "reason": null
+  },
+  "2025-09": {
+   "as_of": "2025-09-01",
+   "trend_return": 0.020524,
+   "vix_observed_at": "2025-09-01",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 16.12,
+   "reason": null
+  },
+  "2025-10": {
+   "as_of": "2025-10-01",
+   "trend_return": 0.046919,
+   "vix_observed_at": "2025-10-01",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 16.29,
+   "reason": null
+  },
+  "2025-11": {
+   "as_of": "2025-11-01",
+   "trend_return": 0.019181,
+   "vix_observed_at": "2025-10-31",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 17.44,
+   "reason": null
+  },
+  "2025-12": {
+   "as_of": "2025-12-01",
+   "trend_return": 0.000653,
+   "vix_observed_at": "2025-12-01",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 17.24,
+   "reason": null
+  },
+  "2026-01": {
+   "as_of": "2026-01-01",
+   "trend_return": 0.005381,
+   "vix_observed_at": "2025-12-31",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 14.95,
+   "reason": null
+  },
+  "2026-02": {
+   "as_of": "2026-02-01",
+   "trend_return": 0.007214,
+   "vix_observed_at": "2026-01-30",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 17.44,
+   "reason": null
+  },
+  "2026-03": {
+   "as_of": "2026-03-01",
+   "trend_return": -0.013561,
+   "vix_observed_at": "2026-02-27",
+   "regime": "risk_off",
+   "cell": "TREND_DOWN x VIX_LOW",
+   "trend": "TREND_DOWN",
+   "vix_cell": "VIX_LOW",
+   "vix": 19.86,
+   "reason": null
+  },
+  "2026-04": {
+   "as_of": "2026-04-01",
+   "trend_return": -0.034195,
+   "vix_observed_at": "2026-04-01",
+   "regime": "risk_off",
+   "cell": "TREND_DOWN x VIX_HIGH",
+   "trend": "TREND_DOWN",
+   "vix_cell": "VIX_HIGH",
+   "vix": 24.54,
+   "reason": null
+  },
+  "2026-05": {
+   "as_of": "2026-05-01",
+   "trend_return": 0.099823,
+   "vix_observed_at": "2026-05-01",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 16.99,
+   "reason": null
+  },
+  "2026-06": {
+   "as_of": "2026-06-01",
+   "trend_return": 0.055496,
+   "vix_observed_at": "2026-06-01",
+   "regime": "risk_on",
+   "cell": "TREND_UP x VIX_LOW",
+   "trend": "TREND_UP",
+   "vix_cell": "VIX_LOW",
+   "vix": 16.05,
+   "reason": null
+  },
+  "2026-07": {
+   "as_of": "2026-07-01",
+   "trend_return": -0.014314,
+   "vix_observed_at": "2026-07-01",
+   "regime": "risk_off",
+   "cell": "TREND_DOWN x VIX_LOW",
+   "trend": "TREND_DOWN",
+   "vix_cell": "VIX_LOW",
+   "vix": 16.59,
+   "reason": null
+  }
+ },
+ "regime_counts": {
+  "unknown": 2,
+  "risk_off": 6,
+  "risk_on": 10
+ },
+ "sensor_refusals": [
+  "no SPY session on or before 2025-01-01",
+  "the 21-session SPY trend is unobserved"
+ ],
+ "admitted_regime": "risk_on",
+ "unrouted": {
+  "label": "unrouted: every block",
+  "cells": 474,
+  "date_blocks": 18,
+  "dropped_unlabelled": 0,
+  "directional_calls": 435,
+  "share_flat": 0.082,
+  "sign_accuracy": 0.4713,
+  "long_short_monthly_mean_pct": 0.0004,
+  "long_short_ann_pct": 0.005,
+  "long_short_ann_pct_NET": -3.921,
+  "t_nw_blocks": 0.001,
+  "t_nw_blocks_NET": -0.454,
+  "monthly_sd_pp": 3.373,
+  "turnover_per_rebalance": 1.3084,
+  "cost_bps_per_side": 25.0,
+  "cost_drag_ann_pct": 3.925
+ },
+ "routed": {
+  "label": "routed: risk_on blocks only",
+  "cells": 262,
+  "date_blocks": 10,
+  "dropped_unlabelled": 0,
+  "directional_calls": 243,
+  "share_flat": 0.073,
+  "sign_accuracy": 0.4774,
+  "long_short_monthly_mean_pct": -0.7739,
+  "long_short_ann_pct": -9.286,
+  "long_short_ann_pct_NET": -13.224,
+  "t_nw_blocks": -0.817,
+  "t_nw_blocks_NET": -1.181,
+  "monthly_sd_pp": 3.641,
+  "turnover_per_rebalance": 1.3126,
+  "cost_bps_per_side": 25.0,
+  "cost_drag_ann_pct": 3.938
+ },
+ "blocks_admitted": [
+  "2025-06",
+  "2025-07",
+  "2025-09",
+  "2025-10",
+  "2025-11",
+  "2025-12",
+  "2026-01",
+  "2026-02",
+  "2026-05",
+  "2026-06"
+ ],
+ "blocks_total": [
+  "2025-01",
+  "2025-02",
+  "2025-03",
+  "2025-05",
+  "2025-06",
+  "2025-07",
+  "2025-08",
+  "2025-09",
+  "2025-10",
+  "2025-11",
+  "2025-12",
+  "2026-01",
+  "2026-02",
+  "2026-03",
+  "2026-04",
+  "2026-05",
+  "2026-06",
+  "2026-07"
+ ],
+ "cells_admitted": 262,
+ "cells_total": 474,
+ "comparison": {
+  "routed_net_ann_pct": -13.224,
+  "unrouted_net_ann_pct": -3.921,
+  "difference_ann_pct": -9.303,
+  "routed_blocks": 10,
+  "unrouted_blocks": 18,
+  "routed_t_nw": -1.181,
+  "unrouted_t_nw": -0.454,
+  "not_a_paired_test": "the two books hold the SAME positions on every admitted block; routing changes only which blocks are in the average, so this difference of two means is not a paired difference and carries no t of its own. The t on each book is its own"
+ },
+ "verdict": "EXPLORATORY_IN_SAMPLE: routing to risk_on keeps 10/18 blocks and -13.224%/yr net against the unrouted -3.921%/yr. This is a look at already-collected data under the explore-dirty licence; the rule is not admitted until it is evaluated on blocks it did not choose.",
+ "headline": "routed -13.224%/yr net on 10 blocks vs unrouted -3.921%/yr on 18; regimes {'unknown': 2, 'risk_off': 6, 'risk_on': 10}",
+ "family_max_p": null,
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": true,
+   "date_shifted_placebo_run": false,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "not applicable: X4 makes no model call of its own",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-06-30",
+   "cutoff_source": "triangulated from OpenRouter/Puter provider pages and the community tracker github.com/HaoooWang/llm-knowledge-cutoff-dates; some secondary sources say April 2024. NOT an official Alibaba cutoff page and NOT verified against Qwen's own model card in this session",
+   "cutoff_confidence": "MEDIUM",
+   "evidence_paths": {
+    "anonymised": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\R2_widened_panelB_answers.jsonl",
+    "date_shifted_placebo_run": null,
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": true,
+   "note": "the cells are R2's own, whose label construction requires the successor month to be literally the next one"
+  },
+  "P3_direction_flip": {
+   "pass_rate": null,
+   "n": 0,
+   "test": "not run in this job: the flip test belongs to X2"
+  },
+  "P4_calibration_ece": {
+   "ece": null,
+   "n_bins": 10,
+   "brier": null,
+   "brier_decomposition": {}
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "r2_trial.COST_BPS_PER_SIDE (25 bps/side on realised turnover)",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": null,
+   "costed": true,
+   "gross_reported_separately": true
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "dir, conf": "Qwen2.5-7B via the frozen TRIAL-R2 prompt, read from disk",
+    "regime": "deterministic: 21-session SPY trend from bars.parquet and FRED VIXCLS, thresholds frozen in market_sensor.THRESHOLDS",
+    "routed/unrouted net": "night_r2_monthly_llm.grade, unchanged"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "PANEL-B (2025-01..2026-07) is entirely AFTER Qwen2.5-7B's ~2024-06 cutoff, so LAP is structurally near zero on every cell this job re-grades (spec section 1.3); L3 owns the measurement"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": null,
+  "t": null,
+  "adopted_arm": null,
+  "reason": "X4 re-grades R2's already-masked answers and adds no text arm of its own; X_anon_gap owns the gap"
+ },
+ "elapsed_s": 0.3,
+ "written_utc": "2026-09-12T12:40:23+00:00",
+ "run": 1
+}
