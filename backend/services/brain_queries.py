@@ -213,24 +213,30 @@ def panel_query(fields: list[str] | None = None, filters: dict | None = None,
     code cannot parse must never be treated as early enough.
     """
     n = _check_limit(limit)
+    import pandas as pd
+
+    # VALIDATE THE REQUEST BEFORE TOUCHING DATA. CI's checkout has no panel
+    # parquet, and the first version answered an unparseable `as_of` with
+    # "no panel" instead of the refusal -- a request error reported as an
+    # environment error (the same defect family as the cadence 422 of 09-12).
+    cut = None
+    if as_of:
+        cut = pd.to_datetime(as_of, utc=True, errors="coerce")
+        if cut is None or pd.isna(cut):
+            raise QueryRefused(
+                f"as_of={as_of!r} is not a date this surface can parse; a "
+                f"cut-off nobody can read is a query with no cut-off")
     path = _sandboxed(DATA().joinpath(*NEWS_PANEL))
     if not path.is_file():
         return {"rows": [], "n": 0, "truncated": False, "as_of_applied": as_of,
                 "available": False,
                 "why": f"CANNOT DETERMINE, no panel at {path}"}
-    import pandas as pd
-
     df = pd.read_parquet(path)
     anchor = n_no_anchor = None
     if as_of:
         anchor = ("first_seen_utc" if "first_seen_utc" in df.columns
                   else "published_utc")
         stamps = pd.to_datetime(df[anchor], errors="coerce", utc=True)
-        cut = pd.to_datetime(as_of, utc=True, errors="coerce")
-        if cut is None or pd.isna(cut):
-            raise QueryRefused(
-                f"as_of={as_of!r} is not a date this surface can parse; a "
-                f"cut-off nobody can read is a query with no cut-off")
         # ROWS WITH NO READABLE ANCHOR ARE EXCLUDED AND COUNTED. On this
         # checkout only 808 of 340,465 panel rows carry a `first_seen_utc` --
         # the rest predate the stamp -- so an `as_of` query returns almost
