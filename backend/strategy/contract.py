@@ -82,7 +82,19 @@ DEFAULT_EXIT_PRIORITY: tuple[str, ...] = (
 )
 
 KNOWN_WEIGHTING = ("ew", "vw", "inverse_vol", "rank", "ce_kelly")
-KNOWN_CONSTRUCTION = ("top_k", "composite_top_k", "rank_weight", "passthrough")
+#: `threshold_coverage` was added 2026-09-12 for lane B's abstention book
+#: (`docs/research_notes/2026-09-12/spec_first_books.md` §D.3): the book holds
+#: its declared fallback (cash, or an index) unless a name's signal clears a
+#: threshold, so COVERAGE is the decision and top-k is only what happens once
+#: coverage is non-empty. It is a new ALLOWED VALUE, not a new field -- adding a
+#: field to `Construction` would change the fingerprint of every book ever
+#: written, and a fingerprint is what tells two sessions they are looking at the
+#: same strategy. The threshold and the fallback ride in `Strategy.engine_params`
+#: (`{"abstain": {"min_signal": ..., "min_names": ..., "fallback": "CASH"}}`),
+#: which is already part of the hash. The spec's synthetic-`CASH_OR_SPY`
+#: workaround still works and is no longer required.
+KNOWN_CONSTRUCTION = ("top_k", "composite_top_k", "rank_weight", "passthrough",
+                      "threshold_coverage")
 
 #: The TWO RULERS. A ranked comparison names the objective it was computed
 #: under, or it is not a ranked comparison.

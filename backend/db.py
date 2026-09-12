@@ -31,7 +31,7 @@ DB_PATH = DATA_DIR / "aegis_pi.db"
 
 _write_lock = threading.Lock()
 
-CURRENT_SCHEMA_VERSION = 8
+CURRENT_SCHEMA_VERSION = 9
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS _schema_version (
@@ -309,6 +309,63 @@ def _run_migrations(conn: sqlite3.Connection, from_version: int, to_version: int
             );
             CREATE INDEX IF NOT EXISTS idx_alerts_rule_subject
                 ON alerts (rule, subject, created_at);
+        """)
+
+    if from_version < 9:
+        # v9: paper_books — lane B's unit (roadmap §3 B1). A book is a FROZEN
+        # `backend.strategy.contract.Strategy` + a cadence + an origin + its
+        # control twins, and its id is `book:<fingerprint>`.
+        #
+        # WHY A NEW TABLE AND NOT A COLUMN ON paper_portfolios. The four
+        # reference lanes' rows are the track record (CANON §5) and nothing here
+        # touches them: this table is additive, and the only row a book adds to
+        # an EXISTING table is one `paper_portfolios` row under the `book:`
+        # namespace, which paper_nav's foreign key requires. Every lane
+        # enumerator in this repository reads an explicit lane list
+        # (main.py's `lane_ids`, scheduler.nav_freshness's REFERENCE_LANES +
+        # seeded optionals), so a book is invisible to all of them; the one
+        # reader that enumerated paper_nav wholesale — control's /fleet — now
+        # excludes the namespace by name, because the fleet table has no twin
+        # column and a book is never shown without its twin (B3).
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS paper_books (
+                id TEXT PRIMARY KEY,             -- 'book:<16-hex fingerprint>'
+                fingerprint TEXT NOT NULL,       -- Strategy.fingerprint
+                strategy_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                contract_json TEXT NOT NULL,     -- Strategy.as_dict(), frozen
+                cadence TEXT NOT NULL,           -- 30m|daily|weekly|monthly|quarterly
+                origin TEXT NOT NULL,            -- human_text|night_job|mutation|twin_of:<id>
+                origin_text TEXT NOT NULL DEFAULT '',
+                control_twin_ids TEXT NOT NULL DEFAULT '[]',   -- JSON list of book ids
+                control_construction TEXT NOT NULL DEFAULT '',
+                ips_hash TEXT,
+                shadow INTEGER NOT NULL DEFAULT 0,
+                created_utc TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'holding'  -- holding|flipped|retired
+            );
+            CREATE INDEX IF NOT EXISTS idx_paper_books_cadence
+                ON paper_books (cadence, status);
+            CREATE INDEX IF NOT EXISTS idx_paper_books_origin
+                ON paper_books (origin);
+
+            -- One row per (book, decision). The weights a decision produced,
+            -- kept beside paper_positions so a decision that traded nothing is
+            -- still a decision with a record.
+            CREATE TABLE IF NOT EXISTS paper_book_decisions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                book_id TEXT NOT NULL REFERENCES paper_books(id),
+                decided_utc TEXT NOT NULL,
+                asof_date TEXT NOT NULL,
+                weights_json TEXT NOT NULL,
+                nav_before REAL,
+                traded_notional REAL,
+                cost_usd REAL,
+                note TEXT,
+                UNIQUE(book_id, asof_date)
+            );
+            CREATE INDEX IF NOT EXISTS idx_book_decisions
+                ON paper_book_decisions (book_id, asof_date);
         """)
 
 

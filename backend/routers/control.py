@@ -475,7 +475,18 @@ FLEET_BENCHMARK_LANE = os.getenv("AEGIS_FLEET_BENCHMARK_LANE", "balanced-ew-cont
 
 
 def _nav_series() -> dict[str, list[tuple[str, float]]]:
+    """Every LANE's NAV series. The `book:` namespace is excluded BY NAME.
+
+    Lane B writes a paper book's marks into the same table under
+    `portfolio_id = "book:<fingerprint>"` (`services/paper_books.py`). This
+    table has no twin column and no twin row, and B3's rule is that a book's
+    number is never shown without its twin's -- so a book must not arrive here
+    and be rendered as a fourteenth lane. Books have their own endpoint
+    (`/api/control/books`), which returns each book WITH its twins or not at
+    all.
+    """
     from backend.db import get_connection
+    from backend.services.paper_books import is_book_id
     conn = get_connection()
     try:
         rows = conn.execute(
@@ -488,7 +499,7 @@ def _nav_series() -> dict[str, list[tuple[str, float]]]:
         pid = r["portfolio_id"] if hasattr(r, "keys") else r[0]
         d = r["date"] if hasattr(r, "keys") else r[1]
         nav = r["nav"] if hasattr(r, "keys") else r[2]
-        if nav is None:
+        if nav is None or is_book_id(pid):
             continue
         out.setdefault(str(pid), []).append((str(d), float(nav)))
     return out
