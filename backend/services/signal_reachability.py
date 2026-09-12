@@ -131,6 +131,14 @@ CLASSIFIED: dict[str, str] = {
         "the first leak. It is exercised by `test_ask_authority.py`'s three "
         "directional tests and becomes reachable the day the distillation job "
         "lands. Reclassify or delete it if M2 is abandoned."),
+    "backend.services.scenario_forecasts": (
+        "AWAITS -- X3's contract, shipped BEFORE its two inputs exist (chunk 7, "
+        "2026-09-12). Grading needs L2's typed-event extraction over the daily "
+        "corpus and pricing needs E1's (event_type, era) base-rate table in the "
+        "39-id vocabulary; both are chunk 9's E1 prerequisite. It is exercised by "
+        "`test_scenario_forecasts.py` and by nothing else, and it says so in its own "
+        "`NOT_WIRED` string and in `declaration()[\"wired\"] is False`. Reclassify "
+        "the day the Morning calls it; delete it if X3 is abandoned."),
     "backend.tests": (
         "OK — the suite. It reaches the system, not the other way round."),
     "backend.services.copy_lab": (
