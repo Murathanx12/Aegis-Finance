@@ -20,11 +20,24 @@ client = TestClient(app)
 
 @pytest.fixture()
 def books_db(tmp_path, monkeypatch):
-    """Point every default DB handle at a throwaway file with the lanes seeded."""
+    """Point every default DB handle at a throwaway file with the lanes seeded.
+
+    BOTH handles. `backend.db.DB_PATH` is what the routers read, and
+    `paper_books._conn` is separately redirected by conftest's
+    `_book_cadence_receipts_to_tmp` (so a Morning click in any test cannot mark
+    the machine's real books). This fixture runs AFTER that autouse one, so
+    patching `_conn` again here wins and points both at the same file -- which
+    is the whole point: the route and the test must be looking at one database.
+    """
     from backend import db as DB
+    from backend.db import get_connection, init_db
     path = tmp_path / "aegis_pi.db"
     conn = seeded_db(path)
     monkeypatch.setattr(DB, "DB_PATH", path)
+    monkeypatch.setattr(
+        PB, "_conn",
+        lambda db_path=None: (init_db(db_path or path)
+                              or get_connection(db_path or path)))
     yield path, conn
     conn.close()
 
