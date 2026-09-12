@@ -347,6 +347,27 @@ enrolment and the passthrough twin. Suite 8,527 → 8,639. **Owed:** Books B and
 the passthrough fix and carry only the random twin — an attended re-seed adds their beta-matched twin.
 A and C mark but refuse to decide forward: their panels are CRSP-keyed and CRSP ends 2024-12.
 
+**Chunk 5c landed (validated 2026-09-12 night):** `c673180` `backend/services/cost_curve.py` — one-way
+cost = half effective spread (measured, 184 names) + the vendored `sqrt_impact` with **η = 0.1206**
+(solved so impact at 1% ADV plus the median half spread = 40 bp, the midpoint of the FIM 2018 range the
+spec cites — the paper itself was not re-checked, and the receipt says so; in the vendor's daily-vol
+units that is η·√252 = 1.91, well above Almgren's 0.3-0.8 — a fifth cost ruler, stated), a regression
+fallback for unmeasured names (n 177, R² 0.48, LOO 0.40: log dollar volume −0.386, log price **+0.078**
+— the spec predicted negative; the tick floor barely binds at 177 large caps — vol +1.416),
+`retail_paper` a refusing stub until D2; `c16c77a` `CostModel.curve` / `Policy` per-fill charging,
+hash-neutral by two mechanisms and pinned by re-hashing **2,094 archived farm rows** (8 more cannot be
+reconstructed: a signal renamed in August); `94f31ff` validation — LOO MAE by liquidity tercile 1.74 /
+0.32 / 0.29 bp; **the DSR sensitivity of the top night result (G1's best genome on G2's holdout, 107
+months): Sharpe +0.155 under C2's overcharge → +0.532 flat → +0.704 empirical, DSR at 40,680 trials
+0.0000 / 0.0001 / 0.0010 — the level moves 4.5×, the verdict does not move at all**; `b0f0c01` the
+migration — 90 files, 208 receipts re-graded, 635 refused by name, no-op re-grade exact, median level
++0.54 pp CAGR, max +1.97, **31 families: 30 rankings unchanged, 1 changed** (a null control at turnover
+0.354 overtook `prior` at 0.196 — a cheaper ruler rewards turnover); `601867c` data paths rooted on
+`AEGIS_REPO_ROOT`. Caveats: the farm can never reach the measured branch (CRSP is permno-keyed, the
+curve ticker-keyed — every farm fill is `EXTRAPOLATED_REGRESSION` and the provenance mix says so); the
+re-grade uses a representative median rate above each book's floor and omits impact (no notional
+declared). Suite 8,639 → 8,694.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits

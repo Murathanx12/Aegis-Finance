@@ -167,6 +167,12 @@ before crediting discovery** (protocol §9).
   job (smoke only; full pass 20-45 min, not run), lane D's book `book:f64e8d9912412124` and
   `scripts/monday_night.py`, the arena job on the venue's real protocol. Suite 8,314 → 8,639; CI green
   through 5b's fix. **Chunk 5c** (the cost model) was building at close.
+- **Chunk 5c** (the TAQ empirical cost model) landed at 18:50: **the one measured result of the
+  evening — re-graded under the empirical curve, the top night result's Sharpe moves 4.5× in level
+  (+0.155 → +0.704) and its deflated Sharpe does not move at all (0.0000 → 0.0010 at 40,680 trials).
+  The cost model was never what stood between that genome and a claim.** 208 receipts re-graded, 30
+  of 31 rankings unchanged; the one that changed is a null control overtaking a prior because a
+  cheaper ruler rewards turnover. Suite 8,694.
 - **Every remaining chunk has a builder spec** under `research_notes/2026-09-12/` (5c cost model, 6
   agency intake, 7 lane X, 8 memory + stopping rules, 9 heads/conformal/Qwen3) plus two probes (the
   short-interest panel exists locally; Alpaca IEX minute bars: one paginated stream a day, ~10 MB).
