@@ -196,6 +196,32 @@ before crediting discovery** (protocol §9).
   R2 panel B run when it is next up — with the conservative batch sizes and the power plan checked.
 - Attended, unchanged: lane D's paper role, the arena registration, `TdrDelay`, the B/B′ re-seed.
 
+## 3f. RESUMED 2026-09-13 01:30 → 02:20 HKT — chunks 8 and 9 validated and pushed; every planned chunk has now landed once
+
+- **Chunk 8** validated (9,180 after fixes): the night search's one ACTIVE lineage survives deflation
+  at 595 trials (per-bank Sharpe 6.27 vs an expected-max bar of 3.15) while the random-genome null has
+  0 of 10 survivors; the first learned rule is CANNOT DETERMINE on 0 resolved rows; the decay sweep's
+  gain is partly dilution and says so; week 1's published-anomaly prereg passes the linter.
+- **Chunk 9** validated (9,272): the frozen embedding FAILED_VARIANT at 5 and 21 sessions (Holm 1.0
+  vs shuffled text); the typed-event proxy head beats GBM at 21 sessions but not shuffled events;
+  ACI lifts high-vol coverage 0.837 → 0.880; ADWIN needs a [0,1] stream to fire at all; Qwen3 would
+  take 25.6 days on panel B vs 3.9 h for the incumbent at the contended rate — the idle measurement
+  decides; the stage field is on receipts.
+- **Three CI reds in one night, all the same family** (a request validated only after a data file the
+  runner lacks): a bad cadence answered 503; re-grades written beside gitignored scratch receipts; an
+  unparseable `as_of` answered "no panel". Rule: validate the request before touching data. And one of
+  mine: I pushed on the commit chain instead of the suite's exit line (memory written).
+- **What is now on disk that was not two days ago:** the launcher; the board; the universe; the
+  Morning click; Ask with tools; the 52-week target with its backtest; the news corpus (17 sources);
+  books with twins and a cadence; seven pre-registered books; lane D's book; the agency intake; the
+  P1-P6 protocol; the empirical cost curve; stopping rules; distillation; the read-only query surface;
+  the heads with conformal and drift. **No strategy has moved. RESULT IMPROVEMENT: NONE.** What has
+  moved is that every number now sits beside its twin, its cost curve, its calibration and its refusal.
+- **Next (chunk 10, not yet specified):** wire L2 (typed-event extraction) — every text head above ran
+  on a keyword proxy; run the model-dependent jobs once the server is up under the night rules
+  (R2 panel B, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text); the
+  full E1 two-model run; the B/B′ re-seed; the attended items unchanged.
+
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
 1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.
