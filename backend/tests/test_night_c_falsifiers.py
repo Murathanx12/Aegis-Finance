@@ -204,6 +204,8 @@ def test_momentum_that_was_never_alive_cannot_be_subsumed_and_says_so():
                                                 "nw_lag2_t": 1.3809,
                                                 "declared_effect_size": 0.01})
     assert out["verdict"] == "CONDITIONAL"
+    assert "untestable, not passed" in out["reading"]
+    assert "both falsifiers PASSED" not in out["reading"]
 
 
 def test_a_live_raw_momentum_marks_the_subsumption_test_as_testable():

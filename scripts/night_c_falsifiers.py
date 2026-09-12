@@ -543,6 +543,13 @@ def january_split(result: dict) -> dict:
 def decide(placebo: dict, momentum: dict, primary: dict | None) -> dict:
     """TRIAL-DRAFT-C §5, applied. The falsifiers can only LOWER the standing."""
     clauses = []
+    # How the no-fire case is WORDED depends on whether the subsumption test
+    # could run at all (2026-09-13: raw momentum t 0.15 on the book's rows).
+    passed = ("both falsifiers PASSED"
+              if momentum.get("subsumption_testable", True)
+              else "the placebo PASSED and the momentum clause does not fire "
+                   "(momentum was never alive on these rows, so the subsumption "
+                   "test is untestable, not passed)")
     if placebo.get("placebo_pays"):
         clauses.append("the sign-flip placebo ALSO pays (§5 FAILED_VARIANT, "
                        "clause 1: it is drift, i.e. momentum again, not "
@@ -581,11 +588,11 @@ def decide(placebo: dict, momentum: dict, primary: dict | None) -> dict:
                             "$10M floor, which this job does not measure.")}
     if mean is None:
         return {"verdict": "CONDITIONAL", "clauses_fired": [],
-                "reading": ("both falsifiers PASSED; the primary metric is "
+                "reading": (f"{passed}; the primary metric is "
                             "unreadable on this checkout, so CONDITIONAL "
                             "stands unchanged.")}
     reading = (
-        f"both falsifiers PASSED, so neither §5 FAILED_VARIANT clause fires. "
+        f"{passed}, so neither §5 FAILED_VARIANT clause fires. "
         f"The standing verdict is therefore the one the primary metric earned "
         f"and no better: {mean:+.6f}/month at NW lag-2 t {t} is below the "
         f"declared {declared:.4f}/month, which is CONDITIONAL. A falsifier "
