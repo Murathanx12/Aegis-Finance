@@ -1,0 +1,261 @@
+{
+ "job": "A_corner",
+ "family": "NIGHT_JOB_BOOKS_2026_09",
+ "licence": "PRODUCT_EXPERIMENT",
+ "book": "si_low_turnover_high_v1",
+ "book_id": "book:1934ec97aa4b1620",
+ "prereg": "TRIAL-DRAFT-A-si-low-turnover-high-v1 (UNSIGNED)",
+ "window": [
+  1990,
+  2024
+ ],
+ "smoke": false,
+ "primary_metric": "net_monthly_excess_vs_random_twin",
+ "confirm_slice": "2011-2024",
+ "floors_usd": {
+  "primary": 3000000.0,
+  "secondary": 10000000.0
+ },
+ "k": 50,
+ "seed": 6452,
+ "min_names": 20,
+ "cost_curve": "flat_25bps_pending_5c",
+ "cost_bps_per_side": 25.0,
+ "declared_mde_monthly": 0.00685,
+ "declared_effect_size": 0.01,
+ "question": "Does the low-SI x high-turnover double sort behave the same at the $10M floor as at the $3M floor, against a twin RE-DRAWN at each floor?",
+ "caveats": [
+  "COST: the flat 25 bps ruler is interim (chunk 5c's TAQ curve is pending). Book and twin both pay it and only DIFFERENCES are read.",
+  "TURNOVER IS NOT VENUE-ADJUSTED (\u00a78): Nasdaq double-counting (Anderson-Dyl 2005) is UNRESOLVED and every panel row carries `turnover_unadjusted_for_venue = True`. A cross-venue turnover sort is exactly what that bites, and raising the floor changes the venue mix of the universe, so the two cells do not share it.",
+  "\u00a78: neither floor may be quoted without the other."
+ ],
+ "next_test": "nothing further on THIS construction. \u00a78 forbids re-bucketing after the read, so a short-interest LEVEL book that works would have to be a new registration with its own corpse check -- and per EXPLORE DIRTY, PROMOTE CLEAN, a failed implementation closes that implementation and not the instrument.",
+ "months_in_panel": 420,
+ "permnos_in_panel": 18684,
+ "contamination_clause": {
+  "rule": "TRIAL-DRAFT-A \u00a75: a confirm-slice year whose panel join rate falls below 0.50 is EXCLUDED and the exclusion is reported BEFORE the number is.",
+  "min_join_rate": 0.5,
+  "join_rate_by_year": {
+   "primary": {
+    "1990": 0.6197,
+    "1991": 0.7049,
+    "1992": 0.6901,
+    "1993": 0.6608,
+    "1994": 0.6522,
+    "1995": 0.6086,
+    "1996": 0.5734,
+    "1997": 0.585,
+    "1998": 0.5911,
+    "1999": 0.5319,
+    "2000": 0.4699,
+    "2001": 0.5707,
+    "2002": 0.6275,
+    "2003": 0.82,
+    "2004": 0.9925,
+    "2005": 0.993,
+    "2006": 0.9928,
+    "2007": 0.9917,
+    "2008": 0.9932,
+    "2009": 0.993,
+    "2010": 0.9946,
+    "2011": 0.9942,
+    "2012": 0.995,
+    "2013": 0.9936,
+    "2014": 0.9938,
+    "2015": 0.993,
+    "2016": 0.9925,
+    "2017": 0.9911,
+    "2018": 0.9924,
+    "2019": 0.9931,
+    "2020": 0.9905,
+    "2021": 0.9884,
+    "2022": 0.9944,
+    "2023": 0.9939,
+    "2024": 0.9931
+   },
+   "secondary": {
+    "1990": 0.6562,
+    "1991": 0.7349,
+    "1992": 0.7312,
+    "1993": 0.7241,
+    "1994": 0.7083,
+    "1995": 0.6474,
+    "1996": 0.6401,
+    "1997": 0.6544,
+    "1998": 0.659,
+    "1999": 0.5705,
+    "2000": 0.4879,
+    "2001": 0.6065,
+    "2002": 0.6762,
+    "2003": 0.8453,
+    "2004": 0.9933,
+    "2005": 0.9937,
+    "2006": 0.9932,
+    "2007": 0.993,
+    "2008": 0.9932,
+    "2009": 0.9932,
+    "2010": 0.9952,
+    "2011": 0.9942,
+    "2012": 0.9945,
+    "2013": 0.9933,
+    "2014": 0.9934,
+    "2015": 0.9926,
+    "2016": 0.993,
+    "2017": 0.9919,
+    "2018": 0.9934,
+    "2019": 0.9924,
+    "2020": 0.9911,
+    "2021": 0.9899,
+    "2022": 0.9946,
+    "2023": 0.9937,
+    "2024": 0.994
+   }
+  },
+  "excluded_years": {
+   "primary": [],
+   "secondary": []
+  },
+  "fired": false,
+  "how_exclusion_works": "the selector returns nothing for an excluded month, so the book and its twin lose the same months. Dropping one leg's months would be a different comparison."
+ },
+ "universe_shrinkage": {
+  "median_eligible_names_3m": 1696,
+  "median_eligible_names_10m": 1094,
+  "why": "the corner is only a corner if it moves the universe. A $10M cell over the same names as the $3M cell would be the same test run twice."
+ },
+ "ran": true,
+ "cell_primary_3m": {
+  "label": "si_low_turnover_high_v1_floor3m",
+  "floor_usd": 3000000.0,
+  "result": {
+   "label": "si_low_turnover_high_v1_floor3m",
+   "twin": "random_universe",
+   "k": 50,
+   "seed": 6452,
+   "floor_usd": 3000000.0,
+   "twin_turnover_matched": true,
+   "n_blocks": 417,
+   "median_names_selected": 50,
+   "mean_book_net_monthly": 0.000868,
+   "mean_twin_net_monthly": 0.006275,
+   "mean_excess_net_monthly": -0.005407,
+   "nw_lag2_t": -2.2603,
+   "p_two_sided": 0.023803,
+   "cost_curve": "flat_25bps_pending_5c",
+   "cost_bps_per_side": 25.0
+  },
+  "confirm_slice": {
+   "slice": "2011-2024",
+   "n_blocks": 168,
+   "mean_excess_net_monthly": -0.009368,
+   "nw_lag2_t": -2.0877,
+   "p_two_sided": 0.036823
+  },
+  "reported_slice_1990_2010": {
+   "slice": "1990-2010",
+   "n_blocks": 249,
+   "mean_excess_net_monthly": -0.002735,
+   "nw_lag2_t": -1.0595,
+   "p_two_sided": 0.28937
+  },
+  "by_era": {
+   "1990-1999": {
+    "n_blocks": 117,
+    "mean_excess_net_monthly": -0.003043,
+    "nw_lag2_t": -1.2024
+   },
+   "2000-2009": {
+    "n_blocks": 120,
+    "mean_excess_net_monthly": -0.001893,
+    "nw_lag2_t": -0.4036
+   },
+   "2010-2016": {
+    "n_blocks": 84,
+    "mean_excess_net_monthly": -0.009941,
+    "nw_lag2_t": -2.2099
+   },
+   "2017-2024": {
+    "n_blocks": 96,
+    "mean_excess_net_monthly": -0.008714,
+    "nw_lag2_t": -1.2687
+   }
+  }
+ },
+ "cell_secondary_10m": {
+  "label": "si_low_turnover_high_v1_floor10m",
+  "floor_usd": 10000000.0,
+  "result": {
+   "label": "si_low_turnover_high_v1_floor10m",
+   "twin": "random_universe",
+   "k": 50,
+   "seed": 6452,
+   "floor_usd": 10000000.0,
+   "twin_turnover_matched": true,
+   "n_blocks": 417,
+   "median_names_selected": 50,
+   "mean_book_net_monthly": 0.004418,
+   "mean_twin_net_monthly": 0.007399,
+   "mean_excess_net_monthly": -0.00298,
+   "nw_lag2_t": -1.3627,
+   "p_two_sided": 0.172965,
+   "cost_curve": "flat_25bps_pending_5c",
+   "cost_bps_per_side": 25.0
+  },
+  "confirm_slice": {
+   "slice": "2011-2024",
+   "n_blocks": 168,
+   "mean_excess_net_monthly": -0.002527,
+   "nw_lag2_t": -0.6377,
+   "p_two_sided": 0.523689
+  },
+  "reported_slice_1990_2010": {
+   "slice": "1990-2010",
+   "n_blocks": 249,
+   "mean_excess_net_monthly": -0.003286,
+   "nw_lag2_t": -1.3122,
+   "p_two_sided": 0.189439
+  },
+  "by_era": {
+   "1990-1999": {
+    "n_blocks": 117,
+    "mean_excess_net_monthly": -0.004275,
+    "nw_lag2_t": -1.8131
+   },
+   "2000-2009": {
+    "n_blocks": 120,
+    "mean_excess_net_monthly": -0.00282,
+    "nw_lag2_t": -0.6218
+   },
+   "2010-2016": {
+    "n_blocks": 84,
+    "mean_excess_net_monthly": -0.004601,
+    "nw_lag2_t": -1.2599
+   },
+   "2017-2024": {
+    "n_blocks": 96,
+    "mean_excess_net_monthly": -0.000183,
+    "nw_lag2_t": -0.0293
+   }
+  }
+ },
+ "decision_rule": "TRIAL-DRAFT-A \u00a75, on the 2011-2024 confirm slice. FAILED_VARIANT if the block-mean is <= 0, or if the $10M cell fails while the $3M cell passes.",
+ "headline": "$3M -0.009368/month t -2.0877 over 168 confirm blocks; $10M -0.002527/month t -0.6377 over 168; FAILED_VARIANT",
+ "verdict": "FAILED_VARIANT \u2014 -0.009368/month at the $3M floor over 168 confirm-slice blocks (NW lag-2 t -2.0877); the $10M cell reads -0.002527/month (t -0.6377). The corner did not kill this book -- it was already below zero at the floor it was registered on, and the $10M cell is reported because \u00a78 says both floors are printed or neither is.",
+ "verdict_block": {
+  "verdict": "FAILED_VARIANT",
+  "clause": "\u00a75 FAILED_VARIANT clause 1: the 2011-2024 net block-mean at the PRIMARY floor is <= 0",
+  "why": "-0.009368/month at the $3M floor over 168 confirm-slice blocks (NW lag-2 t -2.0877); the $10M cell reads -0.002527/month (t -0.6377). The corner did not kill this book -- it was already below zero at the floor it was registered on, and the $10M cell is reported because \u00a78 says both floors are printed or neither is."
+ },
+ "elapsed_s": 103.0,
+ "written_utc": "2026-09-12T23:40:05+00:00",
+ "run": 1,
+ "stage": "pnl",
+ "awake_s": 103.0,
+ "slept_s": 0.0,
+ "box_s": 1800.0,
+ "wall_minus_monotonic_s": -0.0,
+ "sleep_gaps": [],
+ "child_pid": 41892,
+ "killed_pids": [],
+ "exit_code": 0
+}

@@ -240,6 +240,31 @@ before crediting discovery** (protocol §9).
   anonymisation gap, the recall probe, L4's idle measurement, M2's rule text; add an `ANALYST` type to
   the vocabulary before X2 uses C1; the B/B′ re-seed; the attended items unchanged.
 
+## 3g. 2026-09-13 06:40 → 08:00 HKT — chunk 11: the four books' next tests, run the same morning
+
+- **Chunk 11 landed (9,431 → 9,433 after my two edits):** C's two falsifiers with the registered
+  construction re-read, A's $10M corner with the twin re-drawn per floor, B's verdict rule applied to
+  run 1's receipt, vocabulary v2 with the analyst family, all three jobs registered and run.
+- **The three reads (roadmap §11c "Second read"):** **A FAILED_VARIANT** (−0.94%/mo on its confirm
+  slice at its own floor); **B FAILED_VARIANT both arms** (≤ 0 point estimates; the power warning does
+  not rescue a negative); **C CONDITIONAL at +0.24%/mo t 1.38** under the registered construction —
+  the placebo passes, the momentum falsifier is untestable because momentum was never alive on the
+  book's rows. Three of four historical reads closed on their own rules. RESULT IMPROVEMENT: NONE.
+- **Three defects found and fixed live:** (i) run 1's overhang warm-up was 24 months against a
+  registered 60 (found by the Sonnet literature note asking why the 1990s were weakest); (ii) the night
+  factory's folder defaulted to a literal `2026-09-08` — two real receipts landed five days back before
+  I set `NIGHT_RUN_DATE`; both the factory and the jobs module now default to today and create the
+  folder at write time; (iii) "momentum dies" was vacuous at raw t 0.15 — the verdict function now says
+  MOMENTUM_NOT_ALIVE and the sentence says untestable, not passed.
+- **Registration hygiene:** TRIAL-DRAFT-C Amendment 1 (a primary ≤ 0 closes the book) written before
+  the registered read, with what had been seen recorded in the draft itself.
+- **Both agents died once to the session rate limit** (reset 06:40) and were relaunched; nothing
+  was lost because neither had written yet.
+- **Next:** the model-dependent queue is unchanged (R2 panel B, `L2_typed_events`, then E1 on typed
+  rows, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text — all behind the
+  attended `TdrDelay`); C's `next_test` is its own $10M re-measurement and the v1 event sign once L2
+  types; B/B′ re-seed; the attended items unchanged. No CPU-only job is owed tonight.
+
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
 1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.

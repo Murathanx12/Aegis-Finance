@@ -654,6 +654,34 @@ overhang-conditioned PEAD spread is 0.9-1.1%/mo (1980-2002, doubly conditioned, 
 our +0.40%/mo is a tercile cut with a monthly revision-count news sign and 25 bps flat — below the
 literature and inside a 50% post-publication decay, which argues "not suspicious", not "confirmed".
 
+**Second read, 2026-09-13 morning (chunk 11: `A_corner_run01`, `B_verdict_run01`, `C_falsifiers_run03`
+under `night_factory_2026-09-13/`; CPU only, 103 s + 0 s + 60 s):**
+- **A → FAILED_VARIANT** on its own registered floor: −0.94%/mo vs the random twin on the 2011-2024
+  confirm slice (t −2.09, 168 blocks) at $3M; the $10M cell −0.25%/mo (t −0.64), twin re-drawn at each
+  floor, no contamination year excluded. The corner did not kill it; it was already below zero.
+- **B → FAILED_VARIANT, both arms**, by the draft's own clause (2017-2024 net block-mean −2.41% and
+  −0.33%, both ≤ 0). The 7.17% MDE protects a null, not a negative. The tradability clause is CANNOT
+  DETERMINE by name (run 1 carries no per-year count); the 2000-2009 +6.1% is one era, not a rescue.
+- **C → CONDITIONAL, weaker than run 1.** Under the registered construction (60-month warm-up, read
+  from 1995): **+0.24%/mo, t 1.38, 359 blocks** (run 1's +0.40%/t 2.13 was the truncated window from
+  1990; both numbers kept, neither replaces the other). Eras 1995-99 +0.02% (t 0.05), 2000s +0.39%
+  (1.01), 2010-16 +0.30% (1.17), 2017-24 +0.16% (0.54). The sign-flip placebo does not pay (−0.03%/mo,
+  t −0.13); Frazzini's own long-short shape −0.13%/mo (t −0.51). **The momentum falsifier is
+  untestable, not passed:** raw 12-1 momentum carries t 0.15 on the book's own rows (a scratch check
+  prices momentum at rank-IC 0.011, t 1.4, and one-month reversal at IC −0.016, t −2.5 on the same
+  rows — right signs, weak, as expected for seasoned liquid names with five years of history), so there
+  was nothing for overhang to subsume; the "momentum in costume" clause does not fire because momentum
+  earns nothing here. January diagnostic (unregistered): −0.18%/mo in January vs +0.28% Feb-Dec — the
+  Grinblatt-Han sign flip in direction, not in significance. TRIAL-DRAFT-C gained **Amendment 1**
+  before this read (a primary ≤ 0 closes the book, the clause A always carried).
+- **Vocabulary v2** adds the analyst-action family (43 ids; v1's hash byte-identical); C1's kinds now
+  map 2,577 of 6,676 rows (38.6%, was 20.4%).
+- **RESULT IMPROVEMENT: NONE.** Of seven pre-registered books, four have a historical read: three closed
+  as FAILED_VARIANT on their own rules, one CONDITIONAL below its MDE. Nothing outruns its twin at t ≥ 2
+  on a registered construction. The lesson that generalises: the first replay warmed a signal on a
+  shorter window than its registration and nobody noticed until the literature note asked why the
+  1990s were weakest — **the registered construction is a test input, and the receipt must print it.**
+
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
 Roles, from Murat: *"Sonnet for research and data acquisition, Opus 5 for

@@ -472,6 +472,16 @@ panel are 55 independent observations, smallest resolvable effect 4.5 pp; regist
 draft for one family). Suite → 9,358 (my run). Owed: nothing has been typed yet; `cross_sectional_rho
 0.2` is assumed, never measured; `EST_OUT_TOKENS_PER_ROW 120` is an estimate.
 
+**Chunk 11 landed 2026-09-13 07:30 (Opus, one agent, relaunched once after a rate limit):** `9b281ca`
+C's two falsifiers importing the replay's own leg builders, the registered construction (`min_history=60`,
+read from 1995-01; run 1's default kept and pinned), the primary re-read beside them, the January split as
+an unregistered diagnostic; `f9336b3` A's corner, both floors in one pass with the twin re-drawn at each;
+`45f1913` B's verdict from run 1's receipt (no re-run); `b98a782` vocabulary v2 (analyst family inserted
+before `no_event`, v1 hash `b55fcff7…` byte-identical and pinned, C1 family coverage 38.6%); `5208918` the
+proof runs. Suite 9,358 → 9,431; then Fable's `19550db` (Amendment 1 applied in `decide`), `1badf0f` (the
+night date defaults to today), `f7d1d1c`/next (MOMENTUM_NOT_ALIVE). Owed: the builder's first `decide`
+named the registration gap instead of filling it — correct — and the amendment was the session's to sign.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
