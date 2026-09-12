@@ -174,6 +174,51 @@ def _targets(sig_row: np.ndarray, eligible: np.ndarray, policy: Policy,
     return chosen, _cap_weights(w, policy.max_single_name)
 
 
+#: Weights below this are dust the blend left behind: a name at 3e-9 of the
+#: book is a fill of a fraction of a cent that pays a commission. Dropped and
+#: the rest renormalised, so the book stays fully invested.
+BLEND_DUST = 1e-6
+
+
+def blend_targets(prev: np.ndarray, chosen: np.ndarray, weights: np.ndarray,
+                  policy: Policy) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """`w_t = decay * w_{t-1} + (1 - decay) * target_t`, capped and renormalised.
+
+    Returns `(chosen, weights, w_t)` -- the last one full-width, because it is
+    what the NEXT rebalance blends against. The carried state is the BLENDED
+    TARGET, not the realised book: a drifted holding is a price move, and
+    treating it as an intention would make the decay rule depend on returns.
+
+    Renormalisation is the safety net the parameter needs to be honest. A name
+    in `w_{t-1}` can have left the universe by `t` (delisted, dropped below the
+    price floor), so the blend of two unit vectors is not a unit vector, and
+    without the renormalisation a decayed book would quietly run at less than
+    full exposure and look lower-risk for a reason that has nothing to do with
+    the strategy.
+
+    AT `decay == 0` THIS FUNCTION IS NOT CALLED AT ALL (see `run`). It is not
+    enough for it to be the identity on paper: the point of a hash-neutral
+    default is that the arithmetic executed is the same arithmetic, and a
+    floating-point round trip through a blend is not bit-for-bit free.
+    """
+    n = prev.size
+    target = np.zeros(n)
+    if chosen.size:
+        target[chosen] = weights
+    w = float(policy.decay) * prev + (1.0 - float(policy.decay)) * target
+    total = float(w.sum())
+    if total <= 0:
+        return chosen, weights, target
+    w = w / total
+    idx = np.flatnonzero(w > BLEND_DUST)
+    if idx.size == 0:
+        return chosen, weights, target
+    blended = _cap_weights(w[idx], policy.max_single_name)
+    out = np.zeros(n)
+    out[idx] = blended
+    return idx, blended, out
+
+
 def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
         dolvol_ma: np.ndarray | None = None, vol: np.ndarray | None = None,
         warmup: int | None = None) -> FarmResult:
@@ -258,6 +303,11 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
         curve_eta = CC.ETA_SQRT_IMPACT
 
     pending: tuple[np.ndarray, np.ndarray] | None = None
+    # The previous rebalance's BLENDED TARGET weights, full width. Only read
+    # when `policy.decay` is non-zero; allocated unconditionally because one
+    # N-float array is free and a conditional allocation is a NameError waiting
+    # for the first decayed run.
+    prev_target = np.zeros(N)
     nav = np.full(T, np.nan)
     diag = {"n_decisions": 0, "n_fills": 0, "n_unfilled_names": 0,
             "n_delistings": 0, "delisting_cash": 0.0, "total_cost_usd": 0.0,
@@ -266,6 +316,13 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
             "n_delist_assumed": 0, "stuck_capital_events": 0,
             "stuck_capital_usd": 0.0, "min_cash_usd": 0.0,
             "cost_curve": policy.curve}
+    if policy.decay:
+        # The key is ABSENT at decay=0 rather than present and zero: a
+        # diagnostics dict that grew a key for every policy would change the
+        # shape of every archived row, and this branch has to be invisible to
+        # anything that did not ask for it.
+        diag["n_blended_decisions"] = 0
+        diag["decay"] = float(policy.decay)
     if use_curve:
         diag.update({
             "n_name_fills_priced_by_curve": 0,
@@ -459,6 +516,10 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
             eligible = eligible_at(panel, i, policy, dolvol_ma[i], px_c)
             chosen, weights = _targets(sig[i], eligible, policy, vol[i],
                                        panel.mktcap[i].astype(np.float64))
+            if policy.decay:
+                chosen, weights, prev_target = blend_targets(
+                    prev_target, chosen, weights, policy)
+                diag["n_blended_decisions"] += 1
             diag["n_decisions"] += 1
             if chosen.size == 0:
                 diag["n_empty_selections"] += 1

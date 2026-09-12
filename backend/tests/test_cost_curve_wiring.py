@@ -128,8 +128,12 @@ def test_a_field_appended_at_its_default_is_invisible_to_the_hash_ONLY_there():
     """The mechanism, asserted directly, so a future field added the wrong way
     fails here rather than silently re-identifying every archived book."""
     from backend.services.portfolio_farm.policy import _HASH_NEUTRAL_DEFAULTS
-    assert _HASH_NEUTRAL_DEFAULTS == {"curve": "flat"}
+    # `decay` joined the record on 2026-09-12 (chunk 8, the decay-blended
+    # target weights) by the SAME mechanism, and the four hashes above are the
+    # proof it stayed invisible at its default.
+    assert _HASH_NEUTRAL_DEFAULTS == {"curve": "flat", "decay": 0.0}
     assert Policy().curve == "flat"
+    assert Policy().decay == 0.0
     assert CostModel().curve == "flat"
     assert CostModel().flat_bps is None
 

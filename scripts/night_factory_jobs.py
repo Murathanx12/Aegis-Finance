@@ -1494,6 +1494,9 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # LLM, and it changes what the NEXT night breeds from.
         "E5_stopping_rules": _lazy("scripts.night_stopping_rules",
                                    "E5_stopping_rules"),
+        # 2026-09-12, chunk 8 (roadmap 11c): decay-blended target weights swept
+        # WITH the cost axis, every decayed cell beside its own lambda=0 twin.
+        "E_decay_sweep": _lazy("scripts.night_decay_sweep", "E_decay_sweep"),
         "X_anon_gap": _lazy("scripts.night_x_anonymisation_gap", "X_anon_gap"),
         "L3_lookahead": _lazy("scripts.night_l3_lookahead", "L3_lookahead"),
         "X2_elasticity": _lazy("scripts.night_x2_elasticity", "X2_elasticity"),
@@ -1543,7 +1546,8 @@ def main(argv=None) -> int:
         payload = fn(smoke=a.smoke)
     elif a.job in ("RW1_random_windows", "RW2_event_windows"):
         payload = fn(seed=a.seed, smoke=a.smoke)
-    elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules"):
+    elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
+                   "E_decay_sweep"):
         payload = fn(smoke=a.smoke)
     elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
         # the X lane takes the run number: its frozen cell list is filed under

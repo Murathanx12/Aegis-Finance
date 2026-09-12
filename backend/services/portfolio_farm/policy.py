@@ -48,7 +48,7 @@ KNOWN_CURVES = ("flat", "taq_empirical", "retail_paper")
 #: code that produced it -- the exact "drifted parameter, same identity"
 #: failure this class exists to prevent, arriving from the other direction.
 #: Pinned by `test_portfolio_farm_policy.py` against a real archived row.
-_HASH_NEUTRAL_DEFAULTS = {"curve": "flat"}
+_HASH_NEUTRAL_DEFAULTS = {"curve": "flat", "decay": 0.0}
 
 
 class PolicyError(ValueError):
@@ -124,6 +124,18 @@ class Policy:
     #: that does not ask for it. Default `flat` is hash-neutral
     #: (`_HASH_NEUTRAL_DEFAULTS`).
     curve: str = "flat"
+    #: DECAY-BLENDED TARGET WEIGHTS. `w_t = decay * w_{t-1} + (1 - decay) *
+    #: target_t`, renormalised to the book's gross exposure after blending.
+    #: Lambda in [0, 1); 0.0 is no blending, which is every policy ever written
+    #: before this field existed, so it is hash-neutral at its default and the
+    #: blending branch does not execute at all.
+    #:
+    #: It is a COST-CONTROL parameter and belongs on the same axis as
+    #: `fee_bps`: a book that half-remembers last rebalance trades less, and
+    #: whether that is worth the tracking error is an empirical question the
+    #: farm can answer only if the two are swept together. Reported against its
+    #: own `decay=0` twin at the same cost, never alone.
+    decay: float = 0.0
 
     def __post_init__(self):
         if self.signal not in SIGNALS:
@@ -202,6 +214,16 @@ class Policy:
             raise PolicyError("max_single_name must be in [0, 1]")
         if not -1.0 <= self.delisting_return <= 0.0:
             raise PolicyError("delisting_return must be in [-1, 0]")
+        if not 0.0 <= float(self.decay) < 1.0:
+            # 1.0 is excluded deliberately: at lambda = 1 the blend never lets
+            # a new target in, so the book freezes at its first formation and
+            # the signal stops mattering -- a strategy with no signal, wearing
+            # the signal's policy_id.
+            raise PolicyError(
+                f"decay must be in [0, 1), got {self.decay}. At 1.0 the blend "
+                f"never admits a new target and the book freezes at its first "
+                f"formation, which is a different strategy wearing this one's "
+                f"identity.")
 
     @property
     def round_trip_bps(self) -> float:
@@ -238,6 +260,8 @@ class Policy:
                     else f"{self.round_trip_bps:.0f}bp")
         seed = f"#{self.signal_seed}" if self.signal_seed else ""
         ph = f"p{self.phase_offset}" if self.phase_offset else ""
+        if self.decay:
+            cost = f"{cost}/d{self.decay:g}"
         return (f"{self.signal}{seed}/h{self.holding_days}{ph}/k{self.top_k}/"
                 f"{self.sizing[:3]}/u{self.universe_n}/{cost}")
 
