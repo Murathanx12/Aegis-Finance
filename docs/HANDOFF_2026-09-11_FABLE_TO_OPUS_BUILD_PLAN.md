@@ -293,6 +293,22 @@ rebuilt after T0 and verified from a no-console launch** (`Start-Process`): back
 board's routes answering, FRED 23/23 with keys visible, one scheduled job (the ledger resolver), stopped
 by the launcher's PID with nothing left running.
 
+**Chunk 3c landed (validated 2026-09-12 afternoon, after the 10:53 crash; the first agent's uncommitted
+edit was NUL-filled and redone):** `08c04c6` the time box owns its clock — awake seconds only
+(sleep gaps > 300 s recorded as `slept_s`), the whole tree killed by PID (measured: a 90 s sleeper under
+a 1-minute box died at 61.0 s, both the venv redirector and the real interpreter), the power plan checked
+at start (this machine: AC never sleeps, DC 1,800 s), `scripts/night_smoke_job.py` as the cheap exercise;
+`9ab48b6` conservative llama batch sizes for nights (512/128) and the attended `TdrDelay` note;
+`336e268` the target band conditioned on the raw-upside tercile (220 of 257 buckets; the top tercile
+wider in 204, median +22 pp; all eight audited names now show a band); `f7d4627`
+`scripts/frontend_check.py` (tsc + site + export in one receipt; the launcher calls it as a subprocess);
+`4f404ca` the replicated-negative note (N3 `REPLICATED x2`) **and a defect: `control.NIGHT_DIR` was the
+literal `night_factory_2026-09-08`, so the night page had served the 09-08 board for four nights** — now
+newest-by-name; `4953168` the LLM spend ledger rotated by month (62.25 MB → 2026-08 sealed 47.8 MB,
+2026-09 live, 4 torn rows quarantined verbatim). Suite 8,314 → 8,407 (my run). **A finding to carry:**
+N3's `subprocess.run` had returned normally with exit 0 after 11 h — the time box was never the code
+path that ran, so the fix removed the dependency rather than diagnosing the old one.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
