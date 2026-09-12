@@ -309,6 +309,26 @@ newest-by-name; `4953168` the LLM spend ledger rotated by month (62.25 MB → 20
 N3's `subprocess.run` had returned normally with exit 0 after 11 h — the time box was never the code
 path that ran, so the fix removed the dependency rather than diagnosing the old one.
 
+**Chunk 5 landed (validated 2026-09-12 evening):** `d775fe7` B1+B3 — `backend/services/paper_books.py`,
+a `paper_books` table (db v9) plus `paper_book_decisions`; marks under `book:<fingerprint>` in
+`paper_nav` with a test that the four reference lanes' rows are byte-identical before and after; a book
+without a twin is refused; twins = random-universe (seed from the fingerprint), beta-matched for
+long-only, overnight-only at `30m`; cadence enum gains `monthly`; `threshold_coverage` construction
+(abstention) as a new allowed value so no existing fingerprint moves. B4 `book_cadence.py` —
+`decide_weights` faithful to the contract and refusing by name (`run_one` is backtest-only);
+`pi_book_cadence` in the desktop job set, Railway only under `AEGIS_BOOK_CADENCE=1`; the Morning's
+`mark_books` runs it. B5+M1 — `PredictionRecord` schema 1.4.0 with the spec's 19 fields, 24,828 old
+rows load unchanged; `book_forecasts.py` mints the engine row (p = Φ of the trailing IR vs the twin, no
+LLM) and the base-rate row. `ac8dbb1` the books board (`/api/control/books` nests twins; a book has no
+shape without its control); `create-from-contract` refuses `origin=human_text` (chunk 6). `8933563`
+Headline Arena daily job, ledger first, zero network without credentials — **payload field names
+unverified**; the venue's endpoints are now in `research_notes/2026-09-11/research_headlinearena.md`
+(the file had been a stub). `ee59a5d`…`f5ba6f7` the first real pass (`book:8dbbb73b6159d61d`, 12-1
+momentum k=12 monthly: 3 marked, 3 decided, 1,304/1,304 priced from local bars, 2 forecast rows at a
+20-session horizon) and four defects it found (a false 1.20× gross alarm before buying; the Morning's
+book pass marking a real book from the suite; a session-scoped test db leaking two rows into the real
+ledger — reverted; two fixtures on two databases). Suite 8,407 → 8,527.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
