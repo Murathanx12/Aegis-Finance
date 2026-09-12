@@ -408,6 +408,26 @@ sensor draft (one VIX scalar for all blocks) caught before any number; `4e7ca92`
 wired (needs L2). Suite 8,846 → 9,080. Caveats: the Qwen cutoff is community-sourced (medium), DeepSeek's
 low; ChronoGPT not built.
 
+**Chunk 8 landed (validated 2026-09-13 early; paused after T5, its suite run by Fable):** `569847d` E5
+the stopping rules — DSR per G3 lineage at the trial count, CSCV, `G3_lineage_verdicts.jsonl`, a
+DEPRIORITIZED lineage excluded from the elites already carried; **real run: 595 genomes, 251 lineages,
+4 admitted at `banks_met ≥ 2` → 1 ACTIVE (342 banks, per-bank Sharpe 6.27 against an expected-max bar
+of 3.15, DSR 1.0 at both 251 and 595 trials), 3 CANNOT_DETERMINE, 0 DEPRIORITIZED; PBO
+`insufficient_windows` (0 complete rows); the RW1 random-genome null: 0 of 10 survive, max DSR 0.000**;
+a unit error (fitness %/yr passed as a Sharpe sd) caught by its own known-answer test. `d57de09`
+`Policy.decay`, hash-neutral (`policy_id` unchanged, the archived-row pin holds); smoke sweep 2013-16:
+turnover 0.35× at λ = 0.75, every decayed cell beats its λ = 0 twin — **but every λ = 0 control loses
+on that window, so part of the gain is dilution, computed and stated.** `c45ea99` M2 distillation —
+pairing, scoring, the generalisation gate, the noise floor, the over-trust cap, the writers; **real
+ledger: 24,839 rows, 0 resolved; the first rule with its own Brier is CANNOT DETERMINE and would be
+with the model up** (0 resolved vs the 45 a decomposition needs); two spec defects fixed (a degenerate
+Brier construction; a gate a constant forecast could tie); an 81M-tuple cross product found by the hang
+it caused. `cb86dfb` the anomaly cadence — eight with citations; week 1's prereg passes `lint_prereg.py`;
+the 0.25-Sharpe bar is below the MDE and declared NOT_ANSWERABLE_AT_N; the unsigned primary refuses to
+grade itself. `710fcb0` `brain_queries.py` + `docs/OPTIMUS_MCP_SURFACE.md`, read-only by AST; three
+defects found by exercising it live. Known limits in the progress file: `arm_vs_control` pairing yields
+zero pairs; E5's Sharpe is on selected banks; the decay sweep never ran at full scale.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
