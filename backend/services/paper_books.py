@@ -871,9 +871,23 @@ def worst_case(book: PaperBook, *, equity_usd: float | None = None) -> dict:
     k = int(book.strategy.construction.k)
     equity = float(equity_usd if equity_usd is not None
                    else book.strategy.sizing.notional_usd)
-    notional_pct = float(book.strategy.construction.max_single_name) or (1.0 / max(k, 1))
-    return loss_budget_worst_case(book.strategy, n_names=k,
-                                  notional_pct=notional_pct, equity_usd=equity)
+    # THE BINDING CONSTRAINT, not the loosest one. `max_single_name` is a
+    # ceiling per name and `gross_cap` is a ceiling on the sum; the selector
+    # produces min(max_single_name, gross_cap / k) per name, so quoting
+    # `max_single_name` alone reports a gross the book cannot reach and makes
+    # `gross_within_cap` read false on every correctly-specified book. The
+    # first real night_job book printed 1.2x gross against a 1.0 cap for
+    # exactly this reason, on 2026-09-12, before it had bought anything.
+    cap_per_name = float(book.strategy.construction.max_single_name) or 1.0
+    ew_per_name = float(book.strategy.construction.gross_cap) / max(k, 1)
+    notional_pct = min(cap_per_name, ew_per_name)
+    out = loss_budget_worst_case(book.strategy, n_names=k,
+                                 notional_pct=notional_pct, equity_usd=equity)
+    out["notional_pct_binding_constraint"] = (
+        "max_single_name" if cap_per_name <= ew_per_name else "gross_cap / k")
+    out["max_single_name"] = cap_per_name
+    out["equal_weight_per_name"] = ew_per_name
+    return out
 
 
 __all__ = ["BOOK_PREFIX", "CADENCES", "CADENCE_SESSIONS", "ORIGINS", "BookError",

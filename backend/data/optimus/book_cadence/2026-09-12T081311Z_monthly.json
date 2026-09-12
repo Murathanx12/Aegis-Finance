@@ -1,0 +1,113 @@
+{
+  "job": "book_cadence",
+  "cadence": "monthly",
+  "ran_at": "2026-09-12T08:13:10+00:00",
+  "today": "2026-09-12",
+  "books_considered": 3,
+  "marked": [
+    {
+      "book_id": "book:57c7af9fb85e59e8",
+      "nav": 100000.0,
+      "date": "2026-09-11",
+      "is_twin": true,
+      "granularity": "daily_close"
+    },
+    {
+      "book_id": "book:8dbbb73b6159d61d",
+      "nav": 100000.0,
+      "date": "2026-09-11",
+      "is_twin": false,
+      "granularity": "daily_close"
+    },
+    {
+      "book_id": "book:f46aaaa40b8c039a",
+      "nav": 100000.0,
+      "date": "2026-09-11",
+      "is_twin": true,
+      "granularity": "daily_close"
+    }
+  ],
+  "decisions": [
+    {
+      "book_id": "book:57c7af9fb85e59e8",
+      "asof": "2026-09-11",
+      "n_names": 12,
+      "traded_notional": 100000.0,
+      "cost_usd": 60.0,
+      "cost_rate_bps": 6.0,
+      "nav_before": 100000.0,
+      "n_universe": 1302,
+      "n_scored": 1302,
+      "signal": "beta_matched_index_sleeve",
+      "direction": 1,
+      "rule": "top_k",
+      "n_picked": 12,
+      "gross": 1.0
+    },
+    {
+      "book_id": "book:8dbbb73b6159d61d",
+      "asof": "2026-09-11",
+      "n_names": 12,
+      "traded_notional": 100000.0,
+      "cost_usd": 60.0,
+      "cost_rate_bps": 6.0,
+      "nav_before": 100000.0,
+      "n_universe": 1304,
+      "n_scored": 1278,
+      "signal": "mom_12_1",
+      "direction": 1,
+      "rule": "top_k",
+      "n_picked": 12,
+      "gross": 1.0
+    },
+    {
+      "book_id": "book:f46aaaa40b8c039a",
+      "asof": "2026-09-11",
+      "n_names": 12,
+      "traded_notional": 100000.0,
+      "cost_usd": 60.0,
+      "cost_rate_bps": 6.0,
+      "nav_before": 100000.0,
+      "n_universe": 1304,
+      "n_scored": 1304,
+      "signal": "random_genome_null",
+      "direction": 1,
+      "rule": "top_k",
+      "n_picked": 12,
+      "gross": 1.0
+    }
+  ],
+  "refused": [],
+  "unpriced": [],
+  "nothing_to_do": false,
+  "granularity": "daily_close",
+  "intraday_bars_available": false,
+  "granularity_note": "minute bars do not exist on this machine, so a 30m book is marked from the latest DAILY bar. The pass says so rather than implying a resolution it does not have; lane D (chunk 5b) builds the intraday mark.",
+  "selector": "decide_weights -- run_one is backtest-only (it requires a Window and every registered engine replays one), so a live decision uses the faithful selector and REFUSES any signal or weighting it cannot compute",
+  "bar_date": "2026-09-11",
+  "priced": {
+    "n_wanted": 1304,
+    "n_priced": 1304,
+    "from_local_bars": 1304,
+    "from_yfinance": 0
+  },
+  "forecasts": {
+    "n_rows": 2,
+    "mechanism_id": "paper_book_v1",
+    "prediction_ids": [
+      "628f4f648f2522b4",
+      "dc42cecc7e1982ba"
+    ],
+    "books": [
+      "book:8dbbb73b6159d61d"
+    ],
+    "horizons": [
+      20
+    ],
+    "note": "one row per book against its first twin, plus the twin's own base-rate row at p=0.5 in the same ledger"
+  },
+  "finished_at": "2026-09-12T08:13:11+00:00",
+  "n_marked": 3,
+  "n_decisions": 3,
+  "n_refused": 0
+}

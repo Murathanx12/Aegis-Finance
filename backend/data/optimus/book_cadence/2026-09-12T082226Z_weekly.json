@@ -1,0 +1,22 @@
+{
+  "job": "book_cadence",
+  "cadence": "weekly",
+  "ran_at": "2026-09-12T08:22:26+00:00",
+  "today": "2026-09-12",
+  "books_considered": 0,
+  "marked": [],
+  "decisions": [],
+  "refused": [],
+  "unpriced": [],
+  "nothing_to_do": true,
+  "granularity": "daily_close",
+  "intraday_bars_available": false,
+  "granularity_note": "minute bars do not exist on this machine, so a 30m book is marked from the latest DAILY bar. The pass says so rather than implying a resolution it does not have; lane D (chunk 5b) builds the intraday mark.",
+  "selector": "decide_weights -- run_one is backtest-only (it requires a Window and every registered engine replays one), so a live decision uses the faithful selector and REFUSES any signal or weighting it cannot compute",
+  "bar_date": "2026-09-11",
+  "reason": "no holding book declares cadence 'weekly'",
+  "finished_at": "2026-09-12T08:22:26+00:00",
+  "n_marked": 0,
+  "n_decisions": 0,
+  "n_refused": 0
+}
