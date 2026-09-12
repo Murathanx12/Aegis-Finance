@@ -428,6 +428,29 @@ grade itself. `710fcb0` `brain_queries.py` + `docs/OPTIMUS_MCP_SURFACE.md`, read
 defects found by exercising it live. Known limits in the progress file: `arm_vs_control` pairing yields
 zero pairs; E5's Sharpe is on selected banks; the decay sweep never ran at full scale.
 
+**Chunk 9 landed (validated 2026-09-13 early):** `6b20153` E2 — N3 with the horizon parameterised
+and a config-diff test (`design_block(1)` matches the 09-11 receipt key for key), the embedding cache
+reused (0 GPU seconds), the GPU-contention refusal; **run on the full panel: FAILED_VARIANT at 5 and
+21 sessions** (EMBED − SHUFFLE t −0.77 at h=5, −0.31 at h=21; Holm 1.0; quarters are not eras);
+`4dc8788` E1 — the typed-event tabular head on a KEYWORD PROXY (L2 is not built; entity tags
+contributed 0 of 15,329 rows, said in the receipt), LightGBM the bar: at h=21 `StockMixer_T1` beats GBM
+(+0.129 IC, t 5.3 → 1.16 after the overlap correction) but **nothing beats shuffled events anywhere**
+(best Holm 0.17) — FAILED_VARIANT; planted-effect known answers pass; `3343abe` E3 — ACI and the
+weighted variant on the GBM control arm: realised coverage at nominal 90%, high-vol tercile NAIVE
+0.837 → ACI 0.870 → weighted 0.880; on a synthetic shift naive falls to 0.49 and ACI recovers within
+10 steps; `c281ac3` E4 — ADWIN in-repo (`river` will not install offline) with the [0,1] rule that
+makes it fire at all (an unscaled error stream gave zero detections); it fired once vs the calendar's
+14, IC difference +0.0034 (t 0.16); `6d0c7ef` L4 — `R2-Qwen3` registered as a NEW UNSIGNED arm,
+PENDING_MODEL; the GGUF present (17.28 GiB, sha256 recorded); **panel B = 37,002 calls: 3.9 h on the
+incumbent, 25.6 days for Qwen3 at the contended 5.6 tok/s** — the idle measurement decides;
+`5091ab7` the stage contract's first step (`stage` on receipts, 18 jobs mapped, 14 deliberately
+unstamped and named, a refusal-shaped no-forward-read test); `ed78ce3`/`3fcdf04` **a defect the agent
+found in its own numbers**: an h-session label over daily rows inflates t by ~√h (CANON §58); every
+E1/E2/E4 receipt now carries `horizon_caveats`. Suite → 9,272 (the agent's run). Owed: no full-panel
+E1 two-model run (120-symbol smokes; the 700-symbol run is GBM-only). Process defects it filed on
+itself: `$!` in Git Bash is the shell's PID, so `Stop-Process` on it kills nothing; a killed re-run left
+`running` stubs over completed receipts (recovered by re-running).
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
