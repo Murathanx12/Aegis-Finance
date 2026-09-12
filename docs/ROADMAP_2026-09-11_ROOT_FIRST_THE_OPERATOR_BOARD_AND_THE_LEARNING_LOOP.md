@@ -456,6 +456,51 @@ mood: any corpse can be re-registered with (a) the receipt it must rebut,
 (b) the new data it will use, (c) the spending boundary. Value's 2020-22 revival
 is the worked example of why.
 
+## 10b. Lane D — the day-trading book (Murat, 2026-09-12: "if we can make 1% a day…")
+
+> "If we can make 1% return every day in a day-trading part of the project with our live data and
+> analysis, relying on future outcomes and dates, that would be a winner. Dedicate a paper account;
+> check for signals in the market, monitor them, find the small details, make the engine and NN
+> train on it. I will leave the PC open on Monday nights to let it test on the device."
+
+Note: `research_notes/2026-09-12/research_daytrading.md`. Licence `PRODUCT_EXPERIMENT`; paper only;
+the declared target is 1%/day and the result is measured, not asserted.
+
+**The arithmetic, stated once.** 1%/day is +1,127%/yr compounded, above Medallion's gross. At the
+TAQ-measured effective spread on liquid names (1.08 bp one-way) costs are ~2-9 bp/day and the gross
+edge needed is ~1.02-1.09%/day; at the retail 25 bp/side assumption, 2× daily turnover alone costs the
+whole 1%, so the needed gross edge is 1.5-3.0%/day. **Which cost regime applies is decided by fill
+quality on Alpaca paper (IEX quotes, marketable orders, 10% random partials, no depth check), and that
+has not been measured** — it is the first receipt lane D writes. The statistics are cheap: on a
+12-name equal-weight book with book σ ≈ 1.2%/day, **~12 sessions** separate a true 1%/day from zero at
+t 2.8 (≈71 sessions at the universe's measured 2.93%/day intraday σ). The population evidence is the
+prior: fewer than 1% of Taiwanese day traders profitable net of fees (Barber-Lee-Liu-Odean), 97% of
+persisting Brazilian futures day traders lose (Chague-De Losso-Giovannetti 2020), US 1998-99 profits
+tied to Nasdaq beta (Jordan-Diltz 2003). The lane exists so the measurement can happen; the prior is
+in its contract.
+
+**What we already know (do not re-ask):** `FINDING_2026-08-23_OVERNIGHT_INTRADAY.md` — at daily
+resolution on CRSP 2013-2024 the overnight/intraday split is measured (t 8.71, n 3,019 days) and
+buy-and-hold beats overnight-only at zero cost; the earnings gap is a bigger bet, not a better one
+(Sharpe 0.94 vs 0.96). The daily reaction lane is closed in every form (RW2). **What is genuinely
+untested and only we can test:** the FIRST HOUR after a native-stamped headline, by typed event
+(`first_seen_utc` from Alpaca/Benzinga; L2's vocabulary).
+
+| id | item | control |
+|---|---|---|
+| **D1** | **The book**: a `Strategy` contract at `cadence=30m` — universe = TAQ-covered liquid names at the dollar-volume floor; signal ∈ {typed event in the first hour, first-half-hour return, overnight gap}; `Construction(k=12-20, ew)`; hold in 30-minute bars with a stop and **forced flat at the close**; `CostModel` from the TAQ effective-spread panel per name PLUS an IEX-vs-SIP slippage add-on measured from paper fills; `Objective.periods_per_year` recalibrated (the default assumes monthly). Wrapped as a `PaperBook` (B1) with **two twins**: random entry at the same clock and size, and an **overnight-only twin** (holds through the open, nothing intraday). Daily loss limit printed as `n × notional% × stop%`. | the two twins; SPY intraday |
+| **D2** | **Fill quality receipt**: every paper fill vs the IEX quote and vs the SIP NBBO where available; the realised spread per name per session is the cost model's input from day one. `tif=opg` is never used (13/15 expired unfilled on 09-02). | — |
+| **D3** | **The pre-open row**: for each name in the book, a scenario forecast (X3) with the implied move from the options snapshot and the sensor; graded at the close; Brier per model. | the base-rate scenario set |
+| **D4** | **The NN**: trains on the ledger's rows (decision-time features → close outcome), purged walk-forward, **GBM the mandatory control**. | GBM |
+| **D5** | **The Monday-night device protocol**: paper keys only; the launcher's `--serve` mode; a receipt per 30-minute pass ("nothing to do" included); PID-only process control; every network step refuses by name when offline; the app never holds an order path to a real account (AST test). | — |
+
+**First three experiments, ranked by information per session:** (1) the first-hour continuation after a
+native-stamped headline, by typed event — the only untested slice, ~12 sessions to a first read; (2) the
+overnight-vs-intraday twin as a **systems check** against a known answer (already closed at daily
+resolution); (3) SPY/QQQ intraday momentum with vol targeting (Gao-Han-Li-Zhou 2018, R² 1.6%; the
+cleanest execution, ~70 sessions). **Chunk 5b** builds D1-D2 on top of chunk 5's `PaperBook` and
+cadence scheduler; D3-D5 follow L2 and M1.
+
 ## 11. Joins from Qanat and Fidetolabs Notes (what to take, what we already do better)
 
 Qanat (`fidetolabs/qanat`, MIT, created 2026-09-05, one contributor) is a DAG
@@ -578,6 +623,7 @@ locally, Fable reviews the diff, runs the fast suite, pushes, watches CI.
 | **3b** | O5 Morning · O6 Ask-with-tools · **O11 the 52-week target** (spec from Sonnet, build on Opus, backtest on IBES before the page shows it) | the Morning receipt; the target's per-era backtest beside the consensus |
 | **4** | N-A corpus writer + N-B registry + N-C nightly join (Sonnet: source-by-source pulls and the N-D name table; Opus: the writer and the tests) | coverage card shows Asia rows with `first_seen_utc` |
 | **5** | B1-B5 books with twins + M1 ledger schema + M3 hindsight-safe retrieval + M6 Headline Arena daily job (attended registration by Murat) | the first `origin=human_text` book has a twin and a graded forecast; the first arena settlement equals our grade |
+| **5b** | **Lane D** D1-D2: the 30-minute paper book with two twins and the fill-quality receipt; a dedicated Alpaca paper account role for it (attended: Murat creates it); the Monday-night protocol | the first session's receipt: fills vs quotes, net vs both twins |
 | **6** | A1-A5 the agency intake, options, daily review, protect-first | Murat states a goal and receives three graded options |
 | **7** | X1-X4 LLM-in-backtest workarounds under P1-P6 + L3 Lookahead Propensity + the anonymisation gap | each receipt carries LAP and the flip test |
 | **8** | M2 distillation → `LEARNED_<month>.md` for Optimus · M4 calibration on the board · E5 DSR/PBO stopping rules · §11 cheap joins | the first rule with its own Brier |

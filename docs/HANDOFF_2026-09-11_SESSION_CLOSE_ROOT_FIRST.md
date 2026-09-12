@@ -85,6 +85,24 @@ must be re-run before its number is quoted), G3 resumes from its search state wi
 union. Receipts under `night_factory_2026-09-11/`. **Check the overlap against the previous G3 log
 before crediting discovery** (protocol §9).
 
+## 3b. THE NIGHT'S RECEIPTS (read 2026-09-12 10:45 HKT)
+
+- **P6**: 1,257,540 daily bars for 3,060 symbols over 424 sessions, 2025-01-01..2026-09-11 — the bar
+  table is current. **E1_append**: 808 rows appended (0 PIT violations; 2,562 backfill rows predate the
+  bar table). **N3**: `FAILED_VARIANT` again — the frozen embedding does not beat shuffled text (IC
+  −0.0032 t −0.68 vs TF-IDF +0.0003; difference t −0.70, p 0.48); a replicated negative on the grown
+  panel, consistent with 09-10. **R2 panel B**: started 10:46 HKT on the model, running. **G3**: follows.
+- **Defect:** N3 ran **11 hours under a 60-minute box** and no TIMEOUT receipt was written — the
+  embedding stalled at 8+ hours per chunk under GPU contention with the model server (5.3 GB of 8 GB
+  VRAM) and the factory's `subprocess.run(timeout=...)` never fired through the venv's launcher wrapper.
+  A time box that cannot go red is a broken gate; chunk 3c fixes it with a real sleeping-job test.
+- **CI on the close push was red** on the site build: the worktree merge combined two `STATUS_TONE`
+  maps in the board cards (the desktop export tolerated the duplicate; Turbopack's site build did not).
+  Fixed in the morning; the site build, `tsc` and the desktop export are now all part of validation.
+- **Operational:** removing the merged worktree emptied `frontend/node_modules` in the main checkout
+  (most likely a junction the worktree agent made into it; `git worktree remove --force` followed it).
+  `npm ci` restored it. Do not junction node_modules into a worktree.
+
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
 1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.
