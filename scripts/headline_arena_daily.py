@@ -106,13 +106,20 @@ def load_mapping(path: Path | None = None) -> dict:
     return yaml.safe_load(p.read_text(encoding="utf-8"))
 
 
+#: The blocks the pre-registration hash covers. `ternary` joined them on
+#: 2026-09-12 when the mapping went from binary up/down to the venue's
+#: bullish/bearish/neutral: the neutral floor and the dead-zone reference ARE
+#: rules, and a rule outside the hash is a rule that can move unnoticed.
+HASHED_BLOCKS = ("sensors", "confidence", "ternary", "targets")
+
+
 def prereg_hash(mapping: dict) -> str:
     """sha256 over the rules that decide a direction, canonicalised.
 
-    Only `sensors`, `confidence` and `targets` go in: the API block and the
-    prose may be corrected without re-registering, but a rule may not.
+    Only the rule blocks go in: the API block and the prose may be corrected
+    without re-registering, but a rule may not.
     """
-    payload = {k: mapping.get(k) for k in ("sensors", "confidence", "targets")}
+    payload = {k: mapping.get(k) for k in HASHED_BLOCKS}
     blob = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
@@ -200,10 +207,43 @@ def confidence_from_z(z: float, mapping: dict) -> float:
     return max(floor, min(ceiling, abs(float(z)) / 2.0))
 
 
-def direction_for(target: dict, z: float) -> int:
-    """+1 / -1 from the target's declared rule. 0 is never produced: a rule that
-    can abstain has to say so in the mapping, and none of the five does."""
+#: The venue's own vocabulary. Ours is +1 / -1 / 0 and it is translated once,
+#: here, so no call site can invent a fourth word.
+TERNARY_WORDS = {1: "bullish", -1: "bearish", 0: "neutral"}
+
+
+def effective_neutral_z(mapping: dict, dead_zone_pct: float | None) -> float:
+    """The |z| a call has to clear before we state a direction at all.
+
+    `neutral_z * max(1, dead_zone_pct / reference_dead_zone_pct)`: a venue that
+    needs a bigger move before it settles directionally needs a bigger view
+    from us before we state one. `dead_zone_pct` comes from the CHALLENGE, and
+    `None` means no challenge object was fetched -- the mapping's declared
+    default is used and the row says which.
+    """
+    tern = mapping.get("ternary") or {}
+    base = float(tern.get("neutral_z", 0.10))
+    ref = float(tern.get("reference_dead_zone_pct", 0.25)) or 0.25
+    dz = float(dead_zone_pct if dead_zone_pct is not None
+               else tern.get("default_dead_zone_pct", ref))
+    return base * max(1.0, dz / ref)
+
+
+def direction_for(target: dict, z: float, *, mapping: dict | None = None,
+                  dead_zone_pct: float | None = None) -> int:
+    """+1 bullish / -1 bearish / 0 neutral.
+
+    v1 of the mapping could only say +1 or -1. The venue settles a TERNARY
+    against a per-challenge `dead_zone_pct`, so a binary mapping posts a
+    direction the venue cannot settle as stated and every neutral settlement
+    lands against us with no rule to explain it. The mapping was re-registered
+    to v2 before the first submission; `prereg_hash` changed, which is what
+    makes the change visible.
+    """
     rule = str(target.get("direction", "sign(z)")).strip()
+    if mapping is not None and abs(float(z)) < effective_neutral_z(
+            mapping, dead_zone_pct):
+        return 0
     s = 1 if z >= 0 else -1
     if rule == "sign(z)":
         return s
@@ -218,8 +258,16 @@ def direction_for(target: dict, z: float) -> int:
 # the rows
 
 
-def build_rows(mapping: dict, sensors: dict, asof: date) -> tuple[list, list[dict]]:
-    """(PredictionRecords, skipped) — one row per target whose sensor exists."""
+def build_rows(mapping: dict, sensors: dict, asof: date,
+               challenges: dict | None = None) -> tuple[list, list[dict]]:
+    """(PredictionRecords, skipped) — one row per target whose sensor exists.
+
+    `challenges` is `{target_id: challenge object}` from
+    `GET /api/v1/eval/challenges?status=open`, and the only thing read out of
+    it is `dead_zone_pct`. Absent (no credentials, or `--dry-run`), the
+    mapping's declared default is used and every row records WHICH, because a
+    dead zone we assumed and a dead zone the venue told us are different facts.
+    """
     from backend.services.belief_state import Observable, make_prediction
 
     rows, skipped = [], []
@@ -235,19 +283,27 @@ def build_rows(mapping: dict, sensors: dict, asof: date) -> tuple[list, list[dic
                                      "pre-registration")})
             continue
         z = float(sensor["z"])
-        d = direction_for(target, z)
-        conf = confidence_from_z(z, mapping)
-        # `probability` is the graded quantity: P(the target rises). A DOWN
+        ch = (challenges or {}).get(str(target["id"])) or {}
+        dz = ch.get("dead_zone_pct")
+        dz_source = ("challenge" if dz is not None else "mapping_default")
+        d = direction_for(target, z, mapping=mapping, dead_zone_pct=dz)
+        conf = (confidence_from_z(z, mapping) if d != 0 else 0.0)
+        # `probability` is the graded quantity: P(the target rises). A BEARISH
         # call at confidence c is P(up) = 0.5 - c/2, which is the same claim
-        # stated so that one Brier can score both directions.
+        # stated so that one Brier can score both directions. A NEUTRAL call is
+        # 0.5 exactly -- it is the honest output of a sensor with no view, not
+        # a hedge, and it scores 50 on the venue's track whatever happens.
         p = 0.5 + (d * conf) / 2.0
         rows.append(make_prediction(
             ticker=str(target["grade_symbol"]), specialist=SPECIALIST,
             observable=Observable.RETURN_SIGN, horizon_days=1,
             probability=p,
-            thesis=(f"{target['id']} ({target['name']}) closes "
-                    f"{'up' if d > 0 else 'down'} tomorrow. Rule: "
-                    f"{target['direction']} on {sname} (z={z:.3f}); prior: "
+            thesis=(f"{target['id']} ({target['name']}) settles "
+                    f"{TERNARY_WORDS[d]} tomorrow against a dead zone of "
+                    f"{dz if dz is not None else mapping.get('ternary', {}).get('default_dead_zone_pct')}% "
+                    f"({dz_source}). Rule: {target['direction']} on {sname} "
+                    f"(z={z:.3f}, neutral below "
+                    f"{effective_neutral_z(mapping, dz):.3f}); prior: "
                     f"{target.get('prior', '')}"),
             counter_thesis=("the sensor is a one-month equity trend and the "
                             "target is a different asset on a one-day horizon; "
@@ -257,13 +313,28 @@ def build_rows(mapping: dict, sensors: dict, asof: date) -> tuple[list, list[dic
             model=MODEL, model_version=MODEL_VERSION,
             prompt=f"{MECHANISM_ID}|{phash}|{target['id']}",
             input_snapshot={"asof": str(asof), "sensor": sname,
-                            "z": round(z, 6), "prereg_hash": phash},
+                            "z": round(z, 6), "prereg_hash": phash,
+                            "dead_zone_pct": dz,
+                            "dead_zone_source": dz_source,
+                            "neutral_below_z": round(
+                                effective_neutral_z(mapping, dz), 6),
+                            "challenge_id": ch.get("id")},
             benchmark=BENCHMARK,
             made_at=f"{asof}T21:00:00+00:00", session_as_of=str(asof),
             mechanism_id=MECHANISM_ID, decision_date=str(asof),
             policy_hash=phash,
+            # `input_snapshot` is HASHED and not stored; `inputs_used` is
+            # stored verbatim. The dead zone has to be readable off the row
+            # months later -- a dead zone we assumed and a dead zone the venue
+            # told us are different facts, and only one of them is ours to
+            # answer for -- so it goes in both.
             inputs_used={"source": "backend/data/optimus/prices_2025_26/bars.parquet",
-                         "as_of": str(asof), "mapping": str(mapping_path().name)},
+                         "as_of": str(asof), "mapping": str(mapping_path().name),
+                         "dead_zone_pct": dz, "dead_zone_source": dz_source,
+                         "neutral_below_z": round(
+                             effective_neutral_z(mapping, dz), 6),
+                         "challenge_id": ch.get("id"),
+                         "direction": TERNARY_WORDS[d]},
             confidence=conf,
             # No transaction happens: this is a stated forecast, not a position.
             # Saying `costs_charged=True` here would be a lie about a trade that
@@ -271,18 +342,26 @@ def build_rows(mapping: dict, sensors: dict, asof: date) -> tuple[list, list[dic
             costs_charged=False,
             licence=str(mapping.get("licence") or "PRODUCT_EXPERIMENT"),
             notes_text=(f"arena target {target['id']}; direction "
-                        f"{'up' if d > 0 else 'down'}; confidence {conf:.3f}")))
+                        f"{TERNARY_WORDS[d]}; confidence {conf:.3f}; dead zone "
+                        f"{dz_source}")))
     return rows, skipped
 
 
 def arena_payload(record, target_id: str, prereg: str) -> dict:
     """The POST body, read OFF the already-written record.
 
+    FIVE FIELDS, and only five, exactly as the venue's `predict` endpoint
+    documents them (`docs/research_notes/2026-09-11/research_headlinearena.md`):
+    `direction` (bullish / bearish / neutral), `confidence` (0-1), `reasoning`,
+    `summary`, `prompt_hash`. A sixth field of our own invention is a field the
+    venue ignores, and a reader of our receipt would not know which.
+
     The confidence is `abs(2*probability - 1)`, which inverts exactly the
     construction in `build_rows`. It is derived from the ledger row rather than
     recomputed from the sensor so that there is nowhere for a scoring-aware
     adjustment to live: the arena pays `50 +- 50*confidence`, and the only
     defence against that is that the number was already committed elsewhere.
+    A probability of exactly 0.5 is NEUTRAL and posts confidence 0.0.
     """
     if getattr(record, "prediction_id", None) is None:
         raise ValueError("arena_payload takes a written PredictionRecord; a "
@@ -290,17 +369,97 @@ def arena_payload(record, target_id: str, prereg: str) -> dict:
                          "before the ledger row exists, which is the one "
                          "ordering this job is for")
     p = float(record.probability)
+    conf = round(abs(2.0 * p - 1.0), 6)
+    if conf == 0.0:
+        direction = "neutral"
+    else:
+        direction = "bullish" if p > 0.5 else "bearish"
+    reasoning = PUBLIC_REASONING.format(hash=prereg, rule=record.notes_text)
     return {
-        "target": target_id,
-        "direction": "up" if p >= 0.5 else "down",
-        "confidence": round(abs(2.0 * p - 1.0), 6),
-        "reasoning": PUBLIC_REASONING.format(hash=prereg, rule=record.notes_text),
-        "external_id": record.prediction_id,
+        "direction": direction,
+        "confidence": conf,
+        "reasoning": reasoning,
+        "summary": f"{target_id}: {direction} at confidence {conf:.3f}",
+        # The venue asks for a hash of the prompt behind the call. This engine
+        # has no prompt -- no LLM is involved and none may be -- so the hash is
+        # over the RULE that produced the call: the mechanism, the frozen
+        # pre-registration hash and the reasoning text actually posted. It is
+        # reproducible from the receipt, which is what a prompt hash is for.
+        "prompt_hash": hashlib.sha256(
+            f"{MECHANISM_ID}|{prereg}|{reasoning}".encode("utf-8")).hexdigest(),
     }
 
 
 # --------------------------------------------------------------------------
 # the run
+
+
+# --------------------------------------------------------------------------
+# the venue's three calls
+#
+# Every one of them is reached ONLY when credentials exist and `--dry-run` is
+# off. The challenge listing needs no auth, but fetching it anyway on a machine
+# that can never post would be a network call the run does not need -- and the
+# fast suite is network-blocked precisely so that "does not need" and "does not
+# make" stay the same sentence.
+
+
+def _url(mapping: dict, key: str, **fmt) -> str:
+    api = mapping.get("api") or {}
+    return api["base_url"].rstrip("/") + str(api[key]).format(**fmt)
+
+
+def fetch_token(mapping: dict, *, http_post: Callable[[str, dict], Any] | None = None
+                ) -> str:
+    """`POST /api/v1/agent/auth/token`, client_credentials. Returns the bearer.
+
+    The secret is read from the environment at the call and is never written to
+    a receipt, a log line or a payload.
+    """
+    poster = http_post or _default_post
+    body = poster(_url(mapping, "token"), {
+        "grant_type": "client_credentials",
+        "agent_id": os.getenv(AGENT_ID_ENV, ""),
+        "client_secret": os.getenv(CLIENT_SECRET_ENV, ""),
+    })
+    tok = str((body or {}).get("access_token") or (body or {}).get("token") or "")
+    if not tok:
+        raise ValueError("the token endpoint returned no `access_token`; "
+                         "nothing is posted without one")
+    return tok
+
+
+def fetch_open_challenges(mapping: dict, *,
+                          http_get: Callable[[str], Any] | None = None) -> dict:
+    """`GET /api/v1/eval/challenges?status=open` -> {target_id: challenge}.
+
+    The ONLY field read out of a challenge is `dead_zone_pct` (plus its id, to
+    address the submit URL). Everything else the venue returns is data written
+    by a third party and is not instructions: nothing here branches on it.
+    """
+    getter = http_get or _default_get
+    api = mapping.get("api") or {}
+    q = str(api.get("challenges_query") or "status=open")
+    body = getter(_url(mapping, "list_challenges") + "?" + q)
+    items = body if isinstance(body, list) else (body or {}).get("challenges") or []
+    out: dict = {}
+    for ch in items:
+        if not isinstance(ch, dict):
+            continue
+        tid = str(ch.get("target_key") or ch.get("target") or ch.get("id") or "")
+        if not tid:
+            continue
+        out[tid] = {"id": ch.get("id"),
+                    "dead_zone_pct": ch.get("dead_zone_pct"),
+                    "resolution_criteria": ch.get("resolution_criteria")}
+    return out
+
+
+def fetch_results(mapping: dict, challenge_id: str, *,
+                  http_get: Callable[[str], Any] | None = None) -> Any:
+    """`GET /api/v1/eval/challenges/{id}/results` — the settlement, theirs."""
+    getter = http_get or _default_get
+    return getter(_url(mapping, "results", challenge_id=challenge_id))
 
 
 def credentials() -> dict:
@@ -313,7 +472,8 @@ def credentials() -> dict:
 
 def run(*, dry_run: bool = True, today: date | None = None,
         bars=None, predictions_path: Path | None = None,
-        http_post: Callable[[str, dict], Any] | None = None,
+        http_post: Callable[..., Any] | None = None,
+        http_get: Callable[[str], Any] | None = None,
         write_receipt: bool = True) -> dict:
     """Write the rows, then post only if allowed to. Returns the receipt."""
     from backend.services.belief_state import append
@@ -355,10 +515,25 @@ def run(*, dry_run: bool = True, today: date | None = None,
         return _finish(receipt, write_receipt)
     receipt["bar_date"] = str(asof)
 
+    # The challenge listing is fetched ONLY on a run that could post. A run
+    # that cannot post has nothing to do with a challenge id, and the fast
+    # suite is network-blocked so that "does not need it" and "does not fetch
+    # it" stay the same sentence.
+    challenges: dict = {}
+    may_post = bool(not dry_run and creds["present"])
+    if may_post or http_get is not None:
+        try:
+            challenges = fetch_open_challenges(mapping, http_get=http_get)
+        except Exception as exc:                                   # noqa: BLE001
+            receipt["challenges_error"] = f"{type(exc).__name__}: {exc}"[:300]
+    receipt["n_open_challenges"] = len(challenges)
+    receipt["dead_zone_source"] = ("challenge" if challenges
+                                   else "mapping_default (no challenge fetched)")
+
     sensors = sensor_values(bars, asof)
     receipt["sensors"] = {k: {kk: (round(vv, 6) if isinstance(vv, float) else vv)
                               for kk, vv in v.items()} for k, v in sensors.items()}
-    rows, skipped = build_rows(mapping, sensors, asof)
+    rows, skipped = build_rows(mapping, sensors, asof, challenges)
     receipt["skipped"] = skipped
     if not rows:
         receipt["nothing_to_do"] = True
@@ -368,10 +543,16 @@ def run(*, dry_run: bool = True, today: date | None = None,
 
     # ── STEP 2: the ledger, BEFORE any network call ────────────────────────
     append(rows, predictions_path)
-    receipt["rows"] = [{"prediction_id": r.prediction_id, "ticker": r.ticker,
-                        "probability": r.probability, "confidence": r.confidence,
-                        "direction": "up" if r.probability >= 0.5 else "down"}
-                       for r in rows]
+    receipt["rows"] = [
+        {"prediction_id": r.prediction_id, "ticker": r.ticker,
+         "probability": r.probability, "confidence": r.confidence,
+         "direction": ("neutral" if abs(r.probability - 0.5) < 1e-12
+                       else "bullish" if r.probability > 0.5 else "bearish"),
+         "dead_zone_pct": (r.input_snapshot or {}).get("dead_zone_pct")
+         if isinstance(getattr(r, "input_snapshot", None), dict) else None}
+        for r in rows]
+    receipt["n_neutral"] = sum(1 for x in receipt["rows"]
+                               if x["direction"] == "neutral")
     receipt["n_rows"] = len(rows)
     receipt["ledger_written_before_post"] = True
 
@@ -388,18 +569,34 @@ def run(*, dry_run: bool = True, today: date | None = None,
     poster = http_post or _default_post
     phash = receipt["prereg"]["computed"]
     targets = {t["grade_symbol"]: t for t in (mapping.get("targets") or [])}
+    try:
+        bearer = fetch_token(mapping, http_post=poster)
+    except Exception as exc:                                       # noqa: BLE001
+        receipt["reason_not_posted"] = (
+            f"the token call failed ({type(exc).__name__}: {exc})"[:300]
+            + " -- the rows are in our ledger and nothing was sent")
+        return _finish(receipt, write_receipt)
+    receipt["token_obtained"] = True
     posted = []
     for r in rows:
         target = targets.get(r.ticker) or {}
-        body = arena_payload(r, str(target.get("id") or r.ticker), phash)
-        url = (mapping["api"]["base_url"].rstrip("/")
-               + mapping["api"]["submit"].format(challenge_id=body["target"]))
+        tid = str(target.get("id") or r.ticker)
+        ch = challenges.get(tid) or {}
+        cid = ch.get("id")
+        if not cid:
+            posted.append({"target": tid, "skipped": (
+                "no OPEN challenge for this target today; the submit URL is "
+                "addressed by challenge id and there is nothing to address")})
+            continue
+        body = arena_payload(r, tid, phash)
+        url = _url(mapping, "submit", challenge_id=cid)
         try:
-            posted.append({"target": body["target"], "url": url,
+            posted.append({"target": tid, "challenge_id": cid, "url": url,
+                           "direction_sent": body["direction"],
                            "confidence_sent": body["confidence"],
-                           "response": poster(url, body)})
+                           "response": poster(url, body, bearer)})
         except Exception as exc:                                   # noqa: BLE001
-            posted.append({"target": body["target"], "url": url,
+            posted.append({"target": tid, "challenge_id": cid, "url": url,
                            "error": f"{type(exc).__name__}: {exc}"[:300]})
     receipt["posted"] = any("response" in p for p in posted)
     receipt["n_posted"] = sum(1 for p in posted if "response" in p)
@@ -407,15 +604,32 @@ def run(*, dry_run: bool = True, today: date | None = None,
     return _finish(receipt, write_receipt)
 
 
-def _default_post(url: str, body: dict) -> dict:
-    """The real POST. Reached only with credentials present, which they are not."""
+def _default_post(url: str, body: dict, token: str | None = None) -> dict:
+    """The real POST. Reached only with credentials present, which they are not.
+
+    The submit endpoint takes `Authorization: Bearer <token>` from
+    `/api/v1/agent/auth/token`; the token endpoint itself takes the credentials
+    in the BODY, not in headers. v1 of this function sent `X-Agent-Id` and
+    `X-Client-Secret` headers on every call, which is not the venue's scheme
+    and would have put the secret on every request including the ones that do
+    not need it.
+    """
     import urllib.request
+    headers = {"Content-Type": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     req = urllib.request.Request(
-        url, data=json.dumps(body).encode("utf-8"),
-        headers={"Content-Type": "application/json",
-                 "X-Agent-Id": os.getenv(AGENT_ID_ENV, ""),
-                 "X-Client-Secret": os.getenv(CLIENT_SECRET_ENV, "")},
+        url, data=json.dumps(body).encode("utf-8"), headers=headers,
         method="POST")
+    with urllib.request.urlopen(req, timeout=30) as fh:            # noqa: S310
+        return json.loads(fh.read() or b"{}")
+
+
+def _default_get(url: str) -> Any:
+    """The real GET. Reached only on a run that is allowed to post."""
+    import urllib.request
+    req = urllib.request.Request(url, headers={"Accept": "application/json"},
+                                 method="GET")
     with urllib.request.urlopen(req, timeout=30) as fh:            # noqa: S310
         return json.loads(fh.read() or b"{}")
 

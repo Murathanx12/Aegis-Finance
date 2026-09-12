@@ -39,23 +39,53 @@
 #  * registration is ATTENDED -- a magic link to Murat's e-mail. No credential
 #    exists in this environment and nothing here creates one.
 
-version: 1
+version: 2
 licence: PRODUCT_EXPERIMENT
 frozen_utc: "2026-09-12T00:00:00+00:00"
 mechanism_id: headline_arena_v1
 
-# The sha256 (16 hex) of the `sensors` + `targets` blocks below, canonicalised.
+# RE-REGISTERED 2026-09-12, BEFORE THE FIRST SUBMISSION
+# =====================================================
+# v1 mapped every sensor to a BINARY up/down. The venue settles a TERNARY
+# (bullish / bearish / neutral) against a per-challenge `dead_zone_pct`, so a
+# mapping that can only say up or down posts a direction the venue cannot
+# settle as stated, and every neutral settlement would land against us with no
+# rule to explain it. The ternary clause below is therefore a RULE CHANGE and
+# it changes `prereg_hash`, which is the point: the file's own instruction is
+# to state the change rather than paste the new hash.
+#
+# Nothing has been submitted under v1. There are no credentials in this
+# environment, the job has only ever run `--dry-run`, and no row in our ledger
+# carries an arena settlement. Re-registering before the first submission is
+# the cheap moment; re-registering after one would not be a re-registration.
+registration_history:
+  - version: 1
+    prereg_hash: "e70b4fff23c0c6a7"
+    frozen_utc: "2026-09-12T00:00:00+00:00"
+    status: "SUPERSEDED BEFORE ANY SUBMISSION — binary up/down only"
+  - version: 2
+    frozen_utc: "2026-09-12T10:00:00+00:00"
+    change: "ternary direction with a per-challenge dead zone (see `ternary`)"
+    why: "the venue settles bullish/bearish/neutral, not up/down"
+
+# The sha256 (16 hex) of the `sensors`, `confidence`, `ternary` and `targets`
+# blocks below, canonicalised.
 # `scripts/headline_arena_daily.py --verify-prereg` recomputes it, and
 # `test_headline_arena.py` fails if the file and the hash disagree.
-prereg_hash: "e70b4fff23c0c6a7"
+prereg_hash: "e0db36415ef766bb"
 
 # Where the API lives. Read from here rather than hardcoded in the script so a
 # base-URL change is a visible edit to a pre-registered file.
 api:
   base_url: "https://headlinearena.com"
-  list_challenges: "/api/v1/eval/challenges"
-  submit: "/api/v1/eval/challenges/{challenge_id}/predict"
-  settlement: "/api/v1/eval/challenges/{challenge_id}"
+  # Verified against the plugin's guide and skill files, 2026-09-11 note
+  # `docs/research_notes/2026-09-11/research_headlinearena.md`. `/openapi.json`
+  # was 404, so these are the documented paths and not a discovered schema.
+  token: "/api/v1/agent/auth/token"          # POST, grant_type=client_credentials
+  list_challenges: "/api/v1/eval/challenges" # GET ?status=open, NO AUTH
+  submit: "/api/v1/eval/challenges/{challenge_id}/predict"   # POST, Bearer
+  results: "/api/v1/eval/challenges/{challenge_id}/results"  # GET
+  challenges_query: "status=open"
   # The dead zone is READ FROM EACH CHALLENGE (`dead_zone_pct`), never assumed.
   # A hardcoded threshold would silently disagree with the venue the day they
   # change it, and every disagreement would land on our side of the ledger.
@@ -80,13 +110,48 @@ sensors:
       trailing 252 sessions"
     note: "the mega-cap is a SENSOR, not the trade (strategic invariants)"
 
-# direction: +1 = up, -1 = down. `confidence` is |z| / 2, clipped.
+# direction: +1 = up, -1 = down, 0 = neutral. `confidence` is |z| / 2, clipped.
 confidence:
   formula: "min(0.60, max(0.05, abs(z) / 2))"
   floor: 0.05
   ceiling: 0.60
   why_capped: "the score is 50 +- 50*confidence, so an uncapped confidence is a
     bet on the scoring rule rather than a statement about the world"
+
+# THE TERNARY, AND THE DEAD ZONE IT IS READ AGAINST
+# =================================================
+# The venue settles each challenge against its own `dead_zone_pct`: a move
+# inside the band settles NEUTRAL. `dead_zone_pct` is read from the challenge
+# object every day and is never hardcoded -- a threshold frozen on our side
+# silently disagrees with the venue the day they change it, and every
+# disagreement would land on our side of the ledger.
+#
+# Our sensors are standardised z-scores of equity trend and volatility regime.
+# They say nothing about the MAGNITUDE of a one-day move in gold or crude on
+# that instrument's own scale, so no honest rule can convert a z into a
+# predicted percentage. What a z CAN say is whether we have a view at all, and
+# the ternary is built on exactly that and nothing more:
+#
+#   |z| < effective_neutral_z  ->  neutral      (no view)
+#   otherwise                  ->  the target's own sign rule
+#
+#   effective_neutral_z = neutral_z * max(1, dead_zone_pct / reference_dead_zone_pct)
+#
+# i.e. a venue that needs a bigger move before it settles directionally needs a
+# bigger view from us before we state one. Both constants are frozen here.
+ternary:
+  neutral_z: 0.10
+  reference_dead_zone_pct: 0.25
+  default_dead_zone_pct: 0.25
+  default_dead_zone_note: "used ONLY when no challenge object was fetched (no
+    credentials, or --dry-run). The row records which source was used, because
+    a dead zone we assumed and a dead zone the venue told us are different
+    facts."
+  neutral_probability: 0.5
+  why_neutral_is_not_a_hedge: "a neutral call scores 50 on the financial track
+    whether the market moved or not, so it is the honest output of a sensor
+    with no view -- not a way to protect a score. The floor is frozen at 0.10
+    before any submission, which is what stops it becoming one."
 
 targets:
   - id: ES
