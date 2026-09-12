@@ -170,3 +170,22 @@ def test_the_live_board_carries_the_replicated_note():
         pytest.skip("no leaderboard on this checkout")
     rows = [ln for ln in lb["markdown"].splitlines() if ln.startswith("| ")]
     assert rows, "the board has no rows"
+
+
+def test_the_factory_and_the_jobs_module_carry_no_literal_default_night():
+    """`NIGHT_RUN_DATE` unset must mean TODAY, not whichever date was current
+    when the line was written: the literal "2026-09-08" default sent two real
+    receipts into a five-day-old folder on 2026-09-13. AST, not grep, so the
+    comment that explains the defect does not trip the test."""
+    import ast
+    import re
+    for rel in ("scripts/night_factory.py", "scripts/night_factory_jobs.py"):
+        tree = ast.parse((REPO / rel).read_text(encoding="utf-8"))
+        hits = [n for n in ast.walk(tree) if isinstance(n, ast.Assign)
+                and any(isinstance(t, ast.Name) and t.id == "RUN_DATE" for t in n.targets)]
+        assert hits, f"{rel}: no RUN_DATE assignment"
+        for n in hits:
+            literals = [c.value for c in ast.walk(n.value)
+                        if isinstance(c, ast.Constant) and isinstance(c.value, str)]
+            assert not any(re.fullmatch(r"\d{4}-\d{2}-\d{2}", v) for v in literals), \
+                f"{rel}: RUN_DATE still defaults to a literal date {literals}"

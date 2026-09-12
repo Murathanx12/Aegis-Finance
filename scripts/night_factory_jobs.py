@@ -63,9 +63,18 @@ if str(REPO) not in sys.path:
 
 from scripts import r4_event_families as R            # noqa: E402  helpers only
 
-RUN_DATE = "2026-09-08"
+# 2026-09-13: this was a bare literal, so a job run outside the factory (or a
+# factory launched without NIGHT_RUN_DATE) wrote into a five-day-old folder.
+# Unset, the night is TODAY; the factory sets the env for its children.
+RUN_DATE = os.getenv("NIGHT_RUN_DATE") or datetime.now().strftime("%Y-%m-%d")
 OUT = REPO / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
-OUT.mkdir(parents=True, exist_ok=True)
+# Created at WRITE time, not import time: importing this module from a test on a
+# later day must not leave an empty newest night for the board readers to find.
+
+
+def _out() -> Path:
+    OUT.mkdir(parents=True, exist_ok=True)
+    return OUT
 WRDS = REPO / "backend" / "data" / "optimus" / "wrds"
 TAPE = REPO / "backend" / "data" / "optimus" / "r4_event_families" / "R4_earnings_events.parquet"
 PLACEBO = REPO / "backend" / "data" / "optimus" / "r4_event_families" / "R4_placebo_offset40.parquet"
@@ -456,7 +465,7 @@ def D1_reaction_book(smoke: bool = False) -> dict:
     # daily series of the primary cell, for the leaderboard and the morning
     prim = calendar_book(tape, _select(ann, 0.10), 21)
     pd.DataFrame({"date": tape.dates, "net": prim["net"], "gross": prim["gross"], "n_open": prim["n_open"],
-                  "mkt_vw": tape.mkt_vw, "mkt_ew": tape.mkt_ew}).to_parquet(OUT / "D1_primary_daily.parquet", index=False)
+                  "mkt_vw": tape.mkt_vw, "mkt_ew": tape.mkt_ew}).to_parquet(_out() / "D1_primary_daily.parquet", index=False)
     out["cells"] = {k: _strip(v) for k, v in cells.items()}
     out["family"] = {"n_cells": len(family_p), "holm": R.holm(family_p), "bh_fdr": R.bh_fdr(family_p)}
     p = cells.get("top_decile|hold=21", {})
@@ -644,7 +653,7 @@ def G1_evolve(hours: float = 5.0, pop: int = 32, seed: int = 20260908) -> dict:
     dev = df[df["month"] <= DEV_LAST_MONTH].copy()
     del df
     rng = random.Random(seed)
-    log_path = OUT / "G1_evaluations.jsonl"
+    log_path = _out() / "G1_evaluations.jsonl"
     cache: dict[str, dict] = {}
     if log_path.exists():            # resume: a night that restarts keeps its evidence
         for line in log_path.open(encoding="utf-8"):
@@ -733,7 +742,7 @@ def G1_evolve(hours: float = 5.0, pop: int = 32, seed: int = 20260908) -> dict:
 def G2_holdout_once(n_null: int = 200, seed: int = 7) -> dict:
     """Read the sealed window ONCE for the archive. The null bar is the holdout
     distribution of random genomes (never selected on anything)."""
-    rec_path = OUT / "G1_evolve_run01.json"
+    rec_path = _out() / "G1_evolve_run01.json"
     if not rec_path.exists():
         return {"job": "G2_holdout_once", "verdict": "CANNOT DETERMINE", "why": "no G1 receipt"}
     g1 = json.loads(rec_path.read_text(encoding="utf-8"))
@@ -1174,7 +1183,7 @@ def N1_train_reaction_learner(hours: float = 3.0, smoke: bool = False) -> dict:
 
     # a smoke run must never poison the night's resume cache: the config key
     # ("H21|all|s0") says nothing about which tape produced it
-    log_path = OUT / ("N1_configs_smoke.jsonl" if smoke else "N1_configs.jsonl")
+    log_path = _out() / ("N1_configs_smoke.jsonl" if smoke else "N1_configs.jsonl")
     done: dict[str, dict] = {}
     if log_path.exists():
         for line in log_path.open(encoding="utf-8"):
@@ -1683,7 +1692,7 @@ def main(argv=None) -> int:
     # A job that stamped its own stage keeps it; one the map knows gets the
     # map's; one neither knows gets None and is named by the contract's test.
     payload.setdefault("stage", JOB_STAGES.get(a.job))
-    out = Path(a.out) if a.out else OUT / f"{a.job}_run{a.run:02d}{'_smoke' if a.smoke else ''}.json"
+    out = Path(a.out) if a.out else _out() / f"{a.job}_run{a.run:02d}{'_smoke' if a.smoke else ''}.json"
     out.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
     print(f"\n{a.job}: {payload.get('headline')}\n  verdict: {payload.get('verdict')}\n  -> {out}")
     return 0

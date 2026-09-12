@@ -35,7 +35,10 @@ ROOT = Path(__file__).resolve().parent.parent
 # the nn and find logic, reason and learn". Tonight's queue is a different queue
 # in a different directory, so set both from the environment rather than forking
 # this file for every night.
-RUN_DATE = os.getenv("NIGHT_RUN_DATE", "2026-09-08")
+# 2026-09-13: the default was the literal "2026-09-08" for five days; two runs
+# (B_verdict, A_corner) wrote into that folder before anyone noticed, because a
+# stale default date reads exactly like a chosen one. Unset, the night is TODAY.
+RUN_DATE = os.getenv("NIGHT_RUN_DATE") or datetime.now().strftime("%Y-%m-%d")
 OUT = ROOT / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
 STOP = OUT / "STOP"
 LEADERBOARD = OUT / "LEADERBOARD.md"
