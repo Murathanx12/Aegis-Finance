@@ -180,6 +180,22 @@ before crediting discovery** (protocol §9).
   dedicated Alpaca paper role for lane D (D2's fill receipt waits on it); the arena registration; the
   `TdrDelay` registry option; `powercfg` is already "never sleep" on AC on this machine.
 
+## 3e. PAUSE POINT — 2026-09-12 21:35 HKT (Murat: "pause now, we continue in a few hours")
+
+- **Pushed and CI-green through chunk 7** (`main` at the chunk-7 docs commit; 9,080 tests).
+- **Chunk 6 landed** (the agency: IPS, three options, `POST /agency/hold` the only `human_text`
+  route, the review row written before the call, protect-first, plain words; no book held).
+- **Chunk 7 landed** (P1-P6 schema + refusal; L3 INCONCLUSIVE on panel B — all cells post-cutoff;
+  X4 routing makes R2 worse; anonymisation gap, recall probe and elasticity frozen `PENDING_MODEL`
+  with hashed cell lists; the market sensor).
+- **Chunk 8 was on its final step (the suite) at the pause**: five task commits are LOCAL and
+  UNPUSHED (`E5_stopping_rules`, the decay sweep, `M2_distill`, the anomaly cadence, the read-only
+  query surface for the Optimus MCP). **Resume = read `scratchpad/build_chunk8.md`'s report, run
+  the fast suite, review, push, `ci_watch`, then chunk 9** (`spec_chunk9_heads.md`).
+- Model server: DOWN all day (by design after the crash). The three `PENDING_MODEL` X-lane jobs and
+  R2 panel B run when it is next up — with the conservative batch sizes and the power plan checked.
+- Attended, unchanged: lane D's paper role, the arena registration, `TdrDelay`, the B/B′ re-seed.
+
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
 1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.
