@@ -60,6 +60,7 @@ schema + every headline number is committed.
 | `backend/data/optimus/learner/states/company_states.parquet` | ~35.9 MB | `python -m scripts.learner_states_run` | rerun the script (~11 min) |
 | `backend/data/optimus/learner/states/market_states.parquet` | ~7 KB | `python -m scripts.learner_states_run` | rerun the script |
 | `backend/data/optimus/actor_corpus/ibes_graded.parquet` (row-level analyst target grades) | varies | `scripts/tracker_ibes_backtest.py` | rerun the script |
+| `backend/data/optimus/short_interest/comp_sec_shortint/<year>.parquet` (1990-2024, one file per year) | ~35 MB total | `python -m scripts.short_interest_panel --start 1990 --end 2024` | rerun the script (~7 min from the WRDS bulk panel already on disk; no vendor pull). **Book A's data.** `datadate` is the SETTLEMENT date; the PIT stamp is `observed_at = datadate + 14 days` and every consumer uses that column. The committed receipt beside it is `backend/data/optimus/short_interest/comp_sec_shortint_receipt.json` — rows per year, match rate, the verified CRSP volume unit, and the UNRESOLVED Nasdaq double-counting caveat. |
 
 Many more `*.parquet` panels live under `backend/data/optimus/` (aegis_panel,
 crsp_pit, convexity, datasets, event_response, …). They are all ignored by the

@@ -1,0 +1,389 @@
+{
+  "job": "short_interest_panel",
+  "built_utc": "2026-09-12T09:13:29+00:00",
+  "finished_utc": "2026-09-12T09:14:47+00:00",
+  "for": "Book A \u2014 low short interest x high turnover (spec_first_books.md A)",
+  "licence": "PRODUCT_EXPERIMENT",
+  "sources": {
+    "current": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\comp__sec_shortint.parquet",
+    "legacy": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\bulk\\comp__sec_shortint_legacy.parquet",
+    "link": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\link_ccm.parquet",
+    "crsp": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\wrds\\crsp_dsf_<year>.parquet"
+  },
+  "dedupe": {
+    "rows_current": 5279203,
+    "rows_legacy": 4770658,
+    "rows_concatenated": 10049861,
+    "rows_after_dedupe": 6776917,
+    "overlap_rows_dropped": 3272944,
+    "kept_from_current": 5279203,
+    "kept_from_legacy": 1497714,
+    "rule": "the key is (gvkey, iid, datadate); on a collision the CURRENT file wins because it is the live table and the legacy archive predates any restatement"
+  },
+  "primary_issue": {
+    "rows_in": 6776917,
+    "rows_out": 6269322,
+    "dropped_non_primary_issues": 507595,
+    "gvkey_date_cells_with_multiple_issues": 317111,
+    "rule": "lowest numeric iid per (gvkey, datadate) \u2014 Compustat numbers the primary issue 01 and 90/91 are ADR-and-similar forms; link_ccm carries no iid so the link cannot disambiguate"
+  },
+  "link": {
+    "rows_in": 6269322,
+    "rows_linked": 3707730,
+    "rows_unlinked_dropped": 2561592,
+    "match_rate": 0.5914,
+    "linktypes": [
+      "LC",
+      "LU"
+    ],
+    "linkprims": [
+      "P",
+      "C"
+    ],
+    "rule": "linkdt <= datadate <= linkenddt; a null linkenddt is an OPEN link; primary (linkprim P) wins a tie"
+  },
+  "volume_unit_check": {
+    "n": 1194741,
+    "median_daily_turnover": 0.001219,
+    "p99_daily_turnover": 0.027924,
+    "unit": "raw shares",
+    "verdict": "vol is RAW SHARES and shrout is THOUSANDS: median daily turnover 0.1219% is in the plausible band"
+  },
+  "pit_rule": {
+    "observed_at": "datadate + 14 calendar days",
+    "why": "`datadate` is the SETTLEMENT date, not the publication date. The probe measured the publication lag at 10-26 calendar days (median 14; nominal 8 business days), so a panel used on `datadate` trades on a figure nobody could see. Fourteen is the MEDIAN: about half the prints were public earlier and about half later, so a book keyed on `observed_at` is approximately right and occasionally a few days optimistic.",
+    "source": "docs/research_notes/2026-09-12/probe_short_interest.md"
+  },
+  "turnover": {
+    "definition": "sum(vol) over 21 sessions / (shrout * 1000)",
+    "window_ends_on": "the row's own CRSP session, so it is known at that close",
+    "winsorised_at": [
+      0.01,
+      0.99
+    ],
+    "winsorised_within": "each output year"
+  },
+  "unresolved": [
+    "NASDAQ DOUBLE-COUNTING (Anderson-Dyl 2005) is UNRESOLVED. Nasdaq dealer volume is reported roughly twice, inflating Nasdaq turnover against NYSE turnover, worst before 2001. Neither the probe nor this build verified an adjustment against CRSP's own volume notes, so every row carries `turnover_unadjusted_for_venue = True`. A CROSS-VENUE turnover sort is the construction this bites, and Book A's double sort is one.",
+    "`observed_at` uses one fixed median lag rather than the per-print release date, which this vendor table does not carry. The FINRA forward leg carries `settlementDate` and the same distinction."
+  ],
+  "years": {
+    "1990": {
+      "rows_shortint": 20507,
+      "rows": 15664,
+      "match_rate_vs_shortint": 0.7638,
+      "permnos": 1772,
+      "median_si_ratio": 0.004148,
+      "median_turnover_21d": 0.034495,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1990.parquet"
+    },
+    "1991": {
+      "rows_shortint": 21095,
+      "rows": 17336,
+      "match_rate_vs_shortint": 0.8218,
+      "permnos": 1805,
+      "median_si_ratio": 0.004077,
+      "median_turnover_21d": 0.038081,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1991.parquet"
+    },
+    "1992": {
+      "rows_shortint": 23384,
+      "rows": 18820,
+      "match_rate_vs_shortint": 0.8048,
+      "permnos": 1923,
+      "median_si_ratio": 0.004159,
+      "median_turnover_21d": 0.039319,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1992.parquet"
+    },
+    "1993": {
+      "rows_shortint": 28219,
+      "rows": 21398,
+      "match_rate_vs_shortint": 0.7583,
+      "permnos": 2046,
+      "median_si_ratio": 0.00385,
+      "median_turnover_21d": 0.042515,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1993.parquet"
+    },
+    "1994": {
+      "rows_shortint": 31438,
+      "rows": 22642,
+      "match_rate_vs_shortint": 0.7202,
+      "permnos": 2119,
+      "median_si_ratio": 0.004528,
+      "median_turnover_21d": 0.039234,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1994.parquet"
+    },
+    "1995": {
+      "rows_shortint": 32007,
+      "rows": 22710,
+      "match_rate_vs_shortint": 0.7095,
+      "permnos": 2166,
+      "median_si_ratio": 0.005453,
+      "median_turnover_21d": 0.042498,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1995.parquet"
+    },
+    "1996": {
+      "rows_shortint": 33724,
+      "rows": 23826,
+      "match_rate_vs_shortint": 0.7065,
+      "permnos": 2275,
+      "median_si_ratio": 0.006042,
+      "median_turnover_21d": 0.04651,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1996.parquet"
+    },
+    "1997": {
+      "rows_shortint": 36076,
+      "rows": 25450,
+      "match_rate_vs_shortint": 0.7055,
+      "permnos": 2417,
+      "median_si_ratio": 0.007821,
+      "median_turnover_21d": 0.049861,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1997.parquet"
+    },
+    "1998": {
+      "rows_shortint": 37495,
+      "rows": 26045,
+      "match_rate_vs_shortint": 0.6946,
+      "permnos": 2454,
+      "median_si_ratio": 0.008288,
+      "median_turnover_21d": 0.053147,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1998.parquet"
+    },
+    "1999": {
+      "rows_shortint": 36915,
+      "rows": 25109,
+      "match_rate_vs_shortint": 0.6802,
+      "permnos": 2386,
+      "median_si_ratio": 0.007007,
+      "median_turnover_21d": 0.056097,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\1999.parquet"
+    },
+    "2000": {
+      "rows_shortint": 35776,
+      "rows": 23861,
+      "match_rate_vs_shortint": 0.667,
+      "permnos": 2300,
+      "median_si_ratio": 0.007276,
+      "median_turnover_21d": 0.062686,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2000.parquet"
+    },
+    "2001": {
+      "rows_shortint": 34145,
+      "rows": 22174,
+      "match_rate_vs_shortint": 0.6494,
+      "permnos": 2133,
+      "median_si_ratio": 0.010403,
+      "median_turnover_21d": 0.06496,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2001.parquet"
+    },
+    "2002": {
+      "rows_shortint": 34837,
+      "rows": 21698,
+      "match_rate_vs_shortint": 0.6228,
+      "permnos": 2012,
+      "median_si_ratio": 0.013668,
+      "median_turnover_21d": 0.073927,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2002.parquet"
+    },
+    "2003": {
+      "rows_shortint": 56375,
+      "rows": 39627,
+      "match_rate_vs_shortint": 0.7029,
+      "permnos": 5029,
+      "median_si_ratio": 0.011767,
+      "median_turnover_21d": 0.07988,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2003.parquet"
+    },
+    "2004": {
+      "rows_shortint": 76942,
+      "rows": 57342,
+      "match_rate_vs_shortint": 0.7453,
+      "permnos": 5109,
+      "median_si_ratio": 0.013736,
+      "median_turnover_21d": 0.085665,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2004.parquet"
+    },
+    "2005": {
+      "rows_shortint": 77180,
+      "rows": 56809,
+      "match_rate_vs_shortint": 0.7361,
+      "permnos": 5068,
+      "median_si_ratio": 0.01926,
+      "median_turnover_21d": 0.092927,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2005.parquet"
+    },
+    "2006": {
+      "rows_shortint": 110146,
+      "rows": 82303,
+      "match_rate_vs_shortint": 0.7472,
+      "permnos": 4994,
+      "median_si_ratio": 0.020079,
+      "median_turnover_21d": 0.104796,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2006.parquet"
+    },
+    "2007": {
+      "rows_shortint": 151963,
+      "rows": 110351,
+      "match_rate_vs_shortint": 0.7262,
+      "permnos": 4979,
+      "median_si_ratio": 0.027141,
+      "median_turnover_21d": 0.123082,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2007.parquet"
+    },
+    "2008": {
+      "rows_shortint": 147255,
+      "rows": 106828,
+      "match_rate_vs_shortint": 0.7255,
+      "permnos": 4704,
+      "median_si_ratio": 0.02808,
+      "median_turnover_21d": 0.131614,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2008.parquet"
+    },
+    "2009": {
+      "rows_shortint": 138356,
+      "rows": 99660,
+      "match_rate_vs_shortint": 0.7203,
+      "permnos": 4401,
+      "median_si_ratio": 0.016489,
+      "median_turnover_21d": 0.122702,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2009.parquet"
+    },
+    "2010": {
+      "rows_shortint": 134212,
+      "rows": 95705,
+      "match_rate_vs_shortint": 0.7131,
+      "permnos": 4223,
+      "median_si_ratio": 0.018426,
+      "median_turnover_21d": 0.117907,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2010.parquet"
+    },
+    "2011": {
+      "rows_shortint": 132244,
+      "rows": 92213,
+      "match_rate_vs_shortint": 0.6973,
+      "permnos": 4060,
+      "median_si_ratio": 0.01809,
+      "median_turnover_21d": 0.119576,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2011.parquet"
+    },
+    "2012": {
+      "rows_shortint": 130252,
+      "rows": 89115,
+      "match_rate_vs_shortint": 0.6842,
+      "permnos": 3915,
+      "median_si_ratio": 0.016283,
+      "median_turnover_21d": 0.103922,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2012.parquet"
+    },
+    "2013": {
+      "rows_shortint": 129434,
+      "rows": 86497,
+      "match_rate_vs_shortint": 0.6683,
+      "permnos": 3838,
+      "median_si_ratio": 0.010127,
+      "median_turnover_21d": 0.107634,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2013.parquet"
+    },
+    "2014": {
+      "rows_shortint": 133039,
+      "rows": 88508,
+      "match_rate_vs_shortint": 0.6653,
+      "permnos": 3937,
+      "median_si_ratio": 0.011235,
+      "median_turnover_21d": 0.11747,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2014.parquet"
+    },
+    "2015": {
+      "rows_shortint": 134834,
+      "rows": 89860,
+      "match_rate_vs_shortint": 0.6664,
+      "permnos": 3970,
+      "median_si_ratio": 0.013115,
+      "median_turnover_21d": 0.121303,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2015.parquet"
+    },
+    "2016": {
+      "rows_shortint": 131909,
+      "rows": 87618,
+      "match_rate_vs_shortint": 0.6642,
+      "permnos": 3886,
+      "median_si_ratio": 0.015702,
+      "median_turnover_21d": 0.124319,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2016.parquet"
+    },
+    "2017": {
+      "rows_shortint": 129904,
+      "rows": 86100,
+      "match_rate_vs_shortint": 0.6628,
+      "permnos": 3822,
+      "median_si_ratio": 0.012938,
+      "median_turnover_21d": 0.122839,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2017.parquet"
+    },
+    "2018": {
+      "rows_shortint": 130681,
+      "rows": 86142,
+      "match_rate_vs_shortint": 0.6592,
+      "permnos": 3804,
+      "median_si_ratio": 0.014236,
+      "median_turnover_21d": 0.133978,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2018.parquet"
+    },
+    "2019": {
+      "rows_shortint": 130880,
+      "rows": 86055,
+      "match_rate_vs_shortint": 0.6575,
+      "permnos": 3793,
+      "median_si_ratio": 0.015063,
+      "median_turnover_21d": 0.127018,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2019.parquet"
+    },
+    "2020": {
+      "rows_shortint": 132460,
+      "rows": 86225,
+      "match_rate_vs_shortint": 0.651,
+      "permnos": 3897,
+      "median_si_ratio": 0.01303,
+      "median_turnover_21d": 0.158768,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2020.parquet"
+    },
+    "2021": {
+      "rows_shortint": 149251,
+      "rows": 97601,
+      "match_rate_vs_shortint": 0.6539,
+      "permnos": 4532,
+      "median_si_ratio": 0.011907,
+      "median_turnover_21d": 0.138548,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2021.parquet"
+    },
+    "2022": {
+      "rows_shortint": 161575,
+      "rows": 106118,
+      "match_rate_vs_shortint": 0.6568,
+      "permnos": 4613,
+      "median_si_ratio": 0.0138,
+      "median_turnover_21d": 0.124277,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2022.parquet"
+    },
+    "2023": {
+      "rows_shortint": 154157,
+      "rows": 100040,
+      "match_rate_vs_shortint": 0.6489,
+      "permnos": 4409,
+      "median_si_ratio": 0.012504,
+      "median_turnover_21d": 0.129306,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2023.parquet"
+    },
+    "2024": {
+      "rows_shortint": 148885,
+      "rows": 93592,
+      "match_rate_vs_shortint": 0.6286,
+      "permnos": 4133,
+      "median_si_ratio": 0.013039,
+      "median_turnover_21d": 0.146993,
+      "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint\\2024.parquet"
+    }
+  },
+  "total_rows": 2211042,
+  "out_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\short_interest\\comp_sec_shortint"
+}
