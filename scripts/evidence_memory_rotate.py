@@ -95,8 +95,15 @@ def month_of_line(line: str) -> str | None:
 
 
 def untracked_closed_months(directory: Path | None = None, *,
+                            prefix: str = "evidence_memory",
                             now: datetime | None = None) -> dict:
     """Month files for a CLOSED month that git does not track.
+
+    ONE guard, TWO families (2026-09-12). `llm_calls.jsonl` rotated the same way
+    the day after this did, and a second copy of this function would be a second
+    place for the rule to rot. `prefix` selects the family; everything else --
+    the live-month exemption, the refusal when git cannot be asked -- is
+    identical because the failure is identical.
 
     The live month is `.gitignore`d on purpose -- committing it would recreate
     the 65 MB blob under a new name -- and a month that has closed is meant to
@@ -121,9 +128,10 @@ def untracked_closed_months(directory: Path | None = None, *,
     stamp = now or datetime.now(timezone.utc)
     current = f"{stamp:%Y-%m}"
 
+    pat = re.compile(rf"^{re.escape(prefix)}_(\d{{4}}-\d{{2}})\.jsonl$")
     on_disk = []
-    for q in sorted(d.glob("evidence_memory_*.jsonl")):
-        m = re.match(r"^evidence_memory_(\d{4}-\d{2})\.jsonl$", q.name)
+    for q in sorted(d.glob(f"{prefix}_*.jsonl")):
+        m = pat.match(q.name)
         if m and m.group(1) < current:       # lexicographic == chronological
             on_disk.append((m.group(1), q))
     if not on_disk:

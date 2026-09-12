@@ -1,0 +1,70 @@
+{
+ "job": "llm_calls_rotate",
+ "lane": "T6",
+ "licence": "PRODUCT_EXPERIMENT",
+ "utc": "2026-09-12T07:04:20+00:00",
+ "question": "did every row of the monolith reach the month its own `ts` names?",
+ "compaction": "REFUSED -- no row summarised, deduped or dropped",
+ "dated_by": "each row's own `ts`, never the filesystem",
+ "line_endings": "the monolith carries CRLF (text mode on Windows); the month files are LF, so rows_in == rows_out is the reconciliation, not byte equality",
+ "directory": "backend/data/optimus",
+ "live_month": "2026-09",
+ "llm_spend_usd": 0.0,
+ "llm_calls": 0,
+ "network_calls": 0,
+ "monolith": {
+  "path": "backend/data/optimus/llm_calls.jsonl",
+  "bytes": 65272832,
+  "sha256": "529d8d263c20a782204a87ee17e591e7fdb8a7263f522349d8ceb25c060025cc",
+  "rows": 92737
+ },
+ "rows_in": 92737,
+ "rows_without_a_parseable_stamp": 4,
+ "quarantined": {
+  "path": "backend/data/optimus/llm_calls_unstamped.jsonl",
+  "rows": 4,
+  "first_three": [
+   {
+    "line_number": 5910,
+    "text": "\"1.0.0\"}"
+   },
+   {
+    "line_number": 7198,
+    "text": "\"}"
+   },
+   {
+    "line_number": 69386,
+    "text": "\"item1_business\"}, \"row_type\": \"call\", \"schema_version\": \"1.0.0\"}"
+   }
+  ],
+  "why": "no parseable `ts`; copied verbatim, never filed under a guessed month and never deleted"
+ },
+ "months": {
+  "2026-08": {
+   "path": "backend/data/optimus/llm_calls_2026-08.jsonl",
+   "rows": 65874,
+   "bytes": 47792583,
+   "sha256": "fdeefd4f66e068a7708a5f6ac7711381c71b53e434974b861d5d5d604f2b1e50",
+   "sealed": true,
+   "action": "written"
+  },
+  "2026-09": {
+   "path": "backend/data/optimus/llm_calls_2026-09.jsonl",
+   "rows": 26859,
+   "bytes": 17298497,
+   "sha256": "29e5e2ff2433c475900f04be8b188652db69cc07db434a1b68306fdd4d59fd76",
+   "sealed": false,
+   "action": "written"
+  }
+ },
+ "rows_out": 92733,
+ "rows_quarantined": 4,
+ "rows_in_equals_rows_out": true,
+ "sealed_months": [
+  "2026-08"
+ ],
+ "untracked_live_month": "2026-09",
+ "status": "OK",
+ "monolith_deleted": false,
+ "headline": "92737 rows -> 92733 in 2 month file(s) + 4 unstamped quarantined: 2026-08 65874 rows (written), 2026-09 26859 rows (written)"
+}

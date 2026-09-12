@@ -278,7 +278,11 @@ def test_an_amendment_links_outputs_without_rewriting_the_original(ledger):
     tel.attach_outputs(row.call_id, hypothesis_ids=["hyp_a", "hyp_b"],
                        schema_valid=True, path=ledger)
 
-    assert len(ledger.read_text(encoding="utf-8").strip().splitlines()) == 2
+    # the ledger is one file A MONTH now, so the two lines are counted over
+    # `ledger_files`, not over the base path -- which no longer exists at all
+    on_disk = [ln for q in tel.ledger_files(ledger)
+               for ln in q.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    assert len(on_disk) == 2
     folded = tel.read_calls(ledger)
     assert len(folded) == 1
     assert folded[0]["hypothesis_ids"] == ["hyp_a", "hyp_b"]
@@ -496,7 +500,8 @@ def test_concurrent_appends_do_not_tear_rows(tmp_path):
     for th in threads:
         th.join()
 
-    lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [l for q in t.ledger_files(path)
+             for l in q.read_text(encoding="utf-8").splitlines() if l.strip()]
     assert len(lines) == n_threads * per_thread
     for i, line in enumerate(lines, 1):
         json.loads(line)          # a torn row raises here — that is the point

@@ -300,6 +300,22 @@ backend/data/optimus/webview_profile/
 backend/data/optimus/learner/evidence_memory_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl
 backend/data/optimus/learner/evidence_memory_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl.tmp
 
+# 2026-09-12 (T6): the LLM SPEND ledger rotated the same way, for the same
+# reason. `llm_calls.jsonl` was 62.25 MB over 92,737 rows and every LLM call
+# appends to it; GitHub had already WARNED on a push at 50 MB and refuses at
+# 100. Compaction is REFUSED -- a spend ledger that cannot be re-derived per
+# call is not a ledger -- so the LIVE month is ignored and a CLOSED month is
+# sealed once, deliberately:
+#     git add -f backend/data/optimus/llm_calls_2026-09.jsonl
+# `test_llm_calls_rotation.py` fails if a closed month on disk is untracked,
+# and the same guard now covers both families. The split is by each row's own
+# `ts`, never by mtime -- see `scripts/llm_calls_rotate.py`.
+backend/data/optimus/llm_calls_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl
+backend/data/optimus/llm_calls_[0-9][0-9][0-9][0-9]-[0-9][0-9].jsonl.tmp
+# torn lines copied out of the monolith by the rotation: an address book, not a
+# ledger. Local evidence of local damage.
+backend/data/optimus/llm_calls_unstamped.jsonl
+
 # 2026-09-11 (O1, the thin launcher). `dist/` and `build/` were already ignored;
 # the staging paths are not covered by those rules and a 37 MB bundle plus its
 # analysis cache would otherwise be swept in by a `git add -A`. The staging path

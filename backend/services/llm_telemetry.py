@@ -81,6 +81,76 @@ LLM_CALLS = LEDGER_DIR / "llm_calls.jsonl"
 #: has an address rather than only a count. See `quarantine_unreadable`.
 QUARANTINE_SUFFIX = ".quarantine.jsonl"
 
+# ===========================================================================
+# ONE FILE A MONTH, SPLIT BY EACH ROW'S OWN `ts` (2026-09-12)
+# ===========================================================================
+#
+# `llm_calls.jsonl` reached **62.25 MB** and every LLM call appends to it.
+# GitHub warns at 50 MB and REFUSES a blob at 100, and it had already warned on
+# a push. This is the same shape as the evidence memory that E6 rotated the day
+# before, and it takes the same answer:
+#
+# * **compaction is REFUSED.** The ledger is append-only so that "what did this
+#   cost, and what did it yield" stays answerable per call. A summary that
+#   replaces its own rows cannot answer it, and a spend ledger that cannot be
+#   re-derived is not a ledger.
+# * a row goes to the month **its own `ts` names**, never the file's mtime: a
+#   fresh CI checkout writes every file today, which is how a receipt-date gate
+#   kept finance CI red for two days (session protocol 7).
+# * readers take the legacy monolith first (while it is still on disk) and then
+#   every monthly file **in filename order**, which for `YYYY-MM` IS write
+#   order. No consumer in the repo knows the split happened.
+# * the live month is gitignored; a closed month is sealed and committed once,
+#   and `untracked_closed_months` fails the suite if one is forgotten.
+
+#: A month file, matched rather than globbed loosely: `llm_calls.jsonl.
+#: quarantine.jsonl` and `llm_calls_2026-09.jsonl.tmp` are NOT ledger files and
+#: a reader that swept them in would double-count or crash on a partial write.
+_MONTH_SUFFIX = re.compile(r"^(?P<stem>.+)_(?P<month>\d{4}-(?:0[1-9]|1[0-2]))\.jsonl$")
+#: A `ts` this module is willing to file under a month.
+_TS_MONTH = re.compile(r"^(\d{4})-(0[1-9]|1[0-2])")
+
+
+def _stem_of(base: Path) -> str:
+    name = base.name
+    return name[:-len(".jsonl")] if name.endswith(".jsonl") else base.stem
+
+
+def month_of(row: dict) -> tuple[str, str]:
+    """`(YYYY-MM, source)` for one row, from THE ROW'S OWN `ts`.
+
+    A row whose stamp will not parse is filed under the wall clock and SAYS SO
+    in the row it writes: telemetry that is silently misfiled is worse than
+    telemetry that is marked, and dropping the row would lose the spend, which
+    is the one direction a cost ledger must never fail in.
+    """
+    m = _TS_MONTH.match(str(row.get("ts") or ""))
+    if m:
+        return f"{m.group(1)}-{m.group(2)}", "row_stamp"
+    return _now()[:7], "wall_clock_at_write"
+
+
+def month_path(base: Path, month: str) -> Path:
+    """`<dir>/<stem>_<YYYY-MM>.jsonl` beside `base`."""
+    base = Path(base)
+    return base.parent / f"{_stem_of(base)}_{month}.jsonl"
+
+
+def ledger_files(base: Path | None = None) -> list[Path]:
+    """Every file a reader concatenates: the legacy monolith first, then months.
+
+    ORDER MATTERS and is filename order, which for `YYYY-MM` is write order.
+    `read_calls` folds amendments onto base rows and `ledger_health` reads the
+    last stamp, so a stream that came out of order would attribute outputs to
+    the wrong call and date the ledger wrong.
+    """
+    base = Path(base) if base is not None else LLM_CALLS
+    stem = _stem_of(base)
+    months = sorted((q for q in base.parent.glob(f"{stem}_*.jsonl")
+                     if (m := _MONTH_SUFFIX.match(q.name)) and m.group("stem") == stem),
+                    key=lambda q: q.name)
+    return ([base] if base.exists() else []) + months
+
 SCHEMA_VERSION = "1.0.0"
 
 #: Dated model ids (`claude-haiku-4-5-20251001`) name the same model as the
@@ -327,11 +397,26 @@ def append(records: list[LLMCall], path: Path | None = None) -> None:
                      len(records))
         return
     p.parent.mkdir(parents=True, exist_ok=True)
-    blob = "".join(json.dumps(asdict(r), ensure_ascii=False) + "\n"
-                   for r in records)
+    # ONE FILE A MONTH, by each row's own `ts`. A batch that straddles midnight
+    # on the 1st is split, not filed together under whichever month happened to
+    # be first in the list.
+    by_month: dict[str, list[str]] = {}
+    for r in records:
+        row = asdict(r)
+        month, source = month_of(row)
+        if source != "row_stamp":
+            row["meta"] = {**(row.get("meta") or {}), "month_source": source}
+        by_month.setdefault(month, []).append(
+            json.dumps(row, ensure_ascii=False) + "\n")
     with _APPEND_LOCK:
-        with p.open("a", encoding="utf-8") as fh:
-            fh.write(blob)
+        for month, lines in by_month.items():
+            # `newline` is EXPLICIT. Text mode on Windows translates to CRLF,
+            # which is why the 62 MB monolith carries one extra byte a line --
+            # written on this laptop, read on Linux CI. A ledger whose bytes
+            # depend on the OS that appended them cannot be hashed across
+            # machines (the same lesson the evidence memory paid for at E6).
+            with month_path(p, month).open("a", encoding="utf-8", newline="\n") as fh:
+                fh.write("".join(lines))
 
 
 def record_call(**kwargs: Any) -> None:
@@ -468,55 +553,75 @@ def read_calls(path: Path | None = None) -> list[dict]:
     rows are the cache's own dicts and must be treated as READ-ONLY; `reprice()`
     already returns new dicts rather than mutating.
     """
-    p = _resolve_path(path)
-    if p is None or not p.exists():
+    base_path = _resolve_path(path)
+    if base_path is None:
         return []
-    key = str(p.resolve())
-    st = p.stat()
+    files = ledger_files(base_path)
+    if not files:
+        return []
+    key = str(Path(base_path).resolve())
     c = _PARSE_CACHE.get(key)
+    stats = {str(q): q.stat() for q in files}
 
-    # "Grew" means: same file, no shorter, and if identical in size then also
-    # untouched. Anything else — truncated, rewritten in place — invalidates the
-    # cache, because a cache that trusted mtime alone would keep reporting spend
-    # for rows that no longer exist.
-    grew = (c is not None and st.st_size >= c["size"]
-            and (st.st_size != c["size"] or st.st_mtime_ns == c["mtime_ns"]))
-    full = not grew
+    # "Grew" means, per file: same file, no shorter, and if identical in size
+    # then also identical in mtime. Anything else -- a truncation, a rewrite, a
+    # file that VANISHED (the monolith, the day it is deleted) -- forces a full
+    # re-parse of the whole stream, because a stale spend total is the one error
+    # this module exists to prevent. A NEW month file appearing is not a change
+    # to the stream: it is the stream continuing, appended at the end, where
+    # filename order puts it.
+    full = c is None or "files" not in c
+    if not full:
+        for sp, st in stats.items():
+            prev = c["files"].get(sp)
+            if prev is None:
+                continue
+            if st.st_size < prev["size"] or (st.st_size == prev["size"]
+                                             and st.st_mtime_ns != prev["mtime_ns"]):
+                full = True
+                break
+        if not full and any(sp not in stats for sp in c["files"]):
+            full = True
     if full:
-        c = {"size": 0, "mtime_ns": st.st_mtime_ns, "base": {}, "order": [],
-             "pending": [], "unreadable": 0}
+        c = {"files": {}, "base": {}, "order": [], "pending": [], "unreadable": 0}
         _PARSE_CACHE[key] = c
     base, order, pending = c["base"], c["order"], c["pending"]
     unreadable = c["unreadable"]
 
-    if st.st_size > c["size"]:
-        with p.open("rb") as fh:
-            fh.seek(c["size"])
+    for q in files:
+        sp = str(q)
+        st = stats[sp]
+        prev = c["files"].get(sp) or {"size": 0, "mtime_ns": st.st_mtime_ns}
+        if st.st_size <= prev["size"]:
+            c["files"][sp] = {"size": prev["size"], "mtime_ns": st.st_mtime_ns}
+            continue
+        with q.open("rb") as fh:
+            fh.seek(prev["size"])
             tail = fh.read()
         # The cut is found in BYTES, never in decoded text. Decoding with
         # errors="replace" turns each bad byte into U+FFFD, which re-encodes to
-        # THREE bytes — so measuring the offset by re-encoding the decoded text
+        # THREE bytes -- so measuring the offset by re-encoding the decoded text
         # drifts by 2 bytes per damaged byte. Drift backwards re-reads rows
         # already parsed (a duplicate-call_id warning storm, which is how this
         # was caught); drift forwards SKIPS rows, and skipped rows are spend
-        # that silently vanishes. This ledger already carries two torn lines.
+        # that silently vanishes. This ledger already carries torn lines.
         #
-        # A partially-flushed final line is not corruption either — it is a line
+        # A partially-flushed final line is not corruption either -- it is a line
         # still being written. Hold the remainder back and re-read it next time.
         # 24 concurrent writers tore two lines in LLM-SWARM-1; whether we happen
         # to be caching at that moment is not a property of the data.
         if tail.endswith(b"\n"):
-            chunk, consumed = tail, c["size"] + len(tail)
+            chunk, consumed = tail, prev["size"] + len(tail)
         else:
             cut = tail.rfind(b"\n")
             chunk = tail[:cut + 1] if cut >= 0 else b""
-            consumed = c["size"] + len(chunk)
+            consumed = prev["size"] + len(chunk)
         if chunk:
             unreadable += _parse_lines(
                 chunk.decode("utf-8", errors="replace").splitlines(),
                 base, order, pending)
-        c["size"], c["mtime_ns"], c["unreadable"] = (consumed, st.st_mtime_ns,
-                                                     unreadable)
+        c["files"][sp] = {"size": consumed, "mtime_ns": st.st_mtime_ns}
+    c["unreadable"] = unreadable
 
     if full:
         # Only a complete parse can prove an amendment has no base row anywhere.
@@ -899,32 +1004,40 @@ def scan_integrity(path: Path | None = None) -> dict:
     # that resolves to None, and this reports "no file" rather than reaching
     # into the real ledger from a test.
     p = _resolve_path(path)
-    if p is None or not p.exists():
-        return {"path": str(p) if p else None, "exists": False,
+    files = ledger_files(p) if p is not None else []
+    if p is None or not files:
+        return {"path": str(p) if p else None, "exists": False, "files": [],
                 "n_lines": 0, "n_unreadable": 0, "unreadable": []}
     bad: list[dict] = []
     n_lines = 0
-    # errors="replace" rather than strict: a byte-level fault must arrive as a
-    # readable complaint about a locatable line, not as a UnicodeDecodeError
-    # that takes the whole integrity check down with it.
-    with p.open("r", encoding="utf-8", errors="replace") as fh:
-        for i, raw in enumerate(fh, 1):
-            line = raw.strip()
-            if not line:
-                continue
-            n_lines += 1
-            try:
-                json.loads(line)
-            except json.JSONDecodeError as exc:
-                bad.append({"line_no": i, "reason": str(exc),
-                            "n_chars": len(line),
-                            # A torn line is a FRAGMENT of accounting data, not
-                            # content: keeping it bounded stops one damaged
-                            # megabyte from becoming a health report nobody can
-                            # read, while the sidecar keeps the full text.
-                            "excerpt": line[:200]})
-    return {"path": str(p), "exists": True, "n_lines": n_lines,
-            "n_unreadable": len(bad), "unreadable": bad}
+    # EVERY ledger file, not just the base one. After the monthly rotation the
+    # base path may not exist at all, and an integrity check that scanned only
+    # it would report a clean, empty ledger -- a gate that can only be green.
+    for q in files:
+        # errors="replace" rather than strict: a byte-level fault must arrive as
+        # a readable complaint about a locatable line, not as a UnicodeDecodeError
+        # that takes the whole integrity check down with it.
+        with q.open("r", encoding="utf-8", errors="replace") as fh:
+            for i, raw in enumerate(fh, 1):
+                line = raw.strip()
+                if not line:
+                    continue
+                n_lines += 1
+                try:
+                    json.loads(line)
+                except json.JSONDecodeError as exc:
+                    bad.append({"line_no": i, "file": str(q), "reason": str(exc),
+                                "n_chars": len(line),
+                                # A torn line is a FRAGMENT of accounting data,
+                                # not content: keeping it bounded stops one
+                                # damaged megabyte from becoming a health report
+                                # nobody can read, while the sidecar keeps the
+                                # full text. The `file` key is what makes a
+                                # line number mean something once there are
+                                # several files.
+                                "excerpt": line[:200]})
+    return {"path": str(p), "exists": True, "files": [str(q) for q in files],
+            "n_lines": n_lines, "n_unreadable": len(bad), "unreadable": bad}
 
 
 def quarantine_unreadable(path: Path | None = None,
@@ -946,26 +1059,33 @@ def quarantine_unreadable(path: Path | None = None,
         return {**scan, "quarantine_path": None, "n_written": 0}
     q = quarantine_path or p.with_suffix(p.suffix + QUARANTINE_SUFFIX)
 
-    seen: set[tuple[int, str]] = set()
+    # A line number alone stopped identifying a line the day the ledger became
+    # several files, so the address is (file, line_no, text) everywhere here.
+    seen: set[tuple[str, int, str]] = set()
     if q.exists():
         for line in q.read_text(encoding="utf-8", errors="replace").splitlines():
             try:
                 r = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            seen.add((int(r.get("line_no", -1)), str(r.get("raw", ""))))
+            seen.add((str(r.get("source", "")), int(r.get("line_no", -1)),
+                      str(r.get("raw", ""))))
 
-    raw_lines = p.read_text(encoding="utf-8",
-                            errors="replace").split("\n")
+    lines_of: dict[str, list[str]] = {}
     detected_at = _now()
     fresh = []
     for b in scan["unreadable"]:
+        src_file = b.get("file") or str(p)
+        if src_file not in lines_of:
+            lines_of[src_file] = Path(src_file).read_text(
+                encoding="utf-8", errors="replace").split("\n")
+        raw_lines = lines_of[src_file]
         raw = raw_lines[b["line_no"] - 1].strip() if b["line_no"] - 1 < len(raw_lines) else ""
-        if (b["line_no"], raw) in seen:
+        if (src_file, b["line_no"], raw) in seen:
             continue
         fresh.append({"line_no": b["line_no"], "reason": b["reason"],
                       "raw": raw, "detected_at": detected_at,
-                      "source": str(p),
+                      "source": src_file,
                       "note": ("copied, not moved — the source ledger is "
                                "append-only and still holds this line")})
     if fresh:
@@ -1067,7 +1187,12 @@ def spend(since: Any = None, path: Path | None = None, *,
     # answers. Only "no ledger was opened at all" is unknown, so the test is on
     # the FILE, before any filtering — a filter cannot make spend unknowable.
     resolved = _resolve_path(path)
-    if resolved is None or not resolved.exists():
+    # "No ledger was opened at all" is the only unknown, and after the monthly
+    # rotation the BASE path is gone while the ledger is very much there. Asking
+    # `resolved.exists()` would have made `spend()` return {} forever, which
+    # `research_budget.check()` reads as "spend is UNKNOWN" and refuses on --
+    # the whole campaign stopped by a file rename.
+    if resolved is None or not ledger_files(resolved):
         return {}
     # NOT reprice(): that materialises a new dict per row, and this function is
     # called before EVERY vendor request. Same arithmetic, no allocation.
