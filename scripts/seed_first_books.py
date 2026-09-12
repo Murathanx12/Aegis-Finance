@@ -441,7 +441,7 @@ BOOKS: tuple = (
 # the seeding
 
 
-def _client():
+def control_client():
     """An in-process TestClient with the control plane enabled.
 
     `AEGIS_CONTROL_ENABLED` is set here and restored afterwards. The router
@@ -487,7 +487,7 @@ def seed(*, dry_run: bool = False, write_receipt: bool = True,
     prev = os.environ.get("AEGIS_CONTROL_ENABLED")
     os.environ["AEGIS_CONTROL_ENABLED"] = "1"
     try:
-        client = _client()
+        client = control_client()
         for s, origin_text, bid in planned:
             if bid in have:
                 receipt["existing"] += 1

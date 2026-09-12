@@ -1,0 +1,30 @@
+{
+  "job": "seed_lane_d_book",
+  "lane": "D",
+  "item": "D1",
+  "ran_at": "2026-09-12T09:45:19+00:00",
+  "licence": "PRODUCT_EXPERIMENT",
+  "dry_run": false,
+  "strategy_id": "first_hour_event_intraday_v1",
+  "book_id": "book:f64e8d9912412124",
+  "cadence": "30m",
+  "origin": "night_job",
+  "origin_text": "Murat, 2026-09-12: \"If we can make 1% return every day in a day-trading part of the project with our live data and analysis, relying on future outcomes and dates, that would be a winner. Dedicate a paper account; check for signals in the market, monitor them, find the small details, make the engine and NN train on it. I will leave the PC open on Monday nights to let it test on the device.\" | The declared target is 1%/day and the result is MEASURED, not asserted: 1%/day compounds to +1,127%/yr, above Medallion's gross. At TAQ spreads (1.08bp one-way) a 2x-turnover book needs ~1.04%/day gross; at the retail 25bp/side assumption it needs 2.0%/day because turnover alone costs the whole 1%. Which regime applies is D2's unwritten fill receipt. The population prior is in the contract: <1% of Taiwanese day traders profitable net (Barber-Lee-Liu-Odean), 97% of persisting Brazilian futures day traders lose (Chague et al. 2020).",
+  "cost_curve": "retail_paper_pending_D2",
+  "worst_case": {
+    "n_names": 12,
+    "notional_pct_per_name": 0.08333333333333333,
+    "gross_over_equity": 1.0,
+    "gross_cap_declared": 1.0,
+    "gross_within_cap": true,
+    "stop_pct": 0.02,
+    "worst_case_pct_of_equity": 0.02,
+    "worst_case_usd": -200.0,
+    "verdict": "12 names x 8% x 2% stop = 2.00% of equity; gross 1.00x",
+    "daily_loss_limit": "12 names x 8.33% notional x 2% stop = 2.00% of equity in one session; gross 1.00x against a 1.00x cap"
+  },
+  "marking_caveat": "minute bars do not exist on this machine, so `book_cadence` marks this book at granularity='daily_close' with intraday_bars_available=false on every row. A 30-minute book graded from daily closes is not a 30-minute book's result.",
+  "already_present": true,
+  "created": false,
+  "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing"
+}
