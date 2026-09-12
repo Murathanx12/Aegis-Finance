@@ -7,8 +7,13 @@ E1 consume **L2's** typed rows: 39 event types + `no_event`, each carrying
 `event_type, direction, magnitude_bucket, confidence, scope, evidence_span`
 from an LLM extraction over the daily corpus.
 
-**L2 IS NOT BUILT.** So every typed event in this file comes from a PROXY, and
-the proxy is named in every receipt it touches:
+**L2 EXISTS AND HAS TYPED NOTHING YET** (chunk 10, 2026-09-13):
+`scripts/night_l2_typed_events.py` is registered and its receipt says
+PENDING_MODEL on 6,020 frozen corpus rows, because the local reader is down.
+So `events_for_panel` reads L2's rows when any of them land on a symbol and date
+this panel holds, and otherwise falls back to the PROXY below -- and the receipt
+NAMES which one ran (`event_source: typed_l2 | keyword_proxy`). Every number
+published before the reader comes up is a number about the proxy:
 
 1. `entity_tags` the pull already writes -- `8-K:2.02` and the other item codes
    from `scripts/news_pull.py`, and `gdelt_query:*` -- mapped to vocabulary ids
@@ -26,7 +31,8 @@ see the year landing at the low end", and its direction is a cue-word vote, not
 a reading. That asymmetry is a REASON THE ARM CAN LOSE, and it is why the
 verdict this file supports is about the proxy, not about typed events. If the
 proxy beats SHUFFLE, typed events are worth L2's money. If it does not, the
-question stays open at L2, and only the proxy is closed.
+question stays open at L2, and only the proxy is closed -- which is why
+`event_source` is in the receipt rather than inferred from a date.
 
 `backend/services/event_intel.py` already owns an 11-type vocabulary and an
 LLM path. This file does NOT replace it and does not call it: event_intel types
@@ -57,9 +63,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from backend.services import jsonl_io
 
 #: `magnitude_bucket` as an ordinal. L2 emits one per instance; the proxy can
 #: only emit the vocabulary's PRIOR for the type, and the receipt says so.
@@ -283,6 +292,126 @@ def extract_events(df: pd.DataFrame, text_col: str = "text",
     ev = pd.DataFrame(recs)
     ev["magnitude"] = ev["magnitude_bucket"].map({b: i for i, b in enumerate(BUCKETS)}).astype(float)
     return ev
+
+
+# ---------------------------------------------------------------------------
+# L2's typed rows, when they exist
+# ---------------------------------------------------------------------------
+#: where `scripts/night_l2_typed_events.py` writes. Data, gitignored; a checkout
+#: without it falls back to the proxy and the receipt says which ran.
+TYPED_DIR = Path(__file__).resolve().parents[1] / "backend" / "data" / "optimus" / "typed_events"
+
+#: the two ways a cell can get typed, named once so a receipt cannot invent a
+#: third spelling.
+TYPED_L2 = "typed_l2"
+KEYWORD_PROXY = "keyword_proxy"
+
+
+def typed_rows(directory=None) -> list[dict]:
+    """Every L2 row on disk, or `[]`. Refusal rows are a different file and are
+    not read here -- a refused document produced no type, and counting it as one
+    would be the opposite of what its class says."""
+    d = Path(directory or TYPED_DIR)
+    if not d.is_dir():
+        return []
+    rows: list[dict] = []
+    for path in sorted(d.glob("*.jsonl")):
+        if path.name.endswith("_refusals.jsonl"):
+            continue
+        rows.extend(jsonl_io.iter_rows(path, errors="strict"))
+    return rows
+
+
+def typed_events(cells: pd.DataFrame, directory=None) -> tuple[pd.DataFrame, dict]:
+    """L2's rows as the same event table `extract_events` returns.
+
+    ENTRY DATE. A typed row carries the document's date, not a session. Here it
+    is anchored to the first panel session STRICTLY AFTER that date, which can
+    never reach past its own cell and is conservative by one session for a
+    pre-open headline. The proxy path inherits the panel's own `entry_date`,
+    which is computed from the open time the N-C join has and this file does
+    not; when L2's rows are joined through that builder they get the same
+    treatment, and the `entry_date_rule` in the meta says which one ran.
+
+    SCOPE. One row per document, emitted for the document's `scope` symbol only.
+    A document tagged with other tickers does NOT fan out: `direction` is defined
+    relative to the scope entity and nothing else, and fanning would multiply one
+    reading into several correlated ones. The count that was not emitted is
+    reported rather than left to be inferred.
+    """
+    rows = typed_rows(directory)
+    cols = ["symbol", "entry_date", "event_type", "direction", "magnitude_bucket",
+            "confidence", "basis"]
+    if not rows or cells.empty:
+        return pd.DataFrame(columns=cols), {
+            "event_source": None, "n_typed_rows_on_disk": len(rows),
+            "reason": "no typed rows on disk" if not rows else "the panel is empty"}
+    sessions = np.array(sorted(pd.unique(cells["entry_date"])))
+    symbols = set(pd.unique(cells["symbol"]))
+    recs, unmatched_symbol, after_panel, extra_tickers = [], 0, 0, 0
+    for row in rows:
+        sym = str(row.get("scope") or "")
+        extra_tickers += max(0, len(row.get("tickers") or []) - 1)
+        if sym not in symbols:
+            unmatched_symbol += 1
+            continue
+        date = str(row.get("document_date") or "")[:10]
+        # the panel's dates may be datetime64 or plain strings depending on who
+        # built it; comparing the two families raises rather than mis-sorting,
+        # so the key is coerced to the sessions' own dtype
+        key = (np.datetime64(date) if np.issubdtype(sessions.dtype, np.datetime64)
+               else date)
+        i = int(np.searchsorted(sessions, key, side="right"))
+        if i >= len(sessions):
+            after_panel += 1
+            continue
+        recs.append({"symbol": sym, "entry_date": sessions[i],
+                     "event_type": str(row.get("event_type")),
+                     "direction": int(row.get("direction", 0)),
+                     "magnitude_bucket": str(row.get("magnitude_bucket")),
+                     "confidence": float(row.get("confidence", 0.0)),
+                     "basis": TYPED_L2})
+    ev = pd.DataFrame(recs, columns=cols)
+    if len(ev):
+        ev["magnitude"] = ev["magnitude_bucket"].map(
+            {b: i for i, b in enumerate(BUCKETS)}).astype(float)
+    meta = {
+        "event_source": TYPED_L2 if len(ev) else None,
+        "n_typed_rows_on_disk": len(rows),
+        "n_event_rows": int(len(ev)),
+        "dropped_symbol_not_in_panel": unmatched_symbol,
+        "dropped_date_after_panel": after_panel,
+        "tickers_seen_but_not_emitted": extra_tickers,
+        "entry_date_rule": ("the first panel session STRICTLY AFTER the document's "
+                            "own date; conservative by one for a pre-open headline"),
+        "directory": str(Path(directory or TYPED_DIR)),
+    }
+    return ev, meta
+
+
+def events_for_panel(cells: pd.DataFrame, text_col: str = "text",
+                     tags_col: str | None = None, directory=None) -> tuple[pd.DataFrame, dict]:
+    """L2's typed rows when they cover this panel's dates, else the proxy.
+
+    The receipt NAMES which one ran. E1's whole verdict turns on this: a proxy
+    that loses to shuffled events closes the proxy, and only a run on L2's rows
+    can close typed events.
+    """
+    ev, meta = typed_events(cells, directory)
+    if len(ev):
+        return ev, meta
+    proxy = extract_events(cells, text_col=text_col, tags_col=tags_col)
+    return proxy, {
+        **meta,
+        "event_source": KEYWORD_PROXY,
+        "n_event_rows": int(len(proxy)),
+        "reason": (meta.get("reason") or
+                   "L2 has typed rows, but none of them land on a symbol and date "
+                   "this panel holds"),
+        "proxy_note": ("entity_tags where present, otherwise a keyword proxy over the "
+                       "39-id vocabulary's own definitions and example headlines -- "
+                       "weaker than a reading, and the reason an arm can lose"),
+    }
 
 
 # ---------------------------------------------------------------------------

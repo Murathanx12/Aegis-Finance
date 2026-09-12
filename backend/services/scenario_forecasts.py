@@ -40,43 +40,32 @@ import hashlib
 import json
 from typing import Any, Iterable
 
-#: The frozen vocabulary, `docs/research_notes/2026-09-11/spec_events_and_calibration.md`
-#: section 1.2, in the document's own order. 39 substantive ids plus `no_event`
-#: = 40. (That section's closing sentence says "38 substantive + no_event = 39";
-#: its own table has 39 substantive rows, and `test_scenario_forecasts.py`
-#: derives this tuple from the table so a future edit to either cannot drift
-#: silently past the other.)
-EVENT_TYPES: tuple[str, ...] = (
-    "earnings_report", "earnings_preannouncement", "guidance_change",
-    "mergers_acquisitions", "divestiture_asset_sale", "spinoff",
-    "bankruptcy_or_going_concern", "delisting_or_listing_risk",
-    "debt_issuance_or_obligation", "debt_covenant_or_default_trigger",
-    "equity_issuance_dilution", "stock_buyback", "dividend_increase",
-    "dividend_cut_or_suspension", "special_dividend",
-    "regular_dividend_declaration", "stock_split", "reverse_stock_split",
-    "credit_rating_change", "new_contract_or_partnership",
-    "contract_loss_or_termination", "product_launch_or_innovation",
-    "product_recall_or_defect", "clinical_trial_result", "regulatory_approval",
-    "regulatory_investigation_or_action", "litigation_filed",
-    "litigation_settlement", "management_change_departure",
-    "management_change_appointment", "auditor_or_accounting_change",
-    "cybersecurity_incident", "insider_or_institutional_ownership_change",
-    "macro_rate_decision", "macro_inflation_print", "macro_labor_report",
-    "tariff_or_trade_policy", "sanction", "index_rebalance", "no_event",
-)
+from backend.services import event_vocabulary as _vocab
 
-MAGNITUDES: tuple[str, ...] = ("NEGLIGIBLE", "SMALL", "MODERATE", "LARGE", "EXTREME")
+#: The frozen vocabulary, from `event_vocabulary` -- ONE table, not a second copy
+#: of it. Until chunk 10 this tuple was typed out here as well, which is two
+#: sources for one contract and a drift waiting to happen; `event_vocabulary`
+#: generates the ids from the spec's own markdown table and hashes every field.
+#: 39 substantive ids plus `no_event` = 40. (The spec section's closing sentence
+#: says "38 substantive + no_event = 39"; its table has 39, and
+#: `test_scenario_forecasts.py` still derives the tuple from that table so an
+#: edit to either cannot drift silently past the other.)
+EVENT_TYPES: tuple[str, ...] = _vocab.EVENT_TYPES
+
+MAGNITUDES: tuple[str, ...] = _vocab.MAGNITUDE_BUCKETS
 
 K_DEFAULT = 3
 MECHANISM_ID = "x3_scenario_forecast_v1"
 
 #: Why this is not in the Morning yet, in one string a receipt can print.
 NOT_WIRED = (
-    "X3 is a CONTRACT in chunk 7, not a live lane. Grading needs L2's typed-event "
-    "extraction over the daily corpus (nothing produces a realised typed event per "
-    "symbol per day yet) and pricing needs E1's (event_type, era) base-rate table "
-    "confirmed in the 39-id vocabulary. Both are chunk 9's E1 prerequisite. Until "
-    "then this module is exercised by its tests and by nothing else.")
+    "X3 is a CONTRACT, not a live lane. HALF of what it was waiting for exists as of "
+    "chunk 10: L2 (`scripts/night_l2_typed_events.py`) produces realised typed rows per "
+    "(scope, date) and `realised_from_typed_rows` below is the join into this "
+    "grader -- but it has typed nothing yet (the reader is down; its receipt says "
+    "PENDING_MODEL on 6,020 frozen rows). Pricing still needs E1's (event_type, era) "
+    "base-rate table. Until both land this module is exercised by its tests and by "
+    "nothing else.")
 
 
 # ----------------------------------------------------------------- the schema
@@ -336,6 +325,38 @@ def prediction_rows(scenario_set: dict, *, price=None, era: str,
 
 
 # ------------------------------------------------------------------ the grader
+
+def realised_from_typed_rows(rows: Iterable[dict], *, symbol: str,
+                             as_of: str) -> list[dict]:
+    """L2's typed rows for one `(symbol, date)`, in the shape the grader reads.
+
+    This is the join X3 was missing (`NOT_WIRED` said so): nothing produced a
+    realised typed event per symbol per day until `scripts/night_l2_typed_events.py`
+    did. A typed row's `scope` is the entity its `direction` is relative to, so
+    the match is on `scope` and never on the `tickers` list -- a document that
+    merely MENTIONS the symbol carries no direction for it.
+
+    `document_date` is the row's own date. Rows outside `as_of` are not returned,
+    so a caller cannot grade a day with another day's events by forgetting a
+    filter.
+    """
+    out = []
+    for row in rows:
+        if str(row.get("scope") or "") != symbol:
+            continue
+        if str(row.get("document_date") or "")[:10] != str(as_of)[:10]:
+            continue
+        if row.get("event_type") not in EVENT_TYPES:
+            continue
+        out.append({"event_type": row["event_type"],
+                    "direction": row.get("direction"),
+                    "magnitude_bucket": row.get("magnitude_bucket"),
+                    "confidence": row.get("confidence"),
+                    "source": "typed_l2",
+                    "prompt_hash": row.get("prompt_hash"),
+                    "vocabulary_hash": row.get("vocabulary_hash")})
+    return out
+
 
 def dominant_event(realised: Iterable[dict]) -> dict | None:
     """The realised day's dominant typed event for one symbol.

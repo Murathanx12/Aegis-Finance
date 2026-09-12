@@ -38,6 +38,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend.services import belief_elasticity as be                    # noqa: E402
+from backend.services import event_vocabulary as vocab                   # noqa: E402
 from backend.services import protocol_p16 as pp                         # noqa: E402
 from backend.services import x_lane_data as xd                          # noqa: E402
 from backend.services.portfolio_intelligence.r2_trial import (          # noqa: E402
@@ -70,6 +71,95 @@ FULL_PASS = {
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+# ---------------------------------------------------------------- L2 vocabulary
+#: C1's own event kinds, mapped onto L2's frozen 40-id vocabulary where the
+#: mapping is a FUNCTION. Most of C1's kinds are not: `PRODUCT` is a launch or a
+#: recall, `LEGAL` is a filing or a settlement, `FINANCING` is debt or dilution,
+#: and the two have opposite direction priors. Those are recorded as ambiguous
+#: with the candidates named, never collapsed to whichever id comes first -- a
+#: forced mapping would put a positive prior on half the recalls in the file.
+C1_KIND_TO_VOCABULARY: dict[str, str] = {
+    "EARNINGS": "earnings_report",
+    "GUIDANCE": "guidance_change",
+    "M&A": "mergers_acquisitions",
+}
+
+#: Named, with the reason. `ANALYST` is the largest kind in C1 (1,218 of 6,935)
+#: and the L2 vocabulary HAS NO ANALYST TYPE -- RavenPack's public taxonomy has
+#: `price-target`, the spec's section 1.2 does not, and that is a gap in the
+#: vocabulary rather than a defect in this mapping. Recorded here so the next
+#: reader finds it instead of re-deriving it.
+C1_KIND_UNMAPPED: dict[str, str] = {
+    "ANALYST": ("no vocabulary id: the 40-id table has no analyst-action or "
+                "price-target type. C1's LARGEST kind"),
+    "MACRO": ("ambiguous over macro_rate_decision / macro_inflation_print / "
+              "macro_labor_report / tariff_or_trade_policy / sanction"),
+    "PRODUCT": "ambiguous over product_launch_or_innovation / product_recall_or_defect",
+    "MANAGEMENT": ("ambiguous over management_change_departure / "
+                   "management_change_appointment"),
+    "REGULATORY": ("ambiguous over regulatory_approval / "
+                   "regulatory_investigation_or_action"),
+    "FINANCING": ("ambiguous over debt_issuance_or_obligation / "
+                  "equity_issuance_dilution -- opposite direction priors"),
+    "LEGAL": "ambiguous over litigation_filed / litigation_settlement",
+    "OTHER": "unmapped by construction",
+}
+
+#: C1's magnitude words to the vocabulary's buckets. MEDIUM is MODERATE; C1 has
+#: no NEGLIGIBLE and no EXTREME, so neither is ever produced from this file.
+C1_MAGNITUDE_TO_BUCKET = {"SMALL": "SMALL", "MEDIUM": "MODERATE", "LARGE": "LARGE"}
+
+
+def c1_vocabulary_mapping(rows: list[dict]) -> dict:
+    """How much of C1 the L2 vocabulary can type, counted rather than asserted.
+
+    `direction` is mapped only where C1 committed to a sign: `UNCLEAR` becomes
+    `None` and is counted. It does NOT become 0 -- 0 means "real event, no
+    directional implication by itself" in L2's contract, which is a different
+    claim from "the reader could not tell".
+    """
+    mapped, unmapped, missing = {}, {}, 0
+    directions = {"signed": 0, "unclear": 0, "missing": 0}
+    buckets = {}
+    for row in rows:
+        kind = row.get("event_type")
+        if not kind:
+            missing += 1
+        elif kind in C1_KIND_TO_VOCABULARY:
+            vid = C1_KIND_TO_VOCABULARY[kind]
+            mapped[vid] = mapped.get(vid, 0) + 1
+        else:
+            unmapped[str(kind)] = unmapped.get(str(kind), 0) + 1
+        d = be.signed(row.get("direction"))
+        if row.get("direction") is None:
+            directions["missing"] += 1
+        elif d in (-1, 1):
+            directions["signed"] += 1
+        else:
+            directions["unclear"] += 1
+        b = C1_MAGNITUDE_TO_BUCKET.get(str(row.get("magnitude") or "").upper())
+        buckets[b or "unmapped"] = buckets.get(b or "unmapped", 0) + 1
+    n = len(rows)
+    return {
+        "vocabulary_hash": vocab.VOCABULARY_HASH,
+        "n_c1_rows": n,
+        "mapped_rows": sum(mapped.values()),
+        "mapped_share": _r(sum(mapped.values()) / n, 4) if n else None,
+        "mapped_by_vocabulary_id": dict(sorted(mapped.items(), key=lambda kv: -kv[1])),
+        "unmapped_kinds": dict(sorted(unmapped.items(), key=lambda kv: -kv[1])),
+        "unmapped_reasons": {k: v for k, v in C1_KIND_UNMAPPED.items() if k in unmapped},
+        "rows_with_no_kind": missing,
+        "direction": directions,
+        "magnitude_buckets": dict(sorted(buckets.items(), key=lambda kv: -kv[1])),
+        "reading": ("only the three kinds whose mapping is a FUNCTION are mapped. The "
+                    "rest name two or more vocabulary ids with different direction "
+                    "priors, and ANALYST names none at all -- the 40-id table has no "
+                    "analyst-action type, which is a gap in the vocabulary, not in "
+                    "this mapping"),
+    }
+
 
 
 def digest_of(text: str) -> str:
@@ -239,6 +329,7 @@ def X2_elasticity(backend: str = "local_gguf", max_cells: int = 0, seed: int = b
 
     all_pairs = be.pairs(rows, kinds)
     drops = be.drop_reasons(rows, kinds)
+    base["l2_vocabulary_mapping"] = c1_vocabulary_mapping(rows)
     base["construction"] = {
         "c1_rows_status_ok": len(rows), "uids": len({r["uid"] for r in rows}),
         "pairs_with_a_defined_denominator": len(all_pairs),

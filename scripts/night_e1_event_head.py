@@ -362,20 +362,35 @@ def main(argv=None) -> int:
     receipt["panel"] = meta
     atomic_write_json(out, receipt, indent=1)
 
-    print("[e1] typing the corpus with the proxy", flush=True)
-    ev = eh.extract_events(cells[["symbol", "entry_date", "text"]])
+    print("[e1] typing the corpus: L2's rows if they cover this panel, else the proxy",
+          flush=True)
+    ev, source_meta = eh.events_for_panel(cells[["symbol", "entry_date", "text"]])
+    event_source = source_meta["event_source"]
+    print(f"[e1] event_source = {event_source}", flush=True)
     mats, fmeta = _feature_matrices(cells, ev, SEED)
     tagged = int((ev["basis"] == "entity_tag").sum()) if len(ev) else 0
+    typed = int((ev["basis"] == eh.TYPED_L2).sum()) if len(ev) else 0
     fmeta["typing_coverage"] = {
+        "event_source": event_source,
         "cells": int(len(cells)),
         "cells_with_at_least_one_event": int(ev.groupby(["symbol", "entry_date"]).ngroups) if len(ev) else 0,
         "event_rows": int(len(ev)),
+        "event_rows_from_l2": typed,
         "event_rows_from_entity_tags": tagged,
-        "event_rows_from_keyword_proxy": int(len(ev)) - tagged,
+        "event_rows_from_keyword_proxy": int(len(ev)) - tagged - typed,
+        "source_meta": source_meta,
         "note": ("entity_tags contribute 0 on the 2025-26 panel: the tagged corpus starts "
                  "2026-09-11 and this panel predates it. The path is live and will show a "
                  "number the day the corpus reaches back."),
     }
+    receipt["event_source"] = event_source
+    receipt["design"]["typing"] = (
+        ("L2's typed rows (LLM extraction, frozen 40-id vocabulary). A verdict here is "
+         "a verdict about typed events.") if event_source == eh.TYPED_L2 else
+        ("PROXY -- L2 has typed no row this panel holds. Types come from entity_tags "
+         "where present and otherwise from a keyword proxy over the 39-id vocabulary of "
+         "docs/research_notes/2026-09-11/spec_events_and_calibration.md section 1.2. A "
+         "verdict here is a verdict about the proxy."))
     receipt["features"] = fmeta
     atomic_write_json(out, receipt, indent=1)
     print(f"[e1] {len(ev):,} event rows, {fmeta['n_feature_columns']} feature columns, "

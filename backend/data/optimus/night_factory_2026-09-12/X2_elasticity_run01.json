@@ -36,6 +36,49 @@
   "reading": "an OVERNIGHT-SCALE multi-night batch, not an afternoon job. --max-cells makes the first run a 300-pair sample that produces a real number the same night; the projection above is what the full pass costs in time. Dollars: $0.00, the backend is local_gguf"
  },
  "purpose_tag": "x2_belief_elasticity",
+ "l2_vocabulary_mapping": {
+  "vocabulary_hash": "b55fcff7ef3e206ffb14b088a832367b1471a59bddbb8d514c4a01fbfc1d2e6a",
+  "n_c1_rows": 6676,
+  "mapped_rows": 1359,
+  "mapped_share": 0.2036,
+  "mapped_by_vocabulary_id": {
+   "earnings_report": 1106,
+   "mergers_acquisitions": 143,
+   "guidance_change": 110
+  },
+  "unmapped_kinds": {
+   "ANALYST": 1218,
+   "MACRO": 1194,
+   "PRODUCT": 1104,
+   "OTHER": 760,
+   "MANAGEMENT": 509,
+   "REGULATORY": 313,
+   "FINANCING": 189,
+   "LEGAL": 30
+  },
+  "unmapped_reasons": {
+   "ANALYST": "no vocabulary id: the 40-id table has no analyst-action or price-target type. C1's LARGEST kind",
+   "MACRO": "ambiguous over macro_rate_decision / macro_inflation_print / macro_labor_report / tariff_or_trade_policy / sanction",
+   "PRODUCT": "ambiguous over product_launch_or_innovation / product_recall_or_defect",
+   "MANAGEMENT": "ambiguous over management_change_departure / management_change_appointment",
+   "REGULATORY": "ambiguous over regulatory_approval / regulatory_investigation_or_action",
+   "FINANCING": "ambiguous over debt_issuance_or_obligation / equity_issuance_dilution -- opposite direction priors",
+   "LEGAL": "ambiguous over litigation_filed / litigation_settlement",
+   "OTHER": "unmapped by construction"
+  },
+  "rows_with_no_kind": 0,
+  "direction": {
+   "signed": 5491,
+   "unclear": 1185,
+   "missing": 0
+  },
+  "magnitude_buckets": {
+   "SMALL": 2728,
+   "MODERATE": 2575,
+   "LARGE": 1373
+  },
+  "reading": "only the three kinds whose mapping is a FUNCTION are mapped. The rest name two or more vocabulary ids with different direction priors, and ANALYST names none at all -- the 40-id table has no analyst-action type, which is a gap in the vocabulary, not in this mapping"
+ },
  "construction": {
   "c1_rows_status_ok": 6676,
   "uids": 6676,
@@ -136,7 +179,7 @@
   "adopted_arm": null,
   "reason": "every text X2 reads is already anonymised (C1's `anon` field and its transforms), and there is no raw arm to compare against. X_anon_gap owns the gap"
  },
- "elapsed_s": 2.2,
- "written_utc": "2026-09-12T12:35:35+00:00",
+ "elapsed_s": 2.1,
+ "written_utc": "2026-09-12T21:29:07+00:00",
  "run": 1
 }
