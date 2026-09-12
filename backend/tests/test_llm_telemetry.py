@@ -500,8 +500,8 @@ def test_concurrent_appends_do_not_tear_rows(tmp_path):
     for th in threads:
         th.join()
 
-    lines = [l for q in t.ledger_files(path)
-             for l in q.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [ln for q in t.ledger_files(path)
+             for ln in q.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert len(lines) == n_threads * per_thread
     for i, line in enumerate(lines, 1):
         json.loads(line)          # a torn row raises here — that is the point
