@@ -647,13 +647,22 @@ def G3_evolve_v2(hours: float = 4.0, pop: int = 24, seed: int = 20260909,
     holds = [r for r in archive if r["verdict_row"] == "HOLDS_UP_OUT_OF_BANK"]
 
     # ---- carry this night's measured lineages into the next night -----------
+    # E5 (2026-09-12): a lineage whose deflated Sharpe did not clear the bar for
+    # how many genomes the search tried is not bred from again. The set is READ
+    # from `G3_lineage_verdicts.jsonl` rather than recomputed here, so the
+    # exclusion and the receipt that explains it can never disagree; an absent
+    # verdicts file is an empty set, which is the behaviour before E5 existed.
+    from scripts.night_stopping_rules import deprioritized_lineages
+    banned = deprioritized_lineages()
     state.update_elites([{"key": k, "genome": {kk: genomes[k][kk] for kk in
                                                ("w", "k", "weight", "hold_mult", "floor")},
                           "lineage": genomes[k].get("lineage"),
                           "fitness": v["fitness"], "banks_met": v.get("banks_met")}
-                         for k, v in eligible[:24]], keep=24)
+                         for k, v in eligible[:24]], keep=24,
+                        exclude_lineages=banned)
     state.close_night({"job": "G3_evolve_v2", "run": run, "generations": gen,
                        "genome_evaluations": n_eval, "eligible_lineages": len(eligible),
+                       "deprioritized_lineages_excluded": len(banned),
                        "resumed_from_gen": resumed_from_gen})
     ckpt.clear()      # the run finished; the next one must not resume into it
 

@@ -225,18 +225,36 @@ class SearchState:
         ranked = sorted(self.elites, key=lambda e: -(e.get("fitness") if e.get("fitness") is not None else -9e9))
         return [dict(e["genome"]) for e in ranked[:n] if e.get("genome")]
 
-    def update_elites(self, rows: list[dict], keep: int = 24) -> None:
+    def update_elites(self, rows: list[dict], keep: int = 24,
+                      exclude_lineages=None) -> None:
         """Merge this night's rows into the carried elites, best-median first.
 
         A genome already carried keeps the row with MORE banks met, not the one
         with the better fitness: preferring the better number would be selection
         on the outcome, which is the error this repo has paid for more than once
         (`feedback_a_matched_control_must_not_be_picked_on_the_outcome`).
+
+        `exclude_lineages` is E5's DEPRIORITIZED set (`scripts/
+        night_stopping_rules.deprioritized_lineages`). A lineage whose deflated
+        Sharpe did not clear the bar for how many genomes the search tried is
+        not bred from again, and -- this is the half that is easy to miss -- it
+        is also dropped from the elites ALREADY carried, or a lineage
+        deprioritized tonight would go on parenting every future night out of
+        state written before the verdict existed. Nothing is deleted: its
+        evaluations stay in `G3_evaluations.jsonl` and its verdict stays in
+        `G3_lineage_verdicts.jsonl`, so the exclusion is reversible by a later
+        pass that reaches a different verdict.
         """
-        by_key: dict[str, dict] = {e["key"]: e for e in self.elites if e.get("key")}
+        banned = {str(x) for x in (exclude_lineages or ())}
+
+        def _ok(e: dict) -> bool:
+            return not banned or str(e.get("lineage") or "") not in banned
+
+        by_key: dict[str, dict] = {e["key"]: e for e in self.elites
+                                   if e.get("key") and _ok(e)}
         for r in rows:
             k = r.get("key")
-            if not k or r.get("fitness") is None:
+            if not k or r.get("fitness") is None or not _ok(r):
                 continue
             old = by_key.get(k)
             if old is None or (r.get("banks_met") or 0) > (old.get("banks_met") or 0):
