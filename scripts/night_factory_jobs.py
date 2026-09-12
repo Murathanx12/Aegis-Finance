@@ -1474,6 +1474,14 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # cheapest standing check that the text ever starts carrying something.
         "N3_frozen_embedding_head": _lazy("scripts.night_n3_frozen_embedding_head",
                                           "N3_frozen_embedding_head"),
+        # E2 2026-09-13, chunk 9: N3 with ONE number changed -- the holding
+        # horizon. Same file, same encoder, same head, same three controls, same
+        # cost model; `test_e2_embedding_horizon.py` diffs its design block
+        # against N3's own receipt and fails on anything else moving. The
+        # horizon comes from AEGIS_E2_HORIZON (default 5) so the factory's
+        # parser does not grow a per-job flag.
+        "E2_embedding_horizon": _lazy("scripts.night_n3_frozen_embedding_head",
+                                      "E2_embedding_horizon"),
         # 2026-09-12, chunk 5b T3: the historical leg of lane B's first four
         # books. Three of the four cannot decide on the 2025-26 ticker bars
         # (their panels are CRSP-permno-keyed and CRSP ends 2024-12-31), so
@@ -1561,6 +1569,9 @@ def main(argv=None) -> int:
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
                    "E_decay_sweep", "M2_distill", "A_published_anomaly"):
         payload = fn(smoke=a.smoke)
+    elif a.job in ("E2_embedding_horizon", "E1_event_head", "E3_adaptive_conformal",
+                   "E4_adwin_gated_refit", "L4_qwen3_measure"):
+        payload = fn(smoke=a.smoke, run=a.run)
     elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
         # the X lane takes the run number: its frozen cell list is filed under
         # it, and a second run that overwrote the first's list would destroy the

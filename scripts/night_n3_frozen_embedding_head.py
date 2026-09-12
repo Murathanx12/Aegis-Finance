@@ -79,6 +79,13 @@ from learner.evaluate import TRADABLE_DOLLAR_VOL                     # noqa: E40
 # constants -- all of them, so the receipt can carry the configuration verbatim
 # ---------------------------------------------------------------------------
 JOB = "N3_frozen_embedding_head"
+#: E2 (chunk 9) is THIS experiment with one number changed. It is a separate job
+#: name because a horizon is a separate question, and a separate receipt so the
+#: 2026-09-10/11 N3 receipts keep meaning what they said -- but it is the same
+#: file on purpose: a copy would drift from the encoder, the head, the controls
+#: and the cost model, which is exactly the scope creep the config-diff test in
+#: `backend/tests/test_e2_embedding_horizon.py` exists to catch.
+JOB_E2 = "E2_frozen_embedding_head"
 LICENCE = "PRODUCT_EXPERIMENT"
 
 MODEL_ID = "BAAI/bge-small-en-v1.5"
@@ -98,6 +105,12 @@ OUT_DIR = REPO / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
 SEED = 20260910
 MIN_TRAIN_MONTHS = 6            # first test month is the 7th month of the panel
 EMBARGO_SESSIONS = 5            # label is same-session open->close; 5 is slack
+#: E2's axis, and the ONLY thing E2 changes. horizon=1 is N3 verbatim: the
+#: label is the entry session's own open->close, SPY-excess. horizon=h is the
+#: cumulative excess return from the entry OPEN to the close of the h-th
+#: session, so h=1 reproduces the panel's own `x_oc` column exactly (checked:
+#: correlation 0.9999998, median |difference| 0.0 over all 340,465 rows).
+HORIZONS = (1, 5, 10, 21)
 MIN_NAMES_IC = 10               # a cross-sectional IC needs a cross-section
 MIN_NAMES_BOOK = 20             # a decile of 2 names is not a decile
 DECILE = 0.10
@@ -185,13 +198,95 @@ def _price_features(symbols: set) -> pd.DataFrame:
     })
 
 
-def load_cells(smoke: bool = False):
+def _horizon_labels(symbols: set, horizon: int) -> pd.DataFrame:
+    """SPY-excess cumulative return from the entry OPEN to the h-th session's CLOSE.
+
+    h=1 is the panel's own `x_oc` and is reconstructed rather than read, so the
+    five horizons come out of ONE code path and a difference between them can
+    only be the horizon. Checked against the panel column on all 340,465 rows:
+    correlation 0.9999998, median absolute difference 0.0.
+
+    Nothing here is PIT-sensitive in the feature direction -- this is the LABEL,
+    and the label is allowed to live in the future. What it must not do is exist
+    for a cell whose forward window runs off the end of the tape: those rows come
+    back NaN and are dropped, which is why the panel's last `horizon - 1`
+    sessions lose their cells at h > 1.
+    """
+    b = pd.read_parquet(BARS, columns=["symbol", "date", "open", "close"])
+    b["date"] = pd.to_datetime(b["date"]).dt.normalize()
+    spy = b[b["symbol"] == "SPY"].sort_values("date")
+    if spy.empty:
+        raise SystemExit("REFUSED: no SPY bars -- an excess return needs its benchmark")
+    b = b[b["symbol"].isin(symbols)].sort_values(["symbol", "date"]).reset_index(drop=True)
+    g = b.groupby("symbol", sort=False)
+    fwd_close = g["close"].shift(-(horizon - 1))
+    b["r_h"] = fwd_close / b["open"] - 1.0
+    spy_fwd = spy["close"].shift(-(horizon - 1))
+    spy_r = pd.DataFrame({"entry_date": spy["date"].to_numpy(),
+                          "spy_r_h": (spy_fwd / spy["open"] - 1.0).to_numpy()})
+    out = pd.DataFrame({"symbol": b["symbol"].to_numpy(),
+                        "entry_date": b["date"].to_numpy(),
+                        "r_h": b["r_h"].to_numpy()})
+    out = out.merge(spy_r, on="entry_date", how="left")
+    out[f"x_oc_h{horizon}"] = out["r_h"] - out["spy_r_h"]
+    return out[["symbol", "entry_date", f"x_oc_h{horizon}"]]
+
+
+def label_reconstruction_check(cells: pd.DataFrame) -> dict:
+    """How far the RECONSTRUCTED one-session label is from the panel's own `x_oc`.
+
+    It is not zero, and the receipt says so rather than the code hiding it. On
+    2026-09-13, over all 340,465 panel rows: the SPY leg reconciles EXACTLY (0
+    rows differ by more than 1e-6 on 424 dates), and the STOCK leg differs on
+    16,385 rows (4.8%), by at most 0.00117. So the panel's `r_oc` was computed
+    against a bar file that has since been revised for those names (HPQ 803
+    rows, KSS 300, CAL 116) -- the labels are not two different definitions,
+    they are one definition over two vintages of the same bars.
+
+    What follows for E2: horizon=1 keeps reading the panel's column so it stays
+    N3 verbatim, and horizons 5/10/21 are built from the CURRENT bars. A cross-
+    horizon difference of order 1e-4 on 5% of cells is inside that vintage gap
+    and must not be read as a horizon effect. Printing the number is the only
+    way a later reader can apply that caveat.
+    """
+    lab = _horizon_labels(set(cells["symbol"].unique()), 1)
+    j = cells[["symbol", "entry_date", "x_oc"]].merge(lab, on=["symbol", "entry_date"], how="left")
+    d = (j["x_oc"] - j["x_oc_h1"]).abs().to_numpy(dtype=float)
+    fin = d[np.isfinite(d)]
+    if not len(fin):
+        return {"status": "CANNOT DETERMINE -- no cell joined a current bar"}
+    return {
+        "rows": int(len(fin)),
+        "median_abs_diff": float(np.median(fin)),
+        "max_abs_diff": round(float(fin.max()), 8),
+        "rows_over_1e_6": int((fin > 1e-6).sum()),
+        "share_over_1e_6": round(float((fin > 1e-6).mean()), 5),
+        "note": ("the panel's x_oc vs the same quantity rebuilt from the CURRENT bars. The SPY "
+                 "leg reconciles exactly; the difference is a bar-vintage revision on a handful "
+                 "of names, not a second label definition."),
+    }
+
+
+def label_name(horizon: int) -> str:
+    return "x_oc" if int(horizon) == 1 else f"x_oc_h{int(horizon)}"
+
+
+def embargo_for(horizon: int) -> int:
+    """max(5, horizon): an embargo shorter than the label's own window lets the
+    test month's early labels overlap the training window's late features."""
+    return int(max(EMBARGO_SESSIONS, int(horizon)))
+
+
+def load_cells(smoke: bool = False, horizon: int = 1):
     """One row per (symbol, entry_date) cell, plus the deduplicated text corpus.
 
     A cell, not a headline, is the unit: the label is a property of the session,
     so one row per headline would count the same return several times and inflate
     every n in the file.
     """
+    horizon = int(horizon)
+    if horizon not in HORIZONS:
+        raise SystemExit(f"REFUSED: horizon {horizon} is not one of {HORIZONS}")
     df = pd.read_parquet(PANEL)
     if smoke:
         keep = sorted(df["symbol"].unique())[:120]
@@ -220,6 +315,16 @@ def load_cells(smoke: bool = False):
 
     px = _price_features(set(cells["symbol"].unique()))
     cells = cells.merge(px, on=["symbol", "entry_date"], how="left")
+    lab = label_name(horizon)
+    if horizon == 1:
+        cells[lab] = cells["x_oc"].astype(float)
+        cells_before_label = len(cells)
+    else:
+        hl = _horizon_labels(set(cells["symbol"].unique()), horizon)
+        cells = cells.merge(hl, on=["symbol", "entry_date"], how="left")
+        cells_before_label = len(cells)
+        cells = cells[np.isfinite(cells[lab].to_numpy(dtype=float))].copy()
+    cells["y"] = cells[lab].astype(float)
     before = len(cells)
     cells = cells[np.isfinite(cells["mom_21"].to_numpy(dtype=float))
                   & np.isfinite(cells["mom_5"].to_numpy(dtype=float))
@@ -227,6 +332,14 @@ def load_cells(smoke: bool = False):
     cells = cells.sort_values(["entry_date", "symbol"]).reset_index(drop=True)
 
     meta = {
+        "horizon_sessions": horizon,
+        "label": lab,
+        "label_definition": ("SPY-excess open-to-close of the entry session"
+                             if horizon == 1 else
+                             f"SPY-excess cumulative return, entry-session OPEN to the CLOSE of "
+                             f"session +{horizon - 1} ({horizon} sessions held)"),
+        "cells_lost_to_short_forward_window": int(cells_before_label - before),
+        "label_reconstruction_check": label_reconstruction_check(cells),
         "pit_check": pit,
         "panel_rows_used": int(len(df)),
         "unique_texts": int(len(corpus)),
@@ -479,15 +592,15 @@ def _turnover(prev, cur):
 # ---------------------------------------------------------------------------
 # walk-forward
 # ---------------------------------------------------------------------------
-def run_folds(cells: pd.DataFrame, feats: dict, verbose: bool = True):
-    """Expanding walk-forward by month, purged with a 5-session embargo.
+def run_folds(cells: pd.DataFrame, feats: dict, verbose: bool = True, embargo: int = EMBARGO_SESSIONS):
+    """Expanding walk-forward by month, purged with a max(5, horizon)-session embargo.
 
     Never k-fold: a random fold puts next quarter's news in this quarter's
     training set and the whole file becomes a look-ahead with a t-statistic.
     """
     dates = cells["entry_date"].to_numpy()
     months = cells["entry_date"].dt.to_period("M").astype(str).to_numpy()
-    y = cells["x_oc"].to_numpy(dtype=float)
+    y = cells["y"].to_numpy(dtype=float)
     syms = cells["symbol"].to_numpy()
     texts = cells["text"].to_numpy()
     tradable_all = cells["pit_dv_21"].to_numpy(dtype=float) >= TRADABLE_DOLLAR_VOL
@@ -502,7 +615,7 @@ def run_folds(cells: pd.DataFrame, feats: dict, verbose: bool = True):
         if te.sum() < MIN_NAMES_IC:
             continue
         first_test = dates[te].min()
-        cut_i = int(np.searchsorted(sessions, first_test)) - EMBARGO_SESSIONS
+        cut_i = int(np.searchsorted(sessions, first_test)) - int(embargo)
         if cut_i <= 0:
             continue
         tr = dates < sessions[cut_i]
@@ -671,48 +784,105 @@ def verdict(g: dict):
 
 
 # ---------------------------------------------------------------------------
+def design_block(horizon: int = 1) -> dict:
+    """The configuration, as ONE function, so E2 can be diffed against N3.
+
+    `design_block(1)` must reproduce the 2026-09-10/11 N3 receipts key for key.
+    `design_block(h)` may differ in the label, the embargo and the two explicit
+    horizon fields and in NOTHING ELSE -- which is a statement a test can check,
+    and `backend/tests/test_e2_embedding_horizon.py` does, against the stored
+    receipt and across horizons. The encoder, the head, the four arms, the book,
+    the cost model, the liquidity floor and the seed are shared by construction
+    because they are literally the same dict.
+    """
+    horizon = int(horizon)
+    emb = embargo_for(horizon)
+    target = ("x_oc (SPY-excess open-to-close on the first session opening after publication)"
+              if horizon == 1 else
+              f"{label_name(horizon)} (SPY-excess cumulative return from the open of the first "
+              f"session after publication to the close of session +{horizon - 1})")
+    return {
+        "encoder": "frozen, never fine-tuned, never shown a label",
+        "head": "ridge on standardised features, alpha chosen on an inner temporal split",
+        "unit": "(symbol, entry_date) cell -- one label per session, not one per headline",
+        "target": target,
+        "splits": (f"expanding walk-forward by month, {emb}-session embargo, "
+                   f"first test month is month {MIN_TRAIN_MONTHS + 1}"),
+        "arms": {"EMBED": f"{EMBED_DIM}-d frozen {MODEL_ID}",
+                 "TFIDF": f"TF-IDF(1-2gram) -> {SVD_COMPONENTS}-d SVD, fit on TRAIN rows only, per fold",
+                 "SHUFFLE": "the EMBED vectors globally permuted across cells (seed pinned)",
+                 "NOTEXT": "log10 PIT 21-session median dollar volume, mom_21, mom_5"},
+        "book": (f"decile long-short, EW, gross exposure 1.0, {TRADABLE_DOLLAR_VOL:,.0f} PIT "
+                 f"dollar-volume floor, charged on REALISED turnover sum|dw| x {COST_BPS} bps"),
+        "cost_bps_per_side": COST_BPS,
+        "cost_source": "scripts.night_g3_evolve_v2.COST_BPS (imported, not retyped)",
+        "tradable_floor_usd": TRADABLE_DOLLAR_VOL,
+        "seed": SEED,
+        "horizon_sessions": horizon,
+        "embargo_sessions": emb,
+    }
+
+
+#: The only keys `design_block` may move when the horizon moves. Anything else
+#: differing is scope creep, and the config-diff test names the offending key.
+HORIZON_VARYING_KEYS = ("target", "splits", "horizon_sessions", "embargo_sessions")
+
+
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="N3 frozen embedding + small head, vs three controls")
+    ap = argparse.ArgumentParser(description="N3/E2 frozen embedding + small head, vs three controls")
     ap.add_argument("--out", default=None, help="receipt path (default: the night_factory dir)")
     ap.add_argument("--run", type=int, default=1)
     ap.add_argument("--smoke", action="store_true", help="120 symbols, quick end-to-end check")
     ap.add_argument("--no-resume", action="store_true", help="ignore the embedding checkpoint")
+    ap.add_argument("--horizon", type=int, default=1, choices=list(HORIZONS),
+                    help="E2: sessions held. 1 is N3 verbatim; 5/10/21 are E2's axis")
+    ap.add_argument("--stage", default="signal", help="the stage contract's field on the receipt")
     args = ap.parse_args(argv)
+
+    horizon = int(args.horizon)
+    job = JOB if horizon == 1 else JOB_E2
+    emb_sessions = embargo_for(horizon)
 
     t0 = time.time()
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    out = Path(args.out) if args.out else (OUT_DIR / f"{JOB}_run{args.run:02d}.json")
+    default_name = (f"{JOB}_run{args.run:02d}.json" if horizon == 1
+                    else f"{JOB_E2}_h{horizon}_run{args.run:02d}.json")
+    out = Path(args.out) if args.out else (OUT_DIR / default_name)
 
     receipt = {
-        "job": JOB, "licence": LICENCE, "run": args.run, "smoke": bool(args.smoke),
+        "job": job, "licence": LICENCE, "run": args.run, "smoke": bool(args.smoke),
+        "stage": args.stage,
         "llm_spend_usd": 0.0,
         "question": ("Does a FROZEN pretrained sentence encoder plus a small head learned on the "
                      "return label beat TF-IDF, shuffled text, and no text at all, on identical "
                      "walk-forward splits?"),
-        "design": {
-            "encoder": "frozen, never fine-tuned, never shown a label",
-            "head": "ridge on standardised features, alpha chosen on an inner temporal split",
-            "unit": "(symbol, entry_date) cell -- one label per session, not one per headline",
-            "target": "x_oc (SPY-excess open-to-close on the first session opening after publication)",
-            "splits": (f"expanding walk-forward by month, {EMBARGO_SESSIONS}-session embargo, "
-                       f"first test month is month {MIN_TRAIN_MONTHS + 1}"),
-            "arms": {"EMBED": f"{EMBED_DIM}-d frozen {MODEL_ID}",
-                     "TFIDF": f"TF-IDF(1-2gram) -> {SVD_COMPONENTS}-d SVD, fit on TRAIN rows only, per fold",
-                     "SHUFFLE": "the EMBED vectors globally permuted across cells (seed pinned)",
-                     "NOTEXT": "log10 PIT 21-session median dollar volume, mom_21, mom_5"},
-            "book": (f"decile long-short, EW, gross exposure 1.0, {TRADABLE_DOLLAR_VOL:,.0f} PIT "
-                     f"dollar-volume floor, charged on REALISED turnover sum|dw| x {COST_BPS} bps"),
-            "cost_bps_per_side": COST_BPS,
-            "cost_source": "scripts.night_g3_evolve_v2.COST_BPS (imported, not retyped)",
-            "tradable_floor_usd": TRADABLE_DOLLAR_VOL,
-            "seed": SEED,
-        },
+        "design": design_block(horizon),
         "status": "running", "written_utc": _now(),
     }
-    atomic_write_json(out, receipt, indent=1)
+    if horizon != 1:
+        receipt["question"] = (
+            f"Does the same frozen encoder, head, controls and book carry anything at a "
+            f"{horizon}-session horizon that it did not carry at one session?")
+        receipt["parent_job"] = JOB
+        receipt["only_difference_from_parent"] = list(HORIZON_VARYING_KEYS)
 
-    print("[n3] loading the panel", flush=True)
-    cells, corpus, meta = load_cells(smoke=args.smoke)
+    # The card is asked ONCE, before a single GPU second is spent, and the answer
+    # is written whether or not it refuses -- `scripts/gpu_guard.py` carries the
+    # 129.7s vs 40,059.4s measurement this exists to stop repeating.
+    from scripts.gpu_guard import refuse_if_contended
+    gpu = refuse_if_contended(job)
+    receipt["gpu_precondition"] = gpu
+    atomic_write_json(out, receipt, indent=1)
+    if gpu["contended"]:
+        receipt["status"] = "REFUSED_GPU_CONTENTION"
+        receipt["verdict"] = f"REFUSED_GPU_CONTENTION: {gpu['reason']}"
+        receipt["written_utc"] = _now()
+        atomic_write_json(out, receipt, indent=1)
+        print(receipt["verdict"], flush=True)
+        return 3
+
+    print(f"[n3] loading the panel (horizon {horizon}, embargo {emb_sessions})", flush=True)
+    cells, corpus, meta = load_cells(smoke=args.smoke, horizon=horizon)
     receipt["panel"] = meta
     receipt["written_utc"] = _now()
     atomic_write_json(out, receipt, indent=1)
@@ -745,7 +915,7 @@ def main(argv=None) -> int:
     }
 
     print("[n3] walk-forward", flush=True)
-    dd, folds = run_folds(cells, feats)
+    dd, folds = run_folds(cells, feats, embargo=emb_sessions)
     if dd.empty:
         receipt["status"] = "REFUSED"
         receipt["verdict"] = ("REFUSED: no gradable test date -- the panel is too short for the "
@@ -765,6 +935,13 @@ def main(argv=None) -> int:
     receipt["family_max_p"] = g["family_max_p"]
     receipt["headline"] = head
     receipt["verdict"] = v
+    receipt["next_test"] = (
+        "run the same file at the OTHER horizons on the SAME cached embeddings and compare "
+        "EMBED_minus_SHUFFLE across them; if no horizon clears shuffle, the finding is about "
+        "the panel's text and not about the holding period, and E1's typed events are the next "
+        "representation to try rather than a fourth horizon"
+        if horizon != 1 else
+        "E2: the same file at --horizon 5, 10 and 21, which reuses this run's embedding cache")
     receipt["daily_csv"] = str(daily_path)
     receipt["status"] = "done"
     receipt["elapsed_s"] = round(time.time() - t0, 1)
@@ -791,6 +968,26 @@ def N3_frozen_embedding_head(smoke: bool = False, run: int = 1) -> dict:
     """
     out = OUT_DIR / f"{JOB}_run{run:02d}{'_smoke' if smoke else ''}.json"
     argv = ["--run", str(run), "--out", str(out)] + (["--smoke"] if smoke else [])
+    rc = main(argv)
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    if rc != 0:
+        payload.setdefault("status", "REFUSED")
+    return payload
+
+
+def E2_embedding_horizon(smoke: bool = False, run: int = 1, horizon: int = 5) -> dict:
+    """Adapter for `scripts.night_factory_jobs.JOBS`.
+
+    The horizon comes from `AEGIS_E2_HORIZON` when the factory dispatches, because
+    the factory's CLI has no `--horizon` and adding one for a single job would put
+    a job-specific flag on every other job's parser. A direct
+    `python -m scripts.night_n3_frozen_embedding_head --horizon 21` is the same run.
+    """
+    horizon = int(os.getenv("AEGIS_E2_HORIZON", str(horizon)))
+    out = OUT_DIR / f"{JOB_E2}_h{horizon}_run{run:02d}{'_smoke' if smoke else ''}.json"
+    argv = ["--run", str(run), "--out", str(out), "--horizon", str(horizon)]
+    if smoke:
+        argv.append("--smoke")
     rc = main(argv)
     payload = json.loads(out.read_text(encoding="utf-8"))
     if rc != 0:
