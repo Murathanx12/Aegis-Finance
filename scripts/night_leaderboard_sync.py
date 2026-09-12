@@ -26,7 +26,8 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from scripts.night_factory import LEADERBOARD, OUT, append_leaderboard   # noqa: E402
+from scripts.night_factory import (LEADERBOARD, OUT, _status,            # noqa: E402
+                                   append_leaderboard)
 
 RECEIPT = re.compile(r"^(?P<job>.+)_run(?P<run>\d{2})\.json$")
 
@@ -40,6 +41,90 @@ def existing_rows() -> set[tuple[str, int]]:
         if len(cells) > 3 and cells[2].isdigit():
             out.add((cells[1], int(cells[2])))
     return out
+
+
+
+# ------------------------------------------------- the replicated negative
+
+#: where the night directories live. One per run date.
+NIGHTS = REPO / "backend" / "data" / "optimus"
+NIGHT_DIR = re.compile(r"^night_factory_(?P<date>\d{4}-\d{2}-\d{2})$")
+
+
+def night_dirs(base: Path | None = None) -> list[Path]:
+    """Every night directory, ORDERED BY NAME.
+
+    Never by mtime: a fresh CI checkout rewrites every one of them, so an
+    mtime order is an order on checkout time (CLAUDE.md session protocol 7).
+    """
+    base = base or NIGHTS
+    if not base.is_dir():
+        return []
+    return sorted((p for p in base.iterdir() if p.is_dir() and NIGHT_DIR.match(p.name)),
+                  key=lambda p: p.name)
+
+
+def prior_verdicts(job: str, *, before: tuple[str, int], base: Path | None = None
+                   ) -> list[tuple[str, int, str]]:
+    """`[(night date, run, status)]` for `job` STRICTLY before `(night, run)`,
+    oldest first. `status` is the receipt's own leading tag, read by the same
+    `night_factory._status` the board uses -- comparing raw verdict prose would
+    call two identical findings different because one sentence was reworded."""
+    out: list[tuple[str, int, str]] = []
+    for d in night_dirs(base):
+        m = NIGHT_DIR.match(d.name)
+        date = m.group("date") if m else d.name
+        for p in sorted(d.glob(f"{job}_run*.json")):
+            rm = RECEIPT.match(p.name)
+            if not rm or rm.group("job") != job or p.name.endswith("_smoke.json"):
+                continue
+            run = int(rm.group("run"))
+            if (date, run) >= before:
+                continue
+            try:
+                payload = json.loads(p.read_text(encoding="utf-8"))
+            except Exception:                                  # noqa: BLE001
+                continue
+            out.append((date, run, _status(payload)))
+    return out
+
+
+def consistency_note(job: str, run: int, payload: dict, *, night: str | None = None,
+                     base: Path | None = None) -> str | None:
+    """`REPLICATED xN` when this run's verdict repeats the previous run's.
+
+    N3_frozen_embedding_head returned FAILED_VARIANT on 2026-09-10 and again on
+    2026-09-11, and the board showed two rows that looked like two unrelated
+    disappointments. They are not: a negative that reproduces on a second
+    night is stronger evidence than one that happened once, and the board is
+    where that is either visible or lost. This says it in the row.
+
+    A CHANGED verdict is not annotated -- that is a different finding and it
+    deserves its own read, not a badge.
+    """
+    night = night or (NIGHT_DIR.match(OUT.name).group("date")
+                      if NIGHT_DIR.match(OUT.name) else OUT.name)
+    status = _status(payload)
+    prior = prior_verdicts(job, before=(night, run), base=base)
+    if not prior or prior[-1][2] != status:
+        return None
+    streak, dates = 1, []
+    for date, prev_run, prev_status in reversed(prior):
+        if prev_status != status:
+            break
+        streak += 1
+        dates.append(f"{date} run {prev_run:02d}")
+    return (f"[REPLICATED x{streak}: {status} also on {', '.join(dates)}]")
+
+
+def with_consistency(job: str, run: int, payload: dict, *, night: str | None = None,
+                     base: Path | None = None) -> dict:
+    """`payload` with the note prefixed to the headline, or `payload` unchanged."""
+    note = consistency_note(job, run, payload, night=night, base=base)
+    if not note:
+        return payload
+    return {**payload, "consistency": note,
+            "headline": f"{note} {payload.get('headline') or ''}".strip()}
 
 
 def rebuild() -> int:
@@ -60,8 +145,9 @@ def rebuild() -> int:
         if not m or p.name.endswith("_smoke.json"):
             continue
         try:
-            append_leaderboard(m.group("job"), int(m.group("run")),
-                               json.loads(p.read_text(encoding="utf-8")))
+            job, run = m.group("job"), int(m.group("run"))
+            append_leaderboard(job, run, with_consistency(
+                job, run, json.loads(p.read_text(encoding="utf-8"))))
             n += 1
         except Exception as exc:  # noqa: BLE001
             print(f"  SKIP {p.name}: {type(exc).__name__}")
@@ -124,7 +210,9 @@ def main(argv=None) -> int:
         except Exception as exc:  # noqa: BLE001  a corrupt receipt is a finding, not a crash
             print(f"  SKIP {p.name}: unreadable ({type(exc).__name__})")
             continue
-        added.append((job, run, str(payload.get("verdict"))[:60]))
+        payload = with_consistency(job, run, payload)
+        added.append((job, run, (payload.get("consistency") or "")
+                      + str(payload.get("verdict"))[:60]))
         if not a.dry_run:
             append_leaderboard(job, run, payload)
     for job, run, verdict in added:

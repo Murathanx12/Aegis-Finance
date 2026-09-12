@@ -65,7 +65,30 @@ def _repo_root() -> Path:
 
 
 REPO = _repo_root()
-NIGHT_DIR = REPO / "backend" / "data" / "optimus" / "night_factory_2026-09-08"
+
+
+def _night_dir(base: Path | None = None) -> Path:
+    """The night whose board the page shows and a spawned job writes into.
+
+    This was the literal `night_factory_2026-09-08` until 2026-09-12, so the
+    desktop night page served the 09-08 board for four nights while 09-09,
+    09-10 and 09-11 accumulated beside it -- a result on disk and invisible,
+    which is what `night_leaderboard_sync` already exists to prevent one level
+    down. `NIGHT_RUN_DATE` wins (it is what `scripts.night_factory` reads);
+    otherwise the NEWEST directory BY NAME, never by mtime, because a fresh
+    checkout rewrites every mtime (session protocol 7). The old literal
+    survives only as the answer when there is no night directory at all.
+    """
+    base = base or (REPO / "backend" / "data" / "optimus")
+    date = os.getenv("NIGHT_RUN_DATE")
+    if date:
+        return base / f"night_factory_{date}"
+    dirs = sorted(p for p in base.glob("night_factory_20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]")
+                  if p.is_dir())
+    return dirs[-1] if dirs else base / "night_factory_2026-09-08"
+
+
+NIGHT_DIR = _night_dir()
 RUNS_DIR = REPO / "backend" / "data" / "optimus" / "control_runs"
 BALANCE_FILE = REPO / "backend" / "data" / "optimus" / "deepseek_balance.jsonl"
 LLAMA_URL = os.getenv("LOCAL_GGUF_URL", "http://127.0.0.1:8080")
@@ -297,7 +320,10 @@ def run_job(job: str, hours: float | None = None, run: int | None = None) -> dic
     if run is not None:
         args += ["--run", str(int(run))]
     log = NIGHT_DIR / f"control_{job}_{int(time.time())}.log"
-    env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"}
+    # the child derives its own OUT from NIGHT_RUN_DATE; without this the board
+    # this router reads and the directory the job writes can be different nights
+    env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8",
+           "NIGHT_RUN_DATE": NIGHT_DIR.name.replace("night_factory_", "")}
     with log.open("w", encoding="utf-8") as fh:
         proc = qsp.popen(child_argv(args), cwd=str(REPO), stdout=fh,
                          stderr=subprocess.STDOUT, env=env)
@@ -314,7 +340,10 @@ def run_night(hours: float = 4.0) -> dict:
     RUNS_DIR.mkdir(parents=True, exist_ok=True)
     NIGHT_DIR.mkdir(parents=True, exist_ok=True)
     log = NIGHT_DIR / f"control_night_{int(time.time())}.log"
-    env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"}
+    # the child derives its own OUT from NIGHT_RUN_DATE; without this the board
+    # this router reads and the directory the job writes can be different nights
+    env = {**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8",
+           "NIGHT_RUN_DATE": NIGHT_DIR.name.replace("night_factory_", "")}
     with log.open("w", encoding="utf-8") as fh:
         proc = qsp.popen(child_argv(["-m", "scripts.night_factory", "--hours", str(float(hours))]),
                          cwd=str(REPO), stdout=fh, stderr=subprocess.STDOUT, env=env)
