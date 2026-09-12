@@ -2,7 +2,7 @@
   "job": "seed_lane_d_book",
   "lane": "D",
   "item": "D1",
-  "ran_at": "2026-09-12T09:45:19+00:00",
+  "ran_at": "2026-09-12T09:57:20+00:00",
   "licence": "PRODUCT_EXPERIMENT",
   "dry_run": false,
   "strategy_id": "first_hour_event_intraday_v1",
@@ -26,5 +26,20 @@
   "marking_caveat": "minute bars do not exist on this machine, so `book_cadence` marks this book at granularity='daily_close' with intraday_bars_available=false on every row. A 30-minute book graded from daily closes is not a 30-minute book's result.",
   "already_present": true,
   "created": false,
-  "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing"
+  "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing",
+  "twins": [
+    {
+      "book_id": "book:02a03ee6cce2cda1",
+      "kind": "random_universe"
+    },
+    {
+      "book_id": "book:d122db7122f748f5",
+      "kind": "beta_matched"
+    },
+    {
+      "book_id": "book:e3d1553ba7483930",
+      "kind": "overnight_only"
+    }
+  ],
+  "created_utc": "2026-09-12T09:45:15+00:00"
 }

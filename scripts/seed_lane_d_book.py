@@ -261,6 +261,18 @@ def seed(*, dry_run: bool = False, write_receipt: bool = True, conn=None) -> dic
             receipt["reason"] = ("the fingerprint is already in `paper_books`; "
                                  "a second create would rewrite the row and "
                                  "re-draw nothing")
+            # The twins are listed even on a no-op run. This receipt OVERWRITES
+            # the one the creating run wrote, so a receipt that only said
+            # "already present" would erase the only record of what was made.
+            existing = PB.get(bid, conn=conn)
+            if existing is not None:
+                receipt["twins"] = [
+                    {"book_id": tid,
+                     "kind": (PB.get(tid, conn=conn).strategy.engine_params
+                              .get("twin", {}).get("kind")
+                              if PB.get(tid, conn=conn) else None)}
+                    for tid in existing.control_twin_ids]
+                receipt["created_utc"] = existing.created_utc
         return _finish(receipt, write_receipt)
 
     prev = os.environ.get("AEGIS_CONTROL_ENABLED")

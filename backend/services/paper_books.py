@@ -91,7 +91,15 @@ BOOK_PREFIX = "book:"
 #: Constructions that are long-only by declaration. A beta-matched twin is only
 #: meaningful for a book that is long the market; a long-short book's beta is
 #: already a design choice rather than an accident of selection.
-LONG_ONLY_RULES = ("top_k", "composite_top_k", "threshold_coverage")
+#:
+#: `passthrough` joined them 2026-09-12. It was omitted, and the omission was
+#: invisible until lane B's insider-cluster book — the only `passthrough` book
+#: in the programme — came out with one twin where its own pre-registration
+#: names two. `decide_weights` never produces a negative weight for any rule,
+#: so a passthrough book is as long-only as a top-k one; the tuple was a list
+#: of the rules that happened to exist when it was written.
+LONG_ONLY_RULES = ("top_k", "composite_top_k", "threshold_coverage",
+                   "passthrough")
 
 #: The twin constructions, named once so a receipt and a `PredictionRecord`
 #: quote the same words (`control_construction`, spec §4).

@@ -978,7 +978,30 @@ def _case_paper_books():
             BookError, "a book with no costs and no universe to draw a twin from")
 
 
+def _case_book_signals():
+    """T2: a signal whose PANEL does not reach the decision date refuses.
+
+    The missing input is the panel itself. `book_signals` computes the four
+    night-job books' signals from tables that are not the daily bar frame --
+    a short-interest panel, a Form-4 tape, an IBES revision sign -- and the
+    one thing it must never do is return an empty dict when the table is
+    absent. An empty dict reads as "no name qualified this period", which is a
+    book that decided to hold nothing; a refusal reads as "this book could not
+    decide", which is a different fact and the one the receipt has to carry.
+    """
+    from datetime import date
+
+    from backend.services.book_signals import (SignalUnavailable,
+                                               load_short_interest)
+
+    return (lambda: load_short_interest(date(1900, 1, 1),
+                                        panel_dir="/no/such/panel"),
+            SignalUnavailable,
+            "a short-interest panel that does not exist on this machine")
+
+
 CASES = {
+    "book_signals": _case_book_signals,
     "paper_books": _case_paper_books,
     "news_registry": _case_news_registry,
     "r2_trial": _case_r2_trial,

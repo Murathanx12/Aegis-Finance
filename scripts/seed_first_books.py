@@ -491,13 +491,31 @@ def seed(*, dry_run: bool = False, write_receipt: bool = True,
         for s, origin_text, bid in planned:
             if bid in have:
                 receipt["existing"] += 1
-                receipt["books"].append({
-                    "strategy_id": s.strategy_id, "book_id": bid,
-                    "created": False,
-                    "reason": ("the fingerprint is already in `paper_books`; a "
-                               "second create would rewrite the row and re-draw "
-                               "nothing while logging as if it had created "
-                               "something")})
+                row = {"strategy_id": s.strategy_id, "book_id": bid,
+                       "created": False,
+                       "reason": ("the fingerprint is already in `paper_books`; "
+                                  "a second create would rewrite the row and "
+                                  "re-draw nothing while logging as if it had "
+                                  "created something")}
+                # The TWINS are listed even on a no-op run. This receipt
+                # overwrites the one the creating run wrote, so a receipt that
+                # only said "already present" would erase the only record of
+                # what was actually made -- which is the opposite of what a
+                # receipt is for.
+                existing = PB.get(bid)
+                if existing is not None:
+                    row["created_utc"] = existing.created_utc
+                    row["cadence"] = existing.cadence
+                    row["twins"] = []
+                    for tid in existing.control_twin_ids:
+                        tb = PB.get(tid)
+                        row["twins"].append({
+                            "book_id": tid,
+                            "kind": ((tb.strategy.engine_params or {})
+                                     .get("twin", {}).get("kind")
+                                     if tb is not None else None)})
+                    row["worst_case"] = _safe_worst_case(existing)
+                receipt["books"].append(row)
                 continue
             resp = client.post("/api/control/books/create-from-contract", json={
                 "strategy": s.as_dict(), "cadence": "monthly",
@@ -531,6 +549,14 @@ def seed(*, dry_run: bool = False, write_receipt: bool = True,
         else:
             os.environ["AEGIS_CONTROL_ENABLED"] = prev
     return _finish(receipt, write_receipt)
+
+
+def _safe_worst_case(book):
+    from backend.services import paper_books as PB
+    try:
+        return PB.worst_case(book)
+    except Exception as exc:                                      # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"[:200]}
 
 
 def _finish(receipt: dict, write_receipt: bool) -> dict:

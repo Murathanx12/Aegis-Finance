@@ -304,3 +304,27 @@ def test_the_refusal_message_lists_the_registered_signals_too():
         BC._signal_frame(book, synthetic_bars(), ["AAA"], date.today())
     for name in BS.REGISTRY:
         assert name in str(exc.value)
+
+
+# --------------------------------------------------------------------------
+# the twin every long-only construction is owed
+
+
+def test_a_passthrough_book_is_long_only_and_earns_a_beta_matched_twin():
+    """Lane B's insider-cluster book is the programme's only `passthrough`
+    book, and it came out with one twin where its pre-registration names two:
+    `LONG_ONLY_RULES` was a list of the rules that existed when it was written.
+    `decide_weights` produces no negative weight under any rule, so a
+    passthrough book is as long-only as a top-k one."""
+    from backend.services import paper_books as PB
+    from backend.strategy.contract import Construction
+    from backend.tests.book_helpers import make_strategy, synthetic_bars
+
+    s = make_strategy().with_(
+        construction=Construction(rule="passthrough", k=3, weighting="ew",
+                                  max_single_name=0.34))
+    assert PB.is_long_only(s)
+    twins = PB.make_twins(s, cadence="monthly", bars=synthetic_bars(),
+                          asof=date.today())
+    kinds = {t.strategy.engine_params["twin"]["kind"] for t in twins}
+    assert kinds == {"random_universe", "beta_matched"}

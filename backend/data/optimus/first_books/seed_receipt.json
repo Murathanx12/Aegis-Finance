@@ -1,6 +1,6 @@
 {
   "job": "seed_first_books",
-  "ran_at": "2026-09-12T09:31:33+00:00",
+  "ran_at": "2026-09-12T09:57:48+00:00",
   "family": "NIGHT_JOB_BOOKS_2026_09",
   "licence": "PRODUCT_EXPERIMENT",
   "dry_run": false,
@@ -9,43 +9,217 @@
       "strategy_id": "si_low_turnover_high_v1",
       "book_id": "book:1934ec97aa4b1620",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:20+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:9d62cc74239b435d",
+          "kind": "random_universe"
+        },
+        {
+          "book_id": "book:33418f0ea53a2f1a",
+          "kind": "beta_matched"
+        }
+      ],
+      "worst_case": {
+        "n_names": 50,
+        "notional_pct_per_name": 0.02,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": 0.2,
+        "worst_case_pct_of_equity": 0.2,
+        "worst_case_usd": -2000.0,
+        "verdict": "50 names x 2% x 20% stop = 20.00% of equity; gross 1.00x",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.05,
+        "equal_weight_per_name": 0.02
+      }
     },
     {
       "strategy_id": "insider_cluster_length_v1",
       "book_id": "book:625c391913d9718c",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:21+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:1dc244805b119552",
+          "kind": "random_universe"
+        }
+      ],
+      "worst_case": {
+        "n_names": 40,
+        "notional_pct_per_name": 0.025,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": 0.25,
+        "worst_case_pct_of_equity": 0.25,
+        "worst_case_usd": -2500.0,
+        "verdict": "40 names x 2% x 25% stop = 25.00% of equity; gross 1.00x",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.1,
+        "equal_weight_per_name": 0.025
+      }
     },
     {
       "strategy_id": "insider_cluster_same_day_v1",
       "book_id": "book:4359eba886a8a505",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:21+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:32adc8a0ec8ca0fe",
+          "kind": "random_universe"
+        }
+      ],
+      "worst_case": {
+        "n_names": 40,
+        "notional_pct_per_name": 0.025,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": 0.25,
+        "worst_case_pct_of_equity": 0.25,
+        "worst_case_usd": -2500.0,
+        "verdict": "40 names x 2% x 25% stop = 25.00% of equity; gross 1.00x",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.1,
+        "equal_weight_per_name": 0.025
+      }
     },
     {
       "strategy_id": "disposition_overhang_conditioner_v0",
       "book_id": "book:a82e6e453c14c241",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:21+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:000b263cf7ec2286",
+          "kind": "random_universe"
+        },
+        {
+          "book_id": "book:6310ca122657f8b1",
+          "kind": "beta_matched"
+        }
+      ],
+      "worst_case": {
+        "n_names": 30,
+        "notional_pct_per_name": 0.03333333333333333,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": 0.2,
+        "worst_case_pct_of_equity": 0.2,
+        "worst_case_usd": -2000.0,
+        "verdict": "30 names x 3% x 20% stop = 20.00% of equity; gross 1.00x",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.08,
+        "equal_weight_per_name": 0.03333333333333333
+      }
     },
     {
       "strategy_id": "unconditioned_reaction_book_v0",
       "book_id": "book:c3adfbc0192576c0",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:22+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:60c4658f92c49e48",
+          "kind": "random_universe"
+        },
+        {
+          "book_id": "book:668a4e273abf21ff",
+          "kind": "beta_matched"
+        }
+      ],
+      "worst_case": {
+        "n_names": 30,
+        "notional_pct_per_name": 0.03333333333333333,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": 0.2,
+        "worst_case_pct_of_equity": 0.2,
+        "worst_case_usd": -2000.0,
+        "verdict": "30 names x 3% x 20% stop = 20.00% of equity; gross 1.00x",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.08,
+        "equal_weight_per_name": 0.03333333333333333
+      }
     },
     {
       "strategy_id": "abstention_book_v0",
       "book_id": "book:b109c8861c43e3c6",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:23+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:364486e140074b55",
+          "kind": "random_universe"
+        },
+        {
+          "book_id": "book:2c0eb59f611b009c",
+          "kind": "beta_matched"
+        }
+      ],
+      "worst_case": {
+        "n_names": 5,
+        "notional_pct_per_name": 0.2,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": null,
+        "worst_case_usd": null,
+        "worst_case_pct_of_equity": null,
+        "verdict": "CANNOT DETERMINE -- no stop declared, so the worst case is the whole gross exposure, not a stop-bounded loss",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.3,
+        "equal_weight_per_name": 0.2
+      }
     },
     {
       "strategy_id": "abstention_always_invested_twin_v0",
       "book_id": "book:3b3e7049e693c3e4",
       "created": false,
-      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something",
+      "created_utc": "2026-09-12T09:31:24+00:00",
+      "cadence": "monthly",
+      "twins": [
+        {
+          "book_id": "book:0b4039242299f2e0",
+          "kind": "random_universe"
+        },
+        {
+          "book_id": "book:1ece648f7410da8e",
+          "kind": "beta_matched"
+        }
+      ],
+      "worst_case": {
+        "n_names": 5,
+        "notional_pct_per_name": 0.2,
+        "gross_over_equity": 1.0,
+        "gross_cap_declared": 1.0,
+        "gross_within_cap": true,
+        "stop_pct": null,
+        "worst_case_usd": null,
+        "worst_case_pct_of_equity": null,
+        "verdict": "CANNOT DETERMINE -- no stop declared, so the worst case is the whole gross exposure, not a stop-bounded loss",
+        "notional_pct_binding_constraint": "gross_cap / k",
+        "max_single_name": 0.3,
+        "equal_weight_per_name": 0.2
+      }
     }
   ],
   "created": 0,
