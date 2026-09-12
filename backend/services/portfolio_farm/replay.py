@@ -36,6 +36,7 @@ of proof that survives a refactor.
 from __future__ import annotations
 
 import logging
+import math
 import time
 
 import numpy as np
@@ -55,6 +56,16 @@ DELIST_AFTER_MISSING_SESSIONS = 5
 
 #: Rows before which no decision is taken, so every trailing window is full.
 DEFAULT_WARMUP = SIG.YEAR + SIG.MONTH
+
+#: Trading sessions in a year, for turning the panel's DAILY return stdev into
+#: the ANNUALISED volatility the cost curve's impact term is calibrated in.
+SESSIONS_PER_YEAR = 252.0
+
+#: Dollar-volume cuts for the per-tercile cost breakdown on the receipt.
+#: DECLARED, in round numbers, before any run was graded with them -- a cut
+#: chosen after seeing which one flatters the split is not a cut.
+LIQUIDITY_TERCILE_CUTS_USD = (1e7, 1e8)
+LIQUIDITY_TERCILE_NAMES = ("under_10m", "10m_to_100m", "over_100m")
 
 
 def _cap_weights(w: np.ndarray, cap: float) -> np.ndarray:
@@ -222,6 +233,30 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
     cost_rate = 0.0 if policy.zero_cost_diagnostic else (
         (policy.transaction_cost_bps + policy.slippage_bps) / 10_000.0)
 
+    # THE CURVE, RESOLVED ONCE. Under `flat` nothing below this line runs and
+    # the fee arithmetic is byte-identical to what it was, which is what makes
+    # a re-grade under `flat` reproduce an archived net to the cent.
+    use_curve = policy.curve != "flat"
+    curve_fit = None
+    if use_curve:
+        from backend.services import cost_curve as CC
+        if policy.curve == "retail_paper":
+            raise ValueError(
+                "curve='retail_paper' graded against a CRSP institutional "
+                "replay is a REGIME MISMATCH, not a cost choice. Retail fills "
+                "see IEX quotes and a partial-fill process this engine does "
+                "not simulate; pricing them off the SIP-wide tape would "
+                "understate them by construction. Grade a retail book on "
+                "retail fills, or declare curve='taq_empirical'.")
+        curve_fit = CC.load_regression()
+        # The farm's CRSP panel carries PERMNOS, not tickers, so the measured
+        # branch of the curve (which is keyed on ticker) is unreachable from
+        # here and every fill is priced by the regression. Stated on the
+        # receipt rather than left for a reader to infer from a provenance
+        # count they did not expect.
+        curve_b = CC.regression_coefficients(curve_fit)
+        curve_eta = CC.ETA_SQRT_IMPACT
+
     pending: tuple[np.ndarray, np.ndarray] | None = None
     nav = np.full(T, np.nan)
     diag = {"n_decisions": 0, "n_fills": 0, "n_unfilled_names": 0,
@@ -229,7 +264,37 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
             "traded_notional_usd": 0.0, "days_holding_nothing": 0,
             "n_empty_selections": 0, "n_delist_measured": 0,
             "n_delist_assumed": 0, "stuck_capital_events": 0,
-            "stuck_capital_usd": 0.0, "min_cash_usd": 0.0}
+            "stuck_capital_usd": 0.0, "min_cash_usd": 0.0,
+            "cost_curve": policy.curve}
+    if use_curve:
+        diag.update({
+            "n_name_fills_priced_by_curve": 0,
+            "n_name_fills_curve_unpriceable": 0,
+            "cost_curve_spread_usd": 0.0,
+            "cost_curve_impact_usd": 0.0,
+            "tercile_notional_usd": [0.0, 0.0, 0.0],
+            "tercile_cost_usd": [0.0, 0.0, 0.0],
+        })
+
+    def _rates(notional_vec, px_vec, dv_vec, volann_vec):
+        """Per-fill ONE-WAY rate as a fraction, and the split that made it.
+
+        Vectorised twin of `cost_curve.taq_empirical_one_way`'s regression
+        branch; the scalar function is the readable one and
+        `test_cost_curve.py` pins the two against each other. NaN where the
+        regression has no answer -- the caller decides, and counts.
+        """
+        b0, b1, b2, b3 = curve_b
+        ok = (np.isfinite(dv_vec) & (dv_vec > 0) & np.isfinite(px_vec)
+              & (px_vec > 0) & np.isfinite(volann_vec) & (volann_vec >= 0))
+        spread = np.where(
+            ok, np.exp(b0 + b1 * np.log(np.where(ok, dv_vec, 1.0))
+                       + b2 * np.log(np.where(ok, px_vec, 1.0))
+                       + b3 * np.where(ok, volann_vec, 0.0)), np.nan)
+        pov = np.where(ok, notional_vec / np.where(ok, dv_vec, 1.0), np.nan)
+        impact = 1e4 * curve_eta * volann_vec * np.sqrt(np.where(ok, pov, 0.0))
+        return spread, np.where(ok, impact, np.nan), ok
+
     t0 = time.perf_counter()
 
     for i in range(w0, T):
@@ -300,26 +365,76 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
             # ROUND-TRIP rate covers the worst case (sell everything, buy
             # everything) and costs 12 bps of deployment — smaller than the
             # thing it prevents, which is silent leverage.
-            allocatable = (cash + live_value) * (1.0 - 2.0 * cost_rate)
             if stuck_value:
                 diag["stuck_capital_events"] += 1
                 diag["stuck_capital_usd"] += stuck_value
 
-            target_sh = np.zeros(N)
+            def _build_targets(alloc):
+                t = np.zeros(N)
+                if chosen.size:
+                    okc = np.isfinite(px[chosen])
+                    c_ok, w_ok = chosen[okc], weights[okc]
+                    if c_ok.size and alloc > 0:
+                        t[c_ok] = (w_ok * alloc) / px[c_ok]
+                # A name we cannot price cannot be traded either way: keep it.
+                t[unpriceable] = shares[unpriceable]
+                d = t - shares
+                return t, d, np.isfinite(px) & (d != 0)
+
             if chosen.size:
-                ok = np.isfinite(px[chosen])
-                diag["n_unfilled_names"] += int((~ok).sum())
-                c_ok, w_ok = chosen[ok], weights[ok]
-                if c_ok.size and allocatable > 0:
-                    target_sh[c_ok] = (w_ok * allocatable) / px[c_ok]
-            # A name we cannot price cannot be traded either way: keep it.
-            target_sh[unpriceable] = shares[unpriceable]
-            delta = target_sh - shares
-            tradable = np.isfinite(px) & (delta != 0)
+                diag["n_unfilled_names"] += int((~np.isfinite(px[chosen])).sum())
+
+            reserve_rate = cost_rate
+            if use_curve:
+                # TWO PASSES, because the rate depends on the order size and
+                # the order size depends on what is reserved for the rate. The
+                # first pass prices a book sized at the DECLARED flat reserve
+                # and takes the notional-weighted mean of the rates it finds;
+                # the second reserves that instead. Under `flat` neither pass
+                # runs and the arithmetic below is unchanged.
+                _, d0, tr0 = _build_targets((cash + live_value) * (1.0 - 2.0 * cost_rate))
+                if tr0.any():
+                    n0 = np.abs(d0[tr0] * px[tr0])
+                    sp0, im0, ok0 = _rates(n0, px[tr0], dolvol_ma[i][tr0],
+                                           vol[i][tr0] * math.sqrt(SESSIONS_PER_YEAR))
+                    r0 = np.where(ok0, (sp0 + im0) / 1e4, cost_rate)
+                    tot = float(n0.sum())
+                    if tot > 0:
+                        reserve_rate = float((n0 * r0).sum() / tot)
+
+            allocatable = (cash + live_value) * (1.0 - 2.0 * reserve_rate)
+            target_sh, delta, tradable = _build_targets(allocatable)
             if tradable.any():
-                notional = np.abs(delta[tradable] * px[tradable]).sum()
+                notional_vec = np.abs(delta[tradable] * px[tradable])
+                notional = notional_vec.sum()
                 signed = float((delta[tradable] * px[tradable]).sum())
-                fee = float(notional) * cost_rate
+                if use_curve:
+                    dv = dolvol_ma[i][tradable]
+                    volann = vol[i][tradable] * math.sqrt(SESSIONS_PER_YEAR)
+                    sp, im, okr = _rates(notional_vec, px[tradable], dv, volann)
+                    # A fill the curve cannot price is charged the policy's OWN
+                    # DECLARED flat rate and COUNTED. It is not charged an end
+                    # of the declared band: `cost_model.resolve_band_by_picking`
+                    # is a named refusal, and a loop is the last place to start
+                    # quietly picking ends.
+                    rates = np.where(okr, (sp + im) / 1e4, cost_rate)
+                    fee = float((notional_vec * rates).sum())
+                    diag["n_name_fills_priced_by_curve"] += int(okr.sum())
+                    diag["n_name_fills_curve_unpriceable"] += int((~okr).sum())
+                    diag["cost_curve_spread_usd"] += float(
+                        (notional_vec * np.where(okr, sp, 0.0) / 1e4).sum())
+                    diag["cost_curve_impact_usd"] += float(
+                        (notional_vec * np.where(okr, im, 0.0) / 1e4).sum())
+                    lo_cut, hi_cut = LIQUIDITY_TERCILE_CUTS_USD
+                    band = np.where(dv >= hi_cut, 2, np.where(dv >= lo_cut, 1, 0))
+                    costs_usd = notional_vec * rates
+                    for b in (0, 1, 2):
+                        m = band == b
+                        if m.any():
+                            diag["tercile_notional_usd"][b] += float(notional_vec[m].sum())
+                            diag["tercile_cost_usd"][b] += float(costs_usd[m].sum())
+                else:
+                    fee = float(notional) * cost_rate
                 cash -= signed + fee
                 shares = np.where(tradable, target_sh, shares)
                 diag["total_cost_usd"] += fee
@@ -352,6 +467,49 @@ def run(panel, policy: Policy, *, sig: np.ndarray | None = None,
     diag["seconds"] = round(time.perf_counter() - t0, 3)
     diag["cost_drag_pct_of_start"] = round(
         100.0 * diag["total_cost_usd"] / policy.notional_usd, 4)
+    # THE REALISED RATE, BETWEEN GROSS AND NET. A gross/net pair with no rate
+    # between them is the C2 shape: a level with nothing to check it against.
+    traded = float(diag["traded_notional_usd"])
+    diag["mean_realised_cost_bps"] = (
+        round(1e4 * diag["total_cost_usd"] / traded, 4) if traded > 0 else None)
+    diag["cost_curve_provenance"] = (
+        "flat_declared" if not use_curve else "EXTRAPOLATED_REGRESSION")
+    if use_curve:
+        n_ok = diag["n_name_fills_priced_by_curve"]
+        n_no = diag["n_name_fills_curve_unpriceable"]
+        n_all = n_ok + n_no
+        # THE SPLIT IS THE REPORTABLE FACT. The CRSP panel carries permnos and
+        # not tickers, so the ticker-keyed MEASURED branch of the curve is
+        # structurally unreachable from this engine: every priced fill here is
+        # an extrapolation, and saying "we used TAQ" would be false.
+        diag["cost_curve_provenance_mix"] = {
+            "EXTRAPOLATED_REGRESSION": n_ok,
+            "DECLARED_CONSERVATIVE_policy_flat_fallback": n_no,
+            "MEASURED_TAQ_EFFECTIVE": 0,
+            "note": ("the farm's CRSP panel is keyed on PERMNO; the curve's "
+                     "measured branch is keyed on TICKER and is therefore "
+                     "unreachable from this engine. Every priced fill is the "
+                     "regression."),
+        }
+        diag["curve_unpriceable_fraction"] = (
+            round(n_no / n_all, 4) if n_all else None)
+        # The same realised notional charged at the policy's DECLARED flat
+        # rate: the counterfactual that makes the curve's effect readable
+        # without a second full run.
+        flat_cost = traded * cost_rate
+        diag["total_cost_usd_if_flat"] = round(flat_cost, 2)
+        diag["mean_flat_cost_bps"] = round(1e4 * cost_rate, 4)
+        diag["cost_ratio_curve_over_flat"] = (
+            round(diag["total_cost_usd"] / flat_cost, 4) if flat_cost > 0 else None)
+        diag["cost_curve_spread_usd"] = round(diag["cost_curve_spread_usd"], 2)
+        diag["cost_curve_impact_usd"] = round(diag["cost_curve_impact_usd"], 2)
+        tn, tc = diag.pop("tercile_notional_usd"), diag.pop("tercile_cost_usd")
+        diag["cost_bps_by_liquidity_tercile"] = {
+            name: {"notional_usd": round(n, 2),
+                   "cost_usd": round(c, 2),
+                   "one_way_bps": round(1e4 * c / n, 4) if n > 0 else None}
+            for name, n, c in zip(LIQUIDITY_TERCILE_NAMES, tn, tc, strict=True)}
+        diag["liquidity_tercile_cuts_usd"] = list(LIQUIDITY_TERCILE_CUTS_USD)
     dates = list(panel.dates[w0:])
     series = nav[w0:]
     return FarmResult(policy=policy, dates=dates, nav=[float(x) for x in series],

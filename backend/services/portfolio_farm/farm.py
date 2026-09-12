@@ -327,7 +327,11 @@ def across_phases(results: list["FarmResult"]) -> list[dict]:
                row["top_k"], row["sizing"], row["universe_n"],
                row["delisting_return"], row["min_price"],
                row["transaction_cost_bps"], row["slippage_bps"],
-               bool(row["zero_cost_diagnostic"]))
+               bool(row["zero_cost_diagnostic"]),
+               # The CURVE is part of the rule, not of the calendar: two
+               # curves priced the same holdings differently, and merging
+               # them into one median would report the mix as the rule.
+               row.get("curve", "flat"))
         groups.setdefault(key, []).append(row)
 
     out = []
@@ -338,6 +342,7 @@ def across_phases(results: list["FarmResult"]) -> list[dict]:
             "signal": key[0], "signal_seed": key[1], "holding_days": key[2],
             "top_k": key[3], "sizing": key[4], "universe_n": key[5],
             "delisting_return": key[6], "zero_cost_diagnostic": key[10],
+            "cost_curve": key[11],
             "is_null_control": base.get("is_null_control"),
             "n_phases": len(rows),
             "terminal_median_usd": round(float(np.median(t)), 2),

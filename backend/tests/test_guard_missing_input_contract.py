@@ -328,6 +328,28 @@ def _case_cost_model():
             CostRefused, "a verdict priced off a bare float with no provenance")
 
 
+def _case_cost_curve():
+    from backend.services.cost_curve import taq_empirical_one_way
+    from backend.services.cost_model import CostBand, DECLARED_CONSERVATIVE
+    # THE REFUSAL HERE IS A TYPE, NOT AN EXCEPTION, and that is deliberate: a
+    # name with no TAQ row and no regression inputs gets a `CostBand`, which
+    # has no `.value` and no `__float__`, so a caller cannot use it as a number
+    # by accident. Raising instead would make every unmeasured name abort a
+    # whole replay; returning the population mean would make an absent name an
+    # average name. The contract test therefore asserts the TYPE.
+    def _call():
+        got = taq_empirical_one_way("NOT_IN_ANY_PANEL", participation=0.0,
+                                    rows=[])
+        if isinstance(got, CostBand) and got.provenance == DECLARED_CONSERVATIVE:
+            from backend.services.cost_model import CostRefused
+            raise CostRefused(f"declared band, not a number: {got.reason}")
+        raise AssertionError(f"expected a CostBand, got {got!r}")
+
+    from backend.services.cost_model import CostRefused
+    return (_call, CostRefused,
+            "a cost for a name with no TAQ row and no regression inputs")
+
+
 def _case_taq_calibration():
     from backend.services.taq_calibration import TaqRefused, reading_for
     # The missing input is COVERAGE of the NAME. Entitlement is a fact about a
@@ -1040,6 +1062,7 @@ CASES = {
     "relative_value_labels": _case_relative_value_labels,
     "instrument_floor": _case_instrument_floor,
     "taq_calibration": _case_taq_calibration,
+    "cost_curve": _case_cost_curve,
     "cost_model": _case_cost_model,
     "net_dataset": _case_net_dataset,
     "research_daemon": _case_research_daemon,

@@ -30,6 +30,26 @@ from backend.services.portfolio_farm.signals import SIGNALS
 
 KNOWN_SIZING = ("equal_weight", "inverse_vol", "cap_weight")
 
+#: The declared cost regimes. `flat` is the historical behaviour: one scalar
+#: rate for every name. `taq_empirical` prices each fill from the TAQ
+#: effective-spread panel plus a square-root impact term. `retail_paper` is a
+#: DIFFERENT market (Alpaca/IEX fills) and is refused by the CRSP replay.
+KNOWN_CURVES = ("flat", "taq_empirical", "retail_paper")
+
+#: FIELDS ADDED AFTER THE FIRST POLICIES WERE HASHED, with the value every
+#: prior policy implicitly had. At that value the field is OMITTED from
+#: `policy_id`, so a receipt written in August still reproduces its own
+#: identity today; at any other value it is included, so two curves are two
+#: policies.
+#:
+#: This is not a convenience. `policy_id` is a SHA-256 over `asdict`, so
+#: appending a field to the dataclass changes the hash of EVERY policy ever
+#: written, and every archived receipt's identity silently stops matching the
+#: code that produced it -- the exact "drifted parameter, same identity"
+#: failure this class exists to prevent, arriving from the other direction.
+#: Pinned by `test_portfolio_farm_policy.py` against a real archived row.
+_HASH_NEUTRAL_DEFAULTS = {"curve": "flat"}
+
 
 class PolicyError(ValueError):
     """The policy asks for something the engine does not implement."""
@@ -92,6 +112,18 @@ class Policy:
     #: Free-text, carried into the hash so two policies that differ only in
     #: intent are still different policies.
     note: str = ""
+    #: WHICH COST RULER. `flat` charges `transaction_cost_bps + slippage_bps`
+    #: on every name alike; `taq_empirical` charges each fill its own
+    #: half-effective-spread plus square-root impact at its own participation
+    #: rate (`backend/services/cost_curve.py`). Under a non-flat curve the two
+    #: flat fields are IGNORED FOR PRICING and kept only so a receipt written
+    #: under `flat` still reproduces.
+    #:
+    #: Appended LAST on purpose: a field inserted mid-record would shift every
+    #: positional construction, and this one has to be invisible to everything
+    #: that does not ask for it. Default `flat` is hash-neutral
+    #: (`_HASH_NEUTRAL_DEFAULTS`).
+    curve: str = "flat"
 
     def __post_init__(self):
         if self.signal not in SIGNALS:
@@ -131,7 +163,30 @@ class Policy:
                 f"refusal.")
         if self.top_k < 1:
             raise PolicyError("top_k must be >= 1")
-        cost = float(self.transaction_cost_bps) + float(self.slippage_bps)
+        if self.curve not in KNOWN_CURVES:
+            raise PolicyError(
+                f"unknown cost curve {self.curve!r}; declared: "
+                f"{list(KNOWN_CURVES)}. A curve name the engine does not know "
+                f"would price every fill at the flat rate while the receipt "
+                f"said otherwise.")
+        if float(self.transaction_cost_bps) < 0 or float(self.slippage_bps) < 0:
+            raise PolicyError("a negative cost pays the book to trade")
+        # THE ZERO-COST REFUSAL, UNDER WHICHEVER RULER IS DECLARED. Under a
+        # curve the two flat fields are unused, so asking them whether this
+        # book pays anything answers a different question -- and a curve whose
+        # every rate happened to floor at exactly 0 (a regression gone wrong, a
+        # panel of zeros) is precisely the bug this refusal exists to catch.
+        if self.curve == "flat":
+            cost = float(self.transaction_cost_bps) + float(self.slippage_bps)
+        else:
+            from backend.services import cost_curve as CC
+            cost = float(CC.curve_floor_one_way_bps(self.curve))
+            if self.zero_cost_diagnostic:
+                raise PolicyError(
+                    f"zero_cost_diagnostic=True with curve={self.curve!r} is "
+                    f"two contradictory declarations: a frictionless "
+                    f"diagnostic is curve='flat' with the flag, and a measured "
+                    f"curve is never frictionless. Pick one.")
         if cost <= 0 and not self.zero_cost_diagnostic:
             raise PolicyError(
                 "zero transaction cost is not a default. A frictionless run is "
@@ -150,27 +205,48 @@ class Policy:
 
     @property
     def round_trip_bps(self) -> float:
+        """The DECLARED flat round trip. Under a non-flat curve this is not
+        what the book pays -- the realised rate is per fill and lands on the
+        receipt as `mean_realised_cost_bps`. Kept unchanged because every
+        archived row keys on it."""
         return 2.0 * (float(self.transaction_cost_bps) + float(self.slippage_bps))
 
     @property
     def policy_id(self) -> str:
         """SHA-256 over the WHOLE record. Not a name, not a counter: a name can
         be reused for a changed rule and a counter says nothing about what
-        changed. Sixteen hex characters is the same width the arena uses."""
-        blob = json.dumps(asdict(self), sort_keys=True, separators=(",", ":"))
+        changed. Sixteen hex characters is the same width the arena uses.
+
+        Fields in `_HASH_NEUTRAL_DEFAULTS` are omitted AT THEIR DEFAULT so that
+        a policy written before the field existed still hashes to the identity
+        its receipt records. Any other value is hashed normally, so two curves
+        are two policies.
+        """
+        rec = {k: v for k, v in asdict(self).items()
+               if k not in _HASH_NEUTRAL_DEFAULTS
+               or v != _HASH_NEUTRAL_DEFAULTS[k]}
+        blob = json.dumps(rec, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
     @property
     def label(self) -> str:
         """Human-readable, and deliberately NOT the identity."""
-        cost = "FREE" if self.zero_cost_diagnostic else f"{self.round_trip_bps:.0f}bp"
+        if self.curve != "flat":
+            cost = self.curve
+        else:
+            cost = ("FREE" if self.zero_cost_diagnostic
+                    else f"{self.round_trip_bps:.0f}bp")
         seed = f"#{self.signal_seed}" if self.signal_seed else ""
         ph = f"p{self.phase_offset}" if self.phase_offset else ""
         return (f"{self.signal}{seed}/h{self.holding_days}{ph}/k{self.top_k}/"
                 f"{self.sizing[:3]}/u{self.universe_n}/{cost}")
 
     def as_row(self) -> dict:
-        return {"policy_id": self.policy_id, "label": self.label, **asdict(self)}
+        """`cost_curve` rides on every row. A gross/net pair with no rate
+        between them is the C2 shape: a level with no way to check what
+        produced it."""
+        return {"policy_id": self.policy_id, "label": self.label,
+                "cost_curve": self.curve, **asdict(self)}
 
 
 def grid(**axes) -> list[Policy]:
@@ -205,5 +281,19 @@ class FarmResult:
     diagnostics: dict = field(default_factory=dict)
 
     def as_row(self) -> dict:
+        """THE REALISED RATE SITS BETWEEN GROSS AND NET.
+
+        `total_cost_usd / traded_notional_usd` was derivable before; the
+        NOTIONAL-WEIGHTED MEAN of the per-fill rate is a different number
+        whenever the curve is non-flat, and reporting only one invites exactly
+        the averaging-methodology confusion `taq_calibration.py` needed two
+        sections for. Both are here, and so is the provenance mix, because a
+        book that is 80% measured and 20% extrapolated must print both counts.
+        """
+        d = self.diagnostics or {}
         return {**self.policy.as_row(), **self.metrics,
+                "mean_realised_cost_bps": d.get("mean_realised_cost_bps"),
+                "cost_curve_provenance": d.get("cost_curve_provenance"),
+                "cost_bps_by_liquidity_tercile": d.get(
+                    "cost_bps_by_liquidity_tercile"),
                 "diagnostics": self.diagnostics}

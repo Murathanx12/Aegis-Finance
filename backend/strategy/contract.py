@@ -106,6 +106,14 @@ KNOWN_OBJECTIVE = (
 )
 
 
+#: `CostModel` fields added AFTER the first books were fingerprinted, with the
+#: value every prior book implicitly had. `Strategy.fingerprint` drops them at
+#: that value; see its docstring and `Policy._HASH_NEUTRAL_DEFAULTS`, which
+#: does the same job for `policy_id`. Two mechanisms because the two hashes are
+#: over two different records, and one shared helper would have to know both.
+_COSTS_HASH_NEUTRAL_DEFAULTS = {"curve": "flat", "flat_bps": None}
+
+
 def _sha(obj: Any) -> str:
     return hashlib.sha256(
         json.dumps(obj, sort_keys=True, separators=(",", ":"), default=str).encode()
@@ -268,22 +276,39 @@ class CostModel:
     borrow_bps: float = 0.0
     zero_cost_diagnostic: bool = False
     note: str = ""
+    #: WHICH COST RULER: "flat" | "taq_empirical" | "retail_paper". Appended
+    #: LAST and defaulting to "flat", which `Policy._HASH_NEUTRAL_DEFAULTS`
+    #: omits from the hash at that value -- so `Strategy.fingerprint`, which is
+    #: a SHA-256 over the whole record, is unchanged for every strategy that
+    #: does not ask for a curve. Pinned by test.
+    curve: str = "flat"
+    #: Only meaningful when `curve == "flat"`; kept so that a receipt written
+    #: before the curve existed can still state the rate it was graded at even
+    #: after a re-grade writes a second receipt beside it.
+    flat_bps: float | None = None
 
     def __post_init__(self) -> None:
-        # DELEGATED, not re-implemented. See the class docstring.
+        # DELEGATED, not re-implemented. See the class docstring. The curve
+        # travels into the delegation too, so the ONE zero-cost refusal fires
+        # under whichever ruler is declared.
         from backend.services.portfolio_farm.policy import Policy
 
         Policy(transaction_cost_bps=float(self.transaction_cost_bps),
                slippage_bps=float(self.slippage_bps),
-               zero_cost_diagnostic=bool(self.zero_cost_diagnostic))
+               zero_cost_diagnostic=bool(self.zero_cost_diagnostic),
+               curve=str(self.curve))
 
     @property
     def round_trip_bps(self) -> float:
+        """The DECLARED flat round trip. Under a non-flat curve the charged
+        rate is per fill; the realised average lands on the result row as
+        `mean_realised_cost_bps`."""
         return 2.0 * (float(self.transaction_cost_bps) + float(self.slippage_bps))
 
     def as_row(self) -> dict:
         """The flag TRAVELS. Every result row carries it, so a frictionless
-        number can never be quoted as net."""
+        number can never be quoted as net -- and so does the CURVE, so a net
+        computed under a per-name ruler can never be read as a flat one."""
         return {
             "transaction_cost_bps_per_side": float(self.transaction_cost_bps),
             "slippage_bps": float(self.slippage_bps),
@@ -291,6 +316,7 @@ class CostModel:
             "financing_bps_over_rf": float(self.financing_bps_over_rf),
             "borrow_bps": float(self.borrow_bps),
             "zero_cost_diagnostic": bool(self.zero_cost_diagnostic),
+            "cost_curve": str(self.curve),
         }
 
 
@@ -430,8 +456,23 @@ class Strategy:
     @property
     def fingerprint(self) -> str:
         """SHA-256 over the WHOLE record, 16 hex -- the width the arena and the
-        farm both use. A drifted parameter is a different strategy."""
-        return _sha(self.as_dict())[:16]
+        farm both use. A drifted parameter is a different strategy.
+
+        FIELDS ADDED AFTER THE FIRST BOOKS WERE HASHED are dropped AT THEIR
+        DEFAULT, for the reason `KNOWN_CONSTRUCTION`'s comment gives: a new
+        field changes the fingerprint of every book ever written, and a
+        fingerprint is what tells two sessions they are looking at the same
+        strategy. At any other value the field hashes normally, so a
+        `curve="taq_empirical"` re-run of a promoted flat book is a NEW
+        strategy and never a silent edit of the promoted one.
+        """
+        d = self.as_dict()
+        costs = dict(d.get("costs") or {})
+        for k, default in _COSTS_HASH_NEUTRAL_DEFAULTS.items():
+            if k in costs and costs[k] == default:
+                costs.pop(k)
+        d["costs"] = costs
+        return _sha(d)[:16]
 
     @property
     def label(self) -> str:
