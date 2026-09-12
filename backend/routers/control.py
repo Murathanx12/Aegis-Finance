@@ -1173,7 +1173,7 @@ def create_book_from_contract(payload: dict = Body(...)) -> dict:
     broker-free.
     """
     _require_enabled()
-    from backend.services.paper_books import (ORIGINS, BookError, create,
+    from backend.services.paper_books import (CADENCES, ORIGINS, BookError, create,
                                               worst_case)
     from backend.services.paper_books import _strategy_from_dict
     from backend.strategy.contract import StrategyError
@@ -1191,6 +1191,12 @@ def create_book_from_contract(payload: dict = Body(...)) -> dict:
                  "not be recorded as one he did.")
     if origin not in ORIGINS:
         raise HTTPException(422, f"origin must be one of {sorted(set(ORIGINS) - {'human_text'})}")
+    # Validate the REQUEST before touching data. CI's checkout has no bars
+    # file, and the first run there answered a bad cadence with 503 ("bars
+    # unavailable") instead of 422 -- a request error reported as an
+    # environment error, which is the wrong reader sent to the wrong place.
+    if cadence not in CADENCES:
+        raise HTTPException(422, f"cadence must be one of {list(CADENCES)}, not {cadence!r}")
     try:
         strategy = _strategy_from_dict(contract)
     except (StrategyError, TypeError, KeyError, ValueError) as exc:
