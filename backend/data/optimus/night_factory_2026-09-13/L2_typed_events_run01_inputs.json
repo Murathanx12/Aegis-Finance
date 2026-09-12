@@ -1,6 +1,7 @@
 {
  "job": "L2_typed_events",
  "run": 1,
+ "stage": "features",
  "n_rows": 6020,
  "inputs_sha256": "0d27f00243d9a4b37420447fe5a097ddb353cbe60a2862441333fc59a9b156ec",
  "keys": [
@@ -30105,5 +30106,5 @@
    "https://www.yahoo.com/news/world/articles/eu-proposes-curb-airbnb-short-174402390.html"
   ]
  ],
- "written_utc": "2026-09-12T21:30:45+00:00"
+ "written_utc": "2026-09-12T21:38:10+00:00"
 }

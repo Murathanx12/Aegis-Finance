@@ -554,7 +554,10 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
 
     frozen = OUT_DIR / f"{JOB}_run{run:02d}{'_smoke' if smoke else ''}_inputs.json"
     frozen.write_text(json.dumps(
-        {"job": JOB, "run": run, **base["inputs_frozen"],
+        # `stage` on the sidecar as well as on the receipt: the stage-contract
+        # test reads every *.json in the night directory, and an artefact of a
+        # stamped job that carries no stage reads as an unstamped job.
+        {"job": JOB, "run": run, "stage": "features", **base["inputs_frozen"],
          "keys": [list(row_key(r)) for r in waiting], "written_utc": _now()},
         indent=1), encoding="utf-8")
     base["inputs_frozen"]["file"] = str(frozen)
