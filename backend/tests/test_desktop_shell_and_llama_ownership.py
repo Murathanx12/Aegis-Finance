@@ -342,3 +342,45 @@ def test_pythonw_starts_the_whole_shell_and_reaches_health(tmp_path):
     finally:
         if before is not None:
             report.write_text(before, encoding="utf-8")
+
+
+# ------------------------------------------------ conservative batch defaults
+#
+# 2026-09-12 10:53 HKT: bugcheck 0x116 VIDEO_TDR_ERROR while an unattended night
+# job read cells through this server, which held 5.3 GB of the card's 8 GB. A
+# TDR fires when ONE GPU submission outlasts the driver's watchdog, and the size
+# of a submission is the batch.
+
+def test_the_unattended_batch_defaults_are_conservative():
+    """llama.cpp's own defaults are 2048 logical / 512 physical."""
+    assert ls.LLAMA_BATCH == 512
+    assert ls.LLAMA_UBATCH == 128
+    assert ls.LLAMA_BATCH < 2048 and ls.LLAMA_UBATCH < 512
+
+
+def test_the_batch_sizes_are_on_the_command_line_and_in_the_status():
+    """A default nobody passes to the binary protects nothing.
+
+    Read the AST and skip docstrings: this file, and `llama_server`'s own
+    comments, quote the flags while explaining them, and a grep-shaped guard
+    that cannot tell an explanation from an instance gets the rationale
+    deleted to make the suite green.
+    """
+    tree = ast.parse((REPO / "backend" / "services" / "llama_server.py").read_text(encoding="utf-8"))
+    docs = {d for n in ast.walk(tree)
+            if isinstance(n, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+            for d in [ast.get_docstring(n, clean=False)] if d}
+    code = [n.value for n in ast.walk(tree)
+            if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value not in docs]
+    assert "--batch-size" in code and "--ubatch-size" in code
+
+    st = ls.status()
+    assert st["batch_size"] == ls.LLAMA_BATCH
+    assert st["ubatch_size"] == ls.LLAMA_UBATCH
+
+
+def test_an_attended_session_can_buy_the_speed_back(monkeypatch):
+    """The mitigation is a DEFAULT, not a ceiling -- generation is one token at
+    a time either way, so what this costs is prompt processing."""
+    src = (REPO / "backend" / "services" / "llama_server.py").read_text(encoding="utf-8")
+    assert "AEGIS_LLAMA_BATCH" in src and "AEGIS_LLAMA_UBATCH" in src

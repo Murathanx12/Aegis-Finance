@@ -95,6 +95,23 @@ LLAMA_NGL = int(os.getenv("AEGIS_LLAMA_NGL", str(_conf("LLAMA_NGL", 99))))
 #: 0 means "everything the -ngl budget allows on the GPU", which is right for a
 #: dense 7B and wrong for a 30B MoE. See `docs/` note on the model swap.
 LLAMA_N_CPU_MOE = int(os.getenv("AEGIS_LLAMA_N_CPU_MOE", str(_conf("LLAMA_N_CPU_MOE", 0))))
+#: CONSERVATIVE BATCH DEFAULTS FOR UNATTENDED USE (2026-09-12).
+#:
+#: At 10:53 HKT the machine bugchecked 0x116 VIDEO_TDR_ERROR -- the display
+#: driver did not recover from a GPU timeout -- while an unattended night job
+#: read cells through this server, which held 5.3 GB of the card's 8 GB. A TDR
+#: fires when one GPU command takes longer than the driver's watchdog allows,
+#: and the size of a single llama.cpp submission is the batch. llama.cpp's own
+#: defaults are 2048 logical / 512 physical; 512/128 makes each submission a
+#: quarter of that, which is the cheap half of the mitigation and the only half
+#: a session is allowed to do -- raising `TdrDelay` needs admin and a reboot and
+#: belongs to Murat (docs/HANDOFF_2026-09-11_SESSION_CLOSE_ROOT_FIRST.md 3c).
+#:
+#: This costs prompt-processing throughput and nothing else: generation is one
+#: token at a time either way. An attended, interactive session that wants the
+#: speed back sets AEGIS_LLAMA_BATCH=2048 / AEGIS_LLAMA_UBATCH=512.
+LLAMA_BATCH = int(os.getenv("AEGIS_LLAMA_BATCH", str(_conf("LLAMA_BATCH", 512))))
+LLAMA_UBATCH = int(os.getenv("AEGIS_LLAMA_UBATCH", str(_conf("LLAMA_UBATCH", 128))))
 
 OWNER_FILE = Path(os.getenv("AEGIS_LLAMA_OWNER_FILE",
                             str(REPO / "backend" / "data" / "optimus" / "llama_server_owner.json")))
@@ -292,7 +309,8 @@ def status() -> dict:
     )
     return {**asdict(st), "utc": _now(),
             "model_path": str(LLAMA_MODEL), "binary_path": str(LLAMA_BIN),
-            "n_cpu_moe": LLAMA_N_CPU_MOE}
+            "n_cpu_moe": LLAMA_N_CPU_MOE,
+            "batch_size": LLAMA_BATCH, "ubatch_size": LLAMA_UBATCH}
 
 
 # ------------------------------------------------------------------ start/stop
@@ -430,7 +448,8 @@ def start(wait_s: float = 90.0, bind: bool = True) -> dict:
                 "status": status()}
     cmd = [str(LLAMA_BIN), "-m", str(LLAMA_MODEL),
            "--host", LLAMA_HOST, "--port", str(LLAMA_PORT),
-           "-ngl", str(LLAMA_NGL), "-c", str(LLAMA_CTX), "--no-webui"]
+           "-ngl", str(LLAMA_NGL), "-c", str(LLAMA_CTX), "--no-webui",
+           "--batch-size", str(LLAMA_BATCH), "--ubatch-size", str(LLAMA_UBATCH)]
     if LLAMA_N_CPU_MOE > 0:
         # keep this many MoE expert layers on the CPU; the attention stack stays
         # on the GPU. Without it a 30B-A3B at Q4 (~18.6 GB) cannot start at all

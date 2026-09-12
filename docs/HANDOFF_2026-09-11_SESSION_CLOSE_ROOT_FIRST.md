@@ -123,6 +123,37 @@ before crediting discovery** (protocol §9).
   value (attended, admin); (2) **disable Modern Standby / sleep for a night run** (`powercfg` — the
   night factory should refuse to start if the active power plan allows sleep, and say so); (3) every
   in-progress edit is committed or stashed before a long unattended run.
+- **What chunk 3c then DID about it (2026-09-12, commits under `T1`/`T1b`):**
+  - `backend/services/llama_server.py` now starts the server with
+    `--batch-size 512 --ubatch-size 128` (llama.cpp's own defaults are 2048 / 512),
+    overridable by `AEGIS_LLAMA_BATCH` / `AEGIS_LLAMA_UBATCH` and reported by
+    `status()`. A TDR fires when ONE GPU submission outlasts the driver's
+    watchdog, and the size of a submission is the batch, so a quarter-size batch
+    is a quarter-length submission. It costs prompt-processing throughput and
+    nothing else — generation is one token at a time either way — so an
+    attended session that wants the speed back sets the two env vars.
+  - `scripts/night_factory.py` prints `nvidia-smi`'s driver version and VRAM at
+    the start of a run, so the next crash receipt has them without archaeology.
+    Measured on this machine: `NVIDIA GeForce RTX 5060 Laptop GPU, 595.97,
+    836 MiB, 8151 MiB`.
+- **THE ATTENDED OPTION, FOR MURAT ONLY — `TdrDelay`.** Windows kills and resets
+  a display driver whose GPU command has not returned within `TdrDelay` seconds
+  (default **2**). Raising it lets a long kernel finish instead of bugchecking;
+  the cost is that a genuinely hung GPU freezes the desktop for that long
+  instead of recovering. **No session may set this.** It needs an elevated
+  shell and a **reboot** to take effect:
+
+  | where | `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\GraphicsDrivers` |
+  |---|---|
+  | value | `TdrDelay` |
+  | type | `REG_DWORD` |
+  | suggested | `10` (decimal seconds; default is 2 when the value is absent) |
+  | takes effect | after a reboot |
+  | undo | delete the value, reboot |
+
+  Do the batch-size mitigation first and see whether a night survives; it is
+  reversible by an env var and needs no reboot. `TdrDelay` is the second lever,
+  not the first, and it is Murat's to pull.
 
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
