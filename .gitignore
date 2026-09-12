@@ -329,3 +329,16 @@ build_next/
 # PID. Per-machine runtime state, useful for ten seconds, never shared.
 backend/data/optimus/launch_receipt.json
 backend/data/optimus/aegis_desktop_report.json
+
+# 2026-09-12: data the nightly pulls and the cadence passes write. Corpora and
+# per-pass marks are data, not receipts: catalogued in docs/DATA_MANIFEST.md,
+# never committed. A chunk-6 `git add -A` swept 72 of these into history once.
+backend/data/optimus/news_corpus/
+backend/data/optimus/analyst_snapshots/
+backend/data/optimus/short_interest/**/*.parquet
+backend/data/optimus/minute_bars/
+backend/data/optimus/book_cadence/
+backend/data/optimus/monday_night/
+
+# re-grades of scratch receipts are scratch too (2026-09-12)
+backend/data/optimus/night_factory_*/*_smoke_regrade_taq.json

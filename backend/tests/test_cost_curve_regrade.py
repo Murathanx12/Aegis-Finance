@@ -124,14 +124,22 @@ def test_the_migration_ran_and_NOTHING_WAS_OVERWRITTEN():
     blob = json.loads(found[-1].read_text(encoding="utf-8"))
     root = Path(__file__).resolve().parents[2]
     assert blob["n_receipts_regraded"] > 0
+    checked = 0
     for f in blob["files"]:
         src, out = root / f["source"], root / f["regrade"]
-        assert src.exists(), f["source"]
+        if not src.exists():
+            # A source absent from THIS checkout is tolerable only when it is a
+            # scratch receipt (`_smoke.json`, gitignored by rule). CI's checkout
+            # has no scratch receipts; any other absence is a real gap.
+            assert src.name.endswith("_smoke.json"), f"missing source {f['source']}"
+            continue
         assert out.exists(), f["regrade"]
+        checked += 1
         assert src != out, "a re-grade must never be written over its source"
         assert out.name.endswith(RG.SUFFIX)
         # The source is still the source: it carries no re-grade fields.
         assert "terminal_wealth_net_curve" not in src.read_text(encoding="utf-8")
+    assert checked > 0, "no re-graded source was present to check"
 
 
 def test_the_summary_counts_the_refusals_BY_NAME():

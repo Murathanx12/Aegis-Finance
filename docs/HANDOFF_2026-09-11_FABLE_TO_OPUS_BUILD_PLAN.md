@@ -368,6 +368,29 @@ curve ticker-keyed — every farm fill is `EXTRAPOLATED_REGRESSION` and the prov
 re-grade uses a representative median rate above each book's floor and omits impact (no notional
 declared). Suite 8,639 → 8,694.
 
+**Chunk 6 landed (validated 2026-09-12 night):** `a670c18` A1 the IPS (`backend/services/agency.py`:
+schema + hand validator — `jsonschema` is not in the venv — the 8-question Grable-Lytton/SCF
+instrument, ability vs willingness with composite = min, the four-row personality table with each
+number's source, canonical-JSON SHA-256; the local model may draft prose and a test discards any digit
+the engine did not compute); `f77b421` A2 three options from one IPS as `Strategy` contracts with
+twins and worst cases (`POST /agency/propose`), and `POST /agency/hold` — the ONLY route that mints
+`origin="human_text"`, sentence required; the un-chosen become `shadow_of:<ips_hash>` books;
+`439d98d` A3 the daily review (`{hold, sell, buy_more, trim}` with a probability; **the forecast row is
+written, read back and hashed before the call is returned**), a Morning step `agency_review`;
+`86afa53` A4 protect-first (NAV-from-peak vs the IPS budget; flip to the preservation construction as
+a new fingerprint with `flipped_from`; `POST /agency/unflip` human-only; the base rate on the twin
+beside it); `bce42ba` A5 plain words with receipt paths, the limits sentence on every payload, the
+`/desktop/agency` page; `caf8b97` un-tracks 72 data files its own `git add -A` had swept (6.8 MB now in
+unpushed history; left). Real intake → propose on this machine (2,769 names above the $5M floor): IPS
+`3bddc7592213da19`; preservation `b6d650da2e0e1860` −$3,800 (8%), balanced `7ad26ef6135681cb`
+−$4,750 (10%), aggressive `b62b0b95d7577168` −$5,700 (12% — the spec's table said 10% and was the
+hand-edited row); prose = template (the model server was down); **no book held — the first
+`human_text` book is Murat's.** Deviations, documented: the signal is `mom_12_1` (the spec's
+`agency_default_composite` is uncomputable — a book that marks forever and decides never); the worst
+case is quoted on invested equity. Owed: the 45% loser fraction in every agency `LossBudget` is a
+placeholder; `extreme_growth`'s row is extrapolated; the model path is exercised only by mocks. Suite
+8,694 → 8,846.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits

@@ -299,8 +299,14 @@ def main() -> int:
     for pat in SOURCE_DIRS:
         for d in sorted(DATA.glob(pat)):
             if d.is_dir():
+                # `_smoke.json` receipts are SCRATCH: gitignored, never the record
+                # (the leaderboard sync skips them the same way). Re-grading one
+                # writes a tracked artefact beside an untracked source -- which is
+                # exactly what turned CI red on 2026-09-12: the runner's checkout
+                # had the re-grade and not the source.
                 files += [p for p in sorted(d.rglob("*.json"))
-                          if not p.name.endswith(SUFFIX)]
+                          if not p.name.endswith(SUFFIX)
+                          and not p.name.endswith("_smoke.json")]
 
     spreads, dvs = cross_section()
     summary_files, n_reg, n_ref, n_fam_changed, deltas = [], 0, 0, 0, []
