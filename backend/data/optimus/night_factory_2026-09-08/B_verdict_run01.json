@@ -1,0 +1,170 @@
+{
+ "job": "B_verdict",
+ "family": "NIGHT_JOB_BOOKS_2026_09",
+ "licence": "PRODUCT_EXPERIMENT",
+ "prereg": "TRIAL-DRAFT-B-insider-cluster-length-v1 (UNSIGNED)",
+ "arms": [
+  "insider_cluster_length_v1",
+  "insider_cluster_same_day_v1"
+ ],
+ "reads_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\B_first_books_replay_run01.json",
+ "smoke": false,
+ "runs_no_backtest": "this job re-computes nothing. It applies TRIAL-DRAFT-B \u00a75 to numbers a named receipt already carries, so its output can be checked against that receipt by hand.",
+ "decision_rule": "TRIAL-DRAFT-B \u00a75. FAILED_VARIANT if the net block-mean is <= 0, OR the same-day arm outperforms non-cluster purchases, OR post-floor attrition leaves < 10 names/year. PRODUCT_PROMISING needs the block-mean >= the computed MDE of 7.17% at t >= 2.0 with the falsifier surviving and >= 20 names/year. Everything between is CONDITIONAL.",
+ "power_finding": "\u00a74, computed BEFORE the read: the MDE is 0.0717 per block against a published gap of 0.05, so this design cannot confirm its own prior at 80% power. That changes what the trial may CONCLUDE, not whether it runs \u2014 and its protection is explicitly conditional on the point estimate being above zero.",
+ "ran": true,
+ "replay_run": 1,
+ "replay_window": [
+  1990,
+  2024
+ ],
+ "replay_written_utc": "2026-09-12T22:11:58+00:00",
+ "cost_curve": "flat_25bps_pending_5c",
+ "falsifier_status": {
+  "status": "MEASURED",
+  "beats_non_cluster": false,
+  "confirm_mean": -0.00325,
+  "pooled_mean": -0.001574,
+  "why": "the same-day arm reads -0.00325 on 2017-2024 and -0.001574 pooled against its random Form-4-active twin. \u00a75's clause 2 fires only if it OUTPERFORMS; it does not, so the mechanism's falsifier SURVIVES \u2014 which closes nothing and rescues nothing. A falsifier that passes is not evidence for the book."
+ },
+ "arm_verdicts": {
+  "insider_cluster_length_v1": "FAILED_VARIANT",
+  "insider_cluster_same_day_v1": "FAILED_VARIANT"
+ },
+ "per_arm": {
+  "insider_cluster_length_v1": {
+   "numbers": {
+    "book": "insider_cluster_length_v1",
+    "spans": [
+     4,
+     5
+    ],
+    "ran": true,
+    "pooled_mean": -0.001354,
+    "pooled_t": -0.0778,
+    "pooled_p": 0.937952,
+    "pooled_n_blocks": 212,
+    "confirm_slice": "2017-2024",
+    "confirm_mean": -0.024084,
+    "confirm_t": -0.8897,
+    "confirm_n_blocks": 85,
+    "names_per_year": null,
+    "declared_mde_per_block": 0.0717,
+    "power_warning": "the registered MDE (7.17%) is ABOVE the published effect (5.0%): a non-significant result here is CONDITIONAL, never FAILED_VARIANT, unless the point estimate is <= 0"
+   },
+   "tradability_clause": {
+    "status": "CANNOT_DETERMINE",
+    "fires": null,
+    "why": "run 1's receipt carries no post-floor name count per year, so \u00a75's '< 10 names/year' clause has no input. A guard DERIVES its inputs or REFUSES; treating an unmeasured clause as passed is how a gate stops being read. The cluster panel's own per-year count is what would answer it."
+   },
+   "verdict_block": {
+    "verdict": "FAILED_VARIANT",
+    "clauses_fired": [
+     "\u00a75 clause 1: the net block-mean on the 2017-2024 confirm slice is -0.024084, which is <= 0"
+    ],
+    "deciding_number": -0.024084,
+    "deciding_basis": "the 2017-2024 confirm slice",
+    "nw_lag2_t": -0.8897,
+    "why": "\u00a75 clause 1: the net block-mean on the 2017-2024 confirm slice is -0.024084, which is <= 0. \u00a74's power warning does NOT hold this open: it says a non-significant result is CONDITIONAL, never FAILED_VARIANT, **unless the point estimate is <= 0** \u2014 and it is. An underpowered design that reports 'no effect' is reporting its own sample size; an underpowered design whose estimate is on the wrong side of zero has still not found the effect it registered.",
+    "unevaluated_clauses": [
+     "run 1's receipt carries no post-floor name count per year, so \u00a75's '< 10 names/year' clause has no input. A guard DERIVES its inputs or REFUSES; treating an unmeasured clause as passed is how a gate stops being read. The cluster panel's own per-year count is what would answer it."
+    ]
+   },
+   "single_positive_era": {
+    "eras": {
+     "2000-2009": {
+      "n_blocks": 46,
+      "mean_excess_net_monthly": 0.061131,
+      "nw_lag2_t": 1.4718
+     }
+    },
+    "reading": "ONE ERA, and it decides nothing. The confirm slice is 2017-2024 and was chosen before the read because it is the first period after Kang-Kim-Wang's sample ends; an era inside their sample going the other way is what a decayed effect looks like, not a reason to reopen the book. \u00a75 has no 'best era' clause."
+   }
+  },
+  "insider_cluster_same_day_v1": {
+   "numbers": {
+    "book": "insider_cluster_same_day_v1",
+    "spans": [
+     0
+    ],
+    "ran": true,
+    "pooled_mean": -0.001574,
+    "pooled_t": -0.392,
+    "pooled_p": 0.695087,
+    "pooled_n_blocks": 223,
+    "confirm_slice": "2017-2024",
+    "confirm_mean": -0.00325,
+    "confirm_t": -0.4142,
+    "confirm_n_blocks": 91,
+    "names_per_year": null,
+    "declared_mde_per_block": 0.0717,
+    "power_warning": "the registered MDE (7.17%) is ABOVE the published effect (5.0%): a non-significant result here is CONDITIONAL, never FAILED_VARIANT, unless the point estimate is <= 0"
+   },
+   "tradability_clause": {
+    "status": "CANNOT_DETERMINE",
+    "fires": null,
+    "why": "run 1's receipt carries no post-floor name count per year, so \u00a75's '< 10 names/year' clause has no input. A guard DERIVES its inputs or REFUSES; treating an unmeasured clause as passed is how a gate stops being read. The cluster panel's own per-year count is what would answer it."
+   },
+   "verdict_block": {
+    "verdict": "FAILED_VARIANT",
+    "clauses_fired": [
+     "\u00a75 clause 1: the net block-mean on the 2017-2024 confirm slice is -0.003250, which is <= 0"
+    ],
+    "deciding_number": -0.00325,
+    "deciding_basis": "the 2017-2024 confirm slice",
+    "nw_lag2_t": -0.4142,
+    "why": "\u00a75 clause 1: the net block-mean on the 2017-2024 confirm slice is -0.003250, which is <= 0. \u00a74's power warning does NOT hold this open: it says a non-significant result is CONDITIONAL, never FAILED_VARIANT, **unless the point estimate is <= 0** \u2014 and it is. An underpowered design that reports 'no effect' is reporting its own sample size; an underpowered design whose estimate is on the wrong side of zero has still not found the effect it registered.",
+    "unevaluated_clauses": [
+     "run 1's receipt carries no post-floor name count per year, so \u00a75's '< 10 names/year' clause has no input. A guard DERIVES its inputs or REFUSES; treating an unmeasured clause as passed is how a gate stops being read. The cluster panel's own per-year count is what would answer it."
+    ]
+   },
+   "single_positive_era": {
+    "eras": {
+     "2000-2009": {
+      "n_blocks": 48,
+      "mean_excess_net_monthly": 0.002552,
+      "nw_lag2_t": 0.3988
+     }
+    },
+    "reading": "ONE ERA, and it decides nothing. The confirm slice is 2017-2024 and was chosen before the read because it is the first period after Kang-Kim-Wang's sample ends; an era inside their sample going the other way is what a decayed effect looks like, not a reason to reopen the book. \u00a75 has no 'best era' clause."
+   }
+  }
+ },
+ "family_holm_from_the_receipt": {
+  "family": "NIGHT_JOB_BOOKS_2026_09",
+  "declared_family_size": 4,
+  "legs_with_a_p_value": [
+   "disposition_overhang_conditioner_v0",
+   "insider_cluster_length_v1",
+   "si_low_turnover_high_v1"
+  ],
+  "legs_without": [
+   "abstention_book_v0"
+  ],
+  "per_leg": {
+   "si_low_turnover_high_v1": {
+    "p_raw": 0.023803,
+    "holm_alpha": 0.0125,
+    "rejects_at_holm": false
+   },
+   "disposition_overhang_conditioner_v0": {
+    "p_raw": 0.03331,
+    "holm_alpha": 0.016667,
+    "rejects_at_holm": false
+   },
+   "insider_cluster_length_v1": {
+    "p_raw": 0.937952,
+    "holm_alpha": 0.025,
+    "rejects_at_holm": false
+   }
+  },
+  "note": "Holm is computed against the DECLARED family size, not the number of legs that happened to run. A leg that could not run does not make the correction cheaper for the ones that did."
+ },
+ "next_test": "MORE BLOCKS, i.e. time, is the only honest route to power on this construction (\u00a74.3) \u2014 and a wider event definition is a NEW REGISTRATION, not an amendment. Per EXPLORE DIRTY, PROMOTE CLEAN, a FAILED_VARIANT here closes THIS implementation of cluster length, not insider clustering and not the Form-4 tape: the executive-only cut, the CMP opportunistic/routine 2x2 and the 1-3 day span bucket are each a separate registration \u00a78 already forbids claiming from this one.",
+ "headline": "insider_cluster_length_v1 -0.024084 on 2017-2024 -> FAILED_VARIANT; insider_cluster_same_day_v1 -0.00325 on 2017-2024 -> FAILED_VARIANT",
+ "verdict": "insider_cluster_length_v1: FAILED_VARIANT; insider_cluster_same_day_v1: FAILED_VARIANT \u2014 \u00a75 clause 1: the net block-mean on the 2017-2024 confirm slice is -0.024084, which is <= 0. \u00a74's power warning does NOT hold this open: it says a non-significant result is CONDITIONAL, never FAILED_VARIANT, **unless the point estimate is <= 0** \u2014 and it is. An underpowered design that reports 'no effect' is reporting its own sample size; an underpowered design whose estimate is on the wrong side of zero has still not found the effect it registered.",
+ "elapsed_s": 0.0,
+ "written_utc": "2026-09-12T23:12:50+00:00",
+ "run": 1,
+ "stage": "pnl"
+}

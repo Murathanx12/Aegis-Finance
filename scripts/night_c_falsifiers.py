@@ -75,9 +75,15 @@ Run 1 of the whole replay took **829.3 s** for four books, of which Book C is
 one monthly pass plus the overhang recursion over 420 months x 18,684 permnos,
 and Book B's wide daily frame (which this job never builds) was the memory
 peak. This job runs the panel load once, the overhang recursion once, TWO
-monthly passes and one cross-sectional regression per month: projection
-**10-20 minutes**, and the 60-minute default box covers it. A job killed at the
-box writes no receipt at all (2026-09-10, G3 at generation 340).
+monthly passes and one cross-sectional regression per month.
+
+MEASURED here: the smoke pass (2014-2024, 132 months x 200 names, read from
+2019-01) took **5.3 s** end to end. The full pass is 420 months over roughly
+18,700 permnos, and both the recursion and the monthly passes scale with
+month x name, so the projection is **10-25 minutes** -- inside the 60-minute
+default box, but not by so much that a reader should trust the default without
+looking. A job killed at the box writes no receipt at all (2026-09-10, G3 at
+generation 340).
 """
 
 from __future__ import annotations
@@ -544,21 +550,35 @@ def decide(placebo: dict, momentum: dict, primary: dict | None) -> dict:
                             "clears its declared effect at t >= 2.0. §5 also "
                             "requires sign stability in 2 of 3 eras and the "
                             "$10M floor, which this job does not measure.")}
-    return {
-        "verdict": "CONDITIONAL",
-        "clauses_fired": [],
-        "reading": (
-            f"both falsifiers PASSED, so neither §5 FAILED_VARIANT clause "
-            f"fires. The standing verdict is therefore the one the primary "
-            f"metric earned on 2026-09-12 and no better: "
-            f"{mean:+.6f}/month at NW lag-2 t {t} is below the declared "
-            f"{declared:.4f}/month and does not survive the family's Holm "
-            f"block, which is CONDITIONAL. A falsifier that passes is not "
-            f"evidence FOR the book."
-            if mean is not None else
-            "both falsifiers PASSED; the primary metric is unreadable on this "
-            "checkout, so CONDITIONAL stands unchanged."),
-    }
+    if mean is None:
+        return {"verdict": "CONDITIONAL", "clauses_fired": [],
+                "reading": ("both falsifiers PASSED; the primary metric is "
+                            "unreadable on this checkout, so CONDITIONAL "
+                            "stands unchanged.")}
+    reading = (
+        f"both falsifiers PASSED, so neither §5 FAILED_VARIANT clause fires. "
+        f"The standing verdict is therefore the one the primary metric earned "
+        f"and no better: {mean:+.6f}/month at NW lag-2 t {t} is below the "
+        f"declared {declared:.4f}/month, which is CONDITIONAL. A falsifier "
+        f"that passes is not evidence FOR the book.")
+    if mean <= 0:
+        # NAMED, not filled. TRIAL-DRAFT-A §5 closes a book whose block-mean is
+        # <= 0; TRIAL-DRAFT-C §5 has no such clause -- its FAILED_VARIANT
+        # clauses are both falsifiers and its CONDITIONAL clause assumes the
+        # primary CLEARED. Inventing the missing clause here would be a session
+        # editing a registration after the read.
+        reading += (
+            f" AND THE REGISTRATION HAS A GAP HERE: {mean:+.6f} is not merely "
+            f"short of the declared effect, it is on the WRONG SIDE OF ZERO, "
+            f"and §5 has no clause for that — its two FAILED_VARIANT clauses "
+            f"are both falsifiers and its CONDITIONAL clause assumes the "
+            f"primary cleared. TRIAL-DRAFT-A §5 does carry a 'block-mean <= 0' "
+            f"clause; C's does not. That gap is NAMED here rather than filled, "
+            f"because writing the missing clause after seeing the number is a "
+            f"session editing a registration after the read. What it needs is "
+            f"an amendment, signed before the next read.")
+    return {"verdict": "CONDITIONAL", "clauses_fired": [],
+            "primary_is_below_zero": bool(mean <= 0), "reading": reading}
 
 
 # --------------------------------------------------------------------------

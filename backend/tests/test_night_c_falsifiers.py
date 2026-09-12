@@ -283,6 +283,30 @@ def test_a_falsifier_that_passes_is_not_evidence_for_the_book():
     assert "not evidence FOR the book" in out["reading"]
 
 
+def test_a_primary_on_the_wrong_side_of_zero_names_the_registrations_gap():
+    """TRIAL-DRAFT-A §5 closes a book whose block-mean is <= 0. C's §5 does NOT
+    carry that clause -- its two FAILED_VARIANT clauses are both falsifiers.
+    Writing the missing clause after seeing the number would be a session
+    editing a registration after the read, so the gap is NAMED."""
+    out = F.decide({"placebo_pays": False},
+                   {"momentum_survives": False, "overhang_survives": True},
+                   {"mean_excess_net_monthly": -0.004003, "nw_lag2_t": -1.12,
+                    "declared_effect_size": 0.01})
+    assert out["verdict"] == "CONDITIONAL"
+    assert out["primary_is_below_zero"] is True
+    assert "WRONG SIDE OF ZERO" in out["reading"]
+    assert "NAMED here rather than filled" in out["reading"]
+
+
+def test_a_positive_primary_below_the_declared_effect_does_not_claim_a_gap():
+    out = F.decide({"placebo_pays": False},
+                   {"momentum_survives": False, "overhang_survives": True},
+                   {"mean_excess_net_monthly": 0.003978, "nw_lag2_t": 2.1283,
+                    "declared_effect_size": 0.01})
+    assert out["primary_is_below_zero"] is False
+    assert "WRONG SIDE OF ZERO" not in out["reading"]
+
+
 def test_both_clauses_can_fire_at_once_and_both_are_named():
     out = F.decide({"placebo_pays": True}, {"momentum_survives": True}, None)
     assert out["verdict"] == "FAILED_VARIANT"
