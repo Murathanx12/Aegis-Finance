@@ -292,3 +292,91 @@ both were the linter catching a real defect rather than a formality:
 `backend/services/portfolio_intelligence/r2_trial.py::ensure_r2_trial`. Until the
 row exists, this document and that module are the commitment, and their git
 commit timestamp is the evidence.
+
+---
+
+# ADDENDUM (UNSIGNED) — `R2-Qwen3`, a NEW ARM beside R2
+
+**Written 2026-09-13, chunk 9 item L4. UNSIGNED: no Qwen3 digest has been read,
+the model server was never started by this work, and the arm's numbers do not
+exist.** This section registers the arm and freezes what the run will be, which
+is the only thing section 6's rule permits before the first read.
+
+Section 6 of this document is the rule being obeyed, not bent: *"A model swap is
+a NEW ARM, not an upgrade... a different quantisation of the same weights, or a
+different server build is a different reader and gets its own registration and
+its own place in the multiplicity count."* `R2` keeps every claim it has.
+`R2-Qwen3` starts with none.
+
+## The reader
+
+| what | value |
+|---|---|
+| hub repo | `Qwen/Qwen3-30B-A3B-Instruct-2507` (30.5B params, ~3.3B active, MoE) |
+| licence | `apache-2.0` |
+| build | the **plain Instruct** build. Not the base model, not an abliterated community fine-tune |
+| GGUF repo | `bartowski/Qwen_Qwen3-30B-A3B-Instruct-2507-GGUF` |
+| model file | `Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf`, 18,556,686,752 bytes (18.56 GB decimal = 17.28 GiB) |
+| model sha256 | `6c997b8af17debdfb01d890214400ccbab00db6acc0ba8da5de1cc906c4774d0` |
+| quant | Q4_K_M — the same level the incumbent runs, so the comparison is apples to apples |
+
+The sha256 above IS this arm's frozen identity, on the same rule the incumbent's
+`65b8fcd9...` is. A re-download that produces different bytes is a different arm.
+
+## What is held identical to R2
+
+PANEL-B (18,501 cells over **19 monthly blocks** — PANEL-B's count, confirmed
+from `night_factory_2026-09-10/R2_widened_panelB_run01.json`; **not 112**, which
+is PANEL-A's), the same anonymisation, the same shuffled-digest control at rng
+seed `20260909`, the same `read_minus_shuffled_control` primary, the same
+Newey-West lag-2 t on monthly blocks, the same 25 bps a side on realised
+turnover, and the same three frozen prompt hashes (`51ebe4fe...`, `0189e97e...`,
+`0e16923e...`) imported from `r2_trial`, never retyped.
+
+## Decision rule
+
+Adopt `R2-Qwen3` over `R2` **only if both**:
+
+1. `R2-Qwen3`'s OWN `read_minus_shuffled_control` beats `R2`'s own, on the SAME
+   blocks, at the same bar `R2` uses; **and**
+2. its **Lookahead Propensity** (lane X, item L3) is **not worse** than `R2`'s.
+
+A pass on (1) alone is reported as `CONDITIONAL_ON_LAP`, never `ADOPTED`. A
+bigger, differently-trained model reading the same anonymised digest may simply
+have memorised more pre-cutoff fact, and a win driven by that is not a win.
+
+## Is it even runnable — the number, before any token is spent
+
+From R2 PANEL-A's own usage block (5,098,607 prompt tokens and 216,677
+completion tokens over 15,433 calls in 5,854.2 s): mean prompt **330.4 tokens**,
+mean completion **14.0 tokens**. PANEL-B is 37,002 calls (arm + control).
+
+| reader | seconds per call | PANEL-B wall time |
+|---|---|---|
+| Qwen2.5-7B-Instruct-Q4_K_M (measured) | 0.379 | **3.9 hours** |
+| Qwen3-30B-A3B at the CONTENDED 5.6 tok/s prompt eval | 59.7 | **25.6 days** |
+
+The contended figures come from `HANDOFF_2026-09-10` §3 and were taken while a
+PyInstaller build saturated all 20 cores; that document calls them a lower
+bound. **The idle re-measurement is therefore not tidiness — it is the
+difference between an arm that can be run and one that cannot.** If idle
+prompt-eval does not improve by roughly an order of magnitude, `R2-Qwen3` is not
+a nightly arm at any `--n-cpu-moe`, and the honest outcome is to say so.
+
+## The protocol, frozen
+
+`scripts/night_l4_qwen3_measure.py` writes it in full to its receipt:
+idle precondition (the shared `scripts/gpu_guard` check, > 3 GB held by another
+process refuses) · sweep `--n-cpu-moe ∈ {48, 40, 32, 24}` via
+`AEGIS_LLAMA_N_CPU_MOE`, `stop()`/`start()` by PID between settings and never by
+image name, stopping once VRAM is within 500 MiB of the 6,866 MiB usable · at
+each setting VRAM, load seconds, **prompt-eval tok/s** (the decisive number) and
+generation tok/s on R2's own frozen prompts · then the refusal rate over **200**
+PANEL-B digests, a refusal being an unparseable reply, a declined answer, or
+`llm_language.refuse()` firing on a >10% non-Latin-script reply, compared
+against Qwen2.5-7B's rate on the SAME 200 prompts rather than against zero.
+
+**That job never starts or stops `llama-server`.** With the reader down it
+writes `PENDING_MODEL` plus this protocol and the file check, so the run that
+happens when the desktop shell brings the server up asks this question and not
+a similar one.

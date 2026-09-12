@@ -1501,6 +1501,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # spec's own 90-line fallback is in `backend/services/adwin.py`.
         "E4_adwin_gated_refit": _lazy("scripts.night_e4_adwin_refit",
                                       "E4_adwin_gated_refit"),
+        # L4 2026-09-13, chunk 9: the Qwen3-30B-A3B arm's IDLE measurement
+        # protocol. It NEVER starts or stops llama-server -- with the reader
+        # down it writes PENDING_MODEL, the file check (present, bytes, sha256)
+        # and the frozen sweep, so the run that happens when the shell brings
+        # the server up asks this question and not a similar one.
+        "L4_qwen3_measure": _lazy("scripts.night_l4_qwen3_measure", "L4_qwen3_measure"),
         # 2026-09-12, chunk 5b T3: the historical leg of lane B's first four
         # books. Three of the four cannot decide on the 2025-26 ticker bars
         # (their panels are CRSP-permno-keyed and CRSP ends 2024-12-31), so
