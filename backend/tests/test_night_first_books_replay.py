@@ -245,11 +245,39 @@ def test_the_job_is_not_in_the_timeboxed_or_resumable_sets():
     assert "B_first_books_replay" not in NFJ.RESUMABLE
 
 
+#: The four drafts this job's family covers, by name. It used to be
+#: `TRIAL-DRAFT-*.md` — every draft in the directory — which was true only while
+#: the four night-job books were the only drafts there. Chunk 10 added
+#: `TRIAL-DRAFT-L2-typed-events-v1.md`, whose family is `E1_TYPED_EVENTS_2026_09`
+#: because it shares no multiplicity budget with the books, and the glob turned
+#: red for the correct behaviour. A guard that cannot tell one family from
+#: another is a guard on the directory, not on the family.
+BOOK_DRAFTS = (
+    "TRIAL-DRAFT-A-si-low-turnover-high-v1.md",
+    "TRIAL-DRAFT-B-insider-cluster-length-v1.md",
+    "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0.md",
+    "TRIAL-DRAFT-D-abstention-book-v0.md",
+)
+
+
 def test_the_family_name_matches_the_pre_registrations():
     from pathlib import Path
     assert R.FAMILY == "NIGHT_JOB_BOOKS_2026_09"
+    trials = Path("docs/TRIALS")
+    for name in BOOK_DRAFTS:
+        f = trials / name
+        assert f.is_file(), f"{name} is missing — this family's own prereg"
+        assert R.FAMILY in f.read_text(encoding="utf-8"), name
+
+
+def test_every_draft_declares_some_family():
+    """The weaker claim that IS true of every draft: a multiplicity budget has
+    to be named, whichever one it is."""
+    from pathlib import Path
     for f in Path("docs/TRIALS").glob("TRIAL-DRAFT-*.md"):
-        assert R.FAMILY in f.read_text(encoding="utf-8"), f.name
+        text = f.read_text(encoding="utf-8")
+        assert "Family" in text or "family" in text, f.name
+        assert "Holm" in text, f"{f.name} names no export-time multiplicity rule"
 
 
 def test_the_bhar_window_starts_after_the_filing_month_closes():
