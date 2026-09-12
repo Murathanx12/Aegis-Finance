@@ -63,6 +63,13 @@ BASE_RATE = 0.5
 MODEL = "engine"
 MODEL_VERSION = "book_cadence_v1"
 
+#: Where `write_decision_forecasts` appends when the caller names no path.
+#: `None` means `belief_state.PREDICTIONS`, which is what production wants. It
+#: exists as a module constant so the test suite can redirect THIS writer --
+#: the one that fires from the Morning click without any caller naming a path --
+#: without redirecting every reader of the real ledger too.
+DEFAULT_LEDGER: Path | None = None
+
 
 def _returns(series: Sequence[tuple[str, float]]) -> dict[str, float]:
     out: dict[str, float] = {}
@@ -186,7 +193,7 @@ def write_decision_forecasts(books: Iterable[PaperBook], *,
     if not rows:
         return {"n_rows": 0, "reason": ("no book had both a decision and a twin "
                                         "this pass -- nothing to forecast about")}
-    append(rows, path)
+    append(rows, path if path is not None else DEFAULT_LEDGER)
     return {"n_rows": len(rows),
             "mechanism_id": MECHANISM_ID,
             "prediction_ids": [r.prediction_id for r in rows],

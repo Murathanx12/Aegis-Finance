@@ -195,7 +195,7 @@ def _book_cadence_receipt_dir(tmp_path_factory):
 
 
 @pytest.fixture(autouse=True)
-def _book_cadence_receipts_to_tmp(_book_cadence_receipt_dir, monkeypatch):
+def _book_cadence_receipts_to_tmp(_book_cadence_receipt_dir, request, monkeypatch):
     """Keep the suite's cadence passes out of the repo's receipt directory.
 
     FOUND THE SAME WAY AS THE TWO ABOVE, on 2026-09-12, by reading `git status`
@@ -224,14 +224,38 @@ def _book_cadence_receipts_to_tmp(_book_cadence_receipt_dir, monkeypatch):
     # do"; the moment one exists, a suite run MARKS A REAL FORWARD BOOK and
     # writes a NAV row nobody decided to write. Tests that pass their own `conn`
     # or `db_path` are untouched -- only the default is redirected.
+    #
+    # PER TEST, not per session, and the file name is derived from the node id
+    # rather than from `mktemp`: a session-scoped book database leaks BOOKS
+    # between tests, and a book created by one test is then marked by the next
+    # test that clicks the Morning -- which is how two forecast rows about a
+    # book that exists nowhere landed in the tracked `predictions.jsonl` on
+    # 2026-09-12. Deriving the name costs nothing; `mktemp` per test cost this
+    # suite six minutes the last time it was tried (see `_exec_ledger_dir`).
     try:
+        import hashlib
+
         from backend.services import paper_books
         _real_conn = paper_books._conn
-        db = _book_cadence_receipt_dir / "aegis_pi.db"
+        key = hashlib.sha1(str(request.node.nodeid).encode()).hexdigest()[:16]
+        db = _book_cadence_receipt_dir / f"aegis_pi_{key}.db"
         monkeypatch.setattr(
             paper_books, "_conn",
             lambda db_path=None: _real_conn(db_path if db_path is not None else db),
             raising=False)
+    except Exception:                                            # noqa: BLE001
+        pass
+    # AND the forecast writer's default destination. Belt and braces: a test
+    # that both creates a book AND clicks the Morning would otherwise append
+    # real-looking `PredictionRecord`s about a synthetic book to the tracked
+    # ledger, where nothing later could tell them from forecasts the machine
+    # actually made. Only THIS writer is redirected -- every test that reads the
+    # real ledger still reads it.
+    try:
+        from backend.services import book_forecasts
+        monkeypatch.setattr(book_forecasts, "DEFAULT_LEDGER",
+                            _book_cadence_receipt_dir / "predictions.jsonl",
+                            raising=False)
     except Exception:                                            # noqa: BLE001
         pass
     yield
