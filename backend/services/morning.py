@@ -354,9 +354,36 @@ def step_mark_books(ctx: dict) -> dict:
             out["paper_snapshot"] = {"ok": False, "error": _trunc(exc, 200)}
     else:
         out["paper_snapshot"] = {"ok": False, "skipped": "the caller asked for no network"}
-    if not out["n_lanes"]:
+    # LANE B4: the paper books, in the same step and the same process.
+    #
+    # The books are a SEPARATE namespace from the lanes (`book:<fingerprint>`)
+    # and a separate pass, but they share this step because they share the
+    # failure it exists to prevent: on the laptop no APScheduler job is
+    # registered, so if the morning click does not mark them nothing does, and
+    # an unmarked book has no NAV series for its forecast to be graded against.
+    try:
+        from backend.services.book_cadence import run_all, yfinance_fallback
+        report = run_all(price_fallback=(yfinance_fallback if ctx["do_network"]
+                                         else None))
+        out["books"] = {
+            "n_marked": report.get("n_marked"),
+            "n_decisions": report.get("n_decisions"),
+            "n_refused": report.get("n_refused"),
+            "receipts": [r.get("receipt_path")
+                         for r in (report.get("passes") or {}).values()
+                         if r.get("receipt_path")],
+            "refused": [r for p_ in (report.get("passes") or {}).values()
+                        for r in (p_.get("refused") or [])][:10],
+        }
+    except Exception as exc:                                       # noqa: BLE001
+        # NOT fatal to the step: the lanes were marked and saying so is more
+        # useful than reporting the whole morning as broken. The reason travels.
+        out["books"] = {"error": _trunc(exc, 300)}
+
+    if not out["n_lanes"] and not (out.get("books") or {}).get("n_marked"):
         return _row("mark_books", "nothing_to_do",
-                    reason="no reference lane is configured in this checkout", **out)
+                    reason=("no reference lane is configured in this checkout "
+                            "and no paper book was marked"), **out)
     return _row("mark_books", "ok", **out)
 
 
@@ -539,6 +566,11 @@ def nav_augmented_price_fetch(tickers: list[str], start: str, end: str):
     except Exception as exc:                                       # noqa: BLE001
         logger.warning("morning: lane NAV read failed: %s", _trunc(exc, 120))
         return frame
+    try:
+        from backend.services.paper_books import nav_series as book_nav_series
+        series = {**series, **book_nav_series()}
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("morning: book NAV read failed: %s", _trunc(exc, 120))
     for lane, rows in series.items():
         if lane in getattr(frame, "columns", []):
             continue
@@ -551,8 +583,14 @@ def nav_augmented_price_fetch(tickers: list[str], start: str, end: str):
 
 
 def _looks_like_lane(name: str) -> bool:
-    """A lane id, not a ticker. Lowercase or hyphenated; tickers are neither."""
-    return name != name.upper() or "-" in name
+    """A lane or book id, not a ticker.
+
+    Lowercase or hyphenated; tickers are neither. A book id (`book:<16 hex>`)
+    is lowercase and therefore already excluded, but it is named explicitly
+    because "it happens to be lowercase" is not a rule anyone can rely on.
+    """
+    from backend.services.paper_books import is_book_id
+    return is_book_id(name) or name != name.upper() or "-" in name
 
 
 def step_coverage(ctx: dict) -> dict:

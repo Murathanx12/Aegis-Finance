@@ -79,6 +79,25 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
     "pi_prediction_markets",
 })
 
+#: Jobs the DEPLOYMENT registers only when asked for by name.
+#:
+#: `pi_book_cadence` (lane B4) marks paper books from the local bars. On the
+#: laptop that is the point of the job; on Railway the bars parquet is not on
+#: the image and the books live on the operator's machine, so it stays off
+#: unless `AEGIS_BOOK_CADENCE=1`. It is declared here rather than simply added,
+#: because the job canary compares the live set against a DECLARATION and a job
+#: that appears conditionally without being declared conditionally reports as
+#: `unexpected` forever -- a permanent red line beside real ones.
+OPTIONAL_JOB_IDS: frozenset[str] = frozenset({"pi_book_cadence"})
+
+
+def deployment_job_ids() -> frozenset[str]:
+    """What `setup_scheduler` will actually have registered, flags included."""
+    from backend.services.book_cadence import enabled_on_deployment
+    extra = OPTIONAL_JOB_IDS if enabled_on_deployment() else frozenset()
+    return EXPECTED_JOB_IDS | extra
+
+
 #: THE DESKTOP JOB SET (roadmap O5/B5, 2026-09-11).
 #:
 #: Desktop mode registers NOTHING by default -- twelve jobs, two of them paid
@@ -89,7 +108,11 @@ EXPECTED_JOB_IDS: frozenset[str] = frozenset({
 #: laptop"). So exactly one job comes back: the resolver. It spends nothing but
 #: a price fetch, it writes only outcomes onto records that already exist, and
 #: it is idempotent -- a run with nothing due writes a receipt saying so.
-DESKTOP_JOB_IDS: frozenset[str] = frozenset({"pi_ledger_resolve"})
+#: The cadence pass joins it for the same reason (B4): a book that is never
+#: marked has no NAV series, and a forecast about a book with no NAV series can
+#: never be graded -- the same shape of dead end, one object further out.
+DESKTOP_JOB_IDS: frozenset[str] = frozenset({"pi_ledger_resolve",
+                                             "pi_book_cadence"})
 
 #: Which declaration `scheduler_jobs_health()` compares against. Set by whichever
 #: setup function actually ran, because a canary that compares the desktop's one
@@ -130,6 +153,14 @@ def setup_desktop_scheduler():
         replace_existing=True,
         misfire_grace_time=3600,
     )
+    _scheduler.add_job(
+        _book_cadence,
+        CronTrigger(hour="16,17", minute=45, timezone="US/Eastern"),
+        id="pi_book_cadence",
+        name="Paper-book cadence pass (desktop)",
+        replace_existing=True,
+        misfire_grace_time=3600,
+    )
     _scheduler.start()
     _expected_ids = DESKTOP_JOB_IDS
     logger.info("desktop scheduler: %d job(s) registered (%s)",
@@ -143,7 +174,7 @@ def setup_scheduler():
     Uses SQLAlchemyJobStore backed by the same data/ directory as
     the PI database, so scheduled jobs survive Railway redeploys.
     """
-    global _scheduler
+    global _scheduler, _expected_ids
 
     try:
         from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -368,7 +399,22 @@ def setup_scheduler():
         misfire_grace_time=3600,
     )
 
+    from backend.services.book_cadence import enabled_on_deployment
+
+    if enabled_on_deployment():
+        # OFF by default on Railway: the bars parquet is not on the image and
+        # the books live on the operator's machine. Declared in
+        # OPTIONAL_JOB_IDS so the canary expects exactly what was registered.
+        _scheduler.add_job(
+            _book_cadence,
+            CronTrigger(hour="16,17", minute=45, timezone="US/Eastern"),
+            id="pi_book_cadence",
+            name="Paper-book cadence pass",
+            replace_existing=True,
+            misfire_grace_time=3600,
+        )
     _scheduler.start()
+    _expected_ids = deployment_job_ids()
     # Log the SET, not the count: "5 jobs" is what the process logged on the
     # night a job silently vanished from the shared jobstore minutes later.
     registered = sorted(j.id for j in _scheduler.get_jobs())
@@ -1325,6 +1371,32 @@ async def _ledger_resolve():
             )
     except Exception as e:
         logger.error("Ledger resolve failed: %s", e, exc_info=True)
+
+
+async def _book_cadence():
+    """Lane B4: mark every holding paper book, let the due ones decide.
+
+    Writes a receipt per cadence bucket INCLUDING the ones with nothing to do,
+    and never raises into the scheduler: a pass that fails must page through the
+    receipt and the log, not by taking the loop down.
+    """
+    import asyncio
+
+    from backend.services.book_cadence import run_all, yfinance_fallback
+
+    try:
+        report = await asyncio.to_thread(run_all,
+                                         price_fallback=yfinance_fallback)
+        logger.info("book cadence: marked=%s decisions=%s refused=%s",
+                    report.get("n_marked"), report.get("n_decisions"),
+                    report.get("n_refused"))
+        for cad, rep in (report.get("passes") or {}).items():
+            if rep.get("refused"):
+                logger.warning("book cadence %s: %d book(s) refused: %s", cad,
+                               len(rep["refused"]),
+                               [r.get("reason", "")[:120] for r in rep["refused"][:3]])
+    except Exception as e:                                          # noqa: BLE001
+        logger.error("Book cadence pass failed: %s", e, exc_info=True)
 
 
 @receipted()

@@ -60,9 +60,46 @@ def test_every_job_setup_registers_is_declared_and_vice_versa():
     src = inspect.getsource(sched_mod.setup_scheduler)
     registered = set(re.findall(r'\n\s*id="([^"]+)"', src))
     assert registered, "no add_job ids found — the scraper needs updating"
-    assert registered == set(sched_mod.EXPECTED_JOB_IDS), (
+    # A job may be registered CONDITIONALLY (2026-09-12: `pi_book_cadence`,
+    # lane B4, which the deployment runs only under AEGIS_BOOK_CADENCE=1).
+    # Those are declared in OPTIONAL_JOB_IDS and `deployment_job_ids()` decides
+    # which set the canary compares against at run time, so an optional job is
+    # neither "missing" when it is off nor "unexpected" when it is on. What this
+    # test still pins is that every id in the source belongs to exactly one of
+    # the two declarations — an id in neither is the drift the canary exists for.
+    assert registered - sched_mod.OPTIONAL_JOB_IDS == set(sched_mod.EXPECTED_JOB_IDS), (
         f"declared {sorted(sched_mod.EXPECTED_JOB_IDS)} != registered "
-        f"{sorted(registered)}")
+        f"{sorted(registered - sched_mod.OPTIONAL_JOB_IDS)}")
+    assert sched_mod.OPTIONAL_JOB_IDS <= registered, (
+        f"declared optional {sorted(sched_mod.OPTIONAL_JOB_IDS)} but "
+        f"setup_scheduler registers {sorted(registered)}")
+    assert not (set(sched_mod.EXPECTED_JOB_IDS) & sched_mod.OPTIONAL_JOB_IDS), (
+        "a job cannot be both always-on and optional")
+
+
+def test_the_optional_job_is_expected_exactly_when_its_flag_is_on(monkeypatch):
+    """`deployment_job_ids()` follows the flag, both ways.
+
+    A conditional job that is always expected reads as permanently missing on
+    the deployments that do not run it, and a conditional job that is never
+    expected reads as permanently unexpected on the ones that do. Both turn the
+    canary into a red line readers learn to skim.
+    """
+    monkeypatch.delenv("AEGIS_BOOK_CADENCE", raising=False)
+    assert sched_mod.deployment_job_ids() == set(sched_mod.EXPECTED_JOB_IDS)
+    monkeypatch.setenv("AEGIS_BOOK_CADENCE", "1")
+    assert sched_mod.deployment_job_ids() == (
+        set(sched_mod.EXPECTED_JOB_IDS) | sched_mod.OPTIONAL_JOB_IDS)
+
+
+def test_the_desktop_set_carries_the_cadence_pass():
+    """B4: a book that is never marked has no NAV series, and a forecast about
+    a book with no NAV series can never be graded."""
+    import inspect
+
+    assert "pi_book_cadence" in sched_mod.DESKTOP_JOB_IDS
+    assert 'id="pi_book_cadence"' in inspect.getsource(
+        sched_mod.setup_desktop_scheduler)
 
 
 def test_the_job_that_vanished_is_in_the_expected_set():
