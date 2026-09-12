@@ -1,0 +1,47 @@
+{
+  "book": "si_low_turnover_high_v1",
+  "book_id": "book:1934ec97aa4b1620",
+  "prereg": "TRIAL-DRAFT-A-si-low-turnover-high-v1 (UNSIGNED)",
+  "primary_metric": "net_monthly_excess_vs_random_twin",
+  "confirm_slice": "2011-2024",
+  "ran": true,
+  "result": {
+    "label": "si_low_turnover_high_v1",
+    "twin": "random_universe",
+    "k": 50,
+    "seed": 6452,
+    "twin_turnover_matched": true,
+    "n_blocks": 35,
+    "median_names_selected": 50,
+    "mean_book_net_monthly": 0.011125,
+    "mean_twin_net_monthly": 0.011902,
+    "mean_excess_net_monthly": -0.000777,
+    "nw_lag2_t": -0.1454,
+    "p_two_sided": 0.884374,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_bps_per_side": 25.0
+  },
+  "by_era": {
+    "1990-1999": {
+      "n_blocks": 0,
+      "verdict": "too few blocks to report a mean"
+    },
+    "2000-2009": {
+      "n_blocks": 0,
+      "verdict": "too few blocks to report a mean"
+    },
+    "2010-2016": {
+      "n_blocks": 0,
+      "verdict": "too few blocks to report a mean"
+    },
+    "2017-2024": {
+      "n_blocks": 35,
+      "mean_excess_net_monthly": -0.000777,
+      "nw_lag2_t": -0.1454
+    }
+  },
+  "declared_mde_monthly": 0.00685,
+  "declared_effect_size": 0.01,
+  "next_test": "re-measure the SAME double sort at a $10M dollar-volume floor. TRIAL-H5's lesson is that a corner-dependent control must be re-measured at every corner, and this book's decision rule closes it as FAILED_VARIANT if the $10M cell fails while the $3M cell passes.",
+  "smoke": true
+}

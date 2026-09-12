@@ -1474,6 +1474,13 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # cheapest standing check that the text ever starts carrying something.
         "N3_frozen_embedding_head": _lazy("scripts.night_n3_frozen_embedding_head",
                                           "N3_frozen_embedding_head"),
+        # 2026-09-12, chunk 5b T3: the historical leg of lane B's first four
+        # books. Three of the four cannot decide on the 2025-26 ticker bars
+        # (their panels are CRSP-permno-keyed and CRSP ends 2024-12-31), so
+        # this is where their evidence comes from. ONE job over FOUR primary
+        # tests, so the family Holm runs inside it.
+        "B_first_books_replay": _lazy("scripts.night_first_books_replay",
+                                      "B_first_books_replay"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
@@ -1519,7 +1526,7 @@ def main(argv=None) -> int:
         payload = fn(smoke=a.smoke)
     elif a.job in ("RW1_random_windows", "RW2_event_windows"):
         payload = fn(seed=a.seed, smoke=a.smoke)
-    elif a.job == "N2_learner_v3":
+    elif a.job in ("N2_learner_v3", "B_first_books_replay"):
         payload = fn(smoke=a.smoke)
     else:
         payload = fn()

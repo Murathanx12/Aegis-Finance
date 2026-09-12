@@ -1,0 +1,9 @@
+{
+  "book": "abstention_book_v0",
+  "book_id": "book:b109c8861c43e3c6",
+  "prereg": "TRIAL-DRAFT-D-abstention-book-v0 (UNSIGNED)",
+  "ran": false,
+  "refused": "Book D has NO HISTORICAL LEG, by registration rather than by accident. Its `slice_purpose` is CONFIRM forward-only, its `slice_period` is 2026-10-01..2028-09-30, and its own decision rule forbids reading the risk-coverage curve before 24 monthly blocks have accrued. Replaying it on CRSP would be exactly the backfilled forward evidence the three licences prohibit.",
+  "primary_metric": "terminal_wealth_at_equal_drawdown_vs_always_invested_twin",
+  "next_test": "the first cadence pass after seeding writes its first NAV row; the twenty-fourth monthly block is the earliest date any number from it may be read."
+}
