@@ -451,6 +451,27 @@ E1 two-model run (120-symbol smokes; the 700-symbol run is GBM-only). Process de
 itself: `$!` in Git Bash is the shell's PID, so `Stop-Process` on it kills nothing; a killed re-run left
 `running` stubs over completed receipts (recovered by re-running).
 
+**Chunk 10 landed (validated 2026-09-13 morning):** `c0d3936` the vocabulary as a hashed table
+generated from the spec's own markdown (40 rows: 39 + `no_event`; `VOCABULARY_HASH` stable across key
+order, moves on a definition edit; 18 priors ambiguous); `f8d69a9` the extraction contract — the spec's
+prompt byte-equal, pinned centrally through `llm_language.pin` (an AST test: the module never pins
+itself), a schema that refuses (`jsonschema` is NOT installed — the hand validator is the live path and
+`validator_in_use()` is in every receipt), 23 golden rows round-tripping every field; `1f7319f` the night
+job `L2_typed_events` (RESUMABLE cursor over corpus rows), `PENDING_MODEL` with **6,020 eligible rows
+frozen** (`inputs_sha256 0d27f002…`), projected 4.9-10 h of reader time — **and nine corpus rows a
+`splitlines()` reader was silently losing on every E1 append** (nine Benzinga bodies carry U+2028, which
+`json.dumps` does not escape and `str.splitlines` splits on; `jsonl_io.py` reads by `\n` only);
+`cd4e4b6` a PIT defect caught before any call: the prompt's date was `first_seen_utc`, which would have
+dated all 3,799 backfill articles to the download day; `2d9e6a4` the three consumers (E1 names
+`event_source: typed_l2 | keyword_proxy`; X3's grader joins on `event_type`; **X2's mapping of C1's
+kinds covers 1,359 of 6,676 rows (20.4%) — `ANALYST`, C1's largest kind at 1,218, has no vocabulary
+id**, a gap in the 40-row table now recorded); `cb04b87`…`de4751d` the UNSIGNED prereg (κ ≥ 0.61 on
+`event_type`, Landis-Koch; **the linter refused the design on power** — 2,967 events on the 13-month
+panel are 55 independent observations, smallest resolvable effect 4.5 pp; registered as a SCREEN; the
+2015 backfill takes the floor to 1.5 pp); `b7cbd7a` a guard on the wrong thing (a test globbed every
+draft for one family). Suite → 9,358 (my run). Owed: nothing has been typed yet; `cross_sectional_rho
+0.2` is assumed, never measured; `EST_OUT_TOKENS_PER_ROW 120` is an estimate.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
