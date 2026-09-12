@@ -494,8 +494,26 @@ def apply_calibration(raw_upside: float, cohort: dict | None) -> dict:
 EXTRAPOLATION_WIDENING = 1.5
 
 
+def upside_tercile(raw_upside: float | None, cohort: dict | None) -> tuple[str | None, dict]:
+    """`(tercile name, its error quantiles)` for this name inside its bucket.
+
+    `(None, {})` whenever the fit did not condition -- no cuts, no conditioned
+    block, or a raw upside that is not a number. The caller then uses the
+    pooled quantiles, which is what every band did before 2026-09-12.
+    """
+    cuts = (cohort or {}).get("upside_tercile_cuts") or []
+    by = (cohort or {}).get("error_quantiles_by_upside_tercile") or {}
+    x = _finite(raw_upside)
+    if x is None or len(cuts) != 2 or not by:
+        return None, {}
+    name = "low" if x <= cuts[0] else ("mid" if x <= cuts[1] else "high")
+    q = by.get(name) or {}
+    return (name, q) if q else (None, {})
+
+
 def interval(*, current_price: float, point_return: float,
-             cohort: dict | None, widen: bool = False) -> dict:
+             cohort: dict | None, widen: bool = False,
+             raw_upside: float | None = None) -> dict:
     """p10/p50/p90 from the bucket's OWN empirical error quantiles.
 
     Conformal in spirit: the band is the historical distribution of
@@ -508,7 +526,14 @@ def interval(*, current_price: float, point_return: float,
     an em dash. A made-up interval is worse than no interval: it reads as
     measured uncertainty.
     """
-    q = (cohort or {}).get("error_quantiles") or {}
+    # CONDITION ON THE UPSIDE TERCILE FIRST (2026-09-12). Error grows with
+    # implied upside (Asquith-Mikhail-Au), so a name at the top of its bucket's
+    # upside range has a WIDER error distribution than the bucket's average --
+    # which is exactly the name whose pooled band came out above spot and had
+    # to be withheld. The pooled quantiles remain the fallback, and the withhold
+    # below remains the last line of defence for whatever this still gets wrong.
+    tercile, tq = upside_tercile(raw_upside, cohort)
+    q = tq or ((cohort or {}).get("error_quantiles") or {})
     lo, hi = _finite(q.get("p10")), _finite(q.get("p90"))
     p50 = current_price * (1.0 + point_return)
     if lo is None or hi is None:
@@ -526,8 +551,14 @@ def interval(*, current_price: float, point_return: float,
     out = {"p10": round(max(0.0, current_price * (1.0 + point_return + lo_w)), 4),
            "p50": round(p50, 4),
            "p90": round(current_price * (1.0 + point_return + hi_w), 4),
-           "basis": f"empirical_error_quantiles (n={q.get('n')})",
-           "error_p10": lo_w, "error_p90": hi_w}
+           "basis": (f"empirical_error_quantiles (n={q.get('n')})"
+                     + (f" | conditioned on the {tercile} raw-upside tercile of this bucket"
+                        if tercile else " | POOLED over the bucket's whole upside range")
+                     + (f" [{(cohort or {}).get('tercile_basis')}]"
+                        if tercile and (cohort or {}).get("tercile_basis") else "")),
+           "error_p10": lo_w, "error_p90": hi_w,
+           "upside_tercile": tercile,
+           "upside_tercile_cuts": (cohort or {}).get("upside_tercile_cuts") or None}
     if widen:
         out["basis"] += f" x{EXTRAPOLATION_WIDENING} (beyond the fitted support)"
         out["widened"] = True
@@ -543,10 +574,16 @@ def interval(*, current_price: float, point_return: float,
     # and the row says why. Withholding is not a clip: p50 stands.
     if out["p10"] > current_price:
         out.update({"p10": None, "p90": None, "band_withheld": True,
-                    "basis": (f"withheld: the pooled band's p10 "
+                    "basis": (f"withheld: the band's p10 "
                               f"({current_price * (1.0 + point_return + lo_w):.2f}) sits above "
-                              f"spot ({current_price:.2f}); error quantiles are not yet conditioned "
-                              f"on the upside tercile, so this band would overstate certainty")})
+                              f"spot ({current_price:.2f}), which is a claim the error "
+                              f"distribution did not make"
+                              + (f" even conditioned on the {tercile} upside tercile"
+                                 if tercile else
+                                 "; these quantiles are POOLED over the bucket's whole "
+                                 "upside range, which is the 2026-09-11 defect -- refit "
+                                 "the calibration so this bucket carries "
+                                 "`error_quantiles_by_upside_tercile`"))})
     return out
 
 
@@ -639,8 +676,11 @@ def compute_target(*, ticker: str, current_price: float,
             "uncalibrated_point": round(point, 4),
             "uncalibrated_return_pct": round(100.0 * raw_return, 3),
             **{k: v for k, v in cal.items() if k != "calibrated_upside"},
+            # the tercile is chosen on the RAW upside, which is what the fit
+            # sliced on: the calibrated return is already a function of it
             **interval(current_price=px, point_return=calibrated_return, cohort=cohort,
-                       widen=cal["calibration"].startswith("isotonic_clamped")),
+                       widen=cal["calibration"].startswith("isotonic_clamped"),
+                       raw_upside=raw_return),
         },
         "legs": legs,
         "weights": weights,
@@ -783,6 +823,41 @@ def resolve_cohort(calibration: dict | None, sector: str | None,
     return None, exact, "none"
 
 
+def _merge_terciles(pool: list[dict]) -> dict:
+    """The conditioned block for a POOLED cohort, or empty keys.
+
+    NVDA and MU resolve to `Technology|mega|vol_high`, which the monthly-vol
+    fit never produces (CRSP monthly sampling rarely puts a mega-cap over the
+    45% line that daily sampling clears), so they arrive here through
+    `sector_cap` pooling. Leaving the pooled path unconditioned meant the two
+    names the whole exercise was about kept the withheld band.
+    """
+    cuts = [b.get("upside_tercile_cuts") or [] for b in pool]
+    blocks = [b.get("error_quantiles_by_upside_tercile") or {} for b in pool]
+    if not pool or any(len(c) != 2 for c in cuts):
+        return {"upside_tercile_cuts": [], "error_quantiles_by_upside_tercile": {}}
+    if any(not all(k in blk for k in ("low", "mid", "high")) for blk in blocks):
+        return {"upside_tercile_cuts": [], "error_quantiles_by_upside_tercile": {}}
+    w = [int(b["n_obs"]) for b in pool]
+    tot = sum(w) or 1
+    merged_cuts = [round(sum(c[i] * n for c, n in zip(cuts, w)) / tot, 6) for i in (0, 1)]
+    out: dict[str, dict] = {}
+    for name in ("low", "mid", "high"):
+        los = [_finite(blk[name].get("p10")) for blk in blocks]
+        his = [_finite(blk[name].get("p90")) for blk in blocks]
+        los = [v for v in los if v is not None]
+        his = [v for v in his if v is not None]
+        if not los or not his:
+            return {"upside_tercile_cuts": [], "error_quantiles_by_upside_tercile": {}}
+        out[name] = {"p10": min(los), "p90": max(his),
+                     "n": sum(int(blk[name].get("n") or 0) for blk in blocks),
+                     "source": f"widest_of_{len(pool)}_pooled_buckets"}
+    return {"upside_tercile_cuts": merged_cuts,
+            "error_quantiles_by_upside_tercile": out,
+            "tercile_basis": (f"widest p10/p90 of {len(pool)} pooled buckets, cut at their "
+                              f"observation-weighted mean upsides {merged_cuts}")}
+
+
 def _merge_buckets(pool: list[dict]) -> dict | None:
     """Pool several fitted buckets into one, weighting by their observation counts.
 
@@ -808,6 +883,17 @@ def _merge_buckets(pool: list[dict]) -> dict | None:
             "hit_rate_12m_pct": _w("hit_rate_12m_pct"), "hit_rate_anytime_pct": None,
             "error_quantiles": ({"p10": min(los), "p90": max(his), "n": n}
                                 if los and his else {}),
+            # THE TERCILES ARE MERGED THE WAY THE POOLED QUANTILES ARE, and for
+            # the same reason: a coarser bucket is a less certain one, so the
+            # merged tercile takes the WIDEST p10/p90 of the pool. The two cut
+            # points are the observation-weighted mean of the constituents',
+            # which IS an approximation -- the buckets cut at different upsides
+            # -- so the payload says `tercile_basis` and the band's basis string
+            # repeats it. Every number here was fitted on real rows; nothing is
+            # interpolated into existence. `{}` unless every pooled bucket
+            # carries the block, because a "widest" taken over a subset is a
+            # width that depends on which buckets happened to be fitted.
+            **_merge_terciles(pool),
             "isotonic": [],
             "leg_mae_pct": {"consensus_debiased": _w("mae_pct")},
             "pooled_from": len(pool)}

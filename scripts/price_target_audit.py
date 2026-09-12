@@ -166,6 +166,8 @@ def audit_one(ticker: str, *, analysis: dict | None = None) -> dict:
         "target_uncalibrated_return_pct": t12.get("uncalibrated_return_pct"),
         "target_p10": t12.get("p10"), "target_p90": t12.get("p90"),
         "interval_basis": t12.get("basis"),
+        "band_withheld": t12.get("band_withheld"),
+        "upside_tercile": t12.get("upside_tercile"),
         "weights": pt.get("weights"), "weights_source": pt.get("weights_source"),
         "calibration": t12.get("calibration"),
         "bucket": pt.get("bucket"),
@@ -249,6 +251,10 @@ def main(argv=None) -> int:
                 "them. `dominant` names the step that accounts for the largest "
                 "absolute share of the difference.")}
     if args.out:
+        # 2026-09-12: a fifteen-minute audit died at the last line because the
+        # receipt directory did not exist yet. The rows were printed and then
+        # thrown away.
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
         Path(args.out).write_text(json.dumps(blob, indent=1, default=str), encoding="utf-8")
         print(f"\nwrote {args.out}")
     return 0

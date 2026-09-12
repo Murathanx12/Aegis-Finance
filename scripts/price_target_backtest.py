@@ -338,6 +338,70 @@ def _quantiles(ours, consensus_signed) -> dict:
                        "than the arm's own history would justify")}
 
 
+#: a tercile needs its own observations before it may narrow or widen a band.
+#: Below this the bucket keeps the pooled quantiles and says so -- three thin
+#: terciles are three noisy bands, not a conditioned one.
+MIN_TERCILE_OBS = 40
+
+
+def tercile_cuts(imp) -> list[float]:
+    """The two raw-upside cut points for a bucket, as the LIVE path will read
+    them. Computed on the panel's implied upside so the fit and the service
+    agree on which tercile a name is in."""
+    import numpy as np
+
+    a = np.asarray(imp, dtype=float)
+    a = a[np.isfinite(a)]
+    if a.size < 3:
+        return []
+    lo, hi = (float(x) for x in np.percentile(a, [100.0 / 3.0, 200.0 / 3.0]))
+    return [] if not (lo < hi) else [round(lo, 6), round(hi, 6)]
+
+
+def _tercile_of(x: float, cuts: list[float]) -> str:
+    return "low" if x <= cuts[0] else ("mid" if x <= cuts[1] else "high")
+
+
+def conditioned_quantiles(ours_pair, imp, err, cuts: list[float]) -> dict:
+    """`error_quantiles` per raw-upside tercile within one bucket.
+
+    THE DEFECT THIS ANSWERS. Error quantiles pooled over a bucket give a name
+    at the TOP of the upside range a band centred on the bucket's typical name.
+    On 2026-09-11 that printed p10 $234.93 on a $218.36 NVDA -- a band wholly
+    above spot, which is a claim the data did not make -- and the service
+    withheld it. Asquith-Mikhail-Au: error grows with implied upside, so the
+    conditioning is on raw upside and the top tercile should come back WIDER.
+
+    `{}` when the cuts are absent or any tercile is thinner than
+    `MIN_TERCILE_OBS`. The pooled quantiles then stand, unchanged, and the
+    withhold rule is still the last line of defence.
+    """
+    import numpy as np
+
+    if not cuts:
+        return {}
+    imp = np.asarray(imp, dtype=float)
+    out: dict[str, dict] = {}
+    o_err, o_imp = ours_pair if ours_pair is not None else (None, None)
+    for name, mask in (("low", imp <= cuts[0]),
+                       ("mid", (imp > cuts[0]) & (imp <= cuts[1])),
+                       ("high", imp > cuts[1])):
+        if int(mask.sum()) < MIN_TERCILE_OBS:
+            return {}
+        sub_ours = None
+        if o_err is not None:
+            m2 = ((o_imp <= cuts[0]) if name == "low" else
+                  ((o_imp > cuts[0]) & (o_imp <= cuts[1])) if name == "mid" else
+                  (o_imp > cuts[1]))
+            if int(m2.sum()) >= MIN_TERCILE_OBS:
+                sub_ours = o_err[m2]
+        q = _quantiles(sub_ours, -err[mask])
+        q["raw_upside_lo"] = (None if name == "low" else cuts[0 if name == "mid" else 1])
+        q["raw_upside_hi"] = (cuts[0] if name == "low" else (cuts[1] if name == "mid" else None))
+        out[name] = q
+    return out
+
+
 def fit_calibration(df, panel) -> dict:
     """The artefact the live service reads. Fit on the FULL sample, on purpose.
 
@@ -353,13 +417,20 @@ def fit_calibration(df, panel) -> dict:
     # error of the prediction it is drawn around: using the raw consensus's error
     # width for a DE-BIASED point double-counts the bias we just removed, and
     # produced a p10 ABOVE spot on NVDA in the first live audit.
+    # (error, implied) per bucket -- the implied is kept so the SAME rows can be
+    # split by raw-upside tercile below. Dropping it was why the band could only
+    # ever be pooled.
     ours_err: dict = {}
+    ours_pairs: dict = {}
     if df is not None and len(df):
         for key, gg in df.groupby("bucket", sort=False):
             e = (gg["ours"] - gg["realized"]).to_numpy(dtype=float)
-            e = e[np.isfinite(e)]
-            if e.size:
-                ours_err[str(key)] = e
+            i = gg["implied"].to_numpy(dtype=float)
+            ok = np.isfinite(e) & np.isfinite(i)
+            if ok.any():
+                ours_err[str(key)] = e[ok]
+                # `-e` is `realised - predicted`, the sign `_quantiles` expects
+                ours_pairs[str(key)] = (e[ok], i[ok])
 
     buckets: dict[str, dict] = {}
     for key, g in panel.groupby("bucket", sort=True):
@@ -397,6 +468,12 @@ def fit_calibration(df, panel) -> dict:
             # reach the outcome. The de-biased arm's own errors where the
             # walk-forward has them; the raw consensus's only as a named fallback.
             "error_quantiles": _quantiles(ours_err.get(key), -err),
+            # THE BAND, CONDITIONED. Pooled quantiles hand a high-upside name the
+            # typical name's band; these are the same errors sliced by the raw
+            # upside they were made at. `{}` when any tercile is too thin.
+            "upside_tercile_cuts": tercile_cuts(imp),
+            "error_quantiles_by_upside_tercile": conditioned_quantiles(
+                ours_pairs.get(key), imp, err, tercile_cuts(imp)),
             "error_quantiles_consensus": {"p10": round(float(np.percentile(-err, 10)), 6),
                                           "p50": round(float(np.percentile(-err, 50)), 6),
                                           "p90": round(float(np.percentile(-err, 90)), 6),

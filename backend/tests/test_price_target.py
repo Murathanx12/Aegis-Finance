@@ -397,3 +397,170 @@ def test_the_analyzer_clips_nothing_that_is_a_return():
     for expr in clipped:
         assert ("sigma" in expr or "crash" in expr or "vol" in expr), (
             f"a clip on {expr!r} -- returns are calibrated in this codebase, not capped")
+
+
+# ===========================================================================
+# THE BAND, CONDITIONED ON THE UPSIDE TERCILE (2026-09-12, chunk 3c T2)
+# ===========================================================================
+#
+# Pooled error quantiles hand a name at the TOP of its bucket's upside range a
+# band centred on the bucket's typical name, so the whole band can sit above
+# spot -- NVDA, p10 $234.93 on a $218.36 stock -- and be withheld. Asquith,
+# Mikhail and Au: error grows with implied upside. So slice the SAME errors by
+# the raw upside they were made at.
+
+
+def _tercile_cohort(*, low: tuple[float, float], mid: tuple[float, float],
+                    high: tuple[float, float], cuts=(0.10, 0.35), n: int = 500) -> dict:
+    return {
+        "n_obs": 3 * n,
+        "error_quantiles": {"p10": -0.05, "p90": 0.60, "n": 3 * n},
+        "upside_tercile_cuts": list(cuts),
+        "error_quantiles_by_upside_tercile": {
+            "low": {"p10": low[0], "p90": low[1], "n": n},
+            "mid": {"p10": mid[0], "p90": mid[1], "n": n},
+            "high": {"p10": high[0], "p90": high[1], "n": n},
+        },
+    }
+
+
+def test_a_bucket_whose_top_tercile_errs_more_gives_a_high_upside_name_a_wider_band():
+    cohort = _tercile_cohort(low=(-0.10, 0.10), mid=(-0.25, 0.25), high=(-0.80, 0.80))
+    quiet = PT.interval(current_price=100.0, point_return=0.05, cohort=cohort, raw_upside=0.05)
+    loud = PT.interval(current_price=100.0, point_return=0.05, cohort=cohort, raw_upside=0.90)
+    assert quiet["upside_tercile"] == "low" and loud["upside_tercile"] == "high"
+    assert (loud["p90"] - loud["p10"]) > 3 * (quiet["p90"] - quiet["p10"])
+    assert "conditioned on the high raw-upside tercile" in loud["basis"]
+    assert "conditioned on the low raw-upside tercile" in quiet["basis"]
+    assert loud["upside_tercile_cuts"] == [0.10, 0.35]
+
+
+def test_the_middle_tercile_is_picked_at_the_cut_points():
+    cohort = _tercile_cohort(low=(-0.1, 0.1), mid=(-0.2, 0.2), high=(-0.3, 0.3))
+    at_lo = PT.interval(current_price=100.0, point_return=0.0, cohort=cohort, raw_upside=0.10)
+    just_over = PT.interval(current_price=100.0, point_return=0.0, cohort=cohort, raw_upside=0.1001)
+    at_hi = PT.interval(current_price=100.0, point_return=0.0, cohort=cohort, raw_upside=0.35)
+    assert at_lo["upside_tercile"] == "low"          # the cut belongs to the lower side
+    assert just_over["upside_tercile"] == "mid"
+    assert at_hi["upside_tercile"] == "mid"
+
+
+def test_an_unconditioned_bucket_still_uses_the_pooled_quantiles_and_says_POOLED():
+    """The fallback is the behaviour every band had before today. It must be
+    visible in the basis, not silent."""
+    cohort = {"error_quantiles": {"p10": -0.70, "p90": 0.60, "n": 500}}
+    band = PT.interval(current_price=100.0, point_return=0.10, cohort=cohort, raw_upside=2.0)
+    assert band["upside_tercile"] is None
+    assert "POOLED over the bucket's whole upside range" in band["basis"]
+    assert band["p10"] is not None
+
+
+def test_a_raw_upside_that_is_not_a_number_falls_back_rather_than_guessing():
+    cohort = _tercile_cohort(low=(-0.1, 0.1), mid=(-0.2, 0.2), high=(-0.3, 0.3))
+    for bad in (None, float("nan"), float("inf")):
+        assert PT.upside_tercile(bad, cohort) == (None, {})
+    assert PT.upside_tercile(0.9, {"error_quantiles": {"p10": -1, "p90": 1}}) == (None, {})
+
+
+def test_the_withhold_still_fires_on_a_conditioned_band_that_sits_above_spot():
+    """The conditioning is a better prior, not a guarantee. The last line of
+    defence stays a last line of defence."""
+    cohort = _tercile_cohort(low=(-0.9, 0.2), mid=(-0.9, 0.3), high=(0.05, 0.60))
+    band = PT.interval(current_price=218.36, point_return=0.50, cohort=cohort, raw_upside=0.90)
+    assert band["upside_tercile"] == "high"
+    assert band["p10"] is None and band["p90"] is None and band["band_withheld"] is True
+    assert "high upside tercile" in band["basis"]
+    assert band["p50"] == round(218.36 * 1.5, 4)
+
+
+def _bucket(n, p10, p90, cuts, t_lo, t_mid, t_high):
+    return {"n_obs": n, "mean_bias": 0.1, "mae_pct": 30.0, "hit_rate_12m_pct": 40.0,
+            "error_quantiles": {"p10": p10, "p90": p90},
+            "upside_tercile_cuts": list(cuts),
+            "error_quantiles_by_upside_tercile": {
+                "low": {"p10": t_lo[0], "p90": t_lo[1], "n": n // 3},
+                "mid": {"p10": t_mid[0], "p90": t_mid[1], "n": n // 3},
+                "high": {"p10": t_high[0], "p90": t_high[1], "n": n // 3}}}
+
+
+def test_a_pooled_cohort_takes_the_widest_tercile_and_averages_the_cuts():
+    """NVDA and MU resolve to `Technology|mega|vol_high`, which the monthly-vol
+    fit never produces, so they arrive through `sector_cap` POOLING. Leaving
+    that path unconditioned left the two names the exercise was about with the
+    withheld band. The merge is the same rule the pooled quantiles already use
+    -- a coarser bucket is a less certain one, so take the WIDEST -- and the
+    cuts are observation-weighted, which the payload admits is an
+    approximation."""
+    merged = PT._merge_buckets([
+        _bucket(100, -0.4, 0.4, (0.10, 0.30), (-0.1, 0.1), (-0.2, 0.2), (-0.9, 0.3)),
+        _bucket(300, -0.6, 0.5, (0.50, 0.70), (-0.3, 0.2), (-0.4, 0.5), (-0.5, 0.8)),
+    ])
+    assert merged["upside_tercile_cuts"] == [0.4, 0.6]      # (100*.1+300*.5)/400, likewise
+    high = merged["error_quantiles_by_upside_tercile"]["high"]
+    assert high["p10"] == -0.9 and high["p90"] == 0.8       # widest of the pool, both ends
+    assert high["n"] == 133                                  # 33 + 100
+    assert "widest" in merged["tercile_basis"]
+    band = PT.interval(current_price=100.0, point_return=0.5, cohort=merged, raw_upside=0.9)
+    assert band["upside_tercile"] == "high"
+    assert "widest p10/p90 of 2 pooled buckets" in band["basis"]
+
+
+def test_a_pool_where_any_bucket_is_unconditioned_carries_no_block():
+    """A `widest` taken over a subset is a width that depends on which buckets
+    happened to be fitted, which is not a measurement."""
+    merged = PT._merge_buckets([
+        _bucket(100, -0.4, 0.4, (0.10, 0.30), (-0.1, 0.1), (-0.2, 0.2), (-0.9, 0.3)),
+        {"n_obs": 300, "mean_bias": 0.2, "mae_pct": 35.0, "hit_rate_12m_pct": 45.0,
+         "error_quantiles": {"p10": -0.6, "p90": 0.5}},
+    ])
+    assert merged["error_quantiles_by_upside_tercile"] == {}
+    assert merged["upside_tercile_cuts"] == []
+    band = PT.interval(current_price=100.0, point_return=0.1, cohort=merged, raw_upside=5.0)
+    assert band["upside_tercile"] is None and "POOLED" in band["basis"]
+
+
+# ------------------------------------------------------- the fitter's own side
+
+def test_the_fitter_refuses_to_condition_a_bucket_whose_terciles_are_thin():
+    from scripts.price_target_backtest import (MIN_TERCILE_OBS, conditioned_quantiles,
+                                               tercile_cuts)
+
+    rng = np.random.default_rng(20260912)
+    n = 3 * (MIN_TERCILE_OBS - 5)
+    imp = np.linspace(-0.2, 1.2, n)
+    err = rng.normal(0.0, 0.3, size=n)
+    assert conditioned_quantiles(None, imp, err, tercile_cuts(imp)) == {}
+    assert conditioned_quantiles(None, imp, err, []) == {}
+
+
+def test_the_fitter_recovers_a_widening_it_was_given():
+    """Plant heteroskedasticity along the upside axis and read it back."""
+    from scripts.price_target_backtest import conditioned_quantiles, tercile_cuts
+
+    rng = np.random.default_rng(20260912)
+    n = 9000
+    imp = rng.uniform(-0.2, 1.6, size=n)
+    # sd grows with implied upside, which is the Asquith-Mikhail-Au claim
+    err = rng.normal(0.0, 0.05 + 0.5 * np.maximum(imp, 0.0), size=n)
+    cuts = tercile_cuts(imp)
+    got = conditioned_quantiles(None, imp, err, cuts)
+    assert set(got) == {"low", "mid", "high"}
+    widths = {k: got[k]["p90"] - got[k]["p10"] for k in ("low", "mid", "high")}
+    assert widths["low"] < widths["mid"] < widths["high"], widths
+    assert widths["high"] > 2 * widths["low"], widths
+    assert got["low"]["raw_upside_lo"] is None and got["high"]["raw_upside_hi"] is None
+    assert got["mid"]["raw_upside_lo"] == cuts[0] and got["mid"]["raw_upside_hi"] == cuts[1]
+
+
+def test_the_live_calibration_on_disk_carries_conditioned_terciles():
+    """A fit that ships without the block leaves every band pooled, silently."""
+    cal = PT.latest_calibration()
+    if not cal:
+        pytest.skip("no calibration artefact on this checkout")
+    buckets = cal.get("buckets") or {}
+    conditioned = [k for k, v in buckets.items() if v.get("error_quantiles_by_upside_tercile")]
+    assert conditioned, ("the calibration on disk predates the tercile refit; run "
+                         "`python -m scripts.price_target_backtest`")
+    v = buckets[conditioned[0]]
+    assert len(v["upside_tercile_cuts"]) == 2
+    assert set(v["error_quantiles_by_upside_tercile"]) == {"low", "mid", "high"}
