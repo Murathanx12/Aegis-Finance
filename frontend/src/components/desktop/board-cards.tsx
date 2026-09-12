@@ -13,6 +13,7 @@ import {
   getAppLog,
   getCoverage,
   getFile,
+  getBooks,
   getFleet,
   getLeaderboard,
   getLedger,
@@ -23,6 +24,7 @@ import {
   type AppLogResponse,
   type CoverageResponse,
   type FileResponse,
+  type BooksResponse,
   type FleetResponse,
   type LeaderboardResponse,
   type CalibrationReport,
@@ -628,6 +630,106 @@ export function AppLogCard() {
   );
 }
 
+// --------------------------------------------------------------------- books
+
+/**
+ * THE BOOKS CARD (lane B).
+ *
+ * ONE RULE, and it is structural rather than stylistic: **a book's number is
+ * never drawn without its twin's** (B3). The payload nests `twins` inside each
+ * book so there is no shape of the data in which this card could forget, and
+ * the card draws the twin's since-inception beside the book's on the same row.
+ *
+ * The second rule is the fleet card's: the `vs_twin` mean carries its standard
+ * error and its `estimable` flag, and where `estimable` is false the card
+ * prints "not yet" and the payload's own sentence — never a t-statistic, not
+ * even a greyed-out one. Two surfaces that disagreed about when a number is an
+ * estimate would be two claims wearing one word.
+ */
+export function BooksCard() {
+  const { data, error, isLoading } = useQuery<BooksResponse>({
+    queryKey: ["control", "books"],
+    queryFn: getBooks,
+  });
+  const books = data?.books ?? [];
+  return (
+    <Card>
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm">Paper books</CardTitle>
+        <Link href="/desktop/books">
+          <Button size="sm" variant="ghost">
+            open
+          </Button>
+        </Link>
+      </CardHeader>
+      <CardContent>
+        {error ? (
+          <ApiState error={error} what="the paper books" />
+        ) : isLoading ? (
+          <Skeleton className="h-20 w-full" />
+        ) : data?.available === false ? (
+          <p className="text-xs text-muted-foreground">
+            {DASH} the book table could not be read. {data.error ?? ""}
+          </p>
+        ) : books.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            {DASH} no book has been created yet. A book is a frozen contract, a
+            cadence and a control twin; seed one with{" "}
+            <code className="font-mono">POST /api/control/books/create-from-contract</code>.
+          </p>
+        ) : (
+          <>
+            <Field label="books" value={data?.n_books ?? null} />
+            <Field label="twins" value={data?.n_twins ?? null} />
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full text-left text-[11px]">
+                <thead className="text-muted-foreground">
+                  <tr>
+                    <th className="py-1 pr-3 font-normal">book</th>
+                    <th className="py-1 pr-3 font-normal">cadence</th>
+                    <th className="py-1 pr-3 text-right font-normal">since inception</th>
+                    <th className="py-1 pr-3 text-right font-normal">twin</th>
+                    <th className="py-1 font-normal">estimable</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono">
+                  {books.slice(0, 6).map((b) => {
+                    const twin = b.twins?.[0];
+                    return (
+                      <tr key={b.book_id} className="border-t border-border/40">
+                        <td className="py-1 pr-3">{b.book_id.slice(0, 13)}</td>
+                        <td className="py-1 pr-3">{b.cadence}</td>
+                        <td className="py-1 pr-3 text-right tabular-nums">
+                          {n(b.since_inception_pct, 3)}
+                        </td>
+                        {/* the twin's number, on the same row, always */}
+                        <td className="py-1 pr-3 text-right tabular-nums">
+                          {twin ? n(twin.since_inception_pct, 3) : DASH}
+                        </td>
+                        <td className="py-1">
+                          {b.vs_twin?.estimable ? (
+                            <Badge variant="outline">yes</Badge>
+                          ) : (
+                            <Badge variant="secondary">not yet</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              a book is never shown without its twin. {data?.min_days_for_estimable ?? DASH}{" "}
+              paired sessions before a mean daily excess is called an estimate.
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function BoardCards() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -636,6 +738,7 @@ export function BoardCards() {
       <CoverageCard />
       <LedgerCard />
       <FleetSummaryCard />
+      <BooksCard />
       <NightCard />
       <CodeCard />
       <AppLogCard />

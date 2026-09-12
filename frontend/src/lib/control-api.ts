@@ -311,6 +311,8 @@ export const getRunLog = (pid: number, tail = 20_000) =>
 export const getLlama = () => controlFetch<LlamaStatus>("/llama");
 /** Not in the router yet either; the Fleet page renders "not available" on 404. */
 export const getFleet = () => controlFetch<FleetResponse>("/fleet");
+/** Lane B: every paper book WITH its twins. Never one without the other. */
+export const getBooks = () => controlFetch<BooksResponse>("/books");
 
 // ---------------------------------------------------------------- writes
 
@@ -479,6 +481,90 @@ export interface AppLogResponse {
   tail?: number;
   note?: string;
   error?: string;
+}
+
+// ------------------------------------------------------------------ books
+//
+// Lane B. The one thing this type says that a comment could not: `twins` is
+// NOT optional. A book's number is never rendered without its control's (B3),
+// and the payload has no shape in which it could be -- so neither does the
+// type, and a page that forgets to render them will not compile its way past
+// a missing field.
+
+export interface BookTwin {
+  book_id: string;
+  kind: string | null;
+  construction: string | null;
+  present: boolean;
+  nav: number | null;
+  last_mark: string | null;
+  n_marks: number;
+  since_inception_pct: number | null;
+  why_no_nav?: string;
+}
+
+export interface BookForecasts {
+  n_open: number;
+  n_graded?: number;
+  n_engine_graded?: number;
+  n_base_rate_graded?: number;
+  last_grade: string | null;
+  brier: number | null;
+  base_rate_brier: number | null;
+  reading?: string;
+  why?: string;
+  error?: string;
+}
+
+export interface BookWorstCase {
+  n_names?: number;
+  gross_over_equity?: number | null;
+  gross_cap_declared?: number | null;
+  stop_pct?: number | null;
+  worst_case_usd?: number | null;
+  worst_case_pct_of_equity?: number | null;
+  verdict?: string;
+  error?: string;
+}
+
+export interface BookRow {
+  book_id: string;
+  fingerprint: string;
+  strategy_id: string;
+  title: string;
+  cadence: string;
+  origin: string;
+  origin_text: string;
+  control_twin_ids: string[];
+  control_construction: string;
+  created_utc: string;
+  status: string;
+  licence: string;
+  shadow?: boolean;
+  round_trip_bps?: number;
+  zero_cost_diagnostic?: boolean;
+  nav: number | null;
+  last_mark: string | null;
+  n_marks: number;
+  since_inception_pct: number | null;
+  why_no_nav?: string;
+  /** The fleet card's estimability rule, applied to book-minus-twin. */
+  vs_twin: FleetLane;
+  twins: BookTwin[];
+  worst_case: BookWorstCase;
+  forecasts: BookForecasts;
+  [k: string]: unknown;
+}
+
+export interface BooksResponse {
+  utc?: string;
+  available?: boolean;
+  error?: string;
+  books?: BookRow[];
+  n_books?: number;
+  n_twins?: number;
+  min_days_for_estimable?: number;
+  note?: string;
 }
 
 export interface LedgerResponse {

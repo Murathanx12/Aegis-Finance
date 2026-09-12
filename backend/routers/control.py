@@ -39,7 +39,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 
 from backend.services import quiet_subprocess as qsp  # noqa: E402
 
@@ -1003,6 +1003,222 @@ def ledger() -> dict:
     except Exception as e:  # noqa: BLE001  a read degrades to a report
         out["decomposition"] = {"available": False, "error": f"{type(e).__name__}: {e}"}
     return out
+
+
+# ===========================================================================
+# LANE B — the paper books, each WITH its twins (B1-B5)
+# ===========================================================================
+#
+# THE ONE RULE OF THIS ENDPOINT. A book is never returned without its twins.
+# Not "usually", not "when the page asks for them": the twins are nested INSIDE
+# the book's own object, so there is no shape of this payload in which a client
+# can render a book's number and omit its control's. B3's acceptance criterion
+# is a property of the data, and a rule enforced by the renderer is a rule one
+# refactor away from being gone.
+#
+# The estimability rule is the fleet card's, deliberately: `FLEET_MIN_DAYS`
+# paired sessions before a mean daily excess may be called an estimate, and the
+# standard error travels with every mean either way. Two surfaces that disagreed
+# about when a number is estimable would be two different claims wearing one
+# word.
+
+
+@router.get("/books")
+def books(include_retired: bool = False) -> dict:
+    """Every paper book with its twins, its latest mark, and its forecasts."""
+    try:
+        from backend.services import paper_books as PB
+    except Exception as exc:  # noqa: BLE001
+        return {"utc": _now(), "available": False,
+                "error": f"{type(exc).__name__}: {exc}", "books": []}
+    try:
+        all_books = PB.list_books()
+        series = PB.nav_series()
+    except Exception as exc:  # noqa: BLE001
+        return {"utc": _now(), "available": False,
+                "error": f"{type(exc).__name__}: {exc}", "books": [],
+                "note": ("the book table could not be read; nothing is inferred "
+                         "from that. A checkout with no books is not a "
+                         "programme with no books.")}
+
+    by_id = {b.book_id: b for b in all_books}
+    forecasts = _book_forecasts({b.book_id for b in all_books})
+
+    rows: list[dict] = []
+    for book in all_books:
+        if book.is_twin:
+            continue
+        if book.status == "retired" and not include_retired:
+            continue
+        twin_rows = []
+        for tid in book.control_twin_ids:
+            twin = by_id.get(tid)
+            twin_rows.append({
+                "book_id": tid,
+                "kind": ((twin.strategy.engine_params.get("twin") or {}).get("kind")
+                         if twin else None),
+                "construction": twin.control_construction if twin else None,
+                "present": twin is not None,
+                **_book_mark(tid, series.get(tid) or []),
+            })
+        first_twin = (series.get(book.control_twin_ids[0])
+                      if book.control_twin_ids else None)
+        own = series.get(book.book_id) or []
+        rows.append({
+            **book.as_row(),
+            **_book_mark(book.book_id, own),
+            "vs_twin": _excess_row(book.book_id, own,
+                                   _daily_returns(first_twin) if first_twin else None),
+            "twins": twin_rows,
+            "worst_case": _safe(lambda: PB.worst_case(book)),
+            "forecasts": forecasts.get(book.book_id, _no_forecasts()),
+        })
+    return {
+        "utc": _now(), "available": True, "books": rows,
+        "n_books": len(rows),
+        "n_twins": sum(len(r["twins"]) for r in rows),
+        "min_days_for_estimable": FLEET_MIN_DAYS,
+        "note": ("every book carries its twins inside its own row. A book's "
+                 "number is never shown without its control's (B3), and the "
+                 "payload has no shape in which it could be."),
+    }
+
+
+def _safe(fn):
+    try:
+        return fn()
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+def _book_mark(book_id: str, series: list) -> dict:
+    """The realised facts about one book: NAV, when, how many marks.
+
+    Observations, not estimates -- they carry no sampling error and are printed
+    as they arrived. `n_marks` is beside them so a reader can see how thin the
+    series is without having to ask.
+    """
+    if not series:
+        return {"nav": None, "last_mark": None, "n_marks": 0,
+                "since_inception_pct": None,
+                "why_no_nav": ("no cadence pass has marked this book yet; run "
+                               "`POST /api/control/morning` or wait for the "
+                               "16:45 ET pass")}
+    first, last = series[0][1], series[-1][1]
+    return {"nav": round(last, 2), "last_mark": series[-1][0],
+            "n_marks": len(series),
+            "since_inception_pct": (round((last / first - 1) * 100, 4)
+                                    if first else None)}
+
+
+def _no_forecasts() -> dict:
+    return {"n_open": 0, "n_graded": 0, "last_grade": None, "brier": None,
+            "base_rate_brier": None,
+            "why": "no forecast row has been written for this book yet"}
+
+
+def _book_forecasts(book_ids: set) -> dict:
+    """Open and graded forecast counts per book, plus the two Briers.
+
+    The engine's Brier and the BASE-RATE row's Brier are returned together and
+    always: the engine's number alone says nothing, because the whole question
+    the ledger was built to answer is whether it beats a forecaster that looked
+    at nothing.
+    """
+    out: dict[str, dict] = {}
+    try:
+        from backend.services import belief_state as BS
+        rows = [r for r in BS.read_predictions() if r.get("ticker") in book_ids]
+    except Exception as exc:  # noqa: BLE001
+        return {b: {**_no_forecasts(), "error": f"{type(exc).__name__}: {exc}"[:200]}
+                for b in book_ids}
+    for r in rows:
+        cur = out.setdefault(r["ticker"], {"n_open": 0, "n_graded": 0,
+                                           "last_grade": None,
+                                           "_engine": [], "_base": []})
+        if r.get("outcome") is None and not r.get("void_reason"):
+            cur["n_open"] += 1
+            continue
+        if r.get("brier") is None:
+            continue
+        cur["n_graded"] += 1
+        if not cur["last_grade"] or str(r.get("resolved_at")) > cur["last_grade"]:
+            cur["last_grade"] = str(r.get("resolved_at"))
+        (cur["_base"] if r.get("specialist") == "base_rate"
+         else cur["_engine"]).append(float(r["brier"]))
+    for book_id, cur in out.items():
+        eng, base = cur.pop("_engine"), cur.pop("_base")
+        cur["brier"] = round(sum(eng) / len(eng), 5) if eng else None
+        cur["base_rate_brier"] = round(sum(base) / len(base), 5) if base else None
+        cur["n_engine_graded"] = len(eng)
+        cur["n_base_rate_graded"] = len(base)
+        cur["reading"] = (
+            "the engine's Brier is only meaningful beside the base-rate row's: "
+            "if they are equal the trailing-IR stand-in carries no information")
+    return out
+
+
+@router.post("/books/create-from-contract")
+def create_book_from_contract(payload: dict = Body(...)) -> dict:
+    """Create a book AND its twins from a `Strategy` JSON. Control-plane gated.
+
+    This is how the first `origin=night_job` books get seeded by a script. It is
+    NOT B2's human hold step: `origin="human_text"` is refused here, because the
+    sentence Murat typed and the click he made are the two things that make a
+    book his, and a route that could mint one without them would make the
+    distinction unauditable. B2 arrives in chunk 6.
+
+    No order path is reachable from here and none may be: this writes a contract
+    row and a NAV namespace, and the router's AST test keeps the whole module
+    broker-free.
+    """
+    _require_enabled()
+    from backend.services.paper_books import (ORIGINS, BookError, create,
+                                              worst_case)
+    from backend.services.paper_books import _strategy_from_dict
+    from backend.strategy.contract import StrategyError
+
+    contract = payload.get("strategy") or payload.get("contract")
+    if not isinstance(contract, dict):
+        raise HTTPException(422, "body needs a `strategy` object: the frozen "
+                                 "contract, as `Strategy.as_dict()` returns it")
+    cadence = str(payload.get("cadence") or "")
+    origin = str(payload.get("origin") or "night_job")
+    if origin == "human_text":
+        raise HTTPException(
+            422, "origin 'human_text' is B2's human hold step (chunk 6) and is "
+                 "not mintable from a route. A book a human did not hold must "
+                 "not be recorded as one he did.")
+    if origin not in ORIGINS:
+        raise HTTPException(422, f"origin must be one of {sorted(set(ORIGINS) - {'human_text'})}")
+    try:
+        strategy = _strategy_from_dict(contract)
+    except (StrategyError, TypeError, KeyError, ValueError) as exc:
+        raise HTTPException(422, f"the contract was refused: {exc}") from exc
+
+    bars = None
+    try:
+        from backend.services.paper_books import load_bars
+        bars = load_bars()
+    except Exception as exc:  # noqa: BLE001
+        # The twins' draws need a universe. Without bars they would be built
+        # from the declaration alone, which is a twin with no names in it --
+        # refused rather than created empty.
+        raise HTTPException(
+            503, f"the local bars are unavailable, so no control twin can be "
+                 f"drawn and a book without a twin is not created: {exc}") from exc
+    try:
+        book, twins = create(strategy, cadence=cadence, origin=origin,
+                             origin_text=str(payload.get("origin_text") or ""),
+                             ips_hash=payload.get("ips_hash"),
+                             shadow=bool(payload.get("shadow")), bars=bars)
+    except BookError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return {"utc": _now(), "created": True, "book": book.as_row(),
+            "twins": [t.as_row() for t in twins],
+            "worst_case": _safe(lambda: worst_case(book)),
+            "note": ("the book and its twins are frozen and will be marked by "
+                     "the next cadence pass. Nothing here places an order.")}
 
 
 # ===========================================================================

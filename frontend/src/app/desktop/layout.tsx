@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, LayoutDashboard, MessageSquare, Moon, Globe } from "lucide-react";
+import { Activity, BookOpen, LayoutDashboard, MessageSquare, Moon, Globe } from "lucide-react";
 import { DesktopGuide } from "@/components/desktop/guide";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +23,7 @@ const TABS = [
   { href: "/desktop/universe", label: "Universe", icon: Globe },
   { href: "/desktop/night", label: "Night runs", icon: Moon },
   { href: "/desktop/fleet", label: "Fleet vs SPY", icon: Activity },
+  { href: "/desktop/books", label: "Books", icon: BookOpen },
   { href: "/desktop/ask", label: "Ask Aegis", icon: MessageSquare },
 ];
 
