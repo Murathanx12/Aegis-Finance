@@ -1,0 +1,215 @@
+{
+ "job": "news_pull_all",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "sources": 18,
+ "rows_new": 2063,
+ "resolution_rate": 0.7373,
+ "red": [],
+ "refused": [],
+ "registry": {
+  "version": "news_sources_v1/2026-09-11",
+  "licence": "PRODUCT_EXPERIMENT",
+  "path": "C:\\Users\\mrthn\\aegis-finance\\.claude\\worktrees\\agent-aaf500459af17efe5\\backend\\data\\news_sources.yaml"
+ },
+ "name_table": {
+  "issuer_rows": 3056,
+  "adr_rows": 31,
+  "symbols": 3059,
+  "named_symbols": 230,
+  "name_keys": 429,
+  "local_codes": 23,
+  "aliases_dropped_below_length_floor": 19,
+  "aliases_dropped_as_generic": 0,
+  "min_alias_chars": 5,
+  "issuers_path": "C:\\Users\\mrthn\\aegis-finance\\.claude\\worktrees\\agent-aaf500459af17efe5\\backend\\data\\news_entities\\issuers.csv",
+  "adrs_path": "C:\\Users\\mrthn\\aegis-finance\\.claude\\worktrees\\agent-aaf500459af17efe5\\backend\\data\\news_entities\\asia_adrs.csv",
+  "note": "named_symbols < issuer_rows is the known 2026-09-11 name-table gap (yfinance .info measured at 1.38 s/name; the full 3,056-name pull is ~70 minutes). Symbols without a primary_name are still reachable by explicit ticker token."
+ },
+ "corpus_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus",
+ "wall_s": 502.72,
+ "written_utc": "2026-09-11T12:26:53+00:00",
+ "per_source": [
+  {
+   "source": "alpaca_benzinga_news",
+   "status": "OK",
+   "received": 800,
+   "new": 799,
+   "dupes": 1,
+   "resolution_rate": 0.9036,
+   "calls": 16,
+   "wall_s": 36.15
+  },
+  {
+   "source": "gdelt_doc_v2",
+   "status": "OK",
+   "received": 750,
+   "new": 19,
+   "dupes": 731,
+   "resolution_rate": 0.0,
+   "calls": 5,
+   "wall_s": 241.43
+  },
+  {
+   "source": "sec_edgar_8k_current_atom",
+   "status": "OK",
+   "received": 400,
+   "new": 15,
+   "dupes": 385,
+   "resolution_rate": 0.0667,
+   "calls": 4,
+   "wall_s": 15.44
+  },
+  {
+   "source": "yfinance_ticker_news",
+   "status": "OK",
+   "received": 800,
+   "new": 793,
+   "dupes": 7,
+   "resolution_rate": 1.0,
+   "calls": 80,
+   "wall_s": 181.29
+  },
+  {
+   "source": "google_news_rss_en_us",
+   "status": "OK",
+   "received": 38,
+   "new": 38,
+   "dupes": 0,
+   "resolution_rate": 0.0263,
+   "calls": 1,
+   "wall_s": 1.11
+  },
+  {
+   "source": "google_news_rss_en_gb",
+   "status": "OK",
+   "received": 38,
+   "new": 38,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 0.92
+  },
+  {
+   "source": "google_news_rss_en_hk",
+   "status": "OK",
+   "received": 38,
+   "new": 38,
+   "dupes": 0,
+   "resolution_rate": 0.0263,
+   "calls": 1,
+   "wall_s": 1.41
+  },
+  {
+   "source": "google_news_rss_en_sg",
+   "status": "OK",
+   "received": 38,
+   "new": 38,
+   "dupes": 0,
+   "resolution_rate": 0.0526,
+   "calls": 1,
+   "wall_s": 1.91
+  },
+  {
+   "source": "google_news_rss_en_in",
+   "status": "OK",
+   "received": 38,
+   "new": 38,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 1.49
+  },
+  {
+   "source": "google_news_rss_en_au",
+   "status": "OK",
+   "received": 38,
+   "new": 38,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 1.02
+  },
+  {
+   "source": "google_news_rss_zh_cn",
+   "status": "OK",
+   "received": 26,
+   "new": 26,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 1.36
+  },
+  {
+   "source": "google_news_rss_zh_tw",
+   "status": "OK",
+   "received": 34,
+   "new": 34,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 1.49
+  },
+  {
+   "source": "google_news_rss_ja_jp",
+   "status": "OK",
+   "received": 30,
+   "new": 30,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 1.56
+  },
+  {
+   "source": "google_news_rss_ko_kr",
+   "status": "OK",
+   "received": 34,
+   "new": 34,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 2.02
+  },
+  {
+   "source": "nikkei_asia_rss",
+   "status": "OK",
+   "received": 50,
+   "new": 50,
+   "dupes": 0,
+   "resolution_rate": 0.02,
+   "calls": 1,
+   "wall_s": 0.65
+  },
+  {
+   "source": "reddit_algotrading_rss",
+   "status": "OK",
+   "received": 25,
+   "new": 25,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 1.55
+  },
+  {
+   "source": "reddit_securityanalysis_rss",
+   "status": "DEGRADED",
+   "received": 0,
+   "new": 0,
+   "dupes": 0,
+   "resolution_rate": null,
+   "calls": 1,
+   "wall_s": 0.71
+  },
+  {
+   "source": "quantocracy_rss",
+   "status": "OK",
+   "received": 10,
+   "new": 10,
+   "dupes": 0,
+   "resolution_rate": 0.0,
+   "calls": 1,
+   "wall_s": 2.66
+  }
+ ],
+ "headline": "2,063 new rows over 18 sources; 0 RED, 0 refused"
+}

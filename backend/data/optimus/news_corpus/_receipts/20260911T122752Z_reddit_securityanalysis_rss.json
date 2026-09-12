@@ -1,0 +1,30 @@
+{
+ "job": "news_pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "source": "reddit_securityanalysis_rss",
+ "provider": "Reddit (r/SecurityAnalysis)",
+ "region": "GLOBAL",
+ "tier": "social_hypothesis",
+ "pit_grade": "index_state",
+ "label_source": false,
+ "parser": "atom_generic",
+ "min_interval_s": 2.0,
+ "started_utc": "2026-09-11T12:27:51+00:00",
+ "requested": 25,
+ "received": 25,
+ "new": 25,
+ "dupes": 0,
+ "failures": [],
+ "calls": 1,
+ "rows_by_day": {
+  "2026-09-11": 25
+ },
+ "resolved": 3,
+ "unresolved": 22,
+ "resolution_rate": 0.12,
+ "consecutive_zero_runs": 0,
+ "status": "OK",
+ "wall_s": 1.67,
+ "written_utc": "2026-09-11T12:27:52+00:00"
+}

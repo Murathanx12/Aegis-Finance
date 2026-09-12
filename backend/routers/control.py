@@ -1228,6 +1228,72 @@ def create_book_from_contract(payload: dict = Body(...)) -> dict:
 
 
 # ===========================================================================
+# LANE A — THE AGENCY (A1-A5)
+# ===========================================================================
+#
+# `docs/research_notes/2026-09-12/spec_agency_intake.md`. Four routes and one
+# rule that outranks all of them: **a human holds.** `POST /agency/hold` is the
+# only route in this repository that mints `origin="human_text"`, it is
+# control-plane gated, and it records the sentence that was typed. Everything
+# else here computes, and nothing here places an order.
+
+
+@router.get("/agency/questionnaire")
+def agency_questionnaire() -> dict:
+    """The eight questions, their scales, and where each one comes from.
+
+    A READ, and the reason the intake form is not eight strings typed into a
+    page: a questionnaire whose items live in the UI cannot be versioned, and
+    `AEGIS-RQ-1` is a hash input.
+    """
+    from backend.services import agency as AG
+    return {"utc": _now(), "version": AG.QUESTIONNAIRE_VERSION,
+            "questions": [{"qid": q.qid, "text": q.text,
+                           "dimension": q.dimension, "scale": q.scale,
+                           "source": q.source} for q in AG.QUESTIONS],
+            "bands": [{"from": lo, "to": hi, "personality": p}
+                      for lo, hi, p in AG.BANDS],
+            "personalities": {name: row.as_row()
+                              for name, row in AG.TABLE.items()},
+            "constraint_vocabulary": {
+                "pattern": AG.CONSTRAINT_RE.pattern,
+                "esg_categories": sorted(AG.ESG_CATEGORIES)},
+            "convention": ("composite = min(ability, willingness); the four "
+                           "personalities are DECLARED PREFERENCES, never "
+                           "inferred from the data a book will be graded on"),
+            "limits": AG.LIMITS_SENTENCE}
+
+
+@router.post("/agency/intake")
+def agency_intake(payload: dict = Body(...)) -> dict:
+    """A1 — `{capital, horizon_months, personality, constraints[],
+    liquidity_need, answers[8]}` to a validated, hashed IPS.
+
+    Gated: it may call the local model to draft the prose, which is a decision
+    about this machine. Nothing is written to any ledger by this route — the
+    IPS is returned to the caller, and it becomes durable only when a human
+    holds one of the options it proposes.
+    """
+    _require_enabled()
+    from backend.services import agency as AG
+    try:
+        ips = AG.intake(
+            capital=payload.get("capital"),
+            horizon_months=payload.get("horizon_months"),
+            personality=payload.get("personality"),
+            constraints=payload.get("constraints") or [],
+            liquidity_need=float(payload.get("liquidity_need") or 0.0),
+            answers=payload.get("answers"),
+            prior_ips=payload.get("prior_ips"),
+            draft=bool(payload.get("draft", True)))
+    except AG.AgencyError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(422, f"the intake was refused: {exc}") from exc
+    return {"utc": _now(), **ips.as_payload()}
+
+
+# ===========================================================================
 # ONE CLICK = MORNING (O5)
 # ===========================================================================
 #

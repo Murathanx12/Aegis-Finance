@@ -1022,7 +1022,25 @@ def _case_book_signals():
             "a short-interest panel that does not exist on this machine")
 
 
+def _case_agency():
+    """A1: an IPS whose risk profile was never measured is not written.
+
+    The missing input is THE QUESTIONNAIRE. `intake` could perfectly well
+    default the eight answers to a mid score and hand back a policy — and the
+    policy would carry an ability/willingness split nobody measured, under a
+    hash that makes it look like a measured one. The composite risk score is
+    the input the whole personality-to-numbers table is keyed on, so its
+    absence is a refusal rather than a default.
+    """
+    from backend.services.agency import AgencyError, intake
+
+    return (lambda: intake(capital=10_000.0, horizon_months=12,
+                           personality="balanced", answers=None, draft=False),
+            AgencyError, "an intake with no risk questionnaire answers")
+
+
 CASES = {
+    "agency": _case_agency,
     "book_signals": _case_book_signals,
     "paper_books": _case_paper_books,
     "news_registry": _case_news_registry,

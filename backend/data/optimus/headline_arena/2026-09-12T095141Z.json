@@ -1,0 +1,99 @@
+{
+  "job": "headline_arena_daily",
+  "ran_at": "2026-09-12T09:51:39+00:00",
+  "today": "2026-09-12",
+  "dry_run": true,
+  "mechanism_id": "headline_arena_v1",
+  "prereg": {
+    "declared": "e0db36415ef766bb",
+    "computed": "e0db36415ef766bb",
+    "match": true,
+    "note": "a mismatch means a rule changed without being re-registered; the fix is to state the change, not to paste the new hash"
+  },
+  "credentials": {
+    "agent_id_present": false,
+    "client_secret_present": false,
+    "present": false,
+    "env_names": [
+      "HEADLINE_ARENA_AGENT_ID",
+      "HEADLINE_ARENA_CLIENT_SECRET"
+    ]
+  },
+  "posted": false,
+  "n_posted": 0,
+  "rows": [
+    {
+      "prediction_id": "fd3151afd0bf25e6",
+      "ticker": "ES=F",
+      "probability": 0.4365843561142291,
+      "confidence": 0.1268312877715418,
+      "direction": "bearish",
+      "dead_zone_pct": null
+    },
+    {
+      "prediction_id": "e0aafe370293f93a",
+      "ticker": "CL=F",
+      "probability": 0.4365843561142291,
+      "confidence": 0.1268312877715418,
+      "direction": "bearish",
+      "dead_zone_pct": null
+    },
+    {
+      "prediction_id": "cc0c01e01ff9ca38",
+      "ticker": "ZN=F",
+      "probability": 0.5634156438857709,
+      "confidence": 0.1268312877715418,
+      "direction": "bullish",
+      "dead_zone_pct": null
+    },
+    {
+      "prediction_id": "cf5fb1ace4be56dc",
+      "ticker": "GC=F",
+      "probability": 0.2198966917366465,
+      "confidence": 0.560206616526707,
+      "direction": "bearish",
+      "dead_zone_pct": null
+    },
+    {
+      "prediction_id": "ba1c162441db7d1f",
+      "ticker": "DX-Y.NYB",
+      "probability": 0.2198966917366465,
+      "confidence": 0.560206616526707,
+      "direction": "bearish",
+      "dead_zone_pct": null
+    }
+  ],
+  "skipped": [],
+  "caveats": [
+    "their terms take a perpetual, sublicensable licence to submitted text: `reasoning` names only the rule and the prereg hash",
+    "the financial track scores 50 +- 50*confidence and is NOT Brier; our own Brier is computed in our ledger",
+    "registration is attended (a magic link to Murat's e-mail)"
+  ],
+  "bar_date": "2026-09-11",
+  "n_open_challenges": 0,
+  "dead_zone_source": "mapping_default (no challenge fetched)",
+  "sensors": {
+    "spy_mom_21": {
+      "raw": -0.008401,
+      "z": -0.253663,
+      "sd": 0.03312,
+      "n": 252
+    },
+    "vol_regime": {
+      "raw": 0.719897,
+      "z": -1.120413,
+      "vol_21": 0.005832,
+      "vol_252": 0.008102
+    },
+    "nvda_vs_spy_5": {
+      "raw": -0.025741,
+      "z": -0.65326,
+      "sd": 0.039404,
+      "n": 252
+    }
+  },
+  "n_neutral": 0,
+  "n_rows": 5,
+  "ledger_written_before_post": true,
+  "reason_not_posted": "--dry-run: the rows are in our ledger and nothing was sent"
+}

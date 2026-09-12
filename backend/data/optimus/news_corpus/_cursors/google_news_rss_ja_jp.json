@@ -1,0 +1,10 @@
+{
+ "consecutive_zero_runs": 0,
+ "last_run_utc": "2026-09-11T12:26:41+00:00",
+ "next_cursor": "",
+ "next_offset": 0,
+ "note": "next_cursor is only meaningful for sources with a native incremental cursor (Alpaca's created_at); next_offset is where a symbol-by-symbol sweep resumes, so a capped run does not re-pull the same prefix for ever.",
+ "rows_written_total": 30,
+ "runs": 1,
+ "source": "google_news_rss_ja_jp"
+}

@@ -1,0 +1,69 @@
+{
+ "job": "E1_append",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "what": "corpus rows from label_source sources only, labelled at the first session OPEN strictly after the row's PIT anchor, each minus SPY, with pit_dv_21 from the 21 sessions BEFORE the entry",
+ "pit_anchor_rule": "native_stamp -> published_utc (the grade asserts the provider's own stamp is trustworthy, and anchoring a BACKFILL on first_seen would date 2015 news to today); first_seen_only -> first_seen_utc (the provider's stamp is a crawl time it may move, so only our own anchor is safe)",
+ "anchors_used": {
+  "published_utc": 14,
+  "first_seen_utc": 794
+ },
+ "label_sources": [
+  "alpaca_benzinga_news",
+  "gdelt_doc_v2",
+  "sec_edgar_8k_current_atom",
+  "yfinance_ticker_news",
+  "finnhub_company_news"
+ ],
+ "skipped_index_state_sources": [
+  "google_news_rss_en_us",
+  "google_news_rss_en_gb",
+  "google_news_rss_en_hk",
+  "google_news_rss_en_sg",
+  "google_news_rss_en_in",
+  "google_news_rss_en_au",
+  "google_news_rss_zh_cn",
+  "google_news_rss_zh_tw",
+  "google_news_rss_ja_jp",
+  "google_news_rss_ko_kr",
+  "nikkei_asia_rss",
+  "reddit_algotrading_rss",
+  "reddit_securityanalysis_rss",
+  "quantocracy_rss",
+  "akshare_stock_news_em",
+  "akshare_stock_news_main_cx",
+  "hkexnews_rss",
+  "finnhub_recommendation_trends",
+  "yfinance_recommendations",
+  "wikipedia_pageviews",
+  "greenhouse_lever_ashby_ats"
+ ],
+ "watermark_first_seen_utc": null,
+ "funnel": {
+  "corpus_rows": 6014,
+  "no_ticker": 1759,
+  "no_symbol_bar": 2890,
+  "before_calendar": 2562,
+  "pending_future_session": 0,
+  "no_bar_that_day": 0,
+  "dup": 0,
+  "kept": 808
+ },
+ "rows_appended": 808,
+ "panel_rows_before": 339657,
+ "pit_violations": 0,
+ "pit_violations_first_10": [],
+ "paths": {
+  "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet"
+ },
+ "wall_s": 3.23,
+ "written_utc": "2026-09-11T15:30:28+00:00",
+ "panel_rows_after": 340465,
+ "verdict": "APPENDED",
+ "headline": "808 rows appended from 6,014 corpus rows over 5 labelling sources; 0 awaiting a session that has not happened yet; 2,562 older than the first bar; 0 PIT violations",
+ "next_test": "re-run after the next session's bars land to label the pending rows; 2,562 rows PREDATE the bars (the Alpaca backfill starts 2015-01-01 and prices_2025_26 starts 2025-01-02) and need older bars or a --since on the backfill; when the panel passes ~20k labelled cells over 2+ months, run N3_frozen_embedding_head and C2 against the TF-IDF and shuffled controls",
+ "elapsed_s": 5.3,
+ "run": 1,
+ "exit_code": 0
+}

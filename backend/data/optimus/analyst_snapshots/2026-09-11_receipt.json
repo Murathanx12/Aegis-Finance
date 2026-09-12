@@ -1,0 +1,18 @@
+{
+ "job": "analyst_snapshot",
+ "status": "PARTIAL",
+ "date": "2026-09-11",
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\analyst_snapshots\\2026-09-11.parquet",
+ "symbols_requested": 750,
+ "rows": 250,
+ "by_status": {
+  "ok": 143,
+  "partial": 1,
+  "empty": 3,
+  "error": 103
+ },
+ "rate_s_per_symbol": 3.003,
+ "projected_total_min": 37.5,
+ "note": "written at a checkpoint; the run had not finished. The parquet holds the symbols reached so far.",
+ "written_utc": "2026-09-11T13:01:57+00:00"
+}

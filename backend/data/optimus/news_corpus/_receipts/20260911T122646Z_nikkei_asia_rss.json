@@ -1,0 +1,30 @@
+{
+ "job": "news_pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "source": "nikkei_asia_rss",
+ "provider": "Nikkei Asia",
+ "region": "JP",
+ "tier": "2",
+ "pit_grade": "index_state",
+ "label_source": false,
+ "parser": "rss1_rdf",
+ "min_interval_s": 1.0,
+ "started_utc": "2026-09-11T12:26:46+00:00",
+ "requested": 800,
+ "received": 50,
+ "new": 50,
+ "dupes": 0,
+ "failures": [],
+ "calls": 1,
+ "rows_by_day": {
+  "2026-09-11": 50
+ },
+ "resolved": 1,
+ "unresolved": 49,
+ "resolution_rate": 0.02,
+ "consecutive_zero_runs": 0,
+ "status": "OK",
+ "wall_s": 0.65,
+ "written_utc": "2026-09-11T12:26:46+00:00"
+}

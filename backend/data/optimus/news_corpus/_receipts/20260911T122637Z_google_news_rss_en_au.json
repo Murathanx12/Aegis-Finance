@@ -1,0 +1,30 @@
+{
+ "job": "news_pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "source": "google_news_rss_en_au",
+ "provider": "Google News",
+ "region": "GLOBAL",
+ "tier": "2",
+ "pit_grade": "index_state",
+ "label_source": false,
+ "parser": "rss2",
+ "min_interval_s": 1.0,
+ "started_utc": "2026-09-11T12:26:36+00:00",
+ "requested": 800,
+ "received": 38,
+ "new": 38,
+ "dupes": 0,
+ "failures": [],
+ "calls": 1,
+ "rows_by_day": {
+  "2026-09-11": 38
+ },
+ "resolved": 0,
+ "unresolved": 38,
+ "resolution_rate": 0.0,
+ "consecutive_zero_runs": 0,
+ "status": "OK",
+ "wall_s": 1.02,
+ "written_utc": "2026-09-11T12:26:37+00:00"
+}
