@@ -640,6 +640,20 @@ overhang on the right-hand side); **D** refused by registration (forward-only; t
 its earliest read). No verdict clears Holm: **RESULT IMPROVEMENT: NONE**; C is the first candidate in
 this repo with the right shape (a difference against its own control, same sign in every era).
 
+**Two corrections to C's read, found 2026-09-13 before the falsifiers ran** (Sonnet literature note
+`research_notes/2026-09-13/research_overhang_literature_vs_book_c.md`, code verified by Fable):
+(i) the replay computes the overhang once a name has **24 months** of history while the registration
+declares a 60-month warm-up and a **1995 start** — so the pooled 395 blocks and the whole 1990s bucket
+carry a truncated reference price, and the weakest era is exactly the truncated one. The falsifier
+job re-reports the primary metric under the registered construction (60 months, 1995-2024) beside the
+falsifiers; until then the pooled t 2.13 is a number from a construction the draft did not register.
+(ii) Riley-Summers-Duxbury (2020, *Management Science*, US equities to 2016) find 12-1 momentum
+**survives** overhang in the Fama-MacBeth (t 2.93), the opposite of Grinblatt-Han's 1967-1996 table —
+so falsifier (b) firing is the modal expectation, not a surprise. For scale: Frazzini's net
+overhang-conditioned PEAD spread is 0.9-1.1%/mo (1980-2002, doubly conditioned, quintiles, TAQ costs);
+our +0.40%/mo is a tercile cut with a monthly revision-count news sign and 25 bps flat — below the
+literature and inside a 50% post-publication decay, which argues "not suspicious", not "confirmed".
+
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
 Roles, from Murat: *"Sonnet for research and data acquisition, Opus 5 for
