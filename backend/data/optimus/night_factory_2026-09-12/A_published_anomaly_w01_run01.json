@@ -1,0 +1,39 @@
+{
+ "job": "A_published_anomaly",
+ "licence": "RESEARCH_CLAIM",
+ "llm_spend_usd": 0.0,
+ "family_id": "anomaly_short_term_reversal",
+ "cadence_family": "PUBLISHED_ANOMALIES_2026",
+ "week": 1,
+ "anomaly": "short_term_reversal",
+ "citation": "Jegadeesh (1990), 'Evidence of Predictable Behavior of Security Returns', Journal of Finance 45(3)",
+ "published_direction": "last month's losers outperform last month's winners",
+ "data_need": "monthly returns only -- already on the tape",
+ "prereg": {
+  "present": true,
+  "signed": false,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\docs\\TRIALS\\PREREG_ANOMALY_SHORT_TERM_REVERSAL_1.md",
+  "why": "present and UNSIGNED -- the primary may not be graded until Murat signs it; a smoke run is allowed and its verdict is forced to SMOKE_NOT_A_VERDICT"
+ },
+ "control": {
+  "signal": "oldest_listing",
+  "why": "a book with the same number of the same kind of names on the same calendar at the same costs, sorted by something with no economic claim in it, so the difference is about the SORT"
+ },
+ "eras": [
+  "1990-2001",
+  "2002-2012",
+  "2013-2024"
+ ],
+ "cost_cells": [
+  "taq_empirical",
+  "flat_5+1bps",
+  "flat_25+5bps"
+ ],
+ "primary_cost_cell": "taq_empirical",
+ "smoke": false,
+ "written_utc": "2026-09-12T14:02:22+00:00",
+ "available": false,
+ "headline": "week 1: pre-registration present and UNSIGNED; the primary was NOT graded",
+ "verdict": "REFUSED_PREREG_UNSIGNED: the plan exists and is not signed. Run --smoke for the plumbing check, whose verdict is not a verdict, or get the signature.",
+ "elapsed_s": 0.0
+}

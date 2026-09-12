@@ -1503,6 +1503,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # the leaked-field guard, the scoring and both writers, and says
         # PENDING_MODEL with the pair pool frozen and hashed.
         "M2_distill": _lazy("learner.rule_distillation", "M2_distill"),
+        # 2026-09-12, chunk 8 (roadmap 11a): one PUBLISHED anomaly a week,
+        # preregistered before its first cell is graded, replayed on our tape
+        # against a drift-only control over three eras. It REFUSES to grade a
+        # primary whose prereg is unsigned.
+        "A_published_anomaly": _lazy("scripts.night_anomaly_adjudicate",
+                                     "A_published_anomaly"),
         "X_anon_gap": _lazy("scripts.night_x_anonymisation_gap", "X_anon_gap"),
         "L3_lookahead": _lazy("scripts.night_l3_lookahead", "L3_lookahead"),
         "X2_elasticity": _lazy("scripts.night_x2_elasticity", "X2_elasticity"),
@@ -1553,7 +1559,7 @@ def main(argv=None) -> int:
     elif a.job in ("RW1_random_windows", "RW2_event_windows"):
         payload = fn(seed=a.seed, smoke=a.smoke)
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
-                   "E_decay_sweep", "M2_distill"):
+                   "E_decay_sweep", "M2_distill", "A_published_anomaly"):
         payload = fn(smoke=a.smoke)
     elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
         # the X lane takes the run number: its frozen cell list is filed under
