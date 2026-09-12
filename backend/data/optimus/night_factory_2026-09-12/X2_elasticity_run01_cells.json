@@ -1,0 +1,3041 @@
+{
+ "job": "X2_elasticity",
+ "run": 1,
+ "seed": 20260909,
+ "kinds": [
+  "sign_flip",
+  "escalation"
+ ],
+ "n_cells": 300,
+ "cells_sha256": "5981cde760105e900fd4447a5a3f83c906dda41bc73c1d20b7932c6af7c66b69",
+ "pairs": [
+  {
+   "uid": "010314a8bc8ac7232830",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-12-27",
+   "symbols": [
+    "ABSI"
+   ]
+  },
+  {
+   "uid": "0106b61ca98159888bda",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-05-09",
+   "symbols": [
+    "IWM"
+   ]
+  },
+  {
+   "uid": "037e3eceb9e155b87f3f",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-08-25",
+   "symbols": [
+    "ULTA"
+   ]
+  },
+  {
+   "uid": "04019985adc560df5dc5",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-09-11",
+   "symbols": [
+    "SMTC"
+   ]
+  },
+  {
+   "uid": "04f07427c680c45e1911",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-06-04",
+   "symbols": [
+    "GWRE"
+   ]
+  },
+  {
+   "uid": "0533a8c60cab31be476f",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-12-03",
+   "symbols": [
+    "CRM"
+   ]
+  },
+  {
+   "uid": "067d96a03b1a3b63b095",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-05-17",
+   "symbols": [
+    "PATH",
+    "PLCE"
+   ]
+  },
+  {
+   "uid": "06adad3494183a6c560e",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-02-18",
+   "symbols": [
+    "EBAY"
+   ]
+  },
+  {
+   "uid": "07c5099f5d3e9c1d0acc",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-10-14",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "0921a65f7ed98c236198",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-05-17",
+   "symbols": [
+    "PATH"
+   ]
+  },
+  {
+   "uid": "0c8886235c3ab41b9393",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-05-25",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "0cedfae9e78ebd16b200",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-02-10",
+   "symbols": [
+    "BURL"
+   ]
+  },
+  {
+   "uid": "0e11b17582c4d0db5417",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-02-03",
+   "symbols": [
+    "BURL"
+   ]
+  },
+  {
+   "uid": "0ef426875fcc5bdfa85f",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-11-16",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "0f975e85c86884a66233",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-09-05",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "1179b03cead84b09567f",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2021-03-08",
+   "symbols": [
+    "SLNO"
+   ]
+  },
+  {
+   "uid": "12def857a35b5f7c6ce4",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-08-05",
+   "symbols": [
+    "ORCL"
+   ]
+  },
+  {
+   "uid": "1451c15027914af37e7d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-12-09",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "149ecc868cebd3cc2b49",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-10-01",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "162a506e05397d5f602e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-10-03",
+   "symbols": [
+    "RSSS"
+   ]
+  },
+  {
+   "uid": "18d91a7d960b3707f091",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-08-12",
+   "symbols": [
+    "MNDY"
+   ]
+  },
+  {
+   "uid": "192ca1738f99ee2dfeb8",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-04-09",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "1af37a4ac49325c6c81b",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-07-16",
+   "symbols": [
+    "ATAT"
+   ]
+  },
+  {
+   "uid": "1be056c6537443fe4624",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-08-05",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "1be6319fcdea9ea2fb7c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-07-26",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "1c8cf0cb89be60f28e00",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-11-27",
+   "symbols": [
+    "KSS"
+   ]
+  },
+  {
+   "uid": "1dffea7c39b56ae84102",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-08-18",
+   "symbols": [
+    "OKTA"
+   ]
+  },
+  {
+   "uid": "1f53d2eecf34cf8c2b9c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-10-14",
+   "symbols": [
+    "ESTC"
+   ]
+  },
+  {
+   "uid": "20a3010643f7e999ce14",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-09-18",
+   "symbols": [
+    "AMD",
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "2402587f8a82a85ac622",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-11-06",
+   "symbols": [
+    "SMR"
+   ]
+  },
+  {
+   "uid": "25b186e757e0c064f2e8",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-11-29",
+   "symbols": [
+    "SNPS"
+   ]
+  },
+  {
+   "uid": "262ca7887434b546f529",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-01-25",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "2632dddd09110ec929cf",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-10-24",
+   "symbols": [
+    "GSIT"
+   ]
+  },
+  {
+   "uid": "26f7a7eac09168d41cfc",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-05-05",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "27c8c49234cceb86e9a5",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-11-01",
+   "symbols": [
+    "MU",
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "2a616b60d41ce5f31420",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-06-24",
+   "symbols": [
+    "DELL"
+   ]
+  },
+  {
+   "uid": "2bc445bfcc7148f13497",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-06-07",
+   "symbols": [
+    "TSM"
+   ]
+  },
+  {
+   "uid": "2da61e0e4c7738994e34",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-05-24",
+   "symbols": [
+    "QUBT"
+   ]
+  },
+  {
+   "uid": "3023a62a9a5981497d29",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-01-18",
+   "symbols": [
+    "TSM"
+   ]
+  },
+  {
+   "uid": "336e4a0847eaf513169c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-08-14",
+   "symbols": [
+    "OUST"
+   ]
+  },
+  {
+   "uid": "33ab5d197f12334f9862",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2021-07-27",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "33bb92bff374235bd26b",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-02-08",
+   "symbols": [
+    "EOSE"
+   ]
+  },
+  {
+   "uid": "34425a8925fd9c9a5dc5",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-12-11",
+   "symbols": [
+    "SNPS"
+   ]
+  },
+  {
+   "uid": "350d51b24569b84bb995",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2021-06-28",
+   "symbols": [
+    "JKS"
+   ]
+  },
+  {
+   "uid": "351be9c964124d20dacd",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-10-27",
+   "symbols": [
+    "MSFT"
+   ]
+  },
+  {
+   "uid": "35c3d05e1cd4cd910cb4",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-09-01",
+   "symbols": [
+    "ZM"
+   ]
+  },
+  {
+   "uid": "368042a7e9034a75b7fc",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-08-28",
+   "symbols": [
+    "LULU"
+   ]
+  },
+  {
+   "uid": "37ff308934fb2a344567",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-08-16",
+   "symbols": [
+    "MAPS"
+   ]
+  },
+  {
+   "uid": "38079505babfd330dd83",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-03-06",
+   "symbols": [
+    "BEAM"
+   ]
+  },
+  {
+   "uid": "386a357327545aa73acd",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-05-26",
+   "symbols": [
+    "SNOW"
+   ]
+  },
+  {
+   "uid": "3949bdc689f1f53104e3",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-08-17",
+   "symbols": [
+    "CRM"
+   ]
+  },
+  {
+   "uid": "39b5d9dec7ecda801c10",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-05-27",
+   "symbols": [
+    "ZM",
+    "ZS"
+   ]
+  },
+  {
+   "uid": "39b8a3cb1dc68ca67276",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-06-22",
+   "symbols": [
+    "DKNG"
+   ]
+  },
+  {
+   "uid": "39ce3d7a85fff22fae52",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-02-15",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "39da36cafb315c40058c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-05-20",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "3a7271600cfff9ba2933",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-06-12",
+   "symbols": [
+    "DHI"
+   ]
+  },
+  {
+   "uid": "3af565468d33399d2035",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-06-20",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "3b44ddfe4078133759bf",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2020-05-04",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "3b4e4dbe9b5988b851d0",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-08-14",
+   "symbols": [
+    "BLSH"
+   ]
+  },
+  {
+   "uid": "3cbd4e3266af356adfb1",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-05-25",
+   "symbols": [
+    "NTNX"
+   ]
+  },
+  {
+   "uid": "3cf57ad099d75e518d87",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-10-19",
+   "symbols": [
+    "HUBS"
+   ]
+  },
+  {
+   "uid": "3e967f5dd30cf41792db",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-12-04",
+   "symbols": [
+    "FLNC"
+   ]
+  },
+  {
+   "uid": "3f745edd8e95bc4db8d6",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-11-12",
+   "symbols": [
+    "LPA"
+   ]
+  },
+  {
+   "uid": "4070a4d6beff8c4175c4",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-09-18",
+   "symbols": [
+    "KTOS"
+   ]
+  },
+  {
+   "uid": "40c285d54a40778fb87b",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-08-30",
+   "symbols": [
+    "MDB",
+    "MRVL"
+   ]
+  },
+  {
+   "uid": "415b62fdd4fa0c41d9fa",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-10-30",
+   "symbols": [
+    "PPBT"
+   ]
+  },
+  {
+   "uid": "4166bced27c8ae050333",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-01-29",
+   "symbols": [
+    "EVTV"
+   ]
+  },
+  {
+   "uid": "41944827f16fee8c4e8b",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-08-23",
+   "symbols": [
+    "SNPS"
+   ]
+  },
+  {
+   "uid": "424378ee95e02652d3bf",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-06-01",
+   "symbols": [
+    "MDT"
+   ]
+  },
+  {
+   "uid": "439f804fbbc4d5873ce2",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-10-31",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "43a88a81a4ed503f5ea9",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-12-09",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "4441bad61f0353b556af",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-07-10",
+   "symbols": [
+    "IFF"
+   ]
+  },
+  {
+   "uid": "45c09acc106fafe46552",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-07-25",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "46656a899ac1f67ca0a0",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-01-08",
+   "symbols": [
+    "RBC"
+   ]
+  },
+  {
+   "uid": "47004f3bec8e496e8054",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-11-14",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "47ad50bbec55acf28729",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-11-05",
+   "symbols": [
+    "BBY"
+   ]
+  },
+  {
+   "uid": "484d5aa2e5d27a307145",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-11-10",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "4a42cceb3313874e39fb",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-01-27",
+   "symbols": [
+    "GGG"
+   ]
+  },
+  {
+   "uid": "4a8e70dfb4f786a32d7c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-03-25",
+   "symbols": [
+    "CRM"
+   ]
+  },
+  {
+   "uid": "4af9e46303f21624db45",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-07-15",
+   "symbols": [
+    "TSM"
+   ]
+  },
+  {
+   "uid": "4afe883cfe2d61d173de",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-11-12",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "4b4496a9318dc55b95d3",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-12-11",
+   "symbols": [
+    "CIEN"
+   ]
+  },
+  {
+   "uid": "4c5cb6c5dda2e03aaf46",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-07-30",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "4cac704d5d04b3b1c898",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-03-23",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "4d27ea9b357035304e3b",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-05-05",
+   "symbols": [
+    "PLTR"
+   ]
+  },
+  {
+   "uid": "4dc1f4f542d1e59298b0",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-07-09",
+   "symbols": [
+    "MGM"
+   ]
+  },
+  {
+   "uid": "4e9cf1ed97e5bf90fa14",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-08-12",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "4fffbaaff837d5aa3e00",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2023-12-05",
+   "symbols": [
+    "GIII"
+   ]
+  },
+  {
+   "uid": "50741c48d56fa755747d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-12-13",
+   "symbols": [
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "51cac89687d01b79f73d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-11-22",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "553370fe422aedb3fbb8",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-04-08",
+   "symbols": [
+    "OCUL"
+   ]
+  },
+  {
+   "uid": "564eed5acc3018f3b977",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-05-25",
+   "symbols": [
+    "BBY"
+   ]
+  },
+  {
+   "uid": "5691667593807520afca",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-09-13",
+   "symbols": [
+    "ZS"
+   ]
+  },
+  {
+   "uid": "56f8e14ae69262ff0ec8",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-03-19",
+   "symbols": [
+    "GIS"
+   ]
+  },
+  {
+   "uid": "582be7fc9851cbdc6981",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-11-29",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "58b52d07fbff6f40b90b",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-04-01",
+   "symbols": [
+    "T"
+   ]
+  },
+  {
+   "uid": "58c05ab1a521e1d9fbdc",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2023-03-02",
+   "symbols": [
+    "ZS"
+   ]
+  },
+  {
+   "uid": "5977dcabfa29408143c2",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-10-17",
+   "symbols": [
+    "MU",
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "59975e79760c3138f6d6",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-10-13",
+   "symbols": [
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "59be56c0fdda8b340b99",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-07-03",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "59ce26c0472a9d22ae61",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-03-21",
+   "symbols": [
+    "ONDS"
+   ]
+  },
+  {
+   "uid": "5a09a4ce2c4115285123",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-08-25",
+   "symbols": [
+    "SNOW"
+   ]
+  },
+  {
+   "uid": "5b2bf6addec9affd7d67",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-01-25",
+   "symbols": [
+    "FIZZ",
+    "FSLR"
+   ]
+  },
+  {
+   "uid": "5c1a0568eb31ad408607",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-09-03",
+   "symbols": [
+    "TTC"
+   ]
+  },
+  {
+   "uid": "5c23e976827ae509f7a4",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-04-28",
+   "symbols": [
+    "FCEL"
+   ]
+  },
+  {
+   "uid": "5cbf8f82c3ca1341fbb4",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-07-05",
+   "symbols": [
+    "KTOS"
+   ]
+  },
+  {
+   "uid": "5cec66baad239fc370ea",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-11-12",
+   "symbols": [
+    "DRIO"
+   ]
+  },
+  {
+   "uid": "5cec66baad239fc370ea",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-11-12",
+   "symbols": [
+    "DRIO"
+   ]
+  },
+  {
+   "uid": "5d80683362b70172bb5d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-05-29",
+   "symbols": [
+    "WSM",
+    "ZS"
+   ]
+  },
+  {
+   "uid": "5e8a406491f1258d8f34",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-11-29",
+   "symbols": [
+    "PATH",
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "5fa3c452f97eb03653f7",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-05-08",
+   "symbols": [
+    "PLTR"
+   ]
+  },
+  {
+   "uid": "5fa3c452f97eb03653f7",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-05-08",
+   "symbols": [
+    "PLTR"
+   ]
+  },
+  {
+   "uid": "6074295f588aa601e005",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-06-02",
+   "symbols": [
+    "FITB"
+   ]
+  },
+  {
+   "uid": "6176ae0737bac1cbc72e",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-05-20",
+   "symbols": [
+    "SHLS"
+   ]
+  },
+  {
+   "uid": "622c7188ff70bd1a3f22",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-09-26",
+   "symbols": [
+    "UUUU"
+   ]
+  },
+  {
+   "uid": "624b262dbdd0ac6a363e",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-11-28",
+   "symbols": [
+    "WSM"
+   ]
+  },
+  {
+   "uid": "6293cd9bf63eefbb1158",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-07-27",
+   "symbols": [
+    "SNBR"
+   ]
+  },
+  {
+   "uid": "62b88e6e0a67d948d2ee",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-03-02",
+   "symbols": [
+    "ANF",
+    "BOX"
+   ]
+  },
+  {
+   "uid": "63b449043dcfbadff1dc",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-05-12",
+   "symbols": [
+    "FSLR"
+   ]
+  },
+  {
+   "uid": "63e2c5cb56ac6a802df6",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-10-01",
+   "symbols": [
+    "AARD"
+   ]
+  },
+  {
+   "uid": "64bdc9ab9a866aeaa4f2",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2023-05-25",
+   "symbols": [
+    "SNOW",
+    "TITN"
+   ]
+  },
+  {
+   "uid": "64e38e95894092cba963",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-06-11",
+   "symbols": [
+    "HSDT"
+   ]
+  },
+  {
+   "uid": "666aa4d5d1e460cc9e14",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-07-31",
+   "symbols": [
+    "AMZN"
+   ]
+  },
+  {
+   "uid": "666b5fa60041eac4e195",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-05-28",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "66ab6421c93417964db2",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-08-22",
+   "symbols": [
+    "TSM"
+   ]
+  },
+  {
+   "uid": "670e7e040e0415e64f14",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-05-22",
+   "symbols": [
+    "IONQ"
+   ]
+  },
+  {
+   "uid": "6884ac02a4349137d17c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-10-05",
+   "symbols": [
+    "AFRM"
+   ]
+  },
+  {
+   "uid": "691c583d16a452e6205d",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-09-16",
+   "symbols": [
+    "JOBY"
+   ]
+  },
+  {
+   "uid": "69e8e792f4384f75f595",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-05-22",
+   "symbols": [
+    "PANW"
+   ]
+  },
+  {
+   "uid": "6a08bc68a9c3306ac38a",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-08-12",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "6a18d954e6552a231e7b",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-07-02",
+   "symbols": [
+    "BBY"
+   ]
+  },
+  {
+   "uid": "6a7dbdec3004f6cf9a7c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-12-28",
+   "symbols": [
+    "AFRM"
+   ]
+  },
+  {
+   "uid": "6b482fa174291f759770",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-12-01",
+   "symbols": [
+    "BNS"
+   ]
+  },
+  {
+   "uid": "6ce4520bd2bbb6b2ba7e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-12-03",
+   "symbols": [
+    "DCI"
+   ]
+  },
+  {
+   "uid": "6dd313cbefc5b0889254",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-11-08",
+   "symbols": [
+    "BBWI"
+   ]
+  },
+  {
+   "uid": "6dd8d65f275ad696bf09",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-03-23",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "6eb625e90b8c6fd2f2a7",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-02-05",
+   "symbols": [
+    "SWKS"
+   ]
+  },
+  {
+   "uid": "6fab09dd2cb72c987347",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-07-31",
+   "symbols": [
+    "MSTR"
+   ]
+  },
+  {
+   "uid": "72b5a313df7dee56dabd",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-04-22",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "74af9614464519707096",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-08-11",
+   "symbols": [
+    "ZM"
+   ]
+  },
+  {
+   "uid": "75ca7b1ce6310a2c7eb6",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-08-11",
+   "symbols": [
+    "RGTI"
+   ]
+  },
+  {
+   "uid": "761499ff56142d25b9e1",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-06-21",
+   "symbols": [
+    "MDT"
+   ]
+  },
+  {
+   "uid": "77e70fa474e02e835612",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-05-07",
+   "symbols": [
+    "RIVN"
+   ]
+  },
+  {
+   "uid": "77ede6cbc60f4a98fd38",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-06-11",
+   "symbols": [
+    "PLUG"
+   ]
+  },
+  {
+   "uid": "78b933df0e8918b044e3",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2020-08-25",
+   "symbols": [
+    "BBY"
+   ]
+  },
+  {
+   "uid": "79a17297307f558a49ce",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-12-17",
+   "symbols": [
+    "IWM"
+   ]
+  },
+  {
+   "uid": "79cbc3b4b2e34bc547a1",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-09-17",
+   "symbols": [
+    "IONQ"
+   ]
+  },
+  {
+   "uid": "79fcf0ccab2db709466f",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-09-06",
+   "symbols": [
+    "AFRM"
+   ]
+  },
+  {
+   "uid": "7a251b62cd0fea0536f3",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-06-22",
+   "symbols": [
+    "KFY"
+   ]
+  },
+  {
+   "uid": "7c1e9c22ea1a4a18bd73",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-12-08",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "7c8b4258ed7ed1d48083",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2021-12-22",
+   "symbols": [
+    "A"
+   ]
+  },
+  {
+   "uid": "7cb2c2ca3194379254a8",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2020-06-10",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "7e1b22cc5cd8f9745e80",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-07-23",
+   "symbols": [
+    "NFLX"
+   ]
+  },
+  {
+   "uid": "7eb7d197e2d5b9eefd8c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-08-07",
+   "symbols": [
+    "SNOW"
+   ]
+  },
+  {
+   "uid": "7f2266410e367fb2c4d2",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-12-17",
+   "symbols": [
+    "ZDAI"
+   ]
+  },
+  {
+   "uid": "7ffd1cae1c01df898a7c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-09-13",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "810dc545083b6efc8be6",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-03-08",
+   "symbols": [
+    "MDT"
+   ]
+  },
+  {
+   "uid": "82697937c53836a347b6",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-05-02",
+   "symbols": [
+    "MOMO"
+   ]
+  },
+  {
+   "uid": "82dc13265c95edb580a1",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-05-21",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "832b3ce97099c827c2e5",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-11-23",
+   "symbols": [
+    "ENPH"
+   ]
+  },
+  {
+   "uid": "8425e9f412b96aa38cee",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-05-10",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "891eee1327b96e143431",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-09-15",
+   "symbols": [
+    "ARRY"
+   ]
+  },
+  {
+   "uid": "8a97bbe77794eedbf1f9",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-10-26",
+   "symbols": [
+    "ENPH",
+    "FSLR"
+   ]
+  },
+  {
+   "uid": "8b300f4bdcf77fdfe23b",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-01-12",
+   "symbols": [
+    "ITCI"
+   ]
+  },
+  {
+   "uid": "8b488d667be55eff33ca",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-04-26",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "8c9bdc7d9bbf8bf03eef",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-06-06",
+   "symbols": [
+    "CPB"
+   ]
+  },
+  {
+   "uid": "8ca272c26f70b01d9244",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-08-30",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "8d31aca73df5ef020493",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-02-06",
+   "symbols": [
+    "PANW"
+   ]
+  },
+  {
+   "uid": "8d492679aff906724a65",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-09-29",
+   "symbols": [
+    "WOOF"
+   ]
+  },
+  {
+   "uid": "8d63045fc93ba1d45c4e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-04-01",
+   "symbols": [
+    "FSLR"
+   ]
+  },
+  {
+   "uid": "8e9e0a0d2093616a552d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2020-05-21",
+   "symbols": [
+    "BBY"
+   ]
+  },
+  {
+   "uid": "9139481736d342d57926",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-10-02",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "920fcacd294b298473ab",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-12-30",
+   "symbols": [
+    "HXHX"
+   ]
+  },
+  {
+   "uid": "9644c611a4c058b5086f",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-11-29",
+   "symbols": [
+    "CRM"
+   ]
+  },
+  {
+   "uid": "9737d400fe6f28053bf8",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-06-12",
+   "symbols": [
+    "AMD",
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "98b2ed49c90037a62852",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-11-21",
+   "symbols": [
+    "RERE"
+   ]
+  },
+  {
+   "uid": "9b20bb511e3e2c75de59",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-02-25",
+   "symbols": [
+    "ALC"
+   ]
+  },
+  {
+   "uid": "9bb18efb5cf019c616ab",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-09-05",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "9c01773332b1ee4d9163",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-06-14",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "9d3d285f3e953228254c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-07-09",
+   "symbols": [
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "9df62ad82781e68ecd1c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-05-09",
+   "symbols": [
+    "SHLS"
+   ]
+  },
+  {
+   "uid": "a117bdf29cfbc451d5a9",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-08-20",
+   "symbols": [
+    "CRWD"
+   ]
+  },
+  {
+   "uid": "a137702ba74ba28cd41f",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-06-15",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "a2c78de7de83c5f01c22",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-07-25",
+   "symbols": [
+    "HTOO"
+   ]
+  },
+  {
+   "uid": "a513caf6f5a90deef94c",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-08-10",
+   "symbols": [
+    "PLUG"
+   ]
+  },
+  {
+   "uid": "a5285b0c59ed7d03f96a",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-12-24",
+   "symbols": [
+    "BBWI"
+   ]
+  },
+  {
+   "uid": "a536e4bd21ecba8e7b2e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-09-08",
+   "symbols": [
+    "FRO",
+    "GIII"
+   ]
+  },
+  {
+   "uid": "a6017d446c67ddb56a31",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-11-07",
+   "symbols": [
+    "ULTA"
+   ]
+  },
+  {
+   "uid": "a6f83f27eb12767b9d50",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-11-24",
+   "symbols": [
+    "BURL",
+    "DELL",
+    "DLTR"
+   ]
+  },
+  {
+   "uid": "a705f448b870a6a49772",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2021-12-06",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "a7898de02987e9da710e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-04-05",
+   "symbols": [
+    "GOLD"
+   ]
+  },
+  {
+   "uid": "a8050111a63aeb1faa05",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-08-01",
+   "symbols": [
+    "PBM"
+   ]
+  },
+  {
+   "uid": "a8de4f4fdce758b238c1",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-02-23",
+   "symbols": [
+    "INTU"
+   ]
+  },
+  {
+   "uid": "a9043991c8604cf2b62d",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-01-30",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "a9f2aea807389bc3f35c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2021-06-25",
+   "symbols": [
+    "JKS"
+   ]
+  },
+  {
+   "uid": "ab8d33b0ef5edb141b7c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-07-10",
+   "symbols": [
+    "GOOG",
+    "GOOGL"
+   ]
+  },
+  {
+   "uid": "ad2d096144fd4e26424a",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-10-09",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "ad3a662c04dc9bba3a5a",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-08-13",
+   "symbols": [
+    "ZM"
+   ]
+  },
+  {
+   "uid": "ae4cb1df3907a278589a",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-08-11",
+   "symbols": [
+    "ALK"
+   ]
+  },
+  {
+   "uid": "afc09d5b3267a5eb06d3",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-04-10",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "b0302fbdcc914b6fe572",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-06-05",
+   "symbols": [
+    "MU",
+    "NVDA",
+    "OLLI"
+   ]
+  },
+  {
+   "uid": "b04b1f4d064ddc0324c7",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-10-09",
+   "symbols": [
+    "SNOW"
+   ]
+  },
+  {
+   "uid": "b16b6b162d207bccca84",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-09-12",
+   "symbols": [
+    "AFRM"
+   ]
+  },
+  {
+   "uid": "b1959b4028878714ef05",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-03-19",
+   "symbols": [
+    "PANW"
+   ]
+  },
+  {
+   "uid": "b1b9b30ab2519db4f1ff",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-10-03",
+   "symbols": [
+    "CPRT"
+   ]
+  },
+  {
+   "uid": "b391a053d6479e750aa8",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-10-31",
+   "symbols": [
+    "MSTR"
+   ]
+  },
+  {
+   "uid": "b49c3693ea86d1354e34",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-07-18",
+   "symbols": [
+    "CUBE"
+   ]
+  },
+  {
+   "uid": "b700465c8d8dfb0e3068",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-01-13",
+   "symbols": [
+    "SAIC"
+   ]
+  },
+  {
+   "uid": "ba0582adf84a4647d764",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-06-08",
+   "symbols": [
+    "OLLI"
+   ]
+  },
+  {
+   "uid": "bb42f69a1c56e0b04592",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-05-15",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "bc813b19cd8b434d3f9e",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-07-30",
+   "symbols": [
+    "APLD"
+   ]
+  },
+  {
+   "uid": "bd3374bd86e8f0e2f9d7",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-10-24",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "be264a51ef5b7cb947eb",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-06-17",
+   "symbols": [
+    "NXT"
+   ]
+  },
+  {
+   "uid": "c01dd1094837b9cea39d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-08-14",
+   "symbols": [
+    "ENPH"
+   ]
+  },
+  {
+   "uid": "c0760615c006d2881522",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-05-20",
+   "symbols": [
+    "TSLA"
+   ]
+  },
+  {
+   "uid": "c175d96141b43cbec68d",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2021-02-25",
+   "symbols": [
+    "NTNX",
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "c230f58b5a85eeebde06",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-10-01",
+   "symbols": [
+    "BE"
+   ]
+  },
+  {
+   "uid": "c3e090961b4d95e01214",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-04-08",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "c41b0b924830506d3f67",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-11-13",
+   "symbols": [
+    "LFWD"
+   ]
+  },
+  {
+   "uid": "c478adcf73ce10c05580",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-07-03",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "c54be5cb80ca7462a920",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-07-09",
+   "symbols": [
+    "MRVL",
+    "NTLA",
+    "NVDA",
+    "OKTA"
+   ]
+  },
+  {
+   "uid": "c674875d0f1ddee1b74c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-02-28",
+   "symbols": [
+    "TER"
+   ]
+  },
+  {
+   "uid": "c82a41efbadbb2a5299e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-04-28",
+   "symbols": [
+    "TSM"
+   ]
+  },
+  {
+   "uid": "c952471941ab336ee110",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-07-30",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "cbc6c28e9ed29fc0551e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-12-15",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "cc0fe4ee2a6039f35c24",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-05-23",
+   "symbols": [
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "cc2fa73a0aab7d68b924",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-03-20",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "cc6811f796c070543e28",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2021-07-26",
+   "symbols": [
+    "MRVL"
+   ]
+  },
+  {
+   "uid": "cca03b69d5459b9e529d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-07-02",
+   "symbols": [
+    "SNOW"
+   ]
+  },
+  {
+   "uid": "cd3e486a40ebcfc45ff4",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-12-30",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "cd46498cc6677074b358",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-05-31",
+   "symbols": [
+    "GOOG",
+    "GOOGL"
+   ]
+  },
+  {
+   "uid": "cd983daaa194a9dc89f7",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-03-15",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "cdd14f283321e36c07f9",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-11-23",
+   "symbols": [
+    "A"
+   ]
+  },
+  {
+   "uid": "cde2aa299f1f659856a8",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-10-22",
+   "symbols": [
+    "BABA"
+   ]
+  },
+  {
+   "uid": "ce63acb1090d38fa8873",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-04-18",
+   "symbols": [
+    "ZM"
+   ]
+  },
+  {
+   "uid": "cefb7e4885152813f5d5",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-12-02",
+   "symbols": [
+    "CRM"
+   ]
+  },
+  {
+   "uid": "cf3c8afc9ab2e127abbc",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-07-18",
+   "symbols": [
+    "SFBS"
+   ]
+  },
+  {
+   "uid": "d0c5da80e64c92c9979e",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-06-25",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "d125d4a57db16672199c",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-03-05",
+   "symbols": [
+    "ZM"
+   ]
+  },
+  {
+   "uid": "d39a4a653e20636eb2a5",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-11-20",
+   "symbols": [
+    "BIYA"
+   ]
+  },
+  {
+   "uid": "d46d6f0d735d25e66d44",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-09-06",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "d4a2afe0c77e70350346",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-06-02",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "d4c612b4b9677c9f74b8",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-01-28",
+   "symbols": [
+    "FIZZ"
+   ]
+  },
+  {
+   "uid": "d57098abe11113f3fa60",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-09-23",
+   "symbols": [
+    "CDNA"
+   ]
+  },
+  {
+   "uid": "d57cd141f392add75607",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-12-21",
+   "symbols": [
+    "MU",
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "d58e61eee9fc6ca6ddf4",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-12-02",
+   "symbols": [
+    "UUUU"
+   ]
+  },
+  {
+   "uid": "d6d1084b2f208ace95ee",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-08-22",
+   "symbols": [
+    "URBN",
+    "ZM"
+   ]
+  },
+  {
+   "uid": "d74b0c7d4fc593a5dbca",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-04-10",
+   "symbols": [
+    "MOMO"
+   ]
+  },
+  {
+   "uid": "d7a2f6177a1752ed7d6f",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-02-14",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "d8a87ece993d14d53204",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-03-02",
+   "symbols": [
+    "SNOW"
+   ]
+  },
+  {
+   "uid": "d8cee38c82a345de0d73",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-08-24",
+   "symbols": [
+    "SNPS"
+   ]
+  },
+  {
+   "uid": "d8df3f5a0e5b60ca0f25",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-09-15",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "d8f51279e6f2702c210d",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-06-04",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "d9c49b251c711dca939d",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-06-27",
+   "symbols": [
+    "DOCU"
+   ]
+  },
+  {
+   "uid": "da170b672a7f46d7b5f8",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-10-15",
+   "symbols": [
+    "QS"
+   ]
+  },
+  {
+   "uid": "dad86e2cf9d35dd198de",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2024-03-11",
+   "symbols": [
+    "MRVL"
+   ]
+  },
+  {
+   "uid": "dc383bdebf799ed18d62",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-12-01",
+   "symbols": [
+    "INSM"
+   ]
+  },
+  {
+   "uid": "dc40db5a49c4436f1f1b",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2021-10-29",
+   "symbols": [
+    "ZM"
+   ]
+  },
+  {
+   "uid": "dd09bbe65251bf4a6b69",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-08-31",
+   "symbols": [
+    "GWRE"
+   ]
+  },
+  {
+   "uid": "ddd2725f37aa0835d9cf",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-06-21",
+   "symbols": [
+    "AMD"
+   ]
+  },
+  {
+   "uid": "de142b21f0368f43835f",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-12-12",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "deb822de13aa0b3985ba",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-10-05",
+   "symbols": [
+    "MU"
+   ]
+  },
+  {
+   "uid": "deb822de13aa0b3985ba",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-10-05",
+   "symbols": [
+    "MU"
+   ]
+  },
+  {
+   "uid": "dee090e6faf7e5c86714",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-05-06",
+   "symbols": [
+    "CEG",
+    "CELH"
+   ]
+  },
+  {
+   "uid": "df2d9f680398627cfee1",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-06-16",
+   "symbols": [
+    "PDD"
+   ]
+  },
+  {
+   "uid": "dfff02d4a1ad3b4a0882",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-09-16",
+   "symbols": [
+    "CRWV"
+   ]
+  },
+  {
+   "uid": "e02c02ba5e131e5f2fe0",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-03-11",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "e142a3446d4ac0b4b3cd",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-08-04",
+   "symbols": [
+    "PLUG"
+   ]
+  },
+  {
+   "uid": "e2f539b79ce67939e987",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-08-26",
+   "symbols": [
+    "AMWD"
+   ]
+  },
+  {
+   "uid": "e348511c4c32e58980ec",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2022-08-15",
+   "symbols": [
+    "QQQ"
+   ]
+  },
+  {
+   "uid": "e3f843ed1be70914a578",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-05-05",
+   "symbols": [
+    "ALGS"
+   ]
+  },
+  {
+   "uid": "e438129f6e62760ee863",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2023-11-20",
+   "symbols": [
+    "MDT"
+   ]
+  },
+  {
+   "uid": "e58c519129486c2e79aa",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2021-04-06",
+   "symbols": [
+    "PLUG"
+   ]
+  },
+  {
+   "uid": "e672df073180ffb812a6",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-11-20",
+   "symbols": [
+    "ORCL"
+   ]
+  },
+  {
+   "uid": "e67fcd3e3580e3c1c9fa",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2023-11-20",
+   "symbols": [
+    "FIVE"
+   ]
+  },
+  {
+   "uid": "e77cd1e2b834eb83321a",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-08-21",
+   "symbols": [
+    "CHTR"
+   ]
+  },
+  {
+   "uid": "e90e1790540b1c9b34db",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2023-04-03",
+   "symbols": [
+    "SAIC"
+   ]
+  },
+  {
+   "uid": "e9e94a1ab5f10402e588",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2023-08-24",
+   "symbols": [
+    "DLTR"
+   ]
+  },
+  {
+   "uid": "e9f9dca288fc974c42b9",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2022-02-18",
+   "symbols": [
+    "BRC"
+   ]
+  },
+  {
+   "uid": "eaac715c78ec77b4b525",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2020-12-23",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "eae6aaddcaf352a8ad82",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2022-05-16",
+   "symbols": [
+    "PRCH"
+   ]
+  },
+  {
+   "uid": "eb2902e5398b0959df61",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2020-10-26",
+   "symbols": [
+    "TSM"
+   ]
+  },
+  {
+   "uid": "eb45916a51c12b587dd5",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-03-05",
+   "symbols": [
+    "NPCE"
+   ]
+  },
+  {
+   "uid": "eb49ca827a7112cacfc9",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2024-01-09",
+   "symbols": [
+    "URBN"
+   ]
+  },
+  {
+   "uid": "eec5bf83f8ee097f4ec9",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-03-09",
+   "symbols": [
+    "NIO"
+   ]
+  },
+  {
+   "uid": "ef8d32c0b6056095dfc0",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-09-29",
+   "symbols": [
+    "HPQ"
+   ]
+  },
+  {
+   "uid": "f226331509bc198350e5",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2024-02-01",
+   "symbols": [
+    "SNPS"
+   ]
+  },
+  {
+   "uid": "f2a85bd91d67815b5f05",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-05-23",
+   "symbols": [
+    "ROST"
+   ]
+  },
+  {
+   "uid": "f2e350d44bcc2ac5fcac",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-11-21",
+   "symbols": [
+    "NVDA"
+   ]
+  },
+  {
+   "uid": "f3b88cce1d15b4c03c83",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-12-29",
+   "symbols": [
+    "PCLA"
+   ]
+  },
+  {
+   "uid": "f4996c0cafba8670af0a",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2022-04-20",
+   "symbols": [
+    "ENPH"
+   ]
+  },
+  {
+   "uid": "f5e06b5f544740f8203f",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-06-13",
+   "symbols": [
+    "AVGO"
+   ]
+  },
+  {
+   "uid": "f6211015c8e72002e016",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2025-08-31",
+   "symbols": [
+    "PSTG"
+   ]
+  },
+  {
+   "uid": "f8486bc44ae05f52bf43",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2024-06-17",
+   "symbols": [
+    "SYM"
+   ]
+  },
+  {
+   "uid": "f91bc931ed647fa701f5",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2021-01-14",
+   "symbols": [
+    "AMSC"
+   ]
+  },
+  {
+   "uid": "fc7663c6bb436c2db1ed",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": -2.0,
+   "effective_at": "2025-08-12",
+   "symbols": [
+    "BYD"
+   ]
+  },
+  {
+   "uid": "fce4c8659d3d99678dce",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": -1.0,
+   "effective_at": "2025-12-31",
+   "symbols": [
+    "NFLX"
+   ]
+  },
+  {
+   "uid": "fd146326d45d3a612092",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2020-12-10",
+   "symbols": [
+    "LULU"
+   ]
+  },
+  {
+   "uid": "fd4fdff98e1e48e102ae",
+   "cf_index": 1,
+   "kind": "escalation",
+   "delta_event": 1.0,
+   "effective_at": "2021-10-15",
+   "symbols": [
+    "SPY"
+   ]
+  },
+  {
+   "uid": "fe33642de02e722e2cb4",
+   "cf_index": 0,
+   "kind": "sign_flip",
+   "delta_event": 2.0,
+   "effective_at": "2025-02-11",
+   "symbols": [
+    "PLTR"
+   ]
+  }
+ ],
+ "written_utc": "2026-09-12T12:35:33+00:00"
+}

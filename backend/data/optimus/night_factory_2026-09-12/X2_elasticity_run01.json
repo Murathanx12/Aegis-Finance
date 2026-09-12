@@ -1,0 +1,142 @@
+{
+ "job": "X2_elasticity",
+ "lane": "X",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "backend": "local_gguf",
+ "PREREGISTRATION": {
+  "trial": "r2-monthly-news-digest-read",
+  "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+  "pre_registered": "2026-09-10",
+  "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+  "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+  "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+  "model_identity": {
+   "backend": "local_gguf",
+   "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "size_bytes": 4683074240,
+   "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+   "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+   "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+   "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+  },
+  "cost_bps_per_side": 25.0,
+  "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+ },
+ "question": "How much does the model's forecast move when the NEWS changes and the calendar does not?",
+ "PIT_rule": "The elasticity for a uid may enter a prediction whose decision date is on or after that headline's own `effective_at` -- E1's existing contract, unchanged. X2 adds only that BOTH the real-headline forecast and the counterfactual-substituted forecast must exist before that decision, which they trivially do: the counterfactual call needs no future information, only the already-published headline it perturbs.",
+ "full_pass_projection": {
+  "real_headline_calls_cached_one_per_uid": 6935,
+  "sign_flip_calls": 6674,
+  "escalation_calls": 6026,
+  "placebo_calls": 6935,
+  "total_calls_primary_plus_secondary_plus_placebo": 26570,
+  "measured_latency_s_per_call": "4-12 (C1's own latency_s; median ~5-6)",
+  "projected_serial_wall_time_hours": "36-43",
+  "reading": "an OVERNIGHT-SCALE multi-night batch, not an afternoon job. --max-cells makes the first run a 300-pair sample that produces a real number the same night; the projection above is what the full pass costs in time. Dollars: $0.00, the backend is local_gguf"
+ },
+ "purpose_tag": "x2_belief_elasticity",
+ "construction": {
+  "c1_rows_status_ok": 6676,
+  "uids": 6676,
+  "pairs_with_a_defined_denominator": 10063,
+  "per_kind": {
+   "sign_flip": {
+    "kept": 5437,
+    "parent_unclear": 1185,
+    "cf_unclear": 2,
+    "no_change_in_sign": 50,
+    "escalation_points_the_other_way": 0
+   },
+   "escalation": {
+    "kept": 4626,
+    "parent_unclear": 1168,
+    "cf_unclear": 15,
+    "no_change_in_sign": 0,
+    "escalation_points_the_other_way": 217
+   }
+  },
+  "why_actor_timing_is_excluded": "it changes WHO or WHEN, not the event's sign or magnitude, so delta_event has no principled scale; it is kept for the flip diagnostic only",
+  "escalation_convention_MEASURED": "the spec proposed delta = +1 fixed and asked for it to be re-verified. Counted over all C1 rows: 4626 escalations agree with their parent's direction and 217 point the other way. A fixed +1 would be wrong for the second group, so delta = +1 in the PARENT's signed frame and disagreeing cells are dropped and counted, never forced"
+ },
+ "cells_frozen": {
+  "n_cells": 300,
+  "cells_sha256": "5981cde760105e900fd4447a5a3f83c906dda41bc73c1d20b7932c6af7c66b69",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X2_elasticity_run01_cells.json",
+  "seed": 20260909,
+  "placebo_pairs": 300
+ },
+ "verdict": "PENDING_MODEL: 10063 pairs have a defined denominator, 300 are frozen for this run with 300 placebo pairs, and the elasticity arithmetic is tested; the forecasts need the reader, which is not answering and which this job does not start. Probe said: ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+ "headline": "10063 elastic pairs from 6676 C1 rows (5437 sign_flip, 4626 escalation); 300 frozen at sha256 5981cde76010; NO model call was made. Full pass is 36-43 h serial",
+ "pending_when_the_reader_is_up": [
+  "one cached forecast per unique text: 597 calls for this draw",
+  "elasticity = (p_cf - p_real) / delta_event per pair",
+  "the flip test per sign_flip cell (a tie is a FAIL)",
+  "the placebo leg: 300 mismatched pairs, seed 20260909",
+  "one command: python -m scripts.night_x2_elasticity --max-cells 300 --run 1"
+ ],
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": true,
+   "date_shifted_placebo_run": false,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "ChronoGPT is an OPTIONAL separate deliverable (spec section 1.6) and has no GGUF build",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-06-30",
+   "cutoff_source": "triangulated from OpenRouter/Puter provider pages and the community tracker github.com/HaoooWang/llm-knowledge-cutoff-dates; some secondary sources say April 2024. NOT an official Alibaba cutoff page and NOT verified against Qwen's own model card in this session",
+   "cutoff_confidence": "MEDIUM",
+   "evidence_paths": {
+    "anonymised": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-08\\C1_counterfactual_news.jsonl",
+    "date_shifted_placebo_run": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X2_elasticity_run01_cells.json",
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": false,
+   "note": "X2 produces a FEATURE, not a book: it selects no universe and holds no position, so there is no vintage to respect here. The P7 vintage binds whichever book consumes the feature"
+  },
+  "P3_direction_flip": {
+   "pass_rate": null,
+   "n": 0,
+   "test": "sign_flip counterfactual: sign(p_cf - p_real) == sign(delta_event), a tie counts as FAIL (spec section 3.5)"
+  },
+  "P4_calibration_ece": {
+   "ece": null,
+   "n_bins": 10,
+   "brier": null,
+   "brier_decomposition": {}
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "none: X2 emits a feature and prices no book. The consuming book charges r2_trial.COST_BPS_PER_SIDE",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": null,
+   "costed": false,
+   "gross_reported_separately": false
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "anon, counterfactuals[].text": "C1's extraction (local_gguf), read from disk",
+    "p_real, p_cf": "Qwen2.5-7B via the frozen TRIAL-R2 prompt, purpose x2_belief_elasticity",
+    "delta_event, elasticity, flip_pass": "deterministic arithmetic in backend.services.belief_elasticity"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "X2 reads C1's counterfactual REWRITES, which never existed before C1 wrote them, so no model can have memorised their outcome. The real headlines they perturb carry L3's own LAP; this job forecasts no dated outcome of its own"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": null,
+  "t": null,
+  "adopted_arm": null,
+  "reason": "every text X2 reads is already anonymised (C1's `anon` field and its transforms), and there is no raw arm to compare against. X_anon_gap owns the gap"
+ },
+ "elapsed_s": 2.2,
+ "written_utc": "2026-09-12T12:35:35+00:00",
+ "run": 1
+}
