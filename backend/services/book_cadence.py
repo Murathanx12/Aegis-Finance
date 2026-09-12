@@ -186,11 +186,27 @@ def _signal_frame(book: PaperBook, bars, symbols: Sequence[str], asof: date):
     import numpy as np
     import pandas as pd
 
+    from backend.services import book_signals as BS
+
     name = book.strategy.signal.name
+    # The first four night-job books declare signals that need a panel rather
+    # than a bar window (short interest, Form-4 clusters, capital-gains
+    # overhang, a confidence threshold). `book_signals.REGISTRY` computes those;
+    # its `SignalUnavailable` becomes an `UnsupportedSignal` here, so a book
+    # whose panel does not reach the decision date is MARKED and does not
+    # DECIDE, with the reason on the receipt -- which is a different fact from
+    # a book that decided to hold nothing.
+    if name in BS.REGISTRY:
+        try:
+            return BS.compute(name, book=book, bars=bars, symbols=symbols,
+                              asof=asof)
+        except BS.SignalUnavailable as exc:
+            raise UnsupportedSignal(str(exc)) from exc
     if name not in SUPPORTED_SIGNALS:
         raise UnsupportedSignal(
             f"book {book.book_id} declares signal {name!r}; this selector can "
-            f"compute {list(SUPPORTED_SIGNALS)}. The book is marked but does "
+            f"compute {list(SUPPORTED_SIGNALS)} plus the registered book "
+            f"signals {sorted(BS.REGISTRY)}. The book is marked but does "
             f"NOT decide: a NAV produced by a different ranking than the "
             f"contract declares belongs to a strategy nobody wrote down.")
 

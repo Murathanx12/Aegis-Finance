@@ -1,0 +1,92 @@
+{
+  "job": "seed_first_books",
+  "ran_at": "2026-09-12T09:31:33+00:00",
+  "family": "NIGHT_JOB_BOOKS_2026_09",
+  "licence": "PRODUCT_EXPERIMENT",
+  "dry_run": false,
+  "books": [
+    {
+      "strategy_id": "si_low_turnover_high_v1",
+      "book_id": "book:1934ec97aa4b1620",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    },
+    {
+      "strategy_id": "insider_cluster_length_v1",
+      "book_id": "book:625c391913d9718c",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    },
+    {
+      "strategy_id": "insider_cluster_same_day_v1",
+      "book_id": "book:4359eba886a8a505",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    },
+    {
+      "strategy_id": "disposition_overhang_conditioner_v0",
+      "book_id": "book:a82e6e453c14c241",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    },
+    {
+      "strategy_id": "unconditioned_reaction_book_v0",
+      "book_id": "book:c3adfbc0192576c0",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    },
+    {
+      "strategy_id": "abstention_book_v0",
+      "book_id": "book:b109c8861c43e3c6",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    },
+    {
+      "strategy_id": "abstention_always_invested_twin_v0",
+      "book_id": "book:3b3e7049e693c3e4",
+      "created": false,
+      "reason": "the fingerprint is already in `paper_books`; a second create would rewrite the row and re-draw nothing while logging as if it had created something"
+    }
+  ],
+  "created": 0,
+  "existing": 7,
+  "note": "created through POST /api/control/books/create-from-contract, in process, so the route's refusals are the ones that fire",
+  "planned": [
+    {
+      "strategy_id": "si_low_turnover_high_v1",
+      "book_id": "book:1934ec97aa4b1620",
+      "already_present": true
+    },
+    {
+      "strategy_id": "insider_cluster_length_v1",
+      "book_id": "book:625c391913d9718c",
+      "already_present": true
+    },
+    {
+      "strategy_id": "insider_cluster_same_day_v1",
+      "book_id": "book:4359eba886a8a505",
+      "already_present": true
+    },
+    {
+      "strategy_id": "disposition_overhang_conditioner_v0",
+      "book_id": "book:a82e6e453c14c241",
+      "already_present": true
+    },
+    {
+      "strategy_id": "unconditioned_reaction_book_v0",
+      "book_id": "book:c3adfbc0192576c0",
+      "already_present": true
+    },
+    {
+      "strategy_id": "abstention_book_v0",
+      "book_id": "book:b109c8861c43e3c6",
+      "already_present": true
+    },
+    {
+      "strategy_id": "abstention_always_invested_twin_v0",
+      "book_id": "book:3b3e7049e693c3e4",
+      "already_present": true
+    }
+  ],
+  "n_books": 7
+}
