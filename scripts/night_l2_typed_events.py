@@ -514,6 +514,11 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
 
     base = {
         "job": JOB, "lane": "L", "licence": LICENCE, "run": run, "smoke": bool(smoke),
+        # stamped here as well as in `night_factory_jobs.JOB_STAGES`, so a direct
+        # `python -m scripts.night_l2_typed_events` receipt is not an unstamped
+        # row in the stage contract. L2 turns raw text into FEATURE rows; it
+        # reads no price, no weight and no PnL.
+        "stage": "features",
         "llm_spend_usd": 0.0, "backend": backend,
         "question": ("What typed event, if any, does each corpus document carry, "
                      "as a row that is numeric by construction?"),

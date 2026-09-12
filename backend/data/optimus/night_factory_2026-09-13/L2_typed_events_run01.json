@@ -4,6 +4,7 @@
  "licence": "PRODUCT_EXPERIMENT",
  "run": 1,
  "smoke": false,
+ "stage": "features",
  "llm_spend_usd": 0.0,
  "backend": "local_gguf",
  "question": "What typed event, if any, does each corpus document carry, as a row that is numeric by construction?",
@@ -145,5 +146,5 @@
   "one command: python -m scripts.night_l2_typed_events --max-rows 6020 --run 1"
  ],
  "elapsed_s": 2.4,
- "written_utc": "2026-09-12T21:30:47+00:00"
+ "written_utc": "2026-09-12T21:37:48+00:00"
 }
