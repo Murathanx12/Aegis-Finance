@@ -446,6 +446,13 @@ dates, not assumed costless).
 | **X4** | **Regime-conditional use.** FINSABER's failure is asymmetric (right in bulls, wrong in bears): route the LLM read through a market sensor (the NVDA/SPY sensor of invariant 4) and grade routed vs unrouted. | RW1 windows | the unrouted read |
 | **X5** | **The LLM as an auditable information interface, never the allocator** — the Alpha Illusion authors' own recommendation and our invariant 5. Every X-lane output is a feature or a forecast row; the engine sizes, costs and gates. | contract.py | — |
 
+**Measured 2026-09-12 (chunk 7, no model calls):** L3's before/after-cutoff design **cannot run on
+panel B** — every cell is after Qwen2.5-7B's ~2024-06 cutoff, so the panel B number is INCONCLUSIVE
+on lookahead, never CLEAN; panel A (2015-2024) straddles the cutoff and is the cheap within-panel test.
+X4: routing R2's read by the regime sensor makes it **worse** in-sample (−13.2%/yr net on the 10 risk-on
+blocks vs −3.9%/yr unrouted) — FINSABER's asymmetry does not rescue this lane. The anonymisation gap,
+the recall probe and the elasticity run are frozen at hashed cell lists, `PENDING_MODEL`.
+
 **Reopening closed hypotheses without p-hacking (lane X's licence to look
 again):** McLean-Pontiff (2016) split factor decay into ~26% overfitting and
 ~58% publication crowding — a `DEPRIORITIZED` idea is re-opened only with a

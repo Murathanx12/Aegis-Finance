@@ -391,6 +391,23 @@ case is quoted on invested equity. Owed: the 45% loser fraction in every agency 
 placeholder; `extreme_growth`'s row is extrapolated; the model path is exercised only by mocks. Suite
 8,694 → 8,846.
 
+**Chunk 7 landed (validated 2026-09-12 night):** `aa1bc10` P1-P6 as a schema with a refusal
+(`protocol_p16.py`; the leaderboard sync refuses an X-lane receipt missing any field, naming it);
+`bd08133` the anonymisation gap frozen at 300 stratified cells, `PENDING_MODEL` (the server was down
+and never started by the agent); `62e25ae` **L3: panel B cannot run the paper's test at all** — every
+cell is after Qwen2.5-7B's ~2024-06 cutoff, `n_cells_pre_cutoff = 0`, so the verdict is INCONCLUSIVE,
+never CLEAN; the measured MDE at 18 blocks says CLEAN is reachable at 60-120 cells/month, not at panel
+B's size; the AMNESIA gap re-derived from R2's persisted canary rows is −0.0010 (real 0.481 vs masked
+0.482); `81dba12` belief elasticity with the escalation denominator measured on C1 (6,026 escalations,
+18.4% disagree with their parent's direction, so a fixed Δ = +1 is wrong for a fifth), 300 pairs + 300
+placebos frozen `PENDING_MODEL`, full pass projected 26,570 calls / 36-43 h; `f01fdcc` the market
+sensor (21-day SPY trend × FRED VIX; last 60 sessions risk_on 41 / risk_off 19; latest risk_off) and
+**X4: routing R2's read to risk_on keeps 10 of 18 blocks at −13.2%/yr net vs −3.9%/yr unrouted —
+routing makes it worse (in-sample, admits nothing)**; a twenty-month look-ahead inside the first
+sensor draft (one VIX scalar for all blocks) caught before any number; `4e7ca92` X3's contract, not
+wired (needs L2). Suite 8,846 → 9,080. Caveats: the Qwen cutoff is community-sourced (medium), DeepSeek's
+low; ChronoGPT not built.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
