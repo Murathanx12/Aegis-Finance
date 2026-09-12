@@ -844,3 +844,212 @@ export interface CoverageResponse {
 
 export const getCoverage = () =>
   controlFetch<CoverageResponse>("/coverage", undefined, 60_000);
+
+// ---------------------------------------------------------- lane A: agency
+// `backend/routers/control.py`'s agency block. Four reads and three writes,
+// and one rule the types carry: every agency payload has a `limits` sentence
+// on it, because the SEC boundary is a property of the payload rather than a
+// paragraph somebody remembered to put on one page.
+
+export interface AgencyQuestion {
+  qid: string;
+  text: string;
+  dimension: string;
+  scale: string;
+  source: string;
+}
+
+export interface PersonalityRow {
+  personality: string;
+  k: number;
+  max_single_name: number;
+  gross_cap: number;
+  stop_loss: number;
+  drawdown_budget: number;
+  rebalance_frequency: string;
+  cash_floor: number;
+  extrapolated: boolean;
+  sources: Record<string, string>;
+  note?: string;
+}
+
+export interface QuestionnaireResponse {
+  utc?: string;
+  version?: string;
+  questions?: AgencyQuestion[];
+  bands?: Array<{ from: number; to: number; personality: string }>;
+  personalities?: Record<string, PersonalityRow>;
+  constraint_vocabulary?: { pattern?: string; esg_categories?: string[] };
+  convention?: string;
+  limits?: string;
+}
+
+export interface IntakeResponse {
+  utc?: string;
+  ips?: UnknownPayload & { ips_hash?: string; personality?: string };
+  ips_hash?: string;
+  ips_prose_md?: string;
+  prose_source?: string;
+  prose_rejected?: string | null;
+  validated_by?: string;
+  numeric_fields?: Record<string, number>;
+  personality_numbers?: PersonalityRow;
+  echoes?: string[];
+  ips_path_rel?: string | UnknownPayload;
+  limits?: string;
+}
+
+export interface PlainWords {
+  number: string;
+  sentence: string;
+  receipt_path: string;
+  missing_fields?: string[];
+  source?: string;
+  draft_rejected?: string;
+}
+
+export interface AgencyOptionRow {
+  personality: string;
+  is_declared_choice: boolean;
+  contract_hash: string;
+  strategy_id?: string;
+  title?: string;
+  signal?: string;
+  k?: number;
+  max_single_name?: number;
+  gross_cap?: number;
+  stop_loss?: number;
+  drawdown_budget?: number;
+  cash_floor_pct?: number;
+  notional_usd?: number;
+  cadence?: string;
+  hold_rule?: string;
+  extrapolated_tier?: boolean;
+  worst_case?: {
+    worst_case_usd?: number | null;
+    worst_case_pct_of_equity?: number | null;
+    gross_over_equity?: number;
+    verdict?: string;
+    equity_basis?: string;
+  };
+  expected_drawdown?: {
+    verdict?: string;
+    why?: string;
+    worst_twin_drawdown?: number;
+    drawdown_budget?: number | null;
+    n_twin_marks?: number;
+  };
+  twins?: Array<{ book_id: string; kind?: string | null; construction?: string }>;
+  plain_words?: PlainWords[];
+  cost_curve?: string;
+  round_trip_bps?: number;
+  [k: string]: unknown;
+}
+
+export interface ProposeResponse {
+  utc?: string;
+  ips_hash?: string;
+  ips_id?: string;
+  declared_personality?: string;
+  capital_usd?: number;
+  cash_floor_pct?: number;
+  n_options?: number;
+  options?: AgencyOptionRow[];
+  how_to_hold?: string;
+  the_choice_is_graded?: string;
+  limits?: string;
+}
+
+export interface HoldResponse {
+  utc?: string;
+  held_utc?: string;
+  ips_hash?: string;
+  chosen_book_id?: string;
+  chosen_contract_hash?: string;
+  sentence?: string;
+  books?: Array<{ role: string; book: UnknownPayload; twins: UnknownPayload[] }>;
+  note?: string;
+  limits?: string;
+}
+
+export interface ReviewCall {
+  book_id?: string;
+  ticker: string;
+  decision: string;
+  probability: number;
+  prediction_id: string;
+  row_hash: string;
+}
+
+export interface AgencyReviewResponse {
+  utc?: string;
+  ran?: boolean;
+  date?: string;
+  status?: string;
+  reason?: string;
+  n_books?: number;
+  n_calls?: number;
+  n_refused?: number;
+  calls?: ReviewCall[];
+  refused?: Array<{ book_id?: string; ticker?: string; reason?: string }>;
+  protect_first?: UnknownPayload;
+  vocabulary?: string[];
+  receipt_rel?: string | null;
+  note?: string;
+  limits?: string;
+}
+
+export interface ProtectFirstResponse {
+  utc?: string;
+  n_flips?: number;
+  n_open?: number;
+  flips?: UnknownPayload[];
+  ledger_rel?: string;
+  reading?: string;
+  limits?: string;
+}
+
+export const getQuestionnaire = () =>
+  controlFetch<QuestionnaireResponse>("/agency/questionnaire");
+export const getAgencyReview = (day?: string) =>
+  controlFetch<AgencyReviewResponse>(
+    `/agency/review${day ? `?day=${encodeURIComponent(day)}` : ""}`,
+  );
+export const getProtectFirst = () =>
+  controlFetch<ProtectFirstResponse>("/agency/protect-first");
+
+export interface IntakeBody {
+  capital: number;
+  horizon_months: number;
+  personality: string | null;
+  constraints: string[];
+  liquidity_need: number;
+  answers: number[];
+  draft?: boolean;
+}
+
+/** A1. Gated: it may ask the local model for the prose. Writes no book. */
+export const agencyIntake = (body: IntakeBody) =>
+  post<IntakeResponse>("/agency/intake", body, 180_000);
+
+/** A2. Writes nothing — the books exist only once a human holds one. */
+export const agencyPropose = (ipsHash: string) =>
+  post<ProposeResponse>("/agency/propose", { ips_hash: ipsHash }, 120_000);
+
+/**
+ * A2. The ONLY call that mints `origin="human_text"`.
+ *
+ * The sentence is not optional and the client does not invent one: it is what
+ * makes the book the person's, and the backend refuses a short one rather
+ * than accepting a blank reason.
+ */
+export const agencyHold = (
+  ipsHash: string,
+  chosenContractHash: string,
+  sentence: string,
+) =>
+  post<HoldResponse>(
+    "/agency/hold",
+    { ips_hash: ipsHash, chosen_contract_hash: chosenContractHash, sentence },
+    120_000,
+  );

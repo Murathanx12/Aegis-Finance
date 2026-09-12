@@ -1368,7 +1368,12 @@ def propose_payload(ips: IPS, options: Sequence[Option]) -> dict:
             "capital_usd": ips.capital_usd,
             "cash_floor_pct": ips.cash_floor_pct,
             "n_options": len(options),
-            "options": [o.as_row() for o in options],
+            # A5: every number the agency SHOWS carries its sentence and its
+            # receipt path, so the panel cannot be assembled without them.
+            "options": [{**o.as_row(),
+                         "plain_words": explain_option(
+                             o, ips=ips if o.is_declared_choice else None)}
+                        for o in options],
             "how_to_hold": ("POST /api/control/agency/hold with {ips_hash, "
                             "chosen_contract_hash, sentence}. The sentence is "
                             "required: it is what makes the book yours."),
@@ -1979,6 +1984,7 @@ def _review_inner(book, *, bars, asof, conn, db_path, ledger, targets,
             "drawdown_state": dd,
             "limits": LIMITS_SENTENCE,
         })
+        calls[-1]["plain_words"] = explain_call(calls[-1])
     return calls, refusals
 
 
@@ -2469,17 +2475,185 @@ def protect_first_pass(*, asof=None, bars=None, conn=None, db_path=None,
             "limits": LIMITS_SENTENCE}
 
 
+# ===========================================================================
+# A5 — PLAIN WORDS
+# ===========================================================================
+#
+# "Every number the agency shows has a one-sentence explanation the local
+# model writes from the receipt, and the receipt path. The average investor
+# reads the sentence; the sceptic reads the path" (A5).
+#
+# The sentence is built from the RECEIPT'S OWN FIELDS and never from a
+# free-text summary a model invented beside them — same split as A1. The model
+# may rewrite the wording (`draft=True`), and a rewrite that introduces a
+# number the receipt does not contain is discarded in favour of the template.
+#
+# A missing field prints an em dash rather than a plausible stand-in, and the
+# payload names which fields were missing: a sentence with a number in it is
+# read as a measurement whether or not anybody measured it.
+
+DASH = "—"
+
+#: kind -> (template, the fields it needs, what the receipt path points at)
+EXPLAIN_TEMPLATES: dict[str, tuple[str, tuple[str, ...], str]] = {
+    "target": (
+        "{ticker} has a {probability_pct} chance of beating its benchmark "
+        "twin over the next {horizon} sessions, based on {n_events} recent "
+        "news event(s) and its {regime} market regime.",
+        ("ticker", "probability_pct", "horizon", "n_events", "regime"),
+        "predictions.jsonl#{prediction_id}"),
+    "interval": (
+        "The model's {lower} to {upper} range covers what actually happened "
+        "{realised_coverage} of the time recently — {calibrated_or_not}.",
+        ("lower", "upper", "realised_coverage", "calibrated_or_not"),
+        "evidence_memory/calibration/{model}_{mechanism}.json"),
+    "worst_case": (
+        "If every position in this book hit its stop on the same day, you "
+        "would be down about {worst_case_usd} ({worst_case_pct} of this "
+        "book), at {gross_over_equity} gross exposure.",
+        ("worst_case_usd", "worst_case_pct", "gross_over_equity"),
+        "contract.py::loss_budget_worst_case() beside the strategy "
+        "fingerprint {fingerprint}"),
+    "drawdown": (
+        "This book is down {drawdown} from its peak on {peak_date}; its "
+        "budget is {drawdown_budget}, {distance} away.",
+        ("drawdown", "peak_date", "drawdown_budget", "distance"),
+        "protect_first.jsonl (the flip log family; the row exists even when "
+        "no flip has fired)"),
+}
+
+EXPLAIN_SYSTEM = (
+    "You rewrite one sentence about an investment number so a non-expert can "
+    "read it. Reply in English, in ONE sentence. Copy every number exactly as "
+    "given; never compute, round, add or drop one. No advice.")
+
+
+def _fmt(v) -> str:
+    return DASH if v is None or v == "" else str(v)
+
+
+def explain(number: str, receipt_path: str | None = None, *,
+            draft: bool = False, **fields) -> dict:
+    """One plain sentence for one number, with the path it came from (A5).
+
+    `number` is one of `EXPLAIN_TEMPLATES`. Absent fields print an em dash and
+    are named on the payload — a sentence with a number in it reads as a
+    measurement whether or not anybody measured it.
+    """
+    if number not in EXPLAIN_TEMPLATES:
+        raise AgencyError(f"no plain-words template for {number!r}; declared: "
+                          f"{sorted(EXPLAIN_TEMPLATES)}")
+    template, needed, default_path = EXPLAIN_TEMPLATES[number]
+    missing = [f for f in needed if fields.get(f) in (None, "")]
+    values = {k: _fmt(v) for k, v in fields.items()}
+    for f in needed:
+        values.setdefault(f, DASH)
+    sentence = template.format_map(_Defaulting(values))
+    path = receipt_path or default_path.format_map(_Defaulting(values))
+    out = {"number": number, "sentence": sentence, "receipt_path": path,
+           "missing_fields": missing, "source": "template",
+           "fields": dict(fields), "limits": LIMITS_SENTENCE}
+    if not draft:
+        return out
+    # The model may rewrite the WORDING. It may not change the arithmetic, and
+    # a rewrite that introduces a number the receipt does not carry is
+    # discarded rather than repaired.
+    numbers = {f"field_{k}": v for k, v in fields.items()
+               if isinstance(v, (int, float)) and not isinstance(v, bool)}
+    try:
+        from backend.services import free_inference as fi          # noqa: PLC0415
+        reply = fi.complete(backend="local_gguf",
+                            prompt=f"Rewrite this for a non-expert, one "
+                                   f"sentence, same numbers:\n{sentence}",
+                            system=EXPLAIN_SYSTEM, purpose="agency_explain",
+                            max_tokens=160, temperature=0.0)
+    except Exception as exc:                                       # noqa: BLE001
+        out["draft_rejected"] = f"{type(exc).__name__}: {exc}"[:200]
+        return out
+    text = (reply.text or "").strip()
+    allowed = set(_NUM_RE.findall(sentence))
+    intruders = [t for t in _NUM_RE.findall(text)
+                 if t not in allowed and t.replace(",", "") not in
+                 {a.replace(",", "") for a in allowed}]
+    if not text or intruders:
+        out["draft_rejected"] = (
+            f"the rewrite introduced {intruders[:5]} — number(s) the receipt "
+            f"does not carry. DISCARDED, not repaired."
+            if intruders else "the model returned an empty rewrite")
+        return out
+    _ = numbers      # kept for the reader: the check is against the SENTENCE
+    out.update({"sentence": text, "source": f"local_gguf:{reply.model}"})
+    return out
+
+
+class _Defaulting(dict):
+    """`format_map` with an em dash for anything the caller did not supply."""
+
+    def __missing__(self, key):                                    # noqa: D105
+        return DASH
+
+
+def explain_option(option: Option, *, ips: IPS | None = None) -> list[dict]:
+    """The plain-words panel for one proposed book: worst case, and the
+    drawdown line even when no flip has fired."""
+    w = option.worst_case
+    out = [explain("worst_case",
+                   worst_case_usd=(f"${abs(float(w['worst_case_usd'])):,.0f}"
+                                   if w.get("worst_case_usd") is not None
+                                   else None),
+                   worst_case_pct=(f"{float(w['worst_case_pct_of_equity']):.1%}"
+                                   if w.get("worst_case_pct_of_equity")
+                                   is not None else None),
+                   gross_over_equity=f"{float(w['gross_over_equity']):.2f}x",
+                   fingerprint=option.contract_hash)]
+    dd = option.expected_drawdown
+    budget = dd.get("drawdown_budget")
+    out.append(explain(
+        "drawdown",
+        drawdown=(f"{float(dd['worst_twin_drawdown']):.1%}"
+                  if dd.get("worst_twin_drawdown") is not None else None),
+        peak_date=None,
+        drawdown_budget=f"{float(budget):.0%}" if budget is not None else None,
+        distance=(dd.get("verdict") if dd.get("verdict") == "CANNOT DETERMINE"
+                  else None)))
+    if ips is not None:
+        out.append({"number": "policy", "sentence": ips.prose_md,
+                    "receipt_path": f"agency/ips/{ips.ips_hash}.json",
+                    "missing_fields": [], "source": ips.prose_source,
+                    "limits": LIMITS_SENTENCE})
+    return out
+
+
+def explain_call(call: Mapping[str, Any]) -> dict:
+    """The plain sentence for one review call, from the row it was written
+    with — including the receipt path, which is the ledger row itself."""
+    events = next((t.get("n_events") for t in (call.get("terms") or [])
+                   if t.get("term") == "typed_events"), None)
+    regime = next((t.get("regime") for t in (call.get("terms") or [])
+                   if t.get("term") == "market_sensor_regime"), None)
+    return explain("target", f"predictions.jsonl#{call.get('prediction_id')}",
+                   ticker=call.get("ticker"),
+                   probability_pct=(f"{float(call['probability']):.0%}"
+                                    if call.get("probability") is not None
+                                    else None),
+                   horizon=call.get("horizon_sessions"),
+                   n_events=events if events is not None else 0,
+                   regime=regime or "unclassified",
+                   prediction_id=call.get("prediction_id"))
+
+
 __all__ = ["AGENCY_SIGNAL_DEFAULT", "AgencyError", "BANDS",
            "BASE_RATE_DRAWS", "BUY_MORE_ABOVE", "CADENCE_FOR_REBALANCE",
-           "CONSTRAINT_RE", "DECISIONS", "ESG_CATEGORIES", "FLIP_EVENT",
-           "HOLD_FAMILY", "IPS", "IPS_SCHEMA", "LIMITS_SENTENCE",
-           "MAX_CASH_FOR", "MIN_SENTENCE_CHARS", "N_QUESTIONS", "Option",
-           "PERSONALITIES", "PersonalityRow", "QUESTIONNAIRE_VERSION",
-           "QUESTIONS", "SELL_BELOW", "TABLE", "amendment_kind",
-           "base_rate_on_twin", "breach_check", "build_strategy",
-           "carried_peak", "cash_floor_for", "decide_label", "draft_prose",
-           "drawdown_state", "eligible_symbols",
-           "expected_drawdown_at_budget", "flip", "flips_path", "hold",
+           "CONSTRAINT_RE", "DASH", "DECISIONS", "ESG_CATEGORIES",
+           "EXPLAIN_TEMPLATES", "FLIP_EVENT", "HOLD_FAMILY", "IPS",
+           "IPS_SCHEMA", "LIMITS_SENTENCE", "MAX_CASH_FOR",
+           "MIN_SENTENCE_CHARS", "N_QUESTIONS", "Option", "PERSONALITIES",
+           "PersonalityRow", "QUESTIONNAIRE_VERSION", "QUESTIONS",
+           "SELL_BELOW", "TABLE", "amendment_kind", "base_rate_on_twin",
+           "breach_check", "build_strategy", "carried_peak",
+           "cash_floor_for", "decide_label", "draft_prose", "drawdown_state",
+           "eligible_symbols", "expected_drawdown_at_budget", "explain",
+           "explain_call", "explain_option", "flip", "flips_path", "hold",
            "hold_rule_words", "intake", "ips_dir", "ips_hash", "load_ips",
            "neighbours", "numeric_fields", "parse_constraints",
            "personality_for", "probability_terms", "propose",

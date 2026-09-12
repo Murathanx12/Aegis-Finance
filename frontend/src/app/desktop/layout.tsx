@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, BookOpen, LayoutDashboard, MessageSquare, Moon, Globe } from "lucide-react";
+import {
+  Activity,
+  BookOpen,
+  ClipboardList,
+  Globe,
+  LayoutDashboard,
+  MessageSquare,
+  Moon,
+} from "lucide-react";
 import { DesktopGuide } from "@/components/desktop/guide";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +32,10 @@ const TABS = [
   { href: "/desktop/night", label: "Night runs", icon: Moon },
   { href: "/desktop/fleet", label: "Fleet vs SPY", icon: Activity },
   { href: "/desktop/books", label: "Books", icon: BookOpen },
+  // Lane A. It sits after Books because an agency book IS a paper book with
+  // an IPS behind it, and a reader who has not seen the book table first has
+  // no idea what the three options are options over.
+  { href: "/desktop/agency", label: "Agency", icon: ClipboardList },
   { href: "/desktop/ask", label: "Ask Aegis", icon: MessageSquare },
 ];
 
