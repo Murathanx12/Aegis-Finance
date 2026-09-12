@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import statistics
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -61,7 +62,26 @@ import numpy as np
 from backend.services import cost_model as CM
 from backend.strategy.vendor.impact import sqrt_impact
 
-_DATA = Path(__file__).resolve().parent.parent / "data" / "optimus"
+
+def _repo_root() -> Path:
+    """The checkout, honouring `AEGIS_REPO_ROOT`.
+
+    NOT `Path(__file__)`-rooted. Inside the packaged app `__file__` lives under
+    `_internal/`, which is empty, so a path built that way reads a directory
+    that does not exist and returns nothing WITHOUT failing -- defect family
+    #14, five instances in one day on 2026-09-10. Here it would be worse than
+    silent: the panel loader's refusal fires, so a frozen build would report
+    "no TAQ panel" and a reader would conclude the data had been lost.
+    `test_frozen_path_family.py` is the gate and it caught this module on its
+    first full suite run.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parent.parent.parent
+
+
+_DATA = _repo_root() / "backend" / "data" / "optimus"
 
 #: The 4,224-row effective-spread panel (184 names x 23 days, 2026-07-15 to
 #: 2026-08-14). Nothing in this repo consumed it before this module.
