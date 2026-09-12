@@ -131,6 +131,17 @@ CLASSIFIED: dict[str, str] = {
         "the first leak. It is exercised by `test_ask_authority.py`'s three "
         "directional tests and becomes reachable the day the distillation job "
         "lands. Reclassify or delete it if M2 is abandoned."),
+    "backend.services.brain_queries": (
+        "OK -- the READ-ONLY query surface the Optimus MCP wraps (roadmap "
+        "11b, chunk 8, 2026-09-12). Its caller lives in the `optimus` repo: "
+        "the DATA and the query layer are here so the tools cannot diverge "
+        "from what the allocator reads, and only the MCP transport is over "
+        "there, which is why no import edge exists inside this checkout for "
+        "the audit to follow. It is exercised by `test_brain_queries.py`, "
+        "whose AST walk is what keeps it read-only, and `docs/"
+        "OPTIMUS_MCP_SURFACE.md` is the contract the other repo wraps. "
+        "Reclassify if that wrapper is ever built here; delete it if the MCP "
+        "surface is abandoned."),
     "backend.services.scenario_forecasts": (
         "AWAITS -- X3's contract, shipped BEFORE its two inputs exist (chunk 7, "
         "2026-09-12). Grading needs L2's typed-event extraction over the daily "

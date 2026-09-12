@@ -1084,7 +1084,24 @@ def _case_scenario_forecasts():
             "the historical (event_type, era) analogue a scenario is priced from")
 
 
+def _case_brain_queries():
+    """The MCP read surface answers a BOUNDED question or none.
+
+    The missing input is the bound. An MCP tool handed an unbounded limit
+    scans a 340,465-row panel and turns a question into a timeout, and a tool
+    handed a path instead of a job name is a file-read primitive wearing a
+    research tool's name. Both are refusals rather than clamps: silently
+    capping would answer a narrower question than the one asked, without
+    saying so.
+    """
+    from backend.services.brain_queries import MAX_LIMIT, QueryRefused, receipt
+    return (lambda: receipt("../../elsewhere"),
+            QueryRefused,
+            f"a job NAME (not a path), and a limit at or under {MAX_LIMIT}")
+
+
 CASES = {
+    "brain_queries": _case_brain_queries,
     "agency": _case_agency,
     "book_signals": _case_book_signals,
     "paper_books": _case_paper_books,
