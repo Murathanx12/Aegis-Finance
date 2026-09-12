@@ -228,13 +228,31 @@ def scope_of(row: dict) -> tuple[str, str]:
 
 
 def document_date(row: dict) -> str:
-    """The PIT anchor shown to the model: OUR `first_seen_utc`, date part.
+    """The PIT anchor shown to the model -- the N-C join's OWN rule, imported.
 
-    Not `published_utc`: a publisher's stamp can precede the moment the row was
-    observable to us, and the prompt's date is what the model reasons from.
+    `night_e1_news_return_panel._anchor`: a `native_stamp` row is anchored on
+    `published_utc` and everything else on `first_seen_utc`. Re-deriving it here
+    would have been wrong in the expensive direction: the Alpaca backfill's
+    3,799 rows were all first seen on 2026-09-11 and published from 2015-01-01
+    on, so anchoring them on `first_seen_utc` would date a 2015 article to the
+    day we downloaded it, show the model the wrong decade, and stack every typed
+    row of the backfill onto one session. That function's own docstring calls it
+    nonsense, which is how this was caught before the first call was paid for.
+
+    A typed row therefore carries the SAME date the E1 panel gives the same
+    document; `test_l2_typed_events.py` pins the two against each other.
     """
-    stamp = str(row.get("first_seen_utc") or row.get("published_utc") or "")
-    return stamp[:10]
+    from scripts.night_e1_news_return_panel import _anchor
+    stamp, _field = _anchor(row)
+    return str(stamp or "")[:10]
+
+
+def anchor_field(row: dict) -> str:
+    """Which field `document_date` came from -- `published_utc` or
+    `first_seen_utc`. On the row, because a date whose provenance is implicit is
+    a date somebody will re-derive incorrectly."""
+    from scripts.night_e1_news_return_panel import _anchor
+    return _anchor(row)[1]
 
 
 def prompt_for(row: dict) -> str:
@@ -406,6 +424,7 @@ def typed_record(row: dict, typed: ex.TypedEventRow, *, backend: str, variant: s
         "published_utc": row.get("published_utc"),
         "pit_grade": row.get("pit_grade"),
         "document_date": document_date(row),
+        "document_date_field": anchor_field(row),
         "scope": scope, "scope_kind": kind,
         "tickers": list(row.get("tickers") or []),
         "url": row.get("url"),

@@ -207,11 +207,23 @@ def test_a_line_separator_inside_a_body_does_not_split_the_row(wired):
 
 # ----------------------------------------------------------------- PIT + scope
 
-def test_the_prompts_date_is_our_own_first_seen_stamp():
+def test_the_prompts_date_is_the_panels_own_pit_anchor():
+    """A `native_stamp` backfill row is anchored on `published_utc`, not on the
+    day we downloaded it. The Alpaca backfill is 3,799 rows all first seen on
+    2026-09-11 and published from 2015 on; anchoring on `first_seen_utc` would
+    show the model the wrong decade and stack every typed row onto one session."""
+    from scripts.night_e1_news_return_panel import _anchor
+
     row = _corpus_row(0, seen="2026-09-11T12:00:00+00:00")
     row["published_utc"] = "2015-01-01T00:00:00+00:00"
-    assert l2.document_date(row) == "2026-09-11"
-    assert "2026-09-11" in l2.prompt_for(row)
+    row["pit_grade"] = "native_stamp"
+    assert l2.document_date(row) == "2015-01-01" == _anchor(row)[0][:10]
+    assert l2.anchor_field(row) == "published_utc"
+    assert "2015-01-01" in l2.prompt_for(row)
+
+    crawled = dict(row, pit_grade="first_seen_only")
+    assert l2.document_date(crawled) == "2026-09-11"
+    assert l2.anchor_field(crawled) == "first_seen_utc"
 
 
 def test_a_multi_ticker_document_is_one_row_scoped_to_the_first():

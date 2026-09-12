@@ -144,6 +144,6 @@
   "refusals counted per class, never dropped; a no_event row is a SUCCESS and is written",
   "one command: python -m scripts.night_l2_typed_events --max-rows 6020 --run 1"
  ],
- "elapsed_s": 2.2,
- "written_utc": "2026-09-12T21:18:24+00:00"
+ "elapsed_s": 2.4,
+ "written_utc": "2026-09-12T21:30:47+00:00"
 }
