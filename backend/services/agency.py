@@ -1539,15 +1539,544 @@ def load_ips(hash_: str, *, directory=None) -> IPS:
                echoes=tuple(blob.get("echoes") or ()))
 
 
-__all__ = ["AGENCY_SIGNAL_DEFAULT", "AgencyError", "BANDS", "CONSTRAINT_RE",
-           "CADENCE_FOR_REBALANCE", "ESG_CATEGORIES", "HOLD_FAMILY", "IPS",
-           "IPS_SCHEMA", "LIMITS_SENTENCE", "MAX_CASH_FOR", "MIN_SENTENCE_CHARS",
-           "N_QUESTIONS", "Option", "PERSONALITIES", "QUESTIONS",
-           "QUESTIONNAIRE_VERSION", "PersonalityRow", "TABLE", "amendment_kind",
-           "build_strategy", "cash_floor_for", "draft_prose",
+# ===========================================================================
+# A3 — THE DAILY REVIEW
+# ===========================================================================
+#
+# "For each holding, {hold, sell, buy_more, trim} with a probability, the news
+# and events that moved it, and the forecast row written BEFORE the call is
+# shown" (A3).
+#
+# THE ORDERING IS THE POINT
+# -------------------------
+# The `PredictionRecord` is built, appended and re-read from disk BEFORE the
+# call is returned. `append()` returns None by house rule, so nothing branches
+# on the write — the render path branches on having successfully called it and
+# on the row being readable back. If `make_prediction` refuses (an out-of-range
+# probability, a horizon that is not a declared one), the holding gets NO row
+# in the day's review: a refusal, never a silently ungraded display.
+#
+# WHERE THE PROBABILITY COMES FROM, AND WHY IT IS NOT AN LLM's
+# ------------------------------------------------------------
+# No LLM produces this number and none may (`no LLM output ever sizes, ranks
+# or decides`). It is Φ of a sum of DECLARED terms, each of which is recorded
+# on the row with its own basis string, so a reader can see which ones were
+# live and which returned zero because the input does not exist yet:
+#
+#   1. the holding's trailing information ratio against the book's control
+#      twin — the same Φ(IR) convention as `book_forecasts` (spec_first_books
+#      §0B), computed from history that had already happened;
+#   2. the calibrated target's interval, when a target exists for the name;
+#   3. the BOOK's drawdown state against its own budget;
+#   4. the typed-event count — zero until L2 lands, and recorded as zero
+#      rather than omitted, because an absent term and a neutral term read
+#      identically in a sum and mean different things;
+#   5. the market sensor's regime read — a declared placeholder (invariant 4 /
+#      X4), which informs and never overrides.
+#
+# THE LABEL IS DERIVED FROM THE PROBABILITY, NOT CHOSEN BESIDE IT
+# ---------------------------------------------------------------
+# `sell` attached to p=0.62 is a contract violation, and `_check_label`
+# refuses to render it. Two numbers called "the call" is how a system starts
+# disagreeing with itself in public.
+
+DECISIONS: tuple[str, ...] = ("hold", "sell", "buy_more", "trim")
+
+#: The two cut points. Declared here, hashed into nothing, and deliberately
+#: symmetric: an asymmetric pair would encode a directional view in what is
+#: supposed to be a translation from a probability to a verb.
+SELL_BELOW = 0.40
+BUY_MORE_ABOVE = 0.60
+
+#: How far over its own cap a position must sit before the call is `trim`.
+#: Not zero: a weight 0.01pp over the cap on a rounding difference is not a
+#: decision, it is float arithmetic.
+OVERWEIGHT_TOLERANCE = 0.005
+
+#: The drawdown term. A book already halfway through its budget is a book
+#: whose next loss is the one that flips it (§4), so the term is negative and
+#: it is the only one of the five that is currently non-zero by construction.
+DRAWDOWN_TILT_Z = -0.25
+
+SPECIALIST = "agency_daily_review"
+REVIEW_MECHANISM = "agency_review_v1"
+REVIEW_MODEL = "engine"
+REVIEW_MODEL_VERSION = "agency_review_v1"
+
+#: Where `review` appends when no caller names a path. `None` means
+#: `belief_state.PREDICTIONS`. A module constant so the suite can redirect THIS
+#: writer — the one that fires from the Morning click with no caller in sight.
+DEFAULT_LEDGER = None
+
+
+def _phi(z: float) -> float:
+    import math                                                    # noqa: PLC0415
+    return 0.5 * (1.0 + math.erf(float(z) / math.sqrt(2.0)))
+
+
+def decide_label(probability: float, *, weight: float,
+                 max_single_name: float) -> tuple[str, str]:
+    """(decision, why) — DERIVED from the probability and the position's size.
+
+    `trim` is the overweight branch and not a third opinion: it fires when the
+    position has grown past the cap the contract declares, whatever the
+    probability says, because a book that is over its own concentration limit
+    is out of contract before it is out of favour.
+    """
+    p = float(probability)
+    if p < SELL_BELOW:
+        return "sell", (f"p={p:.2f} is below {SELL_BELOW:.2f}: the position is "
+                        f"more likely than not to lose to the control twin")
+    if weight > float(max_single_name) + OVERWEIGHT_TOLERANCE:
+        return "trim", (f"the position is {weight:.1%} of the book against a "
+                        f"{max_single_name:.1%} cap — out of contract, so it "
+                        f"is reduced TOWARD the cap and not to zero")
+    if p >= BUY_MORE_ABOVE:
+        return "buy_more", (f"p={p:.2f} is at or above {BUY_MORE_ABOVE:.2f} and "
+                            f"the position has room under its "
+                            f"{max_single_name:.1%} cap")
+    return "hold", (f"p={p:.2f} sits between {SELL_BELOW:.2f} and "
+                    f"{BUY_MORE_ABOVE:.2f}: no change")
+
+
+def _check_label(decision: str, probability: float, *, weight: float,
+                 max_single_name: float) -> None:
+    """The label and the probability must be able to coexist, or the row is
+    refused. §3.1: 'a sell label attached to probability=0.62 is a contract
+    violation the engine refuses to render.'"""
+    if decision not in DECISIONS:
+        raise AgencyError(f"decision {decision!r} is not one of {list(DECISIONS)}")
+    p = float(probability)
+    over = weight > float(max_single_name) + OVERWEIGHT_TOLERANCE
+    if decision == "sell" and p >= SELL_BELOW:
+        raise AgencyError(
+            f"a `sell` call carries p={p:.2f}, at or above {SELL_BELOW:.2f}. "
+            f"The label is DERIVED from the probability; two numbers called "
+            f"'the call' is how a system starts disagreeing with itself.")
+    if decision == "buy_more" and (p < BUY_MORE_ABOVE or over):
+        raise AgencyError(
+            f"a `buy_more` call carries p={p:.2f} at weight {weight:.1%} "
+            f"against a {max_single_name:.1%} cap; one of the two forbids it")
+    if decision == "trim" and not over:
+        raise AgencyError(
+            f"a `trim` call on a position at {weight:.1%} against a "
+            f"{max_single_name:.1%} cap: trim is the OVERWEIGHT branch, and "
+            f"using it as a soft sell would hide the sell")
+    if decision == "hold" and (p < SELL_BELOW or p >= BUY_MORE_ABOVE or over):
+        raise AgencyError(
+            f"a `hold` call at p={p:.2f}, weight {weight:.1%}: the derivation "
+            f"would not have produced it")
+
+
+def _twin_nav(book, conn=None, db_path=None) -> tuple[str | None, list]:
+    """(twin book id, its NAV series). The FIRST twin, as `book_forecasts`
+    uses, so the book's own forecast row and its holdings' rows are graded
+    against the same control."""
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+    if not book.control_twin_ids:
+        return None, []
+    tid = book.control_twin_ids[0]
+    try:
+        return tid, (PB.nav_series([tid], conn=conn, db_path=db_path).get(tid)
+                     or [])
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("review: the twin's NAV could not be read (%s)", exc)
+        return tid, []
+
+
+def _price_series(bars, ticker: str, asof) -> list:
+    """[(date, close)] for one name up to and including `asof`."""
+    import pandas as pd                                            # noqa: PLC0415
+    if bars is None:
+        return []
+    ts = pd.Timestamp(asof)
+    sub = bars[(bars["date"] <= ts) & (bars["symbol"] == ticker)]
+    if sub.empty:
+        return []
+    sub = sub.sort_values("date")
+    return [(str(pd.Timestamp(d).date()), float(c))
+            for d, c in zip(sub["date"], sub["close"])]
+
+
+def probability_terms(*, ticker: str, price_path, twin_path,
+                      drawdown_state: Mapping[str, Any],
+                      target: Mapping[str, Any] | None = None,
+                      n_typed_events: int = 0,
+                      sensor: Mapping[str, Any] | None = None) -> dict:
+    """The five declared terms and the probability they sum to.
+
+    Every term is returned with its own basis, INCLUDING the ones that are
+    zero because their input does not exist yet. A term omitted because it has
+    no data and a term that legitimately came out neutral are the same number
+    and different facts.
+    """
+    from backend.services.book_forecasts import trailing_ir       # noqa: PLC0415
+
+    terms: list[dict] = []
+    ir, n_paired = trailing_ir(price_path, twin_path)
+    terms.append({
+        "term": "trailing_ir_vs_twin",
+        "z": float(ir) if ir is not None else 0.0,
+        "basis": (f"information ratio of {ticker}'s daily return minus the "
+                  f"control twin's, over {n_paired} paired session(s)"
+                  if ir is not None else
+                  f"CANNOT DETERMINE — {n_paired} paired session(s) with the "
+                  f"twin; an IR from fewer than two observations has no "
+                  f"sampling distribution behind it"),
+        "n_paired": n_paired})
+
+    # 2. the calibrated target's interval
+    if target and target.get("p50") is not None and target.get("spot"):
+        spot = float(target["spot"])
+        p50 = float(target["p50"])
+        lo, hi = target.get("p10"), target.get("p90")
+        implied = (p50 / spot - 1.0) if spot else 0.0
+        band = ("banded" if lo is not None and hi is not None
+                else "point only (the band was withheld or never fitted)")
+        terms.append({"term": "calibrated_target_interval",
+                      "z": round(max(-1.0, min(1.0, implied * 2.0)), 6),
+                      "basis": (f"calibrated 52-week target implies "
+                                f"{implied:+.1%} against spot; {band}. Capped "
+                                f"at +/-1 z so one target cannot carry the call")})
+    else:
+        terms.append({"term": "calibrated_target_interval", "z": 0.0,
+                      "basis": ("CANNOT DETERMINE — no calibrated target with "
+                                "an interval for this name on this machine")})
+
+    # 3. the book's own drawdown state
+    dd = drawdown_state.get("drawdown")
+    budget = drawdown_state.get("drawdown_budget")
+    if dd is not None and budget:
+        halfway = float(dd) <= float(budget) / 2.0
+        terms.append({"term": "book_drawdown_state",
+                      "z": DRAWDOWN_TILT_Z if halfway else 0.0,
+                      "basis": (f"the BOOK is {float(dd):.1%} from its peak "
+                                f"against a {float(budget):.0%} budget"
+                                + ("; past halfway, so the next loss is the "
+                                   "one that flips it (§4)" if halfway else
+                                   "; inside the first half of the budget"))})
+    else:
+        terms.append({"term": "book_drawdown_state", "z": 0.0,
+                      "basis": ("CANNOT DETERMINE — the book has no marked NAV "
+                                "history yet, so it has no peak to fall from")})
+
+    # 4. typed events (L2)
+    terms.append({"term": "typed_events", "z": 0.0,
+                  "n_events": int(n_typed_events),
+                  "basis": (f"{int(n_typed_events)} typed event(s) since the "
+                            f"last review. The term is ZERO BY DECLARATION "
+                            f"until lane L2 lands: counting events is not the "
+                            f"same as knowing what they imply, and a weight "
+                            f"guessed now would be an untested mechanism "
+                            f"inside a probability that looks measured.")})
+
+    # 5. the market sensor
+    terms.append({"term": "market_sensor_regime", "z": 0.0,
+                  "regime": (sensor or {}).get("regime"),
+                  "basis": ("PLACEHOLDER (invariant 4 / X4): the NVDA-SPY "
+                            "sensor tells us what world we are in and informs "
+                            "the read; it does not move the probability until "
+                            "its own mapping is pre-registered.")})
+
+    z = sum(float(t["z"]) for t in terms)
+    p = max(0.02, min(0.98, _phi(z)))
+    return {"probability": round(p, 6), "z_total": round(z, 6),
+            "terms": terms,
+            "convention": ("p = Phi(sum of declared terms), clipped to "
+                           "[0.02, 0.98]. No LLM produces this number.")}
+
+
+def drawdown_state(book, *, conn=None, db_path=None,
+                   nav_path: Sequence | None = None) -> dict:
+    """Peak, current NAV, drawdown from peak, and the book's own budget (§4.1).
+
+    Measured on the marked NAV at the close — one row per (book, date) — and
+    never intraday, which is the same discipline the marks themselves keep.
+    """
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+    budget = book.strategy.objective.drawdown_budget
+    if nav_path is None:
+        try:
+            nav_path = (PB.nav_series([book.book_id], conn=conn,
+                                      db_path=db_path).get(book.book_id) or [])
+        except Exception as exc:                                   # noqa: BLE001
+            return {"drawdown": None, "drawdown_budget": budget,
+                    "why": f"the NAV series could not be read: {exc}"[:200]}
+    if not nav_path:
+        return {"drawdown": None, "drawdown_budget": budget, "n_marks": 0,
+                "why": ("this book has no marked NAV row yet, so it has no "
+                        "peak and no drawdown. That is not a drawdown of zero.")}
+    peak, peak_date = None, None
+    for d, nav in nav_path:
+        if peak is None or nav > peak:
+            peak, peak_date = nav, d
+    last_date, last_nav = nav_path[-1]
+    dd = (last_nav / peak - 1.0) if peak else 0.0
+    return {"drawdown": round(dd, 6), "drawdown_budget": budget,
+            "peak_nav": round(float(peak), 4), "peak_date": peak_date,
+            "nav": round(float(last_nav), 4), "as_of": last_date,
+            "n_marks": len(nav_path),
+            "breach": bool(budget is not None and dd <= float(budget))}
+
+
+def _prior_for(ticker: str, arm: str, path=None) -> tuple[float | None, str]:
+    """Yesterday's probability for the same (book, holding), or None.
+
+    §3.3 asks for the belief-change contract on every review row. On the FIRST
+    review of a holding there is no prior and `make_prediction` refuses a
+    posterior without one — so the row is written without the pair and says
+    so, rather than inventing a prior of 0.5 that would make every first
+    review look like a belief that moved.
+    """
+    from backend.services import belief_state as BS                # noqa: PLC0415
+    try:
+        rows = BS.read_predictions(path)
+    except Exception as exc:                                       # noqa: BLE001
+        return None, f"the ledger could not be read: {exc}"[:120]
+    mine = [r for r in rows
+            if r.get("specialist") == SPECIALIST and r.get("ticker") == ticker
+            and r.get("arm") == arm]
+    if not mine:
+        return None, ("first review of this holding — no prior exists, and a "
+                      "prior of 0.5 invented here would make every first "
+                      "review look like a belief that moved")
+    latest = max(mine, key=lambda r: str(r.get("made_at") or ""))
+    return float(latest["probability"]), f"the {latest['made_at']} row"
+
+
+def review(book, *, bars=None, asof=None, conn=None, db_path=None,
+           path=None, targets: Mapping[str, Mapping] | None = None,
+           typed_events: Mapping[str, int] | None = None,
+           sensor: Mapping[str, Any] | None = None) -> list[dict]:
+    """One call per holding, each with its forecast row ALREADY on disk (A3).
+
+    Returns the calls. A holding whose row could not be written does not
+    appear — `review_book` collects those refusals for the receipt, because a
+    call shown without a graded row is the thing this ordering exists to stop.
+    """
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import belief_state as BS                # noqa: PLC0415
+    from backend.services import book_cadence as BC                # noqa: PLC0415
+
+    asof = asof or _date.today()
+    ledger = path if path is not None else DEFAULT_LEDGER
+    calls, _refusals = _review_inner(
+        book, bars=bars, asof=asof, conn=conn, db_path=db_path, ledger=ledger,
+        targets=targets, typed_events=typed_events, sensor=sensor,
+        BS=BS, BC=BC)
+    return calls
+
+
+def _review_inner(book, *, bars, asof, conn, db_path, ledger, targets,
+                  typed_events, sensor, BS, BC):
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    if conn is None:
+        conn = PB._conn(db_path)
+        own = True
+    else:
+        own = False
+    try:
+        held = {t: sh for t, sh in BC._positions(conn, book.book_id).items()
+                if t != BC.CASH}
+        prices, _src = ({}, {})
+        if held and bars is not None:
+            prices, _src = BC.latest_prices(bars, sorted(held), asof)
+        nav = sum(sh * prices.get(t, 0.0) for t, sh in held.items())
+        cash = BC._positions(conn, book.book_id).get(BC.CASH, 0.0)
+        book_value = nav + cash
+        dd = drawdown_state(book, conn=conn, db_path=db_path)
+        twin_id, twin_path = _twin_nav(book, conn=conn, db_path=db_path)
+    finally:
+        if own:
+            conn.close()
+
+    calls: list[dict] = []
+    refusals: list[dict] = []
+    cap = float(book.strategy.construction.max_single_name)
+    horizon = int(book.horizon_sessions)
+    rate = float(book.strategy.costs.transaction_cost_bps
+                 + book.strategy.costs.slippage_bps)
+    for ticker in sorted(held):
+        px = prices.get(ticker)
+        weight = ((held[ticker] * px / book_value)
+                  if px and book_value else 0.0)
+        terms = probability_terms(
+            ticker=ticker, price_path=_price_series(bars, ticker, asof),
+            twin_path=twin_path, drawdown_state=dd,
+            target=(targets or {}).get(ticker),
+            n_typed_events=int((typed_events or {}).get(ticker, 0)),
+            sensor=sensor)
+        p = float(terms["probability"])
+        decision, why = decide_label(p, weight=weight, max_single_name=cap)
+        try:
+            _check_label(decision, p, weight=weight, max_single_name=cap)
+            if not twin_id:
+                raise AgencyError(
+                    f"{book.book_id} has no control twin, so there is nothing "
+                    f"for this call to be a probability ABOUT. A book's number "
+                    f"is never shown without its twin's (B3).")
+            prior, prior_basis = _prior_for(ticker, book.strategy.strategy_id,
+                                            ledger)
+            made_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+            record = BS.make_prediction(
+                ticker=ticker, specialist=SPECIALIST,
+                observable=BS.Observable.BEATS_BENCHMARK,
+                horizon_days=horizon, probability=p, benchmark=twin_id,
+                thesis=(f"{ticker} beats {twin_id} over {horizon} session(s): "
+                        f"{why}"),
+                counter_thesis=(
+                    f"the call is reading the liquidity band and the "
+                    f"construction, both of which {twin_id} also has, in which "
+                    f"case {ticker}'s excess is noise and the trailing IR is "
+                    f"measuring it"),
+                next_observable=(
+                    "a typed event on this name (lane L2) that moves the "
+                    "trailing IR against the twin by more than its own "
+                    "dispersion — the prospective form of X2's flip test"),
+                model=REVIEW_MODEL, model_version=REVIEW_MODEL_VERSION,
+                prompt=f"{REVIEW_MECHANISM}|{book.strategy.fingerprint}",
+                input_snapshot={"asof": str(asof), "weight": round(weight, 6),
+                                "z_total": terms["z_total"],
+                                "fingerprint": book.strategy.fingerprint},
+                made_at=made_at,
+                prior=prior, posterior=(p if prior is not None else None),
+                arm=book.strategy.strategy_id, session_as_of=str(asof),
+                mechanism_id=REVIEW_MECHANISM, decision_date=str(asof),
+                policy_hash=book.strategy.fingerprint,
+                inputs_used={"source": "local daily bars + marked book NAV",
+                             "as_of": str(asof),
+                             "marked_from": "daily close"},
+                control_twin_id=twin_id,
+                control_construction=(book.control_construction
+                                      or "see the twin's contract"),
+                costs_charged=True, cost_rate_bps=rate,
+                licence=book.strategy.licence.value,
+                notes_text=f"prior basis: {prior_basis}")
+            # WRITE, THEN READ BACK, THEN DISPLAY. `append` returns None by
+            # house rule, so the proof that the row exists is the row.
+            BS.append([record], ledger)
+            persisted = _persisted_row(record.prediction_id, ledger, BS)
+        except (AgencyError, ValueError) as exc:
+            refusals.append({"ticker": ticker, "reason": f"{exc}"[:300],
+                             "shown": False})
+            continue
+        calls.append({
+            "ticker": ticker, "decision": decision, "why": why,
+            "probability": p, "weight": round(weight, 6),
+            "max_single_name": cap,
+            "horizon_sessions": horizon,
+            "benchmark_twin": twin_id,
+            "prediction_id": record.prediction_id,
+            "row_made_at": record.made_at,
+            "row_hash": persisted["hash"],
+            "displayed_after_utc": datetime.now(timezone.utc)
+                .isoformat(timespec="seconds"),
+            "terms": terms["terms"], "z_total": terms["z_total"],
+            "prior": record.prior, "belief_change": record.belief_change,
+            "prior_basis": record.notes_text,
+            "drawdown_state": dd,
+            "limits": LIMITS_SENTENCE,
+        })
+    return calls, refusals
+
+
+def row_hash(row: Mapping[str, Any]) -> str:
+    """The hash of a persisted forecast row, over the fields that identify the
+    CLAIM — not over the whole record, whose resolution fields are filled in
+    later by the grader and would make the hash unstable by design."""
+    return _sha16({k: row.get(k) for k in (
+        "prediction_id", "ticker", "specialist", "observable", "horizon_days",
+        "probability", "benchmark", "made_at", "resolves_after", "policy_hash",
+        "arm", "prior", "posterior")})
+
+
+def _persisted_row(prediction_id: str, ledger, BS) -> dict:
+    """Read the row back off disk and hash it. Raises if it is not there."""
+    rows = [r for r in BS.read_predictions(ledger)
+            if r.get("prediction_id") == prediction_id]
+    if not rows:
+        raise AgencyError(
+            f"the forecast row {prediction_id} is not in the ledger after "
+            f"append(). The call is NOT shown: a call whose row cannot be read "
+            f"back is a call nobody can grade.")
+    return {"row": rows[-1], "hash": row_hash(rows[-1])}
+
+
+def review_book(book, **kw) -> dict:
+    """`review` plus the refusals, for a receipt."""
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import belief_state as BS                # noqa: PLC0415
+    from backend.services import book_cadence as BC                # noqa: PLC0415
+
+    asof = kw.pop("asof", None) or _date.today()
+    ledger = kw.pop("path", None)
+    ledger = ledger if ledger is not None else DEFAULT_LEDGER
+    calls, refusals = _review_inner(
+        book, bars=kw.pop("bars", None), asof=asof, conn=kw.pop("conn", None),
+        db_path=kw.pop("db_path", None), ledger=ledger,
+        targets=kw.pop("targets", None), typed_events=kw.pop("typed_events", None),
+        sensor=kw.pop("sensor", None), BS=BS, BC=BC)
+    if kw:
+        raise AgencyError(f"review_book got unexpected argument(s) {sorted(kw)}")
+    return {"book_id": book.book_id, "ips_hash": book.ips_hash,
+            "as_of": str(asof), "n_calls": len(calls),
+            "n_refused": len(refusals),
+            "calls": calls, "refused": refusals,
+            "vocabulary": list(DECISIONS),
+            "ordering": ("every call below was written to the forecast ledger "
+                         "and read back BEFORE it was returned; a holding whose "
+                         "row could not be written is in `refused` and has no "
+                         "call"),
+            "limits": LIMITS_SENTENCE}
+
+
+def review_all(*, bars=None, asof=None, conn=None, db_path=None, path=None,
+               origins: Sequence[str] = ("human_text",)) -> dict:
+    """Every book a human holds, reviewed. The Morning's `agency_review` step.
+
+    Shadows are NOT reviewed: the review is the agency's advice to a person
+    about the book that person chose, and a shadow is graded (B5 writes its
+    forecast row on the same clock) without being advised about.
+    """
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    asof = asof or _date.today()
+    own = conn is None
+    conn = conn or PB._conn(db_path)
+    try:
+        books = [b for b in PB.list_books(conn=conn, include_twins=False)
+                 if b.origin in tuple(origins) and b.status != "retired"]
+        out = [review_book(b, bars=bars, asof=asof, conn=conn, path=path)
+               for b in books]
+    finally:
+        if own:
+            conn.close()
+    return {"as_of": str(asof), "n_books": len(out),
+            "n_calls": sum(r["n_calls"] for r in out),
+            "n_refused": sum(r["n_refused"] for r in out),
+            "books": out,
+            "reviewed_origins": list(origins),
+            "limits": LIMITS_SENTENCE}
+
+
+__all__ = ["AGENCY_SIGNAL_DEFAULT", "AgencyError", "BANDS", "BUY_MORE_ABOVE",
+           "CADENCE_FOR_REBALANCE", "CONSTRAINT_RE", "DECISIONS",
+           "ESG_CATEGORIES", "HOLD_FAMILY", "IPS", "IPS_SCHEMA",
+           "LIMITS_SENTENCE", "MAX_CASH_FOR", "MIN_SENTENCE_CHARS",
+           "N_QUESTIONS", "Option", "PERSONALITIES", "PersonalityRow",
+           "QUESTIONNAIRE_VERSION", "QUESTIONS", "SELL_BELOW", "TABLE",
+           "amendment_kind", "build_strategy", "cash_floor_for",
+           "decide_label", "draft_prose", "drawdown_state",
            "eligible_symbols", "expected_drawdown_at_budget", "hold",
            "hold_rule_words", "intake", "ips_dir", "ips_hash", "load_ips",
            "neighbours", "numeric_fields", "parse_constraints",
-           "personality_for", "propose", "propose_payload", "save_ips",
-           "score_questionnaire", "supported_signals", "template_prose",
-           "unexplained_numbers", "validate_document"]
+           "personality_for", "probability_terms", "propose",
+           "propose_payload", "review", "review_all", "review_book",
+           "row_hash", "save_ips", "score_questionnaire",
+           "supported_signals", "template_prose", "unexplained_numbers",
+           "validate_document"]

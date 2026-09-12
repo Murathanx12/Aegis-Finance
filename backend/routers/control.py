@@ -1394,6 +1394,46 @@ def agency_hold(payload: dict = Body(...)) -> dict:
         raise HTTPException(422, str(exc)) from exc
 
 
+@router.get("/agency/review")
+def agency_review_latest(day: str | None = None) -> dict:
+    """A3 — today's calls, READ from the morning receipt that wrote them.
+
+    A READ, and deliberately not a re-run: the calls a page shows must be the
+    ones whose forecast rows are on disk, and a route that recomputed them
+    would produce a second set of numbers with no rows behind them. If the
+    morning has not run, that is a 200 with a reason — the Ask page asks "what
+    happens today?" and "the morning has not run" is the answer, not a 404.
+    """
+    from backend.services import agency as AG
+    from backend.services import morning as M
+    blob = M.latest_receipt(day)
+    if blob is None:
+        return {"utc": _now(), "ran": False, "date": day or _now()[:10],
+                "calls": [], "vocabulary": list(AG.DECISIONS),
+                "note": ("no morning receipt for this day, so no review has "
+                         "been written. POST /api/control/morning runs it."),
+                "limits": AG.LIMITS_SENTENCE}
+    step = next((s for s in (blob.get("steps") or [])
+                 if s.get("step") == "agency_review"), None)
+    if step is None:
+        return {"utc": _now(), "ran": True, "date": blob.get("date"),
+                "calls": [], "vocabulary": list(AG.DECISIONS),
+                "note": ("this morning receipt predates the agency review "
+                         "step; it has no calls in it, which is not the same "
+                         "as a review that found nothing to say."),
+                "limits": AG.LIMITS_SENTENCE}
+    return {"utc": _now(), "ran": True, "date": blob.get("date"),
+            "status": step.get("status"), "reason": step.get("reason"),
+            "n_books": step.get("n_books"), "n_calls": step.get("n_calls"),
+            "n_refused": step.get("n_refused"),
+            "calls": step.get("calls") or [],
+            "refused": step.get("refused") or [],
+            "protect_first": step.get("protect_first"),
+            "vocabulary": list(AG.DECISIONS),
+            "receipt_rel": _rel(blob.get("path")) if blob.get("path") else None,
+            "limits": AG.LIMITS_SENTENCE}
+
+
 # ===========================================================================
 # ONE CLICK = MORNING (O5)
 # ===========================================================================

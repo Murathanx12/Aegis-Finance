@@ -83,6 +83,8 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("digest", "yesterday's corpus rows, anonymised through the R2 digest spec"),
     ("mark_books", "the PI daily check for every lane, in-process"),
     ("forecasts", "one gradeable forecast row per lane, written by the engine"),
+    ("agency_review", "one hold/sell/buy_more/trim call per holding of every "
+                      "book a human holds, each with its row already written"),
     ("grade", "resolve every ledger record whose window has closed"),
     ("coverage", "rows per source today, from what exists"),
     ("ready", "what the operator can read next"),
@@ -501,6 +503,54 @@ def step_forecasts(ctx: dict) -> dict:
                 ledger=str(ctx["predictions_path"] or BS.PREDICTIONS))
 
 
+def step_agency_review(ctx: dict) -> dict:
+    """LANE A3 — the daily review, one call per holding of every held book.
+
+    It runs AFTER `mark_books` (the positions and the NAV it reads are that
+    step's output) and BEFORE `grade`, so a row written this morning is graded
+    by the same morning's resolver only once its own window has closed.
+
+    The receipt names every call AND its ledger row id. That pairing is the
+    whole acceptance criterion of A3 — "every call has a forecast row" — and a
+    receipt that printed the calls alone would let the two drift apart without
+    anything failing.
+    """
+    from backend.services import agency as AG
+    from backend.services import paper_books as PB
+
+    try:
+        bars = PB.load_bars()
+    except Exception as exc:                                       # noqa: BLE001
+        # REFUSED, not error: the books were marked by the deployment or not at
+        # all, and a machine with no local bars cannot price a holding. Naming
+        # the missing input is the finding.
+        return _row("agency_review", "refused", reason=_trunc(exc, 300))
+    try:
+        out = AG.review_all(bars=bars, asof=ctx["date_obj"],
+                            path=ctx["predictions_path"])
+    except Exception as exc:                                       # noqa: BLE001
+        return _row("agency_review", "error", reason=_trunc(exc, 400))
+    rows = [{"book_id": b["book_id"], "ticker": c["ticker"],
+             "decision": c["decision"], "probability": c["probability"],
+             "prediction_id": c["prediction_id"], "row_hash": c["row_hash"]}
+            for b in out["books"] for c in b["calls"]]
+    refused = [{"book_id": b["book_id"], **r}
+               for b in out["books"] for r in b["refused"]]
+    if not out["n_books"]:
+        return _row("agency_review", "nothing_to_do",
+                    reason=("no book carries origin='human_text' in this "
+                            "checkout, so there is nothing a person holds to "
+                            "review. That is not the same as a review that "
+                            "found nothing to say."))
+    status = "ok" if rows else "nothing_to_do"
+    return _row("agency_review", status, n_books=out["n_books"],
+                n_calls=out["n_calls"], n_refused=out["n_refused"],
+                calls=rows, refused=refused,
+                vocabulary=list(AG.DECISIONS),
+                ledger=str(ctx["predictions_path"] or "the default ledger"),
+                ordering=out["books"][0]["ordering"] if out["books"] else None)
+
+
 def step_grade(ctx: dict) -> dict:
     """Grade the local ledger, here, on the laptop.
 
@@ -695,6 +745,7 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "digest": step_digest,
     "mark_books": step_mark_books,
     "forecasts": step_forecasts,
+    "agency_review": step_agency_review,
     "grade": step_grade,
     "coverage": step_coverage,
     "ready": step_ready,
