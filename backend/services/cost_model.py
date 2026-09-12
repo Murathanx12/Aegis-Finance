@@ -87,12 +87,39 @@ MEASURED_TAQ = "MEASURED_TAQ"
 #: conservative bound.
 MEASURED_TAQ_QUOTED = "MEASURED_TAQ_QUOTED"
 
+#: An EFFECTIVE spread measured from `taq_effective_spreads_v1.jsonl` (184
+#: names x 23 days), reachable as of 2026-09-12 via `cost_curve.py`. DISTINCT
+#: from `MEASURED_TAQ_QUOTED` for the same reason that one is distinct from
+#: `MEASURED_TAQ`: a quoted spread and an effective spread are different
+#: quantities, and the name is the only thing still carrying the difference
+#: three call sites downstream.
+#:
+#: This label carries a caveat FORWARD, not just a measurement: the panel's own
+#: `verdict_status` is DEFERRED (v1 has no trade-condition, odd-lot or venue
+#: filtering), so a basis string using it says `conventions=v1_unfiltered` and
+#: `cost_curve.survives_convention_sensitivity` is what a verdict resting on it
+#: has to pass.
+MEASURED_TAQ_EFFECTIVE = "MEASURED_TAQ_EFFECTIVE"
+
+#: Not measured on THIS name: predicted from the log-dollar-volume / log-price
+#: / volatility fit on the names that were. It is a model output with an R2 and
+#: a residual sigma, both of which travel on the quote, and it is deliberately
+#: not called "measured" anywhere.
+EXTRAPOLATED_REGRESSION = "EXTRAPOLATED_REGRESSION"
+
+#: A realised retail fill measured against the quote it was filled at -- chunk
+#: 5b's D2 receipt. NOT reachable yet: nothing on disk may carry this label,
+#: and `cost_curve.retail_paper_one_way` refuses rather than substituting the
+#: institutional curve, which would understate retail cost by construction.
+MEASURED_RETAIL_PAPER = "MEASURED_RETAIL_PAPER"
+
 #: No instrument resolved this segment, so the cost is a DECLARED range chosen
 #: to bracket the truth conservatively. Never a measurement, and it says so.
 DECLARED_CONSERVATIVE = "DECLARED_CONSERVATIVE"
 
 _PROVENANCES = (MEASURED_AGK, MEASURED_TAQ, MEASURED_TAQ_QUOTED,
-                DECLARED_CONSERVATIVE)
+                MEASURED_TAQ_EFFECTIVE, EXTRAPOLATED_REGRESSION,
+                MEASURED_RETAIL_PAPER, DECLARED_CONSERVATIVE)
 
 #: The declared band for the segment AGK cannot resolve, in ONE-WAY basis
 #: points. Declared before seeing which verdicts it permits, per the standing
@@ -150,7 +177,9 @@ class OneWayBps:
     @property
     def measured(self) -> bool:
         return self.provenance in (MEASURED_AGK, MEASURED_TAQ,
-                                   MEASURED_TAQ_QUOTED)
+                                   MEASURED_TAQ_QUOTED,
+                                   MEASURED_TAQ_EFFECTIVE,
+                                   MEASURED_RETAIL_PAPER)
 
 
 @dataclass(frozen=True)

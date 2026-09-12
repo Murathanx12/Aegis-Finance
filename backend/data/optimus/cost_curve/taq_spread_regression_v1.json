@@ -1,0 +1,86 @@
+{
+ "artefact": "COST-CURVE-REGRESSION-1",
+ "licence": "PRODUCT_EXPERIMENT (infrastructure; makes no claim)",
+ "generated_at": "2026-09-12T10:26:29.500830+00:00",
+ "source_panel": "backend/data/optimus/taq_effective_spreads_v1.jsonl",
+ "source_panel_verdict_status": "DEFERRED",
+ "source_panel_caveat": "v1 has NO trade-condition / odd-lot / venue filtering. The conventions probe (9 names x 10 conventions) found strict Holden-Jacobsen conventions RAISE the effective/quoted ratio toward 1 (NVDA composed-HJ 0.503 vs v1-all 0.716), so every half-spread fitted here is a LOWER bound on the refined computation -- up to roughly 40% low at the liquid end.",
+ "rhs_source": "backend/data/optimus/prices_2025_26/bars.parquet",
+ "rhs_window_sessions": 60,
+ "rhs_window_ends": "2026-08-14",
+ "gates": {
+  "min_days": 15,
+  "min_trades_per_day": 5000,
+  "min_trades_gate_dropped_rows": 0
+ },
+ "n_names_in_panel": 184,
+ "n_names_fitted": 177,
+ "n_names_dropped_no_local_bars": 7,
+ "names_dropped_no_local_bars": [
+  "AVB",
+  "BRK-B",
+  "DLR",
+  "EA",
+  "MMC",
+  "NFLX",
+  "SQ"
+ ],
+ "model": "log(half_effective_spread_bps) = b0 + b1*log(dollar_volume_usd) + b2*log(price_usd) + b3*volatility_ann",
+ "coefficients": {
+  "intercept": {
+   "estimate": 7.046388,
+   "std_error": 0.68667,
+   "t": 10.262
+  },
+  "log_dollar_volume_usd": {
+   "estimate": -0.386435,
+   "std_error": 0.037062,
+   "t": -10.427
+  },
+  "log_price_usd": {
+   "estimate": 0.078154,
+   "std_error": 0.038383,
+   "t": 2.036
+  },
+  "volatility_ann": {
+   "estimate": 1.416408,
+   "std_error": 0.169485,
+   "t": 8.357
+  }
+ },
+ "r2": 0.482,
+ "adj_r2": 0.473,
+ "loo_r2": 0.4023,
+ "residual_sigma_log": 0.4497,
+ "n": 177,
+ "dof": 173,
+ "half_spread_bps_median_fitted": 1.0767,
+ "volatility_ann_median_fitted": 0.3227,
+ "half_spread_bps_min_fitted": 0.1691,
+ "half_spread_bps_max_fitted": 23.0947,
+ "eta_solve": {
+  "form": "impact_bps = 1e4 * eta * volatility_ann * sqrt(participation)",
+  "vendored_function": "backend.strategy.vendor.impact.sqrt_impact (byte-pinned, NOT edited)",
+  "volatility_convention": "ANNUALISED, per spec S1.4. The vendor's docstring documents a DAILY volatility; eta is solved and used in the SAME unit, so the two are internally consistent, but this eta is NOT comparable to the vendor's 0.3-0.8 default range, which assumes daily vol.",
+  "target_source": "Frazzini, Israel and Moskowitz (2018), 'Trading Costs' (AQR), via spec_cost_model.md S1.4 -- NOT independently re-checked against the paper in this session (no network).",
+  "target_one_way_bps_at_1pct_adv": [
+   30.0,
+   50.0
+  ],
+  "target_used_bps": 40.0,
+  "participation": 0.01,
+  "half_spread_subtracted_bps": 1.0767,
+  "volatility_ann_used": 0.3227,
+  "eta": 0.12062,
+  "eta_at_target_low": 0.089631,
+  "eta_at_target_high": 0.15161,
+  "eta_daily_vol_equivalent": 1.9148,
+  "note": "the daily-vol equivalent is stated because it is the number comparable to Almgren, Thum, Hauptmann and Li (2005) and to the vendor default; where it lands far above 0.3-0.8 that is a FIFTH cost ruler disagreeing with the others, not a bug to hide."
+ },
+ "rulers_that_disagree": {
+  "NEGATIVE_RESULTS_25": "Corwin-Schultz vs Kyle-Obizhaeva disagree 3.4-9.1x on LEVEL in the same segments (Spearman 0.66: they agree on ORDER, not magnitude); frozen verdict 'KO UNDERSTATES COSTS'",
+  "taq_quoted_median_one_way_bps": 2.726,
+  "taq_effective_median_one_way_bps": 1.076,
+  "this_curve": "a FOURTH ruler; it does not adjudicate the others"
+ }
+}
