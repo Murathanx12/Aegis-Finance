@@ -243,8 +243,9 @@ def run(cells: pd.DataFrame, mats: dict, embargo: int, delta: float = DELTA,
     return dd, timeline, cost
 
 
-def grade(dd: pd.DataFrame) -> dict:
-    out = {"arms": {}, "vs": {}}
+def grade(dd: pd.DataFrame, horizon: int = 1) -> dict:
+    out = {"arms": {}, "vs": {},
+           "horizon_caveats": n3.horizon_caveats(horizon, int(len(dd)))}
     for name in ("FIXED", "ADWIN"):
         out["arms"][name] = {
             "ic": n3._cell(dd[f"ic_{name}"].to_numpy(dtype=float), False),
@@ -326,7 +327,7 @@ def main(argv=None) -> int:
         atomic_write_json(out, receipt, indent=1)
         return 2
 
-    g = grade(dd)
+    g = grade(dd, horizon=horizon)
     daily_path = out.with_name(out.stem + "_daily.csv")
     dd.to_csv(daily_path, index=False)
     d = g["vs"]["ADWIN_minus_FIXED"]["ic"]
