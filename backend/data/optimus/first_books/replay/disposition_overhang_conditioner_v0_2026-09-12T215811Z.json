@@ -1,0 +1,51 @@
+{
+  "book": "disposition_overhang_conditioner_v0",
+  "book_id": "book:a82e6e453c14c241",
+  "prereg": "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0 (UNSIGNED)",
+  "primary_metric": "conditioned_minus_unconditioned",
+  "confirm_slice": "1995-2024",
+  "ran": true,
+  "event_sign": "v0: sign(numup - numdown), IBES EPS fpi=1, at statpers",
+  "result": {
+    "label": "disposition_overhang_conditioner_v0",
+    "twin": "unconditioned_reaction_book_v0",
+    "k": 30,
+    "seed": 43054,
+    "twin_turnover_matched": false,
+    "n_blocks": 395,
+    "median_names_selected": 30,
+    "mean_book_net_monthly": 0.011877,
+    "mean_twin_net_monthly": 0.007899,
+    "mean_excess_net_monthly": 0.003978,
+    "nw_lag2_t": 2.1283,
+    "p_two_sided": 0.03331,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_bps_per_side": 25.0
+  },
+  "by_era": {
+    "1990-1999": {
+      "n_blocks": 95,
+      "mean_excess_net_monthly": 0.00112,
+      "nw_lag2_t": 0.286
+    },
+    "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": 0.006669,
+      "nw_lag2_t": 1.6358
+    },
+    "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": 0.004111,
+      "nw_lag2_t": 1.528
+    },
+    "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": 0.003327,
+      "nw_lag2_t": 1.0685
+    }
+  },
+  "declared_mde_monthly": 0.00724,
+  "declared_effect_size": 0.01,
+  "next_test": "the two FALSIFIERS, either of which closes the book whatever the primary metric says: the sign-flip placebo (long good-news/large-LOSS, short bad-news/large-GAIN, which Frazzini reports at ~0) and the momentum orthogonalisation (mom_12_1 must DIE with overhang on the right-hand side).",
+  "smoke": false
+}

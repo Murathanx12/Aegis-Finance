@@ -1,0 +1,45 @@
+{
+  "book": "insider_cluster_length_v1",
+  "book_id": "book:625c391913d9718c",
+  "prereg": "TRIAL-DRAFT-B-insider-cluster-length-v1 (UNSIGNED)",
+  "primary_metric": "net_bhar_22_90_vs_random_active_twin",
+  "confirm_slice": "2017-2024",
+  "ran": true,
+  "spans": [
+    4,
+    5
+  ],
+  "result": {
+    "n_blocks": 212,
+    "mean_bhar_excess_vs_twin": -0.001354,
+    "nw_lag2_t": -0.0778,
+    "p_two_sided": 0.937952,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_note": "both legs pay the same one round trip per event at the flat rate, so the DIFFERENCE is cost-neutral by construction here; the LEVEL of each leg is not, and chunk 5c's curve is what makes the level quotable"
+  },
+  "by_era": {
+    "1990-1999": {
+      "n_blocks": 0,
+      "verdict": "too few blocks to report a mean"
+    },
+    "2000-2009": {
+      "n_blocks": 46,
+      "mean_excess_net_monthly": 0.061131,
+      "nw_lag2_t": 1.4718
+    },
+    "2010-2016": {
+      "n_blocks": 81,
+      "mean_excess_net_monthly": -0.012987,
+      "nw_lag2_t": -0.5341
+    },
+    "2017-2024": {
+      "n_blocks": 85,
+      "mean_excess_net_monthly": -0.024084,
+      "nw_lag2_t": -0.8897
+    }
+  },
+  "declared_mde_per_block": 0.0717,
+  "power_warning": "the registered MDE (7.17%) is ABOVE the published effect (5.0%): a non-significant result here is CONDITIONAL, never FAILED_VARIANT, unless the point estimate is <= 0",
+  "next_test": "the same-day arm. The length-conditioning claim is falsified if span-0 clusters BEAT non-cluster purchases, whatever the 4-5 day arm did, and that test does not need the 7.17% the mean test needs.",
+  "smoke": false
+}
