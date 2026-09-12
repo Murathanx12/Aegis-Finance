@@ -1,0 +1,453 @@
+{
+ "artefact": "COST-CURVE-REGRADE-1",
+ "licence": "PRODUCT_EXPERIMENT (infrastructure; makes no claim)",
+ "generated_at": "2026-09-12T10:48:14.923587+00:00",
+ "source_receipt": "backend/data/optimus/night_factory_2026-09-08/G1_evolve_run01.json",
+ "source_receipt_unchanged": true,
+ "target_curve": "taq_empirical",
+ "eta": 0.12062,
+ "method": "rate substitution on the SAME realised turnover: net_curve = net_archived * ((1-c_curve)/(1-c_flat))**n. Identically 1 when the curves match, so a no-op re-grade reproduces the archived net to the cent.",
+ "what_this_is_not": "NOT a re-run. The holdings are unchanged, so this answers 'what would this book have been WORTH at these costs', not 'what would it have DONE'.",
+ "curve_rate_caveat": "the curve rate is a REPRESENTATIVE median prediction over a 2025-26 cross-section above the book's own declared execution floor -- these books are graded on a permno-keyed CRSP panel and there is no honest join to a ticker-keyed 2026 TAQ panel. The IMPACT term is omitted: no notional is declared, so participation is undefined.",
+ "source_panel_verdict_status": "DEFERRED (v1 unfiltered)",
+ "n_regraded": 0,
+ "n_refused": 35,
+ "family_rankings": [],
+ "rows": [
+  {
+   "path": "/top10_dev[0]",
+   "family": "/top10_dev",
+   "label": "94083541c82ede71",
+   "terminal_wealth_net_archived": 547.9409,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[1]",
+   "family": "/top10_dev",
+   "label": "95cbffbe9fdf5059",
+   "terminal_wealth_net_archived": 581.0373,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[2]",
+   "family": "/top10_dev",
+   "label": "36d13416658e4d0a",
+   "terminal_wealth_net_archived": 566.6118,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[3]",
+   "family": "/top10_dev",
+   "label": "98edebd226ded8bc",
+   "terminal_wealth_net_archived": 604.0545,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[4]",
+   "family": "/top10_dev",
+   "label": "a9939c6ca744ced0",
+   "terminal_wealth_net_archived": 484.7535,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[5]",
+   "family": "/top10_dev",
+   "label": "5e1b2e492bdf9a6d",
+   "terminal_wealth_net_archived": 570.9555,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[6]",
+   "family": "/top10_dev",
+   "label": "89feac6c4078e77f",
+   "terminal_wealth_net_archived": 457.9459,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[7]",
+   "family": "/top10_dev",
+   "label": "28a25814f2058cc8",
+   "terminal_wealth_net_archived": 598.5328,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[8]",
+   "family": "/top10_dev",
+   "label": "6dccb4f69ed7ce7e",
+   "terminal_wealth_net_archived": 546.9842,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/top10_dev[9]",
+   "family": "/top10_dev",
+   "label": "fedf3f56154571b7",
+   "terminal_wealth_net_archived": 531.777,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[0]",
+   "family": "/pareto_dev",
+   "label": "94083541c82ede71",
+   "terminal_wealth_net_archived": 547.9409,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[1]",
+   "family": "/pareto_dev",
+   "label": "95cbffbe9fdf5059",
+   "terminal_wealth_net_archived": 581.0373,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[2]",
+   "family": "/pareto_dev",
+   "label": "98edebd226ded8bc",
+   "terminal_wealth_net_archived": 604.0545,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[3]",
+   "family": "/pareto_dev",
+   "label": "a9939c6ca744ced0",
+   "terminal_wealth_net_archived": 484.7535,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[4]",
+   "family": "/pareto_dev",
+   "label": "89feac6c4078e77f",
+   "terminal_wealth_net_archived": 457.9459,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[5]",
+   "family": "/pareto_dev",
+   "label": "831639eef6867849",
+   "terminal_wealth_net_archived": 412.5824,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[6]",
+   "family": "/pareto_dev",
+   "label": "5fe5ef2e504a615c",
+   "terminal_wealth_net_archived": 340.7918,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[7]",
+   "family": "/pareto_dev",
+   "label": "399fb5364dd828d6",
+   "terminal_wealth_net_archived": 294.5787,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[8]",
+   "family": "/pareto_dev",
+   "label": "c2ad93784d6509e5",
+   "terminal_wealth_net_archived": 275.9244,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[9]",
+   "family": "/pareto_dev",
+   "label": "6ec51495d00533a8",
+   "terminal_wealth_net_archived": 273.871,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[10]",
+   "family": "/pareto_dev",
+   "label": "ba3f9311f8143aa0",
+   "terminal_wealth_net_archived": 260.9415,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[11]",
+   "family": "/pareto_dev",
+   "label": "bb05acb86883a697",
+   "terminal_wealth_net_archived": 254.9862,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[12]",
+   "family": "/pareto_dev",
+   "label": "f8b605ab83b37a44",
+   "terminal_wealth_net_archived": 250.5922,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[13]",
+   "family": "/pareto_dev",
+   "label": "fccc687578d57853",
+   "terminal_wealth_net_archived": 297.1674,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[14]",
+   "family": "/pareto_dev",
+   "label": "9ff870d21e28f315",
+   "terminal_wealth_net_archived": 217.9045,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[15]",
+   "family": "/pareto_dev",
+   "label": "e323a05c9bb47d11",
+   "terminal_wealth_net_archived": 229.7067,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[16]",
+   "family": "/pareto_dev",
+   "label": "627d832f926793ff",
+   "terminal_wealth_net_archived": 203.3414,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[17]",
+   "family": "/pareto_dev",
+   "label": "541945e619d11fc3",
+   "terminal_wealth_net_archived": 202.1709,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[18]",
+   "family": "/pareto_dev",
+   "label": "33eb75caddba4b06",
+   "terminal_wealth_net_archived": 201.2507,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[19]",
+   "family": "/pareto_dev",
+   "label": "8aff484723f2e7a4",
+   "terminal_wealth_net_archived": 200.0709,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[20]",
+   "family": "/pareto_dev",
+   "label": "8dfb03c1a4e88510",
+   "terminal_wealth_net_archived": 199.5303,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[21]",
+   "family": "/pareto_dev",
+   "label": "9c74c52254c5d49d",
+   "terminal_wealth_net_archived": 195.4028,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[22]",
+   "family": "/pareto_dev",
+   "label": "dc2b37fbfccd3eb9",
+   "terminal_wealth_net_archived": 195.0783,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[23]",
+   "family": "/pareto_dev",
+   "label": "be7e7c4e1d4209c2",
+   "terminal_wealth_net_archived": 180.959,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/pareto_dev[24]",
+   "family": "/pareto_dev",
+   "label": "eaf0dad0cc53fa15",
+   "terminal_wealth_net_archived": 178.3754,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  }
+ ]
+}

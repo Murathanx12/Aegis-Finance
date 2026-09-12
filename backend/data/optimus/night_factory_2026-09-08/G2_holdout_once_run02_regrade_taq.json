@@ -1,0 +1,403 @@
+{
+ "artefact": "COST-CURVE-REGRADE-1",
+ "licence": "PRODUCT_EXPERIMENT (infrastructure; makes no claim)",
+ "generated_at": "2026-09-12T10:48:14.925090+00:00",
+ "source_receipt": "backend/data/optimus/night_factory_2026-09-08/G2_holdout_once_run02.json",
+ "source_receipt_unchanged": true,
+ "target_curve": "taq_empirical",
+ "eta": 0.12062,
+ "method": "rate substitution on the SAME realised turnover: net_curve = net_archived * ((1-c_curve)/(1-c_flat))**n. Identically 1 when the curves match, so a no-op re-grade reproduces the archived net to the cent.",
+ "what_this_is_not": "NOT a re-run. The holdings are unchanged, so this answers 'what would this book have been WORTH at these costs', not 'what would it have DONE'.",
+ "curve_rate_caveat": "the curve rate is a REPRESENTATIVE median prediction over a 2025-26 cross-section above the book's own declared execution floor -- these books are graded on a permno-keyed CRSP panel and there is no honest join to a ticker-keyed 2026 TAQ panel. The IMPACT term is omitted: no notional is declared, so participation is undefined.",
+ "source_panel_verdict_status": "DEFERRED (v1 unfiltered)",
+ "n_regraded": 0,
+ "n_refused": 35,
+ "family_rankings": [],
+ "rows": [
+  {
+   "path": "/archive_on_holdout[0]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 12.8267,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[1]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 11.1343,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[2]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 10.7078,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[3]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 11.2348,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[4]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.5837,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[5]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 11.8616,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[6]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.0274,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[7]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 12.1471,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[8]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 15.9525,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[9]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 12.6772,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[10]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 12.8267,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[11]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 11.1343,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[12]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 11.2348,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[13]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.5837,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[14]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.0274,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[15]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 8.4043,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[16]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.8548,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[17]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 8.2231,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[18]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 8.4643,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[19]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 22.1272,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[20]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 8.9817,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[21]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 12.1236,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[22]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 6.2355,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[23]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.6831,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[24]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 6.7357,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[25]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 10.3585,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[26]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.707,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[27]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 8.6993,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[28]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 10.0436,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[29]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 5.7992,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[30]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 5.4478,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[31]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 9.6904,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[32]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 7.4724,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[33]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 7.4308,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/archive_on_holdout[34]/holdout",
+   "family": "/archive_on_holdout",
+   "label": null,
+   "terminal_wealth_net_archived": 5.4425,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  }
+ ]
+}

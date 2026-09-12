@@ -1,0 +1,57 @@
+{
+ "artefact": "COST-CURVE-REGRADE-1",
+ "licence": "PRODUCT_EXPERIMENT (infrastructure; makes no claim)",
+ "generated_at": "2026-09-12T10:48:14.928691+00:00",
+ "source_receipt": "backend/data/optimus/night_factory_2026-09-08/N2_learner_v3_run01.json",
+ "source_receipt_unchanged": true,
+ "target_curve": "taq_empirical",
+ "eta": 0.12062,
+ "method": "rate substitution on the SAME realised turnover: net_curve = net_archived * ((1-c_curve)/(1-c_flat))**n. Identically 1 when the curves match, so a no-op re-grade reproduces the archived net to the cent.",
+ "what_this_is_not": "NOT a re-run. The holdings are unchanged, so this answers 'what would this book have been WORTH at these costs', not 'what would it have DONE'.",
+ "curve_rate_caveat": "the curve rate is a REPRESENTATIVE median prediction over a 2025-26 cross-section above the book's own declared execution floor -- these books are graded on a permno-keyed CRSP panel and there is no honest join to a ticker-keyed 2026 TAQ panel. The IMPACT term is omitted: no notional is declared, so participation is undefined.",
+ "source_panel_verdict_status": "DEFERRED (v1 unfiltered)",
+ "n_regraded": 0,
+ "n_refused": 3,
+ "family_rankings": [],
+ "rows": [
+  {
+   "path": "/arms/v2_panel_only/PRODUCT_RULER",
+   "family": "/arms",
+   "label": null,
+   "terminal_wealth_net_archived": 4.7741,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/arms/v3_panel_plus_event/PRODUCT_RULER",
+   "family": "/arms",
+   "label": null,
+   "terminal_wealth_net_archived": 7.8134,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/arms/v3_CONTROL_panel_plus_placebo_event/PRODUCT_RULER",
+   "family": "/arms",
+   "label": null,
+   "terminal_wealth_net_archived": 8.2548,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "period count (no months)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  }
+ ]
+}

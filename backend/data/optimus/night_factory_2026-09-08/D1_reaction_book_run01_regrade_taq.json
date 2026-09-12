@@ -1,0 +1,150 @@
+{
+ "artefact": "COST-CURVE-REGRADE-1",
+ "licence": "PRODUCT_EXPERIMENT (infrastructure; makes no claim)",
+ "generated_at": "2026-09-12T10:48:14.914762+00:00",
+ "source_receipt": "backend/data/optimus/night_factory_2026-09-08/D1_reaction_book_run01.json",
+ "source_receipt_unchanged": true,
+ "target_curve": "taq_empirical",
+ "eta": 0.12062,
+ "method": "rate substitution on the SAME realised turnover: net_curve = net_archived * ((1-c_curve)/(1-c_flat))**n. Identically 1 when the curves match, so a no-op re-grade reproduces the archived net to the cent.",
+ "what_this_is_not": "NOT a re-run. The holdings are unchanged, so this answers 'what would this book have been WORTH at these costs', not 'what would it have DONE'.",
+ "curve_rate_caveat": "the curve rate is a REPRESENTATIVE median prediction over a 2025-26 cross-section above the book's own declared execution floor -- these books are graded on a permno-keyed CRSP panel and there is no honest join to a ticker-keyed 2026 TAQ panel. The IMPACT term is omitted: no notional is declared, so participation is undefined.",
+ "source_panel_verdict_status": "DEFERRED (v1 unfiltered)",
+ "n_regraded": 0,
+ "n_refused": 11,
+ "family_rankings": [],
+ "rows": [
+  {
+   "path": "/cells/top_decile|hold=5",
+   "family": "/cells",
+   "label": "top_decile|hold=5|25bps",
+   "terminal_wealth_net_archived": 0.0343,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_quintile|hold=5",
+   "family": "/cells",
+   "label": "top_quintile|hold=5|25bps",
+   "terminal_wealth_net_archived": 0.0997,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_decile|hold=10",
+   "family": "/cells",
+   "label": "top_decile|hold=10|25bps",
+   "terminal_wealth_net_archived": 0.7166,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_quintile|hold=10",
+   "family": "/cells",
+   "label": "top_quintile|hold=10|25bps",
+   "terminal_wealth_net_archived": 1.0285,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_decile|hold=21",
+   "family": "/cells",
+   "label": "top_decile|hold=21|25bps",
+   "terminal_wealth_net_archived": 3.7635,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_quintile|hold=21",
+   "family": "/cells",
+   "label": "top_quintile|hold=21|25bps",
+   "terminal_wealth_net_archived": 2.2954,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_decile|hold=42",
+   "family": "/cells",
+   "label": "top_decile|hold=42|25bps",
+   "terminal_wealth_net_archived": 4.4678,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/top_quintile|hold=42",
+   "family": "/cells",
+   "label": "top_quintile|hold=42|25bps",
+   "terminal_wealth_net_archived": 3.975,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/bottom_decile|hold=21",
+   "family": "/cells",
+   "label": "bottom_decile|hold=21|25bps",
+   "terminal_wealth_net_archived": 0.0685,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/PLACEBO_top_decile|hold=5",
+   "family": "/cells",
+   "label": "PLACEBO|hold=5",
+   "terminal_wealth_net_archived": 0.0016,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  },
+  {
+   "path": "/cells/PLACEBO_top_decile|hold=21",
+   "family": "/cells",
+   "label": "PLACEBO|hold=21",
+   "terminal_wealth_net_archived": 0.161,
+   "regraded": false,
+   "refused": true,
+   "refused_for": [
+    "turnover (no mean_turnover on disk)",
+    "flat cost rate (no cost_bps_per_side, none inherited)"
+   ]
+  }
+ ]
+}
