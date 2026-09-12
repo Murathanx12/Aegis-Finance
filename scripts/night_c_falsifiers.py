@@ -562,21 +562,18 @@ def decide(placebo: dict, momentum: dict, primary: dict | None) -> dict:
         f"declared {declared:.4f}/month, which is CONDITIONAL. A falsifier "
         f"that passes is not evidence FOR the book.")
     if mean <= 0:
-        # NAMED, not filled. TRIAL-DRAFT-A §5 closes a book whose block-mean is
-        # <= 0; TRIAL-DRAFT-C §5 has no such clause -- its FAILED_VARIANT
-        # clauses are both falsifiers and its CONDITIONAL clause assumes the
-        # primary CLEARED. Inventing the missing clause here would be a session
-        # editing a registration after the read.
-        reading += (
-            f" AND THE REGISTRATION HAS A GAP HERE: {mean:+.6f} is not merely "
-            f"short of the declared effect, it is on the WRONG SIDE OF ZERO, "
-            f"and §5 has no clause for that — its two FAILED_VARIANT clauses "
-            f"are both falsifiers and its CONDITIONAL clause assumes the "
-            f"primary cleared. TRIAL-DRAFT-A §5 does carry a 'block-mean <= 0' "
-            f"clause; C's does not. That gap is NAMED here rather than filled, "
-            f"because writing the missing clause after seeing the number is a "
-            f"session editing a registration after the read. What it needs is "
-            f"an amendment, signed before the next read.")
+        # TRIAL-DRAFT-C §5 Amendment 1 (2026-09-13): the same clause A §5
+        # carries. v0 omitted it because its CONDITIONAL clause assumed the
+        # primary had cleared; the amendment was written before the registered
+        # read and records what had been seen (run 1's truncated-window read
+        # and one smoke), so applying it here is applying the registration.
+        clause = (f"the primary metric is on the WRONG SIDE OF ZERO: "
+                  f"{mean:+.6f}/month at NW lag-2 t {t} (§5 Amendment 1, "
+                  f"2026-09-13: net block-mean <= 0 over the registered slice "
+                  f"closes the book whatever the falsifiers did)")
+        return {"verdict": "FAILED_VARIANT", "clauses_fired": [clause],
+                "primary_is_below_zero": True,
+                "reading": reading + " " + clause}
     return {"verdict": "CONDITIONAL", "clauses_fired": [],
             "primary_is_below_zero": bool(mean <= 0), "reading": reading}
 

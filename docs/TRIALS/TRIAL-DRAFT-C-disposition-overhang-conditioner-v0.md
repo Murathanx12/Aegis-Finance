@@ -147,6 +147,16 @@ the existing price/volume panel — no external wait. v1 is gated on L2.
   floor check.
 - **Crash override** and contamination clause as in TRIAL-DRAFT-A §5.
 
+**Amendment 1 (2026-09-13, written BEFORE the registered read, after run 1 and one smoke):**
+- **`FAILED_VARIANT`** — the primary metric's net block-mean over the registered slice
+  (1995-2024, 60-month warm-up) is **≤ 0**, whatever the falsifiers did — the same clause
+  TRIAL-DRAFT-A §5 carries, which v0 omitted because its CONDITIONAL clause assumed the primary
+  had cleared. What was seen before this was written: run 1's +0.40%/mo on a construction that
+  warmed the overhang at 24 months and started in 1990 (not the registered construction), and a
+  5-second smoke under the registered construction on 2019+ × 200 names at −0.40%/mo over 71
+  blocks (`C_falsifiers --smoke`). Neither is the registered read. The clause is symmetric with
+  the family's and adds no new way for the book to pass.
+
 ## 6. Frozen parameters
 
 The `Strategy` object `disposition_overhang_conditioner_v0` as

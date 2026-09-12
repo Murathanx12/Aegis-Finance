@@ -283,19 +283,21 @@ def test_a_falsifier_that_passes_is_not_evidence_for_the_book():
     assert "not evidence FOR the book" in out["reading"]
 
 
-def test_a_primary_on_the_wrong_side_of_zero_names_the_registrations_gap():
-    """TRIAL-DRAFT-A §5 closes a book whose block-mean is <= 0. C's §5 does NOT
-    carry that clause -- its two FAILED_VARIANT clauses are both falsifiers.
-    Writing the missing clause after seeing the number would be a session
-    editing a registration after the read, so the gap is NAMED."""
+def test_a_primary_on_the_wrong_side_of_zero_closes_the_book_by_amendment_1():
+    """TRIAL-DRAFT-C §5 Amendment 1 (2026-09-13) carries the clause A §5 always
+    had: a net block-mean <= 0 over the registered slice is FAILED_VARIANT
+    whatever the falsifiers did. The amendment was written before the
+    registered read; the builder's first version of this job NAMED the gap
+    instead of filling it, and the amendment is the signed answer."""
     out = F.decide({"placebo_pays": False},
                    {"momentum_survives": False, "overhang_survives": True},
                    {"mean_excess_net_monthly": -0.004003, "nw_lag2_t": -1.12,
                     "declared_effect_size": 0.01})
-    assert out["verdict"] == "CONDITIONAL"
+    assert out["verdict"] == "FAILED_VARIANT"
     assert out["primary_is_below_zero"] is True
+    assert len(out["clauses_fired"]) == 1
+    assert "Amendment 1" in out["clauses_fired"][0]
     assert "WRONG SIDE OF ZERO" in out["reading"]
-    assert "NAMED here rather than filled" in out["reading"]
 
 
 def test_a_positive_primary_below_the_declared_effect_does_not_claim_a_gap():
