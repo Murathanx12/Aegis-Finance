@@ -1039,12 +1039,60 @@ def _case_agency():
             AgencyError, "an intake with no risk questionnaire answers")
 
 
+def _case_market_sensor():
+    """X4's sensor: no bars means no regime, and the sensor says so by name.
+
+    The missing input is the SPY price history. A half-observed sensor that
+    reported a confident label would be the shape that put a permanent red
+    line beside nine real checks -- and here it would be worse: the routed
+    book would be admitted or held out on a regime nobody measured.
+    """
+    from pathlib import Path
+
+    from backend.services.market_sensor import SensorRefused, spy_trend
+    return (lambda: spy_trend(bars_path=Path("no_such_bars_anywhere.parquet")),
+            SensorRefused,
+            "the SPY bar file the 21-session trend is computed from")
+
+
+def _case_protocol_p16():
+    """An X-lane receipt with no P1-P6 block is not quoted.
+
+    The missing input is the PROTOCOL. MUST NOT REGRESS #24 binds the quote,
+    and the board is where a number becomes quoted; a receipt that reached
+    `LEADERBOARD.md` without its block would be a quoted LLM read over history
+    with no temporal-integrity evidence behind it.
+    """
+    from backend.services.protocol_p16 import ProtocolIncomplete, assert_valid
+    return (lambda: assert_valid("X2_elasticity", {"job": "X2_elasticity"}),
+            ProtocolIncomplete,
+            "the P1-P6 / LAP / anonymisation-gap block on an X-lane receipt")
+
+
+def _case_scenario_forecasts():
+    """X3 prices a scenario by historical analogue, or not at all.
+
+    The missing input is the `(event_type, era)` base-rate cell. Pricing at
+    zero because nobody measured the analogue would put a made-up number where
+    an engine price belongs, which is the one thing X5 forbids: the LLM
+    proposes the scenario, the deterministic engine supplies the number.
+    """
+    from backend.services.scenario_forecasts import BaseRateMissing, pricer
+    price = pricer({})
+    return (lambda: price("sanction", "2026H2"),
+            BaseRateMissing,
+            "the historical (event_type, era) analogue a scenario is priced from")
+
+
 CASES = {
     "agency": _case_agency,
     "book_signals": _case_book_signals,
     "paper_books": _case_paper_books,
     "news_registry": _case_news_registry,
     "r2_trial": _case_r2_trial,
+    "market_sensor": _case_market_sensor,
+    "protocol_p16": _case_protocol_p16,
+    "scenario_forecasts": _case_scenario_forecasts,
     "human_thesis": _case_human_thesis,
     "decision_log": _case_decision_log,
     "counterfactual_prices": _case_counterfactual_prices,

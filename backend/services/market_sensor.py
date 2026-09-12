@@ -35,10 +35,26 @@ permanent red line beside nine real checks.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
-REPO = Path(__file__).resolve().parents[2]
+def _repo_root() -> Path:
+    """The checkout, honouring `AEGIS_REPO_ROOT`.
+
+    NOT `Path(__file__)`-rooted. Inside the packaged app `__file__` lives under
+    `_internal/`, which is empty, so a path built that way reads a directory
+    that does not exist and returns NOTHING without failing -- defect family
+    #14, five instances in one day on 2026-09-10. `test_frozen_path_family.py`
+    is the gate, and it caught this module on its first full suite run.
+    """
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parents[2]
+
+
+REPO = _repo_root()
 
 #: The bars the 2025-26 replay already ingests. SPY is in them (R2's own
 #: `MARKET_SYMBOL`), so the trend leg needs no new source.
