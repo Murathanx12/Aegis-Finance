@@ -76,7 +76,7 @@ LEARNED_RULES = (_repo_root() / "backend" / "data" / "optimus" / "brain"
 #: The reason a candidate was dropped, per clause. Returned in the report so a
 #: retrieval that came back thin can be explained without re-running it.
 REASONS = ("unresolved_window", "never_graded", "graded_after_t", "voided",
-           "no_resolution_date")
+           "no_resolution_date", "rule_not_scored_yet")
 
 
 def _as_date(value: Any) -> date | None:
@@ -132,6 +132,25 @@ def visible_at(record: dict, t: date) -> tuple[bool, str | None]:
     if graded > t:
         return False, "graded_after_t"
     if record.get("outcome") is None:
+        # THE ONE DOCUMENTED EXCEPTION (M2, spec section 1.7). A DISTILLED RULE
+        # has no single binary outcome -- `state` and `brier` carry what
+        # `outcome` would carry for a forecast -- so `outcome is None` is its
+        # normal condition and this branch would gate out every rule M2 ever
+        # writes, i.e. the retrieval that this module exists to make safe would
+        # instead return nothing, forever, silently.
+        #
+        # A rule row is identified by its own `schema_version` prefix, never by
+        # the absence of a field: "no outcome" is also what a half-written
+        # forecast looks like, and the two must not be confused. For a rule,
+        # having been SCORED (`GENERALISED` / `NOT_GENERALISED`) is what
+        # `outcome is not None` means for a forecast: a verdict was reached on
+        # evidence that closed before `t`. A `CANDIDATE` rule -- too few
+        # firings to have a Brier -- is NOT visible, which is the same refusal
+        # under a different name.
+        if str(record.get("schema_version") or "").startswith("learned-rule-"):
+            if record.get("state") in ("GENERALISED", "NOT_GENERALISED"):
+                return True, None
+            return False, "rule_not_scored_yet"
         return False, "voided"
     return True, None
 
@@ -186,9 +205,21 @@ def retrieval_report(t: date | str, *, ledger: Iterable[dict] | None = None,
             visible.append(r)
         elif why:
             dropped[why] = dropped.get(why, 0) + 1
+    # THE OVER-TRUST COLUMN (M2 spec section 1.6). Every surfaced rule carries
+    # the weight it is ALLOWED to have in a live prompt, which is its measured
+    # Brier skill score capped at `MAX_RULE_WEIGHT` -- never its similarity to
+    # the situation, which is the experience-following failure arXiv:2505.16067
+    # measured. A row with no `prompt_weight` of its own is surfaced at ZERO:
+    # an unscored rule may be shown and labelled, and must not move a number.
+    surfaced = [{**r, "prompt_weight": float(r.get("prompt_weight") or 0.0)}
+                for r in visible]
     return {"as_of": str(t_d), "scope": scope, "pool": len(rows),
             "visible": len(visible), "dropped": dropped,
-            "rules": visible,
+            "rules": surfaced,
+            "prompt_weight_note": (
+                "capped by the rule's MEASURED Brier skill score, never by "
+                "retrieval similarity or recency; an unscored rule surfaces "
+                "at 0.0 and may be shown but never weighted"),
             "predicate": ("resolution_date < t AND resolved_at is not None AND "
                           "resolved_at <= t AND outcome is not None"),
             "note": ("a pre-filter on the candidate pool, not a post-filter on a "

@@ -1,0 +1,39 @@
+{
+ "job": "M2_distill",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "month": "2026-09",
+ "run": 1,
+ "pairs": {
+  "pairs_possible": 4780248,
+  "pairs_sampled": 24,
+  "dropped_degenerate": 0,
+  "by_kind": {
+   "era_split": 24
+  },
+  "seed": 5465311,
+  "max_pairs_per_key": 12
+ },
+ "n_shuffled_pairs": 24,
+ "pair_pool_sha256": "045a122a02335536",
+ "ledger": {
+  "ledger_rows": 24839,
+  "ledger_resolved": 0,
+  "memory_rows": 102030,
+  "min_n_for_decomposition": 45,
+  "has_enough_resolved_for_a_first_brier": false
+ },
+ "first_rule_with_its_own_brier": "CANNOT DETERMINE: no rule TEXT was generated because the local reader is not answering, and this job does not start it (the desktop shell owns llama-server).",
+ "written_utc": "2026-09-12T13:56:02+00:00",
+ "model_state": "PENDING_MODEL",
+ "model_refusal": "ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+ "pending_when_the_reader_is_up": [
+  "distil 24 real pairs (pool frozen at sha256 045a122a02335536)",
+  "distil 24 SHUFFLED pairs at seed 5465312 for the noise floor",
+  "score every candidate on the NEXT month's rows, gate on the held-out mechanism family, cap the prompt weight by the Brier skill score",
+  "one command: python -m learner.rule_distillation --month 2026-09"
+ ],
+ "headline": "24 real pairs of 4780248 possible across 1 pair kinds, frozen at sha256 045a122a02335536; NO model call was made",
+ "verdict": "PENDING_MODEL: the pairing, the leaked-field guard, the scoring, the generalisation gate and both writers are built and exercised; only the rule TEXT needs the reader. The ledger also has 0 resolved rows against the 45 a decomposition needs, so the first rule's own Brier is CANNOT DETERMINE on this checkout regardless of the model.",
+ "learned_md": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\brain\\LEARNED_2026-09.md"
+}

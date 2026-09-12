@@ -324,7 +324,9 @@ def report(rows: Iterable[dict], *, by: str = "model",
            rolling_days: int = ROLLING_DAYS) -> dict:
     """The whole M4 payload: decomposition, diagram, groups, rolling, persistence.
 
-    `by` is `model` (+ `model_version`) or `mechanism_id`. NOT `specialist`:
+    `by` is `model` (+ `model_version`), `mechanism_id`, or `rule_id` (M2's
+    distilled rules, grouped by the rule that fired on the row). NOT
+    `specialist`:
     that names the calling code path rather than the hypothesis family, and two
     specialists can share a mechanism. Grouping by mechanism is what lets a
     later distillation compare like with like.
@@ -366,6 +368,12 @@ def report(rows: Iterable[dict], *, by: str = "model",
     def key_of(r: dict) -> str:
         if by == "mechanism_id":
             return str(r.get("mechanism_id") or "unstated (pre-1.4.0)")
+        if by == "rule_id":
+            # M2 (spec section 1.3.3): a DISTILLED RULE is a forecaster and is
+            # grouped like one. One branch here rather than a second scoring
+            # path in `rule_distillation` -- two implementations of a Brier is
+            # how the rule's number and the ledger's number start to disagree.
+            return str(r.get("fired_rule_id") or "none")
         v = str(r.get("model") or "unstated")
         ver = r.get("model_version")
         return f"{v}@{ver}" if ver else v
