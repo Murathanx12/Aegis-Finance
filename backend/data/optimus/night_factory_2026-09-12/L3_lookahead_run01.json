@@ -1,0 +1,152 @@
+{
+ "job": "L3_lookahead",
+ "lane": "X",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "backend": "local_gguf",
+ "model": "Qwen2.5-7B-Instruct",
+ "model_cutoff_date": "2024-06-30",
+ "model_cutoff_source": "triangulated from OpenRouter/Puter provider pages and the community tracker github.com/HaoooWang/llm-knowledge-cutoff-dates; some secondary sources say April 2024. NOT an official Alibaba cutoff page and NOT verified against Qwen's own model card in this session",
+ "model_cutoff_confidence": "MEDIUM",
+ "question": "Is R2's accuracy concentrated in the cells where the model, asked directly and shown nothing, already knows the answer?",
+ "lap_probe": {
+  "purpose_tag": "l3_lap_probe",
+  "system": "You are a financial-history assistant. Answer only from what you already know; you are given no documents. Respond in English only.",
+  "user_template": "For {ticker} in {month}, state what you recall happened to its stock price that month relative to the market: UP, DOWN, or FLAT, and your confidence 0.0-1.0. If you do not recall, say UNKNOWN.\nAnswer in exactly two lines:\nRECALL: UP|DOWN|FLAT|UNKNOWN\nCONFIDENCE: 0.0-1.0",
+  "spend_usd": 0.0,
+  "why_unmasked": "the probe measures memorisation and never feeds a graded forecast; R2's own read never names the company"
+ },
+ "deviations_from_the_spec": [
+  "the verdict uses a joint Wald test on (beta2, beta3) while the receipt reports beta3 as the paper's statistic -- a model that is right in high-LAP cells regardless of what it forecast plants a LEVEL effect on beta2 with a true beta3 of zero, and a beta3-only detector would call that CLEAN"
+ ],
+ "accuracy_side": {
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\R2_widened_panelB_answers.jsonl",
+  "answer_rows": 1074,
+  "gradeable_cells": 435,
+  "tag": "read_MASKED",
+  "convention": "FLAT is not a directional call and is dropped, exactly as night_r2_monthly_llm.grade does",
+  "pre": {
+   "cells": 0,
+   "date_blocks": 0,
+   "months": [],
+   "sign_accuracy": null,
+   "mean_confidence": null,
+   "mean_LAP": null
+  },
+  "post": {
+   "cells": 435,
+   "date_blocks": 18,
+   "months": [
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07"
+   ],
+   "sign_accuracy": 0.4713,
+   "mean_confidence": 0.6529,
+   "mean_LAP": 0.0
+  },
+  "boundary": {
+   "cells": 0,
+   "date_blocks": 0,
+   "months": [],
+   "sign_accuracy": null,
+   "mean_confidence": null,
+   "mean_LAP": null
+  }
+ },
+ "cells_frozen": {
+  "n_cells": 435,
+  "cells_sha256": "af90a2dac151d11219c067a92e8e6bd541f288718a072812bc248c8fe8271ddf",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\L3_lookahead_run01_cells.json"
+ },
+ "n_cells_pre_cutoff": 0,
+ "n_cells_post_cutoff": 435,
+ "verdict": "PENDING_MODEL: the accuracy side is computed from 435 cells already on disk and the 435 probe cells are frozen; the recall probe needs the reader, which is not answering and which this job does not start. Probe said: ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>. the PRE-cutoff arm is EMPTY: PANEL-B covers 2025-01..2026-07 and the model's cutoff is 2024-06-30, so every cell here is already the post-cutoff arm of the split (spec section 1.3). The paper's own before/after design needs PANEL-A, which has no persisted answers",
+ "headline": "PANEL-B: 435 gradeable cells over 18 month blocks, sign accuracy pre None (0 cells) / post 0.4713 (435 cells); LAP probe PENDING_MODEL on 435 cells (sha256 af90a2dac151)",
+ "pending_when_the_reader_is_up": [
+  "the date-only recall probe on 435 frozen cells, purpose l3_lap_probe, temperature 0.0",
+  "LAP_i per cell = the probe's confidence when its recalled direction matches the realised fwd, else 0",
+  "the accuracy ~ forecast + LAP + forecast:LAP regression, clustered by month block, pre- and post-cutoff",
+  "one command: python -m scripts.night_l3_lookahead --panel B --run 1"
+ ],
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": true,
+   "date_shifted_placebo_run": false,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "ChronoGPT is the same-era control spec section 1.6 scopes as an OPTIONAL separate deliverable; it has no GGUF build",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-06-30",
+   "cutoff_source": "triangulated from OpenRouter/Puter provider pages and the community tracker github.com/HaoooWang/llm-knowledge-cutoff-dates; some secondary sources say April 2024. NOT an official Alibaba cutoff page and NOT verified against Qwen's own model card in this session",
+   "cutoff_confidence": "MEDIUM",
+   "evidence_paths": {
+    "anonymised": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\R2_widened_panelB_answers.jsonl",
+    "date_shifted_placebo_run": null,
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": true,
+   "note": "L3 reads cells R2 already graded; R2's label construction requires the successor month to be literally the next one"
+  },
+  "P3_direction_flip": {
+   "pass_rate": null,
+   "n": 0,
+   "test": "not run in this job: the flip test belongs to X2's counterfactuals"
+  },
+  "P4_calibration_ece": {
+   "ece": null,
+   "n_bins": 10,
+   "brier": null,
+   "brier_decomposition": {}
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "r2_trial.COST_BPS_PER_SIDE (this job prices no book of its own)",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": null,
+   "costed": false,
+   "gross_reported_separately": false
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "dir, conf": "Qwen2.5-7B via the frozen TRIAL-R2 prompt (read from disk)",
+    "RECALL, CONFIDENCE": "the same model via LAP_PROBE_USER, purpose l3_lap_probe",
+    "accuracy, LAP, beta*": "deterministic arithmetic in night_l3_lookahead"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "the recall probe has not run (PENDING_MODEL), so no per-cell LAP exists yet; the accuracy side and the frozen probe cells are in this receipt"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": null,
+  "t": null,
+  "adopted_arm": null,
+  "reason": "L3 measures memorisation, not masking cost; X_anon_gap owns the gap and this receipt does not restate it"
+ },
+ "elapsed_s": 2.1,
+ "written_utc": "2026-09-12T12:31:47+00:00",
+ "run": 1
+}

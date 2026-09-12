@@ -1488,6 +1488,7 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # the same question rather than a similar one. Their receipts carry a
         # P1_P6 block or `night_leaderboard_sync` refuses the row.
         "X_anon_gap": _lazy("scripts.night_x_anonymisation_gap", "X_anon_gap"),
+        "L3_lookahead": _lazy("scripts.night_l3_lookahead", "L3_lookahead"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,

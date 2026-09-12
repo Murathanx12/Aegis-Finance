@@ -140,6 +140,33 @@ def consistency_note(job: str, run: int, payload: dict, *, night: str | None = N
     return (f"[REPLICATED x{streak}: {status} also on {', '.join(dates)}]")
 
 
+def with_lap(job: str, payload: dict) -> dict:
+    """`payload` with `[LAP ...]` on the headline when the row quotes a
+    PRE-CUTOFF LLM number, or `payload` unchanged.
+
+    MUST NOT REGRESS #24 binds the QUOTE, and the board is where a number
+    becomes quoted: `LEADERBOARD.md` is what the morning read and what
+    `/api/control/leaderboard` shows. R2's PANEL-A rows (2015-02..2024-11) sit
+    inside Qwen2.5-7B's training window and get the badge; PANEL-B
+    (2025-01..2026-07) is entirely after the cutoff, LAP is structurally near
+    zero there, and a badge on every row is a badge nobody reads. A row whose
+    read window cannot be determined says `LAP UNKNOWN` rather than being
+    assumed post-cutoff.
+
+    Imported lazily: `night_l3_lookahead` pulls pandas in through
+    `night_r2_monthly_llm`, and the board should not pay that to print a row.
+    """
+    try:
+        from scripts.night_l3_lookahead import lap_annotation, latest_l3_receipt
+    except Exception:                                              # noqa: BLE001
+        return payload
+    note = lap_annotation(job, payload, latest_l3_receipt())
+    if not note:
+        return payload
+    return {**payload, "LAP_note": note,
+            "headline": f"{note} {payload.get('headline') or ''}".strip()}
+
+
 def with_consistency(job: str, run: int, payload: dict, *, night: str | None = None,
                      base: Path | None = None) -> dict:
     """`payload` with the note prefixed to the headline, or `payload` unchanged."""
@@ -174,7 +201,8 @@ def rebuild() -> int:
             if refusal:
                 print(f"  REFUSED {p.name}: {refusal}")
                 continue
-            append_leaderboard(job, run, with_consistency(job, run, payload))
+            append_leaderboard(job, run,
+                               with_consistency(job, run, with_lap(job, payload)))
             n += 1
         except Exception as exc:  # noqa: BLE001
             print(f"  SKIP {p.name}: {type(exc).__name__}")
@@ -241,7 +269,7 @@ def main(argv=None) -> int:
         if refusal:
             print(f"  REFUSED {p.name}: {refusal}")
             continue
-        payload = with_consistency(job, run, payload)
+        payload = with_consistency(job, run, with_lap(job, payload))
         added.append((job, run, (payload.get("consistency") or "")
                       + str(payload.get("verdict"))[:60]))
         if not a.dry_run:
