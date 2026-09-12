@@ -86,10 +86,10 @@ import logging
 from pathlib import Path
 
 from scripts.night_first_books_replay import (
+    CGO_LOOKBACK_MONTHS,
     COST_BPS_PER_SIDE,
     COST_CURVE,
     FAMILY,
-    CGO_LOOKBACK_MONTHS,
     FULL_END,
     FULL_START,
     MIN_CONDITIONED_NAMES,
@@ -99,6 +99,7 @@ from scripts.night_first_books_replay import (
     book_c_selectors,
     by_era,
     eligible,
+    find_run_receipt,
     load_monthly_panel,
     names_with_sign,
     newey_west_t,
@@ -565,14 +566,12 @@ def decide(placebo: dict, momentum: dict, primary: dict | None) -> dict:
 
 
 def find_replay_receipt() -> Path | None:
-    """The newest non-smoke `B_first_books_replay` run receipt, or `None`."""
-    repo = Path(__file__).resolve().parent.parent
-    base = repo / "backend" / "data" / "optimus"
-    cands = [p for p in base.glob("night_factory_*/B_first_books_replay_run*.json")
-             if "_smoke" not in p.name]
-    if not cands:
-        return None
-    return sorted(cands, key=lambda p: (p.stat().st_mtime, p.name))[-1]
+    """The newest non-smoke `B_first_books_replay` run receipt, or `None`.
+
+    Delegated to the replay's own finder so that two jobs reading run 1's
+    numbers can never disagree about which run they were quoting.
+    """
+    return find_run_receipt(smoke=False)
 
 
 def primary_from_replay(path: Path | None) -> tuple[dict | None, dict | None]:

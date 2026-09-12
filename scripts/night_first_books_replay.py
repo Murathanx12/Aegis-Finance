@@ -96,6 +96,24 @@ def out_dir() -> Path:
     return OPTIMUS_LEDGER_DIR / "first_books" / "replay"
 
 
+def find_run_receipt(*, smoke: bool = False) -> Path | None:
+    """The newest `B_first_books_replay` run receipt, or `None`.
+
+    One finder, used by every job that reads this one's numbers, so two of them
+    can never disagree about which run they were quoting. Smoke receipts are
+    EXCLUDED unless asked for by name: a verdict read off a 3-year, 200-name
+    window would be a verdict about the smoke flag.
+    """
+    from backend.config import OPTIMUS_LEDGER_DIR
+
+    cands = [p for p in OPTIMUS_LEDGER_DIR.glob(
+        "night_factory_*/B_first_books_replay_run*.json")
+        if ("_smoke" in p.name) == bool(smoke)]
+    if not cands:
+        return None
+    return sorted(cands, key=lambda p: (p.stat().st_mtime, p.name))[-1]
+
+
 # --------------------------------------------------------------------------
 # statistics
 
