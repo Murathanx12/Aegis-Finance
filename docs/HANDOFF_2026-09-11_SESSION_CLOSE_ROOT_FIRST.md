@@ -103,6 +103,27 @@ before crediting discovery** (protocol §9).
   (most likely a junction the worktree agent made into it; `git worktree remove --force` followed it).
   `npm ci` restored it. Do not junction node_modules into a worktree.
 
+## 3c. THE CRASH OF 2026-09-12 10:53 HKT (read 14:20)
+
+- **Cause, from the System log:** bugcheck **0x116 VIDEO_TDR_ERROR** — the display driver did not
+  recover from a GPU timeout — logged at reboot 10:55 (minidump `C:\Windows\Minidump\091226-15453-01.dmp`,
+  driver 595.97). At 10:53 the GPU held the model server (5.3 GB of 8 GB) and **R2 panel B was
+  reading cells on it** (600 of 18,521 done; the 1,118 completed calls are in `llm_calls.jsonl`; the
+  answers file lets it resume). So: an unattended night job on the local model tripped the GPU
+  driver. Also found by chunk 3c before the crash: the PC entered **Modern Standby 23:58 → 08:09**,
+  which is why N3's embedding "took 8 hours" — the machine was asleep. Awake time still exceeded the
+  60-minute box, and the box still never fired.
+- **What the crash did to the checkout:** the git index was corrupt (rebuilt); a stale worktree's
+  index was the persisting `fsck` complaint (removed); `scripts/night_factory.py` was **18,880 NUL
+  bytes** (chunk 3c's uncommitted edit, mid-write at the crash) — restored from HEAD; 1,166 tracked
+  receipts showed as modified but only by line endings (restored); the roadmap commit was unpushed
+  (pushed). Nothing committed was lost.
+- **Rules that follow:** (1) an unattended night that uses the GPU needs a **TDR mitigation** before
+  it is trusted — conservative llama-server batch sizes, and Murat may set the `TdrDelay` registry
+  value (attended, admin); (2) **disable Modern Standby / sleep for a night run** (`powercfg` — the
+  night factory should refuse to start if the active power plan allows sleep, and say so); (3) every
+  in-progress edit is committed or stashed before a long unattended run.
+
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
 1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.
