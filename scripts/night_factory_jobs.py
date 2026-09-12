@@ -1488,6 +1488,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # a PROXY until L2's extraction exists and every receipt says so.
         # AEGIS_E1_HORIZON picks 5 or 21.
         "E1_event_head": _lazy("scripts.night_e1_event_head", "E1_event_head"),
+        # L2 2026-09-13, chunk 10: the LOCAL reader types every eligible corpus
+        # row into the frozen 40-id vocabulary. RESUMABLE by construction -- a
+        # cursor over (source, first_seen_utc, raw_id) in
+        # `typed_events/_cursor.json` -- so `--resume` is accepted and is a
+        # no-op: there is no mode in which this job re-types what it has typed.
+        "L2_typed_events": _lazy("scripts.night_l2_typed_events", "L2_typed_events"),
         # E3 2026-09-13, chunk 9: adaptive conformal intervals (Gibbs-Candes
         # 2021 + Barber et al. 2023 recency weights), graded by REALISED
         # coverage per volatility tercile. Runs on whichever head first shows a
@@ -1578,6 +1584,9 @@ JOB_STAGES = {
     "N2_learner_v3": "signal",
     "R2_widened_panelB": "signal",
     "L4_qwen3_measure": "raw",
+    # L2 turns raw corpus text into typed FEATURE rows; it reads no price,
+    # no weight and no PnL, and E1 (signal) reads it afterwards.
+    "L2_typed_events": "features",
     "G3_evolve_v2": "weights",
     "G1_evolve": "weights",
     "G2_holdout_once": "weights",
@@ -1595,7 +1604,7 @@ TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 #: jobs whose script checkpoints per unit of work and accepts `--resume`.
 #: Grow this as long jobs gain checkpoints; a job NOT in here is restarted from
 #: zero, which is honest but wasteful, and the receipt says which happened.
-RESUMABLE = {"G3_evolve_v2"}
+RESUMABLE = {"G3_evolve_v2", "L2_typed_events"}
 
 
 def main(argv=None) -> int:
@@ -1631,6 +1640,11 @@ def main(argv=None) -> int:
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
                    "E_decay_sweep", "M2_distill", "A_published_anomaly"):
         payload = fn(smoke=a.smoke)
+    elif a.job == "L2_typed_events":
+        # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a
+        # continuation, so there is no non-resuming mode to select. It is in
+        # RESUMABLE so the flag is accepted rather than refused.
+        payload = fn(smoke=a.smoke, run=a.run)
     elif a.job in ("E2_embedding_horizon", "E1_event_head", "E3_adaptive_conformal",
                    "E4_adwin_gated_refit", "L4_qwen3_measure"):
         payload = fn(smoke=a.smoke, run=a.run)

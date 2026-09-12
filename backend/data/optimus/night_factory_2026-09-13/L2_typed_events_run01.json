@@ -1,0 +1,149 @@
+{
+ "job": "L2_typed_events",
+ "lane": "L",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "llm_spend_usd": 0.0,
+ "backend": "local_gguf",
+ "question": "What typed event, if any, does each corpus document carry, as a row that is numeric by construction?",
+ "contract": {
+  "backend": "local_gguf",
+  "purpose_tag": "l2_event_extraction",
+  "prompt_hash_A": "3e535a4c6f30402d202b2084efb4202b92b009fb1ee6ffd3ed626ae85c54e548",
+  "prompt_hash_B": "8f537df85a1d9f4208459c12cbc1dcb5000f754b8b12e3cf74c912e704e2fdf1",
+  "prompt_hash_covers": "wire system prompt + user template + canonical schema",
+  "language_pin": "applied CENTRALLY in model_provider.complete, never at this call site; wire_system() shows the pinned text",
+  "validator": "hand",
+  "body_chars": 2000,
+  "evidence_chars": 400,
+  "refusal_classes": [
+   "REFUSED_LANGUAGE",
+   "REFUSED_UNPARSEABLE",
+   "REFUSED_SCHEMA"
+  ],
+  "no_event_is_not_a_refusal": "a no_event row is a SUCCESSFUL classification and is written like any other row -- it is how L2 measures the corpus's genuine event rate, and dropping it would make the denominator silently wrong",
+  "one_row_per_document": "spec section 2.4: the DOMINANT event only. v1's schema has no multi-event shape, and additionalProperties:false forbids smuggling one in",
+  "vocabulary": {
+   "source": "docs/research_notes/2026-09-11/spec_events_and_calibration.md section 1.2 (the TABLE; the section's closing sentence miscounts by one)",
+   "n_types": 40,
+   "n_substantive": 39,
+   "n_ambiguous_priors": 18,
+   "refusal_class": "no_event",
+   "vocabulary_hash": "b55fcff7ef3e206ffb14b088a832367b1471a59bddbb8d514c4a01fbfc1d2e6a",
+   "magnitude_thresholds": {
+    "NEGLIGIBLE": [
+     0.0,
+     0.005
+    ],
+    "SMALL": [
+     0.005,
+     0.02
+    ],
+    "MODERATE": [
+     0.02,
+     0.05
+    ],
+    "LARGE": [
+     0.05,
+     0.1
+    ],
+    "EXTREME": [
+     0.1,
+     null
+    ]
+   },
+   "directions": [
+    -1,
+    0,
+    1
+   ],
+   "no_fourth_direction": "There is no value for 'I do not know'. A genuinely uncertain call commits to the best-guess sign AND sets `confidence` low. Cohen's kappa cannot be computed over a set that includes an escape hatch one rater uses more than the other.",
+   "confidence": "`confidence` in [0, 1] is the model's stated probability that the emitted (event_type, direction) PAIR, taken together, is the correct reading of the document. It is NOT `event_intel.extraction.tier`, which is a PARSE-FIDELITY judgment (HIGH/MEDIUM/LOW/FAILED) barred by the D4 closure ruling from being read as an outcome probability. This one IS allowed to be read as a probability, because inter-rater kappa is the external check that catches a reader free-lancing high confidence.",
+   "kappa_protocol": {
+    "event_type": "Cohen's kappa, 40-way categorical, unweighted",
+    "direction": "weighted kappa, ordinal -1/0/+1, LINEAR weights",
+    "magnitude_bucket": "weighted kappa, ordinal over MAGNITUDE_BUCKETS, LINEAR weights",
+    "confidence": "mean absolute difference -- it is continuous, so kappa does not apply",
+    "sample": "the SAME rows under both prompts; the spec's control is 500 rows"
+   }
+  }
+ },
+ "corpus": {
+  "label_sources": [
+   "alpaca_benzinga_news",
+   "gdelt_doc_v2",
+   "sec_edgar_8k_current_atom",
+   "yfinance_ticker_news",
+   "finnhub_company_news"
+  ],
+  "files": 4,
+  "rows_on_disk": 6020,
+  "unreadable_lines": 0,
+  "unreadable_examples": [],
+  "rows_already_typed": 0,
+  "rows_waiting": 6020,
+  "rows_this_run": 6020,
+  "eligibility": "news_registry.label_sources() only -- a row that cannot label a return may not become a feature"
+ },
+ "cursor_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\_cursor.json",
+ "inputs_frozen": {
+  "n_rows": 6020,
+  "inputs_sha256": "0d27f00243d9a4b37420447fe5a097ddb353cbe60a2862441333fc59a9b156ec",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\L2_typed_events_run01_inputs.json"
+ },
+ "projection": {
+  "rows": 6020,
+  "estimated_prompt_tokens_no_prefix_cache": 5048981,
+  "estimated_prompt_tokens_with_prefix_cache": 933490,
+  "estimated_output_tokens_total": 722400,
+  "assumptions": {
+   "chars_per_token": 4.0,
+   "output_tokens_per_row": 120,
+   "system_prompt_chars": 2735,
+   "rates_source": "night_factory_2026-09-13/L4_qwen3_measure_run01.json, `contended_measurement_being_superseded` -- itself a LOWER BOUND (20 cores saturated when it was taken)",
+   "prefix_cache": "the system prompt is byte-identical across every call, so llama.cpp pays it once; the no-cache column charges it per row and is the pessimistic bound"
+  },
+  "per_rate": {
+   "qwen3_30b_a3b_contended": {
+    "prompt_eval_tok_s": 5.6,
+    "generation_tok_s": 19.8,
+    "generation_hours": 10.13,
+    "prefill_hours_no_prefix_cache": 250.45,
+    "prefill_hours_system_prefix_cached_once": 46.3,
+    "total_hours_no_prefix_cache": 260.58,
+    "total_hours_with_prefix_cache": 56.44,
+    "seconds_per_row_no_prefix_cache": 155.83
+   },
+   "qwen2_5_7b_incumbent": {
+    "prompt_eval_tok_s": 5.6,
+    "generation_tok_s": 41.4,
+    "generation_hours": 4.85,
+    "prefill_hours_no_prefix_cache": 250.45,
+    "prefill_hours_system_prefix_cached_once": 46.3,
+    "total_hours_no_prefix_cache": 255.29,
+    "total_hours_with_prefix_cache": 51.15,
+    "seconds_per_row_no_prefix_cache": 152.67
+   }
+  },
+  "generation_only_at_20_tok_s_hours": 10.03,
+  "empirical_anchor_r2_panelA": {
+   "source": "L4 receipt `wall_time.source`: R2 panel A's own usage block, 15,433 calls in 5,854.2 s, mean 330.4 prompt / 14.0 completion tokens on Qwen2.5-7B",
+   "measured_seconds_per_call": 0.379,
+   "l2_hours": 4.92,
+   "caveat": "R2's completions are 14 tokens and L2's are ~120, so only the prefill half of this transfers; the generation half is added at the incumbent's measured 41.4 tok/s"
+  }
+ },
+ "one_row_per_document": "a document tagged with several tickers is scoped to the FIRST and carries the rest; fanning it into N rows would multiply one reading into N correlated ones",
+ "status": "PENDING_MODEL",
+ "verdict": "PENDING_MODEL: 6,020 eligible corpus rows are frozen at sha256 0d27f00243d9 and NO model call was made. The reader is not answering and this job does not start it. Probe said: ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+ "headline": "6,020 rows waiting from 5 label sources; 10.03 h of generation alone at 20 tok/s, 56.44 h with the system prefix cached and 260.58 h without, 4.92 h at R2's own measured throughput; $0.00",
+ "pending_when_the_reader_is_up": [
+  "one call per row: 6,020 at prompt hash 3e535a4c6f30",
+  "a re-prompt of 50 of them at hash 8f537df85a1d, kappa on event_type / direction / magnitude and MAD on confidence (the spec's own control is 500 rows)",
+  "refusals counted per class, never dropped; a no_event row is a SUCCESS and is written",
+  "one command: python -m scripts.night_l2_typed_events --max-rows 6020 --run 1"
+ ],
+ "elapsed_s": 2.2,
+ "written_utc": "2026-09-12T21:18:24+00:00"
+}

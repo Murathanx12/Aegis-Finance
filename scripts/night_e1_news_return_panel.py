@@ -355,7 +355,16 @@ def _anchor(row) -> tuple[str, str]:
 
 
 def _corpus_rows(sources, since_iso: str, max_rows=None):
-    """Corpus rows newer than the watermark, from the labelling sources only."""
+    """Corpus rows newer than the watermark, from the labelling sources only.
+
+    Read through `jsonl_io`, NOT `str.splitlines()`. MEASURED 2026-09-13: nine
+    Benzinga bodies in `alpaca_benzinga_news/2026-09-11.jsonl` carry a literal
+    U+2028, which `splitlines()` breaks on and JSONL does not, so each of those
+    rows arrived here as two unparseable fragments and was dropped by the
+    `except: continue` below -- silently, with no count. 9 of 3,799 today; the
+    share is a property of the publisher's copy-paste, not a constant.
+    """
+    from backend.services import jsonl_io as jio
     from scripts.news_pull import corpus_dir
 
     root = corpus_dir()
@@ -365,7 +374,9 @@ def _corpus_rows(sources, since_iso: str, max_rows=None):
         if not d.is_dir():
             continue
         for f in sorted(d.glob("*.jsonl")):
-            for line in f.read_text(encoding="utf-8", errors="replace").splitlines():
+            for line in jio.split_lines(f.read_text(encoding="utf-8", errors="replace")):
+                if not line.strip():
+                    continue
                 try:
                     row = json.loads(line)
                 except Exception:                                    # noqa: BLE001
