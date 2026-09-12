@@ -103,12 +103,7 @@ ALLOW: dict[tuple[str, str], str] = {
     ("scripts/night_factory_jobs.py", "R4_earnings_events.parquet"): _SCRIPTS_NEVER_FROZEN,
     ("scripts/night_factory_jobs.py", "R4_placebo_offset40.parquet"): _SCRIPTS_NEVER_FROZEN,
     ("scripts/night_factory_jobs.py", "train_table_long.parquet"): _SCRIPTS_NEVER_FROZEN,
-    ("scripts/night_factory_jobs.py", "G1_evaluations.jsonl"): _SCRIPTS_NEVER_FROZEN,
-    ("scripts/night_factory_jobs.py", "G1_evolve_run01.json"): _SCRIPTS_NEVER_FROZEN,
-    ("scripts/night_factory_jobs.py", "N1_configs_smoke.jsonl"): _SCRIPTS_NEVER_FROZEN,
     ("scripts/night_factory_jobs.py", ".parquet"): _SCRIPTS_NEVER_FROZEN,
-    ("scripts/night_factory_jobs.py", "D1_primary_daily.parquet"): _SCRIPTS_NEVER_FROZEN,
-    ("scripts/night_factory_jobs.py", ".json"): _SCRIPTS_NEVER_FROZEN,
 }
 
 
