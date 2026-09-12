@@ -41,6 +41,21 @@ quoted as if it had been measured.
 
     python -m scripts.night_factory_jobs B_first_books_replay --smoke
     python -m scripts.night_factory_jobs B_first_books_replay
+
+THE TIME BOX THIS JOB NEEDS, MEASURED
+=====================================
+Two measured scaling points on this machine: 36 months x 200 names took
+**30.1 s**, and 120 months x 1,000 names took **127.4 s**. The full pass is 420
+months over roughly 6,000 permnos and additionally builds a 35-year wide daily
+return frame for Book B's BHAR windows (~35M rows collapsing to about
+8,800 x 6,000 floats, ~0.4 GB), so it is memory-bound rather than CPU-bound.
+Projection: **20-45 minutes.** It is deliberately NOT in `night_factory.QUEUE`
+— this is a replication that runs when someone asks for it, not every night —
+which means `night_queue_plan` gives it the DEFAULT 60-minute box. That covers
+the projection with little room at the top end: whoever queues the full pass
+should set the box explicitly rather than trust the default, because a job
+killed at 60 minutes writes no receipt at all (2026-09-10, G3 at generation
+340).
 """
 
 from __future__ import annotations
