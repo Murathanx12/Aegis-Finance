@@ -44,11 +44,14 @@ def test_a_record_without_the_contract_still_writes_and_carries_nulls():
 def test_schema_version_advanced_so_the_generations_are_distinguishable():
     # 1.1.0 added the belief-change contract; 1.2.0 added the evidence
     # population; 1.3.0 added `session_as_of` (the session a record is ABOUT,
-    # vs `made_at` = when it was written — the catch-up-slot idempotency key).
-    # All additive, and the version is what lets a reader tell a record that
-    # COULD have carried a field from one that could not.
-    assert SCHEMA_VERSION == "1.3.0"
-    assert _base().schema_version == "1.3.0"
+    # vs `made_at` = when it was written — the catch-up-slot idempotency key);
+    # 1.4.0 (2026-09-12) added the M1 ledger fields (mechanism_id, policy_hash,
+    # control_twin_id, vs_control, costs_charged, era_tag, licence and the rest
+    # of `spec_events_and_calibration.md` §4). All additive, and the version is
+    # what lets a reader tell a record that COULD have carried a field from one
+    # that could not.
+    assert SCHEMA_VERSION == "1.4.0"
+    assert _base().schema_version == "1.4.0"
 
 
 def test_the_new_fields_are_the_only_thing_added():

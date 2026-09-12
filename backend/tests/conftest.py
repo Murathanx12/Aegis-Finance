@@ -188,6 +188,55 @@ def _execution_ledger_to_tmp(_exec_ledger_dir, monkeypatch):
     yield
 
 
+@pytest.fixture(scope="session")
+def _book_cadence_receipt_dir(tmp_path_factory):
+    """ONE directory for the whole run — same reasoning as `_exec_ledger_dir`."""
+    return tmp_path_factory.mktemp("book_cadence")
+
+
+@pytest.fixture(autouse=True)
+def _book_cadence_receipts_to_tmp(_book_cadence_receipt_dir, monkeypatch):
+    """Keep the suite's cadence passes out of the repo's receipt directory.
+
+    FOUND THE SAME WAY AS THE TWO ABOVE, on 2026-09-12, by reading `git status`
+    after a full run: the Morning's `mark_books` step now calls
+    `book_cadence.run_all()` in-process, so every test that clicks the Morning
+    wrote five dated receipts into
+    `backend/data/optimus/book_cadence/` — a directory whose whole purpose is to
+    record what the real scheduler did on this machine. Receipts from a suite
+    run are indistinguishable from receipts from a real pass once they are in
+    there, which makes the directory useless for the thing it exists for.
+
+    The module constant is a FUNCTION (`receipt_dir()`), so it is patched
+    rather than reassigned; tests that want to inspect their own receipts patch
+    it again with their own `tmp_path` and win, because monkeypatch applies in
+    order.
+    """
+    try:
+        from backend.services import book_cadence
+        monkeypatch.setattr(book_cadence, "receipt_dir",
+                            lambda: _book_cadence_receipt_dir, raising=False)
+    except Exception:                                            # noqa: BLE001
+        pass
+    # AND THE DATABASE, for the same reason one layer down. A cadence pass with
+    # no `db_path` opens the repo's real `aegis_pi.db`, where the machine's own
+    # paper books live. Before any book existed that was a harmless "nothing to
+    # do"; the moment one exists, a suite run MARKS A REAL FORWARD BOOK and
+    # writes a NAV row nobody decided to write. Tests that pass their own `conn`
+    # or `db_path` are untouched -- only the default is redirected.
+    try:
+        from backend.services import paper_books
+        _real_conn = paper_books._conn
+        db = _book_cadence_receipt_dir / "aegis_pi.db"
+        monkeypatch.setattr(
+            paper_books, "_conn",
+            lambda db_path=None: _real_conn(db_path if db_path is not None else db),
+            raising=False)
+    except Exception:                                            # noqa: BLE001
+        pass
+    yield
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _disk_cache_to_tmp(tmp_path_factory):
     """Give the suite its own disk cache instead of the repo's live one.

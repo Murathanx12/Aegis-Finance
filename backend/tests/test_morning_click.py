@@ -256,15 +256,34 @@ def test_the_grade_step_gives_the_resolver_a_frame_that_knows_the_lanes(
 
 
 def test_the_lane_price_frame_adds_lane_columns_and_never_overwrites_a_ticker(monkeypatch):
+    """Lanes AND books: neither id is a security, and both need a series.
+
+    The book columns arrived on 2026-09-12 (lane B5). Both sources are stubbed
+    here rather than left to the machine's real state — the first version of
+    this test read the live book table, so creating one real book on this laptop
+    turned a passing assertion into a failing one with nothing wrong in the
+    code it was testing.
+    """
     import pandas as pd
 
     monkeypatch.setattr(M, "lane_nav_series", lambda: {
         "balanced": [("2026-09-09", 100.0), ("2026-09-10", 101.0)]})
+    monkeypatch.setattr("backend.services.paper_books.nav_series", lambda: {
+        "book:abcdef0123456789": [("2026-09-09", 200.0), ("2026-09-10", 202.0)]})
     monkeypatch.setattr("backend.services.ledger_resolver._default_price_fetch",
                         lambda t, s, e: pd.DataFrame(
                             {"SPY": [1.0, 2.0]},
                             index=pd.to_datetime(["2026-09-09", "2026-09-10"])))
     frame = M.nav_augmented_price_fetch(["SPY", "balanced"], "2026-09-01", "2026-09-11")
-    assert set(frame.columns) == {"SPY", "balanced"}
+    assert set(frame.columns) == {"SPY", "balanced", "book:abcdef0123456789"}
     assert float(frame["balanced"].iloc[-1]) == 101.0
+    assert float(frame["book:abcdef0123456789"].iloc[-1]) == 202.0
     assert float(frame["SPY"].iloc[-1]) == 2.0
+
+
+def test_a_book_id_is_not_mistaken_for_a_ticker():
+    """`book:<16 hex>` is lowercase, so it was already excluded by accident.
+    'It happens to be lowercase' is not a rule anyone can rely on."""
+    assert M._looks_like_lane("book:abcdef0123456789")
+    assert M._looks_like_lane("balanced-ew-control")
+    assert not M._looks_like_lane("SPY")

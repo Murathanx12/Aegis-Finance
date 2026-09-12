@@ -957,7 +957,29 @@ def _case_news_registry():
             UnknownSource, "a news source id that is not in the registry")
 
 
+def _case_paper_books():
+    """B1: a book without a control twin is not created.
+
+    The missing input is THE TWIN. `make_twins` needs a universe to draw from,
+    and with no bars there is nothing to draw -- so `create` refuses rather than
+    minting a book whose number would have nothing beside it. Refusing here is
+    the whole of B3: a twin built after a number is known is a twin chosen to
+    flatter it, so the only moment the check can bind is before the book exists.
+    """
+    import pandas as pd
+
+    from backend.services.paper_books import BookError, create
+    from backend.tests.book_helpers import make_strategy
+
+    empty = pd.DataFrame(columns=["symbol", "date", "open", "high", "low",
+                                  "close", "volume", "vwap", "trades"])
+    return (lambda: create(make_strategy(zero_cost=True), cadence="daily",
+                           origin="night_job", bars=empty),
+            BookError, "a book with no costs and no universe to draw a twin from")
+
+
 CASES = {
+    "paper_books": _case_paper_books,
     "news_registry": _case_news_registry,
     "r2_trial": _case_r2_trial,
     "human_thesis": _case_human_thesis,
