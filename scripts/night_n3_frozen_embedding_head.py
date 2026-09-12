@@ -857,6 +857,9 @@ def main(argv=None) -> int:
                      "return label beat TF-IDF, shuffled text, and no text at all, on identical "
                      "walk-forward splits?"),
         "design": design_block(horizon),
+        # The stage contract (docs/STAGE_CONTRACT.md): what this run READ, by
+        # name, so the contract's test has an edge to check instead of a node.
+        "inputs": [PANEL.name, BARS.name],
         "status": "running", "written_utc": _now(),
     }
     if horizon != 1:

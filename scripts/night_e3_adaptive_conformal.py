@@ -243,6 +243,7 @@ def main(argv=None) -> int:
                    "naive_control": "fixed alpha, rho = 1.0 -- the exchangeable case, no "
                                     "separate code path",
                    "seed": SEED},
+        "inputs": [],          # filled once the real stream's source is resolved
         "status": "running", "written_utc": n3._now(),
     }
     atomic_write_json(out, receipt, indent=1)
@@ -269,6 +270,9 @@ def main(argv=None) -> int:
     else:
         print(f"[e3] real stream from {daily.name}", flush=True)
         receipt["real_stream"] = real_stream(daily, receipts)
+        # E3 reads a SIGNAL-stage artefact and is itself signal-stage. That edge
+        # is legal and is the one the contract's test actually walks.
+        receipt["inputs"] = [daily.name, n3.BARS.name]
 
     rs = receipt["real_stream"]
     if rs.get("status") == "done":

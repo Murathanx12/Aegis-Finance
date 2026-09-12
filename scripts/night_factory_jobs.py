@@ -1551,6 +1551,43 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
         "G1_evolve": G1_evolve, "G2_holdout_once": G2_holdout_once}
 
+#: THE STAGE CONTRACT (chunk 9, 2026-09-13, `docs/STAGE_CONTRACT.md`), first step.
+#:
+#: `raw < normalized < features < signal < weights < pnl`. A receipt declares
+#: which stage produced it, and no stage may read an artefact produced by a
+#: LATER one -- which is the structural version of "no information acted on
+#: before it was public", and the one class of leak a PIT assertion on a single
+#: table cannot see.
+#:
+#: A job NOT in this map gets `stage: None`, deliberately. A default would make
+#: every unclassified job silently "signal", and a contract whose rows are mostly
+#: guesses is a contract nobody can act on.
+#: `backend/tests/test_stage_contract_no_forward_read.py` reports the unstamped
+#: jobs BY NAME rather than passing over them.
+STAGE_ORDER = ("raw", "normalized", "features", "signal", "weights", "pnl")
+
+JOB_STAGES = {
+    "E1_news_return_panel": "normalized",
+    "E1_append": "normalized",
+    "P7_pit_universe_vintage": "normalized",
+    "E1_event_head": "signal",
+    "E2_embedding_horizon": "signal",
+    "N3_frozen_embedding_head": "signal",
+    "E3_adaptive_conformal": "signal",
+    "E4_adwin_gated_refit": "signal",
+    "N2_learner_v3": "signal",
+    "R2_widened_panelB": "signal",
+    "L4_qwen3_measure": "raw",
+    "G3_evolve_v2": "weights",
+    "G1_evolve": "weights",
+    "G2_holdout_once": "weights",
+    "E_decay_sweep": "weights",
+    "B_first_books_replay": "pnl",
+    "D1_reaction_book": "pnl",
+    "P6_bars_and_regret": "pnl",
+}
+
+
 #: jobs that take a `--hours` time box rather than running to completion
 TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 
@@ -1607,6 +1644,9 @@ def main(argv=None) -> int:
     payload["elapsed_s"] = round(time.time() - t0, 1)
     payload["written_utc"] = _now()
     payload["run"] = a.run
+    # A job that stamped its own stage keeps it; one the map knows gets the
+    # map's; one neither knows gets None and is named by the contract's test.
+    payload.setdefault("stage", JOB_STAGES.get(a.job))
     out = Path(a.out) if a.out else OUT / f"{a.job}_run{a.run:02d}{'_smoke' if a.smoke else ''}.json"
     out.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
     print(f"\n{a.job}: {payload.get('headline')}\n  verdict: {payload.get('verdict')}\n  -> {out}")

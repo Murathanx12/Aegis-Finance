@@ -300,6 +300,7 @@ def main(argv=None) -> int:
                                      "walk-forward, not a separate control run"),
                    "cost_bps_per_side": COST_BPS,
                    "cost_source": "scripts.night_g3_evolve_v2.COST_BPS (imported, not retyped)"},
+        "inputs": [n3.PANEL.name, n3.BARS.name],
         "status": "running", "written_utc": n3._now(),
     }
     atomic_write_json(out, receipt, indent=1)
@@ -334,7 +335,15 @@ def main(argv=None) -> int:
             f"p {d['p']}); {g['stale_vs_fresh']['n_dates_on_a_stale_model']} dates ran on a "
             f"stale model, max age {g['stale_vs_fresh']['max_model_age_months']} months; "
             f"fit seconds {cost['fit_seconds']['ADWIN']} vs {cost['fit_seconds']['FIXED']}")
-    if cost["refits"]["ADWIN"] >= cost["refits"]["FIXED"]:
+    if cost["refits"]["ADWIN"] <= 1:
+        v = ("ADWIN NEVER FIRED after the mandatory first fit, so the ADWIN arm is one model "
+             f"carried across every test month (max age "
+             f"{g['stale_vs_fresh']['max_model_age_months']} months). That is a fact about the "
+             "ERROR STREAM -- at this scale it is stationary to the detector -- and only "
+             "secondarily about the cadence. Read the stale-vs-fresh IC split, not the refit "
+             "count: a monthly refit that changes nothing is ceremony, and a detector that "
+             "cannot see the drift is not evidence there is none.")
+    elif cost["refits"]["ADWIN"] >= cost["refits"]["FIXED"]:
         v = ("ADWIN did not save a refit on this panel -- it signalled a change at least as "
              "often as the calendar did, so the monthly cadence is not the thing being "
              "questioned here.")

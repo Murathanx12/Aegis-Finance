@@ -496,6 +496,11 @@ def run_pass(cadence: str, *, today: date | None = None,
     conn = conn or PB._conn(db_path)
     receipt: dict = {
         "job": "book_cadence", "cadence": cadence, "ran_at": started,
+        # The stage contract's first step (chunk 9, 2026-09-13,
+        # `docs/STAGE_CONTRACT.md`). This pass turns marks into POSITIONS and a
+        # NAV, so it is the `pnl` stage -- the last one. Nothing may read it as
+        # an input; `test_stage_contract_no_forward_read.py` is what says so.
+        "stage": "pnl",
         "today": str(today), "books_considered": 0, "marked": [], "decisions": [],
         "refused": [], "unpriced": [], "nothing_to_do": False,
         "granularity": "daily_close",

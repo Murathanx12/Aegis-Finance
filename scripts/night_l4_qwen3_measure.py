@@ -257,6 +257,7 @@ def main(argv=None) -> int:
                      "in VRAM and buy in prompt-eval tok/s at each --n-cpu-moe, does the plain "
                      "Instruct build refuse any of R2's frozen prompts, and is the resulting "
                      "wall time compatible with a nightly arm?"),
+        "inputs": [GGUF_FILE],
         "model_identity": file_check(with_hash=not args.smoke),
         "reader": reader_state(),
         "contended_measurement_being_superseded": CONTENDED,

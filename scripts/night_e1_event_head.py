@@ -344,6 +344,7 @@ def main(argv=None) -> int:
                        "vocabulary of docs/research_notes/2026-09-11/spec_events_and_"
                        "calibration.md section 1.2. A verdict here is a verdict about the proxy."),
         },
+        "inputs": [n3.PANEL.name, n3.BARS.name],
         "status": "running", "written_utc": n3._now(),
     }
     atomic_write_json(out, receipt, indent=1)
