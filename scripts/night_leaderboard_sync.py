@@ -26,10 +26,33 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
+from backend.services import protocol_p16                              # noqa: E402
 from scripts.night_factory import (LEADERBOARD, OUT, _status,            # noqa: E402
                                    append_leaderboard)
 
 RECEIPT = re.compile(r"^(?P<job>.+)_run(?P<run>\d{2})\.json$")
+
+
+def protocol_refusal(job: str, payload: dict) -> str | None:
+    """Why the board must not carry this X-lane row, or `None`.
+
+    MUST NOT REGRESS #24: *an LLM read over history carries P1-P6, its LAP
+    score and its anonymisation gap, or it is not quoted.* The board is where
+    a number becomes quoted -- `LEADERBOARD.md` is what the morning read and
+    `/api/control/leaderboard` shows -- so the protocol is enforced HERE and
+    not only in the writer, which is the half a future X-lane script can
+    forget. Non-X receipts are never refused by this: the protocol binds LLM
+    reads over history, not the whole factory.
+
+    The reason is RETURNED rather than raised, and the caller prints it. A
+    refused receipt is a finding about that receipt, not a crash that hides
+    the twelve rows queued behind it.
+    """
+    reasons = protocol_p16.refuse_reasons(job, payload)
+    if not reasons:
+        return None
+    return ("X-lane receipt REFUSED (P1-P6 protocol, spec_lane_x section 6): "
+            + "; ".join(reasons))
 
 
 def existing_rows() -> set[tuple[str, int]]:
@@ -146,8 +169,12 @@ def rebuild() -> int:
             continue
         try:
             job, run = m.group("job"), int(m.group("run"))
-            append_leaderboard(job, run, with_consistency(
-                job, run, json.loads(p.read_text(encoding="utf-8"))))
+            payload = json.loads(p.read_text(encoding="utf-8"))
+            refusal = protocol_refusal(job, payload)
+            if refusal:
+                print(f"  REFUSED {p.name}: {refusal}")
+                continue
+            append_leaderboard(job, run, with_consistency(job, run, payload))
             n += 1
         except Exception as exc:  # noqa: BLE001
             print(f"  SKIP {p.name}: {type(exc).__name__}")
@@ -209,6 +236,10 @@ def main(argv=None) -> int:
             payload = json.loads(p.read_text(encoding="utf-8"))
         except Exception as exc:  # noqa: BLE001  a corrupt receipt is a finding, not a crash
             print(f"  SKIP {p.name}: unreadable ({type(exc).__name__})")
+            continue
+        refusal = protocol_refusal(job, payload)
+        if refusal:
+            print(f"  REFUSED {p.name}: {refusal}")
             continue
         payload = with_consistency(job, run, payload)
         added.append((job, run, (payload.get("consistency") or "")
