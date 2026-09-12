@@ -217,10 +217,18 @@ before crediting discovery** (protocol §9).
   P1-P6 protocol; the empirical cost curve; stopping rules; distillation; the read-only query surface;
   the heads with conformal and drift. **No strategy has moved. RESULT IMPROVEMENT: NONE.** What has
   moved is that every number now sits beside its twin, its cost curve, its calibration and its refusal.
-- **Next (chunk 10, not yet specified):** wire L2 (typed-event extraction) — every text head above ran
-  on a keyword proxy; run the model-dependent jobs once the server is up under the night rules
-  (R2 panel B, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text); the
-  full E1 two-model run; the B/B′ re-seed; the attended items unchanged.
+- **Chunk 10 landed 05:30 (9,358):** the typed-event pipeline — vocabulary as a hashed table, the
+  contract byte-equal to the spec, the resumable night job frozen at 6,020 rows `PENDING_MODEL`
+  (4.9-10 h of reader time), the three consumers reading typed rows when they exist; nine corpus rows a
+  `splitlines()` reader was silently losing on every append (U+2028 in headline bodies); a PIT defect in
+  the prompt's date caught before any call; the vocabulary lacks an `ANALYST` type (C1's largest kind).
+- **Running at close (05:35, detached, CPU only, no model):** `B_first_books_replay:90` (the four
+  books' first 1990-2024 read vs their twins, per era, Holm within the family) then `E1_event_head:150`
+  (the full two-model run on the proxy). Receipts under `night_factory_2026-09-13/`.
+- **Next:** read those two receipts; once the model server is up under the night rules (TdrDelay
+  attended), run in order: R2 panel B, `L2_typed_events` (then re-run E1 on typed rows), the
+  anonymisation gap, the recall probe, L4's idle measurement, M2's rule text; add an `ANALYST` type to
+  the vocabulary before X2 uses C1; the B/B′ re-seed; the attended items unchanged.
 
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
