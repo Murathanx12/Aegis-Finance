@@ -89,6 +89,8 @@ if _env_queue:
 
 #: jobs whose length is a time box, not a computation
 TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
+#: imported, not retyped, so the dispatch and the guard cannot drift apart
+from scripts.night_smoke_job import SMOKE_PREFIX          # noqa: E402
 #: mirrors `scripts.night_factory_jobs.RESUMABLE`; imported rather than retyped
 #: so the two cannot drift apart into a --resume that the dispatcher refuses.
 try:
@@ -210,39 +212,304 @@ def resolve_run(job: str, first_run: int) -> tuple[int, bool]:
     return run, False
 
 
+# --------------------------------------------------------------- the time box
+#
+# 2026-09-12. `N3_frozen_embedding_head` ran 40,569.7 s under a `<= 60 min` box
+# and `subprocess.run(..., timeout=3600)` RETURNED NORMALLY with `exit_code 0`:
+# the success branch, not the timeout branch. The machine was in Modern Standby
+# 15:58Z -> 00:09Z, so awake time was still ~3h05m against the 60-minute box.
+# The SHAPE is not at fault -- a probe copying this call verbatim (venv
+# `sys.executable`, file-handle stdout, `stderr=STDOUT`, `text=True`, the same
+# env dict) with a 20 s box and a 90 s sleeper raised `TimeoutExpired` at
+# 20.01 s and the real grandchild died with it. What failed is the dependence
+# on `WaitForSingleObject`'s timeout across a standby transition, which I could
+# not reproduce on demand and therefore do not claim to have diagnosed.
+#
+# So the box no longer asks Windows to time it. It owns its own clock, it
+# counts AWAKE seconds only, and it kills the whole process TREE by PID.
+
+#: a single poll interval longer than this means the MACHINE stopped, not that
+#: the job ran. Anything under it is time the job actually had.
+SLEEP_GAP_S = float(os.getenv("AEGIS_NIGHT_SLEEP_GAP_S", "300"))
+#: how often the box looks at the child. Cheap: one `poll()` per second.
+POLL_S = float(os.getenv("AEGIS_NIGHT_POLL_S", "1.0"))
+#: after the tree is asked to die, how long before we record that it did not
+KILL_GRACE_S = float(os.getenv("AEGIS_NIGHT_KILL_GRACE_S", "20"))
+
+
+def _job_module(job: str) -> str:
+    """The module that runs `job`.
+
+    `SMOKE_*` routes to `scripts.night_smoke_job`, a job that only sleeps, so
+    the time box has something cheap to be exercised against. No real queue may
+    contain a `SMOKE_` id; `test_night_factory_timebox.py` fails if one does.
+    """
+    return "scripts.night_smoke_job" if job.startswith(SMOKE_PREFIX) else "scripts.night_factory_jobs"
+
+
+def _descendants(pid: int) -> list[int]:
+    """Every descendant PID of `pid`, best effort; `[]` when we cannot enumerate.
+
+    The venv launcher is a REDIRECTOR: `.venv/Scripts/python.exe` (274,424 B)
+    starts the real `Python312/python.exe` (104,952 B) and waits, so the job is
+    a GRANDCHILD and killing only the immediate child can orphan hours of
+    compute -- and an orphan that finishes later OVERWRITES the receipt that
+    said it was killed.
+    """
+    try:
+        import psutil                                       # noqa: PLC0415
+    except ImportError:
+        psutil = None
+    if psutil is not None:
+        try:
+            return [c.pid for c in psutil.Process(pid).children(recursive=True)]
+        except Exception:                                   # noqa: BLE001
+            return []
+    if os.name != "nt":
+        return []
+    try:
+        r = subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+             "Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId "
+             "| ConvertTo-Csv -NoTypeInformation"],
+            capture_output=True, text=True, timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return []
+    parent_of: dict[int, int] = {}
+    for line in r.stdout.splitlines()[1:]:
+        parts = [x.strip().strip('"') for x in line.split(",")[:2]]
+        try:
+            parent_of[int(parts[0])] = int(parts[1])
+        except (ValueError, IndexError):
+            continue
+    out: list[int] = []
+    frontier = {pid}
+    while frontier:
+        nxt = {k for k, par in parent_of.items() if par in frontier and k != pid and k not in out}
+        out.extend(sorted(nxt))
+        frontier = nxt
+    return out
+
+
+def kill_tree(pid: int) -> list[int]:
+    """Kill `pid` and every descendant BY PID, never by image name.
+
+    CLAUDE.md session protocol 6: on 2026-09-06 one agent ran
+    `taskkill /F` with an image-name filter to stop its own job and killed two
+    other agents' jobs, a running test suite and the MCP server. PIDs only.
+    """
+    kids = _descendants(pid)
+    asked = [pid, *kids]
+    if os.name == "nt":
+        for target, flags in [(pid, ["/T", "/F"]), *[(k, ["/F"]) for k in kids]]:
+            try:
+                subprocess.run(["taskkill", "/PID", str(int(target)), *flags],
+                               capture_output=True, text=True, timeout=120, check=False)
+            except (OSError, subprocess.SubprocessError):
+                continue
+    else:
+        import signal                                       # noqa: PLC0415
+        for target in reversed(asked):
+            try:
+                os.kill(int(target), signal.SIGKILL)
+            except OSError:
+                continue
+    return asked
+
+
+def await_within_box(proc, box_s: float, *, poll_s: float | None = None,
+                     gap_s: float | None = None, killer=kill_tree,
+                     clock=time.time, sleeper=time.sleep) -> tuple[int | None, dict]:
+    """Wait for `proc`, spending only AWAKE seconds out of `box_s`.
+
+    Returns `(returncode, stats)`; `returncode is None` means the box ran out
+    and the tree was killed. Two clocks are read, because two different
+    failures look identical from either one alone:
+
+    * a poll interval far longer than `poll_s` means the interval did not
+      happen -- the process was frozen (Modern Standby's Desktop Activity
+      Moderator) or the machine suspended. The job did not have that time, so
+      it is `slept_s`, and it does not spend the box.
+    * `time.monotonic()` may or may not advance across a suspend depending on
+      the platform, so `wall_minus_monotonic_s` is REPORTED beside the poll
+      gaps rather than trusted instead of them.
+
+    A job is killed for exceeding its box AWAKE. N3 on 2026-09-11 was awake
+    about 3h05m under a 60-minute box, so this still kills it; what it must not
+    do is kill a job for the eight hours the machine was not running it.
+    """
+    poll_s = POLL_S if poll_s is None else poll_s
+    gap_s = SLEEP_GAP_S if gap_s is None else gap_s
+    wall0, mono0 = clock(), time.monotonic()
+    last = wall0
+    awake = 0.0
+    gaps: list[dict] = []
+    while True:
+        rc = proc.poll()
+        now = clock()
+        delta = now - last
+        last = now
+        if delta > gap_s:
+            gaps.append({"gap_s": round(delta, 1),
+                         "resumed_utc": datetime.fromtimestamp(now, timezone.utc)
+                         .isoformat(timespec="seconds")})
+        else:
+            awake += max(delta, 0.0)
+        elapsed = max(now - wall0, 0.0)
+        stats = {
+            "elapsed_s": round(elapsed, 1),
+            "awake_s": round(awake, 1),
+            "slept_s": round(max(elapsed - awake, 0.0), 1),
+            "box_s": round(float(box_s), 1),
+            "wall_minus_monotonic_s": round(elapsed - (time.monotonic() - mono0), 1),
+            "sleep_gaps": gaps,
+            "child_pid": proc.pid,
+            "killed_pids": [],
+        }
+        if rc is not None:
+            return rc, stats
+        if awake >= box_s:
+            stats["killed_pids"] = list(killer(proc.pid))
+            try:
+                proc.wait(timeout=KILL_GRACE_S)
+            except Exception:                               # noqa: BLE001
+                stats["tree_survived_the_kill"] = True
+            return None, stats
+        sleeper(poll_s)
+
+
+# --------------------------------------------------- the machine must stay up
+
+def standby_timeout_ac() -> tuple[int | None, str]:
+    """`(AC idle sleep timeout in seconds, the evidence)` for the ACTIVE plan.
+
+    `0` is "never sleep". `None` is CANNOT DETERMINE -- no `powercfg` (any
+    non-Windows machine, CI included) or output this cannot parse. A guard that
+    refused on CANNOT DETERMINE would be a gate that can never go green off
+    Windows, so only a PARSED, non-zero timeout refuses.
+    """
+    try:
+        r = subprocess.run(["powercfg", "/query", "SCHEME_CURRENT", "SUB_SLEEP", "STANDBYIDLE"],
+                           capture_output=True, text=True, timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return None, f"powercfg did not run ({exc.__class__.__name__})"
+    if r.returncode != 0:
+        return None, f"powercfg exited {r.returncode}"
+    return parse_standby_ac(r.stdout)
+
+
+def parse_standby_ac(stdout: str) -> tuple[int | None, str]:
+    """The AC index out of `powercfg /query ... STANDBYIDLE` output.
+
+    Split from the call so the guard is testable on a machine with no
+    `powercfg` at all -- which is every CI runner this repo has.
+    """
+    for line in stdout.splitlines():
+        if "Current AC Power Setting Index" in line:
+            raw = line.split(":")[-1].strip()
+            try:
+                return int(raw, 0), f"Current AC Power Setting Index: {raw}"
+            except ValueError:
+                return None, f"could not parse {raw!r}"
+    return None, "powercfg printed no AC setting index"
+
+
+#: the one line Murat runs. Printed on refusal; never run by a session.
+POWERCFG_FIX = "powercfg /change standby-timeout-ac 0"
+
+
+def refuse_if_the_machine_may_sleep() -> str | None:
+    """The refusal text, or `None` when the night may start.
+
+    2026-09-11: the machine entered Modern Standby at 23:58 local and left at
+    08:09, and a job that should have had one hour had eight of them handed to
+    a suspended CPU. A night that can be slept through is not an unattended
+    night. `AEGIS_NIGHT_ALLOW_SLEEP=1` overrides (tests, and a human who means
+    it).
+    """
+    if os.getenv("AEGIS_NIGHT_ALLOW_SLEEP") == "1":
+        return None
+    secs, evidence = standby_timeout_ac()
+    if secs is None:
+        print(f"power plan: CANNOT DETERMINE ({evidence}); starting anyway", flush=True)
+        return None
+    if secs == 0:
+        print("power plan: AC standby timeout 0 (never) -- the machine will stay up", flush=True)
+        return None
+    return (f"REFUSED: the active power plan sleeps after {secs}s on AC ({evidence}).\n"
+            f"An unattended night cannot be slept through. Run this, then start again:\n"
+            f"    {POWERCFG_FIX}\n"
+            f"(or set AEGIS_NIGHT_ALLOW_SLEEP=1 to start anyway and accept the risk)")
+
+
+def gpu_line() -> str:
+    """Driver version and VRAM in use, so the next crash receipt has them.
+
+    2026-09-12 10:53 HKT: bugcheck 0x116 VIDEO_TDR_ERROR while an unattended
+    job held 5.3 GB of 8 GB on the local model. The next crash should not need
+    an archaeologist to learn which driver was loaded.
+    """
+    try:
+        r = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version,memory.used,memory.total",
+                            "--format=csv,noheader"], capture_output=True, text=True,
+                           timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return "GPU: -- (nvidia-smi did not run)"
+    if r.returncode != 0 or not r.stdout.strip():
+        return f"GPU: -- (nvidia-smi exited {r.returncode})"
+    return "GPU: " + " | ".join(x.strip() for x in r.stdout.strip().splitlines())
+
+
 def run_job(job: str, run: int, timeout_min: int, extra: list[str], resume: bool = False) -> dict:
-    started = time.time()
-    cmd = [sys.executable, "-m", "scripts.night_factory_jobs", job,
+    """Run one job under its box and return the receipt payload.
+
+    The box is `await_within_box`, not `subprocess.run(timeout=)`: it counts
+    awake seconds, it kills the tree, and it says in the receipt which PIDs it
+    asked to die and how long the machine was asleep.
+    """
+    cmd = [sys.executable, "-m", _job_module(job), job,
            "--out", str(_receipt_path(job, run)), "--run", str(run), *extra]
     if resume:
         cmd.append("--resume")
     log = OUT / f"{job}_run{run:02d}.log"
     OUT.mkdir(parents=True, exist_ok=True)
-    try:
-        with log.open("w", encoding="utf-8") as fh:
-            r = subprocess.run(cmd, cwd=str(ROOT), stdout=fh, stderr=subprocess.STDOUT, text=True,
-                               timeout=timeout_min * 60,
-                               env={**os.environ, "AEGIS_IGNORE_DOTENV": "1", "PYTHONIOENCODING": "utf-8"})
-        elapsed = round(time.time() - started, 1)
-        if _receipt_path(job, run).exists():
-            payload = json.loads(_receipt_path(job, run).read_text(encoding="utf-8"))
-            payload["elapsed_s"] = elapsed
-            payload["exit_code"] = r.returncode
-            if r.returncode:
-                payload.setdefault("verdict", "FAILED")
-                payload["log_tail"] = log.read_text(encoding="utf-8", errors="replace")[-3000:]
-            write_receipt(job, run, payload)
-            return payload
-        payload = {"verdict": "FAILED", "headline": f"exited {r.returncode} with no receipt",
-                   "elapsed_s": elapsed, "exit_code": r.returncode,
-                   "log_tail": log.read_text(encoding="utf-8", errors="replace")[-4000:]}
+    with log.open("w", encoding="utf-8") as fh:
+        proc = subprocess.Popen(cmd, cwd=str(ROOT), stdout=fh, stderr=subprocess.STDOUT, text=True,
+                                env={**os.environ, "AEGIS_IGNORE_DOTENV": "1",
+                                     "PYTHONIOENCODING": "utf-8"})
+        rc, box = await_within_box(proc, timeout_min * 60)
+
+    def _tail(n: int) -> str:
+        try:
+            return log.read_text(encoding="utf-8", errors="replace")[-n:]
+        except OSError:
+            return ""
+
+    if rc is None:
+        slept = box["slept_s"]
+        headline = (f"killed after {box['awake_s']:.0f}s awake against a {timeout_min}-minute box "
+                    f"(pids {box['killed_pids']})")
+        if slept > 0:
+            headline += (f"; the machine also slept {slept:.0f}s of the "
+                         f"{box['elapsed_s']:.0f}s on the wall, which did NOT count")
+        payload = {"verdict": "TIMEOUT", "headline": headline, "log_tail": _tail(4000), **box}
         write_receipt(job, run, payload)
         return payload
-    except subprocess.TimeoutExpired:
-        payload = {"verdict": "TIMEOUT", "headline": f"killed after {timeout_min} minutes",
-                   "elapsed_s": round(time.time() - started, 1)}
+
+    if _receipt_path(job, run).exists():
+        payload = json.loads(_receipt_path(job, run).read_text(encoding="utf-8"))
+        payload.update(box)
+        payload["exit_code"] = rc
+        if rc:
+            payload.setdefault("verdict", "FAILED")
+            payload["log_tail"] = _tail(3000)
         write_receipt(job, run, payload)
         return payload
+
+    payload = {"verdict": "FAILED", "headline": f"exited {rc} with no receipt",
+               "exit_code": rc, "log_tail": _tail(4000), **box}
+    write_receipt(job, run, payload)
+    return payload
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -264,6 +531,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
     queue = [(j, m) for j, m in QUEUE if want is None or j in want]
     print(f"NIGHT FACTORY {RUN_DATE}: {len(queue)} job(s); STOP file: {STOP}", flush=True)
+    print(gpu_line(), flush=True)
+    refusal = refuse_if_the_machine_may_sleep()
+    if refusal:
+        print(refusal, flush=True)
+        return 3
     for job, minutes in queue:
         if stopped():
             print("STOP file present; ending the night between jobs", flush=True)
