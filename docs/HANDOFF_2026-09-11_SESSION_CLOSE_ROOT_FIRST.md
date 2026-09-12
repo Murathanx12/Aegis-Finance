@@ -155,6 +155,25 @@ before crediting discovery** (protocol §9).
   reversible by an env var and needs no reboot. `TdrDelay` is the second lever,
   not the first, and it is Murat's to pull.
 
+## 3d. WHAT 2026-09-12 LANDED (read 18:30 HKT; details per chunk in the build plan §6b)
+
+- **Chunk 3c** — the time box on its own clock (awake seconds, tree kill by PID, proven by a sleeper);
+  the target band on the upside tercile (all eight audited names show a band); the frontend triple
+  check; the night page had served the 09-08 board for four nights (a literal path) — fixed; the LLM
+  spend ledger rotated. **Chunk 5** — paper books with twins, the cadence scheduler (30m/daily/weekly/
+  monthly/quarterly), the ledger's 19 new fields, the books board, Headline Arena dry-run. **Chunk 5b** —
+  seven books + fifteen twins seeded and pre-registered (four UNSIGNED drafts, family
+  `NIGHT_JOB_BOOKS_2026_09`), Book A's short-interest panel from the local WRDS tables, the replay night
+  job (smoke only; full pass 20-45 min, not run), lane D's book `book:f64e8d9912412124` and
+  `scripts/monday_night.py`, the arena job on the venue's real protocol. Suite 8,314 → 8,639; CI green
+  through 5b's fix. **Chunk 5c** (the cost model) was building at close.
+- **Every remaining chunk has a builder spec** under `research_notes/2026-09-12/` (5c cost model, 6
+  agency intake, 7 lane X, 8 memory + stopping rules, 9 heads/conformal/Qwen3) plus two probes (the
+  short-interest panel exists locally; Alpaca IEX minute bars: one paginated stream a day, ~10 MB).
+- **Owed / attended:** re-seed Books B and B′ so they carry the beta-matched twin; Murat creates a
+  dedicated Alpaca paper role for lane D (D2's fill receipt waits on it); the arena registration; the
+  `TdrDelay` registry option; `powercfg` is already "never sleep" on AC on this machine.
+
 ## 4. FOR TOMORROW (chunk 3c, then 5), in order
 
 1. **Read tonight's receipts** and the merged-tree suite count in the build plan; `python -m scripts.ci_watch`.
