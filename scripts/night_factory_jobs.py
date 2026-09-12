@@ -1481,6 +1481,13 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # tests, so the family Holm runs inside it.
         "B_first_books_replay": _lazy("scripts.night_first_books_replay",
                                       "B_first_books_replay"),
+        # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
+        # llama-server for their model legs and NONE of them start it -- each
+        # writes PENDING_MODEL with its cell list frozen and hashed when the
+        # reader is not answering, so the run that happens when it is up asks
+        # the same question rather than a similar one. Their receipts carry a
+        # P1_P6 block or `night_leaderboard_sync` refuses the row.
+        "X_anon_gap": _lazy("scripts.night_x_anonymisation_gap", "X_anon_gap"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
@@ -1528,6 +1535,11 @@ def main(argv=None) -> int:
         payload = fn(seed=a.seed, smoke=a.smoke)
     elif a.job in ("N2_learner_v3", "B_first_books_replay"):
         payload = fn(smoke=a.smoke)
+    elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
+        # the X lane takes the run number: its frozen cell list is filed under
+        # it, and a second run that overwrote the first's list would destroy the
+        # only thing that makes a PENDING_MODEL receipt reproducible.
+        payload = fn(smoke=a.smoke, run=a.run)
     else:
         payload = fn()
     payload["elapsed_s"] = round(time.time() - t0, 1)

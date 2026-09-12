@@ -1,0 +1,164 @@
+{
+ "job": "X_anon_gap",
+ "lane": "X",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "backend": "local_gguf",
+ "PREREGISTRATION": {
+  "trial": "r2-monthly-news-digest-read",
+  "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+  "pre_registered": "2026-09-10",
+  "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+  "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+  "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+  "model_identity": {
+   "backend": "local_gguf",
+   "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "size_bytes": 4683074240,
+   "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+   "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+   "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+   "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+  },
+  "cost_bps_per_side": 25.0,
+  "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+ },
+ "question": "Does R2's frozen prompt read the SAME PANEL-B cells better from the RAW text than from the anonymised text -- and if it does, is that information or memory?",
+ "adoption_rule_text": "1. Compute the anonymisation gap on PANEL-B: net_ann_pct(read_RAW) minus net_ann_pct(read_MASKED), block-paired, Newey-West lag 2, net of 25 bps a side on realised turnover. This settles sign and size for THIS model, prompt and cross-section; it does not have to agree with either paper, because neither paper ran this model on this data. 2. Cross-check the AMNESIA canary: if read_RAW beats read_MASKED but the canary's real-name-minus-masked accuracy gap is also large and positive, the raw arm's edge is presumptively memorisation and MASKED is adopted regardless of the raw score. If the canary gap stays at or below +0.02 (TRIAL-R2's own adopt threshold) while read_RAW still wins, the extra accuracy is more plausibly entity information masking destroys, and RAW may be preferred -- but every receipt from that point prints BOTH numbers and the canary cross-check, permanently, never just the winner. 3. Default while the raw arm has not run: stay on read_MASKED, the registered TRIAL-R2 arm. Switch only on a measured gap from our PANEL-B.",
+ "amnesia_gap": {
+  "gap": -0.001,
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\R2_widened_panelB_answers.jsonl",
+  "how": "re-derived from R2's PERSISTED canary answers -- its receipt is PENDING_MODEL and carries no canary block",
+  "real_names_accuracy": 0.4811,
+  "n_real": 264,
+  "masked_accuracy": 0.482,
+  "n_masked": 278
+ },
+ "cost_model": {
+  "cost_bps_per_side": 25.0,
+  "charged_on": "realised turnover sum|dw| per monthly rebalance"
+ },
+ "construction": {
+  "news_rows": 340465,
+  "symbol_month_groups": 36898,
+  "with_a_forward_label": 34984,
+  "cells_at_min_docs": 18521,
+  "min_docs_per_cell": 3,
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "market_symbol": "SPY",
+  "convention": "enter at the first open of M+1, exit at the first open of M+2, minus SPY over the same two opens",
+  "symbols_with_a_label": 3060,
+  "label_rows": 59348,
+  "dropped_for_a_calendar_gap": 0
+ },
+ "masking": {
+  "documents_in_digests": 106623,
+  "documents_with_at_least_one_masked_token": 44726,
+  "mask_hit_rate": 0.4195,
+  "cells_whose_symbol_has_a_CRSP_issuer_name": 15817,
+  "note": "a document with no masked token is one where neither the ticker nor an issuer-name token appeared in its text -- common for a headline that never names the company -- but a HIGH rate of them would be a mask leak"
+ },
+ "cells_frozen": {
+  "n_cells": 300,
+  "cells_sha256": "31d99d22223a7bb5e023f692c18d46f5e0b064b2f29c9efb95c75dcb2069d309",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_run01_cells.json",
+  "seed": 20260909,
+  "stratified_by": "month block (canon section 58's dependence unit)",
+  "drawn_from_cells": 18521,
+  "months": [
+   "2025-01",
+   "2025-02",
+   "2025-03",
+   "2025-04",
+   "2025-05",
+   "2025-06",
+   "2025-07",
+   "2025-08",
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07"
+  ]
+ },
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": true,
+   "date_shifted_placebo_run": true,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "ChronoGPT is specced as an OPTIONAL separate deliverable (spec section 1.6); it is not distributed as GGUF and needs a transformers path this job does not have",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-06-30",
+   "cutoff_source": "community cutoff trackers + provider pages for Qwen2.5-7B-Instruct; NOT an official Alibaba cutoff page (spec section 1.3)",
+   "cutoff_confidence": "MEDIUM",
+   "evidence_paths": {
+    "anonymised": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_run01_cells.json",
+    "date_shifted_placebo_run": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_run01_cells.json",
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": true,
+   "note": "PANEL-B cells require the SUCCESSOR month to be literally the next one, so a delisted or halted name contributes no two-month return labelled as one (night_r2_monthly_llm.widened_forward_excess)"
+  },
+  "P3_direction_flip": {
+   "pass_rate": null,
+   "n": 0,
+   "test": "not run in this job: the direction-flip test needs C1's sign_flip counterfactuals, which X2_elasticity reads (spec section 3.5)"
+  },
+  "P4_calibration_ece": {
+   "ece": null,
+   "n_bins": 10,
+   "brier": null,
+   "brier_decomposition": {}
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "r2_trial.COST_BPS_PER_SIDE (25 bps/side on realised turnover)",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": null,
+   "costed": true,
+   "gross_reported_separately": true
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "dir, conf": "Qwen2.5-7B-Instruct-Q4_K_M via the frozen TRIAL-R2 system+user prompt",
+    "fwd": "deterministic: SPY-excess open-to-open month return from bars.parquet",
+    "gap_pct_pt, gap_nw_t": "deterministic arithmetic in night_x_anonymisation_gap"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "PANEL-B (2025-01..2026-07) is entirely AFTER Qwen2.5-7B's ~2024-06 cutoff, so every cell here is already the post-cutoff arm of L3's split (spec section 1.3)"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": null,
+  "t": null,
+  "adopted_arm": null,
+  "reason": "PENDING_MODEL: the raw arm has not been read, so there is no gap. The cell list is frozen and hashed so the run that measures it asks the same question"
+ },
+ "pending_when_the_reader_is_up": [
+  "read_RAW: the 300 frozen cells, un-anonymised digests",
+  "read_MASKED: the SAME 300 cells, anonymised digests",
+  "control_SHUFFLED_masked and control_SHUFFLED_raw: the same cells, each given a digest from a different month (rng seed 20260909)",
+  "the gap: net(raw) minus net(masked), block-paired, NW lag 2",
+  "one command: python -m scripts.night_x_anonymisation_gap --cells 300 --seed 20260909 --run 1"
+ ],
+ "verdict": "PENDING_MODEL: the cell draw, the digests and the adjudication rule are built and frozen; the reader is not answering and this job does not start it (the desktop shell owns llama-server). Probe said: ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+ "headline": "300 cells over 19 month blocks frozen at sha256 31d99d22223a; AMNESIA gap -0.001 carried from R2; NO model call was made",
+ "elapsed_s": 8.3,
+ "written_utc": "2026-09-12T12:20:46+00:00",
+ "run": 1
+}

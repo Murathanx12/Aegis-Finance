@@ -210,13 +210,18 @@ def _x_lane_receipts() -> list[Path]:
     base = REPO / "backend" / "data" / "optimus"
     if not base.is_dir():
         return []
+    # THE BOARD'S OWN PATTERN, not a looser glob: a sidecar the board never
+    # reads as a receipt must not be held to a receipt's schema here either,
+    # or the two disagree about what a receipt is.
+    from scripts.night_leaderboard_sync import RECEIPT
+
     out = []
     for night in sorted(base.glob("night_factory_*")):
         for p in sorted(night.glob("*_run*.json")):
-            if p.name.endswith("_smoke.json"):
+            m = RECEIPT.match(p.name)
+            if not m or p.name.endswith("_smoke.json"):
                 continue
-            job = p.name.split("_run")[0]
-            if pp.X_JOB_RE.match(job):
+            if pp.X_JOB_RE.match(m.group("job")):
                 out.append(p)
     return out
 
