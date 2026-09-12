@@ -630,6 +630,12 @@ locally, Fable reviews the diff, runs the fast suite, pushes, watches CI.
 | **8** | M2 distillation → `LEARNED_<month>.md` for Optimus · M4 calibration on the board · E5 DSR/PBO stopping rules · §11 cheap joins | the first rule with its own Brier |
 | **9** | E1-E4 heads against GBM · L4 Qwen3 as a new arm · the stage contract (big) | a head beats GBM and its three controls, or the result is filed |
 
+**Every chunk from 5b on has a builder spec** (Sonnet, 2026-09-12, `research_notes/2026-09-12/`):
+5b `spec_first_books.md` (+ `probe_short_interest.md`) · 5c `spec_cost_model.md` · lane D
+`research_daytrading.md` · 6 `spec_agency_intake.md` · 7 `spec_lane_x.md` · 8
+`spec_chunk8_memory_and_stopping.md` · 9 `spec_chunk9_heads.md`; and from 2026-09-11: L2/M1/M3/M4
+`spec_events_and_calibration.md`, O11 `spec_price_targets.md`. A builder reads the spec, not this table.
+
 **Compaction rule for the validating session:** summarise when context passes
 half; the chunk table above is the resume point.
 

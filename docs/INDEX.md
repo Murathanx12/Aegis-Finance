@@ -57,6 +57,10 @@ Big local artefacts that are deliberately NOT committed are catalogued in
   in one day (launcher, ledger rotation, the windowless-stdout root cause, the board, the universe, the
   Morning click, Ask with tools, the 52-week target with its IBES backtest, the news corpus with 6,581
   rows from 17 sources), fourteen defects found live, tonight's queue, and tomorrow's order.
+  **2026-09-12:** the PC crashed at 10:53 (0x116 VIDEO_TDR under the model server; handoff §3c);
+  chunks 3c and 5 landed (the time box on its own clock, the target band on the upside tercile, paper
+  books with twins, the cadence scheduler, the ledger's 19 new fields); lane D (the day-trading book,
+  roadmap §10b) added; **every remaining chunk has a builder spec under `research_notes/2026-09-12/`**.
 - `ROADMAP_2026-09-10_MODEL_NEWS_AND_THE_EVENT_NET.md` — SUPERSEDED 2026-09-11 (folded into lanes L/E
   above); keep for §3b's evidence-memory options and the Qwen3 measurements.
 

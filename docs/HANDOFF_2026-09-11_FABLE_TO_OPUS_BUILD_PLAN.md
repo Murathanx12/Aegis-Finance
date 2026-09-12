@@ -329,6 +329,24 @@ momentum k=12 monthly: 3 marked, 3 decided, 1,304/1,304 priced from local bars, 
 book pass marking a real book from the suite; a session-scoped test db leaking two rows into the real
 ledger — reverted; two fixtures on two databases). Suite 8,407 → 8,527.
 
+**Chunk 5b landed (validated 2026-09-12 night):** `d8e29d3` Book A's panel from the local WRDS
+short-interest tables (1990-2024, 2,211,042 rows, permno match 0.59, per-year join 0.62-0.82; PIT
+`observed_at = datadate + 14 d`; the CRSP volume unit measured on every build; Nasdaq double-counting
+UNRESOLVED and flagged per row); `c32ee35` `book_signals.py` + `first_books_mde.py` (the §64 power check
+with measured cross-sectional ρ: A MDE 0.69%/mo, C 0.72%/mo, D 5.9%/mo at 24 blocks so terminal wealth
+at equal drawdown decides, **B underpowered for its own prior — MDE 7.2% vs KKW's 5.0%, so a null there
+is CONDITIONAL**), four UNSIGNED drafts in `docs/TRIALS/TRIAL-DRAFT-{A,B,C,D}-*.md` (family
+`NIGHT_JOB_BOOKS_2026_09`, all pass `lint_prereg.py` against 358 experiments), seven books + fifteen
+twins seeded idempotently through the route; `52f38b0` the replay night job `B_first_books_replay`
+(smoke 4/5 legs in 30 s; full 1990-2024 projected 20-45 min, NOT run) **and the twin that was cheating**
+— the random twin's full monthly rotation gave books +0.354%/month of pure churn; `8c73cf1` lane D's
+book `book:f64e8d9912412124` (30m, three twins incl. overnight-only, worst case 12 × 8.33% × 2% = 2.00%
+of equity a session, cost `retail_paper_pending_D2`) and `scripts/monday_night.py`; `5058683` Headline
+Arena on the venue's real protocol, re-registered v1 → v2 before any submission; `ccb5eb8` guard
+enrolment and the passthrough twin. Suite 8,527 → 8,639. **Owed:** Books B and B′ were seeded before
+the passthrough fix and carry only the random twin — an attended re-seed adds their beta-matched twin.
+A and C mark but refuse to decide forward: their panels are CRSP-keyed and CRSP ends 2024-12.
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits
