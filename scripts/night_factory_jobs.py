@@ -1495,6 +1495,12 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # arm -- saying so, because a check that cannot go green is broken.
         "E3_adaptive_conformal": _lazy("scripts.night_e3_adaptive_conformal",
                                        "E3_adaptive_conformal"),
+        # E4 2026-09-13, chunk 9: refit when ADWIN (Bifet-Gavalda 2007) signals a
+        # change on the head's own error stream, against refitting every month,
+        # on IDENTICAL test dates. `river` could not be installed offline so the
+        # spec's own 90-line fallback is in `backend/services/adwin.py`.
+        "E4_adwin_gated_refit": _lazy("scripts.night_e4_adwin_refit",
+                                      "E4_adwin_gated_refit"),
         # 2026-09-12, chunk 5b T3: the historical leg of lane B's first four
         # books. Three of the four cannot decide on the 2025-26 ticker bars
         # (their panels are CRSP-permno-keyed and CRSP ends 2024-12-31), so
