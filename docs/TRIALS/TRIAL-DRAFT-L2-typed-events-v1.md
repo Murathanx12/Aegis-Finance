@@ -165,25 +165,26 @@ measurement — it is the number this trial is most likely to be wrong about, an
 it is stated so the next reader can measure it and move the verdict.
 
 
-All three numbers come from chunk 9's own E1 receipt,
+**Where those three numbers come from.** Chunk 9's own E1 receipt,
 `night_factory_2026-09-13/E1_event_head_h5_run01_smoke.json` (120-symbol smoke
 panel, 2025-08-01 → 2026-09-01, 249 date blocks, 5,720 cells) — the proxy arm's
 measured behaviour, not a guess. They are re-stated from the FULL panel's own
 receipt at signing, and the full-panel numbers supersede these.
 
-- **`declared_effect_size`: +0.020 mean rank IC per date block** (typed arm minus
-  proxy arm), equivalently a difference large enough to move the EVENT−SHUFFLE
-  gap from its measured −0.0076 to clearly positive. Smaller than that is not
-  worth a reader's hours at 20 tok/s, and this trial does not claim it.
-- **`event_frequency_per_year`: 22.7 typed events per name per year** — 2,967
-  proxy event rows over 120 symbols and 1.09 years on the smoke panel; 1,894 of
-  5,720 cells (33.1%) carry at least one. L2's own rate is unknown until the
-  reader runs and will differ: the extraction emits `no_event` rows, which the
-  proxy never does, so L2's *event* rate is bounded above by the proxy's row
-  count only if its `no_event` share is reported beside it — and it is.
-- **`outcome_dispersion`: per-date-block sd 0.2995 on rank IC** (from the
-  receipt's own mean −0.033082 and t −1.743 at n = 249), and **0.1206 on the
-  net decile spread** (mean −0.00863, t −0.447, n = 39 book dates).
+- the **rate**: 2,967 proxy event rows over 1.09 years = 2,722 a year across the
+  cross-section; 1,894 of 5,720 cells (33.1%) carry at least one. L2's own rate
+  is unknown until the reader runs and will differ — the extraction emits
+  `no_event` rows, which the proxy never does, so its `no_event` share is
+  reported beside its event count and neither is read without the other.
+- the **effect**: 1.0pp per event over five sessions is the smallest difference
+  between the typed and proxy arms worth a reader's hours at 20 tok/s. This
+  trial does not claim less.
+- the **dispersion**: the `single_name` 12.0pp preset. The panel's own numbers
+  agree that this is the right order — its per-date-block sd is **0.2995 on rank
+  IC** (from the receipt's mean −0.033082 and t −1.743 at n = 249) and **0.1206
+  on the net decile spread** (mean −0.00863, t −0.447, n = 39 book dates) — and
+  neither is a better estimate of a single name's five-session dispersion than
+  the preset, so the preset is what is declared.
 
 **THE LINTER REFUSES THIS DESIGN, AND IT IS RIGHT.**
 `python scripts/lint_prereg.py` returns **`UNPOWERED_AT_REGISTRATION`**:
