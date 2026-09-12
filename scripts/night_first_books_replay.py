@@ -197,9 +197,18 @@ def load_monthly_panel(start: int, end: int, *, max_names: int | None = None):
     return panel.sort_values(["ym", "permno"], kind="mergesort").reset_index(drop=True)
 
 
-def eligible(month_frame):
+def eligible(month_frame, *, floor_usd: float | None = None):
+    """The month's tradable band. `floor_usd` defaults to the $3M primary floor.
+
+    Every book here declares a $3M PRIMARY and a $10M SECONDARY floor, and
+    TRIAL-H5's lesson is that a corner-dependent control must be RE-MEASURED at
+    every corner — the twin is drawn from whatever this function returns, so
+    raising the floor here moves the book AND its control together, which is
+    the only way the difference stays a difference in selection.
+    """
     m = month_frame
-    return m[(m["dv"] >= FLOOR_USD) & (m["price"] >= MIN_PRICE)]
+    floor = FLOOR_USD if floor_usd is None else float(floor_usd)
+    return m[(m["dv"] >= floor) & (m["price"] >= MIN_PRICE)]
 
 
 # --------------------------------------------------------------------------
@@ -210,7 +219,8 @@ def eligible(month_frame):
 
 
 def run_monthly(panel, select, *, k: int, seed: int, label: str,
-                twin: str = "random_universe", twin_select=None) -> dict:
+                twin: str = "random_universe", twin_select=None,
+                floor_usd: float | None = None) -> dict:
     """Replay one selector monthly against a twin. Returns the two series.
 
     `select(month_frame, ym) -> list[permno]`, from information known at the
@@ -218,6 +228,11 @@ def run_monthly(panel, select, *, k: int, seed: int, label: str,
     uniform draw of the same size from the SAME eligible frame, seeded per
     month from `seed` so the control is reconstructible and different every
     period, which is what a random-genome null is.
+
+    `floor_usd` moves the eligible band for the book AND the twin at once. A
+    corner re-measurement that raised the floor for the book only would compare
+    a $10M book against a $3M control, which is a different claim from the one
+    being tested.
     """
     import numpy as np
 
@@ -229,7 +244,7 @@ def run_monthly(panel, select, *, k: int, seed: int, label: str,
     n_sel = []
     for i in range(len(months) - 1):
         ym, nxt = months[i], months[i + 1]
-        pool = eligible(by_month[ym])
+        pool = eligible(by_month[ym], floor_usd=floor_usd)
         if pool.empty:
             continue
         picked = list(select(pool, ym) or [])[: int(k)]
@@ -260,6 +275,7 @@ def run_monthly(panel, select, *, k: int, seed: int, label: str,
     t_nw = newey_west_t(diff)
     return {
         "label": label, "twin": twin, "k": int(k), "seed": int(seed),
+        "floor_usd": float(FLOOR_USD if floor_usd is None else floor_usd),
         "twin_turnover_matched": twin_select is None,
         "n_blocks": len(diff),
         "median_names_selected": (int(np.median(n_sel)) if n_sel else 0),
@@ -361,8 +377,19 @@ def by_era(result) -> dict:
 # BOOK A
 
 
-def replay_book_a(panel, *, smoke: bool) -> dict:
-    """Top-50 (low SI x high turnover) vs a random draw from the same band."""
+class BookAPanelUnavailable(RuntimeError):
+    """The short-interest panel Book A's double sort needs is not on disk."""
+
+
+#: Book A's frozen minimum cross-section: below it `si_turnover_composite`
+#: refuses rather than ranking the survivors.
+BOOK_A_MIN_NAMES = 20
+BOOK_A_K = 50
+BOOK_A_SEED = 0x1934
+
+
+def book_a_panel(panel):
+    """Book A's published short-interest prints for the replay's years."""
     import pandas as pd
 
     from backend.services import book_signals as BS
@@ -376,28 +403,59 @@ def replay_book_a(panel, *, smoke: bool) -> dict:
             frames.append(pd.read_parquet(f, columns=["permno", "observed_at",
                                                       "si_ratio", "turnover_21d_w"]))
     if not frames:
-        return {"book": "si_low_turnover_high_v1", "ran": False,
-                "refused": (f"no short-interest panel under {d}. Build it with "
-                            f"`python -m scripts.short_interest_panel`; this job "
-                            f"does not build data it was asked to replay.")}
+        raise BookAPanelUnavailable(
+            f"no short-interest panel under {d}. Build it with "
+            f"`python -m scripts.short_interest_panel`; this job does not "
+            f"build data it was asked to replay.")
     si = pd.concat(frames, ignore_index=True)
     si["observed_at"] = pd.to_datetime(si["observed_at"])
+    return si
+
+
+def book_a_selector(si, *, skip_years: set | None = None):
+    """Book A's double sort as a selector.
+
+    Returned rather than closed over inside `replay_book_a`, because
+    `scripts/night_a_corner.py` re-measures the SAME sort at the $10M floor and
+    a second implementation of the composite would be a second book.
+
+    `skip_years` is TRIAL-DRAFT-A §5's contamination clause: a year whose
+    panel join rate falls below 0.50 is EXCLUDED, and the exclusion is reported
+    before the number is. The selector returns nothing for those months, so the
+    book and its twin lose the same months rather than one of them.
+    """
+    from backend.services import book_signals as BS
+
+    skip = set(skip_years or ())
 
     def select(pool, ym):
+        if int(ym.year) in skip:
+            return []
         asof = ym.to_timestamp(how="end")
         sub = si[si["observed_at"] <= asof]
         if sub.empty:
             return []
         sub = sub[sub["permno"].isin(set(pool["permno"]))]
-        if len(sub) < 20:
+        if len(sub) < BOOK_A_MIN_NAMES:
             return []
         try:
-            scores = BS.si_turnover_composite(sub, asof, min_names=20)
+            scores = BS.si_turnover_composite(sub, asof, min_names=BOOK_A_MIN_NAMES)
         except BS.SignalUnavailable:
             return []
         return [p for p, _ in sorted(scores.items(), key=lambda kv: -kv[1])]
 
-    res = run_monthly(panel, select, k=50, seed=0x1934, label="si_low_turnover_high_v1")
+    return select
+
+
+def replay_book_a(panel, *, smoke: bool) -> dict:
+    """Top-50 (low SI x high turnover) vs a random draw from the same band."""
+    try:
+        si = book_a_panel(panel)
+    except BookAPanelUnavailable as exc:
+        return {"book": "si_low_turnover_high_v1", "ran": False,
+                "refused": str(exc)}
+    res = run_monthly(panel, book_a_selector(si), k=BOOK_A_K, seed=BOOK_A_SEED,
+                      label="si_low_turnover_high_v1")
     return {
         "book": "si_low_turnover_high_v1",
         "book_id": "book:1934ec97aa4b1620",
@@ -888,8 +946,9 @@ def _p(book: dict):
     return r.get("p_two_sided")
 
 
-__all__ = ["B_first_books_replay", "BookCInputsUnavailable", "COST_CURVE",
-           "EVENT_SIGN_V0", "MIN_CONDITIONED_NAMES", "book_c_inputs",
-           "book_c_selectors", "by_era", "eligible", "holm",
-           "load_monthly_panel", "names_with_sign", "newey_west_t",
-           "replay_book_d", "run_monthly", "two_sided_p"]
+__all__ = ["B_first_books_replay", "BookAPanelUnavailable",
+           "BookCInputsUnavailable", "COST_CURVE", "EVENT_SIGN_V0",
+           "MIN_CONDITIONED_NAMES", "book_a_panel", "book_a_selector",
+           "book_c_inputs", "book_c_overhang", "book_c_selectors", "by_era",
+           "eligible", "holm", "load_monthly_panel", "names_with_sign",
+           "newey_west_t", "replay_book_d", "run_monthly", "two_sided_p"]

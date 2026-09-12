@@ -1533,6 +1533,7 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         #   B_verdict     seconds: it re-runs nothing, reads the replay receipt
         #                 and applies TRIAL-DRAFT-B §5 verbatim.
         "C_falsifiers": _lazy("scripts.night_c_falsifiers", "C_falsifiers"),
+        "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
         # llama-server for their model legs and NONE of them start it -- each
         # writes PENDING_MODEL with its cell list frozen and hashed when the
