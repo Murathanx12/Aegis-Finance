@@ -1,0 +1,149 @@
+{
+ "job": "L4_qwen3_measure",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "stage": "raw",
+ "llm_spend_usd": 0.0,
+ "arm": "R2-Qwen3",
+ "question": "Idle, not contended: what does Qwen3-30B-A3B-Instruct-2507 Q4_K_M cost in VRAM and buy in prompt-eval tok/s at each --n-cpu-moe, does the plain Instruct build refuse any of R2's frozen prompts, and is the resulting wall time compatible with a nightly arm?",
+ "model_identity": {
+  "expected_file": "Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+  "searched_at": "C:\\Users\\mrthn\\llama\\models\\Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf",
+  "present": true,
+  "gguf_repo": "bartowski/Qwen_Qwen3-30B-A3B-Instruct-2507-GGUF",
+  "hub_repo": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+  "license": "apache-2.0",
+  "quant": "Q4_K_M -- the same quant level the incumbent runs, for an apples-to-apples file-size and VRAM comparison",
+  "bytes": 18556686752,
+  "gigabytes": 18.557,
+  "sha256": "6c997b8af17debdfb01d890214400ccbab00db6acc0ba8da5de1cc906c4774d0",
+  "sha256_seconds": 17.9,
+  "status": "PRESENT"
+ },
+ "reader": {
+  "listening": false,
+  "ready": false,
+  "pid": null,
+  "foreign": false,
+  "model_loaded": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+  "vram": {
+   "used_mib": 366,
+   "total_mib": 8151,
+   "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU"
+  },
+  "detail": "not running",
+  "this_job_never_starts_or_stops_it": "the desktop shell owns llama-server's lifetime; a night job that started a 17 GB model to get a number is two sessions fighting over one card"
+ },
+ "contended_measurement_being_superseded": {
+  "file_gb": 17.28,
+  "n_cpu_moe": 48,
+  "vram_mib": 1854,
+  "generation_tok_s": 19.8,
+  "prompt_eval_tok_s": 5.6,
+  "incumbent_generation_tok_s": 41.4,
+  "note": "a LOWER BOUND -- all 20 cores were saturated by a PyInstaller build"
+ },
+ "protocol": {
+  "step_1_idle_precondition": {
+   "gpu": "scripts/gpu_guard.contention() -- the SAME helper E2 uses, not a second ad hoc nvidia-smi parse",
+   "refuse_above_mib": 3072,
+   "cpu": "no PyInstaller build, no night-factory job, no other llama-server; the 2026-09-10 numbers are a lower bound precisely because this was not true"
+  },
+  "step_2_sweep": {
+   "n_cpu_moe": [
+    48,
+    40,
+    32,
+    24
+   ],
+   "env": "AEGIS_LLAMA_N_CPU_MOE",
+   "between_settings": "stop() then start(), PID-owned -- never taskkill /IM",
+   "measure_at_each": [
+    "vram_mib (llama_server.vram())",
+    "load_seconds",
+    "prompt_eval_tok_s",
+    "generation_tok_s"
+   ],
+   "benchmark_prompt": "R2's OWN frozen prompts, so the number is comparable to R2's and not to a differently-shaped prompt",
+   "stop_condition": "stop descending once VRAM is within 500 MiB of 8151 - 1285 = 6866 MiB usable",
+   "decisive_number": "prompt-eval tok/s. R2's digests are a month of news per name, so generation speed is nearly irrelevant beside how fast the reader can READ"
+  },
+  "step_3_refusal_rate": {
+   "n_digests": 200,
+   "drawn_from": "PANEL-B's per-name-month digests (18,501 cells over 19 blocks)",
+   "build": "the PLAIN Instruct build -- abliterated only if refusals exceed the incumbent's, and then as its own arm R2-Qwen3-abliterated, never a silent swap-in",
+   "a_refusal_is": [
+    "a non-JSON / unparseable reply (night_r2_monthly_llm.parse returns no direction)",
+    "the model declining to answer",
+    "backend.services.llm_language.refuse() firing on a >10% non-Latin-script reply -- the language pin applies to a local reader too; a model that code-switches is still a bad reader"
+   ],
+   "compared_to": "Qwen2.5-7B's own refusal rate on the SAME 200 prompts -- not to an absolute zero, because the incumbent's rate is not zero either"
+  },
+  "frozen_prompts": {
+   "trial": "r2-monthly-news-digest-read",
+   "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+   "pre_registered": "2026-09-10",
+   "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+   "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+   "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+   "model_identity": {
+    "backend": "local_gguf",
+    "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "size_bytes": 4683074240,
+    "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+    "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+    "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+    "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+   },
+   "cost_bps_per_side": 25.0,
+   "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+  },
+  "step_4_registration": {
+   "arm": "R2-Qwen3",
+   "beside": "R2 (Qwen2.5-7B-Instruct-Q4_K_M)",
+   "same": [
+    "PANEL-B",
+    "the shuffled-digest control (seed 20260909)",
+    "read_minus_shuffled_control",
+    "Newey-West lag-2 t on monthly blocks",
+    "25 bps a side on realised turnover"
+   ],
+   "block_count": "19 monthly blocks -- PANEL-B's, confirmed from R2_widened_panelB_run01.json ('18501 cells over 19 month blocks'). NOT 112: that is PANEL-A's count and PANEL-A is a different panel.",
+   "pre_registered_before": "the first Qwen3 digest is read"
+  },
+  "step_5_decision_rule": {
+   "adopt_only_if": [
+    "R2-Qwen3's OWN read_minus_shuffled_control beats R2's own, on the SAME blocks, at the same significance bar R2 uses",
+    "AND its Lookahead Propensity (lane X item L3) is NOT worse than R2's"
+   ],
+   "a_pass_on_the_first_alone_is": "CONDITIONAL_ON_LAP, never ADOPTED",
+   "why": "a bigger, differently-trained model reading the same anonymised digest may simply have memorised more pre-cutoff fact; a win driven by that is not a win"
+  }
+ },
+ "wall_time": {
+  "source": "R2 PANEL-A's own usage block -- 5,098,607 tokens in and 216,677 out over 15,433 calls in 5,854.2s. Not guessed.",
+  "mean_prompt_tokens": 330.4,
+  "mean_completion_tokens": 14.0,
+  "panelB_calls_arm_plus_control": 37002,
+  "incumbent_qwen2_5_7b": {
+   "measured_seconds_per_call": 0.379,
+   "panelB_hours": 3.9
+  },
+  "qwen3_30b_a3b_at_the_CONTENDED_rates": {
+   "prompt_eval_tok_s": 5.6,
+   "generation_tok_s": 19.8,
+   "seconds_per_call": 59.7,
+   "panelB_hours": 613.7,
+   "panelB_days": 25.6
+  },
+  "what_this_decides": "at the contended prompt-eval rate the PANEL-B read is a multi-WEEK job, so the idle re-measurement is not a tidiness exercise -- it is the difference between an arm that can be run and one that cannot. If idle prompt-eval does not come up by roughly an order of magnitude, R2-Qwen3 is not a nightly arm at any n_cpu_moe and the honest move is to say so rather than to start it.",
+  "arithmetic": "digests x (mean_prompt_tokens / prompt_eval_tok_s + mean_completion_tokens / generation_tok_s)"
+ },
+ "status": "PENDING_MODEL",
+ "written_utc": "2026-09-12T18:18:12+00:00",
+ "verdict": "PENDING_MODEL: the reader is not answering (not running) and this job does not start it. The GGUF is PRESENT and the protocol above is frozen, so the run that happens when the server is up asks this question rather than a similar one.",
+ "headline": "R2-Qwen3 PENDING_MODEL: file present (18.557 GB, sha256 6c997b8af17d...); sweep n_cpu_moe [48, 40, 32, 24]; refusal test on 200 PANEL-B digests; at the CONTENDED 5.6 tok/s prompt eval PANEL-B would take 25.6 days against the incumbent's 3.9 hours",
+ "next_test": "run this file with the machine idle and the desktop shell sequencing llama-server: the sweep, then the 200-digest refusal test against Qwen2.5-7B's rate on the SAME prompts, then -- only if the wall time permits -- the registered PANEL-B read",
+ "elapsed_s": 18.9
+}

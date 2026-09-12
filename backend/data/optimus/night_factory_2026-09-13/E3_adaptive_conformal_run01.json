@@ -1,0 +1,191 @@
+{
+ "job": "E3_adaptive_conformal",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "stage": "signal",
+ "llm_spend_usd": 0.0,
+ "question": "Does adaptive conformal (ACI, plus recency-weighted non-exchangeable quantiles) hold its nominal coverage across volatility regimes where plain split conformal does not?",
+ "method": {
+  "module": "backend.services.conformal",
+  "methods": [
+   "NAIVE (fixed alpha, uniform weights)",
+   "ACI (Gibbs & Candes 2021, alpha tracking)",
+   "ACI_WEIGHTED (ACI + Barber et al. 2023 recency weights rho^(t-i))"
+  ],
+  "citations": {
+   "aci": "Gibbs & Candes, Adaptive Conformal Inference Under Distribution Shift, NeurIPS 2021",
+   "non_exchangeable": "Barber, Candes, Ramdas & Tibshirani, Conformal Prediction Beyond Exchangeability, Ann. Statist. 51(2) 816-845, 2023, DOI 10.1214/23-AOS2276"
+  },
+  "deviations": [
+   "alpha_t clipped to [0.001, 0.999] so the quantile lookup on a finite residual pool is defined"
+  ],
+  "rho_grid": [
+   0.9,
+   0.95,
+   0.99,
+   1.0
+  ],
+  "control_point": "rho = 1.0 IS the exchangeable control; no separate code path exists"
+ },
+ "design": {
+  "alpha": 0.1,
+  "nominal_coverage": 0.9,
+  "gamma": 0.02,
+  "rho": 0.95,
+  "naive_control": "fixed alpha, rho = 1.0 -- the exchangeable case, no separate code path",
+  "seed": 20260910
+ },
+ "inputs": [
+  "E1_event_head_h5_run02_smoke_daily.csv",
+  "bars.parquet"
+ ],
+ "status": "done",
+ "written_utc": "2026-09-12T20:36:46+00:00",
+ "known_answer": {
+  "design": {
+   "n": 1000,
+   "shift_at": 500,
+   "vol_multiplier": 3.0,
+   "ar1_phi": 0.4,
+   "alpha": 0.1,
+   "nominal_coverage": 0.9,
+   "gamma": 0.02,
+   "rho": 0.95,
+   "note": "the point forecast stays correct after the shift; only the error SCALE changes, so this isolates distribution shift from a forecasting failure"
+  },
+  "post_shift_coverage_120_steps": {
+   "NAIVE": 0.4917,
+   "ACI": 0.8,
+   "ACI_WEIGHTED": 0.8833
+  },
+  "smallest_k_back_within_5_points": {
+   "NAIVE": 180,
+   "ACI": 10,
+   "ACI_WEIGHTED": 10
+  },
+  "naive_coverage_collapses": true,
+  "aci_recovers": true,
+  "weighted_recovers_at_least_as_fast": true,
+  "weighted_vs_plain_note": "reported, not assumed -- a weighting that helped on a different series is not evidence about this one"
+ },
+ "real_stream": {
+  "status": "done",
+  "arm": "GBM_NOTEXT",
+  "arm_choice_reason": "no E1/E2 arm has a positive control-adjusted IC, so the machinery is exercised on the GBM CONTROL arm. This is NOT a claim that the control carries signal; it is the interval question answered about the only forecast stream that exists.",
+  "daily_csv": "backend\\data\\optimus\\night_factory_2026-09-13\\E1_event_head_h5_run02_smoke_daily.csv",
+  "n_date_blocks": 275,
+  "dates": [
+   "2025-08-01",
+   "2026-09-03"
+  ],
+  "forecast": "pred_GBM_NOTEXT -- the head's predicted decile spread for that session; the outcome is gross_GBM_NOTEXT, the spread's realised GROSS return (costs are charged in E1's net column and are not part of the forecast)",
+  "vol_regime": {
+   "source": "trailing 21-session SPY open-to-close vol via learner.growth_lab._trailing_vol",
+   "caveat": "the helper annualises with sqrt(12); terciles are invariant to that constant and only the ordering is used",
+   "n_ungradable_regime": 0
+  },
+  "coverage_table": {
+   "NAIVE": {
+    "method": "NAIVE",
+    "alpha_target": 0.1,
+    "gamma": 0.02,
+    "rho": 1.0,
+    "by_vol_tercile": {
+     "ALL": {
+      "n_date_blocks": 245,
+      "nominal_coverage": 0.9,
+      "realised_coverage": 0.8653,
+      "mean_interval_width": 0.267737
+     },
+     "LOW": {
+      "n_date_blocks": 78,
+      "nominal_coverage": 0.9,
+      "realised_coverage": 0.859,
+      "mean_interval_width": 0.257052
+     },
+     "MID": {
+      "n_date_blocks": 75,
+      "nominal_coverage": 0.9,
+      "realised_coverage": 0.9067,
+      "mean_interval_width": 0.273636
+     },
+     "HIGH": {
+      "n_date_blocks": 92,
+      "nominal_coverage": 0.9,
+      "realised_coverage": 0.837,
+      "mean_interval_width": 0.271988
+     }
+    }
+   },
+   "ACI": {
+    "method": "ACI",
+    "alpha_target": 0.1,
+    "gamma": 0.02,
+    "rho": 1.0,
+    "by_vol_tercile": {
+     "ALL": {
+      "n_date_blocks": 245,
+      "nominal_coverage": 0.9102,
+      "realised_coverage": 0.898,
+      "mean_interval_width": 0.286245
+     },
+     "LOW": {
+      "n_date_blocks": 78,
+      "nominal_coverage": 0.9077,
+      "realised_coverage": 0.8846,
+      "mean_interval_width": 0.269739
+     },
+     "MID": {
+      "n_date_blocks": 75,
+      "nominal_coverage": 0.8992,
+      "realised_coverage": 0.9467,
+      "mean_interval_width": 0.279663
+     },
+     "HIGH": {
+      "n_date_blocks": 92,
+      "nominal_coverage": 0.9213,
+      "realised_coverage": 0.8696,
+      "mean_interval_width": 0.305605
+     }
+    }
+   },
+   "ACI_WEIGHTED": {
+    "method": "ACI_WEIGHTED",
+    "alpha_target": 0.1,
+    "gamma": 0.02,
+    "rho": 0.95,
+    "by_vol_tercile": {
+     "ALL": {
+      "n_date_blocks": 245,
+      "nominal_coverage": 0.9105,
+      "realised_coverage": 0.898,
+      "mean_interval_width": 0.304025
+     },
+     "LOW": {
+      "n_date_blocks": 78,
+      "nominal_coverage": 0.9125,
+      "realised_coverage": 0.8846,
+      "mean_interval_width": 0.274693
+     },
+     "MID": {
+      "n_date_blocks": 75,
+      "nominal_coverage": 0.9003,
+      "realised_coverage": 0.9333,
+      "mean_interval_width": 0.269955
+     },
+     "HIGH": {
+      "n_date_blocks": 92,
+      "nominal_coverage": 0.9172,
+      "realised_coverage": 0.8804,
+      "mean_interval_width": 0.356667
+     }
+    }
+   }
+  }
+ },
+ "headline": "nominal 90% on 275 date blocks, arm GBM_NOTEXT: HIGH-vol realised coverage NAIVE 0.837 / ACI 0.8696 / ACI_WEIGHTED 0.8804; LOW-vol NAIVE 0.859 / ACI 0.8846",
+ "verdict": "interval mechanics validated; no head has a signal worth intervalizing yet, so this ran on the GBM control arm and says so",
+ "next_test": "re-run against whichever head first shows a positive control-adjusted IC, and against E4's ADWIN-gated refit, whose stale-model dates should show up here as a coverage cost",
+ "elapsed_s": 0.2
+}

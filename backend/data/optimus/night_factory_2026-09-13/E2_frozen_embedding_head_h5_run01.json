@@ -1,0 +1,1331 @@
+{
+ "job": "E2_frozen_embedding_head",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "stage": "signal",
+ "llm_spend_usd": 0.0,
+ "question": "Does the same frozen encoder, head, controls and book carry anything at a 5-session horizon that it did not carry at one session?",
+ "design": {
+  "encoder": "frozen, never fine-tuned, never shown a label",
+  "head": "ridge on standardised features, alpha chosen on an inner temporal split",
+  "unit": "(symbol, entry_date) cell -- one label per session, not one per headline",
+  "target": "x_oc_h5 (SPY-excess cumulative return from the open of the first session after publication to the close of session +4)",
+  "splits": "expanding walk-forward by month, 5-session embargo, first test month is month 7",
+  "arms": {
+   "EMBED": "384-d frozen BAAI/bge-small-en-v1.5",
+   "TFIDF": "TF-IDF(1-2gram) -> 384-d SVD, fit on TRAIN rows only, per fold",
+   "SHUFFLE": "the EMBED vectors globally permuted across cells (seed pinned)",
+   "NOTEXT": "log10 PIT 21-session median dollar volume, mom_21, mom_5"
+  },
+  "book": "decile long-short, EW, gross exposure 1.0, 3,000,000 PIT dollar-volume floor, charged on REALISED turnover sum|dw| x 25.0 bps",
+  "cost_bps_per_side": 25.0,
+  "cost_source": "scripts.night_g3_evolve_v2.COST_BPS (imported, not retyped)",
+  "tradable_floor_usd": 3000000.0,
+  "seed": 20260910,
+  "horizon_sessions": 5,
+  "embargo_sessions": 5
+ },
+ "inputs": [
+  "news_returns_2025_26.parquet",
+  "bars.parquet"
+ ],
+ "status": "done",
+ "written_utc": "2026-09-12T20:29:39+00:00",
+ "parent_job": "N3_frozen_embedding_head",
+ "only_difference_from_parent": [
+  "target",
+  "splits",
+  "horizon_sessions",
+  "embargo_sessions"
+ ],
+ "gpu_precondition": {
+  "job": "E2_frozen_embedding_head",
+  "checked_once_at_start": true,
+  "not_a_polling_loop": "a job that starts on a free card and is later joined by a contender finishes; aborting mid-encode saves nothing",
+  "contended": false,
+  "reason": "0 MiB held by other processes, card at 362 MiB (threshold 3072)",
+  "gpu": {
+   "available": true,
+   "card": {
+    "used_mib": 362,
+    "total_mib": 8151,
+    "gpu": "NVIDIA GeForce RTX 5060 Laptop GPU"
+   },
+   "self_pid": 32056,
+   "processes_other_than_self": [
+    {
+     "pid": 21620,
+     "used_mib": null,
+     "name": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    },
+    {
+     "pid": 10316,
+     "used_mib": null,
+     "name": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    },
+    {
+     "pid": 18708,
+     "used_mib": null,
+     "name": "[Insufficient Permissions]"
+    },
+    {
+     "pid": 29016,
+     "used_mib": null,
+     "name": "[Insufficient Permissions]"
+    }
+   ],
+   "other_process_mib_measured": 0,
+   "other_processes_unmeasurable": 4,
+   "llama_server_pid_on_port": null,
+   "threshold_mib": 3072
+  },
+  "evidence": "N3 2026-09-10: 162,548 texts in 129.7s with the card free; N3 2026-09-11: 163,284 texts in 40,059.4s contending with llama-server"
+ },
+ "panel": {
+  "horizon_sessions": 5,
+  "label": "x_oc_h5",
+  "label_definition": "SPY-excess cumulative return, entry-session OPEN to the CLOSE of session +4 (5 sessions held)",
+  "cells_lost_to_short_forward_window": 195,
+  "label_reconstruction_check": {
+   "rows": 129983,
+   "median_abs_diff": 0.0,
+   "max_abs_diff": 0.00116869,
+   "rows_over_1e_6": 3555,
+   "share_over_1e_6": 0.02735,
+   "note": "the panel's x_oc vs the same quantity rebuilt from the CURRENT bars. The SPY leg reconciles exactly; the difference is a bar-vintage revision on a handful of names, not a second label definition."
+  },
+  "pit_check": {
+   "rows_checked": 340465,
+   "rows_with_publication_timestamp": 340465,
+   "rows_violating_pit": 0,
+   "hours_publication_to_entry_open": {
+    "min": 0.0,
+    "p05": 0.642,
+    "median": 17.611,
+    "max": 5292.96
+   }
+  },
+  "panel_rows_used": 340465,
+  "unique_texts": 163284,
+  "cells_before_price_join": 137253,
+  "cells": 129983,
+  "symbols": 3019,
+  "date_range": [
+   "2025-02-05",
+   "2026-09-04"
+  ],
+  "dollar_vol_column_of_panel": "IGNORED -- it is the entry session's own close x volume (not PIT)"
+ },
+ "encoder": {
+  "model_id": "BAAI/bge-small-en-v1.5",
+  "revision": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+  "dim": 384,
+  "pooling": "CLS + L2 normalise (the bge convention)",
+  "max_tokens": 192,
+  "dtype": "fp16 forward, fp16 cache, fp32 in memory",
+  "params_millions": 33.36,
+  "rows_embedded": 163284,
+  "chunks": 9,
+  "encode_wall_clock_s": 0.0,
+  "encode_wall_clock_s_note": "this process only; 0 when every chunk was already cached",
+  "encode_wall_clock_s_all_sessions": 40059.4,
+  "encode_texts_per_second": 4.1,
+  "cost_usd": 0.0,
+  "cache_dir": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\emb_bge_small_en_v1_5\\n163284_e41457ce025e",
+  "corpus_digest": "e41457ce025efe7208d7083b002a568009062ac6"
+ },
+ "shuffle_control": {
+  "kind": "global permutation of cell vectors across (symbol, entry_date)",
+  "seed": 20260910,
+  "fixed_points": 2,
+  "note": "labels, dates, universe and construction are identical; only the text link is cut"
+ },
+ "folds": [
+  {
+   "test_month": "2025-08",
+   "n_train": 33067,
+   "n_test": 7207,
+   "train_cut_session": "2025-07-25",
+   "alphas": {
+    "EMBED": 10000.0,
+    "TFIDF": 10000.0,
+    "SHUFFLE": 100.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.5068
+   }
+  },
+  {
+   "test_month": "2025-09",
+   "n_train": 40867,
+   "n_test": 6530,
+   "train_cut_session": "2025-08-25",
+   "alphas": {
+    "EMBED": 10000.0,
+    "TFIDF": 1000.0,
+    "SHUFFLE": 1.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.5065
+   }
+  },
+  {
+   "test_month": "2025-10",
+   "n_train": 47119,
+   "n_test": 9278,
+   "train_cut_session": "2025-09-24",
+   "alphas": {
+    "EMBED": 10000.0,
+    "TFIDF": 1000.0,
+    "SHUFFLE": 1000.0,
+    "NOTEXT": 10.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4911
+   }
+  },
+  {
+   "test_month": "2025-11",
+   "n_train": 55655,
+   "n_test": 7977,
+   "train_cut_session": "2025-10-27",
+   "alphas": {
+    "EMBED": 1000.0,
+    "TFIDF": 1000.0,
+    "SHUFFLE": 10000.0,
+    "NOTEXT": 1.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4695
+   }
+  },
+  {
+   "test_month": "2025-12",
+   "n_train": 64404,
+   "n_test": 6816,
+   "train_cut_session": "2025-11-21",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 100.0,
+    "SHUFFLE": 10000.0,
+    "NOTEXT": 10.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4666
+   }
+  },
+  {
+   "test_month": "2026-01",
+   "n_train": 71555,
+   "n_test": 6400,
+   "train_cut_session": "2025-12-24",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 1000.0,
+    "SHUFFLE": 10000.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4557
+   }
+  },
+  {
+   "test_month": "2026-02",
+   "n_train": 77548,
+   "n_test": 8759,
+   "train_cut_session": "2026-01-26",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 1000.0,
+    "SHUFFLE": 10.0,
+    "NOTEXT": 100.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4496
+   }
+  },
+  {
+   "test_month": "2026-03",
+   "n_train": 85515,
+   "n_test": 7216,
+   "train_cut_session": "2026-02-23",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 10000.0,
+    "SHUFFLE": 10.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4431
+   }
+  },
+  {
+   "test_month": "2026-04",
+   "n_train": 93732,
+   "n_test": 7189,
+   "train_cut_session": "2026-03-25",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 10000.0,
+    "SHUFFLE": 100.0,
+    "NOTEXT": 1000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4351
+   }
+  },
+  {
+   "test_month": "2026-05",
+   "n_train": 100322,
+   "n_test": 7562,
+   "train_cut_session": "2026-04-24",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 1.0,
+    "SHUFFLE": 1.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.425
+   }
+  },
+  {
+   "test_month": "2026-06",
+   "n_train": 108539,
+   "n_test": 6048,
+   "train_cut_session": "2026-05-22",
+   "alphas": {
+    "EMBED": 1000.0,
+    "TFIDF": 1.0,
+    "SHUFFLE": 100.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4224
+   }
+  },
+  {
+   "test_month": "2026-07",
+   "n_train": 114656,
+   "n_test": 6606,
+   "train_cut_session": "2026-06-24",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 10.0,
+    "SHUFFLE": 1.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4149
+   }
+  },
+  {
+   "test_month": "2026-08",
+   "n_train": 121249,
+   "n_test": 6764,
+   "train_cut_session": "2026-07-27",
+   "alphas": {
+    "EMBED": 1.0,
+    "TFIDF": 10000.0,
+    "SHUFFLE": 1.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.4074
+   }
+  },
+  {
+   "test_month": "2026-09",
+   "n_train": 127977,
+   "n_test": 563,
+   "train_cut_session": "2026-08-25",
+   "alphas": {
+    "EMBED": 1000.0,
+    "TFIDF": 10000.0,
+    "SHUFFLE": 1.0,
+    "NOTEXT": 10000.0
+   },
+   "tfidf": {
+    "vocab": 60000,
+    "svd_components": 384,
+    "explained_variance": 0.3998
+   }
+  }
+ ],
+ "results": {
+  "eras": {
+   "ALL": {
+    "n_dates": 276,
+    "dates": [
+     "2025-08-01",
+     "2026-09-04"
+    ],
+    "median_names_per_date": 326,
+    "median_tradable_per_date": 321,
+    "arms": {
+     "EMBED": {
+      "ic": {
+       "mean": -0.005826,
+       "t": -0.969,
+       "p": 0.3333,
+       "n_date_blocks": 276
+      },
+      "gross": {
+       "mean": -0.004993,
+       "t": -2.102,
+       "p": 0.0365,
+       "n_date_blocks": 276,
+       "ann_pct": -125.82
+      },
+      "net": {
+       "mean": -0.009471,
+       "t": -3.99,
+       "p": 0.0001,
+       "n_date_blocks": 276,
+       "ann_pct": -238.669
+      },
+      "mean_daily_turnover": 1.7913,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "TFIDF": {
+      "ic": {
+       "mean": -0.002447,
+       "t": -0.388,
+       "p": 0.6984,
+       "n_date_blocks": 276
+      },
+      "gross": {
+       "mean": -0.000906,
+       "t": -0.33,
+       "p": 0.7416,
+       "n_date_blocks": 276,
+       "ann_pct": -22.831
+      },
+      "net": {
+       "mean": -0.005233,
+       "t": -1.905,
+       "p": 0.0578,
+       "n_date_blocks": 276,
+       "ann_pct": -131.871
+      },
+      "mean_daily_turnover": 1.7308,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "SHUFFLE": {
+      "ic": {
+       "mean": -0.000601,
+       "t": -0.181,
+       "p": 0.8569,
+       "n_date_blocks": 276
+      },
+      "gross": {
+       "mean": 0.001268,
+       "t": 0.917,
+       "p": 0.3598,
+       "n_date_blocks": 276,
+       "ann_pct": 31.96
+      },
+      "net": {
+       "mean": -0.003497,
+       "t": -2.529,
+       "p": 0.012,
+       "n_date_blocks": 276,
+       "ann_pct": -88.119
+      },
+      "mean_daily_turnover": 1.906,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "NOTEXT": {
+      "ic": {
+       "mean": 0.000752,
+       "t": 0.084,
+       "p": 0.933,
+       "n_date_blocks": 276
+      },
+      "gross": {
+       "mean": -0.000645,
+       "t": -0.176,
+       "p": 0.8601,
+       "n_date_blocks": 276,
+       "ann_pct": -16.258
+      },
+      "net": {
+       "mean": -0.003733,
+       "t": -1.021,
+       "p": 0.3081,
+       "n_date_blocks": 276,
+       "ann_pct": -94.074
+      },
+      "mean_daily_turnover": 1.2352,
+      "cost_bps_per_unit_turnover": 25.0
+     }
+    },
+    "vs_controls": {
+     "EMBED_minus_TFIDF": {
+      "ic": {
+       "mean": -0.003379,
+       "t": -0.69,
+       "p": 0.491,
+       "n_date_blocks": 276
+      },
+      "net": {
+       "mean": -0.004238,
+       "t": -1.436,
+       "p": 0.1521,
+       "n_date_blocks": 276,
+       "ann_pct": -106.798
+      }
+     },
+     "EMBED_minus_SHUFFLE": {
+      "ic": {
+       "mean": -0.005225,
+       "t": -0.766,
+       "p": 0.4444,
+       "n_date_blocks": 276
+      },
+      "net": {
+       "mean": -0.005974,
+       "t": -2.132,
+       "p": 0.0339,
+       "n_date_blocks": 276,
+       "ann_pct": -150.551
+      }
+     },
+     "EMBED_minus_NOTEXT": {
+      "ic": {
+       "mean": -0.006578,
+       "t": -0.555,
+       "p": 0.5793,
+       "n_date_blocks": 276
+      },
+      "net": {
+       "mean": -0.005738,
+       "t": -1.285,
+       "p": 0.1997,
+       "n_date_blocks": 276,
+       "ann_pct": -144.595
+      }
+     }
+    }
+   },
+   "2025Q3": {
+    "n_dates": 42,
+    "dates": [
+     "2025-08-01",
+     "2025-09-30"
+    ],
+    "median_names_per_date": 313,
+    "median_tradable_per_date": 305,
+    "arms": {
+     "EMBED": {
+      "ic": {
+       "mean": 0.003106,
+       "t": 0.312,
+       "p": 0.7566,
+       "n_date_blocks": 42
+      },
+      "gross": {
+       "mean": -0.00944,
+       "t": -1.115,
+       "p": 0.2714,
+       "n_date_blocks": 42,
+       "ann_pct": -237.894
+      },
+      "net": {
+       "mean": -0.014005,
+       "t": -1.655,
+       "p": 0.1056,
+       "n_date_blocks": 42,
+       "ann_pct": -352.931
+      },
+      "mean_daily_turnover": 1.826,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "TFIDF": {
+      "ic": {
+       "mean": -0.007886,
+       "t": -0.731,
+       "p": 0.4686,
+       "n_date_blocks": 42
+      },
+      "gross": {
+       "mean": -0.013597,
+       "t": -1.177,
+       "p": 0.2462,
+       "n_date_blocks": 42,
+       "ann_pct": -342.638
+      },
+      "net": {
+       "mean": -0.01807,
+       "t": -1.563,
+       "p": 0.1258,
+       "n_date_blocks": 42,
+       "ann_pct": -455.354
+      },
+      "mean_daily_turnover": 1.7892,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "SHUFFLE": {
+      "ic": {
+       "mean": -0.005057,
+       "t": -0.512,
+       "p": 0.6111,
+       "n_date_blocks": 42
+      },
+      "gross": {
+       "mean": -0.000502,
+       "t": -0.16,
+       "p": 0.8733,
+       "n_date_blocks": 42,
+       "ann_pct": -12.657
+      },
+      "net": {
+       "mean": -0.005233,
+       "t": -1.674,
+       "p": 0.1018,
+       "n_date_blocks": 42,
+       "ann_pct": -131.862
+      },
+      "mean_daily_turnover": 1.8921,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "NOTEXT": {
+      "ic": {
+       "mean": -0.034512,
+       "t": -1.774,
+       "p": 0.0834,
+       "n_date_blocks": 42
+      },
+      "gross": {
+       "mean": -0.019145,
+       "t": -1.735,
+       "p": 0.0903,
+       "n_date_blocks": 42,
+       "ann_pct": -482.45
+      },
+      "net": {
+       "mean": -0.022437,
+       "t": -2.036,
+       "p": 0.0483,
+       "n_date_blocks": 42,
+       "ann_pct": -565.42
+      },
+      "mean_daily_turnover": 1.317,
+      "cost_bps_per_unit_turnover": 25.0
+     }
+    },
+    "vs_controls": {
+     "EMBED_minus_TFIDF": {
+      "ic": {
+       "mean": 0.010993,
+       "t": 1.073,
+       "p": 0.2896,
+       "n_date_blocks": 42
+      },
+      "net": {
+       "mean": 0.004064,
+       "t": 0.275,
+       "p": 0.7848,
+       "n_date_blocks": 42,
+       "ann_pct": 102.424
+      }
+     },
+     "EMBED_minus_SHUFFLE": {
+      "ic": {
+       "mean": 0.008164,
+       "t": 0.584,
+       "p": 0.5627,
+       "n_date_blocks": 42
+      },
+      "net": {
+       "mean": -0.008773,
+       "t": -0.998,
+       "p": 0.3243,
+       "n_date_blocks": 42,
+       "ann_pct": -221.068
+      }
+     },
+     "EMBED_minus_NOTEXT": {
+      "ic": {
+       "mean": 0.037618,
+       "t": 1.72,
+       "p": 0.0931,
+       "n_date_blocks": 42
+      },
+      "net": {
+       "mean": 0.008432,
+       "t": 1.219,
+       "p": 0.2299,
+       "n_date_blocks": 42,
+       "ann_pct": 212.489
+      }
+     }
+    }
+   },
+   "2025Q4": {
+    "n_dates": 64,
+    "dates": [
+     "2025-10-01",
+     "2025-12-31"
+    ],
+    "median_names_per_date": 352,
+    "median_tradable_per_date": 346,
+    "arms": {
+     "EMBED": {
+      "ic": {
+       "mean": -0.006161,
+       "t": -0.471,
+       "p": 0.6392,
+       "n_date_blocks": 64
+      },
+      "gross": {
+       "mean": -0.004714,
+       "t": -0.92,
+       "p": 0.361,
+       "n_date_blocks": 64,
+       "ann_pct": -118.796
+      },
+      "net": {
+       "mean": -0.009116,
+       "t": -1.78,
+       "p": 0.0799,
+       "n_date_blocks": 64,
+       "ann_pct": -229.719
+      },
+      "mean_daily_turnover": 1.7607,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "TFIDF": {
+      "ic": {
+       "mean": -0.017708,
+       "t": -1.345,
+       "p": 0.1833,
+       "n_date_blocks": 64
+      },
+      "gross": {
+       "mean": -0.004366,
+       "t": -0.887,
+       "p": 0.3783,
+       "n_date_blocks": 64,
+       "ann_pct": -110.021
+      },
+      "net": {
+       "mean": -0.008577,
+       "t": -1.743,
+       "p": 0.0862,
+       "n_date_blocks": 64,
+       "ann_pct": -216.137
+      },
+      "mean_daily_turnover": 1.6844,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "SHUFFLE": {
+      "ic": {
+       "mean": -0.01142,
+       "t": -1.763,
+       "p": 0.0827,
+       "n_date_blocks": 64
+      },
+      "gross": {
+       "mean": 0.001132,
+       "t": 0.326,
+       "p": 0.7457,
+       "n_date_blocks": 64,
+       "ann_pct": 28.526
+      },
+      "net": {
+       "mean": -0.003658,
+       "t": -1.053,
+       "p": 0.2963,
+       "n_date_blocks": 64,
+       "ann_pct": -92.184
+      },
+      "mean_daily_turnover": 1.916,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "NOTEXT": {
+      "ic": {
+       "mean": -0.007637,
+       "t": -0.377,
+       "p": 0.7076,
+       "n_date_blocks": 64
+      },
+      "gross": {
+       "mean": 0.000144,
+       "t": 0.016,
+       "p": 0.9873,
+       "n_date_blocks": 64,
+       "ann_pct": 3.632
+      },
+      "net": {
+       "mean": -0.002836,
+       "t": -0.314,
+       "p": 0.7548,
+       "n_date_blocks": 64,
+       "ann_pct": -71.477
+      },
+      "mean_daily_turnover": 1.1922,
+      "cost_bps_per_unit_turnover": 25.0
+     }
+    },
+    "vs_controls": {
+     "EMBED_minus_TFIDF": {
+      "ic": {
+       "mean": 0.011548,
+       "t": 1.355,
+       "p": 0.1803,
+       "n_date_blocks": 64
+      },
+      "net": {
+       "mean": -0.000539,
+       "t": -0.12,
+       "p": 0.9052,
+       "n_date_blocks": 64,
+       "ann_pct": -13.581
+      }
+     },
+     "EMBED_minus_SHUFFLE": {
+      "ic": {
+       "mean": 0.005259,
+       "t": 0.354,
+       "p": 0.7247,
+       "n_date_blocks": 64
+      },
+      "net": {
+       "mean": -0.005458,
+       "t": -0.822,
+       "p": 0.4141,
+       "n_date_blocks": 64,
+       "ann_pct": -137.535
+      }
+     },
+     "EMBED_minus_NOTEXT": {
+      "ic": {
+       "mean": 0.001476,
+       "t": 0.051,
+       "p": 0.9592,
+       "n_date_blocks": 64
+      },
+      "net": {
+       "mean": -0.006279,
+       "t": -0.488,
+       "p": 0.6273,
+       "n_date_blocks": 64,
+       "ann_pct": -158.241
+      }
+     }
+    }
+   },
+   "2026Q1": {
+    "n_dates": 61,
+    "dates": [
+     "2026-01-02",
+     "2026-03-31"
+    ],
+    "median_names_per_date": 350,
+    "median_tradable_per_date": 342,
+    "arms": {
+     "EMBED": {
+      "ic": {
+       "mean": 0.006499,
+       "t": 0.608,
+       "p": 0.5457,
+       "n_date_blocks": 61
+      },
+      "gross": {
+       "mean": 0.003202,
+       "t": 1.034,
+       "p": 0.3053,
+       "n_date_blocks": 61,
+       "ann_pct": 80.699
+      },
+      "net": {
+       "mean": -0.001327,
+       "t": -0.428,
+       "p": 0.6703,
+       "n_date_blocks": 61,
+       "ann_pct": -33.448
+      },
+      "mean_daily_turnover": 1.8118,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "TFIDF": {
+      "ic": {
+       "mean": 0.00835,
+       "t": 0.807,
+       "p": 0.423,
+       "n_date_blocks": 61
+      },
+      "gross": {
+       "mean": 0.004981,
+       "t": 1.405,
+       "p": 0.1652,
+       "n_date_blocks": 61,
+       "ann_pct": 125.513
+      },
+      "net": {
+       "mean": 0.00057,
+       "t": 0.161,
+       "p": 0.873,
+       "n_date_blocks": 61,
+       "ann_pct": 14.353
+      },
+      "mean_daily_turnover": 1.7644,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "SHUFFLE": {
+      "ic": {
+       "mean": -0.005181,
+       "t": -0.812,
+       "p": 0.4201,
+       "n_date_blocks": 61
+      },
+      "gross": {
+       "mean": -0.001372,
+       "t": -0.581,
+       "p": 0.5635,
+       "n_date_blocks": 61,
+       "ann_pct": -34.574
+      },
+      "net": {
+       "mean": -0.006127,
+       "t": -2.594,
+       "p": 0.0119,
+       "n_date_blocks": 61,
+       "ann_pct": -154.389
+      },
+      "mean_daily_turnover": 1.9018,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "NOTEXT": {
+      "ic": {
+       "mean": 0.00343,
+       "t": 0.21,
+       "p": 0.8342,
+       "n_date_blocks": 61
+      },
+      "gross": {
+       "mean": 0.006992,
+       "t": 1.226,
+       "p": 0.2249,
+       "n_date_blocks": 61,
+       "ann_pct": 176.21
+      },
+      "net": {
+       "mean": 0.00392,
+       "t": 0.687,
+       "p": 0.4945,
+       "n_date_blocks": 61,
+       "ann_pct": 98.792
+      },
+      "mean_daily_turnover": 1.2289,
+      "cost_bps_per_unit_turnover": 25.0
+     }
+    },
+    "vs_controls": {
+     "EMBED_minus_TFIDF": {
+      "ic": {
+       "mean": -0.001851,
+       "t": -0.2,
+       "p": 0.8424,
+       "n_date_blocks": 61
+      },
+      "net": {
+       "mean": -0.001897,
+       "t": -0.511,
+       "p": 0.6109,
+       "n_date_blocks": 61,
+       "ann_pct": -47.8
+      }
+     },
+     "EMBED_minus_SHUFFLE": {
+      "ic": {
+       "mean": 0.01168,
+       "t": 0.94,
+       "p": 0.3512,
+       "n_date_blocks": 61
+      },
+      "net": {
+       "mean": 0.004799,
+       "t": 1.142,
+       "p": 0.2579,
+       "n_date_blocks": 61,
+       "ann_pct": 120.941
+      }
+     },
+     "EMBED_minus_NOTEXT": {
+      "ic": {
+       "mean": 0.003069,
+       "t": 0.141,
+       "p": 0.8883,
+       "n_date_blocks": 61
+      },
+      "net": {
+       "mean": -0.005248,
+       "t": -0.75,
+       "p": 0.4559,
+       "n_date_blocks": 61,
+       "ann_pct": -132.239
+      }
+     }
+    }
+   },
+   "2026Q2": {
+    "n_dates": 62,
+    "dates": [
+     "2026-04-01",
+     "2026-06-30"
+    ],
+    "median_names_per_date": 311,
+    "median_tradable_per_date": 308,
+    "arms": {
+     "EMBED": {
+      "ic": {
+       "mean": -0.022304,
+       "t": -1.564,
+       "p": 0.1231,
+       "n_date_blocks": 62
+      },
+      "gross": {
+       "mean": -0.008391,
+       "t": -1.625,
+       "p": 0.1093,
+       "n_date_blocks": 62,
+       "ann_pct": -211.445
+      },
+      "net": {
+       "mean": -0.012807,
+       "t": -2.486,
+       "p": 0.0157,
+       "n_date_blocks": 62,
+       "ann_pct": -322.733
+      },
+      "mean_daily_turnover": 1.7665,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "TFIDF": {
+      "ic": {
+       "mean": 0.00227,
+       "t": 0.143,
+       "p": 0.8866,
+       "n_date_blocks": 62
+      },
+      "gross": {
+       "mean": 0.003996,
+       "t": 0.732,
+       "p": 0.4668,
+       "n_date_blocks": 62,
+       "ann_pct": 100.689
+      },
+      "net": {
+       "mean": -0.000315,
+       "t": -0.058,
+       "p": 0.9541,
+       "n_date_blocks": 62,
+       "ann_pct": -7.95
+      },
+      "mean_daily_turnover": 1.7244,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "SHUFFLE": {
+      "ic": {
+       "mean": 0.009003,
+       "t": 1.32,
+       "p": 0.1919,
+       "n_date_blocks": 62
+      },
+      "gross": {
+       "mean": 0.00367,
+       "t": 1.195,
+       "p": 0.2366,
+       "n_date_blocks": 62,
+       "ann_pct": 92.473
+      },
+      "net": {
+       "mean": -0.001099,
+       "t": -0.358,
+       "p": 0.7217,
+       "n_date_blocks": 62,
+       "ann_pct": -27.7
+      },
+      "mean_daily_turnover": 1.9075,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "NOTEXT": {
+      "ic": {
+       "mean": 0.001374,
+       "t": 0.072,
+       "p": 0.9427,
+       "n_date_blocks": 62
+      },
+      "gross": {
+       "mean": -0.007736,
+       "t": -1.13,
+       "p": 0.263,
+       "n_date_blocks": 62,
+       "ann_pct": -194.955
+      },
+      "net": {
+       "mean": -0.010756,
+       "t": -1.571,
+       "p": 0.1214,
+       "n_date_blocks": 62,
+       "ann_pct": -271.054
+      },
+      "mean_daily_turnover": 1.2079,
+      "cost_bps_per_unit_turnover": 25.0
+     }
+    },
+    "vs_controls": {
+     "EMBED_minus_TFIDF": {
+      "ic": {
+       "mean": -0.024574,
+       "t": -2.135,
+       "p": 0.0368,
+       "n_date_blocks": 62
+      },
+      "net": {
+       "mean": -0.012491,
+       "t": -2.451,
+       "p": 0.0171,
+       "n_date_blocks": 62,
+       "ann_pct": -314.782
+      }
+     },
+     "EMBED_minus_SHUFFLE": {
+      "ic": {
+       "mean": -0.031307,
+       "t": -2.01,
+       "p": 0.0488,
+       "n_date_blocks": 62
+      },
+      "net": {
+       "mean": -0.011708,
+       "t": -1.976,
+       "p": 0.0526,
+       "n_date_blocks": 62,
+       "ann_pct": -295.032
+      }
+     },
+     "EMBED_minus_NOTEXT": {
+      "ic": {
+       "mean": -0.023677,
+       "t": -0.805,
+       "p": 0.424,
+       "n_date_blocks": 62
+      },
+      "net": {
+       "mean": -0.002051,
+       "t": -0.198,
+       "p": 0.8438,
+       "n_date_blocks": 62,
+       "ann_pct": -51.679
+      }
+     }
+    }
+   },
+   "2026Q3": {
+    "n_dates": 47,
+    "dates": [
+     "2026-07-01",
+     "2026-09-04"
+    ],
+    "median_names_per_date": 304,
+    "median_tradable_per_date": 303,
+    "arms": {
+     "EMBED": {
+      "ic": {
+       "mean": -0.007612,
+       "t": -0.434,
+       "p": 0.6662,
+       "n_date_blocks": 47
+      },
+      "gross": {
+       "mean": -0.007552,
+       "t": -1.471,
+       "p": 0.1481,
+       "n_date_blocks": 47,
+       "ann_pct": -190.316
+      },
+      "net": {
+       "mean": -0.012072,
+       "t": -2.352,
+       "p": 0.023,
+       "n_date_blocks": 47,
+       "ann_pct": -304.21
+      },
+      "mean_daily_turnover": 1.8078,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "TFIDF": {
+      "ic": {
+       "mean": 0.002959,
+       "t": 0.159,
+       "p": 0.8747,
+       "n_date_blocks": 47
+      },
+      "gross": {
+       "mean": 0.00104,
+       "t": 0.177,
+       "p": 0.8601,
+       "n_date_blocks": 47,
+       "ann_pct": 26.211
+      },
+      "net": {
+       "mean": -0.003226,
+       "t": -0.549,
+       "p": 0.586,
+       "n_date_blocks": 47,
+       "ann_pct": -81.305
+      },
+      "mean_daily_turnover": 1.7066,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "SHUFFLE": {
+      "ic": {
+       "mean": 0.011389,
+       "t": 1.336,
+       "p": 0.188,
+       "n_date_blocks": 47
+      },
+      "gross": {
+       "mean": 0.003295,
+       "t": 1.024,
+       "p": 0.311,
+       "n_date_blocks": 47,
+       "ann_pct": 83.033
+      },
+      "net": {
+       "mean": -0.001476,
+       "t": -0.458,
+       "p": 0.6489,
+       "n_date_blocks": 47,
+       "ann_pct": -37.183
+      },
+      "mean_daily_turnover": 1.9082,
+      "cost_bps_per_unit_turnover": 25.0
+     },
+     "NOTEXT": {
+      "ic": {
+       "mean": 0.039394,
+       "t": 1.616,
+       "p": 0.1129,
+       "n_date_blocks": 47
+      },
+      "gross": {
+       "mean": 0.014253,
+       "t": 1.725,
+       "p": 0.0913,
+       "n_date_blocks": 47,
+       "ann_pct": 359.183
+      },
+      "net": {
+       "mean": 0.011091,
+       "t": 1.342,
+       "p": 0.1862,
+       "n_date_blocks": 47,
+       "ann_pct": 279.505
+      },
+      "mean_daily_turnover": 1.2647,
+      "cost_bps_per_unit_turnover": 25.0
+     }
+    },
+    "vs_controls": {
+     "EMBED_minus_TFIDF": {
+      "ic": {
+       "mean": -0.010572,
+       "t": -0.71,
+       "p": 0.4812,
+       "n_date_blocks": 47
+      },
+      "net": {
+       "mean": -0.008845,
+       "t": -1.947,
+       "p": 0.0576,
+       "n_date_blocks": 47,
+       "ann_pct": -222.904
+      }
+     },
+     "EMBED_minus_SHUFFLE": {
+      "ic": {
+       "mean": -0.019001,
+       "t": -1.027,
+       "p": 0.3096,
+       "n_date_blocks": 47
+      },
+      "net": {
+       "mean": -0.010596,
+       "t": -1.775,
+       "p": 0.0826,
+       "n_date_blocks": 47,
+       "ann_pct": -267.026
+      }
+     },
+     "EMBED_minus_NOTEXT": {
+      "ic": {
+       "mean": -0.047006,
+       "t": -1.905,
+       "p": 0.063,
+       "n_date_blocks": 47
+      },
+      "net": {
+       "mean": -0.023163,
+       "t": -2.752,
+       "p": 0.0085,
+       "n_date_blocks": 47,
+       "ann_pct": -583.715
+      }
+     }
+    }
+   }
+  },
+  "holm_adjusted_p_all_era_ic": {
+   "EMBED_minus_SHUFFLE": 1.0,
+   "EMBED_minus_TFIDF": 1.0,
+   "EMBED_minus_NOTEXT": 1.0
+  },
+  "family_max_p": 1.0,
+  "horizon_caveats": {
+   "horizon_sessions": 5,
+   "n_date_blocks_reported": 276,
+   "n_effective_independent_blocks": 55,
+   "overlap_note": "each date label spans 5 sessions, so consecutive dates share 4 of them. The reported n of 276 is NOT 276 independent observations: it is about 55. Divide every t in this receipt by roughly sqrt(5) = 2.24 before reading it as significance, and treat a per-era cell with fewer than 5 dates as CANNOT DETERMINE.",
+   "annualisation_note": "ann_pct in every cell is mean x 252 x 100 of that daily series. At horizon 5 it counts the same capital about 5 times over; divide by 5 for a first-order comparable figure. IC is horizon-agnostic and is the number to use for any cross-horizon comparison."
+  }
+ },
+ "family_max_p": 1.0,
+ "headline": "frozen BAAI/bge-small-en-v1.5 + ridge: IC -0.0058 (t -0.969) vs TF-IDF+SVD IC -0.0024 (t -0.388); difference -0.0034 t -0.69 p 0.491 over 276 date blocks; beats TF-IDF in 2/5 eras; vs shuffled text -0.0052 t -0.766",
+ "verdict": "FAILED_VARIANT: the frozen-embedding arm does not beat the SHUFFLED-TEXT control, so whatever it earns is the panel's calendar and universe, not the text.",
+ "next_test": "run the same file at the OTHER horizons on the SAME cached embeddings and compare EMBED_minus_SHUFFLE across them; if no horizon clears shuffle, the finding is about the panel's text and not about the holding period, and E1's typed events are the next representation to try rather than a fourth horizon",
+ "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\E2_frozen_embedding_head_h5_run01_daily.csv",
+ "elapsed_s": 3588.8
+}
