@@ -504,7 +504,7 @@ def step_forecasts(ctx: dict) -> dict:
 
 
 def step_agency_review(ctx: dict) -> dict:
-    """LANE A3 — the daily review, one call per holding of every held book.
+    """LANE A3/A4 — the daily review, and the protect-first check, per book.
 
     It runs AFTER `mark_books` (the positions and the NAV it reads are that
     step's output) and BEFORE `grade`, so a row written this morning is graded
@@ -530,6 +530,14 @@ def step_agency_review(ctx: dict) -> dict:
                             path=ctx["predictions_path"])
     except Exception as exc:                                       # noqa: BLE001
         return _row("agency_review", "error", reason=_trunc(exc, 400))
+    # A4 IN THE SAME STEP AND THE SAME PASS. The breach rule reads the NAV
+    # `mark_books` just wrote, and a protection that ran on a different clock
+    # from the review would let a book be advised HOLD in the morning and
+    # flipped by another pass in the afternoon on the same day's number.
+    try:
+        protect = AG.protect_first_pass(asof=ctx["date_obj"], bars=bars)
+    except Exception as exc:                                       # noqa: BLE001
+        protect = {"error": _trunc(exc, 300)}
     rows = [{"book_id": b["book_id"], "ticker": c["ticker"],
              "decision": c["decision"], "probability": c["probability"],
              "prediction_id": c["prediction_id"], "row_hash": c["row_hash"]}
@@ -541,11 +549,12 @@ def step_agency_review(ctx: dict) -> dict:
                     reason=("no book carries origin='human_text' in this "
                             "checkout, so there is nothing a person holds to "
                             "review. That is not the same as a review that "
-                            "found nothing to say."))
+                            "found nothing to say."),
+                    protect_first=protect)
     status = "ok" if rows else "nothing_to_do"
     return _row("agency_review", status, n_books=out["n_books"],
                 n_calls=out["n_calls"], n_refused=out["n_refused"],
-                calls=rows, refused=refused,
+                calls=rows, refused=refused, protect_first=protect,
                 vocabulary=list(AG.DECISIONS),
                 ledger=str(ctx["predictions_path"] or "the default ledger"),
                 ordering=out["books"][0]["ordering"] if out["books"] else None)

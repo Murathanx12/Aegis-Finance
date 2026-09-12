@@ -2064,19 +2064,427 @@ def review_all(*, bars=None, asof=None, conn=None, db_path=None, path=None,
             "limits": LIMITS_SENTENCE}
 
 
-__all__ = ["AGENCY_SIGNAL_DEFAULT", "AgencyError", "BANDS", "BUY_MORE_ABOVE",
-           "CADENCE_FOR_REBALANCE", "CONSTRAINT_RE", "DECISIONS",
-           "ESG_CATEGORIES", "HOLD_FAMILY", "IPS", "IPS_SCHEMA",
-           "LIMITS_SENTENCE", "MAX_CASH_FOR", "MIN_SENTENCE_CHARS",
-           "N_QUESTIONS", "Option", "PERSONALITIES", "PersonalityRow",
-           "QUESTIONNAIRE_VERSION", "QUESTIONS", "SELL_BELOW", "TABLE",
-           "amendment_kind", "build_strategy", "cash_floor_for",
-           "decide_label", "draft_prose", "drawdown_state",
-           "eligible_symbols", "expected_drawdown_at_budget", "hold",
+# ===========================================================================
+# A4 — PROTECT FIRST
+# ===========================================================================
+#
+# "Drawdown budget per book from the IPS; a breach flips the book to its
+# preservation twin's construction, logged, reversible by a human" (A4).
+#
+# FOUR THINGS THAT ARE NOT OBVIOUS AND ARE THEREFORE ENFORCED
+# -----------------------------------------------------------
+# 1. **The peak never resets.** Not at an amendment, not at the flip itself,
+#    and not at the reversal. A book that breaches, flips and recovers is
+#    still measured against its ORIGINAL peak, so a second breach cannot be
+#    avoided by the act of flipping. The carried peak lives on the flip rows,
+#    so it survives the book id changing.
+# 2. **"Preservation twin's construction" means the preservation PERSONALITY's
+#    construction.** The control twin (B3) is a random/beta-matched draw used
+#    for grading and is never a construction a book can BE. Confusing the two
+#    would flip a breached book into a random portfolio.
+# 3. **A mutation is a new object.** `Strategy.with_` produces a new frozen
+#    contract with a new fingerprint, so the flipped book is a NEW book and
+#    the original is retained unmutated at status `flipped`. Both are shown.
+# 4. **The engine flips; only a human unflips.** Protect-first is
+#    one-directional automatically — CLAUDE.md's "no LLM authority over real
+#    capital", extended to paper capital's protective state.
+#
+# AND THE CONTROL: how often would this rule fire on a book that is doing
+# nothing unusual? The same rule, plus random thresholds, run against the
+# book's own twin — whose breach rate is what construction-level volatility
+# alone does to this shape. A flip that fires no more often than the twin's is
+# a protection event that was not informative, and the Regret page reports
+# THAT comparison rather than the raw flip count. ("A null owes two tests.")
+
+FLIP_EVENT = "protect_first_flip"
+
+#: Where the flip log lives. `None` means "beside the forecast ledger", which
+#: is the same volume `PredictionRecord` is written to — a flip is a receipt,
+#: not a log line that can scroll away.
+FLIPS_PATH = None
+
+#: How many random thresholds the base-rate control draws, and the band it
+#: draws them from as a multiple of the book's own budget. Declared, not tuned:
+#: the question is "how often does a rule of roughly this severity fire on
+#: noise", and a band chosen after seeing the answer would not be a control.
+BASE_RATE_DRAWS = 200
+BASE_RATE_BAND = (0.5, 1.5)
+
+
+def flips_path():
+    from backend.services import belief_state as BS                # noqa: PLC0415
+    from pathlib import Path                                       # noqa: PLC0415
+    if FLIPS_PATH is not None:
+        return Path(FLIPS_PATH)
+    return Path(BS.LEDGER_DIR) / "protect_first.jsonl"
+
+
+def read_flips(path=None) -> list[dict]:
+    from pathlib import Path                                       # noqa: PLC0415
+    p = Path(path) if path is not None else flips_path()
+    if not p.is_file():
+        return []
+    out = []
+    for line in p.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            out.append(json.loads(line))
+    return out
+
+
+def _write_flips(rows: Sequence[Mapping[str, Any]], path=None) -> None:
+    """Rewrite the whole file.
+
+    A reversal writes `reversed_utc` onto the SAME row as the flip it reverses
+    (§4.4) — never a second row, which could be read independently of the flip
+    and would make a reversed flip look like two events. That is a
+    read-modify-write, so it rewrites rather than appends, and it is the one
+    file in this programme that is deliberately not append-only.
+    """
+    from pathlib import Path                                       # noqa: PLC0415
+    p = Path(path) if path is not None else flips_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows),
+                 encoding="utf-8")
+
+
+def carried_peak(book, path=None) -> tuple[float | None, str]:
+    """The peak this book inherits from its own flip lineage, if any.
+
+    A flip changes the book id (a mutation is a new object), so without this
+    the new book would start measuring from its own first mark and the budget
+    would silently reset — which is exactly what §4.1 forbids.
+    """
+    for row in read_flips(path):
+        if row.get("to_book_id") == book.book_id and row.get("peak_nav"):
+            return float(row["peak_nav"]), (
+                f"carried from flip {row['flip_seq']} of {row['book_id']}")
+    return None, ""
+
+
+def breach_check(book, *, conn=None, db_path=None, path=None) -> dict:
+    """Is this book past its own drawdown budget at the close? (§4.1)
+
+    `drawdown <= budget` — both negative ratios, so the comparison fires when
+    the drawdown is AS BAD OR WORSE than the budget.
+    """
+    state = drawdown_state(book, conn=conn, db_path=db_path)
+    inherited, why = carried_peak(book, path)
+    if inherited and state.get("nav"):
+        peak = max(float(inherited), float(state.get("peak_nav") or 0.0))
+        if peak != state.get("peak_nav"):
+            state["peak_nav"] = peak
+            state["peak_carried_from"] = why
+            state["drawdown"] = round(float(state["nav"]) / peak - 1.0, 6)
+    budget = book.strategy.objective.drawdown_budget
+    dd = state.get("drawdown")
+    state["drawdown_budget"] = budget
+    if dd is None or budget is None:
+        state["breach"] = False
+        state.setdefault("why", "")
+        state["why"] = (state["why"] or "") + (
+            "" if budget is not None else
+            " This book declares no drawdown budget, so protect-first has "
+            "nothing to measure against and never fires.")
+        return state
+    state["breach"] = bool(float(dd) <= float(budget))
+    state["distance_to_budget"] = round(float(dd) - float(budget), 6)
+    return state
+
+
+def base_rate_on_twin(book, *, conn=None, db_path=None) -> dict:
+    """§4.5 — how often the same rule fires on a book doing nothing unusual.
+
+    Two numbers, printed beside every flip:
+    * the SAME budget applied to the control twin's own NAV path;
+    * the fraction of RANDOM thresholds in a declared band around the budget
+      that would have fired on that path.
+
+    The twin shares the universe band, cadence and costs and carries no
+    signal, so its breach rate is protect-first's false-positive rate under
+    "nothing is actually wrong, the signal just has this much noise".
+    """
+    import numpy as np                                             # noqa: PLC0415
+
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    budget = book.strategy.objective.drawdown_budget
+    tid = book.control_twin_ids[0] if book.control_twin_ids else None
+    if tid is None or budget is None:
+        return {"verdict": "CANNOT DETERMINE",
+                "why": ("a base rate needs a control twin and a declared "
+                        "budget; without both there is nothing to compare the "
+                        "flip against")}
+    try:
+        path = PB.nav_series([tid], conn=conn, db_path=db_path).get(tid) or []
+    except Exception as exc:                                       # noqa: BLE001
+        return {"verdict": "CANNOT DETERMINE",
+                "why": f"the twin's NAV could not be read: {exc}"[:200]}
+    if len(path) < 2:
+        return {"verdict": "CANNOT DETERMINE", "twin_id": tid,
+                "n_twin_marks": len(path),
+                "why": ("the twin has fewer than two marks, so it has no "
+                        "drawdown path and no base rate. A flip reported "
+                        "without one is a fired rule with no false-positive "
+                        "rate beside it.")}
+    peak = None
+    worst = 0.0
+    n_breach = 0
+    for _d, nav in path:
+        peak = nav if peak is None else max(peak, nav)
+        dd = nav / peak - 1.0 if peak else 0.0
+        worst = min(worst, dd)
+        if dd <= float(budget):
+            n_breach += 1
+    rng = np.random.default_rng(int(book.strategy.fingerprint[:8], 16))
+    lo, hi = BASE_RATE_BAND
+    draws = rng.uniform(float(budget) * hi, float(budget) * lo, BASE_RATE_DRAWS)
+    fired = int(sum(1 for t in draws if worst <= t))
+    return {"verdict": "measured on the twin",
+            "twin_id": tid, "n_twin_marks": len(path),
+            "twin_worst_drawdown": round(worst, 6),
+            "twin_sessions_in_breach": n_breach,
+            "twin_breach_rate": round(n_breach / len(path), 6),
+            "random_threshold_fire_rate": round(fired / BASE_RATE_DRAWS, 6),
+            "random_thresholds": {"n": BASE_RATE_DRAWS,
+                                  "band_x_budget": list(BASE_RATE_BAND),
+                                  "seed": "derived from the book fingerprint"},
+            "reading": ("a book whose own breach is not distinguishably more "
+                        "frequent than these is a book whose 'protection' "
+                        "event was not informative — that comparison, not the "
+                        "flip count, is what the Regret page reports")}
+
+
+def protected_strategy(strategy, *, flip_seq: int):
+    """The same book, rebuilt on the PRESERVATION row (§4.2).
+
+    `Strategy.with_` — a mutation is a new strategy, never an edit — so the
+    original object survives untouched in the book's history and the new one
+    has its own fingerprint.
+    """
+    from backend.strategy.contract import (Construction, HoldRule, Objective,
+                                           Sizing)                 # noqa: PLC0415
+    row = TABLE["preservation"]
+    fam = HOLD_FAMILY["preservation"]
+    params = dict(strategy.engine_params or {})
+    params.update({"protect_first": {
+        "flip_seq": int(flip_seq),
+        "flipped_from": strategy.fingerprint,
+        "construction": "the preservation PERSONALITY's row (§1.4), not the "
+                        "control twin — a twin is a grading control and never "
+                        "a construction a book can be"}})
+    return strategy.with_(
+        strategy_id=f"{strategy.strategy_id}-PROTECTED-{int(flip_seq)}",
+        title=f"{strategy.title} (protected {int(flip_seq)})",
+        construction=Construction(rule=strategy.construction.rule, k=row.k,
+                                  weighting=strategy.construction.weighting,
+                                  max_single_name=row.max_single_name,
+                                  gross_cap=row.gross_cap),
+        hold=HoldRule(horizon_periods=int(fam["horizon_periods"]),
+                      min_hold_periods=int(fam["min_hold_periods"]),
+                      roi_ladder=dict(fam["roi_ladder"]),
+                      stop_loss=row.stop_loss,
+                      scheduled_review_periods=1),
+        sizing=Sizing(rule=strategy.sizing.rule, gross_cap=row.gross_cap,
+                      notional_usd=strategy.sizing.notional_usd),
+        objective=Objective(name=strategy.objective.name,
+                            periods_per_year=strategy.objective.periods_per_year,
+                            drawdown_budget=row.drawdown_budget,
+                            utility="risk_adjusted"),
+        engine_params=params,
+        parents=tuple(strategy.parents) + (strategy.strategy_id,))
+
+
+def flip(book, *, state: Mapping[str, Any], bars, asof=None, conn=None,
+         db_path=None, path=None) -> dict:
+    """Flip a breached book to the preservation construction, and log it.
+
+    Returns the log row. The ORIGINAL book is set to `flipped` and kept; the
+    protected one is a new book with `origin="mutation"` carrying the same
+    `ips_hash`, so both are shown and neither is edited.
+    """
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    asof = asof or _date.today()
+    rows = read_flips(path)
+    seq = 1 + sum(1 for r in rows if r.get("lineage") == (book.ips_hash
+                                                          or book.book_id))
+    new_strategy = protected_strategy(book.strategy, flip_seq=seq)
+    new_book, twins = PB.create(
+        new_strategy, cadence=book.cadence, origin="mutation",
+        origin_text=(f"protect-first flip on {asof}, drawdown "
+                     f"{float(state['drawdown']):.2%} vs budget "
+                     f"{float(state['drawdown_budget']):.2%}"),
+        ips_hash=book.ips_hash, shadow=book.shadow, bars=bars, asof=asof,
+        conn=conn, db_path=db_path)
+    PB.set_status(book.book_id, "flipped", conn=conn, db_path=db_path)
+    row = {
+        "event": FLIP_EVENT,
+        "lineage": book.ips_hash or book.book_id,
+        "book_id": book.book_id,
+        "to_book_id": new_book.book_id,
+        "ips_hash": book.ips_hash,
+        "flip_seq": seq,
+        "triggered_utc": _now(),
+        "session_as_of": str(asof),
+        "nav_at_trigger": state.get("nav"),
+        "peak_nav": state.get("peak_nav"),
+        "peak_date": state.get("peak_date"),
+        "drawdown_at_trigger": state.get("drawdown"),
+        "drawdown_budget": state.get("drawdown_budget"),
+        "from_strategy_fingerprint": book.strategy.fingerprint,
+        "to_strategy_fingerprint": new_strategy.fingerprint,
+        "to_construction": "preservation",
+        "base_rate_control": base_rate_on_twin(book, conn=conn,
+                                               db_path=db_path),
+        "reversible": True,
+        "reversed_utc": None,
+        "reversed_by": None,
+        "twins_of_protected_book": [t.book_id for t in twins],
+        "note": ("the peak is NOT reset by this flip: a book that breaches, "
+                 "flips and recovers is still measured against its original "
+                 "peak, so a second breach cannot be avoided by flipping"),
+    }
+    _write_flips(list(rows) + [row], path)
+    logger.info("protect-first: %s flipped to %s at drawdown %s",
+                book.book_id, new_book.book_id, state.get("drawdown"))
+    return row
+
+
+def unflip(*, book_id: str | None = None, flip_seq: int | None = None,
+           by: str = "human", conn=None, db_path=None, path=None) -> dict:
+    """Reverse a flip. A HUMAN action, and the engine never takes it (§4.4).
+
+    (a) restores the pre-flip book (the retained object, not a re-derivation),
+    (b) writes `reversed_utc`/`reversed_by` onto the SAME row, and
+    (c) does NOT reset `peak_nav` — a reversed flip that breaches again
+        immediately is a real second breach, not a bug.
+    """
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    rows = read_flips(path)
+    live = [r for r in rows
+            if r.get("reversed_utc") is None
+            and (book_id is None or book_id in (r.get("book_id"),
+                                                r.get("to_book_id")))
+            and (flip_seq is None or int(r.get("flip_seq", 0)) == int(flip_seq))]
+    if not live:
+        raise AgencyError(
+            f"no un-reversed protect-first flip matches "
+            f"book_id={book_id!r} flip_seq={flip_seq!r}. A reversal of a flip "
+            f"that did not happen would restore a construction nobody left.")
+    if len(live) > 1:
+        raise AgencyError(
+            f"{len(live)} un-reversed flips match; name the `flip_seq`. "
+            f"Reversing 'the flip' when there are two is a guess about which "
+            f"protective state the human meant to leave.")
+    row = live[0]
+    peak_before = row.get("peak_nav")
+    PB.set_status(row["to_book_id"], "retired", conn=conn, db_path=db_path)
+    PB.set_status(row["book_id"], "holding", conn=conn, db_path=db_path)
+    row["reversed_utc"] = _now()
+    row["reversed_by"] = str(by)
+    row["peak_nav"] = peak_before        # explicitly unchanged, see (c)
+    row["reversal_note"] = (
+        "the pre-flip book is restored to `holding` and the protected book is "
+        "retired. `peak_nav` is unchanged: the drawdown that fired this flip "
+        "is still the drawdown, and an immediate re-breach is a real one.")
+    _write_flips(rows, path)
+    return row
+
+
+#: Which origins protect-first watches. A shadow is protected too: it is the
+#: counterfactual of a CHOICE, and a counterfactual run without the protection
+#: the chosen book has is a comparison between two different policies.
+PROTECTED_ORIGINS_NOTE = (
+    "every book created from an IPS — the one a human held and the two "
+    "shadows — is watched, because a shadow run without the protection the "
+    "chosen book has is a comparison between two different policies")
+
+
+def protect_first_pass(*, asof=None, bars=None, conn=None, db_path=None,
+                       path=None) -> dict:
+    """Check every IPS book at the close; flip the ones in breach (§4).
+
+    One pass per session, on the marked NAV, never intraday.
+    """
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    asof = asof or _date.today()
+    own = conn is None
+    conn = conn or PB._conn(db_path)
+    try:
+        books = [b for b in PB.list_books(conn=conn, include_twins=False)
+                 if b.ips_hash and b.status == "holding"]
+        checked: list[dict] = []
+        flipped: list[dict] = []
+        for book in books:
+            state = breach_check(book, conn=conn, db_path=db_path, path=path)
+            already = (book.strategy.construction.k == TABLE["preservation"].k
+                       and book.strategy.construction.max_single_name
+                       == TABLE["preservation"].max_single_name)
+            entry = {"book_id": book.book_id, "origin": book.origin,
+                     "shadow": book.shadow,
+                     "drawdown": state.get("drawdown"),
+                     "drawdown_budget": state.get("drawdown_budget"),
+                     "breach": bool(state.get("breach")),
+                     "why": state.get("why"),
+                     "base_rate_control": base_rate_on_twin(
+                         book, conn=conn, db_path=db_path)}
+            if state.get("breach") and already:
+                entry["flipped"] = False
+                entry["reason"] = (
+                    "already at the preservation construction; there is no "
+                    "more conservative row to flip to, and re-flipping would "
+                    "mint a book identical to this one")
+            elif state.get("breach"):
+                if bars is None:
+                    entry["flipped"] = False
+                    entry["reason"] = (
+                        "REFUSED: a flip creates a new book, which needs a "
+                        "control twin, which needs bars to draw from. The "
+                        "breach is recorded and the book is NOT flipped.")
+                else:
+                    row = flip(book, state=state, bars=bars, asof=asof,
+                               conn=conn, db_path=db_path, path=path)
+                    entry["flipped"] = True
+                    entry["flip"] = row
+                    flipped.append(row)
+            else:
+                entry["flipped"] = False
+            checked.append(entry)
+    finally:
+        if own:
+            conn.close()
+    return {"as_of": str(asof), "n_checked": len(checked),
+            "n_flipped": len(flipped), "books": checked,
+            "watched": PROTECTED_ORIGINS_NOTE,
+            "reversal": ("only a human reverses a flip: POST "
+                         "/api/control/agency/unflip. The engine is "
+                         "one-directional by design."),
+            "limits": LIMITS_SENTENCE}
+
+
+__all__ = ["AGENCY_SIGNAL_DEFAULT", "AgencyError", "BANDS",
+           "BASE_RATE_DRAWS", "BUY_MORE_ABOVE", "CADENCE_FOR_REBALANCE",
+           "CONSTRAINT_RE", "DECISIONS", "ESG_CATEGORIES", "FLIP_EVENT",
+           "HOLD_FAMILY", "IPS", "IPS_SCHEMA", "LIMITS_SENTENCE",
+           "MAX_CASH_FOR", "MIN_SENTENCE_CHARS", "N_QUESTIONS", "Option",
+           "PERSONALITIES", "PersonalityRow", "QUESTIONNAIRE_VERSION",
+           "QUESTIONS", "SELL_BELOW", "TABLE", "amendment_kind",
+           "base_rate_on_twin", "breach_check", "build_strategy",
+           "carried_peak", "cash_floor_for", "decide_label", "draft_prose",
+           "drawdown_state", "eligible_symbols",
+           "expected_drawdown_at_budget", "flip", "flips_path", "hold",
            "hold_rule_words", "intake", "ips_dir", "ips_hash", "load_ips",
            "neighbours", "numeric_fields", "parse_constraints",
            "personality_for", "probability_terms", "propose",
-           "propose_payload", "review", "review_all", "review_book",
-           "row_hash", "save_ips", "score_questionnaire",
-           "supported_signals", "template_prose", "unexplained_numbers",
+           "propose_payload", "protect_first_pass", "protected_strategy",
+           "read_flips", "review", "review_all", "review_book", "row_hash",
+           "save_ips", "score_questionnaire", "supported_signals",
+           "template_prose", "unexplained_numbers", "unflip",
            "validate_document"]

@@ -1394,6 +1394,49 @@ def agency_hold(payload: dict = Body(...)) -> dict:
         raise HTTPException(422, str(exc)) from exc
 
 
+@router.get("/agency/protect-first")
+def agency_protect_first(book_id: str | None = None) -> dict:
+    """A4 — the flip log, with the base-rate control beside every flip.
+
+    A READ. It never checks for a breach and never flips: the breach rule runs
+    once per session inside the Morning, on the NAV that pass marked, and a
+    route that could flip on a GET would flip whenever a page refreshed.
+    """
+    from backend.services import agency as AG
+    rows = AG.read_flips()
+    if book_id:
+        rows = [r for r in rows if book_id in (r.get("book_id"),
+                                               r.get("to_book_id"))]
+    return {"utc": _now(), "n_flips": len(rows),
+            "n_open": sum(1 for r in rows if not r.get("reversed_utc")),
+            "flips": rows,
+            "ledger_rel": _rel(AG.flips_path()),
+            "reading": ("the flip count alone says nothing: read it against "
+                        "`base_rate_control` on the same row, which is how "
+                        "often the same rule fires on the book's own twin"),
+            "limits": AG.LIMITS_SENTENCE}
+
+
+@router.post("/agency/unflip")
+def agency_unflip(payload: dict = Body(...)) -> dict:
+    """A4 — a HUMAN reverses a protect-first flip. Gated.
+
+    The engine never reverses its own flip: protect-first is one-directional
+    automatically and bidirectional only by hand, which is CLAUDE.md's "no LLM
+    authority over real capital" extended to paper capital's protective state.
+    """
+    _require_enabled()
+    from backend.services import agency as AG
+    try:
+        row = AG.unflip(book_id=payload.get("book_id"),
+                        flip_seq=payload.get("flip_seq"),
+                        by=str(payload.get("by") or "human"))
+    except AG.AgencyError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return {"utc": _now(), "reversed": True, "flip": row,
+            "limits": AG.LIMITS_SENTENCE}
+
+
 @router.get("/agency/review")
 def agency_review_latest(day: str | None = None) -> dict:
     """A3 — today's calls, READ from the morning receipt that wrote them.
