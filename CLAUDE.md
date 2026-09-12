@@ -339,6 +339,12 @@ python lab/rd_loop.py --cycles 60 --model opus
 # Build frontend (catches type errors)
 cd frontend && npx next build
 
+# All THREE frontend builds in one receipt with three exit codes (tsc, the site
+# build, the desktop export). The export tolerates what the site build refuses
+# -- that is how 2026-09-11's duplicate STATUS_TONE reached CI -- so run this,
+# not `next build` alone. The launcher's frontend step calls it too.
+python -m scripts.frontend_check        # -> backend/data/optimus/frontend_check.json
+
 # Train crash model (offline, ~5-10 min)
 python -m engine.training.train_crash_model
 

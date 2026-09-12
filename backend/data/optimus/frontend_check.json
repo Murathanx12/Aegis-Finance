@@ -1,0 +1,47 @@
+{
+ "receipt": "frontend_check",
+ "utc": "2026-09-12T06:53:18+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "frontend": "C:\\Users\\mrthn\\aegis-finance\\frontend",
+ "steps": [
+  {
+   "step": "tsc",
+   "cmd": "npx tsc --noEmit",
+   "env": null,
+   "returncode": 0,
+   "seconds": 2.04,
+   "ok": true,
+   "tail": "",
+   "catches": "type errors, with no bundling and no route analysis"
+  },
+  {
+   "step": "site",
+   "cmd": "npx next build",
+   "env": null,
+   "returncode": 0,
+   "seconds": 11.54,
+   "ok": true,
+   "tail": "\u251c \u25cb /desktop\n\u251c \u25cb /desktop/ask\n\u251c \u25cb /desktop/fleet\n\u251c \u25cb /desktop/night\n\u251c \u25cb /desktop/universe\n\u251c \u25cb /dev\n\u251c \u25cb /investment-committee\n\u251c \u25cb /journal\n\u251c \u25cb /news\n\u251c \u25cb /outlook\n\u251c \u25cb /portfolio\n\u251c \u25cb /portfolio-intelligence\n\u251c \u25cb /portfolio-intelligence/compare\n\u251c \u25cb /portfolio-intelligence/conviction\n\u251c \u25cb /portfolio-intelligence/my-portfolio\n\u251c \u25cb /portfolio-intelligence/reference\n\u251c \u25cb /portfolio-intelligence/risk-watch\n\u251c \u25cb /portfolio-intelligence/track-record\n\u251c \u25cb /retirement\n\u251c \u25cb /risk\n\u251c \u25cb /robots.txt\n\u251c \u25cb /screener\n\u251c \u25cb /sectors\n\u251c \u25cb /simulation\n\u251c \u25cb /sitemap.xml\n\u251c \u25cb /stock\n\u251c \u25cf /stock/[ticker]\n\u2502 \u251c /stock/AAPL\n\u2502 \u251c /stock/MSFT\n\u2502 \u251c /stock/GOOGL\n\u2502 \u2514 [+9 more paths]\n\u251c \u25cb /watchlist\n\u251c \u25cb /workspace\n\u2514 \u25cb /world\n\n\n\u0192 Proxy (Middleware)\n\n\u25cb  (Static)  prerendered as static content\n\u25cf  (SSG)     prerendered as static HTML (uses generateStaticParams)\n\n\n\u26a0 Warning: Next.js inferred your workspace root, but it may not be correct.\n We detected multiple lockfiles and selected the directory of C:\\Users\\mrthn\\package-lock.json as the root directory.\n To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.\n   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.\n Detected additional lockfiles: \n   * C:\\Users\\mrthn\\aegis-finance\\frontend\\package-lock.json\n\n\u26a0 The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy",
+   "catches": "the site build -- full route and page analysis; refuses duplicates the export tolerates"
+  },
+  {
+   "step": "desktop",
+   "cmd": "npx next build",
+   "env": "AEGIS_DESKTOP_BUILD=1",
+   "returncode": 0,
+   "seconds": 11.57,
+   "ok": true,
+   "tail": "\n\u251c \u25cb /retirement\n\u251c \u25cb /risk\n\u251c \u25cb /robots.txt\n\u251c \u25cb /screener\n\u251c \u25cb /sectors\n\u251c \u25cb /simulation\n\u251c \u25cb /sitemap.xml\n\u251c \u25cb /stock\n\u251c \u25cf /stock/[ticker]\n\u2502 \u251c /stock/AAPL\n\u2502 \u251c /stock/MSFT\n\u2502 \u251c /stock/GOOGL\n\u2502 \u2514 [+10 more paths]\n\u251c \u25cb /watchlist\n\u251c \u25cb /workspace\n\u2514 \u25cb /world\n\n\n\u0192 Proxy (Middleware)\n\n\u25cb  (Static)  prerendered as static content\n\u25cf  (SSG)     prerendered as static HTML (uses generateStaticParams)\n\n\n\u26a0 Warning: Next.js inferred your workspace root, but it may not be correct.\n We detected multiple lockfiles and selected the directory of C:\\Users\\mrthn\\package-lock.json as the root directory.\n To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.\n   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.\n Detected additional lockfiles: \n   * C:\\Users\\mrthn\\aegis-finance\\frontend\\package-lock.json\n\n\u26a0 The \"middleware\" file convention is deprecated. Please use \"proxy\" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy\n\u26a0 Statically exporting a Next.js application via `next export` disables API routes and middleware.\nThis command is meant for static-only hosts, and is not necessary to make your application static.\nPages in your application without server-side data dependencies will be automatically statically exported by `next build`, including pages powered by `getStaticProps`.\nLearn more: https://nextjs.org/docs/messages/api-routes-static-export",
+   "catches": "the static export the desktop app serves; runs LAST so frontend/out is left holding it"
+  }
+ ],
+ "skipped": [],
+ "exit_codes": {
+  "tsc": 0,
+  "site": 0,
+  "desktop": 0
+ },
+ "ok": true,
+ "verdict": "GREEN",
+ "headline": "3 build(s) green in 25s"
+}

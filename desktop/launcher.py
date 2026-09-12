@@ -32,9 +32,13 @@ WHAT IT DOES, IN ORDER, EACH WITH A LOG LINE AND A RECEIPT FIELD
 3. **`pip install -r requirements.txt`** -- only when the file's sha256 differs
    from the one in the last receipt. Otherwise a 40-second dependency resolve
    sits between a double-click and a window every single launch.
-4. **`npx next build`** -- only when `git diff <last_export_head> HEAD --
-   frontend/` is non-empty, or when `frontend/out` is missing. No Node: say so
-   and serve the export that is there.
+4. **`python -m scripts.frontend_check`** (tsc + the site build + the desktop
+   export, one receipt with three exit codes) -- only when
+   `git diff <last_export_head> HEAD -- frontend/` is non-empty, or when
+   `frontend/out` is missing. No Node: say so and serve the export that is
+   there. A red tsc or site build is RECORDED and does not stop the window:
+   the export is what the app serves. Before 2026-09-12 only the export ran,
+   and the export is the build that tolerates the most.
 5. **spawn the shell** and wait for it. On Windows the child is put in a JOB
    OBJECT with `KILL_ON_JOB_CLOSE`, the same mechanism `llama_server.bind_lifetime`
    uses, so closing the launcher kills the shell and the shell kills the model
@@ -255,8 +259,13 @@ def frontend_changed(root: Path, since: str | None) -> tuple[bool, str]:
     return True, f"`git diff` could not compare against {since[:9]}"
 
 
-def maybe_frontend(root: Path, last: dict) -> dict:
-    """Step 4. Rebuild the static export only when `frontend/` moved."""
+def maybe_frontend(root: Path, last: dict, interp: str | None = None) -> dict:
+    """Step 4. Re-run the frontend checks only when `frontend/` moved.
+
+    With an `interp` this is `python -m scripts.frontend_check` (tsc, the
+    site build, the desktop export; one receipt, three exit codes). Without
+    one it is the export alone, as before.
+    """
     out_dir = root / "frontend" / "out"
     head = git_head(root)
     changed, why = frontend_changed(root, (last or {}).get("export_head"))
@@ -270,22 +279,66 @@ def maybe_frontend(root: Path, last: dict) -> dict:
         # Serving a stale export is a far better outcome than refusing to open.
         return step | {"ran": False, "reason": "Node/npx is not installed; serving the last export",
                        "export_head": (last or {}).get("export_head")}
-    env = dict(os.environ, AEGIS_DESKTOP_BUILD="1")
+    # THREE BUILDS, NOT ONE (2026-09-12), AND THROUGH A SUBPROCESS.
+    #
+    # The launcher used to run only the desktop export, which is the build that
+    # tolerates the most: on 09-11 two board cards each defined `STATUS_TONE`,
+    # the export swallowed the duplicate and the SITE build refused it, and CI
+    # went red on the merge. A launch that rebuilds the frontend is the moment
+    # to learn that, not the next push.
+    #
+    # `scripts.frontend_check` is invoked as a CHILD of the checkout's own
+    # interpreter and never imported: anything this file imports is FROZEN with
+    # it, and a frozen module is how the whole path-resolution defect family
+    # started (`test_the_launcher_never_imports_backend` pins it).
     t0 = time.time()
+    report = root / "backend" / "data" / "optimus" / "frontend_check.json"
+    if interp:
+        try:
+            subprocess.run([interp, "-m", "scripts.frontend_check", "--out", str(report)],
+                           cwd=str(root), capture_output=True, text=True, timeout=3600,
+                           check=False)
+            rc = json.loads(report.read_text(encoding="utf-8"))
+        except (OSError, subprocess.SubprocessError, ValueError) as exc:
+            rc = {"verdict": "CANNOT DETERMINE",
+                  "headline": f"{type(exc).__name__}: {exc}", "steps": []}
+        codes = rc.get("exit_codes") or {}
+        if codes:
+            export_ok = codes.get("desktop") == 0
+            red = [k for k, v in codes.items() if v not in (0, None)]
+            return step | {"ran": True, "returncode": codes.get("desktop"),
+                           "seconds": round(time.time() - t0, 2),
+                           "exit_codes": codes, "checker_verdict": rc.get("verdict"),
+                           "checker_receipt": str(report),
+                           "tail": "\n".join(s.get("tail") or "" for s in rc.get("steps", [])
+                                             if s.get("ok") is False)[-800:],
+                           "export_head": head if export_ok else (last or {}).get("export_head"),
+                           # the export is what the app SERVES, so a red tsc or
+                           # site build is reported and does not stop the window
+                           "reason": ("rebuilt" if export_ok and not red else
+                                      f"rebuilt, but {', '.join(red)} is RED -- see {report}"
+                                      if export_ok else
+                                      f"the desktop export failed ({', '.join(red)}); "
+                                      f"serving the last export")}
+        # the checker could not speak. Fall through to the export-only build --
+        # a launcher must open the app.
+        step["checker"] = f"no exit codes: {rc.get('headline')}"
+
+    env = dict(os.environ, AEGIS_DESKTOP_BUILD="1")
     try:
         r = subprocess.run([npx, "next", "build"], cwd=str(root / "frontend"),
                            capture_output=True, text=True, timeout=1800, env=env)
-        ok = r.returncode == 0
-        return step | {"ran": True, "returncode": r.returncode,
-                       "seconds": round(time.time() - t0, 2),
-                       "tail": (r.stdout or r.stderr or "").strip()[-800:],
-                       "export_head": head if ok else (last or {}).get("export_head"),
-                       "reason": "rebuilt" if ok else "next build failed; serving the last export"}
     except (OSError, subprocess.SubprocessError) as exc:
         return step | {"ran": True, "returncode": None,
                        "error": f"{type(exc).__name__}: {exc}",
                        "export_head": (last or {}).get("export_head"),
                        "reason": "next build could not run; serving the last export"}
+    ok = r.returncode == 0
+    return step | {"ran": True, "returncode": r.returncode,
+                   "seconds": round(time.time() - t0, 2),
+                   "tail": (r.stdout or r.stderr or "").strip()[-800:],
+                   "export_head": head if ok else (last or {}).get("export_head"),
+                   "reason": "rebuilt" if ok else "next build failed; serving the last export"}
 
 
 # ------------------------------------------------------------ step 5: the child
@@ -561,7 +614,7 @@ def main(argv: list[str] | None = None) -> int:
         pi = maybe_pip(root, interp, last_pip)
         receipt["steps"].append(pi)
         log_line(root, f"pip ran={pi.get('ran')} reason={pi.get('reason')}")
-        fe = maybe_frontend(root, last_fe)
+        fe = maybe_frontend(root, last_fe, interp)
         receipt["steps"].append(fe)
         log_line(root, f"frontend ran={fe.get('ran')} reason={fe.get('reason')}")
 
