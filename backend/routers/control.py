@@ -1290,7 +1290,108 @@ def agency_intake(payload: dict = Body(...)) -> dict:
         raise HTTPException(422, str(exc)) from exc
     except (TypeError, ValueError) as exc:
         raise HTTPException(422, f"the intake was refused: {exc}") from exc
-    return {"utc": _now(), **ips.as_payload()}
+    # The policy is STORED under its own hash so that `hold` can name it by
+    # hash alone. Nothing about a book is written here.
+    saved = _safe(lambda: _rel(AG.save_ips(ips)))
+    return {"utc": _now(), "ips_path_rel": saved, **ips.as_payload()}
+
+
+def _agency_bars():
+    """The local bars, or a 503 naming what is missing.
+
+    Same refusal as `create-from-contract`: without bars no control twin can
+    be drawn, and an option shown without its twin is the thing B3 exists to
+    prevent. A proposal is exactly the moment a human compares numbers.
+    """
+    try:
+        from backend.services.paper_books import load_bars
+        return load_bars()
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            503, f"the local bars are unavailable, so no control twin can be "
+                 f"drawn and no option is shown without one: {exc}") from exc
+
+
+@router.post("/agency/propose")
+def agency_propose(payload: dict = Body(...)) -> dict:
+    """A2 — three books from one IPS, each with its twins and its worst case.
+
+    Takes `{ips_hash}` (the policy the intake stored) or an inline `{ips}`
+    document. Writes nothing: a proposal is a comparison, and the books exist
+    only once a human holds one.
+    """
+    from backend.services import agency as AG
+    ips = _load_agency_ips(payload)
+    bars = _agency_bars()
+    try:
+        options = AG.propose(ips, bars=bars, signal=payload.get("signal"))
+    except AG.AgencyError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return {"utc": _now(), **AG.propose_payload(ips, options)}
+
+
+def _load_agency_ips(payload: dict):
+    """`{ips_hash}` from the store, or an inline `{ips}` document, revalidated.
+
+    An inline document is accepted because a page that has just run the intake
+    already holds one and should not have to trust a round trip — but it is
+    validated and re-hashed exactly like a stored one, and a mismatch between
+    the document and the `ips_hash` beside it is a refusal rather than a
+    preference for whichever arrived first.
+    """
+    from backend.services import agency as AG
+    doc = payload.get("ips")
+    want = payload.get("ips_hash")
+    if isinstance(doc, dict) and doc:
+        try:
+            AG.validate_document(doc)
+            recomputed = AG.ips_hash(doc)
+        except AG.AgencyError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        if recomputed != doc.get("ips_hash") or (want and want != recomputed):
+            raise HTTPException(
+                422, f"the IPS document hashes to {recomputed} and the request "
+                     f"says {want or doc.get('ips_hash')}. One of the two has "
+                     f"been edited; the engine does not pick which.")
+        row = AG.TABLE[str(doc["personality"])]
+        return AG.IPS(document=doc, validator="revalidated",
+                      numbers=AG.numeric_fields(doc, row))
+    if not want:
+        raise HTTPException(422, "body needs `ips_hash` (a policy the intake "
+                                 "stored) or an inline `ips` document")
+    try:
+        return AG.load_ips(str(want))
+    except AG.AgencyError as exc:
+        raise HTTPException(404, str(exc)) from exc
+
+
+@router.post("/agency/hold")
+def agency_hold(payload: dict = Body(...)) -> dict:
+    """A2 — a human holds ONE option; the other two become shadow books.
+
+    THE ONLY ROUTE THAT MINTS `origin="human_text"`. It is control-plane gated,
+    it refuses without the sentence, and it records the sentence verbatim: that
+    marker is the whole distinction between a book a person chose and a book a
+    job produced, and `create-from-contract` refuses to mint one for exactly
+    this reason.
+
+    Nothing here places an order. A book is a frozen contract and a NAV series.
+    """
+    _require_enabled()
+    from backend.services import agency as AG
+    from backend.services.paper_books import BookError
+    ips = _load_agency_ips(payload)
+    bars = _agency_bars()
+    try:
+        return {"utc": _now(), **AG.hold(
+            ips,
+            chosen_contract_hash=str(payload.get("chosen_contract_hash") or ""),
+            sentence=str(payload.get("sentence") or ""),
+            bars=bars, signal=payload.get("signal"))}
+    except AG.AgencyError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except BookError as exc:
+        raise HTTPException(422, str(exc)) from exc
 
 
 # ===========================================================================

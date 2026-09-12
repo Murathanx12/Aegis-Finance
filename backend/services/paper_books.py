@@ -82,8 +82,16 @@ CADENCE_SESSIONS: dict[str, int] = {
 
 #: Where a book came from. `twin_of:<book_id>` is the fourth, and it is a
 #: PREFIX rather than a member because a twin names its parent.
+#:
+#: `shadow_of:<ips_hash>` is the fifth, added 2026-09-12 for lane A2: from one
+#: IPS the engine proposes three books and a human holds ONE. The other two are
+#: created and graded on the same clock so that *the choice itself is graded* —
+#: and they are not `night_job`, because a book nobody chose and a book a night
+#: job produced are two different facts about where a strategy came from. It is
+#: a PREFIX for the same reason `twin_of:` is: the origin names its parent.
 ORIGINS: tuple[str, ...] = ("human_text", "night_job", "mutation")
 TWIN_PREFIX = "twin_of:"
+SHADOW_PREFIX = "shadow_of:"
 
 #: The namespace. Nothing outside it is ever written by this module.
 BOOK_PREFIX = "book:"
@@ -158,11 +166,18 @@ class PaperBook:
             raise BookError(f"cadence {self.cadence!r} is not one of "
                             f"{list(CADENCES)}. A cadence the scheduler cannot "
                             f"act on is a note, not a cadence.")
-        if not (self.origin in ORIGINS or self.origin.startswith(TWIN_PREFIX)):
+        if not (self.origin in ORIGINS
+                or self.origin.startswith(TWIN_PREFIX)
+                or self.origin.startswith(SHADOW_PREFIX)):
             raise BookError(
-                f"origin {self.origin!r} must be one of {list(ORIGINS)} or "
-                f"{TWIN_PREFIX}<book_id>. An unattributed book cannot be told "
-                f"from one a human held.")
+                f"origin {self.origin!r} must be one of {list(ORIGINS)}, "
+                f"{TWIN_PREFIX}<book_id> or {SHADOW_PREFIX}<ips_hash>. An "
+                f"unattributed book cannot be told from one a human held.")
+        if self.origin.startswith(SHADOW_PREFIX) and not self.shadow:
+            raise BookError(
+                f"origin {self.origin!r} says this book is the road not taken, "
+                f"and `shadow=False` says it is the chosen one. A shadow shown "
+                f"as a primary number is the whole thing A2 exists to prevent.")
         if self.status not in ("holding", "flipped", "retired"):
             raise BookError(f"status {self.status!r} is not holding/flipped/retired")
 
@@ -738,9 +753,13 @@ def create(strategy: Strategy, *, cadence: str, origin: str,
       later be told from one a human held, and B2's hold gate is about exactly
       that distinction.
     """
-    if origin not in ORIGINS:
-        raise BookError(f"origin {origin!r} must be one of {list(ORIGINS)}; a "
-                        f"twin is created by `make_twins`, never by `create`")
+    if not (origin in ORIGINS or origin.startswith(SHADOW_PREFIX)):
+        raise BookError(f"origin {origin!r} must be one of {list(ORIGINS)} or "
+                        f"{SHADOW_PREFIX}<ips_hash>; a twin is created by "
+                        f"`make_twins`, never by `create`")
+    if origin.startswith(SHADOW_PREFIX) and not shadow:
+        raise BookError(f"origin {origin!r} is a shadow of an IPS the human "
+                        f"did not choose; it must be created with shadow=True")
     if strategy.costs.zero_cost_diagnostic:
         raise BookError(
             "this contract is a ZERO-COST DIAGNOSTIC. A frictionless run is a "
@@ -898,7 +917,8 @@ def worst_case(book: PaperBook, *, equity_usd: float | None = None) -> dict:
     return out
 
 
-__all__ = ["BOOK_PREFIX", "CADENCES", "CADENCE_SESSIONS", "ORIGINS", "BookError",
+__all__ = ["BOOK_PREFIX", "CADENCES", "CADENCE_SESSIONS", "ORIGINS",
+           "SHADOW_PREFIX", "TWIN_PREFIX", "BookError",
            "PaperBook", "create", "get", "is_book_id", "list_books", "load_bars",
            "liquidity_panel", "make_twins", "nav_series", "pre_period_beta",
            "resolve_universe", "set_status", "worst_case", "book_id_for"]

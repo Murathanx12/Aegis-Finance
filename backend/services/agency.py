@@ -165,6 +165,17 @@ TABLE: dict[str, PersonalityRow] = {
         personality="aggressive", k=12, max_single_name=0.20, gross_cap=1.00,
         stop_loss=-0.12, drawdown_budget=-0.35, rebalance_frequency="weekly",
         cash_floor=0.02,
+        note=("THE SPEC'S ONE ARITHMETIC SLIP, resolved in favour of the "
+              "INPUTS. §1.4 prints this row as '12 x 8.33% x 12% = 10.0%' and "
+              "its test T2 asserts -$10,000 on $100,000 — but 1.00x gross at a "
+              "12% stop is 12.0%, not 10.0%, and the same table's other two "
+              "rows are arithmetically exact. The spec's own note says the "
+              "worst case is RECOMPUTED and never hand-edited, so the declared "
+              "stop ladder (-8/-10/-12/-15) stands and this row prints 12.0%. "
+              "Flipping the stop to -0.10 instead would reproduce the spec's "
+              "printed number and collapse the ladder's third rung onto its "
+              "second; that is a one-constant change if the reviewer prefers "
+              "it, and it is a choice about the ladder, not about arithmetic."),
         sources={"k": _CONSTRUCTION, "max_single_name": _CONSTRUCTION,
                  "gross_cap": "1.00 — no tier below extreme_growth may lever",
                  "stop_loss": _LADDER,
@@ -1012,11 +1023,531 @@ def draft_prose(doc: Mapping[str, Any], row: PersonalityRow,
     return text, f"local_gguf:{reply.model}", ""
 
 
-__all__ = ["AgencyError", "BANDS", "CONSTRAINT_RE", "ESG_CATEGORIES",
-           "HOLD_FAMILY", "IPS", "IPS_SCHEMA", "LIMITS_SENTENCE",
-           "MAX_CASH_FOR", "N_QUESTIONS", "PERSONALITIES", "QUESTIONS",
-           "QUESTIONNAIRE_VERSION", "PersonalityRow", "TABLE",
-           "amendment_kind", "cash_floor_for", "draft_prose", "intake",
-           "ips_hash", "numeric_fields", "parse_constraints",
-           "personality_for", "score_questionnaire", "template_prose",
+# ===========================================================================
+# A2 — THE THREE OPTIONS
+# ===========================================================================
+#
+# "From one IPS the engine proposes three books — preservation / balanced /
+# aggressive expressions of the same IPS — each with its twin, worst case in
+# dollars, expected drawdown at the declared budget, and the hold rule. Murat
+# picks one; the other two are held as shadow books" (A2).
+#
+# WHY THE SIGNAL IS NOT `agency_default_composite`
+# ------------------------------------------------
+# Spec §2.1 names the signal `agency_default_composite`. A book declaring it
+# would be MARKED and would never DECIDE: `book_cadence._signal_frame` is
+# faithful to the contract or it refuses, and neither `SUPPORTED_SIGNALS` nor
+# `book_signals.REGISTRY` can compute a signal of that name. Inventing a new
+# composite here to fill the gap would be a new alpha claim shipped with no
+# evidence and no control, inside the chunk whose subject is risk TREATMENT.
+#
+# So the agency proposes over a signal the selector can already compute, named
+# honestly, and the tier is what differs between the three options — which is
+# what A2 actually asks for ("three expressions of the same IPS"). The signal
+# is a PARAMETER (`propose(..., signal=...)`), so when lane B's library grows a
+# second independent selector the agency can offer it without touching this
+# module, and the book's fingerprint changes when the signal does, which is the
+# property that keeps two different strategies from sharing one forward record.
+#
+# The spec's intent is preserved: a lane A book is its own book with its own
+# twins and its own scoreboard, never a weight folded into `arena_composite`
+# (CLAUDE.md THE BOTTLENECK).
+
+AGENCY_SIGNAL_DEFAULT = "mom_12_1"
+
+#: What `propose` will accept. Derived from the two places that can actually
+#: compute a ranking, never re-typed — a gate that derives its inputs
+#: (CLAUDE.md). A signal missing from both is refused at PROPOSE time rather
+#: than becoming a book that marks forever and decides never.
+def supported_signals() -> tuple[str, ...]:
+    from backend.services import book_signals as BS               # noqa: PLC0415
+    from backend.services.book_cadence import SUPPORTED_SIGNALS   # noqa: PLC0415
+    twins = {"random_genome_null", "beta_matched_index_sleeve", "overnight_only"}
+    return tuple(sorted((set(SUPPORTED_SIGNALS) | set(BS.REGISTRY)) - twins))
+
+
+#: The cadence a book runs on, from the IPS's rebalance frequency. The daily
+#: REVIEW runs regardless (A3); this is how often the book may TRADE.
+CADENCE_FOR_REBALANCE = {"daily": "daily", "weekly": "weekly",
+                         "monthly": "monthly", "quarterly": "quarterly"}
+
+#: 45% of positions are expected to lose, declared BEFORE the first position
+#: (invariant 19). A placeholder with a receipt owed: the farm has no
+#: same-shape control for a k-name long-only book at this cadence yet, and a
+#: loss budget nobody declared is a book retired by its own first loss.
+EXPECTED_LOSER_FRACTION = 0.45
+POSITIONS_JUDGED_PER_K = 4        # ~one year of turnover at the book's cadence
+
+
+def neighbours(personality: str) -> list[str]:
+    """The chosen tier plus its two neighbours on the risk ladder (§2).
+
+    Three, never four, and the window SLIDES at the ends rather than inventing
+    a fourth bucket: at `preservation` the three are preservation / balanced /
+    aggressive, at `extreme_growth` they are balanced / aggressive /
+    extreme_growth. The human sees one step either side of what they said.
+    """
+    if personality not in TABLE:
+        raise AgencyError(f"personality {personality!r} is not one of "
+                          f"{list(PERSONALITIES)}")
+    i = PERSONALITIES.index(personality)
+    lo = max(0, min(i - 1, len(PERSONALITIES) - 3))
+    return list(PERSONALITIES[lo:lo + 3])
+
+
+def hold_rule_words(personality: str) -> str:
+    """The hold rule in the words a person reads, from the same table the
+    contract is built from — so the sentence cannot drift from the rule."""
+    fam = HOLD_FAMILY[personality]
+    rungs = ", ".join(f"after {k} session(s) take {v:.0%}"
+                      for k, v in sorted(fam["roi_ladder"].items()))
+    row = TABLE[personality]
+    return (f"Hold each name up to {fam['horizon_periods']} sessions "
+            f"(minimum {fam['min_hold_periods']}), leave on a "
+            f"{abs(row.stop_loss):.0%} stop, and take profit on the "
+            f"{fam['family']} ladder: {rungs}. Reviewed every trading day; "
+            f"the book may trade {row.rebalance_frequency}.")
+
+
+def _cost_model(symbols: Sequence[str] | None):
+    """`taq_empirical` when the universe is ticker-keyed, `flat` otherwise.
+
+    The curve is a CLAIM about how the net was computed, so it is declared from
+    what the book can actually price: with a frozen symbol list every fill can
+    be quoted per name off the TAQ panel (or its regression), and without one
+    there is nothing to key on and the flat rate is the honest declaration.
+    Costs are never zero either way — `CostModel` delegates that refusal to
+    `portfolio_farm.Policy`, which is the one place it lives.
+    """
+    from backend.strategy.contract import CostModel                # noqa: PLC0415
+    curve = "taq_empirical" if symbols else "flat"
+    return CostModel(transaction_cost_bps=5.0, slippage_bps=1.0, curve=curve,
+                     note=("per-name effective spread off the TAQ panel"
+                           if symbols else
+                           "flat: this universe is a screen, not a ticker list, "
+                           "so there is nothing to key a per-name curve on"))
+
+
+def build_strategy(ips: IPS, personality: str, *,
+                   symbols: Sequence[str] | None = None,
+                   signal: str | None = None):
+    """One `Strategy` for one tier of one IPS (§2.1)."""
+    from backend.strategy.contract import (Benchmark, Construction, HoldRule,
+                                           Licence, LossBudget, Objective,
+                                           Signal, Sizing, Strategy, Universe)
+    if personality not in TABLE:
+        raise AgencyError(f"personality {personality!r} is not one of "
+                          f"{list(PERSONALITIES)}")
+    sig = str(signal or AGENCY_SIGNAL_DEFAULT)
+    allowed = supported_signals()
+    if sig not in allowed:
+        raise AgencyError(
+            f"signal {sig!r} cannot be computed by the cadence selector "
+            f"({list(allowed)}). A book whose signal nothing can compute is "
+            f"marked forever and decides never, which reads on the board as a "
+            f"book that chose to hold nothing.")
+    row = TABLE[personality]
+    fam = HOLD_FAMILY[personality]
+    eu = ips.document["eligible_universe"]
+    invested = 1.0 - ips.cash_floor_pct
+    judged = int(row.k * POSITIONS_JUDGED_PER_K)
+    return Strategy(
+        strategy_id=f"agency-{ips.ips_id}-{personality}",
+        title=f"{ips.ips_id} / {personality}",
+        universe=Universe(
+            name=f"agency-{ips.ips_id}-universe",
+            source=str(eu["source"]),
+            floor_dollar_vol_usd=float(eu["floor_dollar_vol_usd"]),
+            max_names=None,        # Construction.k is the binding cap
+            note=("filtered by the IPS constraints at build time (§1.6): "
+                  f"{len(eu['excluded_tickers'])} ticker(s), "
+                  f"{len(eu['excluded_sectors'])} sector(s) excluded")),
+        signal=Signal(name=sig, column=sig, direction=1, source="lane_a_v1",
+                      note=("the agency proposes three RISK TREATMENTS of one "
+                            "IPS over one declared signal; the tier is what "
+                            "differs between the three options")),
+        construction=Construction(rule="top_k", k=row.k, weighting="ew",
+                                  max_single_name=row.max_single_name,
+                                  gross_cap=row.gross_cap),
+        hold=HoldRule(horizon_periods=int(fam["horizon_periods"]),
+                      min_hold_periods=int(fam["min_hold_periods"]),
+                      roi_ladder=dict(fam["roi_ladder"]),
+                      stop_loss=row.stop_loss,
+                      scheduled_review_periods=1),
+        sizing=Sizing(rule="equal_weight", gross_cap=row.gross_cap,
+                      notional_usd=round(ips.capital_usd * invested, 2)),
+        costs=_cost_model(symbols),
+        benchmark=Benchmark(name="SPY", series_key="spy_tr", beta_matched=True),
+        objective=Objective(name="terminal_wealth_at_drawdown_budget",
+                            drawdown_budget=row.drawdown_budget,
+                            utility=("risk_seeking"
+                                     if personality == "extreme_growth"
+                                     else "risk_adjusted")),
+        loss_budget=LossBudget(
+            positions_judged=judged,
+            expected_losers=round(judged * EXPECTED_LOSER_FRACTION),
+            note=(f"{EXPECTED_LOSER_FRACTION:.0%} base-rate loser fraction — a "
+                  f"RECEIPT-OWED placeholder until the farm has a same-shape "
+                  f"control for a {row.k}-name long-only book at this cadence")),
+        licence=Licence.PRODUCT_EXPERIMENT,
+        engine="series",
+        engine_params={"ips_hash": ips.ips_hash, "personality": personality,
+                       "lane": "A", "cash_floor_pct": ips.cash_floor_pct,
+                       **({"symbols": list(symbols)} if symbols else {})},
+    )
+
+
+def eligible_symbols(ips: IPS, bars, asof) -> list[str]:
+    """The IPS's declared universe resolved to names on `asof`, minus the
+    constraint exclusions. Empty when there are no bars to resolve from — a
+    screen with nothing behind it is not a ticker list, and `_cost_model`
+    reads exactly that distinction."""
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+    if bars is None:
+        return []
+    eu = ips.document["eligible_universe"]
+    panel = PB.liquidity_panel(bars, asof)
+    if panel.empty:
+        return []
+    panel = panel[panel["dollar_vol"] >= float(eu["floor_dollar_vol_usd"])]
+    panel = panel[panel["n_bars"] >= 5]
+    banned = set(eu["excluded_tickers"])
+    return sorted(s for s in panel["symbol"].astype(str) if s not in banned)
+
+
+def expected_drawdown_at_budget(strategy, twins, *, conn=None,
+                                db_path=None) -> dict:
+    """The worst drawdown the book's own CONTROLS have actually shown.
+
+    Not a simulation and not a parametric guess: the twins share the book's
+    universe band, cadence and costs and carry no signal, so their realised
+    peak-to-trough IS what construction-level volatility alone does to this
+    shape. With no marked history it returns CANNOT DETERMINE and says so —
+    a number here that came from nowhere would be read as a forecast.
+    """
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+    budget = strategy.objective.drawdown_budget
+    ids = [t.book_id for t in twins]
+    try:
+        series = PB.nav_series(ids, conn=conn, db_path=db_path)
+    except Exception as exc:                                       # noqa: BLE001
+        return {"verdict": "CANNOT DETERMINE",
+                "why": f"the book table could not be read: {exc}"[:200],
+                "drawdown_budget": budget}
+    worst: float | None = None
+    n_marks = 0
+    for tid in ids:
+        path = series.get(tid) or []
+        n_marks += len(path)
+        peak = None
+        for _d, nav in path:
+            peak = nav if peak is None else max(peak, nav)
+            if peak:
+                dd = nav / peak - 1.0
+                worst = dd if worst is None else min(worst, dd)
+    if worst is None:
+        return {"verdict": "CANNOT DETERMINE",
+                "why": ("neither twin has been marked yet, so this shape has "
+                        "no realised drawdown. An expected drawdown computed "
+                        "from no history is a forecast wearing a measurement's "
+                        "clothes."),
+                "drawdown_budget": budget, "n_twin_marks": 0}
+    return {"verdict": "measured on the twins",
+            "worst_twin_drawdown": round(worst, 6),
+            "drawdown_budget": budget,
+            "n_twin_marks": n_marks,
+            "basis": ("peak-to-trough of the control twins' own NAV paths — "
+                      "same universe band, same cadence, same costs, no "
+                      "signal, so this is construction-level volatility alone"),
+            "within_budget": bool(budget is None or worst > budget)}
+
+
+@dataclass(frozen=True)
+class Option:
+    """One of the three. Carries its contract, its twins and its worst case —
+    never a return, because it has not run."""
+
+    personality: str
+    strategy: Any
+    twins: tuple
+    worst_case: Mapping[str, Any]
+    expected_drawdown: Mapping[str, Any]
+    hold_rule: str
+    is_declared_choice: bool
+    cash_floor_pct: float
+
+    @property
+    def contract_hash(self) -> str:
+        return str(self.strategy.fingerprint)
+
+    def as_row(self) -> dict:
+        row = TABLE[self.personality]
+        return {
+            "personality": self.personality,
+            "is_declared_choice": self.is_declared_choice,
+            "contract_hash": self.contract_hash,
+            "strategy_id": self.strategy.strategy_id,
+            "title": self.strategy.title,
+            "signal": self.strategy.signal.name,
+            "k": self.strategy.construction.k,
+            "max_single_name": self.strategy.construction.max_single_name,
+            "gross_cap": self.strategy.sizing.gross_cap,
+            "stop_loss": self.strategy.hold.stop_loss,
+            "drawdown_budget": self.strategy.objective.drawdown_budget,
+            "cash_floor_pct": self.cash_floor_pct,
+            "notional_usd": self.strategy.sizing.notional_usd,
+            "cadence": CADENCE_FOR_REBALANCE[row.rebalance_frequency],
+            "hold_rule": self.hold_rule,
+            "worst_case": dict(self.worst_case),
+            "expected_drawdown": dict(self.expected_drawdown),
+            "extrapolated_tier": row.extrapolated,
+            "twins": [{"book_id": t.book_id,
+                       "kind": (t.strategy.engine_params.get("twin") or {}).get("kind"),
+                       "construction": t.control_construction}
+                      for t in self.twins],
+            "contract": self.strategy.as_dict(),
+            **self.strategy.costs.as_row(),
+        }
+
+
+def propose(ips: IPS, *, bars=None, asof=None, conn=None, db_path=None,
+            signal: str | None = None) -> list[Option]:
+    """Three `Strategy` contracts, each with its twins and its worst case (A2).
+
+    Nothing is written. The twins are built here rather than at hold time for
+    the same reason `paper_books.create` builds them before the book has a
+    number: a control constructed after a number is known is a control chosen
+    to flatter it, and the human is about to compare three numbers.
+    """
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+    from backend.strategy.contract import loss_budget_worst_case   # noqa: PLC0415
+
+    asof = asof or _date.today()
+    symbols = eligible_symbols(ips, bars, asof)
+    out: list[Option] = []
+    for personality in neighbours(ips.personality):
+        strategy = build_strategy(ips, personality, symbols=symbols,
+                                  signal=signal)
+        cadence = CADENCE_FOR_REBALANCE[TABLE[personality].rebalance_frequency]
+        twins = PB.make_twins(strategy, cadence=cadence, bars=bars, asof=asof)
+        # THE ONE FUNCTION. Session protocol rule 4 exists precisely so the
+        # arithmetic is never re-derived per caller: gross beside stop, both or
+        # neither. The equal-weight notional is the binding constraint whenever
+        # it is tighter than `max_single_name`, which is what `paper_books.
+        # worst_case` learned on the first night_job book.
+        k = strategy.construction.k
+        per_name = min(float(strategy.construction.max_single_name),
+                       float(strategy.construction.gross_cap) / k)
+        worst = loss_budget_worst_case(
+            strategy, n_names=k, notional_pct=per_name,
+            equity_usd=ips.capital_usd * (1.0 - ips.cash_floor_pct))
+        worst["equity_basis"] = ("the INVESTED fraction of the IPS capital; "
+                                 "the cash sleeve cannot be stopped out and is "
+                                 "excluded (§1.5)")
+        worst["notional_pct_binding_constraint"] = (
+            "max_single_name" if strategy.construction.max_single_name
+            <= float(strategy.construction.gross_cap) / k else "gross_cap / k")
+        out.append(Option(
+            personality=personality, strategy=strategy, twins=tuple(twins),
+            worst_case=worst,
+            expected_drawdown=expected_drawdown_at_budget(
+                strategy, twins, conn=conn, db_path=db_path),
+            hold_rule=hold_rule_words(personality),
+            is_declared_choice=(personality == ips.personality),
+            cash_floor_pct=ips.cash_floor_pct))
+    return out
+
+
+def propose_payload(ips: IPS, options: Sequence[Option]) -> dict:
+    """What a route or a page gets. Three options, never two, and the limits
+    sentence on every agency payload (§5.2)."""
+    return {"ips_hash": ips.ips_hash, "ips_id": ips.ips_id,
+            "declared_personality": ips.personality,
+            "capital_usd": ips.capital_usd,
+            "cash_floor_pct": ips.cash_floor_pct,
+            "n_options": len(options),
+            "options": [o.as_row() for o in options],
+            "how_to_hold": ("POST /api/control/agency/hold with {ips_hash, "
+                            "chosen_contract_hash, sentence}. The sentence is "
+                            "required: it is what makes the book yours."),
+            "the_choice_is_graded": (
+                "the two you do not choose are created as shadow books on the "
+                "same clock, with their own twins, so the CHOICE has a "
+                "counterfactual and not just an outcome"),
+            "limits": LIMITS_SENTENCE}
+
+
+# ===========================================================================
+# A2 — THE HOLD (and it is a human who holds)
+# ===========================================================================
+
+#: The shortest sentence that can count as a reason. Not a length check for
+#: its own sake: `origin="human_text"` is the only thing that distinguishes a
+#: book a person chose from one a job produced, and an empty string would make
+#: that distinction unauditable the first time it mattered.
+MIN_SENTENCE_CHARS = 12
+
+
+def hold(ips: IPS, *, chosen_contract_hash: str, sentence: str, bars,
+         asof=None, conn=None, db_path=None,
+         signal: str | None = None) -> dict:
+    """Create the chosen book as `human_text`, the other two as shadows (A2).
+
+    This is the only path in the repository that mints `origin="human_text"`,
+    and it records the sentence that was typed. The un-chosen options are NOT
+    discarded and NOT `night_job`: they are `shadow_of:<ips_hash>` books,
+    marked and forecast on the same clock, so "you would have done better with
+    the other one" is a measurement rather than an argument.
+    """
+    from datetime import date as _date                             # noqa: PLC0415
+
+    from backend.services import paper_books as PB                 # noqa: PLC0415
+
+    text = (sentence or "").strip()
+    if len(text) < MIN_SENTENCE_CHARS:
+        raise AgencyError(
+            f"a hold needs a sentence of at least {MIN_SENTENCE_CHARS} "
+            f"characters saying why you are holding this one. `human_text` is "
+            f"the only marker that separates a book a person chose from a book "
+            f"a job produced; minting one without the sentence makes that "
+            f"distinction unauditable.")
+    asof = asof or _date.today()
+    options = propose(ips, bars=bars, asof=asof, conn=conn, db_path=db_path,
+                      signal=signal)
+    by_hash = {o.contract_hash: o for o in options}
+    chosen = by_hash.get(str(chosen_contract_hash))
+    if chosen is None:
+        raise AgencyError(
+            f"contract hash {chosen_contract_hash!r} is not one of the three "
+            f"this IPS proposes ({sorted(by_hash)}). A hold on a contract the "
+            f"engine did not propose is a hold on something nobody costed.")
+    created: list[dict] = []
+    chosen_book, chosen_twins = PB.create(
+        chosen.strategy,
+        cadence=CADENCE_FOR_REBALANCE[TABLE[chosen.personality].rebalance_frequency],
+        origin="human_text", origin_text=text, ips_hash=ips.ips_hash,
+        shadow=False, bars=bars, asof=asof, conn=conn, db_path=db_path)
+    created.append({"role": "chosen", "book": chosen_book.as_row(),
+                    "twins": [t.as_row() for t in chosen_twins]})
+    for opt in options:
+        if opt.contract_hash == chosen.contract_hash:
+            continue
+        book, twins = PB.create(
+            opt.strategy,
+            cadence=CADENCE_FOR_REBALANCE[TABLE[opt.personality].rebalance_frequency],
+            origin=f"{PB.SHADOW_PREFIX}{ips.ips_hash}",
+            origin_text=(f"the road not taken: {opt.personality} expression of "
+                         f"{ips.ips_id}, graded beside the chosen book"),
+            ips_hash=ips.ips_hash, shadow=True, bars=bars, asof=asof,
+            conn=conn, db_path=db_path)
+        created.append({"role": "shadow", "book": book.as_row(),
+                        "twins": [t.as_row() for t in twins]})
+    return {"held_utc": _now(), "ips_hash": ips.ips_hash,
+            "chosen_book_id": chosen_book.book_id,
+            "chosen_contract_hash": chosen.contract_hash,
+            "sentence": text, "books": created,
+            "worst_case": dict(chosen.worst_case),
+            "hold_rule": chosen.hold_rule,
+            "note": ("nothing here placed an order. The book and its shadows "
+                     "are frozen contracts and will be marked by the next "
+                     "cadence pass."),
+            "limits": LIMITS_SENTENCE}
+
+
+# ===========================================================================
+# THE IPS STORE — a hash has to resolve to a document
+# ===========================================================================
+#
+# `hold` takes an `ips_hash`, and every book carries one. Something has to turn
+# that hash back into the policy, or the protect-first budget and the review's
+# own limits would have to be re-derived from a book's contract — which is the
+# shape that lets two readers disagree about what the client actually asked
+# for. One JSON file per IPS, named by its hash, written once.
+
+
+def ips_dir():
+    """`backend/data/optimus/agency/ips`, rooted on AEGIS_REPO_ROOT.
+
+    NOT on `__file__`: inside a PyInstaller build that resolves to `_internal`
+    and the app writes policies into a directory that disappears on the next
+    install (`[[a-path-that-resolves-differently-when-frozen-is-a-defect-family]]`).
+    """
+    import os                                                      # noqa: PLC0415
+    from pathlib import Path                                       # noqa: PLC0415
+    env = os.getenv("AEGIS_REPO_ROOT")
+    root = (Path(env) if env and Path(env).is_dir()
+            else Path(__file__).resolve().parent.parent.parent)
+    return root / "backend" / "data" / "optimus" / "agency" / "ips"
+
+
+def save_ips(ips: IPS, *, directory=None) -> str:
+    """Write the policy under its own hash. Returns the path.
+
+    Written once and never rewritten: an IPS is immutable by construction (an
+    amendment is a new document pointing at this one), so a second write of the
+    same hash is the same bytes and a different hash is a different file.
+    """
+    from pathlib import Path                                       # noqa: PLC0415
+    d = Path(directory) if directory is not None else ips_dir()
+    d.mkdir(parents=True, exist_ok=True)
+    path = d / f"{ips.ips_hash}.json"
+    if not path.exists():
+        path.write_text(json.dumps(
+            {"ips": ips.document, "ips_prose_md": ips.prose_md,
+             "prose_source": ips.prose_source, "validated_by": ips.validator,
+             "numeric_fields": dict(ips.numbers), "echoes": list(ips.echoes),
+             "saved_utc": _now()},
+            ensure_ascii=False, indent=1), encoding="utf-8")
+    return str(path)
+
+
+def load_ips(hash_: str, *, directory=None) -> IPS:
+    """Rebuild an IPS from the store, REVALIDATING it and rechecking its hash.
+
+    A stored document is untrusted input like any other: the file could have
+    been edited by hand, and an IPS whose hash no longer matches its content is
+    a policy nobody agreed to.
+    """
+    from pathlib import Path                                       # noqa: PLC0415
+    d = Path(directory) if directory is not None else ips_dir()
+    path = d / f"{str(hash_)}.json"
+    if not path.is_file():
+        raise AgencyError(
+            f"no IPS with hash {hash_!r} in {d}. A hold names a policy by its "
+            f"hash; without the document the engine cannot rebuild the three "
+            f"options it is being asked to choose between.")
+    try:
+        blob = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise AgencyError(f"the stored IPS {hash_!r} could not be read: "
+                          f"{exc}") from exc
+    doc = blob.get("ips") or {}
+    validated = validate_document(doc)
+    recomputed = ips_hash(doc)
+    if recomputed != str(hash_) or recomputed != doc.get("ips_hash"):
+        raise AgencyError(
+            f"the stored IPS at {path.name} hashes to {recomputed}, not "
+            f"{hash_}. The file has been edited since it was written; a policy "
+            f"whose hash does not match its content is one nobody agreed to.")
+    row = TABLE[str(doc["personality"])]
+    return IPS(document=doc, prose_md=str(blob.get("ips_prose_md") or ""),
+               prose_source=str(blob.get("prose_source") or "template"),
+               validator=validated["validator"],
+               numbers=numeric_fields(doc, row),
+               echoes=tuple(blob.get("echoes") or ()))
+
+
+__all__ = ["AGENCY_SIGNAL_DEFAULT", "AgencyError", "BANDS", "CONSTRAINT_RE",
+           "CADENCE_FOR_REBALANCE", "ESG_CATEGORIES", "HOLD_FAMILY", "IPS",
+           "IPS_SCHEMA", "LIMITS_SENTENCE", "MAX_CASH_FOR", "MIN_SENTENCE_CHARS",
+           "N_QUESTIONS", "Option", "PERSONALITIES", "QUESTIONS",
+           "QUESTIONNAIRE_VERSION", "PersonalityRow", "TABLE", "amendment_kind",
+           "build_strategy", "cash_floor_for", "draft_prose",
+           "eligible_symbols", "expected_drawdown_at_budget", "hold",
+           "hold_rule_words", "intake", "ips_dir", "ips_hash", "load_ips",
+           "neighbours", "numeric_fields", "parse_constraints",
+           "personality_for", "propose", "propose_payload", "save_ips",
+           "score_questionnaire", "supported_signals", "template_prose",
            "unexplained_numbers", "validate_document"]
