@@ -40,7 +40,11 @@ def test_decay_zero_reproduces_the_undecayed_NAV_bit_for_bit():
     same = replay.run(panel, _pol(decay=0.0), warmup=260)
     assert base.nav == same.nav
     assert base.metrics == same.metrics
-    assert base.diagnostics == same.diagnostics
+    # `seconds` is wall-clock time, not a property of the replay: it differed by
+    # a millisecond between two identical runs under a full-suite load on
+    # 2026-09-13 and turned a determinism test into a timing test.
+    strip = lambda d: {k: v for k, v in d.items() if k != "seconds"}  # noqa: E731
+    assert strip(base.diagnostics) == strip(same.diagnostics)
 
 
 def test_the_blend_branch_does_not_even_execute_at_the_default():

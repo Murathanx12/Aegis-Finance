@@ -330,52 +330,62 @@ def receipt(job: str, run: str | None = None) -> dict:
 # -------------------------------------------------------------- leaderboard
 
 def leaderboard(limit: int = DEFAULT_LIMIT) -> dict:
-    """The registry export's `conditional_evidence` block, exactly as written.
+    """The NIGHT FACTORY's leaderboard -- the newest `LEADERBOARD.md`, parsed.
 
-    Read from `backend/data/signal_registry.yaml` -- what `to_registry()`
-    wrote -- rather than recomputed, so this answers "what does the registry
-    say" and not "what would it say if recomputed now", which are different
-    questions and only the first one is what the allocator reads.
+    Not the signal registry's conditional block. That block is read-only for
+    the PM until B9 (the allocator decision), and a standing guard refuses any
+    reader of it: on 2026-09-13 the first version of this function read it and
+    the guard fired, correctly. What an agent may read is what the morning
+    reads: the night's rows with their typed statuses and receipt paths.
+
+    The file is a markdown table (`| job | run | status | headline | family
+    max p | utc |`); rows are parsed by position and the header is REPORTED,
+    so a changed column order shows up as a changed field, not as garbage.
     """
     n = _check_limit(limit)
-    path = (_repo_root() / "backend" / "data" / "signal_registry.yaml")
-    if not path.is_file():
+    base = _repo_root() / "backend" / "data" / "optimus"
+    nights = sorted(d for d in base.glob("night_factory_*") if d.is_dir())
+    if not nights:
         return {"available": False, "rows": [], "n": 0,
-                "why": f"CANNOT DETERMINE, no registry at {path}"}
-    try:
-        import yaml
-        blob = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except Exception as exc:                                   # noqa: BLE001
-        return {"available": False, "rows": [], "n": 0,
-                "why": f"registry at {path} did not parse ({exc})"}
-    block = blob.get("conditional_evidence") or {}
-    # `rules` is what `to_registry()` actually writes; `families` was the
-    # earlier name. Both are read and the key that answered is REPORTED, so a
-    # rename shows up as a changed field rather than as an empty leaderboard
-    # that looks like an empty registry.
-    rows, key = None, None
-    if isinstance(block, dict):
-        for candidate in ("rules", "families", "rows"):
-            if isinstance(block.get(candidate), list):
-                rows, key = block[candidate], candidate
-                break
-    elif isinstance(block, list):
-        rows, key = block, "conditional_evidence"
-    if rows is None:
-        return {"available": False, "rows": [], "n": 0, "source": str(path),
-                "why": ("CANNOT DETERMINE: the registry's "
-                        "`conditional_evidence` block carries no row list "
-                        f"under rules/families/rows; it has {sorted(block)}"
-                        if isinstance(block, dict) else
-                        "CANNOT DETERMINE: no `conditional_evidence` block")}
-    full = list(rows)
-    return {"available": True, "rows": full[:n], "n": min(len(full), n),
-            "n_matched": len(full), "truncated": len(full) > n,
-            "rows_key": key, "source": str(path),
-            "generated_by": (block.get("generated_by")
-                             if isinstance(block, dict) else None),
-            "read_only_until": (block.get("read_only_until")
-                                if isinstance(block, dict) else None)}
+                "why": f"CANNOT DETERMINE: no night_factory_* directory under {base}"}
+    # The newest night is not always a graded one: a night that only froze
+    # PENDING_MODEL receipts (2026-09-12) has no LEADERBOARD.md. Answer from the
+    # newest night that HAS one, and name the newer nights that do not, so the
+    # reader knows the board is one night behind the receipts.
+    skipped: list[str] = []
+    path = None
+    for night in reversed(nights):
+        cand = night / "LEADERBOARD.md"
+        if cand.is_file():
+            path = cand
+            break
+        skipped.append(night.name)
+    if path is None:
+        return {"available": False, "rows": [], "n": 0, "source": str(base),
+                "why": f"CANNOT DETERMINE: no LEADERBOARD.md in any of {[d.name for d in nights]}"}
+    header: list[str] = []
+    rows: list[dict] = []
+    section = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            section = line[3:].strip()
+            header = []
+            continue
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not header:
+            header = cells
+            continue
+        if all(set(c) <= {"-", ":", " "} for c in cells):
+            continue
+        row = {header[i] if i < len(header) else f"col{i}": cells[i] for i in range(len(cells))}
+        row["section"] = section
+        rows.append(row)
+    return {"available": True, "rows": rows[:n], "n": min(len(rows), n),
+            "n_matched": len(rows), "truncated": len(rows) > n,
+            "source": str(path), "night": path.parent.name,
+            "newer_nights_without_leaderboard": skipped, "header": header}
 
 
 # -------------------------------------------------------------------- books
