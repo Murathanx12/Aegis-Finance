@@ -670,7 +670,7 @@ function ageLabel(hours: number | null | undefined): string {
   return `${(hours / 24).toFixed(1)}d`;
 }
 
-const STATUS_TONE: Record<string, string> = {
+const SOURCE_STATUS_TONE: Record<string, string> = {
   OK: "text-emerald-600 dark:text-emerald-400",
   RED: "text-red-600 dark:text-red-400",
   STALE: "text-amber-600 dark:text-amber-400",
@@ -786,7 +786,7 @@ export function CoverageCard() {
                             ? `${(s.resolution_rate * 100).toFixed(0)}%`
                             : DASH}
                         </td>
-                        <td className={`py-1 ${STATUS_TONE[s.status] ?? ""}`}>
+                        <td className={`py-1 ${SOURCE_STATUS_TONE[s.status] ?? ""}`}>
                           {s.status}
                           {s.flags.length ? (
                             <span className="ml-1 text-[9px] text-muted-foreground">
