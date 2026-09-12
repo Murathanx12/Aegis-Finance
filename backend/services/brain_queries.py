@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re as _re
 import os
 from datetime import date, datetime
 from pathlib import Path
@@ -373,7 +374,10 @@ def leaderboard(limit: int = DEFAULT_LIMIT) -> dict:
             continue
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        # `\|` inside a cell is a literal pipe (the sync writes headlines that
+        # contain one); split only on unescaped pipes.
+        cells = [c.strip().replace("\\|", "|")
+                 for c in _re.split(r"(?<!\\)\|", line.strip().strip("|"))]
         if not header:
             header = cells
             continue
