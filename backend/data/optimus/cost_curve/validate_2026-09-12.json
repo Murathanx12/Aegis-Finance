@@ -1,0 +1,189 @@
+{
+ "artefact": "COST-CURVE-VALIDATION-1",
+ "licence": "PRODUCT_EXPERIMENT (infrastructure; makes no claim)",
+ "generated_at": "2026-09-12T10:44:10.540519+00:00",
+ "curve": "taq_empirical",
+ "eta": 0.12062,
+ "regression_receipt": "backend/data/optimus/cost_curve/taq_spread_regression_v1.json",
+ "source_panel_verdict_status": "DEFERRED (v1: no trade-condition / odd-lot / venue filtering)",
+ "convention_multiplier_range": [
+  0.102,
+  2.985
+ ],
+ "rulers_that_disagree": {
+  "NEGATIVE_RESULTS_25": "Corwin-Schultz vs Kyle-Obizhaeva disagree 3.4-9.1x on LEVEL in the same segments (Spearman 0.66: they agree on ORDER, not magnitude); frozen verdict 'KO UNDERSTATES COSTS'",
+  "taq_quoted_median_one_way_bps": 2.726,
+  "taq_effective_median_one_way_bps": 1.076,
+  "this_curve": "a FOURTH ruler; it does not adjudicate the others"
+ },
+ "spread_validation_S3_1": {
+  "method": "leave-one-out via the hat matrix on the 177 fitted names; terciles by trailing dollar volume, EQUAL COUNT, declared before the error was computed",
+  "n_names": 177,
+  "n_name_days_checked": 4071,
+  "overall_MAE_bps_per_name": 0.784,
+  "overall_median_abs_err_bps_per_name": 0.2443,
+  "overall_MAE_bps_per_name_day": 0.8265,
+  "loo_r2_in_logs": 0.4023,
+  "by_tercile": {
+   "T1_least_liquid": {
+    "n_names": 59,
+    "dollar_volume_usd_median": 350365106.0,
+    "measured_half_bps_median": 1.3716,
+    "predicted_half_bps_median": 1.2542,
+    "MAE_bps": 1.7359,
+    "median_abs_err_bps": 0.3278,
+    "MAE_as_pct_of_measured_median": 126.6,
+    "worst_name": {
+     "ticker": "SOC",
+     "measured_half_bps": 10.7643,
+     "predicted_half_bps": 71.3065
+    },
+    "best_name": {
+     "ticker": "GD",
+     "measured_half_bps": 1.1863,
+     "predicted_half_bps": 1.1825
+    }
+   },
+   "T2_middle": {
+    "n_names": 59,
+    "dollar_volume_usd_median": 715342358.0,
+    "measured_half_bps_median": 1.1485,
+    "predicted_half_bps_median": 1.0826,
+    "MAE_bps": 0.3238,
+    "median_abs_err_bps": 0.2244,
+    "MAE_as_pct_of_measured_median": 28.2,
+    "worst_name": {
+     "ticker": "F",
+     "measured_half_bps": 3.4662,
+     "predicted_half_bps": 0.8707
+    },
+    "best_name": {
+     "ticker": "TJX",
+     "measured_half_bps": 0.8619,
+     "predicted_half_bps": 0.8584
+    }
+   },
+   "T3_most_liquid": {
+    "n_names": 59,
+    "dollar_volume_usd_median": 2098886295.0,
+    "measured_half_bps_median": 0.8046,
+    "predicted_half_bps_median": 0.7235,
+    "MAE_bps": 0.2923,
+    "median_abs_err_bps": 0.2135,
+    "MAE_as_pct_of_measured_median": 36.3,
+    "worst_name": {
+     "ticker": "T",
+     "measured_half_bps": 2.1101,
+     "predicted_half_bps": 0.6666
+    },
+    "best_name": {
+     "ticker": "V",
+     "measured_half_bps": 0.5473,
+     "predicted_half_bps": 0.5514
+    }
+   }
+  },
+  "prestated_expectation": "MAE worst in the ILLIQUID tercile and best in the LIQUID one; if the reverse holds, the regression is fitting noise in dollar volume rather than the liquidity relationship, and THAT is the finding.",
+  "expectation_held": true,
+  "expectation_note": "MAE least-liquid 1.7359bp vs most-liquid 0.2923bp"
+ },
+ "dsr_sensitivity_S3_2": {
+  "result": {
+   "source": "backend/data/optimus/night_factory_2026-09-08/G2_holdout_once_run02.json",
+   "genome": "94083541c82ede71",
+   "window": "2015-12 < month <= 2024-12",
+   "months": 107,
+   "mean_turnover_monthly": 0.692,
+   "terminal_wealth_net": 12.8267,
+   "terminal_wealth_market": 4.8636,
+   "t_raw_paired": 1.588
+  },
+  "derived_inputs": {
+   "monthly_mean_excess_geometric": 0.00924,
+   "monthly_sd_excess_backsolved_from_t": 0.060188,
+   "trial_sharpe_std": 0.120945,
+   "trial_sharpe_std_basis": "sd of the 200 RANDOM genomes' t, (p95-p50)/1.645, divided by sqrt(months). The searched population is wider, so every DSR here is OPTIMISTIC.",
+   "approximations": [
+    "the monthly mean is GEOMETRIC (terminal wealth is what the receipt kept); the arithmetic mean is slightly higher",
+    "the excess sd is back-solved from the paired t, not measured from a series nobody stored",
+    "costs are assumed to shift the MEAN and not the VOL, which is true to first order for a near-constant per-month charge"
+   ]
+  },
+  "representative_curve": {
+   "n_symbols_above_floor": 3038,
+   "floor_dollar_vol_usd": 3000000.0,
+   "cross_section_date": "2026-09-11",
+   "half_spread_bps_median": 3.3638,
+   "half_spread_bps_p25": 2.1052,
+   "half_spread_bps_p75": 5.3142,
+   "caveat": "a REPRESENTATIVE rate over a 2025-26 cross-section above the same $3m floor, NOT the 1999-2024 books' own names. There is no honest permno-to-ticker join for those books."
+  },
+  "impact_term": {
+   "included": false,
+   "why": "the night books declare no NOTIONAL, so participation is undefined and the impact term is OMITTED rather than guessed. At a $10k book it would round to zero; the two sensitivities below say what it would add if it did not.",
+   "would_add_bps_at_0.1pct_adv": 12.206,
+   "would_add_bps_at_1pct_adv": 38.598,
+   "volatility_ann_assumed": 0.32
+  },
+  "by_ruler": {
+   "flat_25bps_per_side": {
+    "monthly_cost": 0.00346,
+    "monthly_cost_bps": 34.6,
+    "monthly_mean_excess": 0.00924,
+    "sharpe_monthly": 0.1535,
+    "sharpe_annualised": 0.5318,
+    "dsr_at_35_trials": 0.1416,
+    "survives_at_35_trials": false,
+    "dsr_at_40680_trials": 0.0001,
+    "survives_at_40680_trials": false
+   },
+   "C2_overcharge_100pct_turnover_both_legs": {
+    "monthly_cost": 0.01,
+    "monthly_cost_bps": 100.0,
+    "monthly_mean_excess": 0.0027,
+    "sharpe_monthly": 0.0449,
+    "sharpe_annualised": 0.1554,
+    "dsr_at_35_trials": 0.014,
+    "survives_at_35_trials": false,
+    "dsr_at_40680_trials": 0.0,
+    "survives_at_40680_trials": false
+   },
+   "taq_empirical_representative": {
+    "monthly_cost": 0.000466,
+    "monthly_cost_bps": 4.66,
+    "monthly_mean_excess": 0.012234,
+    "sharpe_monthly": 0.2033,
+    "sharpe_annualised": 0.7041,
+    "dsr_at_35_trials": 0.2872,
+    "survives_at_35_trials": false,
+    "dsr_at_40680_trials": 0.001,
+    "survives_at_40680_trials": false
+   }
+  },
+  "ranking_by_sharpe": [
+   "taq_empirical_representative",
+   "flat_25bps_per_side",
+   "C2_overcharge_100pct_turnover_both_legs"
+  ],
+  "ranking_unchanged_across_rulers": true,
+  "roadmap_prediction": "'the ranking of nothing may change and the LEVEL of everything will'. With ONE result there is no ranking to change: this row measures the LEVEL only, and the ranking claim is tested in the T4 migration, where families of arms are re-graded together."
+ },
+ "what_the_curve_cannot_know_S3_3": [
+  {
+   "heading": "FILLS",
+   "text": "TAQ's effective spread is what OTHER trades reportedly paid; it says nothing about whether Aegis's own hypothetical order would have been filled at that price, partially filled, or filled worse under queue position it does not model. The retail curve's D2 dependency is the only piece of this program that measures actual fills, and it does not exist yet."
+  },
+  {
+   "heading": "ADVERSE SELECTION AT THE OPEN",
+   "text": "The TAQ panel is explicitly 09:45-15:45 -- the open and the close, the two most expensive and most information-laden windows, are structurally absent from both the quoted and the effective panels. Any book that trades at or near the open (Lane D; tif=opg already shown unreliable on paper) is using a curve calibrated on a DIFFERENT, calmer part of the session, and the receipt must say so rather than implying open-auction costs are covered."
+  },
+  {
+   "heading": "THE 2020 MARCH REGIME",
+   "text": "The panel is 23 days in 2026, a single calm-vol regime. Spread widens mechanically in stress; the vendored sqrt_impact's volatility term partially captures this for the IMPACT leg, but the measured spread term does not -- it is a fixed historical read, not a live one. A book run through a volatility regime the panel never saw is extrapolating the spread term outside its measured domain in the same way taq_calibration.apply_calibration already refuses to do for the AGK/TAQ ratio, and this curve has no equivalent refusal yet. That absence is itself worth naming rather than silently inheriting."
+  },
+  {
+   "heading": "THE FARM'S OWN KEY",
+   "text": "Added by the 5c builder, not in the spec: the farm's CRSP panel is keyed on PERMNO and the measured branch of this curve on TICKER, so every fill the farm prices under `taq_empirical` is the REGRESSION and never the measurement. A receipt that said 'TAQ empirical' without the provenance mix beside it would be read as the opposite."
+  }
+ ]
+}

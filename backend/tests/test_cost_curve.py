@@ -299,3 +299,32 @@ def test_the_vectorised_twin_agrees_with_the_scalar_and_NaNs_the_unusable():
     assert got[1] == pytest.approx(
         CC.regression_half_spread_bps(1e8, 300.0, 0.25, FIXTURE_FIT))
     assert np.isnan(got[2]) and np.isnan(got[3])
+
+
+# ------------------------------------------------------ the validation receipt
+
+def test_the_validation_receipt_is_on_disk_and_confesses_S3_3():
+    """A validation that only reports the errors it can measure is a report on
+    the errors it can measure. The 'what the curve cannot know' block is part
+    of the receipt, not of a docstring nobody reads."""
+    import glob
+    from pathlib import Path
+    found = sorted(glob.glob(str(CC.REGRESSION_PATH.parent / "validate_*.json")))
+    assert found, "run `python -m scripts.cost_curve_validate`"
+    blob = json.loads(Path(found[-1]).read_text(encoding="utf-8"))
+    cannot = {b["heading"] for b in blob["what_the_curve_cannot_know_S3_3"]}
+    assert "FILLS" in cannot
+    assert "ADVERSE SELECTION AT THE OPEN" in cannot
+    assert "THE 2020 MARCH REGIME" in cannot
+    s = blob["spread_validation_S3_1"]
+    assert set(s["by_tercile"]) == {"T1_least_liquid", "T2_middle",
+                                    "T3_most_liquid"}
+    # The expectation was STATED before the error was computed, and the
+    # receipt records whether it held -- either answer is a finding.
+    assert "prestated_expectation" in s
+    assert isinstance(s["expectation_held"], bool)
+    d = blob["dsr_sensitivity_S3_2"]
+    assert set(d["by_ruler"]) == {"flat_25bps_per_side",
+                                  "C2_overcharge_100pct_turnover_both_legs",
+                                  "taq_empirical_representative"}
+    assert d["impact_term"]["included"] is False
