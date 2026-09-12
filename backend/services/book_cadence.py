@@ -465,7 +465,8 @@ def run_pass(cadence: str, *, today: date | None = None,
              conn: sqlite3.Connection | None = None,
              bars=None, price_fallback: Callable[[list[str]], dict] | None = None,
              write_receipt: bool = True,
-             write_forecasts: bool = True) -> dict:
+             write_forecasts: bool = True,
+             predictions_path: Path | None = None) -> dict:
     """Mark every holding book of one cadence; let the due ones decide.
 
     Returns the receipt. Every book is accounted for — marked, decided,
@@ -531,17 +532,19 @@ def run_pass(cadence: str, *, today: date | None = None,
                                                   if v == "yfinance")}
         receipt["unpriced"] = sorted(s for s in wanted if s not in prices)
 
-        forecast_rows = []
         for b in books:
-            row = _one_book(conn, b, bars, asof, prices, receipt)
-            if row is not None:
-                forecast_rows.append(row)
+            _one_book(conn, b, bars, asof, prices, receipt)
 
-        if write_forecasts and forecast_rows:
+        # B5: a forecast row per book that actually DECIDED. A book that was
+        # only marked made no claim this pass, and minting a row for it would
+        # accrue calibration for a decision nobody took.
+        decided = {d["book_id"] for d in receipt["decisions"]}
+        deciders = [b for b in books if b.book_id in decided]
+        if write_forecasts and deciders:
             try:
                 from backend.services.book_forecasts import write_decision_forecasts
                 receipt["forecasts"] = write_decision_forecasts(
-                    forecast_rows, conn=conn, asof=asof)
+                    deciders, conn=conn, asof=asof, path=predictions_path)
             except Exception as exc:                               # noqa: BLE001
                 logger.error("book cadence: forecast rows not written: %s", exc,
                              exc_info=True)

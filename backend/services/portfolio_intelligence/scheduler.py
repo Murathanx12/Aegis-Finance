@@ -1348,7 +1348,14 @@ async def _ledger_resolve():
         # separate population, graded locally and attended. Naming the
         # population here is what stops a future path change from quietly
         # pointing production at the campaign's history.
-        report = await asyncio.to_thread(resolve_due, population="live_forward")
+        # The price frame carries LANE and BOOK NAV columns beside the stocks.
+        # A morning/book forecast is "<lane or book> beats <its control>" and
+        # neither name is a security: without those columns every such record
+        # logs "can never resolve" and sits overdue forever, which reads as a
+        # broken resolver rather than as a missing column.
+        from backend.services.morning import nav_augmented_price_fetch
+        report = await asyncio.to_thread(resolve_due, population="live_forward",
+                                         price_fetch=nav_augmented_price_fetch)
         await asyncio.to_thread(_write_resolver_receipt, report)
         if report.get("status") == "REFUSED":
             logger.error("Ledger resolve REFUSED: %s", report.get("reason"))

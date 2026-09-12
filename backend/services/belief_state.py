@@ -114,7 +114,16 @@ _MIGRATION_ATTEMPTED = False
 #: already minted?" — the snapshot carrying `as_of` is stored only as a hash —
 #: and the why_moved catch-up slots need exactly that question answered before
 #: they re-ask seven lenses about a day the ledger already holds.
-SCHEMA_VERSION = "1.3.0"
+#: 1.4.0 (2026-09-12) is the M1 ledger schema
+#: (`docs/research_notes/2026-09-11/spec_events_and_calibration.md` §4): one
+#: ledger for every forecast the system makes -- a book, a name, a scenario, a
+#: rule -- so a Brier can be computed across them without reconstructing which
+#: population a row belonged to. EVERY addition is optional with a default, so
+#: the 24,828 rows written before it load unchanged; the version is bumped
+#: because a reader has to be able to tell "this field was never written" from
+#: "this field was written as None", and only the row's own schema stamp can
+#: say which.
+SCHEMA_VERSION = "1.4.0"
 
 #: Horizons, in trading days. Frozen: a horizon invented after the fact is a
 #: degree of freedom, and the resolution date is what makes a record honest.
@@ -262,6 +271,62 @@ class PredictionRecord:
     #: `services/evidence_population.py`.
     evidence_population: str | None = None
     ledger_id: str | None = None
+    # ── M1: one ledger schema for every forecast (schema 1.4.0) ───────────
+    #: The hypothesis FAMILY this record belongs to, snake_case and frozen per
+    #: family (`"reaction_longshort_v1"`, `"paper_book_v1"`). Grouped-by in every
+    #: calibration report; pre-1.4.0 rows have None and are grouped by
+    #: `specialist` alone, which the report says out loud rather than implying.
+    mechanism_id: str | None = None
+    #: The calendar date the DECISION was made, which may precede `made_at` (the
+    #: write timestamp) for a batch or overnight job. None -> read `made_at[:10]`.
+    decision_date: str | None = None
+    #: Content hash of the frozen contract this forecast was made under -- a
+    #: `Strategy.fingerprint` for a book row. None for ad-hoc forecasts.
+    policy_hash: str | None = None
+    #: PIT provenance, readable: `{"source": ..., "as_of": ..., "snapshot_hash": ...}`.
+    #: The machine-checkable half stays `input_snapshot_hash`, unchanged.
+    inputs_used: dict = field(default_factory=dict)
+    #: SECOND-ORDER confidence: how sure the forecaster is that its own
+    #: `probability` is well formed. Distinct from `probability`, which is the
+    #: graded quantity and the only thing a Brier is computed on.
+    confidence: float | None = None
+    #: The paired control this record is graded against -- a `prediction_id`, or
+    #: a book id for a paper book. Written AT CREATION (invariant 18: a twin is
+    #: created with the book, not after its number is known).
+    control_twin_id: str | None = None
+    #: How that twin was built, in words, so a reader never has to reconstruct it.
+    control_construction: str | None = None
+    #: Realised spread vs `benchmark` / vs the control's own realised return.
+    #: Both are written by the RESOLVER, never at creation.
+    vs_benchmark: float | None = None
+    vs_control: float | None = None
+    #: Whether transaction costs were applied in computing the graded outcome,
+    #: and the rate. Never silently False: a report aggregating pre-1.4.0 rows
+    #: must say `costs_charged_unknown_pre_1.4.0`, not treat them as charged.
+    costs_charged: bool = False
+    cost_rate_bps: float | None = None
+    #: Probability decile, assigned at resolution for fast grouped queries.
+    calibration_bucket: str | None = None
+    #: Lookahead Propensity (L3) for this record's model+date, measured AFTER the
+    #: fact. Invariant 21: a number from an LLM read over dates before that
+    #: model's cutoff carries its LAP result or is not quoted.
+    LAP_score: float | None = None
+    #: Same-date accuracy delta between an anonymised read and a raw read.
+    anonymization_gap: float | None = None
+    #: PIT era label, assigned at write time and FROZEN -- a changed boundary
+    #: gets a new tag scheme, never a rewrite of existing rows.
+    era_tag: str | None = None
+    #: One of the three licences. Pre-1.4.0 rows are NOT assumed
+    #: PRODUCT_EXPERIMENT; a report says "unstated (pre-1.4.0)".
+    licence: str | None = None
+    #: The mechanism's own trial count AT THE TIME this forecast was made, so a
+    #: multiplicity correction can be computed honestly instead of reconstructed.
+    n_effective_trials_at_time: int | None = None
+    #: Free text added later (a distillation job's note). Never overwrites
+    #: `thesis`/`counter_thesis`.
+    notes_text: str = ""
+    #: Pointer to a stored embedding of the thesis, for M3's retrieval.
+    embedding_id: str | None = None
     # filled at resolution, never at write time
     resolved_at: str | None = None
     void_reason: str | None = None
@@ -282,6 +347,42 @@ class PredictionRecord:
         return str(d + timedelta(days=int(horizon_days * 1.45) + 3))
 
 
+#: PIT era boundaries, FROZEN. A changed boundary gets a new scheme name, never
+#: a rewrite: retagging history is how a number that was computed in one regime
+#: quietly starts being read as evidence about another.
+ERA_SCHEME = "v1"
+ERA_BOUNDS: tuple[tuple[str, str, str], ...] = (
+    ("2008-2015", "2008-01-01", "2015-12-31"),
+    ("2016-2024", "2016-01-01", "2024-12-31"),
+    ("2025-2026", "2025-01-01", "2026-12-31"),
+)
+
+
+def era_of(made_at: str | None) -> str | None:
+    """The era label for a write timestamp, or None when it falls outside.
+
+    None rather than a nearest-match: a row outside every declared era belongs
+    in an explicit `era_unknown` bucket in a report, not folded into whichever
+    era happens to be adjacent.
+    """
+    if not made_at:
+        return None
+    day = str(made_at)[:10]
+    for label, lo, hi in ERA_BOUNDS:
+        if lo <= day <= hi:
+            return label
+    return None
+
+
+def calibration_bucket_of(probability: float | None) -> str | None:
+    """The probability decile, as `p0-10` ... `p90-100`."""
+    if probability is None:
+        return None
+    p = max(0.0, min(1.0, float(probability)))
+    lo = min(90, int(p * 10) * 10)
+    return f"p{lo}-{lo + 10}"
+
+
 def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                     horizon_days: int, probability: float, thesis: str,
                     counter_thesis: str, next_observable: str, model: str,
@@ -292,7 +393,20 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                     prior: float | None = None,
                     posterior: float | None = None,
                     arm: str | None = None,
-                    session_as_of: str | None = None) -> PredictionRecord:
+                    session_as_of: str | None = None,
+                    mechanism_id: str | None = None,
+                    decision_date: str | None = None,
+                    policy_hash: str | None = None,
+                    inputs_used: dict | None = None,
+                    confidence: float | None = None,
+                    control_twin_id: str | None = None,
+                    control_construction: str | None = None,
+                    costs_charged: bool = False,
+                    cost_rate_bps: float | None = None,
+                    era_tag: str | None = None,
+                    licence: str | None = None,
+                    n_effective_trials_at_time: int | None = None,
+                    notes_text: str = "") -> PredictionRecord:
     """Build a record, refusing the ones that cannot be graded."""
     if horizon_days not in HORIZONS:
         raise ValueError(f"horizon {horizon_days} is not one of {HORIZONS}; a "
@@ -317,6 +431,25 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                 f"at what the forecaster meant")
     if observable is Observable.BEATS_BENCHMARK and not benchmark:
         raise ValueError("BEATS_BENCHMARK needs a benchmark")
+    # M1 (spec §4): a rate without a flag, or a flag without a rate, is the
+    # shape that lets a gross number be quoted as net. Both or neither.
+    if costs_charged and cost_rate_bps is None:
+        raise ValueError(
+            "costs_charged=True needs cost_rate_bps. A record that says costs "
+            "were charged without saying at what rate cannot be re-derived, and "
+            "'quote the cost rate or do not quote the count' is canon.")
+    if cost_rate_bps is not None and not costs_charged:
+        raise ValueError(
+            "cost_rate_bps was given with costs_charged=False. One of the two is "
+            "wrong and guessing which would decide whether a number is net.")
+    if control_twin_id and not control_construction:
+        raise ValueError(
+            "a control_twin_id needs a control_construction: a control whose "
+            "construction is not written down cannot be checked by anyone who "
+            "was not in the session that built it.")
+    if licence is not None and licence not in (
+            "PRODUCT_EXPERIMENT", "CAPITAL_CANDIDATE", "RESEARCH_CLAIM"):
+        raise ValueError(f"licence {licence!r} is not one of the three")
     # ── belief-change contract, when supplied ───────────────────────────────
     # Both halves or neither. A posterior with no prior is a level wearing the
     # contract's clothes, and `belief_change` computed against a missing prior
@@ -355,7 +488,17 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
         model_version=model_version, prompt_hash=ph, input_snapshot_hash=snap,
         prior=(float(prior) if prior is not None else None),
         posterior=(float(posterior) if posterior is not None else None),
-        belief_change=belief_change, arm=arm, session_as_of=session_as_of)
+        belief_change=belief_change, arm=arm, session_as_of=session_as_of,
+        mechanism_id=mechanism_id,
+        decision_date=(decision_date or made_at[:10]),
+        policy_hash=policy_hash, inputs_used=dict(inputs_used or {}),
+        confidence=(float(confidence) if confidence is not None else None),
+        control_twin_id=control_twin_id,
+        control_construction=control_construction,
+        costs_charged=bool(costs_charged), cost_rate_bps=cost_rate_bps,
+        era_tag=(era_tag or era_of(made_at)), licence=licence,
+        n_effective_trials_at_time=n_effective_trials_at_time,
+        notes_text=notes_text)
 
 
 # ── persistence: getting the history onto the volume, exactly once ──────────
@@ -671,6 +814,7 @@ def resolve_one(rec: dict, prices, *, today: date | None = None) -> dict | None:
         b = b.iloc[: rec["horizon_days"] + 1]
         bret = float(b.iloc[-1] / b.iloc[0] - 1.0)
         detail["benchmark_return"] = bret
+        detail["vs_benchmark"] = ret - bret
         outcome = int(ret > bret)
     elif obs == Observable.ABS_MOVE_EXCEEDS.value:
         outcome = int(abs(ret) > rec["threshold"])
@@ -686,6 +830,33 @@ def resolve_one(rec: dict, prices, *, today: date | None = None) -> dict | None:
     rec["outcome"] = outcome
     rec["resolved_at"] = str(today)
     rec["brier"] = float((rec["probability"] - outcome) ** 2)
+    # M1 (spec §4): the resolver writes the spreads and the bucket. It does NOT
+    # write them for a record that came from an older schema and never declared
+    # a control -- a spread invented at grading time is a comparison nobody
+    # committed to in advance.
+    if "vs_benchmark" in detail:
+        rec["vs_benchmark"] = float(detail["vs_benchmark"])
+    twin = rec.get("control_twin_id")
+    if twin:
+        if twin in prices.columns:
+            tw = prices[twin].loc[start:].dropna()
+            if len(tw) >= rec["horizon_days"] + 1:
+                tw = tw.iloc[: rec["horizon_days"] + 1]
+                tret = float(tw.iloc[-1] / tw.iloc[0] - 1.0)
+                detail["control_return"] = tret
+                rec["vs_control"] = ret - tret
+            else:
+                # NAMED, not silent: a control series too short to cover the
+                # window would otherwise leave `vs_control` null and read as
+                # "no control was declared".
+                detail["control_note"] = (
+                    f"control {twin} has {len(tw)} bars < horizon "
+                    f"{rec['horizon_days']} + 1 -- vs_control NOT computed")
+        else:
+            detail["control_note"] = (
+                f"control {twin} is absent from the price frame -- vs_control "
+                f"NOT computed; the record is graded, the comparison is not")
+    rec["calibration_bucket"] = calibration_bucket_of(rec.get("probability"))
     rec["resolution_detail"] = detail
     return rec
 

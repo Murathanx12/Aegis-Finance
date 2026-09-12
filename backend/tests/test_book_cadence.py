@@ -19,9 +19,30 @@ import pytest
 
 from backend.services import book_cadence as BC
 from backend.services import paper_books as PB
-from backend.tests.test_paper_books import (REFERENCE_LANES, _lane_rows, db,  # noqa: F401
-                                            make_strategy, synthetic_bars)
+from backend.tests.book_helpers import (lane_rows, make_strategy, seeded_db,
+                                        synthetic_bars)
 from backend.strategy.contract import Construction, Signal
+
+
+@pytest.fixture()
+def db(tmp_path):
+    conn = seeded_db(tmp_path / "aegis_pi.db")
+    yield tmp_path / "aegis_pi.db", conn
+    conn.close()
+
+
+@pytest.fixture(autouse=True)
+def _ledger_to_tmp(tmp_path, monkeypatch):
+    """Every forecast row this module's passes write goes to `tmp_path`.
+
+    `run_pass` writes B5 rows into the real `predictions.jsonl` by default,
+    which is correct in production and is exactly the
+    `_execution_ledger_to_tmp` family of defect in a test: a module constant
+    nobody redirected, driven by a real writer.
+    """
+    from backend.services import belief_state as BS
+    monkeypatch.setattr(BS, "PREDICTIONS", tmp_path / "predictions.jsonl")
+    monkeypatch.setattr(BS, "_migrate_once", lambda: None)
 
 
 @pytest.fixture()
@@ -137,10 +158,10 @@ def test_the_pass_does_not_touch_a_reference_lane(db, bars, asof, tmp_path,
                                                   monkeypatch):
     path, conn = db
     monkeypatch.setattr(BC, "receipt_dir", lambda: tmp_path / "receipts")
-    before = _lane_rows(conn)
+    before = lane_rows(conn)
     _seed(conn, bars, asof)
     BC.run_pass("daily", conn=conn, bars=bars, today=asof)
-    assert _lane_rows(conn) == before
+    assert lane_rows(conn) == before
 
 
 # ── the cadence clock ──────────────────────────────────────────────────────
