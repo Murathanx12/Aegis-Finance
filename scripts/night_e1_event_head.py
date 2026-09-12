@@ -188,7 +188,7 @@ def run_folds(cells: pd.DataFrame, mats: dict, embargo: int, seed: int = SEED,
     return dd, fold_log
 
 
-def grade(dd: pd.DataFrame, models=MODELS) -> dict:
+def grade(dd: pd.DataFrame, models=MODELS, horizon: int = 1) -> dict:
     """Per era and per model. Six control comparisons, Holm inside the family."""
     dd = dd.copy()
     dd["era"] = dd["date"].dt.to_period("Q").astype(str)
@@ -245,6 +245,7 @@ def grade(dd: pd.DataFrame, models=MODELS) -> dict:
     out["holm_adjusted_p_all_era_ic"] = holm
     out["holm_family_size"] = len(ps)
     out["family_max_p"] = round(float(mx), 4) if mx is not None else None
+    out["horizon_caveats"] = n3.horizon_caveats(horizon, int(len(dd)))
     return out
 
 
@@ -294,7 +295,11 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="E1 typed-event tabular head vs GBM and three controls")
     ap.add_argument("--out", default=None)
     ap.add_argument("--run", type=int, default=1)
-    ap.add_argument("--smoke", action="store_true", help="120 symbols")
+    ap.add_argument("--smoke", action="store_true", help="a symbol subset, see --smoke-symbols")
+    ap.add_argument("--smoke-symbols", type=int, default=n3.SMOKE_SYMBOLS,
+                    help="how many symbols --smoke keeps. 120 grades an IC but only ~39 "
+                         "BOOK dates, because a decile book needs MIN_NAMES_BOOK tradable "
+                         "names on the date")
     ap.add_argument("--horizon", type=int, default=5, choices=list(HORIZONS))
     ap.add_argument("--no-mixer", action="store_true",
                     help="GBM only (torch absent, or a cheap re-grade)")
@@ -319,6 +324,8 @@ def main(argv=None) -> int:
         "design": {
             "horizon_sessions": horizon,
             "embargo_sessions": embargo,
+            "universe": ("the full panel" if not args.smoke
+                         else f"a {args.smoke_symbols}-symbol subset (--smoke)"),
             "unit": "(symbol, entry_date) cell -- one label per session, not one per headline",
             "target": n3.design_block(horizon)["target"],
             "feature_family": ("typed_event_onehot_x_direction + magnitude + confidence + "
@@ -350,7 +357,8 @@ def main(argv=None) -> int:
     atomic_write_json(out, receipt, indent=1)
 
     print(f"[e1] loading the panel (horizon {horizon}, embargo {embargo})", flush=True)
-    cells, _corpus, meta = n3.load_cells(smoke=args.smoke, horizon=horizon)
+    cells, _corpus, meta = n3.load_cells(smoke=args.smoke, horizon=horizon,
+                                        smoke_symbols=args.smoke_symbols)
     receipt["panel"] = meta
     atomic_write_json(out, receipt, indent=1)
 
@@ -385,7 +393,7 @@ def main(argv=None) -> int:
         return 2
 
     models = MODELS if with_mixer else ("GBM",)
-    g = grade(dd, models=models)
+    g = grade(dd, models=models, horizon=horizon)
     head, lines = verdict(g, models=models)
     daily_path = out.with_name(out.stem + "_daily.csv")
     dd.to_csv(daily_path, index=False)

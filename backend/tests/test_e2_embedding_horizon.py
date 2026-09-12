@@ -176,6 +176,41 @@ def test_the_label_vintage_gap_is_measured_not_assumed():
 
 
 # ---------------------------------------------------------------------------
+# the overlapping label, and the two numbers it makes lie
+# ---------------------------------------------------------------------------
+def test_a_one_session_label_has_no_overlap_caveat():
+    c = m.horizon_caveats(1, 260)
+    assert c["n_effective_independent_blocks"] == 260
+    assert "non-overlapping" in c["overlap_note"]
+
+
+@pytest.mark.parametrize("h,n,expect", [(5, 260, 52), (10, 260, 26), (21, 260, 12)])
+def test_n_effective_divides_by_the_horizon(h, n, expect):
+    """CANON section 58 applied to an overlapping label: consecutive dates share
+    h-1 of their h sessions, so the reported n is not the effective n."""
+    c = m.horizon_caveats(h, n)
+    assert c["n_effective_independent_blocks"] == expect
+    assert f"sqrt({h})" in c["overlap_note"], (
+        "the receipt must say by how much to shrink a t, not merely that it is inflated")
+    assert "252" in c["annualisation_note"] and f"about {h} times" in c["annualisation_note"]
+
+
+def test_the_caveat_travels_with_the_graded_output():
+    """It must be IN the receipt, not in a docstring somebody has to find."""
+    rng = np.random.default_rng(4)
+    n = 80
+    dd = pd.DataFrame({"date": pd.bdate_range("2025-01-02", periods=n), "n": 50, "n_tradable": 40})
+    for arm in m.ARMS:
+        dd[f"ic_{arm}"] = rng.normal(0, 0.05, n)
+        dd[f"gross_{arm}"] = rng.normal(0, 0.002, n)
+        dd[f"net_{arm}"] = rng.normal(0, 0.002, n)
+        dd[f"turnover_{arm}"] = 0.5
+    g = m.grade(dd, horizon=21)
+    assert g["horizon_caveats"]["horizon_sessions"] == 21
+    assert g["horizon_caveats"]["n_effective_independent_blocks"] == 4
+
+
+# ---------------------------------------------------------------------------
 # the GPU-contention refusal, mocked
 # ---------------------------------------------------------------------------
 def _fake_gpu(monkeypatch, *, card, apps, llama_pid=None):

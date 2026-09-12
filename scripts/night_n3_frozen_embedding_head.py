@@ -277,7 +277,14 @@ def embargo_for(horizon: int) -> int:
     return int(max(EMBARGO_SESSIONS, int(horizon)))
 
 
-def load_cells(smoke: bool = False, horizon: int = 1):
+#: how many symbols `--smoke` keeps. 120 is the end-to-end check N3 shipped with
+#: and is deliberately small; it is TOO small for a decile book, which needs
+#: MIN_NAMES_BOOK tradable names on a date, so a smoke run grades an IC on ~250
+#: dates and a BOOK on ~39. A caller that needs the book raises this.
+SMOKE_SYMBOLS = 120
+
+
+def load_cells(smoke: bool = False, horizon: int = 1, smoke_symbols: int = SMOKE_SYMBOLS):
     """One row per (symbol, entry_date) cell, plus the deduplicated text corpus.
 
     A cell, not a headline, is the unit: the label is a property of the session,
@@ -289,7 +296,7 @@ def load_cells(smoke: bool = False, horizon: int = 1):
         raise SystemExit(f"REFUSED: horizon {horizon} is not one of {HORIZONS}")
     df = pd.read_parquet(PANEL)
     if smoke:
-        keep = sorted(df["symbol"].unique())[:120]
+        keep = sorted(df["symbol"].unique())[:int(smoke_symbols)]
         df = df[df["symbol"].isin(keep)].copy()
     df = df[np.isfinite(df["x_oc"].to_numpy(dtype=float))].copy()
     pit = _assert_pit(df)
@@ -709,7 +716,44 @@ def _cell(x: np.ndarray, ann: bool) -> dict:
     return out
 
 
-def grade(dd: pd.DataFrame) -> dict:
+def horizon_caveats(horizon: int, n_dates: int) -> dict:
+    """The two ways an h-session label makes a DAILY table lie, said out loud.
+
+    Both are arithmetic, not opinion, and both were found by reading E2's own
+    h=21 output: five quarterly cells with |t| from 1.8 to 6.7 and an ALL cell
+    of -0.0024. A daily series of 21-session forward returns overlaps 20 of its
+    21 days with its neighbour, so neither the t nor the annualisation means
+    what its column header says.
+
+    CANON section 58 -- n_effective counts DATE BLOCKS -- is the rule; this is
+    that rule applied to an overlapping label.
+    """
+    h = int(horizon)
+    n_eff = max(1, int(round(n_dates / h)))
+    return {
+        "horizon_sessions": h,
+        "n_date_blocks_reported": int(n_dates),
+        "n_effective_independent_blocks": n_eff,
+        "overlap_note": (
+            f"each date label spans {h} sessions, so consecutive dates share {h - 1} of them. "
+            f"The reported n of {n_dates} is NOT {n_dates} independent observations: it is "
+            f"about {n_eff}. Divide every t in this receipt by roughly sqrt({h}) = "
+            f"{round(h ** 0.5, 2)} before reading it as significance, and treat a per-era "
+            f"cell with fewer than {h} dates as CANNOT DETERMINE."
+            if h > 1 else
+            "the label is a single session, so date blocks are non-overlapping and the "
+            "reported n is the effective n."),
+        "annualisation_note": (
+            "ann_pct in every cell is mean x 252 x 100 of that daily series. At horizon "
+            f"{h} it counts the same capital about {h} times over; divide by {h} for a "
+            "first-order comparable figure. IC is horizon-agnostic and is the number to "
+            "use for any cross-horizon comparison."
+            if h > 1 else
+            "ann_pct is mean x 252 x 100 of a non-overlapping daily series."),
+    }
+
+
+def grade(dd: pd.DataFrame, horizon: int = 1) -> dict:
     """Per era, never pooled-only: a single pooled number hides one good quarter."""
     dd = dd.copy()
     dd["era"] = dd["date"].dt.to_period("Q").astype(str)
@@ -748,6 +792,7 @@ def grade(dd: pd.DataFrame) -> dict:
         mx = adj if mx is None else max(mx, adj)
     out["holm_adjusted_p_all_era_ic"] = holm
     out["family_max_p"] = round(float(mx), 4) if mx is not None else None
+    out["horizon_caveats"] = horizon_caveats(horizon, int(len(dd)))
     return out
 
 
@@ -928,7 +973,7 @@ def main(argv=None) -> int:
         print(receipt["verdict"])
         return 2
 
-    g = grade(dd)
+    g = grade(dd, horizon=horizon)
     head, v = verdict(g)
     daily_path = out.with_name(out.stem + "_daily.csv")
     dd.to_csv(daily_path, index=False)
