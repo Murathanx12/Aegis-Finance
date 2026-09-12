@@ -427,7 +427,36 @@ def read_momentum_verdict(fm: dict) -> dict:
     t_raw_mom = (fm.get("raw_mom") or {}).get("nw_lag2_t")
     survives = bool(t_res_mom is not None and abs(t_res_mom) >= T_ALIVE)
     cgo_survives = bool(t_res_cgo is not None and abs(t_res_cgo) >= T_ALIVE)
+    raw_alive = bool(t_raw_mom is not None and abs(t_raw_mom) >= T_ALIVE)
+    if not raw_alive:
+        # 2026-09-13, found on run 1 (raw t 0.15): momentum was not priced on
+        # these rows BEFORE overhang entered, so "momentum dies" would be
+        # vacuous. Two readings, both carried. Grinblatt-Han's literal claim
+        # (overhang SUBSUMES momentum) cannot be tested -- there is nothing to
+        # subsume. The clause's PURPOSE ("it was momentum in costume") is
+        # answered: a payoff momentum does not earn on these rows is not
+        # momentum's, so the FAILED_VARIANT clause does not fire. Neither
+        # reading is a pass of the subsumption test, and the receipt says so.
+        return {
+            "momentum_survives": False,
+            "overhang_survives": cgo_survives,
+            "subsumption_testable": False,
+            "t_raw_mom": t_raw_mom, "t_resid_mom": t_res_mom,
+            "t_resid_cgo": t_res_cgo,
+            "verdict": "MOMENTUM_NOT_ALIVE",
+            "why": (
+                f"raw 12-1 momentum carries t {t_raw_mom} on the book's own "
+                f"rows, below the |t| >= {T_ALIVE} line, BEFORE overhang enters "
+                f"(after: t {t_res_mom}). Grinblatt-Han's subsumption claim is "
+                f"untestable here -- nothing to subsume -- so this is NOT a pass "
+                f"of that test. The §5 clause's purpose, 'it was momentum in "
+                f"costume', is answered: momentum earns nothing on these rows, "
+                f"so the book's excess is not momentum's, and the FAILED_VARIANT "
+                f"clause does not fire. Overhang's own residual payoff carries "
+                f"t {t_res_cgo}."),
+        }
     return {
+        "subsumption_testable": True,
         "momentum_survives": survives,
         "overhang_survives": cgo_survives,
         "t_raw_mom": t_raw_mom, "t_resid_mom": t_res_mom,

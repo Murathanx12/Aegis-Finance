@@ -187,6 +187,31 @@ def test_a_planted_overhang_effect_makes_momentum_die_and_overhang_survive():
     assert v["overhang_survives"] is True
 
 
+def test_momentum_that_was_never_alive_cannot_be_subsumed_and_says_so():
+    """Run 1 (2026-09-13) read raw momentum at t 0.15 on the book's rows, so
+    'momentum dies' was vacuous. The verdict names it: not a pass of the
+    subsumption test, but the costume clause does not fire either, because a
+    payoff momentum does not earn cannot be momentum's."""
+    fm = {"n_blocks": 348,
+          "raw_mom": {"nw_lag2_t": 0.1525}, "resid_mom": {"nw_lag2_t": 0.1174},
+          "raw_cgo": {"nw_lag2_t": 0.6498}, "resid_cgo": {"nw_lag2_t": 0.8595}}
+    v = F.read_momentum_verdict(fm)
+    assert v["verdict"] == "MOMENTUM_NOT_ALIVE"
+    assert v["subsumption_testable"] is False
+    assert v["momentum_survives"] is False
+    assert "NOT a pass" in v["why"]
+    out = F.decide({"placebo_pays": False}, v, {"mean_excess_net_monthly": 0.002438,
+                                                "nw_lag2_t": 1.3809,
+                                                "declared_effect_size": 0.01})
+    assert out["verdict"] == "CONDITIONAL"
+
+
+def test_a_live_raw_momentum_marks_the_subsumption_test_as_testable():
+    rng = np.random.default_rng(20260913)
+    fm = F.fama_macbeth_orthogonalisation(_fm_rows(120, 200, rng=rng, payoff="cgo"))
+    assert F.read_momentum_verdict(fm)["subsumption_testable"] is True
+
+
 def test_a_planted_momentum_effect_makes_momentum_survive_and_closes_the_book():
     rng = np.random.default_rng(20260913)
     fm = F.fama_macbeth_orthogonalisation(_fm_rows(120, 200, rng=rng, payoff="mom"))
