@@ -572,16 +572,111 @@ def _bhar(daily, permno: int, block) -> float | None:
 # BOOK C
 
 
-def replay_book_c(panel, *, smoke: bool) -> dict:
-    """Top-overhang-tercile good-news names MINUS the unconditioned book.
+#: What the v0 conditioning sign IS, in one string every receipt built on these
+#: inputs prints. v1 is a separate registration amendment naming only the input.
+EVENT_SIGN_V0 = "v0: sign(numup - numdown), IBES EPS fpi=1, at statpers"
 
-    Both legs run through `run_monthly` with the SAME code path; the only
-    difference between them is the overhang gate, which is the whole claim.
+#: The eligible set below which the conditioner has no cross-section to cut into
+#: terciles. Frozen with the book; the falsifiers inherit it rather than choosing
+#: their own, because a different floor is a different universe.
+MIN_CONDITIONED_NAMES = 6
+
+#: The overhang lookback, in MONTHS. TRIAL-DRAFT-C §2 freezes T = 1260 trading
+#: days, which is 60 months at this panel's resolution.
+CGO_LOOKBACK_MONTHS = 60
+
+#: How much history a name must have before its CGO is computed AT ALL — which
+#: is NOT the same number, and the difference is a defect this job shipped on
+#: 2026-09-12 and a later reader found.
+#:
+#: 24 is what run 1 used: a name with 24 months of history got a reference price
+#: from 24 months and it was reported as if the window were 60. Every name's
+#: first 36 months, and the whole 1990-1994 stretch (the panel starts 1990), are
+#: therefore TRUNCATED-window overhangs — and the pooled 395-block result and
+#: the 1990-1999 era both include them, while the receipt says
+#: `confirm_slice: 1995-2024`.
+#:
+#: The default stays 24 SO THAT RUN 1 REMAINS REPRODUCIBLE. The registered
+#: construction is `min_history=CGO_LOOKBACK_MONTHS` and a read that starts in
+#: 1995, and `scripts/night_c_falsifiers.py` passes it explicitly. A silent
+#: change here would rewrite a published receipt's meaning without moving a
+#: number anybody could see.
+CGO_MIN_HISTORY_RUN01 = 24
+
+
+class BookCInputsUnavailable(RuntimeError):
+    """The IBES consensus panel Book C's v0 event sign needs is not on disk.
+
+    Raised rather than returned, because `replay_book_c` turns it into the
+    book's own named refusal and the falsifier job turns it into a different
+    one. A shared `None` would leave both of them guessing.
+    """
+
+
+def book_c_overhang(panel, *, min_history: int = CGO_MIN_HISTORY_RUN01,
+                    lookback: int = CGO_LOOKBACK_MONTHS) -> dict:
+    """{month: {permno: CGO}} from the panel's own price and turnover.
+
+    The Grinblatt-Han recursion at MONTHLY resolution, which is Grinblatt-Han's
+    own cadence (they use weekly/260; the daily 1260 of the contract is the
+    finer form and is what the forward book would use if turnover existed on
+    bars). A name's history is everything strictly BEFORE the month being
+    stamped — the append happens after the read — so no overhang contains the
+    price it is used to rank.
+
+    A name needs `min_history` months before it gets an overhang at all. That
+    is a DIFFERENT number from `lookback`, and run 1 set them to 24 and 60,
+    which is a truncated window reported as a full one.
+
+    Separated from `book_c_inputs` so it can be tested without an IBES panel:
+    a gate whose only test has to stub three unrelated readers is a gate nobody
+    re-tests.
+    """
+    import numpy as np
+
+    from backend.services import book_signals as BS
+
+    hist: dict = {}
+    cgo_by_month: dict = {}
+    for ym, g in panel.groupby("ym", sort=True):
+        cgo_here = {}
+        for pn, px, tv in zip(g["permno"], g["price"], g["turnover_m"]):
+            h = hist.setdefault(int(pn), ([], []))
+            if len(h[0]) >= int(min_history):
+                try:
+                    cgo_here[int(pn)] = BS.capital_gains_overhang(
+                        h[0], h[1], lookback=int(lookback))
+                except BS.SignalUnavailable:
+                    pass
+            h[0].append(float(px))
+            h[1].append(float(tv) if np.isfinite(tv) else 0.0)
+        cgo_by_month[ym] = cgo_here
+    return cgo_by_month
+
+
+def book_c_inputs(panel, *, min_history: int = CGO_MIN_HISTORY_RUN01,
+                  lookback: int = CGO_LOOKBACK_MONTHS) -> dict:
+    """The two objects every Book C leg is built from, computed ONCE.
+
+    Returned rather than closed over inside `replay_book_c`, because
+    `scripts/night_c_falsifiers.py` builds the sign-flipped placebo from the
+    SAME event-sign sets and the SAME overhang series this book traded. A
+    second implementation of the Grinblatt-Han recursion would make the placebo
+    a different construction, and a placebo that is a different construction
+    tests nothing.
+
+    `good` and `bad` are sets of `(ym.ordinal, permno)`. A name whose month
+    carries contradictory IBES rows can land in both; `good` is built exactly as
+    the first read built it, and it is the FALSIFIER that subtracts.
+
+    `min_history` is how many months a name must carry before its overhang is
+    computed at all. The default is run 1's 24 and is kept SO RUN 1 REMAINS
+    REPRODUCIBLE; the registered construction is 60 — a full reference-price
+    window — and the caller that wants it says so (see `CGO_MIN_HISTORY_RUN01`).
     """
     import numpy as np
     import pandas as pd
 
-    from backend.services import book_signals as BS
 
     con = wrds_dir() / "ibes_consensus_monthly.parquet"
     early = wrds_dir() / "ibes_consensus_monthly_early.parquet"
@@ -589,10 +684,10 @@ def replay_book_c(panel, *, smoke: bool) -> dict:
                                           "fpi", "numup", "numdown"])
               for p in (early, con) if p.is_file()]
     if not frames:
-        return {"book": "disposition_overhang_conditioner_v0", "ran": False,
-                "refused": (f"no IBES consensus panel at {con} or {early}; the "
-                            f"v0 event sign is the monthly consensus revision "
-                            f"and this job does not substitute another one")}
+        raise BookCInputsUnavailable(
+            f"no IBES consensus panel at {con} or {early}; the v0 event sign "
+            f"is the monthly consensus revision and this job does not "
+            f"substitute another one")
     ib = pd.concat(frames, ignore_index=True)
     ib = ib[(ib["measure"] == "EPS") & (ib["fpi"].astype(str) == "1")]
     ib["statpers"] = pd.to_datetime(ib["statpers"])
@@ -602,37 +697,38 @@ def replay_book_c(panel, *, smoke: bool) -> dict:
     ib["permno"] = ib["permno"].astype("int64")
     good = {(int(r.ym.ordinal), int(r.permno))
             for r in ib[ib["sign"] > 0][["ym", "permno"]].itertuples()}
+    bad = {(int(r.ym.ordinal), int(r.permno))
+           for r in ib[ib["sign"] < 0][["ym", "permno"]].itertuples()}
 
-    # CGO from the monthly panel's own price and turnover: the Grinblatt-Han
-    # recursion at MONTHLY resolution, which is Grinblatt-Han's own cadence
-    # (they use weekly/260; the daily 1260 of the contract is the finer form
-    # and is what the forward book would use if turnover existed on bars).
-    hist: dict = {}
-    months = sorted(panel["ym"].unique())
-    cgo_by_month: dict = {}
-    for ym, g in panel.groupby("ym", sort=True):
-        cgo_here = {}
-        for pn, px, tv in zip(g["permno"], g["price"], g["turnover_m"]):
-            h = hist.setdefault(int(pn), ([], []))
-            if len(h[0]) >= 24:
-                try:
-                    cgo_here[int(pn)] = BS.capital_gains_overhang(h[0], h[1],
-                                                                  lookback=60)
-                except BS.SignalUnavailable:
-                    pass
-            h[0].append(float(px))
-            h[1].append(float(tv) if np.isfinite(tv) else 0.0)
-        cgo_by_month[ym] = cgo_here
-    del months
+    cgo_by_month = book_c_overhang(panel, min_history=min_history,
+                                   lookback=lookback)
+    return {"good": good, "bad": bad, "cgo_by_month": cgo_by_month,
+            "event_sign": EVENT_SIGN_V0,
+            "cgo_min_history_months": int(min_history),
+            "cgo_lookback_months": int(lookback),
+            "cgo_window_is_full": bool(int(min_history) >= int(lookback))}
+
+
+def names_with_sign(pool, ym, wanted: set) -> list:
+    """`pool`'s permnos carrying the wanted event sign this month, in pool order."""
+    o = int(ym.ordinal)
+    return [int(p) for p in pool["permno"] if (o, int(p)) in wanted]
+
+
+def book_c_selectors(inputs: dict) -> dict:
+    """Book C's two legs as selectors. The falsifier reuses `unconditioned`."""
+    from backend.services import book_signals as BS
+
+    good = inputs["good"]
+    cgo_by_month = inputs["cgo_by_month"]
 
     def good_news(pool, ym):
-        o = int(ym.ordinal)
-        return [int(p) for p in pool["permno"] if (o, int(p)) in good]
+        return names_with_sign(pool, ym, good)
 
     def select_conditioned(pool, ym):
         names = good_news(pool, ym)
         cgo = {n: v for n, v in (cgo_by_month.get(ym) or {}).items() if n in set(names)}
-        if len(cgo) < 6:
+        if len(cgo) < MIN_CONDITIONED_NAMES:
             return []
         try:
             top = BS.overhang_conditioned_ranks(cgo, {n: 1.0 for n in cgo})
@@ -644,16 +740,45 @@ def replay_book_c(panel, *, smoke: bool) -> dict:
         names = good_news(pool, ym)
         return sorted(names)[:30]
 
-    res = run_monthly(panel, select_conditioned, k=30, seed=0xA82E,
+    return {"good_news": good_news, "conditioned": select_conditioned,
+            "unconditioned": select_unconditioned}
+
+
+def replay_book_c(panel, *, smoke: bool) -> dict:
+    """Top-overhang-tercile good-news names MINUS the unconditioned book.
+
+    Both legs run through `run_monthly` with the SAME code path; the only
+    difference between them is the overhang gate, which is the whole claim.
+    """
+    try:
+        inputs = book_c_inputs(panel)
+    except BookCInputsUnavailable as exc:
+        return {"book": "disposition_overhang_conditioner_v0", "ran": False,
+                "refused": str(exc)}
+    sel = book_c_selectors(inputs)
+    res = run_monthly(panel, sel["conditioned"], k=30, seed=0xA82E,
                       label="disposition_overhang_conditioner_v0",
                       twin="unconditioned_reaction_book_v0",
-                      twin_select=select_unconditioned)
+                      twin_select=sel["unconditioned"])
     return {"book": "disposition_overhang_conditioner_v0",
             "book_id": "book:a82e6e453c14c241",
             "prereg": "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0 (UNSIGNED)",
             "primary_metric": "conditioned_minus_unconditioned",
             "confirm_slice": "1995-2024", "ran": True,
-            "event_sign": "v0: sign(numup - numdown), IBES EPS fpi=1, at statpers",
+            "event_sign": inputs["event_sign"],
+            "cgo_construction": {
+                "min_history_months": inputs["cgo_min_history_months"],
+                "lookback_months": inputs["cgo_lookback_months"],
+                "window_is_full": inputs["cgo_window_is_full"],
+                "caveat": (
+                    "at min_history 24 with a 60-month lookback, a name's first "
+                    "36 overhangs are computed on a TRUNCATED reference-price "
+                    "window, and so is the whole 1990-1994 stretch. The "
+                    "registered construction (TRIAL-DRAFT-C §2 T=1260 sessions, "
+                    "§4 slice_period 1995-01-01) is a FULL window and a read "
+                    "that starts in 1995; `scripts/night_c_falsifiers.py` "
+                    "re-reports this book's primary metric under it."),
+            },
             "result": {k: v for k, v in res.items() if k not in ("blocks", "excess")},
             "by_era": by_era(res),
             "declared_mde_monthly": 0.00724, "declared_effect_size": 0.01,
@@ -763,5 +888,8 @@ def _p(book: dict):
     return r.get("p_two_sided")
 
 
-__all__ = ["B_first_books_replay", "COST_CURVE", "by_era", "holm",
-           "newey_west_t", "replay_book_d", "run_monthly", "two_sided_p"]
+__all__ = ["B_first_books_replay", "BookCInputsUnavailable", "COST_CURVE",
+           "EVENT_SIGN_V0", "MIN_CONDITIONED_NAMES", "book_c_inputs",
+           "book_c_selectors", "by_era", "eligible", "holm",
+           "load_monthly_panel", "names_with_sign", "newey_west_t",
+           "replay_book_d", "run_monthly", "two_sided_p"]

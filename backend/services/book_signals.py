@@ -360,15 +360,26 @@ def capital_gains_overhang(prices, turnover, *, lookback: int = 1260) -> float:
 
 
 def overhang_conditioned_ranks(cgo: dict, event_sign: dict, *,
-                               tercile: float = 2.0 / 3.0) -> dict:
+                               tercile: float = 2.0 / 3.0,
+                               side: str = "top") -> dict:
     """{name: CGO} for GOOD-NEWS names in the top overhang tercile.
 
     The eligible set is gated on the EVENT SIGN first and ranked on overhang
     inside it. That order is the mechanism: this is a conditioner, not a
     two-factor blend, and a blend would be a different book.
+
+    `side="bottom"` returns the BOTTOM tercile instead, and exists for exactly
+    one caller: TRIAL-DRAFT-C's registered sign-flip placebo
+    (`scripts/night_c_falsifiers.py`), which is the same construction with the
+    conditioning sign flipped. The book's own call does not pass it, so the
+    book cannot change by this argument existing — and the placebo cutting its
+    tercile with a second implementation of this quantile is exactly the way a
+    placebo stops being a placebo.
     """
     import numpy as np
 
+    if side not in ("top", "bottom"):
+        raise ValueError(f"side must be 'top' or 'bottom', not {side!r}")
     good = {k: float(v) for k, v in cgo.items()
             if float(event_sign.get(k, 0.0)) > 0 and np.isfinite(v)}
     if not good:
@@ -376,6 +387,9 @@ def overhang_conditioned_ranks(cgo: dict, event_sign: dict, *,
             "no name carried BOTH a positive event sign and a computable "
             "overhang this period; the conditioner has an empty eligible set "
             "rather than a weak one")
+    if side == "bottom":
+        cut = float(np.quantile(list(good.values()), 1.0 - tercile))
+        return {k: v for k, v in good.items() if v <= cut}
     cut = float(np.quantile(list(good.values()), tercile))
     return {k: v for k, v in good.items() if v >= cut}
 

@@ -1520,6 +1520,19 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # tests, so the family Holm runs inside it.
         "B_first_books_replay": _lazy("scripts.night_first_books_replay",
                                       "B_first_books_replay"),
+        # 2026-09-13, chunk 11: the three tests the first read NAMED as its own
+        # `next_test`, one job each. They import the replay's leg-building
+        # functions rather than re-implementing them, so a book and its
+        # falsifier can never differ by which code path ran them.
+        #   C_falsifiers  the two FALSIFIERS that close Book C whatever its
+        #                 primary metric did (sign-flip placebo, momentum
+        #                 orthogonalisation). ~10-20 min.
+        #   A_corner      Book A's double sort at the $10M floor, with the twin
+        #                 RE-DRAWN at that floor -- TRIAL-H5's lesson is that a
+        #                 corner-dependent control moves with the corner. ~10 min.
+        #   B_verdict     seconds: it re-runs nothing, reads the replay receipt
+        #                 and applies TRIAL-DRAFT-B §5 verbatim.
+        "C_falsifiers": _lazy("scripts.night_c_falsifiers", "C_falsifiers"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
         # llama-server for their model legs and NONE of them start it -- each
         # writes PENDING_MODEL with its cell list frozen and hashed when the
@@ -1592,6 +1605,12 @@ JOB_STAGES = {
     "G2_holdout_once": "weights",
     "E_decay_sweep": "weights",
     "B_first_books_replay": "pnl",
+    # C_falsifiers and A_corner price books (net monthly excess) and B_verdict
+    # reads a priced receipt; all three are `pnl` for the same reason the
+    # replay is.
+    "C_falsifiers": "pnl",
+    "A_corner": "pnl",
+    "B_verdict": "pnl",
     "D1_reaction_book": "pnl",
     "P6_bars_and_regret": "pnl",
 }
@@ -1638,7 +1657,8 @@ def main(argv=None) -> int:
     elif a.job in ("RW1_random_windows", "RW2_event_windows"):
         payload = fn(seed=a.seed, smoke=a.smoke)
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
-                   "E_decay_sweep", "M2_distill", "A_published_anomaly"):
+                   "E_decay_sweep", "M2_distill", "A_published_anomaly",
+                   "C_falsifiers", "A_corner", "B_verdict"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a
