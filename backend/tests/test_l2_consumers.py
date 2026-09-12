@@ -153,7 +153,7 @@ def test_the_grader_reads_the_dominant_row_when_a_day_has_two():
 
 def test_a_typed_row_outside_the_vocabulary_never_reaches_the_grader():
     row = _typed_row("ACME", "2026-09-01")
-    row["event_type"] = "analyst_rating_change"
+    row["event_type"] = "short_interest_squeeze"        # in no vocabulary version
     assert sf.realised_from_typed_rows([row], symbol="ACME", as_of="2026-09-01") == []
 
 
@@ -177,10 +177,33 @@ def test_only_the_kinds_whose_mapping_is_a_function_are_mapped():
     assert out["mapped_by_vocabulary_id"] == {"earnings_report": 1,
                                               "mergers_acquisitions": 1,
                                               "guidance_change": 1}
-    assert set(out["unmapped_kinds"]) == {"PRODUCT", "ANALYST", "LEGAL"}
+    assert set(out["unmapped_kinds"]) == {"PRODUCT", "LEGAL"}
     assert out["rows_with_no_kind"] == 1
-    assert "no analyst-action" in out["unmapped_reasons"]["ANALYST"]
     assert all(v in vocab.EVENT_TYPES for v in out["mapped_by_vocabulary_id"])
+
+
+def test_analyst_maps_to_the_v2_FAMILY_and_is_counted_separately():
+    """v1 could type none of C1's largest kind. v2 can type it at the mechanism
+    level -- and family coverage is NOT id coverage, so the two counts stay
+    apart rather than being added into one flattering number."""
+    rows = [_c1("EARNINGS")] + [_c1("ANALYST") for _ in range(4)]
+    out = x2.c1_vocabulary_mapping(rows)
+    assert out["vocabulary_version"] == vocab.VOCABULARY_VERSION == 2
+    assert out["mapped_rows"] == 1
+    assert out["family_mapped_rows"] == 4
+    assert out["family_mapped_kinds"] == {"ANALYST": 4}
+    assert out["covered_rows"] == 5 and out["covered_share"] == 1.0
+    assert "ANALYST" not in out["unmapped_kinds"]
+    assert all(v in vocab.EVENT_TYPES
+               for v in out["family_members"]["ANALYST"])
+
+
+def test_a_family_may_not_span_opposite_direction_priors():
+    """The rule that keeps PRODUCT and FINANCING out of the family map: a family
+    that spans opposite priors is a mapping pretending to be a coverage number."""
+    for kind, ids in x2.C1_KIND_TO_FAMILY.items():
+        priors = {vocab.by_id(i).direction_prior for i in ids}
+        assert priors == {None}, (kind, priors)
 
 
 def test_an_unclear_direction_is_not_coerced_to_zero():

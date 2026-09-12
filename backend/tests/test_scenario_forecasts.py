@@ -126,18 +126,27 @@ def test_the_vocabulary_is_the_specs_own_table():
     ids = [m.group(1) for m in
            (re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|", line) for line in section.splitlines())
            if m]
-    assert tuple(ids) == sf.EVENT_TYPES
+    v2 = text[text.index("#### Analyst actions (v2)"):text.index("That is 42 substantive")]
+    ids += [m.group(1) for m in
+            (re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|", line) for line in v2.splitlines())
+            if m]
+    # section 1.2b's rows go BEFORE the refusal class, which is where the module
+    # puts them too
+    assert tuple(ids[:-4] + ids[-3:] + ids[-4:-3]) == sf.EVENT_TYPES
     assert len(set(ids)) == len(ids), "a duplicate id in the frozen vocabulary"
 
 
 def test_the_count_discrepancy_in_the_spec_is_recorded_not_silently_resolved():
     """The section heading says "39 event types + no_event"; its closing
-    sentence says "38 substantive + no_event = 39". The table has 39
+    sentence says "38 substantive + no_event = 39". The v1 table has 39
     substantive rows, so the heading is right and the sentence is off by one.
-    Recorded here so the next reader does not re-derive it."""
-    assert len(sf.EVENT_TYPES) == 40
+    Recorded here so the next reader does not re-derive it. v2 (section 1.2b)
+    adds the three analyst rows on top of that."""
+    from backend.services import event_vocabulary as ev
+    assert len(ev.VOCABULARY_V1) == 40
+    assert len(sf.EVENT_TYPES) == 43
     assert sf.EVENT_TYPES[-1] == "no_event"
-    assert len([t for t in sf.EVENT_TYPES if t != "no_event"]) == 39
+    assert len([t for t in sf.EVENT_TYPES if t != "no_event"]) == 42
 
 
 # ---------------------------------------------------------------- the schema

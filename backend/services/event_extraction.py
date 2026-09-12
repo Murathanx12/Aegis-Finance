@@ -279,6 +279,10 @@ class TypedEventRow:
     evidence_span: str
     prompt_hash: str
     vocabulary_hash: str
+    #: WHICH vocabulary the hash belongs to. A hash says which TABLE; a version
+    #: says which table a reader should go looking for, and the two together are
+    #: what makes a corpus typed across a vocabulary change still readable.
+    vocabulary_version: int = vocab.VOCABULARY_VERSION
     #: True when `evidence_span` really is a substring of the document shown.
     #: MEASURED, not enforced: the spec asks for a verbatim span but does not
     #: make a paraphrase a refusal, and refusing one would throw away an
@@ -441,6 +445,7 @@ def parse_reply(raw: str, *, document: str | None = None, variant: str = "A",
         magnitude_bucket=str(obj["magnitude_bucket"]),
         confidence=float(obj["confidence"]), evidence_span=span,
         prompt_hash=prompt_hash(variant), vocabulary_hash=vocab.VOCABULARY_HASH,
+        vocabulary_version=vocab.VOCABULARY_VERSION,
         evidence_span_verbatim=verbatim)
 
 

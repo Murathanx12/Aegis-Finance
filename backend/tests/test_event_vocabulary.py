@@ -41,11 +41,12 @@ def _spec_rows() -> list[tuple[str, ...]]:
     return rows
 
 
-def test_every_row_is_the_specs_row():
+def test_every_v1_row_is_the_specs_row():
+    """Section 1.2 is v1 and v1 is FROZEN: the hash rows carry depends on it."""
     spec_rows = _spec_rows()
-    assert len(spec_rows) == len(ev.VOCABULARY)
+    assert len(spec_rows) == len(ev.VOCABULARY_V1)
     for (sid, definition, sec_items, prior, magnitude, example, counter), got in zip(
-            spec_rows, ev.VOCABULARY):
+            spec_rows, ev.VOCABULARY_V1):
         assert got.id == sid
         assert got.definition == definition
         assert got.sec_items_text == sec_items
@@ -55,19 +56,89 @@ def test_every_row_is_the_specs_row():
         assert got.counter_example == counter
 
 
-def test_the_count_is_derived_from_the_table_and_the_specs_prose_is_off_by_one():
+def test_the_v1_count_is_derived_from_the_table_and_the_specs_prose_is_off_by_one():
     """39 substantive + `no_event` = 40. The section heading says "39 event
     types + no_event" (right); its closing sentence says "38 substantive +
     no_event = 39" (wrong). Recorded rather than silently resolved, and the
     module's counters are computed from the table so neither sentence can
     decide the number."""
-    assert ev.N_TYPES == len(ev.VOCABULARY) == 40
-    assert ev.N_SUBSTANTIVE == 39
-    assert ev.EVENT_TYPES[-1] == ev.NO_EVENT == "no_event"
-    assert len(set(ev.EVENT_TYPES)) == ev.N_TYPES, "a duplicate id in the vocabulary"
+    assert len(ev.VOCABULARY_V1) == 40
+    assert len([t for t in ev.VOCABULARY_V1 if t.id != "no_event"]) == 39
+    assert ev.VOCABULARY_V1[-1].id == ev.NO_EVENT == "no_event"
     text = SPEC.read_text(encoding="utf-8")
     assert "That is 38 substantive" in text, (
         "the spec's miscount was fixed -- update this test's record of it")
+
+
+def test_v2_is_v1_plus_three_analyst_rows_and_no_event_is_still_last():
+    """The addendum goes BEFORE the refusal class, so every v1 id keeps its
+    position -- row order is part of the contract (the JSON Schema enum is
+    generated from it)."""
+    assert ev.VOCABULARY_VERSION == 2
+    assert ev.N_TYPES == len(ev.VOCABULARY) == 43
+    assert ev.N_SUBSTANTIVE == 42
+    assert ev.EVENT_TYPES[-1] == ev.NO_EVENT == "no_event"
+    assert len(set(ev.EVENT_TYPES)) == ev.N_TYPES, "a duplicate id in the vocabulary"
+    added = tuple(t.id for t in ev._V2_ADDED)
+    assert added == ("analyst_rating_change", "analyst_target_change",
+                     "analyst_initiation")
+    assert ev.EVENT_TYPES[-4:-1] == added
+    # every v1 id is where it was
+    assert ev.EVENT_TYPES[:39] == tuple(t.id for t in ev.VOCABULARY_V1[:39])
+
+
+def test_the_v1_hash_did_not_move_when_v2_landed():
+    """THE PIN. Rows typed before 2026-09-13 carry this hash; if it moves, a
+    corpus becomes unreadable against the vocabulary it was typed under. The
+    literal is the value `git show` gives for the module at commit 0ef42a8."""
+    assert ev.VOCABULARY_HASH_V1 == (
+        "b55fcff7ef3e206ffb14b088a832367b1471a59bddbb8d514c4a01fbfc1d2e6a")
+    assert ev.vocabulary_hash(ev.table(1)) == ev.VOCABULARY_HASH_V1
+    assert ev.VOCABULARY_HASH != ev.VOCABULARY_HASH_V1, (
+        "the CURRENT hash must move when the table grows -- that is the signal")
+    assert ev.VOCABULARY_HASHES == {1: ev.VOCABULARY_HASH_V1, 2: ev.VOCABULARY_HASH}
+
+
+def test_the_analyst_rows_are_the_specs_1_2b_rows():
+    """Parsed from section 1.2b, not transcribed."""
+    text = SPEC.read_text(encoding="utf-8")
+    section = text[text.index("#### Analyst actions (v2)"):
+                   text.index("That is 42 substantive")]
+    rows = []
+    for line in section.splitlines():
+        m = re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|(.*)\|\s*$", line)
+        if not m:
+            continue
+        cells = [c.strip() for c in m.group(2).split("|")]
+        assert len(cells) == 6, f"{m.group(1)}: {len(cells)} cells, expected 6"
+        rows.append((m.group(1), *cells))
+    assert len(rows) == 3
+    for (sid, definition, sec_items, prior, magnitude, example, counter), got in zip(
+            rows, ev._V2_ADDED):
+        assert got.id == sid
+        assert got.definition == definition
+        assert got.sec_items_text == sec_items
+        assert got.direction_prior_text == prior
+        assert got.magnitude_bucket == magnitude
+        assert got.example == example
+        assert got.counter_example == counter
+
+
+def test_every_analyst_prior_is_ambiguous_because_the_sign_is_in_the_word():
+    """A family whose members disagreed on their prior could not be mapped as a
+    family, which is exactly why PRODUCT and FINANCING do not get one."""
+    for t in ev._V2_ADDED:
+        assert t.direction_prior is None, t.id
+        assert t.sec_items == (), f"{t.id}: broker research is not an 8-K"
+
+
+def test_an_unknown_version_names_the_versions_that_exist():
+    assert ev.vocabulary_for(1) is ev.VOCABULARY_V1
+    assert ev.vocabulary_for(2) is ev.VOCABULARY_V2
+    with pytest.raises(KeyError) as exc:
+        ev.vocabulary_for(3)
+    assert "[1, 2]" in str(exc.value)
+    assert "never by editing an existing one" in str(exc.value)
 
 
 def test_the_8k_item_codes_are_parsed_out_of_the_specs_cell():
@@ -139,13 +210,18 @@ def test_magnitude_thresholds_are_contiguous_and_extreme_has_no_ceiling():
 
 
 def test_an_unknown_id_is_a_refusal_that_names_the_vocabulary():
+    """`analyst_rating_change` used to be this test's unknown id. It is a real
+    id at v2, which is the whole point of the version, so the unknown one has
+    to be something the table genuinely does not have."""
+    assert ev.by_id("analyst_rating_change").magnitude_bucket == "MODERATE"
     with pytest.raises(KeyError) as exc:
-        ev.by_id("analyst_rating_change")
+        ev.by_id("short_interest_squeeze")
     assert "frozen L2 vocabulary" in str(exc.value)
     assert ev.VOCABULARY_HASH[:12] in str(exc.value)
+    assert f"v{ev.VOCABULARY_VERSION}" in str(exc.value)
 
 
-def test_scenario_forecasts_reads_the_same_40_ids():
+def test_scenario_forecasts_reads_the_same_43_ids():
     """X3's grader keys on these ids. Two tuples that must never diverge."""
     assert sf.EVENT_TYPES == ev.EVENT_TYPES
     assert tuple(sf.MAGNITUDES) == ev.MAGNITUDE_BUCKETS
@@ -154,7 +230,11 @@ def test_scenario_forecasts_reads_the_same_40_ids():
 def test_the_declaration_carries_what_a_receipt_needs():
     d = ev.declaration()
     assert d["vocabulary_hash"] == ev.VOCABULARY_HASH
-    assert d["n_types"] == 40 and d["n_substantive"] == 39
+    assert d["vocabulary_version"] == 2
+    assert d["versions"]["1"]["vocabulary_hash"] == ev.VOCABULARY_HASH_V1
+    assert d["versions"]["1"]["n_types"] == 40
+    assert d["versions"]["2"]["n_types"] == 43
+    assert d["n_types"] == 43 and d["n_substantive"] == 42
     assert d["refusal_class"] == "no_event"
     assert set(d["kappa_protocol"]) == {"event_type", "direction",
                                         "magnitude_bucket", "confidence", "sample"}

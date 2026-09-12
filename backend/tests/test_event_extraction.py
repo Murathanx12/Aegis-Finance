@@ -215,6 +215,21 @@ def test_no_event_is_a_successful_row_and_never_a_refusal():
 
 # --------------------------------------------------------------- provenance
 
+def test_a_typed_row_carries_the_vocabulary_VERSION_beside_the_hash():
+    """A hash says WHICH table; a version says which table a reader should go
+    looking for. A corpus typed across a vocabulary change needs both."""
+    row, _ = ex.extract(scope="ACME", scope_kind="ticker",
+                        document_date=date.today().isoformat(), source_feed="f",
+                        title="Goldman upgrades Acme to Buy",
+                        complete=lambda *a, **kw: _fake_reply(json.dumps(
+                            {"event_type": "analyst_rating_change", "direction": 1,
+                             "magnitude_bucket": "MODERATE", "confidence": 0.8,
+                             "evidence_span": "Goldman upgrades Acme to Buy"})))
+    assert isinstance(row, ex.TypedEventRow)
+    assert row.vocabulary_version == vocab.VOCABULARY_VERSION == 2
+    assert row.as_dict()["vocabulary_version"] == 2
+
+
 def test_every_typed_row_carries_the_prompt_and_vocabulary_hashes():
     payload = {"event_type": "stock_buyback", "direction": 1,
                "magnitude_bucket": "SMALL", "confidence": 0.85,
@@ -302,8 +317,8 @@ def test_a_provider_refusal_is_not_caught_here():
 
 # ------------------------------------------------------------------ golden set
 
-def test_the_fixture_is_the_specs_own_23_rows():
-    """Derived from the spec's sections 2.6 and 2.7, not eyeballed."""
+def test_the_fixture_is_the_specs_own_26_rows():
+    """Derived from the spec's sections 2.6, 2.7 and 2.8, not eyeballed."""
     import re
 
     block = _spec_block("### 2.6 Golden set",
@@ -322,12 +337,13 @@ def test_the_fixture_is_the_specs_own_23_rows():
         else:
             d = dict(zip(("event_type", "direction", "magnitude_bucket", "confidence"), fields))
         parsed[int(m.group(1))] = (hm.group(1), d)
-    assert len(parsed) == 23
+    assert len(parsed) == 26
 
     rows = _golden()
-    assert len(rows) == 23
-    assert [r["id"] for r in rows] == list(range(1, 24))
+    assert len(rows) == 26
+    assert [r["id"] for r in rows] == list(range(1, 27))
     assert sum(1 for r in rows if r["spec_section"] == "2.7") == 3
+    assert sum(1 for r in rows if r["spec_section"] == "2.8") == 3
     for r in rows:
         headline, d = parsed[r["id"]]
         assert r["title"] == headline
@@ -360,6 +376,21 @@ def test_every_golden_row_round_trips_through_the_parser_with_a_mocked_model():
         assert row.evidence_span == expected["evidence_span"], r["id"]
         assert row.evidence_span_verbatim is True, r["id"]
         assert row.vocabulary_hash == vocab.VOCABULARY_HASH
+        assert row.vocabulary_version == vocab.VOCABULARY_VERSION
+
+
+def test_the_three_v2_rows_cover_the_analyst_family_including_a_neutral_one():
+    """Row 26 earns its place: a neutral initiation is a REAL, dated event with
+    no directional implication by itself, which is what `direction: 0` means --
+    and it is what a keyword match on "initiates coverage" gets wrong in both
+    directions."""
+    rows = {r["id"]: r for r in _golden()}
+    assert rows[24]["expected"]["event_type"] == "analyst_rating_change"
+    assert rows[24]["expected"]["direction"] == 1
+    assert rows[25]["expected"]["event_type"] == "analyst_target_change"
+    assert rows[25]["expected"]["direction"] == -1
+    assert rows[26]["expected"]["event_type"] == "analyst_initiation"
+    assert rows[26]["expected"]["direction"] == 0
 
 
 def test_the_three_adversarial_rows_say_what_the_spec_says_they_say():

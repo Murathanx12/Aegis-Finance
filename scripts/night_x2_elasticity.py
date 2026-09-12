@@ -74,26 +74,44 @@ def _now() -> str:
 
 
 # ---------------------------------------------------------------- L2 vocabulary
-#: C1's own event kinds, mapped onto L2's frozen 40-id vocabulary where the
-#: mapping is a FUNCTION. Most of C1's kinds are not: `PRODUCT` is a launch or a
-#: recall, `LEGAL` is a filing or a settlement, `FINANCING` is debt or dilution,
-#: and the two have opposite direction priors. Those are recorded as ambiguous
-#: with the candidates named, never collapsed to whichever id comes first -- a
-#: forced mapping would put a positive prior on half the recalls in the file.
+#: C1's own event kinds, mapped onto L2's frozen vocabulary where the mapping is
+#: a FUNCTION. Most of C1's kinds are not: `PRODUCT` is a launch or a recall,
+#: `LEGAL` is a filing or a settlement, `FINANCING` is debt or dilution, and the
+#: two have opposite direction priors. Those are recorded as ambiguous with the
+#: candidates named, never collapsed to whichever id comes first -- a forced
+#: mapping would put a positive prior on half the recalls in the file.
 C1_KIND_TO_VOCABULARY: dict[str, str] = {
     "EARNINGS": "earnings_report",
     "GUIDANCE": "guidance_change",
     "M&A": "mergers_acquisitions",
 }
 
-#: Named, with the reason. `ANALYST` is the largest kind in C1 (1,218 of 6,935)
-#: and the L2 vocabulary HAS NO ANALYST TYPE -- RavenPack's public taxonomy has
-#: `price-target`, the spec's section 1.2 does not, and that is a gap in the
-#: vocabulary rather than a defect in this mapping. Recorded here so the next
-#: reader finds it instead of re-deriving it.
+#: FAMILY mapping, added 2026-09-13 with vocabulary v2.
+#:
+#: `ANALYST` was C1's LARGEST kind (1,218 of 6,676 status-OK rows) and the v1
+#: table had no analyst-action type at all, so it was unmappable. v2 adds three
+#: (`analyst_rating_change`, `analyst_target_change`, `analyst_initiation`), and
+#: `ANALYST` still does not map to ONE of them: which one it is lives in the
+#: text, not in C1's kind.
+#:
+#: What makes this different from `PRODUCT` or `FINANCING` -- and the reason
+#: those do NOT get a family entry -- is that all three analyst ids carry the
+#: SAME direction prior (ambiguous) and belong to one mechanism, so saying "this
+#: row is an analyst action" commits to nothing a sub-type would contradict.
+#: `product_launch_or_innovation` and `product_recall_or_defect` have OPPOSITE
+#: priors, and a family that spans opposite priors is a mapping pretending to be
+#: a coverage number.
+#:
+#: Family-mapped rows are counted SEPARATELY from function-mapped rows on the
+#: receipt. A family is coverage at the mechanism level, not at the id level,
+#: and merging the two counts would overstate what the vocabulary can type.
+C1_KIND_TO_FAMILY: dict[str, tuple[str, ...]] = {
+    "ANALYST": ("analyst_rating_change", "analyst_target_change",
+                "analyst_initiation"),
+}
+
+#: Named, with the reason.
 C1_KIND_UNMAPPED: dict[str, str] = {
-    "ANALYST": ("no vocabulary id: the 40-id table has no analyst-action or "
-                "price-target type. C1's LARGEST kind"),
     "MACRO": ("ambiguous over macro_rate_decision / macro_inflation_print / "
               "macro_labor_report / tariff_or_trade_policy / sanction"),
     "PRODUCT": "ambiguous over product_launch_or_innovation / product_recall_or_defect",
@@ -120,7 +138,7 @@ def c1_vocabulary_mapping(rows: list[dict]) -> dict:
     directional implication by itself" in L2's contract, which is a different
     claim from "the reader could not tell".
     """
-    mapped, unmapped, missing = {}, {}, 0
+    mapped, family, unmapped, missing = {}, {}, {}, 0
     directions = {"signed": 0, "unclear": 0, "missing": 0}
     buckets = {}
     for row in rows:
@@ -130,6 +148,8 @@ def c1_vocabulary_mapping(rows: list[dict]) -> dict:
         elif kind in C1_KIND_TO_VOCABULARY:
             vid = C1_KIND_TO_VOCABULARY[kind]
             mapped[vid] = mapped.get(vid, 0) + 1
+        elif kind in C1_KIND_TO_FAMILY:
+            family[str(kind)] = family.get(str(kind), 0) + 1
         else:
             unmapped[str(kind)] = unmapped.get(str(kind), 0) + 1
         d = be.signed(row.get("direction"))
@@ -142,22 +162,36 @@ def c1_vocabulary_mapping(rows: list[dict]) -> dict:
         b = C1_MAGNITUDE_TO_BUCKET.get(str(row.get("magnitude") or "").upper())
         buckets[b or "unmapped"] = buckets.get(b or "unmapped", 0) + 1
     n = len(rows)
+    n_mapped = sum(mapped.values())
+    n_family = sum(family.values())
     return {
+        "vocabulary_version": vocab.VOCABULARY_VERSION,
         "vocabulary_hash": vocab.VOCABULARY_HASH,
         "n_c1_rows": n,
-        "mapped_rows": sum(mapped.values()),
-        "mapped_share": _r(sum(mapped.values()) / n, 4) if n else None,
+        "mapped_rows": n_mapped,
+        "mapped_share": _r(n_mapped / n, 4) if n else None,
         "mapped_by_vocabulary_id": dict(sorted(mapped.items(), key=lambda kv: -kv[1])),
+        "family_mapped_rows": n_family,
+        "family_mapped_kinds": dict(sorted(family.items(), key=lambda kv: -kv[1])),
+        "family_members": {k: list(v) for k, v in C1_KIND_TO_FAMILY.items()
+                           if k in family},
+        "covered_rows": n_mapped + n_family,
+        "covered_share": _r((n_mapped + n_family) / n, 4) if n else None,
         "unmapped_kinds": dict(sorted(unmapped.items(), key=lambda kv: -kv[1])),
         "unmapped_reasons": {k: v for k, v in C1_KIND_UNMAPPED.items() if k in unmapped},
         "rows_with_no_kind": missing,
         "direction": directions,
         "magnitude_buckets": dict(sorted(buckets.items(), key=lambda kv: -kv[1])),
-        "reading": ("only the three kinds whose mapping is a FUNCTION are mapped. The "
-                    "rest name two or more vocabulary ids with different direction "
-                    "priors, and ANALYST names none at all -- the 40-id table has no "
-                    "analyst-action type, which is a gap in the vocabulary, not in "
-                    "this mapping"),
+        "reading": ("only the kinds whose mapping is a FUNCTION are mapped to an ID. "
+                    "The rest name two or more vocabulary ids with different "
+                    "direction priors and stay unmapped. ANALYST -- C1's largest "
+                    "kind, and unmappable at vocabulary v1 because the table had no "
+                    "analyst type -- now maps to the v2 analyst FAMILY: all three of "
+                    "its ids carry the same ambiguous prior, so the family commits "
+                    "to nothing a sub-type would contradict. Family coverage is "
+                    "counted separately from id coverage, because a family is "
+                    "coverage at the mechanism level and merging the two would "
+                    "overstate what the vocabulary can type"),
     }
 
 

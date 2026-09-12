@@ -158,10 +158,16 @@ def _t(id_, definition, sec_items, sec_items_text, prior_text, magnitude,
                      example=example, counter_example=counter_example)
 
 
-#: THE TABLE. Generated from the spec's markdown and checked back against it by
-#: `test_event_vocabulary.py`, which re-parses that table on every run -- an edit
-#: to either side that does not reach the other is a red suite, not a drift.
-VOCABULARY: tuple[EventType, ...] = (
+#: THE v1 TABLE, FROZEN. Generated from the spec's section 1.2 markdown and
+#: checked back against it by `test_event_vocabulary.py`, which re-parses that
+#: table on every run -- an edit to either side that does not reach the other is
+#: a red suite, not a drift.
+#:
+#: This tuple may not change. `VOCABULARY_HASH_V1` is computed from it and rows
+#: typed before 2026-09-13 carry that hash; an edit here would make a corpus
+#: unreadable against the vocabulary it was actually typed under. New types go
+#: in `_V2_ADDED` below, and they move the CURRENT hash, which is the point.
+VOCABULARY_V1: tuple[EventType, ...] = (
     _t(
         "earnings_report",
         "Company reports a completed period's financial results (EPS/revenue) vs. consensus or vs. year-ago.",
@@ -564,6 +570,79 @@ VOCABULARY: tuple[EventType, ...] = (
     ),
 )
 
+#: THE v2 ADDENDUM (spec section 1.2b, 2026-09-13): the analyst-action family.
+#:
+#: `night_x2_elasticity`'s C1 mapping found `ANALYST` to be the LARGEST kind in
+#: the C1 extraction -- 1,218 rows of 6,676 -- against a v1 table with no
+#: analyst-action type at all, so those rows could be typed by no id. That is a
+#: gap in the vocabulary and not a defect in the mapping.
+#:
+#: Three rows rather than one `analyst_action`: a rating move, a target move and
+#: a first initiation have different base rates and different expected
+#: magnitudes, and a downgrade is not a trimmed target. All three priors are
+#: AMBIGUOUS on purpose -- the sign lives in the word (upgrade vs. downgrade,
+#: raise vs. cut), never in the type.
+_V2_ADDED: tuple[EventType, ...] = (
+    _t(
+        "analyst_rating_change",
+        "A sell-side analyst or firm upgrades or downgrades its investment rating on the company's stock.",
+        (),
+        "— (broker research, not an issuer filing)",
+        "ambiguous (positive on an upgrade, negative on a downgrade)",
+        "MODERATE",
+        "\"Goldman Sachs upgrades Acme Corp to Buy from Neutral, cites a margin inflection\"",
+        "A price-target move with the rating left unchanged → `analyst_target_change`. A credit-rating agency action on the company's DEBT → `credit_rating_change`.",
+    ),
+    _t(
+        "analyst_target_change",
+        "A sell-side analyst raises or cuts a price target while leaving the investment rating unchanged.",
+        (),
+        "— (broker research, not an issuer filing)",
+        "ambiguous (positive on a raise, negative on a cut)",
+        "SMALL",
+        "\"Morgan Stanley raises its Acme price target to $185 from $150, keeps Overweight\"",
+        "A target move that accompanies a rating move → `analyst_rating_change`; the rating is the stronger signal and the row carries one type.",
+    ),
+    _t(
+        "analyst_initiation",
+        "A sell-side analyst or firm begins coverage of the company for the first time, or resumes coverage that had been suspended.",
+        (),
+        "— (broker research, not an issuer filing)",
+        "ambiguous (the initiating rating carries the sign; a neutral initiation is `0`)",
+        "SMALL",
+        "\"Barclays initiates coverage of Acme Corp with an Overweight rating and a $95 target\"",
+        "A rating change by a firm that already covers the name → `analyst_rating_change`.",
+    ),
+)
+
+#: v2 = v1 with the addendum inserted BEFORE the refusal class, so `no_event`
+#: stays last and every v1 id keeps its position. Row ORDER is part of the
+#: contract (the JSON Schema enum is generated from it), so appending after
+#: `no_event` would have been a different table in a way a reader cannot see.
+VOCABULARY_V2: tuple[EventType, ...] = (VOCABULARY_V1[:-1] + _V2_ADDED
+                                        + VOCABULARY_V1[-1:])
+
+#: The CURRENT vocabulary. Every typed row carries `vocabulary_version` beside
+#: `vocabulary_hash`, because a hash says WHICH table and a version says which
+#: table a reader should go looking for.
+VOCABULARY_VERSION = 2
+VOCABULARY: tuple[EventType, ...] = VOCABULARY_V2
+
+VERSIONS: dict[int, tuple[EventType, ...]] = {1: VOCABULARY_V1, 2: VOCABULARY_V2}
+
+
+def vocabulary_for(version: int) -> tuple[EventType, ...]:
+    """One version's table, or a KeyError that names the ones that exist."""
+    try:
+        return VERSIONS[int(version)]
+    except KeyError:
+        raise KeyError(
+            f"vocabulary version {version!r} does not exist "
+            f"(have {sorted(VERSIONS)}). A version is added by appending a "
+            f"table here, never by editing an existing one."
+        ) from None
+
+
 #: The ids, in the spec's order. `no_event` is last.
 EVENT_TYPES: tuple[str, ...] = tuple(t.id for t in VOCABULARY)
 
@@ -588,16 +667,18 @@ def by_id(event_type: str) -> EventType:
     except KeyError:
         raise KeyError(
             f"{event_type!r} is not in the frozen L2 vocabulary "
-            f"({N_TYPES} ids, hash {VOCABULARY_HASH[:12]}). Add it to the spec's "
-            "table AND here, and the hash moves -- which is the point: rows typed "
+            f"(v{VOCABULARY_VERSION}, {N_TYPES} ids, hash "
+            f"{VOCABULARY_HASH[:12]}). Add it to the spec's table AND here as a "
+            "NEW VERSION, and the hash moves -- which is the point: rows typed "
             "before and after are then distinguishable."
         ) from None
 
 
-def table() -> list[dict]:
+def table(version: int | None = None) -> list[dict]:
     """The vocabulary as plain dicts -- what the hash is taken over, and what a
-    receipt embeds."""
-    return [asdict(t) for t in VOCABULARY]
+    receipt embeds. `version` defaults to the CURRENT one."""
+    rows = VOCABULARY if version is None else vocabulary_for(version)
+    return [asdict(t) for t in rows]
 
 
 def vocabulary_hash(rows: list[dict] | None = None) -> str:
@@ -613,7 +694,16 @@ def vocabulary_hash(rows: list[dict] | None = None) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-VOCABULARY_HASH: str = vocabulary_hash()
+#: One hash per version. v1's is what rows typed before 2026-09-13 carry, and it
+#: is still computable from `VOCABULARY_V1` -- which is the whole reason that
+#: tuple is kept rather than edited.
+VOCABULARY_HASHES: dict[int, str] = {v: vocabulary_hash(table(v)) for v in VERSIONS}
+VOCABULARY_HASH_V1: str = VOCABULARY_HASHES[1]
+
+#: The CURRENT hash. It MOVED when v2 landed, which is the signal a reader
+#: needs: a row carrying the old one was typed against a table that had no
+#: analyst type to offer.
+VOCABULARY_HASH: str = VOCABULARY_HASHES[VOCABULARY_VERSION]
 
 
 def items_index() -> dict[str, tuple[str, ...]]:
@@ -634,8 +724,12 @@ def declaration() -> dict:
     """What a receipt prints to say which vocabulary typed its rows."""
     return {
         "source": ("docs/research_notes/2026-09-11/spec_events_and_calibration.md "
-                   "section 1.2 (the TABLE; the section's closing sentence "
-                   "miscounts by one)"),
+                   "sections 1.2 (v1's TABLE; the section's closing sentence "
+                   "miscounts by one) and 1.2b (v2's analyst-action addendum)"),
+        "vocabulary_version": VOCABULARY_VERSION,
+        "versions": {str(v): {"n_types": len(t),
+                              "vocabulary_hash": VOCABULARY_HASHES[v]}
+                     for v, t in VERSIONS.items()},
         "n_types": N_TYPES,
         "n_substantive": N_SUBSTANTIVE,
         "n_ambiguous_priors": sum(1 for t in VOCABULARY if t.direction_prior is None),

@@ -199,6 +199,39 @@ not that the type is useless.
 That is 38 substantive types + `no_event` = **39 total**, inside the requested
 25-40 band.
 
+### 1.2b VOCABULARY v2 — the analyst-action family (added 2026-09-13)
+
+**v1 above is FROZEN and its hash is unchanged.** `event_vocabulary` keeps the
+v1 table verbatim and `VOCABULARY_HASH_V1` is still computable from it, so rows
+typed before this date are still readable against the vocabulary they were
+typed under. v2 = v1 with the three rows below inserted BEFORE the refusal
+class, so `no_event` stays last and every v1 id keeps its position. Every typed
+row carries `vocabulary_version`.
+
+**Why these three, and why now.** `night_x2_elasticity`'s C1 mapping found that
+`ANALYST` is the LARGEST kind in the C1 extraction — 1,218 rows of 6,676 — and
+that the v1 table has no analyst-action type at all, so those rows could not be
+typed by any id. RavenPack's public taxonomy carries `price-target`; §1.1's
+merge did not. That is a gap in the vocabulary, not a defect in the mapping,
+and this is the addendum that closes it.
+
+**Why three and not one.** A single `analyst_action` id would collapse a rating
+move, a target move and a first initiation into one bucket, and the three have
+different base rates and different expected magnitudes — a downgrade is not a
+trimmed target. Splitting them costs three rows and keeps the direction prior
+honest: all three are `ambiguous`, because the sign lives in the word (upgrade
+vs. downgrade, raise vs. cut) and not in the type.
+
+#### Analyst actions (v2)
+| id | definition | 8-K | direction prior | magnitude | example | not this |
+|---|---|---|---|---|---|---|
+| `analyst_rating_change` | A sell-side analyst or firm upgrades or downgrades its investment rating on the company's stock. | — (broker research, not an issuer filing) | ambiguous (positive on an upgrade, negative on a downgrade) | MODERATE | "Goldman Sachs upgrades Acme Corp to Buy from Neutral, cites a margin inflection" | A price-target move with the rating left unchanged → `analyst_target_change`. A credit-rating agency action on the company's DEBT → `credit_rating_change`. |
+| `analyst_target_change` | A sell-side analyst raises or cuts a price target while leaving the investment rating unchanged. | — (broker research, not an issuer filing) | ambiguous (positive on a raise, negative on a cut) | SMALL | "Morgan Stanley raises its Acme price target to $185 from $150, keeps Overweight" | A target move that accompanies a rating move → `analyst_rating_change`; the rating is the stronger signal and the row carries one type. |
+| `analyst_initiation` | A sell-side analyst or firm begins coverage of the company for the first time, or resumes coverage that had been suspended. | — (broker research, not an issuer filing) | ambiguous (the initiating rating carries the sign; a neutral initiation is `0`) | SMALL | "Barclays initiates coverage of Acme Corp with an Overweight rating and a $95 target" | A rating change by a firm that already covers the name → `analyst_rating_change`. |
+
+That is 42 substantive types + `no_event` = **43 total** at
+`VOCABULARY_VERSION = 2`.
+
 ### 1.3 Definitions that make two prompts comparable by kappa
 
 - **`direction ∈ {-1, 0, +1}`**, always relative to the named `scope` entity
@@ -294,7 +327,9 @@ prompt contract below is provider-agnostic).
         "auditor_or_accounting_change", "cybersecurity_incident",
         "insider_or_institutional_ownership_change",
         "macro_rate_decision", "macro_inflation_print", "macro_labor_report",
-        "tariff_or_trade_policy", "sanction", "index_rebalance", "no_event"
+        "tariff_or_trade_policy", "sanction", "index_rebalance",
+        "analyst_rating_change", "analyst_target_change", "analyst_initiation",
+        "no_event"
       ]
     },
     "direction": { "type": "integer", "enum": [-1, 0, 1] },
@@ -451,6 +486,17 @@ expands `evidence_span` to the exact quoted substring at implementation time).
 21. **Sarcasm.** "Acme's 'transformational' new CEO lasted all of four months before quietly resigning — shocking absolutely no one." → `{management_change_departure, -1, SMALL, 0.75}`. The sarcastic tone ("transformational", "shocking absolutely no one") must NOT change `event_type` — it is still a departure — but the loaded language is exactly the kind of thing that should show up quoted in `evidence_span`, and rule 6 covers it explicitly.
 22. **Denial.** "Acme Corp denies it is in talks to acquire Widget Inc, calls rumors 'baseless'." → `{mergers_acquisitions, -1, SMALL, 0.6}` per rule 7 — the denial removes an expected catalyst, so scope=Acme gets a mild negative, NOT a positive `1` (which a naive keyword match on "acquire" would produce) and NOT `no_event` (a naive "nothing happened" reading, which throws away real information: the market had priced in a deal that is now off).
 23. **Old-news recap.** "As previously reported in March, Acme completed its acquisition of Widget Inc; the combined company will report first joint earnings next quarter." → `{no_event, 0, NEGLIGIBLE, 0.7}` per rule 8 — "as previously reported" is the explicit recap marker; the event's information content was already extracted on the March article's own date, and a test must confirm the extractor does NOT re-emit `mergers_acquisitions` here.
+
+### 2.8 Vocabulary v2 additions (3 rows, ids 24-26)
+
+24. "Goldman Sachs upgrades Acme Corp to Buy from Neutral, raises target to $95" → `{analyst_rating_change, 1, MODERATE, 0.85}`
+25. "Morgan Stanley cuts its Acme price target to $110 from $150, maintains Overweight" → `{analyst_target_change, -1, SMALL, 0.8}`
+26. "Barclays initiates coverage of Acme Corp with an Equal Weight rating and a $72 target" → `{analyst_initiation, 0, SMALL, 0.7}`
+
+Row 26 is the one that earns its place: a neutral initiation is a REAL, dated
+event with no directional implication by itself, which is exactly what
+`direction: 0` means in §1.3 — and it is the reading a keyword matcher on
+"initiates coverage" would get wrong in both directions.
 
 A regression test (`test_event_vocabulary_golden_set.py`, builder's to write)
 pins all 23 rows: run the prompt against the live local model, assert
