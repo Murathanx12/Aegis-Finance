@@ -793,8 +793,79 @@ def loop_decision_vs_reality(state: LabState) -> dict:
     }
 
 
+def calendar_tickers() -> list[str]:
+    """The names the per-ticker half of the calendar covers.
+
+    The PM book's own positions, through the same loader `routers/pm.py`'s
+    `/catalysts` already uses — a second answer to "which names do we hold"
+    would be one answer too many. An unreadable book is CANNOT DETERMINE, not
+    an empty list: the macro half still ships, and the receipt says the ticker
+    half did not.
+    """
+    from backend.services import pm_engine
+    book = pm_engine.load_book(strict=False)
+    return [p.ticker for p in getattr(book, "positions", [])]
+
+
 def loop_catalyst_calendar(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """Upcoming dates, every entry with its provenance and every gap named.
+
+    Two halves. The per-ticker half is `pm_catalysts.calendar()`, CALLED, not
+    rebuilt. The macro half is new: CPI and NFP from FRED's scheduled release
+    dates, FOMC from a hand-seeded table. Every entry carries
+    `engine_probability: null` with `AWAITING_L2`, because X3 is not wired and
+    a fabricated probability attached to a real date is the one failure this
+    loop could cause that nobody would notice for months.
+    """
+    from backend.services import macro_calendar
+
+    tickers: list[str] = []
+    ticker_refusal: str | None = None
+    try:
+        tickers = calendar_tickers()
+    except Exception as exc:                                       # noqa: BLE001
+        ticker_refusal = f"TICKERS_CANNOT_DETERMINE: {_trunc(exc)}"
+
+    macro = macro_calendar.macro_block()
+    per_ticker: dict = {}
+    if tickers:
+        try:
+            from backend.services import pm_catalysts
+            per_ticker = pm_catalysts.calendar(tickers)
+        except Exception as exc:                                   # noqa: BLE001
+            ticker_refusal = f"EARNINGS_HALF_FAILED: {_trunc(exc)}"
+
+    payload = {
+        "receipt": "lab_catalyst_calendar",
+        "licence": "PRODUCT_EXPERIMENT", "stage": "raw", "llm_spend_usd": 0.0,
+        "utc": _now(), "date": run_date(),
+        "tickers": tickers, "ticker_refusal": ticker_refusal,
+        "per_ticker": per_ticker, **macro,
+    }
+    path = out_dir() / f"lab_catalyst_calendar_{run_date()}.json"
+    _write_atomic(path, payload)
+
+    n_macro = len(macro.get("macro") or [])
+    n_ticker = int((per_ticker.get("events_found") or 0))
+    refusals = list(macro.get("refusals") or [])
+    if ticker_refusal:
+        refusals.append({"kind": "per_ticker", "refusal": ticker_refusal})
+    return {
+        "status": ("ok" if (n_macro or n_ticker)
+                   else ("refused" if refusals else "nothing_to_do")),
+        "n": n_macro + n_ticker,
+        "macro_events": n_macro,
+        "ticker_events": n_ticker,
+        "tickers_checked": len(tickers),
+        "macro_legs": macro.get("legs"),
+        "fomc_table": (macro.get("fomc_table") or {}).get("status"),
+        "refusals": [r.get("refusal") for r in refusals],
+        "receipt_path": str(path),
+        "headline": (f"{n_macro} macro date(s) and {n_ticker} ticker event(s) "
+                     f"over {len(tickers)} name(s); "
+                     f"{len(refusals)} named refusal(s); every "
+                     f"engine_probability null (AWAITING_L2)"),
+    }
 
 
 def loop_nn_lab(state: LabState) -> dict:

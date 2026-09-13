@@ -624,6 +624,45 @@ def test_the_typing_loop_bounds_one_tick(lab, monkeypatch):
 
 
 # --------------------------------------------------------------------------
+# loop 4 — the catalyst calendar
+
+
+def test_the_calendar_loop_ships_macro_even_when_the_tickers_cannot_be_read(
+        lab, monkeypatch):
+    """A per-ticker half that cannot load must not take the macro half down."""
+    monkeypatch.setattr(L, "calendar_tickers", lambda: (_ for _ in ()).throw(
+        RuntimeError("no book on disk")))
+    from backend.services import macro_calendar
+    today = datetime.now(timezone.utc).date()
+    monkeypatch.setattr(macro_calendar, "macro_block", lambda **kw: {
+        "macro": [{"kind": "CPI",
+                   "event_time": (today + timedelta(days=9)).isoformat(),
+                   "engine_probability": None, "probability_status": "AWAITING_L2"}],
+        "legs": {"CPI": "1 date(s)"}, "refusals": [],
+        "fomc_table": {"status": "FOMC_SCHEDULE_NOT_SEEDED"}})
+
+    out = L.loop_catalyst_calendar(L.LabState())
+    assert out["status"] == "ok"
+    assert out["macro_events"] == 1 and out["ticker_events"] == 0
+    assert "TICKERS_CANNOT_DETERMINE" in out["refusals"][0]
+    assert "AWAITING_L2" in out["headline"]
+    assert (lab / f"lab_catalyst_calendar_{L.run_date()}.json").exists()
+
+
+def test_the_calendar_loop_names_every_refused_leg(lab, monkeypatch):
+    monkeypatch.setattr(L, "calendar_tickers", lambda: [])
+    from backend.services import macro_calendar
+    monkeypatch.setattr(macro_calendar, "macro_block", lambda **kw: {
+        "macro": [], "legs": {"CPI": "REFUSED"},
+        "refusals": [{"kind": "CPI", "refusal": "FRED_KEY_ABSENT"}],
+        "fomc_table": {"status": "FOMC_SCHEDULE_NOT_SEEDED"}})
+    out = L.loop_catalyst_calendar(L.LabState())
+    assert out["status"] == "refused"
+    assert out["refusals"] == ["FRED_KEY_ABSENT"]
+    assert out["n"] == 0
+
+
+# --------------------------------------------------------------------------
 # the declared surface, and the things it must never do
 
 
