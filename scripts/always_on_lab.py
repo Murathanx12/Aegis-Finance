@@ -877,7 +877,39 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
 
 
 def loop_thematic_streams(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """Murat's four themes, each its own `mechanism_id`, each on its own cadence.
+
+    Registration is idempotent and happens every tick; only the streams whose
+    own cadence has elapsed do any work. A placeholder reports `n_fired: 0` with
+    the reason rather than disappearing from the payload — a stream nobody
+    remembers is waiting is a stream that gets invented from nothing later, with
+    no history.
+    """
+    from backend.services import lab_themes
+
+    tickers: list[str] = []
+    try:
+        tickers = calendar_tickers()
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("thematic streams: no ticker list (%s)", _trunc(exc))
+
+    out = lab_themes.run_due(tickers)
+    path = out_dir() / f"lab_theme_streams_{run_date()}.json"
+    _write_atomic(path, out)
+    obs = sum(r["n_observations"] for r in out["streams"])
+    fired = sum(r["n_fired"] for r in out["streams"])
+    return {
+        "status": "ok" if (obs or fired) else "nothing_to_do",
+        "n": obs + fired,
+        "observations": obs,
+        "forecasts": fired,
+        "tickers_checked": len(tickers),
+        "streams": {r["mechanism_id"]: r["readiness"] for r in out["streams"]},
+        "blocked": {r["mechanism_id"]: r.get("blocked_by")
+                    for r in out["streams"] if r.get("blocked_by")},
+        "receipt_path": str(path),
+        "headline": out["headline"],
+    }
 
 
 def loop_status(state: LabState) -> dict:
@@ -981,6 +1013,14 @@ def tick(state: LabState, *, now: datetime | None = None) -> dict:
     return payload
 
 
+def _theme_status() -> dict:
+    from backend.services import lab_themes
+    try:
+        return lab_themes.status()
+    except Exception as exc:                                       # noqa: BLE001
+        return {"status": "CANNOT DETERMINE", "why": _trunc(exc)}
+
+
 def status_payload(state: LabState, now: datetime | None = None) -> dict:
     """`lab_status.json` — every loop's block present every tick, always."""
     now = now or datetime.now(timezone.utc)
@@ -1018,6 +1058,7 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
         "spend_today_usd": spend["spend_today_usd"],
         "spend_cap_usd": spend["cap_usd"],
         "spend_cap_reached": spend["cap_reached"],
+        "thematic_streams": _theme_status(),
         "single_instance_lock": read_lock(),
         "stop_file": str(stop_path()),
         "read_me_first": (
