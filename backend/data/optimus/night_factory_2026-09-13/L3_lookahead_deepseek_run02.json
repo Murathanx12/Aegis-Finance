@@ -1,0 +1,89 @@
+{
+ "job": "L3_lookahead",
+ "lane": "X",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-A",
+ "backend": "deepseek",
+ "model": "deepseek-chat",
+ "model_cutoff_date": "2024-07-01",
+ "model_cutoff_source": "an EXTRACTED system prompt reported by knostic.ai -- unofficial. DeepSeek publishes no cutoff date",
+ "model_cutoff_confidence": "LOW",
+ "question": "Is R2's accuracy concentrated in the cells where the model, asked directly and shown nothing, already knows the answer?",
+ "lap_probe": {
+  "purpose_tag": "l3_lap_probe",
+  "system": "You are a financial-history assistant. Answer only from what you already know; you are given no documents. Respond in English only.",
+  "user_template": "For {ticker} in {month}, state what you recall happened to its stock price that month relative to the market: UP, DOWN, or FLAT, and your confidence 0.0-1.0. If you do not recall, say UNKNOWN.\nAnswer in exactly two lines:\nRECALL: UP|DOWN|FLAT|UNKNOWN\nCONFIDENCE: 0.0-1.0",
+  "spend_usd": 0.0,
+  "why_unmasked": "the probe measures memorisation and never feeds a graded forecast; R2's own read never names the company"
+ },
+ "deviations_from_the_spec": [
+  "the verdict uses a joint Wald test on (beta2, beta3) while the receipt reports beta3 as the paper's statistic -- a model that is right in high-LAP cells regardless of what it forecast plants a LEVEL effect on beta2 with a true beta3 of zero, and a beta3-only detector would call that CLEAN"
+ ],
+ "verdict": "REFUSED: PANEL-A has no persisted per-cell answers (the 2026-09-08 run graded 15,000 answers in memory and wrote a summary), so L3's accuracy side cannot be computed without re-reading 5,854 seconds of inference. PANEL-A's L3 needs a NEW read with the frozen R2 prompt first",
+ "headline": "PANEL-A carries no answers file; L3 cannot read what was not written",
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": false,
+   "date_shifted_placebo_run": false,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "ChronoGPT is the same-era control spec section 1.6 scopes as an OPTIONAL separate deliverable; it has no GGUF build",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-07-01",
+   "cutoff_source": "an EXTRACTED system prompt reported by knostic.ai -- unofficial. DeepSeek publishes no cutoff date",
+   "cutoff_confidence": "LOW",
+   "evidence_paths": {
+    "anonymised": null,
+    "date_shifted_placebo_run": null,
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": true,
+   "note": "L3 reads cells R2 already graded; R2's label construction requires the successor month to be literally the next one"
+  },
+  "P3_direction_flip": {
+   "pass_rate": null,
+   "n": 0,
+   "test": "not run in this job: the flip test belongs to X2's counterfactuals"
+  },
+  "P4_calibration_ece": {
+   "ece": null,
+   "n_bins": 10,
+   "brier": null,
+   "brier_decomposition": {}
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "r2_trial.COST_BPS_PER_SIDE (this job prices no book of its own)",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": null,
+   "costed": false,
+   "gross_reported_separately": false
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "dir, conf": "Qwen2.5-7B via the frozen TRIAL-R2 prompt (read from disk)",
+    "RECALL, CONFIDENCE": "the same model via LAP_PROBE_USER, purpose l3_lap_probe",
+    "accuracy, LAP, beta*": "deterministic arithmetic in night_l3_lookahead"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "the recall probe has not run (PENDING_MODEL), so no per-cell LAP exists yet; the accuracy side and the frozen probe cells are in this receipt"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": null,
+  "t": null,
+  "adopted_arm": null,
+  "reason": "L3 measures memorisation, not masking cost; X_anon_gap owns the gap and this receipt does not restate it"
+ },
+ "elapsed_s": 0.0,
+ "written_utc": "2026-09-13T09:19:57+00:00",
+ "run": 2
+}
