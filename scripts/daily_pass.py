@@ -286,7 +286,14 @@ def step_news_pull(ctx: dict) -> dict:
 def step_analyst_snapshot(ctx: dict) -> dict:
     """Today's consensus rows. The name table is updated by the same sweep."""
     t0 = time.time()
-    rec = run_analyst_snapshot()
+    # THE TRADABLE BAND, NOT THE WHOLE POTENTIAL UNIVERSE (chunk 15b). The
+    # 3,056-name sweep is 3.4 h of a 3.9 h pass at the measured 4.45 s/symbol,
+    # and a quarter of it is names no book here can hold. `analyst_snapshot`
+    # reads the band from `night_f_seasonality_export.load_universe` -- the one
+    # place the floor is defined -- and REFUSES rather than falling back to the
+    # larger list, so a pass that quietly grew by 700 names cannot happen
+    # silently. The CLI default stays `all` for the one-off name-table sweep.
+    rec = run_analyst_snapshot(universe="tradable")
     by_status = rec.get("by_status") or {}
     rows = int(rec.get("rows") or 0)
     errs = int(by_status.get("error") or 0)

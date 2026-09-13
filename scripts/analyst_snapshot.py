@@ -2,6 +2,7 @@
 
     python -m scripts.analyst_snapshot --max-symbols 50
     python -m scripts.analyst_snapshot --max-symbols 3056
+    python -m scripts.analyst_snapshot --universe tradable     # the band we can trade
 
 One parquet row per (symbol, date) at
 
@@ -50,6 +51,34 @@ information per dollar, not minimise calls.
 FINNHUB is attempted only if `FINNHUB_API_KEY` or `AAT_FINNHUB_API_KEY`
 resolves. Neither does here, so the receipt names them and moves on. Names only,
 never a value.
+
+WHICH UNIVERSE, AND WHY THE DAILY PASS ASKS FOR THE SMALLER ONE (chunk 15b)
+===========================================================================
+`--universe all` (the CLI default) is the 3,056-name potential universe in
+`backend/data/optimus/potential_universe/`. Measured, not estimated --
+`analyst_snapshots/2026-09-13_receipt.json`: 3,056 symbols, **3.987 s/symbol,
+12,184 s = 3.39 h** of a 3.9-hour daily pass. Roughly a quarter of that is spent
+on names no book here can hold: below the $10M median-dollar-volume floor, below
+$5, or an ETF.
+
+At the same rate the tradable band (2,362 names on the 2026-09-01 universe file)
+projects to **9,417 s = 2.62 h, saving 0.77 h a day** -- about 23%, which is the
+share of the list the floor removes. The saving is in WALL TIME, not in
+information: every name dropped is one no book in this programme can hold.
+
+`--universe tradable` is the band `night_f_seasonality_export.load_universe`
+already defines -- **and it is READ from that function, not re-derived here.**
+Two definitions of "the universe we trade" is two things to keep in step, and
+the one that would drift is this one, because the band's real owner is the
+EXECUTION repo (`alpha/universe.py` writes
+`state/universe/HIGH_DISPERSION_US_v1_<asof>.json`; the exporter applies the
+floor). The receipt prints the file it read, its `asof`, the filter in numbers
+and how many names each clause dropped, so a reader can tell a shrinking band
+from a broken path.
+
+`daily_pass.py` passes `tradable`. The CLI default stays `all`, because a
+one-off sweep for the NAME TABLE wants every name it can get and that
+deliverable has nothing to do with tradability.
 """
 
 from __future__ import annotations
@@ -189,7 +218,12 @@ def _row(symbol: str, day: str, observed: str, got: dict) -> dict:
     }
 
 
-def _symbols(limit: int | None) -> list[str]:
+#: The two universes this job can sweep. `all` is the historical behaviour and
+#: stays the CLI default; `tradable` is the band the books can actually hold.
+UNIVERSES = ("all", "tradable")
+
+
+def _symbols_all(limit: int | None) -> tuple[list[str], dict]:
     p = universe_path()
     out: list[str] = []
     if p.exists():
@@ -201,7 +235,54 @@ def _symbols(limit: int | None) -> list[str]:
             s = d.get("symbol")
             if isinstance(s, str) and s.strip():
                 out.append(s.strip().upper())
-    return out[:limit] if limit else out
+    prov = {"universe": "all", "source": str(p), "exists": p.exists(),
+            "n_available": len(out),
+            "filter": "none -- every symbol in the potential universe"}
+    return (out[:limit] if limit else out), prov
+
+
+def _symbols_tradable(limit: int | None) -> tuple[list[str], dict]:
+    """The tradable band, READ from the one function that already defines it.
+
+    `night_f_seasonality_export.load_universe` applies the $10M median-dollar-
+    volume floor, the $5 price minimum and the ETF flag to the execution repo's
+    stored universe file. Importing it is the point: a second copy of those three
+    clauses here would be a second definition of "the universe we trade", and the
+    day they disagreed the receipts would still both say "tradable".
+
+    A refusal there (no stored universe file, no members, nothing above the
+    floor) is re-raised as a refusal HERE -- an empty band is not silently
+    swapped for the 3,056-name list, because a sweep that quietly grew by 700
+    names is exactly the kind of thing nobody notices in a receipt.
+    """
+    from scripts.night_f_seasonality_export import (
+        FLOOR_USD, MIN_PRICE_USD, load_universe,
+    )
+
+    band = load_universe()
+    syms = sorted(band["symbols"])
+    prov = {
+        "universe": "tradable",
+        "source": band["path"],
+        "asof": band.get("asof"),
+        "exists": True,
+        "n_members": band["n_members"],
+        "n_available": band["n_kept"],
+        "dropped": dict(band["dropped"]),
+        "filter": (f"median dollar volume >= ${FLOOR_USD:,.0f}, "
+                   f"price >= ${MIN_PRICE_USD:g}, ETFs excluded"),
+        "filter_owner": ("scripts/night_f_seasonality_export.load_universe -- read, "
+                         "not re-derived; the band's own owner is the execution "
+                         "repo's alpha/universe.py"),
+    }
+    return (syms[:limit] if limit else syms), prov
+
+
+def _symbols(limit: int | None, universe: str = "all") -> tuple[list[str], dict]:
+    u = (universe or "all").strip().lower()
+    if u not in UNIVERSES:
+        raise ValueError(f"unknown universe {universe!r}; expected one of {UNIVERSES}")
+    return _symbols_all(limit) if u == "all" else _symbols_tradable(limit)
 
 
 def update_name_table(learned: dict[str, str]) -> dict:
@@ -250,13 +331,30 @@ CHECKPOINT_EVERY = 250
 
 def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
              fetch: Callable[[str], dict] | None = None,
-             update_names: bool = True) -> dict:
-    """Pull, write one parquet for today, return the receipt."""
+             update_names: bool = True, universe: str = "all") -> dict:
+    """Pull, write one parquet for today, return the receipt.
+
+    `universe` is "all" (the 3,056-name potential universe) or "tradable" (the
+    ~2,362-name band at the $10M floor). A refusal from the band's own loader is
+    returned AS a refusal -- never silently downgraded to the larger list.
+    """
     t0 = time.time()
     fetch = fetch or fetch_yfinance
     observed = _now()
     day = observed.date().isoformat()
-    symbols = _symbols(max_symbols)
+    try:
+        symbols, universe_prov = _symbols(max_symbols, universe)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "job": "analyst_snapshot", "licence": "PRODUCT_EXPERIMENT",
+            "llm_spend_usd": 0.0, "date": day, "rows": 0,
+            "symbols_requested": 0,
+            "refused": (f"universe {universe!r} could not be resolved "
+                        f"({type(exc).__name__}: {exc})"),
+            "universe": {"universe": universe, "resolved": False},
+            "written_utc": _now().isoformat(timespec="seconds"),
+            "headline": f"REFUSED: no {universe} universe to sweep",
+        }
     rows: list[dict] = []
     learned: dict[str, str] = {}
     errors: list[str] = []
@@ -299,6 +397,7 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
                     "job": "analyst_snapshot", "status": "PARTIAL",
                     "date": day, "path": str(path),
                     "symbols_requested": len(symbols), "rows": len(rows),
+                    "universe": dict(universe_prov),
                     "by_status": dict(counts),
                     "rate_s_per_symbol": round(rate, 3),
                     "projected_total_min": round(rate * len(symbols) / 60.0, 1),
@@ -334,6 +433,7 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         "job": "analyst_snapshot", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
         "date": day, "observed_utc": observed.isoformat(timespec="seconds"),
         "symbols_requested": len(symbols), "rows": len(rows),
+        "universe": universe_prov,
         "by_status": counts,
         "coverage_rate": round(graded / len(rows), 4) if rows else None,
         "path": str(path), "parquet": written, "write_note": write_note,
@@ -361,7 +461,10 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         ),
         "errors_first_20": errors,
         "written_utc": _now().isoformat(timespec="seconds"),
-        "headline": (f"{len(rows):,} (symbol, date) rows for {day}; "
+        "headline": (f"{len(rows):,} (symbol, date) rows for {day} over the "
+                     f"{universe_prov['universe']} universe "
+                     f"({universe_prov['n_available']:,} available, "
+                     f"{universe_prov['filter']}); "
                      f"{graded:,} carried at least one analyst field"),
     }
     if rows:
@@ -376,8 +479,14 @@ def main(argv=None) -> int:
     ap.add_argument("--pace", type=float, default=1.0, help="seconds between symbols")
     ap.add_argument("--no-name-table", action="store_true",
                     help="do not write learned company names back into issuers.csv")
+    ap.add_argument("--universe", choices=list(UNIVERSES), default="all",
+                    help=("all = the 3,056-name potential universe (default, and what "
+                          "the name-table deliverable wants); tradable = the band at "
+                          "the $10M median-dollar-volume floor, >= $5, ETFs out "
+                          "(~2,362 names; what daily_pass asks for)"))
     a = ap.parse_args(argv)
-    out = snapshot(a.max_symbols, pace_s=a.pace, update_names=not a.no_name_table)
+    out = snapshot(a.max_symbols, pace_s=a.pace, update_names=not a.no_name_table,
+                   universe=a.universe)
     print(json.dumps(out, indent=1, default=str))
     return 0
 

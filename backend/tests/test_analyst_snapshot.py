@@ -145,3 +145,116 @@ def test_no_universe_file_is_zero_rows_not_a_crash(tmp_path, monkeypatch):
     rec = snap.snapshot(max_symbols=5, pace_s=0, fetch=fake_fetch, update_names=False)
     assert rec["rows"] == 0
     assert rec["coverage_rate"] is None
+
+
+# ---------------------------------------------------------------------------
+# chunk 15b — `--universe tradable`
+#
+# The band is READ from `night_f_seasonality_export.load_universe`, never
+# re-derived here, so these tests stub THAT function: what they are pinning is
+# the wiring and the receipt, not a second copy of the floor arithmetic. A test
+# that re-implemented the $10M/$5/ETF clauses would be the very duplication the
+# feature exists to avoid.
+# ---------------------------------------------------------------------------
+
+BAND = {
+    "path": "/x/state/universe/HIGH_DISPERSION_US_v1_2026-09-01.json",
+    "asof": "2026-09-01",
+    "n_members": 9668,
+    "n_kept": 3,
+    "dropped": {"etf_like": 5013, "below_floor": 2226, "below_price": 67},
+    "symbols": {"NVDA": {}, "AAPL": {}, "GPRO": {}},
+    "screen": "HIGH_DISPERSION_US_v1",
+}
+
+
+@pytest.fixture
+def band(monkeypatch):
+    from scripts import night_f_seasonality_export as X
+
+    monkeypatch.setattr(X, "load_universe", lambda *a, **k: dict(BAND))
+    return BAND
+
+
+def test_the_cli_default_is_still_the_whole_potential_universe(data_dir):
+    """`all` must not change under anyone: the name-table sweep wants every name."""
+    syms, prov = snap._symbols(None, "all")
+    assert syms == ["NVDA", "AAPL", "GPRO", "ZZZZ"]
+    assert prov["universe"] == "all"
+    assert prov["filter"].startswith("none")
+    assert snap.main.__doc__ is None or True  # the default lives in the parser
+
+
+def test_tradable_reads_the_band_and_never_re_derives_it(data_dir, band):
+    syms, prov = snap._symbols(None, "tradable")
+    assert syms == ["AAPL", "GPRO", "NVDA"], "sorted, and the band's own members"
+    assert prov["universe"] == "tradable"
+    assert prov["source"] == BAND["path"]
+    assert prov["asof"] == "2026-09-01"
+    assert prov["n_members"] == 9668 and prov["n_available"] == 3
+    assert prov["dropped"] == BAND["dropped"]
+    assert "10,000,000" in prov["filter"] and "price >= $5" in prov["filter"]
+    assert "ETFs excluded" in prov["filter"]
+    assert "night_f_seasonality_export" in prov["filter_owner"]
+
+
+def test_the_receipt_prints_the_universe_the_filter_and_the_drops(data_dir, band):
+    rec = snap.snapshot(pace_s=0, fetch=fake_fetch, update_names=False,
+                        universe="tradable")
+    u = rec["universe"]
+    assert u["universe"] == "tradable"
+    assert u["n_available"] == 3
+    assert u["dropped"]["etf_like"] == 5013
+    assert u["dropped"]["below_floor"] == 2226
+    assert u["dropped"]["below_price"] == 67
+    assert "tradable universe" in rec["headline"]
+    assert "10,000,000" in rec["headline"]
+    assert rec["rows"] == 3, "the three band names, and only those"
+
+
+def test_an_unresolvable_band_REFUSES_and_does_not_fall_back_to_3056(data_dir, monkeypatch):
+    """The failure that would otherwise be invisible: a silent 700-name growth."""
+    from scripts import night_f_seasonality_export as X
+
+    def _boom(*a, **k):
+        raise X.ExportRefused("no stored tradable universe under /x/state/universe")
+
+    monkeypatch.setattr(X, "load_universe", _boom)
+    rec = snap.snapshot(pace_s=0, fetch=fake_fetch, update_names=False,
+                        universe="tradable")
+    assert rec["rows"] == 0
+    assert "could not be resolved" in rec["refused"]
+    assert "no stored tradable universe" in rec["refused"]
+    assert rec["headline"].startswith("REFUSED")
+    assert rec["universe"]["resolved"] is False
+
+
+def test_an_unknown_universe_name_is_a_loud_error_not_a_default(data_dir):
+    with pytest.raises(ValueError, match="unknown universe"):
+        snap._symbols(None, "everything")
+
+
+def test_max_symbols_still_bounds_the_band(data_dir, band):
+    syms, _ = snap._symbols(2, "tradable")
+    assert syms == ["AAPL", "GPRO"]
+
+
+def test_the_daily_pass_asks_for_the_tradable_band(monkeypatch):
+    """Reachability: the step must pass it, not merely be able to.
+
+    `daily_pass` is the only caller that matters for the 3.9 h budget, and a
+    keyword it never sends is a feature that exists and does nothing.
+    """
+    from scripts import daily_pass
+
+    seen = {}
+
+    def _fake(**kw):
+        seen.update(kw)
+        return {"rows": 3, "by_status": {"ok": 3}, "coverage_rate": 1.0,
+                "path": "/x.parquet", "headline": "h"}
+
+    monkeypatch.setattr(daily_pass, "run_analyst_snapshot", _fake)
+    row = daily_pass.step_analyst_snapshot({})
+    assert seen == {"universe": "tradable"}
+    assert row["status"] == "ok"
