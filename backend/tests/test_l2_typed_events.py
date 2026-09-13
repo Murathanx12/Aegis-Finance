@@ -108,9 +108,16 @@ def test_the_cursor_resumes_and_never_re_types_a_row(wired):
 
 def test_a_crash_mid_run_keeps_every_flushed_row_and_the_cursor(wired, monkeypatch):
     """2026-09-13: the first cloud run held 1,200 typed rows in memory with the
-    file unwritten and the cursor untouched. Rows are now flushed every
-    FLUSH_EVERY; a reader that dies afterwards leaves them on disk and the
-    cursor past them, so the restart neither loses nor re-bills them."""
+    file unwritten and the cursor untouched. Rows are flushed every FLUSH_EVERY;
+    a reader that dies afterwards leaves them on disk and the cursor past them,
+    so the restart neither loses nor re-bills them.
+
+    CHUNK 15a CHANGED THE SHAPE OF THE ENDING, not the guarantee. A reader error
+    used to escape as a traceback and the run produced no receipt; it is now a
+    counted `REFUSED_READER_ERROR`, every row COLLECTED before the failure is
+    flushed (so the third row here survives where it used to be dropped), and
+    the cursor stops immediately before the failing row.
+    """
     monkeypatch.setattr(l2, "FLUSH_EVERY", 2)
     rows = [_corpus_row(i) for i in range(5)]
     _write(wired["corpus"], rows)
@@ -121,17 +128,20 @@ def test_a_crash_mid_run_keeps_every_flushed_row_and_the_cursor(wired, monkeypat
         if box["calls"] > 3:
             raise RuntimeError("reader died")
         return _Reply(_answer())
-    with pytest.raises(RuntimeError):
-        l2.L2_typed_events(complete=dying, probe=lambda b: None, kappa_rows=0)
-    typed = list(wired["typed"].glob("*.jsonl"))
+    out = l2.L2_typed_events(complete=dying, probe=lambda b: None, kappa_rows=0)
+    assert out["status"] == "READER_ERROR"
+    assert out["results"]["refused"]["REFUSED_READER_ERROR"] == 1
+    typed = [p for p in wired["typed"].glob("*.jsonl")
+             if not p.name.endswith("_refusals.jsonl")]
     assert typed, "nothing was flushed before the crash"
     on_disk = sum(1 for p in typed for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip())
-    assert on_disk == 2, on_disk          # one flush of FLUSH_EVERY rows landed; the third row died unflushed
+    assert on_disk == 3, on_disk   # two at the flush boundary, the third at the stop
     cur = json.loads((wired["typed"] / "_cursor.json").read_text(encoding="utf-8"))
-    assert cur.get("rows_written_total", cur.get("rows_written")) == 2
+    assert cur.get("rows_written_total", cur.get("rows_written")) == 3
+    assert cur["per_source"][SOURCE][1] == "0002", "the cursor stops before row 3"
     # the restart types only what the cursor has not passed
     again = l2.L2_typed_events(complete=_complete([_answer()]), probe=lambda b: None, kappa_rows=0)
-    assert again["results"]["rows_typed"] == 3, again["results"]
+    assert again["results"]["rows_typed"] == 2, again["results"]
 
 
 def test_the_cursor_carries_its_totals_across_runs(wired):

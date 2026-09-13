@@ -308,36 +308,64 @@ KEYWORD_PROXY = "keyword_proxy"
 
 
 def typed_rows(directory=None) -> list[dict]:
-    """Every L2 row on disk, or `[]`. Refusal rows are a different file and are
-    not read here -- a refused document produced no type, and counting it as one
-    would be the opposite of what its class says."""
+    """Every L2 row on disk, or `[]`.
+
+    BOTH SOURCES, in one list. `<date>.jsonl` is the news corpus and
+    `panel_<date>.jsonl` (chunk 15a) is the 2025-26 return panel's own headline
+    table; every row carries `source_kind` so a receipt can say which produced
+    what, and `typed_events` reads the panel's first so that a text present in
+    both contributes ONE event to a cell.
+
+    Refusal rows are a different file and are not read here -- a refused
+    document produced no type, and counting it as one would be the opposite of
+    what its class says.
+    """
     d = Path(directory or TYPED_DIR)
     if not d.is_dir():
         return []
+    paths = sorted(d.glob("*.jsonl"))
+    # panel files first: on a tie they win the dedupe, because their cell comes
+    # from the panel's OWN entry_date rather than from a re-derived session
+    paths.sort(key=lambda p: (not p.name.startswith("panel_"), p.name))
     rows: list[dict] = []
-    for path in sorted(d.glob("*.jsonl")):
+    for path in paths:
         if path.name.endswith("_refusals.jsonl"):
             continue
-        rows.extend(jsonl_io.iter_rows(path, errors="strict"))
+        kind = "panel" if path.name.startswith("panel_") else "corpus"
+        for row in jsonl_io.iter_rows(path, errors="strict"):
+            row.setdefault("source_kind", kind)
+            rows.append(row)
     return rows
 
 
 def typed_events(cells: pd.DataFrame, directory=None) -> tuple[pd.DataFrame, dict]:
     """L2's rows as the same event table `extract_events` returns.
 
-    ENTRY DATE. A typed row carries the document's date, not a session. Here it
-    is anchored to the first panel session STRICTLY AFTER that date, which can
-    never reach past its own cell and is conservative by one session for a
-    pre-open headline. The proxy path inherits the panel's own `entry_date`,
-    which is computed from the open time the N-C join has and this file does
-    not; when L2's rows are joined through that builder they get the same
-    treatment, and the `entry_date_rule` in the meta says which one ran.
+    TWO JOINS, ONE PER SOURCE, AND THE SOURCE PICKS THE JOIN.
 
-    SCOPE. One row per document, emitted for the document's `scope` symbol only.
-    A document tagged with other tickers does NOT fan out: `direction` is defined
-    relative to the scope entity and nothing else, and fanning would multiply one
-    reading into several correlated ones. The count that was not emitted is
-    reported rather than left to be inferred.
+    * A CORPUS row carries the document's date and nothing else, so it is
+      anchored to the first panel session STRICTLY AFTER that date -- which can
+      never reach past its own cell and is conservative by one session for a
+      pre-open headline.
+    * A PANEL row carries the panel's OWN `(symbol, entry_date)` cells in
+      `panel_cells`, written by the N-C join from the open time and the publish
+      position, and they are used verbatim. Re-deriving them with the corpus
+      rule would put every PRE-BELL headline one session late: the panel already
+      assigns those to the SAME day, and "strictly after" would move them.
+
+    THE FAN-OUT. A panel text is typed once and emitted for every cell that
+    carries it (340,465 panel rows over 163,288 texts). 116,247 of those texts
+    appear exactly once; for the 39,209 that span more than one symbol, the
+    direction read for the scope entity is carried to the others unchanged and
+    `fanned_beyond_scope` counts them. A corpus row does NOT fan out across its
+    other tickers -- `direction` there was read against the scope entity and the
+    other tickers are a tagging artefact, not panel rows that exist.
+
+    NO DOUBLE COUNTING. The emitted key is `(symbol, entry_date, text_sha256)`
+    and the first writer wins, panel files read first. A headline that reached
+    both the corpus and the panel is one event for a cell, not two. Rows written
+    before chunk 15a carry no `text_sha256`; they fall back to
+    `(source, raw_id)`, which cannot collide with a hash.
     """
     rows = typed_rows(directory)
     cols = ["symbol", "entry_date", "event_type", "direction", "magnitude_bucket",
@@ -347,10 +375,53 @@ def typed_events(cells: pd.DataFrame, directory=None) -> tuple[pd.DataFrame, dic
             "event_source": None, "n_typed_rows_on_disk": len(rows),
             "reason": "no typed rows on disk" if not rows else "the panel is empty"}
     sessions = np.array(sorted(pd.unique(cells["entry_date"])))
+    session_set = set(sessions.tolist())
     symbols = set(pd.unique(cells["symbol"]))
+    is_dt = np.issubdtype(sessions.dtype, np.datetime64)
     recs, unmatched_symbol, after_panel, extra_tickers = [], 0, 0, 0
+    fanned, dropped_dupe, unmatched_cell, from_panel, from_corpus = 0, 0, 0, 0, 0
+    seen: set[tuple] = set()
+
+    def _key(sym, when, row):
+        ident = row.get("text_sha256") or f"{row.get('source')}|{row.get('raw_id')}"
+        return (str(sym), str(when), str(ident))
+
+    def _emit(sym, when, row, *, scope_matched=True):
+        nonlocal dropped_dupe, fanned
+        key = _key(sym, when, row)
+        if key in seen:
+            dropped_dupe += 1
+            return
+        seen.add(key)
+        if not scope_matched:
+            fanned += 1
+        recs.append({"symbol": str(sym), "entry_date": when,
+                     "event_type": str(row.get("event_type")),
+                     "direction": int(row.get("direction", 0)),
+                     "magnitude_bucket": str(row.get("magnitude_bucket")),
+                     "confidence": float(row.get("confidence", 0.0)),
+                     "basis": TYPED_L2})
+
+    def _as_session(date: str):
+        return np.datetime64(date) if is_dt else date
+
     for row in rows:
         sym = str(row.get("scope") or "")
+        cell_list = row.get("panel_cells") or []
+        if str(row.get("source_kind") or "") == "panel" and cell_list:
+            from_panel += 1
+            for pair in cell_list:
+                try:
+                    csym, cdate = str(pair[0]), str(pair[1])[:10]
+                except (TypeError, IndexError):
+                    continue
+                key = _as_session(cdate)
+                if csym not in symbols or key not in session_set:
+                    unmatched_cell += 1
+                    continue
+                _emit(csym, key, row, scope_matched=(csym == sym))
+            continue
+        from_corpus += 1
         extra_tickers += max(0, len(row.get("tickers") or []) - 1)
         if sym not in symbols:
             unmatched_symbol += 1
@@ -359,18 +430,11 @@ def typed_events(cells: pd.DataFrame, directory=None) -> tuple[pd.DataFrame, dic
         # the panel's dates may be datetime64 or plain strings depending on who
         # built it; comparing the two families raises rather than mis-sorting,
         # so the key is coerced to the sessions' own dtype
-        key = (np.datetime64(date) if np.issubdtype(sessions.dtype, np.datetime64)
-               else date)
-        i = int(np.searchsorted(sessions, key, side="right"))
+        i = int(np.searchsorted(sessions, _as_session(date), side="right"))
         if i >= len(sessions):
             after_panel += 1
             continue
-        recs.append({"symbol": sym, "entry_date": sessions[i],
-                     "event_type": str(row.get("event_type")),
-                     "direction": int(row.get("direction", 0)),
-                     "magnitude_bucket": str(row.get("magnitude_bucket")),
-                     "confidence": float(row.get("confidence", 0.0)),
-                     "basis": TYPED_L2})
+        _emit(sym, sessions[i], row)
     ev = pd.DataFrame(recs, columns=cols)
     if len(ev):
         ev["magnitude"] = ev["magnitude_bucket"].map(
@@ -378,12 +442,20 @@ def typed_events(cells: pd.DataFrame, directory=None) -> tuple[pd.DataFrame, dic
     meta = {
         "event_source": TYPED_L2 if len(ev) else None,
         "n_typed_rows_on_disk": len(rows),
+        "n_typed_rows_from_panel": from_panel,
+        "n_typed_rows_from_corpus": from_corpus,
         "n_event_rows": int(len(ev)),
         "dropped_symbol_not_in_panel": unmatched_symbol,
         "dropped_date_after_panel": after_panel,
+        "dropped_panel_cell_not_in_this_slice": unmatched_cell,
+        "dropped_duplicate_text_on_the_same_cell": dropped_dupe,
+        "fanned_beyond_scope": fanned,
         "tickers_seen_but_not_emitted": extra_tickers,
-        "entry_date_rule": ("the first panel session STRICTLY AFTER the document's "
-                            "own date; conservative by one for a pre-open headline"),
+        "entry_date_rule": ("a PANEL row uses the panel's OWN entry_date for every "
+                            "cell carrying its text; a CORPUS row uses the first "
+                            "panel session STRICTLY AFTER the document's own date, "
+                            "conservative by one for a pre-open headline"),
+        "dedupe_key": "(symbol, entry_date, text_sha256); panel files read first",
         "directory": str(Path(directory or TYPED_DIR)),
     }
     return ev, meta

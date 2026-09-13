@@ -74,7 +74,16 @@ PURPOSE = "l2_event_extraction"
 #: `no_event` row is a successful classification and is written like any other,
 #: because it is how L2 measures the corpus's genuine event rate. Dropping it
 #: would make the denominator silently wrong.
-REFUSAL_CLASSES = ("REFUSED_LANGUAGE", "REFUSED_UNPARSEABLE", "REFUSED_SCHEMA")
+#:
+#: `REFUSED_READER_ERROR` (chunk 15a) is the fourth and is the odd one out: the
+#: other three are properties of the DOCUMENT and the cursor passes them, so a
+#: document the reader refuses is never re-billed. A reader error is a property
+#: of the RUN -- a socket, a 500, a key -- and the cursor stops BEFORE it so the
+#: next run retries exactly that row. Same list, opposite cursor rule, and the
+#: rule is stated where the class is declared because it is the whole reason the
+#: class exists rather than being folded into UNPARSEABLE.
+REFUSAL_CLASSES = ("REFUSED_LANGUAGE", "REFUSED_UNPARSEABLE", "REFUSED_SCHEMA",
+                   "REFUSED_READER_ERROR")
 
 #: How much of an unparseable reply is kept for the regression corpus.
 RAW_KEEP = 1000
@@ -260,6 +269,26 @@ def prompt_hash(variant: str = "A") -> str:
 
 PROMPT_HASH: str = prompt_hash("A")
 PROMPT_HASH_B: str = prompt_hash("B")
+
+
+def text_sha256(title: str, body: str = "") -> str:
+    """The identity of a DOCUMENT'S TEXT, independent of who filed it.
+
+    Chunk 15a. The 2025-26 return panel holds 340,465 rows over 163,288 distinct
+    texts -- one wire story reaches the panel once per tagged symbol -- so typing
+    per ROW would buy the same reading 2.08 times on average and bill for it.
+    The hash is the dedupe key on the way in and the double-count guard on the
+    way out: a text that reaches `learner.event_head` from both the corpus and
+    the panel is ONE typed event for a cell, not two.
+
+    Hashed over the SAME string `extract` shows the model as the document
+    (title, newline, body), whitespace-collapsed -- and normalised for
+    whitespace ONLY. Not lower-cased, not punctuation-stripped: a headline that
+    differs by a ticker in caps is a different headline, and a normaliser that
+    hid that would merge two readings into one and call it a saving.
+    """
+    doc = "{}\n{}".format(title or "", body or "").strip()
+    return hashlib.sha256(re.sub(r"\s+", " ", doc).encode("utf-8")).hexdigest()
 
 
 def user_prompt(*, scope: str, scope_kind: str, document_date: str,
