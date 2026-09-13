@@ -1983,6 +1983,16 @@ def _coverage_for_source(src, root: Path, today: str, trend_days: list[str]) -> 
     }
 
 
+def _lane_d_role() -> dict:
+    """Lane D's Alpaca paper role, by NAME. Degrades to a report, never a 500."""
+    try:
+        from backend.config import lane_d_role_status
+        return lane_d_role_status()
+    except Exception as exc:                                   # noqa: BLE001
+        return {"lane_d_role": "CANNOT DETERMINE",
+                "error": f"{type(exc).__name__}: {exc}"[:200]}
+
+
 @router.get("/coverage")
 def coverage() -> dict:
     """N-F: per-source and per-region news coverage, derived from disk."""
@@ -2056,6 +2066,11 @@ def coverage() -> dict:
                      "floor, not a ceiling."),
         },
         "name_table": news_entities.stats(),
+        # Lane D's own paper role, BY NAME (chunk 12, T6). It is on this card
+        # rather than only in a receipt because a role that is absent has to be
+        # visible before the night that needs it, not discovered in the morning
+        # by a refusal. Names only: `lane_d_role_status` never returns a value.
+        "lane_d_role": _lane_d_role(),
         "analyst_snapshots": {
             "dir": str(snap_dir), "days": len(snaps),
             "series_starts": snaps[0] if snaps else None,

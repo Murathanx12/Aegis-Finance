@@ -113,6 +113,65 @@ def inside_window(now: datetime) -> bool:
 # the passes
 
 
+def lane_d_role() -> dict:
+    """Lane D's own Alpaca paper role, by NAME (chunk 12, T6).
+
+    Held behind a name in THIS module so a test can replace it, and read from
+    `backend.config` rather than from `os.getenv` here, so there is exactly one
+    place in the repository that knows which env names lane D's role uses.
+    """
+    from backend.config import lane_d_role_status
+    return lane_d_role_status()
+
+
+def _safe_role() -> dict:
+    """`lane_d_role()`, or a CANNOT DETERMINE row. Never raises into a receipt."""
+    try:
+        return lane_d_role()
+    except Exception as exc:                                   # noqa: BLE001
+        return {"lane_d_role": "CANNOT DETERMINE",
+                "error": f"{type(exc).__name__}: {exc}"[:200]}
+
+
+def fill_quality_step(role: dict) -> dict:
+    """Lane D's D2 deliverable, or the refusal that names what is missing.
+
+    D2 is "every paper fill vs the IEX quote and vs the SIP NBBO", and it is the
+    only thing that can turn `cost_curve.retail_paper` from a DECLARED band into
+    a measured rate. It needs LANE D'S OWN paper account, and there is no
+    fallback: a fill receipt collected on the default or the arena account is a
+    receipt about a different book's order flow, and the cost number it produced
+    would be attributed to lane D. So an absent role REFUSES BY NAME, and the
+    pass still writes its receipt — a refusal is a finding.
+    """
+    from backend.services import cost_curve as CC
+
+    if role.get("lane_d_role") != "configured":
+        return {
+            "status": "refused",
+            "refusal": role.get("refusal"),
+            "names_absent": role.get("names_absent"),
+            "no_fallback": role.get("no_fallback"),
+            "consequence": ("`cost_curve.retail_paper` stays a DECLARED band "
+                            "rather than a measured rate, and every lane D "
+                            "receipt says so."),
+        }
+    # The role resolves; the WRITER is still chunk 5b's D2 and is not in this
+    # session. Saying so is the point: a step that reported `ok` because the
+    # credential existed would be a gate on the credential, not on the receipt.
+    st = CC.retail_paper_status()
+    return {
+        "status": "pending_writer",
+        "role": "configured",
+        "retail_paper_state": st.get("state"),
+        "n_fill_quality_receipts": st.get("n_fill_quality_receipts"),
+        "blocked_on": ("lane D's role resolves, so the credential is no longer "
+                       "what blocks D2. The fill-vs-quote writer itself is "
+                       "chunk 5b's D2 and does not exist yet; this step reports "
+                       "that rather than claiming a receipt it did not write."),
+    }
+
+
 def one_pass(*, dry_run: bool, now: datetime, index: int) -> dict:
     """Run the cadence pass once and return the receipt payload.
 
@@ -129,6 +188,13 @@ def one_pass(*, dry_run: bool, now: datetime, index: int) -> dict:
         "inside_declared_window": inside_window(now),
         "cadence": CADENCE, "pid": os.getpid(),
     }
+    role = _safe_role()
+    payload["lane_d_role"] = role
+    try:
+        payload["fill_quality"] = fill_quality_step(role)
+    except Exception as exc:                                   # noqa: BLE001
+        payload["fill_quality"] = {"status": "error",
+                                   "reason": f"{type(exc).__name__}: {exc}"[:200]}
     if dry_run:
         payload["nothing_to_do"] = True
         payload["reason"] = ("--dry-run: the clock, the window and this "
@@ -191,6 +257,11 @@ def run(*, passes: int | None = None, interval_s: float = PASS_INTERVAL_S,
         "dry_run": bool(dry_run),
         "stop_file": str(stop_file()),
         "passes": [], "stopped_by": None,
+        # Lane D's own paper role, BY NAME, on the SESSION receipt as well as on
+        # every pass: a night that could not collect a fill-quality receipt
+        # because a credential was absent has to say that once at the top, not
+        # only thirty times in the passes.
+        "lane_d_role": _safe_role(),
         "pid_note": ("this PID is written down BEFORE any work, because rule 6 "
                      "says kill by a PID you wrote down or do not kill. Never "
                      "`taskkill /F /IM python.exe`: on 2026-09-06 one such "

@@ -255,6 +255,78 @@ class APIKeys:
 api_keys: APIKeys = APIKeys.from_env()
 
 
+# ── Lane D's own Alpaca paper role (chunk 12, T6) ────────────────────────────
+#
+# Lane D is the 30-minute day-trading book, and its fill-quality receipt (D2) is
+# the only thing that can turn `cost_curve.retail_paper` from a DECLARED band
+# into a measured rate. It needs its OWN paper account: a fill receipt collected
+# on the default or the arena account is a receipt about a different book's
+# order flow, and the cost number it produced would be attributed to lane D.
+#
+# So the names follow the pattern the repo already uses -- `ALPACA_API_KEY_ID` /
+# `ALPACA_API_SECRET_KEY` for the default role and `ALPACA_ARENA_*` for the
+# arena -- and there is NO FALLBACK. If either half is absent, every consumer
+# refuses BY NAME. A fallback to the default account would quietly trade lane D
+# on the wrong book, and the failure would look like a working system.
+#
+# NAMES ONLY EVER LEAVE THIS MODULE. `lane_d_role_status()` returns
+# `configured` / `absent` and the two NAMES; it never returns, logs or prints a
+# value, and `test_lane_d_alpaca_role.py` reads the AST to say so.
+
+LANE_D_KEY_ID_ENV = "ALPACA_LANE_D_API_KEY_ID"
+LANE_D_SECRET_ENV = "ALPACA_LANE_D_API_SECRET_KEY"
+
+#: The names a consumer must NOT silently substitute. Declared rather than
+#: implied, because "never fall back" is only enforceable if the thing not to
+#: fall back to is written down.
+LANE_D_FORBIDDEN_FALLBACKS = ("ALPACA_API_KEY_ID", "ALPACA_API_SECRET_KEY",
+                              "ALPACA_ARENA_API_KEY_ID",
+                              "ALPACA_ARENA_API_SECRET_KEY")
+
+LANE_D_ROLE_REFUSAL = (
+    "lane D's paper role is not configured: set ALPACA_LANE_D_API_KEY_ID and "
+    "ALPACA_LANE_D_API_SECRET_KEY")
+
+
+def lane_d_role_configured() -> bool:
+    """True when BOTH halves of lane D's own paper role resolve.
+
+    Both, not either: a key id with no secret is an account nobody can reach,
+    and reporting it as configured would move the failure from this line to the
+    first request.
+    """
+    return bool(os.getenv(LANE_D_KEY_ID_ENV, "").strip()
+                and os.getenv(LANE_D_SECRET_ENV, "").strip())
+
+
+def lane_d_role_status() -> dict:
+    """`configured` / `absent`, by NAME. Never a value, never a fingerprint.
+
+    The board and every lane-D receipt print this. A status line that said
+    nothing when the role was missing would be indistinguishable from a role
+    that was working, which is this programme's house failure mode.
+    """
+    kid = bool(os.getenv(LANE_D_KEY_ID_ENV, "").strip())
+    sec = bool(os.getenv(LANE_D_SECRET_ENV, "").strip())
+    present = [n for n, ok in ((LANE_D_KEY_ID_ENV, kid),
+                               (LANE_D_SECRET_ENV, sec)) if ok]
+    absent = [n for n, ok in ((LANE_D_KEY_ID_ENV, kid),
+                              (LANE_D_SECRET_ENV, sec)) if not ok]
+    return {
+        "lane_d_role": "configured" if (kid and sec) else "absent",
+        "names_required": [LANE_D_KEY_ID_ENV, LANE_D_SECRET_ENV],
+        "names_present": present,
+        "names_absent": absent,
+        "refusal": None if (kid and sec) else LANE_D_ROLE_REFUSAL,
+        "no_fallback": (
+            "there is no fallback. Lane D never reads "
+            + ", ".join(LANE_D_FORBIDDEN_FALLBACKS)
+            + ": a fill-quality receipt collected on another account is a "
+              "receipt about another book's order flow, and the cost number it "
+              "produced would be attributed to lane D."),
+    }
+
+
 # ── Master Configuration ─────────────────────────────────────────────────────
 
 config: dict = {
