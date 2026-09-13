@@ -558,11 +558,19 @@ def seasonality_score(frame, *, columns=SEASONALITY_COLUMNS, side: str = "top",
     return _tercile_side(vals, side=side, tercile=tercile)
 
 
+#: The denominators Book G may divide the forecast standard deviation by.
+#: `meanest` is v0 (the coefficient of variation, Diether-Malloy-Scherbina's own
+#: construction); `price` is TRIAL-DRAFT-G Amendment 1. Anything else is refused
+#: rather than defaulted -- see `forecast_dispersion`.
+DISPERSION_SCALES = ("meanest", "price")
+
+
 def forecast_dispersion(frame, *,
                         min_numest: int = MIN_ESTIMATES_FOR_DISPERSION,
                         side: str = "bottom", tercile: float = 2.0 / 3.0,
-                        min_names: int = MIN_CHARACTERISTIC_NAMES) -> dict:
-    """BOOK G. {permno: |stdev / meanest|} for the requested tercile.
+                        min_names: int = MIN_CHARACTERISTIC_NAMES,
+                        scale: str = "meanest") -> dict:
+    """BOOK G. {permno: |stdev / <scale>|} for the requested tercile.
 
     `frame` is one month of the IBES consensus panel, already filtered to
     `measure == 'EPS'` and `fpi == '1'` by the caller and already sliced to rows
@@ -579,33 +587,76 @@ def forecast_dispersion(frame, *,
     consensus of zero makes the coefficient of variation infinite for a reason
     that is about the denominator and not about disagreement, and a book that
     quietly winsorised it would be holding names for an arithmetic accident.
+
+    THE DENOMINATOR IS A PARAMETER, AND THE AMENDMENT THAT MADE IT ONE
+    ==================================================================
+    `scale="meanest"` is v0 and the default, and the default path is
+    byte-identical to the code that produced `B_books_efg_replay_run01`.
+
+    `scale="price"` is TRIAL-DRAFT-G Amendment 1: `|stdev / price|`, the
+    forecast standard deviation per dollar of share price, with `price` the
+    PIT CRSP close of the selection month carried on the caller's own frame.
+    The reason is in the run-01 receipt rather than in a preference: v0's
+    +0.89%/month at the $3M floor EXCEEDS Diether-Malloy-Scherbina's published
+    0.79%/month LONG-SHORT spread, which a long-only-avoid half of that spread
+    cannot honestly do. `|stdev / meanest|` divides by forecast EPS, so the
+    score is large wherever consensus EPS is near zero -- an earnings-LEVEL
+    tilt riding along inside a disagreement measure. Scaling by price removes
+    that channel: price is never near zero in a band with a $5 minimum.
+
+    `stdev` may be zero (unanimous analysts) and that is a legitimate score of
+    zero, not a dropped row -- under either denominator. What is dropped is a
+    denominator that is zero or non-finite, and under `price` the eligible
+    band's own $5 minimum means no row in a real pool is dropped for it.
+    Section 8 of the registration forbids swapping the denominator INSIDE the
+    v0 registration; this parameter exists so the amendment is a separate,
+    named read and never a silent change to v0's own number.
     """
     import numpy as np
 
-    for c in ("permno", "stdev", "meanest", "numest"):
+    if scale not in DISPERSION_SCALES:
+        raise SignalUnavailable(
+            f"unknown dispersion scale {scale!r}; expected one of "
+            f"{DISPERSION_SCALES}. A denominator this function does not know is "
+            f"refused rather than defaulted, because a silent fallback to "
+            f"`meanest` would publish v0's number under the amendment's name")
+    needed = ["permno", "stdev", "meanest", "numest"]
+    if scale == "price":
+        needed.append("price")
+    for c in needed:
         if c not in getattr(frame, "columns", ()):
             raise SignalUnavailable(
                 f"the IBES consensus frame carries no {c!r} column; forecast "
-                f"dispersion needs permno, stdev, meanest and numest and does "
-                f"not substitute another measure of disagreement")
+                f"dispersion at scale={scale!r} needs {', '.join(needed)} and "
+                f"does not substitute another measure of disagreement")
+    denom_col = frame["price"] if scale == "price" else frame["meanest"]
     vals = {}
-    for pn, sd, mean, n in zip(frame["permno"], frame["stdev"],
-                               frame["meanest"], frame["numest"]):
+    for pn, sd, mean, n, den in zip(frame["permno"], frame["stdev"],
+                                    frame["meanest"], frame["numest"],
+                                    denom_col):
         try:
-            sd_f, mean_f, n_f = float(sd), float(mean), float(n)
+            sd_f, mean_f, n_f, den_f = float(sd), float(mean), float(n), float(den)
         except (TypeError, ValueError):
             continue
-        if not (np.isfinite(sd_f) and np.isfinite(mean_f) and np.isfinite(n_f)):
+        if not (np.isfinite(sd_f) and np.isfinite(mean_f) and np.isfinite(n_f)
+                and np.isfinite(den_f)):
             continue
-        if n_f < int(min_numest) or mean_f == 0.0 or sd_f < 0.0:
+        # THE COVERED BAND IS v0's UNDER BOTH SCALES. `meanest != 0` stays a
+        # membership test even when `meanest` is not the denominator, so the
+        # amendment ranks exactly the names v0 ranked and the twin is drawn from
+        # exactly the same pool. Only the SCORE changes -- which is what "the
+        # amendment names only the input" has to mean arithmetically, or the two
+        # reads would differ by coverage as well as by construction.
+        if n_f < int(min_numest) or mean_f == 0.0 or sd_f < 0.0 or den_f == 0.0:
             continue
-        vals[int(pn)] = abs(sd_f / mean_f)
+        vals[int(pn)] = abs(sd_f / den_f)
     if len(vals) < int(min_names):
         raise SignalUnavailable(
             f"only {len(vals)} name(s) carried an IBES consensus with "
-            f"numest >= {min_numest} and a non-zero meanest this month; a "
-            f"cross-sectional tercile over fewer than {min_names} is a cut of "
-            f"the survivors, not of the market")
+            f"numest >= {min_numest}, a non-zero meanest and a usable "
+            f"{scale!r} denominator this month; a cross-sectional tercile over "
+            f"fewer than {min_names} is a cut of the survivors, not of the "
+            f"market")
     return _tercile_side(vals, side=side, tercile=tercile)
 
 

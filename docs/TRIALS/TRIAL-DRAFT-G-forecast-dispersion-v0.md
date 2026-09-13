@@ -249,6 +249,156 @@ result is not a confirmation.
   underpowered read is `FAILED_VARIANT` for this implementation at most.
 - No `RESEARCH_CLAIM` from this registration alone.
 
+## 8b. Amendment 1 (proposed, UNSIGNED) — the denominator becomes PRICE
+
+**Proposed 2026-09-13 by the chunk-15b build session, AFTER run 01 and BEFORE
+the amended read. NOT ADOPTED.** Fable adopts it in the morning if it names only
+the input, as Book C's Amendment 2 did. Until then this section licenses a
+`PRODUCT_EXPERIMENT` read and nothing else; `forecast_dispersion_v0`'s own
+verdict is untouched by it.
+
+§8 forbids "swapping the coefficient of variation for a price-scaled dispersion,
+after the first read" inside this registration, and says the swap is "a separate
+amendment naming only the input". **This is that amendment.**
+
+**What changes, in one sentence.** Dispersion becomes
+
+    |stdev / price|
+
+where `price` is the **panel's own PIT CRSP close of the selection month**
+(`eom`) — the same `price` column the eligibility band and the $5 minimum are
+already computed from, so no new table, no new stamp and no new lag are
+introduced. `numest >= 3` is unchanged. Everything else in §6 is v0's, field for
+field: `fpi == '1'`, `measure == 'EPS'`, the **bottom tercile** held and the top
+avoided and never shorted, k = 30, the monthly rebalance and one-month hold, the
+$3M primary and $10M secondary floors, the $5 price minimum, the flat 25 bps
+per-side ruler, the turnover-matched twin, 1990-2024, both falsifiers of §5 and
+the contamination clause.
+
+**The covered band is v0's, unchanged, including `meanest != 0`.** That clause
+stays a MEMBERSHIP test even though `meanest` is no longer the denominator, so
+the amendment ranks exactly the names v0 ranked and its twin is drawn from
+exactly the same pool. Only the **score** moves. If the covered band moved too,
+the two reads would differ by coverage as well as by construction and neither
+number would be comparable to the other — which is the mistake this whole
+paragraph exists to prevent.
+
+**Why the input is wrong today, stated as the reason rather than as a
+preference.** Run 01's own receipt (`B_books_efg_replay_run01`, 2026-09-13):
+
+| | $3M | $10M | 2017-2024 at $10M |
+|---|---|---|---|
+| `forecast_dispersion_v0` | **+0.89%/month, t 4.82** | +0.72%/month, t 4.42 | **+0.02%/month, t 0.07** |
+
+**+0.89%/month exceeds Diether-Malloy-Scherbina's published 0.79%/month
+LONG-SHORT spread**, and §1 of this registration declares that a long-only-avoid
+construction captures only the long half of that spread by design, on a sample
+whose post-publication decay §1 already haircuts by about 50%. A half cannot
+exceed its own whole. Something other than disagreement is being paid for.
+
+The candidate mechanism is named rather than left as a suspicion: `|stdev /
+meanest|` divides by **forecast EPS**, so the ratio explodes wherever consensus
+EPS is near zero, and near-zero forecast EPS is an **earnings-LEVEL** condition,
+not a disagreement condition. The bottom tercile of that ratio is therefore
+tilted towards high-EPS-per-share names, which is a profitability/value tilt
+riding inside a variable labelled "dispersion". Scaling by price removes that
+channel: price is bounded away from zero by this band's own $5 minimum, so
+`|stdev / price|` is forecast uncertainty per dollar of share price and nothing
+else. (It is also the normalisation that is homogeneous with the return the book
+earns, which is a per-dollar quantity.)
+
+**What this amendment does NOT claim.** It does not claim that the price-scaled
+read is the true one, that v0's number was wrong arithmetic, or that a smaller
+number under the amendment would refute the mechanism. It claims that **v0's
+denominator carries a channel the registration never intended to trade**, and
+that the cheapest way to find out how much of the payoff that channel was is to
+change the denominator and nothing else.
+
+**How it is read.** `scripts/night_books_efg_replay.G_price_scaled`, registered
+as the night job `G_price_scaled`, label `forecast_dispersion_price_scaled_v1`.
+It is **its own declared family of ONE**, `NIGHT_JOB_G_PRICE_SCALED_2026_09_13`
+— it does **not** join `NIGHT_JOB_BOOKS_2026_09_13`, whose four primaries are
+read and whose multiplicity budget is spent; a fifth leg added after that
+family's numbers were seen would be a family that grew to fit a result. The
+receipt additionally prints a **two-construction Holm** against v0's own primary
+p-value, because one mechanism has now been read twice on one panel and that
+correction is what a reader is owed. That block is REPORTED; the decision rule
+is §5's, applied to this construction's own numbers.
+
+**§4's power arithmetic is unchanged and still binds**, including its
+uncomfortable line: the declared effect of 0.65%/month is above the honest
+prior, this construction is underpowered for the effect it most plausibly has,
+and an outcome in (0, 0.65%) is `CONDITIONAL` and explicitly **not** a rejection
+of the mechanism.
+
+**What would make this amendment wrong.** If the price-scaled read comes back at
+or above v0's +0.89%/month, the earnings-level explanation of the excess is not
+supported and the amendment has changed the input without changing the finding —
+in which case the thing to explain is still why a long-only half beats a
+published long-short whole, and the next candidate is the cost ruler or the
+covered band, not the denominator.
+
+## 8c. The amended read, 2026-09-13 — and the amendment's own explanation FAILS
+
+Receipt: `backend/data/optimus/night_factory_2026-09-13/G_price_scaled_run01.json`
+(61 s, CPU, `NIGHT_RUN_DATE=2026-09-13`, 419 monthly blocks 1990-2024, no year
+excluded by the contamination clause at either floor). **UNSIGNED. Nothing is
+adopted by this section; it records what the read said.**
+
+| | $3M | $10M | 1990s | 2000s | 2010-16 | 2017-24 |
+|---|---|---|---|---|---|---|
+| **v0** `stdev / meanest` (run 01) | +0.89% t 4.82 | +0.72% t 4.42 | +0.96 | +1.09 | +0.65 | **+0.02 (t 0.07)** |
+| **Amendment 1** `stdev / price` | **+1.02% t 5.65** | **+1.19% t 6.07** | +1.35 t 4.70 | +1.56 t 3.52 | +0.83 t 2.90 | **+0.83 (t 1.78)** |
+
+(Amendment rows are the $10M cell's eras; the $3M eras are +1.48 / +1.14 / +0.88
+/ +0.41 with t 5.41 / 2.77 / 3.10 / 1.04. Falsifiers, both passed: the big-half
+cell is +1.11%/month t 6.32, so the payoff is not in the smallest names; with
+`si_ratio` on the right-hand side dispersion survives at t 5.40 against a raw
+5.46, so it is not Book A's closed short-interest cell in costume. The avoided
+high-dispersion leg is **−2.47%/month t −7.82**, the largest leg in this book.
+MDE recomputed from the book's own realised difference series: 0.509%/month at
+$3M (n_eff 384.8, rho 0.043), 0.563% at $10M — both BELOW the registration's
+modelled 0.637%, so the read is better powered than declared, not worse.)
+
+**§8b's own falsification clause fires against §8b.** It said: *"If the
+price-scaled read comes back at or above v0's +0.89%/month, the earnings-level
+explanation of the excess is not supported and the amendment has changed the
+input without changing the finding."* It came back **higher at both floors**.
+So:
+
+- the hypothesis that v0's excess was an earnings-LEVEL tilt smuggled in by the
+  `meanest` denominator is **NOT SUPPORTED**. Removing that channel raised the
+  excess;
+- the original puzzle is **UNRESOLVED and is now larger**: a long-only-avoid
+  half of a spread now returns +1.02%/month where the published LONG-SHORT whole
+  is 0.79%/month. The next candidates are the ones §8b named as the fallbacks —
+  the flat 25 bps cost ruler (which cannot see that a $3M name and a $10M name
+  pay different spreads; chunk 5c's TAQ curve is the instrument) and the covered
+  band itself — **not** a third denominator;
+- **what the amendment DID buy, and it is the interesting part:** the current
+  era. v0's 2017-2024 cell at the tradable floor is +0.02%/month, t 0.07 — a
+  decayed 1990s effect. The price-scaled cell is **+0.83%/month, t 1.78** on 96
+  blocks: below |t| 2, still `CONDITIONAL` by §5, and the first version of this
+  book that is not simply dead where we trade.
+
+**Verdict under §5, on this construction's own numbers: `PRODUCT_PROMISING`**
+(primary +1.02%/month ≥ the declared 0.65% at t 5.65 ≥ 2.0; both falsifiers
+passed; 4/4 eras positive; the $10M cell positive). **It is not a claim.** It is
+one read of one construction on one cost ruler, unsigned, under a flat-cost
+interim ruler that the repository's own `NEGATIVE_RESULTS` §25 records two other
+rulers disagreeing with by 3.4-9.1×, and the era row that matters most is the
+one that does not clear |t| 2.
+
+**Holm.** The amendment's own declared family is size 1 (p_raw < 1e-6, rejects).
+Reported beside it, because one mechanism has now been read twice on one panel:
+Holm over BOTH constructions — price-scaled at alpha 0.025 and v0 at 0.05, both
+reject.
+
+**What must happen before any of this moves capital:** adoption of §8b by a
+human (it is UNSIGNED), the TAQ cost curve replacing the flat ruler, and a
+2017-2024 cell that clears |t| 2 at the $10M floor. None of the three has
+happened.
+
 ## 9. Registry
 
 `rule_experiments` row `forecast-dispersion-v0`, **not yet written** — the same

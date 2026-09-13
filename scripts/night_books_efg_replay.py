@@ -110,6 +110,26 @@ SECONDARY_FLOOR_USD = 10_000_000.0
 #: that used a different seed.
 SEEDS = {"E": 0x0E11, "F": 0x0F22, "G": 0x0733}
 
+#: TRIAL-DRAFT-G Amendment 1, quoted into every receipt that ran under it so a
+#: number can never travel without the reason it exists.
+AMENDMENT_1_NOTE = (
+    "TRIAL-DRAFT-G Amendment 1 (UNSIGNED, proposed 2026-09-13): dispersion is "
+    "|stdev / price| -- the panel's own PIT CRSP close of the selection month "
+    "-- instead of |stdev / meanest|. It names ONLY the input, as Book C's "
+    "Amendment 2 did. The reason is run 01's own receipt: +0.89%/month at $3M "
+    "EXCEEDS Diether-Malloy-Scherbina's published 0.79%/month LONG-SHORT "
+    "spread, which a long-only-avoid half cannot honestly do, and dividing by "
+    "forecast EPS makes the score large wherever consensus EPS is near zero -- "
+    "an earnings-LEVEL tilt inside a disagreement measure.")
+
+#: The amendment read is its own declared family of ONE. It is not folded into
+#: `NIGHT_JOB_BOOKS_2026_09_13`, whose four primaries are read and whose budget
+#: is spent; a fifth leg added after that family's numbers were seen would be a
+#: family that grew to fit a result. The receipt ALSO prints a two-construction
+#: Holm against v0's own primary p, because two constructions of one mechanism
+#: have been read and a reader is owed the correction over both.
+FAMILY_G_AMENDMENT = "NIGHT_JOB_G_PRICE_SCALED_2026_09_13"
+
 #: Each draft's own declared effect size (section 4), and the two MDE figures
 #: every one of them prints: the nominal-360-block number and the same number
 #: deflated by the lag-1 rho measured for k=30 on this panel. Written once here
@@ -447,13 +467,22 @@ def book_f_selector(frames: dict, *, columns=None, shift_months: int = 0):
     return select
 
 
-def book_g_selector(frames: dict, *, side: str = "bottom"):
+def book_g_selector(frames: dict, *, side: str = "bottom",
+                    scale: str = "meanest"):
     """Book G: the LOW-disagreement tercile, ranked ASCENDING.
 
-    A smaller `|stdev / meanest|` is a stronger hold, so the sort is ascending
+    A smaller `|stdev / <scale>|` is a stronger hold, so the sort is ascending
     for the held leg and descending for the avoided one. The avoided leg is
     REPORTED and never traded: section 8 forbids shorting it, because the borrow
     cost that took 162 anomalies to -0.01%/month is not in this cost ruler.
+
+    `scale="meanest"` is v0 and is byte-identical to the path that produced
+    `B_books_efg_replay_run01`. `scale="price"` is TRIAL-DRAFT-G Amendment 1 and
+    needs the selection month's PIT price, which lives on the POOL (the replay
+    panel's own `price` column, the CRSP close of the month that has already
+    closed) and not on the IBES frame -- so it is carried across here rather
+    than re-derived from anything. The covered band is v0's under both scales,
+    so the twin is drawn from exactly the same pool and only the SCORE moves.
     """
     from backend.services import book_signals as BS
 
@@ -466,8 +495,13 @@ def book_g_selector(frames: dict, *, side: str = "bottom"):
         sub = g[g["permno"].isin(set(pool["permno"].astype("int64")))]
         if sub.empty:
             return []
+        if scale == "price":
+            px = dict(zip(pool["permno"].astype("int64"),
+                          pool["price"].astype(float)))
+            sub = sub.assign(price=[px.get(int(x)) for x in sub["permno"]])
         try:
-            scores = BS.forecast_dispersion(sub, side=side, tercile=TERCILE)
+            scores = BS.forecast_dispersion(sub, side=side, tercile=TERCILE,
+                                            scale=scale)
         except BS.SignalUnavailable:
             return []
         return [p for p, _ in sorted(scores.items(),
@@ -951,7 +985,26 @@ def _seasonality_columns_near():
 # BOOK G
 
 
-def replay_book_g(panel, ibes_frames: dict, *, smoke: bool) -> dict:
+def replay_book_g(panel, ibes_frames: dict, *, smoke: bool,
+                  scale: str = "meanest") -> dict:
+    """Book G at both floors. `scale="price"` is Amendment 1, `meanest` is v0.
+
+    Every other input is v0's: the covered band, the tercile, k, the twin, the
+    floors, the cost ruler, the contamination clause and both falsifiers. The
+    label, the registration string and the construction block all change with
+    the scale, so a receipt can never be read as the other construction's.
+    """
+    from backend.services import book_signals as BS
+
+    if scale not in BS.DISPERSION_SCALES:
+        raise ValueError(f"unknown dispersion scale {scale!r}")
+    amended = (scale == "price")
+    label = ("forecast_dispersion_price_scaled_v1" if amended
+             else "forecast_dispersion_v0")
+    prereg = ("TRIAL-DRAFT-G-forecast-dispersion-v0 Amendment 1 (UNSIGNED)"
+              if amended else
+              "TRIAL-DRAFT-G-forecast-dispersion-v0 (UNSIGNED)")
+    ratio = "|stdev / price|" if amended else "|stdev / meanest|"
     covered = covered_permnos(ibes_frames, book="G")
     cells, falsifier_blocks, contamination = {}, {}, {}
     for name, floor in (("primary_floor", PRIMARY_FLOOR_USD),
@@ -960,13 +1013,14 @@ def replay_book_g(panel, ibes_frames: dict, *, smoke: bool) -> dict:
                                           floor_usd=floor)
         contamination[name] = cont
         skip = set(cont["excluded_years"])
-        cells[name] = run_cell(panel, book="G", label="forecast_dispersion_v0",
-                               select=book_g_selector(ibes_frames),
+        cells[name] = run_cell(panel, book="G", label=label,
+                               select=book_g_selector(ibes_frames, scale=scale),
                                pool_filter=_pool_filter(covered, skip),
                                floor_usd=floor, seed=SEEDS["G"])
         avoided = run_cell(panel, book="G",
-                           label="forecast_dispersion_high_leg_reported_only",
-                           select=book_g_selector(ibes_frames, side="top"),
+                           label=f"{label}_high_leg_reported_only",
+                           select=book_g_selector(ibes_frames, side="top",
+                                                  scale=scale),
                            pool_filter=_pool_filter(covered, skip),
                            floor_usd=floor, seed=SEEDS["G"])
         falsifiers_here = {"high_dispersion_leg_reported_only": avoided}
@@ -975,8 +1029,8 @@ def replay_book_g(panel, ibes_frames: dict, *, smoke: bool) -> dict:
         # small stocks, so a payoff that lives only in the smallest names of a
         # $3M-floor universe is small-cap beta.
         falsifiers_here["big_half_only"] = run_cell(
-            panel, book="G", label="forecast_dispersion_big_half_only",
-            select=book_g_selector(ibes_frames),
+            panel, book="G", label=f"{label}_big_half_only",
+            select=book_g_selector(ibes_frames, scale=scale),
             pool_filter=_big_half_filter(covered, skip), floor_usd=floor,
             seed=SEEDS["G"])
         falsifier_blocks[name] = falsifiers_here
@@ -988,7 +1042,8 @@ def replay_book_g(panel, ibes_frames: dict, *, smoke: bool) -> dict:
     primary_skip = set(contamination["primary_floor"]["excluded_years"])
     rows, si_status = dispersion_si_rows(panel, ibes_frames, covered,
                                          primary_skip,
-                                         floor_usd=PRIMARY_FLOOR_USD)
+                                         floor_usd=PRIMARY_FLOOR_USD,
+                                         scale=scale)
     fm = fama_macbeth(rows, regressors=("low_dispersion", "si_ratio")) if rows else {}
     disp_check = survives(fm, "low_dispersion") if fm else {
         "regressor": "low_dispersion", "t_multivariate": None,
@@ -1032,12 +1087,14 @@ def replay_book_g(panel, ibes_frames: dict, *, smoke: bool) -> dict:
     ]
     verdict = decide_cell("G", cells["primary_floor"], falsifiers,
                           cells["secondary_floor"])
-    return _book_payload("G", "forecast_dispersion_v0",
-                         "TRIAL-DRAFT-G-forecast-dispersion-v0 (UNSIGNED)",
+    return _book_payload("G", label, prereg,
                          cells, falsifiers, falsifier_blocks, contamination,
                          verdict, smoke=smoke,
                          construction={
-                             "ratio": "|stdev / meanest|",
+                             "ratio": ratio,
+                             "dispersion_scale": scale,
+                             "amendment": (AMENDMENT_1_NOTE if amended else
+                                           "none -- v0 as registered"),
                              "filters": {"measure": IBES_MEASURE,
                                          "fpi": IBES_FPI, "numest_min": 3},
                              "cut": "BOTTOM tercile (low disagreement) is HELD; "
@@ -1045,7 +1102,10 @@ def replay_book_g(panel, ibes_frames: dict, *, smoke: bool) -> dict:
                              "tercile": TERCILE, "k": K,
                              "hold": "one month, monthly rebalance",
                              "twin": "turnover-matched random draw from the "
-                                     "SAME numest>=3 covered band",
+                                     "SAME numest>=3 covered band (the covered "
+                                     "band is v0's under BOTH scales, so the "
+                                     "two reads differ in the score and in "
+                                     "nothing else)",
                              "declared_effect_size": DECLARED_EFFECT["G"]})
 
 
@@ -1126,8 +1186,13 @@ def characteristic_rows(panel, frames: dict, covered: dict, skip_years: set, *,
 
 
 def dispersion_si_rows(panel, ibes_frames: dict, covered: dict,
-                       skip_years: set, *, floor_usd):
+                       skip_years: set, *, floor_usd, scale: str = "meanest"):
     """Book G's falsifier rows: low-dispersion and short interest, same names.
+
+    `scale` must be the SAME denominator the book was ranked on. A falsifier
+    that regressed v0's coefficient of variation while the book held the
+    price-scaled tercile would be testing a different variable and reporting it
+    as this book's control.
 
     The short-interest panel is Book A's own, read on `observed_at` (settlement
     + the measured publication lag) and never on `datadate`. If it is not on
@@ -1180,13 +1245,18 @@ def dispersion_si_rows(panel, ibes_frames: dict, covered: dict,
         rmap = dict(zip(nf["permno"], nf["ret_m"]))
         keep = set(int(p) for p in pool["permno"]) & have
         sub = g[g["permno"].isin(keep)]
+        pxmap = dict(zip(pool["permno"].astype("int64"),
+                         pool["price"].astype(float)))
         for pn, sd, mean in zip(sub["permno"], sub["stdev"], sub["meanest"]):
             pn = int(pn)
             nxt_r, s = rmap.get(pn), simap.get(pn)
             if nxt_r is None or s is None:
                 continue
+            den = pxmap.get(pn) if scale == "price" else mean
+            if den is None:
+                continue
             try:
-                disp = abs(float(sd) / float(mean))
+                disp = abs(float(sd) / float(den))
             except (TypeError, ValueError, ZeroDivisionError):
                 continue
             if not (np.isfinite(disp) and np.isfinite(float(s))
@@ -1362,7 +1432,98 @@ def B_books_efg_replay(*, smoke: bool = False) -> dict:           # noqa: N802
     }
 
 
-__all__ = ["B_books_efg_replay", "CharacteristicPanelUnavailable",
+def G_price_scaled(*, smoke: bool = False) -> dict:               # noqa: N802
+    """Book G alone, under Amendment 1, at both floors, with both falsifiers.
+
+    A SEPARATE job and a SEPARATE receipt, deliberately: folding the amendment
+    into `B_books_efg_replay` would rewrite that job's own family and would make
+    v0's number and the amendment's number two rows of one table that were never
+    declared together. Here the amendment is one declared test, its own family,
+    and the correction over BOTH constructions of the mechanism is printed
+    beside it rather than left for a reader to do.
+    """
+    t0 = datetime.now(timezone.utc)
+    start = SMOKE_START if smoke else FULL_START
+    end = SMOKE_END if smoke else FULL_END
+    panel = load_monthly_panel(start, end,
+                               max_names=SMOKE_NAMES if smoke else None)
+
+    base = {
+        "job": "G_price_scaled", "family": FAMILY_G_AMENDMENT,
+        "family_size_declared": 1,
+        "licence": "PRODUCT_EXPERIMENT",
+        "amendment": AMENDMENT_1_NOTE,
+        "signed": False,
+        "window": [start, end], "smoke": bool(smoke),
+        "max_names": SMOKE_NAMES if smoke else None,
+        "months_in_panel": int(panel["ym"].nunique()),
+        "permnos_in_panel": int(panel["permno"].nunique()),
+        "cost_curve": COST_CURVE, "cost_bps_per_side": COST_BPS_PER_SIDE,
+        "question": ("Does Book G's low-disagreement tercile still beat its "
+                     "turnover-matched twin when dispersion is scaled by PRICE "
+                     "rather than by forecast EPS -- i.e. with the earnings-"
+                     "level channel that made v0 exceed the published "
+                     "long-short spread removed?"),
+        "eras_reported": [f"{a}-{b}" for a, b in ERAS],
+    }
+    try:
+        ibes = load_ibes_dispersion(start, end)
+        ibes_frames = by_month(ibes)
+        base["ibes_rows"] = int(len(ibes))
+        base["ibes_months"] = int(ibes["ym"].nunique())
+    except CharacteristicPanelUnavailable as exc:
+        return {**base, "ran": False, "refused": str(exc),
+                "headline": f"REFUSED: {exc}"}
+
+    book = replay_book_g(panel, ibes_frames, smoke=smoke, scale="price")
+    own_p = _p((book.get("cells") or {}).get("primary_floor"))
+    holm_own = holm({book["book"]: own_p}, family=FAMILY_G_AMENDMENT)
+
+    # The correction a reader is actually owed: TWO constructions of ONE
+    # mechanism have now been read on the same panel.
+    v0 = find_run_receipt(smoke=smoke)
+    v0_p, v0_note = None, "v0's receipt was not found on this checkout"
+    if v0 is not None:
+        try:
+            payload = json.loads(Path(v0).read_text(encoding="utf-8"))
+            for b in payload.get("books") or []:
+                if b.get("book") == "forecast_dispersion_v0":
+                    v0_p = _p((b.get("cells") or {}).get("primary_floor"))
+                    v0_note = f"read from {Path(v0).name}"
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            v0_note = f"v0's receipt was unreadable: {exc}"
+    both = holm({"forecast_dispersion_v0": v0_p,
+                 book["book"]: own_p},
+                family="forecast_dispersion (BOTH constructions)")
+    both["note"] = (
+        "Two constructions of one mechanism, corrected together. This is "
+        "REPORTED, not the decision rule: the amendment's own family is size 1 "
+        "and was declared before this read. " + v0_note)
+
+    d = out_dir()
+    d.mkdir(parents=True, exist_ok=True)
+    stamp = t0.strftime("%Y-%m-%dT%H%M%SZ")
+    name = f"{book['book']}_{stamp}{'_smoke' if smoke else ''}.json"
+    (d / name).write_text(json.dumps(book, indent=2, default=str),
+                          encoding="utf-8")
+
+    return {**base, "ran": bool(book.get("ran")), "books": [book],
+            "receipts": [str(d / name)],
+            "holm": holm_own, "holm_both_constructions": both,
+            "headline": book.get("headline", "no leg ran"),
+            "verdict": ("SMOKE -- proves the job runs end to end; no verdict is "
+                        "read from a shortened window on the largest names"
+                        if smoke else
+                        "UNSIGNED amendment read. Fable adopts Amendment 1 in "
+                        "the morning if it names only the input; until then this "
+                        "is a PRODUCT_EXPERIMENT number and not a verdict on "
+                        "TRIAL-DRAFT-G."),
+            "wall_s": round((datetime.now(timezone.utc) - t0).total_seconds(), 1)}
+
+
+__all__ = ["AMENDMENT_1_NOTE", "B_books_efg_replay",
+           "CharacteristicPanelUnavailable", "FAMILY_G_AMENDMENT",
+           "G_price_scaled",
            "DECLARED_EFFECT", "DECLARED_FAMILY", "FAMILY", "K",
            "SECONDARY_FLOOR_USD", "T_ALIVE", "book_e_selector",
            "book_f_selector", "book_g_selector", "characteristic_rows",
@@ -1378,5 +1539,14 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--dispersion-scale", choices=["meanest", "price"],
+                    default="meanest",
+                    help=("meanest (default) runs the three-book family exactly "
+                          "as registered -- byte-identical to run 01. price runs "
+                          "BOOK G ALONE under TRIAL-DRAFT-G Amendment 1, as the "
+                          "`G_price_scaled` night job does."))
     a = ap.parse_args()
-    print(json.dumps(B_books_efg_replay(smoke=a.smoke), indent=1, default=str))
+    if a.dispersion_scale == "price":
+        print(json.dumps(G_price_scaled(smoke=a.smoke), indent=1, default=str))
+    else:
+        print(json.dumps(B_books_efg_replay(smoke=a.smoke), indent=1, default=str))

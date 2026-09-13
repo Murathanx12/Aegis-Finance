@@ -353,3 +353,128 @@ def test_the_dispersion_falsifier_refuses_when_the_si_panel_is_absent(tmp_path,
     rows, status = EFG.dispersion_si_rows(panel, {}, {}, set(), floor_usd=None)
     assert rows == []
     assert "UNTESTABLE" in status
+
+
+# --------------------------------------------------------------------------
+# TRIAL-DRAFT-G Amendment 1 — the price-scaled read (chunk 15b)
+
+
+def _ibes_frames(panel, *, stdev: dict, meanest: dict, numest: int = 5):
+    frames = {}
+    for ym, g in panel.groupby("ym", sort=False):
+        frames[ym] = pd.DataFrame({
+            "permno": [int(p) for p in g["permno"]],
+            "stdev": [stdev[int(p) - 1000] for p in g["permno"]],
+            "meanest": [meanest[int(p) - 1000] for p in g["permno"]],
+            "numest": [numest] * len(g),
+        })
+    return frames
+
+
+def test_the_default_scale_leaves_the_g_selector_byte_identical():
+    """The amendment must not be able to change v0's selection by existing."""
+    panel = _panel(n_months=24, n_names=90)
+    frames = _ibes_frames(panel,
+                          stdev={i: 0.01 * (i + 1) for i in range(90)},
+                          meanest={i: 1.0 for i in range(90)})
+    ym = sorted(panel["ym"].unique())[0]
+    pool = panel[panel["ym"] == ym]
+    v0 = EFG.book_g_selector(frames)(pool, ym)
+    same = EFG.book_g_selector(frames, scale="meanest")(pool, ym)
+    assert v0 == same and v0, "the default path is v0's, unchanged"
+
+
+def test_the_price_scaled_selector_reads_price_off_the_POOL_not_the_ibes_frame():
+    """The PIT price lives on the replay panel, which is where the $5 minimum
+    and the dollar-volume floor are already computed from. A selector that
+    needed a price column on the IBES frame would need a second source for a
+    number the panel already carries at the right stamp."""
+    panel = _panel(n_months=24, n_names=90)
+    frames = _ibes_frames(panel,
+                          stdev={i: 0.01 * (i + 1) for i in range(90)},
+                          meanest={i: 1.0 for i in range(90)})
+    assert "price" not in frames[sorted(frames)[0]].columns
+    ym = sorted(panel["ym"].unique())[0]
+    pool = panel[panel["ym"] == ym]
+    picked = EFG.book_g_selector(frames, scale="price")(pool, ym)
+    assert picked, "the selector carried price across from the pool"
+    # Price is constant in this panel, so price-scaling is a positive rescaling
+    # of v0's score and must not reorder anything.
+    assert picked == EFG.book_g_selector(frames)(pool, ym)
+
+
+def test_price_scaling_REORDERS_when_the_eps_channel_is_the_only_difference():
+    """The amendment's point, at the selector: two names with identical
+    uncertainty per dollar, one with near-zero consensus EPS. v0 avoids the
+    near-zero-EPS name as if it were the most disagreed-about in the market."""
+    panel = _panel(n_months=24, n_names=90)
+    stdev = {i: 0.10 for i in range(90)}
+    meanest = {i: 5.0 for i in range(90)}
+    meanest[0] = 0.01                      # permno 1000: EPS near zero
+    frames = _ibes_frames(panel, stdev=stdev, meanest=meanest)
+    ym = sorted(panel["ym"].unique())[0]
+    pool = panel[panel["ym"] == ym]
+    v0 = EFG.book_g_selector(frames)(pool, ym)
+    amended = EFG.book_g_selector(frames, scale="price")(pool, ym)
+    assert 1000 not in v0, "v0 avoids it for its EPS LEVEL, not its disagreement"
+    assert 1000 in amended, "the amendment ranks it with its identical peers"
+
+
+def test_the_amended_book_carries_its_own_label_prereg_and_construction():
+    """A receipt that could be mistaken for v0's is the failure this guards.
+
+    Book C's run 1 printed `confirm_slice 1995-2024` while warming a 60-month
+    overhang at 24 -- a receipt that does not print its own construction cannot
+    be checked against the registration that licensed it.
+    """
+    panel = _panel(n_months=60, n_names=90)
+    frames = _ibes_frames(panel,
+                          stdev={i: 0.01 * (i + 1) for i in range(90)},
+                          meanest={i: 1.0 for i in range(90)})
+    book = EFG.replay_book_g(panel, frames, smoke=True, scale="price")
+    c = book["registered_construction"]
+    assert book["book"] == "forecast_dispersion_price_scaled_v1"
+    assert "Amendment 1" in book["prereg"] and "UNSIGNED" in book["prereg"]
+    assert c["dispersion_scale"] == "price"
+    assert c["ratio"] == "|stdev / price|"
+    assert "Amendment 1" in c["amendment"]
+    # and the frozen fields the amendment does NOT touch are still v0's
+    assert c["k"] == EFG.K and c["tercile"] == EFG.TERCILE
+    assert c["filters"]["numest_min"] == 3
+    assert c["declared_effect_size"] == EFG.DECLARED_EFFECT["G"]
+
+    v0 = EFG.replay_book_g(panel, frames, smoke=True)
+    assert v0["book"] == "forecast_dispersion_v0"
+    assert v0["registered_construction"]["dispersion_scale"] == "meanest"
+    assert v0["registered_construction"]["amendment"].startswith("none")
+
+
+def test_an_unknown_scale_is_refused_at_the_replay_too():
+    panel = _panel(n_months=24, n_names=90)
+    frames = _ibes_frames(panel, stdev={i: 0.1 for i in range(90)},
+                          meanest={i: 1.0 for i in range(90)})
+    with pytest.raises(ValueError, match="unknown dispersion scale"):
+        EFG.replay_book_g(panel, frames, smoke=True, scale="ebitda")
+
+
+def test_the_amendment_is_its_OWN_family_and_does_not_join_the_spent_one():
+    """A fifth leg added to `NIGHT_JOB_BOOKS_2026_09_13` after its four numbers
+    were seen would be a family that grew to fit a result."""
+    assert EFG.FAMILY_G_AMENDMENT != EFG.FAMILY
+    assert "forecast_dispersion_price_scaled_v1" not in EFG.DECLARED_FAMILY
+    assert len(EFG.DECLARED_FAMILY) == 4
+
+
+def test_the_job_is_registered_and_reachable_by_name():
+    from scripts.night_factory_jobs import JOB_STAGES, JOBS
+
+    assert "G_price_scaled" in JOBS
+    assert JOB_STAGES["G_price_scaled"] == "pnl"
+
+
+def test_the_amendment_note_is_quoted_into_every_amended_receipt():
+    """A number that travels without the reason it exists is a number that gets
+    quoted as v0's next month."""
+    assert "Amendment 1" in EFG.AMENDMENT_1_NOTE
+    assert "0.79" in EFG.AMENDMENT_1_NOTE, "the published spread it exceeded"
+    assert "UNSIGNED" in EFG.AMENDMENT_1_NOTE

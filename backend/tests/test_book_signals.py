@@ -477,3 +477,83 @@ def test_one_tercile_implementation_serves_book_c_and_the_three_new_books():
     bottom = BS.overhang_conditioned_ranks(cgo, sign, side="bottom")
     assert bottom == {k: v for k, v in cgo.items()
                       if v <= float(np.quantile(list(cgo.values()), 1.0 / 3.0))}
+
+
+# ---------------------------------------------------------------------------
+# TRIAL-DRAFT-G Amendment 1 — the denominator becomes PRICE (chunk 15b)
+# ---------------------------------------------------------------------------
+
+
+def test_the_default_scale_is_v0_and_is_byte_identical_to_it():
+    """The amendment must not be able to change v0's number by existing."""
+    f = _ibes_frame(30)
+    assert BS.forecast_dispersion(f) == BS.forecast_dispersion(f, scale="meanest")
+
+
+def test_price_scaling_divides_by_price_and_not_by_forecast_eps():
+    f = _ibes_frame(30)
+    f["meanest"] = [0.5] * 30          # halving EPS would DOUBLE v0's score
+    f["price"] = [20.0] * 30
+    got = BS.forecast_dispersion(f, scale="price", tercile=0.0, min_names=5)
+    # stdev_i = 0.01*(i+1), price = 20 -> score = 0.0005*(i+1)
+    assert got[1] == pytest.approx(0.01 / 20.0)
+    assert got[30] == pytest.approx(0.30 / 20.0)
+    v0 = BS.forecast_dispersion(f, tercile=0.0, min_names=5)
+    assert v0[1] == pytest.approx(0.01 / 0.5), "v0 still divides by meanest"
+
+
+def test_the_earnings_level_channel_is_exactly_what_price_scaling_removes():
+    """The amendment's whole claim, as an arithmetic fact rather than prose.
+
+    Two names with IDENTICAL forecast uncertainty per dollar of price, one with
+    near-zero consensus EPS. Under v0 the near-zero-EPS name looks like the most
+    disagreed-about name in the market and is AVOIDED; under the amendment the
+    two are ranked together, because neither is more uncertain per dollar.
+    """
+    f = pd.DataFrame({
+        "permno": [1, 2, 3, 4, 5, 6],
+        "stdev": [0.10] * 6,
+        "meanest": [5.0, 5.0, 5.0, 5.0, 5.0, 0.01],   # name 6: EPS near zero
+        "numest": [5] * 6,
+        "price": [50.0] * 6,
+    })
+    v0 = BS.forecast_dispersion(f, tercile=0.0, min_names=5)
+    amended = BS.forecast_dispersion(f, scale="price", tercile=0.0, min_names=5)
+    assert v0[6] == pytest.approx(10.0), "the EPS level, not disagreement"
+    assert v0[6] > 100 * v0[1]
+    assert amended[6] == amended[1] == pytest.approx(0.002)
+
+
+def test_the_covered_band_is_v0s_under_both_scales():
+    """`meanest != 0` stays a MEMBERSHIP test even when it is not the divisor.
+
+    If it did not, the amendment would rank a different set of names and the two
+    reads would differ by coverage as well as by construction -- and neither
+    number would be comparable to the other.
+    """
+    f = _ibes_frame(30)
+    f["price"] = [40.0] * 30
+    f.loc[f["permno"] <= 4, "meanest"] = 0.0
+    got = BS.forecast_dispersion(f, scale="price", min_names=5, tercile=0.0)
+    assert set(got) == set(range(5, 31)), "the same four names v0 drops"
+
+
+def test_a_zero_or_missing_price_is_dropped_not_clipped():
+    f = _ibes_frame(30)
+    f["price"] = [40.0] * 30
+    f.loc[f["permno"] <= 3, "price"] = 0.0
+    got = BS.forecast_dispersion(f, scale="price", min_names=5, tercile=0.0)
+    assert set(got) == set(range(4, 31))
+
+
+def test_price_scaling_refuses_by_name_when_the_price_column_is_absent():
+    with pytest.raises(BS.SignalUnavailable, match="no 'price' column"):
+        BS.forecast_dispersion(_ibes_frame(30), scale="price")
+
+
+def test_an_unknown_scale_is_refused_and_never_falls_back_to_v0():
+    """A silent fallback would publish v0's number under the amendment's name."""
+    f = _ibes_frame(30)
+    with pytest.raises(BS.SignalUnavailable, match="unknown dispersion scale"):
+        BS.forecast_dispersion(f, scale="ebitda")
+    assert BS.DISPERSION_SCALES == ("meanest", "price")
