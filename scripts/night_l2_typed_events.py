@@ -1601,7 +1601,11 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
     typed_records: list[dict] = []
     refusal_records: list[dict] = []
     latest: dict[str, list[str]] = dict(cursor)
+    # The kappa control re-prompts the FIRST `kappa_rows` successfully typed
+    # units, so only those need holding. Keeping every row would carry 163,284
+    # TypedEventRows through a full-panel run for the benefit of the first 50.
     first_pass: dict[tuple, ex.TypedEventRow] = {}
+    keep_for_kappa = max(0, int(kappa_rows))
     state = {"flushed_t": 0, "flushed_r": 0}
 
     def _on_result(idx, unit, res, usage):
@@ -1619,7 +1623,8 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
                 rec["text_sha256"] = unit["text_sha256"]
                 rec["source_kind"] = "corpus"
                 typed_records.append(rec)
-                first_pass[unit["key"]] = res
+                if len(first_pass) < keep_for_kappa:
+                    first_pass[unit["key"]] = res
             # the cursor advances on a REFUSED row too: the document was read and
             # the reader refused it, and re-reading it every night would spend the
             # same tokens on the same failure for ever. The refusal file keeps it.
@@ -1632,7 +1637,8 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
             else:
                 typed_records.append(panel_typed_record(
                     unit, res, backend=backend, variant="A", model=model))
-                first_pass[unit_key(unit)] = res
+                if len(first_pass) < keep_for_kappa:
+                    first_pass[unit_key(unit)] = res
 
     def _on_flush():
         _append(out_path, typed_records[state["flushed_t"]:])
