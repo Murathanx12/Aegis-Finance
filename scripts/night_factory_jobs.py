@@ -1549,6 +1549,24 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # moves the book, both twins and the momentum regression's universe
         # together), and prints both numbers or neither.
         "C_floor10m": _lazy("scripts.night_c_falsifiers", "C_floor10m"),
+        # 2026-09-13, chunk 13a: the SECOND declared family,
+        # `NIGHT_JOB_BOOKS_2026_09_13`, four primaries across two jobs.
+        #   B_books_efg_replay  Books E (JKP quality), F (JKP calendar
+        #                       seasonality) and G (IBES forecast dispersion),
+        #                       each at BOTH floors with the twin re-drawn at
+        #                       each, on the SAME monthly engine the first four
+        #                       books were read under. Three columns this
+        #                       repository has held unread since August. ~15-30
+        #                       min; queue it with an explicit box.
+        #   C_v1                TRIAL-DRAFT-C Amendment 2's read: Book C with
+        #                       the announcement-window sign Frazzini uses in
+        #                       place of v0's revision count, and NOTHING else
+        #                       moved. It is the family's fourth primary and it
+        #                       prints the complete four-leg Holm block by
+        #                       reading the E/F/G receipt. ~15-30 min.
+        "B_books_efg_replay": _lazy("scripts.night_books_efg_replay",
+                                    "B_books_efg_replay"),
+        "C_v1": _lazy("scripts.night_c_v1", "C_v1"),
         "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         "B_verdict": _lazy("scripts.night_b_verdict", "B_verdict"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
@@ -1628,6 +1646,9 @@ JOB_STAGES = {
     # replay is.
     "C_falsifiers": "pnl",
     "C_floor10m": "pnl",
+    # The 09-13 family prices books the same way: net monthly excess vs a twin.
+    "B_books_efg_replay": "pnl",
+    "C_v1": "pnl",
     "A_corner": "pnl",
     "B_verdict": "pnl",
     "D1_reaction_book": "pnl",
@@ -1677,7 +1698,8 @@ def main(argv=None) -> int:
         payload = fn(seed=a.seed, smoke=a.smoke)
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
                    "E_decay_sweep", "M2_distill", "A_published_anomaly",
-                   "C_falsifiers", "C_floor10m", "A_corner", "B_verdict"):
+                   "C_falsifiers", "C_floor10m", "A_corner", "B_verdict",
+                   "B_books_efg_replay", "C_v1"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a

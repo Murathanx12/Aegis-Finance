@@ -426,9 +426,19 @@ def test_v1_moves_the_event_sign_and_nothing_else():
     assert v1["n_good"] == 1 and v1["n_bad"] == 0
 
 
-def test_the_v1_sign_is_not_wired_into_any_book_yet():
-    """§8 forbids swapping the input inside this registration. Until Amendment 2
-    is SIGNED, nothing may call the v1 builder from a job."""
+def test_the_v1_sign_is_wired_into_exactly_ONE_job_and_that_job_is_C_v1():
+    """This replaces the gate that forbade any caller at all.
+
+    That gate said, in its own docstring, "delete this test when Amendment 2 is
+    adopted and the read is queued". It was adopted 2026-09-13 13:05 HKT before
+    any read and the read is `scripts/night_c_v1.py`, so the gate is gone --
+    but the thing it was protecting is not, and this is the narrower guard that
+    survives it: the v1 builder has exactly ONE caller. A second job calling it
+    would be a second construction wearing the same amendment's name, which is
+    what §8 actually forbids.
+
+    AST, not grep: three tests failed on their first run this session by matching
+    the docstring that explains the banned pattern (CLAUDE.md, 2026-09-13)."""
     import ast
     from pathlib import Path
 
@@ -440,7 +450,7 @@ def test_the_v1_sign_is_not_wired_into_any_book_yet():
                 name = getattr(fn, "id", None) or getattr(fn, "attr", None)
                 if name == "book_c_event_sign_v1":
                     called.add(f.name)
-    assert called == set(), (
-        f"{sorted(called)} calls the v1 event sign. TRIAL-DRAFT-C §8: swapping "
-        f"the input is an amendment naming only the input, and Amendment 2 is "
-        f"UNSIGNED. Delete this test when it is signed and the read is queued.")
+    assert called == {"night_c_v1.py"}, (
+        f"the v1 event sign is called from {sorted(called)}. TRIAL-DRAFT-C §8 "
+        f"makes the v0 -> v1 swap an amendment naming ONLY the input; exactly "
+        f"one job may read it, and that job is `night_c_v1.py`.")
