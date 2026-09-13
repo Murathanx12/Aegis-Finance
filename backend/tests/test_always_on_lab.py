@@ -838,6 +838,8 @@ def test_the_schtasks_line_is_onlogon_limited_and_runs_nothing(capsys):
     assert L.main(["--schtasks"]) == 0
     out = capsys.readouterr().out
     assert '/SC ONLOGON' in out
+    # 2026-09-13: the form that registers WITHOUT elevation is printed first
+    assert 'Startup' in out and 'always_on_lab.cmd' in out and 'WScript.Shell' in out
     assert '/RL LIMITED' in out
     assert '/TN "AegisAlwaysOnLab"' in out
     assert "schtasks /Create" in out and "schtasks /Change" in out
@@ -848,10 +850,16 @@ def test_the_schtasks_line_is_onlogon_limited_and_runs_nothing(capsys):
     cmds = [ln for ln in out.splitlines() if ln.strip().startswith("schtasks ")]
     assert len(cmds) == 2
     for cmd in cmds:
-        assert "< " in cmd, "the stdin redirect is load-bearing"
-        assert "NUL" not in cmd, "it must come from a REGULAR file, not NUL"
+        # 2026-09-13: /TR is capped at 261 characters, so the command line points
+        # at the wrapper and the wrapper carries the redirects.
+        assert "always_on_lab.cmd" in cmd
         assert "| tail" not in cmd, "a pipe eats the exit code, and the code is the guard"
-        assert "empty_stdin.txt" in cmd
+    body = [ln for ln in out.splitlines() if "-m scripts.always_on_lab" in ln and "schtasks" not in ln]
+    assert body, "the wrapper body must be printed"
+    for ln in body:
+        assert "< " in ln, "the stdin redirect is load-bearing"
+        assert "NUL" not in ln, "it must come from a REGULAR file, not NUL"
+        assert "empty_stdin.txt" in ln
 
 
 # --------------------------------------------------------------------------

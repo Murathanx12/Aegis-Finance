@@ -1319,13 +1319,27 @@ def _print_schtasks() -> int:
   * No pipe. `cmd | tail` reports tail's exit code, and the exit code is the
     guard.
 """)
-    print(f'  schtasks /Create /TN "{TASK_NAME}" /SC ONLOGON /RL LIMITED '
-          f'/TR "cmd /c cd /d {root} && {py} -m scripts.always_on_lab '
-          f'< {empty} >> {log} 2>&1"')
+    # 2026-09-13, measured: `schtasks` caps /TR at 261 characters (this line is
+    # longer) and refuses ONLOGON for a non-elevated user ("Access is denied").
+    # What registered without elevation was a two-line wrapper .cmd and a
+    # windowless .vbs in the user's Startup folder -- the same effect, printed
+    # first because it is the one that works. The schtasks form stays below for
+    # an elevated shell.
+    wrapper = os.path.join(root, "backend", "data", "optimus", "always_on_lab.cmd")
+    print("  # 1. the wrapper (schtasks /TR is capped at 261 chars):")
+    print(f"  #    {wrapper}  containing:")
+    print("  #      @echo off")
+    print(f"  #      cd /d {root}")
+    print(f"  #      {py} -m scripts.always_on_lab < {empty} >> {log} 2>&1")
+    print("  # 2. windowless at logon WITHOUT elevation (the Startup folder):")
+    startup = os.path.join("%APPDATA%", "Microsoft", "Windows", "Start Menu", "Programs", "Startup", f"{TASK_NAME}.vbs")
+    print(f"  #    {startup}  containing:")
+    print('  #      Set sh = CreateObject("WScript.Shell")')
+    print(f'  #      sh.Run """{wrapper}""", 0, False')
+    print("  # 3. or, from an ELEVATED shell only (ONLOGON is denied otherwise):")
+    print(f'  schtasks /Create /TN "{TASK_NAME}" /SC ONLOGON /RL LIMITED /TR "{wrapper}"')
     print("\n  Already registered? Change it in place rather than re-registering:\n")
-    print(f'  schtasks /Change /TN "{TASK_NAME}" '
-          f'/TR "cmd /c cd /d {root} && {py} -m scripts.always_on_lab '
-          f'< {empty} >> {log} 2>&1"')
+    print(f'  schtasks /Change /TN "{TASK_NAME}" /TR "{wrapper}"')
     print(f"""
   To stop it: create {stop_path()} and wait one heartbeat
   ({HEARTBEAT_MINUTES} min). Never `taskkill /F /IM python.exe` — on
