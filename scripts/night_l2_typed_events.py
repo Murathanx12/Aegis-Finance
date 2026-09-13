@@ -71,6 +71,8 @@ RUN_DATE = "2026-09-13"
 CORPUS = REPO / "backend" / "data" / "optimus" / "news_corpus"
 TYPED = REPO / "backend" / "data" / "optimus" / "typed_events"
 CURSOR_PATH = TYPED / "_cursor.json"
+#: rows typed between two disk flushes; the cursor advances with every flush
+FLUSH_EVERY = 100
 MANIFEST_PATH = TYPED / "MANIFEST.json"
 OUT_DIR = REPO / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
 
@@ -604,6 +606,7 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
     tin = tout = 0
     latest: dict[str, list[str]] = dict(cursor)
     first_pass: dict[tuple, ex.TypedEventRow] = {}
+    flushed_t = flushed_r = 0
 
     for row in waiting:
         scope, kind = scope_of(row)
@@ -627,10 +630,21 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
         # reader refused it, and re-reading it every night would spend the same
         # tokens on the same failure for ever. The refusal file keeps the row.
         latest[src] = [seen, rid]
+        # 2026-09-13: flush EVERY `FLUSH_EVERY` rows, not once at the end. The
+        # first cloud run held 1,200 typed rows in memory with nothing on disk
+        # and the cursor untouched -- a crash at hour three would have lost and
+        # re-billed all of it. "Resumable" has to hold inside a run, not only
+        # between runs.
+        unflushed = (len(typed_records) - flushed_t) + (len(refusal_records) - flushed_r)
+        if unflushed >= FLUSH_EVERY:
+            _append(out_path, typed_records[flushed_t:])
+            _append(ref_path, refusal_records[flushed_r:])
+            save_cursor(latest, rows_written=len(typed_records) - flushed_t)
+            flushed_t, flushed_r = len(typed_records), len(refusal_records)
 
-    _append(out_path, typed_records)
-    _append(ref_path, refusal_records)
-    save_cursor(latest, rows_written=len(typed_records))
+    _append(out_path, typed_records[flushed_t:])
+    _append(ref_path, refusal_records[flushed_r:])
+    save_cursor(latest, rows_written=len(typed_records) - flushed_t)
 
     # ---- the inter-rater control: the SAME rows, the second prompt
     sample = [r for r in waiting if row_key(r) in first_pass][:int(kappa_rows)]

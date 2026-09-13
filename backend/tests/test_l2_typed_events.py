@@ -106,6 +106,34 @@ def test_the_cursor_resumes_and_never_re_types_a_row(wired):
     assert sum(1 for _ in jio.iter_rows(typed_file)) == 5
 
 
+def test_a_crash_mid_run_keeps_every_flushed_row_and_the_cursor(wired, monkeypatch):
+    """2026-09-13: the first cloud run held 1,200 typed rows in memory with the
+    file unwritten and the cursor untouched. Rows are now flushed every
+    FLUSH_EVERY; a reader that dies afterwards leaves them on disk and the
+    cursor past them, so the restart neither loses nor re-bills them."""
+    monkeypatch.setattr(l2, "FLUSH_EVERY", 2)
+    rows = [_corpus_row(i) for i in range(5)]
+    _write(wired["corpus"], rows)
+    box = {"calls": 0}
+
+    def dying(backend, prompt, *, system, max_tokens, temperature, purpose):
+        box["calls"] += 1
+        if box["calls"] > 3:
+            raise RuntimeError("reader died")
+        return _Reply(_answer())
+    with pytest.raises(RuntimeError):
+        l2.L2_typed_events(complete=dying, probe=lambda b: None, kappa_rows=0)
+    typed = list(wired["typed"].glob("*.jsonl"))
+    assert typed, "nothing was flushed before the crash"
+    on_disk = sum(1 for p in typed for ln in p.read_text(encoding="utf-8").splitlines() if ln.strip())
+    assert on_disk == 2, on_disk          # one flush of FLUSH_EVERY rows landed; the third row died unflushed
+    cur = json.loads((wired["typed"] / "_cursor.json").read_text(encoding="utf-8"))
+    assert cur.get("rows_written_total", cur.get("rows_written")) == 2
+    # the restart types only what the cursor has not passed
+    again = l2.L2_typed_events(complete=_complete([_answer()]), probe=lambda b: None, kappa_rows=0)
+    assert again["results"]["rows_typed"] == 3, again["results"]
+
+
 def test_the_cursor_carries_its_totals_across_runs(wired):
     _write(wired["corpus"], [_corpus_row(0)])
     l2.L2_typed_events(complete=_complete([_answer()]), probe=lambda b: None, kappa_rows=0)
