@@ -339,7 +339,11 @@ def dispatch_job(job: str, minutes: int) -> dict:
     AWAKE seconds and kills the process tree by PID.
     """
     from scripts import night_factory
-    return night_factory.run_job(job, 1, minutes, [])
+    # 2026-09-14 02:20: a literal run 1 rewrote a committed receipt the first
+    # night this ran. The factory's own rule picks the next free number and
+    # resumes a crashed stub under its own.
+    run, resume = night_factory.resolve_run(job, 1)
+    return night_factory.run_job(job, run, minutes, [], resume=resume)
 
 
 # ===========================================================================
@@ -631,7 +635,13 @@ def loop_news_pull(state: LabState) -> dict:
                 "reason": "EVERY_SOURCE_RATE_LIMITED_AT_THIS_CADENCE",
                 "sources_skipped": skipped, "cadence_minutes": period}
 
-    summary = pull_news(source_ids=admitted)
+    # 2026-09-14 02:20: a source keeps the CLI's 600 s budget by default, and
+    # 26 sources at 600 s cannot fit a 900 s loop box -- the loop timed out on
+    # every tick of the first night. The lab's pull is the 15-minute
+    # increment, so each source gets LAB_NEWS_SOURCE_BUDGET_S.
+    from scripts import news_pull as _np
+    summary = pull_news(source_ids=admitted,
+                        ctx=_np.RunContext(budget_s=float(_config.LAB_NEWS_SOURCE_BUDGET_S)))
     rows = int(summary.get("rows_new") or 0)
     red = list(summary.get("red") or [])
     refused = list(summary.get("refused") or [])

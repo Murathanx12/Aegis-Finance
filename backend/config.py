@@ -2615,6 +2615,10 @@ LAB_LOOP_TIMEOUT_S: dict = {
 #: checks once because its longest run is hours; this supervisor runs for days,
 #: and a plan that was "never sleep" at 09:00 can be changed by Windows Update
 #: or a battery-saver mode by 15:00.
+#: Per-source wall-clock budget for the LAB's 15-minute news increment (the daily
+#: pass keeps the CLI's 600 s). 26 sources x 25 s = 650 s < the loop's 900 s box.
+LAB_NEWS_SOURCE_BUDGET_S = 25.0
+
 LAB_POWER_RECHECK_MINUTES = 60
 
 #: Minutes with no model-touching call before the idle-GPU queue may dispatch.

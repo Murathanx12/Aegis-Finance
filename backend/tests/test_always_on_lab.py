@@ -815,7 +815,10 @@ def test_acceptance_is_built_unaccepted_until_three_dates_carry_evidence(lab):
 def test_acceptance_counts_dates_not_task_runs(lab):
     """ONLOGON can fire and die repeatedly in a bad state and still produce
     three "runs". The bar is three DATES with evidence on disk."""
-    today = datetime.now(timezone.utc).date()
+    # 2026-09-14: TWO CLOCKS -- the lab dates its receipts on the machine's
+    # local day (`run_date`); a UTC seed here was red eight hours in every 24.
+    from datetime import date as _date
+    today = _date.fromisoformat(L.run_date())
     for i in range(_config.LAB_ACCEPTANCE_DATES):
         day = (today - timedelta(days=i)).isoformat()
         folder = L.data_dir() / f"night_factory_{day}"
@@ -1050,3 +1053,33 @@ def test_a_local_tick_is_booked_unmetered(lab, monkeypatch):
     out = L.loop_l2_typing(L.LabState())
     assert out["cost_source"] == "local_unmetered"
     assert out["spend_today_usd"] == 0.0
+
+
+def test_the_idle_job_takes_the_next_free_run_number(lab, monkeypatch):
+    """2026-09-14: the first idle job of the first night ran as run 1 and
+    rewrote the committed `L2_typed_events_run01.json`."""
+    seen = {}
+    from scripts import night_factory as NF
+    monkeypatch.setattr(NF, "resolve_run", lambda job, first: (7, False))
+    monkeypatch.setattr(NF, "run_job", lambda job, run, minutes, extra, resume=False:
+                        seen.update(job=job, run=run, resume=resume) or {"verdict": "x"})
+    L.dispatch_job("X_anon_gap", 5)
+    assert seen == {"job": "X_anon_gap", "run": 7, "resume": False}
+
+
+def test_the_lab_news_pull_hands_every_source_a_short_budget(lab, monkeypatch):
+    """The lab's pull is a 15-minute increment inside a 900 s box; a source
+    keeping the CLI's 600 s budget timed the loop out on every tick."""
+    seen = {}
+    monkeypatch.setattr(L, "yields_to", lambda *a, **k: None)
+    monkeypatch.setattr(L, "news_sources", lambda: ["a_source"])
+    monkeypatch.setattr(L, "cadence_admits", lambda s, period: {"source": s, "admitted": True, "why": ""})
+    monkeypatch.setattr(L, "pull_news", lambda **kw: seen.update(kw) or
+                        {"rows_new": 0, "sources": {}, "refused": [], "red": []})
+    state = L.LabState()
+    try:
+        L.loop_news_pull(state)
+    except Exception:
+        pass
+    ctx = seen.get("ctx")
+    assert ctx is not None and ctx.budget_s == _config.LAB_NEWS_SOURCE_BUDGET_S
