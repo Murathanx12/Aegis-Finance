@@ -17,8 +17,8 @@ file:line; every external claim carries a URL in the agent notes (§2).
 
 | | |
 |---|---|
-| **RESULT IMPROVEMENT** | **NONE.** No strategy moved. This session verified and planned; it built nothing. |
-| best historical net strategy vs market | none surviving its own control above the tradability floor |
+| **RESULT IMPROVEMENT** | **FIRST POSITIVE READ AT THE TRADABLE FLOOR (2026-09-13 16:30):** a registered book (F) beats its twin at $10M in the current era. Nothing has traded on it yet; no forward evidence; the scoreboard line stays CONDITIONAL until the allocator runs it in paper beside its twin. Before this line: NONE for five months. |
+| best historical net strategy vs market | **F, calendar seasonality (Heston-Sadka years 11-20), +0.43%/mo net vs its random-universe twin at the $10M floor, t 3.12 over 419 blocks, +0.76%/mo t 2.30 in 2017-2024, shift-placebo +0.08% t 0.59** (`B_books_efg_replay_run01`, 2026-09-13; UNSIGNED, one read, flat 25 bps, CONDITIONAL). G forecast dispersion is +0.72%/mo t 4.42 pooled at $10M but **+0.02% t 0.07 in 2017-2024** — a decayed 1990s effect, not a live engine |
 | best forward paper strategy | none — **the six Alpaca books $551,653 of $600,000 (−8.1%) read live 2026-09-13 vs SPY −0.66% over 08-28→09-11**; hack1/3/4 lost 5-7% in three sessions against a flat SPY; hack2 retired to lane D |
 | only live lane | **R2** (local 7B, anonymised monthly digest): +16.19%/yr over its shuffled-digest control, t 3.92, 112 blocks; net CANNOT DETERMINE; **panel B still `PENDING_MODEL`** (`night_factory_2026-09-10/R2_widened_panelB_run01.json`: port 8080 refused) |
 | independent selectors with evidence | **one** — still the reason no router is permitted |
@@ -740,6 +740,22 @@ the `aat-loop-hack2` Railway service is retired when the keys move. **"Thousands
 as internal ledgers at cadence, plus these six venue accounts. Scaling the internal population to
 thousands (every mechanism × personality × cadence × universe, each with a twin and a frozen
 contract) is chunk 13's job, and the accumulation it buys is calendar time, not compute.
+
+**Third read, 2026-09-13 16:30 (chunk 13a: `B_books_efg_replay_run01`, `C_v1_run01`; family
+`NIGHT_JOB_BOOKS_2026_09_13` declared at 4 before any read; 1990-2024; twins re-drawn per floor; 25 bps flat;
+differences vs twin only):**
+
+| book | $3M | $10M | $10M by era 1990s / 2000s / 2010-16 / 2017-24 | falsifiers | verdict |
+|---|---|---|---|---|---|
+| **F seasonality** (yrs 11-20, JKP `seas_11_15an`/`seas_16_20an`) | +0.47% t 3.05 | **+0.43% t 3.12** | +0.46 / +0.32 / +0.17 / **+0.76 (t 2.30)** | shift placebo +0.08% t 0.59 ✓; ex-Jan +0.38% t 2.44 ✓ | CONDITIONAL — **the first engine with a current-era receipt at the floor** |
+| **G dispersion** (IBES `stdev/|meanest|`, low tercile) | +0.89% t 4.82 | +0.72% t 4.42 | +0.96 / +1.09 / +0.65 / **+0.02 (t 0.07)** | high-disp leg loses ✓; survives SI at t 2.0065 (a hair) | PRODUCT_PROMISING by its own rule, **but decayed to zero where we trade**; and +0.89% exceeds the published 0.79% long-short, an earnings-level tilt from the `|meanest|` denominator — next amendment: scale by price |
+| **C v1** (overhang × announcement-window sign, Amendment 2) | +0.55% t 3.43 | +0.33% t 1.93 | +0.24 / +0.53 / +0.03 / +0.38 (t 1.42) | placebo −0.18% ✓; momentum not alive → untestable | CONDITIONAL — v1 more than doubles v0, as the amendment predicted |
+| **E quality-minus-junk** (`qmj`) | +0.41% t 2.56 | +0.11% t 0.70 | +0.36 / +0.25 / −0.10 / −0.19 | junk leg loses ✓; survives size+beta ✓ | CONDITIONAL — dead at the floor |
+
+Holm against the declared four: all reject (G 1e-6, C_v1 6e-4, F 2.3e-3, E 1.0e-2). **What this changes:** hack3's
+engine is F, not C (chunk 13b); G goes to the price-scaled amendment before any account; C_v1 waits for a
+falsifier that can run; E is filed. What it does not change: every number is one read of one construction on
+one cost ruler, unsigned. **The scoreboard's RESULT line moves for the first time in five months, to CONDITIONAL.**
 
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
