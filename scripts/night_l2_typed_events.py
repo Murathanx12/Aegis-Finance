@@ -1294,18 +1294,31 @@ def estimate(units: list[dict], *, workers: int = 1, max_usd: float | None = Non
             "system_prompt_chars": system_chars,
             "system_prompt_tokens": _r(sys_tok, 1),
             "user_chars_mean": _r(user_chars / denom, 1),
-            "prompt_tokens_per_row_no_prefix_cache": _r((user_tok + sys_tok * n) / denom, 1),
-            "prompt_tokens_total_no_prefix_cache": int(tok_in_nocache),
-            "prompt_tokens_total_with_prefix_cache": int(tok_in_cached_miss + tok_in_cached_hit),
+            "prompt_tokens_per_row": _r((user_tok + sys_tok * n) / denom, 1),
+            "prompt_tokens_total": int(tok_in_nocache),
+            "prompt_tokens_charged_at_the_cache_MISS_rate": int(tok_in_cached_miss),
+            "prompt_tokens_charged_at_the_cache_HIT_rate": int(tok_in_cached_hit),
+            "prefix_cache_note": ("the SAME tokens are sent either way -- what a "
+                                  "prefix cache changes is the RATE on the "
+                                  f"{int(sys_tok)}-token system prefix, which is "
+                                  "byte-identical across every call. The two cost "
+                                  "columns are the same token count at two rates, "
+                                  "not two token counts"),
             "output_tokens_per_row": float(MEASURED["tokens_out_mean"]),
             "output_tokens_total": int(out_tok),
             "output_tokens_source": "MEASURED, ledger mean over 7,565 rows",
-            "caveat": (f"{CHARS_PER_TOKEN} chars/token is a CONVENTION. The same "
-                       "ledger's corpus rows averaged "
-                       f"{MEASURED['tokens_in_mean']:.0f} prompt tokens; the "
-                       "panel's texts are shorter (215 chars mean against a "
-                       "2,000-char corpus body cap), so a per-row figure taken "
-                       "from that run over-states this one"),
+            "calibration_against_the_ledger": {
+                "estimated_prompt_tokens_per_row_here": _r((user_tok + sys_tok * n) / denom, 1),
+                "measured_prompt_tokens_per_row_2026_09_13": MEASURED["tokens_in_mean"],
+                "reading": ("the measured rows were CORPUS documents, whose bodies "
+                            "run to the 2,000-char cap, and they still came in "
+                            "BELOW this panel estimate -- so 4 chars/token "
+                            "over-states the real tokenizer on this system prompt "
+                            "and every cost column here is conservative"),
+            },
+            "caveat": (f"{CHARS_PER_TOKEN} chars/token is a CONVENTION, not a "
+                       "tokenizer. The only honest anchor is the ledger, and it "
+                       "is printed beside it"),
         },
         "cost": {
             "published_deepseek_list": published,

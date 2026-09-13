@@ -60,6 +60,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 import time
 from dataclasses import asdict, dataclass, field
 
@@ -203,11 +204,21 @@ LanguageRefusal = LanguageRefused
 #: the same in a summary and mean opposite things.
 _USAGE: dict[str, dict] = {}
 
+#: `complete()` is called from N THREADS as of chunk 15a
+#: (`night_l2_typed_events --workers N`), and `stats["calls"] += 1` is a read,
+#: an add and a write. Two threads that interleave there lose an increment, so
+#: `usage()` would under-report exactly the busy backends. The MONEY is not at
+#: risk -- `llm_telemetry.append` has its own lock and the ledger is what a
+#: receipt's spend is read from -- but a call count that silently drifts low is
+#: the shape of bug nobody notices until it is quoted.
+_USAGE_LOCK = threading.Lock()
+
 
 def _touch(backend: str) -> dict:
-    return _USAGE.setdefault(backend, {
-        "calls": 0, "tokens_in": 0, "tokens_out": 0,
-        "cost_usd": 0.0, "language_refusals": 0, "errors": 0})
+    with _USAGE_LOCK:
+        return _USAGE.setdefault(backend, {
+            "calls": 0, "tokens_in": 0, "tokens_out": 0,
+            "cost_usd": 0.0, "language_refusals": 0, "errors": 0})
 
 
 @dataclass(frozen=True)
@@ -297,7 +308,8 @@ def complete(backend: str | None = None, prompt: str = "", *,
         # omits refusals under-reports exactly the calls worth worrying about.
         rep, refused = exc.reply, True
     except ProviderRefusal:
-        stats["errors"] += 1
+        with _USAGE_LOCK:
+            stats["errors"] += 1
         raise
     dt = round(time.monotonic() - t0, 3)
     tin = int(rep.prompt_tokens or 0)
@@ -316,14 +328,16 @@ def complete(backend: str | None = None, prompt: str = "", *,
             error=("LANGUAGE_REFUSED" if refused else None),
             meta={"cost_class": row.cost_class, "transport": row.transport,
                   "free": row.is_free})
-    stats["calls"] += 1
-    stats["tokens_in"] += tin
-    stats["tokens_out"] += tout
-    if cost is not None:
-        stats["cost_usd"] = round(stats["cost_usd"] + cost, 8)
+    with _USAGE_LOCK:
+        stats["calls"] += 1
+        stats["tokens_in"] += tin
+        stats["tokens_out"] += tout
+        if cost is not None:
+            stats["cost_usd"] = round(stats["cost_usd"] + cost, 8)
 
     if refused:
-        stats["language_refusals"] += 1
+        with _USAGE_LOCK:
+            stats["language_refusals"] += 1
         raise LanguageRefused(
             f"{row.name}/{chosen} replied >{int(_lang.NON_LATIN_BAR * 100)}% "
             f"non-Latin script for purpose={purpose!r}. DISCARDED -- not "
