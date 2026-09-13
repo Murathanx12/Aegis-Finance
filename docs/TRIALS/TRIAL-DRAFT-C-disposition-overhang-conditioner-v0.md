@@ -157,7 +157,7 @@ the existing price/volume panel — no external wait. v1 is gated on L2.
   blocks (`C_falsifiers --smoke`). Neither is the registered read. The clause is symmetric with
   the family's and adds no new way for the book to pass.
 
-**Amendment 2 (proposed, UNSIGNED) — 2026-09-13: v1 names ONLY the input.**
+**Amendment 2 — 2026-09-13: v1 names ONLY the input. ADOPTED 2026-09-13 13:05 HKT by the session, before any read** (as Amendment 1 was): it changes the conditioner to the one the cited paper uses, moves nothing else, and the v1 read is queued as chunk 13a's `C_v1` job at both floors with the same twin and falsifiers. The book stays UNSIGNED as a RESEARCH_CLAIM; this adoption licenses the PRODUCT_EXPERIMENT read only.
 
 §8 forbids swapping the event sign inside this registration and says the swap is "a
 separate amendment naming only the input". This is that amendment. It is **UNSIGNED**,
