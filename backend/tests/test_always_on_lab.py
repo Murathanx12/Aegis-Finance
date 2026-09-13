@@ -585,6 +585,20 @@ def test_the_typing_loop_refuses_a_cloud_reader_that_does_not_exist(lab, monkeyp
     assert out["reason"] == "CLOUD_READER_NOT_IMPLEMENTED"
 
 
+def test_a_typing_tick_with_no_rows_does_not_touch_the_idle_clock(lab, monkeypatch):
+    """2026-09-13 23:30: the mark landed before the call on every tick, so a
+    15-minute typing cadence kept the GPU 'busy' for ever and the 20-minute
+    idle queue never fired. No row read, no model touched, no mark."""
+    monkeypatch.setattr(L, "model_status", SpyServer(
+        listening=True, ready=True, foreign=False, started_by_aegis=True).status)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "done", "rows_typed": 0, "rows_read": 0,
+        "corpus": {"rows_waiting": 0}, "usage": {"cost_usd": 0.0}})
+    state = L.LabState()
+    L.loop_l2_typing(state)
+    assert state.last_model_call_utc is None
+
+
 def test_the_typing_loop_records_a_model_call_so_the_gpu_can_be_called_idle(
         lab, monkeypatch):
     monkeypatch.setattr(L, "model_status", SpyServer(

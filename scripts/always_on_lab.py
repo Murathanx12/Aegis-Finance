@@ -716,7 +716,6 @@ def loop_l2_typing(state: LabState) -> dict:
             server = {**server, "used_read_only": True}
 
     with state.model_lock:
-        state.note_model_call()
         try:
             out = type_rows(backend=backend, max_rows=max_rows)
         except Exception as exc:                                   # noqa: BLE001
@@ -725,6 +724,13 @@ def loop_l2_typing(state: LabState) -> dict:
 
     corpus = out.get("corpus") or {}
     typed = int(out.get("rows_typed") or (out.get("counts") or {}).get("typed") or 0)
+    # 2026-09-13 23:30: the mark used to land BEFORE the call, on every tick,
+    # rows or not -- so a 15-minute typing cadence reset the idle clock for
+    # ever and the 20-minute idle-GPU queue could never fire while the lab
+    # ran. The model was touched only if a row was read.
+    rows_read = int(out.get("rows_read") or (out.get("results") or {}).get("rows_read") or 0)
+    if typed or rows_read:
+        state.note_model_call()
     waiting = corpus.get("rows_waiting")
     status = str(out.get("status") or "")
     if status.startswith("PENDING_MODEL"):
