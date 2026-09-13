@@ -580,6 +580,109 @@ def build_features(cells: pd.DataFrame, ev: pd.DataFrame,
     return X, meta
 
 
+#: The SCALAR arm's columns, in order. Five, and no one-hot anywhere -- the
+#: whole point of the arm is that the type identity is NOT used.
+SCALAR_COLUMNS = ("sc_dirconf", "sc_mag", "sc_cnt_w1", "sc_cnt_w5", "sc_cnt_w21")
+
+
+def build_scalar_features(cells: pd.DataFrame, ev: pd.DataFrame,
+                          windows: tuple[int, ...] = WINDOWS) -> tuple[pd.DataFrame, dict]:
+    """The literature's own feature shape: ONE signed score, plus counts.
+
+    `docs/research_notes/2026-09-13/research_event_returns_last_read.md`: the
+    construction the post-2020 event-return literature actually supports is a
+    SCALAR direction x confidence score at a ONE-SESSION horizon -- not a 43-way
+    one-hot type block at five sessions, which is what E1 has been running. The
+    two are different hypotheses and E1 conflated them, so the null it found
+    ("typed events do not work here") was never a test of the literature's
+    construction.
+
+    This builds that construction from the SAME typed rows, with the SAME
+    searchsorted PIT arithmetic `build_features` uses -- every window is closed
+    at the cell's own session, so no window can reach past it by construction
+    rather than by a filter applied afterwards.
+
+    FIVE COLUMNS, AND THE TYPE IDENTITY IS NOT ONE OF THEM:
+
+      sc_dirconf   mean of `direction * confidence` over the events on the
+                   cell's OWN session. Signed: a confident negative event is
+                   -1 x conf, and an unconfident one is near zero. NaN when the
+                   cell has no same-session event -- LightGBM is NaN-native and
+                   `fillna(0)` on a feature matrix is banned here, because a
+                   zero in a signed column is "confidently neutral" and a
+                   missing one is "we did not look".
+      sc_mag       mean magnitude over the same events.
+      sc_cnt_w1/5/21  how many events this symbol carried in the trailing 1, 5
+                   and 21 sessions, type-agnostic. Counts are genuinely zero
+                   when nothing happened, so they are 0.0 and not NaN.
+
+    What this arm CANNOT tell apart, said rather than implied: a pivot and a
+    lawsuit with the same direction and confidence are one row to it. That is
+    the trade the literature makes, and the reason both arms are run rather than
+    one replacing the other.
+    """
+    sessions = np.array(sorted(pd.unique(cells["entry_date"])))
+    sidx = np.searchsorted(sessions, cells["entry_date"].to_numpy())
+    cells_sym = cells["symbol"].to_numpy()
+    n = len(cells)
+
+    cols = {
+        "sc_dirconf": np.full(n, np.nan, dtype=np.float32),
+        "sc_mag": np.full(n, np.nan, dtype=np.float32),
+    }
+    for w in windows:
+        cols[f"sc_cnt_w{w}"] = np.zeros(n, dtype=np.float32)
+
+    n_cells_with_event = 0
+    if len(ev):
+        e = ev.copy()
+        e["sidx"] = np.searchsorted(sessions, e["entry_date"].to_numpy())
+        by_cell = {}
+        for sym, grp in pd.DataFrame({"i": np.arange(n), "symbol": cells_sym,
+                                      "sidx": sidx}).groupby("symbol", sort=False):
+            by_cell[sym] = (grp["i"].to_numpy(), grp["sidx"].to_numpy())
+        for sym, grp in e.groupby("symbol", sort=False):
+            target = by_cell.get(sym)
+            if target is None:
+                continue
+            idx, csi = target
+            g = grp.sort_values("sidx")
+            es = g["sidx"].to_numpy()
+            hi = np.searchsorted(es, csi, side="right")      # events at or before the cell
+            for w in windows:
+                lo = np.searchsorted(es, csi - w + 1, side="left")
+                cols[f"sc_cnt_w{w}"][idx] = (hi - lo).astype(np.float32)
+            lo0 = np.searchsorted(es, csi, side="left")      # the cell's OWN session
+            same = hi - lo0
+            dirs = g["direction"].to_numpy(dtype=float)
+            mags = g["magnitude"].to_numpy(dtype=float)
+            confs = g["confidence"].to_numpy(dtype=float)
+            for j in np.nonzero(same > 0)[0]:
+                a, b = lo0[j], hi[j]
+                cols["sc_dirconf"][idx[j]] = float(np.mean(dirs[a:b] * confs[a:b]))
+                cols["sc_mag"][idx[j]] = float(np.mean(mags[a:b]))
+                n_cells_with_event += 1
+
+    X = pd.DataFrame(cols, index=cells.index)[list(SCALAR_COLUMNS)]
+    meta = {
+        "arm": "SCALAR",
+        "columns": list(SCALAR_COLUMNS),
+        "n_feature_columns": int(X.shape[1]),
+        "windows_sessions": list(windows),
+        "n_event_rows": int(len(ev)),
+        "cells_with_a_same_session_event": int(n_cells_with_event),
+        "no_one_hot": ("the 43-way type block is DELIBERATELY absent: this arm "
+                       "tests whether a signed scalar score carries the signal, "
+                       "which is the construction the published event-return "
+                       "literature supports and the one E1 had never run"),
+        "nan_policy": ("sc_dirconf and sc_mag are NaN when the cell has no "
+                       "same-session event -- LightGBM is NaN-native and a zero "
+                       "in a signed column would read as 'confidently neutral' "
+                       "rather than 'nothing happened'"),
+    }
+    return X, meta
+
+
 def price_columns(cells: pd.DataFrame) -> pd.DataFrame:
     """N3's three PIT price features, same definitions, same shift-by-1."""
     return pd.DataFrame({

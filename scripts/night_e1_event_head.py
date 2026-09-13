@@ -51,33 +51,76 @@ from scripts.night_g3_evolve_v2 import COST_BPS                   # noqa: E402
 JOB = "E1_event_head"
 LICENCE = "PRODUCT_EXPERIMENT"
 SEED = n3.SEED
-ARMS = ("EVENT", "TFIDF", "SHUFFLE", "NOTEXT")
+#: TWO TREATMENTS, not one (chunk 15b). EVENT is the 43-way one-hot type block
+#: E1 has always run. SCALAR is the construction the published event-return
+#: literature actually supports -- one signed `direction x confidence` score plus
+#: magnitude and the trailing counts, with the type identity deliberately
+#: absent. `research_notes/2026-09-13/research_event_returns_last_read.md`: E1's
+#: null conflated two hypotheses, "typed events do not work here" and "a scalar
+#: sentiment score at the literature's own horizon does not work here either",
+#: and only the first had ever been tested.
+TREATMENTS = ("EVENT", "SCALAR")
+
+#: Three SHARED controls plus one CAPACITY-MATCHED shuffle per treatment.
+#: SHUFFLE permutes the EVENT block (hundreds of columns); SCALAR_SHUFFLE
+#: permutes the five scalar columns. Grading SCALAR only against SHUFFLE would
+#: FLATTER it: a shuffled block with hundreds of noise columns overfits more and
+#: is therefore a weaker opponent than five shuffled columns. Each treatment is
+#: read against its own matched shuffle as well as the shared three.
 CONTROLS = ("TFIDF", "SHUFFLE", "NOTEXT")
+MATCHED_SHUFFLE = {"EVENT": "SHUFFLE", "SCALAR": "SCALAR_SHUFFLE"}
+ARMS = ("EVENT", "SCALAR", "TFIDF", "SHUFFLE", "SCALAR_SHUFFLE", "NOTEXT")
 MODELS = ("GBM", "StockMixer_T1")
-HORIZONS = (5, 21)
+
+#: 1 was added in chunk 15b. `night_n3_frozen_embedding_head.HORIZONS` has always
+#: carried it and `load_cells` has always built its label; only THIS file's tuple
+#: and its CLI `choices` excluded it, so the literature-matched one-session read
+#: had never been possible here. At h=1 the label is a single session, so the
+#: overlapping-label caveat every h>1 receipt carries does not apply -- the
+#: receipt says so in those words rather than leaving the absence to be noticed.
+HORIZONS = (1, 5, 21)
 OUT_DIR = n3.OUT_DIR
 
 
 def _feature_matrices(cells: pd.DataFrame, ev: pd.DataFrame, seed: int):
-    """The four arms' tables. Only the event block moves; price is shared."""
+    """The six arms' tables. Only the event/scalar blocks move; price is shared.
+
+    ONE permutation, used for BOTH shuffles. The same `perm` cuts the
+    event-to-cell link in the EVENT block and in the SCALAR block, so the two
+    matched controls differ from each other in capacity and in nothing else --
+    which is the only way `EVENT - SHUFFLE` and `SCALAR - SCALAR_SHUFFLE` are
+    comparable numbers rather than two draws of a random control.
+    """
     Xev, meta = eh.build_features(cells, ev)
+    Xsc, scalar_meta = eh.build_scalar_features(cells, ev)
     Xpx = eh.price_columns(cells)
     rng = np.random.default_rng(seed)
     perm = rng.permutation(len(cells))
-    shuffled = Xev.to_numpy()[perm]
-    Xsh = pd.DataFrame(shuffled, columns=Xev.columns, index=Xev.index)
+    Xsh = pd.DataFrame(Xev.to_numpy()[perm], columns=Xev.columns, index=Xev.index)
+    Xscsh = pd.DataFrame(Xsc.to_numpy()[perm], columns=Xsc.columns, index=Xsc.index)
     mats = {
         "EVENT": pd.concat([Xev, Xpx], axis=1),
+        "SCALAR": pd.concat([Xsc, Xpx], axis=1),
         "SHUFFLE": pd.concat([Xsh, Xpx], axis=1),
+        "SCALAR_SHUFFLE": pd.concat([Xscsh, Xpx], axis=1),
         "NOTEXT": Xpx,
         "TFIDF": None,                     # fit per fold on train rows only
     }
+    meta["scalar_arm"] = scalar_meta
     meta["shuffle_control"] = {
-        "kind": "global permutation of the EVENT block across (symbol, entry_date)",
+        "kind": ("global permutation of the treatment block across "
+                 "(symbol, entry_date); the SAME permutation is used for the "
+                 "EVENT block and for the SCALAR block"),
         "seed": int(seed),
         "fixed_points": int((perm == np.arange(len(cells))).sum()),
         "note": ("labels, dates, universe, construction and the PIT price columns are "
                  "identical; only the event-to-cell link is cut"),
+        "why_two_shuffles": (
+            f"SHUFFLE carries {Xev.shape[1]} shuffled columns and SCALAR_SHUFFLE "
+            f"carries {Xsc.shape[1]}. A bigger block of pure noise overfits more "
+            f"and is a WEAKER opponent, so grading SCALAR against SHUFFLE alone "
+            f"would flatter it. Each treatment is read against its own "
+            f"capacity-matched shuffle as well as the three shared controls."),
     }
     return mats, meta
 
@@ -188,8 +231,33 @@ def run_folds(cells: pd.DataFrame, mats: dict, embargo: int, seed: int = SEED,
     return dd, fold_log
 
 
+def family_keys(models=MODELS) -> list[str]:
+    """The DECLARED multiplicity family, computed rather than counted by hand.
+
+    Every `<treatment> - <control>` all-era IC comparison: two treatments, two
+    models, three shared controls plus each treatment's own matched shuffle.
+    With both models that is 2 x 2 x 4 = 16. The architecture comparison
+    (StockMixer_T1 vs GBM) is deliberately NOT in it -- it is a different
+    question with a different decision attached, and sweeping it in would both
+    inflate the correction on the controls and hide the M5 bar inside a
+    multiplicity adjustment it was never part of.
+    """
+    keys: list[str] = []
+    for model in models:
+        for t in TREATMENTS:
+            # EVENT's matched shuffle IS one of the shared three, so the dedup is
+            # by KEY. An earlier version skipped the control instead and silently
+            # dropped `EVENT_minus_SHUFFLE` -- the single most load-bearing leg in
+            # this file -- from its own declared family.
+            for c in tuple(CONTROLS) + (MATCHED_SHUFFLE[t],):
+                k = f"{model}:{t}_minus_{c}"
+                if k not in keys:
+                    keys.append(k)
+    return keys
+
+
 def grade(dd: pd.DataFrame, models=MODELS, horizon: int = 1) -> dict:
-    """Per era and per model. Six control comparisons, Holm inside the family."""
+    """Per era and per model. Holm over the DECLARED family of `family_keys`."""
     dd = dd.copy()
     dd["era"] = dd["date"].dt.to_period("Q").astype(str)
     out = {"eras": {}}
@@ -212,13 +280,23 @@ def grade(dd: pd.DataFrame, models=MODELS, horizon: int = 1) -> dict:
                         sl[f"turnover_{key}"].to_numpy(dtype=float))), 4),
                     "cost_bps_per_unit_turnover": COST_BPS,
                 }
-            for c in CONTROLS:
-                cell["vs_controls"][f"{model}:EVENT_minus_{c}"] = {
-                    "ic": n3._cell((sl[f"ic_{model}_EVENT"] - sl[f"ic_{model}_{c}"])
-                                   .to_numpy(dtype=float), False),
-                    "net": n3._cell((sl[f"net_{model}_EVENT"] - sl[f"net_{model}_{c}"])
-                                    .to_numpy(dtype=float), True),
-                }
+            for t in TREATMENTS:
+                for c in tuple(CONTROLS) + (MATCHED_SHUFFLE[t],):
+                    key = f"{model}:{t}_minus_{c}"
+                    if key in cell["vs_controls"]:
+                        continue
+                    cell["vs_controls"][key] = {
+                        "ic": n3._cell((sl[f"ic_{model}_{t}"] - sl[f"ic_{model}_{c}"])
+                                       .to_numpy(dtype=float), False),
+                        "net": n3._cell((sl[f"net_{model}_{t}"] - sl[f"net_{model}_{c}"])
+                                        .to_numpy(dtype=float), True),
+                    }
+            cell["vs_controls"][f"{model}:SCALAR_minus_EVENT"] = {
+                "ic": n3._cell((sl[f"ic_{model}_SCALAR"] - sl[f"ic_{model}_EVENT"])
+                               .to_numpy(dtype=float), False),
+                "net": n3._cell((sl[f"net_{model}_SCALAR"] - sl[f"net_{model}_EVENT"])
+                                .to_numpy(dtype=float), True),
+            }
         if "StockMixer_T1" in models and "GBM" in models:
             cell["vs_controls"]["StockMixer_T1_minus_GBM_on_EVENT"] = {
                 "ic": n3._cell((sl["ic_StockMixer_T1_EVENT"] - sl["ic_GBM_EVENT"])
@@ -228,12 +306,15 @@ def grade(dd: pd.DataFrame, models=MODELS, horizon: int = 1) -> dict:
             }
         out["eras"][era] = cell
 
-    # The Holm family is the SIX EVENT-vs-control comparisons. The architecture
-    # comparison (StockMixer_T1 vs GBM) is a different question with a different
-    # decision attached, and sweeping it into the same family would both inflate
-    # the correction on the controls and hide the M5 bar inside a multiplicity
-    # adjustment it was never part of.
-    fam = {k: v for k, v in out["eras"]["ALL"]["vs_controls"].items() if ":EVENT_minus_" in k}
+    # The family is DECLARED by `family_keys` and corrected over its declared
+    # size -- including any leg that could not be computed, which is named
+    # without a p-value rather than dropped (Holm over 12 p-values in a family
+    # that declared 16 is a different correction, and a reader has to see which
+    # happened). `SCALAR_minus_EVENT` is a HEAD-TO-HEAD, not a control
+    # comparison, and is reported outside the family for the same reason the
+    # architecture comparison is.
+    declared = family_keys(models)
+    fam = {k: v for k, v in out["eras"]["ALL"]["vs_controls"].items() if k in declared}
     ps = sorted(((k, v["ic"]["p"]) for k, v in fam.items() if v["ic"]["p"] is not None),
                 key=lambda kv: kv[1])
     holm, mx = {}, None
@@ -244,6 +325,15 @@ def grade(dd: pd.DataFrame, models=MODELS, horizon: int = 1) -> dict:
         mx = adj if mx is None else max(mx, adj)
     out["holm_adjusted_p_all_era_ic"] = holm
     out["holm_family_size"] = len(ps)
+    out["holm_family_declared_size"] = len(declared)
+    out["holm_family_declared"] = declared
+    out["holm_family_legs_without_a_p"] = [k for k in declared if k not in holm]
+    out["holm_family_note"] = (
+        f"declared at {len(declared)} before the read (two treatments x "
+        f"{len(models)} model(s) x the three shared controls plus each "
+        f"treatment's own matched shuffle); {len(ps)} leg(s) produced a p-value. "
+        f"SCALAR_minus_EVENT and the architecture comparison are head-to-heads "
+        f"and are reported OUTSIDE the family.")
     out["family_max_p"] = round(float(mx), 4) if mx is not None else None
     out["horizon_caveats"] = n3.horizon_caveats(horizon, int(len(dd)))
     return out
@@ -256,14 +346,22 @@ def verdict(g: dict, models=MODELS, *, event_source: str | None = None,
     holm = g["holm_adjusted_p_all_era_ic"]
     lines, beats_shuffle = {}, {}
     for model in models:
-        s = a["vs_controls"][f"{model}:EVENT_minus_SHUFFLE"]["ic"]
-        key = f"{model}:EVENT_minus_SHUFFLE"
-        ok = ((s["mean"] or 0) > 0 and holm.get(key) is not None and holm[key] < 0.05)
-        beats_shuffle[model] = bool(ok)
-        lines[f"beats_shuffle_{model}"] = (
-            f"{model}: EVENT - SHUFFLE IC {s['mean']:+.4f} (t {s['t']}, Holm p "
-            f"{holm.get(key)}) over {s['n_date_blocks']} date blocks -> "
-            f"{'YES' if ok else 'NO'}")
+        for t in TREATMENTS:
+            key = f"{model}:{t}_minus_{MATCHED_SHUFFLE[t]}"
+            s = a["vs_controls"].get(key, {}).get("ic")
+            if s is None:
+                beats_shuffle[f"{model}:{t}"] = False
+                lines[f"beats_shuffle_{model}_{t}"] = (
+                    f"{model}/{t}: the matched-shuffle comparison could not be "
+                    f"computed -> CANNOT DETERMINE")
+                continue
+            ok = ((s["mean"] or 0) > 0 and holm.get(key) is not None
+                  and holm[key] < 0.05)
+            beats_shuffle[f"{model}:{t}"] = bool(ok)
+            lines[f"beats_shuffle_{model}_{t}"] = (
+                f"{model}/{t}: {t} - {MATCHED_SHUFFLE[t]} IC {s['mean']:+.4f} "
+                f"(t {s['t']}, Holm p {holm.get(key)}) over "
+                f"{s['n_date_blocks']} date blocks -> {'YES' if ok else 'NO'}")
     if "StockMixer_T1" in models and "GBM" in models:
         m = a["vs_controls"]["StockMixer_T1_minus_GBM_on_EVENT"]["ic"]
         beats_gbm = (m["mean"] or 0) > 0 and (m["t"] or 0) > 2.0
@@ -290,8 +388,10 @@ def verdict(g: dict, models=MODELS, *, event_source: str | None = None,
         else:
             tail = ("This closes the KEYWORD PROXY, not typed events -- L2's LLM "
                     "extraction has not run.")
-        v = ("FAILED_VARIANT: no model's typed-event arm beats the SHUFFLED-EVENT control, so "
-             "what either earns is the panel's calendar and universe, not the events. " + tail)
+        v = ("FAILED_VARIANT: NEITHER treatment -- the 43-way one-hot type block NOR the "
+             "scalar direction x confidence score the published literature uses -- beats its "
+             "own capacity-matched shuffled control under any model, so what either earns is "
+             "the panel's calendar and universe, not the events. " + tail)
     elif not beats_gbm:
         v = ("FAILED_VARIANT for the ARCHITECTURE (StockMixer_T1 does not beat LightGBM on the "
              "identical table, which is the Gu-Kelly-Xiu prior holding) -- AND "
@@ -332,10 +432,14 @@ def main(argv=None) -> int:
     receipt = {
         "job": JOB, "licence": LICENCE, "run": args.run, "smoke": bool(args.smoke),
         "stage": args.stage, "llm_spend_usd": 0.0,
-        "question": ("Does a TYPED-EVENT table -- one-hot type x direction, counts over 1/5/21 "
-                     "sessions, magnitude, confidence and recency, plus N3's three PIT price "
-                     "columns -- beat shuffled events, TF-IDF and no text, under LightGBM and "
-                     "under a StockMixer-class head, on purged walk-forward splits?"),
+        "question": ("TWO treatments, one panel. (a) Does a TYPED-EVENT table -- one-hot type x "
+                     "direction, counts over 1/5/21 sessions, magnitude, confidence and recency "
+                     "-- beat shuffled events, TF-IDF and no text? (b) Does the SCALAR "
+                     "construction the published event-return literature actually supports -- a "
+                     "single signed `direction x confidence` score, magnitude and the trailing "
+                     "counts, with the 43-way type identity DELIBERATELY absent -- beat the same "
+                     "controls and its own capacity-matched shuffle? Both under LightGBM and a "
+                     "StockMixer-class head, on purged walk-forward splits."),
         "design": {
             "horizon_sessions": horizon,
             "embargo_sessions": embargo,
@@ -343,14 +447,47 @@ def main(argv=None) -> int:
                          else f"a {args.smoke_symbols}-symbol subset (--smoke)"),
             "unit": "(symbol, entry_date) cell -- one label per session, not one per headline",
             "target": n3.design_block(horizon)["target"],
-            "feature_family": ("typed_event_onehot_x_direction + magnitude + confidence + "
-                               "counts_1_5_21 + recency(+censored) + pit_price"),
+            "feature_family": {
+                "EVENT": ("typed_event_onehot_x_direction + magnitude + confidence + "
+                          "counts_1_5_21 + recency(+censored) + pit_price"),
+                "SCALAR": ("sc_dirconf (mean direction x confidence on the cell's own "
+                           "session) + sc_mag + counts over 1/5/21 sessions + pit_price. "
+                           "NO one-hot type column of any kind."),
+            },
+            "why_the_scalar_arm_exists": (
+                "research_notes/2026-09-13/research_event_returns_last_read.md: E1's null "
+                "conflated two hypotheses -- 'typed events do not work here' (what it "
+                "tested, at h=5 with a 43-way one-hot block) and 'a scalar sentiment score "
+                "at the literature's own horizon does not work here either' (never tested, "
+                "because this file's HORIZONS excluded 1 and no arm dropped the one-hots). "
+                "Both are now run on the same 26,003 typed rows at $0 marginal spend."),
             "models": list(MODELS) if with_mixer else ["GBM"],
-            "arms": {"EVENT": "typed-event block + the three PIT price columns",
+            "arms": {"EVENT": "typed-event one-hot block + the three PIT price columns",
+                     "SCALAR": "the five scalar columns + the three PIT price columns",
                      "TFIDF": (f"TF-IDF(1-2gram) -> {n3.SVD_COMPONENTS}-d SVD of the same text, "
                                "fit on TRAIN rows only, per fold"),
                      "SHUFFLE": "the EVENT block globally permuted across cells; price held fixed",
+                     "SCALAR_SHUFFLE": ("the SCALAR block under the SAME permutation -- the "
+                                        "capacity-matched control for SCALAR, because a "
+                                        "shuffled block with hundreds of noise columns "
+                                        "overfits more and is a WEAKER opponent than five"),
                      "NOTEXT": "log10 PIT 21-session median dollar volume, mom_21, mom_5"},
+            "multiplicity": {
+                "family": family_keys(MODELS if with_mixer else ("GBM",)),
+                "declared_size": len(family_keys(MODELS if with_mixer else ("GBM",))),
+                "declared_before_the_read": True,
+                "outside_the_family": ["<model>:SCALAR_minus_EVENT (a head-to-head)",
+                                       "StockMixer_T1_minus_GBM_on_EVENT (the M5 bar)"],
+            },
+            "overlap_caveat": (
+                "NONE AT THIS HORIZON. The label is a single session's SPY-excess "
+                "open-to-close, so consecutive date blocks share no sessions and the "
+                "reported n IS the effective n. Every h=5 and h=21 receipt in this folder "
+                "carries the opposite caveat (a t to be divided by sqrt(h)); this one does "
+                "not, and that is a property of the label, not an omission."
+                if horizon == 1 else
+                f"each date label spans {horizon} sessions and consecutive dates overlap; "
+                f"see `horizon_caveats` in the grade block."),
             "splits": (f"expanding walk-forward by month, {embargo}-session embargo, "
                        f"first test month is month {n3.MIN_TRAIN_MONTHS + 1}"),
             "book": (f"decile long-short, EW, gross exposure 1.0, {TRADABLE_DOLLAR_VOL:,.0f} PIT "
@@ -365,6 +502,11 @@ def main(argv=None) -> int:
                        "where present and otherwise from a keyword proxy over the 39-id "
                        "vocabulary of docs/research_notes/2026-09-11/spec_events_and_"
                        "calibration.md section 1.2. A verdict here is a verdict about the proxy."),
+            "pit_rule_is_shared_by_both_arms": (
+                "`build_scalar_features` uses the SAME searchsorted arithmetic as "
+                "`build_features`: every window closes at the cell's own session, so no "
+                "window can reach past it by construction rather than by a filter applied "
+                "afterwards. The two arms differ in what they READ from the same rows."),
         },
         "inputs": [n3.PANEL.name, n3.BARS.name],
         "status": "running", "written_utc": n3._now(),
