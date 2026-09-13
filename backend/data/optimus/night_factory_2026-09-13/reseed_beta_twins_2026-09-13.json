@@ -1,0 +1,321 @@
+{
+ "receipt": "reseed_beta_twins",
+ "roadmap_item": "chunk 12 T4",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "ran_at": "2026-09-13T03:54:25+00:00",
+ "asof": "2026-09-13",
+ "bars_available": true,
+ "armed": false,
+ "arm_env": "AEGIS_RESEED_BETA_TWINS",
+ "applied": false,
+ "defect": "`LONG_ONLY_RULES` omitted `passthrough` when the first books were seeded on 2026-09-12, so lane B's two insider-cluster books -- the programme's only passthrough books -- were created with ONE twin where TRIAL-DRAFT-B names two. The tuple was fixed the same day; the books already existed, and `seed_first_books` correctly reports `created: false` and adds nothing.",
+ "what_the_draw_depends_on": "THE TWIN IS DRAWN AT TODAY'S BARS. A twin's book_id is the fingerprint of its contract and the contract carries its symbols, so this is not the twin the book would have had on 2026-09-12: it is matched on betas estimated over the 120 sessions ending 2026-09-13. Neither book has a NAV history, so nothing is retro-fitted -- but the control's membership is a fact about the control and it is recorded here rather than implied.",
+ "books": [
+  {
+   "book_id": "book:8dbbb73b6159d61d",
+   "strategy_id": "nightjob-mom121-k12-monthly",
+   "construction_rule": "top_k",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T08:13:09+00:00",
+   "carries": {
+    "random_universe": "book:f46aaaa40b8c039a",
+    "beta_matched": "book:57c7af9fb85e59e8"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [],
+   "expected_gap": false
+  },
+  {
+   "book_id": "book:1934ec97aa4b1620",
+   "strategy_id": "si_low_turnover_high_v1",
+   "construction_rule": "top_k",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:20+00:00",
+   "carries": {
+    "random_universe": "book:9d62cc74239b435d",
+    "beta_matched": "book:33418f0ea53a2f1a"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [],
+   "expected_gap": false
+  },
+  {
+   "book_id": "book:4359eba886a8a505",
+   "strategy_id": "insider_cluster_same_day_v1",
+   "construction_rule": "passthrough",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:21+00:00",
+   "carries": {
+    "random_universe": "book:32adc8a0ec8ca0fe"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [
+    "beta_matched"
+   ],
+   "expected_gap": true,
+   "parent_universe_size": 2834,
+   "missing_twins": [
+    {
+     "degenerate_beta_match": true,
+     "degenerate_coverage_of_parent_universe": 0.9965,
+     "parent_universe_size": 2834,
+     "degenerate_note": "MEASURED, and it is the finding of this scan: the parent is a `passthrough` book whose universe IS the whole liquidity band, so every beta decile's target count equals that decile's whole membership and the 'matched draw' hands back the band. This twin holds 2824 of the parent's 2834 names (99.6%); the rest had no estimable beta and are dropped from BOTH arms. The membership hash is therefore identical between B and B'. It is still a real control -- equal-weight the band against the signal's picks, which is exactly where a passthrough book's edge has to come from -- but it is NOT beta-matched in any informative sense: matching a universe's deciles to itself returns the universe. Whether a control of that shape is worth adding is part of what the attended step decides, and it is the reason this script prints rather than writes.",
+     "kind": "beta_matched",
+     "book_id": "book:a8801805cca0b26e",
+     "strategy_id": "insider_cluster_same_day_v1::beta_matched",
+     "n_symbols": 2824,
+     "symbols_preview": [
+      "A",
+      "AA",
+      "AADX",
+      "AAL",
+      "AAMI",
+      "AAOI",
+      "AAON",
+      "AAP",
+      "AAPL",
+      "AAUC",
+      "AB",
+      "ABBV",
+      "ABCB",
+      "ABCL",
+      "ABEO",
+      "ABG",
+      "ABM",
+      "ABNB",
+      "ABSI",
+      "ABT",
+      "ABUS",
+      "ABVX",
+      "ABX",
+      "ACA",
+      "ACAD"
+     ],
+     "symbols_sha256": "75cec1241d3b93c3607a70882cabfed8cdb7da97eade4654247e574f81c33dcc",
+     "twin_detail": {
+      "kind": "beta_matched",
+      "of": "book:4359eba886a8a505",
+      "seed": 610843105,
+      "estimator": "OLS of daily return on the daily EQUAL-WEIGHT market return of the same pool over the 120 sessions ending strictly before the decision date, minimum 60 usable sessions. This is learner/beta.py's declared estimator applied to ticker bars: that module estimates on CRSP permnos against the CRSP value-weighted index, neither of which exists for a 2025-26 book.",
+      "deciles_matched": {
+       "0": 283,
+       "1": 282,
+       "2": 282,
+       "3": 283,
+       "4": 282,
+       "5": 282,
+       "6": 283,
+       "7": 282,
+       "8": 282,
+       "9": 283
+      },
+      "deciles_short": {},
+      "n_with_beta": 2824,
+      "universe_overlap_with_parent": 1.0
+     },
+     "matched": true,
+     "universe_overlap_with_parent": 1.0,
+     "overlap_note": "the parent is a `passthrough` book whose declared universe IS the liquidity band, so a draw from that band overlaps it entirely and this reads 1.0. That is not a broken control: it means the control does its work through the SIGNAL alone, which is what a beta-matched twin of a whole-universe book can do. A reader has to be able to tell that from a twin that accidentally copied the parent's picks, and this line is how."
+    }
+   ]
+  },
+  {
+   "book_id": "book:625c391913d9718c",
+   "strategy_id": "insider_cluster_length_v1",
+   "construction_rule": "passthrough",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:21+00:00",
+   "carries": {
+    "random_universe": "book:1dc244805b119552"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [
+    "beta_matched"
+   ],
+   "expected_gap": true,
+   "parent_universe_size": 2834,
+   "missing_twins": [
+    {
+     "degenerate_beta_match": true,
+     "degenerate_coverage_of_parent_universe": 0.9965,
+     "parent_universe_size": 2834,
+     "degenerate_note": "MEASURED, and it is the finding of this scan: the parent is a `passthrough` book whose universe IS the whole liquidity band, so every beta decile's target count equals that decile's whole membership and the 'matched draw' hands back the band. This twin holds 2824 of the parent's 2834 names (99.6%); the rest had no estimable beta and are dropped from BOTH arms. The membership hash is therefore identical between B and B'. It is still a real control -- equal-weight the band against the signal's picks, which is exactly where a passthrough book's edge has to come from -- but it is NOT beta-matched in any informative sense: matching a universe's deciles to itself returns the universe. Whether a control of that shape is worth adding is part of what the attended step decides, and it is the reason this script prints rather than writes.",
+     "kind": "beta_matched",
+     "book_id": "book:b7cdc8987583e881",
+     "strategy_id": "insider_cluster_length_v1::beta_matched",
+     "n_symbols": 2824,
+     "symbols_preview": [
+      "A",
+      "AA",
+      "AADX",
+      "AAL",
+      "AAMI",
+      "AAOI",
+      "AAON",
+      "AAP",
+      "AAPL",
+      "AAUC",
+      "AB",
+      "ABBV",
+      "ABCB",
+      "ABCL",
+      "ABEO",
+      "ABG",
+      "ABM",
+      "ABNB",
+      "ABSI",
+      "ABT",
+      "ABUS",
+      "ABVX",
+      "ABX",
+      "ACA",
+      "ACAD"
+     ],
+     "symbols_sha256": "75cec1241d3b93c3607a70882cabfed8cdb7da97eade4654247e574f81c33dcc",
+     "twin_detail": {
+      "kind": "beta_matched",
+      "of": "book:625c391913d9718c",
+      "seed": 2658342123,
+      "estimator": "OLS of daily return on the daily EQUAL-WEIGHT market return of the same pool over the 120 sessions ending strictly before the decision date, minimum 60 usable sessions. This is learner/beta.py's declared estimator applied to ticker bars: that module estimates on CRSP permnos against the CRSP value-weighted index, neither of which exists for a 2025-26 book.",
+      "deciles_matched": {
+       "0": 283,
+       "1": 282,
+       "2": 282,
+       "3": 283,
+       "4": 282,
+       "5": 282,
+       "6": 283,
+       "7": 282,
+       "8": 282,
+       "9": 283
+      },
+      "deciles_short": {},
+      "n_with_beta": 2824,
+      "universe_overlap_with_parent": 1.0
+     },
+     "matched": true,
+     "universe_overlap_with_parent": 1.0,
+     "overlap_note": "the parent is a `passthrough` book whose declared universe IS the liquidity band, so a draw from that band overlaps it entirely and this reads 1.0. That is not a broken control: it means the control does its work through the SIGNAL alone, which is what a beta-matched twin of a whole-universe book can do. A reader has to be able to tell that from a twin that accidentally copied the parent's picks, and this line is how."
+    }
+   ]
+  },
+  {
+   "book_id": "book:a82e6e453c14c241",
+   "strategy_id": "disposition_overhang_conditioner_v0",
+   "construction_rule": "top_k",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:21+00:00",
+   "carries": {
+    "random_universe": "book:000b263cf7ec2286",
+    "beta_matched": "book:6310ca122657f8b1"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [],
+   "expected_gap": false
+  },
+  {
+   "book_id": "book:c3adfbc0192576c0",
+   "strategy_id": "unconditioned_reaction_book_v0",
+   "construction_rule": "top_k",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:22+00:00",
+   "carries": {
+    "random_universe": "book:60c4658f92c49e48",
+    "beta_matched": "book:668a4e273abf21ff"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [],
+   "expected_gap": false
+  },
+  {
+   "book_id": "book:b109c8861c43e3c6",
+   "strategy_id": "abstention_book_v0",
+   "construction_rule": "threshold_coverage",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:23+00:00",
+   "carries": {
+    "random_universe": "book:364486e140074b55",
+    "beta_matched": "book:2c0eb59f611b009c"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [],
+   "expected_gap": false
+  },
+  {
+   "book_id": "book:3b3e7049e693c3e4",
+   "strategy_id": "abstention_always_invested_twin_v0",
+   "construction_rule": "top_k",
+   "cadence": "monthly",
+   "created_utc": "2026-09-12T09:31:24+00:00",
+   "carries": {
+    "random_universe": "book:0b4039242299f2e0",
+    "beta_matched": "book:1ece648f7410da8e"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched"
+   ],
+   "missing": [],
+   "expected_gap": false
+  },
+  {
+   "book_id": "book:f64e8d9912412124",
+   "strategy_id": "first_hour_event_intraday_v1",
+   "construction_rule": "top_k",
+   "cadence": "30m",
+   "created_utc": "2026-09-12T09:45:15+00:00",
+   "carries": {
+    "random_universe": "book:02a03ee6cce2cda1",
+    "beta_matched": "book:d122db7122f748f5",
+    "overnight_only": "book:e3d1553ba7483930"
+   },
+   "owed_now": [
+    "random_universe",
+    "beta_matched",
+    "overnight_only"
+   ],
+   "missing": [],
+   "expected_gap": false
+  }
+ ],
+ "n_books_scanned": 9,
+ "n_books_with_a_gap": 2,
+ "n_twins_to_create": 2,
+ "unmatched_kinds": [],
+ "degenerate_beta_matches": [
+  {
+   "parent": "insider_cluster_same_day_v1",
+   "twin": "book:a8801805cca0b26e",
+   "n_symbols": 2824
+  },
+  {
+   "parent": "insider_cluster_length_v1",
+   "twin": "book:b7cdc8987583e881",
+   "n_symbols": 2824
+  }
+ ],
+ "unmatched_warning": null,
+ "attended_command": "AEGIS_RESEED_BETA_TWINS=1 python -m scripts.reseed_beta_twins --apply   (PowerShell: $env:AEGIS_RESEED_BETA_TWINS='1'; python -m scripts.reseed_beta_twins --apply)"
+}
