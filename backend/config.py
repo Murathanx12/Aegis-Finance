@@ -2626,8 +2626,13 @@ LAB_IDLE_MINUTES = 20
 #: measured gap in the system (6,020 rows PENDING_MODEL on 2026-09-13).
 LAB_IDLE_QUEUE: tuple[tuple[str, int], ...] = (
     ("L2_typed_events", 120),
-    ("R2_widened_panelB", 120),
+    # 2026-09-13 22:50: R2 panel B was read today (REJECT, 4.1 h) and a re-run
+    # at temperature 0 is the same 4.1 h for the same answer. The three
+    # model-dependent reads still unread take its place.
+    ("X_anon_gap", 120),
+    ("X2_elasticity", 120),
     ("E1_event_head", 60),
+    ("X4_regime_route", 90),
     ("L4_qwen3_measure", 60),
 )
 
