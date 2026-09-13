@@ -307,3 +307,23 @@ def test_the_e1_receipt_says_it_is_a_proxy(horizon):
     assert r["beats_gbm"] and r["beats_shuffle"]
     assert r["next_test"]
     assert float(r["design"]["cost_bps_per_side"]) > 0.0
+
+
+def test_the_failed_variant_sentence_names_which_typing_was_read():
+    """2026-09-13: run 2 was the first E1 read on LLM-typed rows (630 of 129,983
+    cells) and the receipt still closed 'the KEYWORD PROXY'. The sentence now
+    names the source and the coverage, and says what the next test is."""
+    from scripts import night_e1_event_head as E
+    ic = {"mean": 0.001, "t": 0.5, "p": 0.6, "n_date_blocks": 30}
+    g = {"eras": {"ALL": {"vs_controls": {
+            "GBM:EVENT_minus_SHUFFLE": {"ic": ic},
+            "StockMixer_T1:EVENT_minus_SHUFFLE": {"ic": ic},
+            "StockMixer_T1_minus_GBM_on_EVENT": {"ic": ic}}}},
+         "holm_adjusted_p_all_era_ic": {"GBM:EVENT_minus_SHUFFLE": 1.0,
+                                         "StockMixer_T1:EVENT_minus_SHUFFLE": 1.0}}
+    _, lines = E.verdict(g, event_source="typed_l2",
+                         typing_coverage={"cells": 129983, "cells_with_at_least_one_event": 630})
+    assert "LLM-typed" in lines["verdict"] and "0.5% coverage" in lines["verdict"]
+    assert "KEYWORD PROXY" not in lines["verdict"]
+    _, lines = E.verdict(g, event_source="keyword_proxy", typing_coverage={})
+    assert "KEYWORD PROXY" in lines["verdict"]

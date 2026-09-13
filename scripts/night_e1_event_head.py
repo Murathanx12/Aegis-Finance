@@ -249,7 +249,8 @@ def grade(dd: pd.DataFrame, models=MODELS, horizon: int = 1) -> dict:
     return out
 
 
-def verdict(g: dict, models=MODELS) -> tuple[str, dict]:
+def verdict(g: dict, models=MODELS, *, event_source: str | None = None,
+            typing_coverage: dict | None = None) -> tuple[str, dict]:
     """TWO lines, never one. `beats GBM` and `beats shuffle` are different facts."""
     a = g["eras"]["ALL"]
     holm = g["holm_adjusted_p_all_era_ic"]
@@ -274,9 +275,23 @@ def verdict(g: dict, models=MODELS) -> tuple[str, dict]:
         lines["beats_gbm"] = "StockMixer_T1 did not run, so the architecture question is CANNOT DETERMINE"
 
     if not any(beats_shuffle.values()):
+        # 2026-09-13: the closing sentence names WHICH typing was read. Run 2 was
+        # the first on LLM-typed rows and the receipt still said "keyword proxy".
+        tc = typing_coverage or {}
+        hit = int(tc.get("cells_with_at_least_one_event") or 0)
+        n = int(tc.get("cells") or 0)
+        share = (hit / n) if n else None
+        if event_source == "typed_l2":
+            tail = (f"This closes THIS READ of the LLM-typed rows at {hit:,} of {n:,} cells "
+                    f"({share:.1%} coverage); " if share is not None else
+                    "This closes THIS READ of the LLM-typed rows; ")
+            tail += ("below ~5% coverage the shuffled control has little power, and the "
+                     "next test is typing the panel's own headlines, not another head.")
+        else:
+            tail = ("This closes the KEYWORD PROXY, not typed events -- L2's LLM "
+                    "extraction has not run.")
         v = ("FAILED_VARIANT: no model's typed-event arm beats the SHUFFLED-EVENT control, so "
-             "what either earns is the panel's calendar and universe, not the events. This "
-             "closes the KEYWORD PROXY, not typed events -- L2's LLM extraction has not run.")
+             "what either earns is the panel's calendar and universe, not the events. " + tail)
     elif not beats_gbm:
         v = ("FAILED_VARIANT for the ARCHITECTURE (StockMixer_T1 does not beat LightGBM on the "
              "identical table, which is the Gu-Kelly-Xiu prior holding) -- AND "
@@ -409,7 +424,8 @@ def main(argv=None) -> int:
 
     models = MODELS if with_mixer else ("GBM",)
     g = grade(dd, models=models, horizon=horizon)
-    head, lines = verdict(g, models=models)
+    head, lines = verdict(g, models=models, event_source=event_source,
+                          typing_coverage=fmeta.get("typing_coverage"))
     daily_path = out.with_name(out.stem + "_daily.csv")
     dd.to_csv(daily_path, index=False)
 
