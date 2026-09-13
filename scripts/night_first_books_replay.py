@@ -152,8 +152,16 @@ def two_sided_p(t: float | None) -> float | None:
     return math.erfc(abs(float(t)) / math.sqrt(2.0))
 
 
-def holm(pvals: dict) -> dict:
-    """Holm-Bonferroni over the family. Missing legs are NAMED, not dropped."""
+def holm(pvals: dict, *, family: str = FAMILY) -> dict:
+    """Holm-Bonferroni over the family. Missing legs are NAMED, not dropped.
+
+    `family` is the DECLARED family's name and defaults to this job's own, so
+    `B_first_books_replay` is unchanged. `scripts/night_books_efg_replay.py`
+    declares a SECOND family (`NIGHT_JOB_BOOKS_2026_09_13`, E/F/G/C_v1) and
+    passes its name here rather than carrying a second implementation of the
+    correction -- two Holm blocks that disagree about how the alpha ladder is
+    built would be worse than one shared one.
+    """
     have = {k: v for k, v in pvals.items() if v is not None}
     missing = sorted(k for k, v in pvals.items() if v is None)
     m = len(pvals)                                # the DECLARED family size
@@ -162,7 +170,7 @@ def holm(pvals: dict) -> dict:
         out[k] = {"p_raw": round(float(p), 6),
                   "holm_alpha": round(0.05 / (m - i), 6),
                   "rejects_at_holm": bool(p <= 0.05 / (m - i))}
-    return {"family": FAMILY, "declared_family_size": m,
+    return {"family": str(family), "declared_family_size": m,
             "legs_with_a_p_value": sorted(have), "legs_without": missing,
             "per_leg": out,
             "note": ("Holm is computed against the DECLARED family size, not "
@@ -238,7 +246,7 @@ def eligible(month_frame, *, floor_usd: float | None = None):
 
 def run_monthly(panel, select, *, k: int, seed: int, label: str,
                 twin: str = "random_universe", twin_select=None,
-                floor_usd: float | None = None) -> dict:
+                floor_usd: float | None = None, pool_filter=None) -> dict:
     """Replay one selector monthly against a twin. Returns the two series.
 
     `select(month_frame, ym) -> list[permno]`, from information known at the
@@ -251,6 +259,15 @@ def run_monthly(panel, select, *, k: int, seed: int, label: str,
     corner re-measurement that raised the floor for the book only would compare
     a $10M book against a $3M control, which is a different claim from the one
     being tested.
+
+    `pool_filter(pool, ym) -> pool` narrows the eligible band BEFORE either the
+    book or the twin sees it, and is how Books E, F and G restrict the universe
+    to names that CARRY the characteristic they sort on. It is the same argument
+    as `floor_usd` in a different coordinate: a book that requires a JKP `qmj`
+    score, or twenty years of tape, or three analysts, and is measured against a
+    twin drawn from names that require none of those, is measuring coverage and
+    calling it selection. `None` is the default and is the behaviour Books A, B
+    and C were read under; they do not pass it.
     """
     import numpy as np
 
@@ -263,7 +280,9 @@ def run_monthly(panel, select, *, k: int, seed: int, label: str,
     for i in range(len(months) - 1):
         ym, nxt = months[i], months[i + 1]
         pool = eligible(by_month[ym], floor_usd=floor_usd)
-        if pool.empty:
+        if pool_filter is not None:
+            pool = pool_filter(pool, ym)
+        if pool is None or pool.empty:
             continue
         picked = list(select(pool, ym) or [])[: int(k)]
         if not picked:
@@ -295,6 +314,7 @@ def run_monthly(panel, select, *, k: int, seed: int, label: str,
         "label": label, "twin": twin, "k": int(k), "seed": int(seed),
         "floor_usd": float(FLOOR_USD if floor_usd is None else floor_usd),
         "twin_turnover_matched": twin_select is None,
+        "pool_filtered_to_the_covered_band": pool_filter is not None,
         "n_blocks": len(diff),
         "median_names_selected": (int(np.median(n_sel)) if n_sel else 0),
         "mean_book_net_monthly": (round(float(np.mean(book_r)), 6) if book_r else None),
