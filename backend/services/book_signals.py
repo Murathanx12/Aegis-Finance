@@ -387,11 +387,226 @@ def overhang_conditioned_ranks(cgo: dict, event_sign: dict, *,
             "no name carried BOTH a positive event sign and a computable "
             "overhang this period; the conditioner has an empty eligible set "
             "rather than a weak one")
+    return _tercile_side(good, side=side, tercile=tercile)
+
+
+# --------------------------------------------------------------------------
+# BOOKS E, F, G — the three characteristics that were already on disk
+#
+# All three read a column this repository has PAID FOR AND NEVER READ, and all
+# three are PIT by the panel's own stamp rather than by a lag we chose:
+#
+#   E  qmj_rank            JKP `qmj`, stamped `eom`            TRIAL-DRAFT-E
+#   F  seasonality_score   JKP `seas_*an`, stamped `eom`       TRIAL-DRAFT-F
+#   G  forecast_dispersion IBES `stdev`/`meanest`, `statpers`  TRIAL-DRAFT-G
+#
+# THE STAMP IS THE WHOLE PIT ARGUMENT AND IT IS NOT OURS TO INVENT. JKP's panel
+# is formation-date stamped on `eom` and its own meta.json says each
+# characteristic derives from data public by then; the IBES consensus row is
+# stamped `statpers`, the snapshot date. The caller slices to rows at or before
+# the decision close -- these functions do not, exactly as
+# `capital_gains_overhang` does not, so a leak is a visible slicing bug in the
+# caller rather than an off-by-one buried inside a quantile.
+#
+# NONE of them sorts. Each returns {permno: the characteristic's own value} for
+# the requested side of the tercile cut, and the SELECTOR decides which
+# direction to rank in -- because "low dispersion is the held leg" is a fact
+# about Book G's registration and not about the arithmetic of a ratio.
+
+#: A cross-sectional tercile over fewer names than this is a cut of the
+#: survivors, not of the market. Same spirit and the same number as
+#: `si_turnover_composite`'s own `min_names`.
+MIN_CHARACTERISTIC_NAMES = 20
+
+#: TRIAL-DRAFT-F section 6 freezes BOTH columns and the requirement that both be
+#: present: `seas_11_15an` and `seas_16_20an`, JKP's own same-calendar-month
+#: averages at lags of 11-15 and 16-20 YEARS. The lag structure is Heston-Sadka's
+#: and it is chosen to be mechanically disjoint from the 12-1 momentum window
+#: the arena's ten books already price.
+SEASONALITY_COLUMNS = ("seas_11_15an", "seas_16_20an")
+
+#: The years-2-5 variant. A REPORTED DIAGNOSTIC ONLY (TRIAL-DRAFT-F section 8):
+#: reading it for a better number would be two books wearing one registration,
+#: so it may never become the primary.
+SEASONALITY_COLUMNS_NEAR = ("seas_2_5an",)
+
+#: TRIAL-DRAFT-G section 6 freezes `numest >= 3`, not 2: a two-analyst standard
+#: deviation is ONE pairwise difference, and a "disagreement" built on one
+#: disagreement is a noise measurement.
+MIN_ESTIMATES_FOR_DISPERSION = 3
+
+
+def _tercile_side(values: dict, *, side: str, tercile: float) -> dict:
+    """The requested side of a tercile cut over `values`. ONE implementation.
+
+    `side="top"` keeps values at or above the `tercile` quantile; `side="bottom"`
+    keeps values at or below the `1 - tercile` quantile, which is the mirror
+    image and NOT a second threshold to tune. `overhang_conditioned_ranks` calls
+    this too, so the frozen Book C cut and the three new books' cuts cannot
+    drift apart -- a placebo or a control that cuts its tercile with a second
+    implementation of the quantile is not cutting the same tercile.
+    """
+    import numpy as np
+
+    if side not in ("top", "bottom"):
+        raise ValueError(f"side must be 'top' or 'bottom', not {side!r}")
+    vals = list(values.values())
     if side == "bottom":
-        cut = float(np.quantile(list(good.values()), 1.0 - tercile))
-        return {k: v for k, v in good.items() if v <= cut}
-    cut = float(np.quantile(list(good.values()), tercile))
-    return {k: v for k, v in good.items() if v >= cut}
+        cut = float(np.quantile(vals, 1.0 - float(tercile)))
+        return {k: v for k, v in values.items() if v <= cut}
+    cut = float(np.quantile(vals, float(tercile)))
+    return {k: v for k, v in values.items() if v >= cut}
+
+
+def _finite_by_permno(frame, column: str) -> dict:
+    """{permno: float} for the rows of `frame` carrying a finite `column`."""
+    import numpy as np
+
+    if column not in getattr(frame, "columns", ()):
+        raise SignalUnavailable(
+            f"the panel carries no {column!r} column; the columns present are "
+            f"{sorted(getattr(frame, 'columns', []))[:12]}. This is a REFUSAL "
+            f"and not an empty cross-section: a book whose characteristic is "
+            f"absent has not decided to hold nothing.")
+    out = {}
+    for pn, v in zip(frame["permno"], frame[column]):
+        try:
+            x = float(v)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(x):
+            out[int(pn)] = x
+    return out
+
+
+def qmj_rank(frame, *, column: str = "qmj", side: str = "top",
+             tercile: float = 2.0 / 3.0,
+             min_names: int = MIN_CHARACTERISTIC_NAMES) -> dict:
+    """BOOK E. {permno: qmj} for the requested tercile of JKP's own composite.
+
+    `frame` is one month of the JKP characteristic panel, already sliced to the
+    rows stamped at or before the decision close and already intersected with
+    the eligible band. Higher `qmj` is more quality, so the book's selector
+    ranks DESCENDING and the junk falsifier (`side="bottom"`, TRIAL-DRAFT-E
+    section 5 clause 2) ranks ASCENDING.
+
+    `column` exists for ONE registered purpose: the `qmj_prof`-only diagnostic
+    TRIAL-DRAFT-E section 3 lists as reported-never-deciding. The book's own
+    call does not pass it, so the book cannot change by this argument existing
+    -- and section 8 forbids the diagnostic from becoming the primary.
+    """
+    vals = _finite_by_permno(frame, column)
+    if len(vals) < int(min_names):
+        raise SignalUnavailable(
+            f"only {len(vals)} name(s) carried a finite {column!r} this month; "
+            f"a cross-sectional tercile over fewer than {min_names} is a cut of "
+            f"the survivors, not of the market")
+    return _tercile_side(vals, side=side, tercile=tercile)
+
+
+def seasonality_score(frame, *, columns=SEASONALITY_COLUMNS, side: str = "top",
+                      tercile: float = 2.0 / 3.0,
+                      min_names: int = MIN_CHARACTERISTIC_NAMES) -> dict:
+    """BOOK F. {permno: composite z} for the requested tercile.
+
+    The composite is the equal-weight mean of the WITHIN-FRAME cross-sectional
+    z-scores of the named columns, computed only for names carrying EVERY named
+    column. Requiring all of them is the registered construction and it is not a
+    convenience: averaging a two-column z with a one-column z would make the
+    signal mean a different thing for old and young names, and the age of a
+    listing is exactly what a twenty-year seasonality lag selects on.
+
+    The columns are JKP's own same-calendar-month averages. Their alignment was
+    MEASURED before the book was registered (TRIAL-DRAFT-F section 2):
+    `seas_2_5an` at `eom = t` correlates 0.99999 with the name's own mean excess
+    return at months `t + 1 - 12k`, so the column stamped at the formation close
+    refers to the calendar month the book is about to EARN, which is what a
+    seasonality signal has to do to be a signal at all.
+
+    `columns` defaults to the frozen 11-15 / 16-20 pair.
+    `SEASONALITY_COLUMNS_NEAR` is the years-2-5 diagnostic and TRIAL-DRAFT-F
+    section 8 forbids it becoming primary.
+    """
+    import numpy as np
+
+    cols = tuple(columns)
+    if not cols:
+        raise SignalUnavailable("seasonality_score was given no columns to read")
+    per_col = {c: _finite_by_permno(frame, c) for c in cols}
+    shared = set.intersection(*(set(v) for v in per_col.values()))
+    if len(shared) < int(min_names):
+        counts = {c: len(v) for c, v in per_col.items()}
+        raise SignalUnavailable(
+            f"only {len(shared)} name(s) carried ALL of {list(cols)} this month "
+            f"(per column: {counts}); a cross-sectional tercile over fewer than "
+            f"{min_names} is a cut of the survivors. A name needs roughly twenty "
+            f"years of tape to carry the 16-20 lag, so a thin month here is a "
+            f"coverage fact and not a market fact.")
+    names = sorted(shared)
+    zs = []
+    for c in cols:
+        x = np.asarray([per_col[c][n] for n in names], dtype=float)
+        sd = float(np.nanstd(x))
+        zs.append(np.zeros_like(x) if not np.isfinite(sd) or sd <= 0
+                  else (x - float(np.nanmean(x))) / sd)
+    composite = np.mean(np.vstack(zs), axis=0)
+    vals = {int(n): float(v) for n, v in zip(names, composite) if np.isfinite(v)}
+    if len(vals) < int(min_names):
+        raise SignalUnavailable(
+            f"the seasonality composite resolved {len(vals)} finite score(s) "
+            f"from {len(names)} covered name(s)")
+    return _tercile_side(vals, side=side, tercile=tercile)
+
+
+def forecast_dispersion(frame, *,
+                        min_numest: int = MIN_ESTIMATES_FOR_DISPERSION,
+                        side: str = "bottom", tercile: float = 2.0 / 3.0,
+                        min_names: int = MIN_CHARACTERISTIC_NAMES) -> dict:
+    """BOOK G. {permno: |stdev / meanest|} for the requested tercile.
+
+    `frame` is one month of the IBES consensus panel, already filtered to
+    `measure == 'EPS'` and `fpi == '1'` by the caller and already sliced to rows
+    stamped at or before the decision close.
+
+    The default `side="bottom"` is the LOW-disagreement leg, which is the leg
+    TRIAL-DRAFT-G registers as held; the top tercile is the leg the book AVOIDS
+    and section 8 forbids shorting it, because the borrow cost that took 162
+    anomalies from +0.14%/month to -0.01%/month is not in this repository's cost
+    ruler. The book's selector therefore ranks the returned values ASCENDING: a
+    smaller ratio is a stronger hold.
+
+    Rows with a non-finite or ZERO `meanest` are dropped rather than clipped. A
+    consensus of zero makes the coefficient of variation infinite for a reason
+    that is about the denominator and not about disagreement, and a book that
+    quietly winsorised it would be holding names for an arithmetic accident.
+    """
+    import numpy as np
+
+    for c in ("permno", "stdev", "meanest", "numest"):
+        if c not in getattr(frame, "columns", ()):
+            raise SignalUnavailable(
+                f"the IBES consensus frame carries no {c!r} column; forecast "
+                f"dispersion needs permno, stdev, meanest and numest and does "
+                f"not substitute another measure of disagreement")
+    vals = {}
+    for pn, sd, mean, n in zip(frame["permno"], frame["stdev"],
+                               frame["meanest"], frame["numest"]):
+        try:
+            sd_f, mean_f, n_f = float(sd), float(mean), float(n)
+        except (TypeError, ValueError):
+            continue
+        if not (np.isfinite(sd_f) and np.isfinite(mean_f) and np.isfinite(n_f)):
+            continue
+        if n_f < int(min_numest) or mean_f == 0.0 or sd_f < 0.0:
+            continue
+        vals[int(pn)] = abs(sd_f / mean_f)
+    if len(vals) < int(min_names):
+        raise SignalUnavailable(
+            f"only {len(vals)} name(s) carried an IBES consensus with "
+            f"numest >= {min_numest} and a non-zero meanest this month; a "
+            f"cross-sectional tercile over fewer than {min_names} is a cut of "
+            f"the survivors, not of the market")
+    return _tercile_side(vals, side=side, tercile=tercile)
 
 
 # --------------------------------------------------------------------------
@@ -625,8 +840,11 @@ def compute(name: str, **kw) -> dict:
 
 
 __all__ = ["FIRST_HOUR_END", "FIRST_HOUR_START", "FRONTIER_SPAN_DAYS",
-           "MIN_CLUSTER_INSIDERS", "REGISTRY", "SAME_DAY_SPAN",
+           "MIN_CHARACTERISTIC_NAMES", "MIN_CLUSTER_INSIDERS",
+           "MIN_ESTIMATES_FOR_DISPERSION", "REGISTRY", "SAME_DAY_SPAN",
+           "SEASONALITY_COLUMNS", "SEASONALITY_COLUMNS_NEAR",
            "SignalUnavailable", "capital_gains_overhang", "cluster_eligibility",
            "cluster_lengths", "compute", "confidence_z", "first_hour_headlines",
-           "load_insider_buys", "load_news_rows", "load_short_interest",
-           "overhang_conditioned_ranks", "si_turnover_composite"]
+           "forecast_dispersion", "load_insider_buys", "load_news_rows",
+           "load_short_interest", "overhang_conditioned_ranks", "qmj_rank",
+           "seasonality_score", "si_turnover_composite"]

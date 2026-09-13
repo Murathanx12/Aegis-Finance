@@ -328,3 +328,152 @@ def test_a_passthrough_book_is_long_only_and_earns_a_beta_matched_twin():
                           asof=date.today())
     kinds = {t.strategy.engine_params["twin"]["kind"] for t in twins}
     assert kinds == {"random_universe", "beta_matched"}
+
+
+# --------------------------------------------------------------------------
+# BOOKS E, F, G — the three characteristics that were already on disk
+#
+# Every test here is on a SYNTHETIC frame. None of them reads the JKP or IBES
+# parquet: a unit test that needs a 1 GB panel is a test nobody runs twice.
+
+
+def _jkp_frame(n=30, *, qmj=True, seas=True, near=False):
+    """One month of the JKP characteristic panel, synthetically."""
+    rows = {"permno": list(range(1, n + 1))}
+    if qmj:
+        rows["qmj"] = [float(i) for i in range(n)]
+        rows["qmj_prof"] = [float(n - i) for i in range(n)]
+    if seas:
+        rows["seas_11_15an"] = [float(i) for i in range(n)]
+        rows["seas_16_20an"] = [float(i) for i in range(n)]
+    if near:
+        rows["seas_2_5an"] = [float(n - i) for i in range(n)]
+    return pd.DataFrame(rows)
+
+
+def _ibes_frame(n=30, *, numest=5):
+    """One month of the IBES consensus, synthetically. Dispersion rises with i."""
+    return pd.DataFrame({
+        "permno": list(range(1, n + 1)),
+        "stdev": [0.01 * (i + 1) for i in range(n)],
+        "meanest": [1.0] * n,
+        "numest": [numest] * n,
+    })
+
+
+def test_qmj_rank_returns_the_top_tercile_and_the_junk_leg_is_its_mirror():
+    f = _jkp_frame(30)
+    top = BS.qmj_rank(f)
+    bottom = BS.qmj_rank(f, side="bottom")
+    assert top and bottom
+    # The top tercile holds the HIGHEST qmj and the bottom holds the lowest;
+    # the junk falsifier is the same cut read from the other end, not a second
+    # threshold that could be tuned.
+    assert min(top.values()) > max(bottom.values())
+    assert set(top) & set(bottom) == set()
+    assert max(top.values()) == 29.0 and min(bottom.values()) == 0.0
+
+
+def test_qmj_rank_refuses_by_name_when_the_column_is_absent():
+    f = _jkp_frame(30, qmj=False)
+    with pytest.raises(BS.SignalUnavailable, match="no 'qmj' column"):
+        BS.qmj_rank(f)
+
+
+def test_qmj_rank_refuses_a_cross_section_too_thin_to_cut():
+    with pytest.raises(BS.SignalUnavailable, match="cut of the survivors"):
+        BS.qmj_rank(_jkp_frame(5))
+
+
+def test_qmj_rank_reads_the_named_diagnostic_column_without_changing_the_book():
+    """TRIAL-DRAFT-E section 3 lists a `qmj_prof`-only leg as reported and never
+    deciding. It must be reachable and it must NOT be what the default call
+    returns, or the diagnostic and the book would be the same object."""
+    f = _jkp_frame(30)
+    book = BS.qmj_rank(f)
+    diag = BS.qmj_rank(f, column="qmj_prof")
+    assert set(book) != set(diag)
+
+
+def test_seasonality_requires_every_named_column_on_every_name():
+    """A name carrying only the 11-15 lag is DROPPED, not averaged over what it
+    has: a one-column z and a two-column z mean different things, and listing
+    age is exactly what a twenty-year lag selects on."""
+    f = _jkp_frame(30)
+    f.loc[f["permno"] <= 5, "seas_16_20an"] = float("nan")
+    got = BS.seasonality_score(f, min_names=5)
+    assert set(got) <= set(range(6, 31))
+
+
+def test_seasonality_refuses_when_too_few_names_carry_both_columns():
+    f = _jkp_frame(30)
+    f.loc[f["permno"] > 3, "seas_16_20an"] = float("nan")
+    with pytest.raises(BS.SignalUnavailable, match="carried ALL of"):
+        BS.seasonality_score(f)
+
+
+def test_seasonality_composite_is_the_mean_of_the_two_column_z_scores():
+    """Two columns that disagree perfectly cancel to a flat score, so the
+    composite is genuinely averaging and not reading the first column."""
+    f = _jkp_frame(30)
+    f["seas_16_20an"] = [float(29 - i) for i in range(30)]
+    got = BS.seasonality_score(f, tercile=0.0)
+    assert len(got) == 30
+    assert max(abs(v) for v in got.values()) < 1e-9
+
+
+def test_seasonality_near_lags_are_a_different_book_and_say_so():
+    f = _jkp_frame(30, near=True)
+    far = BS.seasonality_score(f)
+    near = BS.seasonality_score(f, columns=BS.SEASONALITY_COLUMNS_NEAR)
+    # `seas_2_5an` is built decreasing here, so the two must not select the
+    # same names -- the diagnostic is a different read, which is why
+    # TRIAL-DRAFT-F section 8 forbids it becoming primary.
+    assert set(far) & set(near) == set()
+
+
+def test_dispersion_holds_the_LOW_leg_by_default():
+    got = BS.forecast_dispersion(_ibes_frame(30))
+    assert got
+    # Low disagreement is the held leg; the highest-dispersion names must not
+    # be in it, because section 8 forbids shorting them and the book avoids them.
+    assert max(got.values()) < 0.30
+    assert 30 not in got and 1 in got
+
+
+def test_dispersion_drops_a_lone_analyst_and_a_pair():
+    """`numest >= 3` is frozen: a two-analyst standard deviation is one pairwise
+    difference and a dispersion built on it is a noise measurement."""
+    f = _ibes_frame(30, numest=2)
+    with pytest.raises(BS.SignalUnavailable, match="numest >= 3"):
+        BS.forecast_dispersion(f)
+
+
+def test_dispersion_drops_a_zero_consensus_rather_than_clipping_it():
+    f = _ibes_frame(30)
+    f.loc[f["permno"] <= 4, "meanest"] = 0.0
+    got = BS.forecast_dispersion(f, min_names=5, tercile=0.0)
+    assert set(got) == set(range(5, 31))
+
+
+def test_dispersion_refuses_by_name_when_a_column_is_missing():
+    f = _ibes_frame(30).drop(columns=["stdev"])
+    with pytest.raises(BS.SignalUnavailable, match="no 'stdev' column"):
+        BS.forecast_dispersion(f)
+
+
+def test_one_tercile_implementation_serves_book_c_and_the_three_new_books():
+    """`overhang_conditioned_ranks` was Book C's frozen cut and now delegates to
+    `_tercile_side`. Its behaviour must be unchanged -- a control that cuts its
+    tercile with a second implementation of the quantile is not cutting the same
+    tercile, which is the whole reason the two were merged."""
+    import numpy as np
+
+    cgo = {i: float(i) for i in range(30)}
+    sign = {i: 1.0 for i in range(30)}
+    top = BS.overhang_conditioned_ranks(cgo, sign)
+    expected_cut = float(np.quantile(list(cgo.values()), 2.0 / 3.0))
+    assert top == {k: v for k, v in cgo.items() if v >= expected_cut}
+    bottom = BS.overhang_conditioned_ranks(cgo, sign, side="bottom")
+    assert bottom == {k: v for k, v in cgo.items()
+                      if v <= float(np.quantile(list(cgo.values()), 1.0 / 3.0))}
