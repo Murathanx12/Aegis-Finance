@@ -2566,3 +2566,104 @@ TERMINAL_MIRROR_ARTEFACTS: tuple[tuple[str, str, int], ...] = (
 #: receipt records which happened. A silently half-copied file is the failure
 #: this constant exists to make impossible.
 TERMINAL_MIRROR_MAX_BYTES = 8 * 1024 * 1024
+
+
+# ── THE ALWAYS-ON LAB (chunk 14, `scripts/always_on_lab.py`) ─────────────────
+#
+# One supervisor that runs whenever the PC is on and drives eight loops at
+# their own declared cadences. Every number it schedules on lives HERE, not in
+# the script, because a cadence hardcoded in a driver is a cadence nobody can
+# change without a commit to the driver.
+
+#: The supervisor's own wake-up period, in minutes. It is the SHORTEST cadence
+#: any sub-loop needs, so `lab_status.json`'s `last_tick_utc` is never staler
+#: than this — a hung supervisor is detectable from its own status file inside
+#: one heartbeat rather than from a human noticing the corpus stopped growing.
+LAB_HEARTBEAT_MINUTES = 5
+
+#: Per-loop period in minutes. The supervisor walks THIS dict; a loop without a
+#: period here cannot run, and a period here without a handler is an
+#: AssertionError at import (the `daily_pass.STEPS` discipline).
+LAB_LOOP_PERIODS_MINUTES: dict = {
+    "news_pull": 15,
+    "l2_typing": 15,
+    "decision_vs_reality": 60,
+    "catalyst_calendar": 6 * 60,
+    "nn_lab": 24 * 60,
+    "idle_gpu_queue": 5,          # gated by LAB_IDLE_MINUTES, not by its period
+    "thematic_streams": 24 * 60,
+    "status": 5,
+}
+
+#: Hard wall-clock bound per loop call, in seconds. A loop that outlives its
+#: box is recorded `timeout_after_<n>s`, its `last_tick_utc` stops advancing —
+#: which is the detectable signal — and the supervisor's own heartbeat keeps
+#: going, because each loop is issued FROM the top-level loop with this bound
+#: and never awaited unboundedly.
+LAB_LOOP_TIMEOUT_S: dict = {
+    "news_pull": 900,
+    "l2_typing": 900,
+    "decision_vs_reality": 300,
+    "catalyst_calendar": 300,
+    "nn_lab": 4 * 3600,
+    "idle_gpu_queue": 60,
+    "thematic_streams": 600,
+    "status": 60,
+}
+
+#: How often the power plan is re-checked inside the main loop. `night_factory`
+#: checks once because its longest run is hours; this supervisor runs for days,
+#: and a plan that was "never sleep" at 09:00 can be changed by Windows Update
+#: or a battery-saver mode by 15:00.
+LAB_POWER_RECHECK_MINUTES = 60
+
+#: Minutes with no model-touching call before the idle-GPU queue may dispatch.
+LAB_IDLE_MINUTES = 20
+
+#: The idle-GPU queue, in priority order, as `night_factory_jobs.JOBS` ids with
+#: a time box in minutes. L2's backlog runs FIRST: every other item either
+#: consumes its output or is orthogonal to it, and it is the single biggest
+#: measured gap in the system (6,020 rows PENDING_MODEL on 2026-09-13).
+LAB_IDLE_QUEUE: tuple[tuple[str, int], ...] = (
+    ("L2_typed_events", 120),
+    ("R2_widened_panelB", 120),
+    ("E1_event_head", 60),
+    ("L4_qwen3_measure", 60),
+)
+
+#: Rows the typing loop may take in one tick. One tick must not try to type a
+#: 6,020-row backlog and block the next news pull.
+LAB_L2_MAX_ROWS_PER_TICK = 40
+
+#: The local/cloud overlap set for the reader-agreement (kappa) comparison. The
+#: SAME rows are typed by both readers so kappa is computed on a paired sample
+#: rather than on two different samples that happen to be the same size.
+LAB_L2_OVERLAP_ROWS = 200
+
+#: HARD daily cap on what the lab itself may spend at a cloud provider, in USD,
+#: on the UTC day boundary `llm_analyzer._DAILY_CAP` already uses. It is a
+#: PRE-CALL guard beside that module's CALL-COUNT cap (150/day, which bounds
+#: calls and says nothing about spend) and beside `scripts/llm_cost_audit.py`,
+#: which stays the ground-truth RECONCILIATION. `spec_always_on_lab.md` §5
+#: proposed $5.00; the build brief set $3.00 and the lower number is the one
+#: that ships — a cap is only a cap at the number actually enforced.
+LAB_DAILY_SPEND_CAP_USD = 3.00
+LAB_SPEND_CAP_ENV = "AEGIS_LAB_DAILY_SPEND_CAP_USD"
+
+#: Which loops touch the model. They are serialised against each other by an
+#: in-process lock and paused wholesale when the power plan allows sleep.
+LAB_MODEL_LOOPS: tuple[str, ...] = ("l2_typing", "nn_lab", "idle_gpu_queue")
+
+#: Which loops touch the network. Paused with the model loops on a sleep
+#: refusal only for the GPU half; the news pull keeps running (it cannot be
+#: harmed by a suspend mid-call the way an 8-hour GPU job can).
+LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "catalyst_calendar",
+                                      "thematic_streams")
+
+#: Consecutive calendar DATES of real coverage before the lab is ACCEPTED.
+#: Dates, not task runs: `ONLOGON` can fire and die repeatedly in a bad state
+#: and still produce three "runs".
+LAB_ACCEPTANCE_DATES = 3
+
+#: Hours the machine must have been on for a date to COUNT toward acceptance.
+LAB_ACCEPTANCE_MIN_HOURS = 6
