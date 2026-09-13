@@ -1,0 +1,900 @@
+{
+ "job": "C_v1",
+ "family": "NIGHT_JOB_BOOKS_2026_09_13",
+ "licence": "PRODUCT_EXPERIMENT",
+ "book": "disposition_overhang_conditioner_v1",
+ "book_id": "book:a82e6e453c14c241",
+ "prereg": "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0 Amendment 2 (ADOPTED 2026-09-13, UNSIGNED as a RESEARCH_CLAIM)",
+ "window": [
+  1990,
+  2024
+ ],
+ "smoke": false,
+ "cost_curve": "flat_25bps_pending_5c",
+ "cost_bps_per_side": 25.0,
+ "cost_caveat": "the interim flat ruler, pending chunk 5c's TAQ curve. Both legs of every comparison pay it, so DIFFERENCES are what may be read and no LEVEL may.",
+ "question": "Does the disposition-overhang conditioner read differently when the conditioning sign is the announcement-window return Frazzini (JF 2006) uses, instead of v0's monthly revision count?",
+ "what_moved_from_v0": "the event sign, and nothing else. The Grinblatt-Han recursion, its 60-month window, the tercile, k=30, the unconditioned twin, both floors and the cost ruler are v0's, and this job imports v0's own implementations of every falsifier rather than writing second ones.",
+ "amendment": "TRIAL-DRAFT-C Amendment 2, adopted 2026-09-13 13:05 HKT BEFORE any read, as Amendment 1 was. It licenses a PRODUCT_EXPERIMENT read only; the book stays UNSIGNED as a RESEARCH_CLAIM.",
+ "family_note": "this read is the FOURTH declared primary of NIGHT_JOB_BOOKS_2026_09_13 and is counted ONCE: Amendment 2 says v1 REPLACES v0's primary inside NIGHT_JOB_BOOKS_2026_09 rather than adding a fifth member there.",
+ "months_in_panel": 420,
+ "permnos_in_panel": 18684,
+ "announcement_rows": 700695,
+ "announcement_permnos": 18937,
+ "daily_rows": 44134657,
+ "event_sign": "v1: sign of the [-1,+1] session CRSP-daily return around the IBES quarterly-EPS announcement date (act_epsus.anndats), attributed to the month it became KNOWABLE \u2014 max(the +1 session, actdats) \u2014 and acted on at that month's close, so the earliest return it can touch is the next month's",
+ "event_sign_coverage": {
+  "n_announcements_signed": 569997,
+  "n_good": 287104,
+  "n_bad": 282893,
+  "window_sessions": [
+   -1,
+   1
+  ],
+  "note": "a window that runs off either end of a name's own tape is DROPPED, not truncated, and a cumulative return of exactly zero carries no sign and is dropped too. Both are the v1 builder's own rules and this job does not relax them."
+ },
+ "registered_construction": {
+  "cgo_min_history_months": 60,
+  "cgo_lookback_months": 60,
+  "cgo_window_is_full": true,
+  "registered_read_start": "1995-01",
+  "read_start_used": "1995-01",
+  "first_month_with_a_full_window": "1995-01",
+  "months_read": 360,
+  "event_sign": "v1 (announcement window)",
+  "honours_the_registration": true,
+  "why": "printed in full because run 1 of this book warmed a 60-month overhang at 24 months and its receipt said `confirm_slice 1995-2024` anyway. A smoke window cannot honour the 1995 start and says so here rather than being mistaken for it."
+ },
+ "ran": true,
+ "floors_usd": {
+  "primary": 3000000.0,
+  "secondary": 10000000.0
+ },
+ "floor_comparison": {
+  "verdict": "SECONDARY_FLOOR_DOES_NOT_CLEAR",
+  "both_floors_read": true,
+  "primary": {
+   "by_era": {
+    "1990-1999": {
+     "n_blocks": 59,
+     "mean_excess_net_monthly": 0.012036,
+     "nw_lag2_t": 2.5856
+    },
+    "2000-2009": {
+     "n_blocks": 120,
+     "mean_excess_net_monthly": 0.00527,
+     "nw_lag2_t": 1.79
+    },
+    "2010-2016": {
+     "n_blocks": 84,
+     "mean_excess_net_monthly": 0.003586,
+     "nw_lag2_t": 1.3563
+    },
+    "2017-2024": {
+     "n_blocks": 96,
+     "mean_excess_net_monthly": 0.003431,
+     "nw_lag2_t": 1.3294
+    }
+   },
+   "ran": true,
+   "floor_usd": 3000000.0,
+   "mean_excess_net_monthly": 0.005496,
+   "nw_lag2_t": 3.4272,
+   "p_two_sided": 0.00061,
+   "n_blocks": 359,
+   "median_names_selected": 30,
+   "verdict": "CONDITIONAL",
+   "placebo_pays": false,
+   "momentum_verdict": "MOMENTUM_NOT_ALIVE",
+   "refused": null
+  },
+  "secondary": {
+   "by_era": {
+    "1990-1999": {
+     "n_blocks": 59,
+     "mean_excess_net_monthly": 0.002357,
+     "nw_lag2_t": 0.5178
+    },
+    "2000-2009": {
+     "n_blocks": 120,
+     "mean_excess_net_monthly": 0.005332,
+     "nw_lag2_t": 1.5623
+    },
+    "2010-2016": {
+     "n_blocks": 84,
+     "mean_excess_net_monthly": 0.000287,
+     "nw_lag2_t": 0.1187
+    },
+    "2017-2024": {
+     "n_blocks": 96,
+     "mean_excess_net_monthly": 0.003828,
+     "nw_lag2_t": 1.4221
+    }
+   },
+   "ran": true,
+   "floor_usd": 10000000.0,
+   "mean_excess_net_monthly": 0.003261,
+   "nw_lag2_t": 1.9282,
+   "p_two_sided": 0.053826,
+   "n_blocks": 359,
+   "median_names_selected": 30,
+   "verdict": "CONDITIONAL",
+   "placebo_pays": false,
+   "momentum_verdict": "MOMENTUM_NOT_ALIVE",
+   "refused": null
+  },
+  "sign_agrees_across_floors": true,
+  "delta_mean_secondary_minus_primary": -0.002235,
+  "declared_effect_size": 0.01,
+  "t_alive": 2.0,
+  "era_stability": {
+   "primary_floor": {
+    "n_eras_read": 4,
+    "n_positive": 4,
+    "positive_eras": [
+     "1990-1999",
+     "2000-2009",
+     "2010-2016",
+     "2017-2024"
+    ],
+    "negative_eras": [],
+    "mean_by_era": {
+     "1990-1999": 0.012036,
+     "2000-2009": 0.00527,
+     "2010-2016": 0.003586,
+     "2017-2024": 0.003431
+    },
+    "all_positive": true
+   },
+   "secondary_floor": {
+    "n_eras_read": 4,
+    "n_positive": 4,
+    "positive_eras": [
+     "1990-1999",
+     "2000-2009",
+     "2010-2016",
+     "2017-2024"
+    ],
+    "negative_eras": [],
+    "mean_by_era": {
+     "1990-1999": 0.002357,
+     "2000-2009": 0.005332,
+     "2010-2016": 0.000287,
+     "2017-2024": 0.003828
+    },
+    "all_positive": true
+   },
+   "reading": "the $3M cell is positive in 4/4 eras and the $10M cell in 4/4."
+  },
+  "reading": "the $10M cell is +0.003261/month at t 1.9282, below the declared 0.0100/month and the |t| >= 2.0 line. \u00a75's floor clause holds back a CLEARED primary; this primary is +0.005496/month at t 3.4272 and has not cleared, so the clause changes nothing and the book stands where its primary left it. the $3M cell is positive in 4/4 eras and the $10M cell in 4/4.",
+  "both_floors_or_neither": "TRIAL-DRAFT-A \u00a78's rule, applied here for the same reason: a book quoted at the floor that flatters it is a book quoted at a chosen corner. Both numbers are above; neither may travel alone."
+ },
+ "vs_v0": {
+  "status": "REPORTED_NEVER_DECIDING",
+  "primary_floor": {
+   "v1_mean_excess_net_monthly": 0.005496,
+   "v1_nw_lag2_t": 3.4272,
+   "v1_n_blocks": 359,
+   "v0_mean_excess_net_monthly": 0.002438,
+   "v0_nw_lag2_t": 1.3809,
+   "v0_n_blocks": 359,
+   "delta_mean_v1_minus_v0": 0.003058
+  },
+  "secondary_floor": {
+   "v1_mean_excess_net_monthly": 0.003261,
+   "v1_nw_lag2_t": 1.9282,
+   "v1_n_blocks": 359,
+   "v0_mean_excess_net_monthly": 0.000728,
+   "v0_nw_lag2_t": 0.4481,
+   "v0_n_blocks": 359,
+   "delta_mean_v1_minus_v0": 0.002533
+  },
+  "v0_receipt": "night_factory_2026-09-13/C_floor10m_run02.json",
+  "why": "TRIAL-DRAFT-C section 3 lists the v0-vs-v1 comparison among the things reported and never deciding, and Amendment 2 says it creates NO new way for the book to pass: v1 is a second reading of the same hypothesis with the conditioner the cited paper uses, and the two block counts differ because the two signs cover different sets of name-months -- so the delta is a difference of two reads and not a paired test."
+ },
+ "era_stability": {
+  "primary_floor": {
+   "n_eras_read": 4,
+   "n_positive": 4,
+   "positive_eras": [
+    "1990-1999",
+    "2000-2009",
+    "2010-2016",
+    "2017-2024"
+   ],
+   "negative_eras": [],
+   "mean_by_era": {
+    "1990-1999": 0.012036,
+    "2000-2009": 0.00527,
+    "2010-2016": 0.003586,
+    "2017-2024": 0.003431
+   },
+   "all_positive": true
+  },
+  "secondary_floor": {
+   "n_eras_read": 4,
+   "n_positive": 4,
+   "positive_eras": [
+    "1990-1999",
+    "2000-2009",
+    "2010-2016",
+    "2017-2024"
+   ],
+   "negative_eras": [],
+   "mean_by_era": {
+    "1990-1999": 0.002357,
+    "2000-2009": 0.005332,
+    "2010-2016": 0.000287,
+    "2017-2024": 0.003828
+   },
+   "all_positive": true
+  }
+ },
+ "family_multiplicity": {
+  "family": "NIGHT_JOB_BOOKS_2026_09_13",
+  "declared_family_size": 4,
+  "holm": {
+   "family": "NIGHT_JOB_BOOKS_2026_09_13",
+   "declared_family_size": 4,
+   "legs_with_a_p_value": [
+    "disposition_overhang_conditioner_v1",
+    "forecast_dispersion_v0",
+    "qmj_quality_tilt_v0",
+    "seasonality_11_20_v0"
+   ],
+   "legs_without": [],
+   "per_leg": {
+    "forecast_dispersion_v0": {
+     "p_raw": 1e-06,
+     "holm_alpha": 0.0125,
+     "rejects_at_holm": true
+    },
+    "disposition_overhang_conditioner_v1": {
+     "p_raw": 0.00061,
+     "holm_alpha": 0.016667,
+     "rejects_at_holm": true
+    },
+    "seasonality_11_20_v0": {
+     "p_raw": 0.0023,
+     "holm_alpha": 0.025,
+     "rejects_at_holm": true
+    },
+    "qmj_quality_tilt_v0": {
+     "p_raw": 0.01037,
+     "holm_alpha": 0.05,
+     "rejects_at_holm": true
+    }
+   },
+   "note": "Holm is computed against the DECLARED family size, not the number of legs that happened to run. A leg that could not run does not make the correction cheaper for the ones that did.",
+   "efg_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\B_books_efg_replay_run01.json",
+   "note_on_completeness": "E, F and G's p-values are read off `B_books_efg_replay`'s own receipt. If that receipt is absent they are NAMED here without a p-value and the correction is still against the DECLARED family size of four -- a leg that could not be read does not make the correction cheaper for the legs that could."
+  },
+  "falsifiers_are_not_family_members": "a falsifier is a registered TRIGGER, not a primary metric. Adding them to the Holm block would make the four declared tests cheaper or dearer depending on how many diagnostics a session happened to run."
+ },
+ "cells": {
+  "primary_floor": {
+   "job": "C_v1",
+   "family": "NIGHT_JOB_BOOKS_2026_09_13",
+   "licence": "PRODUCT_EXPERIMENT",
+   "book": "disposition_overhang_conditioner_v1",
+   "book_id": "book:a82e6e453c14c241",
+   "prereg": "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0 Amendment 2 (ADOPTED 2026-09-13, UNSIGNED as a RESEARCH_CLAIM)",
+   "window": [
+    1990,
+    2024
+   ],
+   "smoke": false,
+   "cost_curve": "flat_25bps_pending_5c",
+   "cost_bps_per_side": 25.0,
+   "cost_caveat": "the interim flat ruler, pending chunk 5c's TAQ curve. Both legs of every comparison pay it, so DIFFERENCES are what may be read and no LEVEL may.",
+   "question": "Does the disposition-overhang conditioner read differently when the conditioning sign is the announcement-window return Frazzini (JF 2006) uses, instead of v0's monthly revision count?",
+   "what_moved_from_v0": "the event sign, and nothing else. The Grinblatt-Han recursion, its 60-month window, the tercile, k=30, the unconditioned twin, both floors and the cost ruler are v0's, and this job imports v0's own implementations of every falsifier rather than writing second ones.",
+   "amendment": "TRIAL-DRAFT-C Amendment 2, adopted 2026-09-13 13:05 HKT BEFORE any read, as Amendment 1 was. It licenses a PRODUCT_EXPERIMENT read only; the book stays UNSIGNED as a RESEARCH_CLAIM.",
+   "family_note": "this read is the FOURTH declared primary of NIGHT_JOB_BOOKS_2026_09_13 and is counted ONCE: Amendment 2 says v1 REPLACES v0's primary inside NIGHT_JOB_BOOKS_2026_09 rather than adding a fifth member there.",
+   "months_in_panel": 420,
+   "permnos_in_panel": 18684,
+   "announcement_rows": 700695,
+   "announcement_permnos": 18937,
+   "daily_rows": 44134657,
+   "event_sign": "v1: sign of the [-1,+1] session CRSP-daily return around the IBES quarterly-EPS announcement date (act_epsus.anndats), attributed to the month it became KNOWABLE \u2014 max(the +1 session, actdats) \u2014 and acted on at that month's close, so the earliest return it can touch is the next month's",
+   "event_sign_coverage": {
+    "n_announcements_signed": 569997,
+    "n_good": 287104,
+    "n_bad": 282893,
+    "window_sessions": [
+     -1,
+     1
+    ],
+    "note": "a window that runs off either end of a name's own tape is DROPPED, not truncated, and a cumulative return of exactly zero carries no sign and is dropped too. Both are the v1 builder's own rules and this job does not relax them."
+   },
+   "registered_construction": {
+    "cgo_min_history_months": 60,
+    "cgo_lookback_months": 60,
+    "cgo_window_is_full": true,
+    "registered_read_start": "1995-01",
+    "read_start_used": "1995-01",
+    "first_month_with_a_full_window": "1995-01",
+    "months_read": 360,
+    "event_sign": "v1 (announcement window)",
+    "honours_the_registration": true,
+    "why": "printed in full because run 1 of this book warmed a 60-month overhang at 24 months and its receipt said `confirm_slice 1995-2024` anyway. A smoke window cannot honour the 1995 start and says so here rather than being mistaken for it."
+   },
+   "ran": true,
+   "floor_usd": 3000000.0,
+   "floor_is_registered_primary": true,
+   "primary_registered_construction": {
+    "label": "primary_registered_construction",
+    "what_it_is": "Book C's OWN primary metric -- conditioned minus unconditioned, the same k, the same twin, the same engine, the same 60-month overhang window and the same 1995 start -- with ONE input changed: the event sign is the announcement-window return instead of the monthly revision count.",
+    "result": {
+     "label": "disposition_overhang_conditioner_v1",
+     "twin": "unconditioned_reaction_book_v0",
+     "k": 30,
+     "seed": 43054,
+     "floor_usd": 3000000.0,
+     "twin_turnover_matched": false,
+     "pool_filtered_to_the_covered_band": false,
+     "n_blocks": 359,
+     "median_names_selected": 30,
+     "mean_book_net_monthly": 0.009947,
+     "mean_twin_net_monthly": 0.00445,
+     "mean_excess_net_monthly": 0.005496,
+     "nw_lag2_t": 3.4272,
+     "p_two_sided": 0.00061,
+     "cost_curve": "flat_25bps_pending_5c",
+     "cost_bps_per_side": 25.0
+    },
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 59,
+      "mean_excess_net_monthly": 0.012036,
+      "nw_lag2_t": 2.5856
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": 0.00527,
+      "nw_lag2_t": 1.79
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": 0.003586,
+      "nw_lag2_t": 1.3563
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": 0.003431,
+      "nw_lag2_t": 1.3294
+     }
+    },
+    "declared_effect_size": 0.01,
+    "declared_mde_monthly": 0.00724,
+    "january_diagnostic": {
+     "status": "UNREGISTERED_DIAGNOSTIC",
+     "january": {
+      "n_blocks": 29,
+      "mean_excess_net_monthly": 0.005151,
+      "nw_lag2_t": 1.2003
+     },
+     "february_to_december": {
+      "n_blocks": 330,
+      "mean_excess_net_monthly": 0.005526,
+      "nw_lag2_t": 3.3146
+     },
+     "january_minus_rest": -0.000376,
+     "why": "Grinblatt-Han (JFE 2005) Table II reports the overhang coefficient flipping sign in January. The block series carries the month already, so the split is free \u2014 and it is a DIAGNOSTIC: no decision rule reads it, it is not in the family's multiplicity budget, and acting on it would need its own registration."
+    },
+    "vs_v0": {
+     "v0_registered": {
+      "receipt": "night_factory_2026-09-13/C_floor10m_run02.json",
+      "primary_floor": {
+       "mean_excess_net_monthly": 0.002438,
+       "nw_lag2_t": 1.3809,
+       "n_blocks": 359
+      },
+      "secondary_floor": {
+       "mean_excess_net_monthly": 0.000728,
+       "nw_lag2_t": 0.4481,
+       "n_blocks": 359
+      },
+      "verdict": "SECONDARY_FLOOR_DOES_NOT_CLEAR (the primary never cleared)",
+      "era_stability": "positive in 4/4 eras at $3M, 2/4 at $10M"
+     },
+     "note": "REPORTED, NEVER DECIDING. TRIAL-DRAFT-C section 3 lists the v0-vs-v1 comparison among the things reported and not deciding, and Amendment 2 repeats it: a v1 that pays where v0 did not is a finding about the conditioner's INPUT and is not a promotion."
+    }
+   },
+   "sign_flip_placebo": {
+    "falsifier": "sign_flip_placebo",
+    "registered_as": "TRIAL-DRAFT-C \u00a73 'Reported, never deciding' lists it and \u00a75 makes it a FAILED_VARIANT trigger: 'the sign-flip placebo ALSO pays (it is drift, i.e. momentum again, not disposition)'",
+    "construction": "Book C's eligible set and Book C's overhang series, cut at the BOTTOM tercile instead of the top and ranked most-negative-first. Nothing else moves: same k, same monthly engine, same cost ruler, same twin.",
+    "deciding_leg": "vs_unconditioned",
+    "vs_unconditioned": {
+     "label": "disposition_overhang_placebo_v0",
+     "twin": "unconditioned_reaction_book_v0",
+     "k": 30,
+     "seed": 43054,
+     "floor_usd": 3000000.0,
+     "twin_turnover_matched": false,
+     "pool_filtered_to_the_covered_band": false,
+     "n_blocks": 359,
+     "median_names_selected": 30,
+     "mean_book_net_monthly": 0.002673,
+     "mean_twin_net_monthly": 0.00445,
+     "mean_excess_net_monthly": -0.001777,
+     "nw_lag2_t": -0.9342,
+     "p_two_sided": 0.350225,
+     "cost_curve": "flat_25bps_pending_5c",
+     "cost_bps_per_side": 25.0
+    },
+    "vs_unconditioned_by_era": {
+     "1990-1999": {
+      "n_blocks": 59,
+      "mean_excess_net_monthly": -0.003465,
+      "nw_lag2_t": -0.884
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": -0.001359,
+      "nw_lag2_t": -0.3435
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": 0.000229,
+      "nw_lag2_t": 0.0928
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": -0.003019,
+      "nw_lag2_t": -0.7701
+     }
+    },
+    "long_short": {
+     "label": "frazzini_sign_flip_long_short",
+     "twin": "bad_news_large_gain_v0",
+     "k": 30,
+     "seed": 43054,
+     "floor_usd": 3000000.0,
+     "twin_turnover_matched": false,
+     "pool_filtered_to_the_covered_band": false,
+     "n_blocks": 359,
+     "median_names_selected": 30,
+     "mean_book_net_monthly": 0.002673,
+     "mean_twin_net_monthly": 0.005962,
+     "mean_excess_net_monthly": -0.003289,
+     "nw_lag2_t": -1.2023,
+     "p_two_sided": 0.229236,
+     "cost_curve": "flat_25bps_pending_5c",
+     "cost_bps_per_side": 25.0
+    },
+    "long_short_by_era": {
+     "1990-1999": {
+      "n_blocks": 59,
+      "mean_excess_net_monthly": -0.007036,
+      "nw_lag2_t": -1.0133
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": -0.00061,
+      "nw_lag2_t": -0.111
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": 0.001371,
+      "nw_lag2_t": 0.3842
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": -0.008412,
+      "nw_lag2_t": -1.6727
+     }
+    },
+    "long_short_note": "the literature's own shape, REPORTED. Frazzini reports ~0 for it. It decides nothing here because its comparator is a different universe (bad-news names) and the book's registered comparator is the unconditioned reaction book.",
+    "t_alive": 2.0,
+    "placebo_pays": false,
+    "reading": "the placebo does not pay: -0.001777/month vs the unconditioned book at NW lag-2 t -0.9342 over 359 blocks. \u00a75 fires on a placebo that pays (positive AND |t| >= 2.0); a placebo indistinguishable from 0 is what the book needs and is not by itself evidence FOR the book."
+   },
+   "momentum_orthogonalisation": {
+    "falsifier": "momentum_orthogonalisation",
+    "registered_as": "TRIAL-DRAFT-C section 1 quotes Grinblatt-Han: with overhang on the right-hand side, intermediate-horizon momentum DISAPPEARS. Section 5 makes its survival a FAILED_VARIANT trigger.",
+    "construction": "v0's own `momentum_overhang_rows` and `fama_macbeth_orthogonalisation`, unchanged. The overhang on the right-hand side is the same series the book traded, because `book_c_event_sign_v1` builds it by calling v0's `book_c_overhang`.",
+    "fama_macbeth": {
+     "n_blocks": 348,
+     "median_names_per_block": 1488,
+     "mean_cross_sectional_corr_mom_cgo": 0.3086,
+     "skipped_months": {
+      "too_few_names": 0,
+      "no_dispersion": 0,
+      "collinear": 0
+     },
+     "units": "every slope is the next month's return per ONE cross-sectional sd of the regressor, and every residual is re-standardised so the four legs share that ruler",
+     "raw_mom": {
+      "mean_monthly_slope": 0.000169,
+      "nw_lag2_t": 0.1525,
+      "p_two_sided": 0.878763,
+      "n_blocks": 348
+     },
+     "raw_cgo": {
+      "mean_monthly_slope": 0.000474,
+      "nw_lag2_t": 0.6498,
+      "p_two_sided": 0.515852,
+      "n_blocks": 348
+     },
+     "resid_mom": {
+      "mean_monthly_slope": 0.000117,
+      "nw_lag2_t": 0.1174,
+      "p_two_sided": 0.906581,
+      "n_blocks": 348
+     },
+     "resid_cgo": {
+      "mean_monthly_slope": 0.000463,
+      "nw_lag2_t": 0.8595,
+      "p_two_sided": 0.390084,
+      "n_blocks": 348
+     },
+     "bivariate_mom": {
+      "mean_monthly_slope": 9.7e-05,
+      "nw_lag2_t": 0.0916,
+      "p_two_sided": 0.92698,
+      "n_blocks": 348
+     },
+     "bivariate_cgo": {
+      "mean_monthly_slope": 0.000465,
+      "nw_lag2_t": 0.8109,
+      "p_two_sided": 0.417409,
+      "n_blocks": 348
+     }
+    },
+    "momentum_survives": false,
+    "overhang_survives": false,
+    "subsumption_testable": false,
+    "t_raw_mom": 0.1525,
+    "t_resid_mom": 0.1174,
+    "t_resid_cgo": 0.8595,
+    "verdict": "MOMENTUM_NOT_ALIVE",
+    "why": "raw 12-1 momentum carries t 0.1525 on the book's own rows, below the |t| >= 2.0 line, BEFORE overhang enters (after: t 0.1174). Grinblatt-Han's subsumption claim is untestable here -- nothing to subsume -- so this is NOT a pass of that test. The \u00a75 clause's purpose, 'it was momentum in costume', is answered: momentum earns nothing on these rows, so the book's excess is not momentum's, and the FAILED_VARIANT clause does not fire. Overhang's own residual payoff carries t 0.8595."
+   },
+   "era_stability": {
+    "n_eras_read": 4,
+    "n_positive": 4,
+    "positive_eras": [
+     "1990-1999",
+     "2000-2009",
+     "2010-2016",
+     "2017-2024"
+    ],
+    "negative_eras": [],
+    "mean_by_era": {
+     "1990-1999": 0.012036,
+     "2000-2009": 0.00527,
+     "2010-2016": 0.003586,
+     "2017-2024": 0.003431
+    },
+    "all_positive": true
+   },
+   "decision_rule": "TRIAL-DRAFT-C section 5, including Amendment 1's `primary <= 0 closes it` clause. FAILED_VARIANT if the placebo also pays OR momentum survives orthogonalisation -- either clause alone, whatever the primary metric did.",
+   "headline": "v1 floor $3,000,000: 0.005496/month t 3.4272 over 359 blocks (v0: 0.002438 at $3M); placebo -0.001777/month (pays: False); orthogonalised momentum t 0.1174 vs raw 0.1525 (MOMENTUM_NOT_ALIVE)",
+   "verdict": "CONDITIONAL \u2014 the placebo PASSED and the momentum clause does not fire (momentum was never alive on these rows, so the subsumption test is untestable, not passed), so neither \u00a75 FAILED_VARIANT clause fires. The standing verdict is therefore the one the primary metric earned and no better: +0.005496/month at NW lag-2 t 3.4272 is below the declared 0.0100/month, which is CONDITIONAL. A falsifier that passes is not evidence FOR the book.",
+   "verdict_block": {
+    "verdict": "CONDITIONAL",
+    "clauses_fired": [],
+    "primary_is_below_zero": false,
+    "reading": "the placebo PASSED and the momentum clause does not fire (momentum was never alive on these rows, so the subsumption test is untestable, not passed), so neither \u00a75 FAILED_VARIANT clause fires. The standing verdict is therefore the one the primary metric earned and no better: +0.005496/month at NW lag-2 t 3.4272 is below the declared 0.0100/month, which is CONDITIONAL. A falsifier that passes is not evidence FOR the book.",
+    "primary_read_against": "primary_registered_construction"
+   }
+  },
+  "secondary_floor": {
+   "job": "C_v1",
+   "family": "NIGHT_JOB_BOOKS_2026_09_13",
+   "licence": "PRODUCT_EXPERIMENT",
+   "book": "disposition_overhang_conditioner_v1",
+   "book_id": "book:a82e6e453c14c241",
+   "prereg": "TRIAL-DRAFT-C-disposition-overhang-conditioner-v0 Amendment 2 (ADOPTED 2026-09-13, UNSIGNED as a RESEARCH_CLAIM)",
+   "window": [
+    1990,
+    2024
+   ],
+   "smoke": false,
+   "cost_curve": "flat_25bps_pending_5c",
+   "cost_bps_per_side": 25.0,
+   "cost_caveat": "the interim flat ruler, pending chunk 5c's TAQ curve. Both legs of every comparison pay it, so DIFFERENCES are what may be read and no LEVEL may.",
+   "question": "Does the disposition-overhang conditioner read differently when the conditioning sign is the announcement-window return Frazzini (JF 2006) uses, instead of v0's monthly revision count?",
+   "what_moved_from_v0": "the event sign, and nothing else. The Grinblatt-Han recursion, its 60-month window, the tercile, k=30, the unconditioned twin, both floors and the cost ruler are v0's, and this job imports v0's own implementations of every falsifier rather than writing second ones.",
+   "amendment": "TRIAL-DRAFT-C Amendment 2, adopted 2026-09-13 13:05 HKT BEFORE any read, as Amendment 1 was. It licenses a PRODUCT_EXPERIMENT read only; the book stays UNSIGNED as a RESEARCH_CLAIM.",
+   "family_note": "this read is the FOURTH declared primary of NIGHT_JOB_BOOKS_2026_09_13 and is counted ONCE: Amendment 2 says v1 REPLACES v0's primary inside NIGHT_JOB_BOOKS_2026_09 rather than adding a fifth member there.",
+   "months_in_panel": 420,
+   "permnos_in_panel": 18684,
+   "announcement_rows": 700695,
+   "announcement_permnos": 18937,
+   "daily_rows": 44134657,
+   "event_sign": "v1: sign of the [-1,+1] session CRSP-daily return around the IBES quarterly-EPS announcement date (act_epsus.anndats), attributed to the month it became KNOWABLE \u2014 max(the +1 session, actdats) \u2014 and acted on at that month's close, so the earliest return it can touch is the next month's",
+   "event_sign_coverage": {
+    "n_announcements_signed": 569997,
+    "n_good": 287104,
+    "n_bad": 282893,
+    "window_sessions": [
+     -1,
+     1
+    ],
+    "note": "a window that runs off either end of a name's own tape is DROPPED, not truncated, and a cumulative return of exactly zero carries no sign and is dropped too. Both are the v1 builder's own rules and this job does not relax them."
+   },
+   "registered_construction": {
+    "cgo_min_history_months": 60,
+    "cgo_lookback_months": 60,
+    "cgo_window_is_full": true,
+    "registered_read_start": "1995-01",
+    "read_start_used": "1995-01",
+    "first_month_with_a_full_window": "1995-01",
+    "months_read": 360,
+    "event_sign": "v1 (announcement window)",
+    "honours_the_registration": true,
+    "why": "printed in full because run 1 of this book warmed a 60-month overhang at 24 months and its receipt said `confirm_slice 1995-2024` anyway. A smoke window cannot honour the 1995 start and says so here rather than being mistaken for it."
+   },
+   "ran": true,
+   "floor_usd": 10000000.0,
+   "floor_is_registered_primary": false,
+   "primary_registered_construction": {
+    "label": "primary_registered_construction",
+    "what_it_is": "Book C's OWN primary metric -- conditioned minus unconditioned, the same k, the same twin, the same engine, the same 60-month overhang window and the same 1995 start -- with ONE input changed: the event sign is the announcement-window return instead of the monthly revision count.",
+    "result": {
+     "label": "disposition_overhang_conditioner_v1",
+     "twin": "unconditioned_reaction_book_v0",
+     "k": 30,
+     "seed": 43054,
+     "floor_usd": 10000000.0,
+     "twin_turnover_matched": false,
+     "pool_filtered_to_the_covered_band": false,
+     "n_blocks": 359,
+     "median_names_selected": 30,
+     "mean_book_net_monthly": 0.007265,
+     "mean_twin_net_monthly": 0.004004,
+     "mean_excess_net_monthly": 0.003261,
+     "nw_lag2_t": 1.9282,
+     "p_two_sided": 0.053826,
+     "cost_curve": "flat_25bps_pending_5c",
+     "cost_bps_per_side": 25.0
+    },
+    "by_era": {
+     "1990-1999": {
+      "n_blocks": 59,
+      "mean_excess_net_monthly": 0.002357,
+      "nw_lag2_t": 0.5178
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": 0.005332,
+      "nw_lag2_t": 1.5623
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": 0.000287,
+      "nw_lag2_t": 0.1187
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": 0.003828,
+      "nw_lag2_t": 1.4221
+     }
+    },
+    "declared_effect_size": 0.01,
+    "declared_mde_monthly": 0.00724,
+    "january_diagnostic": {
+     "status": "UNREGISTERED_DIAGNOSTIC",
+     "january": {
+      "n_blocks": 29,
+      "mean_excess_net_monthly": -0.007853,
+      "nw_lag2_t": -1.3569
+     },
+     "february_to_december": {
+      "n_blocks": 330,
+      "mean_excess_net_monthly": 0.004237,
+      "nw_lag2_t": 2.3976
+     },
+     "january_minus_rest": -0.012091,
+     "why": "Grinblatt-Han (JFE 2005) Table II reports the overhang coefficient flipping sign in January. The block series carries the month already, so the split is free \u2014 and it is a DIAGNOSTIC: no decision rule reads it, it is not in the family's multiplicity budget, and acting on it would need its own registration."
+    },
+    "vs_v0": {
+     "v0_registered": {
+      "receipt": "night_factory_2026-09-13/C_floor10m_run02.json",
+      "primary_floor": {
+       "mean_excess_net_monthly": 0.002438,
+       "nw_lag2_t": 1.3809,
+       "n_blocks": 359
+      },
+      "secondary_floor": {
+       "mean_excess_net_monthly": 0.000728,
+       "nw_lag2_t": 0.4481,
+       "n_blocks": 359
+      },
+      "verdict": "SECONDARY_FLOOR_DOES_NOT_CLEAR (the primary never cleared)",
+      "era_stability": "positive in 4/4 eras at $3M, 2/4 at $10M"
+     },
+     "note": "REPORTED, NEVER DECIDING. TRIAL-DRAFT-C section 3 lists the v0-vs-v1 comparison among the things reported and not deciding, and Amendment 2 repeats it: a v1 that pays where v0 did not is a finding about the conditioner's INPUT and is not a promotion."
+    }
+   },
+   "sign_flip_placebo": {
+    "falsifier": "sign_flip_placebo",
+    "registered_as": "TRIAL-DRAFT-C \u00a73 'Reported, never deciding' lists it and \u00a75 makes it a FAILED_VARIANT trigger: 'the sign-flip placebo ALSO pays (it is drift, i.e. momentum again, not disposition)'",
+    "construction": "Book C's eligible set and Book C's overhang series, cut at the BOTTOM tercile instead of the top and ranked most-negative-first. Nothing else moves: same k, same monthly engine, same cost ruler, same twin.",
+    "deciding_leg": "vs_unconditioned",
+    "vs_unconditioned": {
+     "label": "disposition_overhang_placebo_v0",
+     "twin": "unconditioned_reaction_book_v0",
+     "k": 30,
+     "seed": 43054,
+     "floor_usd": 10000000.0,
+     "twin_turnover_matched": false,
+     "pool_filtered_to_the_covered_band": false,
+     "n_blocks": 359,
+     "median_names_selected": 30,
+     "mean_book_net_monthly": 0.002386,
+     "mean_twin_net_monthly": 0.004004,
+     "mean_excess_net_monthly": -0.001618,
+     "nw_lag2_t": -0.9595,
+     "p_two_sided": 0.337314,
+     "cost_curve": "flat_25bps_pending_5c",
+     "cost_bps_per_side": 25.0
+    },
+    "vs_unconditioned_by_era": {
+     "1990-1999": {
+      "n_blocks": 59,
+      "mean_excess_net_monthly": -0.002815,
+      "nw_lag2_t": -0.5564
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": 0.001334,
+      "nw_lag2_t": 0.4115
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": -0.002157,
+      "nw_lag2_t": -1.0381
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": -0.004102,
+      "nw_lag2_t": -1.3867
+     }
+    },
+    "long_short": {
+     "label": "frazzini_sign_flip_long_short",
+     "twin": "bad_news_large_gain_v0",
+     "k": 30,
+     "seed": 43054,
+     "floor_usd": 10000000.0,
+     "twin_turnover_matched": false,
+     "pool_filtered_to_the_covered_band": false,
+     "n_blocks": 358,
+     "median_names_selected": 30,
+     "mean_book_net_monthly": 0.002512,
+     "mean_twin_net_monthly": 0.005299,
+     "mean_excess_net_monthly": -0.002787,
+     "nw_lag2_t": -1.0735,
+     "p_two_sided": 0.283048,
+     "cost_curve": "flat_25bps_pending_5c",
+     "cost_bps_per_side": 25.0
+    },
+    "long_short_by_era": {
+     "1990-1999": {
+      "n_blocks": 58,
+      "mean_excess_net_monthly": 0.001141,
+      "nw_lag2_t": 0.1389
+     },
+     "2000-2009": {
+      "n_blocks": 120,
+      "mean_excess_net_monthly": -0.001557,
+      "nw_lag2_t": -0.2987
+     },
+     "2010-2016": {
+      "n_blocks": 84,
+      "mean_excess_net_monthly": -0.001273,
+      "nw_lag2_t": -0.3422
+     },
+     "2017-2024": {
+      "n_blocks": 96,
+      "mean_excess_net_monthly": -0.008021,
+      "nw_lag2_t": -2.0715
+     }
+    },
+    "long_short_note": "the literature's own shape, REPORTED. Frazzini reports ~0 for it. It decides nothing here because its comparator is a different universe (bad-news names) and the book's registered comparator is the unconditioned reaction book.",
+    "t_alive": 2.0,
+    "placebo_pays": false,
+    "reading": "the placebo does not pay: -0.001618/month vs the unconditioned book at NW lag-2 t -0.9595 over 359 blocks. \u00a75 fires on a placebo that pays (positive AND |t| >= 2.0); a placebo indistinguishable from 0 is what the book needs and is not by itself evidence FOR the book."
+   },
+   "momentum_orthogonalisation": {
+    "falsifier": "momentum_orthogonalisation",
+    "registered_as": "TRIAL-DRAFT-C section 1 quotes Grinblatt-Han: with overhang on the right-hand side, intermediate-horizon momentum DISAPPEARS. Section 5 makes its survival a FAILED_VARIANT trigger.",
+    "construction": "v0's own `momentum_overhang_rows` and `fama_macbeth_orthogonalisation`, unchanged. The overhang on the right-hand side is the same series the book traded, because `book_c_event_sign_v1` builds it by calling v0's `book_c_overhang`.",
+    "fama_macbeth": {
+     "n_blocks": 348,
+     "median_names_per_block": 1035,
+     "mean_cross_sectional_corr_mom_cgo": 0.2694,
+     "skipped_months": {
+      "too_few_names": 0,
+      "no_dispersion": 0,
+      "collinear": 0
+     },
+     "units": "every slope is the next month's return per ONE cross-sectional sd of the regressor, and every residual is re-standardised so the four legs share that ruler",
+     "raw_mom": {
+      "mean_monthly_slope": 0.000644,
+      "nw_lag2_t": 0.549,
+      "p_two_sided": 0.583022,
+      "n_blocks": 348
+     },
+     "raw_cgo": {
+      "mean_monthly_slope": 0.000355,
+      "nw_lag2_t": 0.5093,
+      "p_two_sided": 0.61055,
+      "n_blocks": 348
+     },
+     "resid_mom": {
+      "mean_monthly_slope": 0.000659,
+      "nw_lag2_t": 0.6162,
+      "p_two_sided": 0.537765,
+      "n_blocks": 348
+     },
+     "resid_cgo": {
+      "mean_monthly_slope": 0.000229,
+      "nw_lag2_t": 0.4547,
+      "p_two_sided": 0.64932,
+      "n_blocks": 348
+     },
+     "bivariate_mom": {
+      "mean_monthly_slope": 0.000655,
+      "nw_lag2_t": 0.5822,
+      "p_two_sided": 0.560402,
+      "n_blocks": 348
+     },
+     "bivariate_cgo": {
+      "mean_monthly_slope": 0.000215,
+      "nw_lag2_t": 0.407,
+      "p_two_sided": 0.684017,
+      "n_blocks": 348
+     }
+    },
+    "momentum_survives": false,
+    "overhang_survives": false,
+    "subsumption_testable": false,
+    "t_raw_mom": 0.549,
+    "t_resid_mom": 0.6162,
+    "t_resid_cgo": 0.4547,
+    "verdict": "MOMENTUM_NOT_ALIVE",
+    "why": "raw 12-1 momentum carries t 0.549 on the book's own rows, below the |t| >= 2.0 line, BEFORE overhang enters (after: t 0.6162). Grinblatt-Han's subsumption claim is untestable here -- nothing to subsume -- so this is NOT a pass of that test. The \u00a75 clause's purpose, 'it was momentum in costume', is answered: momentum earns nothing on these rows, so the book's excess is not momentum's, and the FAILED_VARIANT clause does not fire. Overhang's own residual payoff carries t 0.4547."
+   },
+   "era_stability": {
+    "n_eras_read": 4,
+    "n_positive": 4,
+    "positive_eras": [
+     "1990-1999",
+     "2000-2009",
+     "2010-2016",
+     "2017-2024"
+    ],
+    "negative_eras": [],
+    "mean_by_era": {
+     "1990-1999": 0.002357,
+     "2000-2009": 0.005332,
+     "2010-2016": 0.000287,
+     "2017-2024": 0.003828
+    },
+    "all_positive": true
+   },
+   "decision_rule": "TRIAL-DRAFT-C section 5, including Amendment 1's `primary <= 0 closes it` clause. FAILED_VARIANT if the placebo also pays OR momentum survives orthogonalisation -- either clause alone, whatever the primary metric did.",
+   "headline": "v1 floor $10,000,000: 0.003261/month t 1.9282 over 359 blocks (v0: 0.002438 at $3M); placebo -0.001618/month (pays: False); orthogonalised momentum t 0.6162 vs raw 0.549 (MOMENTUM_NOT_ALIVE)",
+   "verdict": "CONDITIONAL \u2014 the placebo PASSED and the momentum clause does not fire (momentum was never alive on these rows, so the subsumption test is untestable, not passed), so neither \u00a75 FAILED_VARIANT clause fires. The standing verdict is therefore the one the primary metric earned and no better: +0.003261/month at NW lag-2 t 1.9282 is below the declared 0.0100/month, which is CONDITIONAL. A falsifier that passes is not evidence FOR the book.",
+   "verdict_block": {
+    "verdict": "CONDITIONAL",
+    "clauses_fired": [],
+    "primary_is_below_zero": false,
+    "reading": "the placebo PASSED and the momentum clause does not fire (momentum was never alive on these rows, so the subsumption test is untestable, not passed), so neither \u00a75 FAILED_VARIANT clause fires. The standing verdict is therefore the one the primary metric earned and no better: +0.003261/month at NW lag-2 t 1.9282 is below the declared 0.0100/month, which is CONDITIONAL. A falsifier that passes is not evidence FOR the book.",
+    "primary_read_against": "primary_registered_construction"
+   }
+  }
+ },
+ "t_alive": 2.0,
+ "next_test": "whichever of the family's four books carries a POSITIVE $10M cell at |t| >= 2 is the one chunk 13b's allocator question is about; and the TAQ cost curve, which is the only thing that can make the two floors pay different spreads.",
+ "headline": "v1 $3M 0.005496/month t 3.4272 over 359 blocks | $10M 0.003261/month t 1.9282 over 359 blocks (v0 was 0.002438 t 1.3809 at $3M) -> SECONDARY_FLOOR_DOES_NOT_CLEAR",
+ "verdict": "SECONDARY_FLOOR_DOES_NOT_CLEAR \u2014 the $10M cell is +0.003261/month at t 1.9282, below the declared 0.0100/month and the |t| >= 2.0 line. \u00a75's floor clause holds back a CLEARED primary; this primary is +0.005496/month at t 3.4272 and has not cleared, so the clause changes nothing and the book stands where its primary left it. the $3M cell is positive in 4/4 eras and the $10M cell in 4/4.",
+ "elapsed_s": 87.7,
+ "written_utc": "2026-09-13T07:35:21+00:00",
+ "run": 1,
+ "stage": "pnl"
+}

@@ -1,0 +1,1036 @@
+{
+  "book": "qmj_quality_tilt_v0",
+  "book_key": "E",
+  "prereg": "TRIAL-DRAFT-E-quality-minus-junk-v0 (UNSIGNED)",
+  "family": "NIGHT_JOB_BOOKS_2026_09_13",
+  "licence": "PRODUCT_EXPERIMENT",
+  "ran": true,
+  "primary_metric": "net_monthly_excess_vs_random_twin",
+  "registered_construction": {
+    "column": "qmj",
+    "cut": "top tercile",
+    "tercile": 0.6666666666666666,
+    "k": 30,
+    "hold": "one month, monthly rebalance",
+    "twin": "turnover-matched random draw from the SAME qmj-covered band",
+    "declared_effect_size": 0.007,
+    "floors_usd": {
+      "primary": 3000000.0,
+      "secondary": 10000000.0
+    },
+    "min_price_usd": 5.0,
+    "cost_curve": "flat_25bps_pending_5c",
+    "cost_bps_per_side": 25.0,
+    "honours_the_registration": true,
+    "why": "printed in full because Book C's run 1 said `confirm_slice 1995-2024` while warming a 60-month overhang at 24 months. A receipt that does not print its own construction cannot be checked against the registration that licensed it. A SMOKE run cannot honour the registered window and says so here rather than being mistaken for it."
+  },
+  "cells": {
+    "primary_floor": {
+      "label": "qmj_quality_tilt_v0",
+      "book": "E",
+      "floor_usd": 3000000.0,
+      "floor_is_registered_primary": true,
+      "result": {
+        "label": "qmj_quality_tilt_v0",
+        "twin": "random_universe_turnover_matched",
+        "k": 30,
+        "seed": 3601,
+        "floor_usd": 3000000.0,
+        "twin_turnover_matched": true,
+        "pool_filtered_to_the_covered_band": true,
+        "n_blocks": 419,
+        "median_names_selected": 30,
+        "mean_book_net_monthly": 0.012373,
+        "mean_twin_net_monthly": 0.008281,
+        "mean_excess_net_monthly": 0.004093,
+        "nw_lag2_t": 2.5632,
+        "p_two_sided": 0.01037,
+        "cost_curve": "flat_25bps_pending_5c",
+        "cost_bps_per_side": 25.0
+      },
+      "by_era": {
+        "1990-1999": {
+          "n_blocks": 119,
+          "mean_excess_net_monthly": 0.005645,
+          "nw_lag2_t": 1.7176
+        },
+        "2000-2009": {
+          "n_blocks": 120,
+          "mean_excess_net_monthly": 0.008268,
+          "nw_lag2_t": 3.0429
+        },
+        "2010-2016": {
+          "n_blocks": 84,
+          "mean_excess_net_monthly": 0.000791,
+          "nw_lag2_t": 0.2587
+        },
+        "2017-2024": {
+          "n_blocks": 96,
+          "mean_excess_net_monthly": -0.000163,
+          "nw_lag2_t": -0.0469
+        }
+      },
+      "mde_recomputed": {
+        "status": "MEASURED",
+        "n_blocks": 419,
+        "realised_difference_sd": 0.032844,
+        "measured_lag1_rho": 0.0214,
+        "n_effective": 401.42,
+        "mde_monthly": 0.00459,
+        "declared_mde_nominal": 0.00637,
+        "declared_mde_deflated": 0.00724,
+        "why": "the registration's 0.637%/0.724% pair was computed from a MODELLED book-minus-twin sd of 0.043167 at k=30. This is the same arithmetic on the sd the book actually realised, and it is the number the verdict should be read against where the two disagree."
+      }
+    },
+    "secondary_floor": {
+      "label": "qmj_quality_tilt_v0",
+      "book": "E",
+      "floor_usd": 10000000.0,
+      "floor_is_registered_primary": false,
+      "result": {
+        "label": "qmj_quality_tilt_v0",
+        "twin": "random_universe_turnover_matched",
+        "k": 30,
+        "seed": 3601,
+        "floor_usd": 10000000.0,
+        "twin_turnover_matched": true,
+        "pool_filtered_to_the_covered_band": true,
+        "n_blocks": 419,
+        "median_names_selected": 30,
+        "mean_book_net_monthly": 0.011101,
+        "mean_twin_net_monthly": 0.009996,
+        "mean_excess_net_monthly": 0.001105,
+        "nw_lag2_t": 0.697,
+        "p_two_sided": 0.485779,
+        "cost_curve": "flat_25bps_pending_5c",
+        "cost_bps_per_side": 25.0
+      },
+      "by_era": {
+        "1990-1999": {
+          "n_blocks": 119,
+          "mean_excess_net_monthly": 0.003629,
+          "nw_lag2_t": 1.1533
+        },
+        "2000-2009": {
+          "n_blocks": 120,
+          "mean_excess_net_monthly": 0.002525,
+          "nw_lag2_t": 0.9309
+        },
+        "2010-2016": {
+          "n_blocks": 84,
+          "mean_excess_net_monthly": -0.001025,
+          "nw_lag2_t": -0.3787
+        },
+        "2017-2024": {
+          "n_blocks": 96,
+          "mean_excess_net_monthly": -0.001935,
+          "nw_lag2_t": -0.5027
+        }
+      },
+      "mde_recomputed": {
+        "status": "MEASURED",
+        "n_blocks": 419,
+        "realised_difference_sd": 0.031586,
+        "measured_lag1_rho": 0.0572,
+        "n_effective": 373.63,
+        "mde_monthly": 0.004575,
+        "declared_mde_nominal": 0.00637,
+        "declared_mde_deflated": 0.00724,
+        "why": "the registration's 0.637%/0.724% pair was computed from a MODELLED book-minus-twin sd of 0.043167 at k=30. This is the same arithmetic on the sd the book actually realised, and it is the number the verdict should be read against where the two disagree."
+      }
+    }
+  },
+  "falsifiers": [
+    {
+      "falsifier": "junk_leg_must_lose",
+      "registered_as": "TRIAL-DRAFT-E section 5 clause 2: the bottom-`qmj` tercile, same engine, same twin, same floor, must have a NEGATIVE net excess. If quality and junk BOTH beat the twin, the sort is not ordering anything.",
+      "junk_mean_excess_net_monthly": -0.00394,
+      "junk_nw_lag2_t": -1.0957,
+      "fires": false,
+      "clause": "the JUNK leg also beats the twin (-0.00394/month), so the `qmj` sort is not ordering anything (section 5 clause 2)"
+    },
+    {
+      "falsifier": "size_and_beta_control",
+      "registered_as": "TRIAL-DRAFT-E section 5 clause 3: in a Fama-MacBeth of next month's return on z(qmj), z(log market equity) and z(beta_60m), `qmj`'s own payoff must survive at |t| >= 2.0.",
+      "fama_macbeth": {
+        "n_months": 419,
+        "regressors": [
+          "qmj",
+          "size",
+          "beta"
+        ],
+        "target": "ret_next",
+        "multivariate": {
+          "qmj": {
+            "n_months": 419,
+            "mean": 0.00151,
+            "nw_lag2_t": 3.2913
+          },
+          "size": {
+            "n_months": 419,
+            "mean": -0.000308,
+            "nw_lag2_t": -0.4745
+          },
+          "beta": {
+            "n_months": 419,
+            "mean": 0.000621,
+            "nw_lag2_t": 0.5481
+          }
+        },
+        "univariate": {
+          "qmj": {
+            "n_months": 419,
+            "mean": 0.001356,
+            "nw_lag2_t": 2.2138
+          },
+          "size": {
+            "n_months": 419,
+            "mean": -0.0004,
+            "nw_lag2_t": -0.4746
+          },
+          "beta": {
+            "n_months": 419,
+            "mean": 0.000747,
+            "nw_lag2_t": 0.6009
+          }
+        },
+        "construction": "each regressor standardised within the month's own cross-section, OLS with an intercept, the slope series priced with a Newey-West lag-2 t. The univariate block is the LIVENESS check: a control that was never alive cannot subsume anything."
+      },
+      "qmj": {
+        "regressor": "qmj",
+        "t_multivariate": 3.2913,
+        "t_univariate_raw": 2.2138,
+        "alive_raw": true,
+        "survives": true,
+        "testable": true,
+        "why": "raw |t| 2.2138 against the |t| >= 2.0 line, and 3.2913 with the controls on the right-hand side."
+      },
+      "fires": false,
+      "undetermined_because": null,
+      "clause": "`qmj` DIES with size and beta on the right-hand side (multivariate t 3.2913 vs raw 2.2138), so the tilt is size and beta in quality's clothing (section 5 clause 3)"
+    }
+  ],
+  "falsifier_cells": {
+    "primary_floor": {
+      "junk_leg": {
+        "label": "qmj_junk_leg_falsifier",
+        "book": "E",
+        "floor_usd": 3000000.0,
+        "floor_is_registered_primary": true,
+        "result": {
+          "label": "qmj_junk_leg_falsifier",
+          "twin": "random_universe_turnover_matched",
+          "k": 30,
+          "seed": 3601,
+          "floor_usd": 3000000.0,
+          "twin_turnover_matched": true,
+          "pool_filtered_to_the_covered_band": true,
+          "n_blocks": 419,
+          "median_names_selected": 30,
+          "mean_book_net_monthly": 0.004627,
+          "mean_twin_net_monthly": 0.008566,
+          "mean_excess_net_monthly": -0.00394,
+          "nw_lag2_t": -1.0957,
+          "p_two_sided": 0.273216,
+          "cost_curve": "flat_25bps_pending_5c",
+          "cost_bps_per_side": 25.0
+        },
+        "by_era": {
+          "1990-1999": {
+            "n_blocks": 119,
+            "mean_excess_net_monthly": -0.004304,
+            "nw_lag2_t": -0.9263
+          },
+          "2000-2009": {
+            "n_blocks": 120,
+            "mean_excess_net_monthly": -0.012902,
+            "nw_lag2_t": -1.5938
+          },
+          "2010-2016": {
+            "n_blocks": 84,
+            "mean_excess_net_monthly": -0.004211,
+            "nw_lag2_t": -0.5916
+          },
+          "2017-2024": {
+            "n_blocks": 96,
+            "mean_excess_net_monthly": 0.007953,
+            "nw_lag2_t": 1.1437
+          }
+        },
+        "mde_recomputed": {
+          "status": "MEASURED",
+          "n_blocks": 419,
+          "realised_difference_sd": 0.071833,
+          "measured_lag1_rho": 0.0625,
+          "n_effective": 369.71,
+          "mde_monthly": 0.01046,
+          "declared_mde_nominal": 0.00637,
+          "declared_mde_deflated": 0.00724,
+          "why": "the registration's 0.637%/0.724% pair was computed from a MODELLED book-minus-twin sd of 0.043167 at k=30. This is the same arithmetic on the sd the book actually realised, and it is the number the verdict should be read against where the two disagree."
+        }
+      },
+      "qmj_prof_only_diagnostic": {
+        "label": "qmj_prof_only_diagnostic",
+        "book": "E",
+        "floor_usd": 3000000.0,
+        "floor_is_registered_primary": true,
+        "result": {
+          "label": "qmj_prof_only_diagnostic",
+          "twin": "random_universe_turnover_matched",
+          "k": 30,
+          "seed": 3601,
+          "floor_usd": 3000000.0,
+          "twin_turnover_matched": true,
+          "pool_filtered_to_the_covered_band": true,
+          "n_blocks": 419,
+          "median_names_selected": 30,
+          "mean_book_net_monthly": 0.013689,
+          "mean_twin_net_monthly": 0.010277,
+          "mean_excess_net_monthly": 0.003412,
+          "nw_lag2_t": 2.0361,
+          "p_two_sided": 0.041736,
+          "cost_curve": "flat_25bps_pending_5c",
+          "cost_bps_per_side": 25.0
+        },
+        "by_era": {
+          "1990-1999": {
+            "n_blocks": 119,
+            "mean_excess_net_monthly": 0.009598,
+            "nw_lag2_t": 2.7011
+          },
+          "2000-2009": {
+            "n_blocks": 120,
+            "mean_excess_net_monthly": 0.000782,
+            "nw_lag2_t": 0.2949
+          },
+          "2010-2016": {
+            "n_blocks": 84,
+            "mean_excess_net_monthly": 0.000223,
+            "nw_lag2_t": 0.0708
+          },
+          "2017-2024": {
+            "n_blocks": 96,
+            "mean_excess_net_monthly": 0.001823,
+            "nw_lag2_t": 0.4856
+          }
+        },
+        "mde_recomputed": {
+          "status": "MEASURED",
+          "n_blocks": 419,
+          "realised_difference_sd": 0.033416,
+          "measured_lag1_rho": 0.0021,
+          "n_effective": 417.25,
+          "mde_monthly": 0.00458,
+          "declared_mde_nominal": 0.00637,
+          "declared_mde_deflated": 0.00724,
+          "why": "the registration's 0.637%/0.724% pair was computed from a MODELLED book-minus-twin sd of 0.043167 at k=30. This is the same arithmetic on the sd the book actually realised, and it is the number the verdict should be read against where the two disagree."
+        }
+      }
+    },
+    "secondary_floor": {
+      "junk_leg": {
+        "label": "qmj_junk_leg_falsifier",
+        "book": "E",
+        "floor_usd": 10000000.0,
+        "floor_is_registered_primary": false,
+        "result": {
+          "label": "qmj_junk_leg_falsifier",
+          "twin": "random_universe_turnover_matched",
+          "k": 30,
+          "seed": 3601,
+          "floor_usd": 10000000.0,
+          "twin_turnover_matched": true,
+          "pool_filtered_to_the_covered_band": true,
+          "n_blocks": 419,
+          "median_names_selected": 30,
+          "mean_book_net_monthly": 0.005589,
+          "mean_twin_net_monthly": 0.008505,
+          "mean_excess_net_monthly": -0.002916,
+          "nw_lag2_t": -0.9608,
+          "p_two_sided": 0.336658,
+          "cost_curve": "flat_25bps_pending_5c",
+          "cost_bps_per_side": 25.0
+        },
+        "by_era": {
+          "1990-1999": {
+            "n_blocks": 119,
+            "mean_excess_net_monthly": 0.001036,
+            "nw_lag2_t": 0.2756
+          },
+          "2000-2009": {
+            "n_blocks": 120,
+            "mean_excess_net_monthly": -0.012014,
+            "nw_lag2_t": -1.8607
+          },
+          "2010-2016": {
+            "n_blocks": 84,
+            "mean_excess_net_monthly": -7.4e-05,
+            "nw_lag2_t": -0.0116
+          },
+          "2017-2024": {
+            "n_blocks": 96,
+            "mean_excess_net_monthly": 0.001069,
+            "nw_lag2_t": 0.1629
+          }
+        },
+        "mde_recomputed": {
+          "status": "MEASURED",
+          "n_blocks": 419,
+          "realised_difference_sd": 0.060992,
+          "measured_lag1_rho": 0.0417,
+          "n_effective": 385.43,
+          "mde_monthly": 0.008699,
+          "declared_mde_nominal": 0.00637,
+          "declared_mde_deflated": 0.00724,
+          "why": "the registration's 0.637%/0.724% pair was computed from a MODELLED book-minus-twin sd of 0.043167 at k=30. This is the same arithmetic on the sd the book actually realised, and it is the number the verdict should be read against where the two disagree."
+        }
+      }
+    }
+  },
+  "contamination": {
+    "primary_floor": {
+      "clause": "TRIAL-DRAFT-E's contamination clause: exclude a year whose covered share inside the eligible band falls below 0.25",
+      "floor_usd": 3000000.0,
+      "per_year": {
+        "1990": {
+          "months": 12,
+          "median_eligible_names": 392.0,
+          "median_covered_names": 341.0,
+          "covered_share": 0.8791,
+          "excluded": false,
+          "why": null
+        },
+        "1991": {
+          "months": 12,
+          "median_eligible_names": 493.0,
+          "median_covered_names": 425.5,
+          "covered_share": 0.8634,
+          "excluded": false,
+          "why": null
+        },
+        "1992": {
+          "months": 12,
+          "median_eligible_names": 552.0,
+          "median_covered_names": 474.0,
+          "covered_share": 0.8539,
+          "excluded": false,
+          "why": null
+        },
+        "1993": {
+          "months": 12,
+          "median_eligible_names": 698.0,
+          "median_covered_names": 572.5,
+          "covered_share": 0.816,
+          "excluded": false,
+          "why": null
+        },
+        "1994": {
+          "months": 12,
+          "median_eligible_names": 727.0,
+          "median_covered_names": 588.0,
+          "covered_share": 0.8035,
+          "excluded": false,
+          "why": null
+        },
+        "1995": {
+          "months": 12,
+          "median_eligible_names": 908.5,
+          "median_covered_names": 689.5,
+          "covered_share": 0.7604,
+          "excluded": false,
+          "why": null
+        },
+        "1996": {
+          "months": 12,
+          "median_eligible_names": 1105.5,
+          "median_covered_names": 799.5,
+          "covered_share": 0.7262,
+          "excluded": false,
+          "why": null
+        },
+        "1997": {
+          "months": 12,
+          "median_eligible_names": 1258.0,
+          "median_covered_names": 920.0,
+          "covered_share": 0.733,
+          "excluded": false,
+          "why": null
+        },
+        "1998": {
+          "months": 12,
+          "median_eligible_names": 1375.5,
+          "median_covered_names": 1002.0,
+          "covered_share": 0.7296,
+          "excluded": false,
+          "why": null
+        },
+        "1999": {
+          "months": 12,
+          "median_eligible_names": 1465.5,
+          "median_covered_names": 989.5,
+          "covered_share": 0.6706,
+          "excluded": false,
+          "why": null
+        },
+        "2000": {
+          "months": 12,
+          "median_eligible_names": 1685.0,
+          "median_covered_names": 1107.5,
+          "covered_share": 0.6463,
+          "excluded": false,
+          "why": null
+        },
+        "2001": {
+          "months": 12,
+          "median_eligible_names": 1438.5,
+          "median_covered_names": 1136.0,
+          "covered_share": 0.7817,
+          "excluded": false,
+          "why": null
+        },
+        "2002": {
+          "months": 12,
+          "median_eligible_names": 1389.5,
+          "median_covered_names": 1175.5,
+          "covered_share": 0.853,
+          "excluded": false,
+          "why": null
+        },
+        "2003": {
+          "months": 12,
+          "median_eligible_names": 1493.5,
+          "median_covered_names": 1287.5,
+          "covered_share": 0.862,
+          "excluded": false,
+          "why": null
+        },
+        "2004": {
+          "months": 12,
+          "median_eligible_names": 1762.5,
+          "median_covered_names": 1519.0,
+          "covered_share": 0.8835,
+          "excluded": false,
+          "why": null
+        },
+        "2005": {
+          "months": 12,
+          "median_eligible_names": 1858.0,
+          "median_covered_names": 1641.0,
+          "covered_share": 0.8853,
+          "excluded": false,
+          "why": null
+        },
+        "2006": {
+          "months": 12,
+          "median_eligible_names": 2018.0,
+          "median_covered_names": 1739.5,
+          "covered_share": 0.8682,
+          "excluded": false,
+          "why": null
+        },
+        "2007": {
+          "months": 12,
+          "median_eligible_names": 2107.0,
+          "median_covered_names": 1788.5,
+          "covered_share": 0.8499,
+          "excluded": false,
+          "why": null
+        },
+        "2008": {
+          "months": 12,
+          "median_eligible_names": 1890.5,
+          "median_covered_names": 1642.5,
+          "covered_share": 0.8686,
+          "excluded": false,
+          "why": null
+        },
+        "2009": {
+          "months": 12,
+          "median_eligible_names": 1556.5,
+          "median_covered_names": 1398.0,
+          "covered_share": 0.8993,
+          "excluded": false,
+          "why": null
+        },
+        "2010": {
+          "months": 12,
+          "median_eligible_names": 1635.5,
+          "median_covered_names": 1460.5,
+          "covered_share": 0.8948,
+          "excluded": false,
+          "why": null
+        },
+        "2011": {
+          "months": 12,
+          "median_eligible_names": 1722.0,
+          "median_covered_names": 1545.0,
+          "covered_share": 0.9032,
+          "excluded": false,
+          "why": null
+        },
+        "2012": {
+          "months": 12,
+          "median_eligible_names": 1643.5,
+          "median_covered_names": 1484.5,
+          "covered_share": 0.9052,
+          "excluded": false,
+          "why": null
+        },
+        "2013": {
+          "months": 12,
+          "median_eligible_names": 1740.0,
+          "median_covered_names": 1550.5,
+          "covered_share": 0.8865,
+          "excluded": false,
+          "why": null
+        },
+        "2014": {
+          "months": 12,
+          "median_eligible_names": 1908.5,
+          "median_covered_names": 1615.5,
+          "covered_share": 0.8494,
+          "excluded": false,
+          "why": null
+        },
+        "2015": {
+          "months": 12,
+          "median_eligible_names": 1933.5,
+          "median_covered_names": 1600.0,
+          "covered_share": 0.829,
+          "excluded": false,
+          "why": null
+        },
+        "2016": {
+          "months": 12,
+          "median_eligible_names": 1848.0,
+          "median_covered_names": 1554.5,
+          "covered_share": 0.8398,
+          "excluded": false,
+          "why": null
+        },
+        "2017": {
+          "months": 12,
+          "median_eligible_names": 1912.5,
+          "median_covered_names": 1604.5,
+          "covered_share": 0.8395,
+          "excluded": false,
+          "why": null
+        },
+        "2018": {
+          "months": 12,
+          "median_eligible_names": 1969.5,
+          "median_covered_names": 1662.5,
+          "covered_share": 0.8468,
+          "excluded": false,
+          "why": null
+        },
+        "2019": {
+          "months": 12,
+          "median_eligible_names": 1887.0,
+          "median_covered_names": 1630.5,
+          "covered_share": 0.8613,
+          "excluded": false,
+          "why": null
+        },
+        "2020": {
+          "months": 12,
+          "median_eligible_names": 1929.0,
+          "median_covered_names": 1626.5,
+          "covered_share": 0.8348,
+          "excluded": false,
+          "why": null
+        },
+        "2021": {
+          "months": 12,
+          "median_eligible_names": 2322.0,
+          "median_covered_names": 1762.0,
+          "covered_share": 0.7573,
+          "excluded": false,
+          "why": null
+        },
+        "2022": {
+          "months": 12,
+          "median_eligible_names": 2062.0,
+          "median_covered_names": 1679.0,
+          "covered_share": 0.8014,
+          "excluded": false,
+          "why": null
+        },
+        "2023": {
+          "months": 12,
+          "median_eligible_names": 1963.0,
+          "median_covered_names": 1652.5,
+          "covered_share": 0.8417,
+          "excluded": false,
+          "why": null
+        },
+        "2024": {
+          "months": 12,
+          "median_eligible_names": 1998.5,
+          "median_covered_names": 1728.0,
+          "covered_share": 0.8596,
+          "excluded": false,
+          "why": null
+        }
+      },
+      "excluded_years": [],
+      "n_excluded_years": 0
+    },
+    "secondary_floor": {
+      "clause": "TRIAL-DRAFT-E's contamination clause: exclude a year whose covered share inside the eligible band falls below 0.25",
+      "floor_usd": 10000000.0,
+      "per_year": {
+        "1990": {
+          "months": 12,
+          "median_eligible_names": 143.0,
+          "median_covered_names": 129.5,
+          "covered_share": 0.9202,
+          "excluded": false,
+          "why": null
+        },
+        "1991": {
+          "months": 12,
+          "median_eligible_names": 175.5,
+          "median_covered_names": 165.5,
+          "covered_share": 0.9351,
+          "excluded": false,
+          "why": null
+        },
+        "1992": {
+          "months": 12,
+          "median_eligible_names": 193.0,
+          "median_covered_names": 177.0,
+          "covered_share": 0.9188,
+          "excluded": false,
+          "why": null
+        },
+        "1993": {
+          "months": 12,
+          "median_eligible_names": 255.5,
+          "median_covered_names": 229.0,
+          "covered_share": 0.893,
+          "excluded": false,
+          "why": null
+        },
+        "1994": {
+          "months": 12,
+          "median_eligible_names": 287.0,
+          "median_covered_names": 246.0,
+          "covered_share": 0.8713,
+          "excluded": false,
+          "why": null
+        },
+        "1995": {
+          "months": 12,
+          "median_eligible_names": 381.0,
+          "median_covered_names": 314.0,
+          "covered_share": 0.812,
+          "excluded": false,
+          "why": null
+        },
+        "1996": {
+          "months": 12,
+          "median_eligible_names": 482.5,
+          "median_covered_names": 385.5,
+          "covered_share": 0.8051,
+          "excluded": false,
+          "why": null
+        },
+        "1997": {
+          "months": 12,
+          "median_eligible_names": 591.0,
+          "median_covered_names": 482.0,
+          "covered_share": 0.8249,
+          "excluded": false,
+          "why": null
+        },
+        "1998": {
+          "months": 12,
+          "median_eligible_names": 669.5,
+          "median_covered_names": 553.0,
+          "covered_share": 0.8187,
+          "excluded": false,
+          "why": null
+        },
+        "1999": {
+          "months": 12,
+          "median_eligible_names": 770.0,
+          "median_covered_names": 561.0,
+          "covered_share": 0.7129,
+          "excluded": false,
+          "why": null
+        },
+        "2000": {
+          "months": 12,
+          "median_eligible_names": 961.5,
+          "median_covered_names": 684.5,
+          "covered_share": 0.6786,
+          "excluded": false,
+          "why": null
+        },
+        "2001": {
+          "months": 12,
+          "median_eligible_names": 859.5,
+          "median_covered_names": 699.0,
+          "covered_share": 0.8146,
+          "excluded": false,
+          "why": null
+        },
+        "2002": {
+          "months": 12,
+          "median_eligible_names": 813.5,
+          "median_covered_names": 716.5,
+          "covered_share": 0.8829,
+          "excluded": false,
+          "why": null
+        },
+        "2003": {
+          "months": 12,
+          "median_eligible_names": 852.0,
+          "median_covered_names": 762.0,
+          "covered_share": 0.8951,
+          "excluded": false,
+          "why": null
+        },
+        "2004": {
+          "months": 12,
+          "median_eligible_names": 994.0,
+          "median_covered_names": 904.5,
+          "covered_share": 0.9064,
+          "excluded": false,
+          "why": null
+        },
+        "2005": {
+          "months": 12,
+          "median_eligible_names": 1087.5,
+          "median_covered_names": 999.0,
+          "covered_share": 0.913,
+          "excluded": false,
+          "why": null
+        },
+        "2006": {
+          "months": 12,
+          "median_eligible_names": 1239.0,
+          "median_covered_names": 1121.0,
+          "covered_share": 0.9058,
+          "excluded": false,
+          "why": null
+        },
+        "2007": {
+          "months": 12,
+          "median_eligible_names": 1373.0,
+          "median_covered_names": 1214.0,
+          "covered_share": 0.8895,
+          "excluded": false,
+          "why": null
+        },
+        "2008": {
+          "months": 12,
+          "median_eligible_names": 1291.5,
+          "median_covered_names": 1164.0,
+          "covered_share": 0.9028,
+          "excluded": false,
+          "why": null
+        },
+        "2009": {
+          "months": 12,
+          "median_eligible_names": 1014.5,
+          "median_covered_names": 947.0,
+          "covered_share": 0.9284,
+          "excluded": false,
+          "why": null
+        },
+        "2010": {
+          "months": 12,
+          "median_eligible_names": 1091.5,
+          "median_covered_names": 1006.0,
+          "covered_share": 0.9232,
+          "excluded": false,
+          "why": null
+        },
+        "2011": {
+          "months": 12,
+          "median_eligible_names": 1161.5,
+          "median_covered_names": 1078.5,
+          "covered_share": 0.9248,
+          "excluded": false,
+          "why": null
+        },
+        "2012": {
+          "months": 12,
+          "median_eligible_names": 1113.0,
+          "median_covered_names": 1035.0,
+          "covered_share": 0.9301,
+          "excluded": false,
+          "why": null
+        },
+        "2013": {
+          "months": 12,
+          "median_eligible_names": 1165.5,
+          "median_covered_names": 1066.0,
+          "covered_share": 0.9057,
+          "excluded": false,
+          "why": null
+        },
+        "2014": {
+          "months": 12,
+          "median_eligible_names": 1341.5,
+          "median_covered_names": 1173.5,
+          "covered_share": 0.8721,
+          "excluded": false,
+          "why": null
+        },
+        "2015": {
+          "months": 12,
+          "median_eligible_names": 1354.5,
+          "median_covered_names": 1158.5,
+          "covered_share": 0.853,
+          "excluded": false,
+          "why": null
+        },
+        "2016": {
+          "months": 12,
+          "median_eligible_names": 1305.5,
+          "median_covered_names": 1132.0,
+          "covered_share": 0.87,
+          "excluded": false,
+          "why": null
+        },
+        "2017": {
+          "months": 12,
+          "median_eligible_names": 1353.0,
+          "median_covered_names": 1179.5,
+          "covered_share": 0.8684,
+          "excluded": false,
+          "why": null
+        },
+        "2018": {
+          "months": 12,
+          "median_eligible_names": 1446.0,
+          "median_covered_names": 1242.0,
+          "covered_share": 0.8664,
+          "excluded": false,
+          "why": null
+        },
+        "2019": {
+          "months": 12,
+          "median_eligible_names": 1382.5,
+          "median_covered_names": 1205.5,
+          "covered_share": 0.877,
+          "excluded": false,
+          "why": null
+        },
+        "2020": {
+          "months": 12,
+          "median_eligible_names": 1428.5,
+          "median_covered_names": 1233.5,
+          "covered_share": 0.8536,
+          "excluded": false,
+          "why": null
+        },
+        "2021": {
+          "months": 12,
+          "median_eligible_names": 1700.0,
+          "median_covered_names": 1347.0,
+          "covered_share": 0.7899,
+          "excluded": false,
+          "why": null
+        },
+        "2022": {
+          "months": 12,
+          "median_eligible_names": 1552.0,
+          "median_covered_names": 1311.5,
+          "covered_share": 0.8357,
+          "excluded": false,
+          "why": null
+        },
+        "2023": {
+          "months": 12,
+          "median_eligible_names": 1473.0,
+          "median_covered_names": 1271.0,
+          "covered_share": 0.8671,
+          "excluded": false,
+          "why": null
+        },
+        "2024": {
+          "months": 12,
+          "median_eligible_names": 1540.5,
+          "median_covered_names": 1363.0,
+          "covered_share": 0.8806,
+          "excluded": false,
+          "why": null
+        }
+      },
+      "excluded_years": [],
+      "n_excluded_years": 0
+    }
+  },
+  "era_stability": {
+    "primary_floor": {
+      "n_eras_read": 4,
+      "n_positive": 3,
+      "positive_eras": [
+        "1990-1999",
+        "2000-2009",
+        "2010-2016"
+      ],
+      "negative_eras": [
+        "2017-2024"
+      ],
+      "mean_by_era": {
+        "1990-1999": 0.005645,
+        "2000-2009": 0.008268,
+        "2010-2016": 0.000791,
+        "2017-2024": -0.000163
+      },
+      "all_positive": false
+    },
+    "secondary_floor": {
+      "n_eras_read": 4,
+      "n_positive": 2,
+      "positive_eras": [
+        "1990-1999",
+        "2000-2009"
+      ],
+      "negative_eras": [
+        "2010-2016",
+        "2017-2024"
+      ],
+      "mean_by_era": {
+        "1990-1999": 0.003629,
+        "2000-2009": 0.002525,
+        "2010-2016": -0.001025,
+        "2017-2024": -0.001935
+      },
+      "all_positive": false
+    }
+  },
+  "verdict_block": {
+    "verdict": "CONDITIONAL",
+    "clauses_fired": [],
+    "era_stability": {
+      "n_eras_read": 4,
+      "n_positive": 3,
+      "positive_eras": [
+        "1990-1999",
+        "2000-2009",
+        "2010-2016"
+      ],
+      "negative_eras": [
+        "2017-2024"
+      ],
+      "mean_by_era": {
+        "1990-1999": 0.005645,
+        "2000-2009": 0.008268,
+        "2010-2016": 0.000791,
+        "2017-2024": -0.000163
+      },
+      "all_positive": false
+    },
+    "reading": "both falsifiers passed, so neither FAILED_VARIANT clause fires, and the standing verdict is the one the primary metric earned and no better: the block mean +0.004093/month at t 2.5632 is below the declared 0.0070/month or below the |t| >= 2.0 line. A falsifier that passes is not evidence FOR the book."
+  },
+  "verdict": "CONDITIONAL \u2014 both falsifiers passed, so neither FAILED_VARIANT clause fires, and the standing verdict is the one the primary metric earned and no better: the block mean +0.004093/month at t 2.5632 is below the declared 0.0070/month or below the |t| >= 2.0 line. A falsifier that passes is not evidence FOR the book.",
+  "both_floors_or_neither": "TRIAL-DRAFT-A section 8's rule, applied here for the same reason: a book quoted at the floor that flatters it is a book quoted at a chosen corner. Both cells are above; neither may travel alone.",
+  "headline": "qmj_quality_tilt_v0: $3M 0.004093/month t 2.5632 over 419 blocks (median 30 names) | $10M 0.001105/month t 0.697 over 419 blocks -> CONDITIONAL",
+  "smoke": false
+}
