@@ -290,3 +290,157 @@ def test_the_bhar_window_starts_after_the_filing_month_closes():
     out = R._bhar(daily, 7, block)
     assert out is not None
     assert math.isclose(out, 0.0, abs_tol=1e-9)
+
+
+# --------------------------------------------------------------------------
+# THE v1 EVENT SIGN (chunk 12, T3) — synthetic announcement dates only
+#
+# No IBES file is read. What is pinned is the three things a [-1,+1] window can
+# get wrong without failing: which sessions it compounds, which MONTH it hands
+# the answer to, and what it does when the window runs off the tape.
+
+
+def _daily(permno: int, dates, rets) -> pd.DataFrame:
+    return pd.DataFrame({"permno": permno, "date": list(dates),
+                         "ret": list(rets)})
+
+
+def _sessions(n: int = 30, start: str = "2020-01-02"):
+    return pd.bdate_range(start, periods=n)
+
+
+def test_the_v1_sign_compounds_exactly_the_three_sessions_around_the_announcement():
+    s = _sessions(10)
+    rets = [0.0] * 10
+    rets[3], rets[4], rets[5] = -0.01, 0.05, 0.01      # -1, 0, +1 around s[4]
+    rets[2] = rets[6] = 9.0                             # outside: must not enter
+    daily = _daily(7, s, rets)
+    ann = pd.DataFrame({"permno": [7], "anndats": [s[4]], "known_date": [s[4]]})
+    out = R.announcement_window_sign(daily, ann)
+    assert len(out) == 1
+    (sign, knowable), = out.values()
+    assert sign == 1                                    # +4.94% over the window
+    assert knowable == s[5], "the window's LAST session is when it is knowable"
+
+
+def test_the_v1_sign_is_negative_when_the_window_is_negative():
+    s = _sessions(10)
+    rets = [0.0] * 10
+    rets[3], rets[4], rets[5] = 0.0, -0.08, 0.01
+    ann = pd.DataFrame({"permno": [7], "anndats": [s[4]], "known_date": [s[4]]})
+    out = R.announcement_window_sign(_daily(7, s, rets), ann)
+    assert list(out.values())[0][0] == -1
+
+
+def test_the_sign_is_filed_under_the_month_it_became_KNOWABLE_not_the_month_it_happened():
+    """IBES `actdats` lags `anndats` by 91 days at the 95th percentile. Keying
+    on the announcement month would hand the tail of that lag a number nobody
+    had."""
+    s = _sessions(90, "2020-01-02")
+    rets = [0.0] * 90
+    rets[4] = 0.05
+    ann_day = s[5]                                      # the +1 session
+    late = pd.Timestamp("2020-04-15")                   # the database stamp
+    ann = pd.DataFrame({"permno": [7], "anndats": [s[4]], "known_date": [late]})
+    out = R.announcement_window_sign(_daily(7, s, rets), ann)
+    (key, (sign, knowable)), = out.items()
+    assert sign == 1
+    assert knowable == late
+    assert key[0] == pd.Period("2020-04", freq="M").ordinal, (
+        "the sign belongs to the month IBES recorded it, not January")
+    assert key[0] != pd.Period(ann_day, freq="M").ordinal
+
+
+def test_a_window_that_runs_off_the_tape_is_dropped_not_truncated():
+    """A two-session window and a three-session window are different
+    measurements; averaging them makes the first and last month of every
+    listing a different signal."""
+    s = _sessions(5)
+    rets = [0.02] * 5
+    daily = _daily(7, s, rets)
+    first = pd.DataFrame({"permno": [7], "anndats": [s[0]], "known_date": [s[0]]})
+    last = pd.DataFrame({"permno": [7], "anndats": [s[-1]], "known_date": [s[-1]]})
+    assert R.announcement_window_sign(daily, first) == {}
+    assert R.announcement_window_sign(daily, last) == {}
+    middle = pd.DataFrame({"permno": [7], "anndats": [s[2]], "known_date": [s[2]]})
+    assert len(R.announcement_window_sign(daily, middle)) == 1
+
+
+def test_an_announcement_on_a_non_session_uses_the_next_session_as_the_centre():
+    s = _sessions(10, "2020-01-02")                     # business days only
+    rets = [0.0] * 10
+    rets[4] = 0.05                                      # s[4] = 2020-01-08 (Wed)
+    weekend = pd.Timestamp("2020-01-05")                # a Sunday; s[1] is 01-03
+    ann = pd.DataFrame({"permno": [7], "anndats": [weekend],
+                        "known_date": [weekend]})
+    out = R.announcement_window_sign(_daily(7, s, rets), ann)
+    # searchsorted lands on s[2] (2020-01-06), so the window is s[1..3] and the
+    # +5% on s[4] is OUTSIDE it. A flat window has no sign and is dropped.
+    assert out == {}
+
+
+def test_two_announcements_knowable_in_one_month_keep_the_later_one():
+    s = _sessions(25, "2020-01-02")
+    rets = [0.0] * 25
+    rets[4] = 0.05                                      # the earlier: positive
+    rets[14] = -0.05                                    # the later: negative
+    ann = pd.DataFrame({"permno": [7, 7], "anndats": [s[4], s[14]],
+                        "known_date": [s[4], s[14]]})
+    out = R.announcement_window_sign(_daily(7, s, rets), ann)
+    assert len(out) == 1, "one (month, permno) key"
+    assert list(out.values())[0][0] == -1, (
+        "the close knows both; the later one is what a selection at the close "
+        "would read")
+
+
+def test_an_unlinked_permno_contributes_nothing_rather_than_a_zero():
+    s = _sessions(10)
+    ann = pd.DataFrame({"permno": [999], "anndats": [s[4]], "known_date": [s[4]]})
+    assert R.announcement_window_sign(_daily(7, s, [0.01] * 10), ann) == {}
+
+
+def test_v1_moves_the_event_sign_and_nothing_else():
+    """TRIAL-DRAFT-C §8: the amendment names ONLY the input. A v1 that also
+    changed the overhang would be a different book wearing the same name."""
+    months = pd.period_range("2000-01", periods=8, freq="M")
+    panel = pd.DataFrame([{"permno": p, "ym": ym, "ret_m": 0.01, "price": 50.0,
+                           "dv": 9e6, "turnover_m": 0.05}
+                          for ym in months for p in (1, 2, 3)])
+    s = _sessions(10)
+    daily = pd.concat([_daily(p, s, [0.0, 0.0, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0,
+                                     0.0, 0.0]) for p in (1, 2, 3)],
+                      ignore_index=True)
+    ann = pd.DataFrame({"permno": [1], "anndats": [s[4]], "known_date": [s[4]]})
+    v1 = R.book_c_event_sign_v1(panel, daily, ann)
+    assert v1["event_sign"] == R.EVENT_SIGN_V1
+    assert v1["event_sign"] != R.EVENT_SIGN_V0
+    assert v1["event_window_sessions"] == [-1, 1]
+    # the overhang leg is v0's, computed by the SAME function at the registered
+    # 60-month window
+    assert v1["cgo_lookback_months"] == R.CGO_LOOKBACK_MONTHS
+    assert v1["cgo_min_history_months"] == R.CGO_LOOKBACK_MONTHS
+    assert v1["cgo_window_is_full"] is True
+    assert set(v1) >= {"good", "bad", "cgo_by_month", "event_sign"}, (
+        "the same dict shape book_c_inputs returns, so every selector, "
+        "falsifier and twin downstream takes it unchanged")
+    assert v1["n_good"] == 1 and v1["n_bad"] == 0
+
+
+def test_the_v1_sign_is_not_wired_into_any_book_yet():
+    """§8 forbids swapping the input inside this registration. Until Amendment 2
+    is SIGNED, nothing may call the v1 builder from a job."""
+    import ast
+    from pathlib import Path
+
+    called = set()
+    for f in Path("scripts").glob("night_*.py"):
+        for n in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
+            if isinstance(n, ast.Call):
+                fn = n.func
+                name = getattr(fn, "id", None) or getattr(fn, "attr", None)
+                if name == "book_c_event_sign_v1":
+                    called.add(f.name)
+    assert called == set(), (
+        f"{sorted(called)} calls the v1 event sign. TRIAL-DRAFT-C §8: swapping "
+        f"the input is an amendment naming only the input, and Amendment 2 is "
+        f"UNSIGNED. Delete this test when it is signed and the read is queued.")

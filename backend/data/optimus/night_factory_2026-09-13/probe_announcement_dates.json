@@ -1,0 +1,132 @@
+{
+ "receipt": "probe_announcement_window_source",
+ "roadmap_item": "chunk 12 T3",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "question": "Does an ANNOUNCEMENT-DATE column exist on disk for 1990-2024, so Book C's v1 event sign can be the [-1,+1] session return around the earnings announcement (Frazzini 2006's own conditioner) instead of a monthly revision count?",
+ "answer": "YES",
+ "chosen_source": {
+  "table": "backend/data/optimus/wrds/bulk/ibes__act_epsus.parquet",
+  "column": "anndats",
+  "pit_stamp_column": "actdats",
+  "filter": "pdicity == 'QTR' and measure == 'EPS'",
+  "rows_1990_2024": 866372,
+  "distinct_ibes_tickers": 22759,
+  "years_covered": 35,
+  "rows_per_year_min": 17327,
+  "rows_per_year_max": 32768,
+  "rows_per_year_min_year": 1990,
+  "rows_per_year_max_year": 2003,
+  "link_to_permno": "backend/data/optimus/wrds/link_ibes_crsp.parquet (ticker -> permno, sdate/edate, 37,662 rows)",
+  "share_of_rows_whose_ticker_appears_in_the_link": 0.9255
+ },
+ "pit_rule_this_forces": {
+  "actdats_minus_anndats_days": {
+   "median": 0.0,
+   "p05": 0.0,
+   "p95": 101.0,
+   "max": 7654
+  },
+  "rule": "the sign is known at max(anndats + 1 session, actdats), NOT at anndats. The median lag is 0 days and the 95th percentile is 91 -- so 'the month after the announcement' is safe for the median row and NOT for the tail, and the knowledge date is what the builder keys on."
+ },
+ "rejected_sources": {
+  "compustat_fundq.parquet (rdq)": "rdq is present and 92.9% non-null, but this extract starts 2013-02-12 -- it cannot reach 1990",
+  "bulk/comp__fundq.parquet (rdq)": "the full 648-column FUNDQ, 2.13M rows, 1.07 GB. It carries rdq and would reach further back, but it is keyed by gvkey and needs link_ccm, and IBES anndats is already permno-linkable through link_ibes_crsp and is the date Frazzini's own construction uses. Kept as the cross-check for the amendment's validation, not as the primary input.",
+  "ibes_consensus_monthly*.parquet": "statpers only -- this is the v0 input and has no announcement date at all, which is the whole reason v1 needs a different table"
+ },
+ "tables_read": [
+  {
+   "table": "backend\\data\\optimus\\wrds\\compustat_fundq.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "rdq"
+   ],
+   "rows": 208603,
+   "columns_sampled": 31,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\bulk\\comp__fundq.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "rdq"
+   ],
+   "rows": 2134455,
+   "columns_sampled": 648,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\bulk\\comp_na_daily_all__fundq.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "rdq"
+   ],
+   "rows": 2134455,
+   "columns_sampled": 648,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\bulk\\ibes__act_epsus.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "anndats",
+    "anntims",
+    "actdats"
+   ],
+   "rows": 1323271,
+   "columns_sampled": 14,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\bulk\\ibes__actu_epsus.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "anndats",
+    "anntims",
+    "actdats"
+   ],
+   "rows": 1323271,
+   "columns_sampled": 14,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\bulk\\ibes__actpsum_epsus.parquet",
+   "exists": true,
+   "announcement_date_column": null,
+   "rows": 2441367,
+   "columns_sampled": 19,
+   "note": "no announcement-date column"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\ibes_consensus_monthly.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "anndats_act"
+   ],
+   "rows": 1554570,
+   "columns_sampled": 16,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\wrds\\ibes_consensus_monthly_early.parquet",
+   "exists": true,
+   "announcement_date_column": [
+    "anndats_act"
+   ],
+   "rows": 3682004,
+   "columns_sampled": 14,
+   "note": "carries an announcement date"
+  },
+  {
+   "table": "backend\\data\\optimus\\crsp_pit\\crsp_pit_monthly_v1.parquet",
+   "exists": true,
+   "announcement_date_column": null,
+   "rows": 545478,
+   "columns_sampled": 11,
+   "note": "no announcement-date column"
+  }
+ ],
+ "what_this_does_NOT_do": "no historical read was run on the v1 sign. Swapping the event-sign input is a registration AMENDMENT naming only the input (TRIAL-DRAFT-C \u00a78), and the read happens after the amendment is signed.",
+ "written_utc": "2026-09-13T03:47:15+00:00",
+ "headline": "ANNOUNCEMENT DATES EXIST 1990-2024: IBES act_epsus `anndats`, 866,372 QTR EPS rows over 35 years, 22,759 tickers, 92.6% of rows on a ticker the CRSP link knows; PIT stamp is `actdats` (median lag 0d, p95 91d)"
+}

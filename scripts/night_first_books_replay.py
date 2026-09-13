@@ -785,6 +785,140 @@ def book_c_inputs(panel, *, min_history: int = CGO_MIN_HISTORY_RUN01,
             "cgo_window_is_full": bool(int(min_history) >= int(lookback))}
 
 
+# --------------------------------------------------------------------------
+# THE v1 EVENT SIGN — the announcement window, not the revision count
+#
+# Frazzini (JF 2006) conditions on the EARNINGS-ANNOUNCEMENT WINDOW RETURN, not
+# on a count of analyst revisions. v0 used the revision count because that is
+# what was on disk in a permno-keyed monthly panel; the 2026-09-13 probe
+# (`night_factory_2026-09-13/probe_announcement_dates.json`) found the
+# announcement date itself: IBES `act_epsus.anndats`, 866,372 quarterly-EPS rows
+# over 1990-2024, 22,759 tickers, 92.6% of them on a ticker `link_ibes_crsp`
+# knows.
+#
+# Swapping the input is a REGISTRATION AMENDMENT and nothing here runs a read on
+# it. TRIAL-DRAFT-C §8: "No swapping the event-sign input (v0 -> v1) inside this
+# registration. That is a separate amendment naming only the input."
+
+
+#: What the v1 conditioning sign IS, in one string every receipt built on it
+#: prints — the same contract `EVENT_SIGN_V0` carries.
+EVENT_SIGN_V1 = ("v1: sign of the [-1,+1] session CRSP-daily return around the "
+                 "IBES quarterly-EPS announcement date (act_epsus.anndats), "
+                 "attributed to the month it became KNOWABLE — "
+                 "max(the +1 session, actdats) — and acted on at that month's "
+                 "close, so the earliest return it can touch is the next month's")
+
+#: The window, in SESSIONS either side of the announcement session. Frozen here
+#: rather than passed, so an amendment that changes it has to change this line.
+EVENT_WINDOW_PRE = 1
+EVENT_WINDOW_POST = 1
+
+
+def announcement_window_sign(daily, ann_dates, *, pre: int = EVENT_WINDOW_PRE,
+                             post: int = EVENT_WINDOW_POST) -> dict:
+    """`{(ym.ordinal, permno): (sign, knowable_date)}` for every announcement.
+
+    `daily` is CRSP daily rows with `permno`, `date`, `ret`. `ann_dates` is
+    `permno`, `anndats` and `known_date` (IBES `actdats` — when the row entered
+    the database, which is NOT the announcement date: the probe measured a
+    median lag of 0 days and a 95th percentile of 91).
+
+    THE SIGN IS ATTRIBUTED TO THE MONTH IT BECAME KNOWABLE, NOT THE MONTH IT
+    HAPPENED. The knowable date is the LATER of the window's last session and
+    `known_date`, and the selection that reads it happens at that month's close,
+    so the earliest return the sign can touch is the following month's. Keying
+    on the announcement month instead would hand the tail of that 91-day lag a
+    number nobody had — the exact shape of a PIT defect that passes every test
+    because the arithmetic is right and the world is wrong.
+
+    A permno with two announcements knowable in one month keeps the LATER one:
+    the selection happens at the close and the close knows both.
+    """
+    import numpy as np
+    import pandas as pd
+
+    if len(daily) == 0 or len(ann_dates) == 0:
+        return {}
+    d = daily[["permno", "date", "ret"]].copy()
+    d["permno"] = d["permno"].astype("int64")
+    d["date"] = pd.to_datetime(d["date"])
+    d = d.dropna(subset=["ret"]).sort_values(["permno", "date"], kind="mergesort")
+    sessions: dict[int, tuple] = {}
+    for pn, g in d.groupby("permno", sort=False):
+        sessions[int(pn)] = (g["date"].to_numpy(),
+                             g["ret"].to_numpy(dtype=float))
+
+    a = ann_dates.copy()
+    a["permno"] = a["permno"].astype("int64")
+    a["anndats"] = pd.to_datetime(a["anndats"])
+    a["known_date"] = pd.to_datetime(a.get("known_date"), errors="coerce")
+
+    out: dict = {}
+    for pn, ann, known in zip(a["permno"], a["anndats"], a["known_date"]):
+        pack = sessions.get(int(pn))
+        if pack is None:
+            continue
+        dates, rets = pack
+        i = int(np.searchsorted(dates, np.datetime64(ann), side="left"))
+        lo, hi = i - int(pre), i + int(post)
+        if lo < 0 or hi >= len(dates):
+            # A window that runs off either end of the name's own tape is
+            # DROPPED, not truncated: a two-session window and a three-session
+            # window are different measurements and averaging them would make
+            # the first and last month of every listing a different signal.
+            continue
+        window = rets[lo:hi + 1]
+        if not np.all(np.isfinite(window)):
+            continue
+        cum = float(np.prod(1.0 + window) - 1.0)
+        if cum == 0.0:
+            continue
+        last_session = pd.Timestamp(dates[hi])
+        knowable = last_session if pd.isna(known) else max(last_session,
+                                                           pd.Timestamp(known))
+        key = (int(pd.Period(knowable, freq="M").ordinal), int(pn))
+        prior = out.get(key)
+        if prior is None or knowable >= prior[1]:
+            out[key] = (1 if cum > 0 else -1, knowable)
+    return out
+
+
+def book_c_event_sign_v1(panel, daily, ann_dates) -> dict:
+    """Book C's inputs with the v1 event sign in place of the v0 revision count.
+
+    ONLY the input moves. The overhang series, its lookback, its minimum
+    history, the tercile cut, k, the twin and the cost ruler are all v0's and
+    are computed by the same `book_c_overhang` call the book itself makes —
+    because an amendment that names only the input has to BE an amendment that
+    changes only the input, and a second construction wearing the same name is
+    the thing TRIAL-DRAFT-C §8 forbids.
+
+    Returns the same dict shape `book_c_inputs` returns, so every selector,
+    falsifier and twin downstream takes it without knowing which version built
+    it. `event_sign` is the string that tells them apart on the receipt.
+    """
+    signs = announcement_window_sign(daily, ann_dates)
+    good = {k for k, (s, _) in signs.items() if s > 0}
+    bad = {k for k, (s, _) in signs.items() if s < 0}
+    cgo_by_month = book_c_overhang(panel, min_history=CGO_LOOKBACK_MONTHS,
+                                   lookback=CGO_LOOKBACK_MONTHS)
+    return {
+        "good": good, "bad": bad, "cgo_by_month": cgo_by_month,
+        "event_sign": EVENT_SIGN_V1,
+        "event_window_sessions": [-int(EVENT_WINDOW_PRE), int(EVENT_WINDOW_POST)],
+        "n_announcements_signed": len(signs),
+        "n_good": len(good), "n_bad": len(bad),
+        "cgo_min_history_months": int(CGO_LOOKBACK_MONTHS),
+        "cgo_lookback_months": int(CGO_LOOKBACK_MONTHS),
+        "cgo_window_is_full": True,
+        "what_moved_from_v0": ("the event sign, and nothing else. The overhang "
+                               "recursion, its 60-month window, the tercile "
+                               "cut, k=30, the unconditioned twin and the flat "
+                               "25 bps ruler are v0's, unchanged."),
+    }
+
+
 def names_with_sign(pool, ym, wanted: set) -> list:
     """`pool`'s permnos carrying the wanted event sign this month, in pool order."""
     o = int(ym.ordinal)
@@ -966,7 +1100,8 @@ def _p(book: dict):
 
 __all__ = ["B_first_books_replay", "BookAPanelUnavailable",
            "BookCInputsUnavailable", "COST_CURVE", "EVENT_SIGN_V0",
-           "MIN_CONDITIONED_NAMES", "book_a_panel", "book_a_selector",
+           "EVENT_SIGN_V1", "MIN_CONDITIONED_NAMES", "announcement_window_sign",
+           "book_a_panel", "book_a_selector", "book_c_event_sign_v1",
            "book_c_inputs", "book_c_overhang", "book_c_selectors", "by_era",
            "eligible", "holm", "load_monthly_panel", "names_with_sign",
            "newey_west_t", "replay_book_d", "run_monthly", "two_sided_p"]

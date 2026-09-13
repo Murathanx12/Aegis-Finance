@@ -157,6 +157,70 @@ the existing price/volume panel — no external wait. v1 is gated on L2.
   blocks (`C_falsifiers --smoke`). Neither is the registered read. The clause is symmetric with
   the family's and adds no new way for the book to pass.
 
+**Amendment 2 (proposed, UNSIGNED) — 2026-09-13: v1 names ONLY the input.**
+
+§8 forbids swapping the event sign inside this registration and says the swap is "a
+separate amendment naming only the input". This is that amendment. It is **UNSIGNED**,
+nothing has been run on it, and no job calls the v1 builder
+(`test_night_first_books_replay.test_the_v1_sign_is_not_wired_into_any_book_yet` fails
+if one starts to).
+
+**What changes, in one sentence.** The conditioned universe is currently split by
+`v0: sign(numup − numdown)`, the IBES monthly consensus revision at `statpers`. v1
+replaces it with `sign of the [−1,+1] session CRSP-daily return around the earnings
+announcement`. Nothing else moves: the Grinblatt-Han overhang recursion, its 1,260-session
+(60-month) window, the top-tercile cut, k = 30, the unconditioned twin, the $3M primary
+and $10M secondary floors and the flat 25 bps ruler are v0's, unchanged, and v1 is built
+by calling v0's own `book_c_overhang` rather than a second implementation.
+
+**Why the input is wrong today, stated as the reason rather than as a preference.**
+Frazzini (JF 2006) conditions on the **announcement-window return**, which is the market's
+own reaction; a revision count is a proxy for it that nobody in that literature uses. §0's
+scope-aware claim is that the conditional question was never asked — asking it with a
+different conditioner than the paper's is asking a third question.
+
+**The input, and the evidence it exists** (probe receipt
+`backend/data/optimus/night_factory_2026-09-13/probe_announcement_dates.json`, which names
+every table read including the ones that did not help):
+
+| | |
+|---|---|
+| table | `backend/data/optimus/wrds/bulk/ibes__act_epsus.parquet` |
+| column | `anndats` (the announcement date), filtered `pdicity == 'QTR'`, `measure == 'EPS'` |
+| PIT stamp | `actdats` — when the row entered IBES, **not** the announcement date |
+| rows 1990-2024 | **866,372** over **35** years (min 17,327 in a year, max 32,768) |
+| distinct IBES tickers | 22,759; **92.6%** of rows sit on a ticker `link_ibes_crsp` knows |
+| link to permno | `link_ibes_crsp.parquet` (ticker → permno with `sdate`/`edate`, 37,662 rows) |
+
+Rejected, and why, so the choice is reviewable: `compustat_fundq.parquet` carries `rdq`
+and is 92.9% non-null but **starts 2013-02-12** and cannot reach 1990; the full
+`bulk/comp__fundq.parquet` (2.13M rows, 648 columns) does carry `rdq` further back but is
+gvkey-keyed and needs `link_ccm`, and it is kept as the **cross-check**, not the input;
+`ibes_consensus_monthly*.parquet` carries `statpers` only, which is exactly why v1 needs a
+different table.
+
+**The PIT rule this forces, and it is not the obvious one.** `actdats − anndats` has a
+**median of 0 days and a 95th percentile of 91**. "Usable from the month after the
+announcement" is therefore true for the median row and **false for the tail**. v1 attributes
+a sign to the month it became **knowable** — `max(the +1 session, actdats)` — and the
+selection that reads it happens at that month's close, so the earliest return the sign can
+touch is the following month's. A window that runs off either end of a name's own tape is
+**dropped, not truncated** (a two-session window and a three-session window are different
+measurements). Two announcements knowable in one month keep the later one, because the
+close knows both.
+
+**What this amendment does NOT do.** It does not touch the overhang, the tercile, k, the
+twin, the floors, the cost ruler, the primary metric, the falsifiers or Amendment 1's ≤ 0
+clause. It creates **no new way for the book to pass**: v1 is a second reading of the same
+hypothesis, and if it is signed, the v0-vs-v1 comparison stays what §3 already calls it —
+**reported, never deciding**. A v1 that pays where v0 did not is a finding about the
+conditioner's input and is not a promotion; the family's declared size of four does not
+change, because v1 replaces v0's primary rather than adding a fifth.
+
+**What signing it authorises:** one historical read on the registered construction
+(60-month warm-up, 1995-2024, $3M primary with the $10M cell beside it), queued as a night
+job, with the same two falsifiers re-run on the v1 sets.
+
 ## 6. Frozen parameters
 
 The `Strategy` object `disposition_overhang_conditioner_v0` as
