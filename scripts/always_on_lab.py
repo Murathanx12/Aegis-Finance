@@ -938,6 +938,15 @@ def loop_nn_lab(state: LabState) -> dict:
     }
 
 
+def _receipt_today(job: str, today: str) -> bool:
+    """Does the night folder for `today` already hold a receipt for `job`?"""
+    folder = data_dir() / f"night_factory_{today}"
+    try:
+        return any(folder.glob(f"{job}_run[0-9][0-9].json"))
+    except OSError:
+        return False
+
+
 def loop_idle_gpu_queue(state: LabState) -> dict:
     """The next registered job, ONLY when nothing else needs the model.
 
@@ -960,7 +969,12 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
     dispatched: dict = dict(row.get("dispatched_on") or {})
     today = run_date()
     queue = [(j, m) for j, m in _config.LAB_IDLE_QUEUE]
-    remaining = [j for j, _ in queue if dispatched.get(j) != today]
+    # 2026-09-14 05:05: "already ran today" is a fact about the NIGHT FOLDER,
+    # not about this supervisor instance -- a restarted lab re-dispatched jobs a
+    # factory had already read that day, and would have loaded Qwen3-30B beside
+    # a 12 GB server. A receipt for the job under today's folder counts.
+    remaining = [j for j, _ in queue
+                 if dispatched.get(j) != today and not _receipt_today(j, today)]
 
     idle = state.idle_minutes(now)
     if idle is not None and idle < IDLE_MINUTES:

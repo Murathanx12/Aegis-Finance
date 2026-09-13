@@ -1104,3 +1104,21 @@ def test_the_idle_queue_records_a_dispatch_before_the_job_returns(lab, monkeypat
     L.loop_idle_gpu_queue(state)
     assert seen["recorded_before_return"] is True
     assert seen["running_job"] == _config.LAB_IDLE_QUEUE[0][0]
+
+
+def test_a_job_with_a_receipt_in_todays_folder_is_not_dispatched_again(lab, monkeypatch):
+    """2026-09-14: a restarted lab re-dispatched reads a factory had already
+    written that day. The night folder is the record, not the instance."""
+    monkeypatch.setattr(L, "model_status", lambda: {"listening": True, "ready": True, "foreign": False})
+    monkeypatch.setattr(L, "yields_to", lambda *a, **k: None)
+    today = L.run_date()
+    first = _config.LAB_IDLE_QUEUE[0][0]
+    folder = L.data_dir() / f"night_factory_{today}"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{first}_run01.json").write_text("{}", encoding="utf-8")
+    seen = {}
+    monkeypatch.setattr(L, "dispatch_job", lambda job, minutes: seen.update(job=job) or {"verdict": "x"})
+    state = L.LabState()
+    state.last_model_call_utc = None
+    L.loop_idle_gpu_queue(state)
+    assert seen.get("job") == _config.LAB_IDLE_QUEUE[1][0], seen
