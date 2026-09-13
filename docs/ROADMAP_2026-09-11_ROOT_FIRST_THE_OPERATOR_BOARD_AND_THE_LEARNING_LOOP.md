@@ -19,7 +19,7 @@ file:line; every external claim carries a URL in the agent notes (§2).
 |---|---|
 | **RESULT IMPROVEMENT** | **NONE.** No strategy moved. This session verified and planned; it built nothing. |
 | best historical net strategy vs market | none surviving its own control above the tradability floor |
-| best forward paper strategy | none — six books −4.43% aggregate in week one vs SPY −0.12% (09-09); no newer read |
+| best forward paper strategy | none — **the six Alpaca books $551,653 of $600,000 (−8.1%) read live 2026-09-13 vs SPY −0.66% over 08-28→09-11**; hack1/3/4 lost 5-7% in three sessions against a flat SPY; hack2 retired to lane D |
 | only live lane | **R2** (local 7B, anonymised monthly digest): +16.19%/yr over its shuffled-digest control, t 3.92, 112 blocks; net CANNOT DETERMINE; **panel B still `PENDING_MODEL`** (`night_factory_2026-09-10/R2_widened_panelB_run01.json`: port 8080 refused) |
 | independent selectors with evidence | **one** — still the reason no router is permitted |
 | what this session found | **the packaged app runs without a single API key** (§1 R1), and the tour repeats because the window wipes its own storage on every launch |
@@ -28,6 +28,37 @@ file:line; every external claim carries a URL in the agent notes (§2).
 | deadline | `learner/evidence_memory.jsonl` **65.16 MB** (62.14 two days ago; GitHub rejects at 100) |
 
 ---
+
+## 0b. THE HANDOFF, 2026-09-13 14:00 HKT — Fable runs the business
+
+Murat, verbatim: *"think like a boss and you own this business. aegis has spent 1000usd at this moment on
+infrastructure. if we don't make a profitable business we will have to shut down. so do anything you can to
+find profit making strategies, combination of strategies etc. test them. run backtest for NN, do a learning
+lab for it to continuously learn. for night sims update it such that it is live whenever pc is on ... I am
+handing it off to you. you have full freedom."*
+
+**The bar.** $1,000 of infrastructure is sunk; the venue caps us at six paper accounts; the fleet is −8.1%
+on an artery that has no historical edge. A business here is a set of books that beat their twins net of
+costs at a tradable floor, run unattended, graded every day, with capital moved by a rule that cuts losers
+fast and promotes winners slowly. Nothing else counts as progress. Every session opens with the scoreboard
+above, and **RESULT IMPROVEMENT: NONE** stays written until a book beats its twin at |t| ≥ 2 on a
+registered construction at $10M.
+
+**The order of work from here (one Opus chunk at a time, Sonnet researches ahead, Fable validates):**
+
+| step | what | why first |
+|---|---|---|
+| **now** | the model night on the GPU (TdrDelay 60 active): R2 panel B, then the 6,020-row typed-event backlog | the only live lane's held-out read, and the NN's missing input |
+| **13a** (building) | Books E (quality-minus-junk), F (seasonality), G (forecast dispersion) from the JKP panel already on disk, replayed at $3M AND $10M with twins; Book C v1 with the announcement-window sign | the fleet needs engines with a receipt at a tradable floor before Monday |
+| **13b** | the allocator in the execution repo (`spec_allocator_kill_promote.md`): drawdown cuts (halve at −5%, floor at −7.5%), Thompson over survivors from each book's historical prior, equal-weight and random twins, the six-engine map from 13a's $10M receipts, worst case printed before every sizing change; then the fleet deploy | capital stops leaking on the losing artery; "kill losers, give winners dominance" in the form that survives small samples |
+| **14** | the always-on lab (`spec_always_on_lab.md`): live news, LLM typing as rows arrive (cloud provider when `research_cloud_llm_readers.md` lands), decision-vs-reality grading of every forecast, the catalyst calendar, the nightly NN refit with four controls and DSR/PBO, the idle-GPU night queue, Murat's themes as typed hypothesis streams | data accumulation compounds with calendar time; every hour the PC is on and idle is an hour not learning |
+| **15** | round-3 books from `research_strategy_ideas_round3.md` (de-duplicated against `research_registry.md`), the internal book population scaled to thousands with twins, the LinkedIn/hiring, pivot-to-AI, motivation and holders streams graded by the lab | breadth of DIFFERENT errors, not more momentum |
+
+**Rules that follow from the bar.** A research question is not opened without a line in
+`research_registry.md`; a book is not deployed to a venue account without a $10M receipt with its twin;
+the allocator cuts on drawdown with no discussion and promotes only on twin-excess with n_effective
+printed; cloud LLM spend carries a hard daily cap in dollars in the receipt; the fleet deploy command is
+handed to Murat with every book's worst case beside it, and he runs it.
 
 ## 1. THE ROOTS — five problems, stated as roots, not as products
 
