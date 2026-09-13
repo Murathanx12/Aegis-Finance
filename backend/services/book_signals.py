@@ -661,6 +661,262 @@ def forecast_dispersion(frame, *,
 
 
 # --------------------------------------------------------------------------
+# BOOK H — executive option-grant opportunistic timing
+#
+# TRIAL-DRAFT-H (UNSIGNED, 2026-09-14). `trans_code == 'A'` with
+# `table == 'DERIV'`: the derivative GRANT AWARD rows that
+# `scripts/sec_insider_bulk_load.py` discards when it distils
+# `insider_events_v1.parquet` down to open-market purchases and sales. This is
+# the first signal in this repository on that code, and the distinction from
+# `TRIAL-INSIDER-IC` / `TRIAL-CMP-INSIDER-IC` / `TRIAL-BRAIN-003` -- all of them
+# `trans_code == 'P'` -- is the code, not a re-cut of one.
+#
+# THE PRECURSOR IS THE HISTORY, NEVER THE GRANT BEING PRICED. Each (issuer,
+# insider) pair is scored on grants FILED strictly before the month of
+# selection; the grant currently being priced contributes nothing to its own
+# score. That is invariant 2 of the mission section, and here it is the whole
+# construction rather than a caveat on it.
+
+
+#: TRIAL-DRAFT-H section 6 freezes THREE strictly-prior grants per (issuer,
+#: insider) pair. Fewer is not a "history": a mean over two grants whose sign
+#: pattern is the qualifying condition is one coin flip wearing a statistic's
+#: clothes.
+MIN_PRIOR_GRANTS = 3
+
+#: The pair-level columns `option_grant_timing_score` reads. Named here so a
+#: caller can be checked against them without running anything.
+GRANT_TIMING_COLUMNS = ("permno", "owner_cik", "mean_pre", "mean_post",
+                        "n_prior_grants")
+
+
+def _rank_scores(order) -> dict:
+    """{permno: float} descending, from an ALREADY-ORDERED sequence of permnos.
+
+    The books here rank on a LEXICOGRAPHIC key (a cut variable, then a declared
+    tie-break) and `run_monthly`'s selector contract is a list ordered
+    best-first, which it builds by sorting a `{permno: score}` mapping. A single
+    float cannot carry two keys without an epsilon that silently reorders when
+    the first key's values happen to be close, so the order is computed once,
+    here, and the returned score is the POSITION -- exact, and impossible to
+    reorder by accident.
+    """
+    n = len(order)
+    return {int(p): float(n - i) for i, p in enumerate(order)}
+
+
+def option_grant_timing_score(frame, *, side: str = "top",
+                              tercile: float = 2.0 / 3.0,
+                              min_prior: int = MIN_PRIOR_GRANTS,
+                              min_names: int = MIN_CHARACTERISTIC_NAMES) -> dict:
+    """BOOK H. {permno: score} for the requested tercile of the grant-timing history.
+
+    `frame` is ONE month of PAIR-level rows -- one row per (issuer, insider) --
+    each carrying the mean market-adjusted 20-session return BEFORE and AFTER
+    that pair's strictly-prior derivative grants, and how many such grants the
+    means were taken over. The caller computes those means from grants whose
+    `filing_date` is strictly earlier than the selection close; this function
+    does the qualification, the aggregation and the cut, and nothing else.
+
+    Three frozen steps, in this order (TRIAL-DRAFT-H section 6):
+
+      1. a pair needs `n_prior_grants >= min_prior` (three) or it is dropped --
+         not defaulted, not imputed;
+      2. a pair QUALIFIES only where `mean_pre < 0 AND mean_post > 0`. That
+         conjunction is the Daines mechanism written down: a price depressed
+         into the grant and recovering out of it. A pair with a large
+         `mean_post - mean_pre` built from two POSITIVE means is a momentum
+         name, not an opportunistically timed grant, and excluding it here is
+         what keeps the two apart;
+      3. the issuer's statistic is the MEDIAN of its qualifying pairs'
+         `mean_post - mean_pre`. The book trades `permno` and not `owner_cik`,
+         and a median rather than a mean so that one insider with one extreme
+         pair cannot carry an issuer into the tercile.
+
+    An issuer with no qualifying pair carries NO SCORE and is absent from the
+    result -- which is different from scoring zero, and the difference is the
+    reason the replay's `pool_filter` and this function are separate things.
+
+    `side="bottom"` is the REPORTED bottom tercile; TRIAL-DRAFT-H section 8
+    forbids trading it.
+    """
+    import numpy as np
+
+    for c in GRANT_TIMING_COLUMNS:
+        if c not in getattr(frame, "columns", ()):
+            raise SignalUnavailable(
+                f"the grant-history frame carries no {c!r} column; "
+                f"option_grant_timing_score needs "
+                f"{', '.join(GRANT_TIMING_COLUMNS)} and does not substitute a "
+                f"different measure of grant timing. This is a REFUSAL and not "
+                f"an empty cross-section: a book whose history table is absent "
+                f"has not decided to hold nothing.")
+    per_issuer: dict = {}
+    for pn, pre, post, n in zip(frame["permno"], frame["mean_pre"],
+                               frame["mean_post"], frame["n_prior_grants"]):
+        try:
+            pre_f, post_f, n_f = float(pre), float(post), float(n)
+            pn_i = int(pn)
+        except (TypeError, ValueError):
+            continue
+        if not (np.isfinite(pre_f) and np.isfinite(post_f) and np.isfinite(n_f)):
+            continue
+        if n_f < int(min_prior):
+            continue
+        if not (pre_f < 0.0 and post_f > 0.0):
+            continue
+        per_issuer.setdefault(pn_i, []).append(post_f - pre_f)
+    vals = {pn: float(np.median(v)) for pn, v in per_issuer.items() if v}
+    if len(vals) < int(min_names):
+        raise SignalUnavailable(
+            f"only {len(vals)} issuer(s) carried a qualifying grant history "
+            f"(>= {min_prior} strictly-prior DERIV grants with mean pre-grant "
+            f"return < 0 and mean post-grant return > 0) this month; a "
+            f"cross-sectional tercile over fewer than {min_names} is a cut of "
+            f"the survivors, not of the market")
+    cut = _tercile_side(vals, side=side, tercile=tercile)
+    # Descending on the statistic, ties broken by permno so two runs of the same
+    # month cannot select two different books.
+    order = [pn for pn, _ in sorted(cut.items(), key=lambda kv: (-kv[1], kv[0]))]
+    return _rank_scores(order)
+
+
+# --------------------------------------------------------------------------
+# BOOK I — buyback versus insider selling
+#
+# TRIAL-DRAFT-I (UNSIGNED, 2026-09-14). `comp__funda.prstkc` joined through
+# `link_ccm` to `trans_code == 'S'` Form-4 sales. The claim is the CONJUNCTION:
+# a repurchase while insiders are NOT selling is confirmation, a repurchase
+# while they sell heavily is the agency-conflict cell. Both single legs are
+# computed by this same function so that the falsifier ("the divergence must
+# beat either leg alone") cannot differ from the book by which code path ran it.
+
+
+#: The legs TRIAL-DRAFT-I declares. `divergence` is the PRIMARY and the only one
+#: that may be traded. `bearish_divergence` is the reported agency-conflict cell
+#: and section 8 forbids shorting it. The two `*_only` legs exist for section 5
+#: clause 2 and are controls, never books.
+BUYBACK_DIVERGENCE_LEGS = ("divergence", "bearish_divergence",
+                           "buyback_only", "low_selling_only")
+
+#: The per-name columns `buyback_insider_divergence` reads.
+BUYBACK_DIVERGENCE_COLUMNS = ("permno", "buyback_flag", "buyback_intensity",
+                              "sell_intensity")
+
+
+def buyback_insider_divergence(frame, *, leg: str = "divergence",
+                               tercile: float = 2.0 / 3.0,
+                               min_names: int = MIN_CHARACTERISTIC_NAMES,
+                               seed: int = 0) -> dict:
+    """BOOK I. {permno: score} for one declared leg of the divergence.
+
+    `frame` is ONE quarter of per-name rows already restricted to the covered
+    band (a CCM-linked `prstkc` observation available within the trailing 18
+    months AND Form-4 coverage in the trailing 12), carrying:
+
+      `buyback_flag`        `prstkc > 0` on the most recent AVAILABLE annual row
+      `buyback_intensity`   `prstkc / (csho * prcc_f)` from that SAME row
+      `sell_intensity`      shares sold in the trailing 90 days as a share of
+                            (sold + still held), from Form-4 `filing_date` rows
+
+    A name with no sale in the window has `sell_intensity == 0`, and that is the
+    SIGNAL and not a missing value -- which is why the caller must pass a zero
+    and never a NaN for it. A NaN here is dropped, so a caller that confused the
+    two would silently trade a different universe.
+
+    The four legs, each frozen by TRIAL-DRAFT-I section 6:
+
+      `divergence`         buyback_flag AND the BOTTOM tercile of
+                           `sell_intensity`; ordered by `sell_intensity`
+                           ascending, ties broken by `buyback_intensity`
+                           DESCENDING -- the purest instance of the conjunction
+                           first. THE PRIMARY.
+      `bearish_divergence` buyback_flag AND the TOP tercile; REPORTED only.
+      `buyback_only`       buyback_flag, the TOP tercile of `buyback_intensity`,
+                           insider selling ignored.
+      `low_selling_only`   the BOTTOM tercile of `sell_intensity` over the whole
+                           covered band, the buyback flag ignored.
+
+    `low_selling_only`'s tie-break is a SEEDED SHUFFLE and not `permno`, and the
+    reason is arithmetic rather than stylistic: most covered names sell nothing
+    in a 90-day window, so `sell_intensity` is exactly 0 for a large majority
+    and a `permno` tie-break would return the same thirty low-numbered listings
+    every quarter -- a near-zero-turnover portfolio of the oldest names in CRSP,
+    which is a size-and-age bet and not a test of "does low insider selling
+    alone pay". The shuffle makes it what section 5 clause 2 needs: a draw from
+    the low-selling band. The other three legs order on a continuous variable
+    and need no such device.
+    """
+    import numpy as np
+
+    if leg not in BUYBACK_DIVERGENCE_LEGS:
+        raise SignalUnavailable(
+            f"unknown leg {leg!r}; expected one of {BUYBACK_DIVERGENCE_LEGS}. A "
+            f"leg this function does not know is refused rather than defaulted "
+            f"to the primary, because a silent fallback would publish the "
+            f"book's own number under a control's name")
+    for c in BUYBACK_DIVERGENCE_COLUMNS:
+        if c not in getattr(frame, "columns", ()):
+            raise SignalUnavailable(
+                f"the divergence frame carries no {c!r} column; "
+                f"buyback_insider_divergence needs "
+                f"{', '.join(BUYBACK_DIVERGENCE_COLUMNS)} and does not "
+                f"substitute a different measure of either leg")
+
+    rows = []
+    for pn, flag, bi, si in zip(frame["permno"], frame["buyback_flag"],
+                                frame["buyback_intensity"],
+                                frame["sell_intensity"]):
+        try:
+            pn_i, si_f = int(pn), float(si)
+        except (TypeError, ValueError):
+            continue
+        if not np.isfinite(si_f):
+            continue
+        try:
+            bi_f = float(bi)
+        except (TypeError, ValueError):
+            bi_f = float("nan")
+        rows.append((pn_i, bool(flag), (bi_f if np.isfinite(bi_f) else 0.0), si_f))
+
+    if leg in ("divergence", "bearish_divergence", "buyback_only"):
+        rows = [r for r in rows if r[1]]
+    if not rows:
+        raise SignalUnavailable(
+            f"no name in this block carried the {leg!r} leg's requirements; the "
+            f"covered band was passed in with {len(frame)} row(s)")
+
+    if leg == "buyback_only":
+        vals = {pn: bi for pn, _f, bi, _si in rows}
+        side = "top"
+    else:
+        vals = {pn: si for pn, _f, _bi, si in rows}
+        side = "top" if leg == "bearish_divergence" else "bottom"
+    if len(vals) < int(min_names):
+        raise SignalUnavailable(
+            f"only {len(vals)} name(s) carried the {leg!r} leg this block; a "
+            f"cross-sectional tercile over fewer than {min_names} is a cut of "
+            f"the survivors, not of the market")
+    cut = _tercile_side(vals, side=side, tercile=tercile)
+    keep = set(cut)
+    sub = [r for r in rows if r[0] in keep]
+
+    if leg == "buyback_only":
+        order = [r[0] for r in sorted(sub, key=lambda r: (-r[2], r[0]))]
+    elif leg == "bearish_divergence":
+        order = [r[0] for r in sorted(sub, key=lambda r: (-r[3], -r[2], r[0]))]
+    elif leg == "divergence":
+        order = [r[0] for r in sorted(sub, key=lambda r: (r[3], -r[2], r[0]))]
+    else:  # low_selling_only
+        rng = np.random.default_rng(int(seed))
+        ordered = sorted(sub, key=lambda r: r[0])
+        jitter = {r[0]: float(x) for r, x in zip(ordered, rng.random(len(ordered)))}
+        order = [r[0] for r in sorted(sub, key=lambda r: (r[3], jitter[r[0]],
+                                                          r[0]))]
+    return _rank_scores(order)
+
+
+# --------------------------------------------------------------------------
 # BOOK D (lane B) — the abstention book's confidence
 #
 # spec_first_books.md §D.2 names two triggers and says not to block on L2: v0 is
