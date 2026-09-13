@@ -68,7 +68,7 @@ import socket
 import sys
 import threading
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
 
@@ -869,11 +869,131 @@ def loop_catalyst_calendar(state: LabState) -> dict:
 
 
 def loop_nn_lab(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """The nightly refit sequence, once a night, only when the GPU is free.
+
+    The idle condition is the same one the idle-GPU queue uses — this loop is
+    not more entitled to the model than the typing loop is, and the in-process
+    model lock serialises them whichever wins the tick.
+    """
+    from backend.services import lab_nn
+
+    now = datetime.now(timezone.utc)
+    idle = state.idle_minutes(now)
+    if idle is not None and idle < IDLE_MINUTES:
+        return {"status": "skipped", "n": 0,
+                "reason": "MODEL_IN_USE",
+                "detail": (f"a model-touching call finished {idle:.0f} min ago; "
+                           f"{IDLE_MINUTES} min of quiet are required"),
+                "idle_minutes": round(idle, 1)}
+
+    yielded = yields_to("night_factory", "monday_night", now=now)
+    if yielded:
+        return {**yielded, "n": 0}
+
+    with state.model_lock:
+        state.note_model_call(now)
+        payload = lab_nn.run_nn_lab()
+    path = lab_nn.write_receipt(payload, day=run_date(), out=out_dir())
+
+    return {
+        "status": "ok" if payload["n_heads"] else ("refused" if payload["refusals"]
+                                                   else "nothing_to_do"),
+        "n": payload["n_heads"],
+        "held_out_month": payload["held_out_month"],
+        "heads": payload["n_heads"],
+        "beat_last_night": payload["n_beat_last_night"],
+        "undecided": payload["n_undecided"],
+        "event_source": payload["event_source"],
+        "refusals": payload["refusals"],
+        "receipt_path": str(path),
+        "headline": payload["headline"],
+    }
 
 
 def loop_idle_gpu_queue(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """The next registered job, ONLY when nothing else needs the model.
+
+    This loop exists to fill the GAPS the scheduled evening run does not cover —
+    daytime idle periods, a night `night_factory` was never launched. It is not
+    a second scheduler for the same jobs, and it is the one loop that can
+    actively collide with existing scheduled work, which is why it was built
+    last and why every condition below is a refusal rather than a preference.
+
+    Four gates, in this order:
+      1. the model must have been quiet for `IDLE_MINUTES`;
+      2. no FOREIGN server may be up — a server we did not start is the desktop
+         app's or a human's, and taking the GPU out from under it is exactly
+         the "not ours to stop" rule wearing a different hat;
+      3. `night_factory` / `monday_night` / `daily_pass` must not be running;
+      4. the job must not already have run today.
+    """
+    now = datetime.now(timezone.utc)
+    row = state.loops["idle_gpu_queue"]
+    dispatched: dict = dict(row.get("dispatched_on") or {})
+    today = run_date()
+    queue = [(j, m) for j, m in _config.LAB_IDLE_QUEUE]
+    remaining = [j for j, _ in queue if dispatched.get(j) != today]
+
+    idle = state.idle_minutes(now)
+    if idle is not None and idle < IDLE_MINUTES:
+        return {"status": "skipped", "n": 0, "reason": "GPU_BUSY",
+                "detail": (f"a model-touching call finished {idle:.0f} min ago; "
+                           f"{IDLE_MINUTES} min of quiet are required"),
+                "idle_minutes": round(idle, 1), "queue_remaining": remaining,
+                "dispatched_on": dispatched}
+
+    try:
+        server = model_status()
+    except Exception as exc:                                       # noqa: BLE001
+        return {"status": "error", "n": 0, "detail": _trunc(exc),
+                "queue_remaining": remaining, "dispatched_on": dispatched}
+    if server.get("listening") and server.get("foreign"):
+        return {"status": "skipped", "n": 0, "reason": "FOREIGN_SERVER_UP",
+                "detail": (f"pid {server.get('pid')} is serving the model and "
+                           f"Aegis did not start it; it may be mid-job and is "
+                           f"not ours to interrupt"),
+                "queue_remaining": remaining, "dispatched_on": dispatched}
+
+    yielded = yields_to("night_factory", "monday_night", "daily_pass", now=now)
+    if yielded:
+        return {**yielded, "n": 0, "queue_remaining": remaining,
+                "dispatched_on": dispatched}
+
+    if not remaining:
+        return {"status": "nothing_to_do", "n": 0,
+                "reason": "EVERY_QUEUED_JOB_ALREADY_RAN_TODAY",
+                "queue_remaining": [], "dispatched_on": dispatched,
+                "queue": [j for j, _ in queue]}
+
+    job = remaining[0]
+    minutes = dict(queue)[job]
+    with state.model_lock:
+        state.note_model_call(now)
+        try:
+            payload = dispatch_job(job, minutes)
+        except Exception as exc:                                   # noqa: BLE001
+            logger.exception("idle queue job %s raised", job)
+            dispatched[job] = today
+            row["dispatched_on"] = dispatched
+            return {"status": "error", "n": 0, "job": job,
+                    "detail": _trunc(exc), "dispatched_on": dispatched,
+                    "queue_remaining": [j for j in remaining if j != job]}
+
+    # Marked dispatched whatever the verdict: a job that FAILED tonight has had
+    # its turn, and re-dispatching it every five minutes would starve the rest
+    # of the queue on one broken job.
+    dispatched[job] = today
+    row["dispatched_on"] = dispatched
+    return {
+        "status": "ok", "n": 1, "job": job, "box_minutes": minutes,
+        "verdict": payload.get("verdict"),
+        "job_headline": str(payload.get("headline"))[:200],
+        "dispatched_on": dispatched,
+        "queue": [j for j, _ in queue],
+        "queue_remaining": [j for j in remaining if j != job],
+        "headline": (f"dispatched {job} (<= {minutes} min) into an idle GPU; "
+                     f"{len(remaining) - 1} job(s) left in tonight's queue"),
+    }
 
 
 def loop_thematic_streams(state: LabState) -> dict:
@@ -1009,6 +1129,10 @@ def tick(state: LabState, *, now: datetime | None = None) -> dict:
 
     payload = status_payload(state, now)
     _write_atomic(status_path(), payload)
+    try:
+        write_learned_line(payload)
+    except OSError as exc:
+        logger.warning("could not write the LEARNED line (%s)", _trunc(exc))
     payload["loops_run_this_tick"] = ran
     return payload
 
@@ -1203,9 +1327,167 @@ def _print_schtasks() -> int:
     return 0
 
 
-def acceptance_report() -> dict:
-    """The three-date acceptance receipt. Filled in at the last build step."""
-    return {"status": "not_yet_implemented"}
+#: The six acceptance criteria, declared so the report walks THEM rather than
+#: whatever happened to be checkable. Each is (id, what it asserts).
+ACCEPTANCE_CRITERIA: tuple[tuple[str, str], ...] = (
+    ("news_pull_never_gapped",
+     "`news_pull`'s last_tick_utc never gapped by more than 2x its declared "
+     "period on any of the three dates"),
+    ("decision_vs_reality_per_date",
+     "at least one full decision_vs_reality receipt per date, even at "
+     "n_resolved 0 everywhere"),
+    ("catalyst_calendar_refreshed",
+     "the catalyst calendar refreshed at least once per date with the macro "
+     "block populated, or FRED_KEY_ABSENT named"),
+    ("no_double_write_collisions",
+     "zero collisions with night_factory/daily_pass recorded as anything other "
+     "than a clean skip"),
+    ("spend_cap_never_breached",
+     "the daily dollar cap never breached"),
+    ("learned_line_present",
+     "LEARNED_<date>.md carries the supervisor's line for all three dates"),
+)
+
+
+def learned_line(payload: dict) -> str:
+    """The ONE line the lab contributes to the day's brain file.
+
+    Written whether or not anything interesting happened — the "a session that
+    ships thirty changes and moves none of them says RESULT IMPROVEMENT: NONE"
+    discipline, on a daily cadence instead of a session one.
+    """
+    loops = payload.get("loops") or {}
+    news = loops.get("news_pull") or {}
+    l2 = loops.get("l2_typing") or {}
+    nn = loops.get("nn_lab") or {}
+    idle = loops.get("idle_gpu_queue") or {}
+    themes = payload.get("thematic_streams") or {}
+    red = news.get("sources_red") or []
+    return (
+        f"Always-on lab, {payload.get('date')}: news pulled from "
+        f"{news.get('sources_pulled', 0)} source(s) ({len(red)} red); L2 typed "
+        f"{l2.get('rows_typed_this_tick', 0)} row(s) (backlog "
+        f"{l2.get('backlog_remaining')}, reader={l2.get('reader', 'local')}); NN lab "
+        f"{nn.get('heads', 0)} head(s), {nn.get('beat_last_night', 0)} beat last "
+        f"night on held-out {nn.get('held_out_month')}; idle-GPU queue ran "
+        f"{idle.get('job') or 'nothing'}; thematic streams: "
+        f"{', '.join(f'{k}={v}' for k, v in sorted(themes.items()))}; spend "
+        f"${payload.get('spend_today_usd', 0.0):.2f}/"
+        f"${payload.get('spend_cap_usd', 0.0):.2f} cap.")
+
+
+def write_learned_line(payload: dict) -> Path:
+    """Append the line to `brain/LEARNED_<date>.md`, creating the file."""
+    p = data_dir() / "brain" / f"LEARNED_{payload.get('date')}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    line = f"> {learned_line(payload)}\n"
+    prior = p.read_text(encoding="utf-8") if p.exists() else ""
+    if line not in prior:
+        with p.open("a", encoding="utf-8") as fh:
+            fh.write(line)
+    return p
+
+
+def acceptance_report(*, dates: list[str] | None = None,
+                      status: dict | None = None) -> dict:
+    """Is the lab ACCEPTED? Three dates of real coverage, not three task runs.
+
+    `ONLOGON` can fire and die repeatedly in a bad state and still produce three
+    "runs"; the bar is three DATES on which the machine was actually on. This
+    report reads what is on disk and REFUSES to conclude from what is absent:
+    a date with no receipts is `no_evidence`, never a failure and never a pass.
+    """
+    payload = status if status is not None else _read_status()
+    today = date.fromisoformat(run_date())
+    want = dates or [(today - timedelta(days=i)).isoformat()
+                     for i in range(_config.LAB_ACCEPTANCE_DATES - 1, -1, -1)]
+
+    per_date = []
+    for day in want:
+        folder = data_dir() / f"night_factory_{day}"
+        dvr = folder / f"decision_vs_reality_{day}.json"
+        cal = folder / f"lab_catalyst_calendar_{day}.json"
+        learned = data_dir() / "brain" / f"LEARNED_{day}.md"
+        row = {
+            "date": day,
+            "night_folder_exists": folder.is_dir(),
+            "decision_vs_reality": dvr.exists(),
+            "catalyst_calendar": cal.exists(),
+            "learned_line": (learned.exists()
+                             and "Always-on lab" in learned.read_text(
+                                 encoding="utf-8", errors="replace")),
+        }
+        row["evidence"] = any(v for k, v in row.items() if k != "date")
+        per_date.append(row)
+
+    dated = [r for r in per_date if r["evidence"]]
+    spend = _spend_block()
+    checks = {
+        "news_pull_never_gapped": "CANNOT DETERMINE (no per-tick history file yet)",
+        "decision_vs_reality_per_date": all(r["decision_vs_reality"] for r in per_date)
+        if dated else "no_evidence",
+        "catalyst_calendar_refreshed": all(r["catalyst_calendar"] for r in per_date)
+        if dated else "no_evidence",
+        "no_double_write_collisions": "CANNOT DETERMINE (collisions are recorded "
+                                      "per tick, not per date)",
+        "spend_cap_never_breached": not spend["cap_reached"],
+        "learned_line_present": all(r["learned_line"] for r in per_date)
+        if dated else "no_evidence",
+    }
+    accepted = (len(dated) >= _config.LAB_ACCEPTANCE_DATES
+                and all(v is True for v in checks.values()))
+    return {
+        "receipt": "always_on_lab_acceptance",
+        "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        "utc": _now(), "date": run_date(),
+        "dates_required": _config.LAB_ACCEPTANCE_DATES,
+        "min_hours_per_date": _config.LAB_ACCEPTANCE_MIN_HOURS,
+        "dates_examined": want,
+        "dates_with_evidence": [r["date"] for r in dated],
+        "per_date": per_date,
+        "criteria": {k: v for k, v in ACCEPTANCE_CRITERIA},
+        "checks": checks,
+        "spend": spend,
+        "accepted": accepted,
+        "status": ("ACCEPTED" if accepted else
+                   ("BUILT_UNACCEPTED" if len(dated) < _config.LAB_ACCEPTANCE_DATES
+                    else "BUILT_NOT_YET_PASSING")),
+        "headline": (
+            f"{len(dated)} of {_config.LAB_ACCEPTANCE_DATES} date(s) carry "
+            f"evidence; " + ("ACCEPTED" if accepted else
+                             "NOT accepted — acceptance needs real wall-clock "
+                             "days, not agent time")),
+        "read_me_first": (
+            "Three DATES on which the machine was actually on, not three task "
+            "runs: ONLOGON can fire and die repeatedly in a bad state and still "
+            "produce three runs. A date with no receipts is `no_evidence` — "
+            "neither a pass nor a failure. Until every check is True the honest "
+            "status is 'built, unaccepted', and a fabricated acceptance receipt "
+            "would be worse than none."),
+    }
+
+
+def _read_status() -> dict:
+    p = status_path()
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _spend_block() -> dict:
+    from backend.services import lab_budget
+    return lab_budget.spend_today()
+
+
+def write_acceptance(report: dict | None = None) -> Path:
+    report = report if report is not None else acceptance_report()
+    day = report.get("date") or run_date()
+    p = out_dir() / f"always_on_lab_acceptance_{day}.json"
+    _write_atomic(p, report)
+    return p
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -1235,7 +1517,9 @@ def main(argv: list[str] | None = None) -> int:
         print_plan(plan())
         return 0
     if a.acceptance:
-        print(json.dumps(acceptance_report(), indent=1, default=str))
+        report = acceptance_report()
+        path = write_acceptance(report)
+        print(json.dumps({**report, "path": str(path)}, indent=1, default=str))
         return 0
     try:
         payload = run_forever(max_ticks=a.ticks)
@@ -1248,16 +1532,18 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["HANDLERS", "LOOPS", "PERIODS", "STATUSES", "TIMEOUTS",
-           "SCHEDULED_DRIVERS", "AlreadyRunning", "LabState", "LoopTimeout",
-           "acceptance_report", "acquire_lock", "cadence_admits", "call_boxed",
-           "check_power", "data_dir", "dispatch_job", "lock_holder",
+__all__ = ["ACCEPTANCE_CRITERIA", "HANDLERS", "LOOPS", "PERIODS",
+           "SCHEDULED_DRIVERS", "STATUSES", "TIMEOUTS", "AlreadyRunning",
+           "LabState", "LoopTimeout", "acceptance_report", "acquire_lock",
+           "cadence_admits", "calendar_tickers", "call_boxed", "check_power",
+           "data_dir", "dispatch_job", "learned_line", "lock_holder",
            "lock_path", "main", "model_status", "news_sources", "out_dir",
            "parsed_rate_limit", "pid_alive", "pid_names_lab", "plan",
            "power_refusal", "print_plan", "pull_news", "read_lock",
            "release_lock", "run_date", "run_forever", "running_drivers",
            "scan_processes", "status_path", "status_payload", "stop_path",
-           "tick", "type_rows", "yields_to"]
+           "tick", "type_rows", "write_acceptance", "write_learned_line",
+           "yields_to"]
 
 
 if __name__ == "__main__":

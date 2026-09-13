@@ -1993,6 +1993,35 @@ def _lane_d_role() -> dict:
                 "error": f"{type(exc).__name__}: {exc}"[:200]}
 
 
+def _lab_status() -> dict:
+    """`lab_status.json`, read-only, or a named absence.
+
+    Read the same way `brain_queries.py` reads other receipts: this route does
+    not import the supervisor, does not start it, and never writes. A file that
+    cannot be parsed is reported as unreadable rather than swallowed into an
+    empty dict a reader would take for "the lab ticked and found nothing".
+    """
+    from backend import config as _cfg
+    p = Path(_cfg.DATA_DIR) / "optimus" / "lab_status.json"
+    if not p.exists():
+        return {"running": None, "available": False,
+                "why": "lab_status.json is absent; the always-on lab has never "
+                       "run on this machine",
+                "path": str(p)}
+    try:
+        rec = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:                        # noqa: BLE001
+        return {"running": None, "available": False,
+                "why": f"lab_status.json is unreadable: {type(e).__name__}",
+                "path": str(p)}
+    keep = ("utc", "date", "running", "stopped_by", "pid", "started_utc",
+            "ticks", "heartbeat_minutes", "power_plan", "loops",
+            "llama_server", "spend_today_usd", "spend_cap_usd",
+            "spend_cap_reached", "thematic_streams")
+    return {"available": True, "path": str(p),
+            **{k: rec.get(k) for k in keep}}
+
+
 @router.get("/coverage")
 def coverage() -> dict:
     """N-F: per-source and per-region news coverage, derived from disk."""
@@ -2065,6 +2094,14 @@ def coverage() -> dict:
                      "that happens to carry Asian rows is not counted, so this is a "
                      "floor, not a ceiling."),
         },
+        # The always-on lab's heartbeat (chunk 14). A BARE PASSTHROUGH: the file
+        # is written by `scripts/always_on_lab.py` and this route only reads it,
+        # so the board can show "is the lab alive and when did each loop last
+        # tick" without opening eight receipt folders. Absent means the lab has
+        # never run on this machine, which is a legitimate state and not an
+        # error -- it is reported as `running: null` rather than as `false`,
+        # because "never started" and "stopped" are different facts.
+        "lab": _lab_status(),
         "name_table": news_entities.stats(),
         # Lane D's own paper role, BY NAME (chunk 12, T6). It is on this card
         # rather than only in a receipt because a role that is absent has to be

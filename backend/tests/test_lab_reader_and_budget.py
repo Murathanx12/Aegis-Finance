@@ -14,9 +14,9 @@ fallback on purpose:
   refund is not a guard: a call that was made and then regretted has already
   been billed.
 
-No test here reads a key, contacts a provider, or touches
-`backend/data/optimus`. `config.DATA_DIR` is redirected to `tmp_path` in every
-test that writes, and the provider probe is stubbed by name.
+No test here reads a key, contacts a provider, or touches the repository's
+own optimus data directory. `config.DATA_DIR` is redirected to `tmp_path` in
+every test that writes, and the provider probe is stubbed by name.
 """
 
 from __future__ import annotations

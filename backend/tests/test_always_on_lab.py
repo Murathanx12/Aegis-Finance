@@ -22,8 +22,8 @@ paid for in this repository or is named in the spec as one that would be:
 
 Every test drives `tmp_path`. `config.DATA_DIR` and `always_on_lab.out_dir` are
 the two seams that decide where anything lands, and both are replaced in a
-fixture so no test can write into `backend/data/optimus` — on CI that directory
-does not exist and has no business gaining one.
+fixture so no test can write into the repository's own optimus data
+directory — on CI that directory does not exist and has no business gaining one.
 
 Dates are derived from `datetime.now(timezone.utc)` inside the test, never
 written as a literal: a fixture that encodes a calendar moment fails the day
@@ -660,6 +660,198 @@ def test_the_calendar_loop_names_every_refused_leg(lab, monkeypatch):
     assert out["status"] == "refused"
     assert out["refusals"] == ["FRED_KEY_ABSENT"]
     assert out["n"] == 0
+
+
+# --------------------------------------------------------------------------
+# loop 6 — the idle-GPU queue
+
+
+def _idle_state(minutes_ago: float | None = 60.0) -> L.LabState:
+    state = L.LabState()
+    if minutes_ago is not None:
+        state.last_model_call_utc = (
+            datetime.now(timezone.utc) - timedelta(minutes=minutes_ago)
+        ).isoformat(timespec="seconds")
+    return state
+
+
+def test_idle_gpu_queue_yields_to_a_running_night_factory(lab, monkeypatch):
+    """The idle queue fills the GAPS the evening run does not cover. It is not
+    a second scheduler for the same jobs."""
+    monkeypatch.setattr(L, "running_drivers", lambda now=None: {
+        "scan_ran": True, "night_factory": [4321], "daily_pass": [],
+        "monday_night": []})
+    monkeypatch.setattr(L, "dispatch_job", lambda job, minutes: pytest.fail(
+        f"double-dispatched {job} while the night factory was running"))
+    out = L.loop_idle_gpu_queue(_idle_state())
+    assert out["status"] == "skipped"
+    assert out["reason"] == "NIGHT_FACTORY_ALREADY_RUNNING"
+    assert out["pids"] == [4321]
+
+
+def test_idle_gpu_queue_yields_to_an_attended_monday_night(lab, monkeypatch):
+    monkeypatch.setattr(L, "running_drivers", lambda now=None: {
+        "scan_ran": True, "night_factory": [], "daily_pass": [],
+        "monday_night": [99]})
+    monkeypatch.setattr(L, "dispatch_job", lambda job, minutes: pytest.fail("no"))
+    out = L.loop_idle_gpu_queue(_idle_state())
+    assert out["reason"] == "MONDAY_NIGHT_RUNNING"
+
+
+def test_a_busy_gpu_is_a_named_skip_not_a_dispatch(lab, monkeypatch):
+    monkeypatch.setattr(L, "dispatch_job", lambda job, minutes: pytest.fail("no"))
+    out = L.loop_idle_gpu_queue(_idle_state(minutes_ago=2.0))
+    assert out["status"] == "skipped" and out["reason"] == "GPU_BUSY"
+    assert out["idle_minutes"] == pytest.approx(2.0, abs=0.2)
+
+
+def test_a_foreign_server_blocks_the_idle_queue(lab, monkeypatch):
+    """A server Aegis did not start may be mid-job, and is not ours to interrupt."""
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": True, "ready": True, "foreign": True, "pid": 9981,
+        "started_by_aegis": False})
+    monkeypatch.setattr(L, "dispatch_job", lambda job, minutes: pytest.fail("no"))
+    out = L.loop_idle_gpu_queue(_idle_state())
+    assert out["reason"] == "FOREIGN_SERVER_UP"
+    assert "9981" in out["detail"]
+
+
+def test_the_idle_queue_dispatches_in_the_declared_order_once_each_per_day(
+        lab, monkeypatch):
+    calls: list[str] = []
+    monkeypatch.setattr(L, "dispatch_job", lambda job, minutes: calls.append(job) or {
+        "verdict": "OK", "headline": f"{job} done"})
+    state = _idle_state()
+    declared = [j for j, _ in _config.LAB_IDLE_QUEUE]
+
+    for expected in declared:
+        out = L.loop_idle_gpu_queue(state)
+        assert out["status"] == "ok" and out["job"] == expected, out
+        state.last_model_call_utc = (
+            datetime.now(timezone.utc) - timedelta(minutes=60)).isoformat(
+                timespec="seconds")
+
+    assert calls == declared, "the queue ran out of its declared order"
+    out = L.loop_idle_gpu_queue(state)
+    assert out["status"] == "nothing_to_do"
+    assert out["reason"] == "EVERY_QUEUED_JOB_ALREADY_RAN_TODAY"
+
+
+def test_l2_runs_first_because_it_is_the_biggest_measured_gap():
+    assert _config.LAB_IDLE_QUEUE[0][0] == "L2_typed_events", (
+        "every other queued job either consumes L2's output or is orthogonal "
+        "to it, and the backlog is the single biggest measured gap")
+
+
+def test_every_queued_job_exists_in_the_factorys_own_registry():
+    from scripts.night_factory_jobs import JOBS
+    for job, minutes in _config.LAB_IDLE_QUEUE:
+        assert job in JOBS, f"{job} is not a registered night-factory job"
+        assert minutes > 0
+
+
+def test_a_failing_job_is_not_re_dispatched_every_five_minutes(lab, monkeypatch):
+    """One broken job must not starve the rest of the queue."""
+    def _boom(job, minutes):
+        raise RuntimeError("the job died")
+
+    monkeypatch.setattr(L, "dispatch_job", _boom)
+    state = _idle_state()
+    out = L.loop_idle_gpu_queue(state)
+    assert out["status"] == "error"
+    first = _config.LAB_IDLE_QUEUE[0][0]
+    assert out["dispatched_on"][first] == L.run_date()
+    assert first not in out["queue_remaining"]
+
+
+# --------------------------------------------------------------------------
+# the LEARNED line and the acceptance receipt
+
+
+def test_the_learned_line_is_written_every_day_whatever_happened(lab, stubbed_loops):
+    payload = L.tick(L.LabState(), now=datetime.now(timezone.utc))
+    p = L.data_dir() / "brain" / f"LEARNED_{L.run_date()}.md"
+    assert p.exists()
+    text = p.read_text(encoding="utf-8")
+    assert text.startswith("> Always-on lab")
+    assert "spend $0.00" in text
+    assert "cap" in text
+
+
+def test_the_learned_line_is_not_duplicated_by_a_second_tick(lab, stubbed_loops):
+    t0 = datetime.now(timezone.utc)
+    state = L.LabState()
+    L.tick(state, now=t0)
+    L.tick(state, now=t0 + timedelta(seconds=1))
+    p = L.data_dir() / "brain" / f"LEARNED_{L.run_date()}.md"
+    lines = [x for x in p.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert len(lines) == 1, lines
+
+
+def test_acceptance_is_built_unaccepted_until_three_dates_carry_evidence(lab):
+    report = L.acceptance_report()
+    assert report["accepted"] is False
+    assert report["status"] == "BUILT_UNACCEPTED"
+    assert report["dates_required"] == _config.LAB_ACCEPTANCE_DATES
+    assert len(report["dates_examined"]) == _config.LAB_ACCEPTANCE_DATES
+    assert report["dates_with_evidence"] == []
+    assert "fabricated acceptance receipt" in report["read_me_first"]
+
+
+def test_acceptance_counts_dates_not_task_runs(lab):
+    """ONLOGON can fire and die repeatedly in a bad state and still produce
+    three "runs". The bar is three DATES with evidence on disk."""
+    today = datetime.now(timezone.utc).date()
+    for i in range(_config.LAB_ACCEPTANCE_DATES):
+        day = (today - timedelta(days=i)).isoformat()
+        folder = L.data_dir() / f"night_factory_{day}"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / f"decision_vs_reality_{day}.json").write_text("{}", encoding="utf-8")
+        (folder / f"lab_catalyst_calendar_{day}.json").write_text("{}", encoding="utf-8")
+        brain = L.data_dir() / "brain"
+        brain.mkdir(parents=True, exist_ok=True)
+        (brain / f"LEARNED_{day}.md").write_text("> Always-on lab, x\n",
+                                                 encoding="utf-8")
+    report = L.acceptance_report()
+    assert len(report["dates_with_evidence"]) == _config.LAB_ACCEPTANCE_DATES
+    assert report["checks"]["decision_vs_reality_per_date"] is True
+    assert report["checks"]["learned_line_present"] is True
+    # still not ACCEPTED: two checks are honestly CANNOT DETERMINE
+    assert report["accepted"] is False
+    assert report["status"] == "BUILT_NOT_YET_PASSING"
+    assert "CANNOT DETERMINE" in report["checks"]["news_pull_never_gapped"]
+
+
+def test_every_declared_acceptance_criterion_has_a_check(lab):
+    report = L.acceptance_report()
+    assert set(report["checks"]) == {k for k, _ in L.ACCEPTANCE_CRITERIA}
+
+
+def test_the_acceptance_receipt_is_written_into_the_night_folder(lab):
+    p = L.write_acceptance()
+    assert p.name == f"always_on_lab_acceptance_{L.run_date()}.json"
+    assert json.loads(p.read_text(encoding="utf-8"))["receipt"] == \
+        "always_on_lab_acceptance"
+
+
+def test_the_schtasks_line_is_onlogon_limited_and_runs_nothing(capsys):
+    assert L.main(["--schtasks"]) == 0
+    out = capsys.readouterr().out
+    assert '/SC ONLOGON' in out
+    assert '/RL LIMITED' in out
+    assert '/TN "AegisAlwaysOnLab"' in out
+    assert "schtasks /Create" in out and "schtasks /Change" in out
+    # Only the COMMAND lines are checked, not the prose around them: the printed
+    # rationale explains why `< NUL` does not work, and a check over the whole
+    # page would fail on the explanation — the same trap that caught the AST
+    # guard in this file and three other tests in this repository.
+    cmds = [ln for ln in out.splitlines() if ln.strip().startswith("schtasks ")]
+    assert len(cmds) == 2
+    for cmd in cmds:
+        assert "< " in cmd, "the stdin redirect is load-bearing"
+        assert "NUL" not in cmd, "it must come from a REGULAR file, not NUL"
+        assert "| tail" not in cmd, "a pipe eats the exit code, and the code is the guard"
+        assert "empty_stdin.txt" in cmd
 
 
 # --------------------------------------------------------------------------

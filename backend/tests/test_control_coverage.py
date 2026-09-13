@@ -145,3 +145,53 @@ def test_an_unreadable_registry_degrades_to_a_report(corpus, monkeypatch):
     assert out["available"] is False
     assert "boom" in out["error"]
     assert out["sources"] == []
+
+
+# ---------------------------------------------------------------------------
+# chunk 14 — the always-on lab's heartbeat, surfaced as a BARE PASSTHROUGH
+
+
+def test_an_absent_lab_status_is_running_null_not_running_false(corpus):
+    """"Never started" and "stopped" are different facts.
+
+    `running: false` on a board would send a reader looking for the crash that
+    stopped it; the lab has simply never run on that machine.
+    """
+    out = control.coverage()
+    assert out["lab"]["available"] is False
+    assert out["lab"]["running"] is None
+    assert "never run" in out["lab"]["why"]
+
+
+def test_the_lab_block_is_read_from_disk_and_nothing_is_started(corpus, monkeypatch):
+    p = corpus.parent / "lab_status.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps({
+        "utc": "2026-01-01T00:00:00+00:00", "date": "2026-01-01", "running": True,
+        "pid": 4242, "ticks": 7, "spend_today_usd": 0.0, "spend_cap_usd": 3.0,
+        "spend_cap_reached": False,
+        "loops": {"news_pull": {"status": "ok", "last_tick_utc": "x"}},
+        "thematic_streams": {"holders_13f_v1": "observing"},
+        "read_me_first": "a long paragraph the board does not need"}),
+        encoding="utf-8")
+
+    import scripts.always_on_lab as lab_module
+    monkeypatch.setattr(lab_module, "run_forever", lambda **kw: pytest.fail(
+        "the route started the supervisor"))
+
+    out = control.coverage()["lab"]
+    assert out["available"] is True
+    assert out["running"] is True and out["pid"] == 4242 and out["ticks"] == 7
+    assert out["loops"]["news_pull"]["status"] == "ok"
+    assert out["thematic_streams"]["holders_13f_v1"] == "observing"
+    assert "read_me_first" not in out, "the board gets the fields, not the essay"
+
+
+def test_an_unreadable_lab_status_is_named_rather_than_swallowed(corpus):
+    p = corpus.parent / "lab_status.json"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("{truncated", encoding="utf-8")
+    out = control.coverage()["lab"]
+    assert out["available"] is False
+    assert "unreadable" in out["why"], (
+        "an empty dict would read as `the lab ticked and found nothing`")
