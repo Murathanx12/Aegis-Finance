@@ -396,9 +396,12 @@ def test_the_job_is_registered_and_its_stage_is_raw():
     assert JOB_STAGES["H1_hiring_pull"] == "raw"
 
 
-def test_a_smoke_run_is_a_dry_run_of_both_steps(hiring_dir):
+def test_a_smoke_run_is_a_dry_run_of_both_steps(hiring_dir, monkeypatch):
     """This job's only side effect is traffic against somebody else's rate
     limit, so 'prove it runs' must not mean 7,000 requests."""
+    # 2026-09-14: the band is READ from the execution repo's stored universe,
+    # which no CI checkout has (red on 85546ba0). A synthetic band here.
+    monkeypatch.setattr(H, "tradable_band", lambda: (["ACME", "WIDG"], {"source": "synthetic"}))
     out = H.H1_hiring_pull(smoke=True, probe=True)
     assert out["dry_run"] is True and out["ran"] is False
     assert not H.board_map_path().exists()
