@@ -1,0 +1,383 @@
+{
+ "job": "L2_typed_events",
+ "lane": "L",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "stage": "features",
+ "llm_spend_usd": 6.437016,
+ "backend": "deepseek",
+ "reader": null,
+ "source": "panel",
+ "workers": 8,
+ "started_utc": "2026-09-13T10:55:17+00:00",
+ "question": "What typed event, if any, does each document carry, as a row that is numeric by construction?",
+ "contract": {
+  "backend": "local_gguf",
+  "purpose_tag": "l2_event_extraction",
+  "prompt_hash_A": "e166ca4d32b1065d4814b8af2f35ab040c161433a1673b7361730272e94c8e56",
+  "prompt_hash_B": "d2275ea9b3f9ec093347fe7a27de340b285da742eaeb6adcfd5e19bcbceffce9",
+  "prompt_hash_covers": "wire system prompt + user template + canonical schema",
+  "language_pin": "applied CENTRALLY in model_provider.complete, never at this call site; wire_system() shows the pinned text",
+  "validator": "jsonschema",
+  "body_chars": 2000,
+  "evidence_chars": 400,
+  "refusal_classes": [
+   "REFUSED_LANGUAGE",
+   "REFUSED_UNPARSEABLE",
+   "REFUSED_SCHEMA",
+   "REFUSED_READER_ERROR"
+  ],
+  "no_event_is_not_a_refusal": "a no_event row is a SUCCESSFUL classification and is written like any other row -- it is how L2 measures the corpus's genuine event rate, and dropping it would make the denominator silently wrong",
+  "one_row_per_document": "spec section 2.4: the DOMINANT event only. v1's schema has no multi-event shape, and additionalProperties:false forbids smuggling one in",
+  "vocabulary": {
+   "source": "docs/research_notes/2026-09-11/spec_events_and_calibration.md sections 1.2 (v1's TABLE; the section's closing sentence miscounts by one) and 1.2b (v2's analyst-action addendum)",
+   "vocabulary_version": 2,
+   "versions": {
+    "1": {
+     "n_types": 40,
+     "vocabulary_hash": "b55fcff7ef3e206ffb14b088a832367b1471a59bddbb8d514c4a01fbfc1d2e6a"
+    },
+    "2": {
+     "n_types": 43,
+     "vocabulary_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc"
+    }
+   },
+   "n_types": 43,
+   "n_substantive": 42,
+   "n_ambiguous_priors": 21,
+   "refusal_class": "no_event",
+   "vocabulary_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc",
+   "magnitude_thresholds": {
+    "NEGLIGIBLE": [
+     0.0,
+     0.005
+    ],
+    "SMALL": [
+     0.005,
+     0.02
+    ],
+    "MODERATE": [
+     0.02,
+     0.05
+    ],
+    "LARGE": [
+     0.05,
+     0.1
+    ],
+    "EXTREME": [
+     0.1,
+     null
+    ]
+   },
+   "directions": [
+    -1,
+    0,
+    1
+   ],
+   "no_fourth_direction": "There is no value for 'I do not know'. A genuinely uncertain call commits to the best-guess sign AND sets `confidence` low. Cohen's kappa cannot be computed over a set that includes an escape hatch one rater uses more than the other.",
+   "confidence": "`confidence` in [0, 1] is the model's stated probability that the emitted (event_type, direction) PAIR, taken together, is the correct reading of the document. It is NOT `event_intel.extraction.tier`, which is a PARSE-FIDELITY judgment (HIGH/MEDIUM/LOW/FAILED) barred by the D4 closure ruling from being read as an outcome probability. This one IS allowed to be read as a probability, because inter-rater kappa is the external check that catches a reader free-lancing high confidence.",
+   "kappa_protocol": {
+    "event_type": "Cohen's kappa, 40-way categorical, unweighted",
+    "direction": "weighted kappa, ordinal -1/0/+1, LINEAR weights",
+    "magnitude_bucket": "weighted kappa, ordinal over MAGNITUDE_BUCKETS, LINEAR weights",
+    "confidence": "mean absolute difference -- it is continuous, so kappa does not apply",
+    "sample": "the SAME rows under both prompts; the spec's control is 500 rows"
+   }
+  }
+ },
+ "corpus": {
+  "source": "panel",
+  "panel": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\text_return_panel\\news_returns_2025_26.parquet",
+  "panel_rows": 340465,
+  "distinct_texts": 163284,
+  "texts_already_typed": 0,
+  "texts_waiting": 163284,
+  "texts_this_run": 20000,
+  "panel_rows_this_run": 43050,
+  "stratified": 20000,
+  "stratified_seed": 0,
+  "stratified_axes": "month of the PIT anchor x symbol-frequency quartile, largest-remainder allocation, np.random.default_rng(seed)",
+  "dedupe": "one typing per DISTINCT TEXT, fanned back out at join time to every (symbol, entry_date) panel row carrying it; 340,465 rows over 163,288 texts is 2.08x",
+  "eligibility": "every row the panel holds. The label-source filter is the CORPUS's rule and was already applied by the panel builder; re-applying it on the panel's own feed spellings would drop rows silently"
+ },
+ "cursor_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\_cursor_panel.json",
+ "inputs_frozen": {
+  "n_rows": 20000,
+  "inputs_sha256": "0788afdebfc6f0e8fcd65cf5f30ca650051c1d2af00850edb8ac620df2812efd",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\L2_typed_events_run01_panel_inputs.json"
+ },
+ "projection": {
+  "rows": 20000
+ },
+ "estimate": {
+  "no_model_was_called": true,
+  "rows_to_type": 20000,
+  "unique_texts": 20000,
+  "panel_rows_covered": 43050,
+  "tokens": {
+   "chars_per_token": 4.0,
+   "system_prompt_chars": 5731,
+   "system_prompt_tokens": 1432.8,
+   "user_chars_mean": 439.3,
+   "prompt_tokens_per_row": 1542.6,
+   "prompt_tokens_total": 30851406,
+   "prompt_tokens_charged_at_the_cache_MISS_rate": 2197838,
+   "prompt_tokens_charged_at_the_cache_HIT_rate": 28653567,
+   "prefix_cache_note": "the SAME tokens are sent either way -- what a prefix cache changes is the RATE on the 1432-token system prefix, which is byte-identical across every call. The two cost columns are the same token count at two rates, not two token counts",
+   "output_tokens_per_row": 49.81,
+   "output_tokens_total": 996200,
+   "output_tokens_source": "MEASURED, ledger mean over 7,565 rows",
+   "calibration_against_the_ledger": {
+    "estimated_prompt_tokens_per_row_here": 1542.6,
+    "measured_prompt_tokens_per_row_2026_09_13": 1482.67,
+    "reading": "the measured rows were CORPUS documents, whose bodies run to the 2,000-char cap, and they still came in BELOW this panel estimate -- so 4 chars/token over-states the real tokenizer on this system prompt and every cost column here is conservative"
+   },
+   "caveat": "4.0 chars/token is a CONVENTION, not a tokenizer. The only honest anchor is the ledger, and it is printed beside it"
+  },
+  "cost": {
+   "published_deepseek_list": {
+    "deepseek-v4-flash_offpeak": {
+     "input_cache_miss_per_mtok": 0.15,
+     "input_cache_hit_per_mtok": 0.003,
+     "output_per_mtok": 0.6,
+     "usd_no_prefix_cache": 5.2254,
+     "usd_with_prefix_cache": 1.0134
+    },
+    "deepseek-v4-flash_peak": {
+     "input_cache_miss_per_mtok": 0.3,
+     "input_cache_hit_per_mtok": 0.006,
+     "output_per_mtok": 1.2,
+     "usd_no_prefix_cache": 10.4509,
+     "usd_with_prefix_cache": 2.0267
+    },
+    "deepseek-v4-pro_offpeak": {
+     "input_cache_miss_per_mtok": 0.66,
+     "input_cache_hit_per_mtok": 0.022,
+     "output_per_mtok": 1.98,
+     "usd_no_prefix_cache": 22.3344,
+     "usd_with_prefix_cache": 4.0534
+    },
+    "deepseek-v4-pro_peak": {
+     "input_cache_miss_per_mtok": 1.32,
+     "input_cache_hit_per_mtok": 0.044,
+     "output_per_mtok": 3.96,
+     "usd_no_prefix_cache": 44.6688,
+     "usd_with_prefix_cache": 8.1069
+    }
+   },
+   "published_source": "docs/research_notes/2026-09-13/research_cloud_llm_readers.md section 3, scraped from api-docs.deepseek.com on 2026-09-13",
+   "peak_hours_utc": "01:00-04:00 and 06:00-10:00 UTC, Mon-Fri (research_cloud_llm_readers.md section 3)",
+   "repo_derived_rates": {
+    "deepseek-chat": {
+     "input_cache_miss_per_mtok": 0.169413,
+     "input_cache_hit_per_mtok": 0.00338826,
+     "output_per_mtok": 1.284835,
+     "usd_no_prefix_cache": 6.5066,
+     "usd_with_prefix_cache": 1.7494
+    },
+    "deepseek-v4-flash": {
+     "input_cache_miss_per_mtok": 0.169413,
+     "input_cache_hit_per_mtok": 0.00338826,
+     "output_per_mtok": 1.284835,
+     "usd_no_prefix_cache": 6.5066,
+     "usd_with_prefix_cache": 1.7494
+    },
+    "deepseek-v4-pro": {
+     "input_cache_miss_per_mtok": 0.52639,
+     "input_cache_hit_per_mtok": 0.00438659,
+     "output_per_mtok": 3.992166,
+     "usd_no_prefix_cache": 20.2169,
+     "usd_with_prefix_cache": 5.2596
+    }
+   },
+   "repo_rates_source": "backend/config.LLM_PRICE_PER_MTOK -- DERIVED from the provider's own balance ledger; this is what llm_telemetry bills every row at",
+   "measured_usd": 6.3,
+   "measured_usd_per_row": 0.00031518,
+   "measured_source": "backend/data/optimus/llm_calls_2026-09.jsonl, purpose=l2_event_extraction, 2026-09-13T07:02Z..09:18Z",
+   "measured_caveat": "`cached_tokens` was 0 on every one of the 7,565 rows, so the measured $/row credits NO prefix cache. It is therefore an UPPER bound for a run that gets one, and the reconciliation against the provider's balance stays scripts/llm_cost_audit.py"
+  },
+  "wall_time": {
+   "brief_planning_rate_20_per_min": {
+    "rows_per_min_per_worker": 20.0,
+    "workers": 8,
+    "hours": 2.08,
+    "minutes": 125.0
+   },
+   "ledger_measured_57p4_per_min": {
+    "rows_per_min_per_worker": 57.4,
+    "workers": 8,
+    "hours": 0.73,
+    "minutes": 43.6
+   }
+  },
+  "cap": {
+   "max_usd": 8.0,
+   "backend": "deepseek",
+   "binds": false,
+   "note": "at the measured $/row this run is $6.30 against a $8.00 cap -- the cap does not bind"
+  }
+ },
+ "one_row_per_document": "a document tagged with several tickers is scoped to the FIRST and carries the rest; fanning it into N rows would multiply one reading into N correlated ones",
+ "status": "done",
+ "results": {
+  "rows_read": 20000,
+  "rows_typed": 19996,
+  "units_submitted": 20000,
+  "units_offered": 20000,
+  "refused": {
+   "REFUSED_LANGUAGE": 0,
+   "REFUSED_UNPARSEABLE": 0,
+   "REFUSED_SCHEMA": 4,
+   "REFUSED_READER_ERROR": 0
+  },
+  "refusal_rate": 0.0002,
+  "by_event_type": {
+   "no_event": 13791,
+   "earnings_report": 1762,
+   "analyst_target_change": 757,
+   "new_contract_or_partnership": 685,
+   "analyst_rating_change": 507,
+   "product_launch_or_innovation": 472,
+   "guidance_change": 283,
+   "insider_or_institutional_ownership_change": 260,
+   "mergers_acquisitions": 218,
+   "tariff_or_trade_policy": 153,
+   "regulatory_investigation_or_action": 125,
+   "clinical_trial_result": 102,
+   "regulatory_approval": 99,
+   "analyst_initiation": 95,
+   "management_change_appointment": 89,
+   "management_change_departure": 80,
+   "equity_issuance_dilution": 71,
+   "litigation_filed": 55,
+   "divestiture_asset_sale": 47,
+   "debt_issuance_or_obligation": 45,
+   "stock_buyback": 38,
+   "macro_rate_decision": 32,
+   "macro_inflation_print": 28,
+   "product_recall_or_defect": 27,
+   "litigation_settlement": 27,
+   "index_rebalance": 23,
+   "dividend_increase": 19,
+   "macro_labor_report": 19,
+   "earnings_preannouncement": 17,
+   "regular_dividend_declaration": 16,
+   "contract_loss_or_termination": 13,
+   "spinoff": 12,
+   "sanction": 7,
+   "cybersecurity_incident": 6,
+   "reverse_stock_split": 4,
+   "bankruptcy_or_going_concern": 4,
+   "dividend_cut_or_suspension": 3,
+   "delisting_or_listing_risk": 2,
+   "credit_rating_change": 1,
+   "stock_split": 1,
+   "special_dividend": 1
+  },
+  "no_event_rows": 13791,
+  "no_event_share": 0.6897,
+  "evidence_span_verbatim_rate": 0.9688,
+  "output_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\panel_2026-09-13.jsonl",
+  "refusal_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\panel_2026-09-13_refusals.jsonl",
+  "panel_rows_covered": 41289
+ },
+ "concurrency": {
+  "workers": 8,
+  "stopped": "complete",
+  "stop_detail": null,
+  "failed_index": null,
+  "rate_limited_rows": 0,
+  "retries": 0,
+  "discarded_after_the_failure": 0,
+  "flush_every": 100,
+  "order": "results are collected and flushed in SUBMISSION order; the cursor never passes a unit whose predecessors are unwritten"
+ },
+ "cap": {
+  "max_usd": 8.0,
+  "backend": "deepseek",
+  "metered": true,
+  "estimated_spend_at_stop_usd": 6.416468,
+  "usd_per_row_used": 0.00032108,
+  "usd_per_row_source": "THIS RUN's own ledger rows (19884 calls)",
+  "ledger_reads": 200,
+  "checked": "before every submission, against the ledger total refreshed every 100 rows",
+  "also_in_force": "lab_budget's UTC-DAY cap, but only on the `--reader` path (lab_reader.resolve); a direct `--backend deepseek` run is capped by --max-usd alone",
+  "unmetered_note": null
+ },
+ "inter_rater": {
+  "n": 50,
+  "kappa_event_type": 0.6661,
+  "kappa_direction_linear": 1.0,
+  "kappa_magnitude_linear": 0.7741,
+  "confidence_mean_abs_difference": 0.046,
+  "raw_agreement_event_type": 0.92,
+  "protocol": {
+   "event_type": "Cohen's kappa, 40-way categorical, unweighted",
+   "direction": "weighted kappa, ordinal -1/0/+1, LINEAR weights",
+   "magnitude_bucket": "weighted kappa, ordinal over MAGNITUDE_BUCKETS, LINEAR weights",
+   "confidence": "mean absolute difference -- it is continuous, so kappa does not apply",
+   "sample": "the SAME rows under both prompts; the spec's control is 500 rows"
+  },
+  "refused_on_the_second_prompt": 0,
+  "sample_size_asked_for": 50,
+  "spec_control_size": 500
+ },
+ "usage": {
+  "tokens_in": 31482992,
+  "tokens_out": 859038,
+  "cost_usd": 6.437016,
+  "cost_source": "the CALL LEDGER, not a local cost field",
+  "ledger": {
+   "usd": 6.437016,
+   "calls": 20049,
+   "tokens_in": 31481417,
+   "tokens_out": 858985,
+   "cached_tokens": 0,
+   "since_utc": "2026-09-13T10:55:17+00:00",
+   "purpose": "l2_event_extraction",
+   "source": "backend/services/llm_telemetry.read_calls()",
+   "note": "a list-price reconstruction from the call ledger, not a bill. `scripts/llm_cost_audit.py --snapshot` reconciles against the provider's own balance and is the ground truth"
+  },
+  "purpose": "l2_event_extraction",
+  "backend": "deepseek"
+ },
+ "manifest": {
+  "job": "L2_typed_events",
+  "what": "one typed row per corpus document, L2's frozen vocabulary. The .jsonl files are DATA and are gitignored; this manifest is tracked.",
+  "typed_rows_total": 26003,
+  "files": [
+   {
+    "file": "2026-09-13.jsonl",
+    "rows": 6007,
+    "sha256": "a3ae7e468a53147cc74ff844a149f7a3d4dd53246124a6223373e40a1170a8d6"
+   },
+   {
+    "file": "2026-09-13_refusals.jsonl",
+    "rows": 13,
+    "sha256": "e36ce6214a8b628c2d3cea3a3bcf2d3962d453b0ab2a1bf751e8f5093b03fd48"
+   },
+   {
+    "file": "panel_2026-09-13.jsonl",
+    "rows": 19996,
+    "sha256": "26577f7f30e5c0b02d84328758d44286ff6a371f1623d738df9f853dcb365474"
+   },
+   {
+    "file": "panel_2026-09-13_refusals.jsonl",
+    "rows": 4,
+    "sha256": "481b45c7e548fd4517cf9b15618f980f0cda209204367f4e213bcc1250629354"
+   }
+  ],
+  "vocabulary_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc",
+  "prompt_hash_A": "e166ca4d32b1065d4814b8af2f35ab040c161433a1673b7361730272e94c8e56",
+  "prompt_hash_B": "d2275ea9b3f9ec093347fe7a27de340b285da742eaeb6adcfd5e19bcbceffce9",
+  "schema": "aegis://schemas/typed_event_row.json",
+  "rebuild": "python -m scripts.night_l2_typed_events --max-rows 0",
+  "written_utc": "2026-09-13T11:35:13+00:00"
+ },
+ "verdict": "19,996 rows typed from panel, 4 refused (REFUSED_SCHEMA=4), event_type kappa 0.6661 on 50 re-prompted rows; $6.4370 by the ledger",
+ "headline": "19,996 typed / 20,000 read from panel at 8 workers; 69.0% no_event; refusal rate 0.0002; $6.44",
+ "next_test": "E1 on these typed rows against E1 on the keyword proxy, same panel, same splits, same three controls -- the only changed variable being how the events were typed",
+ "elapsed_s": 2396.0,
+ "written_utc": "2026-09-13T11:35:13+00:00"
+}
