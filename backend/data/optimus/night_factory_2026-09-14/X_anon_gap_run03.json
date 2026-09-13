@@ -1,0 +1,308 @@
+{
+ "job": "X_anon_gap",
+ "lane": "X",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "backend": "local_gguf",
+ "PREREGISTRATION": {
+  "trial": "r2-monthly-news-digest-read",
+  "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+  "pre_registered": "2026-09-10",
+  "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+  "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+  "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+  "model_identity": {
+   "backend": "local_gguf",
+   "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "size_bytes": 4683074240,
+   "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+   "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+   "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+   "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+  },
+  "cost_bps_per_side": 25.0,
+  "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+ },
+ "question": "Does R2's frozen prompt read the SAME PANEL-B cells better from the RAW text than from the anonymised text -- and if it does, is that information or memory?",
+ "adoption_rule_text": "1. Compute the anonymisation gap on PANEL-B: net_ann_pct(read_RAW) minus net_ann_pct(read_MASKED), block-paired, Newey-West lag 2, net of 25 bps a side on realised turnover. This settles sign and size for THIS model, prompt and cross-section; it does not have to agree with either paper, because neither paper ran this model on this data. 2. Cross-check the AMNESIA canary: if read_RAW beats read_MASKED but the canary's real-name-minus-masked accuracy gap is also large and positive, the raw arm's edge is presumptively memorisation and MASKED is adopted regardless of the raw score. If the canary gap stays at or below +0.02 (TRIAL-R2's own adopt threshold) while read_RAW still wins, the extra accuracy is more plausibly entity information masking destroys, and RAW may be preferred -- but every receipt from that point prints BOTH numbers and the canary cross-check, permanently, never just the winner. 3. Default while the raw arm has not run: stay on read_MASKED, the registered TRIAL-R2 arm. Switch only on a measured gap from our PANEL-B.",
+ "amnesia_gap": {
+  "gap": 0.0027,
+  "source": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\R2_widened_panelB_answers.jsonl",
+  "how": "re-derived from R2's PERSISTED canary answers -- its receipt is PENDING_MODEL and carries no canary block",
+  "real_names_accuracy": 0.4848,
+  "n_real": 264,
+  "masked_accuracy": 0.4821,
+  "n_masked": 280
+ },
+ "cost_model": {
+  "cost_bps_per_side": 25.0,
+  "charged_on": "realised turnover sum|dw| per monthly rebalance"
+ },
+ "construction": {
+  "news_rows": 340466,
+  "symbol_month_groups": 36899,
+  "with_a_forward_label": 34984,
+  "cells_at_min_docs": 18521,
+  "min_docs_per_cell": 3,
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "market_symbol": "SPY",
+  "convention": "enter at the first open of M+1, exit at the first open of M+2, minus SPY over the same two opens",
+  "symbols_with_a_label": 3060,
+  "label_rows": 59348,
+  "dropped_for_a_calendar_gap": 0
+ },
+ "masking": {
+  "documents_in_digests": 106623,
+  "documents_with_at_least_one_masked_token": 44726,
+  "mask_hit_rate": 0.4195,
+  "cells_whose_symbol_has_a_CRSP_issuer_name": 15817,
+  "note": "a document with no masked token is one where neither the ticker nor an issuer-name token appeared in its text -- common for a headline that never names the company -- but a HIGH rate of them would be a mask leak"
+ },
+ "cells_frozen": {
+  "n_cells": 300,
+  "cells_sha256": "31d99d22223a7bb5e023f692c18d46f5e0b064b2f29c9efb95c75dcb2069d309",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_run03_cells.json",
+  "seed": 20260909,
+  "stratified_by": "month block (canon section 58's dependence unit)",
+  "drawn_from_cells": 18521,
+  "months": [
+   "2025-01",
+   "2025-02",
+   "2025-03",
+   "2025-04",
+   "2025-05",
+   "2025-06",
+   "2025-07",
+   "2025-08",
+   "2025-09",
+   "2025-10",
+   "2025-11",
+   "2025-12",
+   "2026-01",
+   "2026-02",
+   "2026-03",
+   "2026-04",
+   "2026-05",
+   "2026-06",
+   "2026-07"
+  ]
+ },
+ "answers_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_answers_run03.jsonl",
+ "arms": {
+  "read_RAW": {
+   "label": "raw digest -> direction",
+   "cells": 299,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 267,
+   "share_flat": 0.107,
+   "sign_accuracy": 0.4944,
+   "long_short_monthly_mean_pct": -1.087,
+   "long_short_ann_pct": -13.043,
+   "long_short_ann_pct_NET": -18.886,
+   "t_nw_blocks": -0.848,
+   "t_nw_blocks_NET": -1.228,
+   "monthly_sd_pp": 5.772,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  },
+  "read_MASKED": {
+   "label": "masked digest -> direction",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 268,
+   "share_flat": 0.107,
+   "sign_accuracy": 0.5037,
+   "long_short_monthly_mean_pct": -0.9209,
+   "long_short_ann_pct": -11.051,
+   "long_short_ann_pct_NET": -16.87,
+   "t_nw_blocks": -0.73,
+   "t_nw_blocks_NET": -1.115,
+   "monthly_sd_pp": 5.579,
+   "turnover_per_rebalance": 1.9396,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.819
+  },
+  "control_SHUFFLED_raw": {
+   "label": "shuffled raw digest (control)",
+   "cells": 299,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 266,
+   "share_flat": 0.11,
+   "sign_accuracy": 0.5,
+   "long_short_monthly_mean_pct": -0.2348,
+   "long_short_ann_pct": -2.818,
+   "long_short_ann_pct_NET": -8.66,
+   "t_nw_blocks": -0.251,
+   "t_nw_blocks_NET": -0.769,
+   "monthly_sd_pp": 4.519,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  },
+  "control_SHUFFLED_masked": {
+   "label": "shuffled masked digest (control)",
+   "cells": 300,
+   "date_blocks": 19,
+   "dropped_unlabelled": 0,
+   "directional_calls": 263,
+   "share_flat": 0.123,
+   "sign_accuracy": 0.4981,
+   "long_short_monthly_mean_pct": 0.2496,
+   "long_short_ann_pct": 2.995,
+   "long_short_ann_pct_NET": -2.847,
+   "t_nw_blocks": 0.246,
+   "t_nw_blocks_NET": -0.234,
+   "monthly_sd_pp": 5.222,
+   "turnover_per_rebalance": 1.9474,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 5.842
+  }
+ },
+ "raw_minus_its_control": {
+  "label": "raw read minus shuffled raw",
+  "blocks": 19,
+  "mean_ann_pct": -10.226,
+  "t_nw": -0.577,
+  "arm_ann_pct": -13.043,
+  "control_ann_pct": -2.818,
+  "monthly_sd_of_difference_pp": 7.23,
+  "mean_ann_pct_NET": -10.226,
+  "t_nw_NET": -0.577,
+  "arm_ann_pct_NET": -18.886,
+  "control_ann_pct_NET": -8.66,
+  "cost_cancellation": {
+   "arm_turnover_per_rebalance": 1.9474,
+   "control_turnover_per_rebalance": 1.9474,
+   "arm_cost_drag_ann_pct": 5.842,
+   "control_cost_drag_ann_pct": 5.842,
+   "cost_effect_on_the_difference_ann_pct": -0.0,
+   "reading": "the two books rebalance identically on the same dates, so the cost line cancels in the DIFFERENCE to the extent the turnovers match; the levels are NOT cost-robust and are reported gross beside net"
+  }
+ },
+ "masked_minus_its_control": {
+  "label": "masked read minus shuffled masked",
+  "blocks": 19,
+  "mean_ann_pct": -14.046,
+  "t_nw": -0.726,
+  "arm_ann_pct": -11.051,
+  "control_ann_pct": 2.995,
+  "monthly_sd_of_difference_pp": 6.678,
+  "mean_ann_pct_NET": -14.022,
+  "t_nw_NET": -0.724,
+  "arm_ann_pct_NET": -16.87,
+  "control_ann_pct_NET": -2.847,
+  "cost_cancellation": {
+   "arm_turnover_per_rebalance": 1.9396,
+   "control_turnover_per_rebalance": 1.9474,
+   "arm_cost_drag_ann_pct": 5.819,
+   "control_cost_drag_ann_pct": 5.842,
+   "cost_effect_on_the_difference_ann_pct": 0.023,
+   "reading": "the two books rebalance identically on the same dates, so the cost line cancels in the DIFFERENCE to the extent the turnovers match; the levels are NOT cost-robust and are reported gross beside net"
+  }
+ },
+ "ANONYMISATION_GAP": {
+  "gap_pct_pt": -2.0159,
+  "gap_nw_t": -0.543,
+  "gap_paired_blocks": 19,
+  "gap_monthly_sd_pp": 1.783,
+  "note": "the two arms read the SAME cells in the same months, so this is a paired difference, not two levels subtracted",
+  "net_ann_pct_raw": -18.886,
+  "net_ann_pct_masked": -16.87,
+  "net_ann_pct_shuffled_control_raw": -8.66,
+  "net_ann_pct_shuffled_control_masked": -2.847,
+  "adopted_arm": "MASKED",
+  "why": "the raw arm does not beat the masked arm (-2.0159 pp/yr net); rule 3's default stands and nothing changes"
+ },
+ "usage": {
+  "tokens_in": 409624,
+  "tokens_out": 16918,
+  "cost_usd": 0.0,
+  "refusals": {
+   "read_RAW": 0,
+   "read_MASKED": 0,
+   "control_SHUFFLED_raw": 0,
+   "control_SHUFFLED_masked": 0
+  }
+ },
+ "P1_P6": {
+  "P1_temporal_integrity": {
+   "anonymised": true,
+   "date_shifted_placebo_run": true,
+   "time_locked_control_run": false,
+   "time_locked_control_model": "ChronoGPT is specced as an OPTIONAL separate deliverable (spec section 1.6); it is not distributed as GGUF and needs a transformers path this job does not have",
+   "cutoff_stated": true,
+   "cutoff_date": "2024-06-30",
+   "cutoff_source": "community cutoff trackers + provider pages for Qwen2.5-7B-Instruct; NOT an official Alibaba cutoff page (spec section 1.3)",
+   "cutoff_confidence": "MEDIUM",
+   "evidence_paths": {
+    "anonymised": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_answers_run03.jsonl",
+    "date_shifted_placebo_run": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-12\\X_anon_gap_answers_run03.jsonl",
+    "time_locked_control_run": null
+   }
+  },
+  "P2_dynamic_universe": {
+   "universe_vintage_id": null,
+   "delisting_handled": true,
+   "note": "PANEL-B cells require the SUCCESSOR month to be literally the next one, so a delisted or halted name contributes no two-month return labelled as one (night_r2_monthly_llm.widened_forward_excess)"
+  },
+  "P3_direction_flip": {
+   "pass_rate": null,
+   "n": 0,
+   "test": "not run in this job: the direction-flip test needs C1's sign_flip counterfactuals, which X2_elasticity reads (spec section 3.5)"
+  },
+  "P4_calibration_ece": {
+   "ece": null,
+   "n_bins": 10,
+   "brier": null,
+   "brier_decomposition": {}
+  },
+  "P5_full_frictions": {
+   "cost_curve_id": "r2_trial.COST_BPS_PER_SIDE (25 bps/side on realised turnover)",
+   "cost_bps_per_side": 25.0,
+   "realised_bps": 48.49,
+   "costed": true,
+   "gross_reported_separately": true
+  },
+  "P6_disaggregation": {
+   "single_agent_baseline_run": true,
+   "field_provenance": {
+    "dir, conf": "Qwen2.5-7B-Instruct-Q4_K_M via the frozen TRIAL-R2 system+user prompt",
+    "fwd": "deterministic: SPY-excess open-to-open month return from bars.parquet",
+    "gap_pct_pt, gap_nw_t": "deterministic arithmetic in night_x_anonymisation_gap"
+   },
+   "homogeneity_metric": null
+  }
+ },
+ "LAP": {
+  "score": null,
+  "study_verdict": null,
+  "applies": false,
+  "reason_if_not_applicable": "PANEL-B (2025-01..2026-07) is entirely AFTER Qwen2.5-7B's ~2024-06 cutoff, so every cell here is already the post-cutoff arm of L3's split (spec section 1.3)"
+ },
+ "anonymisation_gap": {
+  "value_pct_pt": -2.0159,
+  "t": -0.543,
+  "adopted_arm": "MASKED",
+  "reason": null
+ },
+ "elapsed_s": 438.2,
+ "written_utc": "2026-09-13T21:02:19+00:00",
+ "headline": "300 cells, 19 paired blocks: raw -18.886%/yr net vs masked -16.87%/yr net -> gap -2.0159 pp/yr t -0.543; AMNESIA canary 0.0027; adopted MASKED",
+ "verdict": "ADOPTED_ARM=MASKED: the raw arm does not beat the masked arm (-2.0159 pp/yr net); rule 3's default stands and nothing changes",
+ "family_max_p": null,
+ "run": 3,
+ "stage": null,
+ "awake_s": 438.2,
+ "slept_s": 0.0,
+ "box_s": 7200.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 3820,
+ "killed_pids": [],
+ "exit_code": 0
+}
