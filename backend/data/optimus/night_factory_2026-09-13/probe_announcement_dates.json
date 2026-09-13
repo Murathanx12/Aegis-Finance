@@ -128,5 +128,7 @@
  ],
  "what_this_does_NOT_do": "no historical read was run on the v1 sign. Swapping the event-sign input is a registration AMENDMENT naming only the input (TRIAL-DRAFT-C \u00a78), and the read happens after the amendment is signed.",
  "written_utc": "2026-09-13T03:47:15+00:00",
- "headline": "ANNOUNCEMENT DATES EXIST 1990-2024: IBES act_epsus `anndats`, 866,372 QTR EPS rows over 35 years, 22,759 tickers, 92.6% of rows on a ticker the CRSP link knows; PIT stamp is `actdats` (median lag 0d, p95 91d)"
+ "headline": "ANNOUNCEMENT DATES EXIST 1990-2024: IBES act_epsus `anndats`, 866,372 QTR EPS rows over 35 years, 22,759 tickers, 92.6% of rows on a ticker the CRSP link knows; PIT stamp is `actdats` (median lag 0d, p95 91d)",
+ "stage": "raw",
+ "stage_note": "THE STAGE CONTRACT (`docs/STAGE_CONTRACT.md`). This probe reads vendor tables and reports what columns and how many rows they carry. It normalises nothing, ranks nothing and prices nothing, so it is `raw` -- the first stage, which by construction reads no artefact any later stage produced."
 }

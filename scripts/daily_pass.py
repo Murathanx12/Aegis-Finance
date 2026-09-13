@@ -440,6 +440,18 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         "roadmap_item": "chunk 12 T1",
         "licence": "PRODUCT_EXPERIMENT",
         "llm_spend_usd": 0.0,
+        # THE STAGE CONTRACT (`docs/STAGE_CONTRACT.md`). A driver is not one
+        # stage: its steps run from `raw` (the corpus pull, the snapshot)
+        # through `normalized` (the E1 append) to `pnl` (the cadence pass marks
+        # positions and a NAV). It is stamped at the LAST stage it reaches,
+        # which is the conservative direction -- `pnl` may read anything and
+        # nothing may read it, so a stamp of `pnl` can never license a forward
+        # read. The per-step stages are in `step_stages` rather than averaged
+        # into one number nobody can act on.
+        "stage": "pnl",
+        "step_stages": {"news_pull": "raw", "analyst_snapshot": "raw",
+                        "e1_append": "normalized", "book_cadence": "pnl",
+                        "coverage": "raw"},
         "date": day, "run": run,
         "git_head": git_head(),
         "started_utc": started.isoformat(timespec="seconds"),

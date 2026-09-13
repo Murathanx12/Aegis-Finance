@@ -294,6 +294,24 @@ def test_the_receipt_shape(out, calls, rth_open) -> None:
     assert [r["step"] for r in on_disk["steps"]] == [s for s, _ in DP.STEPS]
 
 
+def test_the_receipt_carries_a_stage_and_it_is_the_last_one_it_reaches(
+        out, calls, rth_open) -> None:
+    """The receipt lands in the night folder, and every json in there must carry
+    a stage (`test_stage_contract_no_forward_read`). A driver is not one stage:
+    it is stamped at the LAST stage it reaches, which is the conservative
+    direction -- `pnl` may read anything and nothing may read it, so the stamp
+    can never license a forward read."""
+    from scripts.night_factory_jobs import STAGE_ORDER
+
+    rec = DP.run_daily_pass(day=_today())
+    assert rec["stage"] == "pnl"
+    assert rec["stage"] in STAGE_ORDER
+    assert set(rec["step_stages"]) == {s for s, _ in DP.STEPS}, (
+        "a step without a declared stage would be stamped by the roll-up alone")
+    assert set(rec["step_stages"].values()) <= set(STAGE_ORDER)
+    assert max(STAGE_ORDER.index(v) for v in rec["step_stages"].values()) ==         STAGE_ORDER.index(rec["stage"])
+
+
 def test_the_receipt_lands_in_the_nights_own_folder(out, calls, rth_open) -> None:
     rec = DP.run_daily_pass(day=_today())
     assert Path(rec["path"]).parent == out

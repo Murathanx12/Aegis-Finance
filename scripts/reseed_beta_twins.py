@@ -247,6 +247,13 @@ def plan(*, bars=None, asof: date | None = None, conn=None) -> dict:
     return {
         "receipt": "reseed_beta_twins", "roadmap_item": "chunk 12 T4",
         "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        # THE STAGE CONTRACT (`docs/STAGE_CONTRACT.md`). This scan reads bars and
+        # a book registry and produces a UNIVERSE -- a matched list of tradable
+        # names. It computes no signal, no weight and no PnL, so it is
+        # `normalized`: the stage between the raw tape and anything ranked.
+        "stage": "normalized",
+        "stage_note": ("a twin's membership is a universe, not a signal. This "
+                       "receipt may be read by a later stage and reads none."),
         "ran_at": _now(), "asof": str(asof),
         "bars_available": bars is not None,
         "armed": is_armed(), "arm_env": ARM_ENV, "applied": False,
