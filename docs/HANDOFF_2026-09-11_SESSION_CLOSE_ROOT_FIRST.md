@@ -266,6 +266,10 @@ before crediting discovery** (protocol §9).
   authority correctly declining a Saturday. What is stale is the LAPTOP's local tracker copy
   (2026-09-02), which nothing trades on; the local `.env` carries no Alpaca role keys by design, so
   a laptop refresh is neither possible nor needed.
+- **Murat, 12:05 HKT:** TdrDelay set (60/60, reboot pending until chunk 12 lands); Headline Arena
+  REMOVED; lane D takes hack2's Alpaca paper account (six is the venue's cap); the six accounts read
+  live: fleet −8.1%, no book above its start (table in the roadmap §11c); "thousands of paper
+  accounts" is honestly not built — 7 books + 15 twins + lane D as internal ledgers — chunk 13.
 - **Next:** the model-dependent queue is unchanged (R2 panel B, `L2_typed_events`, then E1 on typed
   rows, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text — all behind the
   attended `TdrDelay`); C's `next_test` is its own $10M re-measurement and the v1 event sign once L2

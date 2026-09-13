@@ -423,7 +423,7 @@ scores verbal reflections with a proper scoring rule; we will.
 | **M2** | **Distillation, ExpeL-style, from winner vs matched loser.** A night job diffs graded pairs (a book vs its twin; a rule that paid vs the same rule in the era it did not) and writes candidate **rules as text with their own Brier**: a rule is a forecast about future forecasts and is graded like one. Output: `backend/data/optimus/brain/LEARNED_<YYYY-MM>.md` — the markdown Murat asked for, fed to Optimus — and `learned_rules.jsonl` for retrieval. | a rule must generalise to a held-out mechanism family or it is `NOT_GENERALISED`; a shuffled-pair distillation produces the noise floor |
 | **M3** | **Retrieval that cannot see hindsight.** When the model is asked for a forecast at date t, it may retrieve only rules whose `resolution_date < t` and whose Brier was computed on data before t. Enforced in the retriever, tested both ways. | the same forecast with retrieval off |
 | **M4** | **Calibration on the board:** Brier split into calibration and resolution (Murphy 1973), reliability diagram per model and per mechanism, rolling; Tetlock-style persistence check (does last quarter's calibration predict this quarter's?). | the base-rate row |
-| **M6** | **Independent settlement — Headline Arena** (issue #8, Kopei, 2026-09-11; note `research_notes/2026-09-11/research_headlinearena.md`). A daily read-only job maps our sensors (NVDA/SPY sensor, FRED, vol regime, the pre-open local read) to direction + confidence on the overlapping targets (GC, CL, ZN, ES, DXY), **locks the row in our own ledger first** (`belief_state.make_prediction`), then posts (`POST /api/v1/eval/challenges/{id}/predict`, reading each challenge's own `dead_zone_pct` rather than hardcoding a threshold), and reconciles their settlement against our grade the next day. Adds what self-measurement cannot: a record settled by a party that is not us, on shared targets, with a public curve. Caveats to carry: their terms take a perpetual, sublicensable licence to submitted text (treat `reasoning` as public and non-recallable); no legal entity or jurisdiction is named; the plugin is a one-maintainer repo; the financial track's score is `50 ± 50·confidence`, not Brier (Brier/CRPS only on the Civic track); the top agent is near coin-flip. Registration is attended (magic link to Murat's e-mail). The mapping is pre-registered before the first submission. | acceptance: for every resolved challenge our ledger's grade equals their settlement; credit-earning never touches the stated confidence |
+| **M6** | ~~Independent settlement — Headline Arena~~ **REMOVED 2026-09-13 (Murat: "just a vibe-code project")**: the daily job, its registry entry and its credential names are deleted in chunk 12; independent settlement stays wanted, from a venue with an entity behind it. | — |
 | **M5** | **Numeric side:** the ledger's numeric fields are a training table; **GBM is the mandatory control for any net** (Gu-Kelly-Xiu 2020: trees and shallow nets lead; no attention/memory architecture has beaten that bar on cross-sectional returns). A Decision-Transformer-style model conditioned on the four personalities is a permitted experiment against that control, not a default. | GBM on the same table |
 
 ## 10. Lane X — the LLM inside the backtest, REOPENED with workarounds and a protocol
@@ -681,6 +681,28 @@ under `night_factory_2026-09-13/`; CPU only, 103 s + 0 s + 60 s):**
   on a registered construction. The lesson that generalises: the first replay warmed a signal on a
   shorter window than its registration and nobody noticed until the literature note asked why the
   1990s were weakest — **the registered construction is a test input, and the receipt must print it.**
+
+**The six Alpaca paper accounts, read live 2026-09-13 12:10 HKT (`scripts.fleet --check` per role through
+each Railway service's own variables; start $100,000 each):**
+
+| role | mandate | equity | positions | orders (any status) |
+|---|---|---|---|---|
+| hack1 | theme basket | $93,863 | 3 | 30 |
+| hack2 | post-event drift | $98,821 | 0 | 8 |
+| hack3 | tracker balanced | $83,342 | 10 | 98 |
+| hack4 | tracker profit-max | $92,941 | 4 | 62 |
+| hack5 | convexity (options) | $95,095 | 1 | 12 |
+| hack6 | tracker diversified | $87,591 | 15 | 130 |
+
+Fleet $551,653 of $600,000 (−8.1%); every book below its start; the three tracker books carry the
+losses. **Decision (Murat, 12:05 HKT): Alpaca allows six paper accounts, so lane D takes one of these
+instead of a seventh — hack2**, the one with no position and the least-touched equity. Alpaca creds
+for lane D use the names `ALPACA_LANE_D_API_KEY_ID` / `ALPACA_LANE_D_API_SECRET_KEY` (chunk 12 T6);
+the `aat-loop-hack2` Railway service is retired when the keys move. **"Thousands of paper accounts"
+(VISION §6b) is NOT built**: what exists is seven registered books, fifteen twins and lane D's book
+as internal ledgers at cadence, plus these six venue accounts. Scaling the internal population to
+thousands (every mechanism × personality × cadence × universe, each with a twin and a frozen
+contract) is chunk 13's job, and the accumulation it buys is calendar time, not compute.
 
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
