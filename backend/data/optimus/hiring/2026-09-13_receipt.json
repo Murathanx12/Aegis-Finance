@@ -1,0 +1,31 @@
+{
+ "job": "H1_hiring_pull",
+ "step": "snapshot",
+ "ran": true,
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "date": "2026-09-13",
+ "observed_utc": "2026-09-13T17:49:17+00:00",
+ "rows": 192,
+ "by_status": {
+  "ok": 173,
+  "empty": 19,
+  "error": 0,
+  "first_observation": 192
+ },
+ "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hiring\\2026-09-13.jsonl",
+ "cursor": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\hiring\\cursor.json",
+ "coverage": {
+  "symbols_with_a_board": 192,
+  "symbols_probed": 2362,
+  "rate_of_probed": 0.0813,
+  "denominator_note": "names with a board / names probed. The denominator travels with the number every time it is quoted."
+ },
+ "pit_rule": "first_seen_utc is THIS collector's own ingest clock, never the source's updated_at/createdAt/publishedAt -- those are index-state fields an ATS can backfill silently, and a feature stamped on one would read the future in a way no test would catch.",
+ "n_new_is_new_to_us": "n_new_since_last counts job ids absent from OUR cursor, and is None on a board's first observation rather than n_open -- otherwise the series carries a spike on the day we started looking.",
+ "labels": "none. TRIAL-HIRING-PIVOT-1 is not written; `label_source` stays false in news_sources.yaml. `n_ai_titled` is recorded and used by nothing.",
+ "errors_first_20": [],
+ "wall_s": 222.9,
+ "written_utc": "2026-09-13T17:53:00+00:00",
+ "headline": "192 board row(s) for 2026-09-13; 173 answered, 0 failed; coverage 192/2,362 probed"
+}
