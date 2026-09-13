@@ -995,6 +995,15 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
 
     job = remaining[0]
     minutes = dict(queue)[job]
+    # 2026-09-14 05:00: record the dispatch BEFORE the call. The loop's own
+    # 60 s box abandons this thread long before a real job returns, so a
+    # record written after the return was never written, the next tick saw
+    # the same job as still due, and the queue re-dispatched its first job
+    # instead of advancing -- the first night ran X_anon_gap twice and never
+    # reached E1.
+    dispatched[job] = today
+    row["dispatched_on"] = dispatched
+    row["running_job"] = job
     with state.model_lock:
         state.note_model_call(now)
         try:

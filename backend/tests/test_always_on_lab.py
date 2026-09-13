@@ -1083,3 +1083,24 @@ def test_the_lab_news_pull_hands_every_source_a_short_budget(lab, monkeypatch):
         pass
     ctx = seen.get("ctx")
     assert ctx is not None and ctx.budget_s == _config.LAB_NEWS_SOURCE_BUDGET_S
+
+
+def test_the_idle_queue_records_a_dispatch_before_the_job_returns(lab, monkeypatch):
+    """2026-09-14: the record was written after `dispatch_job` returned, and
+    the loop's 60 s box abandons that thread first -- so the first night
+    re-dispatched its first job and never advanced."""
+    monkeypatch.setattr(L, "model_status", lambda: {"listening": True, "ready": True, "foreign": False})
+    monkeypatch.setattr(L, "yields_to", lambda *a, **k: None)
+    state = L.LabState()
+    state.last_model_call_utc = None
+    row = state.loops["idle_gpu_queue"]
+    seen = {}
+
+    def slow_dispatch(job, minutes):
+        seen["recorded_before_return"] = row.get("dispatched_on", {}).get(job) == L.run_date()
+        seen["running_job"] = row.get("running_job")
+        return {"verdict": "x"}
+    monkeypatch.setattr(L, "dispatch_job", slow_dispatch)
+    L.loop_idle_gpu_queue(state)
+    assert seen["recorded_before_return"] is True
+    assert seen["running_job"] == _config.LAB_IDLE_QUEUE[0][0]
