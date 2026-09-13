@@ -53,12 +53,18 @@ READER_ENV = "AEGIS_L2_READER"
 #: implementation; `deepseek` is wired and metered.
 READERS = ("local", "deepseek", "cloud")
 
-#: MEASURED 2026-09-13: about $2.00 for roughly 6,000 typed rows on
-#: `deepseek-chat`, prompt-cached, with the JSON schema on the wire. Used ONLY
-#: for the pre-call budget estimate; the ground truth stays
+#: MEASURED 2026-09-13 17:18, from the CALL LEDGER rather than from the job's
+#: own receipt: **$2.04 over 6,007 typed rows** on DeepSeek, prompt-cached,
+#: schema on the wire, 1 h 45 min wall, event-type kappa 0.87 on the 50-row
+#: re-prompt. The job's own `llm_spend_usd` printed **$0.00** for that same run
+#: -- the field reads the local-cost path -- so the ledger is the number that
+#: ships here and `lab_budget` books this estimate whenever a metered run
+#: reports zero. Used ONLY for the pre-call guard; the ground truth stays
 #: `scripts/llm_cost_audit.py`'s reconciliation against the provider's balance.
 #: Named an ESTIMATE in every receipt that quotes it, because it is one.
-DEEPSEEK_USD_PER_ROW = 2.00 / 6000.0
+DEEPSEEK_MEASURED_USD = 2.04
+DEEPSEEK_MEASURED_ROWS = 6007
+DEEPSEEK_USD_PER_ROW = DEEPSEEK_MEASURED_USD / DEEPSEEK_MEASURED_ROWS
 
 
 class CloudReaderNotImplemented(RuntimeError):
@@ -152,9 +158,11 @@ def resolve(*, rows_this_tick: int, env: dict | None = None) -> dict:
     row: dict = {"reader": name, "rows_this_tick": int(rows_this_tick),
                  "metered": name not in ("local",),
                  "estimated_usd": estimate_usd(name, rows_this_tick),
-                 "cost_basis": ("MEASURED 2026-09-13, ~$2.00/6,000 rows on "
-                                "deepseek-chat with the schema on the wire; an "
-                                "ESTIMATE, reconciled by llm_cost_audit.py"
+                 "cost_basis": ("MEASURED 2026-09-13 by the CALL LEDGER: "
+                                f"${DEEPSEEK_MEASURED_USD:.2f} over "
+                                f"{DEEPSEEK_MEASURED_ROWS:,} rows (the job receipt "
+                                "printed $0.00 for the same run); an ESTIMATE, "
+                                "reconciled by llm_cost_audit.py"
                                 if name == "deepseek" else "local reads cost compute, "
                                 "not dollars")}
 
@@ -271,7 +279,8 @@ def _read_typed_rows() -> list[dict]:
     return out
 
 
-__all__ = ["DEEPSEEK_USD_PER_ROW", "READERS", "READER_ENV", "CloudReader",
+__all__ = ["DEEPSEEK_MEASURED_ROWS", "DEEPSEEK_MEASURED_USD",
+           "DEEPSEEK_USD_PER_ROW", "READERS", "READER_ENV", "CloudReader",
            "CloudReaderNotImplemented", "ReaderRefused", "chosen",
            "estimate_usd", "get", "overlap_report", "overlap_rows",
            "provider_configured", "register", "registered", "resolve"]

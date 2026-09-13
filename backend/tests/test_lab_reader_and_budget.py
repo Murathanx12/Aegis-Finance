@@ -237,3 +237,25 @@ def test_the_overlap_set_says_when_it_is_below_the_declared_size(spend_dir):
 
 def test_the_declared_overlap_size_comes_from_config(spend_dir):
     assert lab_reader.overlap_rows() == _config.LAB_L2_OVERLAP_ROWS
+
+
+def test_the_cost_estimate_is_the_call_ledgers_number_not_the_receipts(spend_dir):
+    """The 17:18 DeepSeek run typed 6,007 rows and printed `llm_spend_usd: 0.00`
+    while the call ledger said $2.04.
+
+    The estimate this module carries is the LEDGER's, because the receipt's own
+    field reads the local-cost path and is a known defect. A guard calibrated on
+    a number that is structurally zero is not a guard.
+    """
+    assert lab_reader.DEEPSEEK_MEASURED_USD == 2.04
+    assert lab_reader.DEEPSEEK_MEASURED_ROWS == 6007
+    assert lab_reader.estimate_usd("deepseek", 6007) == pytest.approx(2.04, abs=1e-3)
+
+
+def test_the_cost_basis_names_the_receipt_defect(spend_dir, monkeypatch):
+    monkeypatch.setenv(lab_reader.READER_ENV, "deepseek")
+    monkeypatch.setattr(lab_reader, "provider_configured", lambda name: True)
+    basis = lab_reader.resolve(rows_this_tick=10)["cost_basis"]
+    assert "CALL LEDGER" in basis
+    assert "$0.00" in basis, (
+        "a reader of this receipt must know the job's own field printed zero")

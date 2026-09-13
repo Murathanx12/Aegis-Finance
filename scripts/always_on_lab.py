@@ -735,13 +735,24 @@ def loop_l2_typing(state: LabState) -> dict:
         row_status = "ok" if typed else "nothing_to_do"
 
     spend = lab_budget.spend_today()
+    cost_source = "not_metered"
     if choice["metered"] and typed:
         usage = out.get("usage") or {}
-        actual = float(usage.get("cost_usd") or 0.0) or lab_reader.estimate_usd(
-            choice["reader"], typed)
+        reported = float(usage.get("cost_usd") or 0.0)
+        # THE RECEIPT LIES ABOUT ZERO, MEASURED. The 2026-09-13 17:18 DeepSeek
+        # run typed 6,007 rows and printed `llm_spend_usd: 0.00` while the call
+        # ledger said $2.04, because the field reads the local-cost path. So a
+        # metered tick that reports 0.00 is booked at the ESTIMATE instead --
+        # and SAYS which of the two it used, because a silently substituted
+        # number is the failure the substitution exists to prevent, wearing the
+        # other hat.
+        actual = reported or lab_reader.estimate_usd(choice["reader"], typed)
+        cost_source = "receipt" if reported else "estimate_substituted"
         spend = lab_budget.record(actual, backend=choice["reader"],
-                                  rows=typed, what="L2 typing tick")
+                                  rows=typed,
+                                  what=f"L2 typing tick ({cost_source})")
     elif typed:
+        cost_source = "local_unmetered"
         lab_budget.record(0.0, backend="local", rows=typed, what="L2 typing tick")
 
     return {
@@ -754,6 +765,7 @@ def loop_l2_typing(state: LabState) -> dict:
         "backend": backend,
         "metered": choice["metered"],
         "estimated_usd": choice["estimated_usd"],
+        "cost_source": cost_source,
         "spend_today_usd": spend["spend_today_usd"],
         "spend_cap_usd": spend["cap_usd"],
         "reader_overlap": _overlap_block(),

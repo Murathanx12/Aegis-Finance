@@ -981,3 +981,50 @@ def test_no_test_in_this_file_encodes_a_calendar_moment():
     for match in re.findall(r"20\d\d-\d\d-\d\d", body):
         raise AssertionError(f"literal date {match!r} in executable test source")
     assert "datetime.now" in src
+
+
+def test_a_metered_tick_that_reports_zero_books_the_estimate_and_says_so(
+        lab, monkeypatch):
+    """MEASURED defect: the 17:18 DeepSeek run typed 6,007 rows and printed
+    `llm_spend_usd: 0.00` while the call ledger said $2.04.
+
+    The loop substitutes the estimate — and SAYS which of the two it booked.
+    A silently substituted number is the failure the substitution exists to
+    prevent, wearing the other hat.
+    """
+    monkeypatch.setenv("AEGIS_L2_READER", "deepseek")
+    from backend.services import lab_reader
+    monkeypatch.setattr(lab_reader, "provider_configured", lambda name: True)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "ok", "rows_typed": 100, "usage": {"cost_usd": 0.0},
+        "corpus": {"rows_waiting": 5900}})
+
+    out = L.loop_l2_typing(L.LabState())
+    assert out["status"] == "ok" and out["n"] == 100
+    assert out["cost_source"] == "estimate_substituted"
+    assert out["spend_today_usd"] == pytest.approx(
+        100 * lab_reader.DEEPSEEK_USD_PER_ROW, abs=1e-6)
+
+
+def test_a_metered_tick_that_reports_a_cost_books_the_receipts_number(
+        lab, monkeypatch):
+    monkeypatch.setenv("AEGIS_L2_READER", "deepseek")
+    from backend.services import lab_reader
+    monkeypatch.setattr(lab_reader, "provider_configured", lambda name: True)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "ok", "rows_typed": 100, "usage": {"cost_usd": 0.07},
+        "corpus": {"rows_waiting": 5900}})
+    out = L.loop_l2_typing(L.LabState())
+    assert out["cost_source"] == "receipt"
+    assert out["spend_today_usd"] == pytest.approx(0.07)
+
+
+def test_a_local_tick_is_booked_unmetered(lab, monkeypatch):
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": True, "ready": True, "foreign": False,
+        "started_by_aegis": True, "pid": 1})
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "ok", "rows_typed": 5, "corpus": {"rows_waiting": 1}})
+    out = L.loop_l2_typing(L.LabState())
+    assert out["cost_source"] == "local_unmetered"
+    assert out["spend_today_usd"] == 0.0

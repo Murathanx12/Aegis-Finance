@@ -69,6 +69,13 @@ NOT_INPUT_GUARDS: dict[str, str] = {
     "autopsy_llm": "AutopsyReplyUnusable — a model returned unparseable text",
     "investigator_tools": "BudgetExhausted — spend ceiling, enforced elsewhere",
     "research_budget": "ResearchBudgetExhausted — spend ceiling",
+    "lab_budget": ("SpendCapReached — a spend CEILING, not a missing "
+                   "input: the inputs are all present and the guard "
+                   "refuses because the day has cost enough. Same "
+                   "family as ResearchBudgetExhausted. The pre-call "
+                   "contract (the provider is never contacted, the "
+                   "call count stays 0) is asserted directly in "
+                   "test_lab_reader_and_budget.py"),
     "market_sessions": "SessionCalendarUnavailable — missing calendar file",
     "opportunity_funnel": "FunnelError — pipeline plumbing",
     "pm_engine": "BookError — book arithmetic",

@@ -1100,6 +1100,46 @@ def _case_brain_queries():
             f"a job NAME (not a path), and a limit at or under {MAX_LIMIT}")
 
 
+def _case_macro_calendar():
+    """Chunk 14 — the macro calendar with no FRED key.
+
+    The missing input is the CREDENTIAL, and the failure this refuses is
+    subtler than a crash: an empty release list because nobody set a key is
+    indistinguishable from a quiet quarter, and a reader plans around the wrong
+    one. `market_sensor` already draws exactly this line for `VIXCLS`; this is
+    the same line for `release/dates`. The refusal fires before the wire, so
+    the case makes no network call.
+    """
+    from backend import config as _cfg
+    from backend.services.macro_calendar import MacroRefused, release_dates
+
+    real = _cfg.api_keys.fred
+
+    def _call():
+        _cfg.api_keys.fred = ""
+        try:
+            return release_dates("CPI")
+        finally:
+            _cfg.api_keys.fred = real
+
+    return (_call, MacroRefused, "the FRED key the macro release calendar needs")
+
+
+def _case_lab_reader():
+    """Chunk 14 — a cloud reader that has not been registered.
+
+    The missing input is the READER ITSELF. A fallback to the local model would
+    produce a receipt stamped `reader: cloud` over locally typed rows, and every
+    local-vs-cloud comparison downstream -- the agreement kappa most of all --
+    would then be comparing one reader with itself.
+    """
+    from backend.services.lab_reader import CloudReaderNotImplemented, get
+
+    return (lambda: get("not_registered_anywhere"),
+            CloudReaderNotImplemented,
+            "a CloudReader implementation for the L2 typing loop")
+
+
 CASES = {
     "brain_queries": _case_brain_queries,
     "agency": _case_agency,
@@ -1108,6 +1148,8 @@ CASES = {
     "news_registry": _case_news_registry,
     "r2_trial": _case_r2_trial,
     "market_sensor": _case_market_sensor,
+    "macro_calendar": _case_macro_calendar,
+    "lab_reader": _case_lab_reader,
     "protocol_p16": _case_protocol_p16,
     "scenario_forecasts": _case_scenario_forecasts,
     "human_thesis": _case_human_thesis,
