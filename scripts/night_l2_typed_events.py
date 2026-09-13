@@ -48,6 +48,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -66,7 +67,13 @@ from backend.services import news_registry as nr                        # noqa: 
 
 JOB = "L2_typed_events"
 LICENCE = "PRODUCT_EXPERIMENT"
-RUN_DATE = "2026-09-13"
+#: 2026-09-13: this was the LITERAL "2026-09-13", which is the same defect
+#: `night_factory.py` carried for five days -- a stale default date reads
+#: exactly like a chosen one, and two real receipts landed in a folder five
+#: days in the past before anyone noticed. `NIGHT_RUN_DATE` is honoured so a
+#: job files into the same night folder as the rest of the day; unset, it is
+#: TODAY. Default-preserving on the day it was written and correct after it.
+RUN_DATE = os.getenv("NIGHT_RUN_DATE") or datetime.now().strftime("%Y-%m-%d")
 
 CORPUS = REPO / "backend" / "data" / "optimus" / "news_corpus"
 TYPED = REPO / "backend" / "data" / "optimus" / "typed_events"
@@ -500,11 +507,34 @@ def _probe(backend: str) -> str | None:
 
 def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
                     smoke: bool = False, kappa_rows: int = KAPPA_ROWS,
-                    complete=None, probe=None) -> dict:
+                    complete=None, probe=None, reader: str | None = None) -> dict:
     """Type every corpus row after the cursor. `complete`/`probe` are injectable
     so the tests pin the cursor, the counting and the refusal classes without a
-    model -- and without ever starting one."""
+    model -- and without ever starting one.
+
+    `reader` (chunk 14) is the ALWAYS-ON LAB's hook and is None for every
+    existing caller, which leaves `backend` in charge exactly as before. When it
+    is given, `lab_reader.resolve` picks the backend -- `local`, the wired and
+    metered `deepseek`, or the generic `cloud` hook that has no implementation
+    and REFUSES by name rather than falling back to local and calling the result
+    a cloud run. The resolution lives in one module so the supervisor and this
+    job cannot disagree about which reader ran.
+    """
     t0 = time.time()
+    reader_row: dict | None = None
+    if reader is not None:
+        from backend.services import lab_reader
+        reader_row = lab_reader.resolve(rows_this_tick=int(max_rows or 0))
+        if not reader_row.get("ok"):
+            return {"job": JOB, "lane": "L", "licence": LICENCE, "run": run,
+                    "stage": "features", "llm_spend_usd": 0.0,
+                    "backend": None, "reader": reader_row,
+                    "status": reader_row["refusal"],
+                    "verdict": f"{reader_row['refusal']}: {reader_row['detail']}",
+                    "headline": (f"{reader_row['refusal']} -- no model call was "
+                                 f"made and no row was typed; $0.00"),
+                    "elapsed_s": round(time.time() - t0, 1), "written_utc": _now()}
+        backend = reader_row["backend"]
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     sources = label_sources()
     files = corpus_files(sources)
@@ -523,7 +553,7 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
         # row in the stage contract. L2 turns raw text into FEATURE rows; it
         # reads no price, no weight and no PnL.
         "stage": "features",
-        "llm_spend_usd": 0.0, "backend": backend,
+        "llm_spend_usd": 0.0, "backend": backend, "reader": reader_row,
         "question": ("What typed event, if any, does each corpus document carry, "
                      "as a row that is numeric by construction?"),
         "contract": ex.declaration(),

@@ -52,7 +52,15 @@ MODULE = Path(L.__file__).resolve()
 
 @pytest.fixture
 def lab(tmp_path, monkeypatch):
-    """Redirect every path and stub every external probe.
+    """Redirect every path, stub every external probe, and REPLACE EVERY LOOP.
+
+    The loop replacement is not tidiness. While this file was being written the
+    fixture stubbed only the paths, and the first test that called `tick()`
+    without the loop stubs ran the REAL news pull — eighteen registered sources,
+    paced, against a live daily pass — inside the offline fast suite. It hung.
+    A fixture that redirects where a driver writes but not what it calls is half
+    a fixture: `HANDLERS` is the other half of the seam and belongs here, where
+    no test can forget it.
 
     Returns the night directory, which is where the STOP file lives.
     """
@@ -68,13 +76,37 @@ def lab(tmp_path, monkeypatch):
         "foreign": False, "pid": None, "detail": "not running"})
     monkeypatch.setattr(L, "pid_alive", lambda pid: False)
     monkeypatch.setattr(L, "pid_names_lab", lambda pid: True)
+    # nothing scheduled is running; individual tests override this. The real
+    # probe launches PowerShell, which the offline suite must never do.
+    monkeypatch.setattr(L, "running_drivers", lambda now=None: {
+        "scan_ran": True, "scanned": 0,
+        **{name: [] for name in L.SCHEDULED_DRIVERS}})
+    monkeypatch.setattr(L, "HANDLERS",
+                        {n: (lambda s: {"status": "ok", "n": 0}) for n, _ in L.LOOPS})
+    # the spend ledger and the reader choice live under DATA_DIR too
+    monkeypatch.delenv("AEGIS_L2_READER", raising=False)
+    monkeypatch.delenv(_config.LAB_SPEND_CAP_ENV, raising=False)
     return night
 
 
+class FakeSource:
+    """The four registry fields the cadence check reads. Nothing else."""
+
+    def __init__(self, sid, min_interval_s=1.0, queries=(), rate_limit="none observed"):
+        self.id = sid
+        self.min_interval_s = min_interval_s
+        self.queries = tuple(queries)
+        self.rate_limit = rate_limit
+
+
 @pytest.fixture
-def stubbed_loops(monkeypatch):
-    """Replace every loop handler with a counter, so the SCHEDULER is what is
-    under test rather than any loop's own behaviour."""
+def stubbed_loops(lab, monkeypatch):
+    """Counting loop handlers, so the SCHEDULER is what is under test.
+
+    Depends on `lab` so the counters replace the fixture's own stubs rather than
+    racing them — and so no test can reach a counter without also having the
+    paths redirected.
+    """
     seen: dict[str, int] = {name: 0 for name, _ in L.LOOPS}
 
     def make(name):
@@ -364,6 +396,231 @@ def test_state_is_carried_across_a_restart(lab, stubbed_loops):
     assert revived.loops["news_pull"]["last_tick_utc"] is not None
     assert not revived.due("news_pull", t0 + timedelta(minutes=1))
     assert revived.due("news_pull", t0 + timedelta(minutes=16))
+
+
+# --------------------------------------------------------------------------
+# loop 1 — the live news pull
+
+
+def test_the_news_pull_calls_pull_all_with_the_admitted_sources(lab, monkeypatch):
+    seen: dict = {}
+
+    def _pull(**kw):
+        seen.update(kw)
+        return {"rows_new": 12, "red": [], "refused": [], "sources": 2,
+                "resolution_rate": 0.5, "headline": "12 new rows"}
+
+    monkeypatch.setattr(L, "news_sources",
+                        lambda: [FakeSource("fast"), FakeSource("also_fast")])
+    monkeypatch.setattr(L, "pull_news", _pull)
+    out = L.loop_news_pull(L.LabState())
+    assert out["status"] == "ok"
+    assert out["n"] == 12 and out["rows_new"] == 12
+    assert seen["source_ids"] == ["fast", "also_fast"]
+
+
+def test_a_source_whose_declared_spacing_exceeds_the_cadence_is_skipped_by_name(
+        lab, monkeypatch):
+    """A cadence table with an unstated exception is not a cadence table.
+
+    Six queries at 20 s is a 120 s floor and fits a 15-minute cadence; the same
+    source with 200 queries does not, and is skipped with the reason ON the row
+    rather than quietly pulled less often than the registry declares.
+    """
+    slow = FakeSource("greedy", min_interval_s=20.0, queries=tuple(range(200)))
+    row = L.cadence_admits(slow, L.PERIODS["news_pull"])
+    assert row["admitted"] is False
+    assert row["why"] == "rate_limit_would_be_breached_at_this_cadence"
+    assert "4000s" in row["detail"] or "4,000" in row["detail"] or "s of declared" in row["detail"]
+
+    monkeypatch.setattr(L, "news_sources", lambda: [slow, FakeSource("ok")])
+    monkeypatch.setattr(L, "pull_news", lambda **kw: {
+        "rows_new": 1, "red": [], "refused": [], "headline": "1"})
+    out = L.loop_news_pull(L.LabState())
+    assert [s["source"] for s in out["sources_skipped"]] == ["greedy"]
+
+
+def test_a_budget_smaller_than_the_cadence_demands_is_skipped(lab):
+    row = L.cadence_admits(FakeSource("tiny", rate_limit="10 requests per day"),
+                           L.PERIODS["news_pull"])
+    assert row["admitted"] is False
+    assert row["declared_budget_per_day"] == 10.0
+
+
+def test_an_unparseable_rate_limit_is_cannot_determine_not_a_skip(lab):
+    """A refusal needs evidence just as a positive does.
+
+    Fourteen of the eighteen registered sources say "none observed" or
+    "unknown"; skipping every one of them because prose is prose would stop the
+    corpus and call it caution.
+    """
+    row = L.cadence_admits(FakeSource("prose", rate_limit="none observed"),
+                           L.PERIODS["news_pull"])
+    assert row["admitted"] is True
+    assert row["budget_parsed"] is False
+    assert "CANNOT DETERMINE" in row["why"]
+
+
+def test_the_news_pull_yields_to_a_running_daily_pass(lab, monkeypatch):
+    """`daily_pass` owns 06:30 and pulls every source itself.
+
+    Detected from the process table, never from a guessed wall-clock window: a
+    daily pass running late is still running, whatever time it is.
+    """
+    monkeypatch.setattr(L, "running_drivers", lambda now=None: {
+        "scan_ran": True, "daily_pass": [777], "night_factory": [],
+        "monday_night": []})
+    monkeypatch.setattr(L, "pull_news", lambda **kw: pytest.fail(
+        "a second concurrent pull re-hits every source's rate limit"))
+    out = L.loop_news_pull(L.LabState())
+    assert out["status"] == "skipped"
+    assert out["reason"] == "DAILY_PASS_RUNNING"
+    assert out["pids"] == [777]
+
+
+def test_an_empty_pull_is_nothing_to_do_with_a_count_not_silence(lab, monkeypatch):
+    monkeypatch.setattr(L, "news_sources", lambda: [FakeSource("quiet")])
+    monkeypatch.setattr(L, "pull_news", lambda **kw: {
+        "rows_new": 0, "red": [], "refused": [], "headline": "0 new rows"})
+    out = L.loop_news_pull(L.LabState())
+    assert out["status"] == "nothing_to_do"
+    assert out["n"] == 0
+    assert out["sources_red"] == []
+
+
+def test_red_sources_reach_the_status_file_by_name(lab, monkeypatch):
+    monkeypatch.setattr(L, "news_sources", lambda: [FakeSource("dead")])
+    monkeypatch.setattr(L, "pull_news", lambda **kw: {
+        "rows_new": 0, "red": ["dead"], "refused": [], "headline": "0"})
+    handlers = dict(L.HANDLERS)
+    handlers = {n: (lambda s: {"status": "ok", "n": 0}) for n, _ in L.LOOPS}
+    handlers["news_pull"] = L.loop_news_pull
+    monkeypatch.setattr(L, "HANDLERS", handlers)
+    payload = L.tick(L.LabState(), now=datetime.now(timezone.utc))
+    assert payload["loops"]["news_pull"]["sources_red"] == ["dead"]
+
+
+def test_an_unreadable_registry_refuses_by_name(lab, monkeypatch):
+    monkeypatch.setattr(L, "news_sources", lambda: (_ for _ in ()).throw(
+        ValueError("news_sources.yaml is malformed")))
+    out = L.loop_news_pull(L.LabState())
+    assert out["status"] == "refused"
+    assert out["reason"] == "REGISTRY_UNREADABLE"
+
+
+# --------------------------------------------------------------------------
+# loop 2 — the typing loop and the model server it must never start
+
+
+class SpyServer:
+    """A stand-in for `llama_server` that RECORDS a start or a stop.
+
+    The assertion is on the mock's call count, not on the module's source: a
+    file-level AST check says the symbol is absent, and this says the CALL never
+    happened at run time. Both, because they fail for different reasons.
+    """
+
+    def __init__(self, **status):
+        self._status = status
+        self.starts = 0
+        self.stops = 0
+
+    def status(self):
+        return dict(self._status)
+
+    def start(self, *a, **k):
+        self.starts += 1
+        raise AssertionError("the lab started the model server")
+
+    def stop(self, *a, **k):
+        self.stops += 1
+        raise AssertionError("the lab stopped the model server")
+
+
+def test_foreign_llama_server_is_used_not_started(lab, monkeypatch):
+    """A server already running when Aegis started is not ours to stop.
+
+    It IS ours to read from, and the typing loop does exactly that: `status()`
+    once per model-touching tick, then the reader, and never a `start()`.
+    """
+    spy = SpyServer(listening=True, ready=True, started_by_aegis=False,
+                    foreign=True, pid=9981, detail="ready as PID 9981, started OUTSIDE Aegis")
+    monkeypatch.setattr(L, "model_status", spy.status)
+    typed: dict = {}
+
+    def _type(**kw):
+        typed.update(kw)
+        return {"status": "ok", "rows_typed": 7, "usage": {"cost_usd": 0.0},
+                "corpus": {"rows_waiting": 5980, "rows_on_disk": 6020},
+                "headline": "7 typed"}
+
+    monkeypatch.setattr(L, "type_rows", _type)
+    out = L.loop_l2_typing(L.LabState())
+    assert out["status"] == "ok"
+    assert out["n"] == 7 and out["backlog_remaining"] == 5980
+    assert out["llama_server_foreign"] is True
+    assert typed["backend"] == "local"
+    assert spy.starts == 0 and spy.stops == 0
+
+
+def test_no_server_means_pending_model_not_a_crash(lab, monkeypatch):
+    spy = SpyServer(listening=False, ready=False, started_by_aegis=False,
+                    foreign=False, pid=None, detail="not running")
+    monkeypatch.setattr(L, "model_status", spy.status)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail(
+        "the reader was called with nothing listening"))
+    out = L.loop_l2_typing(L.LabState())
+    assert out["status"] == "PENDING_MODEL"
+    assert out["n"] == 0
+    assert out["llama_server_up"] is False
+    assert spy.starts == 0
+
+
+def test_the_typing_loop_refuses_a_cloud_reader_that_does_not_exist(lab, monkeypatch):
+    monkeypatch.setenv("AEGIS_L2_READER", "cloud")
+    monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail(
+        "a refused cloud reader fell back to typing rows anyway"))
+    out = L.loop_l2_typing(L.LabState())
+    assert out["status"] == "refused"
+    assert out["reason"] == "CLOUD_READER_NOT_IMPLEMENTED"
+
+
+def test_the_typing_loop_records_a_model_call_so_the_gpu_can_be_called_idle(
+        lab, monkeypatch):
+    monkeypatch.setattr(L, "model_status", SpyServer(
+        listening=True, ready=True, foreign=False, started_by_aegis=True).status)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "ok", "rows_typed": 1, "corpus": {"rows_waiting": 0},
+        "usage": {"cost_usd": 0.0}})
+    state = L.LabState()
+    now = datetime.now(timezone.utc)
+    assert state.idle_minutes(now) is None, "never called is not the same as idle"
+    L.loop_l2_typing(state)
+    assert state.last_model_call_utc is not None
+    assert state.idle_minutes(now + timedelta(minutes=30)) >= 29
+
+
+def test_an_empty_backlog_is_nothing_to_do(lab, monkeypatch):
+    monkeypatch.setattr(L, "model_status", SpyServer(
+        listening=True, ready=True, foreign=False, started_by_aegis=True).status)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "done", "rows_typed": 0, "corpus": {"rows_waiting": 0},
+        "verdict": "NOTHING TO DO"})
+    out = L.loop_l2_typing(L.LabState())
+    assert out["status"] == "nothing_to_do"
+    assert out["n"] == 0 and out["backlog_remaining"] == 0
+
+
+def test_the_typing_loop_bounds_one_tick(lab, monkeypatch):
+    """One tick must not try to type a 6,020-row backlog and block the pull."""
+    monkeypatch.setattr(L, "model_status", SpyServer(
+        listening=True, ready=True, foreign=False, started_by_aegis=True).status)
+    seen: dict = {}
+    monkeypatch.setattr(L, "type_rows", lambda **kw: seen.update(kw) or {
+        "status": "ok", "rows_typed": 1, "corpus": {"rows_waiting": 10}})
+    L.loop_l2_typing(L.LabState())
+    assert seen["max_rows"] == _config.LAB_L2_MAX_ROWS_PER_TICK
+    assert seen["max_rows"] < 6020
 
 
 # --------------------------------------------------------------------------

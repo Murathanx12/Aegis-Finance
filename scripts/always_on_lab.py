@@ -63,6 +63,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import threading
@@ -244,6 +245,90 @@ def news_sources() -> list:
 def type_rows(**kw) -> dict:
     from scripts import night_l2_typed_events
     return night_l2_typed_events.L2_typed_events(**kw)
+
+
+#: The scheduled drivers that own their own windows and their own receipts.
+#: The supervisor's overlapping loops YIELD to a running one rather than
+#: launching a second concurrent copy of the same underlying job.
+SCHEDULED_DRIVERS: dict = {
+    "daily_pass": "scripts.daily_pass",
+    "night_factory": "scripts.night_factory",
+    "monday_night": "scripts.monday_night",
+}
+
+#: How long a process scan is trusted before it is taken again. A PowerShell
+#: CIM query per loop per tick would cost more than the loops it guards.
+DRIVER_SCAN_TTL_S = 60.0
+_DRIVER_SCAN: dict = {"utc": None, "value": None}
+
+
+def scan_processes() -> list[tuple[int, str]]:
+    """(pid, command line) for every python process on this machine.
+
+    ONE query, shared by every arbitration check in a tick. Returns [] when the
+    probe itself could not run — and the callers treat that as CANNOT DETERMINE
+    rather than as "nothing is running", because a scan that failed and a
+    machine that is idle are different facts.
+    """
+    if sys.platform != "win32":
+        return []
+    from backend.services import quiet_subprocess as qsp
+    try:
+        r = qsp.run(["powershell", "-NoProfile", "-Command",
+                     "Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | "
+                     "ForEach-Object { \"$($_.ProcessId)`t$($_.CommandLine)\" }"],
+                    capture_output=True, text=True, timeout=45)
+    except Exception:                                              # noqa: BLE001
+        return []
+    out: list[tuple[int, str]] = []
+    for line in (r.stdout or "").splitlines():
+        pid, _, cmd = line.partition("\t")
+        if pid.strip().isdigit():
+            out.append((int(pid), cmd))
+    return out
+
+
+def running_drivers(*, now: datetime | None = None) -> dict:
+    """Which scheduled drivers are running RIGHT NOW, by PID.
+
+    Detected from the process table, never from a guessed wall-clock window: a
+    `daily_pass` running late is still running, whatever time it is. The scan
+    is cached for `DRIVER_SCAN_TTL_S` because it costs a PowerShell launch.
+    """
+    now = now or datetime.now(timezone.utc)
+    prev = _as_dt(_DRIVER_SCAN.get("utc"))
+    if prev is not None and (now - prev).total_seconds() < DRIVER_SCAN_TTL_S:
+        return dict(_DRIVER_SCAN["value"] or {})
+    rows = scan_processes()
+    me = os.getpid()
+    found: dict = {"scanned": len(rows), "scan_ran": bool(rows)}
+    for name, needle in SCHEDULED_DRIVERS.items():
+        found[name] = sorted(pid for pid, cmd in rows
+                             if needle in (cmd or "") and pid != me)
+    _DRIVER_SCAN["utc"] = now.isoformat(timespec="seconds")
+    _DRIVER_SCAN["value"] = found
+    return dict(found)
+
+
+def yields_to(*names: str, now: datetime | None = None) -> dict | None:
+    """A refusal row when one of `names` is running, else None.
+
+    `NIGHT_FACTORY_ALREADY_RUNNING` / `DAILY_PASS_RUNNING` /
+    `MONDAY_NIGHT_RUNNING`, by name, in the receipt — a reader never has to
+    know an enum's numbering to learn why a tick did nothing.
+    """
+    drivers = running_drivers(now=now)
+    for name in names:
+        pids = drivers.get(name) or []
+        if pids:
+            return {"status": "skipped",
+                    "reason": f"{name.upper()}_RUNNING" if name != "night_factory"
+                              else "NIGHT_FACTORY_ALREADY_RUNNING",
+                    "detail": (f"{name} is running as pid(s) {pids}; this loop "
+                               f"yields rather than launching a second copy of "
+                               f"the same underlying job"),
+                    "yielded_to": name, "pids": pids}
+    return None
 
 
 def dispatch_job(job: str, minutes: int) -> dict:
@@ -448,16 +533,264 @@ def _as_dt(value) -> datetime | None:
 # ===========================================================================
 
 
+#: `200 req/min free tier` -> (200, "min"). Prose the registry writes for a
+#: human, read for the one number in it that a cadence check can use.
+_RATE_PER_MIN = re.compile(
+    r"(\d+(?:\.\d+)?)\s*(?:req|call|request)s?\s*(?:/|per)\s*"
+    r"(s|sec|second|min|minute|h|hour|day)", re.I)
+
+
+def parsed_rate_limit(source) -> dict:
+    """The registry's PROSE rate limit, as calls-per-day when it parses.
+
+    `rate_limit` is a sentence written for a human ("200 req/min free tier",
+    "none observed", "unknown"). Where a number and a unit are in it, this
+    returns the implied daily budget; where they are not, it returns
+    CANNOT DETERMINE — which is NOT a skip. A refusal needs evidence just as a
+    positive does, and skipping every source whose limit is unparseable prose
+    would silently stop fourteen of eighteen sources.
+    """
+    text = str(getattr(source, "rate_limit", "") or "")
+    m = _RATE_PER_MIN.search(text)
+    if not m:
+        return {"parsed": False, "per_day": None, "text": text[:120],
+                "why": "no `<n> per <unit>` in the registry's prose"}
+    n = float(m.group(1))
+    per = {"s": 86400, "sec": 86400, "second": 86400,
+           "min": 1440, "minute": 1440, "h": 24, "hour": 24,
+           "day": 1}[m.group(2).lower()]
+    return {"parsed": True, "per_day": n * per, "text": text[:120]}
+
+
+def cadence_admits(source, period_minutes: int) -> dict:
+    """May this source be pulled every `period_minutes`? Two checks, both derived.
+
+    1. PACING: the source's own `min_interval_s` times its per-pull call count
+       is the floor on how long ONE pull takes. A pull that cannot finish
+       before the next one is due would have the supervisor's own cadence
+       breaching the registry's declared spacing.
+    2. BUDGET: where the prose rate limit parses to a daily budget, the cadence
+       demands `1440/period` pulls a day at that many calls each.
+
+    A skipped source is marked `rate_limit_would_be_breached_at_this_cadence`
+    BY NAME rather than quietly pulled less often than declared — a cadence
+    table with an unstated exception is not a cadence table.
+    """
+    calls = max(1, len(getattr(source, "queries", ()) or ()))
+    floor_s = float(getattr(source, "min_interval_s", 0) or 0) * calls
+    pulls_per_day = 1440.0 / max(1, period_minutes)
+    rate = parsed_rate_limit(source)
+    row = {"source": getattr(source, "id", "?"), "calls_per_pull": calls,
+           "min_interval_s": getattr(source, "min_interval_s", None),
+           "pull_floor_s": round(floor_s, 1),
+           "pulls_per_day_at_this_cadence": round(pulls_per_day, 1),
+           "calls_per_day_at_this_cadence": round(pulls_per_day * calls, 1),
+           "declared_budget_per_day": rate["per_day"],
+           "budget_parsed": rate["parsed"], "rate_limit_text": rate["text"]}
+    if floor_s > period_minutes * 60:
+        return {**row, "admitted": False,
+                "why": "rate_limit_would_be_breached_at_this_cadence",
+                "detail": (f"one pull needs at least {floor_s:.0f}s of declared "
+                           f"spacing and the cadence is {period_minutes * 60}s")}
+    if rate["parsed"] and pulls_per_day * calls > rate["per_day"]:
+        return {**row, "admitted": False,
+                "why": "rate_limit_would_be_breached_at_this_cadence",
+                "detail": (f"{pulls_per_day * calls:.0f} calls/day at this cadence "
+                           f"against a declared {rate['per_day']:.0f}/day")}
+    return {**row, "admitted": True,
+            "why": (None if rate["parsed"]
+                    else "budget CANNOT DETERMINE from the registry's prose; "
+                         "admitted, and said so")}
+
+
 def loop_news_pull(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """Every registered source that the 15-minute cadence admits.
+
+    Calls `news_pull.pull_all` — the corpus writer with its own per-source
+    cursor, its own `first_seen_utc` stamp and its own two-zero-runs-is-RED
+    rule. This wrapper adds exactly two things: the cadence admission above,
+    and yielding to a `daily_pass` that is already pulling.
+    """
+    yielded = yields_to("daily_pass")
+    if yielded:
+        return {**yielded, "n": 0, "rows_new": 0, "sources_red": []}
+
+    try:
+        sources = news_sources()
+    except Exception as exc:                                       # noqa: BLE001
+        return {"status": "refused", "n": 0, "rows_new": 0, "sources_red": [],
+                "reason": "REGISTRY_UNREADABLE", "detail": _trunc(exc)}
+
+    period = PERIODS["news_pull"]
+    admission = [cadence_admits(s, period) for s in sources]
+    admitted = [r["source"] for r in admission if r["admitted"]]
+    skipped = [{"source": r["source"], "why": r["why"], "detail": r.get("detail")}
+               for r in admission if not r["admitted"]]
+    if not admitted:
+        return {"status": "refused", "n": 0, "rows_new": 0, "sources_red": [],
+                "reason": "EVERY_SOURCE_RATE_LIMITED_AT_THIS_CADENCE",
+                "sources_skipped": skipped, "cadence_minutes": period}
+
+    summary = pull_news(source_ids=admitted)
+    rows = int(summary.get("rows_new") or 0)
+    red = list(summary.get("red") or [])
+    refused = list(summary.get("refused") or [])
+    return {
+        "status": ("ok" if rows else ("refused" if refused and not red
+                                      else "nothing_to_do")),
+        "n": rows, "rows_new": rows,
+        "sources_pulled": len(admitted),
+        "sources_red": red,
+        "sources_refused": refused,
+        "sources_skipped": skipped,
+        "cadence_minutes": period,
+        "resolution_rate": summary.get("resolution_rate"),
+        "receipt_path": summary.get("receipt_path"),
+        "headline": summary.get("headline"),
+    }
+
+
+def _overlap_block() -> dict:
+    """The two-READER agreement set, or a named CANNOT DETERMINE.
+
+    Reported on every typing tick rather than computed once at the end, because
+    the day a second reader starts running is the day someone will want to mix
+    its rows into E1's table — and the kappa that licenses that has to already
+    exist, not be commissioned afterwards.
+    """
+    from backend.services import lab_reader
+    try:
+        return lab_reader.overlap_report()
+    except Exception as exc:                                       # noqa: BLE001
+        return {"status": "CANNOT DETERMINE", "why": _trunc(exc),
+                "target_rows": lab_reader.overlap_rows()}
 
 
 def loop_l2_typing(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """Type the rows the last pull added, bounded so one tick cannot eat the day.
+
+    Three things this loop does NOT do, each of them named because doing any of
+    them would be a plausible mistake:
+
+    * it never starts the model server. It probes `llama_server.status()` before
+      every model-touching tick — not once at startup, because the desktop app
+      can start or stop the server at any point in a multi-day run — and USES a
+      foreign-owned server read-only when one is up;
+    * it never adds a second resume mechanism. `typed_events/_cursor.json` is
+      the only one, and the supervisor's single-instance lock plus the in-process
+      model lock are what stop two typing calls from racing it;
+    * it never falls back from a refused cloud reader to local. The refusal is
+      recorded by name and the tick ends.
+    """
+    from backend.services import lab_budget, lab_reader
+
+    max_rows = int(_config.LAB_L2_MAX_ROWS_PER_TICK)
+    choice = lab_reader.resolve(rows_this_tick=max_rows)
+    if not choice.get("ok"):
+        return {"status": "refused", "n": 0, "rows_typed_this_tick": 0,
+                "reason": choice["refusal"], "detail": choice["detail"],
+                "reader": choice["reader"],
+                "spend_today_usd": choice.get("spend_today_usd"),
+                "spend_cap_usd": choice.get("spend_cap_usd")}
+
+    backend = choice["backend"]
+    server = {}
+    if backend == "local":
+        try:
+            server = model_status()
+        except Exception as exc:                                   # noqa: BLE001
+            return {"status": "error", "n": 0, "rows_typed_this_tick": 0,
+                    "reader": "local", "detail": _trunc(exc)}
+        if not server.get("listening"):
+            # `L2_typed_events` writes PENDING_MODEL with the input list frozen
+            # and hashed; this loop returns to the scheduler rather than raising.
+            return {"status": "PENDING_MODEL", "n": 0, "rows_typed_this_tick": 0,
+                    "reader": "local", "llama_server_up": False,
+                    "detail": ("nothing is listening on the model port and this "
+                               "loop does not start one; the desktop app and a "
+                               "human are the only starters"),
+                    "backlog_remaining": None}
+        if server.get("foreign"):
+            # A server that was already running when Aegis started is not ours to
+            # stop. It IS ours to read from.
+            server = {**server, "used_read_only": True}
+
+    with state.model_lock:
+        state.note_model_call()
+        try:
+            out = type_rows(backend=backend, max_rows=max_rows)
+        except Exception as exc:                                   # noqa: BLE001
+            return {"status": "error", "n": 0, "rows_typed_this_tick": 0,
+                    "reader": choice["reader"], "detail": _trunc(exc)}
+
+    corpus = out.get("corpus") or {}
+    typed = int(out.get("rows_typed") or (out.get("counts") or {}).get("typed") or 0)
+    waiting = corpus.get("rows_waiting")
+    status = str(out.get("status") or "")
+    if status.startswith("PENDING_MODEL"):
+        row_status = "PENDING_MODEL"
+    elif status == "done" or (waiting == 0 and not typed):
+        row_status = "nothing_to_do"
+    else:
+        row_status = "ok" if typed else "nothing_to_do"
+
+    spend = lab_budget.spend_today()
+    if choice["metered"] and typed:
+        usage = out.get("usage") or {}
+        actual = float(usage.get("cost_usd") or 0.0) or lab_reader.estimate_usd(
+            choice["reader"], typed)
+        spend = lab_budget.record(actual, backend=choice["reader"],
+                                  rows=typed, what="L2 typing tick")
+    elif typed:
+        lab_budget.record(0.0, backend="local", rows=typed, what="L2 typing tick")
+
+    return {
+        "status": row_status,
+        "n": typed,
+        "rows_typed_this_tick": typed,
+        "backlog_remaining": waiting,
+        "rows_on_disk": corpus.get("rows_on_disk"),
+        "reader": choice["reader"],
+        "backend": backend,
+        "metered": choice["metered"],
+        "estimated_usd": choice["estimated_usd"],
+        "spend_today_usd": spend["spend_today_usd"],
+        "spend_cap_usd": spend["cap_usd"],
+        "reader_overlap": _overlap_block(),
+        "llama_server_up": bool(server.get("listening")),
+        "llama_server_foreign": bool(server.get("foreign")),
+        "headline": out.get("headline"),
+    }
 
 
 def loop_decision_vs_reality(state: LabState) -> dict:
-    return {"status": "skipped", "reason": "not_yet_implemented"}
+    """What we said vs what happened, across every mechanism, once an hour.
+
+    Re-grades nothing: it rolls up what each mechanism's own grader already
+    wrote, through `ledger_retrieval.visible_at`'s hindsight gate. A window with
+    zero resolutions writes the receipt anyway, with every mechanism at
+    `n_resolved: 0` — invariant 15, which is the rule that costs a session the
+    most when skipped.
+    """
+    from backend.services import lab_decision_vs_reality as DVR
+    payload = DVR.report()
+    path = DVR.write_report(payload, day=run_date(), out=out_dir())
+    n = int(payload.get("n_resolved") or 0)
+    worst = payload.get("worst_miss") or {}
+    return {
+        "status": "ok" if n else "nothing_to_do",
+        "n": n,
+        "n_resolved": n,
+        "pool_size": payload.get("pool_size"),
+        "mechanisms_reported": len(payload.get("by_mechanism") or []),
+        "mechanisms_with_resolutions": sum(
+            1 for r in (payload.get("by_mechanism") or []) if r.get("n_resolved")),
+        "undeclared_mechanisms": payload.get("undeclared_mechanisms"),
+        "worst_miss_id": worst.get("record_id"),
+        "worst_miss_brier": worst.get("brier"),
+        "receipt_path": str(path),
+        "headline": payload.get("headline"),
+    }
 
 
 def loop_catalyst_calendar(state: LabState) -> dict:
@@ -804,13 +1137,15 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = ["HANDLERS", "LOOPS", "PERIODS", "STATUSES", "TIMEOUTS",
-           "AlreadyRunning", "LabState", "LoopTimeout", "acceptance_report",
-           "acquire_lock", "call_boxed", "check_power", "data_dir",
-           "dispatch_job", "lock_holder", "lock_path", "main", "model_status",
-           "news_sources", "out_dir", "pid_alive", "pid_names_lab", "plan",
+           "SCHEDULED_DRIVERS", "AlreadyRunning", "LabState", "LoopTimeout",
+           "acceptance_report", "acquire_lock", "cadence_admits", "call_boxed",
+           "check_power", "data_dir", "dispatch_job", "lock_holder",
+           "lock_path", "main", "model_status", "news_sources", "out_dir",
+           "parsed_rate_limit", "pid_alive", "pid_names_lab", "plan",
            "power_refusal", "print_plan", "pull_news", "read_lock",
-           "release_lock", "run_date", "run_forever", "status_path",
-           "status_payload", "stop_path", "tick", "type_rows"]
+           "release_lock", "run_date", "run_forever", "running_drivers",
+           "scan_processes", "status_path", "status_payload", "stop_path",
+           "tick", "type_rows", "yields_to"]
 
 
 if __name__ == "__main__":
