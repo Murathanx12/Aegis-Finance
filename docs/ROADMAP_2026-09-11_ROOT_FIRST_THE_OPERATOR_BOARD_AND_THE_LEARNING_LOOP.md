@@ -731,6 +731,10 @@ locally, Fable reviews the diff, runs the fast suite, pushes, watches CI.
 | **7** | X1-X4 LLM-in-backtest workarounds under P1-P6 + L3 Lookahead Propensity + the anonymisation gap | each receipt carries LAP and the flip test |
 | **8** | M2 distillation → `LEARNED_<month>.md` for Optimus · M4 calibration on the board · E5 DSR/PBO stopping rules · §11 cheap joins | the first rule with its own Brier |
 | **9** | E1-E4 heads against GBM · L4 Qwen3 as a new arm · the stage contract (big) | a head beats GBM and its three controls, or the result is filed |
+| **10** (landed 09-13 05:30) | the typed-event pipeline: vocabulary, contract, resumable L2 job, three consumers | 6,020 rows frozen PENDING_MODEL |
+| **11** (landed 09-13 07:30) | the four books' next tests: C's falsifiers + registered construction, A's corner, B's verdict, vocabulary v2 | three closed, C CONDITIONAL |
+| **12** (landed 09-13 12:45) | the daily pass (scheduled) · C at $10M · C v1's announcement sign built (unread) · lane D's role · Headline Arena removed | the board updates without a click |
+| **13** (next; spec `research_notes/2026-09-13/spec_allocator_kill_promote.md` + `research_next_books_published_rulers.md`) | **13a (this repo, CPU):** books E/F/G from the JKP panel on disk, replayed at $3M AND $10M with twins; C v1 read once Amendment 2 is signed. **13b (terminal repo):** the allocator — drawdown cuts, Thompson over survivors, equal-weight and random twins, the six-engine map from 13a's receipts, worst case printed before every sizing change | an engine with a positive $10M cell, or the accounts stay on 1/N |
 
 **Every chunk from 5b on has a builder spec** (Sonnet, 2026-09-12, `research_notes/2026-09-12/`):
 5b `spec_first_books.md` (+ `probe_short_interest.md`) · 5c `spec_cost_model.md` · lane D

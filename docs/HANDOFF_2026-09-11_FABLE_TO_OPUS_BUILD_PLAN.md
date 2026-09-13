@@ -482,6 +482,20 @@ proof runs. Suite 9,358 → 9,431; then Fable's `19550db` (Amendment 1 applied i
 night date defaults to today), `f7d1d1c`/next (MOMENTUM_NOT_ALIVE). Owed: the builder's first `decide`
 named the registration gap instead of filling it — correct — and the amendment was the session's to sign.
 
+**Chunk 12 landed 2026-09-13 12:45 (Opus, one agent):** `9a5489de` the daily pass (`scripts/daily_pass.py`:
+news → analyst snapshot → E1 append → book cadence → coverage, each behind its own try/except, one
+receipt per date via the registry, same-date refusal before any step, a refusing step exits 0, the 30m
+bucket only inside XNYS RTH, `--schtasks` printer; registered by Fable as `AegisDailyPass` 06:30 daily);
+`f7bccf50` Book C at $10M (+0.07%/mo t 0.45; 2 of 4 eras; C is not a live engine); T3 the
+announcement-window sign EXISTS on disk (`wrds/bulk/ibes__act_epsus.parquet`, `anndats`, 866,372 rows
+1990-2024, 92.6% linkable; PIT keyed on max(+1 session, `actdats`) because `actdats − anndats` has p95 91 d)
+— builder written, historical read NOT run, "Amendment 2 (proposed, UNSIGNED)" in TRIAL-DRAFT-C; T4 the
+beta-matched twin is DEGENERATE (the band is the parent's universe, overlap 1.0) so the re-seed is not
+applied; T6 lane D's role (`ALPACA_LANE_D_API_KEY_ID`/`_SECRET_KEY`, no fallback, AST-enforced, `/coverage`
+`lane_d_role`); T7 Headline Arena removed (five ledger rows kept: a ledger is not tidied). Suite 9,434 →
+9,484 (+79, −30). Owed: the v1 read once Amendment 2 is signed; an informative twin for B/B′ (a
+random-universe or beta-STRATIFIED draw, not band-matched).
+
 **Execution is now the chunk table in roadmap §12.** Phases 1-5 above map onto chunks 1-5 and 9; lanes A,
 X and M are chunks 6-8. Chunk 1 is running as an Opus agent (config root, family test, storage, ask-start);
 chunk 2 (the thin launcher + evidence-memory rotation + terminal handoff) is next. Each chunk: Opus commits

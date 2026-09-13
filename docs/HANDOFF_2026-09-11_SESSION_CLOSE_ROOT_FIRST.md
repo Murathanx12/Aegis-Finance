@@ -284,6 +284,11 @@ before crediting discovery** (protocol §9).
   recommendation is NOT to reset — start every allocator curve from the deploy-time equity in the
   receipt — because twelve new key values across Railway and `.env` is the role/account mix-up
   waiting to happen, and the ledger already treats these as LEGACY.
+- **Chunk 12 landed 12:45 (9,484):** the daily pass (scheduled 06:30 as `AegisDailyPass`); C at $10M
+  pays nothing; the announcement-date column for C v1 exists (IBES actuals, 1990-2024) with the PIT
+  rule keyed on the activation date, not the announcement; the beta-matched twin is degenerate and
+  not applied; lane D's role wired and READS CONFIGURED (Murat added the keys 12:20); Headline Arena
+  removed. Details in the build plan §6b.
 - **Next:** the model-dependent queue is unchanged (R2 panel B, `L2_typed_events`, then E1 on typed
   rows, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text — all behind the
   attended `TdrDelay`); C's `next_test` is its own $10M re-measurement and the v1 event sign once L2
