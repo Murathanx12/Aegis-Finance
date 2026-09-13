@@ -415,3 +415,74 @@ declares is a real property of the sample and not an artefact of that error.
 the same state TRIAL-DRAFT-A/B/C/D/E/F/G/H stand in. Signing is the attended
 step; this file and its commit timestamp are the tamper evidence that the rule
 existed before the read.
+
+## 10. The first read, 2026-09-14 — what it said
+
+Receipt: `backend/data/optimus/night_factory_2026-09-14/B_books_hi_replay_run01.json`
+(the same 75 s CPU run as Book H, `NIGHT_RUN_DATE=2026-09-14`, 75 quarterly
+blocks 2006-2024, no year excluded at either floor, `honours_the_registration:
+true`). **UNSIGNED. Nothing is adopted by this section; it records what the read
+said.**
+
+| | $3M | $10M | 1990s | 2000s | 2010-16 | 2017-24 |
+|---|---|---|---|---|---|---|
+| `buyback_insider_divergence_v0` @ $3M | **+0.355%/qtr t 0.33** | | empty | -1.44 (t -0.83) | +0.37 (t 0.39) | +1.18 (t 0.53) |
+| the same @ $10M | | **+0.566%/qtr t 0.56** | empty | +1.39 (t 0.72) | +1.31 (t 1.54) | **-0.48 (t -0.24)** |
+
+**Verdict under §5: `FAILED_VARIANT`, on BOTH falsifier clauses.** Clause 1 did
+not fire — the primary is positive. Clauses 2 and 3 both did:
+
+- **Clause 2, the divergence must beat either leg alone: FIRED.** On the
+  identical pool, floor, k, cost ruler and twin construction, `buyback_only`
+  returned **+1.093%/quarter (t 0.95)** against the conjunction's
+  **+0.355%/quarter**. `low_selling_only` returned +0.011%/quarter (t 0.02). So
+  whatever is in the primary cell is the buyback leg diluted by a sell-intensity
+  cut that adds nothing — §1's claim, "the divergence is the signal, not either
+  leg alone", is **not supported by this read**.
+- **Clause 3, survives outside the smallest names: FIRED.** Inside the top half
+  of the covered band by dollar volume, with the twin re-drawn there, the book is
+  **-0.158%/quarter (t -0.16)**.
+
+**The thing clause 2 turned up may NOT be quoted as a finding, and the reason is
+on the receipt rather than in principle.** `buyback_only` is a CONTROL in this
+registration, §8 forbids promoting it to primary, and — decisively — **at the
+$10M floor the same control is -0.144%/quarter**. A leg that pays +1.09% at $3M
+and -0.14% at $10M is a small-name cell, not a mechanism, and the big-half
+result above says the same thing from the other direction. If anyone wants to
+test buyback intensity as a book, that is a NEW registration with its own family
+and its own falsifiers, not a row lifted out of this one.
+
+**The FAJ 2004 prediction is not supported here either, and it was a REPORTED
+leg rather than a deciding one, exactly as §5 declared before the read.**
+Restricting the intensity to sales of >= 10% of pre-sale holdings gives
++0.372%/quarter; restricting it to SMALL sales gives **+0.525%/quarter** — the
+opposite ordering to the one the large-sales-carry-the-information finding
+predicts. Excluding `plan_10b5_1 == 'YES'` sales collapses the cell to
++0.024%/quarter (t 0.02). The bearish leg — a firm repurchasing while its
+insiders sell heavily — is **-0.509%/quarter (t -0.77)**, the right sign for the
+agency-conflict story and nowhere near significance; it is reported and was
+never traded.
+
+**Power, recomputed from the book's own realised series** (as §4 promised):
+**3.402%/quarter** at $3M (75 blocks, realised difference sd 0.0852, measured
+lag-1 rho **0.208**, n_eff 49.2) and 2.882%/quarter at $10M. The $3M figure is
+**WORSE than the registered 2.502%**, because the realised block series is more
+autocorrelated than the family baseline assumed. So this book is even more
+underpowered than §4 declared it to be, the declared 1.50%/quarter effect sits
+further below its own MDE than the registration said, and **this result may not
+be read as `MECHANISM_REJECTED`**. It closes the ANNUAL-`funda` implementation
+of the divergence, which is what §8 already said a null here could close.
+
+**Coverage and the PIT basis, measured on the run:** 105,691 linked `prstkc`
+rows, 2,695,472 resolved-permno sale rows, 9,106,525 Form-4 filing dates for the
+coverage requirement, 76 quarters with a frame. The availability stamp fired
+**354,872 times as `COMPUSTAT_PDATE_OR_FDATE` and 25,453 times as
+`DATADATE_PLUS_180D_CONSERVATIVE` (93.3% / 6.7%)**, counted per (permno,
+quarter) SELECTION rather than per `funda` row — which is the unit a PIT claim
+is actually about. Covered share inside the eligible band: 0.887 (2006), 0.936
+(2015), 0.944 (2024); no year fell below the 0.10 / 3k clause.
+
+**The current era at the tradable floor, asked and answered plainly:** the
+2017-2024 cell at $10M is **-0.48%/quarter at t -0.24 over 32 blocks**. It is
+NEGATIVE. **The current era does not carry this effect** — and unlike Book H,
+here the current era is the worst of the three populated ones at that floor.

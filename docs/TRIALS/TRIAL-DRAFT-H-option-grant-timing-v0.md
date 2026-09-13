@@ -318,3 +318,64 @@ conviction in a purchase. It borrows only the CMP routine/unscheduled RULE, as
 state TRIAL-DRAFT-A/B/C/D/E/F/G stand in. Signing is the attended step; this
 file and its commit timestamp are the tamper evidence that the rule existed
 before the read.
+
+## 10. The first read, 2026-09-14 — what it said
+
+Receipt: `backend/data/optimus/night_factory_2026-09-14/B_books_hi_replay_run01.json`
+(75 s, CPU, `NIGHT_RUN_DATE=2026-09-14`, 227 monthly blocks 2006-2024, no year
+excluded by the contamination clause at either floor, `honours_the_registration:
+true`). **UNSIGNED. Nothing is adopted by this section; it records what the read
+said.**
+
+| | $3M | $10M | 1990s | 2000s | 2010-16 | 2017-24 |
+|---|---|---|---|---|---|---|
+| `option_grant_timing_v0` @ $3M | **-0.091%/mo t -0.29** | | empty | +0.36 (t 0.73) | -0.14 (t -0.40) | **-0.27 (t -0.42)** |
+| the same @ $10M | | **+0.347%/mo t 1.06** | empty | +0.33 (t 0.66) | +0.36 (t 0.87) | **+0.35 (t 0.54)** |
+
+**Verdict under §5: `FAILED_VARIANT`, on clause 1** — the $3M primary is on the
+wrong side of zero (-0.091%/month, t -0.29 over 227 blocks). That clause was
+carried into this draft from the start rather than added after a read, and it
+closes the book whatever the rest of the receipt says.
+
+**Both falsifiers PASSED, and the pass is uninformative — which has to be said
+rather than quietly banked.** The random-date placebo is **-0.350%/month, t
+-0.94** (it does not pay, so clause 2 does not fire) and the scheduled subset is
+**-0.194%/month, t -0.59** against the unscheduled subset's **-0.289%/month, t
+-0.82** (the scheduled leg does not out-earn the unscheduled one, so clause 3
+does not fire). But *neither leg pays at all*, so what the two clauses actually
+establish is that nothing here is alive to be explained away. A falsifier that
+passes is not evidence FOR the book, and a falsifier that passes because every
+leg is flat is not even a falsifier that ran on a live effect. This is the same
+shape as Book C's 2026-09-13 momentum falsifier, which "passed" with raw
+momentum at t 0.15 and nothing alive to subsume.
+
+**The floors disagree, and §8 governs how that may be quoted.** The $10M cell is
+**+0.347%/month at t 1.06** with all three populated eras positive; the $3M cell
+is negative. §8 forbids quoting either floor alone, so both are above. It does
+NOT license reading the $10M cell as a result: it is half the declared 0.65%
+effect, at a t of 1.06, on a book whose registered primary metric is the $3M
+cell, and promoting it would be choosing the corner after seeing it.
+
+**Power, recomputed from the book's own realised series** (as §4 promised):
+0.887%/month at $3M (227 blocks, realised difference sd 0.0483, measured lag-1
+rho **-0.011**, n_eff 232.1) and 0.921%/month at $10M. Both land essentially on
+the registered 0.901% nominal figure, so the sample was as powered as declared —
+and §4's uncomfortable line still binds: the declared 0.65% effect sits BELOW
+that MDE, a null here is weak evidence of absence, and **this result may not be
+read as `MECHANISM_REJECTED`**. It closes THIS construction of option-grant
+timing.
+
+**Coverage and instrument, measured on the run:** 1,019,988 DERIV code-`A` rows
+read, **986,195 (96.7%) carried a computable 20/20-session window**; 139,983
+(issuer, insider) pairs; 529,521 pair state rows expanded to 11,308,425
+pair-months over 228 months. Grant classes: **612,147 UNCLASSIFIABLE / 250,228
+routine / 157,613 opportunistic** — the unclassifiable majority is the CMP
+rule's three-strictly-prior-years requirement biting on a table that starts in
+2006, and those rows are in NEITHER leg of clause 3. Covered share inside the
+eligible band: 0.238 in 2006 (519 covered names at the median month), 0.722 in
+2015 (1,396), 0.682 in 2024 (1,365). No year fell below the 0.10 / 3k clause.
+
+**The current era at the tradable floor, asked and answered plainly:** the
+2017-2024 cell at $10M is **+0.35%/month at t 0.54 over 96 blocks**. It is
+positive, it is roughly half the declared effect, and it is nowhere near the
+|t| >= 2 line. **The current era does not carry this effect.**
