@@ -502,3 +502,22 @@ def test_our_own_http_call_is_wall_clock_bounded(monkeypatch):
     ctx = np_.RunContext()
     with pytest.raises(np_.CallTimeout, match="http data.alpaca.markets"):
         ctx.http_get("https://data.alpaca.markets/v1beta1/news?x=1")
+
+
+def test_a_caller_that_passes_no_context_still_gets_the_source_budget(monkeypatch):
+    """2026-09-13: `pull_all(ctx=None)` built its RunContext with budget_s=0.0,
+    which the code documents as "0 disables" -- so the daily pass, which passes
+    no ctx, paged one source for 80 minutes. The CLI's default is the default."""
+    seen = {}
+
+    class _Ctx(np_.RunContext):
+        def __init__(self, **kw):
+            seen.update(kw)
+            super().__init__(**kw)
+    monkeypatch.setattr(np_, "RunContext", _Ctx)
+    monkeypatch.setattr(np_, "pull_source", lambda *a, **k: np_.FetchResult())
+    try:
+        np_.pull_all(ctx=None)
+    except Exception:
+        pass
+    assert seen.get("budget_s") == np_.SOURCE_BUDGET_S

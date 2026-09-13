@@ -1035,7 +1035,9 @@ def pull_all(source_ids: Iterable[str] | None = None, ctx: RunContext | None = N
         c = RunContext(
             since=(ctx.since if ctx else ""), until=(ctx.until if ctx else ""),
             max_rows=(ctx.max_rows if ctx else None), resume=(ctx.resume if ctx else False),
-            paced=(ctx.paced if ctx else True), budget_s=(ctx.budget_s if ctx else 0.0),
+            paced=(ctx.paced if ctx else True), budget_s=(ctx.budget_s if ctx else SOURCE_BUDGET_S),  # 2026-09-13: 0 here meant
+            # NO budget for every caller that passed no ctx -- the daily pass paged Alpaca's
+            # whole history for 80 min with every row in memory. The CLI default is the default.
         )
         if ctx is not None:
             c.http_get = ctx.http_get            # type: ignore[method-assign]
