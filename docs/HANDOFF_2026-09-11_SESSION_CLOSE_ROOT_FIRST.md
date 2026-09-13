@@ -270,6 +270,20 @@ before crediting discovery** (protocol §9).
   REMOVED; lane D takes hack2's Alpaca paper account (six is the venue's cap); the six accounts read
   live: fleet −8.1%, no book above its start (table in the roadmap §11c); "thousands of paper
   accounts" is honestly not built — 7 books + 15 twins + lane D as internal ledgers — chunk 13.
+- **Murat, 12:30 HKT: "reset the paper accounts, switch to a winning or current engine, force
+  profit maximisation, kill losers, give winners dominance, do RL."** Read against the tape: SPY −0.66%
+  over 08-28→09-11 while the fleet lost 8.1%, and −5 to −7% in three sessions on hack1/3/4 against a
+  flat SPY — the losses are the artery's, not the market's. Sonnet's spec
+  `research_notes/2026-09-13/spec_allocator_kill_promote.md` is chunk 13: pod-shop drawdown cuts
+  (halve at −5%, floor at −7.5% with a cooldown), Thompson over the survivors seeded from each book's
+  own historical prior, equal-weight and random-Dirichlet twins for the allocator itself, a 60-day
+  FAILED_VARIANT number; the six-engine map (hack1 → quality-minus-junk, hack3 → Book C, hack4 → the
+  DSR-surviving G3 lineage, hack5 kept, hack6 → the de-biased 52-week target; hack2 is lane D) as
+  RANKING swaps inside unchanged constructions so the printed worst case does not move. **Reset is
+  delete-and-recreate at Alpaca now** (new account numbers, new keys for every loop): the
+  recommendation is NOT to reset — start every allocator curve from the deploy-time equity in the
+  receipt — because twelve new key values across Railway and `.env` is the role/account mix-up
+  waiting to happen, and the ledger already treats these as LEGACY.
 - **Next:** the model-dependent queue is unchanged (R2 panel B, `L2_typed_events`, then E1 on typed
   rows, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text — all behind the
   attended `TdrDelay`); C's `next_test` is its own $10M re-measurement and the v1 event sign once L2
