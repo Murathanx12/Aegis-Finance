@@ -68,7 +68,7 @@ def test_an_extra_field_is_refused_rather_than_carried():
     ips = make_ips()
     doc = dict(ips.document)
     doc["favourite_ticker"] = "NVDA"
-    with pytest.raises(A.AgencyError, match="additional properties"):
+    with pytest.raises(A.AgencyError, match="(?i)additional properties"):
         A.validate_document(doc)
 
 
