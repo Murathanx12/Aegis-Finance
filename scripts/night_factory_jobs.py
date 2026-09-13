@@ -1579,6 +1579,21 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # ~2 min on CPU (run 01 measured 97 s for three books).
         "G_price_scaled": _lazy("scripts.night_books_efg_replay",
                                 "G_price_scaled"),
+        # 2026-09-14, chunk 15c: the THIRD declared family,
+        # `NIGHT_JOB_BOOKS_2026_09_14`, two primaries in one job.
+        #   H  option_grant_timing_v0        `trans_code == 'A'` DERIV grant
+        #      awards -- the code `sec_insider_bulk_load.py` DISCARDS when it
+        #      distils `insider_events_v1.parquet`, unread since the August
+        #      pull. Scored on the filer's OWN history of pre-grant-trough /
+        #      post-grant-pop patterns, never on the grant being priced.
+        #   I  buyback_insider_divergence_v0 `comp__funda.prstkc` joined through
+        #      `link_ccm` to `trans_code == 'S'` Form-4 SALES. QUARTERLY: the
+        #      repurchase field is Compustat ANNUAL and `fundq` carries none.
+        # Both at both floors with the twin re-drawn at each, Holm across the
+        # declared two. Book H reads nineteen years of CRSP DAILY for its
+        # 20-session grant windows; queue it with an explicit box.
+        "B_books_hi_replay": _lazy("scripts.night_books_hi_replay",
+                                   "B_books_hi_replay"),
         # 2026-09-13, chunk 15b: N-G's COLLECTOR, the one
         # `news_sources.yaml`'s `greenhouse_lever_ashby_ats` row has promised
         # since the registry landed. Public Greenhouse/Lever/Ashby JSON, no key,
@@ -1688,6 +1703,8 @@ JOB_STAGES = {
     "B_books_efg_replay": "pnl",
     "C_v1": "pnl",
     "G_price_scaled": "pnl",
+    # The 09-14 family prices books the same way: net excess vs a twin.
+    "B_books_hi_replay": "pnl",
     # A collector produces RAW rows and prices nothing; the stage contract is
     # what stops it ever reading a `weights` or `pnl` artefact.
     "H1_hiring_pull": "raw",
@@ -1748,7 +1765,8 @@ def main(argv=None) -> int:
                    "E_decay_sweep", "M2_distill", "A_published_anomaly",
                    "C_falsifiers", "C_floor10m", "A_corner", "B_verdict",
                    "B_books_efg_replay", "C_v1", "F_seasonality_export",
-                   "G_price_scaled", "G3_lineage_export", "H1_hiring_pull"):
+                   "G_price_scaled", "G3_lineage_export", "H1_hiring_pull",
+                   "B_books_hi_replay"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a

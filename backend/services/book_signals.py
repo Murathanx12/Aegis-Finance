@@ -737,6 +737,11 @@ def option_grant_timing_score(frame, *, side: str = "top",
     result -- which is different from scoring zero, and the difference is the
     reason the replay's `pool_filter` and this function are separate things.
 
+    The returned value is the issuer's RAW statistic, exactly as `qmj_rank`
+    returns a raw `qmj`: Book H orders on one continuous variable and needs no
+    tie-break beyond a deterministic one, so the caller sorts descending. Book I
+    is the book with a lexicographic key, and `_rank_scores` is there for it.
+
     `side="bottom"` is the REPORTED bottom tercile; TRIAL-DRAFT-H section 8
     forbids trading it.
     """
@@ -751,22 +756,28 @@ def option_grant_timing_score(frame, *, side: str = "top",
                 f"different measure of grant timing. This is a REFUSAL and not "
                 f"an empty cross-section: a book whose history table is absent "
                 f"has not decided to hold nothing.")
-    per_issuer: dict = {}
-    for pn, pre, post, n in zip(frame["permno"], frame["mean_pre"],
-                               frame["mean_post"], frame["n_prior_grants"]):
-        try:
-            pre_f, post_f, n_f = float(pre), float(post), float(n)
-            pn_i = int(pn)
-        except (TypeError, ValueError):
-            continue
-        if not (np.isfinite(pre_f) and np.isfinite(post_f) and np.isfinite(n_f)):
-            continue
-        if n_f < int(min_prior):
-            continue
-        if not (pre_f < 0.0 and post_f > 0.0):
-            continue
-        per_issuer.setdefault(pn_i, []).append(post_f - pre_f)
-    vals = {pn: float(np.median(v)) for pn, v in per_issuer.items() if v}
+    # Vectorised deliberately. The replay calls this once per month per cell
+    # over a pair-level frame of tens of thousands of rows, and a Python loop
+    # over those rows costs more than every other part of the job put together.
+    pre = frame["mean_pre"].to_numpy(dtype=float, na_value=np.nan)
+    post = frame["mean_post"].to_numpy(dtype=float, na_value=np.nan)
+    n = frame["n_prior_grants"].to_numpy(dtype=float, na_value=np.nan)
+    pn = frame["permno"].to_numpy(dtype="int64")
+    ok = (np.isfinite(pre) & np.isfinite(post) & np.isfinite(n)
+          & (n >= float(min_prior)) & (pre < 0.0) & (post > 0.0))
+    if not ok.any():
+        raise SignalUnavailable(
+            f"no (issuer, insider) pair in this month carried a qualifying "
+            f"grant history (>= {min_prior} strictly-prior DERIV grants with "
+            f"mean pre-grant return < 0 and mean post-grant return > 0) out of "
+            f"{len(frame)} pair-row(s)")
+    stat = (post - pre)[ok]
+    keys = pn[ok]
+    order = np.argsort(keys, kind="mergesort")
+    keys, stat = keys[order], stat[order]
+    edges = np.flatnonzero(np.r_[True, keys[1:] != keys[:-1]])
+    vals = {int(keys[a]): float(np.median(stat[a:b]))
+            for a, b in zip(edges, np.r_[edges[1:], len(keys)])}
     if len(vals) < int(min_names):
         raise SignalUnavailable(
             f"only {len(vals)} issuer(s) carried a qualifying grant history "
@@ -774,11 +785,7 @@ def option_grant_timing_score(frame, *, side: str = "top",
             f"return < 0 and mean post-grant return > 0) this month; a "
             f"cross-sectional tercile over fewer than {min_names} is a cut of "
             f"the survivors, not of the market")
-    cut = _tercile_side(vals, side=side, tercile=tercile)
-    # Descending on the statistic, ties broken by permno so two runs of the same
-    # month cannot select two different books.
-    order = [pn for pn, _ in sorted(cut.items(), key=lambda kv: (-kv[1], kv[0]))]
-    return _rank_scores(order)
+    return _tercile_side(vals, side=side, tercile=tercile)
 
 
 # --------------------------------------------------------------------------
