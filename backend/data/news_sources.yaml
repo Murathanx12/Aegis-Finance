@@ -734,10 +734,20 @@ sources:
     ticker_tags: false
     body_available: true
     label_source: false
-    implemented: false
+    implemented: true
     implemented_note: >
-      This is N-G (TRIAL-HIRING-PIVOT-1), a pre-registered trial with its own
-      collector — `scripts/hiring_pull.py`, not built here. The prereg comes
-      BEFORE the collector writes a label, so `label_source` stays false until
-      that file exists. No LinkedIn, ever.
-    notes: "Needs a company -> board-token mapping table that does not exist yet."
+      N-G's collector is `scripts/hiring_pull.py` (night job `H1_hiring_pull`),
+      built 2026-09-13 (chunk 15b). All three endpoint shapes were verified with
+      one live request each — Greenhouse `airbnb` (200, {jobs,meta}, 164 jobs),
+      Lever `leverdemo` (200, a BARE ARRAY, 13 postings), Ashby `ashby` (200,
+      {apiVersion,jobs}, 71 jobs, 2.1 MB because it ships every description).
+      `label_source` stays FALSE: TRIAL-HIRING-PIVOT-1 is still unwritten and the
+      prereg comes BEFORE the collector writes a label. No LinkedIn, ever.
+    notes: >
+      The company -> board-token map is built by PROBING one guessed token per
+      platform (3 requests/symbol, 0.5 s pace) over the tradable band, into
+      `backend/data/optimus/hiring/board_map.json`. Its misses are written down
+      with the token that was tried, because a tenant under an unguessable token
+      (HOOD is `robinhood`, not `robinhoodmarkets` — measured) is
+      indistinguishable from an absent board at that budget. Coverage is quoted
+      as hits / names PROBED, never hits alone.

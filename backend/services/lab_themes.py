@@ -12,14 +12,31 @@ their own ids rather than folding them into one "ideas" bucket.
 WHAT THE SPEC SAID, AND WHAT THE REPOSITORY ACTUALLY HOLDS
 ==========================================================
 The spec marked `hiring_pivot_ai_v1` **LIVE** on the strength of
-`greenhouse_lever_ashby_ats` being in the news registry. It is in the registry
-and it is `implemented: false`, `label_source: false`, and its own
-`implemented_note` says the collector (`scripts/hiring_pull.py`) is "not built
+`greenhouse_lever_ashby_ats` being in the news registry. It was in the registry
+and it was `implemented: false`, `label_source: false`, and its own
+`implemented_note` said the collector (`scripts/hiring_pull.py`) was "not built
 here" and that the company-to-board-token mapping "does not exist yet". A
-registry row is a PROMISE to pull, not a puller. So the honest status is
-`registered_awaiting_collector`, and this module says so rather than reporting
-a stream as live because a YAML row exists. TRIAL-HIRING-PIVOT-1 stays
-pre-registered and untouched; what is missing is the fetcher, not the design.
+registry row is a PROMISE to pull, not a puller, so the status here was
+`registered_awaiting_collector`.
+
+**Chunk 15b, 2026-09-13: the collector exists.** `scripts/hiring_pull.py` is
+built, its three endpoint shapes were verified live (one request each against
+Greenhouse's `airbnb`, Lever's `leverdemo`, Ashby's `ashby`), and it writes a
+board map plus daily rows. So this stream's readiness moves to
+`collector_present` -- and NO FURTHER. It is deliberately not "live" and not
+"forecasting":
+
+  * `label_source` stays **false** in `news_sources.yaml`, because
+    TRIAL-HIRING-PIVOT-1 is still not written and a collector may not label a
+    return before its trial exists;
+  * the map's coverage is a MEASURED fraction with a large structural
+    false-negative rate (a tenant under an unguessable token is
+    indistinguishable from an absent one at a three-request budget), and the
+    stream carries that denominator rather than the numerator alone;
+  * a collector that has run once is not a graded hypothesis stream.
+
+What is missing is now the TRIAL, not the fetcher -- which is the opposite of
+what was missing yesterday, and the readiness word says which.
 
 Likewise `pivot_to_ai_narrative_v1`: the spec asked whether the 43-id event
 vocabulary carries a strategic-pivot class. It does not — the closest ids are
@@ -83,13 +100,20 @@ THEMES: tuple[dict, ...] = (
         "data_source": "greenhouse_lever_ashby_ats (news registry, N-B)",
         "trial": "TRIAL-HIRING-PIVOT-1 (N-G), already pre-registered",
         "observable": "ai_role_share_change_predicts_forward_return",
-        "readiness": "registered_awaiting_collector",
+        "readiness": "collector_present",
+        "collector": "scripts/hiring_pull.py (H1_hiring_pull)",
         "blocked_by": (
-            "the registry row is `implemented: false` and its own note says the "
-            "collector `scripts/hiring_pull.py` is not built and the "
-            "company-to-board-token mapping does not exist. LinkedIn itself is "
-            "banned; the ATS boards are the legal substitute and they still need "
-            "a fetcher."),
+            "the collector `scripts/hiring_pull.py` now EXISTS and pulls "
+            "Greenhouse/Lever/Ashby into "
+            "`backend/data/optimus/hiring/<date>.jsonl` with a board map and a "
+            "cursor. What blocks the stream now is the TRIAL, not the fetcher: "
+            "TRIAL-HIRING-PIVOT-1 is still unwritten, so `label_source` stays "
+            "false and nothing here may label a return. Coverage is also a "
+            "measured fraction with a structural false-negative rate -- a board "
+            "under an unguessable token is indistinguishable from no board at a "
+            "three-request budget -- so the denominator travels with every "
+            "number. LinkedIn itself is banned; the ATS boards are the legal "
+            "substitute."),
     },
     {
         "mechanism_id": "holders_13f_v1",
@@ -150,8 +174,13 @@ NOT_A_STREAM = {
             "is that everything in it can be graded."),
 }
 
-READINESS = ("observing", "registered_awaiting_collector", "placeholder",
-             "forecasting")
+#: `collector_present` (chunk 15b) sits between `registered_awaiting_collector`
+#: and `forecasting`: the puller exists and writes rows, and the trial that would
+#: let those rows label a return does not. Two different kinds of "not ready"
+#: with two different fixes deserve two different words -- one word for both is
+#: how a stream waits a month for the thing that was already built.
+READINESS = ("observing", "registered_awaiting_collector", "collector_present",
+             "placeholder", "forecasting")
 
 
 def _now() -> str:
@@ -364,7 +393,7 @@ def run_due(tickers: list[str] | None = None, *, today: date | None = None,
         "registry_path": str(registry_path()),
         "headline": (
             f"{sum(1 for r in rows if r['readiness'] == 'observing')} observing, "
-            f"{sum(1 for r in rows if r['readiness'] == 'registered_awaiting_collector')} "
+            f"{sum(1 for r in rows if r['readiness'] in ('registered_awaiting_collector', 'collector_present'))} "
             f"awaiting a collector, "
             f"{sum(1 for r in rows if r['readiness'] == 'placeholder')} placeholder; "
             f"{sum(r['n_observations'] for r in rows)} observation(s), "

@@ -1579,6 +1579,17 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # ~2 min on CPU (run 01 measured 97 s for three books).
         "G_price_scaled": _lazy("scripts.night_books_efg_replay",
                                 "G_price_scaled"),
+        # 2026-09-13, chunk 15b: N-G's COLLECTOR, the one
+        # `news_sources.yaml`'s `greenhouse_lever_ashby_ats` row has promised
+        # since the registry landed. Public Greenhouse/Lever/Ashby JSON, no key,
+        # no LinkedIn ever. `--probe` builds the board-token map (3 requests per
+        # symbol, 0.5 s apart, resumable); the default step writes the day's
+        # `{symbol, board, n_open, n_new_since_last, first_seen_utc}` rows. It
+        # LABELS NOTHING -- TRIAL-HIRING-PIVOT-1 is unwritten and `label_source`
+        # stays false until it exists. A SMOKE run is a dry run of both steps,
+        # because this job's only side effect is traffic against somebody else's
+        # rate limit and "prove it runs" must not mean 7,000 requests.
+        "H1_hiring_pull": _lazy("scripts.hiring_pull", "H1_hiring_pull"),
         # 2026-09-13, chunk 13b: F's FROZEN INPUT for a live account. It reads
         # no verdict and writes no P&L -- it turns the registered selector into
         # one hash-stamped monthly ranking under
@@ -1677,6 +1688,9 @@ JOB_STAGES = {
     "B_books_efg_replay": "pnl",
     "C_v1": "pnl",
     "G_price_scaled": "pnl",
+    # A collector produces RAW rows and prices nothing; the stage contract is
+    # what stops it ever reading a `weights` or `pnl` artefact.
+    "H1_hiring_pull": "raw",
     # The export produces a RANKING and prices nothing; it may not read a
     # `weights` or `pnl` artefact, and the stage contract is what says so.
     "F_seasonality_export": "signal",
@@ -1734,7 +1748,7 @@ def main(argv=None) -> int:
                    "E_decay_sweep", "M2_distill", "A_published_anomaly",
                    "C_falsifiers", "C_floor10m", "A_corner", "B_verdict",
                    "B_books_efg_replay", "C_v1", "F_seasonality_export",
-                   "G_price_scaled", "G3_lineage_export"):
+                   "G_price_scaled", "G3_lineage_export", "H1_hiring_pull"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a

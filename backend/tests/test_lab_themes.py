@@ -90,23 +90,59 @@ def test_the_registry_is_written_atomically(themes_dir):
 # readiness is checked against the repository, not copied from the spec
 
 
-def test_hiring_is_awaiting_a_collector_not_live(themes_dir):
-    """The registry row is `implemented: false` and its own note says the
-    collector is not built. A YAML row is a promise to pull, not a puller."""
+def test_hiring_has_a_collector_now_and_is_still_not_live(themes_dir):
+    """CHUNK 15b FLIPPED THIS TEST WITH THE FACT IT ASSERTS.
+
+    It used to require `registered_awaiting_collector`, which was the truth
+    while `scripts/hiring_pull.py` did not exist. It does now, so the readiness
+    is `collector_present` -- and a test still demanding the old word would be a
+    test demanding the collector be un-built.
+
+    What it must NOT become is `forecasting` or "live": the trial is still
+    unwritten, so the thing blocking this stream changed from the fetcher to the
+    trial, and the `blocked_by` sentence has to say which.
+    """
     row = T.theme("hiring_pivot_ai_v1")
-    assert row["readiness"] == "registered_awaiting_collector"
+    assert row["readiness"] == "collector_present"
+    assert row["readiness"] in T.READINESS
+    assert row["collector"].startswith("scripts/hiring_pull.py")
     assert "hiring_pull.py" in row["blocked_by"]
+    assert "now EXISTS" in row["blocked_by"]
+    assert "TRIAL-HIRING-PIVOT-1 is still unwritten" in row["blocked_by"]
     assert "LinkedIn itself is banned" in row["blocked_by"]
     assert row["trial"].startswith("TRIAL-HIRING-PIVOT-1")
 
 
-def test_the_registry_row_this_claim_rests_on_really_is_unimplemented():
-    """Assert the FACT, not my reading of it — if someone implements the ATS
-    collector, this test fails and the readiness above must be revisited."""
+def test_the_registry_row_this_claim_rests_on_really_is_implemented_now():
+    """Assert the FACT, not my reading of it.
+
+    The previous version of this test asserted `implemented is False` and said
+    in its own docstring: "if someone implements the ATS collector, this test
+    fails and the readiness above must be revisited". Somebody did, it did, and
+    this is the revision. `label_source` does NOT move with it -- a collector
+    may not label a return before its trial is written, and that is the whole
+    distinction the two flags exist to keep apart.
+    """
     from backend.services import news_registry
     src = news_registry.get("greenhouse_lever_ashby_ats")
-    assert src.implemented is False
-    assert src.label_source is False
+    assert src.implemented is True
+    assert src.label_source is False, (
+        "TRIAL-HIRING-PIVOT-1 is unwritten; the prereg comes BEFORE the label")
+    assert "hiring_pull.py" in src.implemented_note
+
+
+def test_the_collector_the_readiness_claims_actually_exists_and_is_reachable():
+    """Reachability, not a string. `lab_themes` names the collector; a name that
+    points at nothing is exactly the failure `signal_reachability` was written
+    about."""
+    from scripts.night_factory_jobs import JOBS
+
+    row = T.theme("hiring_pivot_ai_v1")
+    assert "H1_hiring_pull" in row["collector"]
+    assert "H1_hiring_pull" in JOBS
+    from scripts import hiring_pull
+
+    assert callable(hiring_pull.H1_hiring_pull)
 
 
 def test_pivot_to_ai_is_blocked_on_a_vocabulary_id_that_does_not_exist(themes_dir):
