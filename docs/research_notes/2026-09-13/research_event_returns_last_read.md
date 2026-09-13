@@ -205,3 +205,88 @@ literature this session found points to as the best-supported construction.
 Run that first; let its result — not the remaining headline count — decide
 whether the $10 buys power on a real signal or buys more evidence for a null
 already established twice over.
+
+---
+
+## THE READ THIS NOTE ASKED FOR, RUN 2026-09-13 (chunk 15b). Answer: DO NOT SPEND THE $10.
+
+Receipt: `backend/data/optimus/night_factory_2026-09-13/E1_event_head_h1_run05.json`
+(17 min CPU, `AEGIS_E1_HORIZON=1`, run 5, $0.00 — the rows were already typed).
+Both changes this note recommended were made first: `HORIZONS` gained 1, and a
+`SCALAR` arm was added that uses ONLY `direction × confidence`, magnitude and
+the trailing counts over 1/5/21 sessions, with the 43-way one-hot block absent.
+
+**One addition the note did not ask for, and it matters.** The note said to grade
+SCALAR against "the same SHUFFLE / TFIDF / NOTEXT controls". SHUFFLE permutes the
+EVENT block — 240 columns of noise — and a bigger block of pure noise overfits
+more, so it is a **weaker** opponent than five shuffled columns would be. Grading
+a five-column arm against it would have flattered SCALAR. A capacity-matched
+`SCALAR_SHUFFLE` (the same permutation, applied to the scalar block) is therefore
+the arm SCALAR is judged against, and both are reported.
+
+**The panel:** 130,179 cells, **30,397 with at least one typed event (23.4%)**,
+41,415 event rows, 278 date blocks, median 326 names a date (320 tradable).
+**At h=1 the label is one session, so the blocks do not overlap and 278 IS the
+effective n** — the `divide the t by sqrt(h)` caveat every h=5/h=21 receipt in
+this folder carries does not apply to this one.
+
+| model | comparison | IC | t | Holm p |
+|---|---|---|---|---|
+| GBM | EVENT − SHUFFLE | **+0.0065** | 1.454 | 1.0 |
+| GBM | **SCALAR − SCALAR_SHUFFLE** | **−0.0044** | −1.308 | 1.0 |
+| GBM | SCALAR − SHUFFLE (the note's own control) | +0.0036 | 0.992 | 1.0 |
+| StockMixer_T1 | EVENT − SHUFFLE | +0.0016 | 0.292 | 1.0 |
+| StockMixer_T1 | **SCALAR − SCALAR_SHUFFLE** | +0.0022 | 0.530 | 1.0 |
+| StockMixer_T1 | SCALAR − EVENT (head-to-head, outside the family) | −0.0051 | −0.684 | — |
+| StockMixer_T1 − GBM on EVENT (the M5 bar, outside the family) | | −0.0029 | −0.465 | — |
+
+Holm over the family **declared at 14** before the read (two treatments × two
+models × the three shared controls plus each treatment's own matched shuffle;
+14 legs, none without a p-value). **`family_max_p` = 1.0. Nothing is close.**
+
+**Net at 25 bps, with the daily turnover that produces it** — a decile
+long-short rebuilt every session:
+
+| model / arm | net (daily) | t | turnover |
+|---|---|---|---|
+| GBM / EVENT | **−0.2342%** | −2.718 | 1.52 |
+| GBM / SCALAR | **−0.3934%** | −4.724 | 1.67 |
+| GBM / SCALAR_SHUFFLE | −0.2758% | −3.467 | 1.73 |
+| GBM / NOTEXT | −0.4811% | −6.081 | 1.70 |
+| StockMixer_T1 / EVENT | −0.2474% | −3.562 | 1.19 |
+| StockMixer_T1 / SCALAR | −0.4085% | −3.948 | 1.47 |
+
+**Every arm is net-negative, including every control.** At a one-session horizon
+the book turns over ~150-190% a day, so 25 bps a side is ~40 bps of daily drag
+against an IC that is indistinguishable from zero. That is a fact about the
+HORIZON and the cost ruler, not about the events — but it is the fact that
+decides whether any h=1 construction here could be traded, and the answer is no
+at this ruler even if an IC appeared.
+
+### The decision this note put to the result
+
+This note's own rule 3: *"if the horizon=1 scalar read ALSO fails to beat
+SHUFFLE ... typing the remaining 143,000 headlines would not be testing a fourth
+hypothesis, it would be re-running an already-falsified one with more rows."*
+
+**It failed.** Under GBM the scalar arm is *below* its own matched shuffle
+(−0.0044); under StockMixer it is +0.0022 at t 0.53. The null now holds across
+**four independent constructions** — frozen embeddings at h=1 (N3, twice), the
+43-way one-hot table at h=5 and h=21 (E1 runs 1-4), the one-hot table at h=1,
+and the literature's own scalar score at h=1 — on the same panel, each against
+its own shuffled control.
+
+**So: the remaining ~143,000 headlines are NOT typed.** The $10 buys power on a
+construction that has now been falsified at the literature's own horizon with
+the literature's own feature shape, and per `research_registry.md` #23/#26 more
+data on a closed construction is not what reopens a family — a different
+mechanism class is.
+
+**What this does NOT close**, stated because a scope-aware verdict is owed: it
+does not close text as an input (TF-IDF under StockMixer is the *best* text arm
+here at IC +0.0075, t 1.703, and it is not a typed-event construction); it does
+not close event studies at longer horizons around *scheduled* events, which this
+panel's daily whole-market cross-section is not built to test; and it does not
+close the 23.4%-coverage question in the form "would 100% coverage change the
+sign" — it establishes that at 23.4% coverage there is no point estimate worth
+buying more of.
