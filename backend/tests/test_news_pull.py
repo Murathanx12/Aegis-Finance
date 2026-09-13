@@ -490,3 +490,15 @@ def test_the_cli_lists_the_registry(capsys):
 def test_the_cli_refuses_an_unknown_source(capsys):
     assert np_.main(["--source", "not_a_source"]) == 2
     assert "REFUSED" in capsys.readouterr().out
+
+
+def test_our_own_http_call_is_wall_clock_bounded(monkeypatch):
+    """2026-09-13: the daily pass sat two hours inside a TLS handshake to
+    data.alpaca.markets. urllib's timeout bounds each read, not the call; the
+    RunContext's http_get now runs inside the thread box, like yfinance."""
+    import time as _t
+    monkeypatch.setattr(np_, "HTTP_CALL_TIMEOUT_S", 0.2)
+    monkeypatch.setattr(np_, "_http_get", lambda url, headers=None: _t.sleep(2) or b"")
+    ctx = np_.RunContext()
+    with pytest.raises(np_.CallTimeout, match="http data.alpaca.markets"):
+        ctx.http_get("https://data.alpaca.markets/v1beta1/news?x=1")

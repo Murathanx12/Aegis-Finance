@@ -217,8 +217,9 @@ class CallTimeout(FetchError):
 def call_with_timeout(fn, timeout_s: float, what: str):
     """Run `fn()` with a hard wall-clock bound, on a DAEMON thread.
 
-    `_http_get` passes a timeout to urllib, so our own HTTP is bounded. A
-    third-party library's own session is not: `yfinance.Ticker(...).news` goes
+    `_http_get` passes a timeout to urllib, which bounds each socket READ, not
+    the call (2026-09-13: a two-hour TLS handshake to Alpaca), so our own HTTP
+    now runs in this box too. A third-party library's own session is not: `yfinance.Ticker(...).news` goes
     through curl_cffi, and on 2026-09-11 the live pull sat on one ESTABLISHED
     socket to Yahoo for five minutes with 0.1s of CPU and no way to stop. This
     repo has paid for an unbounded third-party call before — the 2.5 h suite
@@ -248,6 +249,11 @@ def call_with_timeout(fn, timeout_s: float, what: str):
 
 #: Hard bound on ONE `Ticker.news` call. Yahoo is unofficial and has no SLA.
 YF_CALL_TIMEOUT_S = 25.0
+
+#: Hard bound on ONE of our own HTTP calls. urllib's `timeout` is per socket
+#: operation: a server that trickles a byte every 40 s never trips it, and on
+#: 2026-09-13 Alpaca's news endpoint did exactly that for two hours.
+HTTP_CALL_TIMEOUT_S = 120.0
 
 #: Default wall-clock budget per source when the CLI does not set one. A
 #: nightly job must finish; a source that cannot deliver inside its budget
@@ -710,7 +716,13 @@ class RunContext:
 
     # -- effects (each one is mocked in tests) ---------------------------
     def http_get(self, url: str, headers: dict | None = None) -> bytes:
-        return _http_get(url, headers=headers)
+        # 2026-09-13: urllib's timeout bounds each socket read, not the call.
+        # data.alpaca.markets held a TLS handshake open for two hours with the
+        # daily pass stuck inside it (10 s of CPU, one ESTABLISHED socket), so
+        # every HTTP call now runs inside the same wall-clock box yfinance gets.
+        host = urllib.parse.urlsplit(url).netloc
+        return call_with_timeout(lambda: _http_get(url, headers=headers),
+                                 HTTP_CALL_TIMEOUT_S, f"http {host}")
 
     def alpaca_credential(self) -> tuple[str | None, str | None, str]:
         return alpaca_credential()
