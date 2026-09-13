@@ -1567,6 +1567,14 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "B_books_efg_replay": _lazy("scripts.night_books_efg_replay",
                                     "B_books_efg_replay"),
         "C_v1": _lazy("scripts.night_c_v1", "C_v1"),
+        # 2026-09-13, chunk 13b: F's FROZEN INPUT for a live account. It reads
+        # no verdict and writes no P&L -- it turns the registered selector into
+        # one hash-stamped monthly ranking under
+        # `backend/data/optimus/engines/`, which is the only thing that crosses
+        # into the execution repo (the seal-authority pattern: the output ships,
+        # the search never does).
+        "F_seasonality_export": _lazy("scripts.night_f_seasonality_export",
+                                      "F_seasonality_export"),
         "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         "B_verdict": _lazy("scripts.night_b_verdict", "B_verdict"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
@@ -1649,6 +1657,9 @@ JOB_STAGES = {
     # The 09-13 family prices books the same way: net monthly excess vs a twin.
     "B_books_efg_replay": "pnl",
     "C_v1": "pnl",
+    # The export produces a RANKING and prices nothing; it may not read a
+    # `weights` or `pnl` artefact, and the stage contract is what says so.
+    "F_seasonality_export": "signal",
     "A_corner": "pnl",
     "B_verdict": "pnl",
     "D1_reaction_book": "pnl",
@@ -1699,7 +1710,7 @@ def main(argv=None) -> int:
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
                    "E_decay_sweep", "M2_distill", "A_published_anomaly",
                    "C_falsifiers", "C_floor10m", "A_corner", "B_verdict",
-                   "B_books_efg_replay", "C_v1"):
+                   "B_books_efg_replay", "C_v1", "F_seasonality_export"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a
