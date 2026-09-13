@@ -1542,6 +1542,13 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         #   B_verdict     seconds: it re-runs nothing, reads the replay receipt
         #                 and applies TRIAL-DRAFT-B §5 verbatim.
         "C_falsifiers": _lazy("scripts.night_c_falsifiers", "C_falsifiers"),
+        # 2026-09-13, chunk 12: C's own `next_test`, named on its run-03
+        # receipt -- the $10M SECONDARY floor TRIAL-DRAFT-C §6 freezes and §5's
+        # CONDITIONAL clause turns on. It runs `C_falsifiers` at BOTH floors in
+        # one pass, with the twin re-drawn at each (`run_monthly(floor_usd=)`
+        # moves the book, both twins and the momentum regression's universe
+        # together), and prints both numbers or neither.
+        "C_floor10m": _lazy("scripts.night_c_falsifiers", "C_floor10m"),
         "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         "B_verdict": _lazy("scripts.night_b_verdict", "B_verdict"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
@@ -1620,6 +1627,7 @@ JOB_STAGES = {
     # reads a priced receipt; all three are `pnl` for the same reason the
     # replay is.
     "C_falsifiers": "pnl",
+    "C_floor10m": "pnl",
     "A_corner": "pnl",
     "B_verdict": "pnl",
     "D1_reaction_book": "pnl",
@@ -1669,7 +1677,7 @@ def main(argv=None) -> int:
         payload = fn(seed=a.seed, smoke=a.smoke)
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
                    "E_decay_sweep", "M2_distill", "A_published_anomaly",
-                   "C_falsifiers", "A_corner", "B_verdict"):
+                   "C_falsifiers", "C_floor10m", "A_corner", "B_verdict"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a

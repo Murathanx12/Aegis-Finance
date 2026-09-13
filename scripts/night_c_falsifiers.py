@@ -96,6 +96,7 @@ from scripts.night_first_books_replay import (
     COST_BPS_PER_SIDE,
     COST_CURVE,
     FAMILY,
+    FLOOR_USD as REPLAY_FLOOR_USD,
     FULL_END,
     FULL_START,
     MIN_CONDITIONED_NAMES,
@@ -142,6 +143,18 @@ MOM_SKIP = 1
 REGISTERED_MIN_HISTORY = CGO_LOOKBACK_MONTHS
 REGISTERED_READ_START = "1995-01"
 
+#: TRIAL-DRAFT-C §6 freezes "the $3M primary and $10M secondary floors", and §3
+#: lists "the $10M-floor re-measurement" among the things REPORTED and never
+#: deciding — which §5 then contradicts in the only direction that matters: its
+#: `CONDITIONAL` clause is "clears the primary metric but fails an era-stability
+#: or FLOOR check". So the second floor is not a curiosity; it is one of the two
+#: ways a cleared primary is held back, and until it is measured that clause
+#: cannot fire either way. `PRIMARY_FLOOR_USD` is `None` rather than 3e6 because
+#: `run_monthly` defaults to the replay's own `FLOOR_USD` and a second copy of
+#: the number here would be a second place for it to drift.
+PRIMARY_FLOOR_USD = None
+SECONDARY_FLOOR_USD = 10_000_000.0
+
 #: The smoke window is TEN YEARS, not the replay's three, because a 36-month
 #: panel cannot carry a 60-month history and a smoke run under a construction
 #: the job does not use proves the wrong thing.
@@ -158,6 +171,14 @@ MIN_REGRESSION_NAMES = 20
 #: "indistinguishable from 0" / "dies"; 2.0 is that line, and it is written
 #: once here rather than four times below.
 T_ALIVE = 2.0
+
+#: TRIAL-DRAFT-C §4's declared effect size, in mean net monthly excess: one
+#: notch above the computed MDE of 0.724%/month and well below Frazzini's
+#: 2.43%. Written once here rather than three times below, because the floor
+#: comparison reads it too and two copies of a declared threshold is one copy
+#: too many.
+DECLARED_EFFECT = 0.01
+DECLARED_MDE_MONTHLY = 0.00724
 
 
 # --------------------------------------------------------------------------
@@ -214,7 +235,8 @@ def sign_flip_selectors(inputs: dict) -> dict:
 
 
 def run_sign_flip_placebo(panel, inputs: dict, *, k: int = K,
-                          seed: int = SEED) -> dict:
+                          seed: int = SEED,
+                          floor_usd: float | None = PRIMARY_FLOOR_USD) -> dict:
     """Both shapes of the placebo, and which of them DECIDES.
 
     `vs_unconditioned` is the deciding leg: it is Book C's own comparison with
@@ -231,11 +253,11 @@ def run_sign_flip_placebo(panel, inputs: dict, *, k: int = K,
     vs_unc = run_monthly(panel, flip["good_loss"], k=k, seed=seed,
                          label="disposition_overhang_placebo_v0",
                          twin="unconditioned_reaction_book_v0",
-                         twin_select=book["unconditioned"])
+                         twin_select=book["unconditioned"], floor_usd=floor_usd)
     ls = run_monthly(panel, flip["good_loss"], k=k, seed=seed,
                      label="frazzini_sign_flip_long_short",
                      twin="bad_news_large_gain_v0",
-                     twin_select=flip["bad_gain"])
+                     twin_select=flip["bad_gain"], floor_usd=floor_usd)
     mean = vs_unc.get("mean_excess_net_monthly")
     t = vs_unc.get("nw_lag2_t")
     pays = bool(mean is not None and mean > 0 and t is not None and t >= T_ALIVE)
@@ -279,15 +301,18 @@ def run_sign_flip_placebo(panel, inputs: dict, *, k: int = K,
 # (b) THE MOMENTUM ORTHOGONALISATION
 
 
-def momentum_overhang_rows(panel, cgo_by_month: dict):
+def momentum_overhang_rows(panel, cgo_by_month: dict, *,
+                           floor_usd: float | None = PRIMARY_FLOOR_USD):
     """One row per (eligible name, month) with `mom`, `cgo` and NEXT month's return.
 
     `mom` is the eleven-month total return ending one month before the
     formation close, so the month the pick is made in is never inside the
     feature AND never inside the outcome. `cgo` is the book's own overhang for
-    that month. The universe is `eligible()` — the same $3M/$5 corner the book
-    selects in, because a regression run on a wider universe than the book
-    answers a question about a different market.
+    that month. The universe is `eligible()` — the same $5 price corner and the
+    same dollar-volume floor THE BOOK SELECTS IN, because a regression run on a
+    wider universe than the book answers a question about a different market.
+    `floor_usd` therefore moves with the cell: at the $10M floor the
+    orthogonalisation is run on the $10M universe, never on the $3M one.
     """
     import numpy as np
     import pandas as pd
@@ -303,7 +328,7 @@ def momentum_overhang_rows(panel, cgo_by_month: dict):
     rows = []
     for i in range(len(months) - 1):
         ym, nxt = months[i], months[i + 1]
-        pool = eligible(by_month[ym])
+        pool = eligible(by_month[ym], floor_usd=floor_usd)
         if pool.empty:
             continue
         cgo = cgo_by_month.get(ym) or {}
@@ -569,7 +594,7 @@ def decide(placebo: dict, momentum: dict, primary: dict | None) -> dict:
                             "run is not a check that passed.")}
     mean = (primary or {}).get("mean_excess_net_monthly")
     t = (primary or {}).get("nw_lag2_t")
-    declared = (primary or {}).get("declared_effect_size") or 0.01
+    declared = (primary or {}).get("declared_effect_size") or DECLARED_EFFECT
     if primary is None:
         return {"verdict": "CANNOT_DETERMINE", "clauses_fired": [],
                 "reading": ("both falsifiers passed, but no primary-metric "
@@ -648,8 +673,15 @@ def primary_from_replay(path: Path | None) -> tuple[dict | None, dict | None]:
 # the job
 
 
-def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
-    """The night-factory entry point. ONE receipt carrying both falsifiers."""
+def C_falsifiers(*, smoke: bool = False,                          # noqa: N802
+                 floor_usd: float | None = PRIMARY_FLOOR_USD) -> dict:
+    """The night-factory entry point. ONE receipt carrying both falsifiers.
+
+    `floor_usd` moves the tradable band for the book AND every twin at once
+    (`run_monthly` passes it to `eligible`), and it moves the orthogonalisation's
+    universe with them. `None` is the registered PRIMARY floor and is the
+    default, so the registered read is what an unqualified call still runs.
+    """
     start = SMOKE_START if smoke else FULL_START
     end = SMOKE_END if smoke else FULL_END
     receipt = find_replay_receipt()
@@ -658,6 +690,14 @@ def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
         "job": JOB, "family": FAMILY, "licence": "PRODUCT_EXPERIMENT",
         "book": BOOK, "book_id": BOOK_ID, "prereg": PREREG,
         "window": [start, end], "smoke": bool(smoke),
+        "floor_usd": (float(REPLAY_FLOOR_USD) if floor_usd is None
+                      else float(floor_usd)),
+        "floor_is_registered_primary": floor_usd is None,
+        "floor_note": ("TRIAL-DRAFT-C §6 freezes a $3M PRIMARY and a $10M "
+                       "SECONDARY floor. The floor moves the book, both twins "
+                       "and the orthogonalisation's universe together — a $10M "
+                       "book against a $3M control is a different claim from "
+                       "the one being tested (TRIAL-H5's lesson)."),
         "cost_curve": COST_CURVE, "cost_bps_per_side": COST_BPS_PER_SIDE,
         "cost_caveat": ("the interim flat ruler, pending chunk 5c's TAQ curve. "
                         "Both legs of every comparison here pay it, so the "
@@ -754,7 +794,8 @@ def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
                               k=K, seed=SEED,
                               label="disposition_overhang_conditioner_v0_registered",
                               twin="unconditioned_reaction_book_v0",
-                              twin_select=book_c_selectors(inputs)["unconditioned"])
+                              twin_select=book_c_selectors(inputs)["unconditioned"],
+                              floor_usd=floor_usd)
     registered_primary = {
         "label": "primary_registered_construction",
         "what_it_is": ("Book C's OWN primary metric — conditioned minus "
@@ -766,22 +807,30 @@ def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
         "result": {k2: v for k2, v in primary_res.items()
                    if k2 not in ("blocks", "excess")},
         "by_era": by_era(primary_res),
-        "declared_effect_size": 0.01, "declared_mde_monthly": 0.00724,
+        "declared_effect_size": DECLARED_EFFECT,
+        "declared_mde_monthly": DECLARED_MDE_MONTHLY,
         "january_diagnostic": january_split(primary_res),
         "vs_run01": {
             "run01_mean_excess_net_monthly":
                 (primary or {}).get("mean_excess_net_monthly"),
             "run01_nw_lag2_t": (primary or {}).get("nw_lag2_t"),
             "run01_n_blocks": (primary or {}).get("n_blocks"),
+            "comparable": bool(floor_usd is None),
             "note": ("run 1 read a truncated-window overhang from 1990; this "
                      "reads a full-window overhang from 1995. They are not the "
-                     "same measurement and neither replaces the other silently."),
+                     "same measurement and neither replaces the other silently."
+                     + ("" if floor_usd is None else
+                        " AND this cell is at a DIFFERENT FLOOR from run 1's, "
+                        "so the difference below mixes two changes and may not "
+                        "be read as a floor effect on its own — the floor "
+                        "comparison is `C_floor10m`, which runs both.")),
         },
     }
     base["primary_registered_construction"] = registered_primary
 
-    placebo = run_sign_flip_placebo(read, inputs)
-    rows = momentum_overhang_rows(read, inputs["cgo_by_month"])
+    placebo = run_sign_flip_placebo(read, inputs, floor_usd=floor_usd)
+    rows = momentum_overhang_rows(read, inputs["cgo_by_month"],
+                                  floor_usd=floor_usd)
     fm = fama_macbeth_orthogonalisation(rows)
     momentum = {"falsifier": "momentum_orthogonalisation",
                 "registered_as": ("TRIAL-DRAFT-C §1 quotes Grinblatt-Han: with "
@@ -799,7 +848,7 @@ def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
                 **read_momentum_verdict(fm)}
 
     for_decision = dict(registered_primary["result"])
-    for_decision["declared_effect_size"] = 0.01
+    for_decision["declared_effect_size"] = DECLARED_EFFECT
     verdict = decide(placebo, momentum, for_decision)
     verdict["primary_read_against"] = "primary_registered_construction"
     mean = (placebo.get("vs_unconditioned") or {}).get("mean_excess_net_monthly")
@@ -815,7 +864,7 @@ def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
                           "primary metric it is read against is the REGISTERED "
                           "construction's, not run 1's."),
         "headline": (
-            f"registered primary "
+            f"floor ${base['floor_usd']:,.0f}: registered primary "
             f"{registered_primary['result'].get('mean_excess_net_monthly')}/month "
             f"t {registered_primary['result'].get('nw_lag2_t')} over "
             f"{registered_primary['result'].get('n_blocks')} blocks (run01: "
@@ -830,9 +879,210 @@ def C_falsifiers(*, smoke: bool = False) -> dict:                 # noqa: N802
     }
 
 
-__all__ = ["C_falsifiers", "decide", "fama_macbeth_orthogonalisation",
+# --------------------------------------------------------------------------
+# THE $10M FLOOR — C's own registered `next_test`, both cells in one pass
+
+
+def _cell_summary(cell: dict) -> dict:
+    """The numbers a floor comparison is read off, and nothing else."""
+    reg = cell.get("primary_registered_construction") or {}
+    res = reg.get("result") or {}
+    return {
+        "by_era": reg.get("by_era"),
+        "ran": bool(cell.get("ran")),
+        "floor_usd": cell.get("floor_usd"),
+        "mean_excess_net_monthly": res.get("mean_excess_net_monthly"),
+        "nw_lag2_t": res.get("nw_lag2_t"),
+        "p_two_sided": res.get("p_two_sided"),
+        "n_blocks": res.get("n_blocks"),
+        "median_names_selected": res.get("median_names_selected"),
+        "verdict": (cell.get("verdict_block") or {}).get("verdict"),
+        "placebo_pays": (cell.get("sign_flip_placebo") or {}).get("placebo_pays"),
+        "momentum_verdict": (cell.get("momentum_orthogonalisation")
+                             or {}).get("verdict"),
+        "refused": cell.get("refused"),
+    }
+
+
+def era_stability(cell: dict) -> dict:
+    """How many eras carry a POSITIVE mean, and which ones do not.
+
+    §5's `PRODUCT_PROMISING` asks for "the sign is stable in at least 2 of the
+    3 eras tested" and its `CONDITIONAL` clause names an era-stability failure
+    beside the floor failure. The replay splits four eras, not three, so the
+    count is reported with its denominator rather than squeezed into a rule
+    written for a different split — and the per-era table is printed, because
+    "2 of 4" and "3 of 4 with the 2010s negative" are different facts.
+    """
+    eras = cell.get("by_era") or {}
+    rows = {k: (v or {}).get("mean_excess_net_monthly") for k, v in eras.items()}
+    readable = {k: v for k, v in rows.items() if v is not None}
+    positive = sorted(k for k, v in readable.items() if v > 0)
+    negative = sorted(k for k, v in readable.items() if v <= 0)
+    return {"n_eras_read": len(readable), "n_positive": len(positive),
+            "positive_eras": positive, "negative_eras": negative,
+            "mean_by_era": readable,
+            "all_positive": bool(readable and not negative)}
+
+
+def read_floor_pair(primary: dict, secondary: dict) -> dict:
+    """TRIAL-DRAFT-C §5's floor clause, applied to the two cells.
+
+    §5 gives `CONDITIONAL` to a book that "clears the primary metric but fails
+    an era-stability or floor check", so the floor check can only ever hold a
+    CLEARED primary back. C's primary has not cleared (+0.24%/month, t 1.38,
+    against a declared 1.00%/month), so the arithmetic below cannot promote
+    anything and does not pretend to: it reports what the second floor did and
+    says which §5 branch that would have selected had the primary cleared.
+
+    BOTH FLOORS OR NEITHER. TRIAL-DRAFT-A §8 writes that rule down for Book A
+    and it is the same rule here for the same reason: a book quoted at the
+    floor that flatters it is a book quoted at a chosen corner. If either cell
+    refused, this returns CANNOT DETERMINE and no number is quoted as the
+    result.
+    """
+    p, s = _cell_summary(primary), _cell_summary(secondary)
+    if not (p["ran"] and s["ran"]):
+        which = [n for n, c in (("primary", p), ("secondary", s)) if not c["ran"]]
+        return {"verdict": "CANNOT DETERMINE", "both_floors_read": False,
+                "primary": p, "secondary": s,
+                "reading": (f"the {', '.join(which)} cell did not run "
+                            f"({p['refused'] or s['refused']}). Both floors are "
+                            f"printed or neither is, so no floor number is "
+                            f"quoted as the result.")}
+    pm, sm = p["mean_excess_net_monthly"], s["mean_excess_net_monthly"]
+    pt, st = p["nw_lag2_t"], s["nw_lag2_t"]
+    if pm is None or sm is None:
+        return {"verdict": "CANNOT DETERMINE", "both_floors_read": False,
+                "primary": p, "secondary": s,
+                "reading": "a cell produced no block mean; nothing is quoted."}
+    clears = bool(sm >= DECLARED_EFFECT and st is not None and st >= T_ALIVE)
+    same_sign = bool((pm > 0) == (sm > 0))
+    if sm <= 0:
+        verdict = "FAILED_VARIANT_AT_THE_SECONDARY_FLOOR"
+        why = (f"the $10M cell is on the WRONG SIDE OF ZERO ({sm:+.6f}/month, "
+               f"t {st}). §5 Amendment 1 closes the book on a primary <= 0 over "
+               f"the registered slice; this cell is the SECONDARY floor, which "
+               f"Amendment 1 does not name, so it closes the $10M CELL and is "
+               f"reported against the $3M primary rather than substituted for "
+               f"it.")
+    elif clears:
+        verdict = "SECONDARY_FLOOR_CLEARS"
+        why = (f"the $10M cell clears the declared {DECLARED_EFFECT:.4f}/month "
+               f"at t {st}. The PRIMARY floor did not ({pm:+.6f}, t {pt}), and "
+               f"§5's ladder is read off the primary; a secondary floor cannot "
+               f"promote a primary that failed.")
+    else:
+        verdict = "SECONDARY_FLOOR_DOES_NOT_CLEAR"
+        why = (f"the $10M cell is {sm:+.6f}/month at t {st}, below the declared "
+               f"{DECLARED_EFFECT:.4f}/month and the |t| >= {T_ALIVE} line. §5's "
+               f"floor clause holds back a CLEARED primary; this primary is "
+               f"{pm:+.6f}/month at t {pt} and has not cleared, so the clause "
+               f"changes nothing and the book stands where its primary left it.")
+    ep, es = era_stability(p), era_stability(s)
+    era_line = (
+        f"era stability is NOT the same at the two floors: the $3M cell is "
+        f"positive in {ep['n_positive']}/{ep['n_eras_read']} eras and the $10M "
+        f"cell in {es['n_positive']}/{es['n_eras_read']} "
+        f"(negative at $10M: {', '.join(es['negative_eras']) or 'none'}). "
+        f"§5 names era-stability and the floor as the TWO ways a cleared "
+        f"primary is held back; here neither can fire, because the primary did "
+        f"not clear — but 'positive in every era' was the one property the $3M "
+        f"read had that its t did not, and it does not survive the floor."
+        if ep["all_positive"] and not es["all_positive"] else
+        f"the $3M cell is positive in {ep['n_positive']}/{ep['n_eras_read']} "
+        f"eras and the $10M cell in {es['n_positive']}/{es['n_eras_read']}.")
+    return {
+        "verdict": verdict, "both_floors_read": True,
+        "primary": p, "secondary": s,
+        "sign_agrees_across_floors": same_sign,
+        "delta_mean_secondary_minus_primary": round(sm - pm, 6),
+        "declared_effect_size": DECLARED_EFFECT, "t_alive": T_ALIVE,
+        "era_stability": {"primary_floor": ep, "secondary_floor": es,
+                          "reading": era_line},
+        "reading": why + " " + era_line,
+        "both_floors_or_neither": (
+            "TRIAL-DRAFT-A §8's rule, applied here for the same reason: a book "
+            "quoted at the floor that flatters it is a book quoted at a chosen "
+            "corner. Both numbers are above; neither may travel alone."),
+    }
+
+
+def C_floor10m(*, smoke: bool = False) -> dict:                   # noqa: N802
+    """Book C's registered `next_test`: the SAME read at BOTH floors.
+
+    C's own run-03 receipt names its next test: "the $10M-floor re-measurement
+    of THIS book (§3 lists it as reported-never-deciding and §5's CONDITIONAL
+    clause turns on it)". This job runs `C_falsifiers` twice — once at the
+    registered PRIMARY floor and once at the $10M SECONDARY floor — and reports
+    both. It re-runs the primary cell rather than quoting run 03's number
+    because a floor comparison whose two halves came from different checkouts
+    is a comparison of two checkouts.
+
+    The twin is re-drawn at each floor by construction: `run_monthly` passes
+    `floor_usd` to `eligible`, so the book, both twins and the momentum
+    regression's universe move together. A $10M book against a $3M control
+    would be a different claim from the one being tested (TRIAL-H5's lesson,
+    and `A_corner`'s).
+
+    It cannot promote anything, and the arithmetic says so rather than implying
+    it: §5's floor clause only ever holds a CLEARED primary back, and C's
+    primary has not cleared.
+
+        python -m scripts.night_factory_jobs C_floor10m --smoke
+        NIGHT_QUEUE="C_floor10m:45" python -m scripts.night_factory
+
+    TIME: the $3M cell measured 60 s on 2026-09-13 (`C_falsifiers_run03`). This
+    runs two cells, the second on a smaller universe, so ~2 minutes.
+    """
+    primary = C_falsifiers(smoke=smoke, floor_usd=PRIMARY_FLOOR_USD)
+    secondary = C_falsifiers(smoke=smoke, floor_usd=SECONDARY_FLOOR_USD)
+    pair = read_floor_pair(primary, secondary)
+    p, s = pair["primary"], pair["secondary"]
+    return {
+        "job": "C_floor10m", "family": FAMILY, "licence": "PRODUCT_EXPERIMENT",
+        "book": BOOK, "book_id": BOOK_ID, "prereg": PREREG,
+        "smoke": bool(smoke),
+        "ran": bool(pair["both_floors_read"]),
+        "question": ("Does Book C's registered primary metric hold at the $10M "
+                     "SECONDARY floor TRIAL-DRAFT-C §6 freezes, against a twin "
+                     "re-drawn at that floor?"),
+        "floors_usd": {"primary": (float(REPLAY_FLOOR_USD)
+                                   if PRIMARY_FLOOR_USD is None
+                                   else float(PRIMARY_FLOOR_USD)),
+                       "secondary": float(SECONDARY_FLOOR_USD)},
+        "registered_construction": primary.get("registered_construction"),
+        "cost_curve": COST_CURVE, "cost_bps_per_side": COST_BPS_PER_SIDE,
+        "cost_caveat": ("the interim flat ruler pending chunk 5c's TAQ curve. "
+                        "Both legs of every comparison pay it, so DIFFERENCES "
+                        "may be read and no LEVEL may — and the two floors do "
+                        "NOT pay the same real spread, which is exactly what a "
+                        "flat ruler cannot see. The TAQ curve is the fix; until "
+                        "it lands, a $10M cell that looks better than a $3M "
+                        "cell is looking better under a ruler that charged them "
+                        "the same."),
+        "floor_comparison": pair,
+        "family_multiplicity": primary.get("family_multiplicity"),
+        "cells": {"primary_floor": primary, "secondary_floor": secondary},
+        "next_test": ("the v0 -> v1 event sign once L2's typed events exist — a "
+                      "registration amendment naming ONLY the input, never a "
+                      "change to the overhang; and the TAQ cost curve, which is "
+                      "the only thing that can make these two floors pay "
+                      "different spreads."),
+        "headline": (
+            f"$3M {p['mean_excess_net_monthly']}/month t {p['nw_lag2_t']} over "
+            f"{p['n_blocks']} blocks (median {p['median_names_selected']} names) "
+            f"| $10M {s['mean_excess_net_monthly']}/month t {s['nw_lag2_t']} over "
+            f"{s['n_blocks']} blocks (median {s['median_names_selected']} names) "
+            f"-> {pair['verdict']}"),
+        "verdict": pair["verdict"] + " — " + pair["reading"],
+    }
+
+
+__all__ = ["C_falsifiers", "C_floor10m", "decide", "era_stability",
+           "fama_macbeth_orthogonalisation",
            "find_replay_receipt", "january_split", "momentum_overhang_rows",
-           "primary_from_replay", "read_momentum_verdict",
+           "primary_from_replay", "read_floor_pair", "read_momentum_verdict",
            "registered_read_panel", "run_sign_flip_placebo",
            "sign_flip_selectors"]
 
@@ -843,5 +1093,16 @@ if __name__ == "__main__":
 
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
+    ap.add_argument("--floor-usd", type=float, default=None,
+                    help="the tradable dollar-volume floor; omitted is the "
+                         "registered PRIMARY floor. It moves the book, both "
+                         "twins and the momentum regression's universe at once.")
+    ap.add_argument("--both-floors", action="store_true",
+                    help="run C_floor10m: the primary floor AND the $10M "
+                         "secondary floor, both printed")
     a = ap.parse_args()
-    print(json.dumps(C_falsifiers(smoke=a.smoke), indent=1, default=str))
+    if a.both_floors:
+        print(json.dumps(C_floor10m(smoke=a.smoke), indent=1, default=str))
+    else:
+        print(json.dumps(C_falsifiers(smoke=a.smoke, floor_usd=a.floor_usd),
+                         indent=1, default=str))

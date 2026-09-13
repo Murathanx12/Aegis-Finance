@@ -459,3 +459,165 @@ def test_the_placebo_uses_the_books_own_tercile_function_not_a_second_one():
 def test_the_cost_ruler_is_named_as_a_placeholder_on_the_job():
     assert F.COST_CURVE == "flat_25bps_pending_5c"
     assert F.COST_BPS_PER_SIDE == 25.0
+
+
+# --------------------------------------------------------------------------
+# THE $10M FLOOR (chunk 12, T2) — C's own registered `next_test`
+#
+# The floor is the one parameter in this job that can move the answer without
+# moving a line of the construction, so it is pinned three ways: the DEFAULT is
+# the registered primary (so an unqualified call still runs the registered
+# read), the floor reaches the ORTHOGONALISATION's universe and not only the
+# book's, and the pair is read under "both floors or neither".
+
+
+def _mixed_dv_panel(months, *, big, small):
+    """A panel whose names sit on two sides of the $10M line."""
+    rows = []
+    for ym in months:
+        for p in big:
+            rows.append({"permno": p, "ym": ym, "ret_m": 0.01, "price": 50.0,
+                         "dv": 50_000_000.0, "turnover_m": 0.05})
+        for p in small:
+            rows.append({"permno": p, "ym": ym, "ret_m": 0.01, "price": 50.0,
+                         "dv": 4_000_000.0, "turnover_m": 0.05})
+    return pd.DataFrame(rows)
+
+
+def test_the_default_floor_is_the_registered_primary_one():
+    """An unqualified call must still run the REGISTERED read: the second floor
+    is a deviation and has to be asked for by name."""
+    import inspect
+
+    assert F.PRIMARY_FLOOR_USD is None, (
+        "None means `run_monthly`'s own FLOOR_USD; a second copy of 3e6 here "
+        "would be a second place for the registered floor to drift")
+    assert F.SECONDARY_FLOOR_USD == 10_000_000.0
+    for fn in (F.C_falsifiers, F.run_sign_flip_placebo, F.momentum_overhang_rows):
+        assert (inspect.signature(fn).parameters["floor_usd"].default
+                is F.PRIMARY_FLOOR_USD), fn.__name__
+
+
+def test_the_floor_moves_the_orthogonalisations_universe_too():
+    """A regression run on the $3M universe while the book traded the $10M one
+    answers a question about a different market."""
+    months = _months(20)
+    big, small = [1, 2, 3], [4, 5, 6]
+    panel = _mixed_dv_panel(months, big=big, small=small)
+    cgo = {ym: {p: 0.1 * p for p in big + small} for ym in months}
+
+    wide = F.momentum_overhang_rows(panel, cgo)
+    assert set(wide["permno"]) == set(big + small), "the $3M floor keeps both tiers"
+
+    tight = F.momentum_overhang_rows(panel, cgo, floor_usd=F.SECONDARY_FLOOR_USD)
+    assert set(tight["permno"]) == set(big), "the $10M floor drops the small tier"
+
+
+def test_the_floor_moves_the_book_and_its_twin_together():
+    """TRIAL-H5's lesson: a corner-dependent control is re-measured at every
+    corner. Raising the floor for the book alone would compare a $10M book with
+    a $3M control."""
+    months = _months(8)
+    big, small = [1, 2, 3, 4], [5, 6, 7, 8]
+    panel = _mixed_dv_panel(months, big=big, small=small)
+    seen: list[set] = []
+
+    def _select(pool, ym):
+        seen.append(set(int(p) for p in pool["permno"]))
+        return sorted(int(p) for p in pool["permno"])[:2]
+
+    R.run_monthly(panel, _select, k=2, seed=1, label="t",
+                  floor_usd=F.SECONDARY_FLOOR_USD)
+    assert seen and all(s == set(big) for s in seen), (
+        "the twin is drawn from the SAME eligible frame the selector saw")
+
+
+# --- the pair, read under "both floors or neither" -------------------------
+
+
+def _cell(mean, t, *, ran=True, eras=None, refused=None, floor=3_000_000.0):
+    return {
+        "ran": ran, "floor_usd": floor, "refused": refused,
+        "primary_registered_construction": {
+            "result": {"mean_excess_net_monthly": mean, "nw_lag2_t": t,
+                       "p_two_sided": 0.5, "n_blocks": 359,
+                       "median_names_selected": 30},
+            "by_era": {k: {"mean_excess_net_monthly": v}
+                       for k, v in (eras or {}).items()},
+        },
+        "verdict_block": {"verdict": "CONDITIONAL"},
+        "sign_flip_placebo": {"placebo_pays": False},
+        "momentum_orthogonalisation": {"verdict": "MOMENTUM_NOT_ALIVE"},
+    }
+
+
+def test_a_cell_that_did_not_run_means_neither_floor_is_quoted():
+    """Both floors are printed or neither is. Quoting the floor that flatters
+    the book is quoting a chosen corner."""
+    pair = F.read_floor_pair(_cell(0.004, 2.4),
+                             _cell(None, None, ran=False,
+                                   refused="the IBES panel is absent"))
+    assert pair["verdict"] == "CANNOT DETERMINE"
+    assert pair["both_floors_read"] is False
+    assert "IBES panel" in pair["reading"]
+
+
+def test_a_secondary_floor_below_zero_closes_the_cell_not_the_primary():
+    pair = F.read_floor_pair(_cell(0.004, 2.4), _cell(-0.001, -0.3,
+                                                      floor=1e7))
+    assert pair["verdict"] == "FAILED_VARIANT_AT_THE_SECONDARY_FLOOR"
+    assert "SECONDARY floor" in pair["reading"]
+    assert "$3M primary" in pair["reading"]
+
+
+def test_a_secondary_floor_that_clears_cannot_promote_a_primary_that_did_not():
+    """§5's ladder is read off the PRIMARY. A flattering corner is not a pass."""
+    pair = F.read_floor_pair(_cell(0.002, 1.2), _cell(0.02, 3.0, floor=1e7))
+    assert pair["verdict"] == "SECONDARY_FLOOR_CLEARS"
+    assert "cannot promote" in pair["reading"]
+
+
+def test_the_floor_clause_cannot_fire_on_a_primary_that_never_cleared():
+    pair = F.read_floor_pair(_cell(0.0024, 1.38), _cell(0.0007, 0.45, floor=1e7))
+    assert pair["verdict"] == "SECONDARY_FLOOR_DOES_NOT_CLEAR"
+    assert "has not cleared" in pair["reading"]
+    assert pair["delta_mean_secondary_minus_primary"] == pytest.approx(-0.0017)
+
+
+def test_era_stability_is_counted_with_its_denominator_and_names_the_losers():
+    st = F.era_stability({"by_era": {
+        "1990-1999": {"mean_excess_net_monthly": -0.0028},
+        "2000-2009": {"mean_excess_net_monthly": 0.0034},
+        "2010-2016": {"mean_excess_net_monthly": -0.0018},
+        "2017-2024": {"mean_excess_net_monthly": 0.0018}}})
+    assert st["n_eras_read"] == 4 and st["n_positive"] == 2
+    assert st["negative_eras"] == ["1990-1999", "2010-2016"]
+    assert st["all_positive"] is False
+
+
+def test_the_pair_reports_when_era_stability_does_not_survive_the_floor():
+    """The $3M read's one property its t did not have was 'positive in every
+    era'. Whether that survives the floor is the thing to print."""
+    pair = F.read_floor_pair(
+        _cell(0.0024, 1.38, eras={"a": 0.0002, "b": 0.0039,
+                                  "c": 0.0030, "d": 0.0016}),
+        _cell(0.0007, 0.45, floor=1e7,
+              eras={"a": -0.0028, "b": 0.0034, "c": -0.0018, "d": 0.0018}))
+    era = pair["era_stability"]
+    assert era["primary_floor"]["n_positive"] == 4
+    assert era["secondary_floor"]["n_positive"] == 2
+    assert "does not survive the floor" in era["reading"]
+
+
+def test_c_floor10m_is_registered_and_dispatchable():
+    """A job the queue cannot dispatch is a job that silently never runs."""
+    import inspect
+
+    from scripts import night_factory_jobs as J
+
+    assert "C_floor10m" in J.JOBS
+    assert J.JOB_STAGES.get("C_floor10m") == "pnl", (
+        "it prices books (net monthly excess), like C_falsifiers and A_corner")
+    src = inspect.getsource(J.main)
+    assert '"C_floor10m"' in src, (
+        "the dispatcher must pass smoke= to it, or the queue crashes on arrival")
