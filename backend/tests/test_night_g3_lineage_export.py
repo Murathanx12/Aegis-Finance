@@ -125,6 +125,14 @@ def test_the_real_receipts_still_name_the_lineage_this_job_was_written_against()
     assert v["pbo"] is None and v["pbo_status"] == "insufficient_windows"
 
 
+
+#: 2026-09-13: `export()` reads the night search's own evaluation log, which is
+#: gitignored DATA -- absent on every fresh checkout (CI went red on it). The
+#: receipt-reading tests skip by name there; the synthetic ones above still run.
+_REAL_LOG_PRESENT = (GX.run_dir() / GX.EVALUATIONS).exists()
+_needs_real_log = pytest.mark.skipif(not _REAL_LOG_PRESENT, reason="the night search's evaluation log is gitignored data and is absent here")
+
+@_needs_real_log
 def test_the_exported_rule_is_the_genome_the_receipt_names(tmp_path):
     r = GX.export(out_dir=tmp_path)
     p = json.loads((tmp_path / f"G3_lineage_{GX.LINEAGE}.json").read_text(encoding="utf-8"))
@@ -143,6 +151,7 @@ def test_the_exported_rule_is_the_genome_the_receipt_names(tmp_path):
     assert p["terminal_repo_probe"]["executable_in_the_terminal_repo"] is False
 
 
+@_needs_real_log
 def test_the_job_receipt_states_the_consequence_for_hack4(tmp_path, monkeypatch):
     monkeypatch.setattr(GX, "engines_dir", lambda: tmp_path)
     out = GX.G3_lineage_export()
