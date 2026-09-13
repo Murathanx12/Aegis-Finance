@@ -674,6 +674,12 @@ under `night_factory_2026-09-13/`; CPU only, 103 s + 0 s + 60 s):**
   earns nothing here. January diagnostic (unregistered): −0.18%/mo in January vs +0.28% Feb-Dec — the
   Grinblatt-Han sign flip in direction, not in significance. TRIAL-DRAFT-C gained **Amendment 1**
   before this read (a primary ≤ 0 closes the book, the clause A always carried).
+- **C at the $10M floor (chunk 12 T2, `C_floor10m_run02`, 168 s):** **+0.07%/mo, t 0.45** against
+  +0.24%/mo t 1.38 at $3M, both 359 blocks, twins re-drawn per floor; placebo pays at neither;
+  momentum not alive at either; the four-era sign becomes 2 of 4. §5's floor clause cannot fire on
+  a primary that never cleared, so C stands CONDITIONAL — **with its tradable cell at zero.** It is
+  therefore NOT a live-account engine (the allocator spec's hack3 → Book C mapping is withdrawn);
+  hack3's replacement is chosen from the three new books' receipts at $10M, once they exist.
 - **Vocabulary v2** adds the analyst-action family (43 ids; v1's hash byte-identical); C1's kinds now
   map 2,577 of 6,676 rows (38.6%, was 20.4%).
 - **RESULT IMPROVEMENT: NONE.** Of seven pre-registered books, four have a historical read: three closed
