@@ -1,0 +1,20 @@
+{
+ "verdict": "TIMEOUT",
+ "headline": "killed after 7200s awake against a 120-minute box (pids [27812, 3380])",
+ "log_tail": "",
+ "elapsed_s": 7200.0,
+ "awake_s": 7200.0,
+ "slept_s": 0.0,
+ "box_s": 7200.0,
+ "wall_minus_monotonic_s": -0.0,
+ "sleep_gaps": [],
+ "child_pid": 27812,
+ "killed_pids": [
+  27812,
+  3380
+ ],
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "L2_typed_events",
+ "run": 1,
+ "written_utc": "2026-09-13T18:00:36+00:00"
+}

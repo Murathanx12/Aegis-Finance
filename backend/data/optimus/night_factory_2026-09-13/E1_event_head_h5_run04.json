@@ -1,7 +1,7 @@
 {
  "job": "E1_event_head",
  "licence": "PRODUCT_EXPERIMENT",
- "run": 2,
+ "run": 4,
  "smoke": false,
  "stage": "signal",
  "llm_spend_usd": 0.0,
@@ -37,7 +37,7 @@
   "bars.parquet"
  ],
  "status": "done",
- "written_utc": "2026-09-13T09:41:05+00:00",
+ "written_utc": "2026-09-13T12:25:23+00:00",
  "panel": {
   "horizon_sessions": 5,
   "label": "x_oc_h5",
@@ -77,24 +77,35 @@
  "features": {
   "kept_types": [
    "earnings_report",
+   "earnings_preannouncement",
    "guidance_change",
    "mergers_acquisitions",
+   "divestiture_asset_sale",
+   "debt_issuance_or_obligation",
+   "equity_issuance_dilution",
+   "stock_buyback",
    "new_contract_or_partnership",
    "product_launch_or_innovation",
+   "product_recall_or_defect",
    "clinical_trial_result",
+   "regulatory_approval",
+   "regulatory_investigation_or_action",
+   "litigation_filed",
+   "litigation_settlement",
+   "management_change_departure",
    "management_change_appointment",
-   "insider_or_institutional_ownership_change"
+   "insider_or_institutional_ownership_change",
+   "macro_rate_decision",
+   "macro_inflation_print",
+   "macro_labor_report",
+   "tariff_or_trade_policy",
+   "index_rebalance"
   ],
   "dropped_sparse_types": [
-   "earnings_preannouncement",
-   "divestiture_asset_sale",
    "spinoff",
    "bankruptcy_or_going_concern",
    "delisting_or_listing_risk",
-   "debt_issuance_or_obligation",
    "debt_covenant_or_default_trigger",
-   "equity_issuance_dilution",
-   "stock_buyback",
    "dividend_increase",
    "dividend_cut_or_suspension",
    "special_dividend",
@@ -103,20 +114,9 @@
    "reverse_stock_split",
    "credit_rating_change",
    "contract_loss_or_termination",
-   "product_recall_or_defect",
-   "regulatory_approval",
-   "regulatory_investigation_or_action",
-   "litigation_filed",
-   "litigation_settlement",
-   "management_change_departure",
    "auditor_or_accounting_change",
    "cybersecurity_incident",
-   "macro_rate_decision",
-   "macro_inflation_print",
-   "macro_labor_report",
-   "tariff_or_trade_policy",
-   "sanction",
-   "index_rebalance"
+   "sanction"
   ],
   "min_occurrences": 30,
   "windows_sessions": [
@@ -124,8 +124,8 @@
    5,
    21
   ],
-  "n_event_rows": 442,
-  "n_feature_columns": 80,
+  "n_event_rows": 6649,
+  "n_feature_columns": 240,
   "recency_censor_sessions": 252,
   "proxy": "typed by entity_tags where present and otherwise by a KEYWORD proxy over the 39-id vocabulary's own definitions and example headlines -- NOT by L2, which is not built",
   "shuffle_control": {
@@ -137,19 +137,25 @@
   "typing_coverage": {
    "event_source": "typed_l2",
    "cells": 129983,
-   "cells_with_at_least_one_event": 630,
-   "event_rows": 1587,
-   "event_rows_from_l2": 1587,
+   "cells_with_at_least_one_event": 30275,
+   "event_rows": 41148,
+   "event_rows_from_l2": 41148,
    "event_rows_from_entity_tags": 0,
    "event_rows_from_keyword_proxy": 0,
    "source_meta": {
     "event_source": "typed_l2",
-    "n_typed_rows_on_disk": 6007,
-    "n_event_rows": 1587,
+    "n_typed_rows_on_disk": 26003,
+    "n_typed_rows_from_panel": 19996,
+    "n_typed_rows_from_corpus": 6007,
+    "n_event_rows": 41148,
     "dropped_symbol_not_in_panel": 3612,
     "dropped_date_after_panel": 808,
+    "dropped_panel_cell_not_in_this_slice": 1728,
+    "dropped_duplicate_text_on_the_same_cell": 0,
+    "fanned_beyond_scope": 19253,
     "tickers_seen_but_not_emitted": 2221,
-    "entry_date_rule": "the first panel session STRICTLY AFTER the document's own date; conservative by one for a pre-open headline",
+    "entry_date_rule": "a PANEL row uses the panel's OWN entry_date for every cell carrying its text; a CORPUS row uses the first panel session STRICTLY AFTER the document's own date, conservative by one for a pre-open headline",
+    "dedupe_key": "(symbol, entry_date, text_sha256); panel files read first",
     "directory": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events"
    },
    "note": "entity_tags contribute 0 on the 2025-26 panel: the tagged corpus starts 2026-09-11 and this panel predates it. The path is live and will show a number the day the corpus reaches back."
@@ -173,20 +179,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.024978,
-      1.023091,
-      1.022385,
-      1.019543,
-      1.018592,
-      1.017572,
-      1.017312,
-      1.016886,
-      1.016481,
-      1.015636,
-      1.01486,
-      1.015651
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -214,20 +220,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.043876,
-      1.041519,
-      1.039915,
-      1.038953,
-      1.039137,
-      1.038488,
-      1.038703,
-      1.037315,
-      1.036245,
-      1.038133,
-      1.036327,
-      1.035642
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN,
+      NaN
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -255,20 +261,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.041691,
-      1.038644,
-      1.039095,
-      1.037754,
-      1.03559,
-      1.036177,
-      1.03543,
-      1.035429,
-      1.034549,
-      1.034598,
-      1.034118,
-      1.034505
+      1.041382,
+      1.036981,
+      1.034445,
+      1.033133,
+      1.030135,
+      1.029382,
+      1.028116,
+      1.027559,
+      1.024829,
+      1.024114,
+      1.022371,
+      1.025076
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -296,20 +302,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.01084,
-      1.011963,
-      1.013492,
-      1.005999,
-      1.004848,
-      1.003912,
-      1.004311,
-      1.003562,
-      1.002523,
-      1.002895,
-      1.001935,
-      1.002583
+      1.007197,
+      1.004408,
+      1.002582,
+      1.000881,
+      0.999075,
+      0.998171,
+      0.998612,
+      0.996745,
+      0.994708,
+      0.993608,
+      0.992632,
+      0.990987
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -337,20 +343,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.036579,
-      1.035386,
-      1.036356,
-      1.030607,
-      1.030887,
-      1.03087,
-      1.030206,
-      1.030148,
-      1.030217,
-      1.029412,
-      1.029763,
-      1.029119
+      1.034599,
+      1.032233,
+      1.029231,
+      1.026813,
+      1.02519,
+      1.024144,
+      1.024763,
+      1.021674,
+      1.020528,
+      1.017221,
+      1.019195,
+      1.017674
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -378,20 +384,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.033958,
-      1.031611,
-      1.031431,
-      1.030895,
-      1.030527,
-      1.029432,
-      1.029055,
-      1.028858,
-      1.028797,
-      1.028965,
-      1.028161,
-      1.028491
+      1.033739,
+      1.030588,
+      1.028344,
+      1.025392,
+      1.023817,
+      1.021611,
+      1.020276,
+      1.020079,
+      1.01804,
+      1.01728,
+      1.016884,
+      1.016091
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -419,20 +425,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.031298,
-      1.030761,
-      1.027589,
-      1.026386,
-      1.026215,
-      1.025103,
-      1.025069,
-      1.024636,
-      1.024931,
-      1.024307,
-      1.024501,
-      1.024233
+      1.030004,
+      1.026271,
+      1.024043,
+      1.021497,
+      1.019441,
+      1.019007,
+      1.016622,
+      1.016187,
+      1.012006,
+      1.011221,
+      1.010056,
+      1.008605
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -460,20 +466,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.040818,
-      1.038519,
-      1.037193,
-      1.036513,
-      1.036627,
-      1.036115,
-      1.036152,
-      1.035858,
-      1.035033,
-      1.035602,
-      1.034777,
-      1.034842
+      1.040204,
+      1.037141,
+      1.034184,
+      1.032116,
+      1.030577,
+      1.02905,
+      1.026175,
+      1.025612,
+      1.022253,
+      1.0228,
+      1.018915,
+      1.020023
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -501,20 +507,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.043006,
-      1.040597,
-      1.040587,
-      1.039285,
-      1.039112,
-      1.038469,
-      1.038696,
-      1.037776,
-      1.038445,
-      1.037529,
-      1.037198,
-      1.037462
+      1.043574,
+      1.039834,
+      1.036928,
+      1.035228,
+      1.033988,
+      1.032072,
+      1.032728,
+      1.029554,
+      1.027384,
+      1.025788,
+      1.023605,
+      1.021004
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -542,20 +548,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.042492,
-      1.048892,
-      1.045318,
-      1.037574,
-      1.03661,
-      1.036091,
-      1.035536,
-      1.034968,
-      1.035234,
-      1.034307,
-      1.034251,
-      1.033755
+      1.03984,
+      1.036125,
+      1.034709,
+      1.032427,
+      1.029689,
+      1.02772,
+      1.025647,
+      1.023663,
+      1.0211,
+      1.020325,
+      1.017814,
+      1.015055
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -583,20 +589,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.038116,
-      1.037391,
-      1.035951,
-      1.035236,
+      1.039037,
       1.034284,
-      1.033191,
-      1.033459,
-      1.032195,
-      1.03218,
-      1.032725,
-      1.031084,
-      1.030887
+      1.03244,
+      1.030478,
+      1.028638,
+      1.0249,
+      1.023591,
+      1.021081,
+      1.018432,
+      1.017426,
+      1.015172,
+      1.013285
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -624,20 +630,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.035517,
-      1.033384,
-      1.033549,
-      1.032175,
-      1.031597,
-      1.030515,
-      1.030103,
-      1.030133,
-      1.029054,
-      1.02929,
-      1.028131,
-      1.029091
+      1.035862,
+      1.032,
+      1.030297,
+      1.026839,
+      1.025345,
+      1.020921,
+      1.018982,
+      1.015259,
+      1.013929,
+      1.011724,
+      1.008332,
+      1.007954
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -665,20 +671,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.039288,
-      1.038503,
-      1.040776,
-      1.036738,
-      1.039506,
-      1.0336,
-      1.033149,
-      1.032423,
-      1.032225,
-      1.032073,
-      1.032198,
-      1.031323
+      1.036927,
+      1.034344,
+      1.031739,
+      1.02978,
+      1.027428,
+      1.025857,
+      1.024283,
+      1.022058,
+      1.020555,
+      1.018478,
+      1.017563,
+      1.014536
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -706,20 +712,20 @@
      "hidden": 96,
      "dropout": 0.15,
      "epochs": 12,
-     "n_features": 83,
+     "n_features": 243,
      "train_loss_by_epoch": [
-      1.036055,
-      1.035077,
-      1.034129,
-      1.03267,
-      1.032166,
-      1.031295,
-      1.03079,
-      1.030041,
-      1.030029,
-      1.029328,
-      1.028949,
-      1.02814
+      1.036248,
+      1.032926,
+      1.030969,
+      1.029562,
+      1.02821,
+      1.025486,
+      1.023919,
+      1.021836,
+      1.018724,
+      1.017549,
+      1.015985,
+      1.013738
      ],
      "degeneracy": "T=1, so the paper's time-mixing is a no-op; only indicator-mixing and a market-aware stock-mixing term run"
     }
@@ -745,26 +751,26 @@
      "GBM": {
       "EVENT": {
        "ic": {
-        "mean": -0.003576,
-        "t": -0.804,
-        "p": 0.4222,
+        "mean": -0.00213,
+        "t": -0.455,
+        "p": 0.6491,
         "n_date_blocks": 276
        },
        "gross": {
-        "mean": 0.000467,
-        "t": 0.225,
-        "p": 0.8219,
+        "mean": 0.001718,
+        "t": 0.852,
+        "p": 0.395,
         "n_date_blocks": 276,
-        "ann_pct": 11.77
+        "ann_pct": 43.281
        },
        "net": {
-        "mean": -0.003549,
-        "t": -1.711,
-        "p": 0.0882,
+        "mean": -0.001574,
+        "t": -0.781,
+        "p": 0.4354,
         "n_date_blocks": 276,
-        "ann_pct": -89.444
+        "ann_pct": -39.669
        },
-       "mean_daily_turnover": 1.6066,
+       "mean_daily_turnover": 1.3167,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -793,26 +799,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.00791,
-        "t": -1.778,
-        "p": 0.0765,
+        "mean": -0.006701,
+        "t": -1.514,
+        "p": 0.1313,
         "n_date_blocks": 276
        },
        "gross": {
-        "mean": -0.000345,
-        "t": -0.172,
-        "p": 0.8636,
+        "mean": 0.002431,
+        "t": 1.099,
+        "p": 0.2729,
         "n_date_blocks": 276,
-        "ann_pct": -8.682
+        "ann_pct": 61.255
        },
        "net": {
-        "mean": -0.004495,
-        "t": -2.242,
-        "p": 0.0258,
+        "mean": -0.00188,
+        "t": -0.849,
+        "p": 0.3965,
         "n_date_blocks": 276,
-        "ann_pct": -113.275
+        "ann_pct": -47.377
        },
-       "mean_daily_turnover": 1.6602,
+       "mean_daily_turnover": 1.7243,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -843,26 +849,26 @@
      "StockMixer_T1": {
       "EVENT": {
        "ic": {
-        "mean": 0.003103,
-        "t": 0.435,
-        "p": 0.6639,
-        "n_date_blocks": 276
+        "mean": 0.00656,
+        "t": 1.223,
+        "p": 0.2225,
+        "n_date_blocks": 234
        },
        "gross": {
-        "mean": 0.005191,
-        "t": 2.086,
-        "p": 0.0379,
+        "mean": 0.000914,
+        "t": 0.325,
+        "p": 0.7456,
         "n_date_blocks": 276,
-        "ann_pct": 130.815
+        "ann_pct": 23.036
        },
        "net": {
-        "mean": 0.002107,
-        "t": 0.847,
-        "p": 0.398,
+        "mean": -0.001841,
+        "t": -0.653,
+        "p": 0.5141,
         "n_date_blocks": 276,
-        "ann_pct": 53.101
+        "ann_pct": -46.388
        },
-       "mean_daily_turnover": 1.2336,
+       "mean_daily_turnover": 1.102,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -891,26 +897,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.002914,
-        "t": -0.458,
-        "p": 0.6472,
+        "mean": 0.003222,
+        "t": 0.703,
+        "p": 0.4824,
         "n_date_blocks": 276
        },
        "gross": {
-        "mean": 0.002973,
-        "t": 1.383,
-        "p": 0.1678,
+        "mean": 0.000888,
+        "t": 0.55,
+        "p": 0.5828,
         "n_date_blocks": 276,
-        "ann_pct": 74.927
+        "ann_pct": 22.383
        },
        "net": {
-        "mean": -0.000939,
-        "t": -0.436,
-        "p": 0.6628,
+        "mean": -0.003706,
+        "t": -2.292,
+        "p": 0.0227,
         "n_date_blocks": 276,
-        "ann_pct": -23.665
+        "ann_pct": -93.399
        },
-       "mean_daily_turnover": 1.565,
+       "mean_daily_turnover": 1.8378,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -942,107 +948,107 @@
     "vs_controls": {
      "GBM:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.002634,
-       "t": 0.42,
-       "p": 0.6746,
+       "mean": 0.004081,
+       "t": 0.685,
+       "p": 0.4941,
        "n_date_blocks": 276
       },
       "net": {
-       "mean": 0.005071,
-       "t": 1.5,
-       "p": 0.1347,
+       "mean": 0.007046,
+       "t": 2.171,
+       "p": 0.0308,
        "n_date_blocks": 276,
-       "ann_pct": 127.781
+       "ann_pct": 177.556
       }
      },
      "GBM:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.004334,
-       "t": 2.219,
-       "p": 0.0273,
+       "mean": 0.004571,
+       "t": 1.126,
+       "p": 0.2611,
        "n_date_blocks": 276
       },
       "net": {
-       "mean": 0.000946,
-       "t": 1.011,
-       "p": 0.313,
+       "mean": 0.000306,
+       "t": 0.147,
+       "p": 0.8831,
        "n_date_blocks": 276,
-       "ann_pct": 23.831
+       "ann_pct": 7.709
       }
      },
      "GBM:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.004951,
-       "t": 1.641,
-       "p": 0.102,
+       "mean": 0.006398,
+       "t": 1.443,
+       "p": 0.1501,
        "n_date_blocks": 276
       },
       "net": {
-       "mean": 0.003096,
-       "t": 1.4,
-       "p": 0.1627,
+       "mean": 0.005071,
+       "t": 1.981,
+       "p": 0.0486,
        "n_date_blocks": 276,
-       "ann_pct": 78.021
+       "ann_pct": 127.796
       }
      },
      "StockMixer_T1:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.00563,
-       "t": 0.681,
-       "p": 0.4962,
-       "n_date_blocks": 276
+       "mean": 0.009384,
+       "t": 1.549,
+       "p": 0.1226,
+       "n_date_blocks": 234
       },
       "net": {
-       "mean": 0.00606,
-       "t": 1.92,
-       "p": 0.0559,
+       "mean": 0.002112,
+       "t": 0.621,
+       "p": 0.5351,
        "n_date_blocks": 276,
-       "ann_pct": 152.706
+       "ann_pct": 53.217
       }
      },
      "StockMixer_T1:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.006017,
-       "t": 1.584,
-       "p": 0.1142,
-       "n_date_blocks": 276
+       "mean": 1e-06,
+       "t": 0.0,
+       "p": 0.9998,
+       "n_date_blocks": 234
       },
       "net": {
-       "mean": 0.003046,
-       "t": 1.833,
-       "p": 0.0679,
+       "mean": 0.001866,
+       "t": 0.618,
+       "p": 0.5373,
        "n_date_blocks": 276,
-       "ann_pct": 76.767
+       "ann_pct": 47.011
       }
      },
      "StockMixer_T1:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.005618,
-       "t": 0.627,
-       "p": 0.5311,
-       "n_date_blocks": 276
+       "mean": 0.010239,
+       "t": 1.177,
+       "p": 0.2404,
+       "n_date_blocks": 234
       },
       "net": {
-       "mean": 0.004026,
-       "t": 1.196,
-       "p": 0.2328,
+       "mean": 7.8e-05,
+       "t": 0.028,
+       "p": 0.9774,
        "n_date_blocks": 276,
-       "ann_pct": 101.467
+       "ann_pct": 1.978
       }
      },
      "StockMixer_T1_minus_GBM_on_EVENT": {
       "ic": {
-       "mean": 0.006679,
-       "t": 0.819,
-       "p": 0.4135,
-       "n_date_blocks": 276
+       "mean": 0.011245,
+       "t": 1.881,
+       "p": 0.0613,
+       "n_date_blocks": 234
       },
       "net": {
-       "mean": 0.005657,
-       "t": 1.808,
-       "p": 0.0717,
+       "mean": -0.000267,
+       "t": -0.089,
+       "p": 0.9291,
        "n_date_blocks": 276,
-       "ann_pct": 142.545
+       "ann_pct": -6.719
       }
      }
     }
@@ -1059,26 +1065,26 @@
      "GBM": {
       "EVENT": {
        "ic": {
-        "mean": 0.010787,
-        "t": 1.213,
-        "p": 0.2322,
+        "mean": 0.012109,
+        "t": 1.369,
+        "p": 0.1786,
         "n_date_blocks": 42
        },
        "gross": {
-        "mean": 0.005038,
-        "t": 1.112,
-        "p": 0.2728,
+        "mean": 0.009657,
+        "t": 2.36,
+        "p": 0.0231,
         "n_date_blocks": 42,
-        "ann_pct": 126.963
+        "ann_pct": 243.364
        },
        "net": {
-        "mean": 0.000951,
-        "t": 0.209,
-        "p": 0.8352,
+        "mean": 0.006004,
+        "t": 1.465,
+        "p": 0.1506,
         "n_date_blocks": 42,
-        "ann_pct": 23.975
+        "ann_pct": 151.303
        },
-       "mean_daily_turnover": 1.6347,
+       "mean_daily_turnover": 1.4613,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -1107,26 +1113,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": 0.004529,
-        "t": 0.499,
-        "p": 0.6203,
+        "mean": 0.005916,
+        "t": 0.631,
+        "p": 0.5315,
         "n_date_blocks": 42
        },
        "gross": {
-        "mean": 0.005204,
-        "t": 1.291,
-        "p": 0.2038,
+        "mean": 0.010127,
+        "t": 1.221,
+        "p": 0.229,
         "n_date_blocks": 42,
-        "ann_pct": 131.134
+        "ann_pct": 255.205
        },
        "net": {
-        "mean": 0.001061,
-        "t": 0.262,
-        "p": 0.7944,
+        "mean": 0.005798,
+        "t": 0.698,
+        "p": 0.4889,
         "n_date_blocks": 42,
-        "ann_pct": 26.736
+        "ann_pct": 146.118
        },
-       "mean_daily_turnover": 1.6571,
+       "mean_daily_turnover": 1.7315,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -1157,26 +1163,26 @@
      "StockMixer_T1": {
       "EVENT": {
        "ic": {
-        "mean": -0.045083,
-        "t": -3.441,
-        "p": 0.0013,
-        "n_date_blocks": 42
+        "mean": NaN,
+        "t": null,
+        "p": null,
+        "n_date_blocks": 0
        },
        "gross": {
-        "mean": -0.014543,
-        "t": -3.154,
-        "p": 0.003,
+        "mean": -0.019113,
+        "t": -1.435,
+        "p": 0.1589,
         "n_date_blocks": 42,
-        "ann_pct": -366.494
+        "ann_pct": -481.637
        },
        "net": {
-        "mean": -0.017588,
-        "t": -3.824,
-        "p": 0.0004,
+        "mean": -0.022416,
+        "t": -1.683,
+        "p": 0.1,
         "n_date_blocks": 42,
-        "ann_pct": -443.208
+        "ann_pct": -564.88
        },
-       "mean_daily_turnover": 1.2177,
+       "mean_daily_turnover": 1.3213,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -1205,26 +1211,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.032125,
-        "t": -2.735,
-        "p": 0.0092,
+        "mean": -0.015369,
+        "t": -1.586,
+        "p": 0.1205,
         "n_date_blocks": 42
        },
        "gross": {
-        "mean": -0.014713,
-        "t": -4.069,
-        "p": 0.0002,
+        "mean": -0.007719,
+        "t": -1.891,
+        "p": 0.0657,
         "n_date_blocks": 42,
-        "ann_pct": -370.772
+        "ann_pct": -194.511
        },
        "net": {
-        "mean": -0.018408,
-        "t": -5.092,
-        "p": 0.0,
+        "mean": -0.012218,
+        "t": -2.993,
+        "p": 0.0047,
         "n_date_blocks": 42,
-        "ann_pct": -463.879
+        "ann_pct": -307.905
        },
-       "mean_daily_turnover": 1.4779,
+       "mean_daily_turnover": 1.7999,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -1256,107 +1262,107 @@
     "vs_controls": {
      "GBM:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.012601,
-       "t": 1.018,
-       "p": 0.3148,
+       "mean": 0.013922,
+       "t": 1.007,
+       "p": 0.3198,
        "n_date_blocks": 42
       },
       "net": {
-       "mean": 0.020719,
-       "t": 1.546,
-       "p": 0.1298,
+       "mean": 0.025772,
+       "t": 1.92,
+       "p": 0.0619,
        "n_date_blocks": 42,
-       "ann_pct": 522.121
+       "ann_pct": 649.449
       }
      },
      "GBM:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.006258,
-       "t": 1.361,
-       "p": 0.1808,
+       "mean": 0.006193,
+       "t": 0.772,
+       "p": 0.4446,
        "n_date_blocks": 42
       },
       "net": {
-       "mean": -0.00011,
-       "t": -0.054,
-       "p": 0.9572,
+       "mean": 0.000206,
+       "t": 0.025,
+       "p": 0.9802,
        "n_date_blocks": 42,
-       "ann_pct": -2.76
+       "ann_pct": 5.185
       }
      },
      "GBM:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.017402,
-       "t": 2.601,
-       "p": 0.0129,
+       "mean": 0.018723,
+       "t": 2.086,
+       "p": 0.0432,
        "n_date_blocks": 42
       },
       "net": {
-       "mean": 0.015857,
-       "t": 1.425,
-       "p": 0.1616,
+       "mean": 0.02091,
+       "t": 1.718,
+       "p": 0.0933,
        "n_date_blocks": 42,
-       "ann_pct": 399.607
+       "ann_pct": 526.935
       }
      },
      "StockMixer_T1:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": -0.044211,
-       "t": -2.665,
-       "p": 0.011,
-       "n_date_blocks": 42
+       "mean": NaN,
+       "t": null,
+       "p": null,
+       "n_date_blocks": 0
       },
       "net": {
-       "mean": -0.014906,
-       "t": -2.408,
-       "p": 0.0206,
+       "mean": -0.019734,
+       "t": -1.308,
+       "p": 0.1983,
        "n_date_blocks": 42,
-       "ann_pct": -375.631
+       "ann_pct": -497.303
       }
      },
      "StockMixer_T1:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": -0.012958,
-       "t": -1.479,
-       "p": 0.1467,
-       "n_date_blocks": 42
+       "mean": NaN,
+       "t": null,
+       "p": null,
+       "n_date_blocks": 0
       },
       "net": {
-       "mean": 0.00082,
-       "t": 0.19,
-       "p": 0.8505,
+       "mean": -0.010197,
+       "t": -0.775,
+       "p": 0.443,
        "n_date_blocks": 42,
-       "ann_pct": 20.671
+       "ann_pct": -256.975
       }
      },
      "StockMixer_T1:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": -0.049053,
-       "t": -2.37,
-       "p": 0.0226,
-       "n_date_blocks": 42
+       "mean": NaN,
+       "t": null,
+       "p": null,
+       "n_date_blocks": 0
       },
       "net": {
-       "mean": -0.002367,
-       "t": -0.206,
-       "p": 0.838,
+       "mean": -0.007195,
+       "t": -0.774,
+       "p": 0.4432,
        "n_date_blocks": 42,
-       "ann_pct": -59.646
+       "ann_pct": -181.318
       }
      },
      "StockMixer_T1_minus_GBM_on_EVENT": {
       "ic": {
-       "mean": -0.05587,
-       "t": -3.349,
-       "p": 0.0017,
-       "n_date_blocks": 42
+       "mean": NaN,
+       "t": null,
+       "p": null,
+       "n_date_blocks": 0
       },
       "net": {
-       "mean": -0.018539,
-       "t": -2.702,
-       "p": 0.01,
+       "mean": -0.02842,
+       "t": -2.089,
+       "p": 0.043,
        "n_date_blocks": 42,
-       "ann_pct": -467.183
+       "ann_pct": -716.183
       }
      }
     }
@@ -1373,26 +1379,26 @@
      "GBM": {
       "EVENT": {
        "ic": {
-        "mean": -0.011789,
-        "t": -1.405,
-        "p": 0.1649,
+        "mean": -0.001714,
+        "t": -0.166,
+        "p": 0.8688,
         "n_date_blocks": 64
        },
        "gross": {
-        "mean": -0.001764,
-        "t": -0.345,
-        "p": 0.7309,
+        "mean": 0.00152,
+        "t": 0.342,
+        "p": 0.7333,
         "n_date_blocks": 64,
-        "ann_pct": -44.452
+        "ann_pct": 38.307
        },
        "net": {
-        "mean": -0.005722,
-        "t": -1.12,
-        "p": 0.267,
+        "mean": -0.001741,
+        "t": -0.392,
+        "p": 0.6963,
         "n_date_blocks": 64,
-        "ann_pct": -144.203
+        "ann_pct": -43.867
        },
-       "mean_daily_turnover": 1.5834,
+       "mean_daily_turnover": 1.3043,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -1421,26 +1427,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.013224,
-        "t": -1.646,
-        "p": 0.1047,
+        "mean": -0.017046,
+        "t": -1.926,
+        "p": 0.0586,
         "n_date_blocks": 64
        },
        "gross": {
-        "mean": -0.000355,
-        "t": -0.076,
-        "p": 0.9395,
+        "mean": 0.001442,
+        "t": 0.281,
+        "p": 0.7793,
         "n_date_blocks": 64,
-        "ann_pct": -8.939
+        "ann_pct": 36.345
        },
        "net": {
-        "mean": -0.004409,
-        "t": -0.946,
-        "p": 0.3477,
+        "mean": -0.00279,
+        "t": -0.545,
+        "p": 0.588,
         "n_date_blocks": 64,
-        "ann_pct": -111.115
+        "ann_pct": -70.297
        },
-       "mean_daily_turnover": 1.6218,
+       "mean_daily_turnover": 1.6927,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -1471,26 +1477,26 @@
      "StockMixer_T1": {
       "EVENT": {
        "ic": {
-        "mean": 0.011198,
-        "t": 0.763,
-        "p": 0.4486,
+        "mean": -0.003858,
+        "t": -0.404,
+        "p": 0.6876,
         "n_date_blocks": 64
        },
        "gross": {
-        "mean": 0.017606,
-        "t": 2.974,
-        "p": 0.0042,
+        "mean": 0.000534,
+        "t": 0.133,
+        "p": 0.8943,
         "n_date_blocks": 64,
-        "ann_pct": 443.673
+        "ann_pct": 13.454
        },
        "net": {
-        "mean": 0.014623,
-        "t": 2.465,
-        "p": 0.0164,
+        "mean": -0.002008,
+        "t": -0.502,
+        "p": 0.6171,
         "n_date_blocks": 64,
-        "ann_pct": 368.504
+        "ann_pct": -50.609
        },
-       "mean_daily_turnover": 1.1932,
+       "mean_daily_turnover": 1.0169,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -1519,26 +1525,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.01657,
-        "t": -1.228,
-        "p": 0.224,
+        "mean": 0.001678,
+        "t": 0.155,
+        "p": 0.877,
         "n_date_blocks": 64
        },
        "gross": {
-        "mean": 0.009667,
-        "t": 1.881,
-        "p": 0.0647,
+        "mean": 0.001077,
+        "t": 0.284,
+        "p": 0.7774,
         "n_date_blocks": 64,
-        "ann_pct": 243.603
+        "ann_pct": 27.148
        },
        "net": {
-        "mean": 0.005867,
-        "t": 1.137,
-        "p": 0.2597,
+        "mean": -0.003551,
+        "t": -0.932,
+        "p": 0.3548,
         "n_date_blocks": 64,
-        "ann_pct": 147.85
+        "ann_pct": -89.497
        },
-       "mean_daily_turnover": 1.5199,
+       "mean_daily_turnover": 1.8515,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -1570,107 +1576,107 @@
     "vs_controls": {
      "GBM:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.00796,
-       "t": 0.595,
-       "p": 0.5539,
+       "mean": 0.018035,
+       "t": 1.395,
+       "p": 0.1678,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": 0.003174,
-       "t": 0.42,
-       "p": 0.6761,
+       "mean": 0.007156,
+       "t": 0.997,
+       "p": 0.3225,
        "n_date_blocks": 64,
-       "ann_pct": 79.987
+       "ann_pct": 180.323
       }
      },
      "GBM:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.001435,
-       "t": 0.377,
-       "p": 0.7072,
+       "mean": 0.015331,
+       "t": 2.007,
+       "p": 0.0491,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": -0.001313,
-       "t": -0.677,
-       "p": 0.5008,
+       "mean": 0.001049,
+       "t": 0.356,
+       "p": 0.723,
        "n_date_blocks": 64,
-       "ann_pct": -33.089
+       "ann_pct": 26.43
       }
      },
      "GBM:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.002905,
-       "t": 0.504,
-       "p": 0.6163,
+       "mean": 0.01298,
+       "t": 1.442,
+       "p": 0.1542,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": -0.000413,
-       "t": -0.138,
-       "p": 0.8909,
+       "mean": 0.003569,
+       "t": 1.139,
+       "p": 0.2592,
        "n_date_blocks": 64,
-       "ann_pct": -10.403
+       "ann_pct": 89.933
       }
      },
      "StockMixer_T1:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.025506,
-       "t": 1.32,
-       "p": 0.1916,
+       "mean": 0.01045,
+       "t": 0.955,
+       "p": 0.3433,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": 0.022687,
-       "t": 3.011,
-       "p": 0.0037,
+       "mean": 0.006055,
+       "t": 1.016,
+       "p": 0.3134,
        "n_date_blocks": 64,
-       "ann_pct": 571.708
+       "ann_pct": 152.595
       }
      },
      "StockMixer_T1:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.027768,
-       "t": 3.844,
-       "p": 0.0003,
+       "mean": -0.005536,
+       "t": -0.471,
+       "p": 0.6392,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": 0.008756,
-       "t": 2.463,
-       "p": 0.0165,
+       "mean": 0.001543,
+       "t": 0.345,
+       "p": 0.7311,
        "n_date_blocks": 64,
-       "ann_pct": 220.654
+       "ann_pct": 38.888
       }
      },
      "StockMixer_T1:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.02829,
-       "t": 1.217,
-       "p": 0.2283,
+       "mean": 0.013234,
+       "t": 0.848,
+       "p": 0.3995,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": 0.011905,
-       "t": 1.377,
-       "p": 0.1733,
+       "mean": -0.004727,
+       "t": -0.709,
+       "p": 0.4806,
        "n_date_blocks": 64,
-       "ann_pct": 300.003
+       "ann_pct": -119.11
       }
      },
      "StockMixer_T1_minus_GBM_on_EVENT": {
       "ic": {
-       "mean": 0.022988,
-       "t": 1.388,
-       "p": 0.1699,
+       "mean": -0.002143,
+       "t": -0.198,
+       "p": 0.8439,
        "n_date_blocks": 64
       },
       "net": {
-       "mean": 0.020346,
-       "t": 2.978,
-       "p": 0.0041,
+       "mean": -0.000268,
+       "t": -0.056,
+       "p": 0.9556,
        "n_date_blocks": 64,
-       "ann_pct": 512.707
+       "ann_pct": -6.742
       }
      }
     }
@@ -1687,26 +1693,26 @@
      "GBM": {
       "EVENT": {
        "ic": {
-        "mean": 0.001672,
-        "t": 0.24,
-        "p": 0.8108,
+        "mean": -0.007845,
+        "t": -0.882,
+        "p": 0.3811,
         "n_date_blocks": 61
        },
        "gross": {
-        "mean": 0.007193,
-        "t": 2.102,
-        "p": 0.0397,
+        "mean": 0.003484,
+        "t": 0.947,
+        "p": 0.3474,
         "n_date_blocks": 61,
-        "ann_pct": 181.258
+        "ann_pct": 87.793
        },
        "net": {
-        "mean": 0.003112,
-        "t": 0.91,
-        "p": 0.3667,
+        "mean": -4.2e-05,
+        "t": -0.011,
+        "p": 0.991,
         "n_date_blocks": 61,
-        "ann_pct": 78.419
+        "ann_pct": -1.051
        },
-       "mean_daily_turnover": 1.6324,
+       "mean_daily_turnover": 1.4102,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -1735,26 +1741,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.002727,
-        "t": -0.348,
-        "p": 0.7291,
+        "mean": 0.003337,
+        "t": 0.471,
+        "p": 0.6395,
         "n_date_blocks": 61
        },
        "gross": {
-        "mean": 0.003648,
-        "t": 1.05,
-        "p": 0.2979,
+        "mean": 0.00425,
+        "t": 1.431,
+        "p": 0.1577,
         "n_date_blocks": 61,
-        "ann_pct": 91.939
+        "ann_pct": 107.093
        },
        "net": {
-        "mean": -0.000573,
-        "t": -0.165,
-        "p": 0.8697,
+        "mean": -0.000151,
+        "t": -0.051,
+        "p": 0.9595,
         "n_date_blocks": 61,
-        "ann_pct": -14.432
+        "ann_pct": -3.817
        },
-       "mean_daily_turnover": 1.6884,
+       "mean_daily_turnover": 1.7605,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -1785,26 +1791,26 @@
      "StockMixer_T1": {
       "EVENT": {
        "ic": {
-        "mean": 0.005818,
-        "t": 0.449,
-        "p": 0.655,
+        "mean": 0.001987,
+        "t": 0.228,
+        "p": 0.8204,
         "n_date_blocks": 61
        },
        "gross": {
-        "mean": 0.011891,
-        "t": 2.493,
-        "p": 0.0154,
+        "mean": 0.004733,
+        "t": 1.501,
+        "p": 0.1387,
         "n_date_blocks": 61,
-        "ann_pct": 299.644
+        "ann_pct": 119.281
        },
        "net": {
-        "mean": 0.008816,
-        "t": 1.848,
-        "p": 0.0695,
+        "mean": 0.001846,
+        "t": 0.584,
+        "p": 0.5611,
         "n_date_blocks": 61,
-        "ann_pct": 222.168
+        "ann_pct": 46.527
        },
-       "mean_daily_turnover": 1.2298,
+       "mean_daily_turnover": 1.1548,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -1833,26 +1839,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.008744,
-        "t": -0.667,
-        "p": 0.5071,
+        "mean": 0.000149,
+        "t": 0.017,
+        "p": 0.9866,
         "n_date_blocks": 61
        },
        "gross": {
-        "mean": 0.00644,
-        "t": 1.53,
-        "p": 0.1312,
+        "mean": 0.004025,
+        "t": 1.283,
+        "p": 0.2046,
         "n_date_blocks": 61,
-        "ann_pct": 162.28
+        "ann_pct": 101.428
        },
        "net": {
-        "mean": 0.002482,
-        "t": 0.59,
-        "p": 0.5576,
+        "mean": -0.000585,
+        "t": -0.186,
+        "p": 0.8528,
         "n_date_blocks": 61,
-        "ann_pct": 62.542
+        "ann_pct": -14.737
        },
-       "mean_daily_turnover": 1.5831,
+       "mean_daily_turnover": 1.8439,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -1884,107 +1890,107 @@
     "vs_controls": {
      "GBM:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": -0.005347,
-       "t": -0.439,
-       "p": 0.6623,
+       "mean": -0.014863,
+       "t": -1.267,
+       "p": 0.2099,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.006932,
-       "t": 1.569,
-       "p": 0.1219,
+       "mean": 0.003779,
+       "t": 0.853,
+       "p": 0.3973,
        "n_date_blocks": 61,
-       "ann_pct": 174.689
+       "ann_pct": 95.219
       }
      },
      "GBM:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.004399,
-       "t": 1.225,
-       "p": 0.2254,
+       "mean": -0.011182,
+       "t": -1.367,
+       "p": 0.1767,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.003685,
-       "t": 2.232,
-       "p": 0.0293,
+       "mean": 0.00011,
+       "t": 0.031,
+       "p": 0.9751,
        "n_date_blocks": 61,
-       "ann_pct": 92.851
+       "ann_pct": 2.766
       }
      },
      "GBM:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.005483,
-       "t": 0.928,
-       "p": 0.3571,
+       "mean": -0.004034,
+       "t": -0.43,
+       "p": 0.6687,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.005535,
-       "t": 1.726,
-       "p": 0.0895,
+       "mean": 0.002381,
+       "t": 0.621,
+       "p": 0.5368,
        "n_date_blocks": 61,
-       "ann_pct": 139.478
+       "ann_pct": 60.008
       }
      },
      "StockMixer_T1:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.003285,
-       "t": 0.228,
-       "p": 0.8205,
+       "mean": -0.000546,
+       "t": -0.052,
+       "p": 0.9586,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.012137,
-       "t": 1.96,
-       "p": 0.0547,
+       "mean": 0.005167,
+       "t": 1.039,
+       "p": 0.3028,
        "n_date_blocks": 61,
-       "ann_pct": 305.852
+       "ann_pct": 130.211
       }
      },
      "StockMixer_T1:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.014562,
-       "t": 1.818,
-       "p": 0.0741,
+       "mean": 0.001838,
+       "t": 0.171,
+       "p": 0.865,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.006334,
-       "t": 1.657,
-       "p": 0.1028,
+       "mean": 0.002431,
+       "t": 0.559,
+       "p": 0.5782,
        "n_date_blocks": 61,
-       "ann_pct": 159.626
+       "ann_pct": 61.264
       }
      },
      "StockMixer_T1:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": -0.016559,
-       "t": -1.002,
-       "p": 0.3203,
+       "mean": -0.02039,
+       "t": -1.682,
+       "p": 0.0979,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.00496,
-       "t": 0.789,
-       "p": 0.4333,
+       "mean": -0.00201,
+       "t": -0.447,
+       "p": 0.6565,
        "n_date_blocks": 61,
-       "ann_pct": 124.997
+       "ann_pct": -50.645
       }
      },
      "StockMixer_T1_minus_GBM_on_EVENT": {
       "ic": {
-       "mean": 0.004146,
-       "t": 0.269,
-       "p": 0.7887,
+       "mean": 0.009832,
+       "t": 1.002,
+       "p": 0.3202,
        "n_date_blocks": 61
       },
       "net": {
-       "mean": 0.005704,
-       "t": 1.059,
-       "p": 0.2937,
+       "mean": 0.001888,
+       "t": 0.515,
+       "p": 0.6085,
        "n_date_blocks": 61,
-       "ann_pct": 143.749
+       "ann_pct": 47.578
       }
      }
     }
@@ -2001,26 +2007,26 @@
      "GBM": {
       "EVENT": {
        "ic": {
-        "mean": -0.000255,
-        "t": -0.025,
-        "p": 0.9802,
+        "mean": 0.014217,
+        "t": 1.561,
+        "p": 0.1237,
         "n_date_blocks": 62
        },
        "gross": {
-        "mean": -0.00095,
-        "t": -0.202,
-        "p": 0.8403,
+        "mean": 0.006714,
+        "t": 1.509,
+        "p": 0.1365,
         "n_date_blocks": 62,
-        "ann_pct": -23.931
+        "ann_pct": 169.186
        },
        "net": {
-        "mean": -0.004934,
-        "t": -1.05,
-        "p": 0.298,
+        "mean": 0.003611,
+        "t": 0.812,
+        "p": 0.4202,
         "n_date_blocks": 62,
-        "ann_pct": -124.334
+        "ann_pct": 90.985
        },
-       "mean_daily_turnover": 1.5937,
+       "mean_daily_turnover": 1.2413,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -2049,26 +2055,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -3e-05,
-        "t": -0.003,
-        "p": 0.9976,
+        "mean": -0.000152,
+        "t": -0.014,
+        "p": 0.9887,
         "n_date_blocks": 62
        },
        "gross": {
-        "mean": 0.001794,
-        "t": 0.371,
-        "p": 0.712,
+        "mean": 0.004442,
+        "t": 1.014,
+        "p": 0.3147,
         "n_date_blocks": 62,
-        "ann_pct": 45.212
+        "ann_pct": 111.935
        },
        "net": {
-        "mean": -0.002324,
-        "t": -0.48,
-        "p": 0.6329,
+        "mean": 0.000193,
+        "t": 0.044,
+        "p": 0.9651,
         "n_date_blocks": 62,
-        "ann_pct": -58.56
+        "ann_pct": 4.857
        },
-       "mean_daily_turnover": 1.6472,
+       "mean_daily_turnover": 1.6997,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -2099,26 +2105,26 @@
      "StockMixer_T1": {
       "EVENT": {
        "ic": {
-        "mean": -0.005473,
-        "t": -0.456,
-        "p": 0.6501,
+        "mean": 0.021131,
+        "t": 1.801,
+        "p": 0.0766,
         "n_date_blocks": 62
        },
        "gross": {
-        "mean": -0.006163,
-        "t": -1.434,
-        "p": 0.1567,
+        "mean": 0.012968,
+        "t": 2.315,
+        "p": 0.024,
         "n_date_blocks": 62,
-        "ann_pct": -155.297
+        "ann_pct": 326.803
        },
        "net": {
-        "mean": -0.009211,
-        "t": -2.147,
-        "p": 0.0357,
+        "mean": 0.010343,
+        "t": 1.847,
+        "p": 0.0697,
         "n_date_blocks": 62,
-        "ann_pct": -232.125
+        "ann_pct": 260.637
        },
-       "mean_daily_turnover": 1.2195,
+       "mean_daily_turnover": 1.0502,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -2147,26 +2153,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": 0.004397,
-        "t": 0.369,
-        "p": 0.7134,
+        "mean": 0.017204,
+        "t": 1.719,
+        "p": 0.0907,
         "n_date_blocks": 62
        },
        "gross": {
-        "mean": -0.001851,
-        "t": -0.419,
-        "p": 0.6764,
+        "mean": 0.00437,
+        "t": 1.396,
+        "p": 0.1677,
         "n_date_blocks": 62,
-        "ann_pct": -46.653
+        "ann_pct": 110.117
        },
        "net": {
-        "mean": -0.00578,
-        "t": -1.309,
-        "p": 0.1954,
+        "mean": -0.000202,
+        "t": -0.065,
+        "p": 0.9487,
         "n_date_blocks": 62,
-        "ann_pct": -145.666
+        "ann_pct": -5.101
        },
-       "mean_daily_turnover": 1.5716,
+       "mean_daily_turnover": 1.8289,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -2198,107 +2204,107 @@
     "vs_controls": {
      "GBM:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": -0.006637,
-       "t": -0.486,
-       "p": 0.6289,
+       "mean": 0.007835,
+       "t": 0.648,
+       "p": 0.5194,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.001364,
-       "t": -0.209,
-       "p": 0.8348,
+       "mean": 0.00718,
+       "t": 1.262,
+       "p": 0.2116,
        "n_date_blocks": 62,
-       "ann_pct": -34.375
+       "ann_pct": 180.943
       }
      },
      "GBM:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": -0.000226,
-       "t": -0.049,
-       "p": 0.9607,
+       "mean": 0.014369,
+       "t": 1.449,
+       "p": 0.1524,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.00261,
-       "t": -1.126,
-       "p": 0.2644,
+       "mean": 0.003418,
+       "t": 0.788,
+       "p": 0.4337,
        "n_date_blocks": 62,
-       "ann_pct": -65.774
+       "ann_pct": 86.128
       }
      },
      "GBM:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.006266,
-       "t": 0.949,
-       "p": 0.3466,
+       "mean": 0.020739,
+       "t": 2.163,
+       "p": 0.0345,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.002674,
-       "t": -0.803,
-       "p": 0.4251,
+       "mean": 0.005871,
+       "t": 1.254,
+       "p": 0.2146,
        "n_date_blocks": 62,
-       "ann_pct": -67.373
+       "ann_pct": 147.946
       }
      },
      "StockMixer_T1:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": -0.004017,
-       "t": -0.28,
-       "p": 0.7801,
+       "mean": 0.022587,
+       "t": 1.913,
+       "p": 0.0604,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.006045,
-       "t": -1.008,
-       "p": 0.3175,
+       "mean": 0.013509,
+       "t": 2.189,
+       "p": 0.0325,
        "n_date_blocks": 62,
-       "ann_pct": -152.334
+       "ann_pct": 340.429
       }
      },
      "StockMixer_T1:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": -0.009871,
-       "t": -1.257,
-       "p": 0.2135,
+       "mean": 0.003927,
+       "t": 0.281,
+       "p": 0.7795,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.003431,
-       "t": -1.024,
-       "p": 0.3097,
+       "mean": 0.010545,
+       "t": 1.641,
+       "p": 0.1059,
        "n_date_blocks": 62,
-       "ann_pct": -86.459
+       "ann_pct": 265.739
       }
      },
      "StockMixer_T1:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.005199,
-       "t": 0.335,
-       "p": 0.7391,
+       "mean": 0.031803,
+       "t": 1.654,
+       "p": 0.1033,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.008504,
-       "t": -1.623,
-       "p": 0.1097,
+       "mean": 0.01105,
+       "t": 2.49,
+       "p": 0.0155,
        "n_date_blocks": 62,
-       "ann_pct": -214.302
+       "ann_pct": 278.46
       }
      },
      "StockMixer_T1_minus_GBM_on_EVENT": {
       "ic": {
-       "mean": -0.005218,
-       "t": -0.367,
-       "p": 0.7152,
+       "mean": 0.006914,
+       "t": 0.606,
+       "p": 0.547,
        "n_date_blocks": 62
       },
       "net": {
-       "mean": -0.004277,
-       "t": -0.646,
-       "p": 0.5206,
+       "mean": 0.006732,
+       "t": 1.28,
+       "p": 0.2054,
        "n_date_blocks": 62,
-       "ann_pct": -107.792
+       "ann_pct": 169.652
       }
      }
     }
@@ -2315,26 +2321,26 @@
      "GBM": {
       "EVENT": {
        "ic": {
-        "mean": -0.01642,
-        "t": -1.098,
-        "p": 0.2778,
+        "mean": -0.029565,
+        "t": -2.1,
+        "p": 0.0412,
         "n_date_blocks": 47
        },
        "gross": {
-        "mean": -0.00744,
-        "t": -1.512,
-        "p": 0.1374,
+        "mean": -0.013992,
+        "t": -2.663,
+        "p": 0.0106,
         "n_date_blocks": 47,
-        "ann_pct": -187.492
+        "ann_pct": -352.599
        },
        "net": {
-        "mean": -0.011431,
-        "t": -2.321,
-        "p": 0.0248,
+        "mean": -0.016948,
+        "t": -3.221,
+        "p": 0.0023,
         "n_date_blocks": 47,
-        "ann_pct": -288.07
+        "ann_pct": -427.079
        },
-       "mean_daily_turnover": 1.5965,
+       "mean_daily_turnover": 1.1822,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -2363,26 +2369,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": -0.028911,
-        "t": -1.969,
-        "p": 0.055,
+        "mean": -0.025556,
+        "t": -1.957,
+        "p": 0.0564,
         "n_date_blocks": 47
        },
        "gross": {
-        "mean": -0.013292,
-        "t": -2.881,
-        "p": 0.006,
+        "mean": -0.008115,
+        "t": -2.043,
+        "p": 0.0468,
         "n_date_blocks": 47,
-        "ann_pct": -334.959
+        "ann_pct": -204.491
        },
        "net": {
-        "mean": -0.017531,
-        "t": -3.798,
-        "p": 0.0004,
+        "mean": -0.012481,
+        "t": -3.139,
+        "p": 0.003,
         "n_date_blocks": 47,
-        "ann_pct": -441.793
+        "ann_pct": -314.519
        },
-       "mean_daily_turnover": 1.6958,
+       "mean_daily_turnover": 1.7465,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -2413,26 +2419,26 @@
      "StockMixer_T1": {
       "EVENT": {
        "ic": {
-        "mean": 0.042928,
-        "t": 1.713,
-        "p": 0.0934,
+        "mean": 0.007458,
+        "t": 0.563,
+        "p": 0.5764,
         "n_date_blocks": 47
        },
        "gross": {
-        "mean": 0.012203,
-        "t": 1.795,
-        "p": 0.0792,
+        "mean": -0.00153,
+        "t": -0.321,
+        "p": 0.7495,
         "n_date_blocks": 47,
-        "ann_pct": 307.507
+        "ann_pct": -38.557
        },
        "net": {
-        "mean": 0.008887,
-        "t": 1.308,
-        "p": 0.1975,
+        "mean": -0.004084,
+        "t": -0.855,
+        "p": 0.397,
         "n_date_blocks": 47,
-        "ann_pct": 223.957
+        "ann_pct": -102.908
        },
-       "mean_daily_turnover": 1.3262,
+       "mean_daily_turnover": 1.0214,
        "cost_bps_per_unit_turnover": 25.0
       },
       "TFIDF": {
@@ -2461,26 +2467,26 @@
       },
       "SHUFFLE": {
        "ic": {
-        "mean": 0.039705,
-        "t": 2.071,
-        "p": 0.044,
+        "mean": 0.00748,
+        "t": 0.672,
+        "p": 0.5048,
         "n_date_blocks": 47
        },
        "gross": {
-        "mean": 0.011529,
-        "t": 2.16,
-        "p": 0.036,
+        "mean": -0.000342,
+        "t": -0.087,
+        "p": 0.9314,
         "n_date_blocks": 47,
-        "ann_pct": 290.532
+        "ann_pct": -8.612
        },
        "net": {
-        "mean": 0.00735,
-        "t": 1.374,
-        "p": 0.176,
+        "mean": -0.004984,
+        "t": -1.264,
+        "p": 0.2124,
         "n_date_blocks": 47,
-        "ann_pct": 185.216
+        "ann_pct": -125.596
        },
-       "mean_daily_turnover": 1.6717,
+       "mean_daily_turnover": 1.8569,
        "cost_bps_per_unit_turnover": 25.0
       },
       "NOTEXT": {
@@ -2512,122 +2518,122 @@
     "vs_controls": {
      "GBM:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.009064,
-       "t": 0.493,
-       "p": 0.6243,
+       "mean": -0.00408,
+       "t": -0.246,
+       "p": 0.8068,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": -0.000258,
-       "t": -0.042,
-       "p": 0.9665,
+       "mean": -0.005774,
+       "t": -1.059,
+       "p": 0.2951,
        "n_date_blocks": 47,
-       "ann_pct": -6.501
+       "ann_pct": -145.511
       }
      },
      "GBM:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.012491,
-       "t": 2.298,
-       "p": 0.0261,
+       "mean": -0.004008,
+       "t": -0.368,
+       "p": 0.7143,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": 0.0061,
-       "t": 2.699,
-       "p": 0.0097,
+       "mean": -0.004467,
+       "t": -0.859,
+       "p": 0.3949,
        "n_date_blocks": 47,
-       "ann_pct": 153.724
+       "ann_pct": -112.56
       }
      },
      "GBM:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": -0.005813,
-       "t": -0.647,
-       "p": 0.5211,
+       "mean": -0.018958,
+       "t": -1.615,
+       "p": 0.1131,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": 0.000916,
-       "t": 0.238,
-       "p": 0.8128,
+       "mean": -0.0046,
+       "t": -0.952,
+       "p": 0.3461,
        "n_date_blocks": 47,
-       "ann_pct": 23.084
+       "ann_pct": -115.925
       }
      },
      "StockMixer_T1:EVENT_minus_TFIDF": {
       "ic": {
-       "mean": 0.038874,
-       "t": 1.486,
-       "p": 0.1441,
+       "mean": 0.003403,
+       "t": 0.21,
+       "p": 0.8348,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": 0.010234,
-       "t": 1.288,
-       "p": 0.2042,
+       "mean": -0.002736,
+       "t": -0.458,
+       "p": 0.6488,
        "n_date_blocks": 47,
-       "ann_pct": 257.907
+       "ann_pct": -68.958
       }
      },
      "StockMixer_T1:EVENT_minus_SHUFFLE": {
       "ic": {
-       "mean": 0.003223,
-       "t": 0.321,
-       "p": 0.7499,
+       "mean": -2.2e-05,
+       "t": -0.001,
+       "p": 0.9989,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": 0.001537,
-       "t": 0.452,
-       "p": 0.6532,
+       "mean": 0.0009,
+       "t": 0.151,
+       "p": 0.8808,
        "n_date_blocks": 47,
-       "ann_pct": 38.74
+       "ann_pct": 22.688
       }
      },
      "StockMixer_T1:EVENT_minus_NOTEXT": {
       "ic": {
-       "mean": 0.052938,
-       "t": 2.501,
-       "p": 0.016,
+       "mean": 0.017468,
+       "t": 0.768,
+       "p": 0.4465,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": 0.014329,
-       "t": 2.662,
-       "p": 0.0107,
+       "mean": 0.001359,
+       "t": 0.209,
+       "p": 0.8356,
        "n_date_blocks": 47,
-       "ann_pct": 361.099
+       "ann_pct": 34.234
       }
      },
      "StockMixer_T1_minus_GBM_on_EVENT": {
       "ic": {
-       "mean": 0.059348,
-       "t": 2.246,
-       "p": 0.0296,
+       "mean": 0.037022,
+       "t": 2.248,
+       "p": 0.0294,
        "n_date_blocks": 47
       },
       "net": {
-       "mean": 0.020319,
-       "t": 2.465,
-       "p": 0.0175,
+       "mean": 0.012864,
+       "t": 2.25,
+       "p": 0.0293,
        "n_date_blocks": 47,
-       "ann_pct": 512.027
+       "ann_pct": 324.171
       }
      }
     }
    }
   },
   "holm_adjusted_p_all_era_ic": {
-   "GBM:EVENT_minus_SHUFFLE": 0.1638,
-   "GBM:EVENT_minus_NOTEXT": 0.51,
-   "StockMixer_T1:EVENT_minus_SHUFFLE": 0.51,
-   "StockMixer_T1:EVENT_minus_TFIDF": 1.0,
-   "StockMixer_T1:EVENT_minus_NOTEXT": 1.0,
-   "GBM:EVENT_minus_TFIDF": 1.0
+   "StockMixer_T1:EVENT_minus_TFIDF": 0.7356,
+   "GBM:EVENT_minus_NOTEXT": 0.7505,
+   "StockMixer_T1:EVENT_minus_NOTEXT": 0.9616,
+   "GBM:EVENT_minus_SHUFFLE": 0.9616,
+   "GBM:EVENT_minus_TFIDF": 0.9882,
+   "StockMixer_T1:EVENT_minus_SHUFFLE": 0.9998
   },
   "holm_family_size": 6,
-  "family_max_p": 1.0,
+  "family_max_p": 0.9998,
   "horizon_caveats": {
    "horizon_sessions": 5,
    "n_date_blocks_reported": 276,
@@ -2636,15 +2642,15 @@
    "annualisation_note": "ann_pct in every cell is mean x 252 x 100 of that daily series. At horizon 5 it counts the same capital about 5 times over; divide by 5 for a first-order comparable figure. IC is horizon-agnostic and is the number to use for any cross-horizon comparison."
   }
  },
- "family_max_p": 1.0,
+ "family_max_p": 0.9998,
  "beats_shuffle": {
-  "beats_shuffle_GBM": "GBM: EVENT - SHUFFLE IC +0.0043 (t 2.219, Holm p 0.1638) over 276 date blocks -> NO",
-  "beats_shuffle_StockMixer_T1": "StockMixer_T1: EVENT - SHUFFLE IC +0.0060 (t 1.584, Holm p 0.51) over 276 date blocks -> NO"
+  "beats_shuffle_GBM": "GBM: EVENT - SHUFFLE IC +0.0046 (t 1.126, Holm p 0.9616) over 276 date blocks -> NO",
+  "beats_shuffle_StockMixer_T1": "StockMixer_T1: EVENT - SHUFFLE IC +0.0000 (t 0.0, Holm p 0.9998) over 234 date blocks -> NO"
  },
- "beats_gbm": "StockMixer_T1 - GBM on the identical table: IC +0.0067 (t 0.819, p 0.4135) -> NO",
- "headline": "GBM: EVENT - SHUFFLE IC +0.0043 (t 2.219, Holm p 0.1638) over 276 date blocks -> NO | StockMixer_T1: EVENT - SHUFFLE IC +0.0060 (t 1.584, Holm p 0.51) over 276 date blocks -> NO | StockMixer_T1 - GBM on the identical table: IC +0.0067 (t 0.819, p 0.4135) -> NO",
- "verdict": "FAILED_VARIANT: no model's typed-event arm beats the SHUFFLED-EVENT control, so what either earns is the panel's calendar and universe, not the events. This closes the KEYWORD PROXY, not typed events -- L2's LLM extraction has not run.",
+ "beats_gbm": "StockMixer_T1 - GBM on the identical table: IC +0.0112 (t 1.881, p 0.0613) -> NO",
+ "headline": "GBM: EVENT - SHUFFLE IC +0.0046 (t 1.126, Holm p 0.9616) over 276 date blocks -> NO | StockMixer_T1: EVENT - SHUFFLE IC +0.0000 (t 0.0, Holm p 0.9998) over 234 date blocks -> NO | StockMixer_T1 - GBM on the identical table: IC +0.0112 (t 1.881, p 0.0613) -> NO",
+ "verdict": "FAILED_VARIANT: no model's typed-event arm beats the SHUFFLED-EVENT control, so what either earns is the panel's calendar and universe, not the events. This closes THIS READ of the LLM-typed rows at 30,275 of 129,983 cells (23.3% coverage); below ~5% coverage the shuffled control has little power, and the next test is typing the panel's own headlines, not another head.",
  "next_test": "L2's LLM extraction over the same cells, graded through this identical table, splits, book and controls -- the ONLY difference being how the events were typed. That is what separates 'typed events do not work here' from 'a keyword proxy does not work here'.",
- "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\E1_event_head_h5_run02_daily.csv",
- "elapsed_s": 1320.2
+ "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\E1_event_head_h5_run04_daily.csv",
+ "elapsed_s": 825.7
 }

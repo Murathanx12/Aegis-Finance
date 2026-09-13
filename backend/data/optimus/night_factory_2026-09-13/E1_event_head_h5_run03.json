@@ -1,7 +1,7 @@
 {
  "job": "E1_event_head",
  "licence": "PRODUCT_EXPERIMENT",
- "run": 2,
+ "run": 3,
  "smoke": false,
  "stage": "signal",
  "llm_spend_usd": 0.0,
@@ -37,7 +37,7 @@
   "bars.parquet"
  ],
  "status": "done",
- "written_utc": "2026-09-13T09:41:05+00:00",
+ "written_utc": "2026-09-13T11:49:37+00:00",
  "panel": {
   "horizon_sessions": 5,
   "label": "x_oc_h5",
@@ -144,12 +144,18 @@
    "event_rows_from_keyword_proxy": 0,
    "source_meta": {
     "event_source": "typed_l2",
-    "n_typed_rows_on_disk": 6007,
+    "n_typed_rows_on_disk": 26003,
+    "n_typed_rows_from_panel": 19996,
+    "n_typed_rows_from_corpus": 6007,
     "n_event_rows": 1587,
     "dropped_symbol_not_in_panel": 3612,
     "dropped_date_after_panel": 808,
+    "dropped_panel_cell_not_in_this_slice": 41289,
+    "dropped_duplicate_text_on_the_same_cell": 0,
+    "fanned_beyond_scope": 0,
     "tickers_seen_but_not_emitted": 2221,
-    "entry_date_rule": "the first panel session STRICTLY AFTER the document's own date; conservative by one for a pre-open headline",
+    "entry_date_rule": "a PANEL row uses the panel's OWN entry_date for every cell carrying its text; a CORPUS row uses the first panel session STRICTLY AFTER the document's own date, conservative by one for a pre-open headline",
+    "dedupe_key": "(symbol, entry_date, text_sha256); panel files read first",
     "directory": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events"
    },
    "note": "entity_tags contribute 0 on the 2025-26 panel: the tagged corpus starts 2026-09-11 and this panel predates it. The path is live and will show a number the day the corpus reaches back."
@@ -2643,8 +2649,8 @@
  },
  "beats_gbm": "StockMixer_T1 - GBM on the identical table: IC +0.0067 (t 0.819, p 0.4135) -> NO",
  "headline": "GBM: EVENT - SHUFFLE IC +0.0043 (t 2.219, Holm p 0.1638) over 276 date blocks -> NO | StockMixer_T1: EVENT - SHUFFLE IC +0.0060 (t 1.584, Holm p 0.51) over 276 date blocks -> NO | StockMixer_T1 - GBM on the identical table: IC +0.0067 (t 0.819, p 0.4135) -> NO",
- "verdict": "FAILED_VARIANT: no model's typed-event arm beats the SHUFFLED-EVENT control, so what either earns is the panel's calendar and universe, not the events. This closes the KEYWORD PROXY, not typed events -- L2's LLM extraction has not run.",
+ "verdict": "FAILED_VARIANT: no model's typed-event arm beats the SHUFFLED-EVENT control, so what either earns is the panel's calendar and universe, not the events. This closes THIS READ of the LLM-typed rows at 630 of 129,983 cells (0.5% coverage); below ~5% coverage the shuffled control has little power, and the next test is typing the panel's own headlines, not another head.",
  "next_test": "L2's LLM extraction over the same cells, graded through this identical table, splits, book and controls -- the ONLY difference being how the events were typed. That is what separates 'typed events do not work here' from 'a keyword proxy does not work here'.",
- "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\E1_event_head_h5_run02_daily.csv",
- "elapsed_s": 1320.2
+ "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-13\\E1_event_head_h5_run03_daily.csv",
+ "elapsed_s": 820.5
 }
