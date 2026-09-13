@@ -1673,6 +1673,7 @@ JOB_STAGES = {
     "B_verdict": "pnl",
     "D1_reaction_book": "pnl",
     "P6_bars_and_regret": "pnl",
+    "L3_lookahead": "signal",   # 2026-09-13: run outside the factory once; the receipt contract walks the folder
 }
 
 

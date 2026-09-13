@@ -85,5 +85,7 @@
  },
  "elapsed_s": 0.0,
  "written_utc": "2026-09-13T09:19:57+00:00",
- "run": 2
+ "run": 2,
+ "stage": "signal",
+ "stage_note": "stamped by hand 2026-09-13 17:55: the probe ran outside the factory, which stamps this field; nothing else edited"
 }
