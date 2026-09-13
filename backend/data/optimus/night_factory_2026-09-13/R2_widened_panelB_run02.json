@@ -1,0 +1,193 @@
+{
+ "job": "R2_monthly_llm_widened",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "panel": "PANEL-B",
+ "backend": "local_gguf",
+ "trial": "r2-monthly-news-digest-read",
+ "PREREGISTRATION": {
+  "trial": "r2-monthly-news-digest-read",
+  "canonical_doc": "docs/TRIALS/TRIAL-R2-monthly-news-digest-read.md",
+  "pre_registered": "2026-09-10",
+  "system_sha256": "51ebe4fe45c6ab598383f3959c4f2029921d70147ae70aeab7fd431367a2371b",
+  "prompt_sha256": "0189e97eebdf43b6692d91dea64c6a821417b1f14f42b67601ac8e2b404b2ce7",
+  "digest_spec_sha256": "0e16923e20725ccf102a5107d912dbd884cc67a987521b3dc2fb4895bd854e65",
+  "model_identity": {
+   "backend": "local_gguf",
+   "file_name": "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+   "size_bytes": 4683074240,
+   "sha256": "65b8fcd92af6b4fefa935c625d1ac27ea29dcb6ee14589c55a8f115ceaaa1423",
+   "served_by": "llama-server version 0.3.0-dev (build 10645, commit c5fc7e348), built with Clang 20.1.8 for Windows x86_64",
+   "endpoint": "127.0.0.1:8080 (OpenAI-compatible)",
+   "note": "a model swap is a NEW ARM, not an upgrade -- it gets its own registration"
+  },
+  "cost_bps_per_side": 25.0,
+  "cost_model": "turnover_t = sum_i |w_{t,i} - w_{t-1,i}| with w_{-1} = 0; cost_t = turnover_t * COST_BPS_PER_SIDE / 1e4; net_t = gross_t - cost_t. A full monthly replacement of a gross-1 long-short is turnover 2.0, i.e. 50 bps a month or ~6%/yr, and that is the number to sanity-check against"
+ },
+ "question": "Given only that month's ANONYMISED news, does a local 7B call the next month's SPY-adjusted direction better than the identical pipeline reading a digest from a random other month -- on a panel the 135-name read never saw?",
+ "does_not_restate": "PANEL-A (2015-2024, 135 names) keeps exactly the claim its own amendment gave it; this receipt is a separate experiment",
+ "construction": {
+  "news_rows": 340465,
+  "symbol_month_groups": 36898,
+  "with_a_forward_label": 34984,
+  "cells_at_min_docs": 18521,
+  "min_docs_per_cell": 3,
+  "bars": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\prices_2025_26\\bars.parquet",
+  "market_symbol": "SPY",
+  "convention": "enter at the first open of M+1, exit at the first open of M+2, minus SPY over the same two opens",
+  "symbols_with_a_label": 3060,
+  "label_rows": 59348,
+  "dropped_for_a_calendar_gap": 0
+ },
+ "POWER_FIRST": {
+  "date_blocks": 19,
+  "cells": 18521,
+  "median_names_per_month": 912.0,
+  "median_cross_sectional_sd": 0.1733,
+  "implied_long_short_monthly_sd": 0.0182,
+  "MDE_monthly_pct": 1.167,
+  "MDE_annualised_pct": 14.0,
+  "note": "the unit is the monthly date block, not the cell: names inside one month share the market and are not independent draws",
+  "realised_se_ann_pct": 2.68,
+  "MDE_from_realised_se_ann_pct": 7.51
+ },
+ "masking": {
+  "documents_in_digests": 106623,
+  "documents_with_at_least_one_masked_token": 44726,
+  "mask_hit_rate": 0.4195,
+  "cells_whose_symbol_has_a_CRSP_issuer_name": 15817,
+  "note": "a document with no masked token is one where neither the ticker nor an issuer-name token appeared in its text -- common for a headline that never names the company -- but a HIGH rate of them would be a mask leak"
+ },
+ "digests": {
+  "masked": 18521,
+  "real": 18521
+ },
+ "cost_model": {
+  "cost_bps_per_side": 25.0,
+  "charged_on": "realised turnover sum|dw| per monthly rebalance"
+ },
+ "cost_bound_before_the_read": {
+  "max_turnover_per_rebalance": 2.0,
+  "why": "each month's weights satisfy sum|w| = 1, so sum_i |w_t,i - w_t-1,i| <= 2 however different the two months are",
+  "max_cost_drag_ann_pct_per_leg": 6.0,
+  "max_cost_effect_on_the_DIFFERENCE_ann_pct": 6.0,
+  "reading": "the levels cannot lose more than 6%/yr to costs and the difference cannot move by more than 6%/yr either -- and it will move by far less, because the arm and the control rebalance the same cells on the same dates. The bound is arithmetic; the realised numbers are measured by the read and printed beside the gross ones"
+ },
+ "answers_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\R2_widened_panelB_answers.jsonl",
+ "AMNESIA_canary": {
+  "real_names": {
+   "label": "AMNESIA canary: REAL text",
+   "cells": 300,
+   "date_blocks": 18,
+   "dropped_unlabelled": 0,
+   "directional_calls": 264,
+   "share_flat": 0.12,
+   "sign_accuracy": 0.4848,
+   "long_short_monthly_mean_pct": 0.2061,
+   "long_short_ann_pct": 2.474,
+   "long_short_ann_pct_NET": -1.529,
+   "t_nw_blocks": 0.237,
+   "t_nw_blocks_NET": -0.148,
+   "monthly_sd_pp": 3.572,
+   "turnover_per_rebalance": 1.3342,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 4.003
+  },
+  "masked": {
+   "label": "AMNESIA canary: MASKED text",
+   "cells": 300,
+   "date_blocks": 18,
+   "dropped_unlabelled": 0,
+   "directional_calls": 280,
+   "share_flat": 0.067,
+   "sign_accuracy": 0.4821,
+   "long_short_monthly_mean_pct": -0.2601,
+   "long_short_ann_pct": -3.121,
+   "long_short_ann_pct_NET": -7.029,
+   "t_nw_blocks": -0.262,
+   "t_nw_blocks_NET": -0.594,
+   "monthly_sd_pp": 3.502,
+   "turnover_per_rebalance": 1.3026,
+   "cost_bps_per_side": 25.0,
+   "cost_drag_ann_pct": 3.908
+  },
+  "accuracy_gap_real_minus_masked": 0.0027,
+  "reading": "a POSITIVE gap means the model does better when it can see who the company is: recall, not reading"
+ },
+ "arm_masked_read": {
+  "label": "masked digest -> direction",
+  "cells": 18512,
+  "date_blocks": 19,
+  "dropped_unlabelled": 0,
+  "directional_calls": 16736,
+  "share_flat": 0.096,
+  "sign_accuracy": 0.479,
+  "long_short_monthly_mean_pct": 0.0593,
+  "long_short_ann_pct": 0.712,
+  "long_short_ann_pct_NET": -3.513,
+  "t_nw_blocks": 0.201,
+  "t_nw_blocks_NET": -1.007,
+  "monthly_sd_pp": 1.681,
+  "turnover_per_rebalance": 1.4081,
+  "cost_bps_per_side": 25.0,
+  "cost_drag_ann_pct": 4.224
+ },
+ "control_shuffled_digest": {
+  "label": "shuffled digest (control)",
+  "cells": 18513,
+  "date_blocks": 19,
+  "dropped_unlabelled": 0,
+  "directional_calls": 16664,
+  "share_flat": 0.1,
+  "sign_accuracy": 0.4836,
+  "long_short_monthly_mean_pct": 0.0946,
+  "long_short_ann_pct": 1.136,
+  "long_short_ann_pct_NET": -3.253,
+  "t_nw_blocks": 0.411,
+  "t_nw_blocks_NET": -1.208,
+  "monthly_sd_pp": 1.136,
+  "turnover_per_rebalance": 1.4629,
+  "cost_bps_per_side": 25.0,
+  "cost_drag_ann_pct": 4.389
+ },
+ "PRIMARY_read_minus_control": {
+  "label": "read minus shuffled control",
+  "blocks": 19,
+  "mean_ann_pct": -0.424,
+  "t_nw": -0.159,
+  "arm_ann_pct": 0.712,
+  "control_ann_pct": 1.136,
+  "monthly_sd_of_difference_pp": 1.643,
+  "mean_ann_pct_NET": -0.26,
+  "t_nw_NET": -0.097,
+  "arm_ann_pct_NET": -3.513,
+  "control_ann_pct_NET": -3.253,
+  "cost_cancellation": {
+   "arm_turnover_per_rebalance": 1.4081,
+   "control_turnover_per_rebalance": 1.4629,
+   "arm_cost_drag_ann_pct": 4.224,
+   "control_cost_drag_ann_pct": 4.389,
+   "cost_effect_on_the_difference_ann_pct": 0.164,
+   "reading": "the two books rebalance identically on the same dates, so the cost line cancels in the DIFFERENCE to the extent the turnovers match; the levels are NOT cost-robust and are reported gross beside net"
+  }
+ },
+ "usage": {
+  "tokens_in": 12445514,
+  "tokens_out": 530639,
+  "cost_usd": 0.0,
+  "deepseek_equivalent_usd": 2.79021542,
+  "refusals": {
+   "canary_real": 0,
+   "canary_masked": 0,
+   "arm": 0,
+   "control": 0
+  }
+ },
+ "headline": "PANEL-B 19 blocks: masked read 0.712%/yr gross / -3.513%/yr net vs shuffled control 1.136 / -3.253 -> -0.424 gross, -0.26 net, t -0.097; AMNESIA gap 0.0027",
+ "verdict": "REJECT (registered clause): net difference -0.26%/yr, t -0.097, arm net -3.513%/yr vs control net -3.253%/yr.",
+ "family_max_p": null,
+ "elapsed_s": 14624.7,
+ "written_utc": "2026-09-13T11:02:34+00:00",
+ "run": 2,
+ "stage": "signal"
+}

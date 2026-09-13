@@ -20,7 +20,7 @@ file:line; every external claim carries a URL in the agent notes (§2).
 | **RESULT IMPROVEMENT** | **FIRST POSITIVE READ AT THE TRADABLE FLOOR (2026-09-13 16:30):** a registered book (F) beats its twin at $10M in the current era. Nothing has traded on it yet; no forward evidence; the scoreboard line stays CONDITIONAL until the allocator runs it in paper beside its twin. Before this line: NONE for five months. |
 | best historical net strategy vs market | **F, calendar seasonality (Heston-Sadka years 11-20), +0.43%/mo net vs its random-universe twin at the $10M floor, t 3.12 over 419 blocks, +0.76%/mo t 2.30 in 2017-2024, shift-placebo +0.08% t 0.59** (`B_books_efg_replay_run01`, 2026-09-13; UNSIGNED, one read, flat 25 bps, CONDITIONAL). G forecast dispersion is +0.72%/mo t 4.42 pooled at $10M but **+0.02% t 0.07 in 2017-2024** — a decayed 1990s effect, not a live engine |
 | best forward paper strategy | none — **the six Alpaca books $551,653 of $600,000 (−8.1%) read live 2026-09-13 vs SPY −0.66% over 08-28→09-11**; hack1/3/4 lost 5-7% in three sessions against a flat SPY; hack2 retired to lane D |
-| only live lane | **R2** (local 7B, anonymised monthly digest): +16.19%/yr over its shuffled-digest control, t 3.92, 112 blocks; net CANNOT DETERMINE; **panel B still `PENDING_MODEL`** (`night_factory_2026-09-10/R2_widened_panelB_run01.json`: port 8080 refused) |
+| only live lane | **R2 REJECTED on its held-out panel (2026-09-13 18:50, `R2_widened_panelB_run02`, 4.1 h on the local 7B, TdrDelay 60): PANEL-B 19 blocks, masked read −3.51%/yr net vs shuffled-digest control −3.25%/yr → −0.26%/yr, t −0.10; gross −0.42%/yr; AMNESIA gap 0.0027.** Panel A's +16.19%/yr (t 3.92, 112 blocks) was the selection panel; the registered clause on panel B rejects. The lane keeps marking as a SHADOW; it is not a candidate. |
 | independent selectors with evidence | **one** — still the reason no router is permitted |
 | what this session found | **the packaged app runs without a single API key** (§1 R1), and the tour repeats because the window wipes its own storage on every launch |
 | LLM spend | $0.00 this session (no model calls; five Sonnet agents) |
@@ -758,6 +758,8 @@ Holm against the declared four: all reject (G 1e-6, C_v1 6e-4, F 2.3e-3, E 1.0e-
 engine is F, not C (chunk 13b); G goes to the price-scaled amendment before any account; C_v1 waits for a
 falsifier that can run; E is filed. What it does not change: every number is one read of one construction on
 one cost ruler, unsigned. **The scoreboard's RESULT line moves for the first time in five months, to CONDITIONAL.**
+
+**R2 panel B, 2026-09-13 18:50 — the only live lane's held-out read: REJECT.** The registered clause (masked read vs shuffled digest, net, 19 monthly blocks 2025-01..2026-07) fires: −0.26%/yr net, t −0.10; gross −0.42%/yr. The panel-A number (+16.19%/yr, t 3.92) was the number the lane was selected on, and it does not travel. AMNESIA gap 0.0027 (the anonymised digest does not leak the name). RESULT: the scoreboard's "only live lane" row is struck; R2 stays a shadow. This is the fourth registered read today and the fourth honest closure or conditional; the programme's standing candidate at the tradable floor remains F.
 
 ## 12. EXECUTION IN CHUNKS — Sonnet researches, Opus builds, Fable validates
 
