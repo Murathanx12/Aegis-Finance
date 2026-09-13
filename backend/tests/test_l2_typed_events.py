@@ -331,8 +331,8 @@ def test_the_second_prompt_is_a_second_hash_over_the_same_rows(wired):
     assert out["inter_rater"]["kappa_event_type"] in (None, 1.0)   # identical answers
     assert out["inter_rater"]["confidence_mean_abs_difference"] == 0.0
     assert out["inter_rater"]["spec_control_size"] == 500
-    assert seen_systems.count(ex.SYSTEM_PROMPT) == 4
-    assert seen_systems.count(ex.SYSTEM_PROMPT_B) == 2
+    assert seen_systems.count(ex.system_with_schema("A")) == 4
+    assert seen_systems.count(ex.system_with_schema("B")) == 2
 
 
 # ------------------------------------------------------------------- manifest

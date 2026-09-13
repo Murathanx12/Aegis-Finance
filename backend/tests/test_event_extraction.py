@@ -41,8 +41,17 @@ def test_the_wire_system_prompt_is_the_specs_prompt_verbatim():
     """Including the pin: the spec's rule 9 ends with `LANGUAGE_PIN`, which
     `wire_system()` reconstructs by calling `llm_language.pin`."""
     block = _spec_block("### 2.2 System prompt (verbatim)", "### 2.3")
-    spec_text = block.split("```")[1].strip("\n")
-    assert ex.wire_system("A").strip() == spec_text.strip()
+    spec_text = block.split("```")[1].strip("\n").strip()
+    from backend.services import llm_language as _lang
+    pin = _lang.LANGUAGE_PIN.strip()
+    assert spec_text.endswith(pin)
+    spec_body = spec_text[: -len(pin)].rstrip()
+    wire = ex.wire_system("A").strip()
+    # 2026-09-13: the wire is the spec's prompt VERBATIM, then the schema the
+    # prompt refers to, then the pin -- the schema was never on the wire before.
+    assert wire.startswith(spec_body)
+    assert wire.endswith(pin)
+    assert "Full schema:" in wire
 
 
 def test_the_module_does_not_pin_the_language_at_this_call_site():
@@ -283,7 +292,7 @@ def test_extract_sends_the_unpinned_prompt_and_returns_a_typed_row():
     assert seen["backend"] == "local_gguf" and seen["purpose"] == ex.PURPOSE
     # the pin is the wire's job -- it must NOT be in what this module sends
     assert not seen["system"].endswith(_lang.LANGUAGE_PIN)
-    assert seen["system"] == ex.SYSTEM_PROMPT
+    assert seen["system"] == ex.system_with_schema("A")
 
 
 def test_a_language_refusal_from_the_wire_becomes_a_row_level_refusal():
@@ -417,3 +426,37 @@ def test_the_declaration_names_the_validator_and_both_prompt_hashes():
     assert d["validator"] == ex.validator_in_use()
     assert d["vocabulary"]["vocabulary_hash"] == vocab.VOCABULARY_HASH
     assert "CENTRALLY" in d["language_pin"]
+
+
+def test_the_wire_system_prompt_carries_every_vocabulary_id_and_the_schema():
+    """2026-09-13: the prompt referred to "the schema you have been given" and
+    none was given; the first cloud run refused 54 of 100 rows for invented ids.
+    The wire now carries the id list and the full schema, and the hash covers it."""
+    wire = ex.wire_system("A")
+    for eid in ex.SCHEMA["properties"]["event_type"]["enum"]:
+        assert f"- {eid}" in wire
+    assert '"additionalProperties":false' in wire.replace(" ", "")
+    assert ex.PROMPT_HASH == ex.prompt_hash("A")
+
+
+def test_extract_sends_the_schema_to_the_model_and_records_the_model_id():
+    seen = {}
+
+    class _R:
+        provider = "deepseek"
+        model = "deepseek-chat"
+        latency_s = 0.5
+        tokens_in = 300
+        tokens_out = 40
+        cost_usd = 0.0001
+        text = ('{"event_type": "no_event", "direction": 0, "magnitude_bucket": '
+                '"NEGLIGIBLE", "confidence": 0.9, "evidence_span": ""}')
+
+    def fake(backend, prompt, *, system, max_tokens, temperature, purpose):
+        seen["system"] = system
+        return _R()
+    out, usage = ex.extract(scope="ACME", scope_kind="ticker", document_date="2026-09-01",
+                            source_feed="test", title="t", body="b", backend="deepseek",
+                            complete=fake)
+    assert "mergers_acquisitions" in seen["system"] and "Full schema" in seen["system"]
+    assert usage["model"] == "deepseek-chat"

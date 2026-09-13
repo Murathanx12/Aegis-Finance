@@ -399,6 +399,8 @@ text and MUST be produced by calling `llm_language.pin(system_prompt)` in
 code, not hand-typed twice — hand-typing it here is only to show the builder
 the exact string that ends up in the wire prompt.)
 
+> **Wire amendment, 2026-09-13.** The prompt above refers to "the schema you have been given"; until today no schema was sent (it was used only to validate replies) and the first cloud run refused 54 of its first 100 rows for ids the model invented. The wire is now: this prompt verbatim, then the id list and the full JSON Schema (`event_extraction.system_with_schema`), then the language pin. The prompt hash covers the wire, so every row typed from today carries the new hash.
+
 ### 2.3 User template
 
 ```

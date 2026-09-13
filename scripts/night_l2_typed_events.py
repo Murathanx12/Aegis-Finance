@@ -418,7 +418,8 @@ def agreement(rows_a: list[dict], rows_b: list[dict]) -> dict:
 
 # ------------------------------------------------------------------- the writer
 
-def typed_record(row: dict, typed: ex.TypedEventRow, *, backend: str, variant: str) -> dict:
+def typed_record(row: dict, typed: ex.TypedEventRow, *, backend: str, variant: str,
+                 model: str | None = None) -> dict:
     scope, kind = scope_of(row)
     return {
         "source": row.get("source"), "raw_id": row.get("raw_id"),
@@ -431,16 +432,17 @@ def typed_record(row: dict, typed: ex.TypedEventRow, *, backend: str, variant: s
         "tickers": list(row.get("tickers") or []),
         "url": row.get("url"),
         **typed.as_dict(),
-        "prompt_variant": variant, "backend": backend, "typed_utc": _now(),
+        "prompt_variant": variant, "backend": backend, "model": model, "typed_utc": _now(),
     }
 
 
-def refusal_record(row: dict, refusal: ex.Refusal, *, backend: str, variant: str) -> dict:
+def refusal_record(row: dict, refusal: ex.Refusal, *, backend: str, variant: str,
+                   model: str | None = None) -> dict:
     return {
         "source": row.get("source"), "raw_id": row.get("raw_id"),
         "first_seen_utc": row.get("first_seen_utc"),
         "reason": refusal.reason, "detail": refusal.detail, "raw": refusal.raw,
-        "prompt_variant": variant, "backend": backend, "refused_utc": _now(),
+        "prompt_variant": variant, "backend": backend, "model": model, "refused_utc": _now(),
     }
 
 
@@ -621,10 +623,12 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
         src, seen, rid = row_key(row)
         if isinstance(out, ex.Refusal):
             counts[out.reason] = counts.get(out.reason, 0) + 1
-            refusal_records.append(refusal_record(row, out, backend=backend, variant="A"))
+            refusal_records.append(refusal_record(row, out, backend=backend, variant="A",
+                                                  model=usage.get("model")))
         else:
             by_type[out.event_type] = by_type.get(out.event_type, 0) + 1
-            typed_records.append(typed_record(row, out, backend=backend, variant="A"))
+            typed_records.append(typed_record(row, out, backend=backend, variant="A",
+                                              model=usage.get("model")))
             first_pass[(src, seen, rid)] = out
         # the cursor advances on a REFUSED row too: the document was read and the
         # reader refused it, and re-reading it every night would spend the same

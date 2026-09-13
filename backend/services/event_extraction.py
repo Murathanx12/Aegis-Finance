@@ -217,13 +217,31 @@ Classify this document about {scope} per your instructions. Output the JSON
 object only."""
 
 
+def system_with_schema(variant: str = "A") -> str:
+    """The system prompt WITH the schema the rules refer to.
+
+    2026-09-13: the prompt said "matching the schema you have been given" and no
+    schema was ever given -- it was used only to validate the reply -- so the
+    first cloud run refused 54 of its first 100 rows for ids the model invented
+    (`acquisition` for `mergers_acquisitions`). The schema rides at the END of
+    the system prompt so the whole system message is a stable prefix a provider
+    can cache across the run.
+    """
+    ids = chr(10).join(f"- {i}" for i in SCHEMA["properties"]["event_type"]["enum"])
+    head = ("The schema (JSON Schema draft-07). event_type MUST be copied exactly "
+            "from this list of ids and nothing else:")
+    return (PROMPTS[variant] + chr(10) * 2 + head + chr(10) + ids
+            + chr(10) * 2 + "Full schema:" + chr(10)
+            + json.dumps(SCHEMA, sort_keys=True, separators=(",", ":")))
+
+
 def wire_system(variant: str = "A") -> str:
     """Exactly what the model sees, pin included.
 
-    Used for the hash and for a receipt. The call path does NOT use it: it passes
-    the unpinned prompt to `free_inference.complete`, which pins centrally.
+    Used for the hash and for a receipt. The call path passes the unpinned
+    `system_with_schema` to `free_inference.complete`, which pins centrally.
     """
-    return _lang.pin(PROMPTS[variant])
+    return _lang.pin(system_with_schema(variant))
 
 
 def prompt_hash(variant: str = "A") -> str:
@@ -475,8 +493,8 @@ def extract(*, scope: str, scope_kind: str, document_date: str, source_feed: str
                          title=title, body=body)
     document = f"{title}\n{body}"
     try:
-        reply = complete(backend, prompt, system=PROMPTS[variant], max_tokens=max_tokens,
-                         temperature=temperature, purpose=PURPOSE)
+        reply = complete(backend, prompt, system=system_with_schema(variant),
+                         max_tokens=max_tokens, temperature=temperature, purpose=PURPOSE)
     except LanguageRefused as exc:
         # The wire already counted the refusal and the tokens it burned; this
         # turns it into the row-level class the receipt counts by.
@@ -486,7 +504,8 @@ def extract(*, scope: str, scope_kind: str, document_date: str, source_feed: str
     usage = {"tokens_in": int(getattr(reply, "tokens_in", 0) or 0),
              "tokens_out": int(getattr(reply, "tokens_out", 0) or 0),
              "cost_usd": float(getattr(reply, "cost_usd", 0.0) or 0.0),
-             "latency_s": float(getattr(reply, "latency_s", 0.0) or 0.0)}
+             "latency_s": float(getattr(reply, "latency_s", 0.0) or 0.0),
+             "model": getattr(reply, "model", None)}
     return parse_reply(getattr(reply, "text", ""), document=document,
                        variant=variant, provider=backend), usage
 
