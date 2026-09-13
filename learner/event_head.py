@@ -416,10 +416,16 @@ def typed_events(cells: pd.DataFrame, directory=None) -> tuple[pd.DataFrame, dic
                 except (TypeError, IndexError):
                     continue
                 key = _as_session(cdate)
-                if csym not in symbols or key not in session_set:
+                # 2026-09-13: `key in session_set` never matched a datetime64
+                # session -- `sessions.tolist()` yields integers for ns dates --
+                # and E1 run 3 dropped all 41,289 panel cells as "not in this
+                # slice". Locate the session the way the corpus path does, on
+                # the array itself, and emit the array's own element.
+                i = int(np.searchsorted(sessions, key, side="left"))
+                if csym not in symbols or i >= len(sessions) or sessions[i] != key:
                     unmatched_cell += 1
                     continue
-                _emit(csym, key, row, scope_matched=(csym == sym))
+                _emit(csym, sessions[i], row, scope_matched=(csym == sym))
             continue
         from_corpus += 1
         extra_tickers += max(0, len(row.get("tickers") or []) - 1)

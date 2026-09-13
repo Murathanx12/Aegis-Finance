@@ -514,3 +514,26 @@ def test_an_unknown_source_is_a_refusal():
     with pytest.raises(ValueError) as exc:
         l2.L2_typed_events(source="whatever", complete=_reader(), probe=lambda b: None)
     assert "--source must be one of" in str(exc.value)
+
+
+def test_a_panel_cell_joins_a_datetime64_session(tmp_path):
+    """2026-09-13: E1 run 3 read 19,996 panel-typed rows and emitted none --
+    the session set was built with `tolist()`, which turns ns datetimes into
+    integers, so `np.datetime64 in set` was always False. The join must find
+    the session on the array, as the corpus path does."""
+    import json
+    import numpy as np
+    import pandas as pd
+    from learner import event_head as eh
+    cells = pd.DataFrame({"symbol": ["TSLA", "TSLA", "AAPL"],
+                          "entry_date": pd.to_datetime(["2025-01-02", "2025-01-03", "2025-01-02"])})
+    row = {"source_kind": "panel", "scope": "TSLA", "event_type": "earnings_report",
+           "direction": 1, "magnitude_bucket": "MODERATE", "confidence": 0.8,
+           "panel_cells": [["TSLA", "2025-01-02"], ["AAPL", "2025-01-02"], ["TSLA", "2025-01-09"]],
+           "text_sha256": "ab" * 32}
+    (tmp_path / "panel_2026-09-13.jsonl").write_text(json.dumps(row) + chr(10), encoding="utf-8")
+    ev, meta = eh.typed_events(cells, tmp_path)
+    assert meta["n_event_rows"] == 2, meta
+    assert meta["dropped_panel_cell_not_in_this_slice"] == 1
+    assert set(ev["symbol"]) == {"TSLA", "AAPL"}
+    assert np.issubdtype(np.array(ev["entry_date"]).dtype, np.datetime64)
