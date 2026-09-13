@@ -314,6 +314,8 @@ line is negative at 1.3-1.9 turnover/day × 25 bps; levels are not the verdict. 
 `night_factory_2026-09-13/E1_event_head_run01.json`. Next test is the receipt's own: L2's LLM typing
 over the same cells, graded through the identical table and controls.
 
+**Measured 2026-09-13 17:40 (E1 run 2, h=5, the FIRST run on LLM-typed rows, `event_source: typed_l2`, 1,323 s):** 6,007 DeepSeek-typed rows → 1,587 joined the panel (3,612 symbols not in the panel, 808 after its end) → **630 of 129,983 cells carry an event (0.5%)**. GBM EVENT−SHUFFLE IC +0.0043 (t 2.22 raw, Holm 0.16), StockMixer +0.0060 (t 1.58, Holm 0.51) → FAILED_VARIANT at this coverage, and the test had almost no power. **What this says:** the NN's input is not the corpus (two days old plus a 2015 backfill outside the panel) but the panel's own 163,284 unique headline texts, none typed. Typing them on DeepSeek is ~$55 at today's rate (a 20,000-row stratified subset ~$7 first); that is the "backtest for the NN" Murat asked for, and it is a night job, not a design change. The receipt's verdict sentence still says "keyword proxy" — a wording defect fixed the same evening.
+
 | **E6** | **Evidence memory rotation** (deadline): monthly files split by each row's own stamp, live month untracked, sealed months committed once; a test that the reader returns every row across the split. Compaction refused. | row count before = row count after |
 
 ### Lane F — the fleet (attended)
