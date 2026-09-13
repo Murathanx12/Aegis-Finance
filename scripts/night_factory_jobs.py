@@ -1575,6 +1575,13 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # the search never does).
         "F_seasonality_export": _lazy("scripts.night_f_seasonality_export",
                                       "F_seasonality_export"),
+        # 2026-09-13, chunk 13b T3: the one DSR-surviving G3 lineage frozen as a
+        # STATIC rule beside its deflation receipt, plus the probe that asks
+        # whether the execution repo can compute its fourteen inputs. It reads
+        # the search's own logs and NEVER re-runs the search -- a re-run is a new
+        # search with a new multiplicity budget.
+        "G3_lineage_export": _lazy("scripts.night_g3_lineage_export",
+                                   "G3_lineage_export"),
         "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         "B_verdict": _lazy("scripts.night_b_verdict", "B_verdict"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
@@ -1660,6 +1667,8 @@ JOB_STAGES = {
     # The export produces a RANKING and prices nothing; it may not read a
     # `weights` or `pnl` artefact, and the stage contract is what says so.
     "F_seasonality_export": "signal",
+    # A frozen genome IS a weight vector; it prices nothing.
+    "G3_lineage_export": "weights",
     "A_corner": "pnl",
     "B_verdict": "pnl",
     "D1_reaction_book": "pnl",
@@ -1710,7 +1719,8 @@ def main(argv=None) -> int:
     elif a.job in ("N2_learner_v3", "B_first_books_replay", "E5_stopping_rules",
                    "E_decay_sweep", "M2_distill", "A_published_anomaly",
                    "C_falsifiers", "C_floor10m", "A_corner", "B_verdict",
-                   "B_books_efg_replay", "C_v1", "F_seasonality_export"):
+                   "B_books_efg_replay", "C_v1", "F_seasonality_export",
+                   "G3_lineage_export"):
         payload = fn(smoke=a.smoke)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a

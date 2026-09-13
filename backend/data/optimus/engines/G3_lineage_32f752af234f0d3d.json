@@ -1,0 +1,244 @@
+{
+ "engine": "g3_lineage_v1",
+ "lineage": "32f752af234f0d3d",
+ "representative_key": "a85d7eb6323ab821",
+ "licence": "PRODUCT_EXPERIMENT",
+ "job": "G3_lineage_export",
+ "as_of": "2026-09-13T08:12:56+00:00",
+ "rule": {
+  "kind": "linear composite of within-month cross-sectional z-scores",
+  "weights": {
+   "mom_12_1__xs": -1.0,
+   "net_rev_4w__xs": 1.0,
+   "ratio__xs": -0.5,
+   "consensus_rev_1m__xs": 0.5,
+   "disagreement__xs": -1.0,
+   "drawdown_60d__xs": 0.5,
+   "vol_60d__xs": -0.5,
+   "log_market_cap__xs": -1.0,
+   "ret_1m__xs": -1.0,
+   "ret_6m__xs": -0.5,
+   "coverage__xs": 0.0,
+   "target_rev_1m__xs": 1.0,
+   "log_close__xs": 0.5,
+   "dispersion__xs": -1.0
+  },
+  "k": 20,
+  "weighting": "ew",
+  "hold_mult": 8,
+  "hold_k": 160,
+  "tradable_floor_usd": null,
+  "rank": "descending by the composite; the top k are held",
+  "panel": "backend/data/optimus/learner/train_table_long.parquet",
+  "cost_bps_per_side": 25.0,
+  "search_never_re_runs": "this is a FIXED vector. Re-running the evolutionary search to re-derive it would be a new search with a new multiplicity budget, and the deflated Sharpe that licensed this row would not apply to the result."
+ },
+ "dsr_receipt": {
+  "path": "night_factory_2026-09-08/G3_lineage_verdicts.jsonl",
+  "verdict": "ACTIVE",
+  "reason": "DSR 1.000 > 0.95 bar; PBO could not run",
+  "observed_sharpe": 6.273508,
+  "expected_maximum_sharpe": 3.152785,
+  "dsr": 1.0,
+  "dsr_bar": 0.95,
+  "n_observations": 342,
+  "banks_met": 342,
+  "n_windows_measured": 8208,
+  "pbo": null,
+  "pbo_status": "insufficient_windows"
+ },
+ "trials": {
+  "n_trials_raw": 595,
+  "n_trials_effective_proxy": 251,
+  "n_trials_effective_onc": null,
+  "gap": "ONC clusters trials by the correlation of their RETURN SERIES; G3 persists one scalar fitness per (genome, bank), so the vector ONC needs does not exist on disk. Until it does, the lineage count is a proxy that over-counts independent trials and the raw genome count is reported beside it."
+ },
+ "dev_only": {
+  "search_receipt": "night_factory_2026-09-08/G3_evolve_run01.json",
+  "amendment": "night_factory_2026-09-08/G3_verdict_amendment.json",
+  "holdout": "2016-2024 NOT READ by the search",
+  "corrected_verdict_of_the_search": "CONDITIONAL",
+  "two_standing_defects": [
+   "the null genomes were NOT held to the arm's own drawdown refusal (69.3% of candidates were refused), so the fitness is 'admissible minus typical', not 'admissible minus admissible'",
+   "the archive ranked on ONE window bank for almost every lineage; this lineage is the exception (342 banks met)"
+  ],
+  "fitness_on_this_row": {
+   "verdict": "OK",
+   "n_windows": 24,
+   "median_excess_bm_ann_pct": 28.5792,
+   "mean_excess_bm_ann_pct": 32.5526,
+   "p25_excess_bm_ann_pct": 17.4237,
+   "win_rate_bm": 0.9167,
+   "median_beta": 0.8468,
+   "worst_window_max_dd": -0.4566,
+   "median_window_max_dd": -0.1286,
+   "fitness": 28.5792
+  },
+  "full_dev_max_dd": -0.454
+ },
+ "terminal_repo_probe": {
+  "executable_in_the_terminal_repo": false,
+  "n_features": 14,
+  "computable": [
+   "drawdown_60d__xs",
+   "log_close__xs",
+   "mom_12_1__xs",
+   "ret_1m__xs",
+   "ret_6m__xs",
+   "vol_60d__xs"
+  ],
+  "partial_and_therefore_not_usable": [
+   "coverage__xs",
+   "ratio__xs"
+  ],
+  "missing": [
+   "consensus_rev_1m__xs",
+   "disagreement__xs",
+   "dispersion__xs",
+   "log_market_cap__xs",
+   "net_rev_4w__xs",
+   "target_rev_1m__xs"
+  ],
+  "missing_detail": {
+   "consensus_rev_1m__xs": {
+    "builder": "consensus - prior month's consensus, own monthly history",
+    "family": "revision",
+    "terminal": "no",
+    "why": "same monthly IBES history as above"
+   },
+   "disagreement__xs": {
+    "builder": "(ptghigh - ptglow) / meanptg, IBES",
+    "family": "analyst",
+    "terminal": "no",
+    "why": "IBES price-target HIGH and LOW are not available on this side at all"
+   },
+   "dispersion__xs": {
+    "builder": "stdev / meanptg, IBES",
+    "family": "analyst",
+    "terminal": "no",
+    "why": "the standard deviation of analyst price targets. Finnhub's free tier 403s on `stock/price-target` -- `scripts/analyst_panel.py` in the execution repo says so in its own first paragraph"
+   },
+   "log_market_cap__xs": {
+    "builder": "log(market_cap) = log(|prc| x shrout), CRSP",
+    "family": "size",
+    "terminal": "no",
+    "why": "the venue's asset record carries NO shares outstanding and no market cap -- `alpha/universe.py` states it in the stored screen: 'market_cap_screen: NOT APPLIED (no cap in the venue's asset record)', and every stored member's `market_cap_usd` is null"
+   },
+   "net_rev_4w__xs": {
+    "builder": "(numup4w - numdown4w) / numest, IBES",
+    "family": "revision",
+    "terminal": "no",
+    "why": "four-week counts of UP and DOWN estimate revisions. Nothing on the execution side counts revisions, and a count cannot be reconstructed from a level"
+   },
+   "target_rev_1m__xs": {
+    "builder": "meanptg / (prior meanptg x cfacpr(t)/cfacpr(t-1)) - 1, own monthly history with a CRSP split rebase",
+    "family": "revision",
+    "terminal": "no",
+    "why": "needs a monthly IBES consensus history per name AND CRSP's cumulative price factor to rebase across splits -- the panel holds 1999-2024; the execution repo's own target snapshots begin in August 2026 and carry no split factor"
+   }
+  },
+  "partial_detail": {
+   "coverage__xs": {
+    "builder": "IBES numest",
+    "family": "analyst",
+    "terminal": "partial",
+    "why": "yfinance `numberOfAnalystOpinions` where readable -- and `alpha/tracker.py` already refuses a row whose `coverage_source` is an uncalibrated scale, which is the same objection one level down"
+   },
+   "ratio__xs": {
+    "builder": "mean_target / close, IBES ptgsumu (UNADJUSTED) over CRSP prc",
+    "family": "analyst",
+    "terminal": "partial",
+    "why": "the execution repo has a consensus target for its ~150-name window universe from a different vendor and from the news corpus, on a different basis; it has none for the thousands of names the cross-section is computed over"
+   }
+  },
+  "cross_section_objection": "EVERY feature is `__xs` -- a WITHIN-MONTH CROSS-SECTIONAL z-score over the panel's own cross-section (925,757 rows; roughly two thousand names a month). The execution repo's universe at decision time is the window universe (98 names on the stored 2026-08-28 build) or a theme list of 40. A z-score over 98 names is not the z-score the weights were fitted on, so even the six price features would feed DIFFERENT numbers into the same coefficients. This objection does not depend on any vendor and cannot be bought: it is fixed only by giving the execution side the same monthly cross-section, which is what the engine-file pattern (`F_seasonality_*`) does for Book F.",
+  "verdict": "NOT EXECUTABLE. 6 of 14 features have no source on the execution side at all (consensus_rev_1m__xs, disagreement__xs, dispersion__xs, log_market_cap__xs, net_rev_4w__xs, target_rev_1m__xs), and 2 more have only a DIFFERENT vendor's near-substitute, which is not the number the weight was fitted on. Independently of both, every feature is a within-month cross-sectional z and the execution repo's cross-section is two orders of magnitude smaller.",
+  "what_would_change_it": "the engine-file pattern this chunk already built for Book F: the research side computes the monthly cross-section and ships a frozen per-name ranking, so the execution side needs none of the fourteen columns. That is a research job (a monthly rebuild of `train_table_long` from a PIT vintage that reaches 2026, which the panel currently does not), not a fleet change -- and it is the honest next step for this lineage."
+ },
+ "feature_sources": {
+  "mom_12_1__xs": {
+   "builder": "CRSP monthly returns, 12-1",
+   "family": "price",
+   "terminal": "yes",
+   "why": "derivable from Alpaca daily bars given ~13 months of history"
+  },
+  "ret_1m__xs": {
+   "builder": "CRSP monthly return",
+   "family": "price",
+   "terminal": "yes",
+   "why": "daily bars"
+  },
+  "ret_6m__xs": {
+   "builder": "CRSP monthly returns, 6m",
+   "family": "price",
+   "terminal": "yes",
+   "why": "daily bars"
+  },
+  "drawdown_60d__xs": {
+   "builder": "close / rolling max, 60 sessions",
+   "family": "price",
+   "terminal": "yes",
+   "why": "daily bars"
+  },
+  "vol_60d__xs": {
+   "builder": "realised vol, 60 sessions",
+   "family": "price",
+   "terminal": "yes",
+   "why": "daily bars"
+  },
+  "log_close__xs": {
+   "builder": "log(close)",
+   "family": "price",
+   "terminal": "yes",
+   "why": "daily bars"
+  },
+  "log_market_cap__xs": {
+   "builder": "log(market_cap) = log(|prc| x shrout), CRSP",
+   "family": "size",
+   "terminal": "no",
+   "why": "the venue's asset record carries NO shares outstanding and no market cap -- `alpha/universe.py` states it in the stored screen: 'market_cap_screen: NOT APPLIED (no cap in the venue's asset record)', and every stored member's `market_cap_usd` is null"
+  },
+  "ratio__xs": {
+   "builder": "mean_target / close, IBES ptgsumu (UNADJUSTED) over CRSP prc",
+   "family": "analyst",
+   "terminal": "partial",
+   "why": "the execution repo has a consensus target for its ~150-name window universe from a different vendor and from the news corpus, on a different basis; it has none for the thousands of names the cross-section is computed over"
+  },
+  "coverage__xs": {
+   "builder": "IBES numest",
+   "family": "analyst",
+   "terminal": "partial",
+   "why": "yfinance `numberOfAnalystOpinions` where readable -- and `alpha/tracker.py` already refuses a row whose `coverage_source` is an uncalibrated scale, which is the same objection one level down"
+  },
+  "disagreement__xs": {
+   "builder": "(ptghigh - ptglow) / meanptg, IBES",
+   "family": "analyst",
+   "terminal": "no",
+   "why": "IBES price-target HIGH and LOW are not available on this side at all"
+  },
+  "dispersion__xs": {
+   "builder": "stdev / meanptg, IBES",
+   "family": "analyst",
+   "terminal": "no",
+   "why": "the standard deviation of analyst price targets. Finnhub's free tier 403s on `stock/price-target` -- `scripts/analyst_panel.py` in the execution repo says so in its own first paragraph"
+  },
+  "net_rev_4w__xs": {
+   "builder": "(numup4w - numdown4w) / numest, IBES",
+   "family": "revision",
+   "terminal": "no",
+   "why": "four-week counts of UP and DOWN estimate revisions. Nothing on the execution side counts revisions, and a count cannot be reconstructed from a level"
+  },
+  "target_rev_1m__xs": {
+   "builder": "meanptg / (prior meanptg x cfacpr(t)/cfacpr(t-1)) - 1, own monthly history with a CRSP split rebase",
+   "family": "revision",
+   "terminal": "no",
+   "why": "needs a monthly IBES consensus history per name AND CRSP's cumulative price factor to rebase across splits -- the panel holds 1999-2024; the execution repo's own target snapshots begin in August 2026 and carry no split factor"
+  },
+  "consensus_rev_1m__xs": {
+   "builder": "consensus - prior month's consensus, own monthly history",
+   "family": "revision",
+   "terminal": "no",
+   "why": "same monthly IBES history as above"
+  }
+ }
+}
