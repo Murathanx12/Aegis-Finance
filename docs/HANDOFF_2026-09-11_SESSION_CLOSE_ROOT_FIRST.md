@@ -260,6 +260,12 @@ before crediting discovery** (protocol §9).
   the registered read, with what had been seen recorded in the draft itself.
 - **Both agents died once to the session rate limit** (reset 06:40) and were relaunched; nothing
   was lost because neither had written yet.
+- **The terminal repo's "tracker refresh" item is CLOSED, not owed (read 11:30 HKT):** since 09-03 the
+  `seal-authority` Railway service solo-seals unattended; `aat-loop-hack3`'s Friday log shows
+  `SEAL SYNC installed 2026-09-11 9fd01920…`, and the weekend 404s for `2026-09-12.json` are the
+  authority correctly declining a Saturday. What is stale is the LAPTOP's local tracker copy
+  (2026-09-02), which nothing trades on; the local `.env` carries no Alpaca role keys by design, so
+  a laptop refresh is neither possible nor needed.
 - **Next:** the model-dependent queue is unchanged (R2 panel B, `L2_typed_events`, then E1 on typed
   rows, the anonymisation gap, the recall probe, L4's idle measurement, M2's rule text — all behind the
   attended `TdrDelay`); C's `next_test` is its own $10M re-measurement and the v1 event sign once L2
