@@ -947,6 +947,33 @@ def test_every_queued_job_exists_in_the_factorys_own_registry():
         assert minutes > 0
 
 
+def test_no_queued_job_writes_to_a_literal_night_folder():
+    """2026-09-18, MEASURED. `night_x2_elasticity`, `night_x_anonymisation_gap`
+    and `night_x4_regime_route` carried `RUN_DATE = "2026-09-12"`. The lab
+    re-dispatched them on 09-15, 09-16 and 09-17; each night's RECEIPT went to
+    the day's folder (the jobs module resolves that) but each script's own
+    frozen cell list went to the literal folder and OVERWROTE the committed
+    09-12 read -- 100,711 changed lines under a receipt that was supposed to be
+    the reproducible record of a registered question. A job the lab runs every
+    day must date its outputs by the day, as `night_factory` does: unset means
+    today, `NIGHT_RUN_DATE` reproduces a past night."""
+    import ast
+    import re
+    jobs_src = (L.ROOT / "scripts" / "night_factory_jobs.py").read_text(encoding="utf-8")
+    offenders = []
+    for job, _minutes in _config.LAB_IDLE_QUEUE:
+        m = re.search(rf'"{re.escape(job)}":\s*_lazy\("([\w.]+)"', jobs_src)
+        assert m, f"{job} is not a lazily registered night-factory job"
+        path = L.ROOT / (m.group(1).replace(".", "/") + ".py")
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if isinstance(node, ast.Assign) and any(
+                    isinstance(tg, ast.Name) and tg.id == "RUN_DATE" for tg in node.targets):
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                    offenders.append(f"{path.name}: RUN_DATE = {node.value.value!r}")
+    assert not offenders, offenders
+
+
 def test_a_failing_job_is_not_re_dispatched_every_five_minutes(lab, monkeypatch):
     """One broken job must not starve the rest of the queue."""
     def _boom(job, minutes):

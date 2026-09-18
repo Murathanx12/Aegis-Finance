@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -56,7 +57,12 @@ from scripts.night_r2_monthly_llm import (                              # noqa: 
     _nw_t, _probe, _r, _run_digests, grade, paired_vs,
     widened_cells_and_docs, widened_digests)
 
-RUN_DATE = "2026-09-12"
+# 2026-09-18: was the literal "2026-09-12". The lab's idle queue re-dispatches
+# this job every day; the RECEIPT went to the day's folder (the jobs module
+# resolves that) but the frozen cell list went HERE, and overwrote the
+# committed 09-12 read three nights running. Unset means TODAY, as in
+# `night_factory`; the 09-12 read is reproduced with NIGHT_RUN_DATE=2026-09-12.
+RUN_DATE = os.getenv("NIGHT_RUN_DATE") or datetime.now().strftime("%Y-%m-%d")
 OUT = REPO / "backend" / "data" / "optimus" / f"night_factory_{RUN_DATE}"
 JOB = "X_anon_gap"
 
