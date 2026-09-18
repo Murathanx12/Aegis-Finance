@@ -109,6 +109,35 @@ from scripts.news_pull import (  # noqa: E402
 #: properties per symbol, so it is the MORE exposed of the two.
 YF_PROPERTY_TIMEOUT_S = 25.0
 
+#: Hard bound on the `yfinance.Ticker(symbol)` CONSTRUCTION.
+#:
+#: FOUND 2026-09-18, looking for what held the 09-14 daily pass. Every property
+#: read below was already boxed at 25 s, and the construction was not — and it
+#: is not free. `TickerBase.__init__` (yfinance 1.2.0, base.py:84) runs
+#:
+#:     self.session = session or requests.Session(impersonate="chrome")
+#:
+#: which is a **curl_cffi** session: a C-level libcurl handle, allocated on the
+#: MAIN thread, outside every box in this file. It is also the one place the
+#: sweep touches a shared C library while abandoned daemon threads from earlier
+#: timed-out property reads are still inside their own curl calls. That is not
+#: a proof — nobody dumped the stack of the wedged process — but it IS the only
+#: unbounded call in the loop, and an unbounded call in a job that runs
+#: unattended for three hours does not get to stay unbounded on the grounds
+#: that we could not prove it was the one.
+YF_CONSTRUCT_TIMEOUT_S = 20.0
+
+#: Hard bound on ONE symbol, end to end. Defence in depth: it bounds the three
+#: property reads, the construction, and anything a future edit adds between
+#: them without remembering to box it. The sum of the parts plus slack.
+SYMBOL_TIMEOUT_S = 3 * YF_PROPERTY_TIMEOUT_S + YF_CONSTRUCT_TIMEOUT_S + 10.0
+
+#: Hard bound on ONE checkpoint write. The parquet lands on local disk and
+#: should take milliseconds; it is boxed because `DATA_DIR` is a configurable
+#: path and a job that runs for three hours unattended should not be able to
+#: hang on a filesystem.
+FLUSH_TIMEOUT_S = 120.0
+
 COLUMNS = (
     "symbol", "date", "observed_utc", "source",
     "current_price", "target_low", "target_mean", "target_median", "target_high",
@@ -153,7 +182,10 @@ def fetch_yfinance(symbol: str) -> dict:
     """
     import yfinance as yf
 
-    t = yf.Ticker(symbol)
+    # BOXED — see YF_CONSTRUCT_TIMEOUT_S. This line allocates a curl_cffi
+    # session; it is not the free attribute assignment it looks like.
+    t = call_with_timeout(lambda: yf.Ticker(symbol), YF_CONSTRUCT_TIMEOUT_S,
+                          f"{symbol}.Ticker()")
     out: dict[str, Any] = {"status": "ok", "error": ""}
     try:
         info = call_with_timeout(lambda: t.info or {}, YF_PROPERTY_TIMEOUT_S,
@@ -361,14 +393,18 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
     counts = {"ok": 0, "partial": 0, "empty": 0, "error": 0}
     path = out_dir() / f"{day}.parquet"
 
+    def _write_parquet() -> bool:
+        import pandas as pd
+        out_dir().mkdir(parents=True, exist_ok=True)
+        pd.DataFrame(rows, columns=list(COLUMNS)).to_parquet(path, index=False)
+        return True
+
     def _flush() -> bool:
         if not rows:
             return False
         try:
-            import pandas as pd
-            out_dir().mkdir(parents=True, exist_ok=True)
-            pd.DataFrame(rows, columns=list(COLUMNS)).to_parquet(path, index=False)
-            return True
+            return bool(call_with_timeout(_write_parquet, FLUSH_TIMEOUT_S,
+                                          f"checkpoint {len(rows)} rows"))
         except Exception:  # noqa: BLE001 — a failed checkpoint must not end the sweep
             return False
 
@@ -376,7 +412,13 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         if i and pace_s:
             time.sleep(pace_s)
         try:
-            got = fetch(sym)
+            # THE WHOLE SYMBOL IS BOXED, not just the calls inside it. On
+            # 2026-09-14 the daily pass wedged here after 1,500 of 2,362 symbols
+            # and stayed alive for four days while every scheduled firing after
+            # it died at 0x80070420. Every network call in `fetch_yfinance` was
+            # already bounded at 25 s, which is exactly why the outer box has to
+            # exist: a per-call box does not bound the call site.
+            got = call_with_timeout(lambda s=sym: fetch(s), SYMBOL_TIMEOUT_S, sym)
         except Exception as e:  # noqa: BLE001 — one bad symbol must not end the sweep
             got = {"status": "error", "error": f"{type(e).__name__}: {e}"}
         counts[got.get("status", "error")] = counts.get(got.get("status", "error"), 0) + 1

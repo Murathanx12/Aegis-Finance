@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -117,15 +118,21 @@ def test_a_killed_sweep_leaves_a_valid_partial_parquet(data_dir, monkeypatch):
     pytest.importorskip("pyarrow")
     monkeypatch.setattr(snap, "CHECKPOINT_EVERY", 2)
     seen = []
+    real_row = snap._row
 
-    def dying_fetch(symbol):
+    # The kill is simulated on the MAIN thread, which is where a real one lands.
+    # It used to be raised from inside `fetch`, and since 2026-09-18 every fetch
+    # runs on a daemon thread under `SYMBOL_TIMEOUT_S` — a thread that cannot
+    # receive a KeyboardInterrupt, so raising it there simulated nothing.
+    def dying_row(symbol, day, observed, got):
         seen.append(symbol)
         if len(seen) > 3:
             raise KeyboardInterrupt("pretend the process was killed")
-        return dict(FAKE.get(symbol, {"status": "empty", "company_name": ""}))
+        return real_row(symbol, day, observed, got)
 
+    monkeypatch.setattr(snap, "_row", dying_row)
     with pytest.raises(KeyboardInterrupt):
-        snap.snapshot(max_symbols=4, pace_s=0, fetch=dying_fetch, update_names=False)
+        snap.snapshot(max_symbols=4, pace_s=0, fetch=fake_fetch, update_names=False)
 
     import pandas as pd
     day = snap._now().date().isoformat()
@@ -138,6 +145,58 @@ def test_a_killed_sweep_leaves_a_valid_partial_parquet(data_dir, monkeypatch):
     assert rec["status"] == "PARTIAL"
     assert rec["rows"] == 2 and rec["symbols_requested"] == 4
     assert rec["rate_s_per_symbol"] is not None
+
+
+def test_a_wedged_symbol_is_one_error_row_and_the_sweep_goes_on(data_dir, monkeypatch):
+    """WHAT HELD THE 2026-09-14 DAILY PASS, bounded.
+
+    That pass checkpointed 1,500 of 2,362 symbols and never returned; it stayed
+    alive four days and every scheduled firing after it died at Windows
+    0x80070420, so 09-15..09-18 have no receipt at all. Every yfinance property
+    read was ALREADY boxed at 25 s — which is the lesson: a per-call box does
+    not bound the call site. The whole symbol is boxed now.
+    """
+    import time as _time
+    monkeypatch.setattr(snap, "SYMBOL_TIMEOUT_S", 0.2)
+    seen = []
+
+    def wedging_fetch(symbol):
+        seen.append(symbol)
+        if len(seen) == 2:
+            _time.sleep(30)                    # the daemon thread is abandoned
+        return dict(FAKE.get(symbol, {"status": "empty", "company_name": ""}))
+
+    rec = snap.snapshot(max_symbols=3, pace_s=0, fetch=wedging_fetch,
+                        update_names=False)
+    assert rec["rows"] == 3, "the sweep stopped at the wedged symbol"
+    assert rec["by_status"]["error"] == 1
+    assert any("no response in" in e for e in rec["errors_first_20"])
+
+
+def test_every_network_call_in_the_sweep_is_boxed():
+    """The construction was the ONE unboxed call, found 2026-09-18.
+
+    `yfinance.Ticker(symbol)` is not the free attribute assignment it looks
+    like: `TickerBase.__init__` allocates a curl_cffi session, a C-level libcurl
+    handle, on the calling thread.
+    """
+    import ast
+    src = Path(snap.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    boxed = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = node.func
+        if isinstance(fn, ast.Name) and fn.id == "call_with_timeout":
+            for sub in ast.walk(node):
+                if isinstance(sub, ast.Attribute):
+                    boxed.add(sub.attr)
+                if isinstance(sub, ast.Name):
+                    boxed.add(sub.id)
+    assert "Ticker" in boxed, "the Ticker construction is not boxed"
+    for prop in ("info", "analyst_price_targets", "recommendations"):
+        assert prop in boxed, f"{prop} is not boxed"
 
 
 def test_no_universe_file_is_zero_rows_not_a_crash(tmp_path, monkeypatch):

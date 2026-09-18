@@ -33,7 +33,30 @@ so one reader learns one vocabulary):
   NOT an ``ok`` with zeros: a card cannot tell those apart from a bare 0;
 * ``refused``       — a precondition was absent and the row NAMES it;
 * ``error``         — it raised; the type and message are in the row, truncated;
-* ``skipped``       — the pass asked for it not to run (a 30m book outside RTH).
+* ``skipped``       — the pass asked for it not to run (a 30m book outside RTH);
+* ``timeout``       — it outlived its wall-clock box and its thread was
+  abandoned. Added 2026-09-18, see below.
+
+EVERY STEP IS BOXED, AND A STUCK PASS CANNOT TAKE THE WEEK
+==========================================================
+MEASURED. The `AegisDailyPass` firing of 2026-09-14 06:30 entered its analyst
+snapshot, checkpointed 1,500 of 2,362 symbols at 00:52:52Z, and never returned.
+It stayed alive for FOUR DAYS. Every later scheduled firing died at Windows
+result 0x80070420 — "an instance of this task is already running" — so no daily
+pass ran on 09-15, 09-16, 09-17 or 09-18 and there is no receipt for any of
+those dates. The always-on lab's news loop yielded to it (`DAILY_PASS_RUNNING`)
+the whole time.
+
+Every yfinance property read in that sweep was ALREADY boxed at 25 s, which is
+the lesson: a per-call box does not bound a step. So
+
+* every step now runs under `config.DAILY_PASS_STEP_BOX_S[step]` through
+  `news_pull.call_with_timeout` — imported, not re-implemented — and a step that
+  outlives its box is a `timeout` row and the pass CONTINUES. Exit code 0;
+* at startup, another `scripts.daily_pass` process older than
+  `config.DAILY_PASS_STALE_SIBLING_H` hours is killed BY PID (never by image
+  name) and recorded as `stale_sibling_killed` in the receipt. A YOUNGER one
+  still refuses by name: two passes minutes apart is a human being deliberate.
 
 The process exits 0 whenever the receipt was written, whatever the rows say. A
 scheduled task that goes red because a source refused teaches its reader to
@@ -75,6 +98,10 @@ from typing import Any, Callable
 logger = logging.getLogger("daily_pass")
 
 REPO = Path(__file__).resolve().parent.parent
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+
+from backend import config as _config  # noqa: E402
 
 #: The step list. The runner walks THIS, not whatever happened to succeed — a
 #: check that reads the record of what ran cannot see what never got called
@@ -88,7 +115,17 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("coverage", "the per-source coverage card, derived from disk"),
 )
 
-STATUSES = ("ok", "nothing_to_do", "refused", "error", "skipped")
+#: `timeout` joined the five on 2026-09-18. It is deliberately the SAME word
+#: `always_on_lab.STATUSES` uses for the same thing, so one reader learns one
+#: vocabulary: the step outlived its wall-clock box, its thread was abandoned,
+#: and the pass went on to the next step.
+STATUSES = ("ok", "nothing_to_do", "refused", "error", "skipped", "timeout")
+
+#: Per-step wall-clock bound, read from config at import so a step declared
+#: without a box is an AssertionError HERE rather than an unbounded step three
+#: months from now. The numbers live in `backend/config.py` (CLAUDE.md).
+_STEP_BOXES: dict = dict(_config.DAILY_PASS_STEP_BOX_S)
+assert set(_STEP_BOXES) == {s for s, _ in STEPS},     "every declared step needs a wall-clock box in config.DAILY_PASS_STEP_BOX_S"
 
 #: Which cadence buckets are intraday. The full bucket list is
 #: `backend.services.paper_books.CADENCES`, read at call time so the two cannot
@@ -238,6 +275,90 @@ def cadence_list() -> tuple[str, ...]:
 def run_cadence_pass(cadence: str, **kw) -> dict:
     from backend.services import book_cadence
     return book_cadence.run_pass(cadence, **kw)
+
+
+def call_boxed(fn: Callable[[], dict], timeout_s: float, what: str) -> dict:
+    """Run `fn()` under a hard wall-clock bound. IMPORTED, not re-implemented.
+
+    `news_pull.call_with_timeout` is the daemon-thread box this repo already
+    uses everywhere a third-party library can hold a socket open for ever. A
+    second copy of it here would be a second thing to keep in step with the
+    first, and the one that would drift is this one.
+
+    The hung thread is NOT killed -- Python cannot -- which is why it is a
+    daemon: it cannot hold the process open at exit, and the pass moves to the
+    next step instead of waiting on it for ever. That is the whole of the
+    2026-09-14 fix: the analyst sweep wedged and the process stayed alive for
+    four days, so four scheduled firings reported 0x80070420 and no receipt was
+    written for any of them.
+    """
+    from scripts.news_pull import call_with_timeout
+    return call_with_timeout(fn, timeout_s, what)
+
+
+def step_box_s(step: str) -> float:
+    """This step's wall-clock bound, from config. A step with no declared box is
+    an AssertionError at import, not an unbounded step."""
+    return float(_STEP_BOXES[step])
+
+
+def scan_daily_passes() -> list[dict]:
+    """Every OTHER `scripts.daily_pass` python process, with its creation time.
+
+    The shape is `always_on_lab.scan_processes`'s -- one `Get-CimInstance
+    Win32_Process` query, matched on the COMMAND LINE, never on the image name.
+    `CreationDate` comes back from CIM so the caller can tell a sibling that
+    started four minutes ago from one that started four days ago.
+
+    Returns [] when the probe itself could not run, and the caller treats that
+    as CANNOT DETERMINE rather than as "nothing is running": a scan that failed
+    and a machine that is idle are different facts, and the conservative
+    direction here is to kill nothing.
+    """
+    if sys.platform != "win32":
+        return []
+    from backend.services import quiet_subprocess as qsp
+    try:
+        r = qsp.run(["powershell", "-NoProfile", "-Command",
+                     "Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | "
+                     "ForEach-Object { \"$($_.ProcessId)`t"
+                     "$($_.CreationDate.ToUniversalTime().ToString('o'))`t"
+                     "$($_.CommandLine)\" }"],
+                    capture_output=True, text=True, timeout=45)
+    except Exception:                                              # noqa: BLE001
+        return []
+    me = os.getpid()
+    out: list[dict] = []
+    for line in (r.stdout or "").splitlines():
+        parts = line.split("	")
+        if len(parts) < 3 or not parts[0].strip().isdigit():
+            continue
+        pid = int(parts[0])
+        if pid == me or "scripts.daily_pass" not in (parts[2] or ""):
+            continue
+        out.append({"pid": pid, "created_utc": parts[1].strip(),
+                    "cmdline": (parts[2] or "")[:400]})
+    return out
+
+
+def kill_pid(pid: int) -> dict:
+    """Terminate ONE process, BY PID, from a PID this run read off the process
+    table. Never by image name.
+
+    CLAUDE.md rule 6, and it is not hypothetical: on 2026-09-06 a
+    kill-by-image-name took down two other agents' jobs, a running test suite,
+    ~1,676 already-billed LLM extractions and the Optimus MCP server for the
+    rest of the session.
+    """
+    from backend.services import quiet_subprocess as qsp
+    try:
+        r = qsp.run(["taskkill", "/PID", str(int(pid)), "/T", "/F"],
+                    capture_output=True, text=True, timeout=30)
+    except Exception as exc:                                       # noqa: BLE001
+        return {"killed": False, "pid": int(pid), "detail": _trunc(exc)}
+    return {"killed": r.returncode == 0, "pid": int(pid),
+            "returncode": r.returncode,
+            "detail": ((r.stdout or "") + (r.stderr or "")).strip()[:300]}
 
 
 def read_coverage() -> dict:
@@ -407,8 +528,78 @@ class SamePassAlreadyRan(RuntimeError):
     """A daily pass for this date is on disk and `--force` was not given."""
 
 
+def _age_h(created_utc: str, now: datetime | None = None) -> float | None:
+    """Hours since `created_utc`, or None when it cannot be parsed.
+
+    None is CANNOT DETERMINE and it is NOT "old enough": a sibling whose age we
+    could not read is left alone.
+    """
+    now = now or datetime.now(timezone.utc)
+    try:
+        dt = datetime.fromisoformat(str(created_utc).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (now - dt).total_seconds() / 3600.0
+
+
+def stale_siblings(*, now: datetime | None = None,
+                   siblings: list[dict] | None = None) -> dict:
+    """Which other daily passes are running, and which of them are STALE.
+
+    MEASURED, 2026-09-14. The 06:30 pass wedged inside its analyst snapshot and
+    stayed alive for four days. Every later scheduled firing died at Windows
+    result 0x80070420 -- "an instance of this task is already running" -- so no
+    pass ran on 09-15, 09-16, 09-17 or 09-18 and no receipt exists for any of
+    them. One stuck process took a week.
+
+    A sibling older than `DAILY_PASS_STALE_SIBLING_H` is killed BY PID and this
+    pass takes the day. A younger one still REFUSES by name, because two passes
+    launched minutes apart is a human doing something deliberate.
+    """
+    rows = scan_daily_passes() if siblings is None else list(siblings)
+    limit = float(_config.DAILY_PASS_STALE_SIBLING_H)
+    out = []
+    for row in rows:
+        age = _age_h(row.get("created_utc"), now)
+        out.append({**row, "age_h": (None if age is None else round(age, 2)),
+                    "stale": bool(age is not None and age >= limit)})
+    return {"siblings": out, "stale_h": limit,
+            "stale": [r for r in out if r["stale"]],
+            "young": [r for r in out if not r["stale"]],
+            "probe_ran": bool(rows) or siblings == [] or rows == []}
+
+
+def clear_stale_siblings(*, now: datetime | None = None,
+                         siblings: list[dict] | None = None) -> dict:
+    """Kill every STALE sibling by PID; return what happened, for the receipt.
+
+    Never by image name (CLAUDE.md rule 6). A young sibling is reported and NOT
+    killed -- the caller turns that into the same `ALREADY_RUNNING` refusal the
+    pass has always had.
+    """
+    found = stale_siblings(now=now, siblings=siblings)
+    killed = []
+    for row in found["stale"]:
+        result = kill_pid(int(row["pid"]))
+        killed.append({"pid": int(row["pid"]), "age_h": row["age_h"],
+                       "killed": bool(result.get("killed")),
+                       "detail": result.get("detail"),
+                       "cmdline": row.get("cmdline")})
+        logger.warning("killed a stale daily pass: pid %s, %s h old (%s)",
+                       row["pid"], row["age_h"],
+                       "ok" if result.get("killed") else "FAILED")
+    return {**found, "killed": killed}
+
+
+class SiblingPassRunning(RuntimeError):
+    """Another daily pass is running and it is NOT old enough to be stale."""
+
+
 def run_daily_pass(*, day: str | None = None, force: bool = False,
-                   write_receipt: bool = True) -> dict:
+                   write_receipt: bool = True,
+                   check_siblings: bool = True) -> dict:
     """Walk every declared step in order, write ONE receipt, return it.
 
     Never raises for a step's sake: a step that raises still produces its row,
@@ -420,6 +611,21 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
     rate limit and appends rows nobody asked for.
     """
     day = day or run_date()
+    # THE STALE-SIBLING RULE, BEFORE ANY STEP. One wedged pass cost 09-15
+    # through 09-18: four scheduled firings, four 0x80070420s, four dates with
+    # no receipt at all. A sibling older than the stale bound is killed BY PID;
+    # a younger one still refuses.
+    sibling_block: dict = {"checked": False}
+    if check_siblings:
+        sibling_block = clear_stale_siblings()
+        sibling_block["checked"] = True
+        if sibling_block["young"]:
+            raise SiblingPassRunning(
+                f"another daily pass is running as pid(s) "
+                f"{[r['pid'] for r in sibling_block['young']]} and is younger "
+                f"than {sibling_block['stale_h']} h. Two passes at once re-hit "
+                f"every source's rate limit; this one refuses rather than "
+                f"killing a run somebody started deliberately.")
     prior = existing_receipts(day)
     if prior and not force:
         raise SamePassAlreadyRan(
@@ -432,12 +638,33 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
     ctx: dict[str, Any] = {"date": day, "date_obj": date.fromisoformat(day),
                            "run": run, "rows": []}
     for step_id, what in STEPS:
+        box = step_box_s(step_id)
+        t0 = time.time()
         try:
-            row = _HANDLERS[step_id](ctx)
+            row = call_boxed(lambda s=step_id: _HANDLERS[s](ctx), box, step_id)
         except Exception as exc:                                   # noqa: BLE001
-            logger.exception("daily pass step %s raised", step_id)
-            row = _row(step_id, "error", refusals=[_trunc(exc)])
+            # `CallTimeout` is a `FetchError` is a `RuntimeError`; it is caught
+            # HERE by name rather than by class so the row says `timeout` and
+            # not `error`. The two are different findings: `error` means the
+            # step raised and told us why, `timeout` means it never came back
+            # and its thread was abandoned.
+            from scripts.news_pull import CallTimeout
+            if isinstance(exc, CallTimeout):
+                logger.error("daily pass step %s outlived its %gs box",
+                             step_id, box)
+                row = _row(step_id, "timeout", seconds=round(time.time() - t0, 2),
+                           refusals=[f"timeout_after_{box:g}s"],
+                           box_s=box,
+                           detail=("the step did not return inside its wall-clock "
+                                   "box; its thread is abandoned (a daemon, so it "
+                                   "cannot hold this process open) and the pass "
+                                   "continued to the next step"))
+            else:
+                logger.exception("daily pass step %s raised", step_id)
+                row = _row(step_id, "error", seconds=round(time.time() - t0, 2),
+                           refusals=[_trunc(exc)])
         row.setdefault("what", what)
+        row.setdefault("box_s", box)
         ctx["rows"].append(row)
 
     rows = ctx["rows"]
@@ -465,10 +692,14 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         "finished_utc": _now(),
         "elapsed_s": round((datetime.now(timezone.utc) - started).total_seconds(), 2),
         "declared_steps": [s for s, _ in STEPS],
+        "step_boxes_s": dict(_STEP_BOXES),
+        "stale_sibling_killed": (sibling_block.get("killed") or None),
+        "siblings": sibling_block,
         "steps": rows,
         "step_status_counts": counts,
         "steps_that_did_not_run": [r["step"] for r in rows
-                                   if r["status"] in ("refused", "error")],
+                                   if r["status"] in ("refused", "error",
+                                                      "timeout")],
         "us_rth": ctx.get("rth"),
         "forced": bool(force),
         "prior_receipts": [p.name for p in prior],
@@ -477,12 +708,16 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
             "step list, not the list of things that worked. `refused` NAMES the "
             "missing precondition and is a finding, not a failure; "
             "`nothing_to_do` means the step ran correctly and there was "
-            "nothing, which is not the same as zero. Nothing here places an "
-            "order, arms a lane, or asks a model for anything."),
+            "nothing, which is not the same as zero; `timeout` means the step "
+            "outlived `box_s` and its thread was abandoned, and the pass went "
+            "on — which is why one wedged step can no longer cost a week the "
+            "way 2026-09-14's did. Nothing here places an order, arms a lane, "
+            "or asks a model for anything."),
         "headline": (
             f"{counts['ok']} ok / {counts['nothing_to_do']} nothing-to-do / "
             f"{counts['refused']} refused / {counts['error']} error / "
-            f"{counts['skipped']} skipped over {len(STEPS)} steps"),
+            f"{counts['skipped']} skipped / {counts['timeout']} timed out "
+            f"over {len(STEPS)} steps"),
     }
     if write_receipt:
         path = receipt_path(day, run)
@@ -508,10 +743,11 @@ def plan(day: str | None = None) -> dict:
         "prior_receipts": [p.name for p in prior],
         "would_refuse_without_force": bool(prior),
         "us_rth": rth,
-        "steps": [{"step": s, "what": w,
+        "steps": [{"step": s, "what": w, "box_s": step_box_s(s),
                    "note": (skip_note if s == "book_cadence" and not rth.get("inside")
                             else None)}
                   for s, w in STEPS],
+        "stale_sibling_hours": float(_config.DAILY_PASS_STALE_SIBLING_H),
     }
 
 
@@ -607,7 +843,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     try:
         receipt = run_daily_pass(day=a.date, force=a.force)
-    except SamePassAlreadyRan as exc:
+    except (SamePassAlreadyRan, SiblingPassRunning) as exc:
         print(f"REFUSED: {exc}")
         return 2
     print_receipt(receipt)
@@ -615,10 +851,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = ["INTRADAY_CADENCES", "STATUSES", "STEPS", "SamePassAlreadyRan",
-           "cadence_list", "existing_receipts", "git_head", "main", "out_dir",
-           "plan", "print_receipt", "pull_all_news", "read_coverage",
-           "receipt_path", "run_analyst_snapshot", "run_cadence_pass",
-           "run_daily_pass", "run_date", "run_e1_append", "us_rth_state"]
+           "SiblingPassRunning", "cadence_list", "call_boxed",
+           "clear_stale_siblings", "existing_receipts", "git_head", "kill_pid",
+           "main", "out_dir", "plan", "print_receipt", "pull_all_news",
+           "read_coverage", "receipt_path", "run_analyst_snapshot",
+           "run_cadence_pass", "run_daily_pass", "run_date", "run_e1_append",
+           "scan_daily_passes", "stale_siblings", "step_box_s", "us_rth_state"]
 
 
 if __name__ == "__main__":

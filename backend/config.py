@@ -2568,6 +2568,47 @@ TERMINAL_MIRROR_ARTEFACTS: tuple[tuple[str, str, int], ...] = (
 TERMINAL_MIRROR_MAX_BYTES = 8 * 1024 * 1024
 
 
+# ── THE DAILY PASS'S OWN BOXES (chunk 16a, 2026-09-18) ───────────────────────
+#
+# MEASURED. The `AegisDailyPass` run of 2026-09-14 06:30 entered its analyst
+# snapshot, checkpointed 1,500 of 2,362 symbols at 00:52:52Z, and then never
+# returned. It stayed alive for FOUR DAYS: every scheduled firing on 09-15,
+# 09-16, 09-17 and 09-18 reported Windows result 0x80070420 ("an instance of
+# this task is already running") and no daily pass ran on any of them. The lab's
+# news loop yielded to it (`DAILY_PASS_RUNNING`) the whole time.
+#
+# Every yfinance PROPERTY read in that sweep was already boxed at 25 s, so a
+# per-call box is not enough: a driver needs a box on the STEP as well, or one
+# wedged step is a dead day and then a dead week.
+
+#: Hard wall-clock bound per declared step, in seconds. A step that outlives its
+#: box is a `timeout` row in the receipt and the pass CONTINUES to the next step
+#: -- half a day is still a day. The analyst sweep's number is the measured
+#: 2.62 h (2,362 names at 4.0 s) with room, not a guess.
+DAILY_PASS_STEP_BOX_S: dict = {
+    "news_pull": 2400,
+    "analyst_snapshot": 4 * 3600,
+    "e1_append": 600,
+    "book_cadence": 900,
+    "coverage": 300,
+}
+
+#: How old another `scripts.daily_pass` process must be before this one kills it
+#: and takes the day, in hours. Younger than this is a REFUSAL by name, exactly
+#: as before: two passes launched minutes apart is a human doing something
+#: deliberate, and a driver that killed its own operator's run would be worse
+#: than the stall it is fixing.
+#:
+#: THE NUMBER IS NOT FREE. Every step above is boxed, so the longest a HEALTHY
+#: pass can possibly take is the sum of the boxes: 2400 + 14400 + 600 + 900 +
+#: 300 = 18,600 s = 5.17 h. Six hours is above that, so a sibling old enough to
+#: be killed is a sibling that has already outlived every box it has — which is
+#: only possible for a thread that was abandoned and a process that did not
+#: exit. `test_daily_pass` pins the inequality, so raising a box without raising
+#: this number turns the suite red instead of turning a healthy pass into a
+#: victim.
+DAILY_PASS_STALE_SIBLING_H = 6
+
 # ── THE ALWAYS-ON LAB (chunk 14, `scripts/always_on_lab.py`) ─────────────────
 #
 # One supervisor that runs whenever the PC is on and drives eight loops at

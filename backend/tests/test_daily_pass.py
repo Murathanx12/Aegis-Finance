@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from backend import config as _config
 from scripts import daily_pass as DP
 
 MODULE = Path(DP.__file__).resolve()
@@ -39,6 +40,22 @@ MODULE = Path(DP.__file__).resolve()
 
 # --------------------------------------------------------------------------
 # fixtures: the receipt directory, and a full set of step seams
+
+
+@pytest.fixture(autouse=True)
+def no_process_table(monkeypatch):
+    """No test in the offline suite queries the real process table.
+
+    Two reasons, and the second is the one that bites. The probe launches
+    PowerShell, which is slow and does not belong in a unit test — and on the
+    dev machine it would find the LIVE `scripts.daily_pass` this session was
+    told not to touch, decide it is a young sibling, and refuse every test in
+    this file. The kill seam is stubbed to a failure for the same reason a
+    network call is: no test may reach the real one by forgetting to stub it.
+    """
+    monkeypatch.setattr(DP, "scan_daily_passes", lambda: [])
+    monkeypatch.setattr(DP, "kill_pid", lambda pid: pytest.fail(
+        f"a test killed a real process (pid {pid}); stub DP.kill_pid"))
 
 
 @pytest.fixture
@@ -373,6 +390,157 @@ def test_the_daily_pass_has_no_order_path(banned: str) -> None:
     assert banned not in executable_source(MODULE)
 
 
+# --------------------------------------------------------------------------
+# THE BOXES AND THE STALE SIBLING (chunk 16a, 2026-09-18)
+#
+# MEASURED: the 09-14 06:30 pass wedged inside its analyst snapshot after 1,500
+# of 2,362 symbols and stayed alive for four days. Every later firing reported
+# Windows 0x80070420 and no pass ran on 09-15..09-18.
+
+
+def test_every_declared_step_has_a_box() -> None:
+    assert set(DP._STEP_BOXES) == {s for s, _ in DP.STEPS}
+    assert all(DP.step_box_s(s) > 0 for s, _ in DP.STEPS)
+    assert "timeout" in DP.STATUSES
+
+
+def test_the_stale_bound_is_above_the_sum_of_every_box() -> None:
+    """A sibling old enough to kill must be one that outlived every box it has.
+
+    A guard DERIVES its inputs or refuses. If a future edit raises the analyst
+    box past the stale bound, a HEALTHY three-hour pass becomes a victim of the
+    rule meant to protect it — so the inequality is pinned here rather than
+    trusted to whoever edits the config next.
+    """
+    total = sum(DP._STEP_BOXES.values())
+    assert total <= float(_config.DAILY_PASS_STALE_SIBLING_H) * 3600, (
+        f"the boxes sum to {total:.0f}s but a sibling is killed after "
+        f"{_config.DAILY_PASS_STALE_SIBLING_H} h")
+
+
+def test_a_step_that_outlives_its_box_is_a_timeout_row_and_the_pass_goes_on(
+        out, calls, rth_open, monkeypatch) -> None:
+    """The whole of the 09-14 fix, in one assertion: the wedged step yields a
+    `timeout` row and the NEXT step still runs."""
+    import time as _time
+
+    monkeypatch.setitem(DP._STEP_BOXES, "analyst_snapshot", 0.2)
+
+    def _wedged(**kw):
+        calls.append("analyst_snapshot")
+        _time.sleep(30)                        # the daemon thread is abandoned
+        return {"rows": 0}
+
+    monkeypatch.setattr(DP, "run_analyst_snapshot", _wedged)
+    rec = DP.run_daily_pass(day=_today())
+    rows = {r["step"]: r for r in rec["steps"]}
+    assert rows["analyst_snapshot"]["status"] == "timeout"
+    assert rows["analyst_snapshot"]["box_s"] == 0.2
+    assert rows["analyst_snapshot"]["refusals"] == ["timeout_after_0.2s"]
+    # the pass CONTINUED: every declared step still has a row, and the ones
+    # after the wedged one actually ran.
+    assert [r["step"] for r in rec["steps"]] == [s for s, _ in DP.STEPS]
+    assert rows["e1_append"]["status"] == "ok"
+    assert rows["coverage"]["status"] in ("ok", "nothing_to_do")
+    assert rec["step_status_counts"]["timeout"] == 1
+    assert "analyst_snapshot" in rec["steps_that_did_not_run"]
+
+
+def test_a_boxed_out_pass_still_writes_its_receipt_and_exits_zero(
+        out, calls, rth_open, monkeypatch) -> None:
+    """Four dates had NO receipt because one process would not die. A pass that
+    times out everywhere still leaves the evidence behind."""
+    import time as _time
+
+    for step, _ in DP.STEPS:
+        monkeypatch.setitem(DP._STEP_BOXES, step, 0.05)
+    for seam in ("pull_all_news", "run_analyst_snapshot", "run_e1_append",
+                 "run_cadence_pass", "read_coverage"):
+        monkeypatch.setattr(DP, seam, lambda *a, **k: _time.sleep(30))
+    rc = DP.main(["--date", _today()])
+    assert rc == 0, "a boxed-out pass must not go red; the receipt is the evidence"
+    written = json.loads(DP.receipt_path(_today(), 1).read_text(encoding="utf-8"))
+    assert written["step_status_counts"]["timeout"] == len(DP.STEPS)
+
+
+def test_a_seven_hour_old_sibling_is_killed_by_pid_and_named_in_the_receipt(
+        out, calls, rth_open, monkeypatch) -> None:
+    now = datetime.now(timezone.utc)
+    old = (now - timedelta(hours=7)).isoformat()
+    monkeypatch.setattr(DP, "scan_daily_passes", lambda: [
+        {"pid": 4242, "created_utc": old,
+         "cmdline": "python -m scripts.daily_pass"}])
+    killed: list[int] = []
+    monkeypatch.setattr(DP, "kill_pid", lambda pid: killed.append(pid) or
+                        {"killed": True, "pid": pid, "detail": "SUCCESS"})
+    rec = DP.run_daily_pass(day=_today())
+    assert killed == [4242], "the stale sibling was not killed"
+    assert rec["stale_sibling_killed"] == [
+        {"pid": 4242, "age_h": pytest.approx(7.0, abs=0.1), "killed": True,
+         "detail": "SUCCESS", "cmdline": "python -m scripts.daily_pass"}]
+    assert rec["step_status_counts"]["ok"] >= 1, "the pass did not take the day"
+
+
+def test_a_two_hour_old_sibling_is_refused_by_name_and_never_killed(
+        out, calls, rth_open, monkeypatch) -> None:
+    """Two passes minutes apart is a human being deliberate. A driver that
+    killed its own operator's run would be worse than the stall it fixes."""
+    now = datetime.now(timezone.utc)
+    young = (now - timedelta(hours=2)).isoformat()
+    monkeypatch.setattr(DP, "scan_daily_passes", lambda: [
+        {"pid": 99, "created_utc": young, "cmdline": "python -m scripts.daily_pass"}])
+    with pytest.raises(DP.SiblingPassRunning) as exc:
+        DP.run_daily_pass(day=_today())
+    assert "99" in str(exc.value)
+    assert calls == [], "a refused pass ran a step"
+
+
+def test_an_unreadable_creation_time_kills_nothing(monkeypatch) -> None:
+    """CANNOT DETERMINE is not 'old enough'. A sibling whose age could not be
+    read is left alone and reported."""
+    monkeypatch.setattr(DP, "scan_daily_passes", lambda: [
+        {"pid": 7, "created_utc": "not a date", "cmdline": "x"}])
+    found = DP.stale_siblings()
+    assert found["stale"] == []
+    assert found["young"][0]["age_h"] is None
+
+
+def test_the_refusal_is_about_the_invocation_so_the_exit_code_is_two(
+        out, calls, monkeypatch) -> None:
+    now = datetime.now(timezone.utc)
+    monkeypatch.setattr(DP, "scan_daily_passes", lambda: [
+        {"pid": 99, "created_utc": (now - timedelta(minutes=5)).isoformat(),
+         "cmdline": "python -m scripts.daily_pass"}])
+    assert DP.main(["--date", _today()]) == 2
+
+
 def test_it_never_kills_by_image_name() -> None:
-    src = executable_source(MODULE)
-    assert "/IM" not in src and "taskkill" not in src.lower()
+    """The pass became a killer on 2026-09-18. It kills BY PID, only.
+
+    `taskkill` is no longer absent — the stale-sibling rule needs it, because a
+    pass wedged for four days cost 09-15 through 09-18. What must stay absent is
+    the IMAGE-NAME form: on 2026-09-06 one `taskkill /F /IM python.exe` took
+    down two other agents' jobs, a running test suite, ~1,676 already-billed LLM
+    extractions and the Optimus MCP server (CLAUDE.md rule 6).
+
+    Read from the AST, so the paragraph above — which names the banned flag —
+    cannot itself fail the guard the way three tests in this repo did on their
+    first run.
+    """
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    invocations = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for arg in node.args:
+            if not isinstance(arg, ast.List):
+                continue
+            parts = [e.value for e in arg.elts
+                     if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+            if parts and "taskkill" in parts[0].lower():
+                invocations.append(parts)
+    assert invocations, "the stale-sibling kill disappeared; it is load-bearing"
+    for parts in invocations:
+        upper = [p.upper() for p in parts]
+        assert "/IM" not in upper, f"kill by image name: {parts}"
+        assert "/PID" in upper, f"a taskkill with no /PID: {parts}"
