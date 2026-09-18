@@ -643,7 +643,7 @@ def test_an_operator_hold_file_stops_the_lab_from_starting_the_server(lab, monke
 
 
 def test_the_lab_starts_the_model_server_when_nothing_is_listening(lab, monkeypatch):
-    """2026-09-18, MEASURED. The PC rebooted at 06:57 for Windows Update, the
+    """2026-09-18, MEASURED. The PC rebooted at 06:57 (Kernel-Power 41, unclean), the
     lab came back from the Startup folder, and every model loop reported
     PENDING_MODEL for the whole day because nothing starts llama-server after a
     reboot. "Live whenever the PC is on" cannot have a human in its path."""
@@ -1175,7 +1175,7 @@ def test_the_supervisor_calls_no_order_path_and_stops_no_model_server(banned):
     """What the module CALLS, read from the AST — never a grep over its prose.
 
     `start` LEFT this list on 2026-09-18 and `stop` did not. The lab became a
-    starter because a Windows Update reboot left every model loop PENDING_MODEL
+    starter because an unclean reboot left every model loop PENDING_MODEL
     for a day with nobody to start a server; it did NOT become a stopper,
     because a server it did not start may be several GB into somebody else's
     job and a server it DID start outlives it on purpose (`bind=False`).

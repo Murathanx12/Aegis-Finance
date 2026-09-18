@@ -862,7 +862,7 @@ def loop_l2_typing(state: LabState) -> dict:
         started: dict = {}
         if not server.get("listening"):
             # 2026-09-18: this used to return PENDING_MODEL and stop. After the
-            # 06:57 Windows Update reboot nothing else started the server and
+            # 06:57 unclean reboot (Kernel-Power 41) nothing else started the server and
             # the loop said PENDING_MODEL for a whole day. It now asks
             # `ensure_model_server` first — which refuses BY NAME for a foreign
             # server, a sleep-permitting power plan or the daily cap.
@@ -1171,7 +1171,7 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
                 "queue_remaining": remaining, "dispatched_on": dispatched}
 
     # 2026-09-18: half this queue reads through the model server, and after the
-    # 06:57 Windows Update reboot nothing was listening for the whole day. The
+    # 06:57 unclean reboot (Kernel-Power 41) nothing was listening for the whole day. The
     # start is attempted; the dispatch is NOT gated on it, because the other
     # half of the queue does not need a model and blocking those on a server
     # that will not come up would trade one stall for another.
@@ -1431,7 +1431,7 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
             "a loop whose stamp stops moving while `utc` keeps moving is stuck, "
             "which is the signal this file exists to make visible. Nothing here "
             "places an order. The lab DOES start the model server when nothing "
-            "is listening (2026-09-18, after a Windows Update reboot left every "
+            "is listening (2026-09-18, after an unclean reboot left every "
             "model loop PENDING_MODEL for a day) — capped per date, never for a "
             "foreign server, and it still stops nothing."),
     }

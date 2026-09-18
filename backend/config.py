@@ -2742,7 +2742,8 @@ LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "catalyst_calendar",
 #:
 #: The original rule was "the desktop app and a human are the only starters"
 #: (`spec_always_on_lab.md` §1.4). On 2026-09-18 the PC rebooted at 06:57 for
-#: Windows Update; the lab restarted itself from the Startup folder and then sat
+#: an unclean shutdown (Kernel-Power 41, no bugcheck report; the 09-17 13:17
+#: one WAS a 0x116 nvlddmkm bugcheck); the lab restarted itself from the Startup folder and then sat
 #: at `PENDING_MODEL` / `MODEL_IN_USE` for the whole day, because NOTHING starts
 #: `llama-server` after a reboot. "Live whenever the PC is on" cannot depend on
 #: a human opening an app, so the lab is now a starter too.
