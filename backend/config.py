@@ -2741,7 +2741,7 @@ LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "catalyst_calendar",
 #: MAY THE LAB START THE MODEL SERVER? (amended 2026-09-18, measured)
 #:
 #: The original rule was "the desktop app and a human are the only starters"
-#: (`spec_always_on_lab.md` §1.4). On 2026-09-18 the PC rebooted at 06:57 for
+#: (`spec_always_on_lab.md` §1.4). On 2026-09-18 the PC rebooted at 06:57 after
 #: an unclean shutdown (Kernel-Power 41, no bugcheck report; the 09-17 13:17
 #: one WAS a 0x116 nvlddmkm bugcheck); the lab restarted itself from the Startup folder and then sat
 #: at `PENDING_MODEL` / `MODEL_IN_USE` for the whole day, because NOTHING starts
