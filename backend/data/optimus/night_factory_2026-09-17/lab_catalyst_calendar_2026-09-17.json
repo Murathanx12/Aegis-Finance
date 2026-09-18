@@ -1,0 +1,403 @@
+{
+ "receipt": "lab_catalyst_calendar",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "raw",
+ "llm_spend_usd": 0.0,
+ "utc": "2026-09-17T11:27:00+00:00",
+ "date": "2026-09-17",
+ "tickers": [
+  "AARD",
+  "ABSI",
+  "AMSC",
+  "BHVN",
+  "DKNG",
+  "HUBS",
+  "KYTX",
+  "NTLA",
+  "PRCH",
+  "QUBT",
+  "SLDP",
+  "SOC"
+ ],
+ "ticker_refusal": null,
+ "per_ticker": {
+  "0_7d": [],
+  "8_30d": [],
+  "31_90d": [
+   {
+    "ticker": "SLDP",
+    "kind": "earnings",
+    "event_time": "2026-11-02",
+    "first_public_time": null,
+    "days_away": 46,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.1173",
+    "receipt": "162716fa3600a6df",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.1173,
+     "revenue_estimate": 1621116
+    }
+   },
+   {
+    "ticker": "HUBS",
+    "kind": "earnings",
+    "event_time": "2026-11-03",
+    "first_public_time": null,
+    "days_away": 47,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate 3.327",
+    "receipt": "5e48488965377ff9",
+    "detail": {
+     "hour": "amc",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": 3.327,
+     "revenue_estimate": 942991672
+    }
+   },
+   {
+    "ticker": "PRCH",
+    "kind": "earnings",
+    "event_time": "2026-11-03",
+    "first_public_time": null,
+    "days_away": 47,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate 0",
+    "receipt": "9e01ba9397112412",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": 0,
+     "revenue_estimate": 137802173
+    }
+   },
+   {
+    "ticker": "DKNG",
+    "kind": "earnings",
+    "event_time": "2026-11-04",
+    "first_public_time": null,
+    "days_away": 48,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.3407",
+    "receipt": "9b074f31b832f7a3",
+    "detail": {
+     "hour": "amc",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.3407,
+     "revenue_estimate": 1438460100
+    }
+   },
+   {
+    "ticker": "NTLA",
+    "kind": "earnings",
+    "event_time": "2026-11-04",
+    "first_public_time": null,
+    "days_away": 48,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.8164",
+    "receipt": "76032a46f1a75ffb",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.8164,
+     "revenue_estimate": 10670658
+    }
+   },
+   {
+    "ticker": "BHVN",
+    "kind": "earnings",
+    "event_time": "2026-11-09",
+    "first_public_time": null,
+    "days_away": 53,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.7765",
+    "receipt": "f84b675aa8a9e720",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.7765,
+     "revenue_estimate": 0
+    }
+   },
+   {
+    "ticker": "ABSI",
+    "kind": "earnings",
+    "event_time": "2026-11-10",
+    "first_public_time": null,
+    "days_away": 54,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.2053",
+    "receipt": "f01c5915e5280b4b",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.2053,
+     "revenue_estimate": 741672
+    }
+   },
+   {
+    "ticker": "KYTX",
+    "kind": "earnings",
+    "event_time": "2026-11-10",
+    "first_public_time": null,
+    "days_away": 54,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.7038",
+    "receipt": "150a26755a8e0d31",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.7038,
+     "revenue_estimate": 0
+    }
+   },
+   {
+    "ticker": "AARD",
+    "kind": "earnings",
+    "event_time": "2026-11-11",
+    "first_public_time": null,
+    "days_away": 55,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.713",
+    "receipt": "59b0681a948d0136",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.713,
+     "revenue_estimate": 0
+    }
+   },
+   {
+    "ticker": "SOC",
+    "kind": "earnings",
+    "event_time": "2026-11-11",
+    "first_public_time": null,
+    "days_away": 55,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.0278",
+    "receipt": "4172cc70011f4d33",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.0278,
+     "revenue_estimate": 186559796
+    }
+   },
+   {
+    "ticker": "QUBT",
+    "kind": "earnings",
+    "event_time": "2026-11-12",
+    "first_public_time": null,
+    "days_away": 56,
+    "source": "finnhub/calendar/earnings",
+    "expectedness": "scheduled",
+    "affected_metric": "EPS and revenue vs consensus",
+    "direction": null,
+    "confidence": "scheduled",
+    "next_observable": "reported EPS vs estimate -0.0434",
+    "receipt": "defd1a439807dc90",
+    "detail": {
+     "hour": "",
+     "quarter": 3,
+     "year": 2026,
+     "eps_estimate": -0.0434,
+     "revenue_estimate": 7697124
+    }
+   }
+  ],
+  "beyond_90d": [],
+  "tickers_checked": 12,
+  "tickers_blind": [],
+  "events_found": 11,
+  "failures": [],
+  "coverage": {
+   "covered": [
+    "scheduled earnings dates (Finnhub, free tier)",
+    "earnings estimate + surprise history (Finnhub)",
+    "anything hand-entered under `catalysts:` in the book"
+   ],
+   "uncovered": [
+    "FDA/PDUFA action dates",
+    "clinical readout windows",
+    "secondary offerings and shelf takedowns",
+    "13D/13G filings",
+    "lockup expiries",
+    "index adds/deletes",
+    "investor days",
+    "guidance updates outside earnings"
+   ],
+   "vendor_available": true,
+   "tickers_checked": 12,
+   "tickers_requested": 12,
+   "tickers_not_retrieved": 0,
+   "not_retrieved": [],
+   "events_found": 11,
+   "grade": "v0 — earnings only",
+   "warning": "an empty calendar means no EARNINGS date was found in the window. It is NOT evidence that nothing is scheduled: PDUFA dates, readouts, offerings and lockups have no entitled source here and must be entered by hand."
+  }
+ },
+ "macro": [
+  {
+   "kind": "NFP",
+   "event_time": "2026-10-02",
+   "days_away": 15,
+   "source": "fred_release_dates",
+   "what": "Employment Situation / non-farm payrolls (BLS)",
+   "expectedness": "scheduled",
+   "engine_probability": null,
+   "probability_status": "AWAITING_L2",
+   "probability_note": "X3 (`scenario_forecasts.py`) is the contract for an engine probability and is NOT wired: it needs L2's typed rows and E1's base-rate table, and L2 is still PENDING_MODEL. A number here would be invented.",
+   "detail": {
+    "release_id": 50
+   }
+  },
+  {
+   "kind": "CPI",
+   "event_time": "2026-10-14",
+   "days_away": 27,
+   "source": "fred_release_dates",
+   "what": "Consumer Price Index (BLS)",
+   "expectedness": "scheduled",
+   "engine_probability": null,
+   "probability_status": "AWAITING_L2",
+   "probability_note": "X3 (`scenario_forecasts.py`) is the contract for an engine probability and is NOT wired: it needs L2's typed rows and E1's base-rate table, and L2 is still PENDING_MODEL. A number here would be invented.",
+   "detail": {
+    "release_id": 10
+   }
+  },
+  {
+   "kind": "NFP",
+   "event_time": "2026-11-06",
+   "days_away": 50,
+   "source": "fred_release_dates",
+   "what": "Employment Situation / non-farm payrolls (BLS)",
+   "expectedness": "scheduled",
+   "engine_probability": null,
+   "probability_status": "AWAITING_L2",
+   "probability_note": "X3 (`scenario_forecasts.py`) is the contract for an engine probability and is NOT wired: it needs L2's typed rows and E1's base-rate table, and L2 is still PENDING_MODEL. A number here would be invented.",
+   "detail": {
+    "release_id": 50
+   }
+  },
+  {
+   "kind": "CPI",
+   "event_time": "2026-11-10",
+   "days_away": 54,
+   "source": "fred_release_dates",
+   "what": "Consumer Price Index (BLS)",
+   "expectedness": "scheduled",
+   "engine_probability": null,
+   "probability_status": "AWAITING_L2",
+   "probability_note": "X3 (`scenario_forecasts.py`) is the contract for an engine probability and is NOT wired: it needs L2's typed rows and E1's base-rate table, and L2 is still PENDING_MODEL. A number here would be invented.",
+   "detail": {
+    "release_id": 10
+   }
+  },
+  {
+   "kind": "NFP",
+   "event_time": "2026-12-04",
+   "days_away": 78,
+   "source": "fred_release_dates",
+   "what": "Employment Situation / non-farm payrolls (BLS)",
+   "expectedness": "scheduled",
+   "engine_probability": null,
+   "probability_status": "AWAITING_L2",
+   "probability_note": "X3 (`scenario_forecasts.py`) is the contract for an engine probability and is NOT wired: it needs L2's typed rows and E1's base-rate table, and L2 is still PENDING_MODEL. A number here would be invented.",
+   "detail": {
+    "release_id": 50
+   }
+  },
+  {
+   "kind": "CPI",
+   "event_time": "2026-12-10",
+   "days_away": 84,
+   "source": "fred_release_dates",
+   "what": "Consumer Price Index (BLS)",
+   "expectedness": "scheduled",
+   "engine_probability": null,
+   "probability_status": "AWAITING_L2",
+   "probability_note": "X3 (`scenario_forecasts.py`) is the contract for an engine probability and is NOT wired: it needs L2's typed rows and E1's base-rate table, and L2 is still PENDING_MODEL. A number here would be invented.",
+   "detail": {
+    "release_id": 10
+   }
+  }
+ ],
+ "legs": {
+  "CPI": "3 date(s)",
+  "NFP": "3 date(s)",
+  "FOMC": "0 date(s) (FOMC_SCHEDULE_NOT_SEEDED)"
+ },
+ "refusals": [
+  {
+   "kind": "FOMC",
+   "refusal": "FOMC_SCHEDULE_NOT_SEEDED",
+   "detail": "Copy the meeting dates from https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm into C:\\Users\\mrthn\\aegis-finance\\backend\\data\\fomc_schedule.json as {\"verified_on\": \"<YYYY-MM-DD>\", \"source_url\": \"...\", \"dates\": [\"<YYYY-MM-DD>\", ...]}. They are NOT invented here: a wrong scheduled date is worse than an absent one, because a reader plans around it."
+  }
+ ],
+ "horizon_days": 120,
+ "fomc_table": {
+  "status": "FOMC_SCHEDULE_NOT_SEEDED",
+  "verified_on": null,
+  "age_days": null,
+  "source_url": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\fomc_schedule.json"
+ },
+ "uncovered": [
+  "ECB and BoJ decisions",
+  "Treasury refunding",
+  "PCE and GDP release dates (FRED ids not declared here)",
+  "any intra-meeting action, by definition"
+ ],
+ "note": "`engine_probability` is null on every entry: X3 is not wired, and a fabricated probability attached to a real date is the one failure this block could cause that nobody would notice."
+}

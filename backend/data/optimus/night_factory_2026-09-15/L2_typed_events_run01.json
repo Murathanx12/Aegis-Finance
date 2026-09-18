@@ -1,0 +1,283 @@
+{
+ "job": "L2_typed_events",
+ "lane": "L",
+ "licence": "PRODUCT_EXPERIMENT",
+ "run": 1,
+ "smoke": false,
+ "stage": "features",
+ "llm_spend_usd": 0.0,
+ "backend": "local_gguf",
+ "reader": null,
+ "source": "corpus",
+ "workers": 1,
+ "started_utc": "2026-09-15T03:26:59+00:00",
+ "question": "What typed event, if any, does each document carry, as a row that is numeric by construction?",
+ "contract": {
+  "backend": "local_gguf",
+  "purpose_tag": "l2_event_extraction",
+  "prompt_hash_A": "e166ca4d32b1065d4814b8af2f35ab040c161433a1673b7361730272e94c8e56",
+  "prompt_hash_B": "d2275ea9b3f9ec093347fe7a27de340b285da742eaeb6adcfd5e19bcbceffce9",
+  "prompt_hash_covers": "wire system prompt + user template + canonical schema",
+  "language_pin": "applied CENTRALLY in model_provider.complete, never at this call site; wire_system() shows the pinned text",
+  "validator": "jsonschema",
+  "body_chars": 2000,
+  "evidence_chars": 400,
+  "refusal_classes": [
+   "REFUSED_LANGUAGE",
+   "REFUSED_UNPARSEABLE",
+   "REFUSED_SCHEMA",
+   "REFUSED_READER_ERROR"
+  ],
+  "no_event_is_not_a_refusal": "a no_event row is a SUCCESSFUL classification and is written like any other row -- it is how L2 measures the corpus's genuine event rate, and dropping it would make the denominator silently wrong",
+  "one_row_per_document": "spec section 2.4: the DOMINANT event only. v1's schema has no multi-event shape, and additionalProperties:false forbids smuggling one in",
+  "vocabulary": {
+   "source": "docs/research_notes/2026-09-11/spec_events_and_calibration.md sections 1.2 (v1's TABLE; the section's closing sentence miscounts by one) and 1.2b (v2's analyst-action addendum)",
+   "vocabulary_version": 2,
+   "versions": {
+    "1": {
+     "n_types": 40,
+     "vocabulary_hash": "b55fcff7ef3e206ffb14b088a832367b1471a59bddbb8d514c4a01fbfc1d2e6a"
+    },
+    "2": {
+     "n_types": 43,
+     "vocabulary_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc"
+    }
+   },
+   "n_types": 43,
+   "n_substantive": 42,
+   "n_ambiguous_priors": 21,
+   "refusal_class": "no_event",
+   "vocabulary_hash": "b06e322af733c3c006c5c31a0f95218289578d77edcee393d103ea9f2e6262bc",
+   "magnitude_thresholds": {
+    "NEGLIGIBLE": [
+     0.0,
+     0.005
+    ],
+    "SMALL": [
+     0.005,
+     0.02
+    ],
+    "MODERATE": [
+     0.02,
+     0.05
+    ],
+    "LARGE": [
+     0.05,
+     0.1
+    ],
+    "EXTREME": [
+     0.1,
+     null
+    ]
+   },
+   "directions": [
+    -1,
+    0,
+    1
+   ],
+   "no_fourth_direction": "There is no value for 'I do not know'. A genuinely uncertain call commits to the best-guess sign AND sets `confidence` low. Cohen's kappa cannot be computed over a set that includes an escape hatch one rater uses more than the other.",
+   "confidence": "`confidence` in [0, 1] is the model's stated probability that the emitted (event_type, direction) PAIR, taken together, is the correct reading of the document. It is NOT `event_intel.extraction.tier`, which is a PARSE-FIDELITY judgment (HIGH/MEDIUM/LOW/FAILED) barred by the D4 closure ruling from being read as an outcome probability. This one IS allowed to be read as a probability, because inter-rater kappa is the external check that catches a reader free-lancing high confidence.",
+   "kappa_protocol": {
+    "event_type": "Cohen's kappa, 40-way categorical, unweighted",
+    "direction": "weighted kappa, ordinal -1/0/+1, LINEAR weights",
+    "magnitude_bucket": "weighted kappa, ordinal over MAGNITUDE_BUCKETS, LINEAR weights",
+    "confidence": "mean absolute difference -- it is continuous, so kappa does not apply",
+    "sample": "the SAME rows under both prompts; the spec's control is 500 rows"
+   }
+  }
+ },
+ "corpus": {
+  "source": "corpus",
+  "label_sources": [
+   "alpaca_benzinga_news",
+   "gdelt_doc_v2",
+   "sec_edgar_8k_current_atom",
+   "yfinance_ticker_news",
+   "finnhub_company_news"
+  ],
+  "files": 13,
+  "rows_on_disk": 28741,
+  "unreadable_lines": 0,
+  "unreadable_examples": [],
+  "rows_already_typed": 12520,
+  "rows_waiting": 16221,
+  "rows_this_run": 16221,
+  "eligibility": "news_registry.label_sources() only -- a row that cannot label a return may not become a feature"
+ },
+ "cursor_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\typed_events\\_cursor.json",
+ "inputs_frozen": {
+  "n_rows": 16221,
+  "inputs_sha256": "b6305da9f22ff27eaee4a2dd6f8934e4da9eacf11aa8416f1741e9b0f43d8322",
+  "file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-15\\L2_typed_events_run01_inputs.json"
+ },
+ "projection": {
+  "rows": 16221,
+  "estimated_prompt_tokens_no_prefix_cache": 13611677,
+  "estimated_prompt_tokens_with_prefix_cache": 2521252,
+  "estimated_output_tokens_total": 1946520,
+  "assumptions": {
+   "chars_per_token": 4.0,
+   "output_tokens_per_row": 120,
+   "system_prompt_chars": 2735,
+   "rates_source": "night_factory_2026-09-13/L4_qwen3_measure_run01.json, `contended_measurement_being_superseded` -- itself a LOWER BOUND (20 cores saturated when it was taken)",
+   "prefix_cache": "the system prompt is byte-identical across every call, so llama.cpp pays it once; the no-cache column charges it per row and is the pessimistic bound"
+  },
+  "per_rate": {
+   "qwen3_30b_a3b_contended": {
+    "prompt_eval_tok_s": 5.6,
+    "generation_tok_s": 19.8,
+    "generation_hours": 27.31,
+    "prefill_hours_no_prefix_cache": 675.18,
+    "prefill_hours_system_prefix_cached_once": 125.06,
+    "total_hours_no_prefix_cache": 702.49,
+    "total_hours_with_prefix_cache": 152.37,
+    "seconds_per_row_no_prefix_cache": 155.91
+   },
+   "qwen2_5_7b_incumbent": {
+    "prompt_eval_tok_s": 5.6,
+    "generation_tok_s": 41.4,
+    "generation_hours": 13.06,
+    "prefill_hours_no_prefix_cache": 675.18,
+    "prefill_hours_system_prefix_cached_once": 125.06,
+    "total_hours_no_prefix_cache": 688.24,
+    "total_hours_with_prefix_cache": 138.12,
+    "seconds_per_row_no_prefix_cache": 152.74
+   }
+  },
+  "generation_only_at_20_tok_s_hours": 27.04,
+  "empirical_anchor_r2_panelA": {
+   "source": "L4 receipt `wall_time.source`: R2 panel A's own usage block, 15,433 calls in 5,854.2 s, mean 330.4 prompt / 14.0 completion tokens on Qwen2.5-7B",
+   "measured_seconds_per_call": 0.379,
+   "l2_hours": 13.24,
+   "caveat": "R2's completions are 14 tokens and L2's are ~120, so only the prefill half of this transfers; the generation half is added at the incumbent's measured 41.4 tok/s"
+  }
+ },
+ "estimate": {
+  "no_model_was_called": true,
+  "rows_to_type": 16221,
+  "unique_texts": 15970,
+  "panel_rows_covered": 0,
+  "tokens": {
+   "chars_per_token": 4.0,
+   "system_prompt_chars": 5731,
+   "system_prompt_tokens": 1432.8,
+   "user_chars_mean": 621.6,
+   "prompt_tokens_per_row": 1588.1,
+   "prompt_tokens_total": 25761206,
+   "prompt_tokens_charged_at_the_cache_MISS_rate": 2522001,
+   "prompt_tokens_charged_at_the_cache_HIT_rate": 23239205,
+   "prefix_cache_note": "the SAME tokens are sent either way -- what a prefix cache changes is the RATE on the 1432-token system prefix, which is byte-identical across every call. The two cost columns are the same token count at two rates, not two token counts",
+   "output_tokens_per_row": 49.81,
+   "output_tokens_total": 807968,
+   "output_tokens_source": "MEASURED, ledger mean over 7,565 rows",
+   "calibration_against_the_ledger": {
+    "estimated_prompt_tokens_per_row_here": 1588.1,
+    "measured_prompt_tokens_per_row_2026_09_13": 1482.67,
+    "reading": "the measured rows were CORPUS documents, whose bodies run to the 2,000-char cap, and they still came in BELOW this panel estimate -- so 4 chars/token over-states the real tokenizer on this system prompt and every cost column here is conservative"
+   },
+   "caveat": "4.0 chars/token is a CONVENTION, not a tokenizer. The only honest anchor is the ledger, and it is printed beside it"
+  },
+  "cost": {
+   "published_deepseek_list": {
+    "deepseek-v4-flash_offpeak": {
+     "input_cache_miss_per_mtok": 0.15,
+     "input_cache_hit_per_mtok": 0.003,
+     "output_per_mtok": 0.6,
+     "usd_no_prefix_cache": 4.349,
+     "usd_with_prefix_cache": 0.9328
+    },
+    "deepseek-v4-flash_peak": {
+     "input_cache_miss_per_mtok": 0.3,
+     "input_cache_hit_per_mtok": 0.006,
+     "output_per_mtok": 1.2,
+     "usd_no_prefix_cache": 8.6979,
+     "usd_with_prefix_cache": 1.8656
+    },
+    "deepseek-v4-pro_offpeak": {
+     "input_cache_miss_per_mtok": 0.66,
+     "input_cache_hit_per_mtok": 0.022,
+     "output_per_mtok": 1.98,
+     "usd_no_prefix_cache": 18.6022,
+     "usd_with_prefix_cache": 3.7756
+    },
+    "deepseek-v4-pro_peak": {
+     "input_cache_miss_per_mtok": 1.32,
+     "input_cache_hit_per_mtok": 0.044,
+     "output_per_mtok": 3.96,
+     "usd_no_prefix_cache": 37.2043,
+     "usd_with_prefix_cache": 7.5511
+    }
+   },
+   "published_source": "docs/research_notes/2026-09-13/research_cloud_llm_readers.md section 3, scraped from api-docs.deepseek.com on 2026-09-13",
+   "peak_hours_utc": "01:00-04:00 and 06:00-10:00 UTC, Mon-Fri (research_cloud_llm_readers.md section 3)",
+   "repo_derived_rates": {
+    "deepseek-chat": {
+     "input_cache_miss_per_mtok": 0.169413,
+     "input_cache_hit_per_mtok": 0.00338826,
+     "output_per_mtok": 1.284835,
+     "usd_no_prefix_cache": 5.4024,
+     "usd_with_prefix_cache": 1.5441
+    },
+    "deepseek-v4-flash": {
+     "input_cache_miss_per_mtok": 0.169413,
+     "input_cache_hit_per_mtok": 0.00338826,
+     "output_per_mtok": 1.284835,
+     "usd_no_prefix_cache": 5.4024,
+     "usd_with_prefix_cache": 1.5441
+    },
+    "deepseek-v4-pro": {
+     "input_cache_miss_per_mtok": 0.52639,
+     "input_cache_hit_per_mtok": 0.00438659,
+     "output_per_mtok": 3.992166,
+     "usd_no_prefix_cache": 16.786,
+     "usd_with_prefix_cache": 4.655
+    }
+   },
+   "repo_rates_source": "backend/config.LLM_PRICE_PER_MTOK -- DERIVED from the provider's own balance ledger; this is what llm_telemetry bills every row at",
+   "measured_usd": 5.11,
+   "measured_usd_per_row": 0.00031518,
+   "measured_source": "backend/data/optimus/llm_calls_2026-09.jsonl, purpose=l2_event_extraction, 2026-09-13T07:02Z..09:18Z",
+   "measured_caveat": "`cached_tokens` was 0 on every one of the 7,565 rows, so the measured $/row credits NO prefix cache. It is therefore an UPPER bound for a run that gets one, and the reconciliation against the provider's balance stays scripts/llm_cost_audit.py"
+  },
+  "wall_time": {
+   "brief_planning_rate_20_per_min": {
+    "rows_per_min_per_worker": 20.0,
+    "workers": 1,
+    "hours": 13.52,
+    "minutes": 811.0
+   },
+   "ledger_measured_57p4_per_min": {
+    "rows_per_min_per_worker": 57.4,
+    "workers": 1,
+    "hours": 4.71,
+    "minutes": 282.6
+   }
+  },
+  "cap": {
+   "max_usd": null,
+   "backend": "local_gguf",
+   "binds": null,
+   "note": null
+  }
+ },
+ "one_row_per_document": "a document tagged with several tickers is scoped to the FIRST and carries the rest; fanning it into N rows would multiply one reading into N correlated ones",
+ "status": "PENDING_MODEL",
+ "verdict": "PENDING_MODEL: 16,221 eligible documents are frozen at sha256 b6305da9f22f and NO model call was made. The reader is not answering and this job does not start it. Probe said: ProviderRefusal: local unreachable: URLError: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+ "headline": "16,221 units waiting from corpus; $5.11 at the measured $/row, 4.71 h at 1 workers; $0.00",
+ "pending_when_the_reader_is_up": [
+  "one call per unit: 16,221 at prompt hash e166ca4d32b1",
+  "a re-prompt of 50 of them at hash d2275ea9b3f9, kappa on event_type / direction / magnitude and MAD on confidence (the spec's own control is 500 rows)",
+  "refusals counted per class, never dropped; a no_event row is a SUCCESS and is written",
+  "one command: python -m scripts.night_l2_typed_events --source corpus --max-rows 16221 --run 1"
+ ],
+ "elapsed_s": 8.0,
+ "written_utc": "2026-09-15T03:27:02+00:00",
+ "awake_s": 8.0,
+ "slept_s": 0.0,
+ "box_s": 7200.0,
+ "wall_minus_monotonic_s": 0.0,
+ "sleep_gaps": [],
+ "child_pid": 27836,
+ "killed_pids": [],
+ "exit_code": 0
+}

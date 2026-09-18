@@ -1,0 +1,233 @@
+{
+ "receipt": "NN_lab",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "features",
+ "llm_spend_usd": 0.0,
+ "utc": "2026-09-17T05:52:41+00:00",
+ "date": "2026-09-17",
+ "held_out_month": "2026-08",
+ "held_out_month_rule": "the most recent FULLY-CLOSED calendar month, derived from today and FIXED for the comparison: re-evaluating last night's head on a new month would confound 'did the head improve' with 'did the month get easier', and the answer would look like learning either way",
+ "sequence": [
+  {
+   "job": "E1_event_head",
+   "status": "done",
+   "box_minutes": 60,
+   "verdict": "FAILED_VARIANT: NEITHER treatment -- the 43-way one-hot type block NOR the scalar direction x confidence score the published literature uses -- beats its own capacity-matched shuffled control under any model, so what either earns is the panel's calendar and universe, not the events. This closes THIS READ of the LLM-typed rows at 30,690 of 129,983 cells (23.6% coverage); below ~5% coverage the shuffled control has little power, and the next test is typing the panel's own headlines, not another head.",
+   "headline": "GBM/EVENT: EVENT - SHUFFLE IC +0.0019 (t 0.475, Holm p 1.0) over 276 date blocks -> NO | GBM/SCALAR: SCALAR - SCALAR_SHUFFLE IC +0.0028 (t 0.84, Holm p 1.0) over 276 date blocks -> NO | StockMixer_T1/EVENT: EVENT - SHUFFLE IC -0.0029 (t -0.458, Holm p 1.0) over 234 date blocks -> NO | StockMixer_T1/SCALAR: SCALAR - SCALAR_SHUFFLE IC +0.0050 (t 1.358, Holm p 1.0) over 276 date blocks -> NO | StockMixer_T1 - GBM on the identical table: IC +0.0131 (t 2.151, p 0.0325) -> YES",
+   "event_source": "typed_l2",
+   "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\E1_event_head_h5_run01_daily.csv",
+   "seconds": 1671.3
+  },
+  {
+   "job": "E4_adwin_gated_refit",
+   "status": "done",
+   "box_minutes": 45,
+   "verdict": "ADWIN NEVER FIRED after the mandatory first fit, so the ADWIN arm is one model carried across every test month (max age 13 months). That is a fact about the ERROR STREAM -- at this scale it is stationary to the detector -- and only secondarily about the cadence. Read the stale-vs-fresh IC split, not the refit count: a monthly refit that changes nothing is ceremony, and a detector that cannot see the drift is not evidence there is none.",
+   "headline": "ADWIN refit 1 times vs FIXED 14 on 276 identical test dates; ADWIN - FIXED IC +0.0103 (t 1.818, p 0.0702); 255 dates ran on a stale model, max age 13 months; fit seconds 1.09 vs 29.06",
+   "event_source": null,
+   "daily_csv": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\E4_adwin_gated_refit_run01_daily.csv",
+   "seconds": 101.5
+  },
+  {
+   "job": "E5_stopping_rules",
+   "status": "done",
+   "box_minutes": 20,
+   "verdict": "STOPPING RULES APPLIED: 4 lineages admitted at banks_met>=2 out of 251 (595 distinct genomes); 1 ACTIVE, 3 CANNOT_DETERMINE; PBO insufficient_windows",
+   "headline": "4 lineages admitted at banks_met>=2 out of 251 (595 distinct genomes); 1 ACTIVE, 3 CANNOT_DETERMINE; PBO insufficient_windows",
+   "event_source": null,
+   "daily_csv": null,
+   "seconds": 0.1
+  }
+ ],
+ "held_out_ic": {
+  "heads": {
+   "GBM_EVENT": {
+    "ic": -0.002273,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_EVENT": {
+    "ic": -0.001472,
+    "n_date_blocks": 21
+   },
+   "GBM_SCALAR": {
+    "ic": 0.003765,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_SCALAR": {
+    "ic": 0.018686,
+    "n_date_blocks": 21
+   },
+   "GBM_TFIDF": {
+    "ic": -0.006431,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_TFIDF": {
+    "ic": 0.031216,
+    "n_date_blocks": 21
+   },
+   "GBM_SHUFFLE": {
+    "ic": -0.001645,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_SHUFFLE": {
+    "ic": -0.013684,
+    "n_date_blocks": 21
+   },
+   "GBM_SCALAR_SHUFFLE": {
+    "ic": 0.028405,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_SCALAR_SHUFFLE": {
+    "ic": -0.000937,
+    "n_date_blocks": 21
+   },
+   "GBM_NOTEXT": {
+    "ic": 0.026801,
+    "n_date_blocks": 21
+   },
+   "StockMixer_T1_NOTEXT": {
+    "ic": -0.015897,
+    "n_date_blocks": 21
+   }
+  },
+  "status": "ok",
+  "month": "2026-08",
+  "n_dates": 21,
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-10\\E1_event_head_h5_run01_daily.csv"
+ },
+ "comparisons": [
+  {
+   "head": "GBM_EVENT",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.002273,
+   "ic_last_night": -0.002273,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "GBM_NOTEXT",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.026801,
+   "ic_last_night": 0.026801,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "GBM_SCALAR",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.003765,
+   "ic_last_night": 0.003765,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "GBM_SCALAR_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.028405,
+   "ic_last_night": 0.028405,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "GBM_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.001645,
+   "ic_last_night": -0.001645,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "GBM_TFIDF",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.006431,
+   "ic_last_night": -0.006431,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "StockMixer_T1_EVENT",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.001472,
+   "ic_last_night": -0.001472,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "StockMixer_T1_NOTEXT",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.015897,
+   "ic_last_night": -0.015897,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "StockMixer_T1_SCALAR",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.018686,
+   "ic_last_night": 0.018686,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "StockMixer_T1_SCALAR_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.000937,
+   "ic_last_night": -0.000937,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "StockMixer_T1_SHUFFLE",
+   "held_out_month": "2026-08",
+   "ic_tonight": -0.013684,
+   "ic_last_night": -0.013684,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  },
+  {
+   "head": "StockMixer_T1_TFIDF",
+   "held_out_month": "2026-08",
+   "ic_tonight": 0.031216,
+   "ic_last_night": 0.031216,
+   "beat_last_night": false,
+   "delta": 0.0,
+   "n_nights_compared": 2,
+   "last_night_date": "2026-09-15"
+  }
+ ],
+ "n_heads": 12,
+ "n_beat_last_night": 0,
+ "n_undecided": 0,
+ "event_source": "typed_l2",
+ "history_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\nn_lab_history.jsonl",
+ "refusals": [],
+ "never": [
+  "no training on future information: the held-out month is CLOSED before the refit that grades against it starts, and the embargo is the head's own, not a copy",
+  "no target leakage: this module adds no feature and touches no column",
+  "no live book's frozen Strategy is changed: a mutation is a NEW book",
+  "DEPRIORITIZED, never deleted, never re-promoted on the same regime"
+ ],
+ "headline": "12 head(s) on held-out 2026-08; 0 beat last night, 0 undecided (fewer than 2 nights of history); 0 job(s) did not complete"
+}
