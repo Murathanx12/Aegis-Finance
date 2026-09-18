@@ -29,7 +29,8 @@ STOP-file convention instead of IMPORTING them is a second copy of a rule that
 will drift from the first. Every guard here is imported:
 
 * `scripts.night_factory.refuse_if_the_machine_may_sleep` — the power plan;
-* `backend.services.llama_server.status` — and NEVER `start()` or `stop()`;
+* `backend.services.llama_server.status` — and, since 2026-09-18,
+  `start()` when nothing is listening; NEVER `stop()`;
 * `backend.services.ledger_retrieval.visible_at` — the hindsight gate;
 * `scripts.news_pull.pull_all` / `scripts.night_l2_typed_events.L2_typed_events`
   — the loops' actual work.
@@ -192,14 +193,34 @@ def power_refusal() -> str | None:
 
 
 def model_status() -> dict:
-    """`llama_server.status()` and nothing else — never `start()`, never `stop()`.
+    """`llama_server.status()` — the probe, never `stop()`.
 
-    The desktop app and a human are the only starters. This is probed before
-    EVERY model-touching tick, not once at startup, because the desktop app can
-    start or stop the server at any point in a multi-day supervisor run.
+    Probed before EVERY model-touching tick, not once at startup, because the
+    desktop app can start or stop the server at any point in a multi-day
+    supervisor run. Since 2026-09-18 a NOT-LISTENING answer is also the trigger
+    for `ensure_model_server()`: see `LAB_STARTS_MODEL_SERVER` in config.
     """
     from backend.services import llama_server
     return llama_server.status()
+
+
+def start_model_server() -> dict:
+    """`llama_server.start(bind=False)` — the lab as a STARTER (2026-09-18).
+
+    `bind=False` is the whole of the design. `start(bind=True)` puts the server
+    in a Windows job object whose last handle is held by THIS process, so the
+    OS kills the server the moment the supervisor exits — and this supervisor is
+    restarted by the Startup folder on every logon. A server that dies with its
+    starter is not the "live whenever the PC is on" the lab exists for.
+
+    The ownership note `llama_server.start` writes carries `owner_pid =
+    os.getpid()`, which is this supervisor's PID: the existing scheme, unchanged,
+    so `stop_if_owned()` in a desktop app still correctly declines to kill a
+    server the lab started.
+    """
+    from backend.services import llama_server
+    return llama_server.start(bind=False,
+                              wait_s=float(_config.LAB_MODEL_SERVER_START_WAIT_S))
 
 
 def pid_alive(pid: int) -> bool:
@@ -482,6 +503,11 @@ class LabState:
         self.model_lock = threading.Lock()
         #: A loop still running past its box is not re-issued while wedged.
         self.inflight: set[str] = set()
+        #: `{"date": "<YYYY-MM-DD>", "n": int}` — how many times the lab has
+        #: started the model server on that date. Carried across a restart
+        #: because the lab restarts itself from the Startup folder, and a cap
+        #: that a restart resets is not a cap.
+        self.model_server_starts: dict = {"date": None, "n": 0}
 
     @classmethod
     def load(cls) -> "LabState":
@@ -494,7 +520,20 @@ class LabState:
             return cls()
         st = cls(loops=prev.get("loops") or {})
         st.last_model_call_utc = prev.get("last_model_call_utc")
+        st.model_server_starts = {
+            "date": (prev.get("model_server_starts") or {}).get("date"),
+            "n": int((prev.get("model_server_starts") or {}).get("n") or 0)}
         return st
+
+    def starts_today(self, today: str) -> int:
+        """Model-server starts booked on `today`. A new date starts at zero."""
+        rec = self.model_server_starts or {}
+        return int(rec.get("n") or 0) if rec.get("date") == today else 0
+
+    def note_model_server_start(self, today: str) -> int:
+        n = self.starts_today(today) + 1
+        self.model_server_starts = {"date": today, "n": n}
+        return n
 
     def due(self, loop: str, now: datetime) -> bool:
         last = self.loops[loop].get("last_tick_utc")
@@ -526,6 +565,103 @@ def _as_dt(value) -> datetime | None:
     except ValueError:
         return None
     return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt
+
+
+# ===========================================================================
+# THE MODEL SERVER — the lab is a STARTER, and never a stopper (2026-09-18)
+# ===========================================================================
+
+
+#: Every reason `ensure_model_server` can decline, by name. Declared so a reader
+#: of `lab_status.json` meets a closed vocabulary rather than free prose, and so
+#: a test can assert on the NAME instead of on a sentence.
+MODEL_SERVER_REFUSALS = (
+    "LAB_STARTS_MODEL_SERVER_DISABLED",
+    "ALREADY_LISTENING",
+    "FOREIGN_SERVER_UP",
+    "POWER_PLAN_ALLOWS_SLEEP",
+    "MODEL_SERVER_START_CAP_REACHED",
+    "STATUS_PROBE_FAILED",
+    "START_FAILED",
+)
+
+
+def ensure_model_server(state: "LabState", *, now: datetime | None = None,
+                        server: dict | None = None) -> dict:
+    """Start the model server when nothing is listening. Five gates, by name.
+
+    THE MEASURED DEFECT. On 2026-09-18 at 06:57 the PC rebooted for Windows
+    Update. The lab came back from the Startup folder and then spent the whole
+    day reporting `PENDING_MODEL` (typing), `MODEL_IN_USE` (the NN lab) and a
+    stalled idle queue, because the only starters were the desktop app and a
+    human and neither was there. "Live whenever the PC is on" cannot have a
+    human in its critical path.
+
+    What is NOT relaxed:
+
+    * the lab never STOPS a server — not one it started, not a foreign one;
+    * a FOREIGN server (one Aegis did not start) is still not ours to touch: it
+      may be several GB into somebody else's job;
+    * the power-plan refusal still pauses the GPU half;
+    * the cap. `LAB_MODEL_SERVER_MAX_STARTS_PER_DAY` starts a day and then
+      REFUSES BY NAME. A server that keeps dying is a finding; a supervisor that
+      restarts it every five minutes for a week is a log nobody reads.
+
+    The count is incremented BEFORE the call, deliberately — the same lesson the
+    idle queue paid for on 2026-09-14: this runs inside a boxed loop whose thread
+    can be abandoned, and a counter written after the return is a counter that
+    was never written.
+    """
+    now = now or datetime.now(timezone.utc)
+    today = run_date()
+    starts = state.starts_today(today)
+    base = {"attempted": False, "started": False, "starts_today": starts,
+            "cap": int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)}
+
+    if not bool(getattr(_config, "LAB_STARTS_MODEL_SERVER", False)):
+        return {**base, "reason": "LAB_STARTS_MODEL_SERVER_DISABLED",
+                "detail": ("config.LAB_STARTS_MODEL_SERVER is off; the desktop "
+                           "app and a human are the only starters")}
+    if server is None:
+        try:
+            server = model_status()
+        except Exception as exc:                                   # noqa: BLE001
+            return {**base, "reason": "STATUS_PROBE_FAILED", "detail": _trunc(exc)}
+    if server.get("foreign"):
+        return {**base, "reason": "FOREIGN_SERVER_UP",
+                "detail": (f"pid {server.get('pid')} is serving the model and "
+                           f"Aegis did not start it; not ours to touch")}
+    if server.get("listening"):
+        return {**base, "reason": "ALREADY_LISTENING",
+                "detail": f"pid {server.get('pid')} is already listening"}
+    if state.power_refusal:
+        return {**base, "reason": "POWER_PLAN_ALLOWS_SLEEP",
+                "detail": str(state.power_refusal)[:200]}
+    if starts >= int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY):
+        return {**base, "reason": "MODEL_SERVER_START_CAP_REACHED",
+                "detail": (f"the lab has already started the model server "
+                           f"{starts} time(s) on {today}; a server that keeps "
+                           f"dying is a finding, not a retry loop")}
+
+    with state.model_lock:
+        starts = state.note_model_server_start(today)
+        try:
+            out = start_model_server()
+        except Exception as exc:                                   # noqa: BLE001
+            logger.exception("the lab could not start the model server")
+            return {**base, "attempted": True, "starts_today": starts,
+                    "reason": "START_FAILED", "detail": _trunc(exc)}
+    if not out.get("ok"):
+        return {**base, "attempted": True, "starts_today": starts,
+                "reason": "START_FAILED",
+                "detail": str(out.get("reason") or out.get("action"))[:300]}
+    logger.warning("MODEL SERVER STARTED by the lab (pid %s, action %s, "
+                   "start %d of %d today)", out.get("pid"), out.get("action"),
+                   starts, int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY))
+    return {**base, "attempted": True, "started": True, "starts_today": starts,
+            "reason": None, "action": out.get("action"),
+            "server_pid": out.get("pid"), "ready": bool(out.get("ready")),
+            "detail": "MODEL SERVER STARTED by the lab"}
 
 
 # ===========================================================================
@@ -711,14 +847,32 @@ def loop_l2_typing(state: LabState) -> dict:
         except Exception as exc:                                   # noqa: BLE001
             return {"status": "error", "n": 0, "rows_typed_this_tick": 0,
                     "reader": "local", "detail": _trunc(exc)}
+        started: dict = {}
         if not server.get("listening"):
+            # 2026-09-18: this used to return PENDING_MODEL and stop. After the
+            # 06:57 Windows Update reboot nothing else started the server and
+            # the loop said PENDING_MODEL for a whole day. It now asks
+            # `ensure_model_server` first — which refuses BY NAME for a foreign
+            # server, a sleep-permitting power plan or the daily cap.
+            started = ensure_model_server(state, server=server)
+            if started.get("started"):
+                try:
+                    server = model_status()
+                except Exception as exc:                           # noqa: BLE001
+                    return {"status": "error", "n": 0, "rows_typed_this_tick": 0,
+                            "reader": "local", "detail": _trunc(exc),
+                            "model_server_start": started}
+        if not server.get("ready"):
             # `L2_typed_events` writes PENDING_MODEL with the input list frozen
             # and hashed; this loop returns to the scheduler rather than raising.
             return {"status": "PENDING_MODEL", "n": 0, "rows_typed_this_tick": 0,
-                    "reader": "local", "llama_server_up": False,
-                    "detail": ("nothing is listening on the model port and this "
-                               "loop does not start one; the desktop app and a "
-                               "human are the only starters"),
+                    "reader": "local",
+                    "llama_server_up": bool(server.get("listening")),
+                    "model_server_start": started or None,
+                    "detail": (started.get("detail") if started.get("started")
+                               else ("the model server is not ready; "
+                                     + str(started.get("detail")
+                                           or server.get("detail") or ""))[:300]),
                     "backlog_remaining": None}
         if server.get("foreign"):
             # A server that was already running when Aegis started is not ours to
@@ -918,6 +1072,13 @@ def loop_nn_lab(state: LabState) -> dict:
     if yielded:
         return {**yielded, "n": 0}
 
+    # 2026-09-18: the lab is a starter. The refit itself does not call the model
+    # server, so this is NOT a precondition for the sequence -- it is the one
+    # once-a-night moment at which a box that rebooted with nothing listening
+    # gets a server back. The row records the attempt either way, and the
+    # sequence runs whatever the answer was.
+    started = ensure_model_server(state, now=now)
+
     with state.model_lock:
         state.note_model_call(now)
         payload = lab_nn.run_nn_lab()
@@ -926,6 +1087,7 @@ def loop_nn_lab(state: LabState) -> dict:
     return {
         "status": "ok" if payload["n_heads"] else ("refused" if payload["refusals"]
                                                    else "nothing_to_do"),
+        "model_server_start": started,
         "n": payload["n_heads"],
         "held_out_month": payload["held_out_month"],
         "heads": payload["n_heads"],
@@ -996,6 +1158,13 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
                            f"not ours to interrupt"),
                 "queue_remaining": remaining, "dispatched_on": dispatched}
 
+    # 2026-09-18: half this queue reads through the model server, and after the
+    # 06:57 Windows Update reboot nothing was listening for the whole day. The
+    # start is attempted; the dispatch is NOT gated on it, because the other
+    # half of the queue does not need a model and blocking those on a server
+    # that will not come up would trade one stall for another.
+    started = ensure_model_server(state, now=now, server=server)
+
     yielded = yields_to("night_factory", "monday_night", "daily_pass", now=now)
     if yielded:
         return {**yielded, "n": 0, "queue_remaining": remaining,
@@ -1037,6 +1206,7 @@ def loop_idle_gpu_queue(state: LabState) -> dict:
     row["dispatched_on"] = dispatched
     return {
         "status": "ok", "n": 1, "job": job, "box_minutes": minutes,
+        "model_server_start": started,
         "verdict": payload.get("verdict"),
         "job_headline": str(payload.get("headline"))[:200],
         "dispatched_on": dispatched,
@@ -1224,6 +1394,11 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
         "loops": state.loops,
         "last_model_call_utc": state.last_model_call_utc,
         "idle_minutes": state.idle_minutes(now),
+        "model_server_starts": dict(state.model_server_starts),
+        "model_server_starts_today": state.starts_today(run_date()),
+        "model_server_start_cap_per_day": int(
+            _config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY),
+        "lab_starts_model_server": bool(_config.LAB_STARTS_MODEL_SERVER),
         "llama_server": {"up": bool(model.get("listening")),
                          "ready": bool(model.get("ready")),
                          "owned_by_us": bool(model.get("started_by_aegis")),
@@ -1242,7 +1417,10 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
             "omitted key. `last_tick_utc` advances only on a SUCCESSFUL tick, so "
             "a loop whose stamp stops moving while `utc` keeps moving is stuck, "
             "which is the signal this file exists to make visible. Nothing here "
-            "places an order or starts the model server."),
+            "places an order. The lab DOES start the model server when nothing "
+            "is listening (2026-09-18, after a Windows Update reboot left every "
+            "model loop PENDING_MODEL for a day) — capped per date, never for a "
+            "foreign server, and it still stops nothing."),
     }
 
 
@@ -1597,16 +1775,19 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["ACCEPTANCE_CRITERIA", "HANDLERS", "LOOPS", "PERIODS",
+__all__ = ["ACCEPTANCE_CRITERIA", "HANDLERS", "LOOPS", "MODEL_SERVER_REFUSALS",
+           "PERIODS",
            "SCHEDULED_DRIVERS", "STATUSES", "TIMEOUTS", "AlreadyRunning",
            "LabState", "LoopTimeout", "acceptance_report", "acquire_lock",
            "cadence_admits", "calendar_tickers", "call_boxed", "check_power",
-           "data_dir", "dispatch_job", "learned_line", "lock_holder",
+           "data_dir", "dispatch_job", "ensure_model_server", "learned_line",
+           "lock_holder",
            "lock_path", "main", "model_status", "news_sources", "out_dir",
            "parsed_rate_limit", "pid_alive", "pid_names_lab", "plan",
            "power_refusal", "print_plan", "pull_news", "read_lock",
            "release_lock", "run_date", "run_forever", "running_drivers",
-           "scan_processes", "status_path", "status_payload", "stop_path",
+           "scan_processes", "start_model_server", "status_path",
+           "status_payload", "stop_path",
            "tick", "type_rows", "write_acceptance", "write_learned_line",
            "yields_to"]
 

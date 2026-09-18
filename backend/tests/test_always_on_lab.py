@@ -74,6 +74,15 @@ def lab(tmp_path, monkeypatch):
     monkeypatch.setattr(L, "model_status", lambda: {
         "listening": False, "ready": False, "started_by_aegis": False,
         "foreign": False, "pid": None, "detail": "not running"})
+    # THE LAB AS A STARTER IS OFF BY DEFAULT IN THE FIXTURE (2026-09-18). Every
+    # test written before the lab could start a model server keeps its old
+    # meaning, which is how "with LAB_STARTS_MODEL_SERVER = False it behaves
+    # exactly as today" is demonstrated rather than asserted; the tests that
+    # exercise the new path turn it on and install a spy. The stub below is the
+    # belt: no test in the offline suite may start a real llama-server.
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", False)
+    monkeypatch.setattr(L, "start_model_server", lambda: pytest.fail(
+        "a test started the REAL model server; stub L.start_model_server"))
     monkeypatch.setattr(L, "pid_alive", lambda pid: False)
     monkeypatch.setattr(L, "pid_names_lab", lambda pid: True)
     # nothing scheduled is running; individual tests override this. The real
@@ -576,6 +585,161 @@ def test_no_server_means_pending_model_not_a_crash(lab, monkeypatch):
     assert spy.starts == 0
 
 
+class SpyStarter:
+    """Records `start_model_server()` calls and reports what a start produced.
+
+    The assertion is on the CALL COUNT, not on the module's source: the AST test
+    says which function may call `llama_server.start`, and this says whether the
+    call happened at run time and how often. Both, because they fail for
+    different reasons.
+    """
+
+    def __init__(self, ok: bool = True, ready: bool = True, pid: int = 4242):
+        self.calls = 0
+        self._ok, self._ready, self._pid = ok, ready, pid
+
+    def __call__(self):
+        self.calls += 1
+        if not self._ok:
+            return {"ok": False, "action": "died", "reason": "exit code 1"}
+        return {"ok": True, "action": "started" if self._ready else "starting",
+                "pid": self._pid, "ready": self._ready}
+
+
+def _starter(monkeypatch, *, listening_after: bool = True, **kw) -> SpyStarter:
+    """Turn the feature on, install the spy, and make `model_status` answer
+    `not listening` until a start has happened."""
+    spy = SpyStarter(**kw)
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", True)
+    monkeypatch.setattr(L, "start_model_server", spy)
+
+    def _status():
+        up = bool(spy.calls) and listening_after
+        return {"listening": up, "ready": up, "foreign": False,
+                "started_by_aegis": up, "pid": spy._pid if up else None,
+                "detail": "stub"}
+
+    monkeypatch.setattr(L, "model_status", _status)
+    return spy
+
+
+def test_the_lab_starts_the_model_server_when_nothing_is_listening(lab, monkeypatch):
+    """2026-09-18, MEASURED. The PC rebooted at 06:57 for Windows Update, the
+    lab came back from the Startup folder, and every model loop reported
+    PENDING_MODEL for the whole day because nothing starts llama-server after a
+    reboot. "Live whenever the PC is on" cannot have a human in its path."""
+    spy = _starter(monkeypatch)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: {
+        "status": "ok", "rows_typed": 3, "corpus": {"rows_waiting": 9},
+        "usage": {"cost_usd": 0.0}})
+    state = L.LabState()
+    out = L.loop_l2_typing(state)
+    assert spy.calls == 1, "the lab did not start a server with nothing listening"
+    assert out["status"] == "ok" and out["n"] == 3
+    assert out["llama_server_up"] is True
+    assert state.starts_today(L.run_date()) == 1
+
+
+def test_the_start_is_marked_before_the_call_so_an_abandoned_thread_still_counts(
+        lab, monkeypatch):
+    """The idle queue paid for this on 2026-09-14: a record written after a call
+    that never returns was never written, and the loop re-issued for ever. The
+    counter is incremented BEFORE `start_model_server()`."""
+    seen: dict = {}
+
+    def _boom():
+        seen["count_at_call"] = state.starts_today(L.run_date())
+        raise OSError("the binary is not there")
+
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", True)
+    monkeypatch.setattr(L, "start_model_server", _boom)
+    state = L.LabState()
+    out = L.ensure_model_server(state)
+    assert seen["count_at_call"] == 1, "the start was counted after the call"
+    assert out["started"] is False and out["reason"] == "START_FAILED"
+    assert state.starts_today(L.run_date()) == 1
+
+
+def test_a_foreign_server_is_never_started_beside(lab, monkeypatch):
+    """A server Aegis did not start is not ours to touch — and starting a second
+    one beside it means two copies of the weights on an 8 GB card."""
+    spy = SpyStarter()
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", True)
+    monkeypatch.setattr(L, "start_model_server", spy)
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": False, "ready": False, "foreign": True,
+        "started_by_aegis": False, "pid": 9981, "detail": "stub"})
+    out = L.ensure_model_server(L.LabState())
+    assert spy.calls == 0
+    assert out["started"] is False and out["reason"] == "FOREIGN_SERVER_UP"
+
+
+def test_a_sleeping_power_plan_stops_the_lab_starting_a_server(lab, monkeypatch):
+    spy = _starter(monkeypatch, listening_after=False)
+    state = L.LabState()
+    state.power_refusal = "REFUSED: POWER_PLAN_ALLOWS_SLEEP (standby in 30 min)"
+    out = L.ensure_model_server(state)
+    assert spy.calls == 0
+    assert out["reason"] == "POWER_PLAN_ALLOWS_SLEEP"
+
+
+def test_the_fourth_start_in_one_day_is_refused_by_name(lab, monkeypatch):
+    """A server that keeps dying is a FINDING, not a retry loop. At the cap the
+    lab refuses by name and the refusal is in `lab_status.json`."""
+    spy = _starter(monkeypatch, listening_after=False, ready=False)
+    state = L.LabState()
+    cap = int(_config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY)
+    for _ in range(cap):
+        assert L.ensure_model_server(state)["started"] is True
+    out = L.ensure_model_server(state)
+    assert spy.calls == cap, "the lab kept starting past its own cap"
+    assert out["started"] is False
+    assert out["reason"] == "MODEL_SERVER_START_CAP_REACHED"
+    assert out["reason"] in L.MODEL_SERVER_REFUSALS
+    assert L.status_payload(state)["model_server_starts_today"] == cap
+
+
+def test_the_start_count_survives_a_restart(lab, monkeypatch):
+    """The lab restarts itself from the Startup folder. A cap a restart resets
+    is not a cap — it is three starts per restart, and a crash-looping server
+    restarts the lab too."""
+    spy = _starter(monkeypatch, listening_after=False, ready=False)
+    state = L.LabState()
+    L.ensure_model_server(state)
+    L._write_atomic(L.status_path(), L.status_payload(state))
+    revived = L.LabState.load()
+    assert revived.starts_today(L.run_date()) == 1
+    assert spy.calls == 1
+
+
+def test_with_the_starter_switched_off_the_lab_behaves_exactly_as_before(
+        lab, monkeypatch):
+    """`LAB_STARTS_MODEL_SERVER = False` is the pre-2026-09-18 lab, unchanged:
+    PENDING_MODEL, no start, no reader call."""
+    spy = SpyStarter()
+    monkeypatch.setattr(_config, "LAB_STARTS_MODEL_SERVER", False)
+    monkeypatch.setattr(L, "start_model_server", spy)
+    monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail(
+        "the reader was called with nothing listening"))
+    out = L.loop_l2_typing(L.LabState())
+    assert spy.calls == 0
+    assert out["status"] == "PENDING_MODEL" and out["llama_server_up"] is False
+    assert out["model_server_start"]["reason"] == "LAB_STARTS_MODEL_SERVER_DISABLED"
+
+
+def test_a_server_that_is_still_loading_is_not_typed_against(lab, monkeypatch):
+    """`listening` is not `ready`: llama-server binds its port with a fifth of
+    the model resident, and a request sent then gets a 503."""
+    monkeypatch.setattr(L, "model_status", lambda: {
+        "listening": True, "ready": False, "foreign": False,
+        "started_by_aegis": True, "pid": 7, "detail": "still loading"})
+    monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail(
+        "the reader was called against a server that is not ready"))
+    out = L.loop_l2_typing(L.LabState())
+    assert out["status"] == "PENDING_MODEL"
+    assert out["llama_server_up"] is True
+
+
 def test_the_typing_loop_refuses_a_cloud_reader_that_does_not_exist(lab, monkeypatch):
     monkeypatch.setenv("AEGIS_L2_READER", "cloud")
     monkeypatch.setattr(L, "type_rows", lambda **kw: pytest.fail(
@@ -959,18 +1123,42 @@ def call_string_args(path: Path) -> list[str]:
 
 @pytest.mark.parametrize("banned", [
     "submit_order", "place_order", "TradingClient",
-    "llama_server.start", "llama_server.stop", "start", "stop",
+    "llama_server.stop", "stop", "stop_if_owned",
 ])
-def test_the_supervisor_calls_no_order_path_and_starts_no_model_server(banned):
-    """What the module CALLS, read from the AST — never a grep over its prose."""
+def test_the_supervisor_calls_no_order_path_and_stops_no_model_server(banned):
+    """What the module CALLS, read from the AST — never a grep over its prose.
+
+    `start` LEFT this list on 2026-09-18 and `stop` did not. The lab became a
+    starter because a Windows Update reboot left every model loop PENDING_MODEL
+    for a day with nobody to start a server; it did NOT become a stopper,
+    because a server it did not start may be several GB into somebody else's
+    job and a server it DID start outlives it on purpose (`bind=False`).
+    """
     offenders = {t for t in call_targets(MODULE)
                  if t == banned or t.endswith("." + banned)}
-    # the supervisor's own thread lifecycle is allowed to call `start`; a MODEL
-    # server's is not, and the two are told apart by the receiver, not the verb.
-    offenders -= {"t.start", "threading.Thread.start"}
     assert not offenders, (
-        f"{sorted(offenders)} — the lab places no order and is never the "
-        f"process that starts or stops the model server.")
+        f"{sorted(offenders)} — the lab places no order and never stops a "
+        f"model server, not even one it started.")
+
+
+def test_the_only_model_server_start_goes_through_the_one_seam():
+    """`llama_server.start` may be called from exactly one function.
+
+    A start scattered across three loops is three places to forget the cap, the
+    foreign check and the power plan. `start_model_server` is the seam and
+    `ensure_model_server` is the only caller of it.
+    """
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    callers: dict[str, list[str]] = {}
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for node in ast.walk(fn):
+            if isinstance(node, ast.Call) and _dotted(node.func) in (
+                    "llama_server.start", "start_model_server"):
+                callers.setdefault(_dotted(node.func), []).append(fn.name)
+    assert callers.get("llama_server.start") == ["start_model_server"],         f"llama_server.start is called from {callers.get('llama_server.start')}"
+    assert callers.get("start_model_server") == ["ensure_model_server"],         f"start_model_server is called from {callers.get('start_model_server')}"
 
 
 def test_the_supervisor_imports_no_broker_module():

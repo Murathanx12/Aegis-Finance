@@ -2669,6 +2669,32 @@ LAB_MODEL_LOOPS: tuple[str, ...] = ("l2_typing", "nn_lab", "idle_gpu_queue")
 LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "catalyst_calendar",
                                       "thematic_streams")
 
+#: MAY THE LAB START THE MODEL SERVER? (amended 2026-09-18, measured)
+#:
+#: The original rule was "the desktop app and a human are the only starters"
+#: (`spec_always_on_lab.md` §1.4). On 2026-09-18 the PC rebooted at 06:57 for
+#: Windows Update; the lab restarted itself from the Startup folder and then sat
+#: at `PENDING_MODEL` / `MODEL_IN_USE` for the whole day, because NOTHING starts
+#: `llama-server` after a reboot. "Live whenever the PC is on" cannot depend on
+#: a human opening an app, so the lab is now a starter too.
+#:
+#: What does NOT change: the lab never STOPS a server, and a FOREIGN server --
+#: one Aegis did not start -- is still not ours to touch.
+LAB_STARTS_MODEL_SERVER = True
+
+#: How many times in ONE date the lab may start the model server. A server that
+#: keeps dying is a finding, not a retry loop: at the cap the lab refuses BY
+#: NAME (`MODEL_SERVER_START_CAP_REACHED`) and the refusal is in `lab_status.json`
+#: where a reader can see it, rather than a silent restart every five minutes.
+LAB_MODEL_SERVER_MAX_STARTS_PER_DAY = 3
+
+#: Seconds the lab waits for `/health` after a start. ZERO on purpose: the
+#: idle-GPU queue's own box is 60 s and a multi-GB model takes longer than that
+#: to load, so the lab starts the server, records the start, and lets the NEXT
+#: heartbeat (five minutes) find it ready. `llama_server.start` calls that state
+#: `starting`, which is a state and not a failure.
+LAB_MODEL_SERVER_START_WAIT_S = 0.0
+
 #: Consecutive calendar DATES of real coverage before the lab is ACCEPTED.
 #: Dates, not task runs: `ONLOGON` can fire and die repeatedly in a bad state
 #: and still produce three "runs".
