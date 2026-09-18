@@ -658,3 +658,69 @@ def test_arming_is_env_gated_and_off_by_default(monkeypatch):
     assert L.is_armed() is False, "only the literal '1' arms it"
     monkeypatch.setenv("AEGIS_IIF1_LAUNCHER_ARMED", "1")
     assert L.is_armed() is True
+
+
+# ── the registered wall-clock start (chunk 16a, 2026-09-18) ────────────────
+def test_the_registered_start_time_is_read_from_config_not_hardcoded():
+    """17:00 refused every night from 2026-09-01 and nobody read the receipt.
+
+    The margin arithmetic was never wrong. `duration_bound = worst completed
+    night x 2.0` grew to 235 min, the latest safe RUN START moved to 09:35Z, and
+    minus the 45-minute assembly allowance the latest safe LAUNCH became 08:50Z
+    = 16:50 local — ten minutes before the task fired. A number that drifts with
+    measured evidence does not belong in a printed string.
+    """
+    import ast
+    from pathlib import Path
+
+    from backend import config as _config
+    from scripts import run_night_launcher as R
+
+    src = Path(R.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef)):
+            body = node.body
+            if (body and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                node.body = body[1:] or [ast.Pass()]
+    code = ast.unparse(tree)
+    assert "/ST 17:00" not in code, "the refused start time is still registered"
+    assert "IIF1_LAUNCHER_LOCAL_START_TIME" in code
+    # and the config value is a wall-clock HH:MM a human can paste
+    hh, mm = _config.IIF1_LAUNCHER_LOCAL_START_TIME.split(":")
+    assert 0 <= int(hh) <= 23 and 0 <= int(mm) <= 59
+
+
+def test_the_printed_margin_is_derived_and_refuses_rather_than_guessing():
+    """A guard that cannot see is not a guard that passed."""
+    from scripts import run_night_launcher as R
+
+    broken = R._margin_line("not a time")
+    assert "CANNOT DETERMINE" in broken
+    assert "+" not in broken.split("CANNOT DETERMINE")[1][:40]
+
+
+def test_the_launch_boundary_is_the_run_boundary_minus_the_assembly(
+        receipts, launches):
+    """THE ARITHMETIC THAT MADE 17:00 TOO LATE, pinned.
+
+    Not a clock time — a clock time in a test is a defect report with a date on
+    it, and the machine this task is registered on is UTC+8 while CI is UTC. The
+    identity is what generalises: latest safe LAUNCH is the latest safe RUN
+    START minus the assembly allowance, and the run start is the open minus the
+    duration bound. Every launch receipt from 2026-09-01 shows the consequence
+    at -10.0 minutes.
+    """
+    now = datetime(2026, 8, 18, 9, 0, tzinfo=timezone.utc)
+    d = L.evaluate_launch(now=now, receipts_dir=receipts,
+                          launch_dir=launches)["derived"]
+    next_open = datetime.fromisoformat(d["next_open_utc"])
+    run_start = datetime.fromisoformat(d["latest_safe_run_start_utc"])
+    launch = datetime.fromisoformat(d["latest_safe_launch_utc"])
+    assert run_start == next_open - timedelta(minutes=d["decision_minutes"])
+    assert launch == run_start - timedelta(
+        minutes=d["assembly_allowance"]["value"])
+    assert d["launch_margin_minutes"] == pytest.approx(
+        (launch - now).total_seconds() / 60.0, abs=0.1)

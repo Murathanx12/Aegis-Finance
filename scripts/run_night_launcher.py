@@ -43,6 +43,7 @@ import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 
+from backend import config as _config
 from backend.services import night_launcher as L
 
 logger = logging.getLogger(__name__)
@@ -299,6 +300,42 @@ def main(argv: list[str] | None = None) -> int:
     return proc.returncode
 
 
+def _margin_line(local_hhmm: str) -> str:
+    """What margin the registered start time leaves at the NEXT session.
+
+    DERIVED, never asserted. The 2026-09-18 finding was not that the launcher's
+    arithmetic was wrong -- it was right, and it was written into a launch
+    receipt nobody opened while every night from 2026-09-01 was silently
+    refused. A number a human reads at the moment they paste the registration is
+    worth more than the same number in a file.
+
+    Spends nothing and writes nothing: `evaluate_launch(require_writable=False)`
+    is pure derivation. A failure to derive is reported as CANNOT DETERMINE
+    rather than as a margin, because a check that did not run is not a check
+    that passed.
+    """
+    from datetime import datetime, timedelta, timezone
+    try:
+        hh, mm = (int(x) for x in local_hhmm.split(":"))
+        local_now = datetime.now().astimezone()
+        at = local_now.replace(hour=hh, minute=mm, second=0, microsecond=0)
+        if at <= local_now:
+            at += timedelta(days=1)
+        rep = L.evaluate_launch(now=at.astimezone(timezone.utc),
+                                require_writable=False)
+        d = rep["derived"]
+        codes = [r["code"] for r in rep["refusals"]]
+        line = (f"\n  margin at {local_hhmm} local on {at.date()}: "
+                f"{d['launch_margin_minutes']:+.1f} min "
+                f"(latest safe launch {d['latest_safe_launch_utc']}; run bound "
+                f"{d['decision_minutes']:.0f} min; assembly "
+                f"{d['assembly_allowance']['value']:.0f} min)")
+        return line + (f"\n  !! would STILL refuse: {codes}" if codes else "")
+    except Exception as exc:                                       # noqa: BLE001
+        return (f"\n  margin at {local_hhmm} local: CANNOT DETERMINE "
+                f"({type(exc).__name__}: {exc})")
+
+
 def _print_schtasks() -> int:
     """Print the registration. Deliberately does not run it."""
     import os
@@ -310,11 +347,23 @@ def _print_schtasks() -> int:
 Two properties before this is pasted:
 
   * The task time is WALL CLOCK and the opening bell is not. From
-    2026-11-01 the same 17:00 fires an hour later relative to the bell.
+    2026-11-01 the same start fires an hour later relative to the bell.
     The launcher RE-DERIVES its window at every firing and will refuse
     rather than run into the open, so the failure mode is a lost night
     and a receipt saying why — not a contaminated one. Re-check the
     margin after each DST change anyway.
+
+  * 17:00 STOPPED FITTING AND NOBODY SAW IT (found 2026-09-18). Every
+    launch receipt from 2026-09-01 onward says PAST_LATEST_SAFE_LAUNCH
+    at a margin of -10.0 minutes. As the measured worst completed night
+    grew, `duration_bound = worst x 2.0` reached 235 min, the latest safe
+    RUN START moved to 09:35Z, and minus the 45-minute assembly allowance
+    the latest safe LAUNCH became 08:50Z = 16:50 local. The task fired at
+    09:00Z. Ten minutes late, three weeks running, into a receipt nobody
+    opened. The time now comes from
+    `config.IIF1_LAUNCHER_LOCAL_START_TIME` and the CURRENT margin at
+    that time is printed below, because the arithmetic was never the
+    problem — the arithmetic was right.
 
   * The task runs the LAUNCHER, which decides. It does not run a night.
     Whether a night happens is `evaluate_launch`'s verdict plus the
@@ -358,19 +407,22 @@ Two properties before this is pasted:
     check catches the careless terminal `--scheduled`, not a determined
     copy-paste.
 """)
+    st = _config.IIF1_LAUNCHER_LOCAL_START_TIME
     print(f'  schtasks /Create /TN "AegisIIF1NightLauncher" /SC WEEKLY '
-          f'/D MON,TUE,WED,THU,FRI /ST 17:00 /TR '
+          f'/D MON,TUE,WED,THU,FRI /ST {st} /TR '
           f'"cmd /c cd /d {root} && '
           f'python -m scripts.run_night_launcher --scheduled < '
           f'{root}\\backend\\data\\optimus\\empty_stdin.txt >> '
           f'{root}\\backend\\data\\optimus\\launcher.log 2>&1"')
     print("\n  Already registered? Change it in place rather than "
-          "re-registering:\n")
+          "re-registering — and the START TIME is the half that matters:\n")
+    print(f'  schtasks /Change /TN "AegisIIF1NightLauncher" /ST {st}')
     print(f'  schtasks /Change /TN "AegisIIF1NightLauncher" /TR '
           f'"cmd /c cd /d {root} && '
           f'python -m scripts.run_night_launcher --scheduled < '
           f'{root}\\backend\\data\\optimus\\empty_stdin.txt >> '
           f'{root}\\backend\\data\\optimus\\launcher.log 2>&1"')
+    print(_margin_line(st))
     print("""
   WEEKLY/MON-FRI rather than DAILY is a coarse pre-filter only. It is not
   the calendar: the launcher reads XNYS and refuses holidays itself. A

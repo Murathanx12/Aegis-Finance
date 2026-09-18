@@ -2568,6 +2568,34 @@ TERMINAL_MIRROR_ARTEFACTS: tuple[tuple[str, str, int], ...] = (
 TERMINAL_MIRROR_MAX_BYTES = 8 * 1024 * 1024
 
 
+# ── THE IIF1 NIGHT LAUNCHER'S WALL-CLOCK START (chunk 16a, 2026-09-18) ───────
+#
+# MEASURED, from the launch receipts themselves. `AegisIIF1NightLauncher` is
+# registered WEEKLY MON-FRI at 17:00 local and has refused
+# `PAST_LATEST_SAFE_LAUNCH` with a margin of **-10.0 minutes** on every session
+# date whose receipt survives from 2026-09-01 onward. The arithmetic, in the
+# receipt's own numbers, for a US session on EDT:
+#
+#     next_open                13:30Z   (09:30 ET)
+#     - duration_bound         235 min  (worst completed night 117.48 x 2.0)
+#     = latest safe RUN START  09:35Z
+#     - assembly_allowance      45 min  (MAX_DECISION_LAG_MINUTES; CAP_BINDS)
+#     = latest safe LAUNCH     08:50Z = 16:50 local (UTC+8)
+#
+# and the task fires at 09:00Z = 17:00 local. Ten minutes late, every time.
+#
+# 16:00 rather than 16:50, and the reason is the safety factor. The duration
+# bound is `worst completed night x 2.0`, so every extra minute a future night
+# takes costs TWO minutes of launch window. Registering 16:50 buys zero margin
+# and the very next night that runs a minute slower than 117.48 breaks it again;
+# 16:00 leaves +50 min, which tolerates a worst completed night up to ~142 min.
+# Verified by simulation against the live derivation (spends nothing):
+# 17:00 -> -10.0, 16:50 -> 0.0, 16:30 -> +20.0, 16:00 -> +50.0.
+#
+# EDT is the binding case. From 2026-11-01 the open is 14:30Z and the same
+# 16:00 leaves +110 min, so one number works on both sides of the change.
+IIF1_LAUNCHER_LOCAL_START_TIME = "16:00"
+
 # ── THE DAILY PASS'S OWN BOXES (chunk 16a, 2026-09-18) ───────────────────────
 #
 # MEASURED. The `AegisDailyPass` run of 2026-09-14 06:30 entered its analyst
