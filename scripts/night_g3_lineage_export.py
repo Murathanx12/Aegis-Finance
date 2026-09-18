@@ -180,16 +180,36 @@ def _jsonl(path: Path):
 
 
 def active_lineage(*, path: Path | None = None) -> dict:
-    """The one lineage `E5_stopping_rules` marked ACTIVE. Refuses if not exactly one."""
-    rows = [r for r in _jsonl(path or (run_dir() / VERDICTS))
-            if r.get("verdict") == "ACTIVE"]
+    """The one lineage `E5_stopping_rules` marked ACTIVE. Refuses if not exactly one.
+
+    The verdict file is APPEND-ONLY, one row per lineage per pass
+    (`night_stopping_rules.append_verdicts`), and the writer's own contract is
+    "latest wins per lineage". Until 2026-09-18 this guard counted ROWS: after
+    the lab's nightly pass had appended the same ACTIVE lineage three times it
+    reported "3 lineage(s) marked ACTIVE" -- an ambiguity that did not exist,
+    and one that grew by a row every night. It now takes each lineage's latest
+    row (by `utc`, else file order) and counts DISTINCT lineages, so a lineage
+    the latest pass demoted is no longer ACTIVE and one re-affirmed nightly is
+    still exactly one.
+    """
+    latest: dict[str, tuple[int, str, dict]] = {}
+    for i, r in enumerate(_jsonl(path or (run_dir() / VERDICTS))):
+        lin = str(r.get("lineage") or "")
+        if not lin:
+            continue
+        key = (i, str(r.get("utc") or ""), r)
+        prev = latest.get(lin)
+        if prev is None or key[1] > prev[1] or (key[1] == prev[1] and i > prev[0]):
+            latest[lin] = key
+    rows = [t[2] for t in latest.values() if t[2].get("verdict") == "ACTIVE"]
     if len(rows) != 1:
         raise LineageUnavailable(
             f"{len(rows)} lineage(s) marked ACTIVE in {VERDICTS}, not 1 "
-            f"({[r.get('lineage') for r in rows]}). This job freezes THE "
-            f"surviving lineage; with none there is nothing to freeze, and with "
-            f"several the choice is a decision somebody has to take on the "
-            f"record rather than a `[0]` in a script.")
+            f"({[r.get('lineage') for r in rows]}; latest row per lineage). "
+            f"This job freezes THE surviving lineage; with none there is "
+            f"nothing to freeze, and with several the choice is a decision "
+            f"somebody has to take on the record rather than a `[0]` in a "
+            f"script.")
     return rows[0]
 
 

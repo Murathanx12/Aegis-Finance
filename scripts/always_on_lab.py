@@ -164,6 +164,11 @@ def stop_path() -> Path:
     return out_dir() / "STOP"
 
 
+def model_server_hold_path() -> Path:
+    """The operator's hold on the lab's starter (`LAB_MODEL_SERVER_HOLD_NAME`)."""
+    return data_dir() / str(_config.LAB_MODEL_SERVER_HOLD_NAME)
+
+
 def _write_atomic(path: Path, payload: dict) -> None:
     """`os.replace` over a sibling temp file — never a bare `write_text`.
 
@@ -577,6 +582,7 @@ def _as_dt(value) -> datetime | None:
 #: a test can assert on the NAME instead of on a sentence.
 MODEL_SERVER_REFUSALS = (
     "LAB_STARTS_MODEL_SERVER_DISABLED",
+    "OPERATOR_HOLD",
     "ALREADY_LISTENING",
     "FOREIGN_SERVER_UP",
     "POWER_PLAN_ALLOWS_SLEEP",
@@ -622,6 +628,12 @@ def ensure_model_server(state: "LabState", *, now: datetime | None = None,
         return {**base, "reason": "LAB_STARTS_MODEL_SERVER_DISABLED",
                 "detail": ("config.LAB_STARTS_MODEL_SERVER is off; the desktop "
                            "app and a human are the only starters")}
+    hold = model_server_hold_path()
+    if hold.exists():
+        return {**base, "reason": "OPERATOR_HOLD",
+                "detail": (f"{hold} exists: an operator is holding the server "
+                           f"down (a suite run, a memory recipe); the lab "
+                           f"starts nothing until it is deleted")}
     if server is None:
         try:
             server = model_status()
@@ -1399,6 +1411,7 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
         "model_server_start_cap_per_day": int(
             _config.LAB_MODEL_SERVER_MAX_STARTS_PER_DAY),
         "lab_starts_model_server": bool(_config.LAB_STARTS_MODEL_SERVER),
+        "model_server_hold": model_server_hold_path().exists(),
         "llama_server": {"up": bool(model.get("listening")),
                          "ready": bool(model.get("ready")),
                          "owned_by_us": bool(model.get("started_by_aegis")),
@@ -1781,7 +1794,7 @@ __all__ = ["ACCEPTANCE_CRITERIA", "HANDLERS", "LOOPS", "MODEL_SERVER_REFUSALS",
            "LabState", "LoopTimeout", "acceptance_report", "acquire_lock",
            "cadence_admits", "calendar_tickers", "call_boxed", "check_power",
            "data_dir", "dispatch_job", "ensure_model_server", "learned_line",
-           "lock_holder",
+           "lock_holder", "model_server_hold_path",
            "lock_path", "main", "model_status", "news_sources", "out_dir",
            "parsed_rate_limit", "pid_alive", "pid_names_lab", "plan",
            "power_refusal", "print_plan", "pull_news", "read_lock",

@@ -63,6 +63,25 @@ def test_two_active_lineages_refuse_rather_than_taking_the_first(tmp_path):
         GX.active_lineage(path=p)
 
 
+def test_the_same_lineage_affirmed_on_three_nights_is_one_lineage_and_the_latest_row_wins(tmp_path):
+    # 2026-09-18: the lab's nightly stopping-rules pass APPENDS a verdict row per
+    # lineage; three ACTIVE rows for one lineage are one lineage, not three.
+    p = _write_jsonl(tmp_path / "v.jsonl", [
+        _verdict_row(utc="2026-09-12T13:38:02+00:00", dsr=0.97),
+        _verdict_row(utc="2026-09-17T05:52:41+00:00", dsr=0.99),
+        _verdict_row(utc="2026-09-15T03:26:54+00:00", dsr=0.98)])
+    v = GX.active_lineage(path=p)
+    assert v["utc"] == "2026-09-17T05:52:41+00:00" and v["dsr"] == 0.99
+
+
+def test_a_lineage_the_latest_pass_demoted_is_no_longer_active(tmp_path):
+    p = _write_jsonl(tmp_path / "v.jsonl", [
+        _verdict_row(utc="2026-09-12T13:38:02+00:00"),
+        _verdict_row(utc="2026-09-15T03:26:54+00:00", verdict="CANNOT_DETERMINE")])
+    with pytest.raises(GX.LineageUnavailable, match="0 lineage"):
+        GX.active_lineage(path=p)
+
+
 def test_a_missing_receipt_names_the_file_and_says_the_search_never_reruns(tmp_path):
     with pytest.raises(GX.LineageUnavailable, match="does not re-run the search"):
         GX.active_lineage(path=tmp_path / "absent.jsonl")

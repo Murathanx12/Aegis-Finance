@@ -623,6 +623,25 @@ def _starter(monkeypatch, *, listening_after: bool = True, **kw) -> SpyStarter:
     return spy
 
 
+def test_an_operator_hold_file_stops_the_lab_from_starting_the_server(lab, monkeypatch):
+    """The fast suite runs with the server STOPPED (9.5-12 GB resident). A lab
+    that is a starter would bring it back within one heartbeat and undo the
+    recipe mid-suite; the hold file is the operator's word that it must not."""
+    spy = _starter(monkeypatch)
+    hold = L.model_server_hold_path()
+    hold.parent.mkdir(parents=True, exist_ok=True)
+    hold.write_text("suite running", encoding="utf-8")
+    state = L.LabState()
+    out = L.ensure_model_server(state)
+    assert spy.calls == 0, "the lab started a server through an operator hold"
+    assert out["started"] is False and out["reason"] == "OPERATOR_HOLD"
+    assert out["reason"] in L.MODEL_SERVER_REFUSALS
+    assert L.status_payload(state)["model_server_hold"] is True
+    hold.unlink()
+    assert L.ensure_model_server(state)["started"] is True
+    assert L.status_payload(state)["model_server_hold"] is False
+
+
 def test_the_lab_starts_the_model_server_when_nothing_is_listening(lab, monkeypatch):
     """2026-09-18, MEASURED. The PC rebooted at 06:57 for Windows Update, the
     lab came back from the Startup folder, and every model loop reported

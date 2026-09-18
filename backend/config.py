@@ -2757,6 +2757,15 @@ LAB_STARTS_MODEL_SERVER = True
 #: where a reader can see it, rather than a silent restart every five minutes.
 LAB_MODEL_SERVER_MAX_STARTS_PER_DAY = 3
 
+#: THE OPERATOR HOLD. A file of this name under `backend/data/optimus` makes the
+#: lab refuse to start the server (`OPERATOR_HOLD`) for as long as it exists.
+#: Needed the moment the lab became a starter: the fast suite must run with the
+#: server STOPPED (9.5-12 GB resident; suites were killed for low memory on
+#: 09-14), and a lab that restarts the server within one heartbeat of the stop
+#: would undo the recipe mid-suite. Touch it, stop the server, run the suite,
+#: delete it. The lab's status names the hold while it stands.
+LAB_MODEL_SERVER_HOLD_NAME = "MODEL_SERVER_HOLD"
+
 #: Seconds the lab waits for `/health` after a start. ZERO on purpose: the
 #: idle-GPU queue's own box is 60 s and a multi-GB model takes longer than that
 #: to load, so the lab starts the server, records the start, and lets the NEXT
