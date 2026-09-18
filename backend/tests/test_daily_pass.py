@@ -463,6 +463,22 @@ def test_a_boxed_out_pass_still_writes_its_receipt_and_exits_zero(
     assert written["step_status_counts"]["timeout"] == len(DP.STEPS)
 
 
+def test_the_sibling_scan_excludes_this_process_and_its_launcher_parent():
+    """2026-09-18: the venv's python.exe is a redirector that spawns the real
+    interpreter; both carry `-m scripts.daily_pass`. The first pass on the boxed
+    code refused ITSELF ("running as pid(s) [24924]", its own launcher)."""
+    table = "\n".join([
+        "100	2026-09-18T05:45:31Z	python.exe -u -m scripts.daily_pass --force",   # my launcher
+        "101	2026-09-18T05:45:31Z	python.exe -u -m scripts.daily_pass --force",   # me
+        "102	2026-09-14T22:30:00Z	python.exe -m scripts.daily_pass --scheduled",  # a real sibling
+        "103	2026-09-18T04:00:00Z	python.exe -m scripts.always_on_lab",           # not a pass
+        "garbage line",
+    ])
+    rows = DP.parse_process_table(table, me=101, parent=100)
+    assert [r["pid"] for r in rows] == [102]
+    assert rows[0]["created_utc"] == "2026-09-14T22:30:00Z"
+
+
 def test_a_seven_hour_old_sibling_is_killed_by_pid_and_named_in_the_receipt(
         out, calls, rth_open, monkeypatch) -> None:
     now = datetime.now(timezone.utc)

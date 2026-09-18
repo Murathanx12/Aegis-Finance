@@ -327,14 +327,30 @@ def scan_daily_passes() -> list[dict]:
                     capture_output=True, text=True, timeout=45)
     except Exception:                                              # noqa: BLE001
         return []
-    me = os.getpid()
+    return parse_process_table(r.stdout or "")
+
+
+def parse_process_table(text: str, *, me: int | None = None,
+                        parent: int | None = None) -> list[dict]:
+    """The rows of a `pid<TAB>created<TAB>cmdline` table that are OTHER passes.
+
+    "Other" excludes this process AND its parent. The parent matters on this
+    machine: `.venv/Scripts/python.exe` is a REDIRECTOR that spawns the real
+    interpreter as a child, and both carry `-m scripts.daily_pass` on their
+    command line. On 2026-09-18 the first pass on the boxed code refused itself
+    -- `another daily pass is running as pid(s) [24924]` was its own launcher,
+    forty-five seconds old -- and a driver that cannot start is the 09-14
+    stall with a better error message.
+    """
+    me = os.getpid() if me is None else int(me)
+    parent = os.getppid() if parent is None else int(parent)
     out: list[dict] = []
-    for line in (r.stdout or "").splitlines():
+    for line in text.splitlines():
         parts = line.split("	")
         if len(parts) < 3 or not parts[0].strip().isdigit():
             continue
         pid = int(parts[0])
-        if pid == me or "scripts.daily_pass" not in (parts[2] or ""):
+        if pid in (me, parent) or "scripts.daily_pass" not in (parts[2] or ""):
             continue
         out.append({"pid": pid, "created_utc": parts[1].strip(),
                     "cmdline": (parts[2] or "")[:400]})
@@ -853,6 +869,7 @@ def main(argv: list[str] | None = None) -> int:
 __all__ = ["INTRADAY_CADENCES", "STATUSES", "STEPS", "SamePassAlreadyRan",
            "SiblingPassRunning", "cadence_list", "call_boxed",
            "clear_stale_siblings", "existing_receipts", "git_head", "kill_pid",
+           "parse_process_table",
            "main", "out_dir", "plan", "print_receipt", "pull_all_news",
            "read_coverage", "receipt_path", "run_analyst_snapshot",
            "run_cadence_pass", "run_daily_pass", "run_date", "run_e1_append",
