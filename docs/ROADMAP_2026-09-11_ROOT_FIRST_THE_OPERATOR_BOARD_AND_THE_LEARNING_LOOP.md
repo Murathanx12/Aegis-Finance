@@ -913,6 +913,30 @@ clause before a new idea is registered · nothing LLM-derived allocates, still.
 | **22** | re-tests 4 and 5 (the $10M re-audit; TAQ costs on the §22 graduates) · Kronos as a NN-lab arm behind a prereg · NautilusTrader cross-check for lane D | filed results, not activity |
 | terminal | the fleet deploy (Murat's lines, unchanged) · delete `aat-loop-staging` · the overnight execution rule in the allocator · ~~the seal-authority 404 client~~ (benign: 2026-09-19 is a Saturday; the loops poll for a weekend book) | `SEAL AUTHORITY ALLOCATED day=` in the logs |
 
+### 14.4b THE NIGHT QUEUE, after chunk 19
+
+Two jobs join `scripts/night_factory_jobs.JOBS` in chunk 19. Neither is in
+`night_factory.QUEUE`'s legacy default list — that list is the 09-08/09-09
+night — so both are queued by name, with an explicit box. **A job killed at its
+time limit writes no receipt at all** (2026-09-10, G3 at generation 340), so
+these are the measured/projected boxes and not a default:
+
+```
+NIGHT_QUEUE="X5_exclusion_screen:120,N9_library_autopsy:90" python -m scripts.night_factory
+```
+
+| job | stage | box | what it needs | what it refuses |
+|---|---|---|---|---|
+| `X5_exclusion_screen` | `pnl` | **120 min** (it rebuilds Book F's monthly replay four times plus four rank panels; the three-book EFG replay alone measured 829 s) | `wrds/crsp_dsf_<year>.parquet`, `wrds/jkp_*`, and per screen: `wrds/tr13f_s34_<year>.parquet` + `wrds/tr13f_permno_link.json` (io_level, io_abn) or `learner/features_options.parquet` (skew_25d, skew_resid) | a screen whose rank sources are absent is REFUSED BY NAME with the paths it looked for, and is still NAMED in the Holm block; `--floor-usd` moves the book, the screen and both controls together |
+| `N9_library_autopsy` | `signal` | **90 min** (resumable by cursor; a killed run continues rather than re-billing) | the incumbent autopsy JSONL under `research_gym/`, bars for the held panel, and a reader | `--reader local` refuses by name when no server is listening; the run stops at `config.N9_LIBRARY_AUTOPSY_MAX_USD` and prints the spend the CALL LEDGER reports, never a constant |
+
+`X5` is a **defensive overlay on an existing book**, not a new selector: it adds
+nothing to the one-selector bottleneck and may not be read as a return source
+(§26/§27 close that and this job never reopened it). `N9` files **candidates**;
+a candidate enters the precursor library only through `library_measure_*` +
+`library_placebo_null`, because §37/§41's lesson is that a verdict which kills
+or admits is the hardest kind to notice being wrong.
+
 ### 14.5 WHAT MURAT DOES (only what Claude Code cannot)
 
 1. **Run the fleet deploy lines** (`aegis-alpha-terminal/docs/DEPLOY_PLAN_2026-09-14.md` §5) —

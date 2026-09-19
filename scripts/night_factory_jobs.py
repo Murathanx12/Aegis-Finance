@@ -1620,6 +1620,26 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # search with a new multiplicity budget.
         "G3_lineage_export": _lazy("scripts.night_g3_lineage_export",
                                    "G3_lineage_export"),
+        # 2026-09-19, chunk 19 (re-test 1 of the failure thesis): the
+        # EXCLUSION SCREEN `NEGATIVE_RESULTS` §26/§27/§28 name three times and
+        # nobody ever ran. It builds no new book -- it removes the worst decile
+        # of io_level / io_abn / skew_25d / skew_resid from Book F's own pool
+        # and reads the difference against BOTH the unscreened book and a
+        # RANDOM exclusion of the same count. A screen whose rank sources are
+        # not on the checkout refuses BY NAME with the paths it looked for.
+        # `--floor-usd` moves the book, the screen and both controls together.
+        "X5_exclusion_screen": _lazy("scripts.night_x5_exclusion_screen",
+                                     "X5_exclusion_screen"),
+        # 2026-09-19, chunk 19 (re-test 3): §51 measured the precursor library
+        # warning on 15% of exceptional moves -- the base rate. This runs the
+        # EXISTING autopsy machinery over the UNWARNED ones and files what the
+        # reader proposes as CANDIDATES, never as library members: a candidate
+        # enters the library only through `library_measure_*` +
+        # `library_placebo_null` (§37/§41 -- a verdict that kills or admits is
+        # the hardest to notice being wrong). Capped in dollars by
+        # `config.N9_LIBRARY_AUTOPSY_MAX_USD`, spend read from the call ledger.
+        "N9_library_autopsy": _lazy("scripts.night_n9_library_autopsy",
+                                    "N9_library_autopsy"),
         "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         "B_verdict": _lazy("scripts.night_b_verdict", "B_verdict"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
@@ -1705,6 +1725,14 @@ JOB_STAGES = {
     "G_price_scaled": "pnl",
     # The 09-14 family prices books the same way: net excess vs a twin.
     "B_books_hi_replay": "pnl",
+    # X5 prices a book (net monthly excess against two controls), so it is
+    # `pnl` for the same reason the replays are.
+    "X5_exclusion_screen": "pnl",
+    # N9 reads PRICES to find the exceptional moves and proposes RULES about
+    # them; it composes no portfolio and charges no cost. The candidates it
+    # files are a `signal`-stage artefact and nothing downstream may read them
+    # as weights.
+    "N9_library_autopsy": "signal",
     # A collector produces RAW rows and prices nothing; the stage contract is
     # what stops it ever reading a `weights` or `pnl` artefact.
     "H1_hiring_pull": "raw",
@@ -1728,7 +1756,7 @@ TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 #: jobs whose script checkpoints per unit of work and accepts `--resume`.
 #: Grow this as long jobs gain checkpoints; a job NOT in here is restarted from
 #: zero, which is honest but wasteful, and the receipt says which happened.
-RESUMABLE = {"G3_evolve_v2", "L2_typed_events"}
+RESUMABLE = {"G3_evolve_v2", "L2_typed_events", "N9_library_autopsy"}
 
 
 def main(argv=None) -> int:
@@ -1744,6 +1772,21 @@ def main(argv=None) -> int:
     # such parameter is a TypeError three hours into the night, which is exactly
     # the class of failure this flag exists to prevent.
     ap.add_argument("--resume", action="store_true")
+    # chunk 19. Each flag belongs to exactly one job and is forwarded only to
+    # it: a flag forwarded to a function that has no such parameter is a
+    # TypeError hours into a night, which is the class of failure `--resume`'s
+    # own guard above exists to prevent.
+    ap.add_argument("--floor-usd", type=float, default=None,
+                    help="X5: the dollar-volume floor. Moves the book, the "
+                         "screen and BOTH controls together.")
+    ap.add_argument("--max-usd", type=float, default=None,
+                    help="N9: the per-RUN dollar cap. Defaults to "
+                         "config.N9_LIBRARY_AUTOPSY_MAX_USD.")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="N9: concurrent reader calls.")
+    ap.add_argument("--reader", default=None, choices=(None, "deepseek", "local"),
+                    help="N9: which reader autopsies. `local` refuses by name "
+                         "when no server is listening.")
     a = ap.parse_args(argv)
     if a.resume and a.job not in RESUMABLE:
         print(f"REFUSED: {a.job} has no checkpoint to resume from "
@@ -1768,6 +1811,11 @@ def main(argv=None) -> int:
                    "G_price_scaled", "G3_lineage_export", "H1_hiring_pull",
                    "B_books_hi_replay"):
         payload = fn(smoke=a.smoke)
+    elif a.job == "X5_exclusion_screen":
+        payload = fn(smoke=a.smoke, floor_usd=a.floor_usd)
+    elif a.job == "N9_library_autopsy":
+        payload = fn(smoke=a.smoke, run=a.run, max_usd=a.max_usd,
+                     workers=a.workers, reader=a.reader)
     elif a.job == "L2_typed_events":
         # `--resume` is not forwarded ON PURPOSE: L2's cursor makes every run a
         # continuation, so there is no non-resuming mode to select. It is in
