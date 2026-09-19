@@ -828,3 +828,116 @@ half; the chunk table above is the resume point.
     per era. A method with no backtest of its own past errors prints CANNOT DETERMINE for
     its hit rate; it does not print a bare point. The price-target audit (O11), the Brier
     ledger (M4) and Headline Arena (M6) are the three instruments of this rule.
+
+---
+
+## 14. THE ROOT-CAUSE AMENDMENT — 2026-09-19 (Fable, from six Sonnet reads; Murat's brief of the same morning)
+
+Murat, condensed: *"we work on the roadmap a lot but we make no decisions. First settle HOW we
+work: value proposition, the root of the problem, how it has been solved (patents, research,
+public data). Sonnet researches, Opus builds, Fable validates and writes the roadmap. The engine
+must DECIDE — buy, short, size, why. Strip the educational disclaimers for my own build. Social,
+video and earnings-call text as inputs. Attach existing repos, do not rebuild. A thesis on every
+closed family: doable? why did it fail? would something else have worked?"*
+
+The six reads are under `docs/research_notes/2026-09-19/` (README there lists them). The
+external GPT dossier Murat supplied (`Downloads/deep-research-report.md`, 2026-09-18) reaches
+the same diagnosis as §0b: **the bottleneck is the artery from decision to paper account, not
+discovery.** This amendment changes the order of work accordingly and adds nothing that is not
+already licensed by a receipt. The one-file synthesis for any future session is
+`docs/AEGIS_CONTEXT_DOSSIER_2026-09-19.md`.
+
+### 14.1 The scoreboard, 2026-09-19 12:00 HKT (replaces the §0 fleet line)
+
+| | |
+|---|---|
+| RESULT IMPROVEMENT | **NONE since 09-13.** F stays CONDITIONAL; nothing has traded on it. |
+| best forward paper strategy | none — fleet **$440,907** live (hack1 93,673 · hack3 80,947 · hack4 89,362 · hack5 92,239 · hack6 84,686); 09-13 $452,832; 09-18 $448,555. Never deployed. hack2 retired (401 by design). |
+| uptime | `AegisDailyPass` and `AegisIIF1NightLauncher` both 0x80070520 today (interactive-only tasks, session ended overnight); 0x80070420 for four days last week; the lab died and restarted three times since 09-18 13:41 with no exit reason recorded. The lab DID start the model server itself today (chunk 16a works). |
+| LLM spend | DeepSeek balance $7.18 → **$56.98** (Murat's $50 top-up, 09-19); lab $0.00/$3.00 every day (local model). |
+| tests / CI | 9,853 local (09-18), CI green `48fcf4b5`, docs pushed `92efb9d8`. |
+
+### 14.2 HOW WE WORK — the loop, written down once
+
+**Value proposition (personal build first):** every morning the system states, from registered
+evidence only, *what it would buy or short today, at what size, why, and what would make it
+wrong* — and it grades yesterday's statement against what happened. That sentence is the
+product; the fleet, the lab and the ledger exist to produce and grade it. The public build is
+the same sentence with the disclaimers back on.
+
+**The loop (one question at a time, no step skipped):**
+
+1. **A question enters** as one line in the registry with its corpse check — `brain_query` +
+   `aegis_postmortems` + `NEGATIVE_RESULTS.md` — and a verdict class before any data is read:
+   ALREADY_TESTED (read the receipt, do not re-run) · OPEN_AND_CHEAP · OPEN_BUT_NEEDS_DATA ·
+   NOT_A_HYPOTHESIS (what observation separates it from factor beta?).
+2. **Sonnet researches** the open ones: literature, patents, public data, what exists in the
+   repo, and writes a note with a build spec (the six notes of 09-19 are the template).
+3. **Fable** turns the note into a roadmap chunk + an UNSIGNED pre-registration draft
+   (`docs/TRIALS/TRIAL-DRAFT-*`), with the family size declared and the twin named.
+4. **Opus builds** the chunk — a night job, a book with twins, a pipe, a page — with tests,
+   committed locally, never pushed.
+5. **Fable validates**: reads the diff against the spec, runs the suite under the memory
+   recipe (hold file → server stopped → suite → server unbound), pushes the verified SHA,
+   watches CI, reads the first receipt.
+6. **The night factory / the lab runs it** unattended; receipts carry the registered
+   construction; the scoreboard changes only when a receipt does.
+7. **Paper capital moves by rule** (the allocator: cut on drawdown, promote on twin-excess);
+   the Decision Contract records what was decided, delivered, seen, refused, filled, scored.
+
+**Rules earned this round:** a scheduled task is not an uptime guarantee (two failure codes in
+one week; the lab owns its clock from chunk 17) · a verdict's construction is a test input
+(the ledger has six ruler-caused kills) · "closed" families are read for their own reopening
+clause before a new idea is registered · nothing LLM-derived allocates, still.
+
+### 14.3 What the six reads changed (decisions, each with its receipt)
+
+| read | decision |
+|---|---|
+| **failure thesis** (`research_failure_thesis.md`) | 57 entries: ~14 genuine mechanism deaths (stay closed), **six ruler-caused kills** (§32/34/36/38/40/41), the rest construction, data or process. **Five re-tests adopted, in this order:** (1) io_level / io_abn / skew as EXCLUSION SCREENS on existing long-only books (§26-28 flagged it three times, never run; $0); (2) a **13D event-window book** entering days 1-20 post-filing with the 13G placebo (the ledger's only placebo-confirmed positive event, §29-31); (3) LLM-autopsy precursor-library expansion (§51: 85% of exceptional moves unwarned; ~$0.001 each — the right use of the $50); (4) a $10M-floor re-audit of §35's ten adoptions and §22's KO-half graduates; (5) the TAQ cost curve on `fscore_lite` / `industry_mom`. |
+| **ideas adjudicated** (`research_murat_ideas_adjudicated.md`) | CXMT/Micron: not a hypothesis as a trade (MU −5.2% on 09-14 was a SOXX-wide day) but **a missing event class** — add a `foreign_entrant_capacity` vocabulary id and register `TRIAL-FOREIGN-ENTRANT-IC` ($0). Supplier discovery: §12 reopens only as event-conditioned daily links keyed to a typed guidance event (the social spec's `growth_constraint_cited`). Insider buys, congress, ARK: **accruing forward, do not re-register**. Options flow: closed institutionally (§27); retail UOA needs $99-199/mo data — not now. ICT ritual: a frozen mechanical FVG rule on Alpaca 1-min bars is testable in lane D's contract; the prior is low. Overnight: read the 08-23 receipt; the survivor is an execution rule (reduce exposure intraday, never overnight) — adopt it in the allocator. **Construction:** `ce_kelly` sizing exists and is correct (`arena/policies.py`) but runs in 1 of 10 books; register a second arena book, same selection, Kelly-sized vs the EW twin, declared `ic_prior` and `kelly_fraction`. |
+| **decision path** (`spec_decision_contract_and_path_audit.md`) | The engine already sizes (`investment_committee.compose_book`, kill conditions) and the fleet already refuses with a 43-class taxonomy; **no chat surface can reach either**, and the desktop Ask's system prompt forbids sizing. Build the Decision Contract on top of the existing numbers (spec §4: two new services, one copilot tool, one Ask route, one card) — no new model, no new capital risk. Personal mode = one backend flag + one frontend env var across 8 files (spec §5); the three export artefacts keep their disclaimer pending Murat. |
+| **infra & cost** (`research_infra_cost_audit.md`) | Railway: `selfless-courage` (website backend, healthy) + `loving-elegance` (5 loops online, hack2 down by design, **`aat-loop-staging` orphaned — delete it**, seal-authority online but taking 404s on `/2026-09-19.json` from a client on the wrong path). Dollars are dashboard-only (path in the note). DeepSeek burn $16.81 over 08-24→09-13 by balance snapshots; the lab spends $0. **The lab owns its clock** (spec §4.3: dispatch the daily pass at 06:30 and the night launcher at 16:00 local with receipt-keyed already-ran gates, boxed; `atexit` exit reason on the lock). |
+| **social/video** (`spec_social_video_pipeline.md`) | Phase 1 = Reddit comments (PRAW, free) + YouTube Data API (free quota) + SEC 8-K Ex.99 for calls; **Instagram has no lawful path (not built)**; X is pay-per-read (metered, off automatic cadence); transcripts need residential proxies at scale. Five variables with their nulls; new vocabulary id `growth_constraint_cited`; the seam is the existing `news_pull` registry + the local model with the enum on the wire. Needs Murat's keys. |
+| **repos** (`research_external_repos_round4.md`) | **Scrapling ATTACH_NOW** (BSD, fixes the 403-ing collector class); NautilusTrader ATTACH_LATER (LGPL, fill-level cross-check for lane D); Kronos ATTACH_LATER (MIT K-line transformer as a NN-lab arm behind a prereg); FreqTrade (GPL, ideas only, done 09-07), Ghostfolio, Hummingbot, Osiris (token-promotion supply chain) IGNORE; **Xfield could not be identified** — Murat to send the URL. |
+
+### 14.4 THE CHUNKS FROM HERE (one Opus at a time; Fable validates each)
+
+| chunk | contents | gate to the next |
+|---|---|---|
+| **17** (building 2026-09-19) | **the lab owns its clock** (infra spec §4.3-4.4) + exit reason on the lock · **personal mode** (decision spec §5, 8 files) · the overnight execution rule noted for the allocator (terminal repo, next terminal chunk) | the lab's own 06:30 and 16:00 receipts land two days running; `AEGIS_PERSONAL_MODE=1` hides every banner in the desktop build |
+| **18** | **the Decision Contract** (decision spec §4): `decision_contract.py`, `decision_ledger.py`, `step_decision_contract` in the morning, `get_todays_decisions` copilot tool, the `decisions` Ask route before the morning words, the IC card with falsifier + expiry | Murat asks the local model "what would you buy today" and reads engine-sized rows with kill conditions |
+| **19** | **re-tests 1, 3 and the Kelly book**: `X5_exclusion_screen` night job over the existing rank files; the LLM-autopsy library expansion under a $10 cap; the second arena book (`ce_kelly`, declared prior) with its EW twin; the `foreign_entrant_capacity` id + TRIAL-DRAFT-FOREIGN-ENTRANT | three receipts on the leaderboard, each with its twin |
+| **20** | **social phase 1** (social spec §3): Scrapling attached; Reddit comments + YouTube search via the registry; `growth_constraint_cited`; the five variables computed nightly into the panel; the shuffled-ticker and anonymised controls | the first `mention_velocity` and `stance_dispersion` columns on the E1 panel with their nulls (needs Murat's two keys) |
+| **21** | **re-test 2**: the 13D event-window book with the 13G placebo, at $3M and $10M with twins | a receipt with the placebo beside it |
+| **22** | re-tests 4 and 5 (the $10M re-audit; TAQ costs on the §22 graduates) · Kronos as a NN-lab arm behind a prereg · NautilusTrader cross-check for lane D | filed results, not activity |
+| terminal | the fleet deploy (Murat's lines, unchanged) · delete `aat-loop-staging` · the overnight execution rule in the allocator · the seal-authority 404 client | `SEAL AUTHORITY ALLOCATED day=` in the logs |
+
+### 14.5 WHAT MURAT DOES (only what Claude Code cannot)
+
+1. **Run the fleet deploy lines** (`aegis-alpha-terminal/docs/DEPLOY_PLAN_2026-09-14.md` §5) —
+   every day on the old engines costs the fleet thousands of paper dollars on a tracker artery
+   with no historical edge.
+2. On Railway: **delete `aat-loop-staging`**, and read the Usage tab of both projects once
+   (the note names the path); tell me the two monthly numbers.
+3. **Rotate the FRED key** that lived in `market-engine`'s history (fred.stlouisfed.org →
+   API keys); paste nothing here.
+4. **Two API keys for chunk 20**: a YouTube Data API v3 key (Google Cloud console) and a
+   Reddit script app (client id + secret), into `.env` under the names the spec gives.
+5. **Xfield**: send the URL or a screenshot; nobody can find it.
+6. Decide whether the three export artefacts (daily brief, tearsheet, guidance) keep their
+   disclaimer in the personal build (default: they keep it).
+7. Book G Amendment 1 (unchanged): adopt as a screen or not.
+
+### 14.6 MUST NOT REGRESS (added 2026-09-19)
+
+29. **A scheduled task is a fallback, never the clock.** Two distinct scheduler failure codes
+    in one week (0x80070420, 0x80070520); the supervisor that is "live whenever the PC is on"
+    dispatches its own time-of-day jobs with receipt-keyed gates.
+30. **A supervisor records why it died.** Three lab deaths with no exit reason; `atexit` +
+    the lock's `exit_reason`, and a kill by PID is a recorded reason too.
+31. **Read the reopening clause before registering an idea.** Three of Murat's nine ideas were
+    accruing forward or closed with a named reopener; a re-registration would have spent a
+    family slot for nothing.
+32. **An idle-queue job dates its outputs by the day** (09-18: three literal `RUN_DATE`s
+    overwrote committed receipts three nights running; AST test over `LAB_IDLE_QUEUE`).
