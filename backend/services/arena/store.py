@@ -79,7 +79,17 @@ def seed_book(spec, *, root: Path | None = None,
     with _LOCK:
         if p.exists():
             existing = json.loads(p.read_text(encoding="utf-8"))
-            if existing.get("config_hash") != spec.config_hash:
+            # 2026-09-20: the whole-file `config_hash` is the LEGACY identity.
+            # A seed that has migrated to book-v1 is identified by its own
+            # book fingerprint (checked next), so a change elsewhere in the
+            # file -- the 2026-09-20 seeding sentence for PROFIT_ALLOCATOR_v2 --
+            # must not refuse it. It did: `seed_all` on the deployed backend
+            # raised on ENGINE_BASELINE_v1 (seeded 08-21, migrated to book-v1)
+            # and never reached the tenth book. This is the 2026-08-23 defect
+            # ("a comment typed anywhere drifted all ten seeded books")
+            # surviving in the one function that writes inceptions.
+            if (existing.get("fingerprint_scheme") != "book-v1"
+                    and existing.get("config_hash") != spec.config_hash):
                 raise SeedRefused(
                     f"{spec.book_id} was seeded at {existing.get('seeded_at')} "
                     f"under config {str(existing.get('config_hash'))[:12]} and "

@@ -351,3 +351,49 @@ def test_status_book_fingerprint_is_truncated_not_whole():
         bfp = v.get("book_fingerprint")
         if bfp is not None:
             assert len(bfp) <= 12
+
+
+# --------------------------------------------------------------------------
+# 2026-09-20: the SEED path honours book-v1 identity too. On the deployed
+# backend `seed_all` refused ENGINE_BASELINE_v1 -- seeded 08-21, migrated to
+# book-v1 -- because the whole-file hash had moved (the seeding sentence for
+# PROFIT_ALLOCATOR_v2), and never reached the tenth book. A book-v1 seed is
+# identified by its own fingerprint; a legacy seed still by the file.
+# --------------------------------------------------------------------------
+def test_a_book_v1_seed_survives_a_whole_file_hash_move(tmp_path):
+    from backend.services.arena import store
+    s = next(iter(spec.active_specs().values()))
+    rec = store.seed_book(s, root=tmp_path)
+    assert rec["fingerprint_scheme"] == "book-v1"
+    p = store.seed_path(s.book_id, tmp_path)
+    moved = json.loads(p.read_text(encoding="utf-8"))
+    moved["config_hash"] = "0" * 64          # the FILE changed elsewhere
+    p.write_text(json.dumps(moved), encoding="utf-8")
+    again = store.seed_book(s, root=tmp_path)
+    assert again["seeded_at"] == rec["seeded_at"], "the inception did not move"
+
+
+def test_a_legacy_seed_still_refuses_a_whole_file_hash_move(tmp_path):
+    from backend.services.arena import store
+    s = next(iter(spec.active_specs().values()))
+    rec = store.seed_book(s, root=tmp_path)
+    p = store.seed_path(s.book_id, tmp_path)
+    legacy = json.loads(p.read_text(encoding="utf-8"))
+    legacy.pop("fingerprint_scheme", None)
+    legacy.pop("book_fingerprint", None)
+    legacy["config_hash"] = "0" * 64
+    p.write_text(json.dumps(legacy), encoding="utf-8")
+    with pytest.raises(store.SeedRefused, match="changed configuration"):
+        store.seed_book(s, root=tmp_path)
+
+
+def test_a_book_v1_seed_still_refuses_its_own_fingerprint_moving(tmp_path):
+    from backend.services.arena import store
+    s = next(iter(spec.active_specs().values()))
+    store.seed_book(s, root=tmp_path)
+    p = store.seed_path(s.book_id, tmp_path)
+    rec = json.loads(p.read_text(encoding="utf-8"))
+    rec["book_fingerprint"] = "f" * 64
+    p.write_text(json.dumps(rec), encoding="utf-8")
+    with pytest.raises(store.SeedRefused, match="changed rule"):
+        store.seed_book(s, root=tmp_path)

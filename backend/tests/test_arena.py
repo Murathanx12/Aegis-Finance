@@ -203,9 +203,14 @@ def test_seed_is_idempotent_and_refuses_a_moved_inception(root):
     assert rec1["simulation"] is True
     assert rec1["validation_status"] == "PRODUCT_EXPERIMENT"
 
+    # 2026-09-20: a seed written today is book-v1, so a "moved inception" is
+    # the BOOK's own fingerprint moving -- not the whole-file hash, which a
+    # sibling's edit moves without touching this book's rules.
     class Drifted:
         book_id = s.book_id
-        config_hash = "f" * 64
+        config_hash = s.config_hash
+        policy_fingerprint = s.policy_fingerprint
+        book_fingerprint = "f" * 64
     with pytest.raises(store.SeedRefused):
         store.seed_book(Drifted, root=root)
 
