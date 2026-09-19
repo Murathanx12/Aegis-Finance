@@ -1,4 +1,4 @@
-"""THE ALWAYS-ON LAB — one supervisor, ten loops, whenever the PC is on.
+"""THE ALWAYS-ON LAB — one supervisor, eleven loops, whenever the PC is on.
 
     python -m scripts.always_on_lab --dry-run    # print the plan; touch nothing
     python -m scripts.always_on_lab              # the loop, until STOP
@@ -32,8 +32,20 @@ will drift from the first. Every guard here is imported:
 * `backend.services.llama_server.status` — and, since 2026-09-18,
   `start()` when nothing is listening; NEVER `stop()`;
 * `backend.services.ledger_retrieval.visible_at` — the hindsight gate;
-* `scripts.news_pull.pull_all` / `scripts.night_l2_typed_events.L2_typed_events`
-  — the loops' actual work.
+* `scripts.news_pull.pull_all` / `scripts.social_pull.pull` /
+  `scripts.night_l2_typed_events.L2_typed_events` — the loops' actual work.
+
+NO METERED SOURCE RUNS ON A CADENCE HERE (chunk 20)
+===================================================
+`social_pull` reads Reddit and YouTube, both FREE. **X/Twitter is not built and
+does not run here.** It is pay-per-read ($0.005/read, capped 2M/mo) with no free
+self-serve tier after 2026, and `spec_social_video_pipeline.md` §4.3 keeps it
+off the lab's automatic cadence entirely: unattended automatic spend on a
+metered API is the same failure class as the $448,555 unattended-fleet exposure
+logged for 2026-09-18. If it is ever built it is gated behind an operator file
+the way `MODEL_SERVER_HOLD` gates the model starter — never switched on by
+adding a loop. Transcripts are refused by name for a different reason
+(`TRANSCRIPT_SOURCE_NOT_LAWFUL_HERE`) and Instagram has no lawful path at all.
 
 FIVE THINGS IT REFUSES, BY NAME
 ===============================
@@ -114,6 +126,7 @@ LOOPS: tuple[tuple[str, str], ...] = (
     ("daily_pass_dispatch", "the daily pass at its local time, on the lab's own clock"),
     ("night_launcher_dispatch", "the IIF-1 night launcher at its local time, weekdays"),
     ("news_pull", "every registered source into the corpus, with first_seen_utc"),
+    ("social_pull", "Reddit posts and comments, YouTube search — free tiers only"),
     ("l2_typing", "type new corpus rows into the frozen event vocabulary"),
     ("decision_vs_reality", "what we said vs what happened, across every mechanism"),
     ("catalyst_calendar", "earnings plus FOMC/CPI/NFP, every entry with its provenance"),
@@ -290,6 +303,17 @@ def pid_names_lab(pid: int) -> bool:
 def pull_news(**kw) -> dict:
     from scripts import news_pull
     return news_pull.pull_all(**kw)
+
+
+def pull_social(**kw) -> dict:
+    from scripts import social_pull
+    return social_pull.pull(**kw)
+
+
+def social_keys() -> dict:
+    """Which social key NAMES are set. Names and booleans; never a value."""
+    from scripts import social_pull
+    return social_pull.key_status()
 
 
 def news_sources() -> list:
@@ -1226,6 +1250,82 @@ def loop_news_pull(state: LabState) -> dict:
     }
 
 
+def loop_social_pull(state: LabState) -> dict:
+    """Reddit posts and comments, YouTube search — six-hourly, boxed, free only.
+
+    Chunk 20 T4. Three things this loop does NOT do, each named because doing
+    any of them would be a plausible mistake:
+
+    * **it never touches a METERED source.** X/Twitter is pay-per-read
+      ($0.005/read, capped 2M/mo) with no free self-serve tier after 2026, and
+      the spec (§4.3) keeps it OFF the lab's automatic cadence entirely.
+      `scripts/social_pull.py` does not implement it, and an unattended loop
+      against a metered API is the same failure class as the $448,555
+      unattended-fleet exposure logged for 2026-09-18. If it is ever built, it
+      is gated behind an operator file the way `MODEL_SERVER_HOLD` gates the
+      model starter — not switched on here;
+    * it never pulls a transcript. `TRANSCRIPT_SOURCE_NOT_LAWFUL_HERE`;
+    * it never raises. A missing key is a named refusal on the status file and
+      a tick that did nothing, which is a fact about the environment.
+
+    SIX HOURS, not fifteen minutes. YouTube's whole free day is 100 searches
+    (100 quota units each against 10,000), so a tighter cadence spends the
+    day's allowance before lunch and buys nothing: four passes a day over five
+    declared queries is 2,000 of 10,000 units. Reddit is free but its comment
+    trees are the expensive half at ~357 calls a pass.
+    """
+    yielded = yields_to("daily_pass")
+    if yielded:
+        return {**yielded, "n": 0, "rows_new": 0, "refusals": {}}
+
+    keys = social_keys()
+    present = {src: [name for name, ok in block.items() if ok]
+               for src, block in keys.items()}
+    if not any(present.values()):
+        # BOTH keys absent is the state on 2026-09-19 and is REPORTED, not
+        # hidden: a loop that quietly did nothing for weeks is how "the
+        # collector was never wired" gets discovered in a post-mortem.
+        return {"status": "refused", "n": 0, "rows_new": 0,
+                "reason": "SOCIAL_KEYS_ABSENT",
+                "refusals": {"reddit": "REDDIT_KEYS_ABSENT",
+                             "youtube": "YOUTUBE_KEY_ABSENT"},
+                "keys_present": keys,
+                "detail": ("neither social key is set. Murat creates a Reddit "
+                           "SCRIPT app at www.reddit.com/prefs/apps and a "
+                           "YouTube Data API v3 key at "
+                           "console.cloud.google.com/apis/credentials; the "
+                           "collector refuses BY NAME until then and this loop "
+                           "says so every tick rather than looking idle."),
+                "cadence_minutes": PERIODS["social_pull"]}
+
+    box = float(TIMEOUTS["social_pull"])
+    try:
+        summary = pull_social(budget_s=box * 0.7,
+                              pace_s=float(_config.LAB_SOCIAL_PACE_S))
+    except Exception as exc:                                       # noqa: BLE001
+        return {"status": "error", "n": 0, "rows_new": 0, "refusals": {},
+                "detail": _trunc(exc)}
+
+    rows = int(summary.get("rows_new") or 0)
+    refusals = dict(summary.get("refusals") or {})
+    return {
+        "status": ("ok" if rows else
+                   ("refused" if refusals else "nothing_to_do")),
+        "n": rows, "rows_new": rows,
+        "refusals": refusals,
+        "keys_present": keys,
+        "per_source": [{k: p.get(k) for k in
+                        ("source", "status", "rows", "posts", "comments",
+                         "searches", "dupes", "refused")}
+                       for p in (summary.get("per_source") or [])],
+        "cadence_minutes": PERIODS["social_pull"],
+        "metered_sources": ("X/Twitter is pay-per-read and is NOT on this "
+                            "cadence, by spec §4.3 — it is not implemented at "
+                            "all"),
+        "headline": summary.get("headline"),
+    }
+
+
 def _overlap_block() -> dict:
     """The two-READER agreement set, or a named CANNOT DETERMINE.
 
@@ -1693,6 +1793,7 @@ HANDLERS: dict[str, Callable[[LabState], dict]] = {
     "daily_pass_dispatch": loop_daily_pass_dispatch,
     "night_launcher_dispatch": loop_night_launcher_dispatch,
     "news_pull": loop_news_pull,
+    "social_pull": loop_social_pull,
     "l2_typing": loop_l2_typing,
     "decision_vs_reality": loop_decision_vs_reality,
     "catalyst_calendar": loop_catalyst_calendar,

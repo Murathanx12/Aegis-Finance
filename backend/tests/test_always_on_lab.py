@@ -524,6 +524,105 @@ def test_an_unreadable_registry_refuses_by_name(lab, monkeypatch):
 
 
 # --------------------------------------------------------------------------
+# loop 1b — the social pull (chunk 20 T4)
+
+
+def _no_social_keys(monkeypatch):
+    monkeypatch.setattr(L, "social_keys", lambda: {
+        "reddit": {"REDDIT_CLIENT_ID": False, "REDDIT_CLIENT_SECRET": False,
+                   "REDDIT_USER_AGENT": False},
+        "youtube": {"YOUTUBE_API_KEY": False}})
+
+
+def test_the_social_loop_refuses_by_name_while_both_keys_are_absent(lab, monkeypatch):
+    """The state on 2026-09-19, and it is REPORTED rather than hidden: a loop
+    that quietly did nothing for weeks is how "the collector was never wired"
+    becomes a post-mortem."""
+    _no_social_keys(monkeypatch)
+    monkeypatch.setattr(L, "pull_social", lambda **kw: pytest.fail(
+        "the collector must not be called with no key"))
+    out = L.loop_social_pull(L.LabState())
+    assert out["status"] == "refused"
+    assert out["reason"] == "SOCIAL_KEYS_ABSENT"
+    assert out["refusals"] == {"reddit": "REDDIT_KEYS_ABSENT",
+                               "youtube": "YOUTUBE_KEY_ABSENT"}
+    assert "prefs/apps" in out["detail"] and "credentials" in out["detail"]
+
+
+def test_the_social_loop_pulls_when_one_key_exists(lab, monkeypatch):
+    monkeypatch.setattr(L, "social_keys", lambda: {
+        "reddit": {"REDDIT_CLIENT_ID": False, "REDDIT_CLIENT_SECRET": False,
+                   "REDDIT_USER_AGENT": False},
+        "youtube": {"YOUTUBE_API_KEY": True}})
+    seen: dict = {}
+
+    def _pull(**kw):
+        seen.update(kw)
+        return {"rows_new": 7, "refusals": {"reddit": "REDDIT_KEYS_ABSENT"},
+                "per_source": [{"source": "youtube", "status": "OK", "rows": 7}],
+                "headline": "7 new social rows"}
+
+    monkeypatch.setattr(L, "pull_social", _pull)
+    out = L.loop_social_pull(L.LabState())
+    assert out["status"] == "ok" and out["n"] == 7
+    assert out["refusals"] == {"reddit": "REDDIT_KEYS_ABSENT"}
+    assert 0 < seen["budget_s"] < L.TIMEOUTS["social_pull"], \
+        "the pull's budget must fit inside the loop's own box"
+
+
+def test_the_social_loop_yields_to_the_daily_pass(lab, monkeypatch):
+    monkeypatch.setattr(L, "running_drivers", lambda now=None: {
+        "scan_ran": True, "scanned": 1,
+        **{name: [] for name in L.SCHEDULED_DRIVERS}, "daily_pass": [4242]})
+    monkeypatch.setattr(L, "pull_social", lambda **kw: pytest.fail(
+        "the loop must yield, not launch a second copy"))
+    out = L.loop_social_pull(L.LabState())
+    assert out["status"] == "skipped"
+    assert out["reason"] == "DAILY_PASS_RUNNING"
+
+
+def test_a_collector_error_is_an_error_row_and_not_a_raise(lab, monkeypatch):
+    monkeypatch.setattr(L, "social_keys", lambda: {
+        "reddit": {"REDDIT_CLIENT_ID": True, "REDDIT_CLIENT_SECRET": True,
+                   "REDDIT_USER_AGENT": True},
+        "youtube": {"YOUTUBE_API_KEY": False}})
+    monkeypatch.setattr(L, "pull_social", lambda **kw: (_ for _ in ()).throw(
+        RuntimeError("the collector exploded")))
+    out = L.loop_social_pull(L.LabState())
+    assert out["status"] == "error"
+    assert "exploded" in out["detail"]
+
+
+def test_the_social_cadence_is_six_hours_and_is_one_number(lab):
+    """YouTube's whole free day is 100 searches. A fifteen-minute cadence would
+    spend the allowance before lunch and buy nothing."""
+    assert L.PERIODS["social_pull"] == 6 * 60
+    assert _config.LAB_SOCIAL_PULL_PERIOD_S == L.PERIODS["social_pull"] * 60, \
+        "two numbers that must agree are one number"
+    assert "social_pull" in _config.LAB_NETWORK_LOOPS
+    assert "social_pull" not in _config.LAB_MODEL_LOOPS, \
+        "the pull calls no model; only S1's stance half does"
+
+
+def test_no_metered_source_is_on_the_lab_cadence():
+    """X/Twitter is pay-per-read and spec §4.3 keeps it off the automatic
+    cadence. Unattended spend on a metered API is the $448,555 failure class."""
+    from scripts import social_pull as SP
+    assert "twitter" not in SP.SOURCES and "x" not in SP.SOURCES
+    src = MODULE.read_text(encoding="utf-8")
+    assert "X/Twitter is not built" in src
+
+
+def test_s1_is_queued_after_the_two_typing_jobs_with_a_thirty_minute_box():
+    """Its constraint counts are computed from what L2_retype_v3 writes, so
+    running it first would compute today's counts from yesterday's typing."""
+    queue = list(_config.LAB_IDLE_QUEUE)
+    names = [j for j, _ in queue]
+    assert names.index("S1_social_features") == names.index("L2_retype_v3") + 1
+    assert dict(queue)["S1_social_features"] == 30
+
+
+# --------------------------------------------------------------------------
 # loop 2 — the typing loop and the model server it must never start
 
 

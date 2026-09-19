@@ -2693,6 +2693,10 @@ LAB_LOOP_PERIODS_MINUTES: dict = {
     "daily_pass_dispatch": 5,
     "night_launcher_dispatch": 5,
     "news_pull": 15,
+    # Chunk 20. Derived from `LAB_SOCIAL_PULL_PERIOD_S` rather than written
+    # twice: the brief names the seconds constant, the supervisor walks this
+    # dict in minutes, and two numbers that must agree are one number.
+    "social_pull": 6 * 60,
     "l2_typing": 15,
     "decision_vs_reality": 60,
     "catalyst_calendar": 6 * 60,
@@ -2714,6 +2718,7 @@ LAB_LOOP_TIMEOUT_S: dict = {
     "daily_pass_dispatch": 120,
     "night_launcher_dispatch": 120,
     "news_pull": 900,
+    "social_pull": 900,
     "l2_typing": 900,
     "decision_vs_reality": 300,
     "catalyst_calendar": 300,
@@ -2749,6 +2754,14 @@ LAB_IDLE_QUEUE: tuple[tuple[str, int], ...] = (
     # it caps itself at `night_l2_retype_v3.MAX_ROWS_PER_RUN` so the box is a
     # number a pass can finish rather than one that guarantees a kill.
     ("L2_retype_v3", 60),
+    # 2026-09-19, chunk 20. After the two typing jobs and for their reason: the
+    # v3 rows L2_retype_v3 writes are two of this job's five variables, so
+    # running it first would compute today's constraint counts from yesterday's
+    # typing. A 30-MINUTE box: four of the five variables are arithmetic over
+    # rows already on disk, and the fifth (comment stance) caps itself at
+    # `night_social_features.MAX_STANCE_ROWS`, so the box is a number a pass can
+    # finish rather than one that guarantees a kill and no receipt.
+    ("S1_social_features", 30),
     # 2026-09-13 22:50: R2 panel B was read today (REJECT, 4.1 h) and a re-run
     # at temperature 0 is the same 4.1 h for the same answer. The three
     # model-dependent reads still unread take its place.
@@ -2798,8 +2811,8 @@ LAB_MODEL_LOOPS: tuple[str, ...] = ("l2_typing", "nn_lab", "idle_gpu_queue")
 #: Which loops touch the network. Paused with the model loops on a sleep
 #: refusal only for the GPU half; the news pull keeps running (it cannot be
 #: harmed by a suspend mid-call the way an 8-hour GPU job can).
-LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "catalyst_calendar",
-                                      "thematic_streams")
+LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "social_pull",
+                                      "catalyst_calendar", "thematic_streams")
 
 #: MAY THE LAB START THE MODEL SERVER? (amended 2026-09-18, measured)
 #:
@@ -2937,3 +2950,21 @@ SOCIAL_REDDIT_POSTS_PER_SUB = 50
 #: and that rule TOGETHER are the dispersion variable's denominator — which is
 #: why both are printed on the receipt instead of assumed.
 SOCIAL_REDDIT_COMMENTS_PER_POST = 200
+
+#: THE SOCIAL LOOP'S CADENCE, in seconds (chunk 20 T4). Six hours, and the
+#: number is the YouTube quota's, not a preference: the whole free day is
+#: 10,000 units and a `search.list` costs 100, so it is **100 searches a day,
+#: total**. Four passes a day over the five declared queries spends 2,000 of
+#: them; a fifteen-minute cadence like the news loop's would spend the day's
+#: allowance before lunch and buy nothing, because the same query returns the
+#: same videos.
+#:
+#: `LAB_LOOP_PERIODS_MINUTES["social_pull"]` is this in minutes and
+#: `test_always_on_lab.py` pins the two to agree — two numbers that must match
+#: are one number, and the brief names this one.
+LAB_SOCIAL_PULL_PERIOD_S = 6 * 3600
+
+#: Seconds between calls to ONE social provider inside a pass. Single-threaded,
+#: so this IS the rate limit. Reddit's documented ceiling is 100 queries/minute
+#: per OAuth client; 1.0 s is well inside it and PRAW paces itself on top.
+LAB_SOCIAL_PACE_S = 1.0
