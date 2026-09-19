@@ -1,4 +1,4 @@
-"""X5 -- the exclusion screen (re-test 1 of the 2026-09-19 failure thesis).
+"""B -- the exclusion screen (re-test 1 of the 2026-09-19 failure thesis).
 
 WHAT THESE TESTS PIN, AND WHY EACH ONE EXISTS
 =============================================
@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from scripts import night_x5_exclusion_screen as X
+from scripts import night_b_exclusion_screen as X
 
 
 # --------------------------------------------------------------------------
@@ -318,9 +318,9 @@ def test_the_seed_is_reproducible_across_processes():
 
 def test_the_job_is_registered_with_a_stage_and_a_loader():
     from scripts.night_factory_jobs import JOBS, JOB_STAGES, STAGE_ORDER
-    assert "X5_exclusion_screen" in JOBS
-    assert JOB_STAGES["X5_exclusion_screen"] in STAGE_ORDER
-    assert JOB_STAGES["X5_exclusion_screen"] == "pnl"
+    assert "B_exclusion_screen" in JOBS
+    assert JOB_STAGES["B_exclusion_screen"] in STAGE_ORDER
+    assert JOB_STAGES["B_exclusion_screen"] == "pnl"
 
 
 def _offline(monkeypatch, tmp_path, *, jkp: bool = True):
@@ -356,7 +356,7 @@ def test_every_screen_refuses_by_name_when_no_rank_source_is_on_disk(
         tmp_path, monkeypatch):
     """The refusal path end to end. Nothing real is read and nothing is faked."""
     _offline(monkeypatch, tmp_path)
-    out = X.X5_exclusion_screen(smoke=True)
+    out = X.B_exclusion_screen(smoke=True)
     assert out["n_ran"] == 0 and out["n_refused"] == 4
     for name, block in out["screens"].items():
         assert block["ran"] is False, name
@@ -374,7 +374,7 @@ def test_every_screen_refuses_by_name_when_no_rank_source_is_on_disk(
 def test_a_missing_characteristic_panel_refuses_the_whole_job_by_name(
         tmp_path, monkeypatch):
     _offline(monkeypatch, tmp_path, jkp=False)
-    out = X.X5_exclusion_screen(smoke=True)
+    out = X.B_exclusion_screen(smoke=True)
     assert out["n_ran"] == 0
     assert "REFUSED" in out["verdict"]
     assert out["holm"]["declared_family_size"] == 4
@@ -384,7 +384,7 @@ def test_a_missing_characteristic_panel_refuses_the_whole_job_by_name(
 def test_the_receipt_prints_the_construction_it_actually_ran(
         tmp_path, monkeypatch):
     _offline(monkeypatch, tmp_path)
-    rc = X.X5_exclusion_screen(smoke=True)["registered_construction"]
+    rc = X.B_exclusion_screen(smoke=True)["registered_construction"]
     assert rc["honours_the_registration"] is False    # a smoke run cannot
     assert rc["host_book"] == X.HOST_BOOK
     assert rc["cost_curve"] == X.COST_CURVE
@@ -394,13 +394,13 @@ def test_the_receipt_prints_the_construction_it_actually_ran(
 def test_smoke_says_it_does_not_honour_the_registration():
     """A shortened window cannot be mistaken for the registered read."""
     import inspect
-    src = inspect.getsource(X.X5_exclusion_screen)
+    src = inspect.getsource(X.B_exclusion_screen)
     assert '"honours_the_registration": bool(not smoke)' in src
 
 
 def test_the_receipt_declares_both_controls():
     import inspect
-    src = inspect.getsource(X.X5_exclusion_screen)
+    src = inspect.getsource(X.B_exclusion_screen)
     assert "random exclusion of the SAME COUNT" in src
     assert "PRIMARY_vs_random_exclusion_twin" in src
     assert "PRIMARY_vs_unscreened" in src
@@ -409,7 +409,7 @@ def test_the_receipt_declares_both_controls():
 def test_holm_corrects_the_random_exclusion_comparison():
     """Correcting the easier comparison would be correcting the wrong test."""
     import inspect
-    src = inspect.getsource(X.X5_exclusion_screen)
+    src = inspect.getsource(X.B_exclusion_screen)
     assert 'pvals[name] = vs_tw.get("p_two_sided")' in src
 
 

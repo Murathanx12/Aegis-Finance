@@ -8,7 +8,9 @@ seeding are both attended steps and both are Murat's.
 **Book:** `PROFIT_ALLOCATOR_v2` in `backend/data/arena/arena_books_v1.yaml`.
 **Twin:** `ENGINE_BASELINE_v1` — the arena's equal-weight control, already live with a NAV history.
 **Family:** `KELLY_CONSTRUCTION_2026_09`, declared at size **1** (one primary). It extends no
-existing family.
+existing family. Export-time multiplicity rule: **Holm** over the declared family; at size 1 Holm
+is the identity, and it is named here so that a second primary added later cannot enter without
+re-declaring the size.
 **Licence:** `PRODUCT_EXPERIMENT`. Simulation in the arena namespace: no `paper_nav`, no lane YAML,
 no order path, no real capital, no skill claim.
 

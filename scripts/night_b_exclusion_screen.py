@@ -1,4 +1,4 @@
-"""X5 -- the exclusion screen the ledger asked for three times and never ran.
+"""B -- the exclusion screen the ledger asked for three times and never ran.
 
 RE-TEST 1 OF THE 2026-09-19 FAILURE THESIS
 ==========================================
@@ -63,8 +63,8 @@ dropped, because Holm over two p-values in a family that declared four is a
 different correction and a reader has to see which happened. Nothing is
 fabricated, interpolated or back-filled.
 
-    python -m scripts.night_factory_jobs X5_exclusion_screen --smoke
-    python -m scripts.night_factory_jobs X5_exclusion_screen --floor-usd 3000000
+    python -m scripts.night_factory_jobs B_exclusion_screen --smoke
+    python -m scripts.night_factory_jobs B_exclusion_screen --floor-usd 3000000
 
 LICENCE: PRODUCT_EXPERIMENT. Nothing here orders, seeds or promotes.
 """
@@ -110,9 +110,9 @@ from scripts.night_first_books_replay import (
     wrds_dir,
 )
 
-logger = logging.getLogger("x5_exclusion_screen")
+logger = logging.getLogger("b_exclusion_screen")
 
-JOB = "X5_exclusion_screen"
+JOB = "B_exclusion_screen"
 LICENCE = "PRODUCT_EXPERIMENT"
 
 #: A night job dates its outputs by the DAY it runs. Never a literal: three
@@ -703,7 +703,7 @@ def _verdict(vs_unscreened: dict, vs_twin: dict) -> dict:
 # the job
 
 
-def X5_exclusion_screen(*, smoke: bool = False,                   # noqa: N802
+def B_exclusion_screen(*, smoke: bool = False,                   # noqa: N802
                         floor_usd: float | None = None) -> dict:
     """One receipt: every declared screen, on the host book, at one floor."""
     t0 = datetime.now(timezone.utc)

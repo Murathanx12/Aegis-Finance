@@ -907,7 +907,7 @@ clause before a new idea is registered · nothing LLM-derived allocates, still.
 |---|---|---|
 | **17** (building 2026-09-19) | **the lab owns its clock** (infra spec §4.3-4.4) + exit reason on the lock · **personal mode** (decision spec §5, 8 files) · the overnight execution rule noted for the allocator (terminal repo, next terminal chunk) | the lab's own 06:30 and 16:00 receipts land two days running; `AEGIS_PERSONAL_MODE=1` hides every banner in the desktop build |
 | **18** | **the Decision Contract** (decision spec §4): `decision_contract.py`, `decision_ledger.py`, `step_decision_contract` in the morning, `get_todays_decisions` copilot tool, the `decisions` Ask route before the morning words, the IC card with falsifier + expiry | Murat asks the local model "what would you buy today" and reads engine-sized rows with kill conditions |
-| **19** | **re-tests 1, 3 and the Kelly book**: `X5_exclusion_screen` night job over the existing rank files; the LLM-autopsy library expansion under a $10 cap; `PROFIT_ALLOCATOR_v2` (the Kelly book: v1 retired 2026-08-24 under the router-identity fix with its construction never measured; v2 seeds under the corrected router, ENGINE_BASELINE_v1 is its EW twin, the seed flag stays Murat's); vocabulary v3 with `foreign_entrant_capacity` + `growth_constraint_cited` and the `L2_retype_v3` idle job; TRIAL-DRAFT-FOREIGN-ENTRANT written 09-19 | three receipts on the leaderboard, each with its twin |
+| **19** | **re-tests 1, 3 and the Kelly book**: `B_exclusion_screen` night job over the existing rank files; the LLM-autopsy library expansion under a $10 cap; `PROFIT_ALLOCATOR_v2` (the Kelly book: v1 retired 2026-08-24 under the router-identity fix with its construction never measured; v2 seeds under the corrected router, ENGINE_BASELINE_v1 is its EW twin, the seed flag stays Murat's); vocabulary v3 with `foreign_entrant_capacity` + `growth_constraint_cited` and the `L2_retype_v3` idle job; TRIAL-DRAFT-FOREIGN-ENTRANT written 09-19 | three receipts on the leaderboard, each with its twin |
 | **20** | **social phase 1** (social spec §3): Scrapling attached; Reddit comments + YouTube search via the registry; `growth_constraint_cited`; the five variables computed nightly into the panel; the shuffled-ticker and anonymised controls | the first `mention_velocity` and `stance_dispersion` columns on the E1 panel with their nulls (needs Murat's two keys) |
 | **21** | **re-test 2**: the 13D event-window book with the 13G placebo, at $3M and $10M with twins | a receipt with the placebo beside it |
 | **22** | re-tests 4 and 5 (the $10M re-audit; TAQ costs on the §22 graduates) · Kronos as a NN-lab arm behind a prereg · NautilusTrader cross-check for lane D | filed results, not activity |
@@ -922,15 +922,28 @@ time limit writes no receipt at all** (2026-09-10, G3 at generation 340), so
 these are the measured/projected boxes and not a default:
 
 ```
-NIGHT_QUEUE="X5_exclusion_screen:120,N9_library_autopsy:90" python -m scripts.night_factory
+NIGHT_QUEUE="B_exclusion_screen:120,N9_library_autopsy:90" python -m scripts.night_factory
 ```
 
 | job | stage | box | what it needs | what it refuses |
 |---|---|---|---|---|
-| `X5_exclusion_screen` | `pnl` | **120 min** (it rebuilds Book F's monthly replay four times plus four rank panels; the three-book EFG replay alone measured 829 s) | `wrds/crsp_dsf_<year>.parquet`, `wrds/jkp_*`, and per screen: `wrds/tr13f_s34_<year>.parquet` + `wrds/tr13f_permno_link.json` (io_level, io_abn) or `learner/features_options.parquet` (skew_25d, skew_resid) | a screen whose rank sources are absent is REFUSED BY NAME with the paths it looked for, and is still NAMED in the Holm block; `--floor-usd` moves the book, the screen and both controls together |
+| `B_exclusion_screen` | `pnl` | **120 min** (it rebuilds Book F's monthly replay four times plus four rank panels; the three-book EFG replay alone measured 829 s) | `wrds/crsp_dsf_<year>.parquet`, `wrds/jkp_*`, and per screen: `wrds/tr13f_s34_<year>.parquet` + `wrds/tr13f_permno_link.json` (io_level, io_abn) or `learner/features_options.parquet` (skew_25d, skew_resid) | a screen whose rank sources are absent is REFUSED BY NAME with the paths it looked for, and is still NAMED in the Holm block; `--floor-usd` moves the book, the screen and both controls together |
 | `N9_library_autopsy` | `signal` | **90 min** (resumable by cursor; a killed run continues rather than re-billing) | the incumbent autopsy JSONL under `research_gym/`, bars for the held panel, and a reader | `--reader local` refuses by name when no server is listening; the run stops at `config.N9_LIBRARY_AUTOPSY_MAX_USD` and prints the spend the CALL LEDGER reports, never a constant |
 
-`X5` is a **defensive overlay on an existing book**, not a new selector: it adds
+**It was built as `X5_exclusion_screen` and renamed the same day.** `X` is
+lane X's numbering — the LLM inside the backtest — and the prefix is not
+decorative: `protocol_p16.X_JOB_RE` (`^(X[0-9_]|L3[_$])`) binds EVERY receipt
+whose job id matches it to the P1-P6 protocol, Lookahead Propensity and a
+measured anonymisation gap, and `test_x_lane_receipt_completeness` walks every
+receipt on disk to enforce it. This job reads no text and calls no model, so
+it can never satisfy that block and the suite went red the night the first
+receipt landed. **The prefix is a CONTRACT, not a label**, and the right fix
+was the name: `B` is lane B (book constructions — `B_books_efg_replay`,
+`B_verdict`), which is what this job actually is. The id `X5` was also already
+taken twice — by lane X's own §10 row and by a 2026-09-07 weekend-lab
+experiment.
+
+`B` is a **defensive overlay on an existing book**, not a new selector: it adds
 nothing to the one-selector bottleneck and may not be read as a return source
 (§26/§27 close that and this job never reopened it). `N9` files **candidates**;
 a candidate enters the precursor library only through `library_measure_*` +

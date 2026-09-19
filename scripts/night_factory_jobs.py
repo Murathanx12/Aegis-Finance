@@ -1637,8 +1637,8 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # RANDOM exclusion of the same count. A screen whose rank sources are
         # not on the checkout refuses BY NAME with the paths it looked for.
         # `--floor-usd` moves the book, the screen and both controls together.
-        "X5_exclusion_screen": _lazy("scripts.night_x5_exclusion_screen",
-                                     "X5_exclusion_screen"),
+        "B_exclusion_screen": _lazy("scripts.night_b_exclusion_screen",
+                                     "B_exclusion_screen"),
         # 2026-09-19, chunk 19 (re-test 3): §51 measured the precursor library
         # warning on 15% of exceptional moves -- the base rate. This runs the
         # EXISTING autopsy machinery over the UNWARNED ones and files what the
@@ -1737,9 +1737,9 @@ JOB_STAGES = {
     "G_price_scaled": "pnl",
     # The 09-14 family prices books the same way: net excess vs a twin.
     "B_books_hi_replay": "pnl",
-    # X5 prices a book (net monthly excess against two controls), so it is
-    # `pnl` for the same reason the replays are.
-    "X5_exclusion_screen": "pnl",
+    # The exclusion screen prices a book (net monthly excess against two
+    # controls), so it is `pnl` for the same reason the replays are.
+    "B_exclusion_screen": "pnl",
     # N9 reads PRICES to find the exceptional moves and proposes RULES about
     # them; it composes no portfolio and charges no cost. The candidates it
     # files are a `signal`-stage artefact and nothing downstream may read them
@@ -1789,7 +1789,8 @@ def main(argv=None) -> int:
     # TypeError hours into a night, which is the class of failure `--resume`'s
     # own guard above exists to prevent.
     ap.add_argument("--floor-usd", type=float, default=None,
-                    help="X5: the dollar-volume floor. Moves the book, the "
+                    help="B_exclusion_screen: the dollar-volume floor. Moves "
+                         "the book, the "
                          "screen and BOTH controls together.")
     ap.add_argument("--max-usd", type=float, default=None,
                     help="N9: the per-RUN dollar cap. Defaults to "
@@ -1823,7 +1824,7 @@ def main(argv=None) -> int:
                    "G_price_scaled", "G3_lineage_export", "H1_hiring_pull",
                    "B_books_hi_replay"):
         payload = fn(smoke=a.smoke)
-    elif a.job == "X5_exclusion_screen":
+    elif a.job == "B_exclusion_screen":
         payload = fn(smoke=a.smoke, floor_usd=a.floor_usd)
     elif a.job == "N9_library_autopsy":
         payload = fn(smoke=a.smoke, run=a.run, max_usd=a.max_usd,
