@@ -928,7 +928,18 @@ NIGHT_QUEUE="B_exclusion_screen:120,N9_library_autopsy:90" python -m scripts.nig
 | job | stage | box | what it needs | what it refuses |
 |---|---|---|---|---|
 | `B_exclusion_screen` | `pnl` | **120 min** (it rebuilds Book F's monthly replay four times plus four rank panels; the three-book EFG replay alone measured 829 s) | `wrds/crsp_dsf_<year>.parquet`, `wrds/jkp_*`, and per screen: `wrds/tr13f_s34_<year>.parquet` + `wrds/tr13f_permno_link.json` (io_level, io_abn) or `learner/features_options.parquet` (skew_25d, skew_resid) | a screen whose rank sources are absent is REFUSED BY NAME with the paths it looked for, and is still NAMED in the Holm block; `--floor-usd` moves the book, the screen and both controls together |
-| `N9_library_autopsy` | `signal` | **90 min** (resumable by cursor; a killed run continues rather than re-billing) | the incumbent autopsy JSONL under `research_gym/`, bars for the held panel, and a reader | `--reader local` refuses by name when no server is listening; the run stops at `config.N9_LIBRARY_AUTOPSY_MAX_USD` and prints the spend the CALL LEDGER reports, never a constant |
+| `N9_library_autopsy` | `signal` | **90 min** (resumable by cursor; a killed run continues rather than re-billing, and now writes a receipt when it is killed) | the incumbent autopsy JSONL under `research_gym/`, bars for the held panel, a reader, and — for a PAID run — a readable call ledger | `--reader local` refuses by name when no server is listening; `REFUSED_NO_LEDGER` before the first paid submission when the cap's ledger cannot be read; `REFUSED_UNPRICED_CALL` at the first flush that sees a row the price table could not price, naming the model id; the run stops at `config.N9_LIBRARY_AUTOPSY_MAX_USD` and prints the spend the CALL LEDGER reports, never a constant |
+
+**The first probe is why the last two refusals exist** (2026-09-19 14:10 local,
+`--max-usd 1.0 --workers 2 --reader deepseek`). DeepSeek renamed
+`deepseek-chat`'s served model to `deepseek-flash` on 2026-09-14; the price
+table did not carry the id; all 424 ledger rows came back `cost_usd: null`;
+`spend_from_ledger` sums a null as **0.0**, so a $1.00 cap read **$0.00** for
+fifteen minutes while the balance moved **$0.21**. The cap was not loose — it
+could not bind. The run also filed 400 candidates, was interrupted, and left no
+receipt at all, because the receipt is written by `night_factory_jobs.main()`
+only after the job function returns. **A cap that reads an unpriced row as zero
+is not a cap, and fifteen minutes of spend with no receipt is not a run.**
 
 **It was built as `X5_exclusion_screen` and renamed the same day.** `X` is
 lane X's numbering — the LLM inside the backtest — and the prefix is not

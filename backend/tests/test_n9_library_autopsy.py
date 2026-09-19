@@ -25,6 +25,7 @@ The four properties that make this job safe to run unattended:
 
 from __future__ import annotations
 
+import itertools
 import json
 
 import numpy as np
@@ -510,6 +511,285 @@ def test_the_spend_on_the_receipt_is_never_a_literal():
                                  f"{val.value!r}")
     assert not offenders, offenders
     assert "spend_from_ledger" in ast.dump(tree)
+
+
+# --------------------------------------------------------------------------
+# 9. the cap must be able to BIND (2026-09-19, paid for by the first probe)
+#
+# The probe ran `--max-usd 1.0 --workers 2 --reader deepseek` for fifteen
+# minutes. DeepSeek had renamed `deepseek-chat`'s served model to
+# `deepseek-flash` on 2026-09-14, so every one of its 424 ledger rows came back
+# with `cost_usd: null`, `spend_from_ledger` summed them as 0.0, and the $1.00
+# cap read $0.00 the whole time while the balance moved $0.21.
+#
+# Two ways a cap stops being a cap, and both are now refusals by name.
+
+
+_CALL_SEQ = itertools.count()
+
+
+def _row(ts="2026-09-19T06:08:39+00:00", cost=None, model="deepseek-flash",
+         purpose=N.PURPOSE):
+    # A DISTINCT call_id per row: `read_calls` folds duplicates onto one base
+    # row, so identical ids would make three calls read as one -- and the
+    # de-duplication is right, the fixture was wrong.
+    return {"call_id": f"c{next(_CALL_SEQ):06d}", "ts": ts,
+            "purpose": purpose, "model": model, "cost_usd": cost,
+            "tokens_in": 900, "tokens_out": 650, "cached_tokens": 0}
+
+
+def _ledger(tmp_path, rows, name="llm_calls_2026-09.jsonl"):
+    p = tmp_path / name
+    p.write_text("\n".join(json.dumps(r) for r in rows) + "\n",
+                 encoding="utf-8")
+    return tmp_path / "llm_calls.jsonl"          # the BASE; rotation is beside it
+
+
+def test_an_unpriced_call_is_counted_and_names_the_model(tmp_path):
+    base = _ledger(tmp_path, [_row(), _row(), _row(cost=0.001)])
+    u = N.unpriced_calls("2026-09-19T06:00:00", path=base)
+    assert u["n_unpriced"] == 2
+    assert u["models"] == {"deepseek-flash": 2}
+    assert "lower bound of zero" in u["why_it_is_a_breach"]
+
+
+def test_a_priced_run_reports_no_unpriced_calls(tmp_path):
+    base = _ledger(tmp_path, [_row(cost=0.001), _row(cost=0.002)])
+    assert N.unpriced_calls("2026-09-19T06:00:00", path=base)["n_unpriced"] == 0
+
+
+def test_rows_before_this_run_are_not_this_runs_breach(tmp_path):
+    """The 424 rows the probe already wrote are unpriced for ever. A later run
+    must be judged on ITS OWN calls or it could never start again."""
+    base = _ledger(tmp_path, [_row(ts="2026-09-19T06:08:39+00:00"),
+                              _row(ts="2026-09-20T10:00:00+00:00", cost=0.001)])
+    u = N.unpriced_calls("2026-09-20T09:00:00", path=base)
+    assert u["n_unpriced"] == 0
+
+
+def test_another_jobs_unpriced_call_is_not_this_jobs_breach(tmp_path):
+    base = _ledger(tmp_path, [_row(purpose="l2_event_extraction")])
+    assert N.unpriced_calls("2026-09-19T06:00:00", path=base)["n_unpriced"] == 0
+
+
+def test_the_run_stops_by_name_at_the_first_flush_that_sees_one(tmp_path):
+    """Not at the end. The point of stopping is to stop SPENDING."""
+    moves = [_move(date=f"2018-02-{i:02d}") for i in range(1, 12)]
+    seen = {"n": 0}
+
+    def check():
+        seen["n"] += 1
+        return ({"n_unpriced": 7, "models": {"deepseek-flash": 7}}
+                if seen["n"] >= 2 else None)
+
+    calls = []
+    out = N.autopsy_moves(moves,
+                          reader=lambda p: calls.append(p) or GOOD_REPLY,
+                          backend="deepseek", cap=_Cap(), workers=1,
+                          incumbent_path="x.jsonl", flush_every=3,
+                          candidates_file=tmp_path / "c.jsonl",
+                          cursor_file=tmp_path / "cur.json",
+                          unpriced_check=check)
+    assert out["stopped"] == N.REFUSED_UNPRICED_CALL
+    assert "deepseek-flash" in out["stop_detail"]
+    assert "lower bound of ZERO" in out["stop_detail"]
+    assert len(calls) < len(moves), "the run did not stop; it finished"
+    # everything already paid for is KEPT
+    assert out["candidates_filed"] == 6
+    assert len((tmp_path / "c.jsonl").read_text(
+        encoding="utf-8").splitlines()) == 6
+
+
+def test_a_run_that_finishes_inside_one_flush_window_is_still_checked(tmp_path):
+    """Otherwise a short paid run could never trip the guard at all."""
+    out = N.autopsy_moves([_move()], reader=lambda p: GOOD_REPLY,
+                          backend="deepseek", cap=_Cap(), workers=1,
+                          incumbent_path="x.jsonl", flush_every=50,
+                          candidates_file=tmp_path / "c.jsonl",
+                          cursor_file=tmp_path / "cur.json",
+                          unpriced_check=lambda: {
+                              "n_unpriced": 1,
+                              "models": {"deepseek-flash": 1}})
+    assert out["stopped"] == N.REFUSED_UNPRICED_CALL
+    assert out["candidates_filed"] == 1
+
+
+def test_a_priced_run_is_not_stopped(tmp_path):
+    out = N.autopsy_moves([_move()], reader=lambda p: GOOD_REPLY,
+                          backend="deepseek", cap=_Cap(), workers=1,
+                          incumbent_path="x.jsonl",
+                          candidates_file=tmp_path / "c.jsonl",
+                          cursor_file=tmp_path / "cur.json",
+                          unpriced_check=lambda: None)
+    assert out["stopped"] == "complete"
+
+
+# ---- REFUSED_NO_LEDGER
+
+
+def test_an_absent_ledger_directory_refuses_by_name(tmp_path):
+    got = N.ledger_writable(tmp_path / "nope" / "llm_calls.jsonl")
+    assert got["ok"] is False
+    assert got["reason"] == N.REFUSED_NO_LEDGER
+    assert "does not exist" in got["detail"]
+
+
+def test_a_directory_with_no_ledger_stream_refuses_by_name(tmp_path):
+    got = N.ledger_writable(tmp_path / "llm_calls.jsonl")
+    assert got["ok"] is False and got["reason"] == N.REFUSED_NO_LEDGER
+    assert "lower bound" in got["detail"]
+
+
+def test_the_ROTATED_stream_satisfies_the_guard(tmp_path):
+    """NOT `LLM_CALLS.exists()`. The ledger rotated to one file a month on
+    2026-09-12 and the monolith is legitimately gone; a guard that demanded it
+    could never go green, which is the `0/9 stamped [FAIL]` defect."""
+    (tmp_path / "llm_calls_2026-09.jsonl").write_text(
+        json.dumps(_row(cost=0.001)) + "\n", encoding="utf-8")
+    got = N.ledger_writable(tmp_path / "llm_calls.jsonl")
+    assert got["ok"] is True, got
+    assert got["n_files"] == 1
+
+
+def test_no_write_path_at_all_refuses(monkeypatch):
+    """Telemetry resolving None means the calls are never ledgered, and a run
+    whose calls are not ledgered cannot be capped."""
+    from backend.services import llm_telemetry as tel
+    monkeypatch.setattr(tel, "_resolve_path", lambda p: None)
+    got = N.ledger_writable()
+    assert got["ok"] is False and got["reason"] == N.REFUSED_NO_LEDGER
+
+
+def test_a_paid_run_refuses_before_the_first_submission(tmp_path, monkeypatch):
+    lib = tmp_path / "autopsies_2026-08-17.jsonl"
+    lib.write_text(json.dumps({"autopsy": {"affected_precursor": {
+        "all": [{"feature": "vix", "op": ">=", "value": 35}]}}}) + "\n",
+        encoding="utf-8")
+    monkeypatch.setattr(N, "gym_dir", lambda: tmp_path)
+    monkeypatch.setattr(N, "out_dir", lambda: tmp_path / "out")
+    monkeypatch.setattr(N, "ledger_writable", lambda *a, **k: {
+        "ok": False, "reason": N.REFUSED_NO_LEDGER,
+        "detail": "the ledger directory /nowhere does not exist."})
+
+    def _never(name):
+        return (lambda p: pytest.fail("a paid call was made with no ledger"),
+                "deepseek", None)
+
+    monkeypatch.setattr(N, "resolve_reader", _never)
+    out = N.N9_library_autopsy(smoke=True, reader="deepseek", frames=_frames())
+    assert out["verdict"].startswith(N.REFUSED_NO_LEDGER)
+    assert out["autopsies"] is None
+    assert out["ledger"]["ok"] is False
+    json.dumps(out, default=str)
+
+
+def test_an_unmetered_run_needs_no_ledger(tmp_path, monkeypatch):
+    """A local reader costs compute, not dollars: no cap can bind, so a
+    ledger guard there would be a gate that cannot go green."""
+    lib = tmp_path / "autopsies_2026-08-17.jsonl"
+    lib.write_text(json.dumps({"autopsy": {"affected_precursor": {
+        "all": [{"feature": "vix", "op": ">=", "value": 35}]}}}) + "\n",
+        encoding="utf-8")
+    monkeypatch.setattr(N, "gym_dir", lambda: tmp_path)
+    monkeypatch.setattr(N, "out_dir", lambda: tmp_path / "out")
+    monkeypatch.setattr(N, "ledger_writable",
+                        lambda *a, **k: pytest.fail("checked on a free run"))
+    monkeypatch.setattr(N, "resolve_reader",
+                        lambda name: (lambda p: GOOD_REPLY, "local_gguf", None))
+    out = N.N9_library_autopsy(smoke=True, reader="local", frames=_frames())
+    assert out["metered"] is False
+    assert out["ledger"]["ok"] is True
+    assert out["autopsies"]["candidates_filed"] == 3
+
+
+# --------------------------------------------------------------------------
+# 10. an interrupted run leaves a receipt
+#
+# The probe made 424 billed calls, filed 400 rows, and wrote NO receipt: the
+# receipt is written by `night_factory_jobs.main()` only after the job function
+# RETURNS, so a run that is killed leaves fifteen minutes of spend with nothing
+# naming what it bought. That is the defect, and it is this job's to fix.
+
+
+def test_an_interrupted_run_flushes_and_returns_rather_than_raising(tmp_path):
+    moves = [_move(date=f"2018-02-{i:02d}") for i in range(1, 12)]
+    calls = {"n": 0}
+
+    def reader(prompt):
+        calls["n"] += 1
+        if calls["n"] > 6:
+            raise KeyboardInterrupt("operator stopped the run")
+        return GOOD_REPLY
+
+    out = N.autopsy_moves(moves, reader=reader, backend="deepseek",
+                          cap=_Cap(), workers=1, incumbent_path="x.jsonl",
+                          flush_every=3, candidates_file=tmp_path / "c.jsonl",
+                          cursor_file=tmp_path / "cur.json")
+    assert out["stopped"] == "INTERRUPTED"
+    assert "KeyboardInterrupt" in out["stop_detail"]
+    assert out["candidates_filed"] == 6
+    # AND THE ROWS ARE ON DISK, including the ones since the last flush
+    assert len((tmp_path / "c.jsonl").read_text(
+        encoding="utf-8").splitlines()) == 6
+    cur = json.loads((tmp_path / "cur.json").read_text(encoding="utf-8"))
+    assert len(cur["done"]) == 6, "a resumed run would re-bill these"
+
+
+def test_an_interrupted_job_still_produces_a_receipt(tmp_path, monkeypatch):
+    lib = tmp_path / "autopsies_2026-08-17.jsonl"
+    lib.write_text(json.dumps({"autopsy": {"affected_precursor": {
+        "all": [{"feature": "vix", "op": ">=", "value": 35}]}}}) + "\n",
+        encoding="utf-8")
+    monkeypatch.setattr(N, "gym_dir", lambda: tmp_path)
+    monkeypatch.setattr(N, "out_dir", lambda: tmp_path / "out")
+    monkeypatch.setattr(N, "ledger_writable", lambda *a, **k: {"ok": True,
+                                                               "reason": None})
+    calls = {"n": 0}
+
+    def reader(prompt):
+        calls["n"] += 1
+        if calls["n"] > 1:
+            raise KeyboardInterrupt("stopped")
+        return GOOD_REPLY
+
+    monkeypatch.setattr(N, "resolve_reader",
+                        lambda name: (reader, "local_gguf", None))
+    out = N.N9_library_autopsy(smoke=True, reader="local", frames=_frames())
+    assert out["autopsies"]["stopped"] == "INTERRUPTED"
+    assert out["verdict"].startswith("INTERRUPTED")
+    assert "424 billed calls" in out["verdict"]
+    assert out["autopsies"]["candidates_filed"] == 1
+    json.dumps(out, default=str)
+
+
+def test_the_receipt_says_when_its_spend_is_a_lower_bound(tmp_path,
+                                                          monkeypatch):
+    lib = tmp_path / "autopsies_2026-08-17.jsonl"
+    lib.write_text(json.dumps({"autopsy": {"affected_precursor": {
+        "all": [{"feature": "vix", "op": ">=", "value": 35}]}}}) + "\n",
+        encoding="utf-8")
+    monkeypatch.setattr(N, "gym_dir", lambda: tmp_path)
+    monkeypatch.setattr(N, "out_dir", lambda: tmp_path / "out")
+    monkeypatch.setattr(N, "ledger_writable", lambda *a, **k: {"ok": True,
+                                                               "reason": None})
+    monkeypatch.setattr(N, "resolve_reader",
+                        lambda name: (lambda p: GOOD_REPLY, "deepseek", None))
+    monkeypatch.setattr(N, "unpriced_calls", lambda *a, **k: {
+        "n_unpriced": 3, "models": {"deepseek-flash": 3}})
+    out = N.N9_library_autopsy(smoke=True, reader="deepseek", frames=_frames())
+    assert out["spend_is_a_lower_bound"] is True
+    assert "deepseek-flash" in out["spend_caveat"]
+    assert "llm_cost_audit" in out["spend_caveat"]
+    assert out["verdict"].startswith(N.REFUSED_UNPRICED_CALL)
+
+
+def test_the_two_run_level_refusals_are_declared():
+    assert N.REFUSED_UNPRICED_CALL == "REFUSED_UNPRICED_CALL"
+    assert N.REFUSED_NO_LEDGER == "REFUSED_NO_LEDGER"
+    # they are RUN-level, not document-level: a document cannot cause either,
+    # so neither belongs in the per-reply refusal vocabulary.
+    assert N.REFUSED_UNPRICED_CALL not in N.REFUSAL_CLASSES
+    assert N.REFUSED_NO_LEDGER not in N.REFUSAL_CLASSES
 
 
 def test_a_missing_incumbent_library_stops_the_job_before_any_call(

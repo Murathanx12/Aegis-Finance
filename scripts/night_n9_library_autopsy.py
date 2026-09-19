@@ -50,14 +50,43 @@ it is REFUSED at the door here (`REFUSED_VOCABULARY`), counted, and the refusal
 rate is on the receipt. A refusal is a finding: a run where most proposals fail
 to compile is a statement about the language, not about the moves.
 
-THE MONEY
-=========
+THE MONEY, AND THE TWO WAYS A CAP STOPS BEING A CAP
+===================================================
 `config.N9_LIBRARY_AUTOPSY_MAX_USD` ($10.00) caps ONE RUN. The cap is checked
 BEFORE every submission and never refunded after -- a call that was made and
 then regretted has already been billed. The spend printed on the receipt is
 read from the CALL LEDGER (`llm_telemetry.read_calls`), never from a constant:
-`L2_typed_events` carried a literal `"llm_spend_usd": 0.0` and reported a
+`L2_typed_events` carried a literal zero for `llm_spend_usd` and reported a
 $2.384 run as free.
+
+That was not enough, and the first probe proved it. **2026-09-19 14:10 local,
+`--max-usd 1.0 --workers 2 --reader deepseek`:** DeepSeek renamed
+`deepseek-chat`'s served model to `deepseek-flash` on 2026-09-14, the price
+table did not carry the new id, and all 424 of that run's ledger rows came back
+`cost_usd: null`. `spend_from_ledger` sums a null as 0.0, so the $1.00 cap read
+**$0.00 for fifteen minutes** while the provider balance moved **$0.21**. The
+cap was not loose; it could not bind at all.
+
+  * **`REFUSED_UNPRICED_CALL`** -- ANY ledger row for this run's purpose whose
+    `cost_usd` is None is a cap breach by definition, because every total that
+    sums it treats it as zero. Checked at each flush (the cadence the cap
+    already re-reads the ledger at), the run stops there, and the receipt names
+    the model id it could not price.
+  * **`REFUSED_NO_LEDGER`** -- a paid run refuses to start when the ledger the
+    cap reads cannot be read or appended to. Not `LLM_CALLS.exists()`: the
+    ledger rotated to one file a month on 2026-09-12 and the monolith is
+    legitimately gone, so that check could never go green. What is checked is
+    the STREAM and the directory it appends into. An unmetered (local) reader
+    skips it, because no dollar cap can bind on a free run.
+
+AND EVERY EXIT WRITES ITS ROWS
+==============================
+The same probe filed 400 candidates, was interrupted, and left **no receipt** --
+`night_factory_jobs.main()` writes the receipt only after this function
+RETURNS, so fifteen minutes of billed calls had nothing naming what they
+bought. The autopsy loop now flushes and RETURNS on any `BaseException`,
+`KeyboardInterrupt` included, with `stopped: "INTERRUPTED"` and its reason. The
+cursor is at the flushed rows, so a resumed run re-bills none of them.
 
     python -m scripts.night_factory_jobs N9_library_autopsy --smoke
     python -m scripts.night_factory_jobs N9_library_autopsy --max-usd 2 --workers 4
@@ -120,6 +149,14 @@ REFUSAL_CLASSES = ("REFUSED_UNPARSEABLE", "REFUSED_SCHEMA",
                    "REFUSED_VOCABULARY", "REFUSED_READER_ERROR",
                    "REFUSED_NOT_FALSIFIABLE")
 
+#: THE TWO RUN-LEVEL REFUSALS. Neither is a property of a document: each says
+#: the CAP cannot do its job, and a paid run under a cap that cannot bind is an
+#: uncapped run wearing a cap's receipt. Both were written after the first
+#: probe (2026-09-19 14:10 local) spent $0.21 against a $1.00 cap that read
+#: $0.00 for fifteen minutes.
+REFUSED_UNPRICED_CALL = "REFUSED_UNPRICED_CALL"
+REFUSED_NO_LEDGER = "REFUSED_NO_LEDGER"
+
 #: Every row this job writes carries it, and nothing downstream may read a row
 #: without it. A candidate is a PROPOSAL; the library is earned elsewhere.
 CANDIDATE_STATUS = "CANDIDATE"
@@ -153,6 +190,101 @@ def max_usd_default() -> float:
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+# --------------------------------------------------------------------------
+# the two guards the first probe paid for
+
+
+def ledger_writable(path: Path | None = None) -> dict:
+    """Can the CALL LEDGER the cap reads be read and appended to?
+
+    MEASURED 2026-09-19: the first N9 probe ran for fifteen minutes under a
+    $1.00 cap that read $0.00 the whole time. A cap that reads a ledger it
+    cannot see is not a loose cap, it is NO cap -- its total is a lower bound
+    of zero and it can never bind.
+
+    NOT `LLM_CALLS.exists()`. The ledger rotated to one file a month on
+    2026-09-12 and the monolith is legitimately gone, so that check would be a
+    gate that can never go green -- the exact defect `monday_gate_check` printed
+    for weeks. What is checked is the STREAM (`ledger_files`) and the DIRECTORY
+    it appends into.
+    """
+    from backend.services import llm_telemetry as tel
+
+    base = path if path is not None else tel._resolve_path(None)
+    if base is None:
+        return {"ok": False, "reason": REFUSED_NO_LEDGER,
+                "base": None, "files": [],
+                "detail": ("telemetry resolves NO write path here (the pytest "
+                           "branch, or AEGIS_LLM_TELEMETRY_PATH unset in a "
+                           "context that disables writing). A paid run whose "
+                           "calls are never ledgered cannot be capped.")}
+    base = Path(base)
+    files = [str(q) for q in tel.ledger_files(base)]
+    parent = base.parent
+    if not parent.is_dir():
+        return {"ok": False, "reason": REFUSED_NO_LEDGER, "base": str(base),
+                "files": files,
+                "detail": f"the ledger directory {parent} does not exist"}
+    if not os.access(parent, os.W_OK):
+        return {"ok": False, "reason": REFUSED_NO_LEDGER, "base": str(base),
+                "files": files,
+                "detail": f"the ledger directory {parent} is not writable"}
+    if not files:
+        return {"ok": False, "reason": REFUSED_NO_LEDGER, "base": str(base),
+                "files": files,
+                "detail": (f"no ledger file under {parent} matches {base.name} "
+                           f"or its monthly rotation. The cap would read $0.00 "
+                           f"for this whole run because there is nothing to "
+                           f"read, which is a lower bound and not a total.")}
+    return {"ok": True, "reason": None, "base": str(base), "files": files,
+            "n_files": len(files),
+            "checked": ("the ledger STREAM and the directory it appends into, "
+                        "not the pre-rotation monolith -- that file is "
+                        "legitimately gone since 2026-09-12")}
+
+
+def unpriced_calls(since_utc: str, *, purpose: str = PURPOSE,
+                   path: Path | None = None) -> dict:
+    """Rows for THIS run whose `cost_usd` is None, and the models that wrote them.
+
+    `cost_usd is None` means `llm_telemetry.price_call` did not recognise the
+    model id the PROVIDER returned. Summing that as zero is the failure the
+    first probe demonstrated end to end: DeepSeek renamed `deepseek-chat`'s
+    served model to `deepseek-flash` on 2026-09-14, every one of 424 rows came
+    back unpriced, `spend_from_ledger` added them as 0.0, and a $1.00 cap read
+    $0.00 while the balance moved $0.21.
+
+    An unpriced call is therefore a CAP BREACH by definition, not a rounding
+    error: the run cannot know what it is spending, so it must stop and say
+    which model id it could not price.
+    """
+    from backend.services import llm_telemetry as tel
+
+    cut = str(since_utc or "")[:19]
+    models: dict[str, int] = {}
+    n = 0
+    for row in tel.read_calls(path=path):
+        if str(row.get("purpose") or "") != purpose:
+            continue
+        if str(row.get("ts") or "")[:19] < cut:
+            continue
+        if row.get("cost_usd") is None:
+            n += 1
+            m = str(row.get("model") or "<no model id>")
+            models[m] = models.get(m, 0) + 1
+    return {
+        "n_unpriced": n,
+        "models": models,
+        "since_utc": since_utc,
+        "purpose": purpose,
+        "why_it_is_a_breach": (
+            "an unpriced row is added as 0.0 by every total that sums it, so a "
+            "cap over it is a lower bound of zero. The model id below is not in "
+            "`config.LLM_PRICE_PER_MTOK`; price it from the provider's balance "
+            "before running this job again."),
+    }
 
 
 def _r(x, n: int = 6):
@@ -637,15 +769,21 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
                   incumbent_path: str | None, flush_every: int = FLUSH_EVERY,
                   cursor: dict | None = None,
                   candidates_file: Path | None = None,
-                  cursor_file: Path | None = None) -> dict:
-    """Propose one precursor per move, under the cap, resumable, flushed."""
+                  cursor_file: Path | None = None,
+                  unpriced_check=None) -> dict:
+    """Propose one precursor per move, under the cap, resumable, flushed.
+
+    `unpriced_check() -> dict | None` runs AT EVERY FLUSH, which is the same
+    cadence the cap re-reads the ledger at. It returns a block when the run has
+    produced a call the ledger could not price, and the run stops there by name:
+    everything collected is written first, so the stop costs no row.
+    """
     cur = cursor if cursor is not None else load_cursor(cursor_file)
     done = set(cur.get("done") or [])
     todo = [m for m in moves if move_key(m) not in done]
     counts = {c: 0 for c in REFUSAL_CLASSES}
     written = 0
     pending: list = []
-    stopped_on_cap = False
 
     def _one(move):
         try:
@@ -663,38 +801,86 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
         save_cursor(done, rows_written=cur.get("rows_written", 0) + written,
                     path=cursor_file)
 
+    def _result(stopped: str, detail=None, unpriced=None) -> dict:
+        return {
+            "moves_offered": len(moves),
+            "moves_already_done": len(moves) - len(todo),
+            "moves_attempted": len(done) - len(cur.get("done") or []),
+            "candidates_filed": written,
+            "refusals": {k: v for k, v in counts.items() if v},
+            "n_refused": sum(counts.values()),
+            "stopped": stopped,
+            "stop_detail": detail,
+            "unpriced": unpriced,
+            "stopped_on_cap": stopped == "MAX_USD_CAP",
+            "flush_every": flush_every,
+            "cursor_file": str(cursor_file or cursor_path()),
+            "candidates_file": str(candidates_file or candidates_path()),
+        }
+
     batch: list = []
-    for move in todo:
-        if not cap.may_submit():
-            stopped_on_cap = True
-            break
-        cap.charge()
-        batch.append(move)
-        if len(batch) < max(1, int(workers)):
-            continue
-        for m, fields, refusal in _run_batch(batch, _one, workers):
-            written += _record(m, fields, refusal, pending, done, counts,
-                               backend=backend, incumbent_path=incumbent_path)
-        batch = []
-        if len(pending) >= flush_every:
-            _flush()
-    if batch:
-        for m, fields, refusal in _run_batch(batch, _one, workers):
-            written += _record(m, fields, refusal, pending, done, counts,
-                               backend=backend, incumbent_path=incumbent_path)
+    stopped = "complete"
+    detail = None
+    unpriced = None
+    try:
+        for move in todo:
+            if not cap.may_submit():
+                stopped = "MAX_USD_CAP"
+                detail = (f"the cap refused the next submission after "
+                          f"{written} filed row(s)")
+                break
+            cap.charge()
+            batch.append(move)
+            if len(batch) < max(1, int(workers)):
+                continue
+            for m, fields, refusal in _run_batch(batch, _one, workers):
+                written += _record(m, fields, refusal, pending, done, counts,
+                                   backend=backend,
+                                   incumbent_path=incumbent_path)
+            batch = []
+            if len(pending) >= flush_every:
+                _flush()
+                # AT THE FLUSH, not per row: `read_calls` is 1.4 s cold and the
+                # check is worth less than the row it would cost per call.
+                if unpriced_check is not None:
+                    unpriced = unpriced_check()
+                    if unpriced:
+                        stopped = REFUSED_UNPRICED_CALL
+                        detail = (
+                            f"{unpriced['n_unpriced']} call(s) this run came "
+                            f"back with a model id the price table does not "
+                            f"carry: {unpriced['models']}. The cap over them "
+                            f"is a lower bound of ZERO, so the run stops here "
+                            f"rather than spending under a cap that cannot "
+                            f"bind.")
+                        break
+        if stopped == "complete" and batch:
+            for m, fields, refusal in _run_batch(batch, _one, workers):
+                written += _record(m, fields, refusal, pending, done, counts,
+                                   backend=backend,
+                                   incumbent_path=incumbent_path)
+            batch = []
+    except BaseException as exc:                                 # noqa: BLE001
+        # EVERY EXIT FLUSHES. The first probe was interrupted after 424 billed
+        # calls and 400 filed rows and left NO receipt, because the receipt is
+        # written by `night_factory_jobs.main()` only after this function
+        # returns. Fifteen minutes of spend with nothing naming what it bought
+        # is the defect; re-raising here would reproduce it.
+        _flush()
+        return _result("INTERRUPTED",
+                       f"{type(exc).__name__}: {exc}", unpriced)
     _flush()
-    return {
-        "moves_offered": len(moves),
-        "moves_already_done": len(moves) - len(todo),
-        "moves_attempted": len(done) - len(cur.get("done") or []),
-        "candidates_filed": written,
-        "refusals": {k: v for k, v in counts.items() if v},
-        "n_refused": sum(counts.values()),
-        "stopped_on_cap": stopped_on_cap,
-        "flush_every": flush_every,
-        "cursor_file": str(cursor_file or cursor_path()),
-        "candidates_file": str(candidates_file or candidates_path()),
-    }
+    if stopped == "complete" and unpriced_check is not None:
+        # One last read, so a run that finished inside a single flush window
+        # still learns its calls were unpriced.
+        last = unpriced_check()
+        if last:
+            unpriced = last
+            stopped = REFUSED_UNPRICED_CALL
+            detail = (f"{last['n_unpriced']} call(s) this run were unpriced "
+                      f"({last['models']}); the cap over them was a lower "
+                      f"bound of zero for the whole run.")
+    return _result(stopped, detail, unpriced)
 
 
 def _run_batch(batch, fn, workers: int):
@@ -764,7 +950,16 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
         },
         "cost_cap": {"max_usd": cap_usd,
                      "config_key": "N9_LIBRARY_AUTOPSY_MAX_USD",
-                     "checked": "BEFORE every submission, never refunded after"},
+                     "checked": "BEFORE every submission, never refunded after",
+                     "also_breached_by": (
+                         "an UNPRICED call. A row whose `cost_usd` is None is "
+                         "summed as 0.0 by every total that reads it, so the "
+                         "cap over it is a lower bound of zero. The run stops "
+                         f"by name ({REFUSED_UNPRICED_CALL}) and prints the "
+                         "model id it could not price."),
+                     "requires": (
+                         f"a readable, appendable call ledger, else "
+                         f"{REFUSED_NO_LEDGER} before the first submission")},
     }
 
     incumbent = load_incumbent()
@@ -807,6 +1002,32 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
     fn, backend, refusal = resolve_reader(reader)
     base["reader"] = {"asked_for": reader or "deepseek", "backend": backend,
                       "refused": refusal}
+
+    # THE LEDGER COMES BEFORE THE FIRST SUBMISSION, and only for a run that can
+    # spend: a local reader costs compute, so no dollar cap can bind and none
+    # is needed. `lab_budget.UNMETERED_BACKENDS` is the same list `_RunCap`
+    # reads, imported rather than retyped so the two cannot disagree about
+    # which backends cost money.
+    from backend.services import lab_budget
+    metered = backend not in lab_budget.UNMETERED_BACKENDS
+    ledger = ledger_writable() if metered else {
+        "ok": True, "reason": None,
+        "checked": f"skipped: {backend} is unmetered, so no cap can bind"}
+    base["ledger"] = ledger
+    base["metered"] = metered
+    if fn is not None and metered and not ledger["ok"]:
+        why = (f"{REFUSED_NO_LEDGER}: {ledger['detail']} A cap that reads a "
+               f"ledger it cannot see is not a loose cap, it is no cap -- and "
+               f"this job will not spend under one.")
+        return {**base, "autopsies": None,
+                "spend": spend_from_ledger(since, purpose=PURPOSE),
+                "headline": (f"{coverage['n_unwarned']} unwarned exceptional "
+                             f"moves found; {why}"),
+                "verdict": why,
+                "elapsed_s": round((datetime.now(timezone.utc)
+                                    - t0).total_seconds(), 1),
+                "written_utc": _now()}
+
     if fn is None:
         return {**base, "autopsies": None,
                 "spend": spend_from_ledger(since, purpose=PURPOSE),
@@ -819,18 +1040,40 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
 
     cap = _RunCap(cap_usd, backend=backend, since_utc=since,
                   refresh_every=FLUSH_EVERY)
+
+    def _unpriced():
+        """A block when this run has produced an unpriced call, else None.
+
+        Only a METERED run can breach this way: a local reader writes
+        `cost_usd = 0.0`, not `None`, because its price is known to be zero.
+        """
+        if not metered:
+            return None
+        u = unpriced_calls(since, purpose=PURPOSE)
+        return u if u["n_unpriced"] else None
+
     res = autopsy_moves(moves, reader=fn, backend=backend, cap=cap,
                         workers=workers,
-                        incumbent_path=incumbent["path"])
+                        incumbent_path=incumbent["path"],
+                        unpriced_check=_unpriced)
     spend = spend_from_ledger(since, purpose=PURPOSE)
 
     filed = res["candidates_filed"]
+    stopped = res.get("stopped") or "complete"
+    spend_is_a_lower_bound = bool((res.get("unpriced") or {}).get("n_unpriced"))
     return {
         **base,
         "autopsies": res,
         "cap_block": cap.block(),
         "spend": spend,
         "llm_spend_usd": spend["usd"],
+        "spend_is_a_lower_bound": spend_is_a_lower_bound,
+        "spend_caveat": (
+            (f"UNPRICED CALLS: {res['unpriced']['models']}. Every total above "
+             f"that sums them treats them as 0.0, so `llm_spend_usd` is a "
+             f"LOWER BOUND and the real figure is the provider's balance. "
+             f"`scripts/llm_cost_audit.py --snapshot` is the ground truth.")
+            if spend_is_a_lower_bound else None),
         "headline": (
             f"{coverage['n_unwarned']} of {coverage['n_exceptional']} "
             f"exceptional moves unwarned (library covers "
@@ -838,19 +1081,31 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
             f"{coverage['library_fires_on_share_of_all_days']} of all days, "
             f"lift {coverage['lift_vs_base_rate']}); {filed} CANDIDATE "
             f"precursor(s) filed, {res['n_refused']} refused "
-            f"{res['refusals']}, ${spend['usd']:.4f} of ${cap_usd:.2f} spent"),
+            f"{res['refusals']}, ${spend['usd']:.4f}"
+            f"{'+ (LOWER BOUND, unpriced calls)' if spend_is_a_lower_bound else ''}"
+            f" of ${cap_usd:.2f} spent; stopped={stopped}"),
         "next_test": (
             f"none of these is a library member. Each has to clear "
             f"{ADMISSION_PATH} on foreign slices with its parent move barred, "
             f"and the metric that decides is §51's LIFT over the library's own "
             f"firing rate -- not whether the rule fires."),
-        "verdict": ("SMOKE — proves the job runs end to end on three moves; no "
-                    "coverage number may be read from it"
-                    if smoke else
-                    f"{filed} candidates for {ADMISSION_PATH}. A candidate is "
-                    f"a proposal, not a precursor: nothing here changes the "
-                    f"library's measured coverage until the measurement job "
-                    f"runs."),
+        "verdict": (
+            (f"{REFUSED_UNPRICED_CALL} — {res['stop_detail']} {filed} row(s) "
+             f"were filed before the stop and are kept; nothing is re-billed.")
+            if stopped == REFUSED_UNPRICED_CALL else
+            (f"INTERRUPTED — {res['stop_detail']}. {filed} row(s) were flushed "
+             f"before the exit and the cursor is at them, so a resumed run "
+             f"re-bills none of them. This receipt exists BECAUSE the run did "
+             f"not finish: the first probe was interrupted after 424 billed "
+             f"calls and left nothing naming what they bought.")
+            if stopped == "INTERRUPTED" else
+            "SMOKE — proves the job runs end to end on three moves; no "
+            "coverage number may be read from it"
+            if smoke else
+            f"{filed} candidates for {ADMISSION_PATH}. A candidate is "
+            f"a proposal, not a precursor: nothing here changes the "
+            f"library's measured coverage until the measurement job "
+            f"runs."),
         "elapsed_s": round((datetime.now(timezone.utc) - t0).total_seconds(), 1),
         "written_utc": _now(),
     }
