@@ -1140,7 +1140,37 @@ def _case_lab_reader():
             "a CloudReader implementation for the L2 typing loop")
 
 
+def _case_decision_contract():
+    """A cost model that priced the round trip at zero and did not say so.
+
+    The input that is NOT THERE is the DECLARATION: `zero_cost_diagnostic`.
+    Zero costs are a diagnostic, never a default (`portfolio_farm.Policy`, same
+    words) — a contract row that reached a reader on friction it never paid is
+    the failure this refusal exists for.
+    """
+    from backend.services.decision_contract import (CostModelRefused,
+                                                    cost_model_row)
+    return (lambda: cost_model_row("unnamed", round_trip_bps=0.0),
+            CostModelRefused, "a zero-cost book with no diagnostic declared")
+
+
+def _case_decision_ledger():
+    """A lifecycle row about a decision the ledger has never heard of.
+
+    The missing input is the DECISION: `FILLED` for an id with no `DECIDED`
+    row is two writers disagreeing about what happened, and appending it anyway
+    would make the disagreement invisible in the only file built to show it.
+    """
+    from backend.services.decision_ledger import (DecisionLedgerError, LEDGER,
+                                                  record)
+    return (lambda: record("a-decision-that-was-never-made", "SCORED",
+                           by="test", path=LEDGER.parent / "__never_written__"),
+            DecisionLedgerError, "a lifecycle row with no decision under it")
+
+
 CASES = {
+    "decision_contract": _case_decision_contract,
+    "decision_ledger": _case_decision_ledger,
     "brain_queries": _case_brain_queries,
     "agency": _case_agency,
     "book_signals": _case_book_signals,

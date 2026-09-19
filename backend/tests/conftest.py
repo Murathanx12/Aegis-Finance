@@ -189,6 +189,38 @@ def _execution_ledger_to_tmp(_exec_ledger_dir, monkeypatch):
 
 
 @pytest.fixture(scope="session")
+def _decisions_dir(tmp_path_factory):
+    """ONE directory for the whole run — same reasoning as `_exec_ledger_dir`."""
+    return tmp_path_factory.mktemp("decisions")
+
+
+@pytest.fixture(autouse=True)
+def _decision_contract_to_tmp(_decisions_dir, monkeypatch):
+    """Keep the suite's decision contracts and lifecycle rows off the repo.
+
+    FOUND THE SAME WAY AS THE TWO ABOVE — by reading `git status` after a run.
+    `run_morning()` and `run_daily_pass()` both write a Decision Contract now
+    (chunk 18), and the three suites that drive a whole morning end to end were
+    writing `backend/data/optimus/decisions/<today>.json` plus an append-only
+    `ledger.jsonl` into the checkout.
+
+    That is worse than untidy for the same reason the execution ledger was: the
+    contract file is what `ask_tools.tool_decisions` and the copilot answer
+    "what would you buy today" from, so a suite that ranked nothing real could
+    leave the desktop assistant reading a test's rows as the day's decisions.
+    """
+    try:
+        from backend.services import decision_contract, decision_ledger
+        monkeypatch.setattr(decision_contract, "DECISIONS_DIR", _decisions_dir,
+                            raising=False)
+        monkeypatch.setattr(decision_ledger, "LEDGER",
+                            _decisions_dir / "ledger.jsonl", raising=False)
+    except Exception:                                            # noqa: BLE001
+        pass
+    yield
+
+
+@pytest.fixture(scope="session")
 def _book_cadence_receipt_dir(tmp_path_factory):
     """ONE directory for the whole run — same reasoning as `_exec_ledger_dir`."""
     return tmp_path_factory.mktemp("book_cadence")
