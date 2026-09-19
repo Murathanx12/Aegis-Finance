@@ -110,9 +110,11 @@ class TestSizeCeKelly:
 # ── spec refusals ───────────────────────────────────────────────────────────
 class TestSpecRefusals:
     def test_ten_books_load_and_allocator_is_declared(self):
-        assert len(spec_mod.active_specs()) == 9, (
-            "nine ACTIVE books since PROFIT_ALLOCATOR_v1 was retired; its "
-            "ledger and seed are untouched on disk")
+        assert len(spec_mod.active_specs()) == 10, (
+            "nine Gen-1 books since PROFIT_ALLOCATOR_v1 was retired (its "
+            "ledger and seed untouched on disk) plus PROFIT_ALLOCATOR_v2, "
+            "authorised 2026-09-20")
+        assert "PROFIT_ALLOCATOR_v2" in spec_mod.active_specs()
         specs = spec_mod.load_specs()
         assert "PROFIT_ALLOCATOR_v1" in spec_mod.RETIRED
         pa = spec_mod.load_specs()["PROFIT_ALLOCATOR_v1"]
