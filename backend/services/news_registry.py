@@ -76,6 +76,22 @@ REQUIRED_FIELDS = (
 VALID_TIERS = ("1", "2", "3", "social_hypothesis")
 VALID_METHODS = ("api", "rss", "lib")
 
+#: WHICH NETWORK DOOR a source's pages come through. OPTIONAL on a row, and
+#: `plain` when absent — which is what every row written before 2026-09-19
+#: means and what `scripts/news_pull.py` has always done.
+#:
+#: `scrapling` is the stealthy browser fetcher attached in chunk 20
+#: (`backend/services/fetch_scrapling.py`). It is a PER-SOURCE, deliberate
+#: registry edit and never a blanket swap: the stealthy path is slower and
+#: heavier, and the reason it exists is the collector class that 403s on a
+#: plain `urllib` request, not "pages in general".
+#:
+#: Changing this field changes nothing about PIT. A page fetched by a browser
+#: is the same page; `pit_grade` and `label_source` are declared by the row and
+#: invariant 20 still binds (`index_state` may never label).
+VALID_FETCHERS = ("plain", "scrapling")
+DEFAULT_FETCHER = "plain"
+
 
 class RegistryError(ValueError):
     """The registry file itself is wrong. Nothing is pullable until it is fixed."""
@@ -122,6 +138,9 @@ class NewsSource:
     implemented: bool
     implemented_note: str
     notes: str
+    #: Which network door this source's pages come through. Optional in the
+    #: file, `plain` when absent — see `VALID_FETCHERS`.
+    fetcher: str = DEFAULT_FETCHER
     #: GDELT's per-region/per-theme query list; empty for everyone else.
     queries: tuple[str, ...] = ()
     raw: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
@@ -235,6 +254,18 @@ def _validate_row(row: Any, seen: set[str]) -> NewsSource:
     if not isinstance(queries, list) or any(not isinstance(q, str) for q in queries):
         raise RegistryError(f"REFUSED: source {sid!r} `queries` must be a list of strings")
 
+    # OPTIONAL, because every row written before chunk 20 omits it and they all
+    # mean `plain`. An unrecognised value is refused for the same reason an
+    # unrecognised `pit_grade` is: it is not a new kind of door, it is a typo,
+    # and a typo that fell through to the default would silently keep using the
+    # fetcher the editor was trying to change.
+    fetcher = str(row.get("fetcher", DEFAULT_FETCHER) or DEFAULT_FETCHER).strip()
+    if fetcher not in VALID_FETCHERS:
+        raise RegistryError(
+            f"REFUSED: source {sid!r} fetcher {fetcher!r} not in {VALID_FETCHERS}. "
+            f"Omit the field for the plain HTTP door."
+        )
+
     return NewsSource(
         id=sid,
         provider=str(row["provider"]),
@@ -257,6 +288,7 @@ def _validate_row(row: Any, seen: set[str]) -> NewsSource:
         implemented=implemented,
         implemented_note=str(row["implemented_note"]).strip(),
         notes=str(row["notes"]).strip(),
+        fetcher=fetcher,
         queries=tuple(queries),
         raw=dict(row),
     )

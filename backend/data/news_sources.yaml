@@ -37,6 +37,15 @@
 #   licence            what we are allowed to do with it
 #   method             api | rss | lib
 #   parser             which parser in scripts/news_pull.py reads it, or `none`
+#   fetcher            OPTIONAL (chunk 20): which NETWORK DOOR the pages come
+#                      through — `plain` (urllib, the default and what every
+#                      row written before 2026-09-19 means) or `scrapling`
+#                      (the stealthy browser fetcher,
+#                      backend/services/fetch_scrapling.py). A per-source,
+#                      deliberate edit for the collector class that 403s a
+#                      plain request — never a blanket swap. It changes
+#                      nothing about PIT: a page fetched by a browser is the
+#                      same page, and invariant 20 still binds.
 #   endpoint_or_feed   the URL or the call
 #   auth               "none", or "key:ENV_NAME + key:ENV_NAME" — NAMES ONLY,
 #                      never a value; receipts print the source name, not a key
@@ -188,6 +197,55 @@ sources:
       vendor-independent earnings-announcement PIT marker. `raw_id` is the
       accession number. No ticker in the feed; the company name goes through
       N-D's resolver and the CIK is kept in `entity_tags` as `cik:NNNNNNN`.
+
+  - id: sec_edgar_8k_ex99_body
+    provider: SEC EDGAR (8-K Exhibit 99 documents)
+    region: US
+    language: en
+    tier: 1
+    licence: "public domain (US government work)"
+    method: api
+    parser: edgar_ex99
+    fetcher: plain
+    endpoint_or_feed: "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&company=&dateb=&owner=include&count=100&output=atom"
+    auth: none
+    rate_limit: "10 req/s per IP, SEC-wide; a descriptive User-Agent header with a contact address is REQUIRED"
+    min_interval_s: 1.0
+    pit_grade: native_stamp
+    stamp_field: updated
+    stamp_tz: "US/Eastern (filing acceptance time)"
+    ticker_tags: false
+    body_available: true
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: >
+      THE BODY, which `sec_edgar_8k_current_atom` does not have: that row is
+      the feed (filing metadata plus a link), and
+      `spec_social_video_pipeline.md` §1 names SEC 8-K Exhibit 99.1/99.2 as the
+      ONLY genuinely free, lawful, unambiguous route to earnings-call-adjacent
+      text. It gives the press release and sometimes the prepared remarks, and
+      NEVER the Q&A — which is exactly where "what is holding back growth"
+      usually gets answered. That gap is real and is named rather than papered
+      over with a grey-area transcript scrape.
+      `fetcher: plain` ON PURPOSE. The chunk-20 brief allowed the stealthy
+      Scrapling door here; SEC does not need it and should not get it. EDGAR is
+      fully public, rate-limits at 10 req/s and REQUIRES a descriptive
+      User-Agent naming a contact — spoofing a browser fingerprint at a
+      government fair-access endpoint would break the one rule it actually
+      asks of us, to buy nothing. The stealthy door is attached
+      (`backend/services/fetch_scrapling.py`, `fetcher: scrapling`) and is for
+      the collector class that 403s a plain request.
+      COST: one feed call, then two calls per filing that names Item 2.02,
+      7.01 or 8.01 (the index-headers page, then the exhibit). PROBED
+      2026-09-19 with three live requests, which found two things a plausible
+      parser would have got wrong: `index.json`'s `item[].type` is a GIF ICON
+      NAME (`text.gif`), so an EX-99 cannot be told from an EX-10 there at all;
+      and `<accession>-index-headers.html` carries the real SGML types
+      HTML-ESCAPED (`&lt;TYPE&gt;EX-99.1`), the same shape as the escaped
+      `<summary>` that once gave every EDGAR entry one shared `raw_id`.
+      `raw_id` is `<accession>:<exhibit filename>`, not the accession, so this
+      source's body rows never dedupe against the feed source's headline rows.
 
   - id: yfinance_ticker_news
     provider: Yahoo Finance (via yfinance, unofficial)

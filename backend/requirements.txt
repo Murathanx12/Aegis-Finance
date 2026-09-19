@@ -69,6 +69,24 @@ pytrends>=4.9.0
 # Market data APIs
 polygon-api-client>=1.14.0
 
+# Stealthy fetcher for the sources that 403 a plain urllib request (chunk 20;
+# `docs/research_notes/2026-09-19/research_external_repos_round4.md` §6 rates it
+# ATTACH_NOW). BSD-3-Clause, so a public repo can depend on it without any
+# combined-work question. Version as installed and verified 2026-09-19.
+#
+# THE `[fetchers]` EXTRA AND THE ONE CONFLICT IT CREATES, checked rather than
+# assumed: it carries `curl_cffi>=0.16.1`, and the yfinance that happened to be
+# installed locally (1.2.0) declares `curl_cffi<0.14`. What this file actually
+# resolves to is yfinance 1.7.0, which requires `curl_cffi>=0.15` — so the
+# conflict is a stale LOCAL pin, not a CI conflict. One live call on the
+# upgraded pair (curl_cffi 0.16.3 + yfinance 1.2.0) returned 10 news rows and 5
+# daily bars, so the ceiling is stale rather than load-bearing.
+#
+# `scrapling install` (the Camoufox/Playwright browser binaries) is a BY-HAND,
+# once-per-machine step and deliberately NOT a runtime call — no test needs it,
+# and `fetch_scrapling.fetch` refuses BY NAME when it is missing.
+scrapling[fetchers]>=0.4.15
+
 # Utilities
 requests>=2.31.0
 python-dotenv>=1.0.0

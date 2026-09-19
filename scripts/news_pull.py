@@ -81,6 +81,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as _config  # noqa: E402
+from backend.services import fetch_scrapling  # noqa: E402
 from backend.services import news_entities as entities  # noqa: E402
 from backend.services import news_registry as registry  # noqa: E402
 
@@ -102,6 +103,12 @@ MAX_BODY = 4000
 ROW_KEYS = (
     "source", "first_seen_utc", "published_utc", "tz_source", "url", "title",
     "body", "lang", "tickers", "entity_tags", "raw_id", "pit_grade",
+    # Chunk 20: WHICH DOOR this row came through (`plain` / `scrapling`).
+    # On the row and not only on the receipt, because a receipt is per RUN and
+    # a stealthy fetcher is switched on per SOURCE: the day one source's rows
+    # start disagreeing with another's, the question is which fetcher read them
+    # and the answer has to be in the row, not in a file from that night.
+    "fetcher",
 )
 
 
@@ -499,10 +506,159 @@ def fetch_feed(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
     parser = PARSERS[src.parser]
     try:
         res.calls += 1
-        raw = ctx.http_get(src.endpoint_or_feed)
+        raw = ctx.http_get_via(src, src.endpoint_or_feed)
         res.items = parser(raw)
     except (FetchError, ET.ParseError) as e:
         res.failures.append(str(e))
+    return res
+
+
+# --------------------------------------------------- SEC 8-K Exhibit 99 body
+
+#: WHICH 8-K items carry an Exhibit 99 worth reading. 2.02 is the earnings
+#: press release, 7.01 the Reg-FD disclosure, 8.01 the catch-all "other
+#: events". Declared here rather than inferred, so a receipt can say what the
+#: filter WAS and a later widening is a visible edit.
+EX99_ITEMS = ("2.02", "7.01", "8.01")
+
+#: The exhibit types this fetcher will read. `EX-99` covers EX-99, EX-99.1,
+#: EX-99.2 — the press release and the prepared remarks.
+EX99_TYPE_PREFIX = "EX-99"
+
+#: Requests a single filing costs: one index-headers page, one exhibit body.
+#: A CONTRACT, asserted by test, because a fetcher whose per-item cost drifts
+#: silently is a fetcher that breaks somebody else's rate limit.
+EX99_REQUESTS_PER_FILING = 2
+
+
+def parse_filing_documents(raw: bytes | str) -> list[dict]:
+    """`[{type, filename, description, sequence}]` from a filing's index-headers page.
+
+    THE PROBE'S CORRECTION, 2026-09-19. The plan was to read `index.json`,
+    which is the obvious structured door — and its `item[].type` is the name of
+    a GIF ICON (`text.gif`, `compressed.gif`), not the SGML document type. An
+    Ex-99 cannot be told from an Ex-10 there at all; only the FILENAME hints,
+    and filenames are per-filer conventions (`cacc_8k20260917pr.htm` is a press
+    release and says so nowhere a parser can read).
+
+    `<accession>-index-headers.html` carries the real SGML header — and carries
+    it HTML-ESCAPED (`&lt;TYPE&gt;EX-99.1`), which is the same shape as the
+    escaped `<summary>` that once made every EDGAR entry share one `raw_id`.
+    So the page is unescaped first and then split on `<DOCUMENT>`, which reads
+    both the escaped page and the raw `.txt` submission with one code path.
+    """
+    import html as _html
+
+    text = fetch_scrapling._decode(raw)
+    text = _html.unescape(text)
+    out: list[dict] = []
+    for chunk in text.split("<DOCUMENT>")[1:]:
+        chunk = chunk.split("</DOCUMENT>")[0]
+        got = {}
+        for key in ("TYPE", "SEQUENCE", "FILENAME", "DESCRIPTION"):
+            m = re.search(rf"<{key}>[ \t]*([^\r\n<]*)", chunk)
+            got[key.lower()] = (m.group(1).strip() if m else "")
+        if got["type"] or got["filename"]:
+            out.append(got)
+    return out
+
+
+def exhibit_99_documents(docs: list[dict]) -> list[dict]:
+    """The EX-99* documents, in filing order. `[]` is a real answer.
+
+    Many 8-Ks carrying Item 2.02 attach the release; some do not, and an empty
+    list is "this filing has no Exhibit 99", not a parse failure. The caller
+    counts them separately for exactly that reason.
+    """
+    return [d for d in docs
+            if d.get("type", "").upper().startswith(EX99_TYPE_PREFIX)
+            and d.get("filename")]
+
+
+def _filing_base(link: str) -> tuple[str, str]:
+    """`(directory url, accession)` from an EDGAR `-index.htm` link."""
+    if "/" not in link:
+        return "", ""
+    base, last = link.rsplit("/", 1)
+    acc = last.replace("-index.htm", "").replace("-index.html", "")
+    return base, acc
+
+
+def fetch_edgar_ex99(src: registry.NewsSource, ctx: "RunContext") -> FetchResult:
+    """The 8-K Exhibit 99 BODY — the free, no-key, no-ToS-ambiguity call text.
+
+    `spec_social_video_pipeline.md` §1's net read: SEC 8-K Exhibit 99.1/99.2 is
+    the ONLY genuinely free, lawful, unambiguous route to earnings-call-adjacent
+    text. It gives the press release and sometimes the prepared remarks, and
+    NOT the Q&A — which is where the "what is holding back growth" answer
+    usually lives. That gap is named, not papered over.
+
+    Three calls' worth of structure, per filing: the current-filings Atom feed
+    (one call, shared), then `EX99_REQUESTS_PER_FILING` per filing that passes
+    the item filter. The feed row itself is already registered as
+    `sec_edgar_8k_current_atom`; this source is the BODY, which did not exist.
+    """
+    res = FetchResult()
+    try:
+        res.calls += 1
+        entries = parse_edgar_atom(ctx.http_get_via(src, src.endpoint_or_feed))
+    except (FetchError, ET.ParseError) as e:
+        res.failures.append(f"feed: {e}")
+        return res
+
+    wanted = {f"8-K:{i}" for i in EX99_ITEMS}
+    candidates = [e for e in entries if wanted & set(e.get("entity_tags") or [])]
+    res.failures.append(
+        f"feed carried {len(entries)} filing(s); {len(candidates)} name an item in "
+        f"{list(EX99_ITEMS)}. This is a FILTER, printed so a zero-row run is "
+        f"readable: an 8-K with no Item 2.02/7.01/8.01 is skipped unread.")
+
+    no_exhibit = 0
+    for entry in candidates:
+        if ctx.budget_spent(res):
+            break
+        base, acc = _filing_base(entry.get("url") or "")
+        if not base or not acc:
+            res.failures.append(f"{entry.get('raw_id')}: no filing directory in the link")
+            continue
+        _sleep(ctx.pace(src))
+        try:
+            res.calls += 1
+            docs = parse_filing_documents(
+                ctx.http_get_via(src, f"{base}/{acc}-index-headers.html"))
+        except FetchError as e:
+            res.failures.append(f"{acc}: index-headers: {e}")
+            continue
+        exhibits = exhibit_99_documents(docs)
+        if not exhibits:
+            no_exhibit += 1
+            continue
+        doc = exhibits[0]
+        url = f"{base}/{doc['filename']}"
+        _sleep(ctx.pace(src))
+        try:
+            res.calls += 1
+            body = _strip_html(fetch_scrapling._decode(ctx.http_get_via(src, url)))
+        except FetchError as e:
+            res.failures.append(f"{acc}: {doc['filename']}: {e}")
+            continue
+        res.items.append({
+            "title": f"{entry.get('title')} — {doc['type']}",
+            "url": url,
+            "body": body,
+            "published": entry.get("published"),
+            # The accession alone would collide with the FEED row's raw_id and
+            # dedupe this source's body against that source's headline the day
+            # somebody merges the two corpora. The exhibit file is what makes
+            # this row its own document.
+            "raw_id": f"{acc}:{doc['filename']}",
+            "entity_tags": list(entry.get("entity_tags") or [])
+                           + [f"exhibit:{doc['type']}", f"accession:{acc}"],
+            "resolve_text": entry.get("resolve_text") or entry.get("title") or "",
+        })
+    res.failures.append(
+        f"{no_exhibit} filing(s) passed the item filter and attached NO Exhibit 99 — "
+        f"that is an answer about the filing, not a parse failure.")
     return res
 
 
@@ -685,6 +841,7 @@ FETCHERS: dict[str, Callable[[registry.NewsSource, "RunContext"], FetchResult]] 
     "rss1_rdf": fetch_feed,
     "atom_generic": fetch_feed,
     "edgar_atom": fetch_edgar,
+    "edgar_ex99": fetch_edgar_ex99,
     "gdelt_doc": fetch_gdelt,
     "alpaca_news": fetch_alpaca,
     "yfinance_news": fetch_yfinance_news,
@@ -723,6 +880,36 @@ class RunContext:
         host = urllib.parse.urlsplit(url).netloc
         return call_with_timeout(lambda: _http_get(url, headers=headers),
                                  HTTP_CALL_TIMEOUT_S, f"http {host}")
+
+    def http_get_via(self, src: registry.NewsSource, url: str,
+                     headers: dict | None = None) -> bytes:
+        """THE DOOR THE SOURCE DECLARED. `plain` is every row written before
+        chunk 20 and is still the default.
+
+        A `fetcher: scrapling` row goes through `fetch_scrapling.fetch`, which
+        never raises: its refusals are NAMES, and they are turned into
+        `FetchError` here so the rest of `news_pull` — the two-zero-runs rule,
+        the receipt, the cursor — treats a stealth failure exactly like an HTTP
+        failure, which is what it is. A test that stubs `http_get` still stubs
+        the plain path; a scrapling row is driven by injecting the adapter.
+        """
+        if src.fetcher != fetch_scrapling.FETCHER_NAME:
+            return self.http_get(url, headers)
+        budget = self.budget_s or SOURCE_BUDGET_S
+        res = self.scrapling_fetch(url, budget_s=min(float(budget),
+                                                     fetch_scrapling.DEFAULT_BUDGET_S))
+        if res.get("refused"):
+            raise FetchError(f"{res['refused']}: {res.get('detail') or ''} "
+                             f"({url.split('?')[0]})")
+        status = res.get("status")
+        if status is not None and int(status) >= 400:
+            raise FetchError(f"HTTP {status} {url.split('?')[0]} (via "
+                             f"{fetch_scrapling.FETCHER_NAME})")
+        return str(res.get("html") or "").encode("utf-8")
+
+    def scrapling_fetch(self, url: str, *, budget_s: float) -> dict:
+        """The stealthy door as a METHOD, so a test substitutes it like the rest."""
+        return fetch_scrapling.fetch(url, budget_s=budget_s)
 
     def alpaca_credential(self) -> tuple[str | None, str | None, str]:
         return alpaca_credential()
@@ -878,6 +1065,7 @@ def _row(src: registry.NewsSource, item: dict, first_seen: datetime, tbl) -> dic
         "entity_tags": tags,
         "raw_id": str(item.get("raw_id") or item.get("url") or "")[:512],
         "pit_grade": src.pit_grade,
+        "fetcher": src.fetcher,
     }
 
 
@@ -900,7 +1088,8 @@ def pull_source(source_id: str, ctx: RunContext | None = None) -> dict:
         "job": "news_pull", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
         "source": src.id, "provider": src.provider, "region": src.region,
         "tier": src.tier, "pit_grade": src.pit_grade, "label_source": src.label_source,
-        "parser": src.parser, "min_interval_s": src.min_interval_s,
+        "parser": src.parser, "fetcher": src.fetcher,
+        "min_interval_s": src.min_interval_s,
         "started_utc": _iso(started), "requested": 0, "received": 0, "new": 0,
         "dupes": 0, "failures": [], "calls": 0, "rows_by_day": {},
         "resolved": 0, "unresolved": 0, "resolution_rate": None,
@@ -1041,6 +1230,7 @@ def pull_all(source_ids: Iterable[str] | None = None, ctx: RunContext | None = N
         )
         if ctx is not None:
             c.http_get = ctx.http_get            # type: ignore[method-assign]
+            c.scrapling_fetch = ctx.scrapling_fetch  # type: ignore[method-assign]
             c.yf_news = ctx.yf_news              # type: ignore[method-assign]
             c.alpaca_credential = ctx.alpaca_credential  # type: ignore[method-assign]
             c._universe = ctx._universe
