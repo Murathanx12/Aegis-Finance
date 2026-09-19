@@ -1512,6 +1512,16 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # starts or stops a server: with none answering it writes
         # PENDING_MODEL with the candidate list frozen and hashed.
         "L2_retype_v3": _lazy("scripts.night_l2_retype_v3", "L2_retype_v3"),
+        # 2026-09-19, chunk 20: the five variables of the social spec's §2,
+        # each computed beside its OWN null (shuffled ticker; matched-day
+        # count), into one panel-joinable parquet. Nothing here is a signal
+        # claim -- no variable has a TRIALS entry yet. Its one model-touching
+        # half (comment stance) goes through the same local reader as L2 and
+        # refuses PENDING_MODEL with the candidate list frozen and hashed; the
+        # other four need no model. Today every variable refuses NO_SOCIAL_ROWS
+        # BY NAME, because neither social key exists yet.
+        "S1_social_features": _lazy("scripts.night_social_features",
+                                    "S1_social_features"),
         # E3 2026-09-13, chunk 9: adaptive conformal intervals (Gibbs-Candes
         # 2021 + Barber et al. 2023 recency weights), graded by REALISED
         # coverage per volatility tercile. Runs on whichever head first shows a
@@ -1745,6 +1755,11 @@ JOB_STAGES = {
     # files are a `signal`-stage artefact and nothing downstream may read them
     # as weights.
     "N9_library_autopsy": "signal",
+    # S1 turns social rows and typed events into feature COLUMNS and reads the
+    # price tape only for a TRAILING return that ends strictly before the
+    # feature date. It composes no portfolio and charges no cost, so its
+    # artefact is `signal` and nothing downstream may read it as weights.
+    "S1_social_features": "signal",
     # A collector produces RAW rows and prices nothing; the stage contract is
     # what stops it ever reading a `weights` or `pnl` artefact.
     "H1_hiring_pull": "raw",
@@ -1837,7 +1852,8 @@ def main(argv=None) -> int:
     elif a.job == "L2_retype_v3":
         payload = fn(smoke=a.smoke, run=a.run, workers=a.workers)
     elif a.job in ("E2_embedding_horizon", "E1_event_head", "E3_adaptive_conformal",
-                   "E4_adwin_gated_refit", "L4_qwen3_measure"):
+                   "E4_adwin_gated_refit", "L4_qwen3_measure",
+                   "S1_social_features"):
         payload = fn(smoke=a.smoke, run=a.run)
     elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
         # the X lane takes the run number: its frozen cell list is filed under
