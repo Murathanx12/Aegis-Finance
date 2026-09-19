@@ -911,7 +911,7 @@ clause before a new idea is registered · nothing LLM-derived allocates, still.
 | **20** | **social phase 1** (social spec §3): Scrapling attached; Reddit comments + YouTube search via the registry; `growth_constraint_cited`; the five variables computed nightly into the panel; the shuffled-ticker and anonymised controls | the first `mention_velocity` and `stance_dispersion` columns on the E1 panel with their nulls (needs Murat's two keys) |
 | **21** | **re-test 2**: the 13D event-window book with the 13G placebo, at $3M and $10M with twins | a receipt with the placebo beside it |
 | **22** | re-tests 4 and 5 (the $10M re-audit; TAQ costs on the §22 graduates) · Kronos as a NN-lab arm behind a prereg · NautilusTrader cross-check for lane D | filed results, not activity |
-| terminal | the fleet deploy (Murat's lines, unchanged) · delete `aat-loop-staging` · the overnight execution rule in the allocator · the seal-authority 404 client | `SEAL AUTHORITY ALLOCATED day=` in the logs |
+| terminal | the fleet deploy (Murat's lines, unchanged) · delete `aat-loop-staging` · the overnight execution rule in the allocator · ~~the seal-authority 404 client~~ (benign: 2026-09-19 is a Saturday; the loops poll for a weekend book) | `SEAL AUTHORITY ALLOCATED day=` in the logs |
 
 ### 14.5 WHAT MURAT DOES (only what Claude Code cannot)
 

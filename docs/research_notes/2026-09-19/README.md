@@ -58,3 +58,4 @@ Facts read by Fable before the agents launched (2026-09-19 11:50-12:10 HKT):
   `/2026-09-19.json`; DeepSeek $56.98; lab $0; the lab owns its clock (spec §4.3).
 - social: Reddit + YouTube + SEC 8-K Ex.99 lawful and free; Instagram no; X metered; five variables.
 - repos: Scrapling now; Nautilus + Kronos later; Xfield unidentified.
+- 12:55: the seal-authority 404s on `/2026-09-19.json` are BENIGN — 2026-09-19 is a Saturday; the loops poll for a session book that does not exist on a weekend. Not a defect; struck from the terminal list.
