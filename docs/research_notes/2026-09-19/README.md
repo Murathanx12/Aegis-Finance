@@ -59,3 +59,4 @@ Facts read by Fable before the agents launched (2026-09-19 11:50-12:10 HKT):
 - social: Reddit + YouTube + SEC 8-K Ex.99 lawful and free; Instagram no; X metered; five variables.
 - repos: Scrapling now; Nautilus + Kronos later; Xfield unidentified.
 - 12:55: the seal-authority 404s on `/2026-09-19.json` are BENIGN — 2026-09-19 is a Saturday; the loops poll for a session book that does not exist on a weekend. Not a defect; struck from the terminal list.
+- ~17:00: re-test 1 READ — four exclusion screens FAILED_VARIANT on the F host at $10M (NEGATIVE_RESULTS §58). N9 probe: 400 candidates for $0.21; `deepseek-flash` was unpriced (fixed). Chunk 19 validated pending the suite.

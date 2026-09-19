@@ -3252,3 +3252,37 @@ be taken at, because *the control's own level moves with the corner*.
 
 `H5|all` is closed. The same instrument is not re-run, and no successor was
 registered from that session.
+
+## 58. The exclusion screens the ledger named three times, run once: nothing to exclude (B_exclusion_screen)
+
+**Date:** 2026-09-19. **Receipt:** `backend/data/optimus/night_factory_2026-09-19/B_exclusion_screen_run01.json`
+(family `EXCLUSION_SCREEN_2026_09_19`, four screens, Holm over four, stage `pnl`, 138 s).
+**Licence:** `PRODUCT_EXPERIMENT` read. **Origin:** `docs/research_notes/2026-09-19/research_failure_thesis.md`
+re-test 1 — §26, §27 and §28 each observed that the option-implied and institutional-ownership rank
+information sits in the SHORT leg a long-only book cannot hold, and each said an exclusion screen was the
+untested construction. Chunk 19 built it; this is the first read.
+
+**Construction (printed on the receipt):** the host is Book F (calendar seasonality, the only registered
+book alive at the tradable floor), replayed at the $10M floor over 419 monthly date blocks; for each of
+`io_level`, `io_abn` (within-month residual on the declared characteristic set), `skew_25d` and
+`skew_resid`, the worst decile in the direction the ledger measured is EXCLUDED before selection; the twin
+is a random exclusion of the same count each rebalance; the same cost model as the host.
+
+| screen | net vs unscreened /mo | t | net vs random exclusion /mo | t | verdict |
+|---|---|---|---|---|---|
+| io_level (low end) | −0.024% | −0.52 | +0.006% | +0.15 | FAILED_VARIANT |
+| io_abn (low end) | −0.045% | −1.02 | −0.033% | −0.70 | FAILED_VARIANT |
+| skew_25d (high end) | −0.057% | −1.12 | −0.027% | −0.53 | FAILED_VARIANT |
+| skew_resid (high end) | −0.031% | −0.59 | −0.020% | −0.35 | FAILED_VARIANT |
+
+**Reading.** No screen beats either control; three of four cost the host a few basis points a month, which
+is what removing 10% of a seasonality book's eligible names at random also does. The rank information the
+three sections measured does not translate into a defensive overlay on THIS host at THIS floor.
+
+**Scope, stated so this is not over-read.** One host book, one floor, the tradable band (median $ volume
+≥ $10M). §26-28 measured their ranks on the module's large/mid universe with monthly long-short
+constructions; a screen on a momentum or quality host in that universe is a different cell and has not
+been run. The construction the ledger flagged is now measured once and found empty where the programme
+has a live book; it is `FAILED_VARIANT`, not `MECHANISM_REJECTED`. The ownership rank carries no value
+before 1996 on this checkout (holdings files 1989-1995 absent; those months are counted on the receipt as
+`months_with_no_rank_in_pool`, nothing is excluded in them).
