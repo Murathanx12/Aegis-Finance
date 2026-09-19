@@ -1952,6 +1952,13 @@ LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
     "deepseek-chat": {"in": 0.169413, "cached_in": 0.00338826, "out": 1.284835},
     "deepseek-reasoner": {"in": 0.169413, "cached_in": 0.00338826,
                           "out": 1.284835},
+    # 2026-09-19, MEASURED: a `deepseek-chat` request now comes back with
+    # `usage.model == "deepseek-flash"` (the V4.1-Flash rename of 2026-09-14).
+    # The first N9 probe made every call at cost_usd=None, so its $1 cap read a
+    # LOWER BOUND of $0 while the balance moved $0.21. Priced as v4-flash until
+    # a balance re-derivation says otherwise; `deepseek-pro` propagated likewise.
+    "deepseek-flash": {"in": 0.169413, "cached_in": 0.00338826, "out": 1.284835},
+    "deepseek-pro": {"in": 0.526390, "cached_in": 0.00438659, "out": 3.992166},
     # ── FREE TIER (2026-09-07). Zeros, and in THIS table on purpose. ────────
     # A free model is not "no price"; it is a price of zero, and the difference
     # decides what a total means. `llm_telemetry.price_call` returns None for a
