@@ -136,9 +136,14 @@ def test_the_shipped_tables_load_and_report_their_gap():
     s = ne.stats()
     assert s["issuer_rows"] >= 3000, "issuers.csv lost rows"
     assert s["adr_rows"] >= 25, "asia_adrs.csv lost rows"
-    # The known 2026-09-11 gap, stated as a number rather than a feeling.
-    assert s["named_symbols"] < s["issuer_rows"]
+    # The gap is REPORTED as a number and a state, never asserted as a fact:
+    # on 2026-09-19 the first full analyst snapshot since 09-13 closed it
+    # (3,057 named of 3,056 issuer rows) and the dated `<` went red on the day
+    # the data got better. Either state is a valid table; a missing report is not.
+    assert s["name_table_gap_rows"] == s["issuer_rows"] - s["named_symbols"]
     assert "name-table gap" in s["note"]
+    assert ("OPEN" in s["note"]) == (s["name_table_gap_rows"] > 0)
+    assert ("CLOSED" in s["note"]) == (s["name_table_gap_rows"] <= 0)
 
 
 def test_the_shipped_adr_fixes_survive():

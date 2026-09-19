@@ -356,7 +356,20 @@ def stats(tbl: _Tables | None = None) -> dict:
     is a DATA gap with a number beside it, not a broken resolver.
     """
     t = tbl or tables()
+    # 2026-09-19: the note used to ASSERT the 09-11 gap as a fact ("named <
+    # issuers"); the first full 2,362-name analyst snapshot since 09-13 closed
+    # it the same afternoon (3,057 named of 3,056 issuer rows -- the named set
+    # also carries ADR symbols) and a test that pinned the dated inequality went
+    # red on the day the data got better. A gate that cannot stay green as the
+    # system improves is a broken gate: the note now REPORTS the state.
+    gap = int(t.n_issuer_rows) - len(t.named_symbols)
+    gap_state = (f"name-table gap OPEN: {len(t.named_symbols)} of "
+                 f"{t.n_issuer_rows} issuer rows carry a primary_name"
+                 if gap > 0 else
+                 f"name-table gap CLOSED: {len(t.named_symbols)} named symbols "
+                 f"against {t.n_issuer_rows} issuer rows")
     return {
+        "name_table_gap_rows": gap,
         "issuer_rows": t.n_issuer_rows,
         "adr_rows": t.n_adr_rows,
         "symbols": len(t.symbols),
@@ -369,9 +382,8 @@ def stats(tbl: _Tables | None = None) -> dict:
         "issuers_path": str(t.issuers_path),
         "adrs_path": str(t.adrs_path),
         "note": (
-            "named_symbols < issuer_rows is the known 2026-09-11 name-table gap "
-            "(yfinance .info measured at 1.38 s/name; the full 3,056-name pull is "
-            "~70 minutes). Symbols without a primary_name are still reachable by "
-            "explicit ticker token."
+            gap_state + " (the 2026-09-11 gap was 200 of 3,056; yfinance .info "
+            "measured at 1.38 s/name, the full pull ~70 minutes). Symbols without "
+            "a primary_name are still reachable by explicit ticker token."
         ),
     }
