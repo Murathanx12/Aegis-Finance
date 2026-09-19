@@ -91,7 +91,11 @@ def test_router_setting_still_scopes_to_consuming_books(raw, monkeypatch):
     monkeypatch.setattr(trust_router, "CLUSTER_ADJUST_DEFAULT", True)
     after = _fps(raw)
     drifted = [b for b in before if before[b] != after[b]]
-    assert drifted == ["PROFIT_ALLOCATOR_v1"], drifted
+    # BOTH ce_kelly books and only those. v2 (chunk 19) is registered under the
+    # CORRECTED router, so it is born carrying `router:cluster_adjust=1` and
+    # has no legacy identity to protect -- which is the whole reason it is a
+    # new book rather than v1 restarted.
+    assert drifted == ["PROFIT_ALLOCATOR_v1", "PROFIT_ALLOCATOR_v2"], drifted
 
 
 # ---------------------------------------------------------- the migration
@@ -216,9 +220,74 @@ def test_reseeding_a_changed_book_is_still_refused(tmp_path, monkeypatch):
 # The seeded value is asserted literally because that is the number the live
 # books are sealed under. If a deliberate config change moves it, this test is
 # supposed to fail and force the attended migration decision.
+#
+# IT MOVED ON 2026-09-19, AND THIS IS THAT DECISION, RECORDED.
+# ===========================================================
+# Chunk 19 registered `PROFIT_ALLOCATOR_v2`. Adding a book changes the WHOLE
+# FILE's bytes, so the legacy value moved — and that is precisely the defect
+# book-v1 identity was built to stop mattering: `test_adding_a_new_book_drifts_
+# NOTHING` above proves the nine live books' OWN fingerprints did not move, and
+# those are the values their seeds verify against. The legacy hash is carried
+# on receipts and for migrating books still on the old scheme; it is no longer
+# the verification key.
+#
+# The old value is kept beside the new one rather than overwritten, because a
+# constant that is silently re-pointed records nothing. And the real invariant
+# — the nine live books' per-book fingerprints — is now asserted LITERALLY
+# below, where it belongs: pinning the file hash pinned the wrong object, which
+# is how this test could go red for a change that broke nothing.
 
-SEEDED_CONFIG_HASH = (
+#: The value the ten Gen-1 books were sealed under, 2026-08-21. Historical.
+SEEDED_CONFIG_HASH_2026_08_21 = (
     "641adafc38703b5c3c898103639cd9e7c1f3608275757b2c93ac74f5f71ef7db")
+
+#: The current whole-file hash. Moved 2026-09-19 by the registration of
+#: PROFIT_ALLOCATOR_v2 (chunk 19) and by nothing else.
+SEEDED_CONFIG_HASH = (
+    "e84713bb5e57e847209df28915cccb61d69732c96a6c5fcc4832248cc1a37a6c")
+
+#: THE INVARIANT THAT ACTUALLY PROTECTS THE LIVE SEEDS. Recorded from the
+#: checkout immediately BEFORE the v2 registration and re-verified immediately
+#: after: every one is byte-identical across that edit.
+LIVE_BOOK_FINGERPRINTS = {
+    "ENGINE_BASELINE_v1":
+        "39c7177b5d6e517c8f6795fc3d879132503a24501385ae4c20e57392ec714005",
+    "RISK_SIZED_v1":
+        "df833a0b014eb7656a1044e67448e805979a0d962405ee91990f40e2f9c0e448",
+    "WINNER_EXEMPT_v1":
+        "4e02b36ee22cd286d798bec031d1d8f24289f7dd75539030b3940da7e01ebe89",
+    "ANTI_SIGNAL_v1":
+        "9e6d1afcc05f0992397304bd705f9368763a429deb50c7b084723b6a32980e2b",
+    "LLM_PERCEPTION_v1":
+        "23e811940e8919eddb7c1e6adb27154d8213e992f4b8eec0c24c7cd394bff11b",
+    "LLM_EVENTS_v1":
+        "ee0ffcfed025f6af2032fa878463686782b93e393fb4dec601c217778c5269d2",
+    "CURRENT_BEST_v1":
+        "49ce8063bd68b698c09a5edffe7104d88cb5e49ae3ba35bd9bc9d4593c65869c",
+    "AGGRESSIVE_TOP5_v1":
+        "62af76ad90133769a7887c085d25a449c6138cb390427b34d2d0afab0aab4dc9",
+    "DIVERSIFIED_TOP20_v1":
+        "698385a3a69c7037739a2ac3c4b31fe7dbdc75dab52d0075fa63286bf97573fd",
+    # Under the CORRECTED router, which is why this book is retired.
+    "PROFIT_ALLOCATOR_v1":
+        "4b9366bbcc6dcc594e0088a21bf1c5989201b4a9c17c5d5a4392da61f77ab1b6",
+}
+
+
+def test_the_live_books_own_fingerprints_did_not_move(raw):
+    """The invariant the file hash was standing in for, pinned literally.
+
+    Read under the LIVE router setting -- what the books actually run as today,
+    not what they were sealed as in August. `PROFIT_ALLOCATOR_v1` carries the
+    corrected router in its identity, which is exactly why it is RETIRED rather
+    than running.
+    """
+    got = _fps(raw)
+    for book, want in LIVE_BOOK_FINGERPRINTS.items():
+        assert got[book] == want, (
+            f"{book}'s OWN identity moved. This is the value its seed verifies "
+            f"against; a book whose fingerprint moves must be launched as a new "
+            f"immutable version, not edited in place.")
 
 
 def test_config_hash_is_invariant_to_line_endings(tmp_path):

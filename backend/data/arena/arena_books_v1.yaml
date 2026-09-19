@@ -236,9 +236,75 @@ books:
                                 # construction, not by mood
       max_gross: 1.0            # long-only, no leverage; cash is the residual
 
+  # CHUNK 19 (2026-09-19). THE CONSTRUCTION TEST v1 NEVER GOT TO RUN.
+  #
+  # PROFIT_ALLOCATOR_v1 was seeded 2026-08-21 with the trust router's cluster
+  # adjustment OFF and retired 2026-08-23 when the setting was corrected to ON:
+  # the router is part of a ce_kelly book's policy identity, so the book
+  # correctly refused to continue under its own seed. It has ONE NAV row. The
+  # question it was registered to answer -- does sizing by conviction beat 1/N
+  # at the SAME alpha, net of costs -- has therefore never been measured here.
+  #
+  # v2 is that question and nothing else. Same selection as ENGINE_BASELINE_v1
+  # (`arena_composite`, `composite_top_k`), same universe, same costs, same
+  # gates: the ONLY difference from its twin is the sizing rule, which is what
+  # makes this a CONSTRUCTION test and not a smuggled selection test (THE
+  # BOTTLENECK: a new mechanism arrives as its own book, never as a weight).
+  #
+  # ENGINE_BASELINE_v1 IS THE TWIN. It is the arena's equal-weight control and
+  # it is already live with a NAV history, so this book's number is a
+  # difference against a running control rather than against a number computed
+  # afterwards.
+  #
+  # The prior under test is DeMiguel-Garlappi-Uppal (RFS 2009): across seven
+  # datasets and fourteen optimisation models, naive 1/N was not reliably
+  # beaten out of sample, because estimation error in the mean-return vector
+  # swamps the theoretical gain. Kelly sizing here does NOT estimate a mean --
+  # `ic_prior` is DECLARED and never fit -- which is the one version of the
+  # question DGU's result does not already answer.
+  #
+  # Draft registration: docs/TRIALS/TRIAL-DRAFT-KELLY-CONSTRUCTION-v2.md
+  # (UNSIGNED). NOT in AUTHORISED_ACTIVE: this book is registered, not seeded.
+  PROFIT_ALLOCATOR_v2:
+    purpose: arena-capital-engine-ce-kelly-v2-vs-ENGINE_BASELINE_v1
+    policy_version: 1
+    selection: composite_top_k
+    sizing: ce_kelly
+    screens: []
+    llm_perception: false
+    allocator:
+      # COPIED VERBATIM FROM v1, and they are DECLARED PRIORS: neither number
+      # is fit to this book's own history, to the arena's history, or to any
+      # backtest. Grinold's mu = IC * z * sigma needs an IC and the honest
+      # choice is a published one, stated in advance, that the receipt prints
+      # on every decision. Fitting either of them to the book would make the
+      # book's result a statement about the fit.
+      ic_prior: 0.05            # upper range of published momentum ICs
+      kelly_fraction: 0.5       # half-Kelly at full trust
+      abstain_kelly_factor: 0.5 # quarter-Kelly effective until the router
+                                # can vouch (RECOMMENDED)
+      max_gross: 1.0            # long-only, no leverage; cash is the residual
+
 seeding:
   authorised: "Murat, 2026-08-20 (verbatim: 'this is your sandbox... lets start
     building the platform') — recorded in docs/ORDER_25_LIVE_ARENA_GEN1.md.
     Arena books are SIMULATION ledgers (class of lane_factory_sim /
     shadow_portfolios), not lanes; seed-a-lane governs real lanes only."
   script: python -m scripts.arena_run --seed
+  # PROFIT_ALLOCATOR_v2 IS NOT COVERED BY THE AUTHORISATION ABOVE.
+  #
+  # That sentence authorises the 2026-08-20 Gen-1 set. A book registered a
+  # month later is not retroactively authorised by it, and the enforcement is
+  # not this comment: `spec.AUTHORISED_ACTIVE` does not name v2, so
+  # `active_specs()` will not return it and `engine.seed_all()` cannot write an
+  # inception for it. This block records the state in the file a reader opens.
+  profit_allocator_v2:
+    authorised: ""              # EMPTY ON PURPOSE. Seeding is attended:
+                                # Murat flips the flag. A session does not
+                                # decide to start a track record.
+    registered: "2026-09-19 (chunk 19), draft
+      docs/TRIALS/TRIAL-DRAFT-KELLY-CONSTRUCTION-v2.md, UNSIGNED"
+    twin: ENGINE_BASELINE_v1
+    to_activate: "add PROFIT_ALLOCATOR_v2 to spec.AUTHORISED_ACTIVE, sign the
+      draft, then `python -m scripts.arena_run --seed`. All three, in that
+      order, attended."
