@@ -1,4 +1,4 @@
-"""THE ALWAYS-ON LAB — one supervisor, eight loops, whenever the PC is on.
+"""THE ALWAYS-ON LAB — one supervisor, ten loops, whenever the PC is on.
 
     python -m scripts.always_on_lab --dry-run    # print the plan; touch nothing
     python -m scripts.always_on_lab              # the loop, until STOP
@@ -43,7 +43,32 @@ FIVE THINGS IT REFUSES, BY NAME
   registered; never a silent fallback to local called a cloud run (3.2);
 * `DAILY_SPEND_CAP_REACHED` — checked BEFORE a cloud call, not after (5);
 * `NIGHT_FACTORY_ALREADY_RUNNING` / `DAILY_PASS_RUNNING` /
-  `MONDAY_NIGHT_RUNNING` — the idle queue yields to the scheduled owners (4).
+  `MONDAY_NIGHT_RUNNING` / `NIGHT_LAUNCHER_RUNNING` — the idle queue and the
+  dispatch loops yield to the scheduled owners (4); a dispatch NEVER kills;
+* `ALREADY_RAN_TODAY` / `NOT_DUE` / `WEEKEND_NOT_DUE` / `DRIVER_BOX_EXCEEDED`
+  — the two time-of-day drivers the lab owns since chunk 17.
+
+THE LAB OWNS ITS CLOCK (chunk 17, 2026-09-19)
+=============================================
+Both Windows scheduled tasks that used to own a time of day failed twice in one
+week — `0x80070520` (no logon session) on 09-19 and `0x80070420` (an instance is
+already running) for four days before it — and nothing but a `schtasks /Query`
+would have shown it. The lab is the only process that is genuinely live
+whenever the PC is on, so it dispatches `scripts.daily_pass` at 06:30 local and
+`scripts.run_night_launcher --scheduled` at 16:00 local on weekdays, each at
+most once per LOCAL DATE, each gated on the driver's own RECEIPT and on a
+record written BEFORE the call. The scheduled tasks stay registered as a
+fallback: whichever fires first writes the receipt and the other stands down.
+
+AND IT RECORDS WHY IT DIED
+==========================
+Three lab deaths between 2026-09-18 05:41 and 2026-09-19 03:15 left nothing
+behind but the next instance's "overwrote a stale lock". The lock now carries
+`exit_reason`/`exit_utc`, written on every path that unwinds (STOP file, ticks
+exhausted, a signal, an exception, `atexit`), and the NEXT instance carries the
+previous one's reason forward — `not_recorded (killed or crashed)` when there
+was none, which is the honest answer for `TerminateProcess` and for a
+bugcheck.
 
 A refusal is a finding: it is recorded in `lab_status.json` and the process
 exits 0. The exit code is non-zero only for a refusal about the INVOCATION
@@ -84,6 +109,10 @@ ROOT = Path(__file__).resolve().parent.parent
 #: because a check that reads the record of what ran cannot see what never got
 #: called (`signal_reachability.py`'s founding lesson).
 LOOPS: tuple[tuple[str, str], ...] = (
+    # The two time-of-day drivers come FIRST in the walk (chunk 17): they own
+    # their day, and every loop below them yields to a driver that is running.
+    ("daily_pass_dispatch", "the daily pass at its local time, on the lab's own clock"),
+    ("night_launcher_dispatch", "the IIF-1 night launcher at its local time, weekdays"),
     ("news_pull", "every registered source into the corpus, with first_seen_utc"),
     ("l2_typing", "type new corpus rows into the frozen event vocabulary"),
     ("decision_vs_reality", "what we said vs what happened, across every mechanism"),
@@ -280,6 +309,11 @@ SCHEDULED_DRIVERS: dict = {
     "daily_pass": "scripts.daily_pass",
     "night_factory": "scripts.night_factory",
     "monday_night": "scripts.monday_night",
+    # 2026-09-19: the lab dispatches this one itself, so it must also be able
+    # to SEE one it did not dispatch -- a scheduled task that still fires, or a
+    # human at a terminal. A dispatcher that cannot see its own job running is
+    # a dispatcher that launches a second copy of it.
+    "night_launcher": "scripts.run_night_launcher",
 }
 
 #: How long a process scan is trusted before it is taken again. A PowerShell
@@ -373,6 +407,317 @@ def dispatch_job(job: str, minutes: int) -> dict:
 
 
 # ===========================================================================
+# THE LAB OWNS ITS CLOCK (chunk 17)
+#
+# Two time-of-day drivers that a Windows scheduled task used to own and twice
+# failed to start: 0x80070520 (no logon session, both tasks, 2026-09-19) and
+# 0x80070420 (an instance is already running, four days, the week before).
+# The lab is the only thing that is live whenever the PC is on, so it fires
+# them itself -- and the scheduled tasks stay registered as a fallback,
+# because whichever runs first writes the receipt and the other stands down.
+# ===========================================================================
+
+
+#: One row per driver the lab dispatches on its own clock. Declared as DATA so
+#: the two loops are one implementation with two configurations: a second
+#: hand-written dispatch loop is a second place to forget the receipt gate.
+DRIVERS: dict = {
+    "daily_pass": {
+        "loop": "daily_pass_dispatch",
+        "module": "scripts.daily_pass",
+        "args": (),
+        "local_time": str(_config.LAB_DAILY_PASS_LOCAL_TIME),
+        "weekdays_only": False,
+        "task": "AegisDailyPass",
+    },
+    "night_launcher": {
+        "loop": "night_launcher_dispatch",
+        "module": "scripts.run_night_launcher",
+        # --scheduled, ALWAYS. The launcher's own arming, timing and
+        # acceptance rules are what make a night legitimate; the lab dispatches
+        # it, it never bypasses it. Without the flag the receipt counts for
+        # nothing toward acceptance.
+        "args": ("--scheduled",),
+        "local_time": str(_config.LAB_NIGHT_LAUNCHER_LOCAL_TIME),
+        "weekdays_only": bool(_config.LAB_NIGHT_LAUNCHER_WEEKDAYS_ONLY),
+        "task": "AegisIIF1NightLauncher",
+    },
+}
+
+assert {d["loop"] for d in DRIVERS.values()} <= {name for name, _ in LOOPS}, \
+    "every dispatched driver needs its own declared loop"
+assert set(DRIVERS) <= set(SCHEDULED_DRIVERS), \
+    "a driver the lab dispatches must also be one it can SEE running"
+assert set(DRIVERS) == set(_config.LAB_DRIVER_BOX_S), \
+    "every dispatched driver needs a box in config.LAB_DRIVER_BOX_S"
+
+
+def empty_stdin_path() -> Path:
+    """The zero-length REGULAR file every scheduled driver reads stdin from.
+
+    Not `NUL`. On Windows `_isatty()` returns true for any character device, so
+    `< NUL` redirects and changes nothing observable -- which disqualified the
+    launcher's first two genuine firings in August because
+    `observe_invocation` marked them `contradicted`. A disk file is not a
+    character device.
+    """
+    return data_dir() / "empty_stdin.txt"
+
+
+def driver_log_path(name: str, today: str) -> Path:
+    """Where a dispatched driver's stdout and stderr go. A convenience, never
+    the evidence: the evidence is the driver's own receipt."""
+    return data_dir() / f"lab_dispatch_{name}_{today}.log"
+
+
+def driver_receipt(name: str, today: str) -> dict:
+    """Has `name` already produced its receipt for the local date `today`?
+
+    The already-ran gate is keyed HERE, on the artefact on disk, and not on
+    this supervisor's memory: the scheduled task may still be registered, a
+    human may have run the driver by hand, and a restarted lab must not
+    re-dispatch a pass that already happened. `_receipt_today`'s lesson
+    (2026-09-14), applied to the two drivers it did not cover.
+
+    `iif1_launches/` is resolved through `data_dir()` rather than through
+    `night_launcher.LAUNCH_RECEIPTS_DIR` because that constant binds
+    `DATA_DIR` at import; the two are the same directory and a test pins that
+    they stay the same.
+    """
+    if name == "daily_pass":
+        folder = data_dir() / f"night_factory_{today}"
+        pattern = f"daily_pass_{today}*.json"
+    else:
+        folder = data_dir() / "iif1_launches"
+        pattern = f"{today}*.json"
+    try:
+        found = sorted(p for p in folder.glob(pattern) if p.is_file())
+    except OSError as exc:
+        return {"exists": False, "why": f"CANNOT_READ: {_trunc(exc)}"}
+    if not found:
+        return {"exists": False, "path": None, "verdict": None}
+    latest = found[-1]
+    verdict = None
+    try:
+        doc = json.loads(latest.read_text(encoding="utf-8"))
+        verdict = doc.get("verdict") or doc.get("headline")
+    except (OSError, ValueError):
+        verdict = "UNREADABLE_RECEIPT"
+    return {"exists": True, "path": str(latest), "n": len(found),
+            "verdict": (str(verdict)[:200] if verdict else None)}
+
+
+def local_now() -> datetime:
+    """The MACHINE's wall clock — the one a 06:30 means. A seam, so a test can
+    put the lab at any hour of any weekday without touching the UTC clock the
+    rest of the supervisor reasons in."""
+    return datetime.now()
+
+
+def due_at_local_time(hhmm: str, now: datetime) -> bool:
+    """Is `now` (local) at or after `hhmm` on its own date?
+
+    No upper bound, on purpose. A window would turn a machine that was off at
+    06:30 and on at 09:00 into a silent skip, which is the failure this whole
+    change exists to remove. Being late is handled by the driver: the launcher
+    refuses `PAST_LATEST_SAFE_LAUNCH` by name, and the daily pass is worth
+    running at any hour of its own date.
+    """
+    try:
+        hh, mm = (int(x) for x in str(hhmm).split(":"))
+    except ValueError:
+        return False
+    return (now.hour, now.minute) >= (hh, mm)
+
+
+def launch_driver(module: str, args: tuple[str, ...] = (), *,
+                  log: Path, stdin: Path) -> dict:
+    """Start one driver as a DETACHED child of THIS interpreter. One seam.
+
+    Four properties, each of them paid for somewhere in this repository:
+
+    * `sys.executable`, never a bare `python`: the lab runs from the venv and a
+      child that resolved to a different interpreter would import a different
+      repository;
+    * DETACHED, in its own process group: the dispatching loop runs under a
+      wall-clock box on a daemon thread, and a child tied to this console would
+      die with a Ctrl-Break the supervisor never sent;
+    * stdin from the empty regular file (see `empty_stdin_path`);
+    * stdout and stderr appended to a dated log, with no pipe anywhere --
+      `cmd | tail` reports tail's exit code, and the exit code is the guard.
+
+    The child is NOT waited on. Its completion signal is its receipt.
+    """
+    import subprocess
+    argv = [sys.executable, "-m", module, *args]
+    log.parent.mkdir(parents=True, exist_ok=True)
+    if not stdin.exists():
+        stdin.parent.mkdir(parents=True, exist_ok=True)
+        stdin.write_bytes(b"")
+    flags = 0
+    if sys.platform == "win32":
+        flags = (getattr(subprocess, "DETACHED_PROCESS", 0)
+                 | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+    fin = stdin.open("rb")
+    fout = log.open("ab")
+    try:
+        proc = subprocess.Popen(argv, cwd=str(ROOT), stdin=fin, stdout=fout,
+                                stderr=subprocess.STDOUT, creationflags=flags,
+                                close_fds=True)
+    finally:
+        fin.close()
+        fout.close()
+    return {"pid": int(proc.pid), "argv": argv, "log": str(log),
+            "started_utc": _now()}
+
+
+def _driver_outcome(rec: dict, receipt: dict, name: str,
+                    now: datetime) -> dict:
+    """What became of a dispatch this lab already made on this date.
+
+    Read from the RECEIPT, never from the child's exit code — the lab does not
+    wait on it, and the pass's own rule is that the exit code is a fact about
+    the invocation while the receipt is the fact about the day.
+    """
+    box = float(_config.LAB_DRIVER_BOX_S[name])
+    started = _as_dt(rec.get("at_utc"))
+    elapsed = None if started is None else (now - started).total_seconds()
+    if receipt.get("exists"):
+        verdict = str(receipt.get("verdict") or "")
+        result = "refused" if "REFUSED" in verdict.upper() else "ok"
+        return {"status": "ok", "reason": "DISPATCHED_THIS_DATE",
+                "result": result, "driver_verdict": receipt.get("verdict"),
+                "receipt_path": receipt.get("path"),
+                "elapsed_s": (None if elapsed is None else round(elapsed, 1)),
+                "detail": (f"this lab dispatched {name} at {rec.get('at_utc')} "
+                           f"(pid {rec.get('pid')}) and its receipt is on disk")}
+    if elapsed is not None and elapsed > box:
+        return {"status": "timeout", "reason": "DRIVER_BOX_EXCEEDED",
+                "result": "timeout", "elapsed_s": round(elapsed, 1),
+                "box_s": box,
+                "detail": (f"{name} was dispatched {elapsed / 3600:.1f} h ago "
+                           f"(pid {rec.get('pid')}) and no receipt for this "
+                           f"date has landed; the box is {box:.0f}s. Nothing "
+                           f"is killed here — a driver past its box is a "
+                           f"finding, and killing is by PID and attended.")}
+    return {"status": "nothing_to_do", "reason": "DISPATCHED_THIS_DATE",
+            "result": "running", "elapsed_s": (None if elapsed is None
+                                               else round(elapsed, 1)),
+            "box_s": box,
+            "detail": (f"{name} was dispatched at {rec.get('at_utc')} "
+                       f"(pid {rec.get('pid')}); no receipt yet, still inside "
+                       f"its box")}
+
+
+def dispatch_driver(state: LabState, name: str, *,
+                    now: datetime | None = None,
+                    now_local: datetime | None = None) -> dict:
+    """One time-of-day driver, at most once per LOCAL date. Six gates, by name.
+
+    In order, and the order is the design:
+
+    1. this lab already dispatched it today -> read the receipt, never re-fire;
+    2. a receipt already exists (the scheduled task fired, or a human ran it)
+       -> `ALREADY_RAN_TODAY`;
+    3. the weekday pre-filter, for the launcher only -> `WEEKEND_NOT_DUE`;
+    4. the local clock -> `NOT_DUE`;
+    5. a live sibling driver -> yields BY NAME. It does not kill: the only
+       thing in this repository licensed to kill a stale driver is that
+       driver's own startup, by PID, and this one is not it;
+    6. dispatch — and the record is written BEFORE the call, because this runs
+       on a daemon thread that a wall-clock box may abandon, and a record
+       written after the return was never written at all (the idle queue paid
+       for that on 2026-09-14 by dispatching its first job twice).
+    """
+    spec = DRIVERS[name]
+    now = now or datetime.now(timezone.utc)
+    local = now_local or local_now()
+    today = local.strftime("%Y-%m-%d")
+    row = state.loops[spec["loop"]]
+    base = {"n": 0, "driver": name, "date": today,
+            "local_time": spec["local_time"],
+            "local_now": local.strftime("%Y-%m-%d %H:%M"),
+            "weekdays_only": spec["weekdays_only"],
+            "fallback_task": spec["task"]}
+
+    rec = dict(row.get("dispatched") or {})
+    receipt = driver_receipt(name, today)
+
+    if rec.get("date") == today:
+        out = _driver_outcome(rec, receipt, name, now)
+        rec["result"] = out["result"]
+        row["dispatched"] = rec
+        return {**base, **out, "dispatched": rec}
+
+    if receipt.get("exists"):
+        return {**base, "status": "nothing_to_do", "reason": "ALREADY_RAN_TODAY",
+                "result": "ok", "receipt_path": receipt.get("path"),
+                "driver_verdict": receipt.get("verdict"),
+                "detail": (f"{receipt.get('n')} receipt(s) for {today} are "
+                           f"already on disk (the scheduled task "
+                           f"{spec['task']} fired, or a human ran it); the lab "
+                           f"stands down rather than running a second one")}
+
+    if spec["weekdays_only"] and local.weekday() >= 5:
+        return {**base, "status": "skipped", "reason": "WEEKEND_NOT_DUE",
+                "detail": (f"{today} is a {local.strftime('%A')}; the weekday "
+                           f"rule is a coarse pre-filter and NOT the calendar "
+                           f"— the launcher reads XNYS and refuses holidays "
+                           f"itself")}
+
+    if not due_at_local_time(spec["local_time"], local):
+        return {**base, "status": "nothing_to_do", "reason": "NOT_DUE",
+                "detail": (f"local {local.strftime('%H:%M')} is before "
+                           f"{spec['local_time']}")}
+
+    yielded = yields_to(name, now=now)
+    if yielded:
+        return {**base, **yielded}
+
+    log = driver_log_path(name, today)
+    rec = {"date": today, "driver": name, "at_utc": _now(), "pid": None,
+           "result": "dispatching", "log": str(log)}
+    row["dispatched"] = rec
+    try:
+        out = launch_driver(spec["module"], tuple(spec["args"]),
+                            log=log, stdin=empty_stdin_path())
+    except Exception as exc:                                       # noqa: BLE001
+        logger.exception("the lab could not dispatch %s", name)
+        rec["result"] = "spawn_failed"
+        rec["detail"] = _trunc(exc)
+        row["dispatched"] = rec
+        return {**base, "status": "error", "reason": "SPAWN_FAILED",
+                "result": "spawn_failed", "detail": _trunc(exc),
+                "dispatched": rec}
+
+    rec.update(pid=out["pid"], argv=out["argv"], result="running")
+    row["dispatched"] = rec
+    # The cached process scan predates this child, and the loops below this one
+    # in the walk yield to a running driver. Invalidating it costs one
+    # PowerShell launch and buys an arbitration that is true this tick.
+    _DRIVER_SCAN["utc"] = None
+    logger.warning("DISPATCHED %s as pid %s (local %s, box %.0fs) -> %s",
+                   name, out["pid"], local.strftime("%H:%M"),
+                   float(_config.LAB_DRIVER_BOX_S[name]), log)
+    return {**base, "status": "ok", "n": 1, "result": "running",
+            "pid": out["pid"], "argv": out["argv"], "log": str(log),
+            "dispatched": rec,
+            "headline": (f"the lab dispatched {name} at local "
+                         f"{local.strftime('%H:%M')} as pid {out['pid']}; its "
+                         f"receipt, not its exit code, is the outcome")}
+
+
+def loop_daily_pass_dispatch(state: LabState) -> dict:
+    """`scripts.daily_pass`, at `LAB_DAILY_PASS_LOCAL_TIME`, once per date."""
+    return dispatch_driver(state, "daily_pass")
+
+
+def loop_night_launcher_dispatch(state: LabState) -> dict:
+    """`scripts.run_night_launcher --scheduled`, weekdays, once per date."""
+    return dispatch_driver(state, "night_launcher")
+
+
+# ===========================================================================
 # THE SINGLE-INSTANCE LOCK
 # ===========================================================================
 
@@ -391,24 +736,76 @@ def read_lock() -> dict:
         return {}
 
 
+#: What the previous instance's lock says when it left no reason at all. A
+#: killed process runs no handler -- `TerminateProcess` unwinds nothing, and a
+#: bugcheck less than that -- so the ABSENCE of a reason is itself the finding,
+#: and it is written down by the next instance rather than left as a gap
+#: somebody has to notice ("a promise kept only on the tidy path is not the
+#: promise", 2026-09-10).
+EXIT_NOT_RECORDED = "not_recorded (killed or crashed)"
+
+#: Every reason the supervisor can record for its own death, by name. The
+#: generic one is diagnostic precisely because every KNOWN path sets its own
+#: before `atexit` would fire.
+EXIT_REASONS = ("STOP_file", "ticks_exhausted", "SystemExit", "KeyboardInterrupt",
+                "exception", "process_exit_unclassified")
+
+
+def record_exit(reason: str, *, lock: dict | None = None) -> dict | None:
+    """Write `exit_reason`/`exit_utc` into the lock — if this process holds it.
+
+    THE MEASURED GAP. Between 2026-09-18 05:41 and 2026-09-19 03:15 the lab
+    died and restarted three times and the only evidence of any of it is the
+    NEXT instance's line "overwrote a stale lock: pid N is not alive". Nothing
+    said why. A supervisor that cannot say why it stopped cannot tell a clean
+    shutdown from a GPU bugcheck, and the two want opposite responses.
+
+    Never raises: this runs on the way out, and an exception here would replace
+    a recorded death with an unrecorded one.
+    """
+    try:
+        rec = dict(lock if lock is not None else read_lock())
+        if int(rec.get("pid") or 0) != os.getpid():
+            return None
+        rec["exit_reason"] = str(reason)[:300]
+        rec["exit_utc"] = _now()
+        _write_atomic(lock_path(), rec)
+        return rec
+    except Exception:                                              # noqa: BLE001
+        return None
+
+
 def lock_holder() -> dict:
     """Who holds the lock, and whether that claim survives inspection.
 
     Three states, never two: HELD (a live PID whose command line still names
     this supervisor), STALE (the PID is gone, or a different program now holds
-    that number), and FREE (no lock file).
+    that number), and FREE (no lock file, or a lock a previous instance
+    released). A released or stale lock carries `previous_exit_reason`: what
+    the last instance said on its way out, or `EXIT_NOT_RECORDED`.
     """
     rec = read_lock()
     pid = int(rec.get("pid") or 0)
     if not pid:
-        return {"state": "free", "lock": rec}
+        return {"state": "free", "lock": rec,
+                "previous_exit_reason": (rec.get("exit_reason")
+                                         or (EXIT_NOT_RECORDED if rec else None)),
+                "previous_exit_utc": rec.get("exit_utc")}
+    prev = {"previous_exit_reason": rec.get("exit_reason") or EXIT_NOT_RECORDED,
+            "previous_exit_utc": rec.get("exit_utc")}
     if not pid_alive(pid):
-        return {"state": "stale", "lock": rec, "why": f"pid {pid} is not alive"}
+        return {"state": "stale", "lock": rec, "why": f"pid {pid} is not alive",
+                **prev}
     if not pid_names_lab(pid):
         return {"state": "stale", "lock": rec,
                 "why": (f"pid {pid} is alive but its command line does not name "
-                        f"always_on_lab (PID reuse)")}
-    return {"state": "held", "lock": rec, "pid": pid}
+                        f"always_on_lab (PID reuse)"),
+                **prev}
+    # A HELD lock's own `exit_reason` would be a claim about a live process, so
+    # what travels is the one IT carried forward about the instance before it.
+    return {"state": "held", "lock": rec, "pid": pid,
+            "previous_exit_reason": rec.get("previous_exit_reason"),
+            "previous_exit_utc": rec.get("previous_exit_utc")}
 
 
 def acquire_lock() -> dict:
@@ -420,18 +817,39 @@ def acquire_lock() -> dict:
     rec = {"pid": os.getpid(), "started_utc": _now(),
            "hostname": socket.gethostname(), "started_by": "always_on_lab",
            "overwrote": (holder.get("lock") or None) if holder["state"] == "stale" else None,
-           "overwrote_why": holder.get("why")}
+           "overwrote_why": holder.get("why"),
+           # Carried forward on purpose: the instance that can SAY why the last
+           # one died is the one that comes after it, and a killed instance
+           # necessarily says nothing itself.
+           "previous_exit_reason": holder.get("previous_exit_reason"),
+           "previous_exit_utc": holder.get("previous_exit_utc")}
     _write_atomic(lock_path(), rec)
     if holder["state"] == "stale":
-        logger.warning("overwrote a stale lock: %s", holder.get("why"))
+        logger.warning("overwrote a stale lock: %s (previous exit: %s)",
+                       holder.get("why"), holder.get("previous_exit_reason"))
     return rec
 
 
-def release_lock() -> None:
-    p = lock_path()
+def release_lock(reason: str | None = None) -> None:
+    """Give the lock up, KEEPING the record so the next instance can read it.
+
+    The file used to be unlinked. It is now rewritten with `pid: None` — which
+    `lock_holder` reads as FREE exactly as an absent file does — because the
+    exit reason written on the way out is worth nothing if the act of leaving
+    deletes it.
+    """
     try:
-        if p.exists() and int(read_lock().get("pid") or 0) == os.getpid():
-            p.unlink()
+        rec = read_lock()
+        if int(rec.get("pid") or 0) != os.getpid():
+            return
+        # An already-recorded reason WINS: it was written by a more specific
+        # path (a signal handler) that knows something this one does not.
+        rec["exit_reason"] = str(rec.get("exit_reason") or reason
+                                 or "process_exit_unclassified")[:300]
+        rec["exit_utc"] = rec.get("exit_utc") or _now()
+        rec["released_utc"] = _now()
+        rec["pid"] = None
+        _write_atomic(lock_path(), rec)
     except OSError:
         pass
 
@@ -1272,6 +1690,8 @@ def loop_status(state: LabState) -> dict:
 
 
 HANDLERS: dict[str, Callable[[LabState], dict]] = {
+    "daily_pass_dispatch": loop_daily_pass_dispatch,
+    "night_launcher_dispatch": loop_night_launcher_dispatch,
     "news_pull": loop_news_pull,
     "l2_typing": loop_l2_typing,
     "decision_vs_reality": loop_decision_vs_reality,
@@ -1378,6 +1798,34 @@ def _theme_status() -> dict:
         return {"status": "CANNOT DETERMINE", "why": _trunc(exc)}
 
 
+def driver_block(state: LabState) -> dict:
+    """The two time-of-day drivers, their configured local time, and what the
+    lab's last dispatch of each came to.
+
+    Present for BOTH drivers on every tick, with `last_result: null` before the
+    first dispatch of the date — the invariant the rest of this file keeps: a
+    loop that did nothing says so with a reason, and never by an omitted key.
+    """
+    out: dict = {}
+    for name, spec in DRIVERS.items():
+        row = state.loops.get(spec["loop"]) or {}
+        rec = dict(row.get("dispatched") or {})
+        out[name] = {
+            "local_time": spec["local_time"],
+            "weekdays_only": spec["weekdays_only"],
+            "module": spec["module"],
+            "args": list(spec["args"]),
+            "box_s": float(_config.LAB_DRIVER_BOX_S[name]),
+            "fallback_scheduled_task": spec["task"],
+            "last_status": row.get("status"),
+            "last_reason": row.get("reason"),
+            "last_result": rec.get("result"),
+            "last_dispatch": rec or None,
+            "last_tick_utc": row.get("last_tick_utc"),
+        }
+    return out
+
+
 def status_payload(state: LabState, now: datetime | None = None) -> dict:
     """`lab_status.json` — every loop's block present every tick, always."""
     now = now or datetime.now(timezone.utc)
@@ -1387,6 +1835,7 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
         model = {"error": _trunc(exc)}
     from backend.services import lab_budget
     spend = lab_budget.spend_today()
+    lock = read_lock()
     return {
         "receipt": "always_on_lab",
         "licence": "PRODUCT_EXPERIMENT",
@@ -1422,7 +1871,16 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
         "spend_cap_usd": spend["cap_usd"],
         "spend_cap_reached": spend["cap_reached"],
         "thematic_streams": _theme_status(),
-        "single_instance_lock": read_lock(),
+        # Chunk 17. Both dispatch loops, named, with their last result — so a
+        # reader learns "the 06:30 pass ran" or "it has not fired and here is
+        # why" from the same file that carries everything else, rather than
+        # from a scheduled task's Last Result nobody queries.
+        "drivers": driver_block(state),
+        "single_instance_lock": lock,
+        # The PREVIOUS instance's last words, carried forward by `acquire_lock`.
+        # `EXIT_NOT_RECORDED` is the honest answer for a killed or crashed one.
+        "previous_exit_reason": lock.get("previous_exit_reason"),
+        "previous_exit_utc": lock.get("previous_exit_utc"),
         "stop_file": str(stop_path()),
         "read_me_first": (
             "One block per DECLARED loop, every tick, whether or not it ran — a "
@@ -1437,29 +1895,101 @@ def status_payload(state: LabState, now: datetime | None = None) -> dict:
     }
 
 
+def _on_signal(signum, _frame):
+    """Record the reason, then leave by the tidy path.
+
+    `SystemExit` unwinds `run_forever`'s `finally`, so the lock is released
+    with a reason instead of left looking like a crash. This is the "signal-
+    safe path" half of the exit-reason rule; the other half is `atexit`, and
+    NEITHER of them covers `TerminateProcess` or a bugcheck — which is exactly
+    why the next instance writes `EXIT_NOT_RECORDED` rather than assuming.
+    """
+    import signal as _signal
+    name = next((n for n in ("SIGTERM", "SIGINT", "SIGBREAK")
+                 if getattr(_signal, n, None) == signum), str(signum))
+    record_exit(f"signal:{name}")
+    raise SystemExit(128 + int(signum))
+
+
+def install_exit_hooks():
+    """`atexit` + the signals a supervisor is actually asked to stop with.
+
+    Returns what to call to put the previous handlers back: a test (or a caller
+    that is not the process's main loop) must not leave this process with the
+    lab's SIGINT handler installed.
+    """
+    import atexit
+    import signal as _signal
+
+    atexit.register(record_exit, "process_exit_unclassified")
+    previous: list = []
+    for nm in ("SIGTERM", "SIGINT", "SIGBREAK"):
+        sig = getattr(_signal, nm, None)
+        if sig is None:
+            continue
+        try:
+            previous.append((sig, _signal.signal(sig, _on_signal)))
+        except (ValueError, OSError, RuntimeError):     # not the main thread
+            continue
+
+    def _restore() -> None:
+        for sig, handler in previous:
+            try:
+                _signal.signal(sig, handler)
+            except (ValueError, OSError, RuntimeError, TypeError):
+                pass
+        try:
+            atexit.unregister(record_exit)
+        except Exception:                                          # noqa: BLE001
+            pass
+
+    return _restore
+
+
 def run_forever(*, max_ticks: int | None = None,
                 sleeper: Callable[[float], None] | None = None,
                 clock: Callable[[], datetime] | None = None) -> dict:
-    """The loop. Holds the lock, ends on STOP, never on a sub-loop's failure."""
+    """The loop. Holds the lock, ends on STOP, never on a sub-loop's failure.
+
+    It also records WHY it ended, into the lock, before releasing it. Three lab
+    deaths in 30 hours left nothing behind but the next instance's "overwrote a
+    stale lock" line; a reason that is only ever written on the tidy path is
+    still worth having, because it turns every OTHER death into a named
+    absence.
+    """
     clock = clock or (lambda: datetime.now(timezone.utc))
     sleeper = sleeper or time.sleep
     rec = acquire_lock()
+    restore = install_exit_hooks()
     state = LabState.load()
     state.started_utc = rec["started_utc"]
     payload: dict = {}
+    reason = "process_exit_unclassified"
     try:
         while True:
             if stop_path().exists():
                 state.stopped_by = "STOP_file"
+                reason = "STOP_file"
                 payload = status_payload(state, clock())
                 _write_atomic(status_path(), payload)
                 break
             payload = tick(state, now=clock())
             if max_ticks is not None and state.ticks >= max_ticks:
+                reason = "ticks_exhausted"
                 break
             sleeper(HEARTBEAT_MINUTES * 60)
+    except KeyboardInterrupt:
+        reason = "KeyboardInterrupt"
+        raise
+    except SystemExit:
+        reason = "SystemExit"
+        raise
+    except BaseException as exc:                                   # noqa: BLE001
+        reason = f"exception:{type(exc).__name__}"
+        raise
     finally:
-        release_lock()
+        release_lock(reason)
+        restore()
     return payload
 
 
@@ -1487,6 +2017,13 @@ def plan() -> dict:
         "loops": [{"loop": n, "what": w, "period_minutes": PERIODS[n],
                    "timeout_s": TIMEOUTS[n],
                    "touches_model": n in MODEL_LOOPS} for n, w in LOOPS],
+        "drivers": {n: {"local_time": s["local_time"],
+                        "weekdays_only": s["weekdays_only"],
+                        "argv": [sys.executable, "-m", s["module"], *s["args"]],
+                        "box_s": float(_config.LAB_DRIVER_BOX_S[n]),
+                        "fallback_scheduled_task": s["task"]}
+                    for n, s in DRIVERS.items()},
+        "previous_exit_reason": holder.get("previous_exit_reason"),
         "note": ("--dry-run calls no loop: it makes no network request, probes "
                  "no model server, and writes nothing. It prints the cadence "
                  "table and the process model, which is what a reader deciding "
@@ -1511,6 +2048,14 @@ def print_plan(p: dict) -> None:
         print(f"  {row['loop']:22s} {row['period_minutes']:6d} min "
               f"{row['timeout_s']:7d}s  "
               f"{'GPU' if row['touches_model'] else '   ':5s}  {row['what'][:44]}")
+    print()
+    print(f"  {'driver':22s} {'local':>10s} {'box':>8s}  days     fallback task")
+    for name, row in p["drivers"].items():
+        print(f"  {name:22s} {row['local_time']:>10s} "
+              f"{row['box_s']:7.0f}s  "
+              f"{'Mon-Fri' if row['weekdays_only'] else 'daily  '}"
+              f"  {row['fallback_scheduled_task']}")
+    print(f"\n  previous exit reason -> {p['previous_exit_reason']}")
     print(f"\n  status file -> {p['status_file_would_be']}")
     print(f"\n  {p['note']}")
 
@@ -1570,6 +2115,18 @@ def _print_schtasks() -> int:
     print(f'  schtasks /Create /TN "{TASK_NAME}" /SC ONLOGON /RL LIMITED /TR "{wrapper}"')
     print("\n  Already registered? Change it in place rather than re-registering:\n")
     print(f'  schtasks /Change /TN "{TASK_NAME}" /TR "{wrapper}"')
+    print(f"""
+  THE OTHER TWO TASKS ARE NOW FALLBACKS, NOT THE CLOCK (chunk 17, 2026-09-19).
+  {DRIVERS['daily_pass']['task']} and {DRIVERS['night_launcher']['task']}
+  both failed this week with 0x80070520 (no logon session) and, the week
+  before, with 0x80070420 for four days. The lab now dispatches
+  `{DRIVERS['daily_pass']['module']}` at {DRIVERS['daily_pass']['local_time']} local and
+  `{DRIVERS['night_launcher']['module']} {' '.join(DRIVERS['night_launcher']['args'])}`
+  at {DRIVERS['night_launcher']['local_time']} local on weekdays, from inside a process that is
+  already running unattended. Leave both tasks registered for now: whichever
+  fires first writes the receipt, and the other one's already-ran gate reads
+  that receipt and stands down. Deleting them is an attended decision.
+""")
     print(f"""
   To stop it: create {stop_path()} and wait one heartbeat
   ({HEARTBEAT_MINUTES} min). Never `taskkill /F /IM python.exe` — on
@@ -1788,13 +2345,17 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-__all__ = ["ACCEPTANCE_CRITERIA", "HANDLERS", "LOOPS", "MODEL_SERVER_REFUSALS",
+__all__ = ["ACCEPTANCE_CRITERIA", "DRIVERS", "EXIT_NOT_RECORDED",
+           "EXIT_REASONS", "HANDLERS", "LOOPS", "MODEL_SERVER_REFUSALS",
            "PERIODS",
            "SCHEDULED_DRIVERS", "STATUSES", "TIMEOUTS", "AlreadyRunning",
            "LabState", "LoopTimeout", "acceptance_report", "acquire_lock",
            "cadence_admits", "calendar_tickers", "call_boxed", "check_power",
-           "data_dir", "dispatch_job", "ensure_model_server", "learned_line",
-           "lock_holder", "model_server_hold_path",
+           "data_dir", "dispatch_driver", "dispatch_job", "driver_block",
+           "driver_log_path", "driver_receipt", "due_at_local_time",
+           "empty_stdin_path", "ensure_model_server", "install_exit_hooks",
+           "launch_driver", "learned_line", "local_now",
+           "lock_holder", "model_server_hold_path", "record_exit",
            "lock_path", "main", "model_status", "news_sources", "out_dir",
            "parsed_rate_limit", "pid_alive", "pid_names_lab", "plan",
            "power_refusal", "print_plan", "pull_news", "read_lock",

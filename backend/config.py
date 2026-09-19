@@ -2639,7 +2639,7 @@ DAILY_PASS_STALE_SIBLING_H = 6
 
 # ── THE ALWAYS-ON LAB (chunk 14, `scripts/always_on_lab.py`) ─────────────────
 #
-# One supervisor that runs whenever the PC is on and drives eight loops at
+# One supervisor that runs whenever the PC is on and drives ten loops at
 # their own declared cadences. Every number it schedules on lives HERE, not in
 # the script, because a cadence hardcoded in a driver is a cadence nobody can
 # change without a commit to the driver.
@@ -2654,6 +2654,10 @@ LAB_HEARTBEAT_MINUTES = 5
 #: period here cannot run, and a period here without a handler is an
 #: AssertionError at import (the `daily_pass.STEPS` discipline).
 LAB_LOOP_PERIODS_MINUTES: dict = {
+    # The two time-of-day drivers are checked every heartbeat; what makes them
+    # fire once a day is the local-time gate plus the receipt, not the period.
+    "daily_pass_dispatch": 5,
+    "night_launcher_dispatch": 5,
     "news_pull": 15,
     "l2_typing": 15,
     "decision_vs_reality": 60,
@@ -2670,6 +2674,11 @@ LAB_LOOP_PERIODS_MINUTES: dict = {
 #: going, because each loop is issued FROM the top-level loop with this bound
 #: and never awaited unboundedly.
 LAB_LOOP_TIMEOUT_S: dict = {
+    # The dispatch loops SPAWN and return; they never wait on the driver, so
+    # their box bounds a process launch and a receipt read. The driver's own
+    # bound is `LAB_DRIVER_BOX_S`.
+    "daily_pass_dispatch": 120,
+    "night_launcher_dispatch": 120,
     "news_pull": 900,
     "l2_typing": 900,
     "decision_vs_reality": 300,
@@ -2781,3 +2790,61 @@ LAB_ACCEPTANCE_DATES = 3
 
 #: Hours the machine must have been on for a date to COUNT toward acceptance.
 LAB_ACCEPTANCE_MIN_HOURS = 6
+
+# ── THE LAB OWNS ITS CLOCK (chunk 17, 2026-09-19) ────────────────────────────
+#
+# MEASURED, and twice. Both Windows scheduled tasks are registered
+# "Interactive only": `AegisDailyPass` (06:30 daily) and
+# `AegisIIF1NightLauncher` (16:00 Mon-Fri). On 2026-09-19 both reported
+# `0x80070520` -- "a specified logon session does not exist" -- and for four
+# days the week before both reported `0x80070420` -- "an instance of this task
+# is already running", behind the daily pass that wedged for four days. Two
+# distinct scheduler failure codes in one week, neither of them visible to
+# anything but a `schtasks /Query /V` somebody happened to run.
+#
+# The always-on lab is the only process that is genuinely "live whenever the PC
+# is on", so it dispatches these two on its own clock. The scheduled tasks stay
+# registered as a FALLBACK: whichever fires first writes the receipt, and the
+# other one's already-ran gate reads that receipt and stands down. Deleting
+# them is Murat's decision, not a session's.
+
+#: Local (machine) wall-clock time at or after which the lab dispatches the
+#: daily pass, HH:MM. There is deliberately no upper bound on the window: a
+#: machine switched on at 09:00 should still get its pass, and the receipt gate
+#: is what stops a second one. A grace window would turn "late" into "never",
+#: which is the silence this chunk exists to remove.
+LAB_DAILY_PASS_LOCAL_TIME = "06:30"
+
+#: Local time at or after which the lab dispatches the IIF-1 night launcher.
+#: It MUST equal `IIF1_LAUNCHER_LOCAL_START_TIME` -- two clocks for one job is
+#: how a launcher fires ten minutes late for three weeks (2026-09-18). Written
+#: as a literal rather than as an alias so the equality is a TEST
+#: (`test_always_on_lab.py`) rather than a tautology.
+LAB_NIGHT_LAUNCHER_LOCAL_TIME = "16:00"
+
+#: The launcher's coarse pre-filter, exactly as the scheduled task's
+#: WEEKLY/MON-FRI is: NOT the calendar. `night_launcher.evaluate_launch` reads
+#: XNYS and refuses holidays itself; this only avoids waking the launcher on a
+#: Saturday.
+LAB_NIGHT_LAUNCHER_WEEKDAYS_ONLY = True
+
+#: Per-driver wall-clock box, in seconds, measured from the dispatch to the
+#: moment its RECEIPT lands on disk. It does NOT bound the child process: the
+#: lab starts these detached and never waits on them, and the launcher in
+#: particular writes its receipt BEFORE it hands off to a night that may run
+#: for hours. Past the box with no receipt the dispatch row goes `timeout`,
+#: which is a finding a reader can see rather than a dispatch nobody can tell
+#: from a success.
+#:
+#: THE DAILY PASS NUMBER IS NOT FREE. Every step of the pass is boxed
+#: (`DAILY_PASS_STEP_BOX_S`), so the longest a HEALTHY pass can take is the sum
+#: of those boxes -- 18,600 s. This must exceed that sum with a margin, or a
+#: healthy pass would be reported as a timeout; `test_always_on_lab.py` pins
+#: the inequality, so raising a step box without raising this turns the suite
+#: red instead of turning a healthy pass into a false alarm. 21,600 s (6 h) is
+#: also `DAILY_PASS_STALE_SIBLING_H`, which is the hour at which the pass's own
+#: sibling rule would call that process stale -- the two agree on purpose.
+LAB_DRIVER_BOX_S: dict = {
+    "daily_pass": 6 * 3600,
+    "night_launcher": 900,
+}

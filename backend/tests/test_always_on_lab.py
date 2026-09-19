@@ -85,6 +85,12 @@ def lab(tmp_path, monkeypatch):
         "a test started the REAL model server; stub L.start_model_server"))
     monkeypatch.setattr(L, "pid_alive", lambda pid: False)
     monkeypatch.setattr(L, "pid_names_lab", lambda pid: True)
+    # THE SAME BELT AS `start_model_server` (chunk 17). `launch_driver` is the
+    # one seam that starts a real OS process, and a test that reached it would
+    # run a daily pass — twenty-six news sources, paced — inside the offline
+    # fast suite. Every test that means to dispatch installs its own spy.
+    monkeypatch.setattr(L, "launch_driver", lambda *a, **k: pytest.fail(
+        "a test launched a REAL driver subprocess; stub L.launch_driver"))
     # nothing scheduled is running; individual tests override this. The real
     # probe launches PowerShell, which the offline suite must never do.
     monkeypatch.setattr(L, "running_drivers", lambda now=None: {
@@ -1356,3 +1362,368 @@ def test_a_job_with_a_receipt_in_todays_folder_is_not_dispatched_again(lab, monk
     state.last_model_call_utc = None
     L.loop_idle_gpu_queue(state)
     assert seen.get("job") == _config.LAB_IDLE_QUEUE[1][0], seen
+
+
+# --------------------------------------------------------------------------
+# chunk 17 — THE LAB OWNS ITS CLOCK
+#
+# Both Windows scheduled tasks failed twice in one week (0x80070520 "no logon
+# session"; 0x80070420 "an instance is already running", four days). The lab
+# dispatches both drivers itself now, at most once per LOCAL DATE, gated on
+# the driver's own receipt AND on a record written before the call.
+
+
+def _at_local(hhmm: str, weekday: int = 0) -> datetime:
+    """A naive LOCAL datetime at `hhmm` on the next date with `weekday`.
+
+    Derived from `datetime.now()`, never written down: a fixture that encodes a
+    calendar moment fails the day after it passes (CLAUDE.md rule 5).
+    """
+    now = datetime.now()
+    day = now + timedelta(days=(weekday - now.weekday()) % 7)
+    hh, mm = (int(x) for x in hhmm.split(":"))
+    return day.replace(hour=hh, minute=mm, second=0, microsecond=0)
+
+
+@pytest.fixture
+def launched(lab, monkeypatch):
+    """A spy on the ONE subprocess seam. Nothing real is ever started."""
+    calls: list[dict] = []
+
+    def _fake(module, args=(), *, log, stdin):
+        argv = ["<python>", "-m", module, *args]
+        calls.append({"module": module, "args": list(args), "argv": argv,
+                      "log": str(log), "stdin": str(stdin)})
+        return {"pid": 4711, "argv": argv, "log": str(log),
+                "started_utc": L._now()}
+
+    monkeypatch.setattr(L, "launch_driver", _fake)
+    return calls
+
+
+def _clock(monkeypatch, local: datetime) -> None:
+    monkeypatch.setattr(L, "local_now", lambda: local)
+
+
+def test_the_daily_pass_is_dispatched_at_its_local_time_once_per_date(
+        lab, launched, monkeypatch):
+    """The 06:30 the scheduled task could not keep, kept by the supervisor."""
+    local = _at_local(_config.LAB_DAILY_PASS_LOCAL_TIME)
+    _clock(monkeypatch, local)
+    state = L.LabState()
+
+    out = L.loop_daily_pass_dispatch(state)
+    assert out["status"] == "ok" and out["n"] == 1, out
+    assert out["pid"] == 4711
+    assert len(launched) == 1
+    assert launched[0]["module"] == "scripts.daily_pass"
+    assert launched[0]["stdin"].endswith("empty_stdin.txt"), \
+        "stdin comes from a regular file; NUL is a character device on Windows"
+
+    # a second tick on the same local date does NOT fire a second pass
+    again = L.loop_daily_pass_dispatch(state)
+    assert len(launched) == 1, "the lab dispatched a second pass on one date"
+    assert again["reason"] == "DISPATCHED_THIS_DATE"
+    assert again["result"] == "running"
+
+
+def test_the_daily_pass_is_not_dispatched_before_its_local_time(
+        lab, launched, monkeypatch):
+    hh, mm = (int(x) for x in _config.LAB_DAILY_PASS_LOCAL_TIME.split(":"))
+    _clock(monkeypatch, _at_local(f"{hh:02d}:{mm:02d}") - timedelta(minutes=1))
+    out = L.loop_daily_pass_dispatch(L.LabState())
+    assert out["status"] == "nothing_to_do" and out["reason"] == "NOT_DUE", out
+    assert launched == []
+
+
+def test_a_receipt_already_on_disk_stands_the_dispatch_down(
+        lab, launched, monkeypatch):
+    """The scheduled task is still registered as a fallback. Whichever fires
+    first writes the receipt; the other one reads it and does nothing."""
+    local = _at_local(_config.LAB_DAILY_PASS_LOCAL_TIME)
+    _clock(monkeypatch, local)
+    day = local.strftime("%Y-%m-%d")
+    folder = L.data_dir() / f"night_factory_{day}"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"daily_pass_{day}.json").write_text(
+        json.dumps({"headline": "5 steps"}), encoding="utf-8")
+
+    out = L.loop_daily_pass_dispatch(L.LabState())
+    assert out["status"] == "nothing_to_do"
+    assert out["reason"] == "ALREADY_RAN_TODAY", out
+    assert launched == []
+
+
+def test_a_live_sibling_driver_is_refused_by_name_and_never_killed(
+        lab, launched, monkeypatch):
+    """CLAUDE.md rule 6 wearing its scheduling hat: the dispatcher yields."""
+    _clock(monkeypatch, _at_local(_config.LAB_DAILY_PASS_LOCAL_TIME))
+    monkeypatch.setattr(L, "running_drivers", lambda now=None: {
+        "scan_ran": True, "daily_pass": [8123],
+        **{n: [] for n in L.SCHEDULED_DRIVERS if n != "daily_pass"}})
+
+    out = L.loop_daily_pass_dispatch(L.LabState())
+    assert out["status"] == "skipped"
+    assert out["reason"] == "DAILY_PASS_RUNNING"
+    assert out["pids"] == [8123] and out["yielded_to"] == "daily_pass"
+    assert launched == []
+
+
+def test_the_dispatch_is_recorded_before_the_call_not_after_it(
+        lab, monkeypatch):
+    """2026-09-14, the idle queue's lesson applied to the drivers.
+
+    The loop runs on a daemon thread under a wall-clock box. A record written
+    after the call returns was never written at all when the box fired first,
+    and the next tick re-dispatches a driver that is already running.
+    """
+    import threading
+
+    _clock(monkeypatch, _at_local(_config.LAB_DAILY_PASS_LOCAL_TIME))
+    state = L.LabState()
+    row = state.loops["daily_pass_dispatch"]
+    gate = threading.Event()
+    seen: dict = {}
+
+    def _blocking(module, args=(), *, log, stdin):
+        seen["record_at_call_time"] = dict(row.get("dispatched") or {})
+        gate.wait(10)
+        return {"pid": 1, "argv": [], "log": str(log),
+                "started_utc": L._now()}
+
+    monkeypatch.setattr(L, "launch_driver", _blocking)
+    with pytest.raises(L.LoopTimeout):
+        L.call_boxed(lambda: L.loop_daily_pass_dispatch(state), 0.3,
+                     "daily_pass_dispatch")
+
+    rec = seen["record_at_call_time"]
+    assert rec.get("driver") == "daily_pass"
+    assert rec.get("date") == _at_local(
+        _config.LAB_DAILY_PASS_LOCAL_TIME).strftime("%Y-%m-%d")
+    assert row["dispatched"]["result"] == "dispatching"
+    gate.set()
+
+
+def test_the_night_launcher_is_weekday_only(lab, launched, monkeypatch):
+    """Saturday. The weekday rule is a coarse pre-filter and NOT the calendar:
+    the launcher reads XNYS and refuses holidays itself."""
+    _clock(monkeypatch, _at_local(_config.LAB_NIGHT_LAUNCHER_LOCAL_TIME,
+                                  weekday=5))
+    out = L.loop_night_launcher_dispatch(L.LabState())
+    assert out["status"] == "skipped"
+    assert out["reason"] == "WEEKEND_NOT_DUE", out
+    assert launched == []
+
+
+def test_the_night_launcher_is_dispatched_with_the_scheduled_flag(
+        lab, launched, monkeypatch):
+    """Without `--scheduled` the receipt counts for nothing toward acceptance,
+    and the launcher's own arming and timing refusals still bind."""
+    _clock(monkeypatch, _at_local(_config.LAB_NIGHT_LAUNCHER_LOCAL_TIME,
+                                  weekday=2))
+    out = L.loop_night_launcher_dispatch(L.LabState())
+    assert out["status"] == "ok", out
+    assert launched[0]["module"] == "scripts.run_night_launcher"
+    assert "--scheduled" in launched[0]["args"]
+
+
+def test_the_launcher_dispatch_never_sets_the_arming_flag():
+    """Arming an unattended paid run is ATTENDED — it is Murat's flag.
+
+    Two halves, both read from the AST rather than from prose: the lab never
+    names `AEGIS_IIF1_LAUNCHER_ARMED` in executable source, and the child is
+    started with NO `env=` keyword at all, so it inherits the supervisor's
+    environment exactly as it stands rather than one this process composed.
+    """
+    assert "AEGIS_IIF1_LAUNCHER_ARMED" not in executable_source(MODULE)
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    popens = [n for n in ast.walk(tree)
+              if isinstance(n, ast.Call) and _dotted(n.func) == "subprocess.Popen"]
+    assert popens, "the seam moved; this guard must move with it"
+    for call in popens:
+        assert "env" not in {k.arg for k in call.keywords}, \
+            "the child inherits the environment; the lab composes none"
+
+
+def test_a_launcher_that_refused_is_reported_as_refused(
+        lab, launched, monkeypatch):
+    """A refusal is a finding: it reaches the status file by name, and the
+    lab does not compensate for it with a second attempt."""
+    local = _at_local(_config.LAB_NIGHT_LAUNCHER_LOCAL_TIME, weekday=3)
+    _clock(monkeypatch, local)
+    state = L.LabState()
+    assert L.loop_night_launcher_dispatch(state)["status"] == "ok"
+
+    day = local.strftime("%Y-%m-%d")
+    folder = L.data_dir() / "iif1_launches"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / f"{day}.json").write_text(
+        json.dumps({"verdict": "REFUSED", "session_date": day}),
+        encoding="utf-8")
+
+    out = L.loop_night_launcher_dispatch(state)
+    assert out["status"] == "ok" and out["result"] == "refused", out
+    assert out["driver_verdict"] == "REFUSED"
+    assert len(launched) == 1, "a refusal was compensated with a second attempt"
+
+
+def test_a_driver_past_its_box_with_no_receipt_is_a_timeout_row(
+        lab, launched, monkeypatch):
+    """No receipt inside the box is a named finding, not a silent success —
+    and nothing is killed here: killing is by PID and attended."""
+    _clock(monkeypatch, _at_local(_config.LAB_DAILY_PASS_LOCAL_TIME))
+    state = L.LabState()
+    L.loop_daily_pass_dispatch(state)
+
+    box = float(_config.LAB_DRIVER_BOX_S["daily_pass"])
+    later = datetime.now(timezone.utc) + timedelta(seconds=box + 60)
+    out = L.dispatch_driver(state, "daily_pass", now=later)
+    assert out["status"] == "timeout"
+    assert out["reason"] == "DRIVER_BOX_EXCEEDED", out
+    assert out["result"] == "timeout"
+    assert len(launched) == 1, "a timed-out driver must not be re-dispatched"
+
+
+def test_the_lab_and_the_launcher_keep_one_clock():
+    """Two clocks for one job is how a launcher fired ten minutes late for
+    three weeks (2026-09-18). The equality is a test, not an alias."""
+    assert _config.LAB_NIGHT_LAUNCHER_LOCAL_TIME == \
+        _config.IIF1_LAUNCHER_LOCAL_START_TIME
+
+
+def test_the_daily_pass_box_exceeds_the_sum_of_its_own_step_boxes():
+    """A box smaller than the pass's own worst healthy run would report a
+    healthy pass as a timeout. Raising a step box without raising this turns
+    the suite red rather than turning a healthy pass into a false alarm."""
+    steps = sum(float(v) for v in _config.DAILY_PASS_STEP_BOX_S.values())
+    assert _config.LAB_DRIVER_BOX_S["daily_pass"] > steps
+    assert _config.LAB_DRIVER_BOX_S["night_launcher"] < steps, \
+        "the launcher decides and hands off; it does not run a night"
+
+
+def test_every_dispatched_driver_is_one_the_lab_can_also_see_running():
+    assert set(L.DRIVERS) <= set(L.SCHEDULED_DRIVERS)
+    assert set(L.DRIVERS) == set(_config.LAB_DRIVER_BOX_S)
+    for name, spec in L.DRIVERS.items():
+        assert L.SCHEDULED_DRIVERS[name] == spec["module"]
+        assert spec["loop"] in dict(L.LOOPS)
+
+
+def test_the_launcher_receipt_directory_is_the_launchers_own():
+    """The lab resolves `iif1_launches/` through its own path seam because
+    `night_launcher.LAUNCH_RECEIPTS_DIR` binds `DATA_DIR` at import. Two
+    spellings of one directory is a gate that silently reads the wrong place,
+    so the agreement is pinned here."""
+    from backend.services import night_launcher as NL
+    assert NL.LAUNCH_RECEIPTS_DIR.name == "iif1_launches"
+    assert NL.LAUNCH_RECEIPTS_DIR.parent == Path(_config.DATA_DIR) / "optimus"
+
+
+def test_the_only_subprocess_launch_goes_through_the_one_seam():
+    """`subprocess.Popen` may be called from exactly one function.
+
+    A launch scattered across two loops is two places to forget the stdin
+    file, the detach flags and the log.
+    """
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    callers: dict[str, list[str]] = {}
+    for fn in ast.walk(tree):
+        if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for node in ast.walk(fn):
+            if isinstance(node, ast.Call) and _dotted(node.func) in (
+                    "subprocess.Popen", "launch_driver"):
+                callers.setdefault(_dotted(node.func), []).append(fn.name)
+    assert callers.get("subprocess.Popen") == ["launch_driver"], callers
+    assert callers.get("launch_driver") == ["dispatch_driver"], callers
+
+
+def test_the_status_file_names_both_dispatch_loops_every_tick(lab, stubbed_loops):
+    payload = L.tick(L.LabState(), now=datetime.now(timezone.utc))
+    for name, spec in L.DRIVERS.items():
+        block = payload["drivers"][name]
+        assert block["local_time"] == spec["local_time"]
+        assert block["fallback_scheduled_task"] == spec["task"]
+        assert "last_result" in block, "an omitted key reads as a crash"
+        assert spec["loop"] in payload["loops"]
+
+
+def test_the_schtasks_text_calls_the_two_tasks_fallbacks(capsys):
+    assert L.main(["--schtasks"]) == 0
+    out = capsys.readouterr().out
+    assert "FALLBACKS" in out
+    assert L.DRIVERS["daily_pass"]["task"] in out
+    assert L.DRIVERS["night_launcher"]["task"] in out
+
+
+# --------------------------------------------------------------------------
+# chunk 17 — the exit reason on the lock
+
+
+def test_a_clean_exit_records_its_reason_and_the_next_instance_reads_it(
+        lab, stubbed_loops):
+    """Three lab deaths in 30 hours left nothing behind but the next
+    instance's "overwrote a stale lock" line."""
+    L.run_forever(max_ticks=1, sleeper=lambda s: None)
+    rec = json.loads(L.lock_path().read_text(encoding="utf-8"))
+    assert rec["pid"] is None, "the record survives the release, or it is not a record"
+    assert rec["exit_reason"] == "ticks_exhausted"
+    assert rec["exit_utc"]
+
+    holder = L.lock_holder()
+    assert holder["state"] == "free"
+    assert holder["previous_exit_reason"] == "ticks_exhausted"
+    assert L.acquire_lock()["previous_exit_reason"] == "ticks_exhausted"
+
+
+def test_the_stop_file_is_its_own_exit_reason(lab, stubbed_loops):
+    L.stop_path().write_text("", encoding="utf-8")
+    L.run_forever(max_ticks=1, sleeper=lambda s: None)
+    rec = json.loads(L.lock_path().read_text(encoding="utf-8"))
+    assert rec["exit_reason"] == "STOP_file"
+
+
+def test_an_exception_out_of_the_loop_is_recorded_by_type(lab, monkeypatch):
+    def _boom(state, now=None):
+        raise RuntimeError("the loop died")
+    monkeypatch.setattr(L, "tick", _boom)
+    with pytest.raises(RuntimeError):
+        L.run_forever(max_ticks=1, sleeper=lambda s: None)
+    rec = json.loads(L.lock_path().read_text(encoding="utf-8"))
+    assert rec["exit_reason"] == "exception:RuntimeError"
+
+
+def test_a_killed_instance_leaves_no_reason_and_the_next_one_says_so(
+        lab, monkeypatch):
+    """`TerminateProcess` runs no handler and a bugcheck runs less than that.
+    The absence is the finding, and it is written down rather than left as a
+    gap somebody has to notice."""
+    monkeypatch.setattr(L, "pid_alive", lambda pid: False)
+    L.lock_path().write_text(json.dumps(
+        {"pid": 4242, "started_by": "always_on_lab", "started_utc": L._now()}),
+        encoding="utf-8")
+    rec = L.acquire_lock()
+    assert rec["previous_exit_reason"] == L.EXIT_NOT_RECORDED
+    assert rec["overwrote"]["pid"] == 4242
+
+
+def test_the_status_file_surfaces_the_previous_exit_reason(lab, stubbed_loops):
+    L.run_forever(max_ticks=1, sleeper=lambda s: None)
+    payload = L.run_forever(max_ticks=1, sleeper=lambda s: None)
+    assert payload["previous_exit_reason"] == "ticks_exhausted"
+
+
+def test_record_exit_never_touches_another_instances_lock(lab):
+    L.lock_path().write_text(json.dumps({"pid": 4242}), encoding="utf-8")
+    assert L.record_exit("STOP_file") is None
+    assert "exit_reason" not in json.loads(
+        L.lock_path().read_text(encoding="utf-8"))
+
+
+def test_the_exit_hooks_put_the_previous_signal_handlers_back(lab):
+    import signal
+    before = signal.getsignal(signal.SIGINT)
+    restore = L.install_exit_hooks()
+    assert signal.getsignal(signal.SIGINT) is L._on_signal
+    restore()
+    assert signal.getsignal(signal.SIGINT) is before
