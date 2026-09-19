@@ -2640,6 +2640,11 @@ DAILY_PASS_STEP_BOX_S: dict = {
     "analyst_snapshot": 4 * 3600,
     "e1_append": 600,
     "book_cadence": 900,
+    # Chunk 18. It COMPOSES what the committee and the agency already computed
+    # (a cached funnel state plus one book composition) and fetches nothing, so
+    # the box is small on purpose: a decision contract that takes ten minutes is
+    # a decision contract that is doing work it was specified not to do.
+    "decision_contract": 600,
     "coverage": 300,
 }
 

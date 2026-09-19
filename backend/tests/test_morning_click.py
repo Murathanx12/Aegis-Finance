@@ -41,13 +41,29 @@ def offline(monkeypatch, tmp_path):
     monkeypatch.setattr(M, "run_all_lanes", lambda: {})
     monkeypatch.setattr(M, "lane_nav_series", lambda: {})
     monkeypatch.setattr(M, "corpus_dir", lambda: tmp_path / "no_corpus")
+    # Chunk 18: the contract step COMPOSES the committee and the agency, and
+    # both of those read `backend/data` in this checkout and none of it in CI.
+    # The step is exercised through its own seam, like every other step here.
+    monkeypatch.setattr(M, "build_daily_contracts",
+                        lambda **kw: _CONTRACT_ROWS)
     return tmp_path
+
+
+#: Two rows, standing in for what `decision_contract` composes. Enough to prove
+#: the step's own contract -- the counts, the ledger write, the status -- without
+#: making the funnel's world true.
+_CONTRACT_ROWS = [
+    {"decision_id": "dec-aaa", "direction": "BUY", "ticker": "AAA"},
+    {"decision_id": "dec-bbb", "direction": "REFUSED", "ticker": "BBB"},
+]
 
 
 def _run(tmp_path, **kw):
     kw.setdefault("today", date(2026, 9, 11))
     kw.setdefault("out_dir", tmp_path / "morning")
     kw.setdefault("predictions_path", tmp_path / "predictions.jsonl")
+    kw.setdefault("decisions_dir", tmp_path / "decisions")
+    kw.setdefault("decision_ledger_path", tmp_path / "decision_ledger.jsonl")
     return M.run_morning(**kw)
 
 
@@ -142,6 +158,61 @@ def test_a_thin_history_forecasts_the_coin_flip_and_says_so(offline, tmp_path, m
     assert got["balanced"]["probability"] == 0.5
     assert got["balanced"]["basis"] == "insufficient_history"
     assert got["balanced"]["n_paired_days"] == 3       # paired RETURNS, not levels
+
+
+def test_the_decision_contract_step_runs_after_the_agency_review(
+        offline, tmp_path):
+    """CHUNK 18. It composes what `forecasts` and `agency_review` already
+    computed, so it runs after them and before `grade` -- a row written this
+    morning is graded by the same morning's resolver only once its own expiry
+    has closed."""
+    steps = [s for s, _ in M.STEPS]
+    assert steps.index("decision_contract") > steps.index("forecasts")
+    assert steps.index("decision_contract") > steps.index("agency_review")
+    assert steps.index("decision_contract") < steps.index("grade")
+    r = _run(tmp_path)
+    row = next(x for x in r["steps"] if x["step"] == "decision_contract")
+    assert row["status"] == "ok"
+    assert row["n_rows"] == 2
+    assert row["count_by_direction"]["BUY"] == 1
+    assert row["count_by_direction"]["REFUSED"] == 1
+    assert row["licence"] == "PRODUCT_EXPERIMENT"
+    assert row["ledger"]["written"] == 2
+
+
+def test_the_decision_step_writes_a_decided_row_per_decision(offline, tmp_path):
+    _run(tmp_path)
+    from backend.services import decision_ledger as DL
+    ledger = tmp_path / "decision_ledger.jsonl"
+    states = {r["decision_id"]: r["state"] for r in DL.read(ledger)}
+    assert states == {"dec-aaa": "DECIDED", "dec-bbb": "DECIDED"}
+    assert {r["by"] for r in DL.read(ledger)} == {"morning"}
+
+
+def test_a_day_with_no_buy_is_nothing_to_do_and_says_why(
+        offline, tmp_path, monkeypatch):
+    """A day on which every candidate was refused is a FINDING, not an `ok`
+    with zeros and not an empty step."""
+    monkeypatch.setattr(M, "build_daily_contracts", lambda **kw: [
+        {"decision_id": "dec-ccc", "direction": "REFUSED", "ticker": "CCC"}])
+    r = _run(tmp_path)
+    row = next(x for x in r["steps"] if x["step"] == "decision_contract")
+    assert row["status"] == "nothing_to_do"
+    assert "REFUSED" in row["reason"]
+
+
+def test_a_zero_cost_book_refuses_the_step_rather_than_decorating_it(
+        offline, tmp_path, monkeypatch):
+    from backend.services import decision_contract as DC
+
+    def boom(**kw):
+        raise DC.CostModelRefused("zero_cost_diagnostic was not declared")
+
+    monkeypatch.setattr(M, "build_daily_contracts", boom)
+    r = _run(tmp_path)
+    row = next(x for x in r["steps"] if x["step"] == "decision_contract")
+    assert row["status"] == "refused"
+    assert "zero_cost_diagnostic" in row["reason"]
 
 
 def test_no_network_requested_skips_rather_than_pretending_to_refuse(offline, tmp_path):

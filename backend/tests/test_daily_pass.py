@@ -107,8 +107,40 @@ def calls(monkeypatch) -> list[str]:
     monkeypatch.setattr(DP, "run_e1_append", _e1)
     monkeypatch.setattr(DP, "cadence_list", _cadences)
     monkeypatch.setattr(DP, "run_cadence_pass", _pass)
+    def _contracts(**kw):
+        seen.append("decision_contract")
+        return [{"decision_id": "dec-aaa", "direction": "BUY", "ticker": "AAA"},
+                {"decision_id": "dec-bbb", "direction": "REFUSED",
+                 "ticker": "BBB"}]
+
+    def _record(rows, day):
+        return {"state": "DECIDED", "by": "daily_pass", "written": len(rows),
+                "duplicate": 0, "refused": []}
+
     monkeypatch.setattr(DP, "read_coverage", _coverage)
+    # Chunk 18. BOTH seams, because the real builder reads the funnel out of
+    # `backend/data` and the real ledger writes into it — neither exists in CI
+    # and neither belongs in a unit test's blast radius.
+    monkeypatch.setattr(DP, "build_decision_contracts", _contracts)
+    monkeypatch.setattr(DP, "record_decided", _record)
     return seen
+
+
+def test_the_decision_contract_step_records_what_it_decided(
+        out, calls, rth_open) -> None:
+    """CHUNK 18 on the UNATTENDED path. The Morning is what the operator
+    clicks; this pass is what runs whether or not anybody is at the machine,
+    and the chunk's gate needs the contract to exist without a click."""
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "decision_contract")
+    assert row["status"] == "ok"
+    assert row["rows"] == 2
+    assert row["count_by_direction"]["BUY"] == 1
+    assert row["ledger"]["written"] == 2
+    assert row["licence"] == "PRODUCT_EXPERIMENT"
+    assert "decision_contract" in calls
+    # after the book is marked, before the coverage card is read from disk
+    assert calls.index("decision_contract") > calls.index("book_cadence:daily")
 
 
 @pytest.fixture
@@ -141,7 +173,8 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     # the cadence step fans out inside itself; the OUTER order is the declared one
     outer = [c.split(":")[0] for c in calls]
     assert outer == ["news_pull", "analyst_snapshot", "e1_append",
-                     "book_cadence", "book_cadence", "book_cadence", "coverage"]
+                     "book_cadence", "book_cadence", "book_cadence",
+                     "decision_contract", "coverage"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:
@@ -455,7 +488,8 @@ def test_a_boxed_out_pass_still_writes_its_receipt_and_exits_zero(
     for step, _ in DP.STEPS:
         monkeypatch.setitem(DP._STEP_BOXES, step, 0.05)
     for seam in ("pull_all_news", "run_analyst_snapshot", "run_e1_append",
-                 "run_cadence_pass", "read_coverage"):
+                 "run_cadence_pass", "build_decision_contracts",
+                 "read_coverage"):
         monkeypatch.setattr(DP, seam, lambda *a, **k: _time.sleep(30))
     rc = DP.main(["--date", _today()])
     assert rc == 0, "a boxed-out pass must not go red; the receipt is the evidence"

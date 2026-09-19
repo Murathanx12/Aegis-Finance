@@ -112,6 +112,9 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("analyst_snapshot", "today's consensus rows per symbol"),
     ("e1_append", "the text-and-return panel append, PIT re-verified"),
     ("book_cadence", "every paper book due today (30m only inside US RTH)"),
+    ("decision_contract", "what the engine would buy today, at what size, and "
+                          "what would make it wrong — plus a REFUSED row per "
+                          "candidate that did not clear"),
     ("coverage", "the per-source coverage card, derived from disk"),
 )
 
@@ -265,6 +268,19 @@ def run_e1_append(**kw) -> dict:
     """
     from scripts.night_factory_jobs import JOBS
     return JOBS["E1_append"](**kw)
+
+
+def build_decision_contracts(**kw) -> list[dict]:
+    """The chunk-18 contract builder, behind a name like every other seam."""
+    from backend.services import decision_contract
+    return decision_contract.build_daily_contracts(**kw)
+
+
+def record_decided(rows: list[dict], day: str) -> dict:
+    from backend.services import decision_ledger
+    return decision_ledger.record_many(
+        [r["decision_id"] for r in rows], "DECIDED", by="daily_pass",
+        asof=day, detail={"step": "decision_contract"})
 
 
 def cadence_list() -> tuple[str, ...]:
@@ -504,6 +520,45 @@ def step_book_cadence(ctx: dict) -> dict:
                 per_cadence=per, us_rth=rth)
 
 
+def step_decision_contract(ctx: dict) -> dict:
+    """The decision contract, on the UNATTENDED path (chunk 18).
+
+    `backend/services/morning.py` has the same step, and both exist on purpose:
+    the Morning is what the OPERATOR clicks and this pass is what runs whether
+    or not anybody is at the machine. The gate for chunk 18 is Murat asking the
+    local model "what would you buy today" and reading engine-sized rows — which
+    requires the contract to exist without a click.
+
+    Writing the same day twice is not a conflict: the file is keyed on the DATE
+    and rewritten atomically from the same inputs, and the ledger's DECIDED row
+    is idempotent per decision id, so the second writer records `duplicate`
+    rather than a second row.
+    """
+    t0 = time.time()
+    from backend.services import decision_contract as DC
+
+    try:
+        rows = build_decision_contracts(asof=ctx["date_obj"])
+    except DC.CostModelRefused as exc:
+        return _row("decision_contract", "refused", rows=0,
+                    seconds=round(time.time() - t0, 2), refusals=[_trunc(exc)])
+    counts = {d: sum(1 for r in rows if r.get("direction") == d)
+              for d in DC.DIRECTIONS}
+    ledger = record_decided(rows, ctx["date"])
+    blob = DC.latest(ctx["date"]) or {}
+    actionable = counts.get("BUY", 0) + counts.get("WATCH", 0)
+    return _row("decision_contract",
+                ("ok" if actionable else "nothing_to_do"),
+                rows=len(rows), seconds=round(time.time() - t0, 2),
+                refusals=list(blob.get("notes") or []),
+                count_by_direction=counts,
+                count_by_refusal_class=blob.get("count_by_refusal_class"),
+                count_by_terminal_state=blob.get("count_by_terminal_state"),
+                worst_case_largest_admissible_book=blob.get(
+                    "worst_case_largest_admissible_book"),
+                licence=DC.LICENCE, ledger=ledger, receipt=blob.get("path"))
+
+
 def step_coverage(ctx: dict) -> dict:
     """The card, from disk. A card that cannot be computed says so."""
     t0 = time.time()
@@ -530,6 +585,7 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "analyst_snapshot": step_analyst_snapshot,
     "e1_append": step_e1_append,
     "book_cadence": step_book_cadence,
+    "decision_contract": step_decision_contract,
     "coverage": step_coverage,
 }
 assert set(_HANDLERS) == {s for s, _ in STEPS}, "every declared step needs a handler"
@@ -699,9 +755,13 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         # read. The per-step stages are in `step_stages` rather than averaged
         # into one number nobody can act on.
         "stage": "pnl",
+        # `decision_contract` is `pnl`: it reads the marked book and the
+        # committee's composed positions, which are the latest stage anything
+        # in this pass touches. Stamping it lower would let a `normalized`
+        # reader consume a row derived from a NAV.
         "step_stages": {"news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
-                        "coverage": "raw"},
+                        "decision_contract": "pnl", "coverage": "raw"},
         "date": day, "run": run,
         "git_head": git_head(),
         "started_utc": started.isoformat(timespec="seconds"),

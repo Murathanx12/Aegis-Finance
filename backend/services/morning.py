@@ -85,6 +85,9 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("forecasts", "one gradeable forecast row per lane, written by the engine"),
     ("agency_review", "one hold/sell/buy_more/trim call per holding of every "
                       "book a human holds, each with its row already written"),
+    ("decision_contract", "one contract row per ranked name — direction, size, "
+                          "falsifier, expiry — and a REFUSED row for every "
+                          "candidate that did not clear"),
     ("grade", "resolve every ledger record whose window has closed"),
     ("coverage", "rows per source today, from what exists"),
     ("ready", "what the operator can read next"),
@@ -560,6 +563,81 @@ def step_agency_review(ctx: dict) -> dict:
                 ordering=out["books"][0]["ordering"] if out["books"] else None)
 
 
+def build_daily_contracts(**kw) -> list[dict]:
+    """The decision contract builder, behind a NAME (the module's own idiom).
+
+    Held at module level for the same reason `fetch_gdelt` and `resolve_due`
+    are: a step that reaches into another module inline is a step a test can
+    only exercise by making that module's world true.
+    """
+    from backend.services import decision_contract as DC
+    return DC.build_daily_contracts(**kw)
+
+
+def record_decisions(rows: list[dict], *, asof: str, path=None) -> dict:
+    from backend.services import decision_ledger as DL
+    return DL.record_many([r["decision_id"] for r in rows], "DECIDED",
+                          by="morning", asof=asof, path=path,
+                          detail={"step": "decision_contract"})
+
+
+def step_decision_contract(ctx: dict) -> dict:
+    """CHUNK 18 — what the engine would buy today, at what size, and what would
+    make it wrong.
+
+    It runs AFTER `forecasts` and `agency_review` because it COMPOSES what they
+    and the committee already computed and forecasts nothing of its own; and
+    BEFORE `grade`, so a contract row written this morning is graded by the same
+    morning's resolver only once its own expiry has closed.
+
+    The step is the one pipe the 2026-09-19 audit asked for: the numbers existed
+    and no surface Murat talks to could reach them. Nothing here sizes, prices
+    or forecasts — every field is carried from `investment_committee` or
+    `agency`, and an absent input is CANNOT DETERMINE by name.
+    """
+    from backend.services import decision_contract as DC
+
+    out_dir = ctx.get("decisions_dir")
+    try:
+        rows = build_daily_contracts(asof=ctx["date_obj"], out_dir=out_dir)
+    except DC.CostModelRefused as exc:
+        # A refusal is a finding: a book priced at zero cost without declaring
+        # the diagnostic must stop the receipt, not decorate it.
+        return _row("decision_contract", "refused", reason=_trunc(exc, 300))
+    except Exception as exc:                                       # noqa: BLE001
+        return _row("decision_contract", "error", reason=_trunc(exc, 400))
+
+    counts = {d: sum(1 for r in rows if r.get("direction") == d)
+              for d in DC.DIRECTIONS}
+    blob = DC.latest(ctx["date_obj"], out_dir) or {}
+    ledger = ctx.get("decision_ledger_path")
+    try:
+        recorded = record_decisions(rows, asof=ctx["today"], path=ledger)
+    except Exception as exc:                                       # noqa: BLE001
+        recorded = {"error": _trunc(exc, 200)}
+    actionable = counts.get("BUY", 0) + counts.get("WATCH", 0)
+    if not rows:
+        return _row("decision_contract", "nothing_to_do",
+                    reason=("the committee ranked nothing and the agency has "
+                            "surfaced no option, so there is no decision to "
+                            "record. That is not the same as a day on which "
+                            "every candidate was refused."),
+                    notes=blob.get("notes"), receipt=blob.get("path"))
+    status = "ok" if actionable else "nothing_to_do"
+    return _row("decision_contract", status,
+                n_rows=len(rows), count_by_direction=counts,
+                count_by_refusal_class=blob.get("count_by_refusal_class"),
+                count_by_terminal_state=blob.get("count_by_terminal_state"),
+                worst_case_largest_admissible_book=blob.get(
+                    "worst_case_largest_admissible_book"),
+                licence=DC.LICENCE, ledger=recorded,
+                notes=blob.get("notes"), receipt=blob.get("path"),
+                reason=(None if actionable else
+                        "every ranked candidate was REFUSED today — the classes "
+                        "are on the receipt, and a day with no buy is a finding "
+                        "rather than an empty step"))
+
+
 def step_grade(ctx: dict) -> dict:
     """Grade the local ledger, here, on the laptop.
 
@@ -755,6 +833,7 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "mark_books": step_mark_books,
     "forecasts": step_forecasts,
     "agency_review": step_agency_review,
+    "decision_contract": step_decision_contract,
     "grade": step_grade,
     "coverage": step_coverage,
     "ready": step_ready,
@@ -780,7 +859,9 @@ def next_run_number(day: str, out_dir: Path | None = None) -> int:
 def run_morning(*, today: date | None = None, do_network: bool = True,
                 predictions_path: Path | None = None,
                 out_dir: Path | None = None,
-                lanes: list[str] | None = None) -> dict:
+                lanes: list[str] | None = None,
+                decisions_dir: Path | None = None,
+                decision_ledger_path: Path | None = None) -> dict:
     """Run every step in order, write ONE receipt, return it.
 
     Never raises for a step's sake. The only exceptions that escape are the ones
@@ -799,6 +880,8 @@ def run_morning(*, today: date | None = None, do_network: bool = True,
         "do_network": bool(do_network),
         "predictions_path": predictions_path,
         "out_dir": out_dir, "run": run, "rows": [], "lanes": lanes,
+        "decisions_dir": decisions_dir,
+        "decision_ledger_path": decision_ledger_path,
     }
     started = datetime.now(timezone.utc)
     for step_id, what in STEPS:
