@@ -299,9 +299,10 @@ seeding:
   # `active_specs()` will not return it and `engine.seed_all()` cannot write an
   # inception for it. This block records the state in the file a reader opens.
   profit_allocator_v2:
-    authorised: ""              # EMPTY ON PURPOSE. Seeding is attended:
-                                # Murat flips the flag. A session does not
-                                # decide to start a track record.
+    authorised: "Murat, 2026-09-20 (verbatim: 'on the alpaca flip and adjust
+      yourself dont ask it'), against item 6 of the 2026-09-19 list ('flip the
+      seed flag for PROFIT_ALLOCATOR_v2'). Seeded by AEGIS_SEED_ARENA=1 on one
+      boot of the deployed backend the same day."
     registered: "2026-09-19 (chunk 19), draft
       docs/TRIALS/TRIAL-DRAFT-KELLY-CONSTRUCTION-v2.md, UNSIGNED"
     twin: ENGINE_BASELINE_v1

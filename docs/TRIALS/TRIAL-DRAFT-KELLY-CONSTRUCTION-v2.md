@@ -1,6 +1,9 @@
 # TRIAL-DRAFT-KELLY-CONSTRUCTION — does conviction sizing beat 1/N at the same alpha? (v2)
 
-**STATUS: UNSIGNED DRAFT.** Written 2026-09-19 (chunk 19) by the Opus builder from
+**STATUS: SIGNED 2026-09-20 — SIGNED-BY: Murat (verbatim, 2026-09-20: "on the alpaca flip and
+adjust yourself dont ask it", answering item 6 of the 2026-09-19 list, "flip the seed flag for
+PROFIT_ALLOCATOR_v2"). Recorded by Fable; the seed follows on the deployed backend the same day.**
+Originally an UNSIGNED DRAFT written 2026-09-19 (chunk 19) by the Opus builder from
 `docs/research_notes/2026-09-19/research_murat_ideas_adjudicated.md` §9, **before the book has a
 single NAV row**. Not in `rule_experiments`; `cumulative_trials` not incremented. Registration and
 seeding are both attended steps and both are Murat's.

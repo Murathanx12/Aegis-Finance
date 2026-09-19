@@ -241,10 +241,19 @@ def test_reseeding_a_changed_book_is_still_refused(tmp_path, monkeypatch):
 SEEDED_CONFIG_HASH_2026_08_21 = (
     "641adafc38703b5c3c898103639cd9e7c1f3608275757b2c93ac74f5f71ef7db")
 
-#: The current whole-file hash. Moved 2026-09-19 by the registration of
-#: PROFIT_ALLOCATOR_v2 (chunk 19) and by nothing else.
-SEEDED_CONFIG_HASH = (
+#: The whole-file hash as of 2026-09-19 (the registration of PROFIT_ALLOCATOR_v2,
+#: chunk 19). Historical.
+SEEDED_CONFIG_HASH_2026_09_19 = (
     "e84713bb5e57e847209df28915cccb61d69732c96a6c5fcc4832248cc1a37a6c")
+
+#: The current whole-file hash. Moved 2026-09-20 by ONE edit: the
+#: `seeding.profit_allocator_v2.authorised` sentence (Murat's authorisation,
+#: verbatim) -- a text change in the seeding block, not in any live book's
+#: block, which is exactly the case book-v1 identity was introduced to make
+#: harmless (the per-book pins below did not move). This legacy whole-file pin
+#: is kept so that a change to the FILE is always a visible test change.
+SEEDED_CONFIG_HASH = (
+    "fbad6155b88316f438a0dba25f2907a8517b6f473ee9bc5aaabe6cb5f29eec3b")
 
 #: THE INVARIANT THAT ACTUALLY PROTECTS THE LIVE SEEDS. Recorded from the
 #: checkout immediately BEFORE the v2 registration and re-verified immediately

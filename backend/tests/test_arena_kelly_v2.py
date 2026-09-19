@@ -169,19 +169,21 @@ def test_the_twin_is_named_in_the_seeding_block(raw):
     assert raw["seeding"]["profit_allocator_v2"]["twin"] == TWIN
 
 
-def test_seeding_is_unauthorised_and_the_flag_is_empty(raw):
+def test_seeding_was_authorised_by_a_named_person_on_a_date(raw):
+    """2026-09-20: Murat authorised the seed ("on the alpaca flip and adjust
+    yourself dont ask it"). The flag carries WHO and WHEN, verbatim; an empty
+    flag was the registered state for one day and is pinned in git history."""
     block = raw["seeding"]["profit_allocator_v2"]
-    assert block["authorised"] == "", (
-        "seeding is attended; a session does not decide to start a track "
-        "record")
+    assert "Murat" in block["authorised"] and "2026-09-20" in block["authorised"]
     assert "attended" in block["to_activate"].lower()
 
 
-def test_no_code_path_here_can_seed_the_book():
+def test_the_book_is_now_active_and_seedable():
     """The enforcement is not the comment. `active_specs()` returns only
-    AUTHORISED_ACTIVE, and `engine.seed_all()` reads that."""
-    assert BOOK not in spec.AUTHORISED_ACTIVE
-    assert BOOK not in spec.active_specs()
+    AUTHORISED_ACTIVE, and `engine.seed_all()` reads that -- so the flip is
+    the tuple, and the YAML sentence only records it."""
+    assert BOOK in spec.AUTHORISED_ACTIVE
+    assert BOOK in spec.active_specs()
 
 
 def test_the_router_endpoint_will_not_serve_an_unauthorised_book():
@@ -196,10 +198,12 @@ def test_the_router_endpoint_will_not_serve_an_unauthorised_book():
 # 5. the draft registration
 
 
-def test_the_draft_exists_and_is_unsigned():
+def test_the_draft_exists_and_is_signed_by_a_named_person():
+    """Signed 2026-09-20 by Murat (verbatim words on the draft). The signature
+    names WHO and WHEN; an unsigned draft was the state for one day."""
     assert DRAFT.is_file()
     text = DRAFT.read_text(encoding="utf-8")
-    assert "STATUS: UNSIGNED DRAFT" in text
+    assert "STATUS: SIGNED 2026-09-20" in text and "SIGNED-BY: Murat" in text
     assert "cumulative_trials` not incremented" in text
 
 

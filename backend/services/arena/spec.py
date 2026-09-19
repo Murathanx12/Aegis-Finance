@@ -27,6 +27,10 @@ AUTHORISED_ACTIVE: tuple[str, ...] = (
     "CURRENT_BEST_v1",
     "AGGRESSIVE_TOP5_v1",
     "DIVERSIFIED_TOP20_v1",
+    # 2026-09-20: the Kelly construction test, authorised by Murat the same day
+    # ("on the alpaca flip and adjust yourself dont ask it"); v1 retired
+    # 2026-08-24 with its construction never measured. Twin: ENGINE_BASELINE_v1.
+    "PROFIT_ALLOCATOR_v2",
 )
 
 #: Books that RAN and have been stood down. Their ledgers, seeds and NAV rows
