@@ -87,6 +87,21 @@ polygon-api-client>=1.14.0
 # and `fetch_scrapling.fetch` refuses BY NAME when it is missing.
 scrapling[fetchers]>=0.4.15
 
+# Reddit's OAuth2 client, for `scripts/social_pull.py` (chunk 20 T2). PRAW owns
+# the token refresh, which is the reason the social collector sits outside
+# `news_pull.py` at all. BSD-2-Clause; resolves cleanly (prawcore, defusedxml,
+# update_checker, websocket-client — all small, no conflicts, checked by
+# dry-run before it was added).
+#
+# The three key NAMES it needs (REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET /
+# REDDIT_USER_AGENT) do NOT exist yet, so the collector refuses by name and
+# this dependency is installed-and-unused until Murat creates a script app at
+# www.reddit.com/prefs/apps. `social_pull.reddit_client` passes
+# `check_for_updates=False`: PRAW's default configuration pings PyPI on
+# construction, and a collector that makes an unasked-for network call on every
+# tick is one nobody can bound.
+praw>=8.0.3
+
 # Utilities
 requests>=2.31.0
 python-dotenv>=1.0.0

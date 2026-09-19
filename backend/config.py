@@ -2902,3 +2902,38 @@ LAB_DRIVER_BOX_S: dict = {
     "daily_pass": 6 * 3600,
     "night_launcher": 900,
 }
+
+
+# ---------------------------------------------------------------------------
+# SOCIAL PHASE 1 (chunk 20, 2026-09-19 —
+# `docs/research_notes/2026-09-19/spec_social_video_pipeline.md`)
+#
+# Two sources behind two keys that DO NOT EXIST YET. Every number here is a
+# ceiling on somebody else's allowance, not a target: the collector refuses by
+# key NAME when a key is absent, and the refusal is the live path today.
+# ---------------------------------------------------------------------------
+
+#: YouTube Data API v3 quota units a `search.list` call costs. NOT a knob —
+#: it is Google's price and it is here so the arithmetic on the receipt has one
+#: source. The whole free day is 10,000 units, so this number times the query
+#: list is the entire budget: 100 searches, total, per day.
+SOCIAL_YOUTUBE_SEARCH_UNITS = 100
+
+#: The free daily quota, in units, resetting at MIDNIGHT PACIFIC (not UTC — see
+#: `social_pull.YOUTUBE_QUOTA_TZ`; getting the timezone wrong does not fail, it
+#: silently spends tomorrow's allowance this evening). There is no paid tier
+#: for this API, only a manual extension form that takes weeks, so an exhausted
+#: day is exhausted.
+SOCIAL_YOUTUBE_DAILY_UNITS = 10_000
+
+#: Posts read per subreddit per pass. Reddit's documented ceiling is 100
+#: queries/minute per OAuth client and each post costs one extra call for its
+#: comment tree, so one pass over the seven declared subs is about
+#: 7 x (1 + 50) = 357 calls — minutes at the paced rate, not seconds.
+SOCIAL_REDDIT_POSTS_PER_SUB = 50
+
+#: Comments kept per post. `replace_more(limit=0)` drops the "load more" stubs
+#: rather than expanding them (each expansion is another API call), so this cap
+#: and that rule TOGETHER are the dispersion variable's denominator — which is
+#: why both are printed on the receipt instead of assumed.
+SOCIAL_REDDIT_COMMENTS_PER_POST = 200
