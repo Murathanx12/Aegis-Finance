@@ -64,6 +64,10 @@ BODY_CHARS = 2000
 #: `evidence_span`'s ceiling, from the schema. A longer span is a schema refusal.
 EVIDENCE_CHARS = 400
 
+#: Ceiling on each v3 entity field. A name, not a sentence: a role field long
+#: enough to hold prose is a role field that will hold prose.
+ENTITY_CHARS = 120
+
 #: The backend this contract is written for. Local, free, and NOT
 #: `llm_analyzer._call_llm`, which is DeepSeek-specific (spec section 2).
 BACKEND = "local_gguf"
@@ -117,6 +121,32 @@ def schema() -> dict:
                     "justifies event_type and direction. Empty string only when "
                     "event_type is no_event."),
             },
+            # v3 (2026-09-19). OPTIONAL BY CONSTRUCTION, and that is what makes
+            # it backward compatible: `entities` is not in `required`, so every
+            # v2 row on disk and every v2 reply still validates against this
+            # schema unchanged. Two v3 ids carry one direction prior PER ROLE
+            # (`event_vocabulary.ENTITY_DIRECTION_PRIORS`), and a row that
+            # names the incumbent without naming which side it is scoped to
+            # cannot have its sign resolved at all.
+            "entities": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    **{role: {"type": "string", "maxLength": ENTITY_CHARS,
+                              "description":
+                                  f"the {role} named in the document, as "
+                                  f"written; omit the key when none is named"}
+                       for role in vocab.ENTITY_ROLES},
+                    "named_input": {
+                        "type": "string", "maxLength": ENTITY_CHARS,
+                        "description": (
+                            "growth_constraint_cited only: the specific input, "
+                            "capacity or resource named as the constraint "
+                            "(\"HBM supply\", \"grid interconnection "
+                            "capacity\"), as written"),
+                    },
+                },
+            },
         },
     }
 
@@ -168,6 +198,17 @@ Rules:
    earlier date (no new fact, just a summary or "as previously announced")
    is "no_event" — the event was already extracted from the original article
    on its original date; extracting it again from a recap double-counts it.
+10. entities is OPTIONAL and applies to exactly two event types. For
+    foreign_entrant_capacity give {"incumbent": "...", "entrant": "..."} --
+    the established company whose category is being entered, and the company
+    entering it. For growth_constraint_cited give {"supplier": "..."} when the
+    constraint names a supplier, and "named_input" for the constrained
+    resource itself. Copy names as written. Omit any key you cannot fill, and
+    omit the whole object for every other event type.
+11. direction for those two types is relative to the NAMED ENTITY the document
+    is about, as always: an entrant reaching parity is negative for the
+    incumbent and positive for the entrant, and a cited constraint is negative
+    for the company that cited it and positive for a supplier it names.
 9. Output EXACTLY the JSON object. No markdown fences, no explanation before
    or after, no additional keys."""
 
@@ -208,6 +249,17 @@ Three readings that are easy to get wrong:
 - A recap is not news. An article that only restates something already reported
   on an earlier date ("as previously announced") is "no_event"; the original
   article's own date already carried it.
+
+Two event types carry an optional entities object, and only those two:
+- foreign_entrant_capacity: {"incumbent": "...", "entrant": "..."} - the
+  established company whose category is being entered, and the one entering it.
+- growth_constraint_cited: {"supplier": "..."} when a supplier is named, plus
+  "named_input" for the constrained resource itself.
+Copy names as written, omit any key you cannot fill, and omit the object
+entirely for every other type. The direction for these two is still relative to
+the entity the document is about: parity reached is down for the incumbent and
+up for the entrant; a cited constraint is down for the company citing it and up
+for a supplier it names.
 
 Emit the JSON object alone: no markdown fences, nothing before or after it, no
 keys outside the schema."""
@@ -330,6 +382,9 @@ class TypedEventRow:
     #: says which table a reader should go looking for, and the two together are
     #: what makes a corpus typed across a vocabulary change still readable.
     vocabulary_version: int = vocab.VOCABULARY_VERSION
+    #: v3's entity block, or `{}`. OPTIONAL: a v2 row has none and is still a
+    #: complete row, which is what lets one corpus hold both.
+    entities: dict = field(default_factory=dict)
     #: True when `evidence_span` really is a substring of the document shown.
     #: MEASURED, not enforced: the spec asks for a verbatim span but does not
     #: make a paraphrase a refusal, and refusing one would throw away an
@@ -411,6 +466,39 @@ def _hand_errors(obj: Any) -> list[str]:
             errs.append("evidence_span: expected a string")
         elif len(s) > EVIDENCE_CHARS:
             errs.append(f"evidence_span: {len(s)} characters, ceiling is {EVIDENCE_CHARS}")
+    if "entities" in obj:
+        errs += _entity_errors(obj.get("entities"), obj.get("event_type"))
+    return errs
+
+
+def _entity_errors(ent, event_type) -> list[str]:
+    """v3's entity block, checked by hand beside the schema.
+
+    Absent is fine -- the block is optional, which is how every v2 row stays
+    valid. Present and wrong is a refusal, including present on an id that has
+    no use for it: a field that can appear anywhere is a field no reader can
+    filter on.
+    """
+    allowed = set(SCHEMA["properties"]["entities"]["properties"])
+    if not isinstance(ent, dict):
+        return [f"entities: expected an object, got {type(ent).__name__}"]
+    errs = []
+    for key, val in ent.items():
+        if key not in allowed:
+            errs.append(f"entities.{key}: additionalProperties is false and "
+                        f"this key is not in the schema "
+                        f"({sorted(allowed)})")
+            continue
+        if not isinstance(val, str):
+            errs.append(f"entities.{key}: expected a string")
+        elif len(val) > ENTITY_CHARS:
+            errs.append(f"entities.{key}: {len(val)} characters, ceiling is "
+                        f"{ENTITY_CHARS}")
+    if ent and isinstance(event_type, str) and event_type not in vocab.IDS_WITH_ENTITIES:
+        errs.append(
+            f"entities: {event_type!r} declares no entity roles. Only "
+            f"{list(vocab.IDS_WITH_ENTITIES)} carry them, because their "
+            f"direction prior is per ROLE and every other id's is per row")
     return errs
 
 
@@ -493,6 +581,7 @@ def parse_reply(raw: str, *, document: str | None = None, variant: str = "A",
         confidence=float(obj["confidence"]), evidence_span=span,
         prompt_hash=prompt_hash(variant), vocabulary_hash=vocab.VOCABULARY_HASH,
         vocabulary_version=vocab.VOCABULARY_VERSION,
+        entities=dict(obj.get("entities") or {}),
         evidence_span_verbatim=verbatim)
 
 
@@ -557,6 +646,12 @@ def declaration() -> dict:
             "a no_event row is a SUCCESSFUL classification and is written like any "
             "other row -- it is how L2 measures the corpus's genuine event rate, and "
             "dropping it would make the denominator silently wrong"),
+        "entity_roles": list(vocab.ENTITY_ROLES),
+        "ids_with_entities": list(vocab.IDS_WITH_ENTITIES),
+        "entities_are_optional": (
+            "v3 added the block and did NOT add it to `required`, so every v2 "
+            "row and every v2 reply still validates unchanged. A v2 row is a "
+            "complete row; it simply carries no entities."),
         "one_row_per_document": (
             "spec section 2.4: the DOMINANT event only. v1's schema has no "
             "multi-event shape, and additionalProperties:false forbids smuggling one in"),

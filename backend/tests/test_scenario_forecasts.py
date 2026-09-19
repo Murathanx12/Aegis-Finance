@@ -126,13 +126,18 @@ def test_the_vocabulary_is_the_specs_own_table():
     ids = [m.group(1) for m in
            (re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|", line) for line in section.splitlines())
            if m]
-    v2 = text[text.index("#### Analyst actions (v2)"):text.index("That is 42 substantive")]
-    ids += [m.group(1) for m in
-            (re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|", line) for line in v2.splitlines())
-            if m]
-    # section 1.2b's rows go BEFORE the refusal class, which is where the module
-    # puts them too
-    assert tuple(ids[:-4] + ids[-3:] + ids[-4:-3]) == sf.EVENT_TYPES
+    for header, closer in (("#### Analyst actions (v2)", "That is 42 substantive"),
+                           ("#### Foreign entry and constraints (v3)",
+                            "That is 44 substantive")):
+        block = text[text.index(header):text.index(closer)]
+        ids += [m.group(1) for m in
+                (re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|", line)
+                 for line in block.splitlines())
+                if m]
+    # Every addendum's rows go BEFORE the refusal class, which is where the
+    # module puts them too: `no_event` is v1's last row and stays last.
+    no_event = ids.index("no_event")
+    assert tuple(ids[:no_event] + ids[no_event + 1:] + ["no_event"]) == sf.EVENT_TYPES
     assert len(set(ids)) == len(ids), "a duplicate id in the frozen vocabulary"
 
 
@@ -141,12 +146,14 @@ def test_the_count_discrepancy_in_the_spec_is_recorded_not_silently_resolved():
     sentence says "38 substantive + no_event = 39". The v1 table has 39
     substantive rows, so the heading is right and the sentence is off by one.
     Recorded here so the next reader does not re-derive it. v2 (section 1.2b)
-    adds the three analyst rows on top of that."""
+    adds the three analyst rows on top of that, and v3 (section 1.2c) two
+    more -- the counts below are the CURRENT table's and move with it."""
     from backend.services import event_vocabulary as ev
     assert len(ev.VOCABULARY_V1) == 40
-    assert len(sf.EVENT_TYPES) == 43
+    assert len(ev.VOCABULARY_V2) == 43
+    assert len(sf.EVENT_TYPES) == len(ev.VOCABULARY) == 45
     assert sf.EVENT_TYPES[-1] == "no_event"
-    assert len([t for t in sf.EVENT_TYPES if t != "no_event"]) == 42
+    assert len([t for t in sf.EVENT_TYPES if t != "no_event"]) == 44
 
 
 # ---------------------------------------------------------------- the schema

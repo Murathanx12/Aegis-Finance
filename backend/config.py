@@ -2735,6 +2735,13 @@ LAB_IDLE_MINUTES = 20
 #: measured gap in the system (6,020 rows PENDING_MODEL on 2026-09-13).
 LAB_IDLE_QUEUE: tuple[tuple[str, int], ...] = (
     ("L2_typed_events", 120),
+    # 2026-09-19, chunk 19. Directly AFTER the backlog job and for its reason:
+    # vocabulary v3 added two ids, and the rows L2 is still typing are the rows
+    # this one re-reads. A 60-minute box, not 120: it reads only what a declared
+    # keyword screen lets through, which is a small fraction of the corpus, and
+    # it caps itself at `night_l2_retype_v3.MAX_ROWS_PER_RUN` so the box is a
+    # number a pass can finish rather than one that guarantees a kill.
+    ("L2_retype_v3", 60),
     # 2026-09-13 22:50: R2 panel B was read today (REJECT, 4.1 h) and a re-run
     # at temperature 0 is the same 4.1 h for the same answer. The three
     # model-dependent reads still unread take its place.

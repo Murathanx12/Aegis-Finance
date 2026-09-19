@@ -1503,6 +1503,15 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # `typed_events/_cursor.json` -- so `--resume` is accepted and is a
         # no-op: there is no mode in which this job re-types what it has typed.
         "L2_typed_events": _lazy("scripts.night_l2_typed_events", "L2_typed_events"),
+        # 2026-09-19, chunk 19: vocabulary v3 added `foreign_entrant_capacity`
+        # and `growth_constraint_cited`. Rows typed before today answered a
+        # question with two fewer options -- they are not wrong, and
+        # `vocabulary_version` is what makes that legible. This job re-reads
+        # ONLY the texts a DECLARED keyword screen lets through, on the local
+        # reader, and appends rows carrying `vocabulary_version: 3`. It never
+        # starts or stops a server: with none answering it writes
+        # PENDING_MODEL with the candidate list frozen and hashed.
+        "L2_retype_v3": _lazy("scripts.night_l2_retype_v3", "L2_retype_v3"),
         # E3 2026-09-13, chunk 9: adaptive conformal intervals (Gibbs-Candes
         # 2021 + Barber et al. 2023 recency weights), graded by REALISED
         # coverage per volatility tercile. Runs on whichever head first shows a
@@ -1709,6 +1718,9 @@ JOB_STAGES = {
     # L2 turns raw corpus text into typed FEATURE rows; it reads no price,
     # no weight and no PnL, and E1 (signal) reads it afterwards.
     "L2_typed_events": "features",
+    # Same stage as the job it extends: it turns raw corpus text into typed
+    # FEATURE rows and reads no price, no weight and no PnL.
+    "L2_retype_v3": "features",
     "G3_evolve_v2": "weights",
     "G1_evolve": "weights",
     "G2_holdout_once": "weights",
@@ -1821,6 +1833,8 @@ def main(argv=None) -> int:
         # continuation, so there is no non-resuming mode to select. It is in
         # RESUMABLE so the flag is accepted rather than refused.
         payload = fn(smoke=a.smoke, run=a.run)
+    elif a.job == "L2_retype_v3":
+        payload = fn(smoke=a.smoke, run=a.run, workers=a.workers)
     elif a.job in ("E2_embedding_horizon", "E1_event_head", "E3_adaptive_conformal",
                    "E4_adwin_gated_refit", "L4_qwen3_measure"):
         payload = fn(smoke=a.smoke, run=a.run)

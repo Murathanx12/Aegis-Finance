@@ -74,17 +74,90 @@ def test_v2_is_v1_plus_three_analyst_rows_and_no_event_is_still_last():
     """The addendum goes BEFORE the refusal class, so every v1 id keeps its
     position -- row order is part of the contract (the JSON Schema enum is
     generated from it)."""
-    assert ev.VOCABULARY_VERSION == 2
-    assert ev.N_TYPES == len(ev.VOCABULARY) == 43
-    assert ev.N_SUBSTANTIVE == 42
-    assert ev.EVENT_TYPES[-1] == ev.NO_EVENT == "no_event"
-    assert len(set(ev.EVENT_TYPES)) == ev.N_TYPES, "a duplicate id in the vocabulary"
+    assert len(ev.VOCABULARY_V2) == 43
+    assert ev.VOCABULARY_V2[-1].id == ev.NO_EVENT == "no_event"
     added = tuple(t.id for t in ev._V2_ADDED)
     assert added == ("analyst_rating_change", "analyst_target_change",
                      "analyst_initiation")
-    assert ev.EVENT_TYPES[-4:-1] == added
+    assert tuple(t.id for t in ev.VOCABULARY_V2[-4:-1]) == added
     # every v1 id is where it was
-    assert ev.EVENT_TYPES[:39] == tuple(t.id for t in ev.VOCABULARY_V1[:39])
+    assert (tuple(t.id for t in ev.VOCABULARY_V2[:39])
+            == tuple(t.id for t in ev.VOCABULARY_V1[:39]))
+
+
+def test_v3_is_v2_plus_two_rows_and_no_event_is_STILL_last():
+    """Same rule, one version later. A table that appended after `no_event`
+    would be a different table in a way a reader cannot see."""
+    assert ev.VOCABULARY_VERSION == 3
+    assert ev.N_TYPES == len(ev.VOCABULARY) == 45
+    assert ev.N_SUBSTANTIVE == 44
+    assert ev.EVENT_TYPES[-1] == ev.NO_EVENT == "no_event"
+    assert len(set(ev.EVENT_TYPES)) == ev.N_TYPES, "a duplicate id in the vocabulary"
+    added = tuple(t.id for t in ev._V3_ADDED)
+    assert added == ("foreign_entrant_capacity", "growth_constraint_cited")
+    assert ev.EVENT_TYPES[-3:-1] == added
+    # every v2 id is where it was
+    assert (ev.EVENT_TYPES[:42] == tuple(t.id for t in ev.VOCABULARY_V2[:42]))
+
+
+def test_both_v3_priors_are_ambiguous_because_the_sign_is_in_the_SCOPE():
+    """The incumbent falls and the entrant rises from ONE event. A table that
+    collapsed that to a single sign would be the prior asserting what only the
+    scope can say."""
+    for t in ev._V3_ADDED:
+        assert t.direction_prior is None, t.id
+        assert "ambiguous by scope" in t.direction_prior_text, t.id
+        assert t.sec_items == (), f"{t.id}: this is not an 8-K item"
+
+
+def test_the_entity_priors_are_pinned_because_they_sit_outside_the_hash():
+    """`vocabulary_hash` cannot see this mapping -- the dataclass carries one
+    prior per ROW and these ids carry one per ROLE. An edit here is therefore
+    invisible to the hash, and this literal is the thing that makes it visible.
+    """
+    assert ev.ENTITY_DIRECTION_PRIORS == {
+        "foreign_entrant_capacity": {"incumbent": -1, "entrant": +1},
+        "growth_constraint_cited": {"issuer": -1, "supplier": +1},
+    }
+    assert ev.ENTITY_ROLES == ("incumbent", "entrant", "supplier")
+    assert set(ev.IDS_WITH_ENTITIES) == set(ev.ENTITY_DIRECTION_PRIORS)
+    for id_ in ev.IDS_WITH_ENTITIES:
+        ev.by_id(id_)                      # every one is really in the table
+
+
+def test_the_v3_rows_are_the_specs_1_2c_rows():
+    """Parsed from section 1.2c, not transcribed."""
+    text = SPEC.read_text(encoding="utf-8")
+    section = text[text.index("#### Foreign entry and constraints (v3)"):
+                   text.index("That is 44 substantive")]
+    rows = []
+    for line in section.splitlines():
+        m = re.match(r"^\|\s*`([a-z0-9_]+)`\s*\|(.*)\|\s*$", line)
+        if not m:
+            continue
+        cells = [c.strip() for c in m.group(2).split("|")]
+        assert len(cells) == 6, f"{m.group(1)}: {len(cells)} cells, expected 6"
+        rows.append((m.group(1), *cells))
+    assert len(rows) == 2
+    for (sid, definition, sec_items, prior, magnitude, example, counter), got in zip(
+            rows, ev._V3_ADDED):
+        assert got.id == sid
+        assert got.definition == definition
+        assert got.sec_items_text == sec_items
+        assert got.direction_prior_text == prior
+        assert got.magnitude_bucket == magnitude
+        assert got.example == example
+        assert got.counter_example == counter
+
+
+def test_the_kappa_protocol_derives_its_width_from_the_table():
+    """It said "40-way" through the whole of v2's life. A count that describes
+    the vocabulary must be derived from it or it is a number that was true
+    once."""
+    assert f"{ev.N_TYPES}-way" in ev.KAPPA_PROTOCOL["event_type"]
+    assert ev.KAPPA_PROTOCOL["n_types"] == ev.N_TYPES == 45
+    assert ev.KAPPA_PROTOCOL["vocabulary_version"] == ev.VOCABULARY_VERSION
+    assert "re_run_on_a_version_bump" in ev.KAPPA_PROTOCOL
 
 
 def test_the_v1_hash_did_not_move_when_v2_landed():
@@ -96,7 +169,13 @@ def test_the_v1_hash_did_not_move_when_v2_landed():
     assert ev.vocabulary_hash(ev.table(1)) == ev.VOCABULARY_HASH_V1
     assert ev.VOCABULARY_HASH != ev.VOCABULARY_HASH_V1, (
         "the CURRENT hash must move when the table grows -- that is the signal")
-    assert ev.VOCABULARY_HASHES == {1: ev.VOCABULARY_HASH_V1, 2: ev.VOCABULARY_HASH}
+    assert ev.VOCABULARY_HASHES == {1: ev.VOCABULARY_HASH_V1,
+                                    2: ev.VOCABULARY_HASH_V2,
+                                    3: ev.VOCABULARY_HASH}
+    assert ev.VOCABULARY_HASH_V2 != ev.VOCABULARY_HASH_V1
+    assert ev.VOCABULARY_HASH not in (ev.VOCABULARY_HASH_V1,
+                                      ev.VOCABULARY_HASH_V2)
+    assert ev.vocabulary_hash(ev.table(2)) == ev.VOCABULARY_HASH_V2
 
 
 def test_the_analyst_rows_are_the_specs_1_2b_rows():
@@ -135,9 +214,10 @@ def test_every_analyst_prior_is_ambiguous_because_the_sign_is_in_the_word():
 def test_an_unknown_version_names_the_versions_that_exist():
     assert ev.vocabulary_for(1) is ev.VOCABULARY_V1
     assert ev.vocabulary_for(2) is ev.VOCABULARY_V2
+    assert ev.vocabulary_for(3) is ev.VOCABULARY_V3
     with pytest.raises(KeyError) as exc:
-        ev.vocabulary_for(3)
-    assert "[1, 2]" in str(exc.value)
+        ev.vocabulary_for(4)
+    assert "[1, 2, 3]" in str(exc.value)
     assert "never by editing an existing one" in str(exc.value)
 
 
@@ -221,7 +301,7 @@ def test_an_unknown_id_is_a_refusal_that_names_the_vocabulary():
     assert f"v{ev.VOCABULARY_VERSION}" in str(exc.value)
 
 
-def test_scenario_forecasts_reads_the_same_43_ids():
+def test_scenario_forecasts_reads_the_same_ids_as_the_current_table():
     """X3's grader keys on these ids. Two tuples that must never diverge."""
     assert sf.EVENT_TYPES == ev.EVENT_TYPES
     assert tuple(sf.MAGNITUDES) == ev.MAGNITUDE_BUCKETS
@@ -230,12 +310,17 @@ def test_scenario_forecasts_reads_the_same_43_ids():
 def test_the_declaration_carries_what_a_receipt_needs():
     d = ev.declaration()
     assert d["vocabulary_hash"] == ev.VOCABULARY_HASH
-    assert d["vocabulary_version"] == 2
+    assert d["vocabulary_version"] == 3
     assert d["versions"]["1"]["vocabulary_hash"] == ev.VOCABULARY_HASH_V1
     assert d["versions"]["1"]["n_types"] == 40
     assert d["versions"]["2"]["n_types"] == 43
-    assert d["n_types"] == 43 and d["n_substantive"] == 42
+    assert d["versions"]["3"]["n_types"] == 45
+    assert d["n_types"] == 45 and d["n_substantive"] == 44
     assert d["refusal_class"] == "no_event"
-    assert set(d["kappa_protocol"]) == {"event_type", "direction",
-                                        "magnitude_bucket", "confidence", "sample"}
+    assert {"event_type", "direction", "magnitude_bucket", "confidence",
+            "sample"} <= set(d["kappa_protocol"])
+    # v3's entity mapping rides on every receipt BECAUSE it is outside the hash.
+    assert d["entity_direction_priors"] == ev.ENTITY_DIRECTION_PRIORS
+    assert d["entity_roles"] == list(ev.ENTITY_ROLES)
+    assert d["ids_with_entities"] == list(ev.IDS_WITH_ENTITIES)
     assert "no value for 'I do not know'" in d["no_fourth_direction"]

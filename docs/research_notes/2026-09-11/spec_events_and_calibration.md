@@ -232,6 +232,78 @@ vs. downgrade, raise vs. cut) and not in the type.
 That is 42 substantive types + `no_event` = **43 total** at
 `VOCABULARY_VERSION = 2`.
 
+### 1.2c VOCABULARY v3 — foreign entry and cited constraints (added 2026-09-19)
+
+**v1 and v2 above are FROZEN and their hashes are unchanged.**
+`VOCABULARY_HASH_V1` (`b55fcff7…`) and `VOCABULARY_HASH_V2` are both still
+computable from their own tables, so every row typed before today stays readable
+against the table it was actually typed under. v3 = v2 with the two rows below
+inserted BEFORE the refusal class, so `no_event` stays last and every earlier id
+keeps its position.
+
+**Why these two, and why now.** Both come from the 2026-09-19 reads, and both
+close a gap that was measured rather than imagined.
+
+- `foreign_entrant_capacity` — `research_murat_ideas_adjudicated.md` §1 checked
+  the v2 table against Murat's CXMT/Micron question and found **no
+  foreign-competitor-entry class at all**. The nearest neighbours,
+  `tariff_or_trade_policy` and `product_launch_or_innovation`, fire on the
+  *entrant's own announcement*, not on the incumbent-relevant reading of it,
+  which is a different event. The literal MU short is NOT a hypothesis (the
+  2026-09-14 −5.2% sat inside a SOXX-wide day); the generalised event class is,
+  and it is registered as `docs/TRIALS/TRIAL-DRAFT-FOREIGN-ENTRANT-IC-v0.md`
+  (UNSIGNED) — written **before** this id existed.
+- `growth_constraint_cited` — `spec_social_video_pipeline.md` §2.4-2.5. This is
+  the event-conditioned key `NEGATIVE_RESULTS.md` §12 named as the *only*
+  admissible successor to the supply-chain corpse: §12 closed an annual, static
+  customer-link cross-section and said a revival needs event-conditioned links
+  on daily data, **registered fresh**. It is registered fresh, not treated as a
+  re-run of §12.
+
+**Why both priors are `ambiguous` in the table.** The sign depends on which
+entity the row is scoped to — the incumbent falls and the entrant rises; the
+constrained issuer falls and its named supplier rises. Collapsing that to one
+sign would be the prior asserting what only the scope can say, which is exactly
+what `_prior` already refuses to do for `mergers_acquisitions` ("positive
+(target) / ambiguous (acquirer)"). The resolved signs live in
+`event_vocabulary.ENTITY_DIRECTION_PRIORS`:
+
+| id | role | prior |
+|---|---|---|
+| `foreign_entrant_capacity` | `incumbent` | **−1** |
+| `foreign_entrant_capacity` | `entrant` | **+1** |
+| `growth_constraint_cited` | `issuer` (the speaker's own company) | **−1** |
+| `growth_constraint_cited` | `supplier` (when one is named) | **+1** |
+
+That mapping is **outside the vocabulary hash**, deliberately and at a cost:
+`EventType` carries one prior per row and adding a field would have moved v1's
+and v2's hashes, so re-identifying two frozen tables in order to describe a
+third was the worse trade. The mitigation is that `declaration()` prints the
+mapping on every receipt and `test_event_vocabulary.py` pins it literally — an
+edit outside the hash is a red suite rather than a quiet change.
+
+**The entity fields on the wire.** `event_extraction.schema()` gains an
+**optional** `entities` object with `incumbent`, `entrant`, `supplier` and a
+free-text `named_input`. It is optional by construction, and that is what makes
+it backward compatible: it is not in `required`, so every v2 row on disk and
+every v2 reply validates against the v3 schema unchanged. It is refused on any
+id outside the two above — a field that can appear anywhere is a field no reader
+can filter on.
+
+#### Foreign entry and constraints (v3)
+| id | definition | 8-K | direction prior | magnitude | example | not this |
+|---|---|---|---|---|---|---|
+| `foreign_entrant_capacity` | A foreign or new entrant achieves qualified compatibility, certification, or capacity parity in an incumbent's product category, or discloses capacity that would reach it. | — (competitor disclosure, trade press or an entrant's own filing, not the incumbent's 8-K) | ambiguous by scope: negative (-1) for the named incumbent, positive (+1) for the entrant — see ENTITY_DIRECTION_PRIORS | MODERATE | "CXMT DDR5 modules pass AM5 motherboard qualification at 8,200 MT/s, vendors list them alongside incumbent parts" | The entrant announcing a product with no compatibility, certification or capacity claim against an incumbent's category → `product_launch_or_innovation`. An export control or duty on the entrant → `tariff_or_trade_policy`. |
+| `growth_constraint_cited` | A CEO, CFO or other company officer names a specific input, capacity, supplier or resource that is holding back near-term growth. | — (earnings call, conference remarks or an Ex.99 transcript, not an 8-K item) | ambiguous by scope: negative (-1) for the speaker's own issuer, positive (+1) for a named supplier when the constraint names one — see ENTITY_DIRECTION_PRIORS | MODERATE | "We could ship more if we could get HBM; our supply of high-bandwidth memory is the binding constraint this year" | A forward number raised or cut without naming what limits it → `guidance_change`. A supplier failing to deliver under an existing contract → `contract_loss_or_termination`. |
+
+That is 44 substantive types + `no_event` = **45 total** at
+`VOCABULARY_VERSION = 3`.
+
+**The kappa protocol is re-run, not inherited.** Chance agreement alone moves
+from 1/43 to 1/45, so a kappa computed under v2's table does not carry to v3's.
+`KAPPA_PROTOCOL` now DERIVES its width from `N_TYPES` — it said "40-way" through
+the whole of v2's life, which is a number that was true once.
+
 ### 1.3 Definitions that make two prompts comparable by kappa
 
 - **`direction ∈ {-1, 0, +1}`**, always relative to the named `scope` entity
@@ -306,43 +378,118 @@ prompt contract below is provider-agnostic).
   "title": "AegisTypedEventRow",
   "type": "object",
   "additionalProperties": false,
-  "required": ["event_type", "direction", "magnitude_bucket", "confidence", "evidence_span"],
+  "required": [
+    "event_type",
+    "direction",
+    "magnitude_bucket",
+    "confidence",
+    "evidence_span"
+  ],
   "properties": {
     "event_type": {
       "type": "string",
       "enum": [
-        "earnings_report", "earnings_preannouncement", "guidance_change",
-        "mergers_acquisitions", "divestiture_asset_sale", "spinoff",
-        "bankruptcy_or_going_concern", "delisting_or_listing_risk",
-        "debt_issuance_or_obligation", "debt_covenant_or_default_trigger",
-        "equity_issuance_dilution", "stock_buyback", "dividend_increase",
-        "dividend_cut_or_suspension", "special_dividend",
-        "regular_dividend_declaration", "stock_split", "reverse_stock_split",
-        "credit_rating_change", "new_contract_or_partnership",
-        "contract_loss_or_termination", "product_launch_or_innovation",
-        "product_recall_or_defect", "clinical_trial_result",
-        "regulatory_approval", "regulatory_investigation_or_action",
-        "litigation_filed", "litigation_settlement",
-        "management_change_departure", "management_change_appointment",
-        "auditor_or_accounting_change", "cybersecurity_incident",
+        "earnings_report",
+        "earnings_preannouncement",
+        "guidance_change",
+        "mergers_acquisitions",
+        "divestiture_asset_sale",
+        "spinoff",
+        "bankruptcy_or_going_concern",
+        "delisting_or_listing_risk",
+        "debt_issuance_or_obligation",
+        "debt_covenant_or_default_trigger",
+        "equity_issuance_dilution",
+        "stock_buyback",
+        "dividend_increase",
+        "dividend_cut_or_suspension",
+        "special_dividend",
+        "regular_dividend_declaration",
+        "stock_split",
+        "reverse_stock_split",
+        "credit_rating_change",
+        "new_contract_or_partnership",
+        "contract_loss_or_termination",
+        "product_launch_or_innovation",
+        "product_recall_or_defect",
+        "clinical_trial_result",
+        "regulatory_approval",
+        "regulatory_investigation_or_action",
+        "litigation_filed",
+        "litigation_settlement",
+        "management_change_departure",
+        "management_change_appointment",
+        "auditor_or_accounting_change",
+        "cybersecurity_incident",
         "insider_or_institutional_ownership_change",
-        "macro_rate_decision", "macro_inflation_print", "macro_labor_report",
-        "tariff_or_trade_policy", "sanction", "index_rebalance",
-        "analyst_rating_change", "analyst_target_change", "analyst_initiation",
+        "macro_rate_decision",
+        "macro_inflation_print",
+        "macro_labor_report",
+        "tariff_or_trade_policy",
+        "sanction",
+        "index_rebalance",
+        "analyst_rating_change",
+        "analyst_target_change",
+        "analyst_initiation",
+        "foreign_entrant_capacity",
+        "growth_constraint_cited",
         "no_event"
       ]
     },
-    "direction": { "type": "integer", "enum": [-1, 0, 1] },
+    "direction": {
+      "type": "integer",
+      "enum": [
+        -1,
+        0,
+        1
+      ]
+    },
     "magnitude_bucket": {
       "type": "string",
-      "enum": ["NEGLIGIBLE", "SMALL", "MODERATE", "LARGE", "EXTREME"]
+      "enum": [
+        "NEGLIGIBLE",
+        "SMALL",
+        "MODERATE",
+        "LARGE",
+        "EXTREME"
+      ]
     },
-    "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
     "evidence_span": {
       "type": "string",
       "minLength": 0,
       "maxLength": 400,
       "description": "A verbatim substring of the input document (<=400 chars) that justifies event_type and direction. Empty string only when event_type is no_event."
+    },
+    "entities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "incumbent": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "the incumbent named in the document, as written; omit the key when none is named"
+        },
+        "entrant": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "the entrant named in the document, as written; omit the key when none is named"
+        },
+        "supplier": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "the supplier named in the document, as written; omit the key when none is named"
+        },
+        "named_input": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "growth_constraint_cited only: the specific input, capacity or resource named as the constraint (\"HBM supply\", \"grid interconnection capacity\"), as written"
+        }
+      }
     }
   }
 }
@@ -390,8 +537,20 @@ Rules:
    earlier date (no new fact, just a summary or "as previously announced")
    is "no_event" — the event was already extracted from the original article
    on its original date; extracting it again from a recap double-counts it.
+10. entities is OPTIONAL and applies to exactly two event types. For
+    foreign_entrant_capacity give {"incumbent": "...", "entrant": "..."} --
+    the established company whose category is being entered, and the company
+    entering it. For growth_constraint_cited give {"supplier": "..."} when the
+    constraint names a supplier, and "named_input" for the constrained
+    resource itself. Copy names as written. Omit any key you cannot fill, and
+    omit the whole object for every other event type.
+11. direction for those two types is relative to the NAMED ENTITY the document
+    is about, as always: an entrant reaching parity is negative for the
+    incumbent and positive for the entrant, and a cited constraint is negative
+    for the company that cited it and positive for a supplier it names.
 9. Output EXACTLY the JSON object. No markdown fences, no explanation before
-   or after, no additional keys. Respond in English only.
+   or after, no additional keys.
+Respond in English only.
 ```
 
 (Rule 9's final sentence is the repo's standing `llm_language.LANGUAGE_PIN`

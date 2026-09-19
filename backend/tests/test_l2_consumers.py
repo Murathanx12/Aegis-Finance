@@ -188,7 +188,7 @@ def test_analyst_maps_to_the_v2_FAMILY_and_is_counted_separately():
     apart rather than being added into one flattering number."""
     rows = [_c1("EARNINGS")] + [_c1("ANALYST") for _ in range(4)]
     out = x2.c1_vocabulary_mapping(rows)
-    assert out["vocabulary_version"] == vocab.VOCABULARY_VERSION == 2
+    assert out["vocabulary_version"] == vocab.VOCABULARY_VERSION == 3
     assert out["mapped_rows"] == 1
     assert out["family_mapped_rows"] == 4
     assert out["family_mapped_kinds"] == {"ANALYST": 4}

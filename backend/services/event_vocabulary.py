@@ -94,14 +94,11 @@ CONFIDENCE_DEFINITION = (
     "probability, because inter-rater kappa is the external check that catches a "
     "reader free-lancing high confidence.")
 
-#: How two prompts (or two checkpoints) are compared on the same sample.
-KAPPA_PROTOCOL = {
-    "event_type": "Cohen's kappa, 40-way categorical, unweighted",
-    "direction": "weighted kappa, ordinal -1/0/+1, LINEAR weights",
-    "magnitude_bucket": "weighted kappa, ordinal over MAGNITUDE_BUCKETS, LINEAR weights",
-    "confidence": "mean absolute difference -- it is continuous, so kappa does not apply",
-    "sample": "the SAME rows under both prompts; the spec's control is 500 rows",
-}
+#: `KAPPA_PROTOCOL` used to live here and said "40-way categorical" as a
+#: LITERAL. v2 made the table 43 ids and the protocol went on saying 40 --
+#: a count that describes the vocabulary must be DERIVED from it or it becomes
+#: a number that was true once. It is now built after `N_TYPES`, further down
+#: this module, and the width comes from the table.
 
 NO_EVENT = "no_event"
 
@@ -622,13 +619,96 @@ _V2_ADDED: tuple[EventType, ...] = (
 VOCABULARY_V2: tuple[EventType, ...] = (VOCABULARY_V1[:-1] + _V2_ADDED
                                         + VOCABULARY_V1[-1:])
 
+#: v3, added 2026-09-19 (chunk 19). Two ids, from two different 09-19 reads,
+#: and each one closes a gap that was MEASURED rather than imagined:
+#:
+#: `foreign_entrant_capacity` -- `research_murat_ideas_adjudicated.md` section 1
+#: checked the v2 table against Murat's CXMT/Micron question and found no
+#: foreign-competitor-entry class at all. The nearest neighbours
+#: (`tariff_or_trade_policy`, `product_launch_or_innovation`) fire on the
+#: ENTRANT'S OWN announcement, not on the incumbent-relevant reading of it,
+#: which is a different event. Registered as TRIAL-DRAFT-FOREIGN-ENTRANT-IC-v0
+#: (UNSIGNED) BEFORE this id existed.
+#:
+#: `growth_constraint_cited` -- `spec_social_video_pipeline.md` sections 2.4-2.5.
+#: It is the event-conditioned key `NEGATIVE_RESULTS.md` section 12 named as the
+#: only admissible successor to the supply-chain corpse: section 12 closed an
+#: ANNUAL, static customer-link cross-section and said a revival needs
+#: event-conditioned links on daily data, registered fresh. This id is that
+#: conditioner, and it is registered fresh rather than treated as a re-run.
+#:
+#: BOTH PRIORS ARE `ambiguous` IN THE TABLE, and that is not a dodge. The sign
+#: depends on WHICH ENTITY the row is scoped to -- the incumbent falls, the
+#: entrant rises; the constrained issuer falls, its named supplier rises -- and
+#: collapsing that to one sign would be the prior asserting what only the scope
+#: can say, which is exactly what `_prior` refuses to do for
+#: `mergers_acquisitions`. `ENTITY_DIRECTION_PRIORS` below carries the resolved
+#: signs.
+_V3_ADDED: tuple[EventType, ...] = (
+    _t(
+        "foreign_entrant_capacity",
+        "A foreign or new entrant achieves qualified compatibility, certification, or capacity parity in an incumbent's product category, or discloses capacity that would reach it.",
+        (),
+        "— (competitor disclosure, trade press or an entrant's own filing, not the incumbent's 8-K)",
+        "ambiguous by scope: negative (-1) for the named incumbent, positive (+1) for the entrant — see ENTITY_DIRECTION_PRIORS",
+        "MODERATE",
+        "\"CXMT DDR5 modules pass AM5 motherboard qualification at 8,200 MT/s, vendors list them alongside incumbent parts\"",
+        "The entrant announcing a product with no compatibility, certification or capacity claim against an incumbent's category → `product_launch_or_innovation`. An export control or duty on the entrant → `tariff_or_trade_policy`.",
+    ),
+    _t(
+        "growth_constraint_cited",
+        "A CEO, CFO or other company officer names a specific input, capacity, supplier or resource that is holding back near-term growth.",
+        (),
+        "— (earnings call, conference remarks or an Ex.99 transcript, not an 8-K item)",
+        "ambiguous by scope: negative (-1) for the speaker's own issuer, positive (+1) for a named supplier when the constraint names one — see ENTITY_DIRECTION_PRIORS",
+        "MODERATE",
+        "\"We could ship more if we could get HBM; our supply of high-bandwidth memory is the binding constraint this year\"",
+        "A forward number raised or cut without naming what limits it → `guidance_change`. A supplier failing to deliver under an existing contract → `contract_loss_or_termination`.",
+    ),
+)
+
+#: v3 = v2 with the two rows inserted BEFORE the refusal class, for the same
+#: reason v2 was: `no_event` stays last and every earlier id keeps its position.
+VOCABULARY_V3: tuple[EventType, ...] = (VOCABULARY_V2[:-1] + _V3_ADDED
+                                        + VOCABULARY_V2[-1:])
+
 #: The CURRENT vocabulary. Every typed row carries `vocabulary_version` beside
 #: `vocabulary_hash`, because a hash says WHICH table and a version says which
 #: table a reader should go looking for.
-VOCABULARY_VERSION = 2
-VOCABULARY: tuple[EventType, ...] = VOCABULARY_V2
+VOCABULARY_VERSION = 3
+VOCABULARY: tuple[EventType, ...] = VOCABULARY_V3
 
-VERSIONS: dict[int, tuple[EventType, ...]] = {1: VOCABULARY_V1, 2: VOCABULARY_V2}
+VERSIONS: dict[int, tuple[EventType, ...]] = {1: VOCABULARY_V1,
+                                              2: VOCABULARY_V2,
+                                              3: VOCABULARY_V3}
+
+#: THE SIGNS THE TABLE CANNOT CARRY.
+#:
+#: `EventType.direction_prior` is one number per row, and these two rows have
+#: one prior PER ENTITY ROLE. Adding a field to the dataclass would have moved
+#: v1's and v2's hashes -- `vocabulary_hash` is taken over `asdict(t)` -- and
+#: re-identifying two frozen tables in order to describe a third is exactly the
+#: silent drift the hash exists to refuse. So the mapping lives beside the
+#: table.
+#:
+#: It is OUTSIDE the hash, which is a real cost: an edit here changes what is
+#: declared without moving `VOCABULARY_HASH`. The mitigation is that
+#: `declaration()` prints it on every receipt and `test_event_vocabulary.py`
+#: pins it literally, so an edit is a red suite rather than a quiet change.
+ENTITY_DIRECTION_PRIORS: dict[str, dict[str, int]] = {
+    "foreign_entrant_capacity": {"incumbent": -1, "entrant": +1},
+    "growth_constraint_cited": {"issuer": -1, "supplier": +1},
+}
+
+#: The entity roles the extraction schema may carry. `named_input` is free text
+#: (the constrained resource: "HBM supply", "grid interconnection capacity")
+#: and is a FIELD, not a role, so it is not in here.
+ENTITY_ROLES: tuple[str, ...] = ("incumbent", "entrant", "supplier")
+
+#: Which ids may carry entity fields at all. Every other id emits none, and the
+#: schema refuses entities on a row whose type has no use for them -- a field
+#: that can appear anywhere is a field no reader can filter on.
+IDS_WITH_ENTITIES: tuple[str, ...] = tuple(ENTITY_DIRECTION_PRIORS)
 
 
 def vocabulary_for(version: int) -> tuple[EventType, ...]:
@@ -652,6 +732,23 @@ SUBSTANTIVE_TYPES: tuple[str, ...] = tuple(t for t in EVENT_TYPES if t != NO_EVE
 #: DERIVED, never typed: the spec's prose miscounts and the table does not.
 N_TYPES = len(EVENT_TYPES)
 N_SUBSTANTIVE = len(SUBSTANTIVE_TYPES)
+
+#: How two prompts (or two checkpoints) are compared on the same sample. The
+#: width is DERIVED: it said "40-way" through the whole of v2's life, which is
+#: a number that was true once.
+KAPPA_PROTOCOL = {
+    "event_type": f"Cohen's kappa, {N_TYPES}-way categorical, unweighted",
+    "direction": "weighted kappa, ordinal -1/0/+1, LINEAR weights",
+    "magnitude_bucket": "weighted kappa, ordinal over MAGNITUDE_BUCKETS, LINEAR weights",
+    "confidence": "mean absolute difference -- it is continuous, so kappa does not apply",
+    "sample": "the SAME rows under both prompts; the spec's control is 500 rows",
+    "n_types": N_TYPES,
+    "vocabulary_version": VOCABULARY_VERSION,
+    "re_run_on_a_version_bump": (
+        "a kappa computed under one table does not carry to a wider one: "
+        f"chance agreement alone moves from 1/{len(VOCABULARY_V2)} to "
+        f"1/{N_TYPES}. v3's control sample is re-read, never inherited."),
+}
 
 _BY_ID: dict[str, EventType] = {t.id: t for t in VOCABULARY}
 
@@ -699,6 +796,9 @@ def vocabulary_hash(rows: list[dict] | None = None) -> str:
 #: tuple is kept rather than edited.
 VOCABULARY_HASHES: dict[int, str] = {v: vocabulary_hash(table(v)) for v in VERSIONS}
 VOCABULARY_HASH_V1: str = VOCABULARY_HASHES[1]
+#: v2's hash, pinned the day v3 landed. Rows typed 2026-09-13..2026-09-19 carry
+#: it and stay readable against the table they were actually typed under.
+VOCABULARY_HASH_V2: str = VOCABULARY_HASHES[2]
 
 #: The CURRENT hash. It MOVED when v2 landed, which is the signal a reader
 #: needs: a row carrying the old one was typed against a table that had no
@@ -725,7 +825,8 @@ def declaration() -> dict:
     return {
         "source": ("docs/research_notes/2026-09-11/spec_events_and_calibration.md "
                    "sections 1.2 (v1's TABLE; the section's closing sentence "
-                   "miscounts by one) and 1.2b (v2's analyst-action addendum)"),
+                   "miscounts by one), 1.2b (v2's analyst-action addendum) and "
+                   "1.2c (v3's foreign-entrant and growth-constraint rows)"),
         "vocabulary_version": VOCABULARY_VERSION,
         "versions": {str(v): {"n_types": len(t),
                               "vocabulary_hash": VOCABULARY_HASHES[v]}
@@ -740,4 +841,13 @@ def declaration() -> dict:
         "no_fourth_direction": NO_FOURTH_DIRECTION,
         "confidence": CONFIDENCE_DEFINITION,
         "kappa_protocol": KAPPA_PROTOCOL,
+        "entity_direction_priors": ENTITY_DIRECTION_PRIORS,
+        "entity_roles": list(ENTITY_ROLES),
+        "ids_with_entities": list(IDS_WITH_ENTITIES),
+        "entity_priors_are_outside_the_hash": (
+            "two v3 ids carry one prior PER ENTITY ROLE and the dataclass "
+            "carries one prior per row. Adding a field would have moved v1's "
+            "and v2's hashes, so the mapping lives beside the table -- printed "
+            "here on every receipt and pinned literally by the test, because "
+            "an edit outside the hash is otherwise invisible."),
     }

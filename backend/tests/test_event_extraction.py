@@ -235,8 +235,8 @@ def test_a_typed_row_carries_the_vocabulary_VERSION_beside_the_hash():
                              "magnitude_bucket": "MODERATE", "confidence": 0.8,
                              "evidence_span": "Goldman upgrades Acme to Buy"})))
     assert isinstance(row, ex.TypedEventRow)
-    assert row.vocabulary_version == vocab.VOCABULARY_VERSION == 2
-    assert row.as_dict()["vocabulary_version"] == 2
+    assert row.vocabulary_version == vocab.VOCABULARY_VERSION == 3
+    assert row.as_dict()["vocabulary_version"] == 3
 
 
 def test_every_typed_row_carries_the_prompt_and_vocabulary_hashes():
