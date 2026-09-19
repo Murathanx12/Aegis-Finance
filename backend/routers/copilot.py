@@ -23,10 +23,19 @@ router = APIRouter(prefix="/api/copilot", tags=["copilot"])
 
 @router.get("/status")
 async def copilot_status():
-    """Is the copilot configured and ready?"""
+    """Is the copilot configured and ready?
+
+    `personal_mode` rides along (chunk 17) because this is where the build's
+    availability flags already surface, and the frontend would otherwise have
+    to hardcode a second answer to a question the backend already knows.
+    """
+    from backend import config as _cfg
     return {
         "available": is_available(),
         "tool_count": len(list_tools()),
+        # The disclaimer's visibility, and nothing else: no sizing, no
+        # permission and no number changes with this flag.
+        "personal_mode": bool(getattr(_cfg, "PERSONAL_MODE", False)),
     }
 
 

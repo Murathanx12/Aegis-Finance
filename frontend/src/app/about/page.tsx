@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 const METHODOLOGY = [
   {
@@ -185,15 +186,17 @@ export default function AboutPage() {
         </Card>
       </div>
 
-      {/* Disclaimer */}
-      <Card className="border-amber-500/20 bg-amber-500/5">
-        <CardContent className="p-4">
-          <p className="text-sm font-medium text-amber-400">Disclaimer</p>
-          <p className="text-xs text-amber-400/80 mt-1">
-            Aegis Finance is an educational tool. It is not financial advice. All predictions are probabilistic estimates with significant uncertainty. Past performance does not guarantee future results. Always consult a qualified financial advisor before making investment decisions.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Disclaimer — the whole card is one, so personal mode drops it whole. */}
+      {!isPersonalMode() && (
+        <Card className="border-amber-500/20 bg-amber-500/5">
+          <CardContent className="p-4">
+            <p className="text-sm font-medium text-amber-400">Disclaimer</p>
+            <p className="text-xs text-amber-400/80 mt-1">
+              Aegis Finance is an educational tool. It is not financial advice. All predictions are probabilistic estimates with significant uncertainty. Past performance does not guarantee future results. Always consult a qualified financial advisor before making investment decisions.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

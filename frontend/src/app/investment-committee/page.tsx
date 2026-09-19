@@ -18,6 +18,7 @@ import {
   type ICCommitteeResponse, type ICComposedBook, type ICPosition,
 } from "@/lib/api";
 import { fmtMoney } from "@/lib/format";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 const CAPITAL_TABS = [
   { key: "10000", label: "$10k" },
@@ -194,7 +195,8 @@ export default function InvestmentCommitteePage() {
             {data.universe_screened != null
               ? `${data.universe_screened.toLocaleString()} US names screened · `
               : ""}
-            benchmark core + evidence-scaled tilts · paper only, not financial advice
+            benchmark core + evidence-scaled tilts · paper only
+            {isPersonalMode() ? "" : ", not financial advice"}
           </p>
         </div>
       </div>

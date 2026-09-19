@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getModelVsFirms } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 /**
  * Our MC S&P 500 expected return next to the published capital-market
@@ -79,7 +80,10 @@ export function ModelVsFirmsCard() {
         <p className="text-xs text-muted-foreground">
           Nominal annualized, horizons as labeled. The spread across firms is the honest
           margin of error on any long-run forecast — including ours. Published figures,
-          refreshed on the firms&apos; annual cycle. Educational, not advice.
+          refreshed on the firms&apos; annual cycle.
+          {/* Personal mode (chunk 17): the dispersion IS the finding and stays;
+              only the advice line goes. */}
+          {isPersonalMode() ? "" : " Educational, not advice."}
         </p>
       </CardContent>
     </Card>

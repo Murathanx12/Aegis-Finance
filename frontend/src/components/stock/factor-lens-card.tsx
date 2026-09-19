@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isPersonalMode } from "@/lib/personal-mode";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { getFactorDecomposition } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
@@ -183,7 +184,8 @@ export function FactorLensCard({ ticker }: { ticker: string }) {
         <p className="text-[11px] text-muted-foreground">
           * = statistically significant (p &lt; 0.05). Premiums are what each
           factor actually returned over this window — not a prediction.
-          Data: Kenneth French Data Library. Educational, not advice.
+          Data: Kenneth French Data Library.
+          {isPersonalMode() ? "" : " Educational, not advice."}
         </p>
       </CardContent>
     </Card>

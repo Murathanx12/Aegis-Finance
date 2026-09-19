@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useBeginnerMode } from "@/hooks/use-beginner-mode";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 type NavItem = {
   href: string; label: string; icon: typeof LayoutDashboard; code: string;
@@ -271,7 +272,9 @@ function SidebarContent({ onClick }: { onClick?: () => void }) {
           <TourButton />
         </div>
         <p className="text-xs text-muted-foreground">
-          Educational tool only. Not financial advice.{" "}
+          {/* Personal mode (chunk 17) drops the footer disclaimer; the
+              keyboard hint beside it is not a disclaimer and stays. */}
+          {isPersonalMode() ? null : <>Educational tool only. Not financial advice.{" "}</>}
           <span className="block mt-1">
             Press <kbd className="rounded border border-border bg-muted/40 px-1 font-mono text-[10px]">?</kbd> for shortcuts.
           </span>

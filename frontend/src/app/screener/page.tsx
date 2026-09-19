@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorCard } from "@/components/error-card";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 type SortKey = "ticker" | "current_price" | "expected_return" | "sharpe" | "prob_loss" | "volatility" | "beta" | "crash_prob_3m" | "signal_confidence" | "rsi_14" | "momentum_percentile" | "analyst_upside" | "dividend_yield";
 type SortDir = "asc" | "desc";
@@ -618,7 +619,7 @@ export default function ScreenerPage() {
 
       <p className="text-xs text-muted-foreground text-center">
         Click a row to expand signal breakdown. Double-click to view full analysis.
-        Not financial advice — for educational purposes only.
+        {isPersonalMode() ? "" : " Not financial advice — for educational purposes only."}
       </p>
     </div>
   );

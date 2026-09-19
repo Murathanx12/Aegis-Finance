@@ -2202,6 +2202,28 @@ WHY_MOVED_FORBIDDEN_PATTERN = (
 #: what was actually spent. A budget checked against a counter that resets on
 #: process restart is not a budget.
 RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false", "")
+
+#: PERSONAL MODE (chunk 17, `spec_decision_contract_and_path_audit.md` §5).
+#:
+#: Aegis is two deliverables out of one system: Murat's own capital, and a
+#: public tool other people run. The public one carries "educational tool, not
+#: financial advice" on every surface; the personal one is a man reading his own
+#: research on his own desktop, and a disclaimer he wrote to himself is noise
+#: that teaches him to skim the sentence beside it.
+#:
+#: OFF BY DEFAULT, and it stays off unless the environment says otherwise: the
+#: deployed website, the public build and CI all read `0`. It hides exactly two
+#: things on the backend -- the comparison framing's closing sentence in
+#: `routers/market.py` and the copilot system prompt's closing-reminder clause
+#: -- and the frontend banners behind `NEXT_PUBLIC_AEGIS_PERSONAL_MODE`.
+#:
+#: What it does NOT touch: `daily_brief.py`, `tearsheet.py` and
+#: `portfolio_guidance.py`. Those are EXPORT artefacts — a saved tearsheet, a
+#: shared brief — that can leave the machine that made them, and whether they
+#: keep their disclaimer is Murat's call, not a session's (spec §5.2). It
+#: changes no number, no sizing and no permission: nothing about a disclaimer's
+#: visibility gives an LLM authority over capital.
+PERSONAL_MODE = os.getenv("AEGIS_PERSONAL_MODE", "0") in ("1", "true", "yes")
 #: Per-campaign ceilings. Deliberately generous relative to observed cost
 #: (~$5.26 for 40M tokens historically) and deliberately FINITE.
 #: THE CEILING MUST BIND BEFORE THE VENDOR BALANCE DOES.

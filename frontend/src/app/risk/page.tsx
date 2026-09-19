@@ -25,6 +25,7 @@ import {
 import {
   getRiskLayerExposure, type Holding, type RiskClaim,
 } from "@/lib/api";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 const PERSONALITIES = ["preservation", "balanced", "aggressive", "extreme_growth"];
 
@@ -330,7 +331,8 @@ export default function RiskLayerPage() {
           </Card>
 
           <p className="text-xs text-muted-foreground">
-            Educational tool, not financial advice. Measured on a selection
+            {isPersonalMode() ? "" : "Educational tool, not financial advice. "}
+            Measured on a selection
             window. The reserved confirmation window stays unspent — not because
             we are saving it, but because a power check run before spending it
             showed it cannot resolve an effect this size.

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { getStockTwoSided } from "@/lib/api";
 import { queryKeys, staleTimes } from "@/lib/query-keys";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 /**
  * Bull/bear two-sided card: AI prose arguing BOTH sides of the computed
@@ -57,7 +58,10 @@ export function TwoSidedCard({ ticker }: { ticker: string }) {
         <p className="text-[11px] text-muted-foreground border-t border-border/50 pt-2">
           AI-written prose ({data.provider}) around the computed signal
           {data.signal_action ? ` (${data.signal_action})` : ""} — the numbers
-          never come from the AI. Educational, not financial advice.
+          never come from the AI.
+          {/* "the numbers never come from the AI" is a fact about the surface
+              and stays in both builds; the advice line does not. */}
+          {isPersonalMode() ? "" : " Educational, not financial advice."}
         </p>
       </CardContent>
     </Card>

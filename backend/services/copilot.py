@@ -235,16 +235,45 @@ TOOLS: dict[str, dict] = {
 }
 
 
-SYSTEM_PROMPT = (
+#: Everything the copilot is told that does NOT depend on the build. The
+#: disclaimer clause is the only part that does, so it is the only part that
+#: moves (chunk 17, `spec_decision_contract_and_path_audit.md` §5).
+_SYSTEM_PROMPT_BASE = (
     "You are Aegis Copilot, a quantitative finance assistant. You have tools that call "
     "the Aegis Finance analytics engine directly. Use them to answer questions about "
     "specific stocks, the market regime, sector rotation, and asset-allocation backtests. "
     "Always call tools before committing to numeric claims. Keep answers concise (3-6 "
     "sentences unless the user explicitly asks for depth). Cite numbers you received from "
     "tools and label them as 'Aegis data'. Never invent tickers. If a tool returns an error, "
-    "tell the user and suggest an alternative you could try. This tool is educational; "
-    "always end with a one-line reminder that Aegis is not financial advice."
+    "tell the user and suggest an alternative you could try."
 )
+
+#: The clause personal mode drops. Named rather than inlined so a reader can see
+#: WHAT is removed without diffing two long strings.
+_DISCLAIMER_CLAUSE = (
+    " This tool is educational; always end with a one-line reminder that Aegis "
+    "is not financial advice."
+)
+
+
+def system_prompt() -> str:
+    """The copilot's system prompt for THIS process.
+
+    A function, not a constant: `PERSONAL_MODE` is read from the environment at
+    import time, and a prompt frozen at import would make the flag a fact about
+    module load order instead of about the build. Nothing else moves — the
+    copilot has no sizing authority in either build (spec §1.3), and hiding a
+    disclaimer does not grant it one.
+    """
+    from backend import config as _cfg
+    if getattr(_cfg, "PERSONAL_MODE", False):
+        return _SYSTEM_PROMPT_BASE
+    return _SYSTEM_PROMPT_BASE + _DISCLAIMER_CLAUSE
+
+
+#: The PUBLIC build's prompt, kept as a module constant for readers and for
+#: tests that want the default text. Every call site uses `system_prompt()`.
+SYSTEM_PROMPT = _SYSTEM_PROMPT_BASE + _DISCLAIMER_CLAUSE
 
 
 def _shrink(payload: Any) -> str:
@@ -313,7 +342,7 @@ def _record_turn(provider: str, model: str, *, resp, t0: float,
 
     _tel.record_call(
         provider=provider, model=model, purpose="copilot_chat", agent="copilot",
-        prompt=SYSTEM_PROMPT, context=messages,
+        prompt=system_prompt(), context=messages,
         latency_ms=(time.perf_counter() - t0) * 1000.0,
         schema_valid=schema_valid,
         meta={"round": round_, "final_synthesis": final},
@@ -329,7 +358,7 @@ def _chat_with_deepseek(messages: list[dict]) -> dict:
     )
     model = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     chat_history = [{"role": "system",
-                     "content": _lang.pin(SYSTEM_PROMPT)}] + list(messages)
+                     "content": _lang.pin(system_prompt())}] + list(messages)
     tool_trace: list[dict] = []
 
     for _round in range(_MAX_TOOL_ROUNDS):
@@ -425,7 +454,7 @@ def _chat_with_claude(messages: list[dict]) -> dict:
         resp = client.messages.create(
             model=model,
             max_tokens=1500,
-            system=SYSTEM_PROMPT,
+            system=system_prompt(),
             tools=_anthropic_tool_schema(),
             messages=chat_messages,
         )
@@ -463,7 +492,7 @@ def _chat_with_claude(messages: list[dict]) -> dict:
     resp = client.messages.create(
         model=model,
         max_tokens=1000,
-        system=SYSTEM_PROMPT + "\n\nYou've used your tool budget. Write a final answer now.",
+        system=system_prompt() + "\n\nYou've used your tool budget. Write a final answer now.",
         messages=chat_messages,
     )
     _record_turn("anthropic", model, resp=resp, t0=t0, messages=messages,

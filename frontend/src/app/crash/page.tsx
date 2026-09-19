@@ -19,6 +19,7 @@ import {
   ResponsiveContainer, Cell, ReferenceLine,
   AreaChart, Area, LineChart, Line, ComposedChart,
 } from "recharts";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 /* ── Crash Gauge ─────────────────────────────────────────────── */
 
@@ -327,7 +328,9 @@ export default function CrashPage() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 text-xs text-amber-400/80">
-        Educational tool only. Crash probabilities are model estimates, not guarantees. Not financial advice.
+        {isPersonalMode() ? "" : "Educational tool only. "}
+        Crash probabilities are model estimates, not guarantees.
+        {isPersonalMode() ? "" : " Not financial advice."}
       </div>
 
       {crash?.status === "model_not_trained" && (

@@ -23,6 +23,7 @@ import {
   type Holding, type PortfolioAnalysis, type PortfolioBuilt, type PortfolioProjection, type StockSignal,
 } from "@/lib/api";
 import { fmtPct, fmtNum, fmtMoney, fmtSigned, fmtSignedPct } from "@/lib/format";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 const PIE_COLORS = [
   "#63b4ff", "#22c55e", "#f59e0b", "#ef4444", "#a855f7",
@@ -1163,9 +1164,11 @@ export default function PortfolioPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
-        <span>Educational tool only. Not financial advice. Portfolio suggestions are algorithmic and do not account for your full financial situation.</span>
-      </div>
+      {!isPersonalMode() && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
+          <span>Educational tool only. Not financial advice. Portfolio suggestions are algorithmic and do not account for your full financial situation.</span>
+        </div>
+      )}
 
       <ReferenceLanesPanel />
 

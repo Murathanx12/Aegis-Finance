@@ -12,6 +12,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 function EventScoreGauge({ score, interpretation }: { score: number; interpretation: string }) {
   const pct = Math.round(score * 100);
@@ -88,9 +89,11 @@ export default function NewsPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
-        <span>Educational tool only. Not financial advice. Sentiment scores are algorithmic estimates, not recommendations.</span>
-      </div>
+      {!isPersonalMode() && (
+        <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
+          <span>Educational tool only. Not financial advice. Sentiment scores are algorithmic estimates, not recommendations.</span>
+        </div>
+      )}
 
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

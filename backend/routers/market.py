@@ -13,6 +13,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
+from backend import config as _cfg
 from backend.cache import cache_get, cache_set, cache_swr, cache_swr_202, computing_or
 from backend.config import config
 
@@ -559,13 +560,21 @@ async def get_model_vs_firms():
         "our_model": ours,  # null until the projection cache warms — disclosed
         "firms": fb["us_large_cap_expected_return"],
         "street_target_note": fb["street_target_hit_rate_note"],
+        # PERSONAL MODE (chunk 17). The dispersion sentence is the finding and
+        # stays in both builds; only the closing disclaimer is dropped, and only
+        # when `AEGIS_PERSONAL_MODE` is on. Read at call time, not at import, so
+        # the flag is a fact about the process rather than about when this
+        # module happened to load.
         "framing": (
             "Nominal annualized US large-cap expected returns as published by "
             "each firm (horizons differ and are labeled). The firms disagree "
             "with each other by several percentage points — that dispersion "
             "is the honest margin of error on ANY long-run return forecast, "
-            "including ours. Educational comparison, not advice."
+            "including ours."
+            + ("" if getattr(_cfg, "PERSONAL_MODE", False)
+               else " Educational comparison, not advice.")
         ),
+        "personal_mode": bool(getattr(_cfg, "PERSONAL_MODE", False)),
         "sources_doc": "docs/research/DATA_SOURCES_AND_BASELINES_2026-07-16.md",
     }
 

@@ -13,6 +13,7 @@ import {
   ResponsiveContainer, ReferenceLine,
 } from "recharts";
 import { projectSavings, type SavingsProjection } from "@/lib/api";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 function loadSettings(): Record<string, string> {
   if (typeof window === "undefined") return {};
@@ -109,7 +110,10 @@ export default function RetirementPage() {
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 flex items-center gap-2 text-xs text-amber-400/80">
-        <span>Educational tool only. Projections assume constant returns and contributions. Actual results will vary significantly.</span>
+        <span>
+          {isPersonalMode() ? "" : "Educational tool only. "}
+          Projections assume constant returns and contributions. Actual results will vary significantly.
+        </span>
       </div>
 
       <Card>

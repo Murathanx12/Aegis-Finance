@@ -1,4 +1,5 @@
 import { CopilotChat } from "@/components/copilot-chat";
+import { isPersonalMode } from "@/lib/personal-mode";
 
 export const metadata = {
   title: "Copilot — Aegis Finance",
@@ -17,9 +18,11 @@ export default function CopilotPage() {
         </p>
       </header>
       <CopilotChat />
-      <p className="text-xs text-muted-foreground text-center">
-        Educational only. Aegis is not financial advice.
-      </p>
+      {!isPersonalMode() && (
+        <p className="text-xs text-muted-foreground text-center">
+          Educational only. Aegis is not financial advice.
+        </p>
+      )}
     </main>
   );
 }
