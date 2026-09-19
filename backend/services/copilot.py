@@ -143,9 +143,67 @@ def _tool_market_treemap(window: str = "1d") -> dict:
     return tm
 
 
+def _tool_todays_decisions() -> dict:
+    """Today's Decision Contract — the engine's own ranked, sized rows.
+
+    THE SINGLE SMALLEST CHANGE THAT ANSWERS "what would you buy today" (the
+    2026-09-19 audit, §4.2 item 3). Until this tool existed the copilot could
+    narrate a stock's factor grades and could not retrieve the engine's ranked
+    BUY list, so the question had no tool that could produce an answer.
+
+    Retrieval is itself an event: the ledger records DELIVERED and
+    SEEN_BY_EXECUTOR here, at the moment the rows reached a reader, because the
+    thing nothing in either repo recorded was "the row was written and nobody
+    read it."
+    """
+    from backend.services import decision_contract as DC
+    from backend.services import decision_ledger as DL
+
+    blob = DC.latest()
+    if blob is None:
+        return {"contract_exists": False,
+                "answer": DC.summarise_for_reader(None),
+                "rows": [], "licence": DC.LICENCE}
+    rows = DC.ranked_rows(blob)
+    ids = [str(r.get("decision_id")) for r in rows]
+    if ids:
+        DL.deliver(ids, by="copilot", asof=blob.get("date"),
+                   detail={"tool": "get_todays_decisions"})
+    return {
+        "contract_exists": True,
+        "date": blob.get("date"),
+        "licence": blob.get("licence"),
+        "policy_id": (rows[0].get("policy_id") if rows else None),
+        "policy_version": (rows[0].get("policy_version") if rows else None),
+        "count_by_direction": blob.get("count_by_direction"),
+        "count_by_refusal_class": blob.get("count_by_refusal_class"),
+        "worst_case_largest_admissible_book":
+            blob.get("worst_case_largest_admissible_book"),
+        "notes": blob.get("notes"),
+        "answer": DC.summarise_for_reader(blob),
+        "rows": [{k: r.get(k) for k in
+                  ("decision_id", "direction", "ticker", "signal", "rank",
+                   "expected_payoff", "estimated_probability",
+                   "position_budget", "maximum_loss", "cost_model",
+                   "falsifier", "expiry_utc", "artifact_sha256")}
+                 for r in rows],
+    }
+
+
 # --- Tool catalogue ------------------------------------------------------
 
 TOOLS: dict[str, dict] = {
+    "get_todays_decisions": {
+        "description": (
+            "Today's Decision Contract: the engine's own ranked BUY/WATCH rows "
+            "with position size (weight, dollars, shares), worst-case loss, the "
+            "falsifier that would kill each one, and the expiry — plus the "
+            "refusal class for every candidate that did not clear. Call this "
+            "for 'what would you buy today', 'what's a good buy', 'what would "
+            "you short'. No arguments."),
+        "parameters": {"type": "object", "properties": {}, "required": []},
+        "impl": lambda args: _tool_todays_decisions(),
+    },
     "get_market_status": {
         "description": "Current market signal + regime (Bull/Bear/Volatile/Neutral). No arguments.",
         "parameters": {"type": "object", "properties": {}, "required": []},
@@ -245,7 +303,14 @@ _SYSTEM_PROMPT_BASE = (
     "Always call tools before committing to numeric claims. Keep answers concise (3-6 "
     "sentences unless the user explicitly asks for depth). Cite numbers you received from "
     "tools and label them as 'Aegis data'. Never invent tickers. If a tool returns an error, "
-    "tell the user and suggest an alternative you could try."
+    "tell the user and suggest an alternative you could try. "
+    # Chunk 18. Describing a position the ENGINE computed is not the model
+    # inventing advice, and the sentence says which policy produced it so the
+    # row can be found again tomorrow.
+    "When get_todays_decisions was called you MAY state the engine's ranked rows "
+    "verbatim — direction, ticker, position size, worst-case loss, falsifier and "
+    "expiry — and you MUST say which policy_id and policy_version produced them; "
+    "you may not add a name, a size or an expected return the tool did not return."
 )
 
 #: The clause personal mode drops. Named rather than inlined so a reader can see

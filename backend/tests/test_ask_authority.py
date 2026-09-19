@@ -2,10 +2,20 @@
 
 The assistant now reads the checkout. That is a new kind of authority — not "run
 a job" but "read anything" — and the safety property is NEGATIVE: it cannot
-write, cannot spawn, cannot reach a broker, cannot POST anywhere. A negative
-property is only provable over a narrow file, which is why `ask` moved out of
-`control.py` (that module legitimately spawns night jobs) and why this suite
-walks the AST of exactly two modules.
+spawn, cannot reach a broker, cannot POST anywhere, and writes nothing but ONE
+append-only lifecycle ledger. A negative property is only provable over a
+narrow file, which is why `ask` moved out of `control.py` (that module
+legitimately spawns night jobs) and why this suite walks the AST of exactly two
+modules.
+
+THE ONE EXCEPTION, NAMED (chunk 18, 2026-09-19)
+===============================================
+`tool_decisions` appends DELIVERED / SEEN_BY_EXECUTOR to `decision_ledger`,
+because the moment a decision reaches a reader is the event nothing in either
+repo recorded — and the only place it can honestly be recorded is where the
+retrieval happens. The two-file AST walk cannot see that: it lives one import
+deep. So the closure is walked too (`WRITE_ALLOWLIST`), and the one module that
+really is called to write is bounded to append-only with no deletes.
 
 The second half pins the ROUTER, because a deterministic router is the whole
 reason an answer can be diagnosed: the same question always retrieves the same
@@ -108,6 +118,110 @@ def test_the_ask_path_makes_no_outbound_post(path: Path) -> None:
                 and id(n) not in docs]
     assert not [s for s in runnable if s.strip() in {"post", "put", "delete"}], (
         f"{path.name} names an HTTP write verb in executable code")
+
+
+#: Every module in the ask path's import closure that CONTAINS a write path,
+#: with the reason it is there. Two of the three are read-only from here and
+#: always were; the third is the one real change.
+#:
+#: Chunk 18 made "did anyone SEE this decision before the window closed" a
+#: recordable fact, and the only honest place to record it is where the
+#: retrieval happens — inside this ask path. That is a genuine weakening of
+#: "the ask path cannot write", so it is written down and BOUNDED here rather
+#: than left to the two-file AST walk, which cannot see one import deep and
+#: would have gone on reporting a property that had quietly stopped being true.
+WRITE_ALLOWLIST: dict[str, str] = {
+    "decision_ledger": ("APPENDS. Lifecycle rows (DELIVERED, SEEN_BY_EXECUTOR) "
+                        "for decisions the ENGINE already made, at the moment "
+                        "of retrieval — the one write the ask path makes, "
+                        "bounded to append-only by the test below."),
+    "decision_contract": ("READ ONLY from here. The module can write a "
+                          "contract (`write_contracts`, `build_daily_contracts`) "
+                          "and the ask path calls neither: it calls `latest`, "
+                          "`ranked_rows` and `summarise_for_reader`."),
+    "morning": ("READ ONLY from here. `run_morning` writes the receipt and the "
+                "ask path calls only `latest_receipt`. True since roadmap O6; "
+                "written down now because this guard is what will notice if it "
+                "stops being true."),
+}
+
+
+def test_no_unexplained_writer_enters_the_ask_paths_import_closure() -> None:
+    """One import deep, because the AST walk above stops at the file boundary.
+
+    `ask_tools.tool_decisions` calls `decision_ledger.record_many`, and a guard
+    that only reads `ask_tools.py` would swear nothing in the ask path writes.
+
+    What this proves is deliberately the WEAKER statement — "no module with a
+    write path is in the closure without a written reason" — because whether a
+    given call reaches a given write is not decidable from the AST, and a test
+    that claimed the stronger thing would be claiming more than it checks. The
+    strong bound on the one module that actually IS called to write lives in
+    the next test.
+    """
+    tree = _tree(Path(ask_tools.__file__))
+    imported: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
+                "backend.services"):
+            imported.update(a.name for a in node.names)
+    writers = set()
+    for name in sorted(imported):
+        mod = Path(ask_tools.__file__).parent / f"{name}.py"
+        if not mod.is_file():
+            continue
+        src = mod.read_text(encoding="utf-8")
+        sub = ast.parse(src)
+        docs = _doc_string_ids(sub)
+        for node in ast.walk(sub):
+            if isinstance(node, ast.Call):
+                attr = getattr(node.func, "attr", None)
+                if attr in {"write_text", "write_bytes", "unlink", "rmtree",
+                            "replace"}:
+                    writers.add(f"{name}.{attr}")
+                if attr == "open":
+                    for a in list(node.args) + [k.value for k in node.keywords]:
+                        if isinstance(a, ast.Constant) and isinstance(a.value, str) \
+                                and id(a) not in docs and (
+                                    "w" in a.value or "+" in a.value):
+                            writers.add(f"{name}.open({a.value!r})")
+    unexplained = sorted(w for w in writers
+                         if w.split(".")[0] not in WRITE_ALLOWLIST)
+    assert not unexplained, (
+        f"a module the ask path imports can write and nobody said why: "
+        f"{unexplained}. Add it to WRITE_ALLOWLIST with its reason, or stop "
+        f"the ask path importing it — 'it only writes a little' must never be "
+        f"the quiet default.")
+
+
+def test_the_allowed_writer_only_ever_appends_to_its_own_ledger() -> None:
+    """The bound on the one exception: append-only, its own file, no deletes.
+
+    An append-only ledger the ask path may add one line to is a different
+    authority from a file it may rewrite. The difference is the whole reason
+    this is an allowlist entry and not a repeal.
+    """
+    from backend.services import decision_ledger
+
+    src = Path(decision_ledger.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    docs = _doc_string_ids(tree)
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        attr = getattr(node.func, "attr", None)
+        assert attr not in {"write_text", "write_bytes", "unlink", "rmtree",
+                            "replace", "truncate"}, (
+            f"decision_ledger calls .{attr}() — a lifecycle ledger the ask "
+            f"path can reach must be append-only")
+        if attr == "open":
+            modes = [a.value for a in list(node.args) + [k.value for k in node.keywords]
+                     if isinstance(a, ast.Constant) and isinstance(a.value, str)
+                     and id(a) not in docs and a.value in
+                     ("r", "w", "a", "rb", "wb", "ab", "r+", "w+", "a+")]
+            assert modes == ["a"] or modes == [], (
+                f"decision_ledger opens a file with mode {modes}; only append "
+                f"is allowed")
 
 
 def test_the_ask_path_holds_no_stop_path() -> None:

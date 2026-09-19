@@ -72,6 +72,7 @@ TOOLS: tuple[str, ...] = (
     "receipt",       # a night job's newest receipt
     "fleet",         # the six books' excess, with their standard errors
     "night_plan",    # the newest NIGHT_PLAN receipt
+    "decisions",     # today's Decision Contract -- direction, size, falsifier
     "morning",       # today's morning receipt and its forecast rows
     "universe",      # the tracker universe's header
     "default",       # INDEX TIER 0 names, the newest handoff's head, today's receipts
@@ -90,6 +91,14 @@ _JOB_RE = re.compile(r"\b([A-Z]\d+_[A-Za-z0-9_]+)\b")
 
 #: A bare job FAMILY, as a person says it: "the G3 receipt", "what did D4 do".
 _JOB_STUB_RE = re.compile(r"\b([A-Z]\d+)\b")
+
+#: The question this whole chunk exists for. Matched BEFORE `_MORNING_WORDS`
+#: in `route()`: "what's a good buy today" contains "today", and until chunk 18
+#: that one word sent the question to the lane-vs-benchmark coin flip, which is
+#: not a per-ticker call and never could be. Phrases, not single words -- "buy"
+#: alone would swallow every question that mentions buying anything.
+_DECISION_WORDS = ("what should i buy", "good buy", "what would you buy",
+                   "what to buy", "what would you short", "decisions today")
 
 _FLEET_WORDS = ("fleet", "books", "positions", "paper account", "paper book")
 _PLAN_WORDS = ("tonight", "queue", "plan", "what should run", "next test")
@@ -161,6 +170,12 @@ def route(question: str) -> dict:
             return {"tool": "receipt", "arg": matches[0],
                     "why": f"the question names the job family {stub}{extra}"}
 
+    # BEFORE the morning words, deliberately. See `_DECISION_WORDS`.
+    if any(w in low for w in _DECISION_WORDS):
+        return {"tool": "decisions", "arg": None,
+                "why": ("the question asks what to buy, so it is answered from "
+                        "today's Decision Contract rather than from the "
+                        "lane-vs-benchmark forecast rows")}
     if any(w in low for w in _MORNING_WORDS):
         return {"tool": "morning", "arg": None,
                 "why": "the question is about today, so it is answered from today's forecast rows"}
@@ -269,6 +284,58 @@ def tool_night_plan() -> tuple[str, list[str]]:
                 "what is queued.", [])
     return (f"### tonight's queue — {_rel(p)}\n"
             + _clip(p.read_text(encoding="utf-8", errors="replace")), [_rel(p)])
+
+
+def tool_decisions() -> tuple[str, list[str]]:
+    """Today's Decision Contract, and the ledger states it is now in.
+
+    The same shape as `tool_morning`, and the same discipline: the ABSENCE of a
+    contract comes back in words, so the route can answer "the engine has not
+    said what it would buy today" instead of handing a model an empty context
+    and letting it fill the gap. Retrieving a row is itself an event -- it is
+    the moment a decision reached a reader -- so the ledger records DELIVERED
+    and SEEN_BY_EXECUTOR here, where the retrieval actually happens, and not at
+    the point the row was written.
+    """
+    from backend.services import decision_contract as DC
+    from backend.services import decision_ledger as DL
+
+    blob = DC.latest()
+    if blob is None:
+        return ("### today's decisions\n" + DC.summarise_for_reader(None)), []
+    seen: list[str] = []
+    text = DC.summarise_for_reader(blob, record=seen.append)
+    if seen:
+        DL.deliver(seen, by="desktop_ask", asof=blob.get("date"),
+                   detail={"tool": "ask:decisions"})
+    refused = blob.get("count_by_refusal_class") or {}
+    worst = blob.get("worst_case_largest_admissible_book") or {}
+    states = DL.summary(blob.get("date")).get("count_by_state") or {}
+    body = (f"### today's decisions — {_rel(blob.get('path', ''))}\n{text}\n\n"
+            f"refusal classes today: {json.dumps(refused, sort_keys=True)}\n"
+            f"worst case for the largest admissible book: "
+            f"{worst.get('verdict')}\n"
+            f"notes: {json.dumps(blob.get('notes') or [], ensure_ascii=False)}\n"
+            f"ledger states so far: "
+            f"{json.dumps(states, sort_keys=True)}")
+    return body, [_rel(blob.get("path", ""))]
+
+
+def decision_answer() -> tuple[str, str | None, int]:
+    """(answer, receipt, n_rows). The route's own read, not the model's.
+
+    A decision that is not in the contract cannot be graded tomorrow, which is
+    the same rule `forecast_answer` enforces for forecasts -- so the sentence
+    Murat gets is computed from the file, with no model in the path, and the
+    model is only ever asked to ELABORATE on rows that already exist.
+    """
+    from backend.services import decision_contract as DC
+
+    blob = DC.latest()
+    if blob is None:
+        return DC.summarise_for_reader(None), None, 0
+    rows = DC.ranked_rows(blob)
+    return (DC.summarise_for_reader(blob), _rel(blob.get("path", "")), len(rows))
 
 
 def tool_morning() -> tuple[str, list[str]]:
@@ -387,6 +454,7 @@ _DISPATCH = {
     "receipt": tool_receipt,
     "fleet": tool_fleet,
     "night_plan": tool_night_plan,
+    "decisions": tool_decisions,
     "morning": tool_morning,
     "universe": tool_universe,
     "default": tool_default,

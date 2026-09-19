@@ -123,6 +123,26 @@ def ask(question: str, backend: str = "local_gguf", max_tokens: int = 700,
                             "order anything"),
               "cost_usd": 0.0}
 
+    # THE CONTRACT ANSWERS FOR ITSELF (chunk 18). Same rule as the forecast
+    # branch below and for the same reason: a buy recommendation generated at
+    # question time is in no ledger and cannot be graded tomorrow. The rows were
+    # sized by `investment_committee`/`agency` this morning and this route reads
+    # them out verbatim -- which is why `ASK_SYSTEM`'s "you cannot size
+    # positions" clause does not have to move an inch: the model is not in this
+    # path at all, and when it IS (every other route) it still cannot size
+    # anything.
+    if ctx["tool"] == "decisions":
+        answer, receipt, n_rows = ask_tools.decision_answer()
+        sources = [receipt] if receipt else []
+        return {**common, "ok": True, "answered_by": "contract",
+                "answer": answer + _GAP + ask_tools.sources_line(sources),
+                "context_sources": sources, "model": None, "backend": "none",
+                "contract_exists": receipt is not None,
+                "n_decision_rows": n_rows,
+                "note": ("answered from the Decision Contract the engine wrote "
+                         "before the session; no model was called, so nothing "
+                         "here can be a position this assistant sized")}
+
     # THE LEDGER ANSWERS FOR ITSELF. No model, no invention, no exception.
     if ctx["tool"] == "morning" and _is_forecast_question(q):
         rows, receipt = ask_tools.morning_forecast_rows()

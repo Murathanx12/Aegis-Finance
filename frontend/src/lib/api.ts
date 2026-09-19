@@ -289,6 +289,71 @@ export interface ICCommitteeResponse {
   honesty: { core_and_tilts: string } & Record<string, string>;
 }
 
+// THE DECISION CONTRACT (chunk 18) — what the engine would buy today, at what
+// size, and what would make it wrong. Read-only: the contract is written by the
+// morning click and the unattended daily pass, never by this page.
+export interface ICDecisionRow {
+  decision_id: string;
+  asof: string;
+  policy_id: string;
+  policy_version: string;
+  licence: string;
+  source: string;
+  instrument_kind?: string;
+  ticker: string;
+  signal: string;
+  direction: "BUY" | "WATCH" | "SELL" | "REFUSED";
+  expected_payoff: string;
+  estimated_probability: number | null;
+  estimated_probability_reason?: string;
+  position_budget: {
+    weight: number | null;
+    dollars: number | null;
+    shares: number | null;
+    k?: number | null;
+    basis?: string;
+  };
+  maximum_loss: { worst_case_usd: number | null; verdict?: string };
+  cost_model: { name: string; priced: boolean; reason?: string };
+  falsifier: string;
+  expiry_utc: string | null;
+  expiry_basis?: string;
+  artifact_sha256: string;
+  rank?: number | null;
+  refusal_class?: string;
+  terminal_state?: string;
+  refusal_reason?: string;
+}
+
+export interface ICDecisionsResponse {
+  date: string;
+  written_utc: string;
+  licence: string;
+  n_rows: number;
+  capital_usd: number | null;
+  count_by_direction: Record<string, number>;
+  count_by_refusal_class: Record<string, number>;
+  count_by_terminal_state: Record<string, number>;
+  directions_not_produced_today: string[];
+  worst_case_largest_admissible_book: {
+    verdict: string;
+    worst_case_usd: number | null;
+  };
+  notes: string[];
+  rows: ICDecisionRow[];
+  read_me_first: string;
+  ledger?: {
+    count_by_state: Record<string, number>;
+    execution_artery_states: string[];
+    note: string;
+  };
+}
+
+export function getDecisionContract(date?: string) {
+  const q = date ? `?date=${encodeURIComponent(date)}` : "";
+  return fetchAPI<ICDecisionsResponse>(`/api/ic/decisions${q}`);
+}
+
 // Ticker resolution ("marvell" → MRVL)
 export interface TickerResolveResponse {
   query: string;

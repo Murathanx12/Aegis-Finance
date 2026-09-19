@@ -11,11 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Landmark, ShieldCheck, AlertTriangle, Scale, CheckCircle2,
+  Landmark, ShieldCheck, AlertTriangle, Scale, CheckCircle2, ClipboardList,
 } from "lucide-react";
 import {
-  getInvestmentCommittee,
+  getInvestmentCommittee, getDecisionContract,
   type ICCommitteeResponse, type ICComposedBook, type ICPosition,
+  type ICDecisionsResponse,
 } from "@/lib/api";
 import { fmtMoney } from "@/lib/format";
 import { isPersonalMode } from "@/lib/personal-mode";
@@ -151,6 +152,161 @@ function BookTable({ book }: { book: ICComposedBook }) {
   );
 }
 
+// ─── THE DECISION CONTRACT (chunk 18) ──────────────────────────────────────
+// The card exists because the numbers below it were never reachable from a
+// sentence: the engine sized these positions and nothing that talks to a human
+// could retrieve them. It renders the falsifier and the expiry BESIDE the size
+// on purpose — a position printed without what would kill it is half a receipt.
+function DecisionsCard() {
+  const { data, isLoading, error } = useQuery<ICDecisionsResponse>({
+    queryKey: ["ic", "decisions"],
+    queryFn: () => getDecisionContract(),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+  if (error || !data) {
+    // 404 is the ordinary case before the morning has run, and it is NOT an
+    // empty table: "the engine has not said what it would buy today" and "every
+    // candidate was refused" are different days and must not print alike.
+    return (
+      <Card className="border-amber-500/40 bg-amber-500/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            Today&apos;s decisions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-[15px] text-muted-foreground">
+          No decision contract has been written for today, so the engine has not
+          said what it would buy. It is written by the morning click and by the
+          unattended daily pass; this page reads one and never builds one.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const counts = data.count_by_direction ?? {};
+  const actionable = (data.rows ?? []).filter(
+    (r) => r.direction === "BUY" || r.direction === "WATCH");
+  const ledger = data.ledger?.count_by_state ?? {};
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-primary" />
+          Today&apos;s decisions — {counts.BUY ?? 0} BUY · {counts.WATCH ?? 0} WATCH ·{" "}
+          {counts.REFUSED ?? 0} REFUSED
+        </CardTitle>
+        <p className="text-[15px] text-muted-foreground">
+          {data.date} · licence {data.licence} ·{" "}
+          {data.capital_usd != null ? `sized at ${fmtMoney(data.capital_usd)}` : "capital not declared"}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {actionable.length === 0 ? (
+          <p className="text-[15px] text-muted-foreground">
+            No name cleared the tilt gate today, so there is nothing the engine
+            would buy. The refusal classes are below — a day with no buy is a
+            finding, not an empty table.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[15px]">
+              <thead>
+                <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <th className="py-2 pr-3">Direction</th>
+                  <th className="py-2 pr-3">Ticker</th>
+                  <th className="py-2 pr-3 text-right">Size</th>
+                  <th className="py-2 pr-3 text-right">Worst case</th>
+                  <th className="py-2 pr-3">Falsifier — what would make it wrong</th>
+                  <th className="py-2">Expires</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actionable.map((r) => (
+                  <tr key={r.decision_id} className="border-b border-border/50 align-top">
+                    <td className="py-2.5 pr-3">
+                      {r.direction === "BUY" ? (
+                        <Badge className="bg-emerald-600/15 text-emerald-700 dark:text-emerald-400 border-emerald-600/30">BUY</Badge>
+                      ) : (
+                        <Badge variant="outline">{r.direction}</Badge>
+                      )}
+                    </td>
+                    <td className="py-2.5 pr-3 font-mono font-semibold">{r.ticker}</td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums">
+                      {pct(r.position_budget?.weight, 2)}
+                      <span className="block text-xs text-muted-foreground">
+                        {r.position_budget?.dollars != null
+                          ? fmtMoney(r.position_budget.dollars)
+                          : "—"}
+                        {r.position_budget?.shares != null
+                          ? ` · ${r.position_budget.shares} sh`
+                          : ""}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-3 text-right tabular-nums text-red-700 dark:text-red-400">
+                      {r.maximum_loss?.worst_case_usd != null
+                        ? fmtMoney(r.maximum_loss.worst_case_usd)
+                        : "—"}
+                    </td>
+                    <td className="py-2.5 pr-3 text-muted-foreground max-w-md">{r.falsifier}</td>
+                    <td className="py-2.5 text-muted-foreground font-mono text-xs">
+                      {r.expiry_utc ? r.expiry_utc.slice(0, 10) : "CANNOT DETERMINE"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <div className="rounded-lg bg-muted/40 p-4 space-y-2 text-sm text-muted-foreground">
+          <p>
+            <span className="font-semibold uppercase text-xs tracking-wide">
+              Expected payoff:
+            </span>{" "}
+            NOT CALIBRATED on every row — the engine reports an ordering and
+            refuses a per-name return it cannot defend. It is a field, not an
+            omission.
+          </p>
+          <p>
+            <span className="font-semibold uppercase text-xs tracking-wide">
+              Worst case, largest admissible book:
+            </span>{" "}
+            {data.worst_case_largest_admissible_book?.verdict}
+          </p>
+          {Object.keys(data.count_by_refusal_class ?? {}).length > 0 && (
+            <p>
+              <span className="font-semibold uppercase text-xs tracking-wide">
+                Why no trade:
+              </span>{" "}
+              {Object.entries(data.count_by_refusal_class)
+                .map(([k, v]) => `${k} ×${v}`)
+                .join(" · ")}
+            </p>
+          )}
+          <p>
+            <span className="font-semibold uppercase text-xs tracking-wide">
+              Lifecycle:
+            </span>{" "}
+            {Object.entries(ledger)
+              .map(([k, v]) => `${k} ${v}`)
+              .join(" · ") || "no lifecycle rows yet"}
+            {". "}
+            {data.ledger?.note}
+          </p>
+          {(data.notes ?? []).map((n, i) => (
+            <p key={i}>{n}</p>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function InvestmentCommitteePage() {
   const [activeCapital, setActiveCapital] = useState("40000");
   const { data, isLoading, error } = useQuery<ICCommitteeResponse>({
@@ -260,6 +416,9 @@ export default function InvestmentCommitteePage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 2b — TODAY'S DECISIONS (chunk 18) */}
+      <DecisionsCard />
 
       {/* 3 — Top opportunities */}
       <Card>
