@@ -2764,6 +2764,19 @@ LAB_L2_OVERLAP_ROWS = 200
 LAB_DAILY_SPEND_CAP_USD = 3.00
 LAB_SPEND_CAP_ENV = "AEGIS_LAB_DAILY_SPEND_CAP_USD"
 
+#: HARD per-RUN cap for `N9_library_autopsy` (chunk 19, re-test 3 of the
+#: 2026-09-19 failure thesis), in USD. It is a PER-INVOCATION cap and not a day
+#: cap, for the same reason `L2_typed_events`' `--max-usd` is: the run that has
+#: to happen is a few dollars in one sitting, and a day cap that refused it
+#: would be a gate that cannot go green. `LAB_DAILY_SPEND_CAP_USD` still binds
+#: whenever the LAB is the caller; the receipt names which one was in force.
+#:
+#: The number: §51's own estimate is ~$0.001 per autopsy, and the failure
+#: thesis ranks this the cheapest lever in the ledger. $10.00 buys several
+#: thousand proposals at that rate and is small against the $56.98 balance --
+#: it is a ceiling on a mistake, not a budget to spend.
+N9_LIBRARY_AUTOPSY_MAX_USD = 10.00
+
 #: Which loops touch the model. They are serialised against each other by an
 #: in-process lock and paused wholesale when the power plan allows sleep.
 LAB_MODEL_LOOPS: tuple[str, ...] = ("l2_typing", "nn_lab", "idle_gpu_queue")
