@@ -124,3 +124,40 @@ decision, or a claim.
 2. Reddit script-app keys, when wanted.
 3. The local-only policy is now the default; say "cloud ok for job X, $Y" per
    run to lift it.
+
+---
+
+## The 18:00–21:00 HKT block (Fable, unattended; Murat: "identify problems and solve them")
+
+Brief, verbatim: "sonnet for resaerch and opus for built. run backtests everytime u have an idea ... Use deepseek for anytasks or resarch u need as well dont run the openclaw yet ... we need to fix the decision making engine ... it should go with the highest ROI ... gut feeling ... test with llm and made up scenarios ... make sure railways doesnt passes 20 dolars a month. if it makes more money u can try day traiding but if holding for months is better thats better search this and see what people that won in markets are saying find correlations between things."
+
+### Landed (every item pushed, CI green unless stated)
+
+| # | what | evidence |
+|---|---|---|
+| 1 | **The Decision Contract runs, and first.** Reordered to step two of the pass; the analyst sweep stops itself at 55 min. The real pass reached it at 18:39 and `decisions/ledger.jsonl` exists for the first time: 43 DECIDED rows (4 BUY, 1 WATCH, 38 REFUSED). | `3d1afd9f`, `backend/data/optimus/decisions/ledger.jsonl` |
+| 2 | **Forecasts are graded.** New `forecast_grader` step: 14,703 of 17,614 due records graded on the first run; 2,911 refused `NO_BAR_FOR_RESOLUTION_DATE` (local panel ends 09-11). **First honest grade of the swarm: mean probability 0.510 vs base rate 0.340, Brier 0.2625 vs climatology 0.2244 — overconfident, does not beat the base rate.** | `4603cce9`, `night_factory_2026-09-20/grade_forecasts_2026-09-20.json` |
+| 3 | **Railway.** Warm loop off (`AEGIS_WARM_SKIP=1`) and Serverless on for the website backend: cache status reads `skipped`, RSS 685 → 301 MB, CPU 0. Loops run in `--once` cycles (full every 30 min, exits-only every 10 min; `AAT_LOOP_MODE=persistent` rolls back). Period usage read on the workspace page: $48.05 (memory $25.20, CPU $20.52). The Pro plan fee is $20 and INCLUDES $20 of usage, so "≤ $20" means usage ≤ $20 next period. | `92ed017f`; terminal `f40431c`; six deployments 18:10 |
+| 4 | **N9's 3,048 candidates measured locally in 64 s.** Zero BH survivors on either read. The whole foreign-read excess is one family (rebound after a stressed drawdown: top tail 22.8% at p≤0.05 vs 5.5% for the bottom tail). One rule family to register, not 3,050 rules to buy. | `937228e9`, `N9_candidate_measure_run01.json` |
+| 5 | **Congress collector repaired.** Fifteen production receipts said "ran" in 0.3 s while writing nothing: the job swallowed its own source failure below the receipt, and 07:30 ET is eleven hours into an FMP quota day already marked exhausted. Failures now reach the receipt, writes are on it, the slot is 00:40 UTC, and `buyer_ids`/`seller_ids` ride in the PIT payload. First real run: Tue 2026-09-22 00:40 UTC. | `b018f211`, `audit_congress_collector.md` |
+| 6 | **Typing salvage.** 30% of the 7B reader's rows were refused over an `entities` block on ids that declare no roles; the block is now dropped and named on the row. Applies from the next typing run. | `25c703db` |
+| 7 | **Research.** Horizon and winners (verdict: hold weeks to months; day trading loses to costs; 12 winner rules tagged testable/needs-data; "SP1/SP3" NOT found anywhere — ask Murat). Decision-rule + scenario-gym spec (the gate that refuses everything: `compose_book`'s eligible filter and `expected_payoff = "NOT CALIBRATED"`). | `research_horizon_and_winners.md`, `spec_decision_engine_and_scenario_gym.md` |
+| 8 | **Local GPU.** Model server restarted (PID 32000, mine); E1 head read closed FAILED_VARIANT again at 24% coverage; L2 typing run 2 raising coverage (120-min box). | `night_local_1822.log` |
+
+### The ROI decision rule (chunk 18c) — landed `5b35c398`, `4f1eb079`, `a58091ee`, `07aa42b6`, CI green
+
+Spec Part B + D built: `backend/services/roi_rank.py` (score = measured net return / vol-based downside, top-K, fractional Kelly via the existing `size_ce_kelly`, personalities as Kelly fractions, behind `IC_ROI_RANKING`), `config.SIGNAL_MEASURED_RETURN` (every row carries its receipt path, test-pinned to exist), a `t` floor `ROI_MIN_T = 2.0`, and the `REVISED` ledger state with `decision_contract.revise()` (a revision is a new row with `parent_decision_id`; no text can revise, only re-ranked candidate fields).
+
+**Today's contract rebuilt under the rule: 0 of 43 rows scored.** 38 never reached it (refused at a hard gate), 3 are agency book rows, and the two names that did reach it were refused by name: CVLG's `profitability_small` receipt states an IC t (4.29) but no t on the net return; INDV's `insider_opportunistic` read carries t 1.40, below the floor. BUY set, sizes and the worst case are byte-identical to the morning. The rule fires on a fixture (an insider read at t 2.6 sizes a 25%-vol name to the 3% cap and an 80%-vol name to 0.80%).
+
+**What this says, plainly:** the engine now has the rule Murat asked for, and nothing in the repo qualifies for it. The signals with a measured per-name net read are insider (+0.17%/mo, t 1.40), small-cap profitability (+0.24%/mo, no t on the return) and their fusion (+0.15%/mo, t 1.66); low-vol, short interest, rating drift have no per-name net magnitude; earnings surprise is measured inverted; momentum is closed. The best number on the board, Book F seasonality (+0.43%/mo, t 3.12), is a BOOK read against its own twin and cannot be attached to a name. So "highest ROI among sure-enough candidates" is currently the empty set, printed as such on every row — which is the honest version of "it can't be sure so it doesn't make one". The way to a non-empty set is measurement, not code: net per-name reads with date blocks for the signals the committee already scores, and the pre-registered books accruing forward.
+
+### Building at the time of writing
+- **The scenario gym (chunk 18d, spec Part C)** — local model only, smoke N tonight, full N on the next unattended night; its output enters only as `gut_signal` with a measured reliability weight, NOT_ADOPTED until N ≥ 300 and a forward record exists.
+
+### Not done, in order of value
+1. The scenario gym's FULL run (N ≥ 300) on the next unattended night, then its reliability read.
+2. The DeepSeek price table by UTC hour (peak 01–04, 06–10 UTC weekdays at 0.30/1.20; off-peak 0.15/0.60).
+3. The idle-queue detach in the lab (one job per instance) — moot while the lab is closed.
+4. hack2's Alpaca key (401) — Murat.
+5. Monday 13:00Z: every loop's first `MARKET WINDOW cycle full` line; 16:30 ET: `SEAL AUTHORITY ALLOCATED day=2026-09-21`.
