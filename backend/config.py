@@ -1772,6 +1772,77 @@ IC_TILT_FALLBACK_VOL = 0.50
 #: `roi*` key from the book and from the decision contract, byte for byte.
 IC_ROI_RANKING = True
 
+
+# ── THE EXPLOIT / EXPLORE AUTHORITY SPLIT (chunk 21, 2026-09-20) ─────────────
+# `backend/services/decision_authority.py`, roadmap §15.2, from Murat's review
+# of the same evening: "the ROI rule scored 0 of 43 while the old heuristic
+# still says BUY four — that is internally inconsistent with 'if it can't be
+# sure, don't make the bad decision'." Every admissible candidate now carries
+# exactly one authority: EXPLOIT (calibrated), EXPLORE (measured but unproven,
+# on a fixed paper-risk budget) or REFUSED.
+
+#: The retirement switch for the verdict x confidence heuristic. False — the
+#: default from 2026-09-20 — means a name is EXPLOIT, EXPLORE or REFUSED and
+#: NOTHING else: `investment_committee._tilt_size` no longer sizes anything on
+#: the daily path. True restores the 18c behaviour (ROI where it scored, the
+#: heuristic everywhere else) as a one-line revert. `IC_ROI_RANKING = False`
+#: still overrides both and restores the pre-18c book byte for byte.
+IC_LEGACY_HEURISTIC_SIZING = False
+
+#: The total paper-risk budget for EXPLORE, as a fraction of equity. ADDITIVE
+#: to `IC_TOTAL_TILT_BUDGET`, so the day's worst case rises by at most this and
+#: the contract prints the addition beside the existing worst case. 2% is
+#: Murat's own number ("a tiny fixed paper-risk budget"); at $40,000 of
+#: declared capital it is $800 if every explored name goes to zero.
+EXPLORE_BUDGET_PCT = 0.02
+
+#: One explored name's slice. 0.25% of equity — deliberately small enough that
+#: being wrong about eight of them at once costs 2%, and large enough to buy
+#: one share of most names at the configured capital levels.
+EXPLORE_PER_NAME_PCT = 0.0025
+
+#: The posterior width when the receipt states NO t on its return: se =
+#: this x |monthly_net_pct|. Three sigma of the point estimate is the widest
+#: of the three rows in `SIGNAL_MEASURED_RETURN` by construction — "nobody
+#: measured the t" must be MORE uncertain than "the t is 1.4", never less, and
+#: never a zero.
+EXPLORE_UNKNOWN_T_SE_MULT = 3.0
+
+#: The floor a measured read must clear to be worth paper risk at all, in
+#: percent per month. Zero: a hypothesis with no positive expected value is
+#: not explored, it is refused. (The t floor is `ROI_MIN_T` and governs
+#: EXPLOIT only — Murat: "do not require t >= 2 before AEGIS is allowed to
+#: learn".)
+EXPLORE_MIN_NET_PCT = 0.0
+
+#: The round-trip cost charged to an exploration score, in bps, amortised over
+#: the horizon. Charged ON TOP of the receipt's own net ruler — a deliberate
+#: double charge that can only lower a score, never raise one. 50 bps is the
+#: ruler the explore leg of the measured library declares.
+EXPLORE_COST_ROUND_TRIP_BPS = 50.0
+
+#: `exploration_score = draw - cost - COEF x monthly_vol% + bonus`. 0.01 means
+#: a 50%-annualised-vol name pays 0.144 %/month of score for its wildness —
+#: enough to order two otherwise equal hypotheses, not enough to freeze the
+#: explorer, which is the failure this whole split exists to end.
+EXPLORE_RISK_PENALTY_COEF = 0.01
+
+#: The bonus on posterior width: what a paper-risk dollar buys here is
+#: INFORMATION, so a wider posterior is worth more, not less. 0.25 x se.
+EXPLORE_UNCERTAINTY_BONUS_COEF = 0.25
+
+#: The seed namespace for the Thompson draws. Bump it only to deliberately
+#: redraw every historical allocation — the seed is derived from the AS-OF
+#: date and the name, so a past contract reproduces exactly.
+EXPLORE_SEED_NAMESPACE = "AEGIS_EXPLORE_v1"
+
+#: The cash floor in the daily capital resolution: every dollar resolves to
+#: benchmark / active_exploit / active_explore / cash (Murat's item 11), and
+#: the benchmark core is the residual. Zero because the committee's core IS
+#: the low-cost default and holding cash beside it is a second decision nobody
+#: has declared — a non-zero value here is a policy choice, not a tuning knob.
+IC_CASH_FLOOR_PCT = 0.0
+
 #: The confidence floor, on the LEADING signal's own measured t. A signal
 #: measured at t below this does not rank a name: the engine is not sure enough
 #: about the return to order anything on it, so it does not — it keeps today's

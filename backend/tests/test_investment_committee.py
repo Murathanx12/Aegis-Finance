@@ -20,6 +20,23 @@ from backend.services import investment_committee as IC
 from backend.services.recommendation import Recommendation
 
 
+@pytest.fixture(autouse=True)
+def legacy_sizing(monkeypatch):
+    """This file pins the NIGHT-13 composer: core + `cap x verdict x
+    confidence` tilts, capacity, one-share, the budget cap, ruin beside dream.
+
+    Chunk 21 (2026-09-20) retired that sizing on the daily path behind
+    `IC_LEGACY_HEURISTIC_SIZING`, and the EXPLOIT/EXPLORE split that replaced
+    it has its own file (`test_decision_authority.py`) — including the same
+    capacity and one-share paths under the new authorities. The flag is pinned
+    ON here so this file keeps testing the thing it was written to test: the
+    revert must stay a revert, and a graceful-degradation ruling that nothing
+    exercises is a ruling that quietly rots.
+    """
+    monkeypatch.setattr(config, "IC_LEGACY_HEURISTIC_SIZING", True,
+                        raising=False)
+
+
 def _rec(ticker, score=1.0, verdict="BUY", conf="MEDIUM",
          grade="SUPPORTED", rank=1, price=20.0):
     r = Recommendation(ticker=ticker, rank=rank, ranking_score=score,

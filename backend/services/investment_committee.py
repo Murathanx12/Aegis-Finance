@@ -41,6 +41,7 @@ from typing import Any, Optional
 from backend import config
 from backend.cache import cache_get, cache_set
 from backend.services import capital_frontier as CF
+from backend.services import decision_authority
 from backend.services import kill_conditions
 from backend.services import pm_actions
 from backend.services import portfolio_factory as PF
@@ -297,12 +298,17 @@ def compose_book(recs: list[Any], *, capital: float,
                  candidates: Optional[dict[str, dict]] = None,
                  refusal_reasons: Optional[dict[str, str]] = None,
                  extra_degradation: Optional[list[str]] = None,
-                 template_name: Optional[str] = None) -> dict:
+                 template_name: Optional[str] = None,
+                 asof: Any = None) -> dict:
     """Benchmark core + evidence-scaled tilts at one capital level.
 
     NEVER returns an empty book. `ArchetypeRefused` cannot escape: refusal
     strings arrive as `refusal_reasons` (or are caught here) and become the
     printed reason the tilts are small.
+
+    `asof` is the date the EXPLORE allocation's Thompson draws are seeded from
+    (chunk 21). None means today, which is what an interactive page wants; the
+    daily contract passes its own as-of so a rebuilt day reproduces exactly.
     """
     # Imported here, not at module top: portfolio_engine drags in the GARCH /
     # MC stack, which the strict CLI path never needs.
@@ -334,16 +340,32 @@ def compose_book(recs: list[Any], *, capital: float,
     #     of that set. A name with no measured return for its leading signal,
     #     or with a measured t below ROI_MIN_T, keeps exactly today's
     #     verdict/confidence sizing and carries the printed reason.
+    # 1c. THE AUTHORITY SPLIT (chunk 21). With `IC_LEGACY_HEURISTIC_SIZING`
+    #     False — the default — every admissible name is EXPLOIT (calibrated,
+    #     Kelly-sized), EXPLORE (measured but unproven, on the fixed paper-risk
+    #     budget) or REFUSED, and `_tilt_size` sizes nothing. The verdict x
+    #     confidence BUY with no measured ROI stops existing.
     roi = None
+    authority = None
     if config.IC_ROI_RANKING:
         try:
-            roi = roi_rank.rank(
-                eligible, candidates=candidates,
-                horizon_months=config.IC_WEALTH_HORIZON_MONTHS,
-                personality=config.ROI_DEFAULT_PERSONALITY,
-                max_names=config.IC_MAX_TILT_NAMES,
-                single_name_cap=config.IC_SINGLE_NAME_TILT_CAP,
-                total_budget=config.IC_TOTAL_TILT_BUDGET)
+            if config.IC_LEGACY_HEURISTIC_SIZING:
+                roi = roi_rank.rank(
+                    eligible, candidates=candidates,
+                    horizon_months=config.IC_WEALTH_HORIZON_MONTHS,
+                    personality=config.ROI_DEFAULT_PERSONALITY,
+                    max_names=config.IC_MAX_TILT_NAMES,
+                    single_name_cap=config.IC_SINGLE_NAME_TILT_CAP,
+                    total_budget=config.IC_TOTAL_TILT_BUDGET)
+            else:
+                authority = decision_authority.assign(
+                    eligible, candidates=candidates, asof=asof,
+                    horizon_months=config.IC_WEALTH_HORIZON_MONTHS,
+                    personality=config.ROI_DEFAULT_PERSONALITY,
+                    max_names=config.IC_MAX_TILT_NAMES,
+                    single_name_cap=config.IC_SINGLE_NAME_TILT_CAP,
+                    total_budget=config.IC_TOTAL_TILT_BUDGET)
+                roi = authority.roi
         except roi_rank.CapBreach as exc:
             # A cap disagreement is not something to trade through: fall back
             # to today's sizing and SAY the ROI rule refused.
@@ -351,7 +373,10 @@ def compose_book(recs: list[Any], *, capital: float,
             degradation.append(f"ROI ranking REFUSED and today's "
                                f"verdict/confidence sizing stands: {exc}")
             roi = None
-    if roi is not None:
+            authority = None
+    if authority is not None:
+        eligible = authority.admitted
+    elif roi is not None:
         eligible = roi.admitted
     else:
         eligible = eligible[:config.IC_MAX_TILT_NAMES]
@@ -359,8 +384,12 @@ def compose_book(recs: list[Any], *, capital: float,
     tilts: dict[str, float] = {}
     tilt_meta: dict[str, dict] = {}
     for r in eligible:
-        w = (roi.weight_for(r.ticker) if roi is not None
-             and roi.is_scored(r.ticker) else _tilt_size(r))
+        if authority is not None:
+            w = authority.weight_for(r.ticker) or 0.0
+        elif roi is not None and roi.is_scored(r.ticker):
+            w = roi.weight_for(r.ticker)
+        else:
+            w = _tilt_size(r)
         if not w or w <= 0:
             continue
         cand = candidates.get(r.ticker, {})
@@ -388,22 +417,58 @@ def compose_book(recs: list[Any], *, capital: float,
                                "capacity": cap_row.to_dict()}
         if roi is not None:
             tilt_meta[r.ticker]["roi"] = roi.contract_fields(r.ticker)
+        if authority is not None:
+            tilt_meta[r.ticker]["authority"] = authority.contract_fields(
+                r.ticker)
 
-    # 2. total-budget cap: scale all tilts down proportionally, never up.
-    total = sum(tilts.values())
-    if total > config.IC_TOTAL_TILT_BUDGET:
-        f = config.IC_TOTAL_TILT_BUDGET / total
-        tilts = {t: w * f for t, w in tilts.items()}
-        total = config.IC_TOTAL_TILT_BUDGET
-        degradation.append(
-            f"evidence tilts scaled by x{f:.2f} to the "
-            f"{config.IC_TOTAL_TILT_BUDGET:.0%} total tilt budget")
+    # 2. the budget caps. With the authority split the two populations have
+    #    SEPARATE ceilings and are capped separately — the explore budget is
+    #    additive to the tilt budget by design (chunk 21), so scaling them as
+    #    one pool would let an EXPLOIT name eat the paper-risk money and
+    #    would make the printed worst case wrong in both directions.
+    if authority is not None:
+        exploit = {t: w for t, w in tilts.items() if authority.is_exploit(t)}
+        explore = {t: w for t, w in tilts.items() if authority.is_explore(t)}
+        e_total = sum(exploit.values())
+        if e_total > config.IC_TOTAL_TILT_BUDGET:
+            f = config.IC_TOTAL_TILT_BUDGET / e_total
+            exploit = {t: w * f for t, w in exploit.items()}
+            degradation.append(
+                f"EXPLOIT tilts scaled by x{f:.2f} to the "
+                f"{config.IC_TOTAL_TILT_BUDGET:.0%} total tilt budget")
+        x_total = sum(explore.values())
+        if x_total > config.EXPLORE_BUDGET_PCT:
+            f = config.EXPLORE_BUDGET_PCT / x_total
+            explore = {t: w * f for t, w in explore.items()}
+            degradation.append(
+                f"EXPLORE positions scaled by x{f:.2f} to the "
+                f"{config.EXPLORE_BUDGET_PCT:.2%} paper-risk budget")
+        tilts = {**exploit, **explore}
+        total = sum(tilts.values())
+    else:
+        # total-budget cap: scale all tilts down proportionally, never up.
+        total = sum(tilts.values())
+        if total > config.IC_TOTAL_TILT_BUDGET:
+            f = config.IC_TOTAL_TILT_BUDGET / total
+            tilts = {t: w * f for t, w in tilts.items()}
+            total = config.IC_TOTAL_TILT_BUDGET
+            degradation.append(
+                f"evidence tilts scaled by x{f:.2f} to the "
+                f"{config.IC_TOTAL_TILT_BUDGET:.0%} total tilt budget")
 
     if not tilts:
         degradation.append(
             "no candidate clears the tilt gate (BUY/WATCH verdict + licensed "
             "evidence + tradeable at this capital) — the book is 100% "
             "benchmark core")
+        if authority is not None:
+            degradation.append(
+                f"the authority split licensed nothing today: "
+                f"{authority.receipt['n_exploit']} EXPLOIT, "
+                f"{authority.receipt['n_explore']} EXPLORE, "
+                f"{authority.receipt['n_refused']} REFUSED of "
+                f"{authority.receipt['n_considered']} admissible candidates — "
+                f"every row names its own reason")
 
     # 3. the book: core scaled to fund the tilts, tilts on top. Never empty —
     #    the template is a constant and total < 1 by construction.
@@ -445,6 +510,12 @@ def compose_book(recs: list[Any], *, capital: float,
                        f"name"),
             "capacity": m["capacity"],
         }
+        if "authority" in m:
+            block = m["authority"]
+            pos["authority"] = block.get("authority")
+            pos["authority_basis"] = block.get("authority_basis")
+            if "explore" in block:
+                pos["explore"] = block["explore"]
         if "roi" in m:
             pos["roi"] = m["roi"]
             block = m["roi"]
@@ -457,6 +528,17 @@ def compose_book(recs: list[Any], *, capital: float,
                 if "roi_score" in block else
                 f"verdict x confidence (the ROI rule did not rank this name: "
                 f"{block.get('roi')})")
+        if pos.get("authority") == decision_authority.EXPLORE:
+            ex = pos.get("explore") or {}
+            pos["sizing"] = (
+                f"the fixed paper-risk budget: {w:.4%} of equity, one slice of "
+                f"{config.EXPLORE_BUDGET_PCT:.2%}, allocated by Thompson "
+                f"sampling on an exploration score of "
+                f"{ex.get('exploration_score')} (seed "
+                f"{ex.get('thompson_seed')}). This is an EXPERIMENT, not a "
+                f"position the evidence licenses: the read is measured "
+                f"({ex.get('posterior_mean_pct_per_month')}%/mo) and unproven "
+                f"(t {ex.get('measured_t')})")
         positions.append(pos)
 
     wealth = _wealth(positions, capital, candidates)
@@ -473,6 +555,13 @@ def compose_book(recs: list[Any], *, capital: float,
     }
     if roi is not None:
         out["roi_ranking"] = roi.receipt
+    if authority is not None:
+        out["authority"] = authority.receipt
+        out["authority_of"] = dict(authority.authority_of)
+        out["exploit_weight"] = round(
+            sum(w for t, w in tilts.items() if authority.is_exploit(t)), 6)
+        out["explore_weight"] = round(
+            sum(w for t, w in tilts.items() if authority.is_explore(t)), 6)
     return out
 
 

@@ -71,6 +71,7 @@ from pathlib import Path
 from typing import Any, Callable, Optional
 
 from backend import config
+from backend.services import decision_authority as DA
 
 logger = logging.getLogger(__name__)
 
@@ -618,6 +619,10 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
     roi_ranking = book.get("roi_ranking") or None
     roi_rows = dict((roi_ranking or {}).get("rows_by_ticker") or {})
     roi_unranked = dict((roi_ranking or {}).get("not_calibrated") or {})
+    # The authority split (chunk 21). Absent entirely when the legacy heuristic
+    # sizing is back on, so that flag is a true revert here too.
+    authority = book.get("authority") or None
+    authority_refused = dict((authority or {}).get("refused") or {})
     degradation = list(book.get("degradation_reasons") or [])
     by_ticker_degradation: dict[str, str] = {}
     for line in degradation:
@@ -669,6 +674,8 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
         if roi_ranking is not None:
             row.update(_roi_fields(ticker, roi_rows, roi_unranked))
         pos = tilts.get(ticker)
+        if authority is not None:
+            row.update(_authority_fields(ticker, pos, authority_refused))
         if pos is not None:
             verdict = str(getattr(r, "recommendation", "") or "")
             row["direction"] = "BUY" if verdict == "BUY" else "WATCH"
@@ -686,7 +693,12 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
             rows.append(row)
             continue
         # REFUSED: name the gate that stopped it, in this repo's own words.
-        why = _refusal_sentence(r, by_ticker_degradation.get(ticker))
+        # The authority split's own sentence wins when it has one: it is the
+        # LAST thing that refused the name and therefore the closest to the
+        # truth, and it is the sentence that says whether the refusal was
+        # "no measured read at all" or "the paper-risk budget was full".
+        why = (authority_refused.get(ticker)
+               or _refusal_sentence(r, by_ticker_degradation.get(ticker)))
         row.update({
             "direction": "REFUSED",
             "position_budget": {
@@ -738,6 +750,41 @@ def _roi_fields(ticker: str, rows: dict, unranked: dict) -> dict:
                     f"entered the ROI ranking, because the hard eligibility "
                     f"gates run first and the rule only ever sees the "
                     f"candidates they admitted")}
+
+
+def _authority_fields(ticker: str, pos: dict | None,
+                      refused: dict) -> dict:
+    """The authority block for one name: EXPLOIT, EXPLORE or REFUSED, and why.
+
+    Three populations and no fourth (chunk 21). A name the split FUNDED carries
+    the authority it was funded under, the sentence that licensed it, and — for
+    an EXPLORE name — the whole posterior, the Thompson draw, the seed and the
+    score, so tomorrow's reader can reproduce the allocation without rerunning
+    it. A name the split refused carries the refusal sentence. A name that
+    never reached it says exactly that.
+
+    `authority: REFUSED` and `direction: REFUSED` are not the same statement
+    and both are printed: the first says no authority licensed capital, the
+    second says no budget was allocated. They agree today and must be able to
+    disagree tomorrow (a capacity refusal after an EXPLORE allocation is
+    exactly that case), which is why neither is derived from the other.
+    """
+    t = str(ticker)
+    if pos is not None and pos.get("authority"):
+        out = {"authority": pos.get("authority"),
+               "authority_basis": pos.get("authority_basis")}
+        if pos.get("explore"):
+            out["explore"] = pos["explore"]
+        if pos.get("sizing"):
+            out["sizing"] = pos["sizing"]
+        return out
+    if t in refused:
+        return {"authority": DA.REFUSED, "authority_basis": refused[t]}
+    return {"authority": DA.REFUSED,
+            "authority_basis": (
+                "not considered — this name never reached the authority split, "
+                "because the hard eligibility gates run first and the split "
+                "only ever sees the candidates they admitted")}
 
 
 def _refusal_sentence(r: Any, degradation_line: str | None) -> str:
@@ -830,6 +877,29 @@ def _agency_rows(options: list, *, asof: date) -> list[dict]:
             horizon_months=int(config.IC_WEALTH_HORIZON_MONTHS))
         row["expiry_utc"] = expiry
         row["expiry_basis"] = basis
+        if not config.IC_LEGACY_HEURISTIC_SIZING:
+            # An agency Option is a whole costed book under this repo's only
+            # licence, `PRODUCT_EXPERIMENT` — which is the definition of
+            # EXPLORE: it may be tested in paper and it may not claim anything.
+            # Its SIZE is its own contract's (k, gross cap, cash floor), not a
+            # slice of `EXPLORE_BUDGET_PCT`: the per-name paper-risk budget
+            # sizes NAMES inside the committee's tilt sleeve, and applying it
+            # to a whole book would silently re-size a strategy contract that
+            # was frozen before the first decision.
+            row["authority"] = DA.EXPLORE
+            row["authority_basis"] = (
+                f"EXPLORE by licence: an agency Option is a whole costed BOOK "
+                f"under {LICENCE}, which permits internal simulation and PAPER "
+                f"brokerage and licenses no claim. It is sized by its own "
+                f"frozen strategy contract (k {data.get('k')}, gross cap "
+                f"{data.get('gross_cap')}, cash floor "
+                f"{data.get('cash_floor_pct')}), not out of "
+                f"EXPLORE_BUDGET_PCT — that budget slices NAMES inside the "
+                f"committee's tilt sleeve, and re-sizing a frozen contract "
+                f"with it would break the one thing a PRODUCT_EXPERIMENT may "
+                f"not do. It is excluded from the day's capital resolution for "
+                f"the same reason the three personalities are: they are "
+                f"ALTERNATIVES at one capital level, not additive holdings.")
         if config.IC_ROI_RANKING:
             row["roi"] = (
                 f"{NOT_CALIBRATED_ROI}: not a name — an agency Option is a "
@@ -908,7 +978,8 @@ def build_daily_contracts(asof: date | str | None = None, *,
             candidates=state.get("candidates") or {},
             refusal_reasons=(state.get("books") or {}).get("refused") or {},
             extra_degradation=[d for d in state.get("degradation_reasons") or []
-                               if "REFUSED" not in d])
+                               if "REFUSED" not in d],
+            asof=day)
     except Exception as exc:                                       # noqa: BLE001
         logger.exception("decision contract: compose_book failed")
         book = {"positions": [], "degradation_reasons":
@@ -1115,7 +1186,8 @@ def revise(parent_decision_id: str, *, asof: date | str | None = None,
         candidates=state.get("candidates") or {},
         refusal_reasons=(state.get("books") or {}).get("refused") or {},
         extra_degradation=[d for d in state.get("degradation_reasons") or []
-                           if "REFUSED" not in d])
+                           if "REFUSED" not in d],
+        asof=day)
     ticker = str(parent.get("ticker"))
     fresh = [r for r in _ic_rows(state, book, asof=day, capital=capital)
              if str(r.get("ticker")) == ticker]
@@ -1250,6 +1322,7 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "directions_not_produced_today": sorted(d for d in DIRECTIONS
                                                 if d not in produced),
         **_roi_payload_block(rows, book),
+        **_authority_payload_block(rows, book),
         "worst_case_largest_admissible_book": largest_admissible_book(),
         "notes": list(notes or []),
         "degradation_reasons": list((book or {}).get("degradation_reasons") or []),
@@ -1293,6 +1366,37 @@ def _roi_payload_block(rows: list[dict], book: dict | None) -> dict:
     census["n_rows_scored"] = scored
     census["n_rows_not_calibrated_by_missing_field"] = by_field
     return {"roi_ranking": census}
+
+
+def _authority_payload_block(rows: list[dict], book: dict | None) -> dict:
+    """The day's authority census, or nothing at all when the split is off.
+
+    Counts each authority over the ROWS (not over the split's own candidate
+    set) so the census and the file agree by construction, and prints the
+    worst case the EXPLORE budget ADDS to the day's existing one — session
+    protocol rule 4, which is about the number nobody printed.
+    """
+    split = (book or {}).get("authority")
+    if not split:
+        return {}
+    counts = {a: 0 for a in DA.AUTHORITIES}
+    buys_without_authority = []
+    for r in rows:
+        a = str(r.get("authority") or "")
+        if a in counts:
+            counts[a] += 1
+        if (r.get("direction") in ("BUY", "WATCH")
+                and a not in DA.ACTIVE_AUTHORITIES):
+            buys_without_authority.append(r.get("ticker"))
+    census = {k: v for k, v in split.items()
+              if k not in ("explore_rows", "refused")}
+    census["count_by_authority_over_rows"] = counts
+    census["rows_with_a_budget_and_no_authority"] = buys_without_authority
+    census["explore_rows"] = split.get("explore_rows") or []
+    return {
+        "authority": census,
+        "worst_case_explore_budget": split.get("worst_case_added_by_explore"),
+    }
 
 
 def write_contracts(rows: list[dict], *, asof: date, out_dir: Path | None = None,
