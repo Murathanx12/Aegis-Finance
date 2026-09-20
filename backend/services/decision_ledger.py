@@ -19,7 +19,7 @@ populations were once confused for one.
 THE STATES, AND WHO WRITES THEM
 ===============================
 ``DECIDED -> DELIVERED -> SEEN_BY_EXECUTOR -> REFUSED | ORDER_SUBMITTED ->
-FILLED -> SCORED``
+REVISED -> FILLED -> SCORED``
 
 * ``DECIDED`` — the morning wrote the row (`decision_contract`).
 * ``DELIVERED`` — a surface returned it to a caller.
@@ -34,6 +34,12 @@ FILLED -> SCORED``
   else. When the artery lands (a terminal chunk) it POSTs them through the same
   hash-verified path `seal_authority.py` already uses — never a shared
   filesystem.
+* ``REVISED`` — a re-run of the SAME ranking over the SAME capital level
+  superseded this row (`decision_contract.revise`). Written on the PARENT, in
+  the same call that writes ``DECIDED`` on the child; the child carries
+  ``parent_decision_id``. The parent row on disk is never edited — it must stay
+  gradeable exactly as it was decided, and a mutated row would be a silently
+  rewritten one, which is the worse failure.
 * ``SCORED`` — the grader joined the row's own expiry to realised close-to-close
   returns.
 
@@ -79,12 +85,19 @@ STATES: tuple[str, ...] = DECISION_STATES
 
 #: Rank, not a chain. `REFUSED` and `ORDER_SUBMITTED` share rank 3 because they
 #: are alternatives at the same point in the life of a decision.
-RANK: dict[str, int] = {
+#:
+#: `REVISED` is 3.5 — after the row could have been declined or sent, before it
+#: could have been filled or scored. The ranks are floats for exactly this: a
+#: renumbering (3 -> 4, 4 -> 5 ...) would change what every stored row's
+#: neighbours are, and the ledger's ordering is read by comparing ranks, not by
+#: their absolute values. A half step inserts a state without moving any other.
+RANK: dict[str, float] = {
     "DECIDED": 0,
     "DELIVERED": 1,
     "SEEN_BY_EXECUTOR": 2,
     "REFUSED": 3,
     "ORDER_SUBMITTED": 3,
+    "REVISED": 3.5,
     "FILLED": 4,
     "SCORED": 5,
 }

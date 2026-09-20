@@ -174,9 +174,15 @@ OTHER_TYPED = "OTHER_TYPED"
 #: enum because a stored row must be written against the whole lifecycle, and a
 #: ledger that grew a state later would be a ledger whose old rows mean
 #: something else.
+#:
+#: `REVISED` (spec §D) sits between `SEEN_BY_EXECUTOR` and `FILLED`/`SCORED`
+#: and is written on the PARENT when a re-run of the same ranking supersedes
+#: it. The superseding row is a NEW contract row with its own `decision_id` and
+#: a `parent_decision_id` — never an in-place edit, because the original must
+#: stay gradeable exactly as it was decided.
 DECISION_STATES: tuple[str, ...] = (
     "DECIDED", "DELIVERED", "SEEN_BY_EXECUTOR", "REFUSED", "ORDER_SUBMITTED",
-    "FILLED", "SCORED",
+    "REVISED", "FILLED", "SCORED",
 )
 
 #: (class, terminal_state, pattern, basis) for THIS repo's own refusal
@@ -488,8 +494,14 @@ def seal(row: dict) -> str:
 
 
 def decision_id(*, policy_id: str, policy_version: str, ticker: str,
-                asof: str) -> str:
+                asof: str, revision_of: str | None = None) -> str:
+    """The row's identity. `revision_of` is what makes a same-day revision a
+    DIFFERENT decision rather than a rewrite of the first one: without it, a
+    child built from the same policy, ticker and date would collide with its
+    own parent, and the ledger would read the supersession as a duplicate."""
     blob = f"{policy_id}|{policy_version}|{ticker}|{asof}"
+    if revision_of:
+        blob = f"{blob}|revision_of:{revision_of}"
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
 
 
@@ -941,6 +953,254 @@ def _capital_from(options: list) -> tuple[float, str]:
     levels = [float(c) for c in config.IC_CAPITAL_LEVELS]
     return max(levels), ("no IPS document exists, so the largest CONFIGURED "
                          "level (config.IC_CAPITAL_LEVELS) is used and named")
+
+
+# ===========================================================================
+# REVISION — spec §D. A new row, never a rewritten one.
+# ===========================================================================
+
+
+def find_contract_row(decision_id_: str, *, out_dir: Path | None = None,
+                      days: int = 366) -> tuple[dict | None, Path | None]:
+    """(row, file) for one `decision_id`, newest file first, or (None, None).
+
+    A year of per-day files, the same window `decision_ledger._open_contract_
+    rows` reads, for the same reason: a revision is about a decision whose
+    window is still open, and scanning five years of receipts to find one is
+    budget spent on rows nobody can act on.
+    """
+    folder = Path(out_dir or DECISIONS_DIR)
+    if not folder.is_dir():
+        return None, None
+    want = str(decision_id_)
+    floor = datetime.now(timezone.utc).date() - timedelta(days=int(days))
+    for p in sorted(folder.glob("*.json"), reverse=True):
+        try:
+            if date.fromisoformat(p.stem) < floor:
+                continue
+        except ValueError:
+            continue
+        try:
+            blob = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for row in blob.get("rows") or []:
+            if str(row.get("decision_id")) == want:
+                return row, p
+    return None, None
+
+
+def _typed_updates(updates: dict | None) -> tuple[dict, str]:
+    """({ticker: {field: number|None}}, refusal) — numbers only, never text.
+
+    The firewall the spec names: *no LLM output writes a revision directly*. A
+    typed event reaches this function as a CANDIDATE FIELD — the same kind of
+    thing a price update is — and the ranking rule is the only thing that can
+    move a direction. So a string, a dict, a list or a bool in the update
+    payload is REFUSED by name rather than coerced: a free-text "very bullish"
+    that silently became a field would be the LLM sizing a position through the
+    back door, which is the one thing `belief_state.py`'s firewall forbids.
+    """
+    clean: dict[str, dict] = {}
+    for ticker, fields in (updates or {}).items():
+        if not isinstance(fields, dict):
+            return {}, (f"CANNOT DETERMINE: the update for {ticker!r} is a "
+                        f"{type(fields).__name__}, not a mapping of candidate "
+                        f"fields to numbers")
+        row: dict = {}
+        for name, value in fields.items():
+            if value is None:
+                row[str(name)] = None
+                continue
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                return {}, (
+                    f"REFUSED: {ticker}.{name} = {value!r} is a "
+                    f"{type(value).__name__}. A revision takes CANDIDATE "
+                    f"FIELDS — numbers the signal scorer reads — never text. "
+                    f"The LLM proposes and forecasts; the engine computes and "
+                    f"allocates, and that firewall is enforced here rather "
+                    f"than intended.")
+            row[str(name)] = float(value)
+        clean[str(ticker)] = row
+    return clean, ""
+
+
+def _restate(state: dict, updates: dict) -> tuple[dict, str]:
+    """Re-run the SAME signal-scoring path over updated candidate fields."""
+    from backend.services import recommendation as REC
+    from backend.services import signal_registry as SR
+
+    cands = [dict(c) for c in (state.get("candidates") or {}).values()]
+    if not cands:
+        return state, ("CANNOT DETERMINE: the funnel state carries no "
+                       "candidates, so there is nothing to re-rank")
+    for c in cands:
+        patch = updates.get(str(c.get("ticker")))
+        if patch:
+            c.update(patch)
+    reg = SR.load()
+    try:
+        REC.assert_registry_discipline(cands, registry=reg)
+    except REC.RankLeadershipError as exc:
+        return state, (f"CANNOT DETERMINE: the ranking gate is VOID on the "
+                       f"revised candidates, so no revision is licensed ({exc})")
+    out = dict(state)
+    out["candidates"] = {str(c.get("ticker")): c for c in cands}
+    out["recs"] = REC.score_candidates(cands, registry=reg)
+    return out, ""
+
+
+def revise(parent_decision_id: str, *, asof: date | str | None = None,
+           reason: str = "", candidate_updates: dict | None = None,
+           funnel_path: Path | None = None, out_dir: Path | None = None,
+           ledger_path: Path | None = None, write: bool = True) -> dict:
+    """Re-run the ranking over the affected capital level; supersede or don't.
+
+    The rule, and the whole of it: re-score the candidates through
+    `recommendation.score_candidates`, recompose the book at the PARENT's own
+    capital, and compare the parent row's direction and rank-cut with the new
+    one. If neither moved, **nothing is written** — a revision that changes no
+    decision is not an event, and a ledger that recorded it would report
+    activity it did not have. If either moved, a NEW row is written with
+    `parent_decision_id` set, `REVISED` is recorded on the parent and `DECIDED`
+    on the child.
+
+    `reason` is recorded and READ BY NOBODY: it travels onto the ledger detail
+    so a human can see why the re-run was triggered, and it cannot reach the
+    ranking. `candidate_updates` is the only input that can change an outcome
+    and it is numbers only (`_typed_updates`).
+    """
+    from backend.services import decision_ledger as DL
+
+    day = _as_date(asof)
+    parent, parent_path = find_contract_row(parent_decision_id, out_dir=out_dir)
+    if parent is None:
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": (f"CANNOT DETERMINE: no contract row in the last year "
+                           f"carries decision_id {parent_decision_id!r}")}
+    if parent.get("source") != "investment_committee":
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": (f"REFUSED: {parent.get('ticker')} is a "
+                           f"{parent.get('source')} row. An agency Option is a "
+                           f"whole costed BOOK with its own contract hash; "
+                           f"re-ranking one name inside it is not what this "
+                           f"function does, and pretending otherwise would put "
+                           f"a name-level revision on a book-level decision.")}
+
+    updates, refusal = _typed_updates(candidate_updates)
+    if refusal:
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": refusal}
+
+    capital = float((parent.get("position_budget") or {}).get("capital_usd")
+                    or 0.0)
+    if capital <= 0:
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": ("CANNOT DETERMINE: the parent row names no capital "
+                           "level, so there is no book to recompose it in")}
+
+    try:
+        state = funnel_state(funnel_path)
+    except Exception as exc:                                       # noqa: BLE001
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": (f"CANNOT DETERMINE: the funnel state could not be "
+                           f"rebuilt ({type(exc).__name__}: {exc})")}
+    state, refusal = _restate(state, updates)
+    if refusal:
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": refusal}
+
+    book = compose_book(
+        state.get("recs") or [], capital=capital,
+        candidates=state.get("candidates") or {},
+        refusal_reasons=(state.get("books") or {}).get("refused") or {},
+        extra_degradation=[d for d in state.get("degradation_reasons") or []
+                           if "REFUSED" not in d])
+    ticker = str(parent.get("ticker"))
+    fresh = [r for r in _ic_rows(state, book, asof=day, capital=capital)
+             if str(r.get("ticker")) == ticker]
+    if not fresh:
+        return {"status": "refused", "parent_decision_id": str(parent_decision_id),
+                "reason": (f"CANNOT DETERMINE: {ticker} is no longer in the "
+                           f"funnel's candidate set, so the ranking cannot be "
+                           f"re-run for it. The parent stays exactly as it was "
+                           f"decided; a name that left the universe is a fact "
+                           f"about the universe, not a revision.")}
+    child = fresh[0]
+
+    was_held = str(parent.get("direction")) != "REFUSED"
+    now_held = str(child.get("direction")) != "REFUSED"
+    changed = {
+        "direction": (str(parent.get("direction")), str(child.get("direction"))),
+        "rank_cut": (was_held, now_held),
+    }
+    moved = (changed["direction"][0] != changed["direction"][1]
+             or was_held != now_held)
+    if not moved:
+        return {"status": "unchanged", "parent_decision_id": str(parent_decision_id),
+                "ticker": ticker, "capital_usd": capital,
+                "comparison": changed,
+                "reason": ("the re-run produced the same direction and the same "
+                           "side of the rank cut, so nothing was superseded and "
+                           "nothing was written")}
+
+    child["decision_id"] = decision_id(
+        policy_id=str(child.get("policy_id")),
+        policy_version=str(child.get("policy_version")),
+        ticker=ticker, asof=str(day), revision_of=str(parent_decision_id))
+    child["parent_decision_id"] = str(parent_decision_id)
+    child["revision_reason"] = str(reason or "")
+    child["revision_comparison"] = changed
+    child["built_utc"] = _now()
+    child["artifact_sha256"] = seal(child)
+
+    written_to = None
+    if write:
+        path = contracts_path(str(day), out_dir)
+        rows: list[dict] = []
+        notes: list[str] = []
+        capital_on_file = capital
+        if path.is_file():
+            try:
+                blob = json.loads(path.read_text(encoding="utf-8"))
+                rows = list(blob.get("rows") or [])
+                notes = list(blob.get("notes") or [])
+                capital_on_file = blob.get("capital_usd") or capital
+            except (OSError, ValueError):
+                rows, notes = [], []
+        rows = [r for r in rows
+                if str(r.get("decision_id")) != child["decision_id"]]
+        rows.append(child)
+        notes.append(f"revision: {child['decision_id']} supersedes "
+                     f"{parent_decision_id} for {ticker} "
+                     f"({changed['direction'][0]} -> {changed['direction'][1]}); "
+                     f"the parent row is untouched")
+        written_to = str(write_contracts(rows, asof=day, out_dir=out_dir,
+                                         notes=notes, capital=capital_on_file,
+                                         book=book))
+
+    detail = {"child_decision_id": child["decision_id"], "ticker": ticker,
+              "reason": str(reason or ""), "comparison": changed,
+              "candidate_updates": updates}
+    if not DL.states_of(str(parent_decision_id), path=ledger_path):
+        DL.record(str(parent_decision_id), "DECIDED", by="contract_file",
+                  asof=parent.get("asof"), path=ledger_path,
+                  detail={"backfilled": True,
+                          "why": ("the contract file carries this row and the "
+                                  "ledger did not")})
+    DL.record(child["decision_id"], "DECIDED", by="decision_contract.revise",
+              asof=str(day), path=ledger_path,
+              detail={"parent_decision_id": str(parent_decision_id)})
+    parent_state = DL.record(str(parent_decision_id), "REVISED",
+                             by="decision_contract.revise",
+                             asof=parent.get("asof"), path=ledger_path,
+                             detail=detail)
+
+    return {"status": "revised", "parent_decision_id": str(parent_decision_id),
+            "child_decision_id": child["decision_id"], "ticker": ticker,
+            "capital_usd": capital, "comparison": changed, "child": child,
+            "written_to": written_to, "parent_ledger_row": parent_state,
+            "parent_contract_file": str(parent_path) if parent_path else None}
 
 
 def _as_date(asof: date | str | None) -> date:
