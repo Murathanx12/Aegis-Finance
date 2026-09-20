@@ -197,6 +197,12 @@ def compute_congress_scores(
             "n_trades": a["n_trades"],
             "n_nonstock": a["n_nonstock"],
             "chambers": sorted(a["chambers"]),
+            # 2026-09-20: WHO bought is kept beside how many. The headline
+            # score is unchanged; the ids let a later read condition on
+            # leadership or committee seat (NBER w26975; Wei & Zhou), which
+            # the aggregate alone can never answer.
+            "buyer_ids": sorted(a["buyers"]),
+            "seller_ids": sorted(a["sellers"]),
         })
     return out
 

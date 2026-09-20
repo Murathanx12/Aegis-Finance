@@ -254,12 +254,19 @@ def setup_scheduler():
     # TRIAL-CONGRESS-IC morning slot (2026-07-17): the 16:30 ET daily check
     # competes for FMP's free-tier daily quota AFTER a full day of
     # fallback-provider traffic — the 2026-07-16 collection died on 402 that
-    # way. Disclosure data needs no close prices, so collect at 07:30 ET when
-    # the quota is fresh; the 5-day PIT throttle turns the daily-check call
-    # into a same-day retry, never a duplicate write.
+    # way. Disclosure data needs no close prices, so collect when the quota is
+    # fresh; the 5-day PIT throttle turns the daily-check call into a
+    # same-day retry, never a duplicate write.
+    #
+    # 2026-09-20: "07:30 ET, when the quota is fresh" was false. `fmp_budget`'s
+    # day boundary is UTC (FMP's observed reset), and 07:30 ET is eleven to
+    # twelve hours INTO that day -- by then a live 402 from any other caller
+    # had already marked the day exhausted, and priority draws fast-fail on an
+    # exhausted day. The slot moves to 00:40 UTC, forty minutes after the
+    # reset, before anything else has spent.
     _scheduler.add_job(
         _congress_morning_collect,
-        CronTrigger(hour=7, minute=30, day_of_week="mon-fri", timezone="US/Eastern"),
+        CronTrigger(hour=0, minute=40, day_of_week="tue-sat", timezone="UTC"),
         id="pi_congress_collect",
         name="PI congress-IC morning collect",
         replace_existing=True,
@@ -1197,12 +1204,19 @@ async def _congress_morning_collect():
         collect_congress_scores,
     )
 
-    try:
-        cg = await asyncio.to_thread(collect_congress_scores)
-        logger.info("Congress-IC morning collect: status=%s n=%s nonzero=%s "
-                    "(descriptive)", cg.get("status"), cg.get("n"), cg.get("nonzero"))
-    except Exception as e:
-        logger.error("Congress-IC morning collection failed: %s", e, exc_info=True)
+    # 2026-09-20: this body used to catch every exception and log it. The
+    # collector's "raises on source failure" contract therefore never reached
+    # `@receipted()`, and fifteen production receipts (2026-09-01 -> 09-18)
+    # read `status: ran, exception: null, writes: null` in 0.3 s each while the
+    # trial accrued NOTHING for two months (audit:
+    # docs/research_notes/2026-09-20/audit_congress_collector.md). A failure
+    # now reaches the wrapper, which records `status: raised` and the
+    # exception text; a success annotates the receipt with what it wrote.
+    cg = await asyncio.to_thread(collect_congress_scores)
+    note(writes=cg)
+    logger.info("Congress-IC morning collect: status=%s n=%s nonzero=%s "
+                "(descriptive)", cg.get("status"), cg.get("n"), cg.get("nonzero"))
+    return cg
 
 
 @receipted()
