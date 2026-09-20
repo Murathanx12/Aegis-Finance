@@ -48,6 +48,25 @@ because both halves of it existed in code and neither had ever run:
   closed against the LOCAL bars through `ledger_resolver.resolve_due`, with a named reason per
   record that did not grade — the first run resolved 14,703 of a ledger that was 100% ungraded.
 
+The last link of that loop — *"paper capital moves by rule"* — grew its rule on 2026-09-20
+(chunk 18c, §14.4d). `backend/services/roi_rank.py` ranks the candidates that already cleared
+the hard gates by `expected_return_net / downside` at the declared horizon, takes the top K and
+sizes by fractional Kelly (`arena.policies.size_ce_kelly` reused, so `w = f · mu/sigma²` exactly,
+with the four personalities as the `f` and the 3%/10% caps still binding — today's worst case is
+unchanged). It scores a name **only** when both numbers are measured: the leading signal's net
+forward return, copied off a receipt in `config.SIGNAL_MEASURED_RETURN` whose path a test proves
+is on disk, and the name's own volatility — and only when that signal's own measured **t** clears
+`ROI_MIN_T`. Three of the eight adapter signals have such a read (`profitability_small`
++0.241%/mo net with no t on the *return*, `insider_opportunistic` t 1.40,
+`fusion_insider_profitability` NW t 1.66), none clears 2.0, so today's 43-row contract scores
+**zero** and every row now names the field it is missing instead of carrying one flat
+`NOT CALIBRATED` string. The BUY set and every weight are unchanged — the loop's shape changed,
+not its output, and the rule fires without a code change the day a signal earns a t ≥ 2 read.
+Beside it, `decision_ledger` gained `REVISED` at rank 3.5 and `decision_contract.revise`, which
+re-runs the same ranking over the affected capital level and writes a child row with
+`parent_decision_id` only when direction or rank-cut moves; it takes candidate FIELDS and refuses
+text, so a typed event can revise a decision and a sentence cannot.
+
 Operating rules that cost the most to learn (full list: `docs/AEGIS_STRATEGIC_INVARIANTS.md`,
 `CLAUDE.md` session protocol, roadmap §6/§13/§14.6): never kill by image name; never move
 `.env`; gate a push on the suite's `exit=0` line and push the SHA, not the branch; a receipt is

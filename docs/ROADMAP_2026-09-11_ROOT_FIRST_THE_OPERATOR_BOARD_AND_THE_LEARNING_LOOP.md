@@ -1042,6 +1042,97 @@ reached."**
   depends on the memory of whoever adds the next step is not a weaker test — it
   is the real function running against the real data.
 
+### 14.4d CHUNK 18c — 2026-09-20: the ROI rule, and what it refuses to rank
+
+Murat, the same afternoon, verbatim: *"we need to fix the decision making
+engine. it shouldnt make bad dessicions but it cant be sure so it doesnt make
+one. from good decisions and return potetnials it should go with the highest
+ROI like we have talked."* Spec (Sonnet):
+`docs/research_notes/2026-09-20/spec_decision_engine_and_scenario_gym.md` §B
+and §D. Built: `backend/services/roi_rank.py`, `config.IC_ROI_RANKING`,
+`decision_contract.revise`, `decision_ledger`'s `REVISED` at rank 3.5.
+
+- **The rule.** Among candidates that already cleared the hard gates, rank by
+  `expected_return_net / downside` at the declared horizon, take the top
+  `IC_MAX_TILT_NAMES`, size by fractional Kelly. Kelly is
+  `arena.policies.size_ce_kelly` reused, not rewritten: feed it `z = roi_score`
+  and `sigma = vol_horizon` with `ic_prior = ROI_DOWNSIDE_Z` and its Grinold
+  form collapses to `w = f * mu / sigma^2` exactly. The four personalities are
+  the `f`. **The worst case does not move** — `IC_SINGLE_NAME_TILT_CAP` (3%)
+  and `IC_TOTAL_TILT_BUDGET` (10%) still bind after sizing, `_refuse_cap_breach`
+  REFUSES rather than trims if the two layers ever disagree, and today's
+  contract prints the same `-$100,000 of $1,000,000` it printed this morning.
+
+- **The honesty rule, which is the whole of the second clause.** A candidate is
+  ROI-scored only when BOTH numbers are measured — its leading signal's net
+  forward return, copied off a receipt in `config.SIGNAL_MEASURED_RETURN`, and
+  its own `vol_annual` — and only when that signal's measured **t** clears
+  `ROI_MIN_T` (2.0). Anything else keeps today's verdict × confidence sizing
+  and the row says `roi: NOT_CALIBRATED: <field> — <why>`. A test fails if any
+  row's receipt path is not in this checkout: a measured return whose receipt
+  moved is prose with a filename, and it would be sizing positions.
+
+- **Which signals have a measured read, and which do not.** A sweep of
+  `docs/TRIALS/`, `docs/archive/`, `NEGATIVE_RESULTS.md`,
+  `STRATEGY_LIBRARY_MEASURED_2006_2019.md` and every `night_factory_*` receipt
+  found a per-name NET magnitude for exactly three of the eight adapter
+  signals — and they are exactly the three the registry independently permits
+  to LEAD:
+
+  | signal | measured | t | receipt |
+  |---|---|---|---|
+  | `profitability_small` | +0.241%/mo net, held-out 2019-2024 (72 months) | **none on the return** — the receipt states rank IC t 4.29, a statistic about the ORDER | `docs/TRIALS/TRIAL-SMQ-FWD.md` |
+  | `insider_opportunistic` | +0.17%/mo net (BRAIN-003) | 1.40 | `docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md` |
+  | `fusion_insider_profitability` | +0.153%/mo net (BRAIN-007) | 1.66 NW | `docs/TRIALS/TRIAL-SMQ-FWD.md` |
+
+  No row for `low_volatility` (registry: "ZERO net excess return", role
+  FILTER — and its adapter is `higher_is_better=False` on vol, so a positive
+  return there would license a risk filter to pick), `short_interest_level`
+  (no per-name net magnitude anywhere in this repo), `earnings_surprise_monthly`
+  (measured INVERTED, IC t −2.6), `rating_drift_3m` (`known_effect: null` —
+  nothing has ever been measured for it) or `momentum_12_1` (CLOSED/REJECTED;
+  −1.11%/yr net in the measured library, and an explicit written prohibition
+  against forward seeding). **Books E/F/G/C — including F's +0.43%/mo t 3.12,
+  the best number on the board — are BOOK-level reads against their own
+  random-universe twins with no per-name column.** Attaching F's seasonality
+  number to a `profitability_small` candidate would be a category error wearing
+  the best number we have.
+
+- **So today's contract scores 0 of 43.** 2 rows reached the rule and were
+  refused at the confidence gate by name (CVLG on "no t on the return",
+  INDV on "t 1.40 below ROI_MIN_T 2.00"); 38 never entered it, because the
+  hard gates run first and the rule only ever sees survivors; 3 are agency
+  BOOK rows. **The BUY set, every weight and every `decision_id` are
+  byte-identical to this morning's file** — the rule changed what the rows SAY,
+  not what the engine did. That is the finding and it is about the programme's
+  evidence, not about a setting: the day a signal earns a t ≥ 2 read on its
+  *return*, it gets a row and the rule fires with no code change.
+
+- **Nothing here takes an LLM probability.** The grader's first run the same
+  morning put the swarm at mean probability 0.510 against a base rate of 0.340,
+  Brier 0.2625 against a climatology of 0.2244. A number that loses to its own
+  climatology is not an expected return, and `roi_rank`'s docstring says so at
+  the top so the next reader does not have to rediscover it.
+
+- **§D, `REVISED`.** One new ledger state at rank 3.5 (the RANK map is floats
+  now, so inserting it moved nobody) and `decision_contract.revise`, which
+  re-scores through `recommendation.score_candidates`, recomposes the book at
+  the parent's own capital, and writes a child row with `parent_decision_id`
+  **only if direction or rank-cut changed** — otherwise nothing is written at
+  all. The parent row on disk is never edited: it must stay gradeable exactly
+  as it was decided. `revise` takes candidate FIELDS and refuses a string, a
+  list, a dict or a bool by name, and a test runs the same revision under two
+  different `reason` strings and asserts the child is identical. **An LLM
+  cannot revise a decision**, and that is now a red test rather than a
+  convention. No event wiring and no CLI yet — the service and its state
+  machine only.
+
+- **Still owed from the spec:** §C, the scenario gym (good/bad counterfactual
+  twins graded on MOVEMENT, never a trading arm on its own), and a `revise`
+  caller wired to L2's typed events. Both wait on the local-only policy and on
+  the gym's own adoption rule being a code-enforced weight cap rather than an
+  intention.
+
 ### 14.5 WHAT MURAT DOES (only what Claude Code cannot)
 
 1. **Run the fleet deploy lines** (`aegis-alpha-terminal/docs/DEPLOY_PLAN_2026-09-14.md` §5) —
