@@ -233,12 +233,20 @@ def _as_float(v) -> float | None:
     return f
 
 
-def refusal_for(rec: dict, panel, *, today: date) -> str:
+def refusal_for(rec: dict) -> str:
     """The NAMED reason this still-ungraded record did not grade.
 
     Ordered by what is broken FURTHEST upstream, because the first answer is
     the actionable one: a record with no ticker cannot be blamed on a missing
     bar, and an observable no grader knows cannot be blamed on its threshold.
+
+    `NO_BAR_FOR_RESOLUTION_DATE` is reached by ELIMINATION, not by looking in
+    the panel, and that is deliberate: the resolver has already been round, and
+    a record it left ungraded while the record itself is complete was left
+    ungraded for want of bars. Re-deriving "does the panel cover this window"
+    here would be a second implementation of the window check that
+    `belief_state.resolve_one` already owns, and the one that would drift is
+    this one. The resolver's own `unpriceable` block names the tickers.
     """
     if not str(rec.get("ticker") or "").strip():
         return "RECORD_LACKS_TARGET"
@@ -256,7 +264,7 @@ def refusal_for(rec: dict, panel, *, today: date) -> str:
     return "NO_BAR_FOR_RESOLUTION_DATE"
 
 
-def bucket_of(rec: dict, panel, *, today: date,
+def bucket_of(rec: dict, *, today: date,
               quarantined: bool = False) -> str:
     """Which of the closed `BUCKETS` this record finished in, after the run."""
     if rec.get("outcome") is not None:
@@ -273,7 +281,7 @@ def bucket_of(rec: dict, panel, *, today: date,
         return "not_yet_due"
     if quarantined:
         return "QUARANTINED"
-    return refusal_for(rec, panel, today=today)
+    return refusal_for(rec)
 
 
 # ===========================================================================
@@ -320,14 +328,13 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
     q_ids, q_note = quarantined_ids(after, report, path=path)
     if q_note:
         logger.warning("forecast grader: %s", q_note)
-    panel = None
     counts: dict[str, dict[str, int]] = {}
     for mech in declared_mechanisms(after):
         counts[mech] = {b: 0 for b in BUCKETS}
     for rec in after:
         mech = mechanism_of(rec)
         row = counts.setdefault(mech, {b: 0 for b in BUCKETS})
-        bucket = bucket_of(rec, panel, today=today,
+        bucket = bucket_of(rec, today=today,
                            quarantined=str(rec.get("prediction_id")) in q_ids)
         row[bucket] = row.get(bucket, 0) + 1
 

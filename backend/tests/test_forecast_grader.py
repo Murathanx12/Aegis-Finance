@@ -146,8 +146,8 @@ def test_an_observable_no_grader_knows_is_MECHANISM_HAS_NO_GRADER():
     rec = {"prediction_id": "x", "ticker": "AAA", "observable": "vibes_improve",
            "resolves_after": str(_today() - timedelta(days=1)),
            "horizon_days": 20, "outcome": None}
-    assert FG.bucket_of(rec, None, today=_today()) == "MECHANISM_HAS_NO_GRADER"
-    assert FG.refusal_for(rec, None, today=_today()) == "MECHANISM_HAS_NO_GRADER"
+    assert FG.bucket_of(rec, today=_today()) == "MECHANISM_HAS_NO_GRADER"
+    assert FG.refusal_for(rec) == "MECHANISM_HAS_NO_GRADER"
 
 
 @pytest.mark.parametrize("rec,why", [
@@ -161,14 +161,14 @@ def test_a_record_missing_what_its_observable_needs_is_RECORD_LACKS_TARGET(
         rec, why):
     full = {"prediction_id": "x", "horizon_days": 20, "outcome": None,
             "resolves_after": str(_today() - timedelta(days=1)), **rec}
-    assert FG.bucket_of(full, None, today=_today()) == "RECORD_LACKS_TARGET", why
+    assert FG.bucket_of(full, today=_today()) == "RECORD_LACKS_TARGET", why
 
 
 def test_a_record_with_no_readable_resolution_date_is_not_parked_in_not_yet_due():
     """The one bucket that is not a finding must not absorb a broken record."""
     rec = {"prediction_id": "x", "ticker": "AAA", "observable": "return_sign",
            "horizon_days": 20, "outcome": None, "resolves_after": "never"}
-    assert FG.bucket_of(rec, None, today=_today()) == "RECORD_LACKS_TARGET"
+    assert FG.bucket_of(rec, today=_today()) == "RECORD_LACKS_TARGET"
 
 
 def test_a_record_whose_window_is_still_open_is_not_yet_due(tmp_path, local_fetch):
