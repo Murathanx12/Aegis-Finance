@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import ast
 import json
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
@@ -474,5 +474,14 @@ def test_the_output_name_moves_with_the_run_date():
     output path that did not carry it would overwrite a committed receipt,
     which is exactly what three idle-queue jobs did on 2026-09-18."""
     assert R.RUN_DATE in str(R.output_path())
+    # YESTERDAY is admissible, and this is not a loosened assertion: `RUN_DATE`
+    # is computed at IMPORT and compared here at ASSERT time. A 14-minute suite
+    # that started at 23:59 on 2026-09-20 failed this line at 00:13 on 09-21
+    # having changed nothing about the module — a red suite produced by the
+    # clock rather than by the code, which is the same family as CLAUDE.md
+    # session protocol 5 (a fixture must not encode a calendar moment). What
+    # the test is FOR is unchanged: the run date reaches the output path, and
+    # it is either the declared `NIGHT_RUN_DATE` or the day the module loaded.
     assert R.RUN_DATE in (date.today().isoformat(),
+                          (date.today() - timedelta(days=1)).isoformat(),
                           __import__("os").getenv("NIGHT_RUN_DATE"))
