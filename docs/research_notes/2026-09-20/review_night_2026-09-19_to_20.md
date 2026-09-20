@@ -152,8 +152,13 @@ Spec Part B + D built: `backend/services/roi_rank.py` (score = measured net retu
 
 **What this says, plainly:** the engine now has the rule Murat asked for, and nothing in the repo qualifies for it. The signals with a measured per-name net read are insider (+0.17%/mo, t 1.40), small-cap profitability (+0.24%/mo, no t on the return) and their fusion (+0.15%/mo, t 1.66); low-vol, short interest, rating drift have no per-name net magnitude; earnings surprise is measured inverted; momentum is closed. The best number on the board, Book F seasonality (+0.43%/mo, t 3.12), is a BOOK read against its own twin and cannot be attached to a name. So "highest ROI among sure-enough candidates" is currently the empty set, printed as such on every row — which is the honest version of "it can't be sure so it doesn't make one". The way to a non-empty set is measurement, not code: net per-name reads with date blocks for the signals the committee already scores, and the pre-registered books accruing forward.
 
-### Building at the time of writing
-- **The scenario gym (chunk 18d, spec Part C)** — local model only, smoke N tonight, full N on the next unattended night; its output enters only as `gut_signal` with a measured reliability weight, NOT_ADOPTED until N ≥ 300 and a forward record exists.
+### The scenario gym (chunk 18d, spec Part C) — landed `9855fa9d`, CI green, smoke run tonight
+
+`scripts/night_scenario_gym.py`, job `S2_scenario_gym`: real decision points masked into fiction the way X_anon_gap masks them, one good twin and one bad twin each (deterministic, from the vocabulary's direction priors), the 7B reader commits to {BUY/SHORT/HOLD/CASH, size, expected 20-day return, confidence, falsifier}, graded on the real outcome and on whether the decision MOVES the right way on the twins. Smoke, 20 cells × 6 arms, 127 s, $0: gut score 0.55; lift over sign-matched controls +14.5 pp (good +5.3 pp t 0.53, bad +23.7 pp t 1.82); 60% HOLD/CASH so the return leg refuses (8 directional calls); zero schema refusals because the schema rides in the system message. `adoption: NOT_ADOPTED — reliability_weight 0 until N ≥ 300 and a forward record exists`.
+
+**The finding that matters:** the first pass reported a bad-twin lift of +52.6 pp, t 3.89, and it was an artefact — an adverse sentence differenced against a favourable one measures VALENCE, not relevance. With each twin differenced against an unrelated development of its own sign the number halves. Roughly half of the apparent "gut" was the model following the tone of the last sentence. That is now a pinned test, and it is the reason the gym can only ever enter as one measured field.
+
+Full N = 300 (1,800 local calls, ~32 min) is queued for the next unattended night: `NIGHT_QUEUE="S2_scenario_gym:90"`.
 
 ### Not done, in order of value
 1. The scenario gym's FULL run (N ≥ 300) on the next unattended night, then its reliability read.
