@@ -49,6 +49,21 @@ async def _prewarm_cache():
     import asyncio
     set_cache_status("pending")
 
+    if _warm_skip():
+        # 2026-09-20: the warm loop WAS the Railway bill. `railway metrics` on
+        # the website backend read 0.58 vCPU average with 29.8 vCPU peaks and
+        # 829 MB average memory -- the 80-ticker screener, the Monte Carlo and
+        # the sector pass, recomputed every TTL for nobody. Murat: "it doesn't
+        # have to run all the time" and a $20/month ceiling. With the skip set
+        # every endpoint still works; the first caller pays the compute and
+        # the cache serves the rest. The status says SKIPPED, not READY: a
+        # health page that read "ready" over an empty cache would be lying.
+        set_cache_status("skipped", "AEGIS_WARM_SKIP=1: prewarm and the "
+                         "endpoint warm loop are not started")
+        logger.info("AEGIS_WARM_SKIP=1: no prewarm, no PI fast-lane warm, no "
+                    "endpoint warm loop; caches fill on first request")
+        return
+
     def _note_no_fred_fetch(reason: str) -> None:
         """A prewarm that died before/inside the FRED fetch left NOTHING on the
         health page: zero recorded passes reads the same as a quiet, healthy
@@ -233,6 +248,18 @@ async def _prewarm_pi_fast_lanes():
         logger.info("PI fast-lane prewarm: %d/%d succeeded", ok, len(jobs))
     except Exception as e:
         logger.warning("PI fast-lane prewarm failed (non-fatal): %s", e)
+
+
+def _warm_skip() -> bool:
+    """True when the deployment must not spend CPU warming caches for nobody.
+
+    Read at call time, not import time, so a test can flip it and so the
+    Railway variable takes effect on the redeploy it triggers. Declared in
+    `backend/config.py` as `WARM_SKIP` (env `AEGIS_WARM_SKIP`).
+    """
+    from backend import config as _cfg
+    return bool(getattr(_cfg, "WARM_SKIP", False)) or (
+        os.getenv("AEGIS_WARM_SKIP", "") in ("1", "true", "yes"))
 
 
 def _desktop_background_off() -> bool:

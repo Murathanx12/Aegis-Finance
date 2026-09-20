@@ -2231,6 +2231,19 @@ RESEARCH_LLM_ENABLED = os.getenv("AEGIS_RESEARCH_LLM", "1") not in ("0", "false"
 #: changes no number, no sizing and no permission: nothing about a disclaimer's
 #: visibility gives an LLM authority over capital.
 PERSONAL_MODE = os.getenv("AEGIS_PERSONAL_MODE", "0") in ("1", "true", "yes")
+
+#: 2026-09-20: the website backend's warm loop was the Railway bill. Measured
+#: with `railway metrics` on `selfless-courage/Aegis-Finance`: 0.58 vCPU average
+#: (peaks 29.8 vCPU) and 829 MB average, recomputing the 80-ticker screener,
+#: the Monte Carlo and the sector pass every TTL for nobody -- ~$20/month of
+#: the ~$47 total against Murat's $20 ceiling for the whole of Railway. With
+#: this set the deployment starts no prewarm and no warm loop; every endpoint
+#: still answers, the first caller pays the compute and the cache serves the
+#: rest. `/api/health` reports `cache.status == "skipped"` rather than "ready"
+#: so nobody reads a warm cache into an empty one. Set on Railway as
+#: `AEGIS_WARM_SKIP=1`; the desktop app is unaffected (it has its own gate,
+#: `main._desktop_background_off`).
+WARM_SKIP = os.getenv("AEGIS_WARM_SKIP", "0") in ("1", "true", "yes")
 #: Per-campaign ceilings. Deliberately generous relative to observed cost
 #: (~$5.26 for 40M tokens historically) and deliberately FINITE.
 #: THE CEILING MUST BIND BEFORE THE VENDOR BALANCE DOES.
