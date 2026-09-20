@@ -1522,6 +1522,17 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # BY NAME, because neither social key exists yet.
         "S1_social_features": _lazy("scripts.night_social_features",
                                     "S1_social_features"),
+        # 2026-09-21, chunk 22: the map from a signal's DECILE to a RETURN
+        # MAGNITUDE, out of sample, at 5/21/63/126 sessions. It reads only
+        # local parquet (CRSP daily, the JKP characteristics, the SEC Form 4
+        # bulk panel), calls no model and charges no network. RESUMABLE per
+        # signal: each signal's file is written as it finishes and IS the
+        # cursor, because a job killed at its time limit writes no receipt.
+        # The family it calibrates is DERIVED (adapters x registry PICKER
+        # permission), never listed, and a leadable signal with no
+        # point-in-time panel on disk is NO_PANEL naming the table.
+        "C7_signal_calibration": _lazy("scripts.calibrate_signal_return",
+                                       "C7_signal_calibration"),
         # E3 2026-09-13, chunk 9: adaptive conformal intervals (Gibbs-Candes
         # 2021 + Barber et al. 2023 recency weights), graded by REALISED
         # coverage per volatility tercile. Runs on whichever head first shows a
@@ -1772,6 +1783,11 @@ JOB_STAGES = {
     # feature date. It composes no portfolio and charges no cost, so its
     # artefact is `signal` and nothing downstream may read it as weights.
     "S1_social_features": "signal",
+    # C7 turns a score panel and a price tape into a FEATURE table -- the map
+    # from decile to expected return that `roi_rank` reads as a per-name mu.
+    # It composes no portfolio and holds no weight: the decile spread it prices
+    # is the EVIDENCE for the map, and nothing downstream may read it as a book.
+    "C7_signal_calibration": "features",
     # The gym turns corpus text and typed FEATURE rows into a graded property
     # of the READER (does its decision move with the story?). It composes no
     # portfolio, and the long-short it prices is a secondary diagnostic that
@@ -1801,7 +1817,7 @@ TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 #: jobs whose script checkpoints per unit of work and accepts `--resume`.
 #: Grow this as long jobs gain checkpoints; a job NOT in here is restarted from
 #: zero, which is honest but wasteful, and the receipt says which happened.
-RESUMABLE = {"G3_evolve_v2", "L2_typed_events", "N9_library_autopsy",
+RESUMABLE = {"C7_signal_calibration", "G3_evolve_v2", "L2_typed_events", "N9_library_autopsy",
              # S2 appends one line per answer and derives its cursor from that
              # file, so `--resume` skips every (arm, cell) already on disk. A
              # killed 90-minute run continues rather than re-asking.
@@ -1871,6 +1887,8 @@ def main(argv=None) -> int:
         # continuation, so there is no non-resuming mode to select. It is in
         # RESUMABLE so the flag is accepted rather than refused.
         payload = fn(smoke=a.smoke, run=a.run)
+    elif a.job == "C7_signal_calibration":
+        payload = fn(smoke=a.smoke, run=a.run, resume=a.resume)
     elif a.job == "L2_retype_v3":
         payload = fn(smoke=a.smoke, run=a.run, workers=a.workers)
     elif a.job in ("E2_embedding_horizon", "E1_event_head", "E3_adaptive_conformal",

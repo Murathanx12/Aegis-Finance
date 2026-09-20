@@ -2008,6 +2008,135 @@ SIGNAL_MEASURED_RETURN: dict = {
 }
 
 
+# ── RANK -> RETURN CALIBRATION (chunk 22, 2026-09-21) ────────────────────────
+# `scripts/calibrate_signal_return.py` (night job `C7_signal_calibration`) and
+# `backend/services/signal_calibration.py`. Murat's review of 2026-09-20,
+# issue 1: "the ROI engine is not yet an ROI engine. Expected return comes from
+# the leading signal FAMILY's average; downside from the ticker's vol. Needed:
+# calibrate signal strength into return magnitude — an out-of-sample map from
+# signal decile to expected abnormal return and downside at 5/21/63/126
+# sessions, with uncertainty, so each company gets its own mu_i."
+#
+# Everything here is the DECLARED half of that construction. The measured half
+# lives on disk, one JSON per signal per run date, and `roi_rank` reads it by
+# receipt path (`mu_basis` on the row) rather than by import.
+
+#: The four horizons, in SESSIONS. Named in Murat's review, kept in sessions
+#: rather than months because the forward return is computed on the session
+#: index of the CRSP tape, where a "month" is 21 sessions by convention and not
+#: by calendar.
+CALIB_HORIZONS_SESSIONS: tuple = (5, 21, 63, 126)
+
+#: The horizon the VERDICT is taken at, and the one `roi_rank` reads a per-name
+#: mu from. 21 sessions ~ one month, which is the unit every measured net read
+#: in `SIGNAL_MEASURED_RETURN` is already quoted in — so the calibrated number
+#: and the family number it replaces are the same quantity.
+CALIB_DECIDING_HORIZON_SESSIONS = 21
+
+#: Sessions per month on the tape. One constant, so nothing anywhere turns 21
+#: sessions into "about a month" twice with two different numbers.
+CALIB_SESSIONS_PER_MONTH = 21.0
+
+#: Deciles. Ten buckets of the cross-sectional score, cut on TRAINING data only.
+CALIB_N_DECILES = 10
+
+#: The downside percentile. Murat asked for "downside" beside the mean; the
+#: 20th percentile of the decile's own abnormal-return distribution is what a
+#: name in that decile actually risks in a bad fifth of outcomes, and it is a
+#: MEASURED quantity rather than a distributional assumption about vol.
+CALIB_DOWNSIDE_PCTILE = 20.0
+
+#: Walk-forward: expanding window, refit yearly, first test year = the panel's
+#: first year + this. Three years of training before the first out-of-sample
+#: read; nothing before that year is ever scored.
+CALIB_FIRST_TEST_YEAR_OFFSET = 3
+
+#: Block bootstrap on the decile statistics: MONTH blocks (the dependence unit,
+#: CANON §58), drawn with replacement.
+CALIB_BOOTSTRAP_DRAWS = 400
+CALIB_BOOTSTRAP_SEED = 20260921
+
+#: The cost ruler, per side, on the implied turnover of a monthly-rebalanced
+#: decile portfolio. A replaced name is sold and bought, so a one-way turnover
+#: of tau costs 2 x tau x this per month. 25 bps/side is the ruler the roadmap
+#: names for this chunk; quote the rate or do not quote the count.
+CALIB_COST_BPS_PER_SIDE = 25.0
+
+#: Holm alpha over the family of (signal x horizon) spreads. EXPORT rule
+#: (CANON §63): this table sizes positions, so it is judged at the family-wise
+#: error rate and not at an FDR.
+CALIB_HOLM_ALPHA = 0.05
+
+#: A CALIBRATED verdict needs the decile map to be MONOTONE, not merely to have
+#: a positive end-to-end spread: a U-shape with a high top decile is not a map
+#: from signal strength to return magnitude. Spearman of decile index against
+#: decile mean, over the non-empty deciles.
+CALIB_MONOTONE_MIN_SPEARMAN = 0.60
+
+#: Refusal floors. A decile-month cell with fewer names than this contributes
+#: no spread observation; a signal with fewer month blocks than this is
+#: REFUSED by name rather than graded on a window nobody would believe.
+CALIB_MIN_NAMES_PER_DECILE = 5
+CALIB_MIN_BLOCKS = 24
+
+#: How many NON-EMPTY deciles the monotonicity test needs before it is allowed
+#: to answer at all. A score with a large tied block — the insider score is
+#: zero for every name with no open-market Form 4 in its lookback — collapses
+#: the bottom deciles into one bucket, and a Spearman over two points is
+#: trivially +/-1. Below this the monotone test reports CANNOT DETERMINE and
+#: the signal cannot reach CALIBRATED, which is the conservative direction:
+#: EXPLORE still funds it, EXPLOIT does not.
+CALIB_MIN_NONEMPTY_DECILES = 4
+
+#: Draws in the second null test — the shuffled-panel DISTRIBUTION the real
+#: spread and the real monotonicity are placed against. The first null test is
+#: one full end-to-end shuffled replication (cut points refit on the shuffled
+#: training panel); this is the same shuffle repeated on the out-of-sample
+#: panel to give an empirical percentile. A null owes two tests.
+CALIB_NULL_DRAWS = 200
+
+#: The first calendar year the panel may start at. 2006 is when the SEC Form 4
+#: bulk panel begins (`sec_insider/insider_events_v1.parquet`); the price tape
+#: reaches back to 1990 and the JKP characteristics to 1926, so this is the
+#: binding constraint for the insider and fusion legs and is applied to all
+#: three so the three verdicts are read on the same window.
+CALIB_START_YEAR = 2006
+
+#: The insider score's own lookback, in CALENDAR days. It must equal the live
+#: path's (`insider_trading.get_insider_transactions(lookback_days=90)`) or the
+#: calibration is a map for a score the engine does not compute.
+CALIB_INSIDER_LOOKBACK_DAYS = 90
+
+#: Where the per-signal calibration JSONs are written and read, relative to the
+#: repo root. One directory, so `roi_rank` reads by path and the path IS the
+#: receipt.
+CALIB_OUTPUT_DIR = "backend/data/optimus/calibration"
+
+#: How stale a calibration file may be before `roi_rank` refuses to size on it,
+#: in days, dated by the file's OWN `asof` stamp and never by `st_mtime`
+#: (session protocol 7). A year: the map is an out-of-sample read over two
+#: decades and does not turn over weekly, but a file nobody has rebuilt in over
+#: a year is a number that has stopped being maintained.
+CALIB_MAX_AGE_DAYS = 366
+
+#: The time box for the night job, in minutes. A job killed at its limit writes
+#: no receipt (2026-09-10, G3 at generation 340), so this job writes each
+#: signal's file as it finishes and treats an existing file as its cursor.
+CALIB_TIME_BOX_MINUTES = 60
+
+#: WHERE THE PER-NAME DOWNSIDE COMES FROM once a signal is CALIBRATED.
+#: "decile_p20" — the measured 20th percentile of that decile's own abnormal
+#: returns. "vol" restores chunk 18c's `z x vol_annual x sqrt(h/12)` for every
+#: name. The vol path is NEVER deleted: it is the fallback whenever the decile
+#: has no usable p20 (a non-negative 20th percentile, or too few names), and
+#: `roi_rank` PRINTS which of the two produced the number on every row.
+ROI_DOWNSIDE_SOURCE = "decile_p20"
+
+#: ONE flag for the whole of chunk 22. False and `roi_rank` reads only
+#: `SIGNAL_MEASURED_RETURN`, exactly as it did on 2026-09-20.
+ROI_USE_CALIBRATION = True
+
+
 # ── TRANSACTION-ENSEMBLE-1 (prereg frozen at Aegis module c5b81aa) ───────────
 # Generator parameters for the licensed substitute for Murat's missing broker
 # records: an ensemble of transaction histories consistent with declared
