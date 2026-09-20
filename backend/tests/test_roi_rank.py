@@ -75,6 +75,12 @@ def measured(monkeypatch):
     monkeypatch.setattr(config, "SIGNAL_MEASURED_RETURN", _table(),
                         raising=False)
     monkeypatch.setattr(config, "IC_ROI_RANKING", True, raising=False)
+    # CHUNK 18c's world, deliberately: mu from the family row, downside from
+    # the ticker's vol. Chunk 22 (2026-09-21) moved both INPUTS and gated
+    # EXPLOIT on a CALIBRATED decile map; `ROI_USE_CALIBRATION = False`
+    # restores this file's subject byte for byte, and the chunk-22 behaviour is
+    # tested in `test_signal_calibration.py` against a map planted in tmp_path.
+    monkeypatch.setattr(config, "ROI_USE_CALIBRATION", False, raising=False)
     return _table()
 
 

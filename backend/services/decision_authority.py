@@ -20,18 +20,24 @@ Every candidate that has already cleared the HARD gates
 positive ranking score — unchanged, and nothing here can reopen one) is
 assigned exactly ONE authority:
 
-* ``EXPLOIT`` — the leading signal carries a CALIBRATED positive net return
-  whose own measured ``t`` clears `config.ROI_MIN_T`. Sized by `roi_rank`
-  exactly as it was this morning: fractional Kelly inside
-  `IC_SINGLE_NAME_TILT_CAP` and `IC_TOTAL_TILT_BUDGET`. **Today this set is
-  empty and printed empty** — no signal in `config.SIGNAL_MEASURED_RETURN`
-  clears the floor, which is a fact about the programme's evidence and the
-  reason chunk 22 (rank -> return calibration) exists.
+* ``EXPLOIT`` — the leading signal carries a **CALIBRATED** decile map
+  (`signal_calibration`, chunk 22) AND the ROI rule sized the name above zero
+  on it: fractional Kelly inside `IC_SINGLE_NAME_TILT_CAP` and
+  `IC_TOTAL_TILT_BUDGET`, unchanged. From 2026-09-21 the family-mean row is no
+  longer sufficient even when its `t` clears `ROI_MIN_T` — one number per
+  signal, the same for every name that signal leads, is the defect chunk 22
+  exists to end, and gating here is what makes "EXPLOIT can become non-empty
+  only through measurement" structural rather than a sentence. **On 2026-09-21
+  this set is empty and printed empty**: the first calibration run graded all
+  three leadable signals WEAK.
 * ``EXPLORE`` — a MEASURED but unproven read: the signal has a row in
   `SIGNAL_MEASURED_RETURN` with a positive monthly net, and its ``t`` is below
   the floor or is a named absence. Sized out of a fixed paper-risk budget
   (`config.EXPLORE_BUDGET_PCT`, `config.EXPLORE_PER_NAME_PCT`) allocated by
-  THOMPSON SAMPLING over each hypothesis's posterior.
+  THOMPSON SAMPLING over each hypothesis's posterior. Chunk 22: when the
+  candidate's own decile carries a **WEAK** calibration, that decile's measured
+  mean and its block-bootstrap se ARE the posterior — so two names on one
+  signal in different deciles no longer draw from one distribution.
 * ``REFUSED`` — everything else, with the sentence that names why. **A name
   with NO measured read is REFUSED, not explored**: exploration is for
   measured-but-unproven, never for nothing. `NO_EVIDENCE` was refused at the
@@ -94,7 +100,7 @@ from typing import Any, Optional
 import numpy as np
 
 from backend import config
-from backend.services import roi_rank
+from backend.services import roi_rank, signal_calibration
 
 logger = logging.getLogger(__name__)
 
@@ -141,14 +147,49 @@ def seed_for(asof: date | str | None, ticker: str, signal: str) -> int:
                           "big")
 
 
-def posterior(row: dict) -> tuple[float, float, str]:
+#: What produced an EXPLORE posterior. Two values and no third.
+POSTERIOR_DECILE = "calibration_decile"
+POSTERIOR_FAMILY = "family_mean"
+
+
+def posterior(row: dict, cal: Any = None) -> tuple[float, float, str]:
+    """(mean %/month, se %/month, basis). The 3-tuple callers already use."""
+    return posterior_read(row, cal)[:3]
+
+
+def posterior_read(row: dict, cal: Any = None
+                   ) -> tuple[float, float, str, str]:
     """(mean %/month, se %/month, basis) for one measured row.
 
     The mean is the receipt's own `monthly_net_pct`. The se is derived from the
     receipt's own t; a named absence widens it instead of failing, because
     "nobody computed the t" is a statement about uncertainty and this is the
     one place in the programme that is allowed to act on uncertainty.
+
+    CHUNK 22: when a WEAK calibration exists for this candidate's own decile,
+    it wins — its mean is that decile's measured net abnormal return and its se
+    comes from the decile's own block-bootstrap CI, so two names sharing a
+    signal but sitting in different deciles no longer draw from one posterior.
+    WEAK is exactly the verdict that belongs here: measured, positive, not
+    proven. A CALIBRATED read never reaches this function (it is EXPLOIT's),
+    and INVERTED / NO_PANEL leave the candidate on the family row, which is
+    where chunk 21 put it.
     """
+    if cal is not None and getattr(cal, "verdict", None) == signal_calibration.WEAK:
+        mu = _as_float(getattr(cal, "mu_pct", None))
+        se_pct = _as_float(getattr(cal, "se_pct", None))
+        months = max(float(getattr(cal, "horizon_months", 0.0) or 0.0), 1e-9)
+        if mu is not None and se_pct is not None and se_pct > 0:
+            mean_m = mu / months
+            se_m = se_pct / months
+            return mean_m, se_m, (
+                f"decile {cal.decile} of {cal.signal} on {cal.receipt} (asof "
+                f"{cal.asof}, verdict WEAK): mean {mu:+.4f}% over "
+                f"{months:g} month(s) = {mean_m:+.4f} %/mo, se from the "
+                f"decile's own 95% block-bootstrap CI "
+                f"[{cal.ci_lo_pct}, {cal.ci_hi_pct}]% = {se_m:.4f} %/mo. This "
+                f"is the candidate's OWN decile, not its signal family's "
+                f"average"), POSTERIOR_DECILE
     mean = float(row["monthly_net_pct"])
     t_stat = _as_float(row.get("t"))
     if t_stat is not None and abs(t_stat) > 0:
@@ -166,7 +207,7 @@ def posterior(row: dict) -> tuple[float, float, str]:
         se = float(config.EXPLORE_UNKNOWN_T_SE_MULT) * max(abs(mean), 1e-6)
         basis += (" ; the derived se was not positive, so the unknown-t width "
                   "is used and named")
-    return mean, se, basis
+    return mean, se, basis, POSTERIOR_FAMILY
 
 
 def _cost_pct_per_month(horizon_months: float) -> tuple[float, str]:
@@ -287,7 +328,8 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
            single_name_cap: Optional[float] = None,
            total_budget: Optional[float] = None,
            explore_budget: Optional[float] = None,
-           explore_per_name: Optional[float] = None) -> AuthoritySplit:
+           explore_per_name: Optional[float] = None,
+           calibration_root: Optional[Any] = None) -> AuthoritySplit:
     """Split the already-admissible into EXPLOIT, EXPLORE and REFUSED.
 
     `recs` arrive in today's order (`(rank, -ranking_score)`); the hard gates
@@ -308,7 +350,8 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
     roi = roi_rank.rank(recs, candidates=candidates, horizon_months=horizon,
                         personality=personality, max_names=max_names,
                         single_name_cap=single_name_cap,
-                        total_budget=total_budget)
+                        total_budget=total_budget, asof=asof_s,
+                        calibration_root=calibration_root)
 
     authority_of: dict[str, str] = {}
     weights: dict[str, float] = {}
@@ -332,6 +375,26 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
                 f"sized it at {w:.6f} of equity, which is not a position "
                 f"(roi_score {body.get('roi_score')}, receipt "
                 f"{body.get('roi_basis')})")
+            authority_of[t] = REFUSED
+            continue
+        if (bool(getattr(config, "ROI_USE_CALIBRATION", False))
+                and body.get("calibration_verdict")
+                != signal_calibration.CALIBRATED):
+            # CHUNK 22. EXPLOIT capital is licensed by a MEASURED decile map
+            # and by nothing else, so that the set can become non-empty only
+            # through measurement. A family-mean row that cleared ROI_MIN_T is
+            # still a number typed off a receipt by hand, one per signal, the
+            # same for every name that signal leads — which is precisely the
+            # defect this chunk exists to end.
+            refused[t] = (
+                f"the ROI rule scored {t} at {body.get('roi_score')} from its "
+                f"{body.get('mu_source')} read, and EXPLOIT requires a "
+                f"CALIBRATED decile map for the leading signal "
+                f"{body.get('signal')!r}. The calibration says "
+                f"{body.get('calibration_verdict') or body.get('calibration_verdict_seen') or 'nothing — no file'}"
+                f", so this name is not exploited. It is not frozen either: an "
+                f"unproven positive read is EXPLORE's, below "
+                f"(config.ROI_USE_CALIBRATION)")
             authority_of[t] = REFUSED
             continue
         authority_of[t] = EXPLOIT
@@ -396,14 +459,20 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
                 f"a proven one as a consolation")
             authority_of[ticker] = REFUSED
             continue
-        mean = _as_float(row.get("monthly_net_pct"))
-        if mean is None or mean <= float(config.EXPLORE_MIN_NET_PCT):
+        cal = None
+        cal_why = "config.ROI_USE_CALIBRATION is off"
+        if bool(getattr(config, "ROI_USE_CALIBRATION", False)):
+            cal, cal_why = signal_calibration.read_for(
+                sig, roi_rank.raw_score_of(candidates, ticker, rec, sig),
+                root=calibration_root, asof=asof_s)
+        mean_pct, se, se_basis, post_src = posterior_read(row, cal)
+        if mean_pct is None or mean_pct <= float(config.EXPLORE_MIN_NET_PCT):
             refused[ticker] = (
-                f"{sig}'s measured net read is {row.get('monthly_net_pct')}"
+                f"{sig}'s measured net read is {mean_pct}"
                 f"%/month, which is not above EXPLORE_MIN_NET_PCT "
                 f"{float(config.EXPLORE_MIN_NET_PCT):g} — a hypothesis with no "
                 f"positive expected value is not worth paper risk "
-                f"(receipt {row.get('receipt')})")
+                f"({se_basis})")
             authority_of[ticker] = REFUSED
             continue
         vol_annual = _vol_of(candidates, ticker, rec)
@@ -416,7 +485,6 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             authority_of[ticker] = REFUSED
             continue
 
-        mean_pct, se, se_basis = posterior(row)
         seed = seed_for(asof_s, ticker, sig)
         draw = float(np.random.default_rng(seed).normal(mean_pct, se))
         cost, cost_basis = _cost_pct_per_month(horizon)
@@ -448,8 +516,16 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
                 "terms in percent per month"),
             "measured_t": row.get("t"),
             "measured_t_basis": row.get("t_basis"),
-            "receipt": row.get("receipt"),
-            "measured_on": row.get("measured_on"),
+            "receipt": (cal.receipt if post_src == POSTERIOR_DECILE
+                        else row.get("receipt")),
+            "measured_on": (cal.asof if post_src == POSTERIOR_DECILE
+                            else row.get("measured_on")),
+            "posterior_source": post_src,
+            "calibration_verdict": (getattr(cal, "verdict", None)
+                                    if cal is not None else None),
+            "calibration_decile": (getattr(cal, "decile", None)
+                                   if cal is not None else None),
+            "calibration_note": cal_why,
         })
 
     # 3. THE BUDGET. Ranked by exploration score, filled top-down, and the
@@ -524,6 +600,16 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
                    "feedback_murat_review_2026-09-20_evening.md issue 2"),
         "asof": asof_s,
         "legacy_heuristic_sizing": bool(config.IC_LEGACY_HEURISTIC_SIZING),
+        "use_calibration": bool(getattr(config, "ROI_USE_CALIBRATION", False)),
+        "calibration_table": signal_calibration.table(calibration_root,
+                                                      asof=asof_s),
+        "exploit_gate": (
+            "CHUNK 22: a name reaches EXPLOIT only when its leading signal "
+            "carries a CALIBRATED decile map AND the ROI rule sized it above "
+            "zero. A family-mean row that cleared ROI_MIN_T is no longer "
+            "enough: one number per signal, the same for every name it leads, "
+            "is the defect chunk 22 exists to end. EXPLOIT can therefore "
+            "become non-empty only through measurement."),
         "min_t": min_t,
         "horizon_months": horizon,
         "n_considered": len(by_ticker),
@@ -582,5 +668,6 @@ def explore_worst_case(*, n_names: int, per_name: float,
 
 
 __all__ = ["ACTIVE_AUTHORITIES", "AUTHORITIES", "AuthoritySplit", "EXPLOIT",
-           "EXPLORE", "REFUSED", "assign", "explore_worst_case", "posterior",
+           "EXPLORE", "POSTERIOR_DECILE", "POSTERIOR_FAMILY", "REFUSED",
+           "assign", "explore_worst_case", "posterior", "posterior_read",
            "seed_for"]

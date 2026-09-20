@@ -20,6 +20,33 @@ take the top K, and size each by FRACTIONAL KELLY. Nothing here can turn a
 `REFUSED` into a `BUY`: this module never sees a candidate the gates rejected,
 and it never relaxes a cap. It reorders the admissible and it resizes them.
 
+CHUNK 22 (2026-09-21): WHERE `mu_i` COMES FROM NOW
+==================================================
+Murat's review of 2026-09-20, issue 1: *"expected return comes from the leading
+signal FAMILY's average; downside from the ticker's vol. So among names sharing
+a family the rule prefers the lowest-vol name. Useful, but a different
+problem."* Both halves are answered here, and neither is a new formula — the
+rule is unchanged and the INPUTS moved:
+
+* **`expected_return_net`** now prefers the candidate's OWN score decile, read
+  by `signal_calibration` off the newest `CALIBRATED` file under
+  `config.CALIB_OUTPUT_DIR`. Two names sharing a signal but sitting in
+  different deciles no longer inherit the same number. The decile's own
+  turnover cost is already charged in that cell.
+* **`downside`** now prefers that decile's MEASURED 20th percentile
+  (`config.ROI_DOWNSIDE_SOURCE = "decile_p20"`). The volatility path is kept,
+  is the fallback whenever the p20 is unusable, and every row PRINTS which of
+  the two produced the number (`downside_source`).
+* **`t`** is then the signal's own 21-session spread t off that file, not a
+  number copied out of a config by hand.
+
+Precedence, in one sentence: a `CALIBRATED` file beats the family row; `WEAK`
+does not reach here at all (it feeds EXPLORE's posterior in
+`decision_authority`); `INVERTED` and `NO_PANEL` leave the candidate exactly
+where chunk 21 put it, on the family row. Every scored row carries `mu_source`
+and `mu_basis` — the receipt path the number came off — so a reader never has
+to guess which of the two produced it.
+
 THE HONESTY RULE, WHICH IS THE CENTRE OF THE THING
 ==================================================
 A candidate gets an ROI score **only** when BOTH numbers come from a MEASURED
@@ -96,6 +123,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from backend import config
+from backend.services import signal_calibration
 
 logger = logging.getLogger(__name__)
 
@@ -239,6 +267,169 @@ def downside(vol_annual: Optional[float], *, horizon_months: float,
         f"= {100 * zz * vol_h:.2f}% at the horizon (config.ROI_DOWNSIDE_Z)")
 
 
+#: What produced the `mu` on a scored row. Two values and no third.
+MU_CALIBRATION = "calibration"
+MU_FAMILY_MEAN = "family_mean"
+
+#: What produced the `downside` on a scored row. Two values and no third.
+DN_DECILE_P20 = "decile_p20"
+DN_VOL = "vol"
+
+
+@dataclass
+class ResolvedReturn:
+    """The expected return for ONE candidate, and where the number came from."""
+
+    er: float
+    horizon_months: float
+    t: Optional[float]
+    t_text: Any
+    basis: str
+    receipt: str
+    source: str
+    measured_on: str
+    n_blocks: Any = None
+    verdict: Optional[str] = None
+    decile: Optional[int] = None
+    downside_p20_pct: Optional[float] = None
+    se_pct: Optional[float] = None
+    monthly_net_pct: Optional[float] = None
+
+
+def adapter_field(signal_id: str) -> Optional[str]:
+    """The candidate FIELD a signal's score is read off, from the adapters.
+
+    Derived from `recommendation._ADAPTERS` rather than listed: the adapter is
+    what actually reads the data, and a second list here would stop matching
+    the engine the first time one moved.
+    """
+    from backend.services.recommendation import _ADAPTERS
+
+    for ad in _ADAPTERS:
+        if ad.signal_id == signal_id:
+            return ad.field_name
+    return None
+
+
+def raw_score_of(candidates: Optional[dict], ticker: str, rec: Any,
+                 signal_id: str) -> Optional[float]:
+    """The candidate's RAW score for its leading signal, un-z-scored.
+
+    The calibration's cut points are quantiles of the raw score, so the raw
+    value is the only thing that can be placed in a decile. A cross-sectional
+    z-score of today's 43 candidates is a different quantity from the score the
+    panel was cut on, and using it would read someone else's decile.
+    """
+    field_name = adapter_field(signal_id)
+    if not field_name:
+        return None
+    cand = (candidates or {}).get(ticker) or {}
+    v = cand.get(field_name) if isinstance(cand, dict) else None
+    if v is None:
+        v = getattr(rec, field_name, None)
+    return _as_float(v)
+
+
+def resolve_expected_return(signal_id: str, *, ticker: str, rec: Any,
+                            candidates: Optional[dict],
+                            horizon_months: float,
+                            asof: Any = None,
+                            calibration_root: Optional[Path] = None
+                            ) -> tuple[Optional[ResolvedReturn], str, Optional[dict]]:
+    """(the resolved read, the reason when there is none, the calibration row).
+
+    PRECEDENCE, and it is the whole of chunk 22's contract with chunk 21:
+
+    1. a **CALIBRATED** file for this signal, at the candidate's OWN decile;
+    2. otherwise `config.SIGNAL_MEASURED_RETURN`'s family row, exactly as
+       chunk 18c left it.
+
+    `WEAK`, `INVERTED`, `NO_PANEL` and "no file" all fall to (2) and the
+    calibration row travels back so the caller can PRINT which verdict was
+    seen. A WEAK read is not discarded — `decision_authority` uses it for
+    EXPLORE's posterior — it simply may not size EXPLOIT capital.
+    """
+    cal_row: Optional[dict] = None
+    cal_note = "config.ROI_USE_CALIBRATION is off"
+    if getattr(config, "ROI_USE_CALIBRATION", False):
+        score = raw_score_of(candidates, ticker, rec, signal_id)
+        read, cal_note = signal_calibration.read_for(
+            signal_id, score, root=calibration_root, asof=asof)
+        if read is not None:
+            cal_row = read.as_row()
+            if read.is_exploitable:
+                return ResolvedReturn(
+                    er=float(read.mu_pct) / 100.0,
+                    horizon_months=float(read.horizon_months),
+                    t=_as_float(read.spread_t),
+                    t_text=read.spread_t,
+                    basis=read.basis,
+                    receipt=str(read.receipt),
+                    source=MU_CALIBRATION,
+                    measured_on=str(read.asof),
+                    n_blocks=read.n_date_blocks,
+                    verdict=read.verdict,
+                    decile=read.decile,
+                    downside_p20_pct=read.downside_p20_pct,
+                    se_pct=read.se_pct,
+                    monthly_net_pct=(float(read.mu_pct)
+                                     / max(float(read.horizon_months), 1e-9)),
+                ), "", cal_row
+    try:
+        er, er_basis, row = expected_return_net(signal_id,
+                                                horizon_months=horizon_months)
+    except MeasuredReturnError as exc:
+        return None, (
+            f"{NOT_CALIBRATED}: expected_return_net — the measured-return "
+            f"table REFUSED to answer for {signal_id!r}: {exc} "
+            f"(calibration: {cal_note})"), cal_row
+    if er is None or row is None:
+        return None, f"{er_basis} (calibration: {cal_note})", cal_row
+    return ResolvedReturn(
+        er=float(er), horizon_months=float(horizon_months),
+        t=_as_float(row["t"]), t_text=row["t"], basis=er_basis,
+        receipt=str(row["receipt"]), source=MU_FAMILY_MEAN,
+        measured_on=str(row["measured_on"]), n_blocks=row["n_blocks"],
+        verdict=(cal_row or {}).get("calibration_verdict"),
+        monthly_net_pct=_as_float(row["monthly_net_pct"]),
+    ), "", cal_row
+
+
+def downside_for(read: ResolvedReturn, vol_annual: Optional[float], *,
+                 z: float) -> tuple[Optional[float], str, str]:
+    """(downside magnitude as a FRACTION, basis, which source produced it).
+
+    `config.ROI_DOWNSIDE_SOURCE` declares the preference; the vol path is never
+    deleted and is the fallback whenever the measured p20 is unusable. The row
+    PRINTS the source either way, because "the decile's measured 20th
+    percentile" and "one sigma of this ticker's vol" are different claims and a
+    reader must never have to infer which one sized the position.
+    """
+    want = str(getattr(config, "ROI_DOWNSIDE_SOURCE", DN_VOL))
+    if want == DN_DECILE_P20:
+        p20 = _as_float(read.downside_p20_pct)
+        if p20 is not None and p20 < 0:
+            return abs(p20) / 100.0, (
+                f"the MEASURED 20th percentile of decile {read.decile}'s own "
+                f"abnormal returns at {read.horizon_months:g} months: "
+                f"{p20:.4f}% (config.ROI_DOWNSIDE_SOURCE={want!r}; receipt "
+                f"{read.receipt})"), DN_DECILE_P20
+        why = (f"decile {read.decile} carries no usable 20th percentile "
+               f"({read.downside_p20_pct!r} — a non-negative p20 is not a "
+               f"downside)" if read.source == MU_CALIBRATION
+               else f"this row's mu came from {read.source}, which carries no "
+                    f"decile distribution")
+        dn, basis = downside(vol_annual, horizon_months=read.horizon_months, z=z)
+        if dn is None:
+            return None, basis, DN_VOL
+        return dn, (f"{basis} — the VOL FALLBACK, used because {why} "
+                    f"(config.ROI_DOWNSIDE_SOURCE={want!r})"), DN_VOL
+    dn, basis = downside(vol_annual, horizon_months=read.horizon_months, z=z)
+    if dn is None:
+        return None, basis, DN_VOL
+    return dn, f"{basis} (config.ROI_DOWNSIDE_SOURCE={want!r})", DN_VOL
+
+
 def kelly_fraction_for(personality: Optional[str] = None) -> tuple[float, str]:
     """(fraction of FULL Kelly, basis). The four personalities, and no fifth.
 
@@ -316,7 +507,9 @@ def rank(recs: list[Any], *, candidates: Optional[dict] = None,
          personality: Optional[str] = None,
          max_names: Optional[int] = None,
          single_name_cap: Optional[float] = None,
-         total_budget: Optional[float] = None) -> RoiRanking:
+         total_budget: Optional[float] = None,
+         asof: Any = None,
+         calibration_root: Optional[Path] = None) -> RoiRanking:
     """Rank the ALREADY-ADMISSIBLE by ROI, size the measured ones by Kelly.
 
     `recs` must arrive in today's order (`(rank, -ranking_score)`), because
@@ -339,6 +532,7 @@ def rank(recs: list[Any], *, candidates: Optional[dict] = None,
     scored: list[dict] = []
     not_calibrated: dict[str, str] = {}
     by_ticker: dict[str, Any] = {}
+    calibration: dict[str, dict] = {}
 
     for rec in recs or []:
         ticker = str(getattr(rec, "ticker", "") or "")
@@ -352,60 +546,73 @@ def rank(recs: list[Any], *, candidates: Optional[dict] = None,
                 f"rank-bearing licensed signal, so there is no measured read to "
                 f"attach to it")
             continue
-        try:
-            er, er_basis, row = expected_return_net(sig, horizon_months=horizon)
-        except MeasuredReturnError as exc:
-            not_calibrated[ticker] = (
-                f"{NOT_CALIBRATED}: expected_return_net — the measured-return "
-                f"table REFUSED to answer for {sig!r}: {exc}")
+        read, why, cal_row = resolve_expected_return(
+            sig, ticker=ticker, rec=rec, candidates=candidates,
+            horizon_months=horizon, asof=asof,
+            calibration_root=calibration_root)
+        if read is None:
+            not_calibrated[ticker] = why
             continue
-        if er is None or row is None:
-            not_calibrated[ticker] = er_basis
-            continue
-        t_stat = _as_float(row["t"])
+        calibration.setdefault(ticker, cal_row or {})
+        t_stat = read.t
         if t_stat is None:
             not_calibrated[ticker] = (
-                f"{NOT_CALIBRATED}: confidence — {sig}'s receipt states a net "
-                f"return and NO t on that return ({row['t']}). "
-                f"{row['t_basis']} Without a t there is nothing for ROI_MIN_T "
+                f"{NOT_CALIBRATED}: confidence — {sig}'s {read.source} read "
+                f"states a net return and NO t on that return "
+                f"({read.t_text}). Without a t there is nothing for ROI_MIN_T "
                 f"to clear, so the name is not ranked "
-                f"(receipt {row['receipt']})")
+                f"(receipt {read.receipt})")
             continue
         if t_stat < min_t:
             not_calibrated[ticker] = (
-                f"{NOT_CALIBRATED}: confidence — {sig}'s measured net read "
+                f"{NOT_CALIBRATED}: confidence — {sig}'s {read.source} read "
                 f"carries t {t_stat:.2f}, below ROI_MIN_T {min_t:.2f}. The "
                 f"engine is not sure enough about this return to rank the name "
                 f"on it, so it does not: the name keeps the verdict/confidence "
                 f"sizing and this sentence instead of a score "
-                f"(receipt {row['receipt']})")
+                f"(receipt {read.receipt})")
             continue
-        if er <= 0:
+        if read.er <= 0:
             not_calibrated[ticker] = (
-                f"{NOT_CALIBRATED}: expected_return_net — {sig}'s measured net "
-                f"read is {float(row['monthly_net_pct']):+.4f}%/month, which is "
-                f"not positive, so there is no ROI to rank "
-                f"(receipt {row['receipt']})")
+                f"{NOT_CALIBRATED}: expected_return_net — {sig}'s "
+                f"{read.source} read is {float(read.monthly_net_pct or 0.0):+.4f}"
+                f"%/month, which is not positive, so there is no ROI to rank "
+                f"(receipt {read.receipt})")
             continue
         vol_annual = _vol_of(candidates or {}, ticker, rec)
-        dn, dn_basis = downside(vol_annual, horizon_months=horizon, z=zz)
+        dn, dn_basis, dn_source = downside_for(read, vol_annual, z=zz)
         if dn is None or dn <= 0:
             not_calibrated[ticker] = dn_basis
             continue
-        scored.append({
+        body = {
             "ticker": ticker,
             "signal": sig,
-            "expected_return_net_pct": round(100.0 * er, 6),
-            "expected_return_basis": er_basis,
+            "expected_return_net_pct": round(100.0 * read.er, 6),
+            "expected_return_basis": read.basis,
             "downside_pct": round(100.0 * dn, 6),
             "downside_basis": dn_basis,
-            "roi_score": round(er / dn, 6),
-            "roi_basis": str(row["receipt"]),
-            "roi_measured_on": str(row["measured_on"]),
+            "downside_source": dn_source,
+            "roi_score": round(read.er / dn, 6),
+            "roi_basis": read.receipt,
+            "mu_source": read.source,
+            "mu_basis": read.receipt,
+            "roi_horizon_months": read.horizon_months,
+            "roi_measured_on": read.measured_on,
             "roi_t": t_stat,
-            "roi_n_blocks": row["n_blocks"],
-            "_vol_horizon": float(vol_annual) * math.sqrt(horizon / 12.0),
-        })
+            "roi_n_blocks": read.n_blocks,
+            # sigma such that `size_ce_kelly`'s Grinold form collapses to
+            # w = f * mu / sigma^2 EXACTLY, whichever source the downside came
+            # from. On the vol path dn = z * vol_h, so dn/z == vol_h and this
+            # is byte-identical to what chunk 18c fed it.
+            "_vol_horizon": float(dn) / float(zz),
+        }
+        if read.source == MU_CALIBRATION:
+            body["calibration_verdict"] = read.verdict
+            body["calibration_decile"] = read.decile
+            body["calibration_se_pct"] = read.se_pct
+        elif (cal_row or {}).get("calibration_verdict"):
+            body["calibration_verdict_seen"] = cal_row["calibration_verdict"]
+        scored.append(body)
 
     scored.sort(key=lambda d: (-d["roi_score"], d["ticker"]))
     unscored = [t for t in by_ticker if t in not_calibrated]
@@ -457,9 +664,33 @@ def rank(recs: list[Any], *, candidates: Optional[dict] = None,
         "n_considered": len(by_ticker),
         "n_scored": len(rows),
         "n_not_calibrated": len(not_calibrated),
+        "mu_sources": {t: b.get("mu_source") for t, b in rows.items()},
+        "n_mu_from_calibration": sum(1 for b in rows.values()
+                                     if b.get("mu_source") == MU_CALIBRATION),
+        "downside_sources": {t: b.get("downside_source")
+                             for t, b in rows.items()},
+        "downside_source_declared": str(
+            getattr(config, "ROI_DOWNSIDE_SOURCE", DN_VOL)),
+        "calibration_seen": calibration,
+        "calibration_table": signal_calibration.table(calibration_root,
+                                                      asof=asof),
+        "mixed_horizons": len({b.get("roi_horizon_months")
+                               for b in rows.values()}) > 1,
         "not_calibrated": dict(not_calibrated),
         "rows_by_ticker": rows,
         "kelly": kelly_receipt,
+        "chunk_22": (
+            "mu_i is the candidate's OWN score decile's mean from the newest "
+            "CALIBRATED file under config.CALIB_OUTPUT_DIR (already net of that "
+            "decile's turnover cost), and the downside is that decile's "
+            "MEASURED 20th percentile. A signal that is WEAK, INVERTED, "
+            "NO_PANEL or uncalibrated leaves the candidate on the family row "
+            "exactly as chunk 21 left it, and `mu_source` on every scored row "
+            "says which of the two produced the number. `mixed_horizons` True "
+            "means two scored rows were measured at different horizons and "
+            "their roi_scores are NOT like-for-like comparable — it cannot "
+            "happen while only one horizon is calibrated, and it is printed so "
+            "that it cannot happen silently."),
         "honesty": (
             "A name is ROI-ranked only when BOTH its leading signal's measured "
             "net return (config.SIGNAL_MEASURED_RETURN, every row with a "
@@ -505,6 +736,9 @@ def table_receipts(root: Optional[Path] = None) -> dict:
     return out
 
 
-__all__ = ["CapBreach", "MeasuredReturnError", "NOT_CALIBRATED",
-           "REQUIRED_FIELDS", "RoiRanking", "downside", "expected_return_net",
-           "kelly_fraction_for", "measured_return", "rank", "table_receipts"]
+__all__ = ["CapBreach", "DN_DECILE_P20", "DN_VOL", "MU_CALIBRATION",
+           "MU_FAMILY_MEAN", "MeasuredReturnError", "NOT_CALIBRATED",
+           "REQUIRED_FIELDS", "ResolvedReturn", "RoiRanking", "adapter_field",
+           "downside", "downside_for", "expected_return_net",
+           "kelly_fraction_for", "measured_return", "rank", "raw_score_of",
+           "resolve_expected_return", "table_receipts"]

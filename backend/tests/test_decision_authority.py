@@ -82,6 +82,13 @@ def measured(monkeypatch):
     monkeypatch.setattr(config, "IC_ROI_RANKING", True, raising=False)
     monkeypatch.setattr(config, "IC_LEGACY_HEURISTIC_SIZING", False,
                         raising=False)
+    # CHUNK 21's world, deliberately. Chunk 22 (2026-09-21) tightened the
+    # EXPLOIT gate to require a CALIBRATED decile map on disk and gave EXPLORE
+    # a decile posterior; every test below describes the behaviour BEFORE that,
+    # which `ROI_USE_CALIBRATION = False` restores byte for byte. The chunk-22
+    # behaviour is `test_signal_calibration.py`, which plants its own map in
+    # tmp_path and never reads `backend/data`.
+    monkeypatch.setattr(config, "ROI_USE_CALIBRATION", False, raising=False)
     return _table()
 
 

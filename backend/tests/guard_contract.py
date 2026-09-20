@@ -110,6 +110,18 @@ NOT_INPUT_GUARDS: dict[str, str] = {
         "read as a result ABOUT that signal. It takes no user input and guards "
         "no request field, so it is not a missing-input guard; the refusals "
         "are exercised in test_portfolio_farm_revisions.py"),
+    "signal_calibration": (
+        "CalibrationError — chunk 22's reader NEVER raises it on a missing "
+        "input, and that is the point: every absence it can meet (no file for "
+        "the signal, a SMOKE or PARTIAL file, a stale one, a wrong schema, a "
+        "body whose date disagrees with its name, a candidate with no score, a "
+        "decile the out-of-sample table never populated) is answered with "
+        "`(None, <the sentence saying which>)` so the caller can PRINT it and "
+        "fall back to the family row. The type exists for a file that is "
+        "structurally untrustworthy, the same declaration-defect shape as "
+        "`roi_rank`'s MeasuredReturnError below. Every one of those refusals "
+        "is exercised directly in test_signal_calibration.py, against files "
+        "planted in tmp_path"),
     "roi_rank": (
         "MeasuredReturnError / CapBreach — neither is a missing-input guard. "
         "MeasuredReturnError is raised on a `config.SIGNAL_MEASURED_RETURN` "

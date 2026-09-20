@@ -719,11 +719,18 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
 
 
 #: The fields an ROI-scored row carries, in the order a reader wants them.
+#: `mu_source` / `mu_basis` / `downside_source` are chunk 22's (2026-09-21):
+#: WHICH measurement produced this row's expected return and its downside, and
+#: the receipt path it came off. A reader must never have to infer whether a
+#: number came from the candidate's own score decile or from its signal
+#: family's average — those are different claims.
 _ROI_ROW_FIELDS: tuple[str, ...] = (
     "expected_return_net_pct", "downside_pct", "roi_score", "roi_rank",
     "kelly_fraction", "kelly_weight", "roi_basis", "roi_measured_on", "roi_t",
     "roi_n_blocks", "expected_return_basis", "downside_basis",
-    "kelly_fraction_basis")
+    "kelly_fraction_basis", "mu_source", "mu_basis", "downside_source",
+    "roi_horizon_months", "calibration_verdict", "calibration_decile",
+    "calibration_se_pct", "calibration_verdict_seen")
 
 
 def _roi_fields(ticker: str, rows: dict, unranked: dict) -> dict:
