@@ -771,6 +771,15 @@ def decile_table(oos: pd.DataFrame, h: int, *, rng: np.random.Generator,
                                 if len(vals) > 1 else float("nan"), 6),
             "ci_lo_pct": round(100.0 * float(lo), 6) if np.isfinite(lo) else None,
             "ci_hi_pct": round(100.0 * float(hi), 6) if np.isfinite(hi) else None,
+            # The SAME interval shifted by this decile's own cost, so a reader
+            # never sees a net mean printed beside a gross interval it appears
+            # to sit outside. The cost is a constant, so the WIDTH — and
+            # therefore the standard error the explorer's posterior derives
+            # from it — is identical either way.
+            "ci_lo_net_pct": (round(100.0 * (float(lo) - c), 6)
+                              if (np.isfinite(lo) and c is not None) else None),
+            "ci_hi_net_pct": (round(100.0 * (float(hi) - c), 6)
+                              if (np.isfinite(hi) and c is not None) else None),
         })
     rows.sort(key=lambda r: r["decile"])
     return {"rows": rows, "_by_month_mean": by_month_mean,

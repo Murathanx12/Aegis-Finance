@@ -514,8 +514,17 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             "exploration_score_formula": (
                 "draw - cost - risk_penalty(vol) + uncertainty_bonus(se), all "
                 "terms in percent per month"),
-            "measured_t": row.get("t"),
-            "measured_t_basis": row.get("t_basis"),
+            # The t that belongs to the number the posterior actually used.
+            # Quoting the family row's t beside a decile's mean was the first
+            # thing this block printed on 2026-09-21 and it read as though the
+            # two were the same measurement.
+            "measured_t": (cal.spread_t if post_src == POSTERIOR_DECILE
+                           else row.get("t")),
+            "measured_t_basis": (
+                (f"the {cal.signal} D-hi minus D-lo NET spread's Newey-West t "
+                 f"at {cal.horizon_sessions} sessions, off {cal.receipt}; "
+                 f"Holm-adjusted p {cal.holm_p}")
+                if post_src == POSTERIOR_DECILE else row.get("t_basis")),
             "receipt": (cal.receipt if post_src == POSTERIOR_DECILE
                         else row.get("receipt")),
             "measured_on": (cal.asof if post_src == POSTERIOR_DECILE

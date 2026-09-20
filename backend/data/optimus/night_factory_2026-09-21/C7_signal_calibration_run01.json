@@ -1,0 +1,113 @@
+{
+ "job": "C7_signal_calibration",
+ "stage": "features",
+ "licence": "PRODUCT_EXPERIMENT",
+ "roadmap_item": "chunk 22",
+ "asof": "2026-09-21",
+ "smoke": false,
+ "inputs": [
+  "backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2006.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2007.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2008.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2009.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2010.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2011.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2012.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2013.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2014.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2015.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2016.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2017.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2018.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2019.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2020.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2021.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2022.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2023.parquet",
+  "backend\\data\\optimus\\wrds\\crsp_dsf_2024.parquet",
+  "backend\\data\\optimus\\wrds\\jkp_full\\jkp_usa_2006_2007.parquet",
+  "backend\\data\\optimus\\wrds\\jkp_full\\jkp_usa_2008_2009.parquet",
+  "backend\\data\\optimus\\wrds\\jkp_full\\jkp_usa_2010_2011.parquet",
+  "backend\\data\\optimus\\wrds\\jkp_full\\jkp_usa_2012_2012.parquet",
+  "backend\\data\\optimus\\wrds\\jkp_global_factor_usa.parquet"
+ ],
+ "family_derived_from": "recommendation._ADAPTERS x signal_registry.permits(id, 'PICKER')",
+ "signals_calibrated": [
+  "profitability_small",
+  "insider_opportunistic",
+  "fusion_insider_profitability"
+ ],
+ "signals_excluded_from_the_family": {
+  "low_volatility": "registry grades it SUPPORTED/FILTER \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a filter to pick",
+  "short_interest_level": "registry grades it SHELF/FILTER \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a filter to pick",
+  "earnings_surprise_monthly": "registry grades it SHELF/FILTER \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a filter to pick",
+  "rating_drift_3m": "registry grades it OBSERVATIONAL/FILTER \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a filter to pick",
+  "analyst_target_level_haircut": "registry grades it OBSERVATIONAL/RISK_INPUT \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a risk_input to pick",
+  "analyst_target_upside_xs": "registry grades it PERVERSE/CLOSED \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a closed to pick",
+  "momentum_12_1": "registry grades it REJECTED/CLOSED \u2014 it is read and printed and may never LEAD a ranking, so calibrating a return for it would license a closed to pick"
+ },
+ "resumed": [],
+ "timed_out": [],
+ "holm": {
+  "method": "holm-bonferroni (EXPORT)",
+  "alpha": 0.05,
+  "family_size": 12,
+  "adjusted": {
+   "profitability_small@126": 0.06458952000000001,
+   "fusion_insider_profitability@126": 0.3086743,
+   "profitability_small@63": 0.3320208,
+   "profitability_small@21": 1.0,
+   "fusion_insider_profitability@5": 1.0,
+   "insider_opportunistic@126": 1.0,
+   "profitability_small@5": 1.0,
+   "fusion_insider_profitability@63": 1.0,
+   "insider_opportunistic@5": 1.0,
+   "insider_opportunistic@21": 1.0,
+   "fusion_insider_profitability@21": 1.0,
+   "insider_opportunistic@63": 1.0
+  },
+  "survivors": [],
+  "n_survivors": 0,
+  "best_adjusted_p": 0.06458952000000001,
+  "n_dropped_non_finite": 0,
+  "dropped_non_finite": []
+ },
+ "summary": {
+  "profitability_small": {
+   "verdict": "WEAK",
+   "net_spread_pct": 0.644511,
+   "net_t": 1.5879,
+   "holm_p": 1.0,
+   "n_date_blocks": 191,
+   "file": "backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json"
+  },
+  "insider_opportunistic": {
+   "verdict": "WEAK",
+   "net_spread_pct": -0.046304,
+   "net_t": -0.3482,
+   "holm_p": 1.0,
+   "n_date_blocks": 191,
+   "file": "backend\\data\\optimus\\calibration\\insider_opportunistic_2026-09-21.json"
+  },
+  "fusion_insider_profitability": {
+   "verdict": "WEAK",
+   "net_spread_pct": 0.130629,
+   "net_t": 0.2969,
+   "holm_p": 1.0,
+   "n_date_blocks": 191,
+   "file": "backend\\data\\optimus\\calibration\\fusion_insider_profitability_2026-09-21.json"
+  }
+ },
+ "outputs": {
+  "profitability_small": "backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json",
+  "insider_opportunistic": "backend\\data\\optimus\\calibration\\insider_opportunistic_2026-09-21.json",
+  "fusion_insider_profitability": "backend\\data\\optimus\\calibration\\fusion_insider_profitability_2026-09-21.json"
+ },
+ "headline": "3 leadable signal(s): 0 CALIBRATED, 3 WEAK, 0 INVERTED, 0 NO_PANEL, 0 REFUSED",
+ "verdict": "WEAK",
+ "honesty": "Every statistic in every decile table is computed on TEST rows only, with the cut points refit yearly on the expanding past. The cost ruler is printed beside every spread and the verdict reads the NET. A signal with no point-in-time panel on disk is NO_PANEL naming the table, never a guess. Only CALIBRATED licenses EXPLOIT capital.",
+ "elapsed_s": 41.6,
+ "written_utc": "2026-09-20T17:28:46+00:00",
+ "run": 1
+}

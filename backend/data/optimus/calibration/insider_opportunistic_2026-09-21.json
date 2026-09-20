@@ -1,0 +1,808 @@
+{
+ "schema": "aegis.signal_calibration.v1",
+ "signal": "insider_opportunistic",
+ "asof": "2026-09-21",
+ "generated_utc": "2026-09-20T17:28:21+00:00",
+ "licence": "PRODUCT_EXPERIMENT",
+ "roadmap_item": "chunk 22",
+ "source": "docs/research_notes/2026-09-20/feedback_murat_review_2026-09-20_evening.md issue 1",
+ "deciding_horizon_sessions": 21,
+ "horizons_sessions": [
+  5,
+  21,
+  63,
+  126
+ ],
+ "licensed_universe": "CRSP + Form 4",
+ "licensed_bands": [
+  "large",
+  "mid",
+  "small"
+ ],
+ "smoke": false,
+ "construction": {
+  "universe": {
+   "price_source": [
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2006.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2007.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2008.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2009.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2010.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2011.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2012.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2013.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2014.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2015.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2016.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2017.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2018.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2019.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2020.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2021.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2022.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2023.parquet",
+    "backend\\data\\optimus\\wrds\\crsp_dsf_2024.parquet"
+   ],
+   "years": [
+    2006,
+    2024
+   ],
+   "n_sessions": 4781,
+   "n_month_anchors": 228,
+   "anchor_rule": "the LAST SESSION of each calendar month on the CRSP daily tape; the score is read at that close and the forward return starts the NEXT session",
+   "cap_rule": "CRSP |prc| x shrout x 1000 at the anchor session, banded by the LIVE thresholds small<=$2,000,000,000 mid<=$10,000,000,000 (config.SIGNAL_UNIVERSE_*_MAX_USD). Nominal 2026 dollars applied to every year \u2014 the anachronism the live engine also commits, committed identically here so the calibration measures the universe the engine can reproduce",
+   "rows": 917014,
+   "n_permnos": 9347
+  },
+  "panel": {
+   "sources": [
+    "backend\\data\\optimus\\sec_insider\\insider_events_v1.parquet"
+   ],
+   "score_formula": "n_distinct_open_market_buyers + tanh(buy_value / $1,000,000) over a 90-calendar-day lookback \u2014 the LIVE formula, insider_trading.compute_opportunistic_buy_score",
+   "pit_basis": "observed_at_utc = FILING_DATE_EOD_CONSERVATIVE on the bulk panel: the FILING date, never the trade date",
+   "construction_difference_from_live": "the bulk panel's insider_open_market_buy family excludes 10b5-1 plan transactions; the live Finnhub path has no such field and cannot. The historical score is the cleaner of the two",
+   "n_scored_zero_no_buy_in_window": 720519,
+   "n_rows": 917014
+  },
+  "forward": {
+   "n_missing_forward_bar": {
+    "5": 5568,
+    "21": 9551,
+    "63": 28113,
+    "126": 55733
+   },
+   "basis": "a name whose CRSP block ends before anchor+h contributes nothing at that horizon; CRSP dsf carries no delisting return, so this DROPS the worst outcomes and biases every decile mean upward"
+  },
+  "walk_forward": {
+   "n_deciles": 10,
+   "first_test_year": 2009,
+   "refit": "yearly, expanding window, cut points from years strictly < y",
+   "tie_rule": "side='left' \u2014 a tied block falls into ONE decile",
+   "cut_points_by_year": {
+    "2009": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0447201524,
+     2.2146662021
+    ],
+    "2010": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0374824318,
+     2.1578222339
+    ],
+    "2011": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.026866533,
+     2.0826205129
+    ],
+    "2012": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0242188631,
+     2.0641023875
+    ],
+    "2013": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0208217901,
+     2.0470878216
+    ],
+    "2014": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0169183855,
+     2.0321423241
+    ],
+    "2015": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0147673264,
+     2.0237945078
+    ],
+    "2016": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.014573968,
+     2.0219833337
+    ],
+    "2017": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0134304987,
+     2.0194905714
+    ],
+    "2018": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0114994931,
+     2.0140475939
+    ],
+    "2019": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0104696174,
+     2.0110720475
+    ],
+    "2020": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0101228542,
+     2.0104244224
+    ],
+    "2021": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0102996358,
+     2.0120994095
+    ],
+    "2022": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0090129559,
+     2.0064718296
+    ],
+    "2023": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0082498128,
+     2.0027959927
+    ],
+    "2024": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0071518781,
+     2.0
+    ]
+   },
+   "cut_points_live": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0054547559,
+    1.9999999611
+   ],
+   "cut_points_live_basis": "quantiles of the score over the WHOLE panel. These are the cut points `roi_rank` maps a live candidate's raw score through; they are a scaling of the score's own distribution and carry no forward return, so fitting them on all years leaks nothing into the decile TABLE, every cell of which is out-of-sample",
+   "n_oos_rows": 749300,
+   "n_train_only_rows": 167714,
+   "nonempty_deciles": [
+    1,
+    8,
+    9,
+    10
+   ],
+   "n_nonempty_deciles": 4,
+   "largest_decile_share": 0.798399
+  },
+  "abnormal": "the name's own compounded forward return minus the EQUAL-WEIGHT mean of this signal's own scored universe at the same anchor and horizon",
+  "block_unit": "calendar month (CANON \u00a758: n_effective counts DATE BLOCKS)",
+  "bootstrap": {
+   "draws": 400,
+   "seed": 20260921,
+   "unit": "month blocks, resampled with replacement"
+  },
+  "cost_ruler_bps_per_side": 25.0,
+  "decile_turnover_one_way_monthly": {
+   "1": 0.06092,
+   "8": 0.384607,
+   "9": 0.356373,
+   "10": 0.28132
+  }
+ },
+ "cut_points": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  1.0054547559,
+  1.9999999611
+ ],
+ "cut_points_basis": "quantiles of the score over the WHOLE panel. These are the cut points `roi_rank` maps a live candidate's raw score through; they are a scaling of the score's own distribution and carry no forward return, so fitting them on all years leaks nothing into the decile TABLE, every cell of which is out-of-sample",
+ "horizons": {
+  "5": {
+   "deciles": [
+    {
+     "decile": 1,
+     "n_names": 593738,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.06092,
+     "cost_pct": 0.007252,
+     "mean_abn_net_pct": -0.022222,
+     "mean_abn_pct": -0.01497,
+     "p20_abn_pct": -4.287537,
+     "sd_abn_pct": 9.868633,
+     "ci_lo_pct": -0.041869,
+     "ci_hi_pct": 0.011065,
+     "ci_lo_net_pct": -0.049122,
+     "ci_hi_net_pct": 0.003813
+    },
+    {
+     "decile": 8,
+     "n_names": 23847,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.384607,
+     "cost_pct": 0.045787,
+     "mean_abn_net_pct": -0.125457,
+     "mean_abn_pct": -0.079671,
+     "p20_abn_pct": -4.558196,
+     "sd_abn_pct": 8.829927,
+     "ci_lo_pct": -0.271489,
+     "ci_hi_pct": 0.091758,
+     "ci_lo_net_pct": -0.317276,
+     "ci_hi_net_pct": 0.045971
+    },
+    {
+     "decile": 9,
+     "n_names": 67453,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.356373,
+     "cost_pct": 0.042425,
+     "mean_abn_net_pct": 0.040929,
+     "mean_abn_pct": 0.083355,
+     "p20_abn_pct": -4.322792,
+     "sd_abn_pct": 9.154209,
+     "ci_lo_pct": -0.002065,
+     "ci_hi_pct": 0.153127,
+     "ci_lo_net_pct": -0.04449,
+     "ci_hi_net_pct": 0.110701
+    },
+    {
+     "decile": 10,
+     "n_names": 59089,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.28132,
+     "cost_pct": 0.03349,
+     "mean_abn_net_pct": 0.053931,
+     "mean_abn_pct": 0.087421,
+     "p20_abn_pct": -5.094984,
+     "sd_abn_pct": 9.543902,
+     "ci_lo_pct": -0.069057,
+     "ci_hi_pct": 0.183543,
+     "ci_lo_net_pct": -0.102548,
+     "ci_hi_net_pct": 0.150053
+    }
+   ],
+   "n_date_blocks": 191,
+   "spread": {
+    "decile_low": 1,
+    "decile_high": 10,
+    "label": "D10 - D1",
+    "n_date_blocks": 191,
+    "nw_lag_months": 1,
+    "gross_spread_pct": 0.073006,
+    "gross_t": 1.0401,
+    "cost_pct": 0.040743,
+    "cost_basis": "one-way monthly turnover D1 0.0609 + D10 0.2813, each replaced slice SOLD and BOUGHT at 25 bps/side = 2 x tau x 25 bps per month, scaled to the horizon by 5/21 months (config.CALIB_COST_BPS_PER_SIDE)",
+    "net_spread_pct": 0.032263,
+    "net_t": 0.4596,
+    "net_p_two_sided": 0.64576829,
+    "monthly_series_head": [
+     -0.00533236,
+     -0.01893171,
+     0.01249603,
+     0.03359895,
+     -0.00540285
+    ],
+    "monthly_series_tail": [
+     -0.00190754,
+     -0.00091886,
+     0.00437632,
+     0.01233332,
+     0.00505126
+    ],
+    "tail_before_mean": {
+     "worst_month_pct": -4.025518,
+     "best_month_pct": 5.712334,
+     "share_of_months_positive": 0.502618,
+     "top5_months_share_of_total": 1.221713
+    }
+   },
+   "monotonicity": {
+    "spearman_decile_vs_mean": 0.8,
+    "threshold": 0.6,
+    "n_nonempty_deciles": 4,
+    "monotone": true,
+    "verdict": "Spearman 0.800 over 4 non-empty deciles against a CALIB_MONOTONE_MIN_SPEARMAN of 0.6"
+   }
+  },
+  "21": {
+   "deciles": [
+    {
+     "decile": 1,
+     "n_names": 590778,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.06092,
+     "cost_pct": 0.03046,
+     "mean_abn_net_pct": -0.053851,
+     "mean_abn_pct": -0.023391,
+     "p20_abn_pct": -9.083343,
+     "sd_abn_pct": 20.382686,
+     "ci_lo_pct": -0.063706,
+     "ci_hi_pct": 0.011304,
+     "ci_lo_net_pct": -0.094166,
+     "ci_hi_net_pct": -0.019156
+    },
+    {
+     "decile": 8,
+     "n_names": 23799,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.384607,
+     "cost_pct": 0.192304,
+     "mean_abn_net_pct": -0.160827,
+     "mean_abn_pct": 0.031476,
+     "p20_abn_pct": -9.141501,
+     "sd_abn_pct": 18.996188,
+     "ci_lo_pct": -0.283683,
+     "ci_hi_pct": 0.465933,
+     "ci_lo_net_pct": -0.475986,
+     "ci_hi_net_pct": 0.27363
+    },
+    {
+     "decile": 9,
+     "n_names": 67363,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.356373,
+     "cost_pct": 0.178186,
+     "mean_abn_net_pct": -0.072556,
+     "mean_abn_pct": 0.105631,
+     "p20_abn_pct": -9.000887,
+     "sd_abn_pct": 17.261111,
+     "ci_lo_pct": -0.044388,
+     "ci_hi_pct": 0.298936,
+     "ci_lo_net_pct": -0.222574,
+     "ci_hi_net_pct": 0.12075
+    },
+    {
+     "decile": 10,
+     "n_names": 59017,
+     "n_date_blocks": 191,
+     "turnover_one_way_monthly": 0.28132,
+     "cost_pct": 0.14066,
+     "mean_abn_net_pct": -0.039769,
+     "mean_abn_pct": 0.100891,
+     "p20_abn_pct": -10.610127,
+     "sd_abn_pct": 20.0422,
+     "ci_lo_pct": -0.155135,
+     "ci_hi_pct": 0.307143,
+     "ci_lo_net_pct": -0.295795,
+     "ci_hi_net_pct": 0.166483
+    }
+   ],
+   "n_date_blocks": 191,
+   "spread": {
+    "decile_low": 1,
+    "decile_high": 10,
+    "label": "D10 - D1",
+    "n_date_blocks": 191,
+    "nw_lag_months": 1,
+    "gross_spread_pct": 0.124816,
+    "gross_t": 0.9385,
+    "cost_pct": 0.17112,
+    "cost_basis": "one-way monthly turnover D1 0.0609 + D10 0.2813, each replaced slice SOLD and BOUGHT at 25 bps/side = 2 x tau x 25 bps per month, scaled to the horizon by 21/21 months (config.CALIB_COST_BPS_PER_SIDE)",
+    "net_spread_pct": -0.046304,
+    "net_t": -0.3482,
+    "net_p_two_sided": 0.72772234,
+    "monthly_series_head": [
+     -0.00684576,
+     0.00712503,
+     0.04424539,
+     0.01711457,
+     -0.01395369
+    ],
+    "monthly_series_tail": [
+     -0.00223118,
+     -0.01025346,
+     0.01105131,
+     0.00730425,
+     0.02023544
+    ],
+    "tail_before_mean": {
+     "worst_month_pct": -4.085083,
+     "best_month_pct": 6.730627,
+     "share_of_months_positive": 0.539267,
+     "top5_months_share_of_total": 0.92396
+    }
+   },
+   "monotonicity": {
+    "spearman_decile_vs_mean": 0.8,
+    "threshold": 0.6,
+    "n_nonempty_deciles": 4,
+    "monotone": true,
+    "verdict": "Spearman 0.800 over 4 non-empty deciles against a CALIB_MONOTONE_MIN_SPEARMAN of 0.6"
+   }
+  },
+  "63": {
+   "deciles": [
+    {
+     "decile": 1,
+     "n_names": 576350,
+     "n_date_blocks": 189,
+     "turnover_one_way_monthly": 0.06092,
+     "cost_pct": 0.09138,
+     "mean_abn_net_pct": -0.201453,
+     "mean_abn_pct": -0.110073,
+     "p20_abn_pct": -17.145001,
+     "sd_abn_pct": 33.579945,
+     "ci_lo_pct": -0.202543,
+     "ci_hi_pct": -0.037959,
+     "ci_lo_net_pct": -0.293923,
+     "ci_hi_net_pct": -0.129339
+    },
+    {
+     "decile": 8,
+     "n_names": 23577,
+     "n_date_blocks": 189,
+     "turnover_one_way_monthly": 0.384607,
+     "cost_pct": 0.576911,
+     "mean_abn_net_pct": 0.194214,
+     "mean_abn_pct": 0.771126,
+     "p20_abn_pct": -17.060257,
+     "sd_abn_pct": 40.361585,
+     "ci_lo_pct": 0.337807,
+     "ci_hi_pct": 2.30396,
+     "ci_lo_net_pct": -0.239104,
+     "ci_hi_net_pct": 1.727049
+    },
+    {
+     "decile": 9,
+     "n_names": 66497,
+     "n_date_blocks": 189,
+     "turnover_one_way_monthly": 0.356373,
+     "cost_pct": 0.534559,
+     "mean_abn_net_pct": -0.171502,
+     "mean_abn_pct": 0.363057,
+     "p20_abn_pct": -16.943138,
+     "sd_abn_pct": 31.62316,
+     "ci_lo_pct": 0.089433,
+     "ci_hi_pct": 0.663235,
+     "ci_lo_net_pct": -0.445126,
+     "ci_hi_net_pct": 0.128676
+    },
+    {
+     "decile": 10,
+     "n_names": 58317,
+     "n_date_blocks": 189,
+     "turnover_one_way_monthly": 0.28132,
+     "cost_pct": 0.42198,
+     "mean_abn_net_pct": -0.059867,
+     "mean_abn_pct": 0.362113,
+     "p20_abn_pct": -20.47174,
+     "sd_abn_pct": 40.987363,
+     "ci_lo_pct": -0.070165,
+     "ci_hi_pct": 0.704673,
+     "ci_lo_net_pct": -0.492145,
+     "ci_hi_net_pct": 0.282693
+    }
+   ],
+   "n_date_blocks": 189,
+   "spread": {
+    "decile_low": 1,
+    "decile_high": 10,
+    "label": "D10 - D1",
+    "n_date_blocks": 189,
+    "nw_lag_months": 3,
+    "gross_spread_pct": 0.43167,
+    "gross_t": 1.2279,
+    "cost_pct": 0.51336,
+    "cost_basis": "one-way monthly turnover D1 0.0609 + D10 0.2813, each replaced slice SOLD and BOUGHT at 25 bps/side = 2 x tau x 25 bps per month, scaled to the horizon by 63/21 months (config.CALIB_COST_BPS_PER_SIDE)",
+    "net_spread_pct": -0.08169,
+    "net_t": -0.2324,
+    "net_p_two_sided": 0.81624664,
+    "monthly_series_head": [
+     0.13066514,
+     0.18959928,
+     0.01476497,
+     -0.00749551,
+     0.0282523
+    ],
+    "monthly_series_tail": [
+     0.01933964,
+     0.00822164,
+     0.03279789,
+     0.05506063,
+     0.05591234
+    ],
+    "tail_before_mean": {
+     "worst_month_pct": -8.039353,
+     "best_month_pct": 18.959928,
+     "share_of_months_positive": 0.555556,
+     "top5_months_share_of_total": 0.621186
+    }
+   },
+   "monotonicity": {
+    "spearman_decile_vs_mean": 0.2,
+    "threshold": 0.6,
+    "n_nonempty_deciles": 4,
+    "monotone": false,
+    "verdict": "Spearman 0.200 over 4 non-empty deciles against a CALIB_MONOTONE_MIN_SPEARMAN of 0.6"
+   }
+  },
+  "126": {
+   "deciles": [
+    {
+     "decile": 1,
+     "n_names": 555369,
+     "n_date_blocks": 186,
+     "turnover_one_way_monthly": 0.06092,
+     "cost_pct": 0.18276,
+     "mean_abn_net_pct": -0.346237,
+     "mean_abn_pct": -0.163477,
+     "p20_abn_pct": -25.859467,
+     "sd_abn_pct": 50.021305,
+     "ci_lo_pct": -0.28359,
+     "ci_hi_pct": -0.060057,
+     "ci_lo_net_pct": -0.466351,
+     "ci_hi_net_pct": -0.242817
+    },
+    {
+     "decile": 8,
+     "n_names": 23229,
+     "n_date_blocks": 186,
+     "turnover_one_way_monthly": 0.384607,
+     "cost_pct": 1.153822,
+     "mean_abn_net_pct": -0.579515,
+     "mean_abn_pct": 0.574308,
+     "p20_abn_pct": -25.959774,
+     "sd_abn_pct": 52.572717,
+     "ci_lo_pct": -0.151671,
+     "ci_hi_pct": 1.415668,
+     "ci_lo_net_pct": -1.305493,
+     "ci_hi_net_pct": 0.261846
+    },
+    {
+     "decile": 9,
+     "n_names": 65004,
+     "n_date_blocks": 186,
+     "turnover_one_way_monthly": 0.356373,
+     "cost_pct": 1.069118,
+     "mean_abn_net_pct": -0.223667,
+     "mean_abn_pct": 0.845451,
+     "p20_abn_pct": -25.573382,
+     "sd_abn_pct": 48.739971,
+     "ci_lo_pct": 0.446433,
+     "ci_hi_pct": 1.233955,
+     "ci_lo_net_pct": -0.622685,
+     "ci_hi_net_pct": 0.164837
+    },
+    {
+     "decile": 10,
+     "n_names": 57088,
+     "n_date_blocks": 186,
+     "turnover_one_way_monthly": 0.28132,
+     "cost_pct": 0.84396,
+     "mean_abn_net_pct": -0.449975,
+     "mean_abn_pct": 0.393985,
+     "p20_abn_pct": -31.023392,
+     "sd_abn_pct": 64.943221,
+     "ci_lo_pct": -0.352999,
+     "ci_hi_pct": 0.771933,
+     "ci_lo_net_pct": -1.196959,
+     "ci_hi_net_pct": -0.072027
+    }
+   ],
+   "n_date_blocks": 186,
+   "spread": {
+    "decile_low": 1,
+    "decile_high": 10,
+    "label": "D10 - D1",
+    "n_date_blocks": 186,
+    "nw_lag_months": 6,
+    "gross_spread_pct": 0.349483,
+    "gross_t": 0.6273,
+    "cost_pct": 1.02672,
+    "cost_basis": "one-way monthly turnover D1 0.0609 + D10 0.2813, each replaced slice SOLD and BOUGHT at 25 bps/side = 2 x tau x 25 bps per month, scaled to the horizon by 126/21 months (config.CALIB_COST_BPS_PER_SIDE)",
+    "net_spread_pct": -0.677237,
+    "net_t": -1.2156,
+    "net_p_two_sided": 0.22414025,
+    "monthly_series_head": [
+     0.27932469,
+     0.24638488,
+     0.09028236,
+     0.01337817,
+     -0.01810955
+    ],
+    "monthly_series_tail": [
+     -0.03406266,
+     0.03355832,
+     0.05116431,
+     0.08335321,
+     0.05013553
+    ],
+    "tail_before_mean": {
+     "worst_month_pct": -10.752348,
+     "best_month_pct": 27.932469,
+     "share_of_months_positive": 0.526882,
+     "top5_months_share_of_total": 1.210682
+    }
+   },
+   "monotonicity": {
+    "spearman_decile_vs_mean": 0.4,
+    "threshold": 0.6,
+    "n_nonempty_deciles": 4,
+    "monotone": false,
+    "verdict": "Spearman 0.400 over 4 non-empty deciles against a CALIB_MONOTONE_MIN_SPEARMAN of 0.6"
+   }
+  }
+ },
+ "nulls": {
+  "null_1_end_to_end_shuffle": {
+   "gross_spread_pct": -0.028743,
+   "gross_t": -0.3884,
+   "cost_pct": 0.563673,
+   "net_spread_pct": -0.592416,
+   "net_t": -8.006,
+   "spearman": -0.4,
+   "n_nonempty_deciles": 4,
+   "label": "D10 - D1",
+   "basis": "scores permuted WITHIN each anchor date; cut points refit on the shuffled training window; the entire decile table rebuilt. This is the review's '(a) shuffled scores within date' and '(b) the map fit on the shuffled panel' \u2014 they are one operation and are named as one rather than dressed as two",
+   "read_the_gross": "READ THE GROSS LINE. A shuffled decile turns over ~100% every month, so its NET is the gross minus a cost constant near 1%/month and its net t is large and negative by construction. That is a fact about random rebalancing, not about the shuffle: the null's claim is that the GROSS spread is zero"
+  },
+  "null_2_shuffled_distribution": {
+   "draws": 200,
+   "n_spread_draws": 200,
+   "spread_mean_pct": 0.009649,
+   "spread_sd_pct": 0.093911,
+   "spread_p95_pct": 0.161806,
+   "spearman_p95": 0.8,
+   "basis": "the same within-date shuffle repeated on the OUT-OF-SAMPLE panel, giving the distribution the real spread is placed against. A spread inside this distribution is not a spread, whatever its t",
+   "compared_on": "GROSS against GROSS. The shuffled draws carry no cost (they are decile means, not a traded book), so placing a NET spread against them would charge one side of the comparison and not the other",
+   "real_net_spread_pct": -0.046304,
+   "real_gross_spread_pct": 0.124816,
+   "real_percentile_of_null": 0.895
+  }
+ },
+ "holm": {
+  "key": "insider_opportunistic@21",
+  "adjusted_p": 1.0,
+  "alpha": 0.05,
+  "family": [
+   "fusion_insider_profitability@126",
+   "fusion_insider_profitability@21",
+   "fusion_insider_profitability@5",
+   "fusion_insider_profitability@63",
+   "insider_opportunistic@126",
+   "insider_opportunistic@21",
+   "insider_opportunistic@5",
+   "insider_opportunistic@63",
+   "profitability_small@126",
+   "profitability_small@21",
+   "profitability_small@5",
+   "profitability_small@63"
+  ],
+  "basis": "Holm-Bonferroni over every (signal x horizon) spread this run computed \u2014 the EXPORT rule (CANON \u00a763), because this table SIZES positions"
+ },
+ "verdict": "WEAK",
+ "verdict_basis": "at 21 sessions the D10 - D1 NET spread is -0.0463% (gross 0.124816%, cost 0.17112%), NW t -0.3482 over 191 month blocks, Holm-adjusted p 1 against alpha 0.05; monotonicity: Spearman 0.800 over 4 non-empty deciles against a CALIB_MONOTONE_MIN_SPEARMAN of 0.6. Verdict WEAK: CALIBRATED needs net > 0 AND Holm p < alpha AND monotone; INVERTED is net < 0 at Holm p < alpha; everything else is WEAK and feeds EXPLORE's posterior rather than EXPLOIT's capital",
+ "holm_family": {
+  "method": "holm-bonferroni (EXPORT)",
+  "alpha": 0.05,
+  "family_size": 12,
+  "adjusted": {
+   "profitability_small@126": 0.06458952000000001,
+   "fusion_insider_profitability@126": 0.3086743,
+   "profitability_small@63": 0.3320208,
+   "profitability_small@21": 1.0,
+   "fusion_insider_profitability@5": 1.0,
+   "insider_opportunistic@126": 1.0,
+   "profitability_small@5": 1.0,
+   "fusion_insider_profitability@63": 1.0,
+   "insider_opportunistic@5": 1.0,
+   "insider_opportunistic@21": 1.0,
+   "fusion_insider_profitability@21": 1.0,
+   "insider_opportunistic@63": 1.0
+  },
+  "survivors": [],
+  "n_survivors": 0,
+  "best_adjusted_p": 0.06458952000000001,
+  "n_dropped_non_finite": 0,
+  "dropped_non_finite": []
+ }
+}

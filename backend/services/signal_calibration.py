@@ -366,8 +366,15 @@ def read_for(signal_id: str, score: Optional[float], *,
     base.mu_is_net = net is not None
     base.downside_p20_pct = _f(row.get("p20_abn_pct"))
     base.sd_pct = _f(row.get("sd_abn_pct"))
-    base.ci_lo_pct = _f(row.get("ci_lo_pct"))
-    base.ci_hi_pct = _f(row.get("ci_hi_pct"))
+    # The interval that matches the mean being reported. The cost is a
+    # constant shift, so the WIDTH — and the se derived from it — is the same
+    # either way; only the reader's eye needs the two to agree.
+    lo_net, hi_net = _f(row.get("ci_lo_net_pct")), _f(row.get("ci_hi_net_pct"))
+    if base.mu_is_net and lo_net is not None and hi_net is not None:
+        base.ci_lo_pct, base.ci_hi_pct = lo_net, hi_net
+    else:
+        base.ci_lo_pct = _f(row.get("ci_lo_pct"))
+        base.ci_hi_pct = _f(row.get("ci_hi_pct"))
     if base.ci_lo_pct is not None and base.ci_hi_pct is not None:
         base.se_pct = abs(base.ci_hi_pct - base.ci_lo_pct) / (2.0 * _CI95_Z)
     base.n_names = row.get("n_names")
