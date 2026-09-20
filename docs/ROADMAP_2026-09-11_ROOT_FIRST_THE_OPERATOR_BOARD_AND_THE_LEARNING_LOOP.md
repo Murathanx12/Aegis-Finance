@@ -1264,3 +1264,60 @@ NIGHT_QUEUE="S2_scenario_gym:90" python -m scripts.night_factory
     family slot for nothing.
 32. **An idle-queue job dates its outputs by the day** (09-18: three literal `RUN_DATE`s
     overwrote committed receipts three nights running; AST test over `LAB_IDLE_QUEUE`).
+
+## 15. THE EXPLOIT/EXPLORE AMENDMENT — 2026-09-20 21:30 HKT (Fable, from Murat's review of the evening block)
+
+Source: `docs/research_notes/2026-09-20/feedback_murat_review_2026-09-20_evening.md`
+(his words, kept). The loop now exists end to end (§14.4c–e). His verdict:
+"we fixed the fact that AEGIS was producing no decisions; now fix the fact that
+its decision logic can still either make heuristic trades with no measured ROI
+or refuse to explore anything uncertain."
+
+### 15.1 The rule that governs every chunk below (Murat, absolute)
+
+> No new research module is "finished" until it either changes a virtual/paper
+> position, improves the weighting of an existing position, or kills a
+> hypothesis that would otherwise have received capital.
+
+A chunk's receipt therefore ends with one of three lines — `CAPITAL_CHANGED:`,
+`WEIGHT_CHANGED:`, `HYPOTHESIS_KILLED:` — or the chunk is not closed.
+
+### 15.2 The chunks, in his order (one Opus at a time; Fable validates each)
+
+| chunk | what | the line it must print to close |
+|---|---|---|
+| 21 | **EXPLOIT / EXPLORE authority split** in `decision_contract` + `roi_rank`: EXPLOIT buys only a name with a calibrated positive `μ_i` (chunk 22's output; until then the EXPLOIT set is empty and printed empty); EXPLORE takes unproven positive-EV candidates (insider t 1.4, fusion t 1.66, ...) under a fixed paper-risk budget (`config.EXPLORE_BUDGET_PCT`, default 2% of equity, 0.25% per name) allocated by Thompson sampling over each hypothesis's posterior (`exploration_score = est_alpha − costs − risk_penalty + uncertainty_bonus`). The four heuristic BUYs stop existing as a third kind of thing: each is either EXPLOIT (calibrated) or EXPLORE (budgeted) or REFUSED. **Every dollar resolves daily to `benchmark` / `active_exploit` / `active_explore` / `cash`** (his item 11) and the contract prints that split. **The morning scoreboard** (his item 12) is the first block of the pass receipt and of the desktop Ask: NAV vs SPY, exploit P&L, explore P&L, decisions made, forecasts matured/graded, calibration, strongest new positive, strongest killed, one sentence on whether anything learned changed capital. | `CAPITAL_CHANGED: explore book seeded with N names at X% ...` |
+| 22 | **Rank → return calibration.** For every signal `recommendation.score_candidates` can lead with, an out-of-sample map from signal decile to abnormal return AND downside at 5/21/63/126 sessions with a CI, from the panels on disk (walk-forward, date blocks, Holm over the family). Output `config`-free: a table under `backend/data/optimus/calibration/<signal>_<date>.json` that `roi_rank` reads by receipt path. Per-name `μ_i` replaces the family average. | `WEIGHT_CHANGED:` or `HYPOTHESIS_KILLED:` per signal |
+| 22b | **Pre-decision evidence refresh** (2–5 min, boxed): last price, overnight news rows, catalysts, latest Form 4s, options snapshot where present, incremental analyst revisions — for the CANDIDATE names only — written to the contract's inputs before the rule runs. | `CAPITAL_CHANGED:` only if a decision flipped; else the count of refreshed fields |
+| 23 | **Book-of-Books allocator.** Independent policies (SPY, F, quality/low-vol, insider, analyst, event, supply-chain, explore, random, cash) each with expected excess return, vol, drawdown, correlations and forward-evidence length; weights by independent contribution (Numerai MMC-shaped: the part of a book's return not explained by the others), under the drawdown budget; Book F enters HERE, never as a stock signal. | `WEIGHT_CHANGED: F 0 → x%` |
+| 24 | **`world_model/` sidecar** (MiroFish-shaped, AGPL boundary kept: separate directory, separate process, structured JSON in/out, no import into `backend/`): one event package → graph → economic actors and mechanical chains → 20–50 LOCAL scenarios → consequence probabilities. Then its **historical replay** on 2018–2024 events with four controls (single LLM, graph-no-sim, shuffled agents, swarm). "If swarm adds nothing, kill it." | `HYPOTHESIS_KILLED:` or a feature table with a measured IC |
+| 25 | **Event-conditioned supply-chain book** (the bridge to 24): typed event → causal graph → customer/supplier consequences → low-attention second-order names → 5/21/63-day outcomes, vs the rejected unconditional customer-momentum corpse (NEGATIVE_RESULTS, read the § before registering). | one of the three |
+| 26 | **Analyst v2** (revision magnitude, text opinion, disagreement, stickiness, reaction already priced; NOT target upside) and **Insider v2** (open-market cash, cluster, role, distress state, drawdown, short interest; 1/5/21/63 d). Each as its own PRODUCT_EXPERIMENT book. | one of the three, each |
+| 27 | **NN routing**, last: predicts which specialist is useful now and return distributions, trained on the resolved decisions the ledger now accumulates; world-model outputs as features; targets are reality. | one of the three |
+
+Also in 21, the two code items: the config comment "five arms / 100" → six /
+120; and `SCENARIO_GYM_ADOPT_MIN_BLOCKS` (independent month blocks, default 12)
+beside `SCENARIO_GYM_ADOPT_MIN_N` — three hundred correlated scenarios are not
+three hundred observations.
+
+### 15.3 Interdisciplinary intake (Murat: "find projects like these")
+
+A Sonnet read is due at `docs/research_notes/2026-09-20/research_world_model_and_analogous_projects.md`:
+MiroFish/OASIS/Graphiti, agent-based market simulators, generative-agent
+social sims, prediction-market aggregation, behavioural-finance measures that
+exist as DATA, media/trend and political event data, supply-chain graphs, and
+the quant references for 22/23. Every entry: licence, what to take, what to
+refuse, the first test. Ideas enter as chunks only through §15.1.
+
+### 15.4 MUST NOT REGRESS (added 2026-09-20 evening)
+
+33. **A metric at zero can be a dead process.** `railway metrics` read 0 MB on three
+    crash-looping containers; liveness is the process's own first log line.
+34. **A rule that scores the empty set prints why per row.** The ROI rule refused
+    every name today and said which field was missing; a rule that had guessed
+    would have been a worse rule with a better-looking receipt.
+35. **A control must match the treatment's valence.** The gym's first bad-twin lift
+    (+52.6 pp, t 3.9) was tone; sign-matched controls halved it. Every twin is
+    differenced against an unrelated development of its own sign.
+36. **Uncertain means EXPLORE, never freeze.** t ≥ 2 governs claims and EXPLOIT
+    capital; it does not govern what paper money may test.

@@ -1012,8 +1012,10 @@ def grade_and_adopt(by_arm: dict, *, refusals: dict | None = None,
         "MDE": mde(n_graded, sd_pct, block_series=real_g.get("_monthly_net")),
         "refusals": counts,
         "refusal_terminal_states": dict(REFUSAL_TERMINAL_STATE),
-        "adoption": adoption(n_graded, calib, forward_record=forward_record),
-        "adoption_line": adoption_line(n_graded, forward_record=forward_record),
+        "adoption": adoption(n_graded, calib, forward_record=forward_record,
+                             n_blocks=real_g.get("date_blocks")),
+        "adoption_line": adoption_line(n_graded, forward_record=forward_record,
+                                       n_blocks=real_g.get("date_blocks")),
         "_summary": {"n_graded": n_graded, "gut_score": gut,
                      "gut_score_vs_control_pp": gut_vs_ctl,
                      "good_up_rate": up, "bad_down_rate": dn,
@@ -1027,7 +1029,8 @@ def grade_and_adopt(by_arm: dict, *, refusals: dict | None = None,
     }
 
 
-def adoption(n_graded: int, calib: dict, *, forward_record: bool = False) -> dict:
+def adoption(n_graded: int, calib: dict, *, forward_record: bool = False,
+             n_blocks: int | None = None) -> dict:
     """The weight the gym is allowed to carry. A CAP IN CODE, not an intention.
 
     `reliability_weight` is 0.0 unless BOTH conditions hold, whatever the Brier
@@ -1038,12 +1041,22 @@ def adoption(n_graded: int, calib: dict, *, forward_record: bool = False) -> dic
     as one.
     """
     min_n = int(config.SCENARIO_GYM_ADOPT_MIN_N)
+    min_blocks = int(config.SCENARIO_GYM_ADOPT_MIN_BLOCKS)
     measured = (calib or {}).get("brier_decomposition", {}).get("resolution")
     enough = int(n_graded) >= min_n
-    ok = bool(enough and forward_record)
+    # 2026-09-20 (Murat): "three hundred correlated scenarios are not 300
+    # independent observations." The dependence unit is the month block; a
+    # receipt that cannot count its blocks is CANNOT DETERMINE, not enough.
+    blocks_known = n_blocks is not None
+    enough_blocks = blocks_known and int(n_blocks) >= min_blocks
+    ok = bool(enough and enough_blocks and forward_record)
     why = []
     if not enough:
         why.append(f"N {int(n_graded)} < {min_n}")
+    if not blocks_known:
+        why.append(f"independent month blocks CANNOT DETERMINE (need >= {min_blocks})")
+    elif not enough_blocks:
+        why.append(f"independent month blocks {int(n_blocks)} < {min_blocks}")
     if not forward_record:
         why.append("no forward record exists for this gym yet")
     return {
@@ -1054,24 +1067,32 @@ def adoption(n_graded: int, calib: dict, *, forward_record: bool = False) -> dic
                       "reliability_weight}",
         "never": "veto or override; it can never flip a REFUSED to a BUY, never "
                  "override a hard gate, and never act alone",
-        "requires": {"min_n": min_n, "forward_record": True,
+        "requires": {"min_n": min_n, "min_independent_blocks": min_blocks,
+                     "forward_record": True,
                      "re_measured_on": "calibration.py's rolling window "
                                        f"(ROLLING_N={cal.ROLLING_N}, "
                                        f"ROLLING_DAYS={cal.ROLLING_DAYS})"},
+        "n_independent_blocks": (int(n_blocks) if blocks_known else None),
         "why_not": "; ".join(why) or None,
-        "line": adoption_line(n_graded, forward_record=forward_record),
+        "line": adoption_line(n_graded, forward_record=forward_record,
+                              n_blocks=n_blocks),
     }
 
 
-def adoption_line(n_graded: int, *, forward_record: bool = False) -> str:
+def adoption_line(n_graded: int, *, forward_record: bool = False,
+                  n_blocks: int | None = None) -> str:
     """The one line a reader greps for. Derived, never a stored string."""
     min_n = int(config.SCENARIO_GYM_ADOPT_MIN_N)
-    if int(n_graded) >= min_n and forward_record:
-        return (f"adoption: ELIGIBLE - N {int(n_graded)} >= {min_n} and a forward "
+    min_blocks = int(config.SCENARIO_GYM_ADOPT_MIN_BLOCKS)
+    if (int(n_graded) >= min_n and forward_record
+            and n_blocks is not None and int(n_blocks) >= min_blocks):
+        return (f"adoption: ELIGIBLE - N {int(n_graded)} >= {min_n} over "
+                f"{int(n_blocks)} >= {min_blocks} independent blocks and a forward "
                 "record exists; the weight is still set by the rolling "
                 "calibration, never by hand")
     return (f"adoption: NOT_ADOPTED — reliability_weight 0 until N>={min_n} "
-            "and a forward record exists")
+            f"over >={min_blocks} independent month blocks and a forward "
+            "record exists")
 
 
 # ══════════════════════════════════════════════════════════════ the P1-P6

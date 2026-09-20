@@ -423,6 +423,25 @@ def test_below_the_floor_the_adoption_says_why_by_name():
     out = S.adoption(12, {})
     assert "N 12 < 300" in out["why_not"]
     assert "no forward record" in out["why_not"]
+    assert "CANNOT DETERMINE" in out["why_not"]          # blocks not given
+
+
+def test_three_hundred_correlated_scenarios_are_not_three_hundred_observations():
+    """Murat, 2026-09-20. N clears the floor, the forward record exists, and
+    the cells come from four month blocks: still NOT_ADOPTED, and the reason
+    names the blocks. With enough blocks the state flips to ADOPTED and the
+    weight is STILL 0.0 (the rolling calibration sets it, never this call)."""
+    n = config.SCENARIO_GYM_ADOPT_MIN_N
+    few = S.adoption(n, {}, forward_record=True, n_blocks=4)
+    assert few["state"] == "NOT_ADOPTED"
+    assert f"independent month blocks 4 < {config.SCENARIO_GYM_ADOPT_MIN_BLOCKS}" in few["why_not"]
+    assert few["n_independent_blocks"] == 4
+    enough = S.adoption(n, {}, forward_record=True,
+                        n_blocks=config.SCENARIO_GYM_ADOPT_MIN_BLOCKS)
+    assert enough["state"] == "ADOPTED" and enough["reliability_weight"] == 0.0
+    assert "independent blocks" in enough["line"]
+    assert "ELIGIBLE" in enough["line"]
+    assert str(config.SCENARIO_GYM_ADOPT_MIN_BLOCKS) in S.adoption_line(0)
 
 
 def test_the_gym_can_never_become_a_trading_arm_by_its_own_receipt():

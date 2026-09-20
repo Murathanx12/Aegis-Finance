@@ -3192,7 +3192,10 @@ SCENARIO_GYM_SEED = 20260920
 #: computed over. N=1,000 buys only the calibration-decile read.
 SCENARIO_GYM_CELLS = 300
 
-#: `--smoke`. Five arms per cell, so this is 100 local completions.
+#: `--smoke`. SIX arms per cell (real, good twin, bad twin, a sign-matched
+#: control for each twin, and the shuffled control), so this is 120 local
+#: completions. (2026-09-20: the comment said five and 100 after the control
+#: arms were split by sign; the run was right and the comment was stale.)
 SCENARIO_GYM_SMOKE_CELLS = 20
 
 #: The job's own time box in minutes, the same 90 the night queue gives it.
@@ -3226,3 +3229,9 @@ SCENARIO_GYM_MIN_N_FOR_CALIBRATION = 45
 #: names the failure this prevents — "`reliability_weight` computed once and
 #: never re-measured is a thumb on the scale wearing a calibration label".
 SCENARIO_GYM_ADOPT_MIN_N = 300
+#: ... AND at least this many INDEPENDENT month blocks among the graded cells
+#: (Murat, 2026-09-20: "three hundred correlated scenarios are not 300
+#: independent observations"; canon section 58: n_effective counts date
+#: blocks). Twelve is a year of months; the panel offers ~19. A receipt that
+#: cannot count its blocks is CANNOT DETERMINE and is not adopted.
+SCENARIO_GYM_ADOPT_MIN_BLOCKS = 12
