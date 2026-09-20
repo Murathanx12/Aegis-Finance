@@ -390,6 +390,14 @@ class TypedEventRow:
     #: make a paraphrase a refusal, and refusing one would throw away an
     #: otherwise-correct classification. A rate that climbs is visible instead.
     evidence_span_verbatim: bool | None = None
+    #: 2026-09-20: the keys of an `entities` block the reader returned on an id
+    #: that declares no roles, DROPPED rather than refused. Two nights of the
+    #: 7B reader refused 30% of its rows this way (`entities.analyst` on an
+    #: analyst id, `incumbent` on an M&A id), each one a valid type thrown
+    #: away over a field no reader would have looked at. The property the
+    #: refusal protected still holds -- the block never appears on such an id
+    #: -- and the drop is on the row, so its rate stays visible.
+    entities_dropped: tuple[str, ...] = ()
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -569,6 +577,15 @@ def parse_reply(raw: str, *, document: str | None = None, variant: str = "A",
         return Refusal(reason="REFUSED_UNPARSEABLE", detail=f"json.loads: {exc}",
                        raw=text[:RAW_KEEP])
     errs = schema_errors(obj)
+    dropped: tuple[str, ...] = ()
+    if errs and _only_a_stray_entity_block(obj, errs):
+        # The type, direction, bucket, confidence and span all validated; the
+        # only fault is an entity block on an id that has no roles. Keep the
+        # row, drop the block, say so. On an id that DOES declare roles the
+        # block is load-bearing and a wrong one is still a refusal.
+        dropped = tuple(sorted(str(k) for k in (obj.get("entities") or {})))
+        obj = {k: v for k, v in obj.items() if k != "entities"}
+        errs = schema_errors(obj)
     if errs:
         return Refusal(reason="REFUSED_SCHEMA",
                        detail="; ".join(errs), raw=text[:RAW_KEEP],
@@ -582,7 +599,18 @@ def parse_reply(raw: str, *, document: str | None = None, variant: str = "A",
         prompt_hash=prompt_hash(variant), vocabulary_hash=vocab.VOCABULARY_HASH,
         vocabulary_version=vocab.VOCABULARY_VERSION,
         entities=dict(obj.get("entities") or {}),
-        evidence_span_verbatim=verbatim)
+        evidence_span_verbatim=verbatim,
+        entities_dropped=dropped)
+
+
+def _only_a_stray_entity_block(obj: Any, errs: list[str]) -> bool:
+    """True when every error is about `entities` AND the id declares no roles."""
+    if not isinstance(obj, dict) or not obj.get("entities"):
+        return False
+    et = obj.get("event_type")
+    if not isinstance(et, str) or et in vocab.IDS_WITH_ENTITIES:
+        return False
+    return all(e.startswith("entities") for e in errs)
 
 
 # ------------------------------------------------------------------ the call

@@ -152,15 +152,40 @@ def test_named_input_is_carried_for_the_constraint_id():
     assert row.entities["named_input"] == "HBM supply"
 
 
-def test_entities_on_an_id_that_declares_none_is_refused():
-    """A field that can appear anywhere is a field no reader can filter on."""
+def test_entities_on_an_id_that_declares_none_is_dropped_and_named():
+    """A field that can appear anywhere is a field no reader can filter on --
+    so the block never lands on such a row. 2026-09-20: it used to be a
+    refusal of the whole row, and two nights of the 7B reader lost 30% of
+    their rows to it; the type was valid every time. The block is dropped,
+    the row is kept, and the drop is on the row."""
     out = ex.parse_reply(json.dumps({
         "event_type": "earnings_report", "direction": 1,
         "magnitude_bucket": "MODERATE", "confidence": 0.8,
         "evidence_span": "beat", "entities": {"incumbent": "Micron"}}))
+    assert isinstance(out, ex.TypedEventRow)
+    assert out.event_type == "earnings_report" and out.entities == {}
+    assert out.entities_dropped == ("incumbent",)
+    assert out.as_dict()["entities_dropped"] == ["incumbent"] or \
+        out.as_dict()["entities_dropped"] == ("incumbent",)
+
+
+def test_a_stray_unknown_key_on_a_roleless_id_is_dropped_too():
+    out = ex.parse_reply(json.dumps({
+        "event_type": "analyst_rating_change", "direction": 1,
+        "magnitude_bucket": "MODERATE", "confidence": 0.7,
+        "evidence_span": "upgrade", "entities": {"analyst": "Goldman"}}))
+    assert isinstance(out, ex.TypedEventRow)
+    assert out.entities_dropped == ("analyst",)
+
+
+def test_a_stray_block_does_not_rescue_a_row_with_another_fault():
+    out = ex.parse_reply(json.dumps({
+        "event_type": "earnings_report", "direction": 7,
+        "magnitude_bucket": "MODERATE", "confidence": 0.8,
+        "evidence_span": "beat", "entities": {"incumbent": "Micron"}}))
     assert isinstance(out, ex.Refusal)
     assert out.reason == "REFUSED_SCHEMA"
-    assert "declares no entity roles" in out.detail
+    assert "direction" in out.detail
 
 
 def test_an_unknown_entity_role_is_refused_and_names_what_is_allowed():
