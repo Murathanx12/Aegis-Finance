@@ -137,6 +137,15 @@ STEPS: tuple[tuple[str, str], ...] = (
                         "the local bars — with a NAMED reason per record that "
                         "did not"),
     ("coverage", "the per-source coverage card, derived from disk"),
+    # 2026-09-20, chunk 21. It runs LAST and is PRINTED FIRST: it reads the
+    # receipts the steps above have just written, and the economics is what the
+    # reader came for (Murat's item 12). It is a declared STEP rather than a
+    # line in the runner so that it gets a wall-clock box, a row of its own and
+    # the AST seam guard in `test_daily_pass.py` -- a call made from the runner
+    # itself is outside that guard, and the real composer would then read
+    # `backend/data` inside every unit test of this driver.
+    ("scoreboard", "the economic scoreboard, composed from the receipts this "
+                   "pass has just written -- printed FIRST on the receipt"),
 )
 
 #: `timeout` joined the five on 2026-09-18. It is deliberately the SAME word
@@ -673,6 +682,35 @@ def step_coverage(ctx: dict) -> dict:
                 totals=cov.get("totals"))
 
 
+def step_scoreboard(ctx: dict) -> dict:
+    """The economic scoreboard, from the receipts this pass has just written.
+
+    Murat, 2026-09-20 (item 12): *"every morning print the economic scoreboard
+    first."* It runs LAST because it reads what the other steps wrote, and the
+    runner hoists it to the TOP of the receipt because the economics is what
+    the reader came for. It composes nothing of its own and writes nothing.
+
+    There is no `nothing_to_do` branch and there cannot be one: a board always
+    carries its ten fields, and the ones it could not derive carry
+    `CANNOT DETERMINE: <why>`, which is the finding rather than the gap. The
+    row COUNTS them and names them, so a morning on which six fields are named
+    absences is visible in the step list without opening the board.
+    """
+    t0 = time.time()
+    board = morning_scoreboard(asof=ctx["date_obj"])
+    ctx["scoreboard"] = board
+    undetermined = sorted(
+        k for k, v in board.items()
+        if isinstance(v, str) and v.startswith("CANNOT DETERMINE"))
+    return _row("scoreboard", "ok", rows=1,
+                seconds=round(time.time() - t0, 2),
+                refusals=[f"{k}: {board[k]}" for k in undetermined],
+                n_fields_cannot_determine=len(undetermined),
+                fields_cannot_determine=undetermined,
+                licence=board.get("licence"),
+                headline=board.get("headline"))
+
+
 _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "news_pull": step_news_pull,
     "analyst_snapshot": step_analyst_snapshot,
@@ -681,6 +719,7 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "decision_contract": step_decision_contract,
     "grade_forecasts": step_grade_forecasts,
     "coverage": step_coverage,
+    "scoreboard": step_scoreboard,
 }
 assert set(_HANDLERS) == {s for s, _ in STEPS}, "every declared step needs a handler"
 
@@ -835,18 +874,16 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
 
     rows = ctx["rows"]
     counts = {s: sum(1 for r in rows if r["status"] == s) for s in STATUSES}
-    # THE SCOREBOARD IS THE FIRST BLOCK (Murat's item 12, chunk 21). It is
-    # composed AFTER the steps and printed BEFORE them: it reads the receipts
-    # this pass has just written, and the economics is what the reader came
-    # for. It can never fail the pass — a scoreboard that raised would cost
-    # the day's receipt, which is the one thing this driver must not do.
-    try:
-        board = morning_scoreboard(asof=ctx["date_obj"])
-    except Exception as exc:                                       # noqa: BLE001
-        logger.exception("daily pass: the scoreboard could not be composed")
-        board = {"receipt": "morning_scoreboard", "date": day,
-                 "headline": (f"CANNOT DETERMINE: the scoreboard could not be "
-                              f"composed ({type(exc).__name__}: {_trunc(exc)})")}
+    # THE SCOREBOARD IS THE FIRST BLOCK (Murat's item 12, chunk 21): composed
+    # by the LAST step, printed BEFORE the step list, because it reads what the
+    # steps above wrote and the economics is what the reader came for. A step
+    # that refused, timed out or raised leaves the named absence here rather
+    # than a zero — and it can never cost the day's receipt, which is the one
+    # thing this driver must not do.
+    board = ctx.get("scoreboard") or {
+        "receipt": "morning_scoreboard", "date": day,
+        "headline": ("CANNOT DETERMINE: the scoreboard step did not return a "
+                     "board (its row in `steps` carries the reason)")}
     receipt = {
         "receipt": "daily_pass",
         "scoreboard": board,
@@ -876,7 +913,7 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         "step_stages": {"news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "grade_forecasts": "pnl",
-                        "coverage": "raw"},
+                        "coverage": "raw", "scoreboard": "pnl"},
         "date": day, "run": run,
         "git_head": git_head(),
         "started_utc": started.isoformat(timespec="seconds"),

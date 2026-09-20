@@ -167,6 +167,22 @@ def calls(monkeypatch) -> list[str]:
     # and neither belongs in a unit test's blast radius.
     monkeypatch.setattr(DP, "build_decision_contracts", _contracts)
     monkeypatch.setattr(DP, "record_decided", _record)
+
+    # Chunk 21. The real composer reads the decision contracts, the ledger,
+    # the night folder and the replay receipts out of `backend/data`. It writes
+    # nothing — but "read-only" is not the standard this fixture holds: the
+    # standard is that a unit test of the DRIVER exercises the driver, not the
+    # state of somebody's machine. The board below is the shape `render` and
+    # the receipt read, with one named absence so the step's counting branch is
+    # exercised too.
+    def _board(**kw):
+        seen.append("scoreboard")
+        return {"receipt": "morning_scoreboard", "licence": "PRODUCT_EXPERIMENT",
+                "date": str(kw.get("asof") or _today()),
+                "nav_vs_spy": "CANNOT DETERMINE: no NAV series in this fixture",
+                "headline": "fixture scoreboard"}
+
+    monkeypatch.setattr(DP, "morning_scoreboard", _board)
     return seen
 
 
@@ -222,7 +238,7 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     outer = [c.split(":")[0] for c in calls]
     assert outer == ["news_pull", "decision_contract", "analyst_snapshot",
                      "e1_append", "book_cadence", "book_cadence", "book_cadence",
-                     "grade_forecasts", "coverage"]
+                     "grade_forecasts", "coverage", "scoreboard"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:
@@ -410,6 +426,28 @@ def test_the_receipt_shape(out, calls, rth_open) -> None:
     on_disk = json.loads(Path(rec["path"]).read_text(encoding="utf-8"))
     assert on_disk["date"] == day
     assert [r["step"] for r in on_disk["steps"]] == [s for s, _ in DP.STEPS]
+
+
+def test_the_scoreboard_is_the_first_block_and_the_last_step(out, calls,
+                                                             rth_open) -> None:
+    """Murat's item 12 (chunk 21): the economics before the step list.
+
+    It runs LAST — it reads what the steps wrote — and is PRINTED FIRST, so a
+    reader who opens the receipt sees what the day did to the money before the
+    list of what the machine did.
+    """
+    rec = DP.run_daily_pass(day=_today())
+    assert calls[-1] == "scoreboard"
+    keys = list(rec)
+    assert keys.index("scoreboard") < keys.index("steps")
+    assert rec["scoreboard"]["headline"] == "fixture scoreboard"
+    row = next(r for r in rec["steps"] if r["step"] == "scoreboard")
+    assert row["status"] == "ok"
+    assert row["n_fields_cannot_determine"] == 1
+    assert row["fields_cannot_determine"] == ["nav_vs_spy"]
+    # a step that never returned leaves the NAMED absence, never a zero
+    on_disk = json.loads(Path(rec["path"]).read_text(encoding="utf-8"))
+    assert on_disk["scoreboard"]["headline"] == "fixture scoreboard"
 
 
 def test_the_receipt_carries_a_stage_and_it_is_the_last_one_it_reaches(

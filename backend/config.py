@@ -2930,6 +2930,11 @@ DAILY_PASS_STEP_BOX_S: dict = {
     # outlive this has grown enough to be worth a look.
     "grade_forecasts": 900,
     "coverage": 300,
+    # Chunk 21. It reads five receipts and a NAV map and computes nothing of
+    # its own. 300 s is `coverage`'s box for `coverage`'s reason: a scoreboard
+    # that takes five minutes is a scoreboard doing work it was specified not
+    # to do, and the pass must never wait on the block it prints first.
+    "scoreboard": 300,
 }
 
 #: How long the analyst sweep is allowed to run INSIDE its box, in seconds.
@@ -2956,7 +2961,7 @@ DAILY_PASS_ANALYST_BUDGET_S = 3300
 #:
 #: THE NUMBER IS NOT FREE. Every step above is boxed, so the longest a HEALTHY
 #: pass can possibly take is the sum of the boxes: 2400 + 3600 + 600 + 900 +
-#: 600 + 900 + 300 = 9,300 s = 2.58 h (it was 18,600 s = 5.17 h until the
+#: 600 + 900 + 300 + 300 = 9,600 s = 2.67 h (it was 18,600 s = 5.17 h until the
 #: analyst box came down to an hour and the grader arrived, both on
 #: 2026-09-20). Six hours is above that, so a sibling
 #: old enough to be killed is a sibling that has already outlived every box it
@@ -3201,7 +3206,8 @@ LAB_NIGHT_LAUNCHER_WEEKDAYS_ONLY = True
 #:
 #: THE DAILY PASS NUMBER IS NOT FREE. Every step of the pass is boxed
 #: (`DAILY_PASS_STEP_BOX_S`), so the longest a HEALTHY pass can take is the sum
-#: of those boxes -- 9,300 s since 2026-09-20 (18,600 s before it). This must
+#: of those boxes -- 9,600 s since 2026-09-20 (18,600 s before it, and 9,300 s
+#: before the scoreboard step). This must
 #: exceed that sum with a margin, or a healthy pass would be reported as a
 #: timeout; `test_always_on_lab.py` pins
 #: the inequality, so raising a step box without raising this turns the suite
