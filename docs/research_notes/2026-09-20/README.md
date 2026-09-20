@@ -2,3 +2,5 @@
 
 - `research_alpaca_and_social_round5.md` (Sonnet): hackathon winners UNPUBLISHED (428 submissions, judging in progress); no new Alpaca event open; AlphaDesk's guardrails are weaker than ours; TAKE: Alpaca skills-library checklist format, StockTwits trending as an attention control; TEST: insider cluster-buy 0-1d post-disclosure (§46 licenses it); IGNORE: Revelio ($85k/yr), congress copy (45-day lag).
 - Fleet deployed (terminal `71d5cc1` market-window wrapper); staging deleted; Railway $47.22/month read; PROFIT_ALLOCATOR_v2 active (`d1ea5a81`); YouTube key placed; the authority has not allocated on a weekday since 09-11 — Monday 16:30 ET is the test.
+
+- `review_night_2026-09-19_to_20.md` — Fable, 09-20 08:30 HKT: the night reviewed after Murat closed the lab ("local simulation was what I asked"). Scoreboard first: five readable books $440,907, hack2 401, zero decisions on disk, zero forecasts graded, $2.08 of cloud spent since the top-up. Three loops were dead containers (CRLF wrapper, fixed `0878516`); the idle queue ran one job per lab instance; the price table is wrong; what would be more efficient and more profitable, in order.
