@@ -114,6 +114,13 @@ DIRECTIONS: tuple[str, ...] = ("BUY", "WATCH", "SELL", "REFUSED")
 #: reads as a finding).
 NOT_CALIBRATED = "NOT CALIBRATED"
 
+#: The ROI rule's own named absence, spelled with an underscore so a reader
+#: greping either file finds both halves of the same idea
+#: (`roi_rank.NOT_CALIBRATED`). Re-declared rather than imported for the same
+#: reason the refusal vocabularies are: this module is the one that writes the
+#: receipt, and the word on the receipt must not change because an import moved.
+NOT_CALIBRATED_ROI = "NOT_CALIBRATED"
+
 #: At most this many REFUSED rows, best rank first. A funnel of 5,324 screened
 #: names would otherwise write a file nobody opens; the count that was elided is
 #: on the payload, so the cap is visible rather than silent.
@@ -593,6 +600,12 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
 
     tilts = {p["ticker"]: p for p in (book.get("positions") or [])
              if p.get("source") == "evidence-led"}
+    # The ROI rule's block for every name it considered (chunk 18c). Absent
+    # entirely when `config.IC_ROI_RANKING` is off, so the flag is a true
+    # revert: no key appears that today's rows do not already carry.
+    roi_ranking = book.get("roi_ranking") or None
+    roi_rows = dict((roi_ranking or {}).get("rows_by_ticker") or {})
+    roi_unranked = dict((roi_ranking or {}).get("not_calibrated") or {})
     degradation = list(book.get("degradation_reasons") or [])
     by_ticker_degradation: dict[str, str] = {}
     for line in degradation:
@@ -641,6 +654,8 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
             "ranking_score": getattr(r, "ranking_score", None),
             "verdict": getattr(r, "recommendation", None),
         })
+        if roi_ranking is not None:
+            row.update(_roi_fields(ticker, roi_rows, roi_unranked))
         pos = tilts.get(ticker)
         if pos is not None:
             verdict = str(getattr(r, "recommendation", "") or "")
@@ -677,6 +692,40 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
     refused.sort(key=lambda d: (d.get("rank") is None, d.get("rank") or 0))
     kept = refused[:MAX_REFUSED_ROWS]
     return rows + kept
+
+
+#: The fields an ROI-scored row carries, in the order a reader wants them.
+_ROI_ROW_FIELDS: tuple[str, ...] = (
+    "expected_return_net_pct", "downside_pct", "roi_score", "roi_rank",
+    "kelly_fraction", "kelly_weight", "roi_basis", "roi_measured_on", "roi_t",
+    "roi_n_blocks", "expected_return_basis", "downside_basis",
+    "kelly_fraction_basis")
+
+
+def _roi_fields(ticker: str, rows: dict, unranked: dict) -> dict:
+    """The ROI block for one name: the numbers, or the reason there are none.
+
+    Three populations and no fourth. A name the rule SCORED carries the two
+    measured inputs, the ratio, its rank and its Kelly fraction, plus the
+    receipt path the expected return came off. A name the rule CONSIDERED and
+    could not score carries the sentence naming the missing field. A name that
+    never reached the rule — every REFUSED row, because the hard gates run
+    first and the rule only ever sees survivors — says exactly that, so a
+    reader can never mistake "refused at the gate" for "the ROI rule declined
+    it".
+    """
+    t = str(ticker)
+    if t in rows:
+        body = rows[t]
+        out = {k: body[k] for k in _ROI_ROW_FIELDS if k in body}
+        out["roi"] = "SCORED"
+        return out
+    if t in unranked:
+        return {"roi": unranked[t]}
+    return {"roi": (f"{NOT_CALIBRATED_ROI}: not considered — this name never "
+                    f"entered the ROI ranking, because the hard eligibility "
+                    f"gates run first and the rule only ever sees the "
+                    f"candidates they admitted")}
 
 
 def _refusal_sentence(r: Any, degradation_line: str | None) -> str:
@@ -769,6 +818,14 @@ def _agency_rows(options: list, *, asof: date) -> list[dict]:
             horizon_months=int(config.IC_WEALTH_HORIZON_MONTHS))
         row["expiry_utc"] = expiry
         row["expiry_basis"] = basis
+        if config.IC_ROI_RANKING:
+            row["roi"] = (
+                f"{NOT_CALIBRATED_ROI}: not a name — an agency Option is a "
+                f"whole costed BOOK. The ROI rule ranks candidates inside the "
+                f"committee's tilt sleeve against each other; there is no "
+                f"measured per-book expected return that would let it rank one "
+                f"personality's book against another's, and the three books "
+                f"are not alternatives at one capital level anyway.")
         rows.append(row)
     return rows
 
@@ -932,6 +989,7 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "capital_usd": capital,
         "directions_not_produced_today": sorted(d for d in DIRECTIONS
                                                 if d not in produced),
+        **_roi_payload_block(rows, book),
         "worst_case_largest_admissible_book": largest_admissible_book(),
         "notes": list(notes or []),
         "degradation_reasons": list((book or {}).get("degradation_reasons") or []),
@@ -947,6 +1005,34 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
             "seals anything: the engine decided, this file records, and the two "
             "LLM surfaces read it."),
     }
+
+
+def _roi_payload_block(rows: list[dict], book: dict | None) -> dict:
+    """The day's ROI census, or nothing at all when the flag is off.
+
+    Counts the rows the rule SCORED and groups the rest by the FIELD that was
+    missing, because "38 rows are not calibrated" is not a finding and "36 of
+    them have no measured return for their leading signal, 2 have no
+    volatility" is. The per-ticker sentences stay on the rows; only the census
+    is here, so the file does not carry the same prose twice.
+    """
+    ranking = (book or {}).get("roi_ranking")
+    if not ranking:
+        return {}
+    scored = sum(1 for r in rows if r.get("roi") == "SCORED")
+    by_field: dict[str, int] = {}
+    for r in rows:
+        text = str(r.get("roi") or "")
+        if not text.startswith(NOT_CALIBRATED_ROI):
+            continue
+        tail = text[len(NOT_CALIBRATED_ROI):].lstrip(": ")
+        field_name = tail.split("—")[0].strip() or "unstated"
+        by_field[field_name] = by_field.get(field_name, 0) + 1
+    census = {k: v for k, v in ranking.items()
+              if k not in ("rows_by_ticker", "not_calibrated")}
+    census["n_rows_scored"] = scored
+    census["n_rows_not_calibrated_by_missing_field"] = by_field
+    return {"roi_ranking": census}
 
 
 def write_contracts(rows: list[dict], *, asof: date, out_dir: Path | None = None,

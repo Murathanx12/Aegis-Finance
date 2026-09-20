@@ -110,6 +110,17 @@ NOT_INPUT_GUARDS: dict[str, str] = {
         "read as a result ABOUT that signal. It takes no user input and guards "
         "no request field, so it is not a missing-input guard; the refusals "
         "are exercised in test_portfolio_farm_revisions.py"),
+    "roi_rank": (
+        "MeasuredReturnError / CapBreach — neither is a missing-input guard. "
+        "MeasuredReturnError is raised on a `config.SIGNAL_MEASURED_RETURN` "
+        "ROW that is malformed (a measured return with no receipt, a t with no "
+        "basis), which is a declaration defect like `policy` above, not an "
+        "absent request field; a MISSING row is the ordinary case and is "
+        "answered with a printed `NOT_CALIBRATED` sentence, never a raise. "
+        "CapBreach fires only if `size_ce_kelly` and this module disagree "
+        "about the declared caps. Both refusals, and the whole "
+        "scored/NOT_CALIBRATED partition, are exercised directly in "
+        "test_roi_rank.py"),
     "policy": ("PolicyError (portfolio_farm) — a policy asks for a signal or "
                "sizing the engine does not implement, or zero costs without "
                "declaring the frictionless diagnostic. Every branch is "

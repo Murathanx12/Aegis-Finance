@@ -1,0 +1,510 @@
+"""THE ROI RULE — rank what is MEASURED, refuse to rank what is not.
+
+Murat, 2026-09-20, verbatim: *"we need to fix the decision making engine. it
+shouldnt make bad dessicions but it cant be sure so it doesnt make one. from
+good decisions and return potetnials it should go with the highest ROI like we
+have talked."* The spec is
+`docs/research_notes/2026-09-20/spec_decision_engine_and_scenario_gym.md`
+Part B; this module is that Part and nothing else.
+
+THE RULE
+========
+Among candidates that already cleared the HARD gates (verdict, licensed
+evidence, positive rank score, PIT, capacity, one-share minimum, worst case
+computable — all of them in `investment_committee.compose_book`, all of them
+unchanged), rank by::
+
+    roi_score = expected_return_net(horizon) / downside(horizon)
+
+take the top K, and size each by FRACTIONAL KELLY. Nothing here can turn a
+`REFUSED` into a `BUY`: this module never sees a candidate the gates rejected,
+and it never relaxes a cap. It reorders the admissible and it resizes them.
+
+THE HONESTY RULE, WHICH IS THE CENTRE OF THE THING
+==================================================
+A candidate gets an ROI score **only** when BOTH numbers come from a MEASURED
+source:
+
+* `expected_return_net` — the measured net forward return of the candidate's
+  LEADING licensed signal, read out of `config.SIGNAL_MEASURED_RETURN`, where
+  every row carries its own `receipt` path and `measured_on` date and
+  `test_roi_rank.py` asserts every one of those paths exists in this checkout.
+  **A signal with no receipt has no row, and a name whose leader has no row is
+  not ranked.** There is no default, no prior, no "roughly the equity premium".
+* `downside` — the name's own annualised volatility, scaled to the horizon.
+  A name with no `vol_annual` is not ranked. Missing is missing, never average
+  (the same rule `arena.policies.size_ce_kelly` already enforces).
+
+and only when the leading signal's measured `t` clears `config.ROI_MIN_T`.
+That floor is the brief's second clause made executable: *it cannot be sure, so
+it does not make one.* A name below the floor is not forced into a ranking on a
+number nobody measured well enough — it keeps today's verdict/confidence sizing
+and the row PRINTS why, as `roi: NOT_CALIBRATED: <field> — <reason>`.
+
+The rule is therefore a STRICT PARTIAL FUNCTION and the domain it is undefined
+on is printed rather than guessed. That is the only difference between this and
+relabelling today's heuristic "ROI".
+
+WHAT MAY NOT FEED IT
+====================
+**No LLM probability is an input here, today or later.** The first run of the
+forecast grader (`backend/data/optimus/night_factory_2026-09-20/
+grade_forecasts_2026-09-20.json`) measured the swarm at mean probability 0.510
+against a base rate of 0.340, Brier 0.2625 against climatology 0.2244 — the
+forecasts are overconfident and do not beat the base rate. A number that loses
+to its own climatology is not an expected return. The spec's §C gym may one day
+contribute a `gut_signal` field with its OWN measured reliability weight; it
+enters as one weighted input among licensed signals, never as `expected_return`
+and never as a veto.
+
+WHY KELLY IS BORROWED AND NOT REWRITTEN
+=======================================
+`arena.policies.size_ce_kelly` already implements fractional Kelly with a
+declared prior, a per-name cap that truncates WITHOUT redistributing, and a
+gross cap — and it already refuses a name with no volatility. A second Kelly in
+this repo would be a second thing to get wrong. The mapping is exact rather
+than approximate:
+
+    size_ce_kelly gives  w = kelly_fraction * ic_prior * z / sigma
+
+feed it `z = roi_score` and `sigma = vol_horizon`, with
+`ic_prior = ROI_DOWNSIDE_Z` (the same z the downside was built from). Then
+
+    w = f * Z * (mu / (Z * sigma)) / sigma = f * mu / sigma^2
+
+which is fractional Kelly on the horizon distribution, exactly. The four
+personalities are the `f` — `config.ROI_KELLY_FRACTION_BY_PERSONALITY`, the
+same four names `agency.py` uses — and nothing else about the rule changes
+between them.
+
+THE CAPS DO NOT MOVE
+====================
+`max_single_name` is `IC_SINGLE_NAME_TILT_CAP` and `max_gross` is
+`IC_TOTAL_TILT_BUDGET`, the same two numbers
+`decision_contract.largest_admissible_book()` computes the day's worst case
+from. `rank()` re-checks both after sizing and REFUSES rather than trimming, so
+no personality and no score can raise the worst case above today's. Session
+protocol rule 4, enforced in code instead of remembered.
+"""
+
+from __future__ import annotations
+
+import logging
+import math
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Optional
+
+from backend import config
+
+logger = logging.getLogger(__name__)
+
+#: The prefix every un-scored row carries. Spelled once: a reader greps for it.
+NOT_CALIBRATED = "NOT_CALIBRATED"
+
+#: Every `SIGNAL_MEASURED_RETURN` row must carry all seven. A row missing one
+#: is a REFUSAL, not a row with a hole — a measured return with no receipt is
+#: the exact shape of a number that entered a config by hand.
+#:
+#: `t` and `n_blocks` may be the string `CANNOT DETERMINE: ...` and often are:
+#: several receipts in this repo state a monthly NET return and a rank IC t,
+#: which is a statistic about the ORDER and not about the return. A row whose
+#: `t` is a named absence can never clear `ROI_MIN_T` — which is the correct
+#: outcome, and `t_basis` is what tells a reader whether the absence is "nobody
+#: computed it" or "the number next to it is a different quantity".
+REQUIRED_FIELDS: tuple[str, ...] = (
+    "monthly_net_pct", "t", "t_basis", "n_blocks", "net_basis", "receipt",
+    "measured_on")
+
+#: Tolerance on the two cap re-checks. Kelly weights are floats; a cap breach
+#: worth refusing is a real one, not the last bit of a float.
+_CAP_EPS = 1e-9
+
+
+class MeasuredReturnError(ValueError):
+    """A `SIGNAL_MEASURED_RETURN` row that cannot be trusted as measured.
+
+    Raised by `measured_return`, CAUGHT by `rank` and turned into a printed
+    `NOT_CALIBRATED` reason: a malformed table must never take down the daily
+    contract, and it must never quietly become a number either.
+    """
+
+
+class CapBreach(RuntimeError):
+    """Kelly sizing produced a weight or a gross above the declared cap.
+
+    Not clamped here on purpose. `size_ce_kelly` already caps both; if this
+    fires, the two layers disagree about what the cap IS, and the worst case on
+    the day's receipt would be computed from the wrong one.
+    """
+
+
+def _as_float(value: Any) -> Optional[float]:
+    """A finite number, or None. `CANNOT DETERMINE: ...` becomes None, which is
+    what a named absence has to mean everywhere it is read."""
+    try:
+        out = float(value)
+    except (TypeError, ValueError):
+        return None
+    return out if math.isfinite(out) else None
+
+
+def _repo_root() -> Path:
+    """The checkout — the same three lines as `decision_contract._repo_root`."""
+    import os
+
+    env = os.getenv("AEGIS_REPO_ROOT")
+    if env and Path(env).is_dir():
+        return Path(env).resolve()
+    return Path(__file__).resolve().parent.parent.parent
+
+
+# ===========================================================================
+# THE TWO NUMBERS
+# ===========================================================================
+
+
+def measured_return(signal_id: str) -> Optional[dict]:
+    """The measured net read for one signal, or None when none is on file.
+
+    None is the ordinary case and it is not a failure: most licensed signals
+    in this programme carry an ORDERING verdict and no per-name return, which
+    is exactly why `expected_payoff` has been the string NOT CALIBRATED since
+    the contract was written.
+    """
+    table = getattr(config, "SIGNAL_MEASURED_RETURN", {}) or {}
+    row = table.get(str(signal_id or ""))
+    if row is None:
+        return None
+    missing = [k for k in REQUIRED_FIELDS if row.get(k) is None]
+    if missing:
+        raise MeasuredReturnError(
+            f"config.SIGNAL_MEASURED_RETURN[{signal_id!r}] is missing "
+            f"{missing} — every row carries all of {list(REQUIRED_FIELDS)} or "
+            f"it is not a measured read, it is a number somebody typed")
+    return dict(row)
+
+
+def expected_return_net(signal_id: str, *, horizon_months: float
+                        ) -> tuple[Optional[float], str, Optional[dict]]:
+    """(net return at the horizon as a FRACTION, basis, the measured row).
+
+    Scaled LINEARLY from the monthly read, never compounded. Compounding would
+    assert that the measured month repeats every month for two years, which no
+    receipt in this repo claims; linear is the smaller of the two numbers and
+    the one the receipt supports.
+    """
+    row = measured_return(signal_id)
+    if row is None:
+        return None, (
+            f"{NOT_CALIBRATED}: expected_return_net — no measured net forward "
+            f"return is on file for {signal_id!r} (config.SIGNAL_MEASURED_RETURN "
+            f"has no row, and a signal with no receipt gets no number)"), None
+    monthly = float(row["monthly_net_pct"]) / 100.0
+    er = monthly * float(horizon_months)
+    basis = (f"{100 * monthly:+.4f}%/month net x {horizon_months:g} months "
+             f"(linear, not compounded), measured {row['measured_on']} at "
+             f"t {row['t']} over {row['n_blocks']} blocks; receipt "
+             f"{row['receipt']}")
+    return er, basis, row
+
+
+def downside(vol_annual: Optional[float], *, horizon_months: float,
+             z: Optional[float] = None) -> tuple[Optional[float], str]:
+    """(downside magnitude at the horizon as a FRACTION, basis).
+
+    `z x vol_annual x sqrt(horizon/12)`. A one-sigma horizon move, because the
+    quantity being divided into is a POINT estimate of return: a ratio of a
+    mean to a one-sigma spread is the Sharpe-shaped number the spec asks for,
+    and raising z scales every candidate identically and reorders nothing.
+    The z is config (`ROI_DOWNSIDE_Z`) so a reader can see the choice instead
+    of finding it inside an expression.
+
+    A missing `vol_annual` returns None. Missing is missing.
+    """
+    zz = float(config.ROI_DOWNSIDE_Z if z is None else z)
+    try:
+        vol = float(vol_annual)
+    except (TypeError, ValueError):
+        vol = float("nan")
+    if not math.isfinite(vol) or vol <= 0:
+        return None, (
+            f"{NOT_CALIBRATED}: downside — the candidate carries no usable "
+            f"annualised volatility (vol_annual={vol_annual!r}), so no "
+            f"distributional downside can be computed at this horizon and the "
+            f"name is not ROI-ranked")
+    vol_h = vol * math.sqrt(float(horizon_months) / 12.0)
+    return zz * vol_h, (
+        f"{zz:g} x annualised vol {100 * vol:.1f}% x sqrt({horizon_months:g}/12) "
+        f"= {100 * zz * vol_h:.2f}% at the horizon (config.ROI_DOWNSIDE_Z)")
+
+
+def kelly_fraction_for(personality: Optional[str] = None) -> tuple[float, str]:
+    """(fraction of FULL Kelly, basis). The four personalities, and no fifth.
+
+    An unknown personality falls back to the configured default and SAYS so —
+    a typo that silently sized at full Kelly would be the worst possible
+    failure of this function.
+    """
+    table = dict(config.ROI_KELLY_FRACTION_BY_PERSONALITY)
+    name = str(personality or config.ROI_DEFAULT_PERSONALITY)
+    if name in table:
+        return float(table[name]), (
+            f"{float(table[name]):g}x full Kelly, the declared fraction for the "
+            f"{name!r} personality (config.ROI_KELLY_FRACTION_BY_PERSONALITY)")
+    fallback = str(config.ROI_DEFAULT_PERSONALITY)
+    return float(table[fallback]), (
+        f"{float(table[fallback]):g}x full Kelly — {name!r} is not one of the "
+        f"declared personalities {sorted(table)}, so the configured default "
+        f"{fallback!r} is used and named")
+
+
+# ===========================================================================
+# THE RANKING
+# ===========================================================================
+
+
+@dataclass
+class RoiRanking:
+    """What the rule decided, and what it refused to decide.
+
+    `admitted` is the ORDER `compose_book` should size in: scored names best
+    first, then the un-scored ones in today's order, truncated to K. Ordering
+    the measured ahead of the unmeasured is deliberate and is the only place
+    this module changes who gets a scarce slot — an ordering rank and an ROI
+    score are not comparable quantities, and a name with a measured return at
+    t >= ROI_MIN_T is the better-evidenced of the two by construction. It
+    cannot admit a name the gates refused: `rank()` only ever sees survivors.
+    """
+
+    admitted: list[Any] = field(default_factory=list)
+    weights: dict[str, float] = field(default_factory=dict)
+    rows: dict[str, dict] = field(default_factory=dict)
+    not_calibrated: dict[str, str] = field(default_factory=dict)
+    receipt: dict = field(default_factory=dict)
+
+    def is_scored(self, ticker: str) -> bool:
+        return str(ticker) in self.weights
+
+    def weight_for(self, ticker: str) -> Optional[float]:
+        return self.weights.get(str(ticker))
+
+    def contract_fields(self, ticker: str) -> dict:
+        """The block `decision_contract` puts on the row for this name."""
+        t = str(ticker)
+        if t in self.rows:
+            return dict(self.rows[t])
+        return {"roi": self.not_calibrated.get(
+            t, f"{NOT_CALIBRATED}: this name never entered the ROI ranking")}
+
+
+def _sig_of(rec: Any) -> Optional[str]:
+    lead = rec.leader() if hasattr(rec, "leader") else None
+    return getattr(lead, "signal_id", None)
+
+
+def _vol_of(candidates: dict, ticker: str, rec: Any) -> Optional[float]:
+    cand = (candidates or {}).get(ticker) or {}
+    v = cand.get("vol_annual")
+    if v is None:
+        v = getattr(rec, "vol_annual", None)
+    return v
+
+
+def rank(recs: list[Any], *, candidates: Optional[dict] = None,
+         horizon_months: Optional[float] = None,
+         personality: Optional[str] = None,
+         max_names: Optional[int] = None,
+         single_name_cap: Optional[float] = None,
+         total_budget: Optional[float] = None) -> RoiRanking:
+    """Rank the ALREADY-ADMISSIBLE by ROI, size the measured ones by Kelly.
+
+    `recs` must arrive in today's order (`(rank, -ranking_score)`), because
+    that order is what the un-scored names keep. Everything this function can
+    refuse, it refuses by NAME into `not_calibrated`.
+    """
+    from backend.services.arena.policies import size_ce_kelly
+
+    horizon = float(horizon_months if horizon_months is not None
+                    else config.IC_WEALTH_HORIZON_MONTHS)
+    k = int(max_names if max_names is not None else config.IC_MAX_TILT_NAMES)
+    cap = float(single_name_cap if single_name_cap is not None
+                else config.IC_SINGLE_NAME_TILT_CAP)
+    budget = float(total_budget if total_budget is not None
+                   else config.IC_TOTAL_TILT_BUDGET)
+    frac, frac_basis = kelly_fraction_for(personality)
+    min_t = float(config.ROI_MIN_T)
+    zz = float(config.ROI_DOWNSIDE_Z)
+
+    scored: list[dict] = []
+    not_calibrated: dict[str, str] = {}
+    by_ticker: dict[str, Any] = {}
+
+    for rec in recs or []:
+        ticker = str(getattr(rec, "ticker", "") or "")
+        if not ticker:
+            continue
+        by_ticker[ticker] = rec
+        sig = _sig_of(rec)
+        if not sig:
+            not_calibrated[ticker] = (
+                f"{NOT_CALIBRATED}: expected_return_net — this name has no "
+                f"rank-bearing licensed signal, so there is no measured read to "
+                f"attach to it")
+            continue
+        try:
+            er, er_basis, row = expected_return_net(sig, horizon_months=horizon)
+        except MeasuredReturnError as exc:
+            not_calibrated[ticker] = (
+                f"{NOT_CALIBRATED}: expected_return_net — the measured-return "
+                f"table REFUSED to answer for {sig!r}: {exc}")
+            continue
+        if er is None or row is None:
+            not_calibrated[ticker] = er_basis
+            continue
+        t_stat = _as_float(row["t"])
+        if t_stat is None:
+            not_calibrated[ticker] = (
+                f"{NOT_CALIBRATED}: confidence — {sig}'s receipt states a net "
+                f"return and NO t on that return ({row['t']}). "
+                f"{row['t_basis']} Without a t there is nothing for ROI_MIN_T "
+                f"to clear, so the name is not ranked "
+                f"(receipt {row['receipt']})")
+            continue
+        if t_stat < min_t:
+            not_calibrated[ticker] = (
+                f"{NOT_CALIBRATED}: confidence — {sig}'s measured net read "
+                f"carries t {t_stat:.2f}, below ROI_MIN_T {min_t:.2f}. The "
+                f"engine is not sure enough about this return to rank the name "
+                f"on it, so it does not: the name keeps the verdict/confidence "
+                f"sizing and this sentence instead of a score "
+                f"(receipt {row['receipt']})")
+            continue
+        if er <= 0:
+            not_calibrated[ticker] = (
+                f"{NOT_CALIBRATED}: expected_return_net — {sig}'s measured net "
+                f"read is {float(row['monthly_net_pct']):+.4f}%/month, which is "
+                f"not positive, so there is no ROI to rank "
+                f"(receipt {row['receipt']})")
+            continue
+        vol_annual = _vol_of(candidates or {}, ticker, rec)
+        dn, dn_basis = downside(vol_annual, horizon_months=horizon, z=zz)
+        if dn is None or dn <= 0:
+            not_calibrated[ticker] = dn_basis
+            continue
+        scored.append({
+            "ticker": ticker,
+            "signal": sig,
+            "expected_return_net_pct": round(100.0 * er, 6),
+            "expected_return_basis": er_basis,
+            "downside_pct": round(100.0 * dn, 6),
+            "downside_basis": dn_basis,
+            "roi_score": round(er / dn, 6),
+            "roi_basis": str(row["receipt"]),
+            "roi_measured_on": str(row["measured_on"]),
+            "roi_t": t_stat,
+            "roi_n_blocks": row["n_blocks"],
+            "_vol_horizon": float(vol_annual) * math.sqrt(horizon / 12.0),
+        })
+
+    scored.sort(key=lambda d: (-d["roi_score"], d["ticker"]))
+    unscored = [t for t in by_ticker if t in not_calibrated]
+    order = [d["ticker"] for d in scored] + unscored
+    admitted_tickers = order[:k]
+    admitted = [by_ticker[t] for t in admitted_tickers]
+
+    take = [d for d in scored if d["ticker"] in set(admitted_tickers)]
+    weights: dict[str, float] = {}
+    kelly_receipt: dict = {"sizing": "not_run",
+                           "why": "no candidate carried a measured ROI score"}
+    if take:
+        weights, kelly_receipt = size_ce_kelly(
+            [{"ticker": d["ticker"], "score": d["roi_score"]} for d in take],
+            {"names": {d["ticker"]: {"vol63": d["_vol_horizon"]} for d in take}},
+            ic_prior=zz, kelly_fraction=frac, max_single_name=cap,
+            max_gross=budget)
+        _refuse_cap_breach(weights, cap=cap, budget=budget)
+
+    rows: dict[str, dict] = {}
+    for i, d in enumerate(take, start=1):
+        body = {kk: vv for kk, vv in d.items() if not kk.startswith("_")}
+        body["roi_rank"] = i
+        body["kelly_fraction"] = frac
+        body["kelly_fraction_basis"] = frac_basis
+        body["kelly_weight"] = round(float(weights.get(d["ticker"], 0.0)), 6)
+        rows[d["ticker"]] = body
+
+    for d in scored:
+        if d["ticker"] not in rows:
+            not_calibrated.setdefault(d["ticker"], (
+                f"{NOT_CALIBRATED}: ranked out — this name carried an ROI score "
+                f"of {d['roi_score']:.4f} and was outranked inside the "
+                f"IC_MAX_TILT_NAMES ({k}) cap"))
+
+    receipt = {
+        "rule": "expected_return_net / downside, top K, fractional Kelly",
+        "spec": ("docs/research_notes/2026-09-20/"
+                 "spec_decision_engine_and_scenario_gym.md §B"),
+        "horizon_months": horizon,
+        "personality": str(personality or config.ROI_DEFAULT_PERSONALITY),
+        "kelly_fraction": frac,
+        "kelly_fraction_basis": frac_basis,
+        "downside_z": zz,
+        "min_t": min_t,
+        "max_names": k,
+        "single_name_cap": cap,
+        "total_budget": budget,
+        "n_considered": len(by_ticker),
+        "n_scored": len(rows),
+        "n_not_calibrated": len(not_calibrated),
+        "not_calibrated": dict(not_calibrated),
+        "rows_by_ticker": rows,
+        "kelly": kelly_receipt,
+        "honesty": (
+            "A name is ROI-ranked only when BOTH its leading signal's measured "
+            "net return (config.SIGNAL_MEASURED_RETURN, every row with a "
+            "receipt path on disk) and its own volatility exist, and only when "
+            "that signal's measured t clears ROI_MIN_T. Everything else keeps "
+            "the verdict/confidence sizing and prints which field was missing. "
+            "No LLM probability is an input: the 2026-09-20 grader measured the "
+            "swarm's forecasts at Brier 0.2625 against a climatology of 0.2244."),
+    }
+    return RoiRanking(admitted=admitted, weights=weights, rows=rows,
+                      not_calibrated=not_calibrated, receipt=receipt)
+
+
+def _refuse_cap_breach(weights: dict[str, float], *, cap: float,
+                       budget: float) -> None:
+    """Session protocol rule 4, as a gate rather than a memory."""
+    for t, w in weights.items():
+        if float(w) > cap + _CAP_EPS:
+            raise CapBreach(
+                f"Kelly sized {t} at {float(w):.6f}, above the declared "
+                f"IC_SINGLE_NAME_TILT_CAP {cap:.6f}. The day's worst case is "
+                f"computed from the cap, so a weight above it would make the "
+                f"printed worst case smaller than the real one.")
+    gross = sum(float(w) for w in weights.values())
+    if gross > budget + _CAP_EPS:
+        raise CapBreach(
+            f"Kelly sized a gross tilt of {gross:.6f}, above the declared "
+            f"IC_TOTAL_TILT_BUDGET {budget:.6f}.")
+
+
+def table_receipts(root: Optional[Path] = None) -> dict:
+    """Every measured row's receipt path, and whether it EXISTS in this checkout.
+
+    The claim `SIGNAL_MEASURED_RETURN` makes is "this number was measured and
+    here is where". `test_roi_rank.py` fails on a missing path, because a
+    receipt that is not on disk is prose with a filename.
+    """
+    base = Path(root) if root is not None else _repo_root()
+    out: dict[str, dict] = {}
+    for sig, row in (getattr(config, "SIGNAL_MEASURED_RETURN", {}) or {}).items():
+        rel = str((row or {}).get("receipt") or "")
+        out[sig] = {"receipt": rel, "exists": bool(rel) and (base / rel).exists()}
+    return out
+
+
+__all__ = ["CapBreach", "MeasuredReturnError", "NOT_CALIBRATED",
+           "REQUIRED_FIELDS", "RoiRanking", "downside", "expected_return_net",
+           "kelly_fraction_for", "measured_return", "rank", "table_receipts"]

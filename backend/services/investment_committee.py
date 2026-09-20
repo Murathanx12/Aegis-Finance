@@ -45,6 +45,7 @@ from backend.services import kill_conditions
 from backend.services import pm_actions
 from backend.services import portfolio_factory as PF
 from backend.services import recommendation as REC
+from backend.services import roi_rank
 from backend.services import signal_registry as SR
 
 logger = logging.getLogger(__name__)
@@ -327,13 +328,40 @@ def compose_book(recs: list[Any], *, capital: float,
     except PF.ArchetypeRefused as exc:  # defensive: recs may be lazily built
         degradation.append(f"tilt selection refused: {exc}")
     eligible.sort(key=lambda r: (r.rank, -r.ranking_score))
-    eligible = eligible[:config.IC_MAX_TILT_NAMES]
+
+    # 1b. THE ROI RULE (chunk 18c). Behind ONE flag, and it moves only ORDER
+    #     and SIZE inside the set the gates already admitted — never membership
+    #     of that set. A name with no measured return for its leading signal,
+    #     or with a measured t below ROI_MIN_T, keeps exactly today's
+    #     verdict/confidence sizing and carries the printed reason.
+    roi = None
+    if config.IC_ROI_RANKING:
+        try:
+            roi = roi_rank.rank(
+                eligible, candidates=candidates,
+                horizon_months=config.IC_WEALTH_HORIZON_MONTHS,
+                personality=config.ROI_DEFAULT_PERSONALITY,
+                max_names=config.IC_MAX_TILT_NAMES,
+                single_name_cap=config.IC_SINGLE_NAME_TILT_CAP,
+                total_budget=config.IC_TOTAL_TILT_BUDGET)
+        except roi_rank.CapBreach as exc:
+            # A cap disagreement is not something to trade through: fall back
+            # to today's sizing and SAY the ROI rule refused.
+            logger.error("ROI ranking refused: %s", exc)
+            degradation.append(f"ROI ranking REFUSED and today's "
+                               f"verdict/confidence sizing stands: {exc}")
+            roi = None
+    if roi is not None:
+        eligible = roi.admitted
+    else:
+        eligible = eligible[:config.IC_MAX_TILT_NAMES]
 
     tilts: dict[str, float] = {}
     tilt_meta: dict[str, dict] = {}
     for r in eligible:
-        w = _tilt_size(r)
-        if w <= 0:
+        w = (roi.weight_for(r.ticker) if roi is not None
+             and roi.is_scored(r.ticker) else _tilt_size(r))
+        if not w or w <= 0:
             continue
         cand = candidates.get(r.ticker, {})
         price = cand.get("price") or r.price
@@ -358,6 +386,8 @@ def compose_book(recs: list[Any], *, capital: float,
         tilts[r.ticker] = w
         tilt_meta[r.ticker] = {"rec": r, "price": price, "mdv": mdv,
                                "capacity": cap_row.to_dict()}
+        if roi is not None:
+            tilt_meta[r.ticker]["roi"] = roi.contract_fields(r.ticker)
 
     # 2. total-budget cap: scale all tilts down proportionally, never up.
     total = sum(tilts.values())
@@ -402,7 +432,7 @@ def compose_book(recs: list[Any], *, capital: float,
         r = m["rec"]
         price = m["price"]
         shares = math.floor(w * capital / price) if price else None
-        positions.append({
+        pos = {
             "ticker": t,
             "weight": round(w, 6),
             "dollars": round(w * capital, 2),
@@ -414,10 +444,23 @@ def compose_book(recs: list[Any], *, capital: float,
                        f"capped at {config.IC_SINGLE_NAME_TILT_CAP:.0%} per "
                        f"name"),
             "capacity": m["capacity"],
-        })
+        }
+        if "roi" in m:
+            pos["roi"] = m["roi"]
+            block = m["roi"]
+            pos["sizing"] = (
+                f"fractional Kelly at {block['kelly_fraction']:g}x on an ROI "
+                f"score of {block['roi_score']:.4f} "
+                f"({block['expected_return_net_pct']:+.2f}% net expected over "
+                f"{block['downside_pct']:.2f}% downside); receipt "
+                f"{block['roi_basis']}"
+                if "roi_score" in block else
+                f"verdict x confidence (the ROI rule did not rank this name: "
+                f"{block.get('roi')})")
+        positions.append(pos)
 
     wealth = _wealth(positions, capital, candidates)
-    return {
+    out = {
         "capital": capital,
         "template": tname,
         "template_description": template["description"],
@@ -428,6 +471,9 @@ def compose_book(recs: list[Any], *, capital: float,
         "degradation_reasons": degradation,
         "wealth": wealth,
     }
+    if roi is not None:
+        out["roi_ranking"] = roi.receipt
+    return out
 
 
 def _wealth(positions: list[dict], capital: float,

@@ -1758,6 +1758,161 @@ IC_TILT_ASSUMED_RETURN = 0.059
 IC_TILT_FALLBACK_VOL = 0.50
 
 
+# ── THE ROI RULE (chunk 18c, 2026-09-20) ─────────────────────────────────────
+# `backend/services/roi_rank.py`, spec
+# `docs/research_notes/2026-09-20/spec_decision_engine_and_scenario_gym.md` §B.
+# Murat: "it shouldnt make bad dessicions but it cant be sure so it doesnt make
+# one. from good decisions and return potetnials it should go with the highest
+# ROI." The rule ranks admissible candidates by expected-net-return over
+# downside and sizes by fractional Kelly — and it applies to a candidate ONLY
+# when both numbers are measured. Everything below is the declared half of that
+# sentence; the measured half is `SIGNAL_MEASURED_RETURN`.
+
+#: ONE flag. False restores the verdict x confidence sizing and removes every
+#: `roi*` key from the book and from the decision contract, byte for byte.
+IC_ROI_RANKING = True
+
+#: The confidence floor, on the LEADING signal's own measured t. A signal
+#: measured at t below this does not rank a name: the engine is not sure enough
+#: about the return to order anything on it, so it does not — it keeps today's
+#: sizing and prints the t it refused on. 2.0 is the conventional two-sigma bar
+#: and is deliberately NOT tuned to admit any particular signal; with the table
+#: as it stands (2026-09-20) it admits none, which is a fact about the
+#: programme's measured evidence and not a setting to relax.
+ROI_MIN_T = 2.0
+
+#: The downside is `z x vol_annual x sqrt(horizon/12)`. One sigma, because the
+#: numerator is a POINT estimate: mean over one-sigma spread is the
+#: Sharpe-shaped ratio the spec asks for. Raising z scales every candidate
+#: identically and reorders nothing — it only shrinks the Kelly weights.
+ROI_DOWNSIDE_Z = 1.0
+
+#: The four declared personalities as fractions of FULL Kelly (the same names
+#: `agency.py` uses). Full Kelly maximises log wealth and is famously too
+#: violent to hold; every tier here is a fraction of it, and NONE of them can
+#: raise the book's worst case, because `IC_SINGLE_NAME_TILT_CAP` and
+#: `IC_TOTAL_TILT_BUDGET` still bind after sizing (`roi_rank._refuse_cap_breach`
+#: REFUSES rather than trims if they ever stop binding).
+ROI_KELLY_FRACTION_BY_PERSONALITY: dict = {
+    "preservation": 0.10,
+    "balanced": 0.25,
+    "aggressive": 0.50,
+    "extreme_growth": 1.00,
+}
+
+#: The personality the committee book composes under. The committee page is the
+#: default product surface and its core-and-tilts framing is the balanced one;
+#: an aggressive book is a DECLARED choice a person makes, not a default.
+ROI_DEFAULT_PERSONALITY = "balanced"
+
+#: THE MEASURED HALF. One row per signal that may LEAD a ranking
+#: (`recommendation._ADAPTERS` x the registry's PICKER permission) and that has
+#: a per-name NET forward return with a receipt IN THIS CHECKOUT. Every row
+#: carries all of `roi_rank.REQUIRED_FIELDS`, every number was copied off the
+#: receipt named beside it, and `test_roi_rank.py` fails if any receipt path is
+#: not on disk. **A signal with no receipt gets no row, and a name whose
+#: leading signal has no row is not ROI-ranked.**
+#:
+#: WHY THERE ARE ONLY THREE ROWS, AND WHY NONE OF THEM CLEARS ROI_MIN_T TODAY
+#: --------------------------------------------------------------------------
+#: A sweep of `docs/TRIALS/`, `docs/archive/`, `NEGATIVE_RESULTS.md`, the
+#: measured strategy library and every `night_factory_*` receipt (2026-09-20)
+#: found a per-name net magnitude for exactly three of the eight adapter
+#: signals, and the registry independently permits exactly those three to lead
+#: (the other five are FILTER / SHELF / CLOSED, so writing a return for them
+#: would be licensing a filter to pick). The three carry t 1.40, t 1.66 and no
+#: t on the return at all.
+#:
+#: That is the answer to *"it can't be sure so it doesn't make one"*, and it is
+#: a fact about the programme's evidence rather than a setting: the rule is
+#: wired, armed and currently ranks nothing, and every row on the daily
+#: contract now prints WHICH number was missing instead of one flat string.
+#: The day a signal earns a t >= ROI_MIN_T read, it gets a row and the rule
+#: fires without a code change.
+#:
+#: NOT IN THE TABLE, AND WHY (each checked, none of them an oversight):
+#:   * `low_volatility` — registry: "ZERO net excess return", role FILTER. The
+#:     one in-repo magnitude (+4.37%/yr net,
+#:     `docs/STRATEGY_LIBRARY_MEASURED_2006_2019.md`) fails that doc's own FDR
+#:     screen, and the adapter is `higher_is_better=False` on vol: a positive
+#:     return here would license a risk filter to lead the order.
+#:   * `short_interest_level` — no per-name net magnitude anywhere in this
+#:     repo; a net t 3.4/3.0 with no return beside it
+#:     (`docs/archive/ROADMAP_BRAIN_V2.md`), and the one BOOK that used it is
+#:     -0.94%/mo t -2.09 (`docs/research_notes/2026-09-13/research_registry.md`).
+#:   * `earnings_surprise_monthly` — measured INVERTED (IC t -2.6,
+#:     `NEGATIVE_RESULTS.md` §14); the family's only net magnitude is
+#:     -3.74%/yr.
+#:   * `rating_drift_3m` — `known_effect: null`, `reliability_weight: null`, a
+#:     4-row yfinance table. Nothing has ever been measured for it.
+#:   * `momentum_12_1` — registry CLOSED/REJECTED; -1.11%/yr net in the
+#:     measured library. Structurally barred from the order already.
+#:   * Books E/F/G/C (the §14 scoreboard's +0.43%/mo t 3.12 and friends) are
+#:     BOOK-level engine reads against their own random-universe twins, with no
+#:     per-name column. Attaching F's seasonality number to a
+#:     `profitability_small` candidate would be a category error wearing the
+#:     best number on the board.
+SIGNAL_MEASURED_RETURN: dict = {
+    "profitability_small": {
+        "monthly_net_pct": 0.241,
+        "t": "CANNOT DETERMINE: the receipt states IC t 4.29, which is a RANK "
+             "statistic about the ordering, not a t on the return",
+        "t_basis": ("BRAIN-008's confirm window reports the net return and an "
+                    "information-coefficient t. A rank IC t may not be read as "
+                    "the return's t — that substitution is the exact shape of "
+                    "the defect `recommendation.py` was written to stop — so "
+                    "this row can never clear ROI_MIN_T until a t on the "
+                    "RETURN is measured."),
+        "n_blocks": 72,
+        "net_basis": ("+24.1 bps/mo on the HELD-OUT 2019-2024 confirm window, "
+                      "net at the 50 bps ruler the explore leg declared; "
+                      "n_blocks 72 = the 72 months of that stated window. "
+                      "Caveat carried on the same receipt: DSR ~ 0.10 after "
+                      "61-candidate deflation, and BRAIN-008's FF6 alpha is "
+                      "negative (the edge may be a factor tilt). The spanning "
+                      "test in docs/archive/SESSION_2026-08-09_NIGHT4_PF4.md "
+                      "cuts the annual incremental from +4.23%/yr t 3.65 to "
+                      "+1.04%/yr t 1.07."),
+        "receipt": "docs/TRIALS/TRIAL-SMQ-FWD.md",
+        "measured_on": "2026-07-22",
+    },
+    "insider_opportunistic": {
+        "monthly_net_pct": 0.17,
+        "t": 1.40,
+        "t_basis": "a t on the NET return, as quoted on the receipt",
+        "n_blocks": "CANNOT DETERMINE: the receipt quotes BRAIN-003's headline "
+                    "and not its window; the underlying run is in the brain "
+                    "module repo, which is a separate checkout",
+        "net_basis": ("BRAIN-003 opportunistic insider, +17 bps/mo NET, t 1.40, "
+                      "microcap null, DSR 0.26 — the receipt does NOT name the "
+                      "cost ruler, so this net is not comparable like-for-like "
+                      "with the 50 bps rows above it. The project's own prior, "
+                      "quoted beside the literature it matches. The registry "
+                      "grades it SUPPORTED with the forward clock running to "
+                      "2027-07, so this is a backtest prior and not yet a "
+                      "forward record."),
+        "receipt": "docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md",
+        "measured_on": "2026-08-02",
+    },
+    "fusion_insider_profitability": {
+        "monthly_net_pct": 0.153,
+        "t": 1.66,
+        "t_basis": "a Newey-West t on the NET return, as quoted on the receipt",
+        "n_blocks": "CANNOT DETERMINE: the receipt quotes BRAIN-007's headline "
+                    "and not its window; the underlying run is in the brain "
+                    "module repo, which is a separate checkout",
+        "net_basis": ("BRAIN-007, the frozen equal-weight z-composite of the "
+                      "other two: +15.3 bps/mo net, NW t 1.66, beating the "
+                      "best single signal on 3.6x the names. Inherits the "
+                      "PF4 spanning caveat through its profitability leg, and "
+                      "the same receipt's caveat line: DSR ~ 0.10 after "
+                      "61-candidate deflation, deploy gate NOT met anywhere."),
+        "receipt": "docs/TRIALS/TRIAL-SMQ-FWD.md",
+        "measured_on": "2026-07-22",
+    },
+}
+
+
 # ── TRANSACTION-ENSEMBLE-1 (prereg frozen at Aegis module c5b81aa) ───────────
 # Generator parameters for the licensed substitute for Murat's missing broker
 # records: an ensemble of transaction histories consistent with declared
