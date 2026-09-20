@@ -3170,3 +3170,59 @@ LAB_SOCIAL_PULL_PERIOD_S = 6 * 3600
 #: so this IS the rate limit. Reddit's documented ceiling is 100 queries/minute
 #: per OAuth client; 1.0 s is well inside it and PRAW paces itself on top.
 LAB_SOCIAL_PACE_S = 1.0
+
+# ---------------------------------------------------------------------------
+# THE SCENARIO GYM (S2) — spec_decision_engine_and_scenario_gym.md §C
+# ---------------------------------------------------------------------------
+#
+# Murat, 2026-09-20: *"we cant be fully sure but we can have a gut feeling ...
+# test with llm and made up scenarios (make good and bad scenarios using data
+# we have like same situation in a fiction setting to see what it will
+# respond)"*. `scripts/night_scenario_gym.py` is that test. Every number it
+# needs is here, because a gym whose N and whose adoption floor live in the
+# script is a gym whose floor moves with the run that wanted it to move.
+
+#: The cell draw's seed. Fixed per the spec (§C "seed 20260920") so a re-run
+#: proves it asked the same question; the cells' sha256 is what checks it.
+SCENARIO_GYM_SEED = 20260920
+
+#: Decision points in a full run. §C's power table: at N=300 the per-decision
+#: MDE on a 20-session mean is ±2.81 pp off the panel's 17.39% sd, and the
+#: ~19 available month blocks are what the PRIMARY block-paired number is
+#: computed over. N=1,000 buys only the calibration-decile read.
+SCENARIO_GYM_CELLS = 300
+
+#: `--smoke`. Five arms per cell, so this is 100 local completions.
+SCENARIO_GYM_SMOKE_CELLS = 20
+
+#: The job's own time box in minutes, the same 90 the night queue gives it.
+#: The job stops ASKING at the box and grades what it has: a job killed at its
+#: limit writes no receipt at all (2026-09-10, G3 at generation 340).
+SCENARIO_GYM_BOX_MINUTES = 90
+
+#: Completion budget for one decision. The schema is five fields and one short
+#: falsifier sentence; 160 tokens is that with room, and a reply that runs past
+#: it fails the schema and is counted as REFUSED_SCHEMA rather than repaired.
+SCENARIO_GYM_MAX_TOKENS = 160
+
+#: `size_pct` bounds in the committed-decision schema. 0..10 per §C.
+SCENARIO_GYM_MAX_SIZE_PCT = 10.0
+
+#: The per-cell date shift that makes a real month a FICTIONAL one, in days:
+#: (minimum, maximum) magnitude, sign drawn from the same seeded hash. Numbers
+#: — returns, volumes, prices — are kept verbatim; only date LITERALS move, and
+#: a bare four-digit year is not a date literal (it is as often a count).
+SCENARIO_GYM_DATE_SHIFT_DAYS = (120, 600)
+
+#: Below this many gradeable decisions the calibration decomposition is refused
+#: by name (INSUFFICIENT_N) rather than computed on tiny bins. It is
+#: `calibration.MIN_N_FOR_DECOMPOSITION`'s own floor, named here so the gym's
+#: receipt can print the number it refused against.
+SCENARIO_GYM_MIN_N_FOR_CALIBRATION = 45
+
+#: THE ADOPTION FLOOR, AND IT IS A CODE-ENFORCED CAP, NOT AN INTENTION.
+#: §C's adoption rule 4: the gym's `reliability_weight` stays at 0 until it has
+#: at least this many graded decisions AND its own forward record. Spec §E
+#: names the failure this prevents — "`reliability_weight` computed once and
+#: never re-measured is a thumb on the scale wearing a calibration label".
+SCENARIO_GYM_ADOPT_MIN_N = 300

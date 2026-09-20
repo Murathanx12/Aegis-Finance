@@ -1127,11 +1127,114 @@ and §D. Built: `backend/services/roi_rank.py`, `config.IC_ROI_RANKING`,
   convention. No event wiring and no CLI yet — the service and its state
   machine only.
 
-- **Still owed from the spec:** §C, the scenario gym (good/bad counterfactual
-  twins graded on MOVEMENT, never a trading arm on its own), and a `revise`
-  caller wired to L2's typed events. Both wait on the local-only policy and on
-  the gym's own adoption rule being a code-enforced weight cap rather than an
-  intention.
+- **Still owed from the spec:** a `revise` caller wired to L2's typed events.
+  §C, the scenario gym, was built the same evening — §14.4e.
+
+### 14.4e CHUNK 18d — 2026-09-20: the SCENARIO GYM, and why its weight is zero
+
+Murat, the same afternoon, verbatim: *"we cant be fully sure but we can have a
+gut feeling thats what we are trying to cover it it has a good feeling about
+something (test with llm and made up scenarios (make good and bad scenarios
+using data we have like same situation in a ficiton setting to see what it will
+respond) and we can use this with the engine to make a decison and update it on
+events and news."* Spec §C. Built: `scripts/night_scenario_gym.py`
+(`S2_scenario_gym`, stage `features`, box **90 min**, RESUMABLE),
+`backend/tests/test_scenario_gym.py` (50 tests, no model, no `backend/data`),
+and ten `SCENARIO_GYM_*` parameters in `config.py`.
+
+- **What it asks.** N decision points from the E1 text-return panel joined to
+  its forward SPY-excess open-to-open return, drawn by
+  `x_lane_data.stratified_cells` (equal across MONTH BLOCKS, seed 20260920)
+  and frozen with `cells_fingerprint` **before any model call**. Each is turned
+  into a FICTIONAL case: X_anon_gap's own masking
+  (`night_r2_monthly_llm.widened_digests`, the same object — a test asserts
+  identity, not similarity) plus a fixed per-cell seeded date shift, with every
+  number kept verbatim. The reader commits to
+  `{direction, size_pct, expected_return_20d, confidence, falsifier}`, and
+  **the whole schema travels in the system message** (the 09-13 lesson;
+  `prompt_fingerprint().schema_in_system` is on the receipt).
+
+- **The twins, and the one that matters.** Each case is asked five ways:
+  `real`, `good_twin`, `bad_twin`, `control_good_twin`, `control_bad_twin`
+  and `control_shuffled`. The
+  twins append exactly ONE sentence to a byte-identical base, drawn from a
+  frozen, hashed library of eleven good/bad development pairs keyed by the
+  cell's dominant typed event and the vocabulary's own `direction_prior`. **No
+  model writes a twin** — a twin the reader authored tests whether it agrees
+  with itself. The two controls append a development from an UNRELATED family,
+  **sign-matched** to the twin each is differenced against, and **the headline
+  is the lift over them**: a gut that moves on the bad twin has proved nothing
+  if it moves just as much on an unrelated sentence of the same tone.
+
+- **The trap the grader is built around.** The spec's literal pass condition is
+  `Δ ≥ 0 on a majority of three deltas`, which **a model that answers the same
+  thing every time passes at 100%**. So the receipt prints `unmoved_rate`, both
+  readings, and takes its `gut_score` from the STRICT rates — and the primary
+  is `good_twin_lift_vs_control` / `bad_twin_lift_vs_control`, block-paired
+  with a Newey-West lag-2 t over month blocks, never a level.
+
+- **The adoption cap is CODE.** `adoption()` returns
+  `reliability_weight: 0.0` unless N ≥ `SCENARIO_GYM_ADOPT_MIN_N` (300) **and**
+  a forward record exists, and a test runs it at N = 300 *with* a forward
+  record and *with* a measured resolution of 0.08 and still asserts 0.0. The
+  measured number rides beside it as
+  `reliability_weight_measured_not_granted`, labelled as what it would be. Its
+  only route into the engine is one candidate field,
+  `gut_signal {direction, confidence, reliability_weight}`, scored alongside
+  the licensed signals — never a veto, never an override, never able to flip a
+  REFUSED to a BUY (`roi_rank`'s docstring already said so before this existed).
+
+- **Refusals by name, always all four.** `PENDING_MODEL`, `REFUSED_SCHEMA`,
+  `REFUSED_LANGUAGE`, `INSUFFICIENT_N` — printed at zero when none fired, each
+  mapped to one of `decision_contract.TERMINAL_STATES` (a derived check, not a
+  third taxonomy). A reply that fails the schema is refused, **not repaired and
+  not retried**: a repaired answer is a different experiment under the same job
+  name. With the reader down the job writes `PENDING_MODEL` with the cells and
+  the library hashed, and it never starts llama-server.
+
+- **THE SMOKE RUN CHANGED THE DESIGN, which is what a smoke run is for.**
+  First pass, ONE control twin appending an unrelated *favourable* sentence:
+  good-twin lift **+5.3 pp (t 0.40)**, bad-twin lift **+52.6 pp (t 3.89)** —
+  a headline result. It was an artefact: the bad twin's adverse sentence was
+  being differenced against a *favourable* control, so the number measured
+  **valence, not relevance**. Each twin is now differenced against an
+  unrelated development of ITS OWN SIGN (six arms, not five), and the same 20
+  cells say: good-twin lift **+5.3 pp (t 0.53)**, bad-twin lift **+23.7 pp
+  (t 1.82)**, mean **+14.5 pp**. Roughly half of the apparent gut was the
+  model following the tone of the last appended sentence. A test now pins the
+  sign-matching.
+
+- **Smoke receipt** (`night_factory_2026-09-20/S2_scenario_gym_run01_smoke.json`,
+  cells `0f36bc53634e`, library `dc1d71a5509a`): 20 cases × 6 arms =
+  **120 local calls in 127 s, $0.00**, refusals `{PENDING_MODEL 0,
+  REFUSED_SCHEMA 0, REFUSED_LANGUAGE 0, INSUFFICIENT_N 1}` — **zero schema
+  refusals on the first paid-for-nothing run**, which is what sending the
+  schema in the system message buys. Gut score 0.55 (good twin raises 55% of
+  20 pairs, bad twin lowers 55%); control-good raises 50%, control-bad lowers
+  30%. The RETURN leg says nothing and says so: the reader answered HOLD or
+  CASH on **60%** of cases, leaving 8 directional calls over 8 month blocks,
+  sign accuracy 0.25, calibration `INSUFFICIENT_N` (8 < 45), block MDE
+  **±235 pp/yr** and per-decision MDE ±16.6 pp. `paired_vs` REFUSED the
+  real-minus-shuffled difference by name because the two arms did not share
+  their month blocks. Nothing here is a finding; it is the machine working.
+
+- **What it needs next, in order.** (1) The full N = 300 on an unattended
+  night — see the queue line below. (2) **Typed-event coverage**: on the 20
+  smoke cells only 15% carried a typed event, so most twins took the `generic`
+  pair; the receipt prints that coverage, and L2's panel typing is what raises
+  it. (3) A forward record: until the gym grades its own decisions forward,
+  rule 4's second condition cannot be met and the weight stays 0 by
+  construction, which is the intended state and not a defect.
+
+**The night queue line** (§14.4b's table, one more row):
+
+```
+NIGHT_QUEUE="S2_scenario_gym:90" python -m scripts.night_factory
+```
+
+| job | stage | box | what it needs | what it refuses |
+|---|---|---|---|---|
+| `S2_scenario_gym` | `features` | **90 min** (300 cells × 6 arms = 1,800 local completions, ~32 min at the smoke's measured 1.06 s/call; the job owns its own clock too and stops ASKING at the box, then grades what it has, because a job killed at its limit writes no receipt at all) | `text_return_panel/news_returns_2025_26.parquet`, `prices_2025_26/bars.parquet`, `typed_events/*.jsonl`, and llama-server answering on 127.0.0.1:8080 | `PENDING_MODEL` with the cell list and the twin library frozen and hashed when the reader is down, and again after ten consecutive provider refusals mid-run (`--resume` continues from the answers on disk); `REFUSED_SCHEMA` on a reply that is not the committed-decision object; `INSUFFICIENT_N` on the calibration below 45 gradeable decisions; and `reliability_weight` 0 whatever the Brier says |
 
 ### 14.5 WHAT MURAT DOES (only what Claude Code cannot)
 

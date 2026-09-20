@@ -1690,6 +1690,18 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "A_published_anomaly": _lazy("scripts.night_anomaly_adjudicate",
                                      "A_published_anomaly"),
         "X_anon_gap": _lazy("scripts.night_x_anonymisation_gap", "X_anon_gap"),
+        # S2 2026-09-20, chunk 18d: the SCENARIO GYM (spec §C). N fictional
+        # decision points -- X_anon_gap's masking plus a seeded per-cell date
+        # shift -- each asked three ways: as it stands, with one favourable
+        # development appended, and with one adverse one. The twins are built
+        # DETERMINISTICALLY from the typed-event vocabulary's direction priors;
+        # no model writes a twin. Graded on MOVEMENT against a control twin
+        # that appends an unrelated development, never on being right. It
+        # never starts llama-server: with the reader down it writes
+        # PENDING_MODEL with the cells and the twin library frozen and hashed.
+        # Its output may enter the engine ONLY as `gut_signal` with a measured
+        # reliability weight, and `adoption()` caps that at 0 in code.
+        "S2_scenario_gym": _lazy("scripts.night_scenario_gym", "S2_scenario_gym"),
         "L3_lookahead": _lazy("scripts.night_l3_lookahead", "L3_lookahead"),
         "X2_elasticity": _lazy("scripts.night_x2_elasticity", "X2_elasticity"),
         "X4_regime_route": _lazy("scripts.night_x4_regime_route", "X4_regime_route"),
@@ -1760,6 +1772,12 @@ JOB_STAGES = {
     # feature date. It composes no portfolio and charges no cost, so its
     # artefact is `signal` and nothing downstream may read it as weights.
     "S1_social_features": "signal",
+    # The gym turns corpus text and typed FEATURE rows into a graded property
+    # of the READER (does its decision move with the story?). It composes no
+    # portfolio, and the long-short it prices is a secondary diagnostic that
+    # nothing downstream may read as weights -- the adoption cap is what makes
+    # that structural rather than a promise.
+    "S2_scenario_gym": "features",
     # A collector produces RAW rows and prices nothing; the stage contract is
     # what stops it ever reading a `weights` or `pnl` artefact.
     "H1_hiring_pull": "raw",
@@ -1783,7 +1801,11 @@ TIMEBOXED = {"G1_evolve", "N1_train_reaction_learner", "G3_evolve_v2"}
 #: jobs whose script checkpoints per unit of work and accepts `--resume`.
 #: Grow this as long jobs gain checkpoints; a job NOT in here is restarted from
 #: zero, which is honest but wasteful, and the receipt says which happened.
-RESUMABLE = {"G3_evolve_v2", "L2_typed_events", "N9_library_autopsy"}
+RESUMABLE = {"G3_evolve_v2", "L2_typed_events", "N9_library_autopsy",
+             # S2 appends one line per answer and derives its cursor from that
+             # file, so `--resume` skips every (arm, cell) already on disk. A
+             # killed 90-minute run continues rather than re-asking.
+             "S2_scenario_gym"}
 
 
 def main(argv=None) -> int:
@@ -1855,6 +1877,10 @@ def main(argv=None) -> int:
                    "E4_adwin_gated_refit", "L4_qwen3_measure",
                    "S1_social_features"):
         payload = fn(smoke=a.smoke, run=a.run)
+    elif a.job == "S2_scenario_gym":
+        # the run number files the frozen cell list, and `--resume` continues
+        # from the answers already on disk rather than re-asking them.
+        payload = fn(smoke=a.smoke, run=a.run, resume=a.resume)
     elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
         # the X lane takes the run number: its frozen cell list is filed under
         # it, and a second run that overwrote the first's list would destroy the

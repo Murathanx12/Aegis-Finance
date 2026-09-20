@@ -275,6 +275,11 @@ backend/data/optimus/night_factory_*/*_smoke.json
 # G3's per-evaluation log is appended to, so a smoke run's rows land in the same
 # family of file as a real run's; committing one puts test rows next to results.
 backend/data/optimus/night_factory_*/*_smoke.jsonl
+# 2026-09-20: and it missed the smoke SIDECAR. A job that files its frozen
+# cell list as `<job>_run01_smoke_cells.json` drops a test artefact beside
+# the real run's `<job>_run01_cells.json` -- the same "test rows next to
+# results" the two rules above exist to stop, one filename shape further on.
+backend/data/optimus/night_factory_*/*_smoke_cells.json
 backend/data/optimus/night_factory_*/*_smoke/
 backend/data/optimus/night_factory_*/G3_checkpoint_run*.json
 
