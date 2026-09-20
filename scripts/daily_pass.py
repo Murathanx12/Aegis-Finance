@@ -107,14 +107,29 @@ from backend import config as _config  # noqa: E402
 #: check that reads the record of what ran cannot see what never got called
 #: (`signal_reachability.py`'s founding lesson). Adding a row here without a
 #: handler is an AssertionError at import time, which is the point.
+#:
+#: THE CONTRACT RUNS SECOND, BEFORE THE SWEEP (2026-09-20). It used to be
+#: fifth, after the 2,362-symbol analyst snapshot, and the consequence was
+#: measured rather than feared: `step_decision_contract` has NEVER executed in
+#: a pass. The only firing that carried it — 09-14 06:30 — wedged inside the
+#: snapshot four steps earlier and was killed four days later, so the append-only
+#: ledger `backend/data/optimus/decisions/ledger.jsonl` did not exist at all and
+#: `record_decided` had never been called once.
+#:
+#: It may move because it does not depend on anything the snapshot writes. The
+#: builder reads `config.IC_FUNNEL_PATH` (a committed artefact), the agency's IPS
+#: store and `paper_books.load_bars()` (a static parquet); it never opens
+#: `backend/data/analyst_snapshot/<date>.parquet`, and no step of this pass
+#: refreshes the bars it does read. Twelve seconds of work was standing behind
+#: 2.5 hours of network for no reason at all.
 STEPS: tuple[tuple[str, str], ...] = (
     ("news_pull", "every registered news source, into the corpus"),
-    ("analyst_snapshot", "today's consensus rows per symbol"),
-    ("e1_append", "the text-and-return panel append, PIT re-verified"),
-    ("book_cadence", "every paper book due today (30m only inside US RTH)"),
     ("decision_contract", "what the engine would buy today, at what size, and "
                           "what would make it wrong — plus a REFUSED row per "
                           "candidate that did not clear"),
+    ("analyst_snapshot", "today's consensus rows per symbol"),
+    ("e1_append", "the text-and-return panel append, PIT re-verified"),
+    ("book_cadence", "every paper book due today (30m only inside US RTH)"),
     ("coverage", "the per-source coverage card, derived from disk"),
 )
 
@@ -446,13 +461,23 @@ def step_analyst_snapshot(ctx: dict) -> dict:
     # place the floor is defined -- and REFUSES rather than falling back to the
     # larger list, so a pass that quietly grew by 700 names cannot happen
     # silently. The CLI default stays `all` for the one-off name-table sweep.
-    rec = run_analyst_snapshot(universe="tradable")
+    #
+    # AND IT STOPS ITSELF (2026-09-20). The step box abandons a wedged thread
+    # and leaves no receipt of its own; the sweep's own budget flushes, writes
+    # a receipt that NAMES the shortfall, and returns. At 4.45 s/symbol the
+    # 2,362-name band needs ~2.9 h, so this truncates most days — visibly, in
+    # `symbols_not_reached`, rather than by a `timeout` row every morning.
+    rec = run_analyst_snapshot(
+        universe="tradable", budget_s=float(_config.DAILY_PASS_ANALYST_BUDGET_S))
     by_status = rec.get("by_status") or {}
     rows = int(rec.get("rows") or 0)
     errs = int(by_status.get("error") or 0)
     refusals = []
     if rec.get("refused"):
         refusals.append(rec["refused"])
+    if rec.get("truncated"):
+        refusals.append(str(rec.get("truncation_reason")
+                            or "the sweep reached its own budget"))
     if errs:
         refusals.append(f"{errs} symbol(s) errored")
     status = ("refused" if rec.get("refused")
@@ -461,6 +486,8 @@ def step_analyst_snapshot(ctx: dict) -> dict:
                 seconds=round(time.time() - t0, 2), refusals=refusals,
                 by_status=by_status, coverage_rate=rec.get("coverage_rate"),
                 path=rec.get("path"),
+                budget_s=rec.get("budget_s"), truncated=rec.get("truncated"),
+                symbols_not_reached=rec.get("symbols_not_reached"),
                 name_table_update=rec.get("name_table_update"),
                 headline=rec.get("headline"))
 
@@ -533,6 +560,10 @@ def step_decision_contract(ctx: dict) -> dict:
     and rewritten atomically from the same inputs, and the ledger's DECIDED row
     is idempotent per decision id, so the second writer records `duplicate`
     rather than a second row.
+
+    IT RUNS SECOND. Measured by hand on 2026-09-20: 43 rows in 12 seconds. It
+    stood behind a 2.5-hour network sweep for four weeks and therefore never
+    ran once; see the note on `STEPS`.
     """
     t0 = time.time()
     from backend.services import decision_contract as DC
@@ -755,10 +786,14 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         # read. The per-step stages are in `step_stages` rather than averaged
         # into one number nobody can act on.
         "stage": "pnl",
-        # `decision_contract` is `pnl`: it reads the marked book and the
-        # committee's composed positions, which are the latest stage anything
-        # in this pass touches. Stamping it lower would let a `normalized`
-        # reader consume a row derived from a NAV.
+        # `decision_contract` stays `pnl` even though it now runs SECOND, before
+        # the cadence pass marks anything. It composes positions and sizes them
+        # in dollars, which is the latest stage anything it touches can be, and
+        # `pnl` may read anything while nothing may read `pnl` — so the stamp is
+        # the conservative direction in both orders. What changed on 2026-09-20
+        # is the ORDER, not the stage: the row is no longer derived from a NAV
+        # this pass wrote, and it never was — `compose_book` is the committee's
+        # composer, not the paper book's marker.
         "step_stages": {"news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "coverage": "raw"},

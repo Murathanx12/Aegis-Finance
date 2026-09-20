@@ -139,8 +139,12 @@ def test_the_decision_contract_step_records_what_it_decided(
     assert row["ledger"]["written"] == 2
     assert row["licence"] == "PRODUCT_EXPERIMENT"
     assert "decision_contract" in calls
-    # after the book is marked, before the coverage card is read from disk
-    assert calls.index("decision_contract") > calls.index("book_cadence:daily")
+    # SECOND, right after the corpus pull and BEFORE the analyst sweep. It was
+    # fifth until 2026-09-20 and had therefore never run once: the only firing
+    # that carried it wedged in the 2.5-hour snapshot four steps earlier, and
+    # `backend/data/optimus/decisions/ledger.jsonl` did not exist at all.
+    assert calls.index("decision_contract") < calls.index("analyst_snapshot")
+    assert calls.index("decision_contract") > calls.index("news_pull")
 
 
 @pytest.fixture
@@ -172,9 +176,9 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     assert [r["step"] for r in rec["steps"]] == [s for s, _ in DP.STEPS]
     # the cadence step fans out inside itself; the OUTER order is the declared one
     outer = [c.split(":")[0] for c in calls]
-    assert outer == ["news_pull", "analyst_snapshot", "e1_append",
-                     "book_cadence", "book_cadence", "book_cadence",
-                     "decision_contract", "coverage"]
+    assert outer == ["news_pull", "decision_contract", "analyst_snapshot",
+                     "e1_append", "book_cadence", "book_cadence", "book_cadence",
+                     "coverage"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:

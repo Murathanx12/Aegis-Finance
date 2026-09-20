@@ -363,12 +363,22 @@ CHECKPOINT_EVERY = 250
 
 def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
              fetch: Callable[[str], dict] | None = None,
-             update_names: bool = True, universe: str = "all") -> dict:
+             update_names: bool = True, universe: str = "all",
+             budget_s: float | None = None) -> dict:
     """Pull, write one parquet for today, return the receipt.
 
     `universe` is "all" (the 3,056-name potential universe) or "tradable" (the
     ~2,362-name band at the $10M floor). A refusal from the band's own loader is
     returned AS a refusal -- never silently downgraded to the larger list.
+
+    `budget_s` is the sweep STOPPING ITSELF. It is not the caller's timeout:
+    a caller's box abandons a thread and leaves whatever the last checkpoint
+    happened to hold, with no receipt of its own to say how far it got. A sweep
+    that reaches its own budget finishes the symbol it is on, writes the
+    parquet, and returns a receipt carrying `truncated`, `symbols_reached` and
+    `symbols_not_reached` — so a short day is a COUNTED fact rather than a
+    `timeout` row the reader has to interpret. `None` means no budget, which is
+    what the CLI does.
     """
     t0 = time.time()
     fetch = fetch or fetch_yfinance
@@ -408,7 +418,14 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         except Exception:  # noqa: BLE001 — a failed checkpoint must not end the sweep
             return False
 
+    truncated_at: int | None = None
     for i, sym in enumerate(symbols):
+        # THE SWEEP STOPS ITSELF, before it is stopped. Checked at the TOP of
+        # the symbol rather than after it, so the budget bounds the wall clock
+        # and not the wall clock plus one more `SYMBOL_TIMEOUT_S`.
+        if budget_s is not None and (time.time() - t0) >= float(budget_s):
+            truncated_at = i
+            break
         if i and pace_s:
             time.sleep(pace_s)
         try:
@@ -477,6 +494,20 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
         "symbols_requested": len(symbols), "rows": len(rows),
         "universe": universe_prov,
         "by_status": counts,
+        # THE SHORTFALL IS A FIELD, NEVER AN ABSENCE. `budget_s` is carried even
+        # when it is None so a reader can tell "no budget was set" from "a
+        # budget was set and there was time to spare".
+        "budget_s": (None if budget_s is None else float(budget_s)),
+        "truncated": truncated_at is not None,
+        "symbols_reached": len(rows),
+        "symbols_not_reached": (0 if truncated_at is None
+                                else len(symbols) - truncated_at),
+        "truncation_reason": (
+            None if truncated_at is None else
+            (f"the sweep reached its own {float(budget_s):.0f}s budget after "
+             f"{truncated_at} of {len(symbols)} symbols and stopped itself; the "
+             f"parquet holds the symbols reached and the remaining "
+             f"{len(symbols) - truncated_at} carry no row for {day}")),
         "coverage_rate": round(graded / len(rows), 4) if rows else None,
         "path": str(path), "parquet": written, "write_note": write_note,
         "wall_s": round(time.time() - t0, 1),
@@ -507,7 +538,10 @@ def snapshot(max_symbols: int | None = None, *, pace_s: float = 1.0,
                      f"{universe_prov['universe']} universe "
                      f"({universe_prov['n_available']:,} available, "
                      f"{universe_prov['filter']}); "
-                     f"{graded:,} carried at least one analyst field"),
+                     f"{graded:,} carried at least one analyst field"
+                     + ("" if truncated_at is None else
+                        f"; TRUNCATED at the {float(budget_s):.0f}s budget with "
+                        f"{len(symbols) - truncated_at:,} symbols not reached")),
     }
     if rows:
         (out_dir() / f"{day}_receipt.json").write_text(

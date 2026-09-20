@@ -315,5 +315,70 @@ def test_the_daily_pass_asks_for_the_tradable_band(monkeypatch):
 
     monkeypatch.setattr(daily_pass, "run_analyst_snapshot", _fake)
     row = daily_pass.step_analyst_snapshot({})
-    assert seen == {"universe": "tradable"}
+    assert seen == {"universe": "tradable",
+                    "budget_s": float(daily_pass._config.DAILY_PASS_ANALYST_BUDGET_S)}
     assert row["status"] == "ok"
+
+
+# ── THE SWEEP STOPS ITSELF (2026-09-20) ────────────────────────────────────
+#
+# The step box abandons a wedged thread and leaves no receipt of its own; the
+# sweep's own budget flushes and RETURNS, so the shortfall is a counted field
+# rather than a `timeout` row every single morning.
+
+
+def test_a_budget_stops_the_sweep_and_the_shortfall_is_a_counted_field(
+        data_dir, monkeypatch):
+    import time as _time
+
+    def _slow(symbol: str) -> dict:
+        _time.sleep(0.2)
+        return dict(FAKE.get(symbol) or {"status": "empty", "error": ""})
+
+    rec = snap.snapshot(max_symbols=4, pace_s=0, fetch=_slow,
+                        update_names=False, budget_s=0.25)
+    assert rec["truncated"] is True
+    assert rec["budget_s"] == 0.25
+    assert rec["rows"] == rec["symbols_reached"] < 4
+    assert rec["symbols_reached"] + rec["symbols_not_reached"] == 4
+    assert "budget" in rec["truncation_reason"]
+    assert "TRUNCATED" in rec["headline"]
+
+
+def test_no_budget_is_a_FIELD_and_not_an_absence(data_dir):
+    """A reader must be able to tell "no budget was set" from "a budget was set
+    and there was room to spare" — an omitted key reads as neither."""
+    rec = snap.snapshot(max_symbols=4, pace_s=0, fetch=fake_fetch,
+                        update_names=False)
+    assert rec["budget_s"] is None
+    assert rec["truncated"] is False
+    assert rec["symbols_not_reached"] == 0
+    assert rec["truncation_reason"] is None
+
+
+def test_a_budget_with_room_to_spare_runs_the_whole_sweep(data_dir):
+    rec = snap.snapshot(max_symbols=4, pace_s=0, fetch=fake_fetch,
+                        update_names=False, budget_s=600)
+    assert rec["truncated"] is False
+    assert rec["rows"] == 4
+    assert rec["symbols_not_reached"] == 0
+
+
+def test_the_daily_pass_names_the_truncation_in_its_row(monkeypatch):
+    from scripts import daily_pass
+
+    def _fake(**kw):
+        return {"rows": 800, "by_status": {"ok": 800}, "coverage_rate": 1.0,
+                "path": "/x.parquet", "headline": "h", "truncated": True,
+                "budget_s": 3300.0, "symbols_not_reached": 1562,
+                "truncation_reason": "the sweep reached its own 3300s budget"}
+
+    monkeypatch.setattr(daily_pass, "run_analyst_snapshot", _fake)
+    row = daily_pass.step_analyst_snapshot({})
+    # `ok`, not `timeout` and not `refused`: 800 real rows landed, and the
+    # 1,562 that did not is a NUMBER on the row rather than a status nobody
+    # can act on.
+    assert row["status"] == "ok"
+    assert row["truncated"] is True
+    assert row["symbols_not_reached"] == 1562
+    assert any("budget" in r for r in row["refusals"])

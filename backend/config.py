@@ -2644,7 +2644,15 @@ IIF1_LAUNCHER_LOCAL_START_TIME = "16:00"
 #: 2.62 h (2,362 names at 4.0 s) with room, not a guess.
 DAILY_PASS_STEP_BOX_S: dict = {
     "news_pull": 2400,
-    "analyst_snapshot": 4 * 3600,
+    # ONE HOUR, down from four (2026-09-20). Four hours was the whole of a
+    # working morning spent on a sweep that no other step of the pass reads:
+    # the contract, the panel append and the cadence pass all run off artefacts
+    # already on disk. The sweep itself now stops at
+    # `DAILY_PASS_ANALYST_BUDGET_S` and returns a receipt that NAMES the
+    # truncation, so this number is a backstop rather than the thing that
+    # normally fires — a box that times out every single day would be a red
+    # line the reader learns to skim (CLAUDE.md, "a gate that cannot go green").
+    "analyst_snapshot": 3600,
     "e1_append": 600,
     "book_cadence": 900,
     # Chunk 18. It COMPOSES what the committee and the agency already computed
@@ -2655,6 +2663,22 @@ DAILY_PASS_STEP_BOX_S: dict = {
     "coverage": 300,
 }
 
+#: How long the analyst sweep is allowed to run INSIDE its box, in seconds.
+#:
+#: The box above abandons a wedged thread; this is the sweep stopping ITSELF.
+#: The two are different findings and the difference is the whole point: a
+#: thread abandoned at the box writes a `timeout` row and no receipt of its own,
+#: while a sweep that reaches its budget flushes its parquet, writes a receipt
+#: that says `truncated: N of M symbols`, and lets the pass report `ok` with the
+#: shortfall NAMED. At the measured 4.45 s/symbol the 2,362-name tradable band
+#: needs ~2.9 h, so this budget is a deliberate cap and not a bound anybody
+#: expects the sweep to fit inside: it will truncate most days, visibly, in a
+#: counted field, until the sweep is made cheaper.
+#:
+#: 3,300 s leaves 300 s of head-room under the 3,600 s box, so the ordinary day
+#: is `ok` and a `timeout` row means something genuinely went wrong.
+DAILY_PASS_ANALYST_BUDGET_S = 3300
+
 #: How old another `scripts.daily_pass` process must be before this one kills it
 #: and takes the day, in hours. Younger than this is a REFUSAL by name, exactly
 #: as before: two passes launched minutes apart is a human doing something
@@ -2662,9 +2686,11 @@ DAILY_PASS_STEP_BOX_S: dict = {
 #: than the stall it is fixing.
 #:
 #: THE NUMBER IS NOT FREE. Every step above is boxed, so the longest a HEALTHY
-#: pass can possibly take is the sum of the boxes: 2400 + 14400 + 600 + 900 +
-#: 300 = 18,600 s = 5.17 h. Six hours is above that, so a sibling old enough to
-#: be killed is a sibling that has already outlived every box it has — which is
+#: pass can possibly take is the sum of the boxes: 2400 + 3600 + 600 + 900 +
+#: 600 + 300 = 8,400 s = 2.33 h (it was 18,600 s = 5.17 h until the analyst box
+#: came down to an hour on 2026-09-20). Six hours is above that, so a sibling
+#: old enough to be killed is a sibling that has already outlived every box it
+#: has — which is
 #: only possible for a thread that was abandoned and a process that did not
 #: exit. `test_daily_pass` pins the inequality, so raising a box without raising
 #: this number turns the suite red instead of turning a healthy pass into a
@@ -2905,8 +2931,9 @@ LAB_NIGHT_LAUNCHER_WEEKDAYS_ONLY = True
 #:
 #: THE DAILY PASS NUMBER IS NOT FREE. Every step of the pass is boxed
 #: (`DAILY_PASS_STEP_BOX_S`), so the longest a HEALTHY pass can take is the sum
-#: of those boxes -- 18,600 s. This must exceed that sum with a margin, or a
-#: healthy pass would be reported as a timeout; `test_always_on_lab.py` pins
+#: of those boxes -- 8,400 s since 2026-09-20 (18,600 s before it). This must
+#: exceed that sum with a margin, or a healthy pass would be reported as a
+#: timeout; `test_always_on_lab.py` pins
 #: the inequality, so raising a step box without raising this turns the suite
 #: red instead of turning a healthy pass into a false alarm. 21,600 s (6 h) is
 #: also `DAILY_PASS_STALE_SIBLING_H`, which is the hour at which the pass's own

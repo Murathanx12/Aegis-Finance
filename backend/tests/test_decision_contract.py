@@ -155,9 +155,10 @@ def test_the_refusal_vocabulary_is_pinned_to_the_execution_repos():
 def test_every_local_pattern_maps_into_the_closed_sets():
     """A pattern that mapped to a class outside the enum would be a third
     vocabulary wearing the second one's name."""
-    for cls, term, _pat in DC._LOCAL_PATTERNS:
+    for cls, term, _pat, basis in DC._LOCAL_PATTERNS:
         assert cls in DC.REFUSAL_CLASSES, cls
         assert term in DC.TERMINAL_STATES, term
+        assert basis and isinstance(basis, str), cls
 
 
 def test_an_unrecognised_sentence_is_typed_and_never_blank():
@@ -167,6 +168,33 @@ def test_an_unrecognised_sentence_is_typed_and_never_blank():
     blank = DC.classify_refusal("")
     assert blank["refusal_class"] == DC.UNCLASSIFIED
     assert "CANNOT DETERMINE" in blank["refusal_reason"]
+
+
+def test_the_two_kinds_of_UNCLASSIFIED_are_one_field_apart():
+    """MEASURED 2026-09-20: the day's contract carried 7 UNCLASSIFIED refusals
+    and a reader could not tell whether the vocabulary had no class for the
+    sentence or whether nothing had matched it. The first owes nothing; the
+    second owes a pattern, and only one of them should be counted as work."""
+    typed = DC.classify_refusal(
+        "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): "
+        "screened, liquid and priced, and the engine has nothing it is allowed "
+        "to say about it")
+    assert typed["refusal_class"] == DC.UNCLASSIFIED
+    assert typed["terminal_state"] == "DATA_MISSING"
+    assert not typed["refusal_class_basis"].startswith("NO PATTERN MATCHED")
+
+    unmatched = DC.classify_refusal("a gate nobody has typed yet said something new")
+    assert unmatched["refusal_class"] == DC.UNCLASSIFIED
+    assert unmatched["refusal_class_basis"].startswith("NO PATTERN MATCHED")
+
+    blob = DC.payload([
+        {"direction": "REFUSED", **typed},
+        {"direction": "REFUSED", **unmatched},
+        {"direction": "BUY", "ticker": "AAA"},
+    ], asof=date(2026, 9, 20))
+    assert blob["count_by_refusal_class"][DC.UNCLASSIFIED] == 2
+    assert blob["unclassified_owing_a_pattern"] == 1
+    assert sum(blob["count_by_unclassified_basis"].values()) == 2
 
 
 # ── the rows ───────────────────────────────────────────────────────────────

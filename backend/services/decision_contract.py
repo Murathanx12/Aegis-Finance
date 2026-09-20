@@ -172,44 +172,84 @@ DECISION_STATES: tuple[str, ...] = (
     "FILLED", "SCORED",
 )
 
-#: (class, terminal_state, pattern) for THIS repo's own refusal sentences.
-#: Ordered, first match wins, most specific first — the execution repo's rule,
-#: because "no candidate clears the tilt gate" must not be read as the per-name
-#: verdict refusal it quotes.
-_LOCAL_PATTERNS: tuple[tuple[str, str, str], ...] = (
+#: (class, terminal_state, pattern, basis) for THIS repo's own refusal
+#: sentences. Ordered, first match wins, most specific first — the execution
+#: repo's rule, because "no candidate clears the tilt gate" must not be read as
+#: the per-name verdict refusal it quotes.
+#:
+#: `basis` is the FOURTH element and it exists because of 2026-09-20: the day's
+#: contract carried 7 UNCLASSIFIED refusals and a reader could not tell whether
+#: the sentence had matched a pattern that deliberately maps to UNCLASSIFIED or
+#: had matched nothing at all. Those are opposite findings — the first is "the
+#: closed vocabulary has no class for this", which is a fact about the execution
+#: repo's 31 classes; the second is "a gate wrote a sentence nobody has typed",
+#: which is work owed here. Every row now carries the basis that produced its
+#: class, so the two are one field apart instead of indistinguishable.
+_LOCAL_PATTERNS: tuple[tuple[str, str, str, str], ...] = (
     # ---- pass-level: nothing at all cleared -------------------------------
-    ("NO_STRUCTURE_CLEARED", "STRUCTURE", r"no candidate clears the tilt gate"),
+    ("NO_STRUCTURE_CLEARED", "STRUCTURE", r"no candidate clears the tilt gate",
+     "the pass-level refusal: nothing at all cleared the tilt gate"),
+    # ---- the engine has nothing it is ALLOWED to say about this name ------
+    # MEASURED 2026-09-20: all 7 UNCLASSIFIED rows on that day's contract were
+    # this one sentence, from `_refusal_sentence`'s NO_EVIDENCE branch. It stays
+    # UNCLASSIFIED after reading all 31 classes in
+    # `aegis-alpha-terminal/alpha/refusal_classes.py`: that vocabulary was
+    # derived from an options book whose candidates are STRUCTURES on a forecast
+    # that already exists, so it has classes for a refuted route (REFUTED_ROUTE),
+    # an edge under the bar (EDGE_BELOW_BAR), a move under the MDE (MDE) and an
+    # unquotable chain (CHAIN_UNUSABLE) — and none at all for a screened, liquid,
+    # priced name that NO licensed signal covers. The terminal state DATA_MISSING
+    # does fit and is what a census joins on, which is why the row is not lost.
+    (UNCLASSIFIED, "DATA_MISSING",
+     r"no licensed signal|NO_EVIDENCE",
+     "no class in the execution repo's closed 31 covers 'screened and priced, "
+     "and no licensed signal speaks to this name'; the nearest merit classes "
+     "(REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. "
+     "The terminal state DATA_MISSING is exact and is what a cross-repo census "
+     "groups on"),
     # ---- the inputs were not there ----------------------------------------
     # "CANNOT DETERMINE" is the execution repo's own DATA_MISSING pattern; a
     # missing funnel, a void ranking gate and an unreadable candidate all
     # arrive wearing it, which is why this repo writes those words literally.
     (UNCLASSIFIED, "DATA_MISSING",
-     r"CANNOT DETERMINE|no funnel run available|ranking gate VOID|"
-     r"no licensed signal|NO_EVIDENCE"),
+     r"CANNOT DETERMINE|no funnel run available|ranking gate VOID",
+     "an input the ranking needed was absent or void; the closed 31 classes are "
+     "about candidates and books and none of them names a missing input, so the "
+     "typed answer is the terminal state DATA_MISSING"),
     # ---- the size buys no unit / the book has no room ----------------------
     ("CAPITAL_ROUNDS_TO_ZERO", "CAPACITY",
-     r"below one share|rounds to zero|buys no share"),
-    ("BOOK_LIMIT", "CAPACITY", r"tilt budget|IC_MAX_TILT_NAMES|no room in the book"),
+     r"below one share|rounds to zero|buys no share",
+     "the execution repo's CAPITAL_ROUNDS_TO_ZERO, in this repo's words"),
+    ("BOOK_LIMIT", "CAPACITY", r"tilt budget|IC_MAX_TILT_NAMES|no room in the book",
+     "the book, not the candidate: IC_MAX_TILT_NAMES or the total tilt budget"),
     # ---- the tape could not carry it --------------------------------------
-    ("UNCLASSIFIED", "LIQUIDITY",
-     r"untradeable at \$|dollar volume|days to exit|participation"),
+    (UNCLASSIFIED, "LIQUIDITY",
+     r"untradeable at \$|dollar volume|days to exit|participation",
+     "the closed 31 carry no liquidity class — an options book refuses on the "
+     "chain (CHAIN_UNUSABLE), not on median dollar volume — so the terminal "
+     "state LIQUIDITY carries the meaning"),
     # ---- the ranker preferred a sibling -----------------------------------
     ("OUTRANKED_BY_SIBLING", "RANKED_OUT",
-     r"ranked below|out-ranked|outranked"),
+     r"ranked below|out-ranked|outranked",
+     "the ranker preferred another name inside the same budget"),
     # ---- the candidate's own merit ----------------------------------------
     ("EDGE_BELOW_BAR", "NEGATIVE_EV",
      r"verdict .* is not BUY or WATCH|ranking score .* is not positive|"
-     r"scores at or below zero"),
-    ("MDE", "CONFIDENCE", r"minimum detectable|not distinguishable from noise"),
+     r"scores at or below zero",
+     "a signal spoke and the candidate's own merit did not clear the bar"),
+    ("MDE", "CONFIDENCE", r"minimum detectable|not distinguishable from noise",
+     "the move is under the minimum detectable effect"),
     # ---- the archetype refused to fill a book -----------------------------
     ("NO_STRUCTURE_CLEARED", "STRUCTURE",
-     r"cannot fill a book|the archetype needs at least"),
+     r"cannot fill a book|the archetype needs at least",
+     "the archetype could not be filled, which is a structure refusal"),
     # ---- this policy may not express this claim ---------------------------
-    ("CLAIM_MISMATCH", "MANDATE", r"not in the mandate|outside the declared"),
+    ("CLAIM_MISMATCH", "MANDATE", r"not in the mandate|outside the declared",
+     "the policy may not express this claim"),
 )
 
-_COMPILED = tuple((cls, term, re.compile(pat, re.IGNORECASE))
-                  for cls, term, pat in _LOCAL_PATTERNS)
+_COMPILED = tuple((cls, term, re.compile(pat, re.IGNORECASE), basis)
+                  for cls, term, pat, basis in _LOCAL_PATTERNS)
 
 
 def enum_fingerprint(names: tuple[str, ...]) -> str:
@@ -223,22 +263,37 @@ def enum_fingerprint(names: tuple[str, ...]) -> str:
 
 
 def classify_refusal(reason: str | None) -> dict:
-    """`{refusal_class, terminal_state, refusal_reason}` — never raises, never blank.
+    """`{refusal_class, terminal_state, refusal_reason, refusal_class_basis}`
+    — never raises, never blank.
 
     `UNCLASSIFIED`/`OTHER_TYPED` is a typed answer and is counted by the caller,
     not a silent bucket: a new refusal sentence added without a pattern surfaces
     as a number on the day's file instead of dissolving.
+
+    `refusal_class_basis` says WHY the class is what it is, and it matters most
+    when the class is `UNCLASSIFIED`, because that word covers two opposite
+    findings: a sentence this repo has typed and deliberately mapped to
+    UNCLASSIFIED (the closed 31 have no class for it — nothing is owed), and a
+    sentence nothing matched at all (a gate wrote prose nobody has typed — work
+    is owed). One field separates them.
     """
     text = str(reason or "").strip()
     if not text:
         return {"refusal_class": UNCLASSIFIED, "terminal_state": "DATA_MISSING",
-                "refusal_reason": "CANNOT DETERMINE: the refusal carried no sentence"}
-    for cls, term, rx in _COMPILED:
+                "refusal_reason": "CANNOT DETERMINE: the refusal carried no sentence",
+                "refusal_class_basis": (
+                    "the row carried no refusal sentence at all, so there was "
+                    "nothing to classify")}
+    for cls, term, rx, basis in _COMPILED:
         if rx.search(text):
             return {"refusal_class": cls, "terminal_state": term,
-                    "refusal_reason": text}
+                    "refusal_reason": text, "refusal_class_basis": basis}
     return {"refusal_class": UNCLASSIFIED, "terminal_state": OTHER_TYPED,
-            "refusal_reason": text}
+            "refusal_reason": text,
+            "refusal_class_basis": (
+                "NO PATTERN MATCHED: a gate wrote a sentence `_LOCAL_PATTERNS` "
+                "has never seen. This is the UNCLASSIFIED that owes work — add "
+                "the pattern, or name why the closed 31 cannot hold it")}
 
 
 # ===========================================================================
@@ -845,6 +900,10 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
               for d in DIRECTIONS}
     by_class: dict[str, int] = {}
     by_terminal: dict[str, int] = {}
+    # Why each UNCLASSIFIED row is unclassified, counted. A day whose
+    # UNCLASSIFIED rows all carry a basis this repo wrote deliberately owes
+    # nothing; a day with an `unmatched` entry owes a pattern.
+    unclassified_basis: dict[str, int] = {}
     for r in rows:
         if r.get("direction") != "REFUSED":
             continue
@@ -852,6 +911,10 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
             by_class.get(r.get("refusal_class", UNCLASSIFIED), 0) + 1
         by_terminal[r.get("terminal_state", OTHER_TYPED)] = \
             by_terminal.get(r.get("terminal_state", OTHER_TYPED), 0) + 1
+        if r.get("refusal_class", UNCLASSIFIED) == UNCLASSIFIED:
+            key = str(r.get("refusal_class_basis")
+                      or "CANNOT DETERMINE: the row carries no class basis")
+            unclassified_basis[key] = unclassified_basis.get(key, 0) + 1
     produced = {r.get("direction") for r in rows}
     return {
         "receipt": "decision_contract",
@@ -863,6 +926,9 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "count_by_direction": counts,
         "count_by_refusal_class": by_class,
         "count_by_terminal_state": by_terminal,
+        "count_by_unclassified_basis": unclassified_basis,
+        "unclassified_owing_a_pattern": sum(
+            n for b, n in unclassified_basis.items() if b.startswith("NO PATTERN MATCHED")),
         "capital_usd": capital,
         "directions_not_produced_today": sorted(d for d in DIRECTIONS
                                                 if d not in produced),
