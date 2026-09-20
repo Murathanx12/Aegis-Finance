@@ -1,0 +1,84 @@
+{
+ "job": "N9_candidate_measure",
+ "licence": "PRODUCT_EXPERIMENT",
+ "stage": "screen",
+ "llm_spend_usd": 0.0,
+ "run_date": "2026-09-20",
+ "written_utc": "2026-09-20T10:13:05+00:00",
+ "candidates_file": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\research_gym\\library_candidates.jsonl",
+ "n_candidates": 3048,
+ "n_refused": 2,
+ "refusals": {
+  "RULE_UNEVALUABLE": 2
+ },
+ "panel": {
+  "securities": [
+   "DIA",
+   "XLV",
+   "XLI",
+   "XLP",
+   "XLU",
+   "XLB"
+  ],
+  "start": "2003-01-01",
+  "end": "2026-09-20",
+  "sessions": {
+   "DIA": 5965,
+   "XLV": 5965,
+   "XLI": 5965,
+   "XLP": 5965,
+   "XLU": 5965,
+   "XLB": 5965
+  }
+ },
+ "construction": {
+  "seed": 20260920,
+  "null": "circular date-shift of the firing mask, 400 shifts, |shift| >= 63 sessions",
+  "min_fires": 10,
+  "origin_window_excluded_sessions": 63,
+  "screen": "BH-FDR q=0.10 over the family (canon section 63)",
+  "horizon": "each candidate's own move horizon (20 or 60 sessions), gross of costs"
+ },
+ "ORIGIN_read_IN_SAMPLE_SCREEN": {
+  "n_reads": 3046,
+  "n_measured": 2351,
+  "n_too_few_fires": 695,
+  "raw_p_le_0_05": 144,
+  "expected_by_chance_at_0_05": 117.6,
+  "bh_fdr_q10_survivors": 0,
+  "bh_family_n": 2351,
+  "median_excess_in_tail_direction_pct": -0.002,
+  "share_excess_positive": 0.499
+ },
+ "FOREIGN_read_parent_barred": {
+  "n_reads": 3046,
+  "n_measured": 2864,
+  "n_too_few_fires": 182,
+  "raw_p_le_0_05": 391,
+  "expected_by_chance_at_0_05": 143.2,
+  "bh_fdr_q10_survivors": 0,
+  "bh_family_n": 2864,
+  "median_excess_in_tail_direction_pct": 0.218,
+  "share_excess_positive": 0.572
+ },
+ "rows": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\night_factory_2026-09-20\\N9_candidate_measure_rows.jsonl",
+ "elapsed_s": 63.7,
+ "read_me_first": "The ORIGIN read is in-sample by construction (the rule was written while looking at a move on that security); only the FOREIGN read can promote anything, and even that is a SCREEN, not a claim. Survivors go to the registered admission path, never straight to a book.",
+ "family_read": {
+  "distinct_feature_signatures": 1881,
+  "by_tail_FOREIGN": {
+   "top": {
+    "n": 1350,
+    "median_excess_pct": 0.522,
+    "share_p_le_0_05": 0.228
+   },
+   "bottom": {
+    "n": 1514,
+    "median_excess_pct": 0.048,
+    "share_p_le_0_05": 0.055
+   }
+  },
+  "verdict": "ONE FAMILY, NOT 391 FINDINGS. Every foreign-read excess sits in the TOP tail: rules of the shape 'drawdown_pct <= -X and vix >= Y (and vol_ratio_20_60 > 1)' -> long 20/60 sessions, i.e. rebound after a stressed drawdown. The bottom tail is at chance (5.5% vs 5%). The rules share VIX, which is the same series for all six securities, so the 391 are one mechanism read 391 times (feedback: check whether the noise is shared). BH-FDR is under-resolved here: a 400-shift null cannot produce p below 0.0025, so zero survivors is the null's granularity, not a verdict.",
+  "next_test": "Register ONE rule family, not 3,050 rules: drawdown/VIX/vol-ratio thresholds chosen on SPY/XLF/XLE pre-2016 (the mining slice), scored on the held six, net of 25 bps a side, against a 4,000-shift null and a random-threshold twin; compare with whatever the research gym's market_stress book already reads before calling it new."
+ }
+}
