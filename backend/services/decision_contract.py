@@ -1323,6 +1323,7 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
                                                 if d not in produced),
         **_roi_payload_block(rows, book),
         **_authority_payload_block(rows, book),
+        "capital_resolution": capital_resolution(rows, capital=capital),
         "worst_case_largest_admissible_book": largest_admissible_book(),
         "notes": list(notes or []),
         "degradation_reasons": list((book or {}).get("degradation_reasons") or []),
@@ -1366,6 +1367,91 @@ def _roi_payload_block(rows: list[dict], book: dict | None) -> dict:
     census["n_rows_scored"] = scored
     census["n_rows_not_calibrated_by_missing_field"] = by_field
     return {"roi_ranking": census}
+
+
+def capital_resolution(rows: list[dict], *, capital: float | None = None
+                       ) -> dict:
+    """Where EVERY dollar went today: benchmark / exploit / explore / cash.
+
+    Murat's item 11, 2026-09-20: *"force a daily portfolio decision — every
+    dollar resolves to benchmark, active exploit, active explore or cash. 'No
+    active trade' is allowed; 'nothing happened' is not."*
+
+    Derived from the ROWS, so the split and the file cannot disagree: the two
+    active shares are the position budgets the authorities funded, cash is the
+    declared floor (`config.IC_CASH_FLOOR_PCT`) and the benchmark core is the
+    RESIDUAL — which is the honest direction, because the core is what the
+    committee holds when nothing else is licensed, not a target of its own.
+
+    Agency rows are excluded and say so on the block: the three personalities
+    are ALTERNATIVE whole books at the same capital, so adding them would
+    resolve the same dollar three times.
+    """
+    exploit = 0.0
+    explore = 0.0
+    n_exploit = 0
+    n_explore = 0
+    n_books = 0
+    for r in rows:
+        if r.get("instrument_kind") == "book":
+            n_books += 1
+            continue
+        w = (r.get("position_budget") or {}).get("weight")
+        try:
+            w = float(w)
+        except (TypeError, ValueError):
+            continue
+        if w <= 0:
+            continue
+        if r.get("authority") == DA.EXPLOIT:
+            exploit += w
+            n_exploit += 1
+        elif r.get("authority") == DA.EXPLORE:
+            explore += w
+            n_explore += 1
+    cash = float(config.IC_CASH_FLOOR_PCT)
+    benchmark = 1.0 - exploit - explore - cash
+    total = benchmark + exploit + explore + cash
+    out = {
+        "benchmark_pct": round(benchmark, 8),
+        "active_exploit_pct": round(exploit, 8),
+        "active_explore_pct": round(explore, 8),
+        "cash_pct": round(cash, 8),
+        "sums_to": round(total, 8),
+        "capital_usd": (float(capital) if capital is not None else None),
+        "n_exploit_names": n_exploit,
+        "n_explore_names": n_explore,
+        "agency_book_rows_excluded": n_books,
+        "basis": (
+            "benchmark = 1 - exploit - explore - cash; the two active shares "
+            "are the position budgets the authorities funded, cash is "
+            "config.IC_CASH_FLOOR_PCT, and the benchmark core is the residual. "
+            "Agency Option rows are ALTERNATIVE whole books at this same "
+            "capital and are excluded — counting them would resolve one dollar "
+            "three times."),
+        "nothing_happened_is_not_allowed": (
+            f"every dollar resolved today: {benchmark:.2%} benchmark core, "
+            f"{exploit:.2%} active EXPLOIT across {n_exploit} name(s), "
+            f"{explore:.2%} active EXPLORE across {n_explore} name(s), "
+            f"{cash:.2%} cash. 'No active trade' is an allowed outcome; "
+            f"'nothing happened' is not, and this line is the proof it did "
+            f"not happen."),
+    }
+    if abs(total - 1.0) > 1e-8 or benchmark < 0:
+        out["refused"] = (
+            f"CANNOT DETERMINE: the resolution does not add to one "
+            f"({total:.8f}) or the benchmark residual is negative "
+            f"({benchmark:.8f}) — the active budgets exceed the declared "
+            f"capital, which is a defect in the sizing caps and not a book "
+            f"anyone should hold")
+    if capital is not None:
+        out["dollars"] = {
+            "benchmark_usd": round(benchmark * float(capital), 2),
+            "active_exploit_usd": round(exploit * float(capital), 2),
+            "active_explore_usd": round(explore * float(capital), 2),
+            "cash_usd": round(cash * float(capital), 2),
+        }
+    return out
 
 
 def _authority_payload_block(rows: list[dict], book: dict | None) -> dict:

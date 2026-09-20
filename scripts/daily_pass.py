@@ -310,6 +310,12 @@ def grade_forecasts(**kw) -> dict:
     return forecast_grader.grade_due(**kw)
 
 
+def morning_scoreboard(**kw) -> dict:
+    """The economic scoreboard, behind a name like every other seam."""
+    from backend.services import morning_scoreboard as MS
+    return MS.compose(**kw)
+
+
 def cadence_list() -> tuple[str, ...]:
     from backend.services.paper_books import CADENCES
     return tuple(CADENCES)
@@ -829,8 +835,21 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
 
     rows = ctx["rows"]
     counts = {s: sum(1 for r in rows if r["status"] == s) for s in STATUSES}
+    # THE SCOREBOARD IS THE FIRST BLOCK (Murat's item 12, chunk 21). It is
+    # composed AFTER the steps and printed BEFORE them: it reads the receipts
+    # this pass has just written, and the economics is what the reader came
+    # for. It can never fail the pass — a scoreboard that raised would cost
+    # the day's receipt, which is the one thing this driver must not do.
+    try:
+        board = morning_scoreboard(asof=ctx["date_obj"])
+    except Exception as exc:                                       # noqa: BLE001
+        logger.exception("daily pass: the scoreboard could not be composed")
+        board = {"receipt": "morning_scoreboard", "date": day,
+                 "headline": (f"CANNOT DETERMINE: the scoreboard could not be "
+                              f"composed ({type(exc).__name__}: {_trunc(exc)})")}
     receipt = {
         "receipt": "daily_pass",
+        "scoreboard": board,
         "roadmap_item": "chunk 12 T1",
         "licence": "PRODUCT_EXPERIMENT",
         "llm_spend_usd": 0.0,

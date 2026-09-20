@@ -286,6 +286,25 @@ def tool_night_plan() -> tuple[str, list[str]]:
             + _clip(p.read_text(encoding="utf-8", errors="replace")), [_rel(p)])
 
 
+def scoreboard_paragraph() -> str:
+    """The morning scoreboard, FIRST, before any list of names (chunk 21).
+
+    Murat's item 12: the economics is printed before the decisions, every
+    morning. It is computed from receipts on disk with no model in the path,
+    and a failure to compose it must never cost the reader the decisions —
+    which is why the exception becomes a named absence rather than a raise.
+    """
+    try:
+        from backend.services import morning_scoreboard as MS
+        return MS.render(MS.compose())
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("scoreboard unavailable: %s", exc)
+        return (f"### the morning scoreboard\nCANNOT DETERMINE: the scoreboard "
+                f"could not be composed ({type(exc).__name__}: {exc}). The "
+                f"decisions below are unaffected — they are read from the "
+                f"contract file, not from this block.")
+
+
 def tool_decisions() -> tuple[str, list[str]]:
     """Today's Decision Contract, and the ledger states it is now in.
 
@@ -300,9 +319,11 @@ def tool_decisions() -> tuple[str, list[str]]:
     from backend.services import decision_contract as DC
     from backend.services import decision_ledger as DL
 
+    board = scoreboard_paragraph()
     blob = DC.latest()
     if blob is None:
-        return ("### today's decisions\n" + DC.summarise_for_reader(None)), []
+        return (board + "\n\n### today's decisions\n"
+                + DC.summarise_for_reader(None)), []
     seen: list[str] = []
     text = DC.summarise_for_reader(blob, record=seen.append)
     if seen:
@@ -311,7 +332,8 @@ def tool_decisions() -> tuple[str, list[str]]:
     refused = blob.get("count_by_refusal_class") or {}
     worst = blob.get("worst_case_largest_admissible_book") or {}
     states = DL.summary(blob.get("date")).get("count_by_state") or {}
-    body = (f"### today's decisions — {_rel(blob.get('path', ''))}\n{text}\n\n"
+    body = (f"{board}\n\n"
+            f"### today's decisions — {_rel(blob.get('path', ''))}\n{text}\n\n"
             f"refusal classes today: {json.dumps(refused, sort_keys=True)}\n"
             f"worst case for the largest admissible book: "
             f"{worst.get('verdict')}\n"

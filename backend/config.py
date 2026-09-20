@@ -1836,6 +1836,30 @@ EXPLORE_UNCERTAINTY_BONUS_COEF = 0.25
 #: date and the name, so a past contract reproduces exactly.
 EXPLORE_SEED_NAMESPACE = "AEGIS_EXPLORE_v1"
 
+# ── THE MORNING SCOREBOARD (chunk 21, Murat's item 12) ──────────────────────
+# `backend/services/morning_scoreboard.py`. Reads receipts, writes nothing.
+
+#: The benchmark the scoreboard differences NAV against. SPY, and named here
+#: rather than spelled in the module, because the fleet's own benchmark is a
+#: control LANE and the two must never be confused on one page.
+SCOREBOARD_BENCHMARK_SYMBOL = "SPY"
+
+#: How far back "strongest NEW positive / killed" looks, in days, dated by each
+#: receipt's OWN stamp (never `st_mtime`: session protocol 7).
+SCOREBOARD_WINDOW_DAYS = 7
+
+#: How far back the scoreboard reads contract files to attribute a realised
+#: return to the authority that took the decision. A year, the same window
+#: `decision_contract.find_contract_row` scans.
+SCOREBOARD_JOIN_DAYS = 366
+
+#: Most per-name rows carried on a P&L block before it is truncated.
+SCOREBOARD_MAX_NAMES = 25
+
+#: The verdict prefixes that count as a hypothesis KILLED. `STOP` is not among
+#: them and is retired from exploratory work (CLAUDE.md, EXPLORE DIRTY).
+SCOREBOARD_KILL_VERDICTS: tuple = ("FAILED_VARIANT", "MECHANISM_REJECTED")
+
 #: The cash floor in the daily capital resolution: every dollar resolves to
 #: benchmark / active_exploit / active_explore / cash (Murat's item 11), and
 #: the benchmark core is the residual. Zero because the committee's core IS
