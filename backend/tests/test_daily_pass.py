@@ -38,6 +38,36 @@ from scripts import daily_pass as DP
 MODULE = Path(DP.__file__).resolve()
 
 
+def _seam_names() -> set[str]:
+    """Every public module-level callable a `step_*` handler reaches out through.
+
+    DERIVED from the module's own AST, never listed by hand. A hand-written
+    seam list is only as good as the memory of whoever adds the next step, and
+    the cost of forgetting is not a weaker test: it is the REAL function
+    running against `backend/data` inside a unit test. `grade_forecasts` was
+    added on 2026-09-20 and, unstubbed for one run, rewrote the live prediction
+    ledger — 14,703 records graded — before the ledger was restored from git.
+    """
+    tree = ast.parse(MODULE.read_text(encoding="utf-8"))
+    module_fns = {n.name for n in tree.body if isinstance(n, ast.FunctionDef)}
+    seams: set[str] = set()
+    for node in tree.body:
+        if not (isinstance(node, ast.FunctionDef) and node.name.startswith("step_")):
+            continue
+        for sub in ast.walk(node):
+            if (isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name)
+                    and sub.func.id in module_fns
+                    and not sub.func.id.startswith("_")):
+                seams.add(sub.func.id)
+    return seams
+
+
+#: Sorted for a stable failure message. Captured PRISTINE at import so a test
+#: can ask "is this one still the real function?" by identity.
+_SEAMS = sorted(_seam_names())
+_PRISTINE = {name: getattr(DP, name) for name in _SEAMS}
+
+
 # --------------------------------------------------------------------------
 # fixtures: the receipt directory, and a full set of step seams
 
@@ -117,7 +147,21 @@ def calls(monkeypatch) -> list[str]:
         return {"state": "DECIDED", "by": "daily_pass", "written": len(rows),
                 "duplicate": 0, "refused": []}
 
+    def _grade(**kw):
+        seen.append("grade_forecasts")
+        return {"newly_resolved": 3, "resolver_status": "ok",
+                "totals": {"graded": 3, "not_yet_due": 1},
+                "n_records": 4, "licence": "PRODUCT_EXPERIMENT",
+                "bars": {"available": True}, "headline": "3 newly resolved"}
+
     monkeypatch.setattr(DP, "read_coverage", _coverage)
+    # Chunk 18b. The real grader reads the LIVE prediction ledger out of
+    # `backend/data` and REWRITES it — `belief_state.resolve_all` writes the
+    # whole file. It was unstubbed for exactly one test run and graded 14,703
+    # live records against the local bars; the ledger was restored from git and
+    # `test_every_module_level_seam_is_stubbed_by_the_calls_fixture` below is
+    # why the next step added here cannot repeat it.
+    monkeypatch.setattr(DP, "grade_forecasts", _grade)
     # Chunk 18. BOTH seams, because the real builder reads the funnel out of
     # `backend/data` and the real ledger writes into it — neither exists in CI
     # and neither belongs in a unit test's blast radius.
@@ -178,11 +222,31 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     outer = [c.split(":")[0] for c in calls]
     assert outer == ["news_pull", "decision_contract", "analyst_snapshot",
                      "e1_append", "book_cadence", "book_cadence", "book_cadence",
-                     "coverage"]
+                     "grade_forecasts", "coverage"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:
     assert set(DP._HANDLERS) == {s for s, _ in DP.STEPS}
+
+
+def test_every_module_level_seam_is_stubbed_before_a_pass_runs(
+        out, calls, rth_open) -> None:
+    """MEASURED 2026-09-20, at this repository's expense.
+
+    `grade_forecasts` was added to `STEPS` and the `calls` fixture was not
+    taught about it. One `pytest backend/tests/test_daily_pass.py` later, the
+    real grader had run against the LIVE prediction ledger and written outcomes
+    onto 14,703 records — the ledger was restored from git, and this test is
+    the reason the next step added here cannot do it again.
+
+    The seam list is derived from the module's AST, so a new seam is covered
+    the moment it exists rather than the moment somebody remembers it.
+    """
+    assert _SEAMS, "the AST walk found no seams at all — it has stopped working"
+    live = [name for name in _SEAMS if getattr(DP, name) is _PRISTINE[name]]
+    assert not live, (
+        f"{live} reach outside and are NOT stubbed by the fixtures, so a unit "
+        f"test would run them for real against backend/data")
 
 
 def test_a_step_that_raises_still_leaves_a_row(out, calls, rth_open,
@@ -491,9 +555,11 @@ def test_a_boxed_out_pass_still_writes_its_receipt_and_exits_zero(
 
     for step, _ in DP.STEPS:
         monkeypatch.setitem(DP._STEP_BOXES, step, 0.05)
-    for seam in ("pull_all_news", "run_analyst_snapshot", "run_e1_append",
-                 "run_cadence_pass", "build_decision_contracts",
-                 "read_coverage"):
+    # DERIVED, not listed. A seam left off a hand-written list is not a weaker
+    # test — it is the REAL function running against `backend/data` inside a
+    # unit test, which is how `grade_forecasts` rewrote the live prediction
+    # ledger the first time it was added.
+    for seam in _SEAMS:
         monkeypatch.setattr(DP, seam, lambda *a, **k: _time.sleep(30))
     rc = DP.main(["--date", _today()])
     assert rc == 0, "a boxed-out pass must not go red; the receipt is the evidence"

@@ -130,6 +130,12 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("analyst_snapshot", "today's consensus rows per symbol"),
     ("e1_append", "the text-and-return panel append, PIT re-verified"),
     ("book_cadence", "every paper book due today (30m only inside US RTH)"),
+    # 2026-09-20. It is AFTER the cadence pass because the books write their
+    # own forecast rows there, and a grader that ran first would leave today's
+    # rows for tomorrow for no reason.
+    ("grade_forecasts", "every forecast whose window has closed, resolved from "
+                        "the local bars — with a NAMED reason per record that "
+                        "did not"),
     ("coverage", "the per-source coverage card, derived from disk"),
 )
 
@@ -296,6 +302,12 @@ def record_decided(rows: list[dict], day: str) -> dict:
     return decision_ledger.record_many(
         [r["decision_id"] for r in rows], "DECIDED", by="daily_pass",
         asof=day, detail={"step": "decision_contract"})
+
+
+def grade_forecasts(**kw) -> dict:
+    """The forecast grader, behind a name like every other seam."""
+    from backend.services import forecast_grader
+    return forecast_grader.grade_due(**kw)
 
 
 def cadence_list() -> tuple[str, ...]:
@@ -590,6 +602,50 @@ def step_decision_contract(ctx: dict) -> dict:
                 licence=DC.LICENCE, ledger=ledger, receipt=blob.get("path"))
 
 
+def step_grade_forecasts(ctx: dict) -> dict:
+    """Resolve every forecast whose window has closed (chunk 18b).
+
+    MEASURED 2026-09-20 on the live ledger: 24,839 records, and every single one
+    carried `resolved_at: null`. 17,614 were past their resolution date, the
+    oldest since 2026-08-11. `lab_decision_vs_reality` reported the number every
+    hour and re-grades nothing by design; the graders it aggregates over simply
+    had no caller on this machine, because the only production caller is a
+    background thread inside a server process that does not run here.
+
+    `nothing_to_do` when nothing was due, `ok` when a record resolved, and
+    `refused` when the resolver itself refused (an unestablished population, an
+    unreadable campaign ledger) — never an `ok` with zeros, which a card cannot
+    tell from a day on which everything was already graded.
+    """
+    t0 = time.time()
+    rec = grade_forecasts()
+    totals = rec.get("totals") or {}
+    newly = int(rec.get("newly_resolved") or 0)
+    status_word = str(rec.get("resolver_status") or "ok").upper()
+    refusals: list[str] = []
+    if status_word in ("REFUSED", "ERROR"):
+        refusals.append(str(rec.get("resolver_reason") or status_word))
+    for bucket in ("RECORD_LACKS_TARGET", "MECHANISM_HAS_NO_GRADER",
+                   "NO_BAR_FOR_RESOLUTION_DATE", "QUARANTINED"):
+        n = int(totals.get(bucket) or 0)
+        if n:
+            refusals.append(f"{bucket}: {n:,} record(s)")
+    if status_word in ("REFUSED", "ERROR"):
+        status = "refused"
+    elif newly:
+        status = "ok"
+    else:
+        status = "nothing_to_do"
+    return _row("grade_forecasts", status, rows=newly,
+                seconds=round(time.time() - t0, 2), refusals=refusals,
+                totals=totals, bars=rec.get("bars"),
+                n_records=rec.get("n_records"),
+                graded_after_this_run=rec.get("graded_after_this_run"),
+                n_unpriceable_tickers=rec.get("n_unpriceable_tickers"),
+                licence=rec.get("licence"), receipt=rec.get("path"),
+                headline=rec.get("headline"))
+
+
 def step_coverage(ctx: dict) -> dict:
     """The card, from disk. A card that cannot be computed says so."""
     t0 = time.time()
@@ -617,6 +673,7 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "e1_append": step_e1_append,
     "book_cadence": step_book_cadence,
     "decision_contract": step_decision_contract,
+    "grade_forecasts": step_grade_forecasts,
     "coverage": step_coverage,
 }
 assert set(_HANDLERS) == {s for s, _ in STEPS}, "every declared step needs a handler"
@@ -794,9 +851,13 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         # is the ORDER, not the stage: the row is no longer derived from a NAV
         # this pass wrote, and it never was — `compose_book` is the committee's
         # composer, not the paper book's marker.
+        # `grade_forecasts` is `pnl` and could not be anything else: an outcome
+        # written onto a forecast is the thing that makes it evidence, and
+        # nothing upstream may read it.
         "step_stages": {"news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
-                        "decision_contract": "pnl", "coverage": "raw"},
+                        "decision_contract": "pnl", "grade_forecasts": "pnl",
+                        "coverage": "raw"},
         "date": day, "run": run,
         "git_head": git_head(),
         "started_utc": started.isoformat(timespec="seconds"),
@@ -963,8 +1024,8 @@ def main(argv: list[str] | None = None) -> int:
 
 __all__ = ["INTRADAY_CADENCES", "STATUSES", "STEPS", "SamePassAlreadyRan",
            "SiblingPassRunning", "cadence_list", "call_boxed",
-           "clear_stale_siblings", "existing_receipts", "git_head", "kill_pid",
-           "parse_process_table",
+           "clear_stale_siblings", "existing_receipts", "git_head",
+           "grade_forecasts", "kill_pid", "parse_process_table",
            "main", "out_dir", "plan", "print_receipt", "pull_all_news",
            "read_coverage", "receipt_path", "run_analyst_snapshot",
            "run_cadence_pass", "run_daily_pass", "run_date", "run_e1_append",
