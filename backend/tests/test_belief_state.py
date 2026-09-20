@@ -187,13 +187,37 @@ def test_a_coherent_probability_tree_prices_the_branches():
     assert b.expected_value() == pytest.approx(37.0)
 
 
-def test_the_live_ledger_has_records_and_none_of_them_are_scoreable_yet():
-    """The clock started tonight. Nothing has resolved, and that is the point."""
+def test_the_live_ledger_has_records_and_every_graded_one_is_whole():
+    """RETIRED ASSERTION, 2026-09-20: `all(outcome is None)`.
+
+    This test used to say "the clock started tonight, nothing has resolved, and
+    that is the point" — written 2026-08-11, when that was true. It is a
+    fixture that encodes a calendar moment (CLAUDE.md protocol 5), and its only
+    way of staying green was for the resolver to never run. It ran on
+    2026-09-20 and graded 14,703 of 24,839 records that had been sitting
+    ungraded, the oldest since 2026-08-11, and this test went red for the
+    success rather than for the failure.
+
+    What is pinned instead is the INVARIANT, which does not expire: a graded
+    record is graded WHOLE — an outcome, a resolution date and a Brier
+    together. A row with an outcome and no `resolved_at` would be invisible to
+    `ledger_retrieval.visible_at` and would be scored by
+    `belief_state.calibration` anyway, which is the shape of a hindsight leak.
+    """
     rows = read_predictions()
     assert len(rows) >= 60, "the first live run should be on disk"
-    assert all(r.get("outcome") is None for r in rows)
+    graded = [r for r in rows if r.get("outcome") is not None]
+    for r in graded:
+        assert r.get("resolved_at"), (
+            f"{r['prediction_id']} carries an outcome and no resolution date — "
+            f"`visible_at` cannot admit it and `calibration` would score it")
+        assert r.get("brier") is not None, r["prediction_id"]
+        assert str(r["resolved_at"])[:10] >= str(r["made_at"])[:10], (
+            f"{r['prediction_id']} was resolved before it was made")
     voided = [r for r in rows if r.get("void_reason")]
     assert all(not (0 < (r["threshold"] or 0.5) < 1) for r in voided)
+    assert all(r.get("outcome") is None for r in voided), (
+        "a voided record must never be graded: the void IS the disposition")
 
 
 # ── the canary: would anything say so if this went dark? ────────────────────
