@@ -67,6 +67,39 @@ re-runs the same ranking over the affected capital level and writes a child row 
 `parent_decision_id` only when direction or rank-cut moves; it takes candidate FIELDS and refuses
 text, so a typed event can revise a decision and a sentence cannot.
 
+**And then the same evening, the authority split (chunk 21, §15.2), because a rule that scores
+zero while a heuristic still buys four is two rules.** Murat's review: *"that is internally
+inconsistent with 'if it can't be sure, don't make the bad decision' ... do not require t ≥ 2
+before AEGIS is allowed to learn. Uncertain must mean INVESTIGATE, never freeze."* Every
+candidate that clears the hard gates now carries exactly ONE authority
+(`backend/services/decision_authority.py`): **EXPLOIT** — the leading signal's measured t clears
+`ROI_MIN_T`, sized by the Kelly above, **empty today and printed empty**, which is what chunk 22's
+rank→return calibration exists to change; **EXPLORE** — measured but unproven (positive monthly
+net, t below the floor or no t at all), funded out of a fixed paper-risk budget
+(`EXPLORE_BUDGET_PCT` 2% of equity at `EXPLORE_PER_NAME_PCT` 0.25%) allocated by **Thompson
+sampling** over Normal(measured net, se), se = |net|/t and 3·|net| when the receipt states no t —
+an unmeasured t is the *widest* posterior, never a zero — ranked by
+`draw − cost − risk_penalty(vol) + uncertainty_bonus(se)` with every draw seeded from the as-of
+date and the name, so a rebuilt day reproduces exactly; **REFUSED** — everything else, each with
+its own sentence, and a name with *no* measured read is refused rather than explored, because
+exploration is for measured-but-unproven and never for nothing. `IC_LEGACY_HEURISTIC_SIZING`
+(False) retires `cap × verdict × confidence`, and a test asserts no row can carry a position
+budget without an active authority. Today's rebuilt contract: **0 EXPLOIT, 2 EXPLORE (CVLG and
+INDV at 0.25% = $100 each of the declared $40,000), 38 REFUSED**, worst cases printed side by
+side — tilt sleeve 10 × 3% held to 10%, explore 0.50% of equity under a 2% ceiling, additive.
+
+Two things follow that a reader of the loop needs. **Every dollar now resolves daily** (item 11):
+the contract receipt carries `capital_resolution` — 99.50% benchmark core / 0.00% active exploit /
+0.50% active explore / 0.00% cash, summing to 1.0, with the line "'no active trade' is an allowed
+outcome; 'nothing happened' is not". And **the economics is printed first** (item 12):
+`backend/services/morning_scoreboard.py` composes NAV vs SPY, exploit P&L, explore P&L, decisions,
+forecasts matured and graded, calibration against the base-rate Brier, strongest new positive,
+strongest killed and one sentence on whether anything learned changed capital — as the first block
+of the daily-pass receipt and the first paragraph of the desktop Ask. It computes nothing of its
+own, and any field it cannot derive prints `CANNOT DETERMINE: <why>` and never a zero; six of ten
+are in that state today (no local NAV, nothing SCORED yet, 0 resolved in the calibration window),
+which is a fact about the programme rather than a defect in the reader.
+
 Operating rules that cost the most to learn (full list: `docs/AEGIS_STRATEGIC_INVARIANTS.md`,
 `CLAUDE.md` session protocol, roadmap §6/§13/§14.6): never kill by image name; never move
 `.env`; gate a push on the suite's `exit=0` line and push the SHA, not the branch; a receipt is
