@@ -37,6 +37,17 @@ receipt) → the night factory / the lab runs it unattended → paper capital mo
 (allocator) and the Decision Contract records decided / delivered / seen / refused / filled /
 scored. One Opus at a time. Gates outrank dates.
 
+Two steps of the daily pass close that loop and were added on 2026-09-20 (chunk 18b, §14.4c),
+because both halves of it existed in code and neither had ever run:
+
+- **`decision_contract` now runs SECOND**, immediately after `news_pull` instead of fifth behind
+  the analyst sweep — it needs nothing the sweep writes, it takes twelve seconds, and standing
+  behind two and a half hours of network is why it had never executed once and why the decision
+  ledger did not exist.
+- **`grade_forecasts` runs after `book_cadence`** and resolves every forecast whose window has
+  closed against the LOCAL bars through `ledger_resolver.resolve_due`, with a named reason per
+  record that did not grade — the first run resolved 14,703 of a ledger that was 100% ungraded.
+
 Operating rules that cost the most to learn (full list: `docs/AEGIS_STRATEGIC_INVARIANTS.md`,
 `CLAUDE.md` session protocol, roadmap §6/§13/§14.6): never kill by image name; never move
 `.env`; gate a push on the suite's `exit=0` line and push the SHA, not the branch; a receipt is

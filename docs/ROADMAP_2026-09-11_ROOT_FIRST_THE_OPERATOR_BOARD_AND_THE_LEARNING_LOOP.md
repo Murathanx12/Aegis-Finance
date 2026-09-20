@@ -907,6 +907,7 @@ clause before a new idea is registered · nothing LLM-derived allocates, still.
 |---|---|---|
 | **17** (landed 09-19 13:00) | **the lab owns its clock** (infra spec §4.3-4.4) + exit reason on the lock · **personal mode** (decision spec §5, 8 files) · the overnight execution rule noted for the allocator (terminal repo, next terminal chunk) | the lab's own 06:30 and 16:00 receipts land two days running; `AEGIS_PERSONAL_MODE=1` hides every banner in the desktop build |
 | **18** (landed 09-19 15:30) | **the Decision Contract** (decision spec §4): `decision_contract.py`, `decision_ledger.py`, `step_decision_contract` in the morning, `get_todays_decisions` copilot tool, the `decisions` Ask route before the morning words, the IC card with falsifier + expiry | Murat asks the local model "what would you buy today" and reads engine-sized rows with kill conditions |
+| **18b** (landed 09-20 18:20) | **the contract runs first; the grader exists.** `step_decision_contract` moved from fifth to SECOND in `scripts/daily_pass.py` (it had never executed once — see below) · the analyst box 4 h → 1 h with `DAILY_PASS_ANALYST_BUDGET_S = 3300` so the sweep stops ITSELF and names the shortfall instead of timing out · `refusal_class_basis` on every REFUSED contract row · new `backend/services/forecast_grader.py` + a `grade_forecasts` step after `book_cadence` | the decision ledger exists with DECIDED rows, and the prediction ledger stops being 100% ungraded |
 | **19** (landed 09-19 17:30; re-test 1 READ: 4× FAILED_VARIANT, §58; N9 1,750 candidates) | **re-tests 1, 3 and the Kelly book**: `B_exclusion_screen` night job over the existing rank files; the LLM-autopsy library expansion under a $10 cap; `PROFIT_ALLOCATOR_v2` (the Kelly book: v1 retired 2026-08-24 under the router-identity fix with its construction never measured; v2 seeds under the corrected router, ENGINE_BASELINE_v1 is its EW twin, the seed flag stays Murat's); vocabulary v3 with `foreign_entrant_capacity` + `growth_constraint_cited` and the `L2_retype_v3` idle job; TRIAL-DRAFT-FOREIGN-ENTRANT written 09-19 | three receipts on the leaderboard, each with its twin |
 | **20** (landed 09-19 18:30; refuses by name until the two keys exist) | **social phase 1** (social spec §3): Scrapling attached; Reddit comments + YouTube search via the registry; `growth_constraint_cited`; the five variables computed nightly into the panel; the shuffled-ticker and anonymised controls | the first `mention_velocity` and `stance_dispersion` columns on the E1 panel with their nulls (needs Murat's two keys) |
 | **21** | **re-test 2**: the 13D event-window book with the 13G placebo, at $3M and $10M with twins | a receipt with the placebo beside it |
@@ -960,6 +961,86 @@ nothing to the one-selector bottleneck and may not be read as a return source
 a candidate enters the precursor library only through `library_measure_*` +
 `library_placebo_null`, because §37/§41's lesson is that a verdict which kills
 or admits is the hardest kind to notice being wrong.
+
+### 14.4c CHUNK 18b — 2026-09-20: two steps that existed and never ran
+
+Chunks 18 and 14 both shipped working code that nothing called. Neither failure
+was visible from the code, and both were visible in one `ls` of the data
+directory. The pattern is the house failure mode with a new face: not "it runs
+green and does nothing" but **"it would do the right thing and is never
+reached."**
+
+- **The Decision Contract had never executed once.** `step_decision_contract`
+  was declared FIFTH in `scripts/daily_pass.py`, after the 2,362-symbol analyst
+  sweep. The only pass that ever carried it — the 09-14 06:30 firing — wedged
+  inside that sweep four steps earlier and was killed four days later, so
+  `record_decided` was never called and
+  `backend/data/optimus/decisions/ledger.jsonl` **did not exist at all**. Run
+  by hand on 09-20 the builder produced **43 rows in 12 seconds**: 4 BUY, 1
+  WATCH, 38 REFUSED (31 `EDGE_BELOW_BAR`, 7 `UNCLASSIFIED`). Twelve seconds of
+  work had been standing behind two and a half hours of network for four weeks.
+  It is now SECOND, immediately after `news_pull`, and it may move because it
+  depends on nothing the sweep writes: `config.IC_FUNNEL_PATH` is a committed
+  artefact, the IPS store is local, `paper_books.load_bars()` is a static
+  parquet, and no step of the pass refreshes any of them.
+
+- **The analyst box comes down 4 h → 1 h, and the sweep stops itself.**
+  `DAILY_PASS_ANALYST_BUDGET_S = 3300` is the sweep's OWN budget, inside the
+  3,600 s box. The two are different findings and the difference is the point:
+  a thread abandoned at the box writes a `timeout` row and no receipt, while a
+  sweep that reaches its budget flushes its parquet and returns a receipt
+  carrying `truncated`, `symbols_reached`, `symbols_not_reached` and the
+  reason. At the measured 4.45 s/symbol the 2,362-name band needs ~2.9 h, so it
+  will truncate visibly, in a counted field, until the sweep is made cheaper —
+  a box that timed out every morning would be a red line the reader learns to
+  skim. The healthy-pass ceiling is now 9,300 s (2.58 h), down from 18,600 s.
+
+- **The 7 UNCLASSIFIED refusals were one sentence, and it stays UNCLASSIFIED.**
+  All seven came from `_refusal_sentence`'s NO_EVIDENCE branch — "no licensed
+  signal speaks to this name". None of the 31 classes in
+  `aegis-alpha-terminal/alpha/refusal_classes.py` covers it: that vocabulary
+  was derived from an options book whose candidates are STRUCTURES on a
+  forecast that already exists, so `REFUTED_ROUTE`, `EDGE_BELOW_BAR`, `MDE` and
+  `CHAIN_UNUSABLE` all presuppose a signal that spoke. The terminal state
+  `DATA_MISSING` is exact and is what a cross-repo census joins on. Every
+  REFUSED row now carries `refusal_class_basis`, because UNCLASSIFIED had been
+  covering two opposite findings: a sentence deliberately mapped to it (nothing
+  owed) and a sentence nothing matched (a pattern owed). The payload counts
+  both and `unclassified_owing_a_pattern` is the number that is work.
+
+- **The prediction ledger was 100% ungraded, and now is not.** 24,839 records,
+  every one with `resolved_at: null`; **17,614 past their resolution date**,
+  the oldest since 2026-08-11. `lab_decision_vs_reality` printed that number
+  every hour and re-grades nothing by design; the graders it aggregates over
+  had no caller on this machine, because the only production caller of
+  `ledger_resolver.resolve_due` is a background thread inside a server process
+  that does not run here. `backend/services/forecast_grader.py` is the caller,
+  and it contains **no return arithmetic**: it hands `resolve_due` a LOCAL
+  price panel from `paper_books.load_bars()` in place of the yfinance default,
+  and adds a named reason per record plus a receipt. First real run
+  (`night_factory_2026-09-20/grade_forecasts_2026-09-20.json`): **14,703 newly
+  resolved**, 2,911 `NO_BAR_FOR_RESOLUTION_DATE` over 105 tickers the local
+  panel does not carry (it ends 2026-09-11), 6 `VOID`, 7,219 not yet due, 0
+  `RECORD_LACKS_TARGET`, 0 `MECHANISM_HAS_NO_GRADER`. Every record is in
+  exactly one bucket of a closed set; every declared mechanism is on the
+  receipt, six of them at zero.
+
+- **The first thing the ledger has ever said about itself is not flattering.**
+  Over the 14,703 graded records: mean probability **0.510** against a base
+  rate of **0.340**, Brier **0.2625** against a climatology of **0.2244**. The
+  swarm is overconfident and does not beat the base rate. That is one number on
+  one population and it is not a verdict on any mechanism — but it is the first
+  time the question could be asked at all, and it is the reason the grader is a
+  daily step rather than a one-off script.
+
+- **The cost, paid in the making, and the guard it bought.** The new seam was
+  not stubbed in `test_daily_pass.py`'s `calls` fixture, so one unit-test run
+  drove the real grader against the live ledger. The ledger was restored from
+  git and the seam list is no longer written by hand: it is derived from
+  `scripts/daily_pass.py`'s own AST, and a pass whose seams are not all stubbed
+  is a failing test rather than a write into `backend/data`. A seam list that
+  depends on the memory of whoever adds the next step is not a weaker test — it
+  is the real function running against the real data.
 
 ### 14.5 WHAT MURAT DOES (only what Claude Code cannot)
 
