@@ -119,21 +119,30 @@ def replay_dir() -> Path:
     return REPO / "backend" / "data" / "optimus" / "first_books" / "replay"
 
 
-def nav_map() -> dict[str, list[tuple[str, float]]]:
-    """Every lane and book NAV series this machine holds. Often EMPTY: the
-    laptop does not mark to market, the deployment does (`morning.py`)."""
+def nav_map() -> tuple[dict[str, list[tuple[str, float]]], list[str]]:
+    """(series by lane/book, problems). Often EMPTY: the laptop does not mark
+    to market, the deployment does (`morning.py`).
+
+    The PROBLEMS are returned rather than logged away. "No NAV exists" and
+    "the NAV reader raised" are different findings that would otherwise print
+    the same sentence — the exact silent-fragility shape this repo audits for,
+    where a caught exception becomes an empty result that reads as a fact.
+    """
     out: dict[str, list[tuple[str, float]]] = {}
+    problems: list[str] = []
     try:
         from backend.services.morning import lane_nav_series
         out.update(lane_nav_series() or {})
     except Exception as exc:                                       # noqa: BLE001
         logger.info("scoreboard: lane NAV unreadable: %s", exc)
+        problems.append(f"lane NAV unreadable ({type(exc).__name__}: {exc})")
     try:
         from backend.services.paper_books import nav_series
         out.update(nav_series() or {})
     except Exception as exc:                                       # noqa: BLE001
         logger.info("scoreboard: book NAV unreadable: %s", exc)
-    return out
+        problems.append(f"book NAV unreadable ({type(exc).__name__}: {exc})")
+    return out, problems
 
 
 def spy_closes(start: str, end: str) -> list[tuple[str, float]]:
@@ -176,9 +185,16 @@ def nav_vs_spy(navs: dict[str, list[tuple[str, float]]] | None = None) -> Any:
     which is the state of `paper_nav` in this checkout, and reporting it as a
     flat line would read as "we tracked the market" instead of "nobody marked".
     """
-    navs = nav_map() if navs is None else navs
+    if navs is None:
+        navs, problems = nav_map()
+    else:
+        problems = []
     usable = {k: v for k, v in (navs or {}).items() if v and len(v) >= 2}
     if not usable:
+        if problems:
+            return _cd(
+                "the NAV readers REFUSED rather than returned nothing, which "
+                "is a different finding: " + "; ".join(problems))
         return _cd(
             "no NAV series exists on this machine — `paper_nav` is empty here "
             "because the laptop does not mark to market, the deployment does. "
@@ -210,6 +226,8 @@ def nav_vs_spy(navs: dict[str, list[tuple[str, float]]] | None = None) -> Any:
         "books": rows,
         "benchmark_symbol": config.SCOREBOARD_BENCHMARK_SYMBOL,
     }
+    if problems:
+        out["partial"] = problems
     if spy_pct is None:
         out["benchmark_pct"] = _cd(
             f"no {config.SCOREBOARD_BENCHMARK_SYMBOL} closes on disk between "

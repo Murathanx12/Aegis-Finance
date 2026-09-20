@@ -249,6 +249,20 @@ def test_nav_vs_spy_differences_the_same_window(world, monkeypatch):
     assert nav["excess_pct"] == pytest.approx(10.0)
 
 
+def test_a_nav_reader_that_raises_is_a_different_finding_from_no_nav(
+        world, monkeypatch):
+    """Silent fragility, refused: a caught exception must not read as a fact.
+
+    `nav_map` returns its problems instead of logging them away, so "nobody
+    marked" and "the reader raised" cannot print the same sentence.
+    """
+    monkeypatch.setattr(MS, "nav_map",
+                        lambda: ({}, ["book NAV unreadable (OSError: disk)"]))
+    board = _board(world, navs=None)
+    assert "the NAV readers REFUSED" in board["nav_vs_spy"]
+    assert "OSError: disk" in board["nav_vs_spy"]
+
+
 def test_a_missing_benchmark_refuses_the_excess_rather_than_zeroing_it(
         world, monkeypatch):
     monkeypatch.setattr(MS, "spy_closes", lambda start, end: [])
