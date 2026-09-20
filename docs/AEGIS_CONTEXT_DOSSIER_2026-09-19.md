@@ -92,6 +92,32 @@ Two things follow that a reader of the loop needs. **Every dollar now resolves d
 the contract receipt carries `capital_resolution` — 99.50% benchmark core / 0.00% active exploit /
 0.50% active explore / 0.00% cash, summing to 1.0, with the line "'no active trade' is an allowed
 outcome; 'nothing happened' is not". And **the economics is printed first** (item 12):
+**And on 2026-09-21 the loop's last open link closed: the engine can now say how much, per
+company** (chunk 22, roadmap §15.2). Until Sunday, `roi_rank`'s expected return came from the
+leading signal FAMILY's average — one number per signal, the same for every name it led — and the
+downside came from the ticker's volatility, so among names sharing a family the rule preferred
+whichever happened to be quietest. `scripts/calibrate_signal_return.py` (`C7_signal_calibration`,
+stage `features`, 60-minute box, resumable per signal) now builds, for every signal the registry
+permits to LEAD, an OUT-OF-SAMPLE map from score decile to abnormal return and downside at
+5/21/63/126 sessions — cut points refit yearly on the expanding past, months as the dependence
+unit, a block bootstrap on every cell, costs charged at 25 bps/side on the decile's own turnover,
+two nulls and Holm over the whole (signal × horizon) family. `backend/services/signal_calibration.py`
+is the only reader; `roi_rank` takes the candidate's OWN decile's net mean as `μ_i` and that
+decile's measured 20th percentile as the downside, printing which of the two sources produced
+each number and the receipt path it came off. **`decision_authority` now admits to EXPLOIT only a
+name whose leading signal carries a CALIBRATED map**, so the set that has been empty since the
+split was built can become non-empty only through measurement, never through a config row.
+
+The first real run says the honest thing: all three leadable signals are **WEAK** over 2006-2024
+(191 month blocks). `profitability_small` has the one map that looks like a map — monotone at
+Spearman 0.964, D1 −0.417% → D10 +0.358% net, D10−D1 +0.6445% at 21 sessions (t 1.588, Holm p
+1.000; at 126 sessions +5.11%, t 2.78, Holm p 0.065, the only cell near the bar).
+`insider_opportunistic`'s gross edge (+0.125%/month) is smaller than its own turnover cost
+(0.171%/month) and its score is 0.0 for 79.8% of name-months, so four of ten deciles are ever
+populated and the receipt says so rather than printing ten buckets that are really two. The
+measurement moved capital the same day: INDV's $100 of paper EXPLORE was withdrawn, because its
+own decile reads −0.073%/month net where the family row had said +0.17%.
+
 `backend/services/morning_scoreboard.py` composes NAV vs SPY, exploit P&L, explore P&L, decisions,
 forecasts matured and graded, calibration against the base-rate Brier, strongest new positive,
 strongest killed and one sentence on whether anything learned changed capital — as the first block
