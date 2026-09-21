@@ -84,6 +84,14 @@ lands. Validator: Fable.
    receipt as a block. PROBE rows carry `selection_probability = 1.0` with the
    basis "every unmeasured name probes; no draw". This is the field off-policy
    evaluation needs later (review item 12); it changes no decision today.
+   Two companions, from `research_sequential_evidence_and_bandits.md` (a
+   doubly-robust off-policy estimator cannot run without them): every EXPLORE
+   candidate row also carries `action_set` (the tickers considered for the M
+   slots that day, with each one's posterior mean and se) and
+   `context_features` (the small dict the authority already has: signal,
+   decile, vol_annual, horizon, regime tag if the funnel carries one). Write
+   them once per day on the receipt and reference by `action_set_sha256` on
+   each row, so the ledger row stays small.
 
 ## What it must NOT do
 
