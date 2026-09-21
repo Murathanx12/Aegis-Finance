@@ -78,6 +78,37 @@ cap was not loose; it could not bind at all.
     legitimately gone, so that check could never go green. What is checked is
     the STREAM and the directory it appends into. An unmetered (local) reader
     skips it, because no dollar cap can bind on a free run.
+  * **`REFUSED_CAP_READER_DISAGREES`** -- the cap and the receipt read the same
+    ledger and got different numbers. Added 2026-09-21 (chunk 22c), paid for by
+    run 3 the night before.
+
+THE THIRD WAY, AND THE MOST EXPENSIVE ONE SO FAR
+================================================
+**2026-09-21, `--max-usd 2 --workers 4 --reader deepseek`:** the run stopped at
+"**$10.0479 of $2.00**" -- five times its cap, $5.23 of real provider balance
+(the ledger over-counts list price ~2x; that is a PRICING question and not this
+one). Its own receipt printed both halves of the fault:
+`cap_block.estimated_spend_at_stop_usd` **0.013238** after **167** ledger
+reads, and `spend` **$10.047856** over **8,342** calls -- the same file, the
+same instant, two readers.
+
+The cause was one missing keyword. `_RunCap.refresh()` called
+`spend_from_ledger(self.since_utc, path=self.ledger_path)` and let `purpose`
+fall back to that function's DEFAULT, which is L2's `l2_event_extraction`;
+this job's receipt calls `spend_from_ledger(since, purpose=PURPOSE)` with
+`n9_library_autopsy`. So the cap spent the night summing a handful of L2 rows
+that happened to share the window ($0.0132, and never the 20 priced rows it
+needed to even re-derive $/row) while 8,342 N9 rows went unread. Not a loose
+cap and not an unpriced one: a cap watching a different meter.
+
+The fix is not a tighter number, it is ONE READER FOR BOTH -- `_RunCap` now
+takes `purpose` and both call sites name it -- plus a proof rather than a
+promise: after the FIRST flush of a metered run the two reads are printed side
+by side into the log and onto the receipt as
+`cap_block.first_flush_agreement`, and a difference wider than one call's
+worst case (`config.CAP_READER_AGREEMENT_TOLERANCE_USD`) stops the run by name.
+A cap that cannot be shown to be reading the writer's ledger is not trusted to
+bind.
 
 AND EVERY EXIT WRITES ITS ROWS
 ==============================
@@ -149,13 +180,21 @@ REFUSAL_CLASSES = ("REFUSED_UNPARSEABLE", "REFUSED_SCHEMA",
                    "REFUSED_VOCABULARY", "REFUSED_READER_ERROR",
                    "REFUSED_NOT_FALSIFIABLE")
 
-#: THE TWO RUN-LEVEL REFUSALS. Neither is a property of a document: each says
+#: THE THREE RUN-LEVEL REFUSALS. None is a property of a document: each says
 #: the CAP cannot do its job, and a paid run under a cap that cannot bind is an
-#: uncapped run wearing a cap's receipt. Both were written after the first
-#: probe (2026-09-19 14:10 local) spent $0.21 against a $1.00 cap that read
-#: $0.00 for fifteen minutes.
+#: uncapped run wearing a cap's receipt. The first two were written after the
+#: first probe (2026-09-19 14:10 local) spent $0.21 against a $1.00 cap that
+#: read $0.00 for fifteen minutes; the third after run 3 (2026-09-21) spent
+#: $10.05 against a $2.00 cap that was reading another job's rows.
 REFUSED_UNPRICED_CALL = "REFUSED_UNPRICED_CALL"
 REFUSED_NO_LEDGER = "REFUSED_NO_LEDGER"
+REFUSED_CAP_READER_DISAGREES = "REFUSED_CAP_READER_DISAGREES"
+
+#: Every way a metered run can end because the CAP, not the work, is broken.
+#: A list, so the places that enumerate terminal states cannot drift apart from
+#: the constants (a stop that no reader enumerates is a stop nobody sees).
+CAP_REFUSALS: tuple[str, ...] = (REFUSED_UNPRICED_CALL, REFUSED_NO_LEDGER,
+                                 REFUSED_CAP_READER_DISAGREES)
 
 #: Every row this job writes carries it, and nothing downstream may read a row
 #: without it. A candidate is a PROPOSAL; the library is earned elsewhere.
@@ -770,13 +809,21 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
                   cursor: dict | None = None,
                   candidates_file: Path | None = None,
                   cursor_file: Path | None = None,
-                  unpriced_check=None) -> dict:
+                  unpriced_check=None, agreement_check=None) -> dict:
     """Propose one precursor per move, under the cap, resumable, flushed.
 
     `unpriced_check() -> dict | None` runs AT EVERY FLUSH, which is the same
     cadence the cap re-reads the ledger at. It returns a block when the run has
     produced a call the ledger could not price, and the run stops there by name:
     everything collected is written first, so the stop costs no row.
+
+    `agreement_check() -> dict | None` runs AT THE FIRST FLUSH ONLY and returns
+    the cap's read of the ledger beside the receipt's. A disagreement is a
+    property of the WIRING -- the arguments the two readers pass -- so it is
+    true at the first flush or never, and re-asking at every flush would only
+    buy the same answer at the price of a ledger scan. `agree: False` stops the
+    run as `REFUSED_CAP_READER_DISAGREES` at the earliest moment any evidence
+    of it exists, which on 2026-09-21 would have been row ~50 of 8,342.
     """
     cur = cursor if cursor is not None else load_cursor(cursor_file)
     done = set(cur.get("done") or [])
@@ -801,8 +848,10 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
         save_cursor(done, rows_written=cur.get("rows_written", 0) + written,
                     path=cursor_file)
 
-    def _result(stopped: str, detail=None, unpriced=None) -> dict:
+    def _result(stopped: str, detail=None, unpriced=None,
+                agreement=None) -> dict:
         return {
+            "cap_reader_agreement": agreement,
             "moves_offered": len(moves),
             "moves_already_done": len(moves) - len(todo),
             "moves_attempted": len(done) - len(cur.get("done") or []),
@@ -822,6 +871,55 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
     stopped = "complete"
     detail = None
     unpriced = None
+    agreement = None
+    agreement_asked = False
+
+    def _agreement_detail(block: dict) -> str:
+        return (
+            f"the CAP read ${block['cap_usd']:.6f} over "
+            f"{block['cap_calls']} ledger call(s) while the RECEIPT read "
+            f"${block['receipt_usd']:.6f} over {block['receipt_calls']} "
+            f"call(s) of the SAME ledger -- a difference of "
+            f"${block['delta_usd']:.6f} / {block['delta_calls']} call(s) "
+            f"against a tolerance of ${block['tolerance_usd']:.4f} / "
+            f"{block['tolerance_calls']} call(s). The cap reads purpose "
+            f"{block['cap_purpose']!r} since {block['cap_since_utc']!r}; the "
+            f"receipt reads {block['receipt_purpose']!r} since "
+            f"{block['receipt_since_utc']!r}. A cap that compares a number "
+            f"the writer never produced cannot bind, so the run stops here "
+            f"rather than spending under it.")
+
+    def _check_agreement() -> str | None:
+        """The first-flush proof. Returns the stop detail, or None to go on."""
+        nonlocal agreement, agreement_asked
+        if agreement_check is None or agreement_asked:
+            return None
+        agreement_asked = True
+        agreement = agreement_check()
+        if not agreement:
+            return None
+        # INTO THE LOG as well as the receipt: the 2026-09-21 run printed its
+        # cap figure on every progress line and nobody could see it was the
+        # wrong figure, because there was nothing beside it.
+        #
+        # PRINT, not only `logger.info`. `night_factory_jobs` calls no
+        # `basicConfig`, so the root logger sits at WARNING and an INFO line
+        # here would be a guard that reports into a void -- the house failure
+        # mode, written into the one place whose whole job is to be seen.
+        line = (
+            f"cap-reader agreement: CAP ${agreement['cap_usd']:.6f} over "
+            f"{agreement['cap_calls']} call(s) [purpose "
+            f"{agreement['cap_purpose']}] vs RECEIPT "
+            f"${agreement['receipt_usd']:.6f} over "
+            f"{agreement['receipt_calls']} call(s) [purpose "
+            f"{agreement['receipt_purpose']}] -> "
+            f"{'AGREE' if agreement['agree'] else 'DISAGREE'}")
+        print(line, flush=True)
+        logger.info("%s", line)
+        if agreement.get("agree"):
+            return None
+        return _agreement_detail(agreement)
+
     try:
         for move in todo:
             if not cap.may_submit():
@@ -840,6 +938,14 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
             batch = []
             if len(pending) >= flush_every:
                 _flush()
+                # THE CAP'S READER IS PROVED BEFORE THE NEXT DOLLAR. First,
+                # because a cap reading the wrong rows makes every other cost
+                # guard below it decorative.
+                _dis = _check_agreement()
+                if _dis is not None:
+                    stopped = REFUSED_CAP_READER_DISAGREES
+                    detail = _dis
+                    break
                 # AT THE FLUSH, not per row: `read_calls` is 1.4 s cold and the
                 # check is worth less than the row it would cost per call.
                 if unpriced_check is not None:
@@ -868,8 +974,16 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
         # is the defect; re-raising here would reproduce it.
         _flush()
         return _result("INTERRUPTED",
-                       f"{type(exc).__name__}: {exc}", unpriced)
+                       f"{type(exc).__name__}: {exc}", unpriced, agreement)
     _flush()
+    if stopped == "complete":
+        # A run that finished inside a single flush window never reached the
+        # check above, and a cap that was never proved is a cap that was never
+        # a cap -- even when the run is already over, the receipt has to say so.
+        _dis = _check_agreement()
+        if _dis is not None:
+            stopped = REFUSED_CAP_READER_DISAGREES
+            detail = _dis
     if stopped == "complete" and unpriced_check is not None:
         # One last read, so a run that finished inside a single flush window
         # still learns its calls were unpriced.
@@ -880,7 +994,7 @@ def autopsy_moves(moves: list, *, reader, backend: str, cap, workers: int,
             detail = (f"{last['n_unpriced']} call(s) this run were unpriced "
                       f"({last['models']}); the cap over them was a lower "
                       f"bound of zero for the whole run.")
-    return _result(stopped, detail, unpriced)
+    return _result(stopped, detail, unpriced, agreement)
 
 
 def _run_batch(batch, fn, workers: int):
@@ -957,6 +1071,16 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
                          "cap over it is a lower bound of zero. The run stops "
                          f"by name ({REFUSED_UNPRICED_CALL}) and prints the "
                          "model id it could not price."),
+                     "and_by": (
+                         "a cap reading rows the writer is not writing. Run 3 "
+                         "(2026-09-21) spent $10.0479 of $2.00 while its "
+                         "`cap_block` read $0.013238 over 167 ledger reads, "
+                         "because the cap summed another job's purpose. The "
+                         "two reads are now printed side by side after the "
+                         "first flush (`cap_block.first_flush_agreement`) and "
+                         f"the run stops as {REFUSED_CAP_READER_DISAGREES} if "
+                         "they differ by more than one call's worst case."),
+                     "purpose_read": PURPOSE,
                      "requires": (
                          f"a readable, appendable call ledger, else "
                          f"{REFUSED_NO_LEDGER} before the first submission")},
@@ -1038,8 +1162,18 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
                                     - t0).total_seconds(), 1),
                 "written_utc": _now()}
 
+    # `purpose=PURPOSE` IS THE FIX OF 2026-09-21 AND IT IS NOT OPTIONAL. Left
+    # off, `_RunCap.refresh()` falls back to `spend_from_ledger`'s default,
+    # which is L2's purpose, and the cap spends the night summing another job's
+    # rows: $0.013238 read against $10.047856 written, same file.
     cap = _RunCap(cap_usd, backend=backend, since_utc=since,
-                  refresh_every=FLUSH_EVERY)
+                  refresh_every=FLUSH_EVERY, purpose=PURPOSE)
+
+    def _agreement():
+        """The cap's read beside the receipt's -- the SAME call the receipt
+        will make below, so a wiring difference shows up as numbers, not as
+        trust."""
+        return cap.agreement(spend_from_ledger(since, purpose=PURPOSE))
 
     def _unpriced():
         """A block when this run has produced an unpriced call, else None.
@@ -1055,7 +1189,8 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
     res = autopsy_moves(moves, reader=fn, backend=backend, cap=cap,
                         workers=workers,
                         incumbent_path=incumbent["path"],
-                        unpriced_check=_unpriced)
+                        unpriced_check=_unpriced,
+                        agreement_check=_agreement)
     spend = spend_from_ledger(since, purpose=PURPOSE)
 
     filed = res["candidates_filed"]
@@ -1090,6 +1225,11 @@ def N9_library_autopsy(*, smoke: bool = False, run: int = 1,   # noqa: N802
             f"and the metric that decides is §51's LIFT over the library's own "
             f"firing rate -- not whether the rule fires."),
         "verdict": (
+            (f"{REFUSED_CAP_READER_DISAGREES} — {res['stop_detail']} {filed} "
+             f"row(s) were filed before the stop and are kept; nothing is "
+             f"re-billed. The cap is not loosened to make this go green: the "
+             f"wiring is corrected and the run re-started.")
+            if stopped == REFUSED_CAP_READER_DISAGREES else
             (f"{REFUSED_UNPRICED_CALL} — {res['stop_detail']} {filed} row(s) "
              f"were filed before the stop and are kept; nothing is re-billed.")
             if stopped == REFUSED_UNPRICED_CALL else

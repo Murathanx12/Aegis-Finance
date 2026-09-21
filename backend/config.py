@@ -3234,6 +3234,29 @@ LAB_SPEND_CAP_ENV = "AEGIS_LAB_DAILY_SPEND_CAP_USD"
 #: it is a ceiling on a mistake, not a budget to spend.
 N9_LIBRARY_AUTOPSY_MAX_USD = 10.00
 
+#: How far the CAP's read of the call ledger and the RECEIPT's read of the same
+#: ledger may differ before a metered run refuses to continue, in USD (chunk
+#: 22c, 2026-09-21).
+#:
+#: THE NUMBER IS ONE CALL'S WORST CASE and it mirrors
+#: `backend.services.investigator_night.WORST_CASE_CALL_USD` deliberately --
+#: `test_cap_reader_agreement.py` fails if the two ever drift apart. The
+#: tolerance exists only so that a row landing between two reads of a live
+#: ledger is not a refusal; it is NOT a budget for disagreement. The failure it
+#: was written for was 750x wide: N9 run 3 (2026-09-21) stopped "at $10.0479 of
+#: $2.00" while `cap_block.estimated_spend_at_stop_usd` read **$0.013238** over
+#: 167 ledger reads, because `_RunCap.refresh()` called `spend_from_ledger`
+#: WITHOUT a purpose and so summed L2's rows (`l2_event_extraction`) while the
+#: receipt summed N9's own 8,342 (`n9_library_autopsy`). Same file, same
+#: instant, two views; a cap that compares a number the writer never produced
+#: cannot bind at any tolerance.
+CAP_READER_AGREEMENT_TOLERANCE_USD = 0.05
+
+#: A run's two readers may also differ by this many CALLS -- one row, so that a
+#: ledger appended to between the cap's read and the receipt's read is not a
+#: refusal. Anything wider is a wiring fault, which is what 22c is about.
+CAP_READER_AGREEMENT_TOLERANCE_CALLS = 1
+
 #: Which loops touch the model. They are serialised against each other by an
 #: in-process lock and paused wholesale when the power plan allows sleep.
 LAB_MODEL_LOOPS: tuple[str, ...] = ("l2_typing", "nn_lab", "idle_gpu_queue")

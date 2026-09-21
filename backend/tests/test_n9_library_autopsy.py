@@ -783,13 +783,18 @@ def test_the_receipt_says_when_its_spend_is_a_lower_bound(tmp_path,
     assert out["verdict"].startswith(N.REFUSED_UNPRICED_CALL)
 
 
-def test_the_two_run_level_refusals_are_declared():
+def test_the_three_run_level_refusals_are_declared():
     assert N.REFUSED_UNPRICED_CALL == "REFUSED_UNPRICED_CALL"
     assert N.REFUSED_NO_LEDGER == "REFUSED_NO_LEDGER"
-    # they are RUN-level, not document-level: a document cannot cause either,
-    # so neither belongs in the per-reply refusal vocabulary.
-    assert N.REFUSED_UNPRICED_CALL not in N.REFUSAL_CLASSES
-    assert N.REFUSED_NO_LEDGER not in N.REFUSAL_CLASSES
+    # the third, 2026-09-21: the cap and the receipt read the same ledger and
+    # got $0.013238 / 167 calls against $10.047856 / 8,342 (chunk 22c; its own
+    # behaviour is pinned in `test_cap_reader_agreement.py`).
+    assert N.REFUSED_CAP_READER_DISAGREES == "REFUSED_CAP_READER_DISAGREES"
+    # they are RUN-level, not document-level: a document cannot cause any of
+    # them, so none belongs in the per-reply refusal vocabulary.
+    for name in N.CAP_REFUSALS:
+        assert name not in N.REFUSAL_CLASSES
+    assert len(N.CAP_REFUSALS) == 3
 
 
 def test_a_missing_incumbent_library_stops_the_job_before_any_call(

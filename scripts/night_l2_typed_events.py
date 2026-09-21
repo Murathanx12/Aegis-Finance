@@ -437,6 +437,20 @@ class _RunCap:
     Refuse BEFORE the call, never refund after -- a call that was made and then
     regretted has already been billed.
 
+    THE CAP READS THE LEDGER THE WRITER WRITES (chunk 22c, 2026-09-21). This
+    class takes `purpose` and it is NOT optional-by-accident: `refresh()` used
+    to call `spend_from_ledger(self.since_utc, path=...)` with the function's
+    DEFAULT purpose, which is L2's `l2_event_extraction`. L2 itself was never
+    wrong -- its cap and its receipt both fell back to that same default, so the
+    two agreed -- but N9 imported this class, passed its own `since_utc`, and
+    inherited L2's purpose silently. N9 run 3 then spent **$10.0479 over 8,342
+    calls under a $2.00 cap** whose `estimated_spend_at_stop_usd` read
+    **$0.013238** after 167 reads, because it was summing whatever L2 rows
+    happened to share the window. A default that is right for one caller and
+    invisible to the next is the defect; `purpose` is now named at both call
+    sites, and `agreement()` proves it at the first flush rather than trusting
+    it.
+
     THE LEDGER IS READ PER FLUSH, NOT PER ROW. `read_calls()` is 1.4 s cold and
     0.02 s warm over 121,982 rows, and the filter is another ~30 ms; paying that
     per row would cost more than the row. Between reads the running total is the
@@ -446,7 +460,8 @@ class _RunCap:
     """
 
     def __init__(self, max_usd: float | None, *, backend: str, since_utc: str,
-                 refresh_every: int = FLUSH_EVERY, ledger_path: Path | None = None):
+                 refresh_every: int = FLUSH_EVERY, ledger_path: Path | None = None,
+                 purpose: str = ex.PURPOSE):
         from backend.services import lab_budget
         self.max_usd = None if max_usd is None else float(max_usd)
         self.backend = backend
@@ -454,12 +469,15 @@ class _RunCap:
         self.since_utc = since_utc
         self.refresh_every = max(1, int(refresh_every))
         self.ledger_path = ledger_path
+        self.purpose = str(purpose)
         self.usd_per_row = float(MEASURED["usd_per_row"])
         self.usd_per_row_source = "MEASURED 2026-09-13 ledger mean"
         self.ledger_usd = 0.0
+        self.ledger_calls = 0
         self.submitted_since_read = 0
         self.rows_submitted = 0
         self.reads = 0
+        self.first_flush_agreement: dict | None = None
         if self.metered:
             self.refresh()
 
@@ -467,8 +485,10 @@ class _RunCap:
         """Re-read the ledger and re-derive $/row from THIS RUN's own rows."""
         if not self.metered:
             return 0.0
-        row = spend_from_ledger(self.since_utc, path=self.ledger_path)
+        row = spend_from_ledger(self.since_utc, purpose=self.purpose,
+                                path=self.ledger_path)
         self.ledger_usd = float(row["usd"])
+        self.ledger_calls = int(row["calls"])
         self.reads += 1
         if row["calls"] >= 20 and row["usd"] > 0:
             self.usd_per_row = row["usd"] / row["calls"]
@@ -492,11 +512,71 @@ class _RunCap:
         self.submitted_since_read += 1
         self.rows_submitted += 1
 
+    def agreement(self, receipt_row: dict | None) -> dict:
+        """The CAP's read of the ledger beside the RECEIPT's, side by side.
+
+        `receipt_row` is whatever the job's own receipt will print -- the
+        caller's `spend_from_ledger(...)`, with the caller's own `since`,
+        `purpose` and `path`. This method re-reads the ledger through the CAP's
+        wiring and compares. The two are the same function over the same file;
+        the only thing that can separate them is the ARGUMENTS, which is
+        exactly the fault of 2026-09-21 (`cap_block` $0.013238 / 167 reads vs
+        `spend` $10.047856 / 8,342 calls, same receipt, same file).
+
+        Returns the block that goes on the receipt as
+        `cap_block.first_flush_agreement`. The FIRST call's block is the one
+        kept: a disagreement is a property of the wiring, so it is true at the
+        first flush or not at all, and a later read cannot absolve it.
+
+        An unmetered run returns `agree: True` with both reads at zero -- there
+        is no bill for two readers to disagree about.
+        """
+        from backend import config as _cfg
+        tol_usd = float(_cfg.CAP_READER_AGREEMENT_TOLERANCE_USD)
+        tol_calls = int(_cfg.CAP_READER_AGREEMENT_TOLERANCE_CALLS)
+        receipt_row = receipt_row or {}
+        r_usd = float(receipt_row.get("usd") or 0.0)
+        r_calls = int(receipt_row.get("calls") or 0)
+        if self.metered:
+            self.refresh()
+        c_usd, c_calls = float(self.ledger_usd), int(self.ledger_calls)
+        d_usd = abs(c_usd - r_usd)
+        d_calls = abs(c_calls - r_calls)
+        agree = (not self.metered) or (d_usd <= tol_usd and d_calls <= tol_calls)
+        block = {
+            "cap_usd": _r(c_usd, 6), "receipt_usd": _r(r_usd, 6),
+            "cap_calls": c_calls, "receipt_calls": r_calls,
+            "agree": bool(agree),
+            "delta_usd": _r(d_usd, 6), "delta_calls": d_calls,
+            "tolerance_usd": tol_usd, "tolerance_calls": tol_calls,
+            "cap_purpose": self.purpose,
+            "receipt_purpose": receipt_row.get("purpose"),
+            "cap_since_utc": self.since_utc,
+            "receipt_since_utc": receipt_row.get("since_utc"),
+            "cap_ledger_path": (None if self.ledger_path is None
+                                else str(self.ledger_path)),
+            "metered": self.metered,
+            "why": ("a dollar cap is only a cap if the number it compares is "
+                    "the number the writer produces. Two readers of one file "
+                    "that disagree by 8,000 rows is not a rounding error "
+                    "(MUST NOT REGRESS §38)."),
+        }
+        if self.first_flush_agreement is None:
+            self.first_flush_agreement = block
+        return block
+
     def block(self) -> dict:
         return {
             "max_usd": self.max_usd,
             "backend": self.backend,
             "metered": self.metered,
+            "purpose": self.purpose,
+            "first_flush_agreement": self.first_flush_agreement,
+            "first_flush_agreement_note": (
+                "the cap's read and the receipt's read of the SAME ledger, "
+                "printed side by side after the first flush of a metered run. "
+                "`null` means the run never flushed under a metered backend."
+                if self.first_flush_agreement is None else None),
             "estimated_spend_at_stop_usd": _r(self.spend_now(), 6),
             "usd_per_row_used": _r(self.usd_per_row, 8),
             "usd_per_row_source": self.usd_per_row_source,
@@ -1649,8 +1729,15 @@ def L2_typed_events(backend: str = ex.BACKEND, max_rows: int = 0, run: int = 1,
         state["flushed_t"] = len(typed_records)
         state["flushed_r"] = len(refusal_records)
 
+    # NAMED, not defaulted. L2 does not have N9's 22c defect -- its cap and its
+    # receipt (`spend_from_ledger(started_utc, path=ledger_path)` below) both
+    # fell back to the same `ex.PURPOSE`, so the two reads always agreed -- but
+    # the agreement rested on a shared default rather than on a stated
+    # argument, and that is precisely what let N9 inherit the wrong purpose in
+    # silence. Naming it here makes the equality checkable
+    # (`test_cap_reader_agreement.py`) instead of coincidental.
     cap = _RunCap(max_usd, backend=backend, since_utc=started_utc,
-                  ledger_path=ledger_path)
+                  ledger_path=ledger_path, purpose=ex.PURPOSE)
     work = type_units(units, backend=backend, complete=complete, variant="A",
                       workers=workers, cap=cap, on_result=_on_result,
                       on_flush=_on_flush, sleep=sleep)
