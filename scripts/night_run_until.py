@@ -55,11 +55,13 @@ if str(REPO) not in sys.path:
 from backend import config as _config                       # noqa: E402,F401
 
 #: key NAMES the night's jobs read; printed as present/absent, never as values
-KEY_NAMES: tuple[str, ...] = ("APCA_API_KEY_ID", "APCA_API_SECRET_KEY",
-                              "FRED_API_KEY", "DEEPSEEK_API_KEY")
-#: P6 reads the venue's own names; the repo's .env carries the ALPACA_ ones.
-KEY_ALIASES: tuple[tuple[str, str], ...] = (("APCA_API_KEY_ID", "ALPACA_API_KEY_ID"),
-                                            ("APCA_API_SECRET_KEY", "ALPACA_API_SECRET_KEY"))
+KEY_NAMES: tuple[str, ...] = ("FRED_API_KEY", "DEEPSEEK_API_KEY")
+#: NO aliasing of the venue's APCA_* names from the repo's ALPACA_* pair. On the
+#: first real night (2026-09-21 22:28) that alias put a pair the data host
+#: answers 401 to in front of P6's own fallback (the terminal repo's loop
+#: credentials, which built the panel on 09-11), and the bars refresh FAILED.
+#: P6 resolves its own credential; this wrapper only refuses to shadow it.
+KEY_ALIASES: tuple[tuple[str, str], ...] = ()
 STOP_LEAD_MIN = 30
 KILL_JOBS_LEAD_MIN = 5
 KILL_LAB_LEAD_MIN = 3
@@ -117,6 +119,10 @@ class Night:
         for want, have in KEY_ALIASES:
             if not e.get(want) and e.get(have):
                 e[want] = e[have]
+        # the repo's ALPACA_API_KEY_ID pair must not reach P6 as APCA_* either
+        # way: a child that inherits a dead pair prefers it to its own fallback
+        for dead in ("APCA_API_KEY_ID", "APCA_API_SECRET_KEY"):
+            e.pop(dead, None)
         if self.paid:
             e["AEGIS_NIGHT_PAID_OK"] = "1"
         else:
