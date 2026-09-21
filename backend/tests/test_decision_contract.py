@@ -28,6 +28,7 @@ from datetime import date
 
 import pytest
 
+from backend import config
 from backend.services import decision_contract as DC
 
 # ── THE PINS ───────────────────────────────────────────────────────────────
@@ -154,11 +155,23 @@ def test_the_refusal_vocabulary_is_pinned_to_the_execution_repos():
 
 def test_every_local_pattern_maps_into_the_closed_sets():
     """A pattern that mapped to a class outside the enum would be a third
-    vocabulary wearing the second one's name."""
-    for cls, term, _pat, basis in DC._LOCAL_PATTERNS:
+    vocabulary wearing the second one's name.
+
+    The LOCAL class (chunk 23a-ii) is a FOURTH thing and is deliberately not
+    pinned to the execution repo: it answers "what does this refusal mean",
+    which the closed 31 cannot, because `EDGE_BELOW_BAR` covers both "no view
+    at all" and "the measurement said no". It has its own closed set here.
+    """
+    for cls, term, _pat, basis, local in DC._LOCAL_PATTERNS:
         assert cls in DC.REFUSAL_CLASSES, cls
         assert term in DC.TERMINAL_STATES, term
         assert basis and isinstance(basis, str), cls
+        assert local in DC.LOCAL_REFUSAL_CLASSES, local
+    assert DC.UNTYPED in DC.LOCAL_REFUSAL_CLASSES
+    for name in config.PROBE_REFUSAL_CLASSES:
+        assert name in DC.LOCAL_REFUSAL_CLASSES, (
+            f"{name} is probe-eligible in config and is not a local refusal "
+            f"class, so no row could ever carry it")
 
 
 def test_an_unrecognised_sentence_is_typed_and_never_blank():
@@ -245,17 +258,31 @@ def test_a_probability_that_does_not_exist_is_null_WITH_a_reason(
 
 def test_every_refused_row_carries_a_class_from_the_frozen_tuple(
         synthetic, tmp_path):
-    refused = [r for r in _build(tmp_path) if r["direction"] == "REFUSED"]
+    rows = _build(tmp_path)
+    refused = [r for r in rows if r["direction"] == "REFUSED"]
     assert refused
     for r in refused:
         assert r["refusal_class"] in DC.REFUSAL_CLASSES
         assert r["terminal_state"] in DC.TERMINAL_STATES
+        assert r["local_refusal_class"] in DC.LOCAL_REFUSAL_CLASSES
         assert r["refusal_reason"]
+        assert r["probe_refused"], (
+            "a row that stayed REFUSED must say why it was not probed; "
+            "otherwise 'not probed' and 'never considered' read the same")
     by_ticker = {r["ticker"]: r for r in refused}
-    # the three gates compose_book checks, each named in its own words
-    assert by_ticker["DDD"]["terminal_state"] == "DATA_MISSING"
-    assert by_ticker["CCC"]["refusal_class"] == "EDGE_BELOW_BAR"
+    # the tape refusal is EVIDENCE about tradeability and stays refused
     assert by_ticker["EEE"]["terminal_state"] == "LIQUIDITY"
+    assert by_ticker["EEE"]["local_refusal_class"] == "LIQUIDITY"
+    # CHUNK 23a-ii: the two refusals that are an ABSENCE of measurement are
+    # PROBE rows now, and they keep the gate's own sentence and its class.
+    probe = {r["ticker"]: r for r in rows if r["direction"] == "PROBE"}
+    assert set(probe) == {"CCC", "DDD"}
+    assert probe["CCC"]["refusal_class"] == "EDGE_BELOW_BAR"
+    assert probe["CCC"]["local_refusal_class"] == "NO_ACTION_VERDICT"
+    assert "not BUY or WATCH" in probe["CCC"]["probe_basis"]
+    assert probe["DDD"]["terminal_state"] == "DATA_MISSING"
+    assert probe["DDD"]["local_refusal_class"] == "NO_LICENSED_SIGNAL"
+    assert probe["DDD"]["position_budget"]["weight"] == 0.0
 
 
 def test_the_decision_id_is_stable_and_the_seal_covers_the_row(
@@ -332,20 +359,105 @@ def test_a_session_horizon_names_the_calendar_that_produced_its_expiry():
     assert far > when
 
 
-def test_probe_is_in_the_direction_enum_and_is_named_when_absent(
+def test_a_refusal_that_is_an_absence_of_measurement_becomes_a_probe(
         synthetic, tmp_path):
-    """A direction nobody produced is a FIELD on the receipt, not an absence.
+    """Chunk 23a-ii, and roadmap §16.5 item 39 as a test.
 
-    The synthetic book carries no authority split, so no row can be PROBE —
-    and the file has to say that rather than leave a reader to infer it.
+    Two of the three refusals in this fixture are an ABSENCE — a HOLD verdict
+    and an evidence grade of NO_EVIDENCE — and one is the tape saying the
+    tilt cannot be carried. The first two become virtual rows at four horizons;
+    the third stays refused. No dollar moves either way, and the census on the
+    file says which class went where so a reader can check it name by name.
     """
     assert "PROBE" in DC.DIRECTIONS
-    _build(tmp_path)
+    rows = _build(tmp_path)
     blob = DC.latest("2026-09-19", tmp_path / "decisions")
-    assert blob["count_by_direction"]["PROBE"] == 0
-    assert "PROBE" in blob["directions_not_produced_today"]
-    assert blob["capital_resolution"]["probe_count"] == 0
-    assert blob["capital_resolution"]["probe_pct"] == 0.0
+    n_h = len(config.PROBE_HORIZONS_SESSIONS)
+    assert blob["count_by_direction"]["PROBE"] == 2 * n_h
+    census = blob["probe"]
+    assert census["n_names"] == 2
+    assert census["n_hypotheses"] == 1, (
+        "both names are led by the same signal in the same information-set "
+        "month, so they are ONE hypothesis with two observations — which is "
+        "the whole reason the id is not the ticker: a panel keyed per name "
+        "would need thirty grades of ONE name to say anything")
+    assert census["rows_by_source"] == {"contract_refusal_class": 2 * n_h}
+    assert census["probed_by_local_refusal_class"] == {
+        "NO_ACTION_VERDICT": 1, "NO_LICENSED_SIGNAL": 1}
+    assert census["stayed_refused_by_local_refusal_class"] == {"LIQUIDITY": 1}
+    assert census["rows_without_a_hypothesis_id"] == 0
+    assert "a refusal to fund is not a refusal to learn" not in census["honesty"]
+    assert "§16.5 item 39" in census["honesty"]
+
+    # the capital resolution is untouched: a PROBE row holds nothing
+    res = blob["capital_resolution"]
+    assert res["probe_count"] == 2 * n_h
+    assert res["probe_pct"] == 0.0
+    without = DC.capital_resolution(
+        [r for r in rows if r["direction"] != "PROBE"], capital=100_000.0)
+    for key in ("benchmark_pct", "active_exploit_pct", "active_explore_pct",
+                "cash_pct", "sums_to", "dollars"):
+        assert res[key] == without[key], key
+
+
+def test_a_view_against_and_a_measured_no_are_not_probed(synthetic, tmp_path):
+    """PROBE is for the absence of a measurement, never for one we dislike.
+
+    A SELL is a view AGAINST the name; a read that came back at or below the
+    floor is evidence. Both wear sentences whose PINNED class is the same as a
+    probe-eligible one, and only the local class and the verdict separate them
+    — which is the whole reason both fields exist.
+    """
+    sell = DC.classify_refusal("verdict SELL is not BUY or WATCH, so no tilt "
+                               "is licensed")
+    assert sell["local_refusal_class"] == "NO_ACTION_VERDICT"
+    ok, why = DC.probe_eligible(sell, "SELL")
+    assert ok is False and "view AGAINST" in why
+
+    measured = DC.classify_refusal(
+        "insider_opportunistic's measured net read is -0.0726%/month, which is "
+        "not above EXPLORE_MIN_NET_PCT 0 — a hypothesis with no positive "
+        "expected value is not worth paper risk")
+    assert measured["refusal_class"] == "EDGE_BELOW_BAR"
+    assert measured["local_refusal_class"] == "MEASURED_NO_EV"
+    assert not measured["refusal_class_basis"].startswith("NO PATTERN MATCHED")
+    ok2, why2 = DC.probe_eligible(measured, "WATCH")
+    assert ok2 is False and "MEASURED_NO_EV" in why2
+
+    hold = DC.classify_refusal("verdict HOLD is not BUY or WATCH, so no tilt "
+                               "is licensed")
+    assert DC.probe_eligible(hold, "HOLD")[0] is True
+    no_sig = DC.classify_refusal(
+        "no licensed signal speaks to this name (evidence grade NO_EVIDENCE)")
+    assert DC.probe_eligible(no_sig, "NO_ACTION")[0] is True
+
+
+def test_the_sentences_this_repo_writes_all_carry_a_pattern(synthetic,
+                                                             tmp_path):
+    """The contract's own rule, enforced on the whole day (chunk 23a-ii).
+
+    MEASURED 2026-09-21: the live contract carried ONE row whose basis said
+    NO PATTERN MATCHED — chunk 21's `EXPLORE_MIN_NET_PCT` refusal, which had
+    never been typed. Four patterns were owed and are now here.
+    """
+    blob = DC.latest("2026-09-19", tmp_path / "decisions") or {}
+    if not blob:
+        _build(tmp_path)
+        blob = DC.latest("2026-09-19", tmp_path / "decisions")
+    assert blob["unclassified_owing_a_pattern"] == 0
+    for sentence in (
+            "EXPLORE was licensed by a measured, unproven read (x +0.1%/mo, "
+            "t 1.4), and the paper-risk budget is already full: the budget is "
+            "a ceiling, not a guide",
+            "x is a measured, unproven read worth exploring, but this name "
+            "carries no usable annualised volatility (vol_annual=None)",
+            "x is CALIBRATED, so this name belongs to EXPLOIT and did not win "
+            "a place there. EXPLORE is for measured-but-UNPROVEN reads and "
+            "does not fund a proven one as a consolation"):
+        got = DC.classify_refusal(sentence)
+        assert not got["refusal_class_basis"].startswith("NO PATTERN MATCHED"), (
+            sentence[:60])
+        assert got["local_refusal_class"] != DC.UNTYPED
 
 
 def test_the_probe_cap_refusal_is_a_typed_class_not_an_unmatched_sentence():

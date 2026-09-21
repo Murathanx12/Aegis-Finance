@@ -332,8 +332,12 @@ def test_contract_rows_carry_roi_or_the_named_absence(measured, tmp_path):
     assert by["AAA"]["roi_basis"] == "README.md"
     assert by["AAA"]["roi_score"] > 0
     assert by["BBB"]["roi"].startswith("NOT_CALIBRATED: expected_return_net")
-    # a name the HARD gate refused never reaches the rule, and says so
-    assert by["CCC"]["direction"] == "REFUSED"
+    # A name the HARD gate refused never reaches the rule, and says so. Its
+    # DIRECTION is PROBE from chunk 23a-ii — a HOLD verdict is an absence of a
+    # view, so the name keeps a zero-weight virtual row instead of vanishing —
+    # and the ROI block is unchanged: the rule still never saw it.
+    assert by["CCC"]["direction"] == "PROBE"
+    assert by["CCC"]["position_budget"]["weight"] == 0.0
     assert "not considered" in by["CCC"]["roi"]
     blob = DC.payload(rows, asof=__import__("datetime").date(2026, 9, 20),
                       book=book)

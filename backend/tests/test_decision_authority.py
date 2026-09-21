@@ -664,6 +664,42 @@ def test_the_probe_cap_trims_by_rank_and_the_refused_trim_does_not(
         "unmatched sentence is work owed, not a typed answer")
 
 
+def test_the_ceiling_is_applied_once_by_rank_over_both_probe_sources(
+        measured, monkeypatch):
+    """Chunk 23a-ii. Two sources, one ceiling, and the cut is by RANK.
+
+    The authority probes its own unmeasured survivors; the contract probes the
+    refusals whose class is an absence of measurement. Two ceilings applied
+    separately would let a day write 2 x PROBE_MAX_NAMES_PER_DAY rows, and the
+    cap would bound nothing.
+    """
+    monkeypatch.setattr(config, "PROBE_MAX_NAMES_PER_DAY", 3, raising=False)
+    recs = [_rec("A01", "nothing_measured", rank=1),      # authority PROBE
+            _rec("H02", "unproven", rank=2, verdict="HOLD"),   # contract PROBE
+            _rec("A03", "nothing_measured", rank=3),      # authority PROBE
+            _rec("H04", "unproven", rank=4, verdict="HOLD"),   # over the cap
+            _rec("H05", "unproven", rank=5, verdict="HOLD")]   # over the cap
+    cands = _cands(recs)
+    state = {"available": True, "recs": recs, "candidates": cands,
+             "funnel_generated_at": "2026-09-18T00:00:00+00:00"}
+    book = IC.compose_book(recs, capital=1_000_000.0, candidates=cands,
+                           asof=ASOF,
+                           information_set="2026-09-18T00:00:00+00:00")
+    rows = DC._ic_rows(state, book, asof=ASOF, capital=40_000.0)
+    probe = [r for r in rows if r["direction"] == "PROBE"]
+    assert sorted({r["ticker"] for r in probe}) == ["A01", "A03", "H02"], (
+        "the three best-ranked unmeasured names take the day's quota, "
+        "whichever source they came from")
+    assert {r["probe_source"] for r in probe} == {"authority",
+                                                  "contract_refusal_class"}
+    capped = [r for r in rows if r.get("probe_eligible_but_capped")]
+    assert sorted(r["ticker"] for r in capped) == ["H04", "H05"]
+    assert all(r["direction"] == "REFUSED" for r in capped)
+    blob = DC.payload(rows, asof=ASOF, capital=40_000.0, book=book)
+    assert blob["probe"]["probe_eligible_but_over_the_ceiling"] == 2
+    assert blob["unclassified_owing_a_pattern"] == 0
+
+
 def test_a_probe_row_cannot_be_written_without_a_hypothesis_id(measured,
                                                                 caplog):
     """The panel joins on it; a row it cannot join is a cost with no return."""

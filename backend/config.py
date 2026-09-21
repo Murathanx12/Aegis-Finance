@@ -1879,6 +1879,34 @@ PROBE_MIN_BLOCKS = 6
 #: seeded from the hypothesis id and the horizon, so a panel read reproduces.
 PROBE_BOOTSTRAP_DRAWS = 200
 
+#: WHICH REFUSALS ARE AN ABSENCE OF MEASUREMENT rather than evidence
+#: (chunk 23a-ii). A refused, ranked name whose refusal means one of these
+#: becomes PROBE at the contract level: weight 0, a virtual row per horizon,
+#: the original refusal sentence kept on the row as `probe_basis`.
+#:
+#: These are `decision_contract.LOCAL_REFUSAL_CLASSES` members, NOT the
+#: execution repo's pinned 31. The pinned vocabulary cannot make the
+#: distinction: its `EDGE_BELOW_BAR` covers both "verdict HOLD, nothing
+#: measured" and "the measurement came back negative", and PROBE must take the
+#: first and refuse the second. The two spellings a reader may be looking for
+#: map like this: "NO_ACTION" is `NO_ACTION_VERDICT` (the HOLD/NO_ACTION
+#: verdict refusal, pinned class EDGE_BELOW_BAR) and "NO_EVIDENCE" is
+#: `NO_LICENSED_SIGNAL` (the evidence-grade NO_EVIDENCE refusal, pinned class
+#: UNCLASSIFIED / terminal DATA_MISSING).
+#:
+#: Everything NOT in this tuple stays REFUSED and is meant to: `MEASURED_NO_EV`
+#: (a read that came back at or below the floor), `CALIBRATED_OUTRANKED`,
+#: `EXPLORE_BUDGET_FULL`, `VOL_MISSING`, `LIQUIDITY`, `CAPACITY`, `MDE`,
+#: `STRUCTURE`, `MANDATE`, `INPUT_MISSING`, `UNTYPED`.
+PROBE_REFUSAL_CLASSES: tuple = ("NO_ACTION_VERDICT", "NO_LICENSED_SIGNAL")
+
+#: The verdicts that mean the engine has NO VIEW. `_refusal_sentence` writes
+#: one sentence for every non-BUY/WATCH verdict, so HOLD and SELL arrive
+#: wearing the same words and only the verdict separates them — and a SELL is a
+#: view AGAINST the name, not an absence of one. A probe of a SELL would be a
+#: virtual long against the engine's own opinion.
+PROBE_REFUSAL_VERDICTS: tuple = ("HOLD", "NO_ACTION", "")
+
 #: How many times the Thompson draw is REPLAYED to estimate each candidate's
 #: probability of being selected. The selection probability is what a
 #: doubly-robust off-policy estimator divides by (chunk 24's Vowpal Wabbit

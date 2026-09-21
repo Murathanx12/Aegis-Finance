@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from backend import config
 from backend.services import decision_contract as DC
 from backend.services import decision_ledger as DL
 
@@ -172,7 +173,16 @@ def test_a_direction_change_writes_a_child_and_revises_the_parent(staged):
     child = out["child"]
     assert child["decision_id"] != parent["decision_id"]
     assert child["parent_decision_id"] == parent["decision_id"]
-    assert child["direction"] == "REFUSED"
+    # CHUNK 23a-ii: the name lost its capital and did not lose its row. A
+    # collapsed quality score means the verdict is no longer BUY/WATCH, which
+    # is an ABSENCE of a view rather than evidence against the name — so the
+    # child is a PROBE at zero weight, and THAT is the supersession: the
+    # parent held 3% of the book and this row holds nothing.
+    assert child["direction"] == "PROBE"
+    assert child["position_budget"]["weight"] == 0.0
+    assert child["hypothesis_id"]
+    assert child["horizon_sessions"] == min(config.PROBE_HORIZONS_SESSIONS)
+    assert "the shortest" in child["revision_note"]
     assert child["artifact_sha256"] == DC.seal(child)
 
     states = DL.states_of(parent["decision_id"], path=staged["ledger"])

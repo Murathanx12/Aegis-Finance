@@ -1140,14 +1140,17 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             "a panel that fills forward (chunk 23a). No LLM number is an input "
             "to any of the four."),
         "probe_honesty": (
-            f"PROBE sits DOWNSTREAM of the hard eligibility gates and only "
-            f"ever sees the {len(by_ticker)} candidate(s) they admitted today. "
-            f"A name refused for NO_EVIDENCE or for a verdict that is not "
-            f"BUY/WATCH never reaches this module, is not probed, and is not "
-            f"counted here — that gate is `investment_committee.compose_book`'s "
-            f"and chunk 23a did not move it. A day with zero PROBE names is "
-            f"therefore a statement about how many candidates cleared the "
-            f"gates, not about how many hypotheses are unmeasured."),
+            f"THIS count is the AUTHORITY level only. This module sits "
+            f"downstream of the hard eligibility gates and sees just the "
+            f"{len(by_ticker)} candidate(s) they admitted today, so what it "
+            f"probes is 'cleared every gate, then had no measured read'. A "
+            f"name refused for NO_EVIDENCE or for a verdict that is not "
+            f"BUY/WATCH never reaches this module at all — those are probed "
+            f"ONE LEVEL UP, in `decision_contract._ic_rows`, by refusal class "
+            f"(chunk 23a-ii, config.PROBE_REFUSAL_CLASSES), and they are "
+            f"counted on the contract's own `probe` block, not here. A zero "
+            f"here is therefore a statement about how many candidates cleared "
+            f"the gates, never about how many hypotheses are unmeasured."),
     }
     return AuthoritySplit(admitted=admitted, authority_of=authority_of,
                           weights=weights, blocks=blocks, refused=refused,

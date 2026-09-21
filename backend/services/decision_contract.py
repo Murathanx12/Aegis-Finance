@@ -48,6 +48,25 @@ none of this repo's prose; `_LOCAL_PATTERNS` below maps THIS repo's refusal
 sentences into the SAME two closed vocabularies, so a census can union the two
 repos' refused rows without a translation table.
 
+WHERE `PROBE` COMES FROM (chunk 23a-ii, 2026-09-21)
+---------------------------------------------------
+`decision_authority` sends a name to `PROBE` when it cleared every hard gate
+and then had no measured read. That is the SMALL half. The larger half is
+here: a refused, ranked name whose refusal MEANS an absence of measurement —
+`NO_ACTION_VERDICT` (the engine has no view) or `NO_LICENSED_SIGNAL` (nothing
+licensed speaks to it), `config.PROBE_REFUSAL_CLASSES` — becomes a PROBE row
+too, at zero weight, keeping the gate's own refusal sentence on the row as
+`probe_basis`. Nothing reopens a gate: the name is still refused CAPITAL, and
+what changes is only that it is no longer refused out of the LEDGER
+(roadmap §16.5 item 39).
+
+The distinction the pinned 31 could not make is why `LOCAL_REFUSAL_CLASSES`
+exists: `EDGE_BELOW_BAR` is the class for both "verdict HOLD, nothing
+measured" and "the measurement came back negative", and PROBE must take the
+first and refuse the second. The verdict is the second key, because
+`_refusal_sentence` writes one sentence for every non-BUY/WATCH verdict and a
+SELL is a view AGAINST the name rather than an absence of one.
+
 WHERE `SELL` IS
 ---------------
 `DIRECTIONS` carries `SELL` and no source in this repo emits one today:
@@ -198,10 +217,39 @@ DECISION_STATES: tuple[str, ...] = (
     "REVISED", "FILLED", "SCORED",
 )
 
-#: (class, terminal_state, pattern, basis) for THIS repo's own refusal
-#: sentences. Ordered, first match wins, most specific first — the execution
-#: repo's rule, because "no candidate clears the tilt gate" must not be read as
-#: the per-name verdict refusal it quotes.
+#: THIS repo's own answer to "what does the refusal MEAN", and it is NOT the
+#: execution repo's vocabulary and is NOT pinned to it (chunk 23a-ii).
+#:
+#: It exists because the pinned 31 cannot make the one distinction PROBE turns
+#: on. `EDGE_BELOW_BAR` is the class for BOTH "this name carries no view at
+#: all" (verdict HOLD, nothing measured) and "the measurement came back
+#: negative" — and those are opposite findings: the first is an absence of
+#: evidence and the second IS evidence. Roadmap §16.5 item 39 ("a refusal to
+#: fund is not a refusal to learn") applies to the first and must not apply to
+#: the second, so the two need different names somewhere. They get them here,
+#: on a SECOND field, while `refusal_class` stays byte-identical to the closed
+#: vocabulary a cross-repo census joins on.
+LOCAL_REFUSAL_CLASSES: tuple[str, ...] = (
+    # ---- not enough measurement: these are PROBE's (config.PROBE_REFUSAL_CLASSES)
+    "NO_ACTION_VERDICT",        # HOLD / NO_ACTION — the engine has no view
+    "NO_LICENSED_SIGNAL",       # screened and priced; no licensed signal speaks
+    # ---- a measurement, or a view, that says no --------------------------
+    "MEASURED_NO_EV",           # the read came back at or below the floor
+    "VIEW_AGAINST",             # SELL / AVOID — a view, not an absence
+    "CALIBRATED_OUTRANKED",     # proven, and it lost its slot
+    # ---- the book, the tape, the inputs ----------------------------------
+    "EXPLORE_BUDGET_FULL", "VOL_MISSING", "INPUT_MISSING", "LIQUIDITY",
+    "CAPACITY", "RANKED_OUT", "STRUCTURE", "MANDATE", "MDE", "PROBE_CEILING",
+    # ---- LAST: nothing matched, and it is counted ------------------------
+    "UNTYPED",
+)
+
+UNTYPED = "UNTYPED"
+
+#: (class, terminal_state, pattern, basis, local_class) for THIS repo's own
+#: refusal sentences. Ordered, first match wins, most specific first — the
+#: execution repo's rule, because "no candidate clears the tilt gate" must not
+#: be read as the per-name verdict refusal it quotes.
 #:
 #: `basis` is the FOURTH element and it exists because of 2026-09-20: the day's
 #: contract carried 7 UNCLASSIFIED refusals and a reader could not tell whether
@@ -211,10 +259,43 @@ DECISION_STATES: tuple[str, ...] = (
 #: repo's 31 classes; the second is "a gate wrote a sentence nobody has typed",
 #: which is work owed here. Every row now carries the basis that produced its
 #: class, so the two are one field apart instead of indistinguishable.
-_LOCAL_PATTERNS: tuple[tuple[str, str, str, str], ...] = (
+_LOCAL_PATTERNS: tuple[tuple[str, str, str, str, str], ...] = (
     # ---- pass-level: nothing at all cleared -------------------------------
     ("NO_STRUCTURE_CLEARED", "STRUCTURE", r"no candidate clears the tilt gate",
-     "the pass-level refusal: nothing at all cleared the tilt gate"),
+     "the pass-level refusal: nothing at all cleared the tilt gate",
+     "STRUCTURE"),
+    # ---- MEASURED, and the measurement said no (chunk 23a-ii) -------------
+    # This sentence is chunk 21's and it had NO pattern until 2026-09-21: it
+    # was the ONE row on that day's contract whose basis said NO PATTERN
+    # MATCHED, i.e. the one that actually owed work under this file's own
+    # rule. It must be matched BEFORE the generic merit pattern below, and
+    # its LOCAL class is what keeps it out of PROBE: a read that came back
+    # negative is EVIDENCE, and probing it again would spend the panel on a
+    # question that has already been answered.
+    ("EDGE_BELOW_BAR", "NEGATIVE_EV",
+     r"not above EXPLORE_MIN_NET_PCT|no positive expected value",
+     "a measured read came back at or below the floor a hypothesis must clear "
+     "to be worth paper risk; the execution repo's EDGE_BELOW_BAR is exact",
+     "MEASURED_NO_EV"),
+    # ---- proven, and it lost its slot -------------------------------------
+    ("OUTRANKED_BY_SIBLING", "RANKED_OUT",
+     r"does not fund a proven one|EXPLORE is for measured-but-UNPROVEN",
+     "a CALIBRATED read that did not win an EXPLOIT place; the paper-risk "
+     "budget does not fund it as a consolation, and there is no information "
+     "left in it to buy",
+     "CALIBRATED_OUTRANKED"),
+    # ---- the paper-risk budget was already full ---------------------------
+    ("BOOK_LIMIT", "CAPACITY", r"budget is a ceiling, not a guide",
+     "the EXPLORE budget, not the candidate: the name was licensed and the "
+     "ceiling bound first",
+     "EXPLORE_BUDGET_FULL"),
+    # ---- the risk penalty could not be computed ---------------------------
+    (UNCLASSIFIED, "DATA_MISSING",
+     r"no usable annualised volatility|Missing is missing, never average",
+     "the closed 31 have no class for a missing INPUT on an otherwise "
+     "licensed candidate; DATA_MISSING is exact and the sentence names the "
+     "field",
+     "VOL_MISSING"),
     # ---- the engine has nothing it is ALLOWED to say about this name ------
     # MEASURED 2026-09-20: all 7 UNCLASSIFIED rows on that day's contract were
     # this one sentence, from `_refusal_sentence`'s NO_EVIDENCE branch. It stays
@@ -232,7 +313,8 @@ _LOCAL_PATTERNS: tuple[tuple[str, str, str, str], ...] = (
      "and no licensed signal speaks to this name'; the nearest merit classes "
      "(REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. "
      "The terminal state DATA_MISSING is exact and is what a cross-repo census "
-     "groups on"),
+     "groups on",
+     "NO_LICENSED_SIGNAL"),
     # ---- the inputs were not there ----------------------------------------
     # "CANNOT DETERMINE" is the execution repo's own DATA_MISSING pattern; a
     # missing funnel, a void ranking gate and an unreadable candidate all
@@ -241,7 +323,8 @@ _LOCAL_PATTERNS: tuple[tuple[str, str, str, str], ...] = (
      r"CANNOT DETERMINE|no funnel run available|ranking gate VOID",
      "an input the ranking needed was absent or void; the closed 31 classes are "
      "about candidates and books and none of them names a missing input, so the "
-     "typed answer is the terminal state DATA_MISSING"),
+     "typed answer is the terminal state DATA_MISSING",
+     "INPUT_MISSING"),
     # ---- the day's PROBE ceiling refused a ROW, not a hypothesis -----------
     # chunk 23a. It must be matched BEFORE the generic capacity patterns: the
     # sentence is about the size of the FILE, not about the book or the
@@ -254,41 +337,50 @@ _LOCAL_PATTERNS: tuple[tuple[str, str, str, str], ...] = (
      "(config.PROBE_MAX_NAMES_PER_DAY) refused the name a virtual row after "
      "the higher-ranked unmeasured names took the day's quota. The terminal "
      "state CAPACITY is exact — a ceiling was reached — and nothing about the "
-     "hypothesis was decided"),
+     "hypothesis was decided",
+     "PROBE_CEILING"),
     # ---- the size buys no unit / the book has no room ----------------------
     ("CAPITAL_ROUNDS_TO_ZERO", "CAPACITY",
      r"below one share|rounds to zero|buys no share",
-     "the execution repo's CAPITAL_ROUNDS_TO_ZERO, in this repo's words"),
+     "the execution repo's CAPITAL_ROUNDS_TO_ZERO, in this repo's words",
+     "CAPACITY"),
     ("BOOK_LIMIT", "CAPACITY", r"tilt budget|IC_MAX_TILT_NAMES|no room in the book",
-     "the book, not the candidate: IC_MAX_TILT_NAMES or the total tilt budget"),
+     "the book, not the candidate: IC_MAX_TILT_NAMES or the total tilt budget",
+     "CAPACITY"),
     # ---- the tape could not carry it --------------------------------------
     (UNCLASSIFIED, "LIQUIDITY",
      r"untradeable at \$|dollar volume|days to exit|participation",
      "the closed 31 carry no liquidity class — an options book refuses on the "
      "chain (CHAIN_UNUSABLE), not on median dollar volume — so the terminal "
-     "state LIQUIDITY carries the meaning"),
+     "state LIQUIDITY carries the meaning",
+     "LIQUIDITY"),
     # ---- the ranker preferred a sibling -----------------------------------
     ("OUTRANKED_BY_SIBLING", "RANKED_OUT",
      r"ranked below|out-ranked|outranked",
-     "the ranker preferred another name inside the same budget"),
+     "the ranker preferred another name inside the same budget",
+     "RANKED_OUT"),
     # ---- the candidate's own merit ----------------------------------------
     ("EDGE_BELOW_BAR", "NEGATIVE_EV",
      r"verdict .* is not BUY or WATCH|ranking score .* is not positive|"
      r"scores at or below zero",
-     "a signal spoke and the candidate's own merit did not clear the bar"),
+     "a signal spoke and the candidate's own merit did not clear the bar",
+     "NO_ACTION_VERDICT"),
     ("MDE", "CONFIDENCE", r"minimum detectable|not distinguishable from noise",
-     "the move is under the minimum detectable effect"),
+     "the move is under the minimum detectable effect",
+     "MDE"),
     # ---- the archetype refused to fill a book -----------------------------
     ("NO_STRUCTURE_CLEARED", "STRUCTURE",
      r"cannot fill a book|the archetype needs at least",
-     "the archetype could not be filled, which is a structure refusal"),
+     "the archetype could not be filled, which is a structure refusal",
+     "STRUCTURE"),
     # ---- this policy may not express this claim ---------------------------
     ("CLAIM_MISMATCH", "MANDATE", r"not in the mandate|outside the declared",
-     "the policy may not express this claim"),
+     "the policy may not express this claim",
+     "MANDATE"),
 )
 
-_COMPILED = tuple((cls, term, re.compile(pat, re.IGNORECASE), basis)
-                  for cls, term, pat, basis in _LOCAL_PATTERNS)
+_COMPILED = tuple((cls, term, re.compile(pat, re.IGNORECASE), basis, local)
+                  for cls, term, pat, basis, local in _LOCAL_PATTERNS)
 
 
 def enum_fingerprint(names: tuple[str, ...]) -> str:
@@ -319,20 +411,64 @@ def classify_refusal(reason: str | None) -> dict:
     text = str(reason or "").strip()
     if not text:
         return {"refusal_class": UNCLASSIFIED, "terminal_state": "DATA_MISSING",
+                "local_refusal_class": "INPUT_MISSING",
                 "refusal_reason": "CANNOT DETERMINE: the refusal carried no sentence",
                 "refusal_class_basis": (
                     "the row carried no refusal sentence at all, so there was "
                     "nothing to classify")}
-    for cls, term, rx, basis in _COMPILED:
+    for cls, term, rx, basis, local in _COMPILED:
         if rx.search(text):
             return {"refusal_class": cls, "terminal_state": term,
+                    "local_refusal_class": local,
                     "refusal_reason": text, "refusal_class_basis": basis}
     return {"refusal_class": UNCLASSIFIED, "terminal_state": OTHER_TYPED,
+            "local_refusal_class": UNTYPED,
             "refusal_reason": text,
             "refusal_class_basis": (
                 "NO PATTERN MATCHED: a gate wrote a sentence `_LOCAL_PATTERNS` "
                 "has never seen. This is the UNCLASSIFIED that owes work — add "
                 "the pattern, or name why the closed 31 cannot hold it")}
+
+
+def probe_eligible(classified: dict, verdict: Any) -> tuple[bool, str]:
+    """(may this refused name be PROBED, why/why not) — chunk 23a-ii.
+
+    Roadmap §16.5 item 39: *a refusal to fund is not a refusal to learn.* Two
+    of this repo's refusals are an ABSENCE of measurement — "no licensed signal
+    speaks to this name" and "the verdict is HOLD/NO_ACTION, so no tilt is
+    licensed" — and refusing them out of the ledger is how the absence becomes
+    permanent. Every other refusal is a measurement, a view, a ceiling or a
+    missing input, and each of those is a reason to stop.
+
+    TWO keys and not one. The LOCAL class says what the refusal means
+    (`config.PROBE_REFUSAL_CLASSES`), and the VERDICT says whether the engine
+    has no view or a view AGAINST: `_refusal_sentence` writes one sentence for
+    every non-BUY/WATCH verdict, so HOLD and SELL arrive wearing the same words
+    and only the verdict separates them. A SELL is a position the engine
+    declined to take in the other direction, not a hypothesis nobody has
+    measured.
+    """
+    local = str(classified.get("local_refusal_class") or UNTYPED)
+    eligible = tuple(config.PROBE_REFUSAL_CLASSES)
+    if local not in eligible:
+        return False, (
+            f"this refusal means {local}, which is not one of "
+            f"{list(eligible)} (config.PROBE_REFUSAL_CLASSES): it is a "
+            f"measurement, a view, a ceiling or a missing input, and each of "
+            f"those is a reason to STOP rather than a reason to probe")
+    v = str(verdict or "").strip().upper()
+    allowed = tuple(str(x).upper() for x in config.PROBE_REFUSAL_VERDICTS)
+    if v not in allowed:
+        return False, (
+            f"the refusal means {local}, but the verdict is {v}, which is not "
+            f"one of {list(allowed)} (config.PROBE_REFUSAL_VERDICTS). A "
+            f"{v} is a view AGAINST this name, not an absence of one, and "
+            f"PROBE is for the absence")
+    return True, (
+        f"this refusal means {local} (config.PROBE_REFUSAL_CLASSES) on a "
+        f"verdict of {v or 'NONE'}: the engine has NO view of this name, which "
+        f"is an absence of measurement and not evidence about the mechanism. "
+        f"§16.5 item 39 — a refusal to fund is not a refusal to learn")
 
 
 # ===========================================================================
@@ -712,7 +848,10 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
 
     rows: list[dict] = []
     refused: list[dict] = []
-    probe_rows: list[dict] = []
+    #: (base row, probe block) in RANK order — both the authority's own PROBE
+    #: names and the refusals chunk 23a-ii promotes. One list, so the day's
+    #: ceiling is applied once and by rank across both sources.
+    probe_candidates: list[tuple[dict, dict]] = []
     for r in recs:
         ticker = str(getattr(r, "ticker", "") or "")
         if not ticker:
@@ -783,10 +922,7 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
             # PROBE (chunk 23a): one VIRTUAL row per declared horizon. Not a
             # refusal and not a position — a graded observation that costs
             # nothing, so a hypothesis with no panel can build one forward.
-            probe_rows.extend(_probe_rows_for(
-                row, probe_blocks[ticker], expiries=probe_expiry,
-                capital=capital, policy_id=policy_id,
-                policy_version=policy_version, asof=asof_s))
+            probe_candidates.append((row, probe_blocks[ticker]))
             continue
         # REFUSED: name the gate that stopped it, in this repo's own words.
         # The authority split's own sentence wins when it has one: it is the
@@ -795,6 +931,7 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
         # "no measured read at all" or "the paper-risk budget was full".
         why = (authority_refused.get(ticker)
                or _refusal_sentence(r, by_ticker_degradation.get(ticker)))
+        classified = classify_refusal(why)
         row.update({
             "direction": "REFUSED",
             "position_budget": {
@@ -805,18 +942,69 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
                 n_names=0, notional_pct=0.0, equity_usd=float(capital),
                 gross_over_equity=0.0,
                 why="refused — nothing is at risk on a row that was not taken"),
-            **classify_refusal(why),
+            **classified,
         })
+        # CHUNK 23a-ii. The refusal that is an ABSENCE of measurement is not a
+        # reason to keep the name out of the ledger — it is the reason to put
+        # it in (§16.5 item 39). The refusal SENTENCE survives on the row as
+        # `probe_basis`: it still says exactly why no capital was allocated,
+        # and nothing here reopens the gate that refused it.
+        may_probe, probe_why = probe_eligible(
+            classified, getattr(r, "recommendation", None))
+        if may_probe:
+            probe_candidates.append((row, _contract_probe_block(
+                r, ticker, signal, classified=classified, probe_why=probe_why,
+                candidates=candidates, horizon_months=horizon_months,
+                information_set=generated_at, asof=asof_s,
+                action_set_sha=(authority or {}).get("action_set_sha256"))))
+            continue
+        row["probe_refused"] = probe_why
         refused.append(row)
+
+    # THE DAY'S PROBE CEILING, applied ONCE and by RANK over both sources —
+    # the authority's own unmeasured names and the refusals 23a-ii promotes.
+    # A name over the ceiling keeps the REFUSED row it would have had, with
+    # the sentence that says it was probe-eligible and the file was full: the
+    # cap refuses a ROW, and nothing about the hypothesis was decided.
+    probe_cap = int(config.PROBE_MAX_NAMES_PER_DAY)
+    probe_candidates.sort(key=lambda t: (t[0].get("rank") is None,
+                                         t[0].get("rank") or 0))
+    probe_rows: list[dict] = []
+    for i, (base, block) in enumerate(probe_candidates, start=1):
+        if i > probe_cap:
+            cut = (f"the day's PROBE ceiling refused this name a virtual row: "
+                   f"it ranked #{i} of {len(probe_candidates)} unmeasured "
+                   f"candidates and config.PROBE_MAX_NAMES_PER_DAY is "
+                   f"{probe_cap}. This refuses a ROW, by rank; nothing about "
+                   f"the hypothesis was decided")
+            base["probe_refused"] = cut
+            base["probe_eligible_but_capped"] = True
+            base.update({
+                "direction": "REFUSED",
+                "position_budget": {
+                    "weight": 0.0, "dollars": 0.0, "shares": 0,
+                    "price": None, "capital_usd": float(capital),
+                    "basis": "refused — no budget was allocated"},
+                "maximum_loss": worst_case_no_stop(
+                    n_names=0, notional_pct=0.0, equity_usd=float(capital),
+                    gross_over_equity=0.0,
+                    why=("refused — nothing is at risk on a row that was "
+                         "not taken")),
+                **classify_refusal(cut),
+            })
+            refused.append(base)
+            continue
+        probe_rows.extend(_probe_rows_for(
+            base, block, expiries=probe_expiry, capital=capital,
+            policy_id=policy_id, policy_version=policy_version, asof=asof_s))
 
     refused.sort(key=lambda d: (d.get("rank") is None, d.get("rank") or 0))
     kept = refused[:MAX_REFUSED_ROWS]
     # PROBE rows are NOT trimmed here: they are the panel, and their own
-    # ceiling was applied BY RANK in `decision_authority` before this function
-    # ever saw them (`config.PROBE_MAX_NAMES_PER_DAY`, with the cut count on
-    # the receipt). Trimming them at MAX_REFUSED_ROWS would cap what the
-    # programme can ever measure with a constant chosen to keep a file
-    # readable.
+    # ceiling was applied BY RANK just above (`config.PROBE_MAX_NAMES_PER_DAY`,
+    # with the cut named on each row it cut). Trimming them at
+    # MAX_REFUSED_ROWS would cap what the programme can ever measure with a
+    # constant chosen to keep a file readable.
     return rows + kept + probe_rows
 
 
@@ -899,6 +1087,65 @@ def _hypothesis_and_propensity(ticker: str, rec: Any, signal: str, *,
     return out
 
 
+def _contract_probe_block(rec: Any, ticker: str, signal: str, *,
+                          classified: dict, probe_why: str, candidates: dict,
+                          horizon_months: float, information_set: str | None,
+                          asof: str, action_set_sha: str | None) -> dict:
+    """The PROBE block for a name the AUTHORITY never saw (chunk 23a-ii).
+
+    Same shape `decision_authority` builds for its own unmeasured names, so
+    `_probe_rows_for` cannot tell the two apart — except by `probe_source`,
+    which is printed, because the two are genuinely different statements. The
+    authority's PROBE means "this candidate cleared every hard gate and then
+    had no measured read"; this one means "a hard gate declined to fund it for
+    a reason that is an absence of measurement, not evidence".
+
+    The original refusal sentence is kept verbatim as `probe_basis`: it is
+    still exactly why no capital was allocated, and nothing here reopens the
+    gate that wrote it.
+    """
+    sig = str(signal or "")
+    if not sig or sig.startswith("CANNOT DETERMINE"):
+        sig = DA.NO_LEAD_SIGNAL
+    hyp = DA.hypothesis_fields(rec, sig, information_set=information_set,
+                               asof=asof)
+    why = str(classified.get("refusal_reason") or "")
+    return {
+        "authority_basis": (
+            f"PROBE (chunk 23a-ii): no capital, and not silence either. The "
+            f"gate's own sentence stands — {why} — and {probe_why}"),
+        "authority_weight": 0.0,
+        "probe_source": "contract_refusal_class",
+        "probe_basis": why,
+        "action_set_sha256": action_set_sha,
+        "probe": {
+            **hyp,
+            "signal": sig,
+            "virtual": True,
+            "virtual_notional_usd": float(config.PROBE_VIRTUAL_NOTIONAL_USD),
+            "virtual_basis": (
+                f"a PROBE row holds ZERO weight and ZERO dollars; "
+                f"${float(config.PROBE_VIRTUAL_NOTIONAL_USD):,.0f} "
+                f"(config.PROBE_VIRTUAL_NOTIONAL_USD) is the notional the "
+                f"graded return is QUOTED at, and it buys nothing"),
+            "horizons_sessions": [int(h) for h in
+                                  config.PROBE_HORIZONS_SESSIONS],
+            "selection_probability": 1.0,
+            "selection_probability_basis": (
+                "every unmeasured name probes; no draw. Nothing was allocated, "
+                "so there was no scarce budget to be selected out of and the "
+                "propensity is exactly 1.0"),
+            "context_features": DA._context_features(
+                candidates, ticker, rec, sig, horizon_months=horizon_months,
+                decile=None),
+            "refusal_class": classified.get("refusal_class"),
+            "local_refusal_class": classified.get("local_refusal_class"),
+            "terminal_state": classified.get("terminal_state"),
+            "probe_eligibility_basis": probe_why,
+        },
+    }
+
+
 def _probe_rows_for(base: dict, block: dict, *, expiries: dict,
                     capital: float, policy_id: str, policy_version: str,
                     asof: str) -> list[dict]:
@@ -936,6 +1183,9 @@ def _probe_rows_for(base: dict, block: dict, *, expiries: dict,
             "direction": "PROBE",
             "authority": DA.PROBE,
             "authority_basis": block.get("authority_basis"),
+            "probe_source": block.get("probe_source") or "authority",
+            "probe_basis": (block.get("probe_basis")
+                            or block.get("authority_basis")),
             "hypothesis_id": hid,
             "hypothesis_id_basis": probe.get("hypothesis_id_basis"),
             "hypothesis_signal": probe.get("hypothesis_signal"),
@@ -1456,7 +1706,22 @@ def revise(parent_decision_id: str, *, asof: date | str | None = None,
     child["decision_id"] = decision_id(
         policy_id=str(child.get("policy_id")),
         policy_version=str(child.get("policy_version")),
-        ticker=ticker, asof=str(day), revision_of=str(parent_decision_id))
+        ticker=ticker, asof=str(day), revision_of=str(parent_decision_id),
+        horizon_sessions=child.get("horizon_sessions"))
+    if len(fresh) > 1:
+        # A re-run that lands on PROBE produces one row per declared horizon.
+        # ONE of them supersedes the parent — the shortest, because it is the
+        # one that resolves first and a supersession nobody can grade for six
+        # months is a supersession nobody can check. The horizon is in the
+        # child's id, so a later revision at another horizon cannot collide
+        # with this one.
+        child["revision_note"] = (
+            f"the re-run produced {len(fresh)} rows for {ticker} (one per "
+            f"horizon in config.PROBE_HORIZONS_SESSIONS); the shortest, "
+            f"{child.get('horizon_sessions')} sessions, is the child written "
+            f"here. The parent held capital and this row holds none — that IS "
+            f"the change, and the other horizons are written by the next "
+            f"ordinary daily contract, not by this revision.")
     child["parent_decision_id"] = str(parent_decision_id)
     child["revision_reason"] = str(reason or "")
     child["revision_comparison"] = changed
@@ -1558,6 +1823,7 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "capital_usd": capital,
         "directions_not_produced_today": sorted(d for d in DIRECTIONS
                                                 if d not in produced),
+        "probe": probe_census_over_rows(rows),
         **_roi_payload_block(rows, book),
         **_authority_payload_block(rows, book),
         "capital_resolution": capital_resolution(rows, capital=capital),
@@ -1575,6 +1841,69 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
             "groups across both repos. Nothing here places, sizes, arms or "
             "seals anything: the engine decided, this file records, and the two "
             "LLM surfaces read it."),
+    }
+
+
+def probe_census_over_rows(rows: list[dict]) -> dict:
+    """What was PROBED, what stayed REFUSED, and the class breakdown of each.
+
+    Chunk 23a-ii's `probe_honesty`, computed from the ROWS so the census and
+    the file cannot disagree. The two halves are printed side by side on
+    purpose: "31 names probed" means nothing without "8 stayed refused, and
+    here is the class of each", because the whole claim of the chunk is that
+    the split between them is the split between an ABSENCE of measurement and
+    a measurement — and a reader has to be able to check it name by name.
+    """
+    probe = [r for r in rows if r.get("direction") == DA.PROBE]
+    refused = [r for r in rows if r.get("direction") == "REFUSED"]
+    by_source: dict[str, int] = {}
+    probed_by_class: dict[str, int] = {}
+    names: dict[str, str] = {}
+    for r in probe:
+        src = str(r.get("probe_source") or "authority")
+        by_source[src] = by_source.get(src, 0) + 1
+        names[str(r.get("ticker"))] = str(
+            r.get("local_refusal_class")
+            or (r.get("probe") or {}).get("local_refusal_class")
+            or ("NO_MEASURED_READ" if src == "authority" else UNTYPED))
+    for t, cls in names.items():
+        probed_by_class[cls] = probed_by_class.get(cls, 0) + 1
+    stayed: dict[str, int] = {}
+    capped = 0
+    for r in refused:
+        cls = str(r.get("local_refusal_class") or UNTYPED)
+        stayed[cls] = stayed.get(cls, 0) + 1
+        if r.get("probe_eligible_but_capped"):
+            capped += 1
+    hypotheses = sorted({str(r.get("hypothesis_id")) for r in probe
+                         if r.get("hypothesis_id")})
+    return {
+        "n_rows": len(probe),
+        "n_names": len(names),
+        "n_hypotheses": len(hypotheses),
+        "hypotheses": hypotheses,
+        "rows_by_source": by_source,
+        "probed_by_local_refusal_class": probed_by_class,
+        "stayed_refused_by_local_refusal_class": stayed,
+        "probe_eligible_but_over_the_ceiling": capped,
+        "eligible_classes": list(config.PROBE_REFUSAL_CLASSES),
+        "eligible_verdicts": list(config.PROBE_REFUSAL_VERDICTS),
+        "horizons_sessions": [int(h) for h in config.PROBE_HORIZONS_SESSIONS],
+        "rows_without_a_hypothesis_id": sum(1 for r in probe
+                                            if not r.get("hypothesis_id")),
+        "honesty": (
+            f"{len(names)} name(s) x {len(config.PROBE_HORIZONS_SESSIONS)} "
+            f"horizon(s) = {len(probe)} virtual row(s) under "
+            f"{len(hypotheses)} hypothesis id(s), holding ZERO capital. They "
+            f"were probed because their refusal means one of "
+            f"{list(config.PROBE_REFUSAL_CLASSES)} — an ABSENCE of "
+            f"measurement — on a verdict in "
+            f"{list(config.PROBE_REFUSAL_VERDICTS)}: {probed_by_class}. The "
+            f"{len(refused)} name(s) that stayed REFUSED did so because their "
+            f"refusal is a measurement, a view, a ceiling or a missing input: "
+            f"{stayed}. Nothing here reopened a gate — every probed name is "
+            f"still refused CAPITAL, and its gate's own sentence is on its "
+            f"row as probe_basis (roadmap §16.5 item 39)."),
     }
 
 
@@ -1750,9 +2079,11 @@ def _authority_payload_block(rows: list[dict], book: dict | None) -> dict:
     census["probe_rows_exempt_from_the_refused_trim"] = (
         f"PROBE rows are not subject to MAX_REFUSED_ROWS ({MAX_REFUSED_ROWS}); "
         f"their own ceiling is config.PROBE_MAX_NAMES_PER_DAY "
-        f"({int(config.PROBE_MAX_NAMES_PER_DAY)}) applied BY RANK in "
-        f"decision_authority, and it cut "
-        f"{split.get('n_probe_cut_by_cap', 0)} name(s) today")
+        f"({int(config.PROBE_MAX_NAMES_PER_DAY)}), applied BY RANK once in "
+        f"`_ic_rows` over BOTH sources — this module's unmeasured survivors "
+        f"and the refusals chunk 23a-ii promotes. The names it cut carry "
+        f"`probe_eligible_but_capped` on their REFUSED rows; the split's own "
+        f"earlier cut was {split.get('n_probe_cut_by_cap', 0)} name(s)")
     return {
         "authority": census,
         "worst_case_explore_budget": split.get("worst_case_added_by_explore"),
