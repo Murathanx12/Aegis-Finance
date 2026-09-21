@@ -42,7 +42,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -290,7 +290,7 @@ class Night:
         cen = self.census()
         payload = {"receipt": "NIGHT_STOPPED", "date": self.date, "why": why,
                    "stop_at": self.stop_at.isoformat(timespec="minutes"),
-                   "stopped_utc": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                   "stopped_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
                    "pids": self.pids, "model_server": model, "morning_report": report,
                    "census": cen, "keys": self.key_census(), "events": self.events[-60:]}
         (self.out / "NIGHT_STOPPED.json").write_text(json.dumps(payload, indent=1, default=str),
