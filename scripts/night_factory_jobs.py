@@ -1670,6 +1670,21 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         # `config.N9_LIBRARY_AUTOPSY_MAX_USD`, spend read from the call ledger.
         "N9_library_autopsy": _lazy("scripts.night_n9_library_autopsy",
                                     "N9_library_autopsy"),
+        # 2026-09-21, chunk 24 (the J lane -- what the night LEARNED, read off
+        # what the programme already wrote). Both are $0: they call no model,
+        # charge no network, and read only ledgers and receipts already on disk.
+        #   J1  one row per graded forecast and per decision row, with the way
+        #       it was wrong named by a RULE from a fixed vocabulary, and a
+        #       CURRICULUM ranked by (count x mean |error|). The precedence is
+        #       declared and every row keeps every rule that fired, so the
+        #       population can be re-cut without re-running. ~2 s on the full
+        #       24,839-record ledger.
+        #   J3  the morning report. It reads every receipt in the night folder
+        #       and answers five questions by rule -- Q1 is YES only if some
+        #       receipt carries a MODEL_IMPROVED:/CAPITAL_CHANGED:/WEIGHT_CHANGED:
+        #       line WITH a measured before -> after. Queue it LAST.
+        "J1_error_dataset": _lazy("scripts.night_error_dataset", "J1_error_dataset"),
+        "J3_morning_report": _lazy("scripts.night_morning_report", "J3_morning_report"),
         "A_corner": _lazy("scripts.night_a_corner", "A_corner"),
         "B_verdict": _lazy("scripts.night_b_verdict", "B_verdict"),
         # 2026-09-12, chunk 7: lane X under the P1-P6 protocol. All four need
@@ -1716,6 +1731,20 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "L3_lookahead": _lazy("scripts.night_l3_lookahead", "L3_lookahead"),
         "X2_elasticity": _lazy("scripts.night_x2_elasticity", "X2_elasticity"),
         "X4_regime_route": _lazy("scripts.night_x4_regime_route", "X4_regime_route"),
+        # J2 2026-09-21: the night brief's own question -- the largest moves of
+        # the trailing 21 sessions that AEGIS did NOT capture, and for each,
+        # whether anything on our own disk said so BEFOREHAND. It is also the
+        # night's ONE paid question, and it is paid only if it earns it: the
+        # SAME masked digest and the SAME frozen schema go to `local_gguf` AND
+        # `deepseek` on the SAME cases, each reader's `precursor_class` is
+        # graded against the deterministic PIT PRESENT set, and the receipt
+        # carries both hit rates, a paired McNemar and a Brier per reader.
+        # The paid leg is gated by the ENVIRONMENT (`AEGIS_NIGHT_PAID_OK=1`
+        # plus a `DEEPSEEK_API_KEY` NAME), not by a flag, because the queue
+        # launches every job with no per-job arguments; without it the local
+        # leg still runs and the receipt says REFUSED by name.
+        "J2_missed_opportunity": _lazy("scripts.night_missed_opportunity",
+                                       "J2_missed_opportunity"),
         "D3_matched_control_grid": D3_matched_control_grid,
         "N1_train_reaction_learner": N1_train_reaction_learner,
         "D4_ls_robustness_and_decay": D4_ls_robustness_and_decay,
@@ -1807,6 +1836,18 @@ JOB_STAGES = {
     "D1_reaction_book": "pnl",
     "P6_bars_and_regret": "pnl",
     "L3_lookahead": "signal",   # 2026-09-13: run outside the factory once; the receipt contract walks the folder
+    # J2 reads the DAY DECISION CONTRACT -- the latest artefact in the chain --
+    # and the price tape, so it is stamped `pnl`: nothing it reads was produced
+    # by a later stage, and nothing downstream may read its diagnostic as a
+    # weight. Its place in the night QUEUE is "screen", which the receipt
+    # carries separately as `queue_stage`; the stage contract's vocabulary is
+    # STAGE_ORDER and a queue label does not belong in it.
+    "J2_missed_opportunity": "pnl",
+    # J1 joins graded OUTCOMES to decisions and prices both against SPY at the
+    # declared round trip; J3 reads receipts that include priced ones. Both sit
+    # at the end of the chain and nothing downstream reads either.
+    "J1_error_dataset": "pnl",
+    "J3_morning_report": "pnl",
 }
 
 
@@ -1847,7 +1888,20 @@ def main(argv=None) -> int:
                          "screen and BOTH controls together.")
     ap.add_argument("--max-usd", type=float, default=None,
                     help="N9: the per-RUN dollar cap. Defaults to "
-                         "config.N9_LIBRARY_AUTOPSY_MAX_USD.")
+                         "config.N9_LIBRARY_AUTOPSY_MAX_USD. J2: the HARD cap, "
+                         "default config.MISSED_OPP_MAX_USD; the soft stop is "
+                         "config.MISSED_OPP_SOFT_STOP_USD and is not a flag.")
+    # J2 only, and it is a HAND-RUN switch. The night queue passes NO per-job
+    # arguments, so J2's paid leg is gated by the ENVIRONMENT
+    # (AEGIS_NIGHT_PAID_OK=1 and a DEEPSEEK_API_KEY name); this flag states the
+    # same intent explicitly and is not a way around the key check.
+    ap.add_argument("--backend", default=None,
+                    choices=("local_gguf", "deepseek", "both"),
+                    help="J2: ask the paid leg too on a HAND run. The night "
+                         "queue's switch is AEGIS_NIGHT_PAID_OK=1, not this.")
+    ap.add_argument("--top-k", type=int, default=None,
+                    help="J2: how many missed names reach the paired read. "
+                         "Defaults to config.MISSED_OPP_TOP_K.")
     ap.add_argument("--workers", type=int, default=1,
                     help="N9: concurrent reader calls.")
     ap.add_argument("--reader", default=None, choices=(None, "deepseek", "local"),
@@ -1879,6 +1933,9 @@ def main(argv=None) -> int:
         payload = fn(smoke=a.smoke)
     elif a.job == "B_exclusion_screen":
         payload = fn(smoke=a.smoke, floor_usd=a.floor_usd)
+    elif a.job == "J2_missed_opportunity":
+        payload = fn(smoke=a.smoke, run=a.run, backend=a.backend,
+                     max_usd=a.max_usd, top_k=a.top_k)
     elif a.job == "N9_library_autopsy":
         payload = fn(smoke=a.smoke, run=a.run, max_usd=a.max_usd,
                      workers=a.workers, reader=a.reader)
@@ -1899,6 +1956,11 @@ def main(argv=None) -> int:
         # the run number files the frozen cell list, and `--resume` continues
         # from the answers already on disk rather than re-asking them.
         payload = fn(smoke=a.smoke, run=a.run, resume=a.resume)
+    elif a.job in ("J1_error_dataset", "J3_morning_report"):
+        # chunk 24. Both take (smoke, run) and both tolerate `--resume` without
+        # being in RESUMABLE: they rebuild in one pass in seconds, so there is
+        # nothing to continue from and nothing is lost by restarting.
+        payload = fn(smoke=a.smoke, run=a.run)
     elif a.job in ("X_anon_gap", "L3_lookahead", "X2_elasticity", "X4_regime_route"):
         # the X lane takes the run number: its frozen cell list is filed under
         # it, and a second run that overwrote the first's list would destroy the

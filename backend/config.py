@@ -3575,3 +3575,91 @@ SCENARIO_GYM_ADOPT_MIN_N = 300
 #: blocks). Twelve is a year of months; the panel offers ~19. A receipt that
 #: cannot count its blocks is CANNOT DETERMINE and is not adopted.
 SCENARIO_GYM_ADOPT_MIN_BLOCKS = 12
+
+# ---------------------------------------------------------------------------
+# J1 -- THE ERROR DATASET (chunk 24, 2026-09-21). `scripts/night_error_dataset.py`
+# ---------------------------------------------------------------------------
+
+#: Round-trip cost is 2 x this. Pinned EQUAL to `night_g3_evolve_v2.COST_BPS` by
+#: `test_night_error_dataset.py` so the error dataset and the evolutionary
+#: search never price the same trade two ways -- a `COSTS_KILLED_EDGE` label
+#: computed at a different cost rate than the search uses is a label about the
+#: constant, not about the trade.
+J1_COST_BPS_PER_SIDE = 25.0
+
+#: `HIGH_CONFIDENCE_WRONG` fires at or above this probability. 0.70 is the
+#: threshold the task declared; it is a constant here so the cluster rule and
+#: the receipt can never disagree about it.
+J1_HIGH_CONFIDENCE_P = 0.70
+
+#: `LOW_CONFIDENCE_RIGHT` fires at or below this probability.
+J1_LOW_CONFIDENCE_P = 0.55
+
+#: A REFUSED/PROBE/EXPLORE name whose excess over its own horizon reaches this
+#: many PERCENT is a refusal (or an under-funded exploration) worth a row of its
+#: own. 5% is the task's declared bar; it is deliberately high, because the
+#: point is to find gates that cost real money rather than to relabel noise.
+J1_EXCESS_PERFORMED_PCT = 5.0
+
+
+# ── J2_missed_opportunity (2026-09-21) ──────────────────────────────────────
+# The night job that asks what the market did that we did not, and whether
+# anything on our own disk said so beforehand. `scripts/night_missed_opportunity.py`.
+
+#: sessions of tape the nightly screen looks back over.
+MISSED_OPP_WINDOW_SESSIONS = 21
+#: each name is scored on its BEST contiguous sub-window of excess return, not
+#: on the window total: a name that gave 20% back over the month and a name
+#: that never moved look identical on a 21-session sum, and the question is
+#: about the MOVE.
+MISSED_OPP_SUBWINDOW_SESSIONS = 5
+#: how many names reach the precursor check and the paired read.
+MISSED_OPP_TOP_K = 30
+#: a smoke run proves the job runs end to end; no rate may be read from it.
+MISSED_OPP_SMOKE_TOP_K = 3
+#: the dollar-volume floor, and it is PRINTED on every receipt. Without one the
+#: same sub-dollar tape wins every night and the job says nothing about
+#: anything we could have traded.
+MISSED_OPP_MIN_DOLLAR_VOL = 5_000_000.0
+
+#: calendar days of history the PIT precursor check may read, all of it dated
+#: strictly BEFORE the move's first session.
+MISSED_OPP_PRECURSOR_LOOKBACK_DAYS = 30
+#: distinct Form 4 open-market buyers that make a CLUSTER rather than a trade.
+MISSED_OPP_INSIDER_CLUSTER_MIN = 2
+#: |ΔMedian target| that counts as a revision, in percent.
+MISSED_OPP_REVISION_PCT = 5.0
+#: |Δanalyst count| that counts as a coverage change.
+MISSED_OPP_COVERAGE_MIN = 1
+#: a news burst is measured against the NAME'S OWN base rate — ten stories is a
+#: quiet week for AAPL and a klaxon for a micro-cap — and needs both a floor
+#: and a multiple, because 1 row against a base of 0.2 is not a burst.
+MISSED_OPP_NEWS_BURST_MULT = 2.0
+MISSED_OPP_NEWS_BURST_MIN_ROWS = 3
+
+#: the digest handed to BOTH readers: rows and characters per row.
+MISSED_OPP_DIGEST_ROWS = 12
+MISSED_OPP_DIGEST_CHARS = 700
+#: the answer ceiling. On a reasoning model the ceiling bounds thinking PLUS
+#: answer, so a truncated reply is a refusal, not a short answer.
+MISSED_OPP_MAX_TOKENS = 320
+
+#: THE HARD CAP: the `_RunCap` backstop for billing that lands after the last
+#: ledger read. `--max-usd` defaults to it.
+MISSED_OPP_MAX_USD = 4.5
+#: THE SOFT STOP: where the job stops ASKING. Two numbers on purpose — one
+#: number has to be either too tight to finish or too loose to bind, and the
+#: 2026-09-21 breach ($10.05 under a $2.00 cap) was a cap that never bound at
+#: all because it was reading another job's rows.
+MISSED_OPP_SOFT_STOP_USD = 4.0
+#: rows between ledger re-reads. `read_calls()` is ~1.4 s cold over 120k rows;
+#: paying that per row would cost more than the row.
+MISSED_OPP_FLUSH_EVERY = 5
+
+#: a precursor class PRESENT on at least this many missed names becomes a
+#: CURRICULUM line — a named experiment, never a finding.
+MISSED_OPP_CURRICULUM_MIN_NAMES = 3
+#: the paired McNemar's alpha. It decides only whether tonight's receipt says
+#: BELIEF_CHANGED; one night is one night, and the standing question is whether
+#: the difference accumulates across nights.
+MISSED_OPP_PAIRED_ALPHA = 0.05
