@@ -107,7 +107,13 @@ LICENCE = "PRODUCT_EXPERIMENT"
 #: "why no trade" is a decision with the same provenance requirements as a
 #: trade, and a refused candidate that simply vanished from the file would make
 #: the day's coverage unauditable.
-DIRECTIONS: tuple[str, ...] = ("BUY", "WATCH", "SELL", "REFUSED")
+#:
+#: `PROBE` joined them on 2026-09-21 (chunk 23a). It is a VIRTUAL row: weight
+#: zero, dollars zero, graded at its own expiry like every other row, and it
+#: exists because refusing a name for having no measurement is the right
+#: capital decision and the wrong learning decision — nothing accrues, so the
+#: absence perpetuates itself (roadmap §16.2, §16.5 item 39).
+DIRECTIONS: tuple[str, ...] = ("BUY", "WATCH", "SELL", "PROBE", "REFUSED")
 
 #: The string the committee already prints instead of a per-name expected
 #: return, carried as a FIELD rather than omitted (CLAUDE.md: a headline number
@@ -125,6 +131,12 @@ NOT_CALIBRATED_ROI = "NOT_CALIBRATED"
 #: At most this many REFUSED rows, best rank first. A funnel of 5,324 screened
 #: names would otherwise write a file nobody opens; the count that was elided is
 #: on the payload, so the cap is visible rather than silent.
+#:
+#: **PROBE rows are exempt** (chunk 23a). They are not noise to be trimmed —
+#: they are the panel, and a trim at 50 would silently cap what this programme
+#: can ever measure. They carry their own, much larger ceiling
+#: (`config.PROBE_MAX_NAMES_PER_DAY`, applied by RANK in `decision_authority`),
+#: and the count that ceiling cut is on the payload too.
 MAX_REFUSED_ROWS = 50
 
 
@@ -230,6 +242,19 @@ _LOCAL_PATTERNS: tuple[tuple[str, str, str, str], ...] = (
      "an input the ranking needed was absent or void; the closed 31 classes are "
      "about candidates and books and none of them names a missing input, so the "
      "typed answer is the terminal state DATA_MISSING"),
+    # ---- the day's PROBE ceiling refused a ROW, not a hypothesis -----------
+    # chunk 23a. It must be matched BEFORE the generic capacity patterns: the
+    # sentence is about the size of the FILE, not about the book or the
+    # candidate, and reading it as a book limit would report a virtual row
+    # nobody wrote as a position the book had no room for.
+    (UNCLASSIFIED, "CAPACITY",
+     r"PROBE ceiling refused this name a virtual row",
+     "the execution repo's closed 31 are about candidates competing for "
+     "CAPITAL, and this refusal spent none: the day's PROBE ceiling "
+     "(config.PROBE_MAX_NAMES_PER_DAY) refused the name a virtual row after "
+     "the higher-ranked unmeasured names took the day's quota. The terminal "
+     "state CAPACITY is exact — a ceiling was reached — and nothing about the "
+     "hypothesis was decided"),
     # ---- the size buys no unit / the book has no room ----------------------
     ("CAPITAL_ROUNDS_TO_ZERO", "CAPACITY",
      r"below one share|rounds to zero|buys no share",
@@ -495,15 +520,55 @@ def seal(row: dict) -> str:
 
 
 def decision_id(*, policy_id: str, policy_version: str, ticker: str,
-                asof: str, revision_of: str | None = None) -> str:
+                asof: str, revision_of: str | None = None,
+                horizon_sessions: int | None = None) -> str:
     """The row's identity. `revision_of` is what makes a same-day revision a
     DIFFERENT decision rather than a rewrite of the first one: without it, a
     child built from the same policy, ticker and date would collide with its
-    own parent, and the ledger would read the supersession as a duplicate."""
+    own parent, and the ledger would read the supersession as a duplicate.
+
+    `horizon_sessions` does the same job for a PROBE name, which writes one row
+    per declared horizon on one day: four rows about one name that shared an id
+    would be one row in the ledger, and three of the four grades would be lost
+    to the idempotence rule that exists to stop double-counting. Absent, the
+    blob is byte-identical to the one every stored row was written against."""
     blob = f"{policy_id}|{policy_version}|{ticker}|{asof}"
     if revision_of:
         blob = f"{blob}|revision_of:{revision_of}"
+    if horizon_sessions is not None:
+        blob = f"{blob}|h:{int(horizon_sessions)}"
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:16]
+
+
+def sessions_expiry(asof: date, sessions: int) -> tuple[str, str]:
+    """(expiry_utc, basis) for a horizon counted in TRADING SESSIONS.
+
+    Uses the same session walker the counterfactual resolver already uses
+    (`counterfactual_prices.sessions_after`), which returns the calendar it
+    actually used — XNYS when `exchange_calendars` is installed, weekday
+    arithmetic when it is not. The basis NAMES which of the two produced the
+    date, because a 126-session horizon resolved on weekday arithmetic lands
+    about six sessions late over a year of holidays, and a reader grading the
+    row a year from now has no other way to know which ruler it was written
+    against.
+    """
+    try:
+        from backend.services.counterfactual_prices import sessions_after
+        day, calendar = sessions_after(asof, int(sessions))
+    except Exception as exc:                                       # noqa: BLE001
+        days = -(-int(sessions) * 7 // 5)
+        when = datetime.combine(asof, datetime.min.time(), timezone.utc) + \
+            timedelta(days=days)
+        return (when.isoformat(timespec="seconds"),
+                f"{int(sessions)} sessions = {days} calendar days at 5 "
+                f"sessions a week; the session calendar was unavailable "
+                f"({type(exc).__name__}: {exc}), so the 7/5 approximation was "
+                f"used and is named here rather than left to be inferred")
+    when = datetime.combine(day, datetime.min.time(), timezone.utc)
+    return (when.isoformat(timespec="seconds"),
+            f"{int(sessions)} trading sessions after {asof} on the "
+            f"{calendar} calendar (counterfactual_prices.sessions_after) = "
+            f"{day}")
 
 
 def universe_hash(candidates: Any, generated_at: str | None) -> str:
@@ -623,6 +688,21 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
     # sizing is back on, so that flag is a true revert here too.
     authority = book.get("authority") or None
     authority_refused = dict((authority or {}).get("refused") or {})
+    probe_blocks = dict((authority or {}).get("probe_blocks") or {})
+    # Every name the SPLIT saw, and the EXPLORE candidate rows keyed by name.
+    # The second is what puts `selection_probability` on a candidate the
+    # budget did not fund: an off-policy estimator needs the propensity of the
+    # actions NOT taken as much as of the one that was, and a row that only
+    # carried it when it won would be a log of winners.
+    authority_of = dict(book.get("authority_of") or {})
+    explore_by_ticker = {str(d.get("ticker")): d
+                         for d in (authority or {}).get("explore_rows") or []}
+    # The four expiries are computed ONCE for the day: they depend on the as-of
+    # date and the horizon and on nothing about the name, and walking the
+    # exchange calendar per name per horizon would be 800 walks for 200 names.
+    probe_expiry = {int(h): sessions_expiry(asof, int(h))
+                    for h in ((authority or {}).get("probe_horizons_sessions")
+                              or config.PROBE_HORIZONS_SESSIONS)}
     degradation = list(book.get("degradation_reasons") or [])
     by_ticker_degradation: dict[str, str] = {}
     for line in degradation:
@@ -632,6 +712,7 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
 
     rows: list[dict] = []
     refused: list[dict] = []
+    probe_rows: list[dict] = []
     for r in recs:
         ticker = str(getattr(r, "ticker", "") or "")
         if not ticker:
@@ -675,7 +756,13 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
             row.update(_roi_fields(ticker, roi_rows, roi_unranked))
         pos = tilts.get(ticker)
         if authority is not None:
-            row.update(_authority_fields(ticker, pos, authority_refused))
+            row.update(_authority_fields(ticker, pos, authority_refused,
+                                         probe_blocks))
+            row.update(_hypothesis_and_propensity(
+                ticker, r, signal, authority_of=authority_of,
+                explore_row=explore_by_ticker.get(ticker),
+                information_set=generated_at, asof=asof_s,
+                action_set_sha=(authority or {}).get("action_set_sha256")))
         if pos is not None:
             verdict = str(getattr(r, "recommendation", "") or "")
             row["direction"] = "BUY" if verdict == "BUY" else "WATCH"
@@ -691,6 +778,15 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
             row["reason"] = pos.get("reason")
             row["capacity"] = pos.get("capacity")
             rows.append(row)
+            continue
+        if ticker in probe_blocks:
+            # PROBE (chunk 23a): one VIRTUAL row per declared horizon. Not a
+            # refusal and not a position — a graded observation that costs
+            # nothing, so a hypothesis with no panel can build one forward.
+            probe_rows.extend(_probe_rows_for(
+                row, probe_blocks[ticker], expiries=probe_expiry,
+                capital=capital, policy_id=policy_id,
+                policy_version=policy_version, asof=asof_s))
             continue
         # REFUSED: name the gate that stopped it, in this repo's own words.
         # The authority split's own sentence wins when it has one: it is the
@@ -715,7 +811,13 @@ def _ic_rows(state: dict, book: dict, *, asof: date, capital: float) -> list[dic
 
     refused.sort(key=lambda d: (d.get("rank") is None, d.get("rank") or 0))
     kept = refused[:MAX_REFUSED_ROWS]
-    return rows + kept
+    # PROBE rows are NOT trimmed here: they are the panel, and their own
+    # ceiling was applied BY RANK in `decision_authority` before this function
+    # ever saw them (`config.PROBE_MAX_NAMES_PER_DAY`, with the cut count on
+    # the receipt). Trimming them at MAX_REFUSED_ROWS would cap what the
+    # programme can ever measure with a constant chosen to keep a file
+    # readable.
+    return rows + kept + probe_rows
 
 
 #: The fields an ROI-scored row carries, in the order a reader wants them.
@@ -759,11 +861,128 @@ def _roi_fields(ticker: str, rows: dict, unranked: dict) -> dict:
                     f"candidates they admitted")}
 
 
-def _authority_fields(ticker: str, pos: dict | None,
-                      refused: dict) -> dict:
-    """The authority block for one name: EXPLOIT, EXPLORE or REFUSED, and why.
+def _hypothesis_and_propensity(ticker: str, rec: Any, signal: str, *,
+                               authority_of: dict, explore_row: dict | None,
+                               information_set: str | None, asof: str,
+                               action_set_sha: str | None) -> dict:
+    """The chunk-23a fields every row the AUTHORITY touched carries.
 
-    Three populations and no fourth (chunk 21). A name the split FUNDED carries
+    `hypothesis_id` on all of them, because a row nobody can join to the panel
+    is a row that can never become a measurement — and the join key has to be
+    on EXPLOIT and REFUSED rows too, or a hypothesis's history would have a
+    hole every time one of its names was funded or declined.
+
+    `selection_probability` / `action_set_sha256` / `context_features` on every
+    EXPLORE CANDIDATE, funded or not. A doubly-robust off-policy estimator
+    divides by the propensity of the action that was taken and needs the choice
+    set it was taken from; a log that carried those only for the winners is a
+    log that cannot be replayed under any other policy (chunk 24).
+
+    A name the split never saw gets nothing: it was refused at a hard gate
+    before any authority existed, and inventing a hypothesis id for it would
+    put a claim on a row that was never evaluated as one.
+    """
+    if str(ticker) not in authority_of:
+        return {}
+    sig = str(signal or "")
+    if not sig or sig.startswith("CANNOT DETERMINE"):
+        sig = DA.NO_LEAD_SIGNAL
+    out = dict(DA.hypothesis_fields(rec, sig, information_set=information_set,
+                                    asof=asof))
+    if explore_row is not None:
+        out["selection_probability"] = explore_row.get("selection_probability")
+        out["selection_probability_basis"] = explore_row.get(
+            "selection_probability_basis")
+        out["context_features"] = explore_row.get("context_features")
+        out["action_set_sha256"] = (explore_row.get("action_set_sha256")
+                                    or action_set_sha)
+    return out
+
+
+def _probe_rows_for(base: dict, block: dict, *, expiries: dict,
+                    capital: float, policy_id: str, policy_version: str,
+                    asof: str) -> list[dict]:
+    """One VIRTUAL row per declared horizon for one PROBE name.
+
+    Four rows and not one, because a mechanism that shows up in a week and is
+    gone by a quarter is a different finding from one that needs a quarter to
+    appear, and a single horizon makes the two indistinguishable for ever. Each
+    row is separately gradeable — its own `decision_id`, its own `expiry_utc` —
+    and each carries the `hypothesis_id` the panel joins on.
+
+    Nothing here holds capital: the weight, the dollars and the shares are zero
+    by construction and `virtual_notional_usd` is the scale the graded return
+    is QUOTED at, never a position. The day's capital resolution does not see
+    these rows and cannot: it sums position budgets, and these are zero.
+    """
+    probe = dict(block.get("probe") or {})
+    hid = str(probe.get("hypothesis_id") or "")
+    if not hid:
+        # A PROBE row without a hypothesis id cannot be written: the panel
+        # would have nothing to accumulate it under, so the row could never
+        # become a measurement and would be a cost with no return.
+        logger.error("PROBE row for %s carries no hypothesis_id; no virtual "
+                     "row was written", base.get("ticker"))
+        return []
+    ticker = str(base.get("ticker"))
+    out: list[dict] = []
+    for h in sorted(expiries):
+        expiry, expiry_basis = expiries[h]
+        row = dict(base)
+        row["decision_id"] = decision_id(
+            policy_id=policy_id, policy_version=policy_version,
+            ticker=ticker, asof=asof, horizon_sessions=int(h))
+        row.update({
+            "direction": "PROBE",
+            "authority": DA.PROBE,
+            "authority_basis": block.get("authority_basis"),
+            "hypothesis_id": hid,
+            "hypothesis_id_basis": probe.get("hypothesis_id_basis"),
+            "hypothesis_signal": probe.get("hypothesis_signal"),
+            "hypothesis_mechanism": probe.get("hypothesis_mechanism"),
+            "hypothesis_information_set": probe.get(
+                "hypothesis_information_set"),
+            "horizon_sessions": int(h),
+            "horizon": {"sessions": int(h),
+                        "basis": "config.PROBE_HORIZONS_SESSIONS"},
+            "expiry_utc": expiry,
+            "expiry_basis": expiry_basis,
+            "virtual": True,
+            "selection_probability": probe.get("selection_probability"),
+            "selection_probability_basis": probe.get(
+                "selection_probability_basis"),
+            "action_set_sha256": block.get("action_set_sha256"),
+            "context_features": probe.get("context_features"),
+            "position_budget": {
+                "weight": 0.0, "dollars": 0.0, "shares": 0, "price": None,
+                "capital_usd": float(capital),
+                "virtual": True,
+                "virtual_notional_usd": float(
+                    config.PROBE_VIRTUAL_NOTIONAL_USD),
+                "basis": probe.get("virtual_basis") or (
+                    "PROBE — a virtual row: zero weight, zero dollars, zero "
+                    "shares, graded at its own expiry"),
+            },
+            "maximum_loss": worst_case_no_stop(
+                n_names=0, notional_pct=0.0, equity_usd=float(capital),
+                gross_over_equity=0.0,
+                why=("PROBE — nothing is at risk: the row holds no weight and "
+                     "no dollars, and its whole cost is the grading call that "
+                     "prices it at its expiry")),
+        })
+        out.append(row)
+    return out
+
+
+def _authority_fields(ticker: str, pos: dict | None, refused: dict,
+                      probe_blocks: dict | None = None) -> dict:
+    """The authority block for one name: EXPLOIT, EXPLORE, PROBE or REFUSED.
+
+    Four populations and no fifth (chunk 21, amended by 23a). A name the split
+    sent to PROBE carries its hypothesis, its virtual notional and the sentence
+    that says which of the two unmeasured branches sent it there — and, like
+    every other row here, a weight of zero it can never be read as holding.
+    A name the split FUNDED carries
     the authority it was funded under, the sentence that licensed it, and — for
     an EXPLORE name — the whole posterior, the Thompson draw, the seed and the
     score, so tomorrow's reader can reproduce the allocation without rerunning
@@ -785,6 +1004,11 @@ def _authority_fields(ticker: str, pos: dict | None,
         if pos.get("sizing"):
             out["sizing"] = pos["sizing"]
         return out
+    block = (probe_blocks or {}).get(t)
+    if block:
+        return {"authority": DA.PROBE,
+                "authority_basis": block.get("authority_basis"),
+                "probe": block.get("probe")}
     if t in refused:
         return {"authority": DA.REFUSED, "authority_basis": refused[t]}
     return {"authority": DA.REFUSED,
@@ -986,7 +1210,8 @@ def build_daily_contracts(asof: date | str | None = None, *,
             refusal_reasons=(state.get("books") or {}).get("refused") or {},
             extra_degradation=[d for d in state.get("degradation_reasons") or []
                                if "REFUSED" not in d],
-            asof=day)
+            asof=day,
+            information_set=state.get("funnel_generated_at"))
     except Exception as exc:                                       # noqa: BLE001
         logger.exception("decision contract: compose_book failed")
         book = {"positions": [], "degradation_reasons":
@@ -1194,7 +1419,8 @@ def revise(parent_decision_id: str, *, asof: date | str | None = None,
         refusal_reasons=(state.get("books") or {}).get("refused") or {},
         extra_degradation=[d for d in state.get("degradation_reasons") or []
                            if "REFUSED" not in d],
-        asof=day)
+        asof=day,
+        information_set=state.get("funnel_generated_at"))
     ticker = str(parent.get("ticker"))
     fresh = [r for r in _ic_rows(state, book, asof=day, capital=capital)
              if str(r.get("ticker")) == ticker]
@@ -1207,8 +1433,12 @@ def revise(parent_decision_id: str, *, asof: date | str | None = None,
                            f"about the universe, not a revision.")}
     child = fresh[0]
 
-    was_held = str(parent.get("direction")) != "REFUSED"
-    now_held = str(child.get("direction")) != "REFUSED"
+    # "Held" is BUY or WATCH and nothing else. `!= "REFUSED"` was equivalent
+    # until 2026-09-21; with PROBE in the enum it would read a virtual,
+    # zero-weight row as a position and report a revision that moved no
+    # capital as one that did.
+    was_held = str(parent.get("direction")) in ("BUY", "WATCH")
+    now_held = str(child.get("direction")) in ("BUY", "WATCH")
     changed = {
         "direction": (str(parent.get("direction")), str(child.get("direction"))),
         "rank_cut": (was_held, now_held),
@@ -1416,6 +1646,16 @@ def capital_resolution(rows: list[dict], *, capital: float | None = None
         elif r.get("authority") == DA.EXPLORE:
             explore += w
             n_explore += 1
+    # chunk 23a. PROBE rows are COUNTED here and resolve no capital: their
+    # weight is zero by construction, so they cannot enter the sums above even
+    # by accident. The count sits beside the four buckets because a day that
+    # wrote forty virtual rows and moved no dollar is a day that did something,
+    # and a resolution that printed only the dollars would read as if it had
+    # not.
+    probe_rows = [r for r in rows if r.get("direction") == DA.PROBE]
+    probe_names = sorted({str(r.get("ticker")) for r in probe_rows})
+    probe_hypotheses = sorted({str(r.get("hypothesis_id")) for r in probe_rows
+                               if r.get("hypothesis_id")})
     cash = float(config.IC_CASH_FLOOR_PCT)
     benchmark = 1.0 - exploit - explore - cash
     total = benchmark + exploit + explore + cash
@@ -1428,6 +1668,18 @@ def capital_resolution(rows: list[dict], *, capital: float | None = None
         "capital_usd": (float(capital) if capital is not None else None),
         "n_exploit_names": n_exploit,
         "n_explore_names": n_explore,
+        "probe_count": len(probe_rows),
+        "n_probe_names": len(probe_names),
+        "n_probe_hypotheses": len(probe_hypotheses),
+        "probe_pct": 0.0,
+        "probe_basis": (
+            f"{len(probe_rows)} virtual PROBE row(s) across "
+            f"{len(probe_names)} name(s) and {len(probe_hypotheses)} "
+            f"hypothesis id(s) resolved 0.00% of capital, BY CONSTRUCTION: a "
+            f"PROBE row carries zero weight and zero dollars and is graded at "
+            f"its own expiry. It is counted here so a day that wrote virtual "
+            f"rows and moved no dollar does not read as a day that did "
+            f"nothing (roadmap §16.2)."),
         "agency_book_rows_excluded": n_books,
         "basis": (
             "benchmark = 1 - exploit - explore - cash; the two active shares "
@@ -1482,10 +1734,25 @@ def _authority_payload_block(rows: list[dict], book: dict | None) -> dict:
                 and a not in DA.ACTIVE_AUTHORITIES):
             buys_without_authority.append(r.get("ticker"))
     census = {k: v for k, v in split.items()
-              if k not in ("explore_rows", "refused")}
+              if k not in ("explore_rows", "refused", "probe_blocks")}
     census["count_by_authority_over_rows"] = counts
     census["rows_with_a_budget_and_no_authority"] = buys_without_authority
     census["explore_rows"] = split.get("explore_rows") or []
+    probe_rows = [r for r in rows if r.get("direction") == DA.PROBE]
+    by_hypothesis: dict[str, int] = {}
+    for r in probe_rows:
+        hid = str(r.get("hypothesis_id") or "MISSING")
+        by_hypothesis[hid] = by_hypothesis.get(hid, 0) + 1
+    census["probe_rows_written"] = len(probe_rows)
+    census["probe_rows_by_hypothesis"] = by_hypothesis
+    census["probe_rows_without_a_hypothesis_id"] = sum(
+        1 for r in probe_rows if not r.get("hypothesis_id"))
+    census["probe_rows_exempt_from_the_refused_trim"] = (
+        f"PROBE rows are not subject to MAX_REFUSED_ROWS ({MAX_REFUSED_ROWS}); "
+        f"their own ceiling is config.PROBE_MAX_NAMES_PER_DAY "
+        f"({int(config.PROBE_MAX_NAMES_PER_DAY)}) applied BY RANK in "
+        f"decision_authority, and it cut "
+        f"{split.get('n_probe_cut_by_cap', 0)} name(s) today")
     return {
         "authority": census,
         "worst_case_explore_budget": split.get("worst_case_added_by_explore"),
@@ -1552,7 +1819,9 @@ def summarise_for_reader(blob: dict | None, *,
     counts = blob.get("count_by_direction") or {}
     head = (f"Today's decision contract ({blob.get('date')}), written by the "
             f"engine: {counts.get('BUY', 0)} BUY, {counts.get('WATCH', 0)} "
-            f"WATCH, {counts.get('REFUSED', 0)} REFUSED.")
+            f"WATCH, {counts.get('REFUSED', 0)} REFUSED, "
+            f"{counts.get('PROBE', 0)} PROBE (virtual rows at zero capital, "
+            f"graded at their own expiry — never a recommendation).")
     if not rows:
         return (head + " No name cleared the tilt gate today, so there is "
                        "nothing the engine would buy. The refusal classes are on "

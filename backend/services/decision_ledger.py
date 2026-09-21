@@ -64,6 +64,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from backend import config
 from backend.services.decision_contract import DECISION_STATES, DECISIONS_DIR
 
 logger = logging.getLogger(__name__)
@@ -409,11 +410,18 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
 
     tickers = sorted({str(r.get("ticker")) for r, _ in due
                       if r.get("source") == "investment_committee"})
+    # The benchmark is REQUESTED with the names (chunk 23a, §16.5 item 37: an
+    # internal figure is quoted beside the external one when one exists). A raw
+    # close-to-close return is mostly the market; a panel built on raw returns
+    # measures beta and calls it a mechanism. If the fetch comes back without
+    # it, the two benchmark fields are present and None with the reason — never
+    # a zero, which would read as "the market did nothing".
+    benchmark = str(config.DECISION_BENCHMARK_SYMBOL)
     start = min(str(r.get("asof")) for r, _ in due)
     frame = None
     if tickers:
         try:
-            frame = fetch(tickers, start, str(day))
+            frame = fetch(sorted(set(tickers) | {benchmark}), start, str(day))
         except Exception as exc:                                   # noqa: BLE001
             return {"status": "refused", "as_of": str(day), "due": len(due),
                     "newly_scored": 0, "unpriceable": unpriceable,
@@ -434,9 +442,28 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
             unpriceable.append({"decision_id": r.get("decision_id"),
                                 "reason": basis})
             continue
+        bench_ret, bench_basis = _close_to_close(
+            frame, benchmark, str(r.get("asof")), str(when))
+        excess = None if bench_ret is None else ret - bench_ret
         detail = {"ticker": ticker, "realised_return": ret, "basis": basis,
                   "direction": r.get("direction"), "expiry_utc": r.get("expiry_utc"),
-                  "artifact_sha256": r.get("artifact_sha256")}
+                  "artifact_sha256": r.get("artifact_sha256"),
+                  "benchmark_symbol": benchmark,
+                  "benchmark_return": bench_ret,
+                  "excess_return": excess,
+                  "benchmark_basis": (
+                      bench_basis if bench_ret is not None else
+                      f"CANNOT DETERMINE: {bench_basis}. The raw return stands "
+                      f"and the excess is null — never zero, which would read "
+                      f"as 'the market did nothing'")}
+        # chunk 23a: what the PROBE panel joins on. Carried on the LEDGER row
+        # and not only on the contract row, because the panel reads the ledger
+        # and a join that needed both files would break the day a contract file
+        # is rotated out of the year the grader scans.
+        for key in ("hypothesis_id", "horizon_sessions", "virtual",
+                    "selection_probability", "action_set_sha256"):
+            if r.get(key) is not None:
+                detail[key] = r.get(key)
         try:
             record(str(r.get("decision_id")), "SCORED", by="decision_grader",
                    detail=detail, asof=r.get("asof"), path=path)
@@ -480,7 +507,11 @@ def _open_contract_rows(*, day: date, out_dir: Path | None,
         except (OSError, ValueError):
             continue
         for r in blob.get("rows") or []:
-            if r.get("direction") in ("BUY", "WATCH") and \
+            # PROBE joined BUY and WATCH here on 2026-09-21 (chunk 23a). A
+            # virtual row that was written and never graded is a row that
+            # bought nothing and taught nothing, and the whole point of the
+            # state is that it is graded exactly like the rest.
+            if r.get("direction") in ("BUY", "WATCH", "PROBE") and \
                     str(r.get("decision_id")) not in already:
                 rows.append(r)
     return rows

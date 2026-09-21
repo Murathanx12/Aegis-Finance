@@ -75,6 +75,28 @@ def _cands(recs, vol=0.45):
                        "median_dollar_vol": 5e7} for r in recs}
 
 
+@pytest.fixture(autouse=True)
+def _empty_probe_panel(monkeypatch):
+    """No test in this file may read the repository's real decision ledger.
+
+    `assign` consults the PROBE panel (chunk 23a) for every name whose leading
+    signal has no measured row, and the default path is
+    `backend/data/optimus/decisions/ledger.jsonl`. A suite that read it would
+    be a suite whose result depends on how many virtual rows this machine has
+    graded — so the DEFAULT path reads nothing here, and the tests that are
+    ABOUT the panel plant their own ledger in `tmp_path` and are untouched.
+    """
+    real = DA.probe_panel.scored_probe_rows
+
+    def guarded(path=None, **kw):
+        if path is None:
+            return []
+        return real(path, **kw)
+
+    monkeypatch.setattr(DA.probe_panel, "scored_probe_rows", guarded,
+                        raising=True)
+
+
 @pytest.fixture()
 def measured(monkeypatch):
     monkeypatch.setattr(config, "SIGNAL_MEASURED_RETURN", _table(),
@@ -141,10 +163,16 @@ def test_the_verdict_times_confidence_buy_is_retired(measured):
     recs = [_rec("HEUR", "nothing_measured", rank=1, conf="HIGH")]
     book = _book(recs)
     assert not [p for p in book["positions"] if p["source"] == "evidence-led"]
-    assert book["authority"]["n_refused"] == 1
-    why = book["authority"]["refused"]["HEUR"]
+    # CHUNK 23a: it receives no capital, and it is no longer REFUSED either —
+    # an unmeasured name is PROBED at zero weight so the measurement it lacks
+    # can accrue. The capital claim this test exists for is unchanged.
+    assert book["authority"]["n_refused"] == 0
+    assert book["authority"]["n_probe"] == 1
+    assert book["authority"]["probe_tickers"] == ["HEUR"]
+    assert book["probe_weight"] == 0.0
+    why = book["authority"]["probe_basis"]["HEUR"]
     assert "NO measured read exists" in why
-    assert "never for nothing" in why
+    assert "PROBED at zero capital" in why
 
     # ... and the legacy flag brings it back, unchanged, as a one-line revert.
     with pytest.MonkeyPatch.context() as mp:
@@ -220,7 +248,13 @@ def test_an_unmeasured_t_is_the_widest_posterior_never_a_zero(measured):
 
 
 def test_exploration_is_for_measured_but_unproven_never_for_nothing(measured):
-    """Three refusals that must stay refusals, each with its own sentence."""
+    """Two refusals that must stay refusals, and one PROBE that must not be.
+
+    The two REFUSALS are EVIDENCE — a measured read that is not positive, and
+    a name whose risk penalty cannot be computed. The third is the chunk-23a
+    distinction: `NONE` has no measurement at all, which is not evidence about
+    the mechanism and must not be recorded as though it were.
+    """
     recs = [_rec("NONE", "nothing_measured", rank=1),
             _rec("NEG", "negative", rank=2),
             _rec("NOVOL", "unproven", rank=3)]
@@ -229,7 +263,8 @@ def test_exploration_is_for_measured_but_unproven_never_for_nothing(measured):
     book = IC.compose_book(recs, capital=1_000_000.0, candidates=cands,
                            asof=ASOF)
     ref = book["authority"]["refused"]
-    assert "NO measured read exists" in ref["NONE"]
+    assert "NONE" not in ref
+    assert "NO measured read exists" in book["authority"]["probe_basis"]["NONE"]
     assert "not above EXPLORE_MIN_NET_PCT" in ref["NEG"]
     assert "no usable annualised volatility" in ref["NOVOL"]
     assert not [p for p in book["positions"] if p["source"] == "evidence-led"]
@@ -385,6 +420,270 @@ def test_the_contract_file_carries_the_split_and_reproduces(measured, tmp_path,
     assert by["BBB"]["authority"] == DA.EXPLORE
     assert by["BBB"]["explore"]["thompson_seed"] == DA.seed_for(
         "2026-09-20", "BBB", "unproven")
-    assert by["CCC"]["authority"] == DA.REFUSED
+    assert by["CCC"]["authority"] == DA.PROBE
     assert blob["authority"]["count_by_authority_over_rows"][DA.EXPLORE] == 1
     assert blob["count_by_direction"]["BUY"] >= 1
+
+
+# ===========================================================================
+# PROBE — chunk 23a. Zero capital, a virtual graded row, a hypothesis id.
+# ===========================================================================
+
+
+def _scored_probe(hypothesis_id, *, horizon=5, months=8, per_month=5,
+                  excess=0.01):
+    """A synthetic ledger of SCORED PROBE rows, `months` x `per_month` of them.
+
+    Shaped exactly like what `decision_ledger.score_due` writes, because the
+    panel's whole job is to read that shape back.
+    """
+    rows = []
+    for m in range(months):
+        for i in range(per_month):
+            day = f"2026-{(m % 12) + 1:02d}-{i + 1:02d}"
+            # The excess VARIES by month on purpose: a fixture whose every
+            # month carries the same mean has a block-bootstrap se of exactly
+            # zero, and the panel refuses that read by name rather than
+            # printing a certainty it does not have.
+            e = excess + 0.001 * i + 0.002 * (m - (months - 1) / 2.0)
+            rows.append({
+                "state": "SCORED", "decision_id": f"{hypothesis_id}-{m}-{i}",
+                "asof": day,
+                "detail": {"direction": "PROBE",
+                           "hypothesis_id": hypothesis_id,
+                           "horizon_sessions": horizon,
+                           "ticker": f"T{i}",
+                           "realised_return": e + 0.02,
+                           "benchmark_return": 0.02,
+                           "excess_return": e},
+            })
+    return rows
+
+
+def _ledger(tmp_path, rows):
+    path = tmp_path / "ledger.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(json.dumps(r) for r in rows) + "\n",
+                    encoding="utf-8")
+    return path
+
+
+def test_a_name_with_no_measured_read_is_probed_at_four_horizons(measured,
+                                                                  tmp_path):
+    """Spec test 1: PROBE, four rows, a hypothesis id, weight zero.
+
+    And the claim the whole state rests on: the capital resolution is
+    bit-identical to the one the same book produces with the PROBE names
+    removed. A row that resolved a dollar would not be a probe.
+    """
+    recs = [_rec("AAA", "unproven", rank=1),
+            _rec("NEW", "nothing_measured", rank=2)]
+    cands = _cands(recs)
+    state = {"available": True, "recs": recs, "candidates": cands,
+             "funnel_generated_at": "2026-09-18T00:00:00+00:00"}
+    book = IC.compose_book(recs, capital=1_000_000.0, candidates=cands,
+                           asof=ASOF,
+                           information_set="2026-09-18T00:00:00+00:00")
+    rows = DC._ic_rows(state, book, asof=ASOF, capital=40_000.0)
+    probe = [r for r in rows if r["direction"] == "PROBE"]
+    assert len(probe) == len(config.PROBE_HORIZONS_SESSIONS)
+    assert {r["horizon_sessions"] for r in probe} == set(
+        config.PROBE_HORIZONS_SESSIONS)
+    assert len({r["decision_id"] for r in probe}) == len(probe), (
+        "four rows about one name on one day must be four decisions; one id "
+        "would make three of the four grades unwritable by the ledger's own "
+        "idempotence rule")
+    for r in probe:
+        assert r["ticker"] == "NEW"
+        assert r["authority"] == DA.PROBE
+        assert r["hypothesis_id"] and len(r["hypothesis_id"]) == 12
+        assert r["hypothesis_id_basis"]
+        assert r["position_budget"]["weight"] == 0.0
+        assert r["position_budget"]["dollars"] == 0.0
+        assert r["position_budget"]["virtual"] is True
+        assert r["position_budget"]["virtual_notional_usd"] == \
+            config.PROBE_VIRTUAL_NOTIONAL_USD
+        assert r["maximum_loss"]["worst_case_usd"] == 0.0
+        assert r["expiry_utc"] and "sessions" in r["expiry_basis"]
+        assert r["selection_probability"] == 1.0
+        assert r["context_features"]["signal"]
+
+    # the capital resolution, with and without the PROBE rows
+    with_probe = DC.capital_resolution(rows, capital=40_000.0)
+    without = DC.capital_resolution(
+        [r for r in rows if r["direction"] != "PROBE"], capital=40_000.0)
+    vector = ("benchmark_pct", "active_exploit_pct", "active_explore_pct",
+              "cash_pct", "sums_to", "dollars")
+    assert {k: with_probe[k] for k in vector} == {k: without[k] for k in vector}
+    assert with_probe["probe_pct"] == 0.0
+    assert with_probe["probe_count"] == len(probe)
+    assert DA.PROBE not in DA.ACTIVE_AUTHORITIES
+
+
+def test_a_measured_but_nonpositive_read_is_still_refused(measured):
+    """Spec test 2. A measurement that says 'no' is EVIDENCE and stays REFUSED.
+
+    PROBE is for the absence of a measurement, never for a measurement one
+    dislikes — the moment it becomes the second thing, every negative result
+    this programme has paid for can be re-opened by relabelling it.
+    """
+    recs = [_rec("NEG", "negative", rank=1)]
+    book = _book(recs)
+    split = book["authority"]
+    assert split["n_probe"] == 0
+    assert "not above EXPLORE_MIN_NET_PCT" in split["refused"]["NEG"]
+
+
+def test_the_panel_is_measured_only_at_both_gates(tmp_path):
+    """Spec test 3: 40 rows over 8 months is measured; over 2 months is not."""
+    from backend.services import probe_panel as PP
+
+    wide = _ledger(tmp_path, _scored_probe("hyp_wide", months=8, per_month=5))
+    read = PP.read_for("hyp_wide", 5, path=wide)
+    assert read is not None and read.measured is True
+    assert read.n == 40 and read.n_blocks == 8
+    assert read.mean_excess_pct == pytest.approx(100 * (0.01 + 0.002), abs=1e-6)
+    assert read.se_pct is not None and read.se_pct > 0
+    assert read.sign_hit_rate == 1.0
+    assert read.n_excess == 40 and read.n_raw_fallback == 0
+
+    narrow = _ledger(tmp_path / "n", _scored_probe("hyp_narrow", months=2,
+                                                   per_month=20))
+    thin = PP.read_for("hyp_narrow", 5, path=narrow)
+    assert thin is not None and thin.measured is False
+    assert thin.n == 40 and thin.n_blocks == 2
+    assert any("MONTHS" in s for s in thin.shortfalls), thin.shortfalls
+    assert not any("graded rows" in s for s in thin.shortfalls), (
+        "40 rows clears PROBE_MIN_GRADED; only the BLOCK gate is short, and "
+        "the two shortfalls ask for opposite work")
+    assert PP.read_for("never_probed", 5, path=wide) is None
+
+
+def test_a_measured_panel_read_reaches_EXPLORE_as_PROBE_PANEL(measured,
+                                                              tmp_path):
+    """Spec test 4 — the loop closing.
+
+    A hypothesis that had no measurement built one out of its own graded
+    virtual rows, and the name it leads is EXPLORE's today where it was PROBE
+    yesterday. The posterior source says which of the three reads produced it.
+    """
+    recs = [_rec("NEW", "nothing_measured", rank=1)]
+    cands = _cands(recs)
+    hyp = DA.hypothesis_fields(recs[0], "nothing_measured",
+                               information_set="2026-09-18T00:00:00+00:00",
+                               asof=ASOF)
+    path = _ledger(tmp_path, _scored_probe(hyp["hypothesis_id"], horizon=5,
+                                           months=8, per_month=5))
+    split = DA.assign(recs, candidates=cands, asof=ASOF,
+                      information_set="2026-09-18T00:00:00+00:00",
+                      probe_ledger_path=path)
+    assert split.authority_for("NEW") == DA.EXPLORE
+    block = split.blocks["NEW"]["explore"]
+    assert block["posterior_source"] == DA.POSTERIOR_PROBE_PANEL
+    assert block["probe_panel"]["measured"] is True
+    assert block["posterior_mean_pct_per_month"] > 0
+    assert "change of UNITS" in block["posterior_basis"]
+    assert block["hypothesis_id"] == hyp["hypothesis_id"]
+
+    # ... and with the panel two months short it stays PROBE, saying how short
+    thin = _ledger(tmp_path / "thin",
+                   _scored_probe(hyp["hypothesis_id"], horizon=5, months=2,
+                                 per_month=3))
+    still = DA.assign(recs, candidates=cands, asof=ASOF,
+                      information_set="2026-09-18T00:00:00+00:00",
+                      probe_ledger_path=thin)
+    assert still.authority_for("NEW") == DA.PROBE
+    assert "6 graded row(s)" in still.probe_basis["NEW"]
+
+
+def test_the_selection_probability_sums_to_the_slots_and_reproduces(measured):
+    """Spec test 5: sums to M, 1.0 on PROBE, deterministic for one as-of."""
+    n = int(config.EXPLORE_BUDGET_PCT / config.EXPLORE_PER_NAME_PCT) + 4
+    recs = ([_rec(f"E{i:02d}", "unproven", rank=i + 1) for i in range(n)]
+            + [_rec("NEW", "nothing_measured", rank=99)])
+    split = DA.assign(recs, candidates=_cands(recs), asof=ASOF)
+    sel = split.receipt["selection_probability"]
+    slots = split.receipt["explore_slots"]
+    assert sel["slots"] == slots
+    assert sum(sel["probability"].values()) == pytest.approx(slots, abs=0.05)
+    assert all(0.0 <= p <= 1.0 for p in sel["probability"].values())
+    for d in split.receipt["explore_rows"]:
+        assert d["selection_probability"] == sel["probability"][d["ticker"]]
+        assert d["selection_probability_basis"]
+        assert d["action_set_sha256"] == split.receipt["action_set_sha256"]
+    # a PROBE name never competes for a slot, so its propensity is exactly 1
+    assert split.blocks["NEW"]["probe"]["selection_probability"] == 1.0
+
+    again = DA.assign(recs, candidates=_cands(recs), asof=ASOF)
+    assert (again.receipt["selection_probability"]["probability"]
+            == sel["probability"])
+    other = DA.assign(recs, candidates=_cands(recs), asof=date(2026, 9, 21))
+    assert (other.receipt["selection_probability"]["seeds"]
+            != sel["seeds"])
+    # the action set is written ONCE, in full, and referenced by digest
+    assert {a["ticker"] for a in split.receipt["action_set"]} == {
+        d["ticker"] for d in split.receipt["explore_rows"]}
+
+
+def test_the_probe_cap_trims_by_rank_and_the_refused_trim_does_not(
+        measured, monkeypatch):
+    """Spec test 7. MAX_REFUSED_ROWS must not touch the panel; its own cap must.
+
+    The trim that keeps a file readable and the ceiling that bounds a panel are
+    different decisions with different numbers, and a panel silently capped at
+    50 would cap what the programme can ever measure.
+    """
+    monkeypatch.setattr(config, "PROBE_MAX_NAMES_PER_DAY", 3, raising=False)
+    n = DC.MAX_REFUSED_ROWS + 10
+    recs = [_rec(f"N{i:03d}", "nothing_measured", rank=i + 1)
+            for i in range(n)]
+    cands = _cands(recs)
+    state = {"available": True, "recs": recs, "candidates": cands,
+             "funnel_generated_at": "2026-09-18T00:00:00+00:00"}
+    book = IC.compose_book(recs, capital=1_000_000.0, candidates=cands,
+                           asof=ASOF,
+                           information_set="2026-09-18T00:00:00+00:00")
+    split = book["authority"]
+    assert split["n_probe"] == 3
+    assert split["probe_tickers"] == ["N000", "N001", "N002"], (
+        "the cut is BY RANK: the names the funnel ranked best are the ones "
+        "that get a virtual row")
+    assert split["n_probe_cut_by_cap"] == n - 3
+    rows = DC._ic_rows(state, book, asof=ASOF, capital=40_000.0)
+    probe = [r for r in rows if r["direction"] == "PROBE"]
+    assert len(probe) == 3 * len(config.PROBE_HORIZONS_SESSIONS)
+    refused = [r for r in rows if r["direction"] == "REFUSED"]
+    assert len(refused) == DC.MAX_REFUSED_ROWS
+    blob = DC.payload(rows, asof=ASOF, capital=40_000.0, book=book)
+    census = blob["authority"]
+    assert census["probe_rows_written"] == len(probe)
+    assert census["probe_rows_without_a_hypothesis_id"] == 0
+    assert str(n - 3) in census["probe_rows_exempt_from_the_refused_trim"]
+    assert blob["unclassified_owing_a_pattern"] == 0, (
+        "the cap's refusal sentence needs a classify_refusal pattern; an "
+        "unmatched sentence is work owed, not a typed answer")
+
+
+def test_a_probe_row_cannot_be_written_without_a_hypothesis_id(measured,
+                                                                caplog):
+    """The panel joins on it; a row it cannot join is a cost with no return."""
+    base = {"ticker": "NEW"}
+    out = DC._probe_rows_for(base, {"probe": {}}, expiries={5: ("x", "y")},
+                             capital=40_000.0, policy_id="P",
+                             policy_version="V", asof=str(ASOF))
+    assert out == []
+
+
+def test_the_scoreboard_carries_the_probe_line(tmp_path):
+    """The one line §16.1 needs: rows open / graded / hypotheses measured."""
+    from backend.services import morning_scoreboard as MS
+
+    ledger = _ledger(tmp_path, _scored_probe("hyp_board", months=8,
+                                             per_month=5))
+    board = MS.compose(asof=ASOF, out_dir=tmp_path / "decisions",
+                       ledger_path=ledger, night_folder=tmp_path / "night",
+                       replay_folder=tmp_path / "replay")
+    panel = board["probe_panel"]
+    assert panel["rows_graded"] == 40
+    assert panel["hypotheses_measured"] == 1
+    assert "PROBE panel:" in MS.render(board)

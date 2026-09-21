@@ -299,7 +299,9 @@ def compose_book(recs: list[Any], *, capital: float,
                  refusal_reasons: Optional[dict[str, str]] = None,
                  extra_degradation: Optional[list[str]] = None,
                  template_name: Optional[str] = None,
-                 asof: Any = None) -> dict:
+                 asof: Any = None,
+                 information_set: Optional[str] = None,
+                 probe_ledger_path: Optional[Any] = None) -> dict:
     """Benchmark core + evidence-scaled tilts at one capital level.
 
     NEVER returns an empty book. `ArchetypeRefused` cannot escape: refusal
@@ -309,6 +311,11 @@ def compose_book(recs: list[Any], *, capital: float,
     `asof` is the date the EXPLORE allocation's Thompson draws are seeded from
     (chunk 21). None means today, which is what an interactive page wants; the
     daily contract passes its own as-of so a rebuilt day reproduces exactly.
+
+    `information_set` is the funnel snapshot's `generated_at` (chunk 23a): it
+    names the MONTH a PROBE hypothesis belongs to, so the panel joins rows that
+    were computed on the same information and separates rows that were not.
+    `probe_ledger_path` redirects that panel's ledger read for a test.
     """
     # Imported here, not at module top: portfolio_engine drags in the GARCH /
     # MC stack, which the strict CLI path never needs.
@@ -364,7 +371,9 @@ def compose_book(recs: list[Any], *, capital: float,
                     personality=config.ROI_DEFAULT_PERSONALITY,
                     max_names=config.IC_MAX_TILT_NAMES,
                     single_name_cap=config.IC_SINGLE_NAME_TILT_CAP,
-                    total_budget=config.IC_TOTAL_TILT_BUDGET)
+                    total_budget=config.IC_TOTAL_TILT_BUDGET,
+                    information_set=information_set,
+                    probe_ledger_path=probe_ledger_path)
                 roi = authority.roi
         except roi_rank.CapBreach as exc:
             # A cap disagreement is not something to trade through: fall back
@@ -562,6 +571,12 @@ def compose_book(recs: list[Any], *, capital: float,
             sum(w for t, w in tilts.items() if authority.is_exploit(t)), 6)
         out["explore_weight"] = round(
             sum(w for t, w in tilts.items() if authority.is_explore(t)), 6)
+        # chunk 23a. PROBE never appears in `tilts` and never can: it holds no
+        # weight. The COUNT is carried so a reader of the book sees how many
+        # hypotheses the day sent to the panel without having to open the
+        # authority receipt — and so a zero reads as a number, not an absence.
+        out["probe_weight"] = 0.0
+        out["n_probe"] = len(authority.probe)
     return out
 
 

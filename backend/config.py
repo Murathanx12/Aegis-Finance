@@ -1836,6 +1836,56 @@ EXPLORE_UNCERTAINTY_BONUS_COEF = 0.25
 #: date and the name, so a past contract reproduces exactly.
 EXPLORE_SEED_NAMESPACE = "AEGIS_EXPLORE_v1"
 
+# ── PROBE (chunk 23a, roadmap §16.2) ───────────────────────────────────────
+# Murat, 2026-09-21: *"We should be skeptical about claims, not skeptical about
+# experiments. High confidence determines how much capital we risk. It should
+# not determine whether we are allowed to learn."* A name whose leading signal
+# has NO measured read is refused capital correctly and refused LEARNING
+# wrongly: nothing accrues, so the read can never become measured. A PROBE row
+# costs nothing, is graded by the same grader at its own expiry, and
+# accumulates under its `hypothesis_id` into exactly the measured read EXPLORE
+# requires (§16.5 item 39).
+
+#: The horizons every PROBE name is written at, in SESSIONS. Four and not one,
+#: because a mechanism that shows up at a week and dies by a quarter is a
+#: different finding from one that needs a quarter to appear, and a single
+#: horizon would make the two indistinguishable for ever. The shortest is what
+#: makes the panel start filling within a week of the chunk landing.
+PROBE_HORIZONS_SESSIONS: tuple = (5, 21, 63, 126)
+
+#: The notional a PROBE row is quoted at, in dollars. It buys NOTHING: the
+#: weight is zero by construction and the capital resolution never sees it.
+#: The number exists so a graded PROBE return can be read as a dollar figure
+#: on the same scale as an EXPLORE name (0.25% of $40,000 = $100), which is
+#: the only comparison a reader of the panel actually wants.
+PROBE_VIRTUAL_NOTIONAL_USD = 100.0
+
+#: At most this many PROBE NAMES on one day, best rank first. PROBE rows are
+#: exempt from `decision_contract.MAX_REFUSED_ROWS` — they are the panel, and
+#: trimming the panel to 50 would silently cap what can ever be measured — so
+#: they carry their own ceiling, and the count that was cut is on the receipt.
+PROBE_MAX_NAMES_PER_DAY = 200
+
+#: The panel is a MEASURED read only at both of these, never one: `n` graded
+#: rows AND `n_blocks` distinct asof MONTHS (CANON §58 — n_effective counts
+#: DATE BLOCKS, and forty rows from one week are one observation wearing forty
+#: hats). Below either, `probe_panel.read_for` returns the read with
+#: `measured = False` and names the shortfall.
+PROBE_MIN_GRADED = 30
+PROBE_MIN_BLOCKS = 6
+
+#: Block-bootstrap draws for the panel's standard error, resampling MONTHS
+#: with replacement. 200 is the same order the replay receipts use; the draw is
+#: seeded from the hypothesis id and the horizon, so a panel read reproduces.
+PROBE_BOOTSTRAP_DRAWS = 200
+
+#: How many times the Thompson draw is REPLAYED to estimate each candidate's
+#: probability of being selected. The selection probability is what a
+#: doubly-robust off-policy estimator divides by (chunk 24's Vowpal Wabbit
+#: benchmark, and Murat's item 12): without it, the rows this repo logs can
+#: only ever be scored by Thompson's own math. It changes no decision today.
+EXPLORE_SELECTION_REPLAYS = 2000
+
 # ── THE MORNING SCOREBOARD (chunk 21, Murat's item 12) ──────────────────────
 # `backend/services/morning_scoreboard.py`. Reads receipts, writes nothing.
 
@@ -1843,6 +1893,15 @@ EXPLORE_SEED_NAMESPACE = "AEGIS_EXPLORE_v1"
 #: rather than spelled in the module, because the fleet's own benchmark is a
 #: control LANE and the two must never be confused on one page.
 SCOREBOARD_BENCHMARK_SYMBOL = "SPY"
+
+#: The benchmark the DECISION GRADER differences every scored row against
+#: (`decision_ledger.score_due`, chunk 23a). The same symbol as the scoreboard
+#: and a SEPARATE constant on purpose: one is a NAV comparison and the other is
+#: a per-row close-to-close excess, and a single name shared between them would
+#: make a future change to either silently change the other. A row whose
+#: benchmark could not be priced carries `benchmark_return = None` with the
+#: reason — never a zero, which would read as "the market did nothing".
+DECISION_BENCHMARK_SYMBOL = "SPY"
 
 #: How far back "strongest NEW positive / killed" looks, in days, dated by each
 #: receipt's OWN stamp (never `st_mtime`: session protocol 7).

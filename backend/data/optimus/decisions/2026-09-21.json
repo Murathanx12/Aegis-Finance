@@ -3,12 +3,13 @@
  "roadmap_item": "chunk 18",
  "licence": "PRODUCT_EXPERIMENT",
  "date": "2026-09-21",
- "written_utc": "2026-09-20T17:28:56+00:00",
+ "written_utc": "2026-09-21T06:17:42+00:00",
  "n_rows": 43,
  "count_by_direction": {
   "BUY": 4,
   "WATCH": 0,
   "SELL": 0,
+  "PROBE": 0,
   "REFUSED": 39
  },
  "count_by_refusal_class": {
@@ -27,6 +28,7 @@
  "unclassified_owing_a_pattern": 1,
  "capital_usd": 40000.0,
  "directions_not_produced_today": [
+  "PROBE",
   "SELL",
   "WATCH"
  ],
@@ -150,8 +152,8 @@
   }
  },
  "authority": {
-  "rule": "every admissible candidate carries exactly one authority: EXPLOIT (calibrated), EXPLORE (measured but unproven, Thompson-allocated out of a fixed paper-risk budget) or REFUSED",
-  "roadmap_item": "chunk 21",
+  "rule": "every admissible candidate carries exactly one authority: EXPLOIT (calibrated), EXPLORE (measured but unproven, Thompson-allocated out of a fixed paper-risk budget), PROBE (no measurement yet — zero capital, a virtual graded row per horizon) or REFUSED",
+  "roadmap_item": "chunk 21; PROBE and the selection probability are 23a",
   "source": "docs/research_notes/2026-09-20/feedback_murat_review_2026-09-20_evening.md issue 2",
   "asof": "2026-09-21",
   "legacy_heuristic_sizing": false,
@@ -194,11 +196,47 @@
   "n_considered": 2,
   "n_exploit": 0,
   "n_explore": 1,
+  "n_probe": 0,
+  "n_probe_cut_by_cap": 0,
   "n_refused": 1,
   "exploit_tickers": [],
   "explore_tickers": [
    "CVLG"
   ],
+  "probe_tickers": [],
+  "probe_tickers_cut_by_cap": [],
+  "probe_max_names_per_day": 200,
+  "probe_horizons_sessions": [
+   5,
+   21,
+   63,
+   126
+  ],
+  "probe_basis": {},
+  "probe_panel_note": "",
+  "probe_gate": "a PROBE read becomes a MEASURED read — and the name becomes EXPLORE's with posterior_source=PROBE_PANEL — only at n >= 30 graded rows AND n_blocks >= 6 distinct as-of MONTHS under one hypothesis_id (CANON §58). Until then the name holds zero capital and the shortfall is printed on its row.",
+  "selection_probability": {
+   "replays": 2000,
+   "slots": 8,
+   "n_candidates": 1,
+   "probability": {
+    "CVLG": 1.0
+   },
+   "seeds": {
+    "CVLG": 12168969072959373790
+   },
+   "sums_to": 1.0,
+   "basis": "P(selected) over 2000 replays of the Thompson draw: the SAME posterior mean and se per candidate, fresh draws, the same cost/risk/uncertainty offsets, and the top 1 of 1 by exploration score take the 8 slot(s) the 2.00% budget funds at 0.2500% per name. Each candidate's stream is seeded sha256('AEGIS_EXPLORE_v1|2026-09-21|SELECTION_REPLAY|<ticker>|<signal>'), so the replay reproduces and adding a candidate cannot move another candidate's stream. The probabilities sum to 1 by construction (exactly 1 name(s) are selected in every replay). Nothing here changes a decision: the allocation is the single seeded draw on the row"
+  },
+  "action_set": [
+   {
+    "ticker": "CVLG",
+    "signal": "profitability_small",
+    "posterior_mean_pct_per_month": 0.357644,
+    "posterior_se_pct_per_month": 0.165696
+   }
+  ],
+  "action_set_sha256": "6ceded5703c2f7233ef2aed25db5a9ca88c7defb215d69ab0086234ce43a1927",
   "exploit_weight_total": 0,
   "explore_weight_total": 0.0025,
   "explore_budget_pct": 0.02,
@@ -214,10 +252,12 @@
    "worst_case_pct_of_equity": 0.0025,
    "verdict": "1 explored name(s) x 0.2500% = 0.2500% of equity, held under the 2.00% EXPLORE_BUDGET_PCT ceiling; no stop is declared, so the whole explore notional is the worst case and it ADDS to the tilt worst case rather than sharing its budget"
   },
-  "honesty": "EXPLOIT is empty whenever no signal's measured t clears ROI_MIN_T, and it is printed empty rather than filled with the verdict x confidence heuristic the review retired. EXPLORE never takes a name with NO measured read: uncertain means INVESTIGATE, unmeasured means REFUSE. No LLM number is an input to either.",
+  "honesty": "EXPLOIT is empty whenever no signal's measured t clears ROI_MIN_T, and it is printed empty rather than filled with the verdict x confidence heuristic the review retired. EXPLORE never takes a name with NO measured read: uncertain means INVESTIGATE, unmeasured means PROBE — zero capital, a graded virtual row, and a panel that fills forward (chunk 23a). No LLM number is an input to any of the four.",
+  "probe_honesty": "PROBE sits DOWNSTREAM of the hard eligibility gates and only ever sees the 2 candidate(s) they admitted today. A name refused for NO_EVIDENCE or for a verdict that is not BUY/WATCH never reaches this module, is not probed, and is not counted here — that gate is `investment_committee.compose_book`'s and chunk 23a did not move it. A day with zero PROBE names is therefore a statement about how many candidates cleared the gates, not about how many hypotheses are unmeasured.",
   "count_by_authority_over_rows": {
    "EXPLOIT": 0,
    "EXPLORE": 4,
+   "PROBE": 0,
    "REFUSED": 39
   },
   "rows_with_a_budget_and_no_authority": [],
@@ -225,6 +265,24 @@
    {
     "ticker": "CVLG",
     "signal": "profitability_small",
+    "hypothesis_id": "339aed0abb77",
+    "hypothesis_signal": "profitability_small",
+    "hypothesis_mechanism": "UNATTRIBUTED",
+    "hypothesis_information_set": "2026-08",
+    "hypothesis_id_basis": "sha256('profitability_small|UNATTRIBUTED|2026-08')[:12] = 339aed0abb77; the funnel snapshot's own generated_at (2026-08-11T02:33:48+00:00) -> month 2026-08. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+    "context_features": {
+     "signal": "profitability_small",
+     "decile": 10,
+     "vol_annual": 0.41815656056402206,
+     "horizon_months": 24.0,
+     "horizon_days": 731,
+     "rank": 1,
+     "ranking_score": 0.881871,
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "regime": null,
+     "regime_basis": "CANNOT DETERMINE: the funnel carries no regime tag for this name, so the field is null rather than a guessed label"
+    },
     "posterior_mean_pct_per_month": 0.357644,
     "posterior_se_pct_per_month": 0.165696,
     "posterior_basis": "decile 10 of profitability_small on backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json (asof 2026-09-21, verdict WEAK): mean +0.3576% over 1 month(s) = +0.3576 %/mo, se from the decile's own 95% block-bootstrap CI [0.045406, 0.694921]% = 0.1657 %/mo. This is the candidate's OWN decile, not its signal family's average",
@@ -243,15 +301,23 @@
     "measured_t_basis": "the profitability_small D-hi minus D-lo NET spread's Newey-West t at 21 sessions, off backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json; Holm-adjusted p 1.0",
     "receipt": "backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json",
     "measured_on": "2026-09-21",
+    "probe_panel": null,
     "posterior_source": "calibration_decile",
     "calibration_verdict": "WEAK",
     "calibration_decile": 10,
     "calibration_note": "decile 10 of profitability_small on backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json (asof 2026-09-21, verdict WEAK): mean abnormal 0.357644% over 21 sessions, 20th percentile -10.998926%, NET of this decile's own monthly turnover cost (gross 0.385821%), 95% block-bootstrap CI [0.045406, 0.694921]%, 42509 name-months over 191 month blocks; the signal's D10 - D1 NET spread is 0.644511% at NW t 1.5879, Holm-adjusted p 1.0",
     "explore_rank": 1,
     "authority": "EXPLORE",
-    "weight": 0.0025
+    "weight": 0.0025,
+    "selection_probability": 1.0,
+    "selection_probability_basis": "P(selected) over 2000 replays of the Thompson draw: the SAME posterior mean and se per candidate, fresh draws, the same cost/risk/uncertainty offsets, and the top 1 of 1 by exploration score take the 8 slot(s) the 2.00% budget funds at 0.2500% per name. Each candidate's stream is seeded sha256('AEGIS_EXPLORE_v1|2026-09-21|SELECTION_REPLAY|<ticker>|<signal>'), so the replay reproduces and adding a candidate cannot move another candidate's stream. The probabilities sum to 1 by construction (exactly 1 name(s) are selected in every replay). Nothing here changes a decision: the allocation is the single seeded draw on the row",
+    "action_set_sha256": "6ceded5703c2f7233ef2aed25db5a9ca88c7defb215d69ab0086234ce43a1927"
    }
-  ]
+  ],
+  "probe_rows_written": 0,
+  "probe_rows_by_hypothesis": {},
+  "probe_rows_without_a_hypothesis_id": 0,
+  "probe_rows_exempt_from_the_refused_trim": "PROBE rows are not subject to MAX_REFUSED_ROWS (50); their own ceiling is config.PROBE_MAX_NAMES_PER_DAY (200) applied BY RANK in decision_authority, and it cut 0 name(s) today"
  },
  "worst_case_explore_budget": {
   "n_names": 1,
@@ -271,6 +337,11 @@
   "capital_usd": 40000.0,
   "n_exploit_names": 0,
   "n_explore_names": 1,
+  "probe_count": 0,
+  "n_probe_names": 0,
+  "n_probe_hypotheses": 0,
+  "probe_pct": 0.0,
+  "probe_basis": "0 virtual PROBE row(s) across 0 name(s) and 0 hypothesis id(s) resolved 0.00% of capital, BY CONSTRUCTION: a PROBE row carries zero weight and zero dollars and is graded at its own expiry. It is counted here so a day that wrote virtual rows and moved no dollar does not read as a day that did nothing (roadmap §16.2).",
   "agency_book_rows_excluded": 3,
   "basis": "benchmark = 1 - exploit - explore - cash; the two active shares are the position budgets the authorities funded, cash is config.IC_CASH_FLOOR_PCT, and the benchmark core is the residual. Agency Option rows are ALTERNATIVE whole books at this same capital and are excluded — counting them would resolve one dollar three times.",
   "nothing_happened_is_not_allowed": "every dollar resolved today: 99.75% benchmark core, 0.00% active EXPLOIT across 0 name(s), 0.25% active EXPLORE across 1 name(s), 0.00% cash. 'No active trade' is an allowed outcome; 'nothing happened' is not, and this line is the proof it did not happen.",
@@ -347,6 +418,24 @@
    "authority_basis": "EXPLORE: profitability_small is MEASURED at +0.3576%/month net with t 1.5879 — unproven against ROI_MIN_T 2.00, and not equivalent to zero. Thompson draw +0.5223 from Normal(+0.3576, 0.1657) at seed 310544340803946493 gives an exploration score of +0.4222 (rank #1); funded at 0.2500% of equity out of the 2.00% paper-risk budget. Receipt backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json",
    "explore": {
     "signal": "profitability_small",
+    "hypothesis_id": "339aed0abb77",
+    "hypothesis_signal": "profitability_small",
+    "hypothesis_mechanism": "UNATTRIBUTED",
+    "hypothesis_information_set": "2026-08",
+    "hypothesis_id_basis": "sha256('profitability_small|UNATTRIBUTED|2026-08')[:12] = 339aed0abb77; the funnel snapshot's own generated_at (2026-08-11T02:33:48+00:00) -> month 2026-08. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+    "context_features": {
+     "signal": "profitability_small",
+     "decile": 10,
+     "vol_annual": 0.41815656056402206,
+     "horizon_months": 24.0,
+     "horizon_days": 731,
+     "rank": 1,
+     "ranking_score": 0.881871,
+     "confidence": "MEDIUM",
+     "evidence_grade": "SUPPORTED",
+     "regime": null,
+     "regime_basis": "CANNOT DETERMINE: the funnel carries no regime tag for this name, so the field is null rather than a guessed label"
+    },
     "posterior_mean_pct_per_month": 0.357644,
     "posterior_se_pct_per_month": 0.165696,
     "posterior_basis": "decile 10 of profitability_small on backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json (asof 2026-09-21, verdict WEAK): mean +0.3576% over 1 month(s) = +0.3576 %/mo, se from the decile's own 95% block-bootstrap CI [0.045406, 0.694921]% = 0.1657 %/mo. This is the candidate's OWN decile, not its signal family's average",
@@ -365,15 +454,40 @@
     "measured_t_basis": "the profitability_small D-hi minus D-lo NET spread's Newey-West t at 21 sessions, off backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json; Holm-adjusted p 1.0",
     "receipt": "backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json",
     "measured_on": "2026-09-21",
+    "probe_panel": null,
     "posterior_source": "calibration_decile",
     "calibration_verdict": "WEAK",
     "calibration_decile": 10,
     "calibration_note": "decile 10 of profitability_small on backend\\data\\optimus\\calibration\\profitability_small_2026-09-21.json (asof 2026-09-21, verdict WEAK): mean abnormal 0.357644% over 21 sessions, 20th percentile -10.998926%, NET of this decile's own monthly turnover cost (gross 0.385821%), 95% block-bootstrap CI [0.045406, 0.694921]%, 42509 name-months over 191 month blocks; the signal's D10 - D1 NET spread is 0.644511% at NW t 1.5879, Holm-adjusted p 1.0",
     "explore_rank": 1,
     "authority": "EXPLORE",
-    "weight": 0.0025
+    "weight": 0.0025,
+    "selection_probability": 1.0,
+    "selection_probability_basis": "P(selected) over 2000 replays of the Thompson draw: the SAME posterior mean and se per candidate, fresh draws, the same cost/risk/uncertainty offsets, and the top 1 of 1 by exploration score take the 8 slot(s) the 2.00% budget funds at 0.2500% per name. Each candidate's stream is seeded sha256('AEGIS_EXPLORE_v1|2026-09-21|SELECTION_REPLAY|<ticker>|<signal>'), so the replay reproduces and adding a candidate cannot move another candidate's stream. The probabilities sum to 1 by construction (exactly 1 name(s) are selected in every replay). Nothing here changes a decision: the allocation is the single seeded draw on the row",
+    "action_set_sha256": "6ceded5703c2f7233ef2aed25db5a9ca88c7defb215d69ab0086234ce43a1927"
    },
    "sizing": "the fixed paper-risk budget: 0.2500% of equity, one slice of 2.00%, allocated by Thompson sampling on an exploration score of 0.422196 (seed 310544340803946493). This is an EXPERIMENT, not a position the evidence licenses: the read is measured (0.357644%/mo) and unproven (t 1.5879)",
+   "hypothesis_id": "339aed0abb77",
+   "hypothesis_signal": "profitability_small",
+   "hypothesis_mechanism": "UNATTRIBUTED",
+   "hypothesis_information_set": "2026-08",
+   "hypothesis_id_basis": "sha256('profitability_small|UNATTRIBUTED|2026-08')[:12] = 339aed0abb77; the funnel snapshot's own generated_at (2026-08-11T02:33:48+00:00) -> month 2026-08. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
+   "selection_probability": 1.0,
+   "selection_probability_basis": "P(selected) over 2000 replays of the Thompson draw: the SAME posterior mean and se per candidate, fresh draws, the same cost/risk/uncertainty offsets, and the top 1 of 1 by exploration score take the 8 slot(s) the 2.00% budget funds at 0.2500% per name. Each candidate's stream is seeded sha256('AEGIS_EXPLORE_v1|2026-09-21|SELECTION_REPLAY|<ticker>|<signal>'), so the replay reproduces and adding a candidate cannot move another candidate's stream. The probabilities sum to 1 by construction (exactly 1 name(s) are selected in every replay). Nothing here changes a decision: the allocation is the single seeded draw on the row",
+   "context_features": {
+    "signal": "profitability_small",
+    "decile": 10,
+    "vol_annual": 0.41815656056402206,
+    "horizon_months": 24.0,
+    "horizon_days": 731,
+    "rank": 1,
+    "ranking_score": 0.881871,
+    "confidence": "MEDIUM",
+    "evidence_grade": "SUPPORTED",
+    "regime": null,
+    "regime_basis": "CANNOT DETERMINE: the funnel carries no regime tag for this name, so the field is null rather than a guessed label"
+   },
+   "action_set_sha256": "6ceded5703c2f7233ef2aed25db5a9ca88c7defb215d69ab0086234ce43a1927",
    "direction": "BUY",
    "position_budget": {
     "weight": 0.0025,
@@ -405,8 +519,8 @@
     "tradeable": true,
     "binding_constraint": ""
    },
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "8293f56389e8cdcfd8888d996454d01645adb758e36242df3d44de6ed2e3a7bb"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "1a477caf2c0b24e5134df091b2316e317d33a17ca02a38a33aa862c043ab80d6"
   },
   {
    "decision_id": "4ca04243c3d3bdc3",
@@ -446,6 +560,11 @@
    "roi": "NOT_CALIBRATED: confidence — insider_opportunistic's family_mean read carries t 1.40, below ROI_MIN_T 2.00. The engine is not sure enough about this return to rank the name on it, so it does not: the name keeps the verdict/confidence sizing and this sentence instead of a score (receipt docs/AEGIS_FINANCE_DOSSIER_2026-08-02.md)",
    "authority": "REFUSED",
    "authority_basis": "insider_opportunistic's measured net read is -0.072556%/month, which is not above EXPLORE_MIN_NET_PCT 0 — a hypothesis with no positive expected value is not worth paper risk (decile 9 of insider_opportunistic on backend\\data\\optimus\\calibration\\insider_opportunistic_2026-09-21.json (asof 2026-09-21, verdict WEAK): mean -0.0726% over 1 month(s) = -0.0726 %/mo, se from the decile's own 95% block-bootstrap CI [-0.222574, 0.12075]% = 0.0876 %/mo. This is the candidate's OWN decile, not its signal family's average)",
+   "hypothesis_id": "13d11be5e53d",
+   "hypothesis_signal": "insider_opportunistic",
+   "hypothesis_mechanism": "UNATTRIBUTED",
+   "hypothesis_information_set": "2026-08",
+   "hypothesis_id_basis": "sha256('insider_opportunistic|UNATTRIBUTED|2026-08')[:12] = 13d11be5e53d; the funnel snapshot's own generated_at (2026-08-11T02:33:48+00:00) -> month 2026-08. The ticker is deliberately NOT an input: the object the PROBE panel accumulates is the MECHANISM, so every name this signal leads in this month feeds one posterior",
    "direction": "REFUSED",
    "position_budget": {
     "weight": 0.0,
@@ -469,8 +588,8 @@
    "terminal_state": "OTHER_TYPED",
    "refusal_reason": "insider_opportunistic's measured net read is -0.072556%/month, which is not above EXPLORE_MIN_NET_PCT 0 — a hypothesis with no positive expected value is not worth paper risk (decile 9 of insider_opportunistic on backend\\data\\optimus\\calibration\\insider_opportunistic_2026-09-21.json (asof 2026-09-21, verdict WEAK): mean -0.0726% over 1 month(s) = -0.0726 %/mo, se from the decile's own 95% block-bootstrap CI [-0.222574, 0.12075]% = 0.0876 %/mo. This is the candidate's OWN decile, not its signal family's average)",
    "refusal_class_basis": "NO PATTERN MATCHED: a gate wrote a sentence `_LOCAL_PATTERNS` has never seen. This is the UNCLASSIFIED that owes work — add the pattern, or name why the closed 31 cannot hold it",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "93215286d6eb140a99ffe1b1e1806f6d83ccba9bbc9853478ee7d6881614e510"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "0358c651b03a2ab2d0422674f021a9764fe74569b1f90381d2e7b03f2ea5958e"
   },
   {
    "decision_id": "44f4b9b0af426315",
@@ -533,8 +652,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "f2351460f46f77e67a0fb6162d224dea8b72d647ef43847888f30ff81e48f58b"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "1a05e4b72f865ac527bfdea6bb7eda909e488ab4234fbfc0b703e29c22ae78c8"
   },
   {
    "decision_id": "4bcf0d4e16737366",
@@ -597,8 +716,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "2d4852b983e0b79e4fa902e11224a399f60ca849bd92b61626a380554f6374c3"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "0eb68af11853704980a8df758e17451b632852048d7f5826c1b40f4cdefb4e93"
   },
   {
    "decision_id": "0d4deff9e9e193ee",
@@ -661,8 +780,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "6d3a6c698744c678cfd36f283b63014a6e61c447361ec5671968d9ae44986a35"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "0c9e2b9b26352d840fd149ee0701c548512761816cb3e18f9f9fc77f74b81a94"
   },
   {
    "decision_id": "48050def45354c49",
@@ -725,8 +844,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "01851c9b17296337a6541208e0ec121b007813611c2d4151b8200eecc7428406"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "5f47b70d901f1f433fc162f55e7f776d939086313e0394352cb90bd589943507"
   },
   {
    "decision_id": "26b00be7d338c019",
@@ -789,8 +908,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "0af5d38d35e7c63b166ff11e629772307f52d34f73cb1217b7d0929b8e1cec7d"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "1a2b05ff70f82ac7c598149aef489ff83279a59002b6e6eaf8c16a04126e7aa5"
   },
   {
    "decision_id": "a719ef9678b04740",
@@ -853,8 +972,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "f1accd20fc52dbba24de38ebeca76f25f6c424197eb8161bd412e5d37496d202"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "d5ce3638e4d1d64e973fc3509865189e254126dd5fad37b2383611c8051b8476"
   },
   {
    "decision_id": "98eaacee574a385b",
@@ -917,8 +1036,8 @@
    "terminal_state": "DATA_MISSING",
    "refusal_reason": "no licensed signal speaks to this name (evidence grade NO_EVIDENCE): screened, liquid and priced, and the engine has nothing it is allowed to say about it",
    "refusal_class_basis": "no class in the execution repo's closed 31 covers 'screened and priced, and no licensed signal speaks to this name'; the nearest merit classes (REFUTED_ROUTE, EDGE_BELOW_BAR, MDE) all presuppose a signal that spoke. The terminal state DATA_MISSING is exact and is what a cross-repo census groups on",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "64df858a661ddef25601269eccf4cbfe797603ffb527a8e2a68cbec1e2db190b"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "1cda0aa9e40d965c6fd7fc0e5eecbfd82cebefc0888a2465e9550e8ab0696b26"
   },
   {
    "decision_id": "e423da8b365d588c",
@@ -981,8 +1100,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "1a6857cd9d235d119752cbe8bacaa669d2c96ea11a20d9c2fa55240d116fec8e"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "496f2857f6a678bced0df6c98373ff5d8056e38e7002f84caad74638ad45d960"
   },
   {
    "decision_id": "2acef7222dc9aae3",
@@ -1045,8 +1164,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "a5dc5a59f5bf3793c4ce3250db3faae2918b5223e1767a73cc05597ba2c83cc9"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "ea3569da8562c1390f3a379060a810ee06dfff108356f70f756bf37daa2dcdd4"
   },
   {
    "decision_id": "9053462307aa00b5",
@@ -1109,8 +1228,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "6de2aa9d598a7fb39156e40cba2d49ff225ec97dbb6bb6422ec781520f3e61bb"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "1b9aa5eda7e5adfd5e189eecdf06030c95ca2ef3f4aa0f0d889bde3e57ef3906"
   },
   {
    "decision_id": "e4709bd1c59e17b2",
@@ -1173,8 +1292,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "270e38f90c90c0bfa09d44c1db6f1691f763993144de02ae93de20a6f1721e9c"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "d0ea9044d81cafd7a21c4dc5d08c3262888eb9080972a083516adac4923fe46a"
   },
   {
    "decision_id": "98a3588f6fadb0d9",
@@ -1237,8 +1356,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "25f87fbb7fdbd4866dd388628d8359bd506ee7a92c20b9ba26c2dadd8d80d1e7"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "138e03f3cc5a89340b56d5ce7f82d809abe54c6e65ff1f381680bba9ce285f5c"
   },
   {
    "decision_id": "595b18a5140fd578",
@@ -1301,8 +1420,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "56fe5978dc493d6925fa707d9b7728e8fd1027e467955fabeb7bf293bbfe150d"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "c91319c921da0809d4812d8cdd7908784326b24bca7ee5043d680719ca700213"
   },
   {
    "decision_id": "179abcfd1cc49b8d",
@@ -1365,8 +1484,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "ca308bf1725ad2ffd12194a35f48829e7d856d5e62614f50be34d06dcb1683b1"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "805ea69d8d7cc6c7378acf36d3898acdabb499f4b51e8d41df5067bb2f573c13"
   },
   {
    "decision_id": "2ab06d03e9e89949",
@@ -1429,8 +1548,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "44ed9c65ba0a54ad3d5163e6976029f99170edc009ac5926786ebfc7beeda5d8"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "ffa9850f6b686045bc7b61ef2f69accbe2fd8ee0a2742f6419ad6b5743d0c990"
   },
   {
    "decision_id": "3372da14b1edffee",
@@ -1493,8 +1612,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "01e3894a06a7d75c10aefa15243d79973d9c98dcc80768a2b0a67b107e92af77"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "f37ad7a49c8b24bfebff517bc75e2c95f0e9dd8d81f59d171f8d25d516c491a9"
   },
   {
    "decision_id": "f864329758fb1e16",
@@ -1557,8 +1676,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "eb119370dd7a7a089b45c0592ba8fa35b2f44b5fddd4e69f08340338e9f43904"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "8519d5c937a26f5b19adef785e028b9f9f192dc532cd7496e871739768fa9234"
   },
   {
    "decision_id": "35ebcec57bc36ee1",
@@ -1621,8 +1740,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "cd49d73b225befe9c6415f95b24eab772f85040e9c1d3b121bdfb8edcb12979c"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "49b12e2116743ed792b2499c3e1494a1096a3621fac63ea690df439be1e09fbb"
   },
   {
    "decision_id": "6ea25a9c037e0dc1",
@@ -1685,8 +1804,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "46c70ab00772a94bb03e5e8abbda49a654f0801353702a4ab26a20afc9e2ecb1"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "a2896a567fd333cb91be9dd05cca5362fcf1217080e981da7623f14aae02ab02"
   },
   {
    "decision_id": "0b411e415e7eed46",
@@ -1749,8 +1868,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "f228a03bd4a8af2a15713a18b65022c5a03aab90d80a2fbd7ad9e1787da8bf02"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "27ae32bf70f40c7b8e4dd451eca276e56dcd99a11c5bdb63a57103a49c39db9b"
   },
   {
    "decision_id": "4262c56ae4e9b887",
@@ -1813,8 +1932,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "37c3d4f28897292da39b13b1ae5c67e89ef62d0d6c6d868123c7742e80daf2b5"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "039ddf986146d7ec55b11667f08c25303f37404b1572c6b77195959b0c956e66"
   },
   {
    "decision_id": "e31af9af07954cd3",
@@ -1877,8 +1996,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "2f27333ef1e9ecf1bcb78676bbc30e6d2ffd97b0d2e8785599d76bc49defd06a"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "3f4a83f082762ed069a7bc1df823ee40fb05d2349eceb5869fa0d9de29654f94"
   },
   {
    "decision_id": "8424f6d021941795",
@@ -1941,8 +2060,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "74fb4182280aae678811c4ab3ab1924093829c4c051a7236dd6c198456ff6c01"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "9bd19cfbd6944af916fc713fd07fda99ccc30b964113945399f2be30cb73e0ac"
   },
   {
    "decision_id": "fa02a460fb075662",
@@ -2005,8 +2124,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "d5e58059ad18b28733e479cbcc57b78726cbb6f901f86a091aafec611604af3e"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "4e52ab7ee4a55bffe2dd3faf741df17cca80b14139da0d5cf94250621f8caafe"
   },
   {
    "decision_id": "dc7e1568aab557d4",
@@ -2069,8 +2188,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "d27284f827874e7dd7f59990e8b3f70fc7bb4c848173762774081fb62655975d"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "2b27ec11709c9960c4f5cd0265ff93902471fe342285bd9d84af181852aa8497"
   },
   {
    "decision_id": "3e504c717afa8f3a",
@@ -2133,8 +2252,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "3eb43f1a8c3ab1931cdb4f8c4cdcc7ca9ef479cc11b6640a17fab5eb11b758ef"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "c4393116e6210b51b88f087ee0420207e0e7e0b0f87b88734cf1534b30229b05"
   },
   {
    "decision_id": "78052191bb9969e9",
@@ -2197,8 +2316,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "67fbe52d1abadc05c06c5a8163afce191d86673a9a35ead2404aa67b9d69e173"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "88b232132a8feb84c415464370b6686fff4d67445264a9e8f49d1babd292cda4"
   },
   {
    "decision_id": "8283c9ef0ffe7c0a",
@@ -2261,8 +2380,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "0745014df0f6b1ab426e22649335c30101c415eb152c85feabb870e132681010"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "3862069ec8f73483fd20d1096b5a26f082a81d0686a2395ae2d34d6035c29375"
   },
   {
    "decision_id": "478a7500cdeba667",
@@ -2325,8 +2444,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "c6cd825e1d1bda9d2291f455212c217e4642a26c64941d248e399e4cfd3e8bfe"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "931c0929e77f66492cdcc11dcc4b86bf54add4f97a0170dc90918bdd7473d3b6"
   },
   {
    "decision_id": "1fdf368766a1022c",
@@ -2389,8 +2508,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "6dee5f9c09c094b5d9a4f28397dc438a444bc29d8d9cb624c5e88de5d7aad0f5"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "a38240dbe1f5b3f13dee6c25228f1854070ce00211561c85c0dec541728ad18a"
   },
   {
    "decision_id": "80cbef3eb7042f6f",
@@ -2453,8 +2572,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "e9b310685505c7dcbda23fd55824f9882c1042ccc90159591cf23ddcf1bd82f0"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "e3227ed129e8714b10d47ca1ddc81d7e014325a1301deb35538177afd470764e"
   },
   {
    "decision_id": "7eef18725cb4ea9c",
@@ -2517,8 +2636,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "85dee1bf54170a92db27d25636a8e8b59259098b84a2a3f71c7d99942a60ea76"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "3a035008c60306efd7198718b2d26d9a54fd4542ad6d2406a598ae775437b6af"
   },
   {
    "decision_id": "b3e95d51579d8881",
@@ -2581,8 +2700,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "aa921466c174ab32437af8c92770f4cc8173fd7b2aff343322d6863711c6ad42"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "d2a95d3b6a010b9f58ff18b2986bcbbf20ae94de2a7f1f782f3054b648169fbc"
   },
   {
    "decision_id": "38fcea02c65b74ed",
@@ -2645,8 +2764,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "743d9d07b53f6eba04bf3261eb7e83d80a910416e4b573c1b2f9ee142526c727"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "fa6d9bdd4f8544a2d11ef4be1ca40c4ab7385c686b2160306c6a9942d812709f"
   },
   {
    "decision_id": "64bbfa9afc722ee2",
@@ -2709,8 +2828,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "148b8401a23c4f92c43419c9ed4cd54705e2f3c494a8370abd2737bcadafe92b"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "b7b9d0eb692543835be007c63aaaa0c89925d7520c89688b7c51da7b538bf569"
   },
   {
    "decision_id": "d5c61699a2eb060b",
@@ -2773,8 +2892,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "3ce66ba2154d9a8e719e64c0543fbac94287d7e6e7a9ad7b1d83bd57676fa8cb"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "06e83486630619eb598d078fe02cc5fb35d7a1c48e34122bc224f12f4e5f0898"
   },
   {
    "decision_id": "e9d64635aa93e2f5",
@@ -2837,8 +2956,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "c502236b57e44ad5a6c155d889fe8ef07269861f7445b95b34373ac88c7c1c2e"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "5b1c89392d0a1a6c59ba6dca4e324a34c85057819a4b1bbf31cb48269162813f"
   },
   {
    "decision_id": "b87356a9dbcd113f",
@@ -2901,8 +3020,8 @@
    "terminal_state": "NEGATIVE_EV",
    "refusal_reason": "verdict HOLD is not BUY or WATCH, so no tilt is licensed",
    "refusal_class_basis": "a signal spoke and the candidate's own merit did not clear the bar",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "33d0d0595453fec6c2fdcdde7a5bb373e6486f040743dde12ff1f62eb51a31ec"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "782d1e427d0c860c253fb586893f9a8738ccc0f488db1880f4f531ed5c31585c"
   },
   {
    "decision_id": "c8ade8de80c94206",
@@ -2974,8 +3093,8 @@
    "authority": "EXPLORE",
    "authority_basis": "EXPLORE by licence: an agency Option is a whole costed BOOK under PRODUCT_EXPERIMENT, which permits internal simulation and PAPER brokerage and licenses no claim. It is sized by its own frozen strategy contract (k 15, gross cap 1.0, cash floor 0.0), not out of EXPLORE_BUDGET_PCT — that budget slices NAMES inside the committee's tilt sleeve, and re-sizing a frozen contract with it would break the one thing a PRODUCT_EXPERIMENT may not do. It is excluded from the day's capital resolution for the same reason the three personalities are: they are ALTERNATIVES at one capital level, not additive holdings.",
    "roi": "NOT_CALIBRATED: not a name — an agency Option is a whole costed BOOK. The ROI rule ranks candidates inside the committee's tilt sleeve against each other; there is no measured per-book expected return that would let it rank one personality's book against another's, and the three books are not alternatives at one capital level anyway.",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "875c62fbe648738b8d163c575746cde7c82edb2724314b0a6fbebf94a9ae84c0"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "173d3bc36b0f50fb3df0876f13d60d63dfc2ea5a5b2c267889341859b62d8b06"
   },
   {
    "decision_id": "fe3bedaa46f2bf69",
@@ -3047,8 +3166,8 @@
    "authority": "EXPLORE",
    "authority_basis": "EXPLORE by licence: an agency Option is a whole costed BOOK under PRODUCT_EXPERIMENT, which permits internal simulation and PAPER brokerage and licenses no claim. It is sized by its own frozen strategy contract (k 12, gross cap 1.0, cash floor 0.0), not out of EXPLORE_BUDGET_PCT — that budget slices NAMES inside the committee's tilt sleeve, and re-sizing a frozen contract with it would break the one thing a PRODUCT_EXPERIMENT may not do. It is excluded from the day's capital resolution for the same reason the three personalities are: they are ALTERNATIVES at one capital level, not additive holdings.",
    "roi": "NOT_CALIBRATED: not a name — an agency Option is a whole costed BOOK. The ROI rule ranks candidates inside the committee's tilt sleeve against each other; there is no measured per-book expected return that would let it rank one personality's book against another's, and the three books are not alternatives at one capital level anyway.",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "41c89a01da5107611c9d3390d2f6c1d374cb83c6d3971f1833b9b8ad0af51582"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "ccc9652e8d63593ef1bb92f87b6c24e6cd95dba39ce6c8800989049d84bf394d"
   },
   {
    "decision_id": "666c75a559f1cf66",
@@ -3120,8 +3239,8 @@
    "authority": "EXPLORE",
    "authority_basis": "EXPLORE by licence: an agency Option is a whole costed BOOK under PRODUCT_EXPERIMENT, which permits internal simulation and PAPER brokerage and licenses no claim. It is sized by its own frozen strategy contract (k 8, gross cap 1.5, cash floor 0.0), not out of EXPLORE_BUDGET_PCT — that budget slices NAMES inside the committee's tilt sleeve, and re-sizing a frozen contract with it would break the one thing a PRODUCT_EXPERIMENT may not do. It is excluded from the day's capital resolution for the same reason the three personalities are: they are ALTERNATIVES at one capital level, not additive holdings.",
    "roi": "NOT_CALIBRATED: not a name — an agency Option is a whole costed BOOK. The ROI rule ranks candidates inside the committee's tilt sleeve against each other; there is no measured per-book expected return that would let it rank one personality's book against another's, and the three books are not alternatives at one capital level anyway.",
-   "built_utc": "2026-09-20T17:28:56+00:00",
-   "artifact_sha256": "41602bee5c69450752cbd9b6f7e2d965a4824d17502b22b97b9c5d1bb3e93185"
+   "built_utc": "2026-09-21T06:17:42+00:00",
+   "artifact_sha256": "8ff66d46b053b8d197510a8be6bdad1501c8334b1371017f34dc79ac71ef3021"
   }
  ],
  "read_me_first": "Every number here was computed by `investment_committee` or `agency` before this file existed; nothing in it was forecast, sized or priced by a model. `expected_payoff` is the string 'NOT CALIBRATED' because no calibrated per-name return exists — it is a FIELD, not an omission. A REFUSED row carries one class from the execution repo's own closed vocabulary, so 'why no trade' groups across both repos. Nothing here places, sizes, arms or seals anything: the engine decided, this file records, and the two LLM surfaces read it."

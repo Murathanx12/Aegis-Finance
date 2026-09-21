@@ -302,7 +302,10 @@ export interface ICDecisionRow {
   instrument_kind?: string;
   ticker: string;
   signal: string;
-  direction: "BUY" | "WATCH" | "SELL" | "REFUSED";
+  // PROBE (chunk 23a) is a VIRTUAL row: zero weight, zero dollars, graded at
+  // its own expiry. It is never a recommendation, and the page that lists
+  // actionable rows filters on BUY/WATCH rather than on "not REFUSED".
+  direction: "BUY" | "WATCH" | "SELL" | "PROBE" | "REFUSED";
   expected_payoff: string;
   estimated_probability: number | null;
   estimated_probability_reason?: string;

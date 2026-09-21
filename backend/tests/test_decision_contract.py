@@ -316,6 +316,48 @@ def test_a_hold_rule_that_counts_sessions_expires_on_its_own_maximum():
     assert "21 sessions" in basis
 
 
+def test_a_session_horizon_names_the_calendar_that_produced_its_expiry():
+    """Chunk 23a. A PROBE row's expiry is counted in TRADING SESSIONS.
+
+    Which calendar walked them is on the row, because 126 sessions resolved on
+    weekday arithmetic lands about six sessions late over a year of holidays,
+    and a reader grading the row next March has no other way to know which
+    ruler it was written against.
+    """
+    when, basis = DC.sessions_expiry(date(2026, 9, 21), 5)
+    assert when.startswith("2026-09-28")        # Mon 21st + 5 sessions
+    assert "5 trading sessions after 2026-09-21" in basis
+    assert ("XNYS" in basis) or ("approximation" in basis)
+    far, _ = DC.sessions_expiry(date(2026, 9, 21), 126)
+    assert far > when
+
+
+def test_probe_is_in_the_direction_enum_and_is_named_when_absent(
+        synthetic, tmp_path):
+    """A direction nobody produced is a FIELD on the receipt, not an absence.
+
+    The synthetic book carries no authority split, so no row can be PROBE —
+    and the file has to say that rather than leave a reader to infer it.
+    """
+    assert "PROBE" in DC.DIRECTIONS
+    _build(tmp_path)
+    blob = DC.latest("2026-09-19", tmp_path / "decisions")
+    assert blob["count_by_direction"]["PROBE"] == 0
+    assert "PROBE" in blob["directions_not_produced_today"]
+    assert blob["capital_resolution"]["probe_count"] == 0
+    assert blob["capital_resolution"]["probe_pct"] == 0.0
+
+
+def test_the_probe_cap_refusal_is_a_typed_class_not_an_unmatched_sentence():
+    """A new REFUSED sentence owes a `classify_refusal` pattern (spec)."""
+    got = DC.classify_refusal(
+        "the day's PROBE ceiling refused this name a virtual row: it ranked "
+        "#201 of 300 unmeasured candidates and config.PROBE_MAX_NAMES_PER_DAY "
+        "is 200. This refuses a ROW, not a hypothesis")
+    assert got["terminal_state"] == "CAPACITY"
+    assert not got["refusal_class_basis"].startswith("NO PATTERN MATCHED")
+
+
 def test_a_falsifier_with_no_window_falls_back_and_SAYS_which():
     when, basis = DC.falsifier_expiry("something changes", asof=date(2026, 1, 1),
                                       horizon_months=24)

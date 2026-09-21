@@ -198,7 +198,7 @@ function DecisionsCard() {
         <CardTitle className="text-base flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-primary" />
           Today&apos;s decisions — {counts.BUY ?? 0} BUY · {counts.WATCH ?? 0} WATCH ·{" "}
-          {counts.REFUSED ?? 0} REFUSED
+          {counts.REFUSED ?? 0} REFUSED · {counts.PROBE ?? 0} PROBE
         </CardTitle>
         <p className="text-[15px] text-muted-foreground">
           {data.date} · licence {data.licence} ·{" "}

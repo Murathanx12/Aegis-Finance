@@ -109,6 +109,19 @@ def ledger_summary(asof: date | str, path: Path | None = None) -> dict:
     return DL.summary(asof, path=path)
 
 
+def probe_census(*, out_dir: Path | None = None, path: Path | None = None,
+                 asof: date | str | None = None) -> dict:
+    """PROBE rows open / graded / hypotheses measured (chunk 23a).
+
+    A named indirection like every other read here. The panel is the only
+    surface on which "nothing happened today" and "a hypothesis is building a
+    posterior it did not have yesterday" look different, which is exactly what
+    §16.1's `BELIEF_CHANGED` line has to be able to say.
+    """
+    from backend.services import probe_panel as PP
+    return PP.census(out_dir=out_dir, path=path, asof=asof)
+
+
 def night_dir() -> Path:
     from backend.services.forecast_grader import out_dir
     return Path(out_dir())
@@ -622,6 +635,7 @@ def compose(*, asof: date | str | None = None,
         "explore_pnl": realised_pnl(ledger=ledger, index=index,
                                     authority="EXPLORE"),
         "decisions": decisions,
+        "probe_panel": _probe_block(out_dir=folder, path=ledger_path, asof=day),
         "capital_resolution": ((today_blob or {}).get("capital_resolution")
                                or _cd("no contract, so no dollar resolved")),
         "forecasts": forecasts(night_folder),
@@ -642,6 +656,38 @@ def compose(*, asof: date | str | None = None,
     }
     board["headline"] = _headline(board)
     return board
+
+
+def _probe_block(*, out_dir: Path, path: Path | None,
+                 asof: date) -> dict | str:
+    """The PROBE panel's three numbers, or the reason there are none."""
+    try:
+        return probe_census(out_dir=out_dir, path=path, asof=asof)
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("scoreboard: PROBE census failed: %s", exc)
+        return _cd(f"the PROBE panel could not be read "
+                   f"({type(exc).__name__}: {exc})")
+
+
+def _probe_line(board: dict) -> str:
+    p = board.get("probe_panel")
+    if isinstance(p, str):
+        return p
+    if not isinstance(p, dict):
+        return _cd("the scoreboard carries no PROBE block")
+    measured = p.get("measured") or []
+    head = (f"{p.get('rows_open')} open / {p.get('rows_graded')} graded of "
+            f"{p.get('rows_written')} written; "
+            f"{p.get('hypotheses_measured')} of "
+            f"{p.get('hypotheses_written')} hypotheses measured "
+            f"(n >= {p.get('min_graded')} AND blocks >= {p.get('min_blocks')})")
+    if not measured:
+        return head + " — no hypothesis has a posterior yet"
+    best = measured[0]
+    return (f"{head}; first posterior: {best.get('hypothesis_id')} at "
+            f"{best.get('horizon_sessions')} sessions = "
+            f"{best.get('mean_excess_pct')}% excess +/- {best.get('se_pct')}% "
+            f"over {best.get('n')} rows in {best.get('n_blocks')} month blocks")
 
 
 def _headline(board: dict) -> str:
@@ -697,6 +743,7 @@ def render(board: dict) -> str:
         f"- EXPLORE P&L: {_one(board.get('explore_pnl'), money=True)}",
         f"- every dollar today: {_capital_line(board)}",
         f"- decisions: {_decisions_line(board)}",
+        f"- PROBE panel: {_probe_line(board)}",
         f"- forecasts matured and graded: "
         f"{fc if isinstance(fc, str) else fc.get('headline')}",
         f"- calibration: "
@@ -740,5 +787,6 @@ def _book_line(row: dict) -> str:
 
 
 __all__ = ["LICENCE", "calibration", "compose", "forecasts",
-           "learning_changed_capital", "nav_vs_spy", "realised_pnl", "render",
-           "strongest_killed", "strongest_new_positive"]
+           "learning_changed_capital", "nav_vs_spy", "probe_census",
+           "realised_pnl", "render", "strongest_killed",
+           "strongest_new_positive"]

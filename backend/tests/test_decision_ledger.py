@@ -209,6 +209,76 @@ def test_a_due_row_is_scored_on_close_to_close(ledger):
     assert "SCORED" in DL.states_of("a", path=ledger)
 
 
+def test_the_grader_writes_the_benchmark_beside_the_raw_return(ledger):
+    """Chunk 23a, §16.5 item 37: the external figure beside the internal one.
+
+    A raw close-to-close return is mostly the market. A panel built on raw
+    returns measures beta and calls it a mechanism, so the grader records the
+    benchmark's own return over the SAME window and the difference — and when
+    the benchmark cannot be priced both fields are present and null with the
+    reason, never a zero, which would read as 'the market did nothing'.
+    """
+    pd = pytest.importorskip("pandas")
+    DL.record("a", "DECIDED", by="morning", asof="2026-09-19", path=ledger)
+    row = {"decision_id": "a", "ticker": "AAA", "asof": "2026-09-19",
+           "direction": "BUY", "source": "investment_committee",
+           "expiry_utc": "2026-09-25T00:00:00+00:00"}
+    idx = pd.to_datetime(["2026-09-19", "2026-09-25"])
+    frame = pd.DataFrame({"AAA": [100.0, 110.0], "SPY": [400.0, 412.0]},
+                         index=idx)
+    asked: list = []
+
+    def fetch(tickers, start, end):
+        asked.append(list(tickers))
+        return frame
+
+    out = DL.score_due(today=date(2026, 9, 26), contracts=[row],
+                       price_fetch=fetch, path=ledger)
+    assert "SPY" in asked[0], (
+        "the benchmark is REQUESTED with the names; a benchmark nobody asked "
+        "for could never be in the frame and the field would be null for ever")
+    got = out["scored"][0]
+    assert got["realised_return"] == pytest.approx(0.10)
+    assert got["benchmark_return"] == pytest.approx(0.03)
+    assert got["excess_return"] == pytest.approx(0.07)
+    assert got["benchmark_symbol"] == "SPY"
+
+
+def test_a_missing_benchmark_is_null_with_a_reason_never_a_zero(ledger):
+    DL.record("a", "DECIDED", by="morning", asof="2026-09-19", path=ledger)
+    row = {"decision_id": "a", "ticker": "AAA", "asof": "2026-09-19",
+           "direction": "BUY", "source": "investment_committee",
+           "expiry_utc": "2026-09-25T00:00:00+00:00"}
+    frame = _frame([("2026-09-19", 100.0), ("2026-09-25", 110.0)])
+    out = DL.score_due(today=date(2026, 9, 26), contracts=[row],
+                       price_fetch=lambda *a, **k: frame, path=ledger)
+    got = out["scored"][0]
+    assert got["realised_return"] == pytest.approx(0.10)
+    assert got["benchmark_return"] is None
+    assert got["excess_return"] is None
+    assert "CANNOT DETERMINE" in got["benchmark_basis"]
+
+
+def test_a_probe_row_is_graded_like_any_other_and_carries_its_hypothesis(
+        ledger):
+    """Chunk 23a. A virtual row that is never graded taught nothing."""
+    DL.record("p5", "DECIDED", by="morning", asof="2026-09-19", path=ledger)
+    row = {"decision_id": "p5", "ticker": "AAA", "asof": "2026-09-19",
+           "direction": "PROBE", "source": "investment_committee",
+           "expiry_utc": "2026-09-25T00:00:00+00:00",
+           "hypothesis_id": "abc123def456", "horizon_sessions": 5,
+           "virtual": True, "selection_probability": 1.0}
+    frame = _frame([("2026-09-19", 100.0), ("2026-09-25", 110.0)])
+    out = DL.score_due(today=date(2026, 9, 26), contracts=[row],
+                       price_fetch=lambda *a, **k: frame, path=ledger)
+    assert out["newly_scored"] == 1
+    got = out["scored"][0]
+    assert got["direction"] == "PROBE"
+    assert got["hypothesis_id"] == "abc123def456"
+    assert got["horizon_sessions"] == 5
+    assert got["selection_probability"] == 1.0
+
+
 def test_an_unpriceable_row_stays_open_and_is_named(ledger):
     DL.record("a", "DECIDED", by="morning", asof="2026-09-19", path=ledger)
     row = {"decision_id": "a", "ticker": "AAA", "asof": "2026-09-19",
@@ -236,6 +306,23 @@ def test_a_failed_fetch_refuses_rather_than_grading_at_zero(ledger):
     assert out["status"] == "refused"
     assert out["newly_scored"] == 0
     assert "stay open" in out["reason"]
+
+
+def test_the_open_row_scan_picks_up_probe_rows_from_the_contract_files(
+        ledger, tmp_path):
+    """PROBE joined BUY and WATCH in the grader's own scan (chunk 23a)."""
+    folder = tmp_path / "decisions"
+    folder.mkdir()
+    (folder / "2026-09-21.json").write_text(json.dumps({"rows": [
+        {"decision_id": "b", "direction": "BUY", "ticker": "AAA"},
+        {"decision_id": "p", "direction": "PROBE", "ticker": "BBB"},
+        {"decision_id": "r", "direction": "REFUSED", "ticker": "CCC"},
+    ]}), encoding="utf-8")
+    got = DL._open_contract_rows(day=date(2026, 9, 22), out_dir=folder,
+                                 path=ledger)
+    assert {r["decision_id"] for r in got} == {"b", "p"}, (
+        "a REFUSED row is not graded and a PROBE row is: the second is a "
+        "virtual position with an expiry, and grading it is the whole point")
 
 
 def test_a_row_with_no_expiry_is_unpriceable_not_graded(ledger):

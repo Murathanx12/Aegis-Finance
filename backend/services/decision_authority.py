@@ -1,4 +1,4 @@
-"""EXPLOIT, EXPLORE, REFUSED — the authority every admissible row carries.
+"""EXPLOIT, EXPLORE, PROBE, REFUSED — the authority every admissible row carries.
 
 Roadmap `docs/ROADMAP_2026-09-11_ROOT_FIRST_THE_OPERATOR_BOARD_AND_THE_LEARNING_LOOP.md`
 §15.2 chunk 21, from Murat's review of 2026-09-20
@@ -13,8 +13,8 @@ issue 2). His words, and they are the whole specification:
     Do not require t >= 2 before AEGIS is allowed to learn. ... Uncertain must
     mean INVESTIGATE, never freeze."
 
-THE THREE POPULATIONS, AND THERE IS NO FOURTH
-=============================================
+THE FOUR POPULATIONS, AND THERE IS NO FIFTH (chunk 23a amended chunk 21)
+========================================================================
 Every candidate that has already cleared the HARD gates
 (`investment_committee.compose_book`: BUY/WATCH verdict, licensed evidence,
 positive ranking score — unchanged, and nothing here can reopen one) is
@@ -38,10 +38,39 @@ assigned exactly ONE authority:
   candidate's own decile carries a **WEAK** calibration, that decile's measured
   mean and its block-bootstrap se ARE the posterior — so two names on one
   signal in different deciles no longer draw from one distribution.
-* ``REFUSED`` — everything else, with the sentence that names why. **A name
-  with NO measured read is REFUSED, not explored**: exploration is for
-  measured-but-unproven, never for nothing. `NO_EVIDENCE` was refused at the
-  hard gate and never reaches this module at all.
+* ``PROBE`` — **chunk 23a, 2026-09-21.** A plausible mechanism with NO
+  measurement yet: either no rank-bearing licensed signal leads the name, or
+  its leading signal has no row in `SIGNAL_MEASURED_RETURN` and the PROBE panel
+  has not yet accumulated one. It holds **zero capital** and is not in
+  `ACTIVE_AUTHORITIES`; what it gets instead is a VIRTUAL graded row per
+  horizon (`config.PROBE_HORIZONS_SESSIONS`), written by `decision_contract`
+  and graded by the same grader at its own expiry. Murat, 2026-09-21: *"High
+  confidence determines how much capital we risk. It should not determine
+  whether we are allowed to learn."* Refusing a name for having no measurement
+  is the right CAPITAL decision and the wrong LEARNING decision — nothing
+  accrues, so the read can never become measured, and the refusal is
+  self-fulfilling. A PROBE row costs nothing and accumulates under its
+  `hypothesis_id` into exactly the measured read EXPLORE requires
+  (`probe_panel.read_for`).
+* ``REFUSED`` — everything else, with the sentence that names why. **Every
+  refusal that remains is EVIDENCE**: a measured read that is not above
+  `EXPLORE_MIN_NET_PCT`, a CALIBRATED read that lost its EXPLOIT slot, a
+  missing volatility, a full paper-risk budget. `NO_EVIDENCE` was refused at the
+  hard gate and never reaches this module at all. What is NO LONGER a refusal
+  is "nobody has measured this yet" — that is PROBE's, and §16.5 item 39 says
+  so: *a refusal to fund is not a refusal to learn*.
+
+WHAT A HYPOTHESIS IS, MECHANICALLY
+==================================
+`hypothesis_id = sha256(f"{signal}|{mechanism}|{information_set}")[:12]`, where
+`mechanism` is `forecast_grader.mechanism_of` over the rec and
+`information_set` is the funnel snapshot's MONTH. It is deliberately NOT the
+ticker: the object a PROBE panel accumulates is *the mechanism*, so twenty
+names led by one signal in one month all feed one posterior, which is the only
+way a panel reaches `PROBE_MIN_GRADED` in a lifetime. It is deliberately NOT
+stable across the quarterly panel refresh either: a signal recomputed on a new
+information set is a new claim, and averaging the two would be the construction
+tax paid silently.
 
 The four heuristic BUYs therefore stop existing as a third kind of thing. With
 `config.IC_LEGACY_HEURISTIC_SIZING` False — the default from 2026-09-20 — a
@@ -91,6 +120,7 @@ rather than described (session protocol rule 4).
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import math
 from dataclasses import dataclass, field
@@ -100,19 +130,30 @@ from typing import Any, Optional
 import numpy as np
 
 from backend import config
-from backend.services import roi_rank, signal_calibration
+from backend.services import probe_panel, roi_rank, signal_calibration
 
 logger = logging.getLogger(__name__)
 
-#: The three authorities. Spelled once; a reader greps for them.
+#: The four authorities. Spelled once; a reader greps for them.
 EXPLOIT = "EXPLOIT"
 EXPLORE = "EXPLORE"
+#: chunk 23a. Zero capital, a virtual graded row per horizon, a hypothesis id.
+PROBE = "PROBE"
 REFUSED = "REFUSED"
-AUTHORITIES: tuple[str, ...] = (EXPLOIT, EXPLORE, REFUSED)
+AUTHORITIES: tuple[str, ...] = (EXPLOIT, EXPLORE, PROBE, REFUSED)
 
 #: The authorities that may hold capital. `payload`'s capital resolution and
 #: the contract's "no row carries BUY without an authority" test both read it.
+#: **PROBE is deliberately absent**: it is the whole point of the state that it
+#: never sizes anything, and membership of this tuple is the mechanical version
+#: of that promise rather than a sentence about it.
 ACTIVE_AUTHORITIES: tuple[str, ...] = (EXPLOIT, EXPLORE)
+
+#: The signal name a PROBE row carries when NO rank-bearing licensed signal
+#: leads the name. A sentinel and not `None`, because a hypothesis id is
+#: sha256 over three strings and a row without one cannot be written (the
+#: panel would have nothing to accumulate under).
+NO_LEAD_SIGNAL = "NO_RANK_BEARING_SIGNAL"
 
 
 def _as_float(value: Any) -> Optional[float]:
@@ -147,9 +188,88 @@ def seed_for(asof: date | str | None, ticker: str, signal: str) -> int:
                           "big")
 
 
-#: What produced an EXPLORE posterior. Two values and no third.
+def mechanism_of(rec: Any) -> str:
+    """Which mechanism produced this candidate, in the grader's own vocabulary.
+
+    `forecast_grader.mechanism_of` reads a RECORD (a dict) and a candidate is a
+    `Recommendation` object, so the object is presented to it as the two fields
+    it looks for. A committee candidate carries neither today and the answer is
+    `UNATTRIBUTED` — which is correct and is printed, not hidden: the committee
+    ranks on a signal and does not attribute a mechanism, and a hypothesis id
+    that pretended otherwise would join rows that were never the same claim.
+    """
+    from backend.services import forecast_grader as FG
+
+    return FG.mechanism_of({
+        "mechanism_id": getattr(rec, "mechanism_id", None),
+        "specialist": getattr(rec, "specialist", None),
+    })
+
+
+def information_set_month(information_set: str | None,
+                          asof: date | str | None = None) -> tuple[str, str]:
+    """(YYYY-MM, basis) — the MONTH of the information the funnel was built on.
+
+    The funnel's own `generated_at` when the caller passes one, because that is
+    the snapshot the candidate's score was computed against; the as-of month
+    otherwise, and the basis says which of the two. A hypothesis must be the
+    same object across days and a DIFFERENT object across the quarterly panel
+    refresh, and the month is the coarsest unit that has both properties.
+    """
+    text = str(information_set or "").strip()
+    if len(text) >= 7 and text[4] == "-":
+        return text[:7], (f"the funnel snapshot's own generated_at "
+                          f"({text}) -> month {text[:7]}")
+    day = _asof_str(asof)
+    return day[:7], (
+        f"CANNOT DETERMINE the funnel snapshot's month (information_set="
+        f"{information_set!r}), so the as-of date {day} names it: month "
+        f"{day[:7]}")
+
+
+def hypothesis_id(signal: str, mechanism: str, information_set: str) -> str:
+    """`sha256(signal|mechanism|information_set)[:12]` — the panel's join key.
+
+    Twelve hex characters: short enough to read on a row, wide enough that the
+    collision probability over any number of hypotheses this programme will
+    ever write is not a thing anyone has to think about.
+    """
+    blob = f"{signal}|{mechanism}|{information_set}"
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:12]
+
+
+def hypothesis_fields(rec: Any, signal: str, *,
+                      information_set: str | None = None,
+                      asof: date | str | None = None) -> dict:
+    """`{hypothesis_id, hypothesis_id_basis}` plus the three inputs in clear.
+
+    The inputs are printed BESIDE the digest on purpose: a join key nobody can
+    re-derive from the row it sits on is a key that stops being checkable the
+    moment the function that made it changes.
+    """
+    mech = mechanism_of(rec)
+    month, month_basis = information_set_month(information_set, asof)
+    hid = hypothesis_id(str(signal), mech, month)
+    return {
+        "hypothesis_id": hid,
+        "hypothesis_signal": str(signal),
+        "hypothesis_mechanism": mech,
+        "hypothesis_information_set": month,
+        "hypothesis_id_basis": (
+            f"sha256('{signal}|{mech}|{month}')[:12] = {hid}; "
+            f"{month_basis}. The ticker is deliberately NOT an input: the "
+            f"object the PROBE panel accumulates is the MECHANISM, so every "
+            f"name this signal leads in this month feeds one posterior"),
+    }
+
+
+#: What produced an EXPLORE posterior. Three values and no fourth.
 POSTERIOR_DECILE = "calibration_decile"
 POSTERIOR_FAMILY = "family_mean"
+#: chunk 23a: a MEASURED read the PROBE panel built out of graded virtual rows
+#: where `SIGNAL_MEASURED_RETURN` has none. This is the loop closing — a
+#: hypothesis that had no panel built one forward, one graded row at a time.
+POSTERIOR_PROBE_PANEL = "PROBE_PANEL"
 
 
 def posterior(row: dict, cal: Any = None) -> tuple[float, float, str]:
@@ -269,6 +389,11 @@ class AuthoritySplit:
     weights: dict[str, float] = field(default_factory=dict)
     blocks: dict[str, dict] = field(default_factory=dict)
     refused: dict[str, str] = field(default_factory=dict)
+    #: chunk 23a. The names that carry NO measurement yet, best rank first,
+    #: and the sentence that says which of the two unmeasured branches sent
+    #: each one here. They are NOT in `weights` and never will be.
+    probe: list[str] = field(default_factory=list)
+    probe_basis: dict[str, str] = field(default_factory=dict)
     roi: Any = None
     receipt: dict = field(default_factory=dict)
 
@@ -284,11 +409,17 @@ class AuthoritySplit:
     def is_explore(self, ticker: str) -> bool:
         return self.authority_for(ticker) == EXPLORE
 
+    def is_probe(self, ticker: str) -> bool:
+        return self.authority_for(ticker) == PROBE
+
     def exploit_tickers(self) -> list[str]:
         return [t for t, a in self.authority_of.items() if a == EXPLOIT]
 
     def explore_tickers(self) -> list[str]:
         return [t for t, a in self.authority_of.items() if a == EXPLORE]
+
+    def probe_tickers(self) -> list[str]:
+        return list(self.probe)
 
     def contract_fields(self, ticker: str) -> dict:
         """The authority block `decision_contract` puts on this name's row."""
@@ -320,6 +451,186 @@ def _vol_of(candidates: dict, ticker: str, rec: Any) -> Optional[float]:
     return _as_float(v)
 
 
+def _context_features(candidates: dict, ticker: str, rec: Any, signal: str, *,
+                      horizon_months: float,
+                      decile: Any = None) -> dict:
+    """The small context the authority already has, written on the row.
+
+    Chunk 23a, from `research_sequential_evidence_and_bandits.md`: a
+    contextual-bandit off-policy estimator needs the CONTEXT the action was
+    taken in, and a context reconstructed later from a different snapshot is
+    not the context the decision saw. Nothing here is computed — every field is
+    read off the funnel candidate or the rec, and a field the funnel does not
+    carry is `None` with its name still present, because an absent key and a
+    null mean different things to the estimator that reads them.
+    """
+    cand = (candidates or {}).get(ticker) or {}
+    regime = cand.get("regime") or cand.get("regime_tag")
+    return {
+        "signal": str(signal),
+        "decile": decile,
+        "vol_annual": _vol_of(candidates, ticker, rec),
+        "horizon_months": float(horizon_months),
+        "horizon_days": int(round(float(horizon_months) * 30.44)),
+        "rank": getattr(rec, "rank", None),
+        "ranking_score": _as_float(getattr(rec, "ranking_score", None)),
+        "confidence": getattr(rec, "confidence", None),
+        "evidence_grade": getattr(rec, "evidence_grade", None),
+        "regime": (str(regime) if regime else None),
+        "regime_basis": (
+            "the funnel candidate's own regime tag"
+            if regime else
+            "CANNOT DETERMINE: the funnel carries no regime tag for this "
+            "name, so the field is null rather than a guessed label"),
+    }
+
+
+def _probe_posterior(read: Any) -> tuple[float, float, str, str]:
+    """(mean %/month, se %/month, basis, source) for a MEASURED panel read.
+
+    The panel measures a return over its own horizon in SESSIONS; everything
+    downstream of here is in percent per MONTH, so both the mean and the se are
+    divided by the horizon in months and the conversion is named. Dividing the
+    se by the same number as the mean is right because the horizon is a
+    constant, not a random variable — this is a change of units, not a
+    time-scaling rule, and calling it one would be the sqrt(T) error.
+    """
+    months = read.months
+    mean_m = float(read.mean_excess_pct) / months
+    se_m = float(read.se_pct) / months
+    return mean_m, se_m, (
+        f"the PROBE panel's own measured read: {read.mean_excess_pct:+.4f}% "
+        f"excess over {read.horizon_sessions} sessions = {months:.3g} month(s) "
+        f"-> {mean_m:+.4f} %/mo, se {read.se_pct:.4f}% -> {se_m:.4f} %/mo "
+        f"(a change of UNITS, not a time-scaling). Built from {read.n} graded "
+        f"virtual row(s) over {read.n_blocks} month block(s), "
+        f"{read.first_asof} -> {read.last_asof}; sign hit rate "
+        f"{read.sign_hit_rate}. Receipt {read.receipt}"), POSTERIOR_PROBE_PANEL
+
+
+def _measured_t(post_src: str, cal: Any, row: dict, read: Any):
+    """The t that belongs to the number the posterior actually used."""
+    if post_src == POSTERIOR_DECILE:
+        return cal.spread_t
+    if post_src == POSTERIOR_PROBE_PANEL and read is not None:
+        if read.se_pct:
+            return round(float(read.mean_excess_pct) / float(read.se_pct), 4)
+        return "CANNOT DETERMINE: the panel has no se"
+    return row.get("t")
+
+
+def _measured_t_basis(post_src: str, cal: Any, row: dict, read: Any) -> Any:
+    if post_src == POSTERIOR_DECILE:
+        return (f"the {cal.signal} D-hi minus D-lo NET spread's Newey-West t "
+                f"at {cal.horizon_sessions} sessions, off {cal.receipt}; "
+                f"Holm-adjusted p {cal.holm_p}")
+    if post_src == POSTERIOR_PROBE_PANEL and read is not None:
+        return (f"mean / block-bootstrap se over {read.n_blocks} month "
+                f"block(s) of the PROBE panel — a FORWARD t on virtual rows "
+                f"this programme wrote, not a backtest t, and deliberately not "
+                f"compared to ROI_MIN_T: a panel is EXPLORE's evidence and "
+                f"EXPLOIT is licensed by a CALIBRATED decile map alone")
+    return row.get("t_basis")
+
+
+def _action_set(explore_rows: list[dict]) -> tuple[list[dict], str]:
+    """(the day's action set, its sha256) — written ONCE, referenced per row.
+
+    The tickers that competed for the day's EXPLORE slots, each with the
+    posterior the draw actually used. Carried once on the receipt and by digest
+    on every row, so the ledger row stays small and a later off-policy
+    estimator can still rebuild the choice set exactly.
+    """
+    action_set = sorted(
+        ({"ticker": d["ticker"], "signal": d["signal"],
+          "posterior_mean_pct_per_month": d["posterior_mean_pct_per_month"],
+          "posterior_se_pct_per_month": d["posterior_se_pct_per_month"]}
+         for d in explore_rows), key=lambda a: a["ticker"])
+    blob = json.dumps(action_set, sort_keys=True, separators=(",", ":"))
+    return action_set, hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+def _selection_probabilities(explore_rows: list[dict], *, slots: int,
+                             asof: str) -> dict:
+    """P(this candidate lands in the day's M slots), by replaying the draw.
+
+    The allocation is a Thompson draw over K candidates for M slots, so the
+    quantity an off-policy estimator needs is not the draw that happened but
+    the PROBABILITY of the action that was taken. It has no closed form here
+    (the score is `draw - cost - penalty + bonus` and the costs differ per
+    name), so it is estimated by replaying the same posteriors with fresh draws
+    `config.EXPLORE_SELECTION_REPLAYS` times and counting.
+
+    Each candidate gets its OWN stream, seeded from the as-of date, the
+    candidate and the namespace, for the same reason `seed_for` is per-name:
+    adding a candidate must not move another candidate's replay, or yesterday's
+    printed probability would depend on today's universe.
+
+    This changes no decision. It is written so chunk 24 can compare the
+    Thompson allocator to a contextual bandit on rows that already exist,
+    rather than on rows that have to be re-run under a policy nobody logged.
+    """
+    n = len(explore_rows)
+    replays = int(config.EXPLORE_SELECTION_REPLAYS)
+    m = max(int(slots), 0)
+    out: dict[str, Any] = {
+        "replays": replays,
+        "slots": m,
+        "n_candidates": n,
+        "probability": {},
+        "seeds": {},
+    }
+    if n == 0 or replays <= 0:
+        out["basis"] = (
+            f"no EXPLORE candidate competed today, so there is no draw to "
+            f"replay and no propensity to print (slots {m})")
+        return out
+    if m <= 0:
+        out["probability"] = {d["ticker"]: 0.0 for d in explore_rows}
+        out["basis"] = (
+            f"the paper-risk budget funds {m} slot(s) today, so no candidate "
+            f"could be selected however the draw fell: every propensity is "
+            f"0.0 BY CONSTRUCTION, which is a fact about the budget and not "
+            f"about the candidates")
+        return out
+
+    draws = np.empty((n, replays), dtype=float)
+    offsets = np.empty(n, dtype=float)
+    for i, d in enumerate(explore_rows):
+        seed = seed_for(asof, f"SELECTION_REPLAY|{d['ticker']}", d["signal"])
+        out["seeds"][d["ticker"]] = seed
+        rng = np.random.default_rng(seed)
+        draws[i] = rng.normal(float(d["posterior_mean_pct_per_month"]),
+                              float(d["posterior_se_pct_per_month"]),
+                              size=replays)
+        offsets[i] = (-float(d["cost_pct_per_month"])
+                      - float(d["risk_penalty_pct_per_month"])
+                      + float(d["uncertainty_bonus_pct_per_month"]))
+    scores = draws + offsets[:, None]
+    take = min(m, n)
+    # argpartition puts the `take` largest in the first `take` positions of
+    # each column; the ORDER inside them does not matter, only membership.
+    chosen = np.argpartition(-scores, take - 1, axis=0)[:take]
+    counts = np.bincount(chosen.ravel(), minlength=n)
+    for i, d in enumerate(explore_rows):
+        out["probability"][d["ticker"]] = round(float(counts[i]) / replays, 6)
+    out["sums_to"] = round(sum(out["probability"].values()), 6)
+    out["basis"] = (
+        f"P(selected) over {replays} replays of the Thompson draw: the SAME "
+        f"posterior mean and se per candidate, fresh draws, the same "
+        f"cost/risk/uncertainty offsets, and the top {take} of {n} by "
+        f"exploration score take the {m} slot(s) the "
+        f"{float(config.EXPLORE_BUDGET_PCT):.2%} budget funds at "
+        f"{float(config.EXPLORE_PER_NAME_PCT):.4%} per name. Each candidate's "
+        f"stream is seeded sha256('{config.EXPLORE_SEED_NAMESPACE}|{asof}|"
+        f"SELECTION_REPLAY|<ticker>|<signal>'), so the replay reproduces and "
+        f"adding a candidate cannot move another candidate's stream. The "
+        f"probabilities sum to {min(m, n)} by construction (exactly {take} "
+        f"name(s) are selected in every replay). Nothing here changes a "
+        f"decision: the allocation is the single seeded draw on the row")
+    return out
+
+
 def assign(recs: list[Any], *, candidates: Optional[dict] = None,
            asof: date | str | None = None,
            horizon_months: Optional[float] = None,
@@ -329,11 +640,21 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
            total_budget: Optional[float] = None,
            explore_budget: Optional[float] = None,
            explore_per_name: Optional[float] = None,
-           calibration_root: Optional[Any] = None) -> AuthoritySplit:
-    """Split the already-admissible into EXPLOIT, EXPLORE and REFUSED.
+           calibration_root: Optional[Any] = None,
+           information_set: Optional[str] = None,
+           probe_ledger_path: Optional[Any] = None) -> AuthoritySplit:
+    """Split the already-admissible into EXPLOIT, EXPLORE, PROBE and REFUSED.
 
     `recs` arrive in today's order (`(rank, -ranking_score)`); the hard gates
     have already run. Nothing here can admit a name they refused.
+
+    `information_set` is the funnel snapshot's `generated_at` — the timestamp
+    every candidate's score was computed against. It names the hypothesis's
+    information set (its MONTH), and when it is absent the as-of month stands
+    in and the basis on every row SAYS so.
+
+    `probe_ledger_path` redirects the PROBE panel's ledger read, so the fast
+    suite reads a `tmp_path` ledger and never `backend/data`.
     """
     candidates = candidates or {}
     asof_s = _asof_str(asof)
@@ -357,8 +678,73 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
     weights: dict[str, float] = {}
     blocks: dict[str, dict] = {}
     refused: dict[str, str] = {}
+    probe_order: list[str] = []
+    probe_basis: dict[str, str] = {}
     by_ticker: dict[str, Any] = {}
     exploit_order: list[str] = []
+    # The PROBE panel is read ONCE per call, not once per candidate: a day with
+    # forty unmeasured names would otherwise open the ledger forty times and
+    # the answer would be the same forty times.
+    panel_rows: Optional[list] = None
+    panel_note = ""
+
+    def _panel() -> list:
+        nonlocal panel_rows, panel_note
+        if panel_rows is None:
+            try:
+                panel_rows = probe_panel.scored_probe_rows(probe_ledger_path,
+                                                           asof=asof_s)
+            except Exception as exc:                           # noqa: BLE001
+                logger.warning("PROBE panel unreadable: %s", exc)
+                panel_rows = []
+                panel_note = (f"CANNOT DETERMINE: the PROBE panel's ledger "
+                              f"could not be read ({type(exc).__name__}: "
+                              f"{exc}), so no hypothesis can be promoted out "
+                              f"of PROBE today")
+        return panel_rows
+
+    def _probe(ticker: str, rec: Any, sig: str, why: str,
+               hypothesis: Optional[dict] = None) -> None:
+        """Send one name to PROBE: zero capital, a hypothesis, and a reason.
+
+        Every PROBE name carries a `hypothesis_id` by construction — the panel
+        has nothing to accumulate under without one, and a virtual row that
+        cannot be joined to its siblings is a row that will never become a
+        measurement.
+        """
+        hyp = hypothesis or hypothesis_fields(
+            rec, sig, information_set=information_set, asof=asof_s)
+        authority_of[ticker] = PROBE
+        probe_order.append(ticker)
+        probe_basis[ticker] = why
+        blocks[ticker] = {
+            "authority_basis": why,
+            "authority_weight": 0.0,
+            "probe": {
+                **hyp,
+                "signal": str(sig),
+                "virtual": True,
+                "virtual_notional_usd": float(config.PROBE_VIRTUAL_NOTIONAL_USD),
+                "virtual_basis": (
+                    f"a PROBE row holds ZERO weight and ZERO dollars; "
+                    f"${float(config.PROBE_VIRTUAL_NOTIONAL_USD):,.0f} "
+                    f"(config.PROBE_VIRTUAL_NOTIONAL_USD) is the notional the "
+                    f"graded return is QUOTED at so it reads on the same scale "
+                    f"as an EXPLORE name, and it buys nothing"),
+                "horizons_sessions": [int(h) for h in
+                                      config.PROBE_HORIZONS_SESSIONS],
+                "selection_probability": 1.0,
+                "selection_probability_basis": (
+                    "every unmeasured name probes; no draw. The Thompson draw "
+                    "allocates a SCARCE paper-risk budget and PROBE spends "
+                    "none, so there is no competition to be selected out of "
+                    "and the propensity is exactly 1.0 — which is also what "
+                    "an off-policy estimator must divide by for these rows"),
+                "context_features": _context_features(
+                    candidates, ticker, rec, sig, horizon_months=horizon,
+                    decile=None),
+            },
+        }
 
     for rec in recs or []:
         ticker = str(getattr(rec, "ticker", "") or "")
@@ -421,10 +807,16 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             continue
         sig = _sig_of(rec)
         if not sig:
-            refused[ticker] = (
+            # CHUNK 23a, unmeasured branch ONE. Refusing here is the right
+            # capital decision and the wrong learning decision: nothing
+            # accrues, so the absence is self-perpetuating.
+            _probe(ticker, rec, NO_LEAD_SIGNAL, (
                 "no rank-bearing licensed signal leads this name, so there is "
-                "no measured read to explore and no calibrated read to exploit")
-            authority_of[ticker] = REFUSED
+                "no measured read to explore and no calibrated read to "
+                "exploit. It is PROBED rather than refused: a virtual row at "
+                "each declared horizon costs nothing and is the only way a "
+                "name the licensed pickers do not cover can ever acquire a "
+                "measurement (§16.5 item 39)"))
             continue
         try:
             row = roi_rank.measured_return(sig)
@@ -434,17 +826,29 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
                 f"neither authority can license this name: {exc}")
             authority_of[ticker] = REFUSED
             continue
+        probe_read = None
         if row is None:
-            refused[ticker] = (
-                f"NO measured read exists for {sig!r} "
-                f"(config.SIGNAL_MEASURED_RETURN has no row). EXPLORE is for "
-                f"measured-but-unproven hypotheses, never for nothing: a name "
-                f"whose leading signal has never been measured is refused, not "
-                f"explored")
-            authority_of[ticker] = REFUSED
-            continue
-        t_clears = _as_float(row.get("t"))
-        if t_clears is not None and t_clears >= min_t:
+            # CHUNK 23a, unmeasured branch TWO — and the loop closing. Before
+            # anything is decided, ASK THE PANEL: the virtual rows this module
+            # wrote on earlier days may already have accumulated the measured
+            # read that `SIGNAL_MEASURED_RETURN` has never carried.
+            hyp = hypothesis_fields(rec, sig, information_set=information_set,
+                                    asof=asof_s)
+            probe_read, panel_why = probe_panel.best_read(
+                hyp["hypothesis_id"], path=probe_ledger_path, asof=asof_s,
+                rows=_panel())
+            if probe_read is None:
+                _probe(ticker, rec, sig, (
+                    f"NO measured read exists for {sig!r} "
+                    f"(config.SIGNAL_MEASURED_RETURN has no row), and "
+                    f"{panel_why}{(' ' + panel_note) if panel_note else ''}. "
+                    f"EXPLORE is for measured-but-unproven hypotheses and this "
+                    f"one is UNMEASURED — so it is PROBED at zero capital "
+                    f"rather than refused, and the panel it needs is the panel "
+                    f"these virtual rows build"), hypothesis=hyp)
+                continue
+        t_clears = _as_float(row.get("t")) if row is not None else None
+        if probe_read is None and t_clears is not None and t_clears >= min_t:
             # CALIBRATED, and it did not become an EXPLOIT position: it was
             # outranked inside the exploit cap, or the sizer refused it. A
             # proven read may not eat the paper-risk budget as a consolation —
@@ -461,11 +865,23 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             continue
         cal = None
         cal_why = "config.ROI_USE_CALIBRATION is off"
-        if bool(getattr(config, "ROI_USE_CALIBRATION", False)):
-            cal, cal_why = signal_calibration.read_for(
-                sig, roi_rank.raw_score_of(candidates, ticker, rec, sig),
-                root=calibration_root, asof=asof_s)
-        mean_pct, se, se_basis, post_src = posterior_read(row, cal)
+        if probe_read is not None:
+            # CHUNK 23a. The panel MEASURED this hypothesis out of its own
+            # graded virtual rows, so it enters EXPLORE on the panel's
+            # posterior — a THIRD source beside the calibration decile and the
+            # family row. It does not enter EXPLOIT: EXPLOIT is licensed by a
+            # CALIBRATED decile map and by nothing else (chunk 22), and a
+            # forward panel is not that map however strong it reads.
+            mean_pct, se, se_basis, post_src = _probe_posterior(probe_read)
+            cal_why = ("the posterior came from the PROBE panel, not from a "
+                       "calibration file: this signal has no row in "
+                       "config.SIGNAL_MEASURED_RETURN at all")
+        else:
+            if bool(getattr(config, "ROI_USE_CALIBRATION", False)):
+                cal, cal_why = signal_calibration.read_for(
+                    sig, roi_rank.raw_score_of(candidates, ticker, rec, sig),
+                    root=calibration_root, asof=asof_s)
+            mean_pct, se, se_basis, post_src = posterior_read(row, cal)
         if mean_pct is None or mean_pct <= float(config.EXPLORE_MIN_NET_PCT):
             refused[ticker] = (
                 f"{sig}'s measured net read is {mean_pct}"
@@ -491,10 +907,17 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
         penalty, penalty_basis = _risk_penalty(vol_annual)
         bonus, bonus_basis = _uncertainty_bonus(se)
         score = draw - cost - penalty + bonus
-        t_stat = _as_float(row.get("t"))
+        # A PROBE-panel candidate has NO family row at all, so every field
+        # below that would have come off one comes off the panel read instead.
+        table_row = row if row is not None else {}
         explore_rows.append({
             "ticker": ticker,
             "signal": sig,
+            **hypothesis_fields(rec, sig, information_set=information_set,
+                                asof=asof_s),
+            "context_features": _context_features(
+                candidates, ticker, rec, sig, horizon_months=horizon,
+                decile=getattr(cal, "decile", None)),
             "posterior_mean_pct_per_month": round(mean_pct, 6),
             "posterior_se_pct_per_month": round(se, 6),
             "posterior_basis": se_basis,
@@ -518,17 +941,19 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             # Quoting the family row's t beside a decile's mean was the first
             # thing this block printed on 2026-09-21 and it read as though the
             # two were the same measurement.
-            "measured_t": (cal.spread_t if post_src == POSTERIOR_DECILE
-                           else row.get("t")),
-            "measured_t_basis": (
-                (f"the {cal.signal} D-hi minus D-lo NET spread's Newey-West t "
-                 f"at {cal.horizon_sessions} sessions, off {cal.receipt}; "
-                 f"Holm-adjusted p {cal.holm_p}")
-                if post_src == POSTERIOR_DECILE else row.get("t_basis")),
+            "measured_t": _measured_t(post_src, cal, table_row, probe_read),
+            "measured_t_basis": _measured_t_basis(post_src, cal, table_row,
+                                                  probe_read),
             "receipt": (cal.receipt if post_src == POSTERIOR_DECILE
-                        else row.get("receipt")),
+                        else (probe_read.receipt
+                              if post_src == POSTERIOR_PROBE_PANEL
+                              else table_row.get("receipt"))),
             "measured_on": (cal.asof if post_src == POSTERIOR_DECILE
-                            else row.get("measured_on")),
+                            else (probe_read.last_asof
+                                  if post_src == POSTERIOR_PROBE_PANEL
+                                  else table_row.get("measured_on"))),
+            "probe_panel": (probe_read.as_row() if probe_read is not None
+                            else None),
             "posterior_source": post_src,
             "calibration_verdict": (getattr(cal, "verdict", None)
                                     if cal is not None else None),
@@ -579,8 +1004,32 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
                 f"{per_name:.4%} of equity out of the "
                 f"{budget:.2%} paper-risk budget. Receipt {d['receipt']}"),
             "authority_weight": per_name,
-            "explore": {k: v for k, v in d.items() if k != "ticker"},
         }
+
+    # 3b. CHUNK 23a — THE PROBABILITY THE DRAW SELECTED EACH CANDIDATE.
+    #     Written on every EXPLORE candidate (selected or not) and on the
+    #     receipt. It changes no decision today and it is the field a
+    #     doubly-robust off-policy estimator divides by; without it the rows
+    #     this repo logs can only ever be scored by Thompson's own math
+    #     (Murat's item 12, chunk 24's VW benchmark).
+    slots = int(budget // per_name) if per_name > 0 else 0
+    selection = _selection_probabilities(explore_rows, slots=slots,
+                                         asof=asof_s)
+    action_set, action_sha = _action_set(explore_rows)
+    for d in explore_rows:
+        d["selection_probability"] = selection["probability"].get(d["ticker"])
+        d["selection_probability_basis"] = selection["basis"]
+        d["action_set_sha256"] = action_sha
+    # The explore block travels onto the funded rows only AFTER the probability
+    # is on it — the block is a copy, and a copy taken a line too early is how
+    # a field that exists on the receipt goes missing on the row.
+    for d in explore_rows:
+        t = d["ticker"]
+        if d.get("authority") == EXPLORE and t in blocks:
+            blocks[t]["explore"] = {k: v for k, v in d.items()
+                                    if k != "ticker"}
+    for t in probe_order:
+        blocks[t]["action_set_sha256"] = action_sha
 
     # Names the ROI rule considered and could not score, that never became an
     # EXPLORE candidate either, keep `roi_rank`'s own sentence as the refusal.
@@ -599,12 +1048,36 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
     admitted = [by_ticker[t] for t in exploit_order + explore_order
                 if t in by_ticker]
 
+    probe_cap = int(config.PROBE_MAX_NAMES_PER_DAY)
+    probe_kept = list(probe_order[:probe_cap])
+    probe_cut = list(probe_order[probe_cap:])
+    for i, t in enumerate(probe_cut, start=probe_cap + 1):
+        # Over the day's ceiling. The refusal is of a ROW, not of a
+        # hypothesis: the name is still unmeasured and would have been probed,
+        # and what refused it is the size of the file. Said in those words so
+        # nobody reads the cap as a verdict about the mechanism.
+        probe_basis[t] = (
+            f"{probe_basis[t]} — BUT this name ranked #{i} of "
+            f"{len(probe_order)} PROBE candidates today and the day's ceiling "
+            f"is {probe_cap} names (config.PROBE_MAX_NAMES_PER_DAY), so NO "
+            f"virtual row was written for it. The cut is by RANK, the count is "
+            f"on the receipt, and nothing about the hypothesis was decided")
+        authority_of[t] = REFUSED
+        refused[t] = (
+            f"the day's PROBE ceiling refused this name a virtual row: it "
+            f"ranked #{i} of {len(probe_order)} unmeasured candidates and "
+            f"config.PROBE_MAX_NAMES_PER_DAY is {probe_cap}. This refuses a "
+            f"ROW, not a hypothesis — no capital was at stake either way, and "
+            f"the name is unmeasured exactly as it was before")
+        blocks.pop(t, None)
+
     receipt = {
         "rule": ("every admissible candidate carries exactly one authority: "
                  "EXPLOIT (calibrated), EXPLORE (measured but unproven, "
-                 "Thompson-allocated out of a fixed paper-risk budget) or "
-                 "REFUSED"),
-        "roadmap_item": "chunk 21",
+                 "Thompson-allocated out of a fixed paper-risk budget), PROBE "
+                 "(no measurement yet — zero capital, a virtual graded row per "
+                 "horizon) or REFUSED"),
+        "roadmap_item": "chunk 21; PROBE and the selection probability are 23a",
         "source": ("docs/research_notes/2026-09-20/"
                    "feedback_murat_review_2026-09-20_evening.md issue 2"),
         "asof": asof_s,
@@ -624,9 +1097,29 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
         "n_considered": len(by_ticker),
         "n_exploit": len(exploit_order),
         "n_explore": len(explore_order),
+        "n_probe": len(probe_kept),
+        "n_probe_cut_by_cap": len(probe_cut),
         "n_refused": sum(1 for a in authority_of.values() if a == REFUSED),
         "exploit_tickers": list(exploit_order),
         "explore_tickers": list(explore_order),
+        "probe_tickers": probe_kept,
+        "probe_tickers_cut_by_cap": probe_cut,
+        "probe_max_names_per_day": probe_cap,
+        "probe_horizons_sessions": [int(h) for h in
+                                    config.PROBE_HORIZONS_SESSIONS],
+        "probe_blocks": {t: blocks[t] for t in probe_kept if t in blocks},
+        "probe_basis": {t: probe_basis[t] for t in probe_order},
+        "probe_panel_note": panel_note,
+        "probe_gate": (
+            f"a PROBE read becomes a MEASURED read — and the name becomes "
+            f"EXPLORE's with posterior_source={POSTERIOR_PROBE_PANEL} — only "
+            f"at n >= {int(config.PROBE_MIN_GRADED)} graded rows AND "
+            f"n_blocks >= {int(config.PROBE_MIN_BLOCKS)} distinct as-of MONTHS "
+            f"under one hypothesis_id (CANON §58). Until then the name holds "
+            f"zero capital and the shortfall is printed on its row."),
+        "selection_probability": selection,
+        "action_set": action_set,
+        "action_set_sha256": action_sha,
         "exploit_weight_total": round(
             sum(weights[t] for t in exploit_order), 6),
         "explore_weight_total": round(allocated, 6),
@@ -643,10 +1136,22 @@ def assign(recs: list[Any], *, candidates: Optional[dict] = None,
             "ROI_MIN_T, and it is printed empty rather than filled with the "
             "verdict x confidence heuristic the review retired. EXPLORE never "
             "takes a name with NO measured read: uncertain means INVESTIGATE, "
-            "unmeasured means REFUSE. No LLM number is an input to either."),
+            "unmeasured means PROBE — zero capital, a graded virtual row, and "
+            "a panel that fills forward (chunk 23a). No LLM number is an input "
+            "to any of the four."),
+        "probe_honesty": (
+            f"PROBE sits DOWNSTREAM of the hard eligibility gates and only "
+            f"ever sees the {len(by_ticker)} candidate(s) they admitted today. "
+            f"A name refused for NO_EVIDENCE or for a verdict that is not "
+            f"BUY/WATCH never reaches this module, is not probed, and is not "
+            f"counted here — that gate is `investment_committee.compose_book`'s "
+            f"and chunk 23a did not move it. A day with zero PROBE names is "
+            f"therefore a statement about how many candidates cleared the "
+            f"gates, not about how many hypotheses are unmeasured."),
     }
     return AuthoritySplit(admitted=admitted, authority_of=authority_of,
                           weights=weights, blocks=blocks, refused=refused,
+                          probe=probe_kept, probe_basis=dict(probe_basis),
                           roi=roi, receipt=receipt)
 
 
@@ -677,6 +1182,8 @@ def explore_worst_case(*, n_names: int, per_name: float,
 
 
 __all__ = ["ACTIVE_AUTHORITIES", "AUTHORITIES", "AuthoritySplit", "EXPLOIT",
-           "EXPLORE", "POSTERIOR_DECILE", "POSTERIOR_FAMILY", "REFUSED",
-           "assign", "explore_worst_case", "posterior", "posterior_read",
-           "seed_for"]
+           "EXPLORE", "NO_LEAD_SIGNAL", "POSTERIOR_DECILE", "POSTERIOR_FAMILY",
+           "POSTERIOR_PROBE_PANEL", "PROBE", "REFUSED", "assign",
+           "explore_worst_case", "hypothesis_fields", "hypothesis_id",
+           "information_set_month", "mechanism_of", "posterior",
+           "posterior_read", "seed_for"]
