@@ -1322,3 +1322,94 @@ refuse, the first test. Ideas enter as chunks only through §15.1.
     differenced against an unrelated development of its own sign.
 36. **Uncertain means EXPLORE, never freeze.** t ≥ 2 governs claims and EXPLOIT
     capital; it does not govern what paper money may test.
+
+## 16. THE PROBE AMENDMENT — 2026-09-21 morning (Fable, from Murat's review of the night and his forecasting idea)
+
+Source: `docs/research_notes/2026-09-21/feedback_murat_review_2026-09-21_morning.md`
+(his words, kept; the mapping table at its end says where each item lands).
+His verdict: "We should be skeptical about claims, not skeptical about
+experiments. High confidence determines how much capital we risk. It should
+not determine whether we are allowed to learn."
+
+### 16.1 The rule (§15.1 amended, not repealed)
+
+A chunk's receipt ends with one of FOUR lines — `CAPITAL_CHANGED:`,
+`WEIGHT_CHANGED:`, `HYPOTHESIS_KILLED:`, or **`BELIEF_CHANGED:`** — and the
+fourth is admissible only when it states the numerical posterior before and
+after (`P(alpha > 0): 0.52 → 0.69`, or a decile mean and se before and after)
+AND names the further observation that would move capital. A `BELIEF_CHANGED`
+without both numbers is "nothing happened" and the chunk is not closed.
+
+### 16.2 The five states, and what each may hold
+
+| state | meaning | capital | where it lives |
+|---|---|---:|---|
+| DEAD | strong evidence net alpha ≤ 0, or mechanism invalid — CLOSED IN SCOPE (16.2b) | 0 | `NEGATIVE_RESULTS` entry with the three fields |
+| **PROBE** | plausible mechanism, not enough measurements yet | 0 — a VIRTUAL row, graded | `decisions/ledger.jsonl` row, `authority = PROBE`, `capital_usd = 0`, `virtual = true`, `hypothesis_id` |
+| EXPLORE | measured, positive, unproven | tiny paper risk (2% / 0.25% per name) | as chunk 21 |
+| EXPLOIT | calibrated positive net EV | meaningful paper allocation | as chunk 22 |
+| CORE | durable forward evidence across conditions | largest allocation | Book-of-Books weight (chunk 24) |
+
+PROBE is the change. Today a name with no measured read is REFUSED, and the
+refusal is correct as a CAPITAL decision and wrong as a LEARNING decision:
+nothing accrues, so the read never becomes measured. A PROBE row costs
+nothing, is graded by the same grader at its own expiry, and accumulates
+under its `hypothesis_id` into exactly the measured read EXPLORE requires. A
+hypothesis with no panel builds its panel forward, one graded row at a time.
+
+**16.2b CLOSED is scoped.** Every new `NEGATIVE_RESULTS` entry carries three
+required fields: `what_failed` (mechanism + construction + information set +
+horizon + expression + regime, each named), `what_remains_open`, and
+`reopening_condition` (the observation that reopens it). "Customer-return
+propagation into suppliers, unconditional, monthly rebalance, 2013–2024" is a
+corpse; "event-revealed shortage → supplier map → low-attention beneficiary"
+is not the same mechanism and is not closed by it. The corpse list is re-read
+under this rule before chunk 26 registers anything.
+
+### 16.3 The chunks from here (one Opus at a time; Fable validates each)
+
+| chunk | what | the line it must print to close |
+|---|---|---|
+| 22c **FIRST, blocks every paid run** | **The cap reads the writer's ledger.** N9 run 3 stopped at "$10.05 of $2.00" with `cap_block.estimated_spend_at_stop_usd = 0.013` — the cap's reader saw 167 rows where the receipt's `spend_from_ledger` saw 8,342 from the same file. One reader for both; after the FIRST flush the run prints the cap-read and the receipt-read side by side and stops with `REFUSED_CAP_READER_DISAGREES` if they differ by more than one call's worst case. A test that writes N priced rows and asserts the two reads agree. Provider balance stays the ground truth (`llm_cost_audit --snapshot` before and after any paid run). | `HYPOTHESIS_KILLED: the cap that could not bind` — plus the two reads agreeing on the next paid run's receipt |
+| 23a | **PROBE authority + the selection probability on the row.** `decision_authority.PROBE`; `assign` sends a name with a plausible-but-unmeasured read (a typed event chain, a world-model consequence, an agency thesis, an N9 candidate family) to PROBE instead of REFUSED, weight 0, and the contract writes a virtual ledger row with `hypothesis_id`, `capital_usd = 0`, `virtual = true`, the per-horizon expiries, and — for EXPLORE and PROBE — the **probability with which Thompson selected the action** (off-policy evaluation later; his item 12). The grader scores PROBE rows exactly like the rest; `signal_calibration` gains a reader that turns ≥ `PROBE_MIN_GRADED` scored PROBE rows under one `hypothesis_id` into a measured read that EXPLORE can take. Capital resolution unchanged (PROBE is $0 by construction; the contract prints the PROBE count beside the four buckets). | `BELIEF_CHANGED:` the first hypothesis whose PROBE rows produced a posterior where yesterday there was none, with the numbers |
+| 23b | **Scoped CLOSED.** The three fields on every new `NEGATIVE_RESULTS` entry (16.2b), enforced by the test that reads the file; the existing corpses that chunks 26 and 27 touch (supply-chain momentum, analyst target upside) rewritten in scope, with what they leave open named. | `HYPOTHESIS_KILLED:` (scoped) for each rewritten entry, or the sentence that says what it no longer kills |
+| 23g | **Gym v2 — the market-structure brief and the four roles (Murat, Part 1).** The reader is fed a brief, not raw data: is the market growing or shrinking, what substitute is forming, what analyst dispersion and coverage look like, what the demand work says — built from data on disk (`demand`, analyst ledger, news rows, coverage). Four roles on the local model — ATTACK, RESEARCH, DEFEND, ALTERNATIVE — each answers the frozen schema; a fifth call arbitrates. Same six arms, same sign-matched controls, same forward record, same adoption rule (n ≥ 300 AND blocks ≥ 12 AND a forward record). Two new measurements on the receipt: **does the four-role read beat the one-voice read on sign accuracy and Brier** (paired, same cases), and **does the brief alone beat no brief** (ablation). Past dates use only rows dated before the case date (the Lookahead-Propensity check of §10 runs first). $0. | `BELIEF_CHANGED:` sign accuracy and calibration resolution, one-voice → four-role, with the paired CI; or `HYPOTHESIS_KILLED:` if roles add nothing |
+| 23d | **Horizon is a cell, not a default.** `roi_rank` and the authority score every (signal × horizon) cell chunk 22 already computes and pick the best cell, printing the losing cells; a name may be EXPLOIT at 126 and REFUSED at 21. Costs charged per cell's own turnover. | `CAPITAL_CHANGED:` or `BELIEF_CHANGED:` for profitability_small at 126 (net +5.11%, t 2.78, Holm 0.065) — the review's own example |
+| 23c | **Sequential evidence for ongoing research.** A per-`hypothesis_id` e-process over scored ledger rows (anytime-valid; a confidence sequence the scoreboard reads daily without a look penalty); Holm and BH keep governing RESEARCH_CLAIM and the batch jobs. Gated on ≥ 200 scored PROBE/EXPLORE rows existing. | `BELIEF_CHANGED:` for at least one hypothesis, as a running e-value |
+| 23e | **Value of information in the EXPLORE score.** The uncertainty bonus becomes the expected posterior movement per dollar at risk: a name whose grade would move a whole family's read outranks one that would only move itself. Declared coefficients replaced by the measured `se` shrinkage per graded row. | `CAPITAL_CHANGED:` the explore book's order, with the VOI column |
+| 23f | **Forecast-error correlation.** A matrix over scored rows by source (signal, reader arm, agency, world model): unanimous correlated votes count once; disagreement above a threshold flags a name as a high-information PROBE. | `BELIEF_CHANGED:` or the first disagreement-flagged PROBE |
+| 24 (was 23) | **Book-of-Books allocator, ONLINE.** As §15.2 chunk 23, with weights re-solved daily from forward evidence and never a winner; the Thompson allocator benchmarked against a Vowpal Wabbit contextual bandit (cover / softmax, doubly-robust off-policy evaluation over the rows 23a logs). | `WEIGHT_CHANGED:` |
+| 25–28 | §15.2's 24–27, renumbered: world-model sidecar as **scenario generator, never price oracle** (its consequence chains become PROBE rows), event-conditioned supply-chain book, analyst v2 / insider v2, NN as a mixture-of-experts ROUTER over the specialists' per-horizon distributions, trained on the ledger. | as §15.2 |
+
+### 16.4 Sonnet reads owed (research, not code)
+
+1. **Precursors before the crowd** (Murat, Part 1): for MU and NVDA's last three
+   large moves, what was observable 1–6 months BEFORE the public noticed, as
+   DATA we hold or can pull at $0 (revision breadth, coverage change, options
+   skew, insider clusters, hiring, supplier read-throughs, search interest,
+   social attention slope), each as a precursor with a foreign slice and its
+   matched loser. Output: `docs/research_notes/2026-09-21/research_precursors_before_the_crowd.md`.
+2. **Multi-role LLM forecasting and market-context prompts**: what the
+   published evaluations found (debate / role frameworks, retrieval of market
+   structure, agent trading frameworks), how each avoided lookahead on past
+   dates, and a concrete role design for 23g on a 7B local model.
+   Output: `docs/research_notes/2026-09-21/research_multi_role_llm_forecasting.md`.
+3. **Sequential evidence and contextual bandits, for 23c/23e/24**: e-values and
+   confidence sequences on dependent returns, online FDR, Vowpal Wabbit's
+   action-dependent-feature contextual bandit and its off-policy estimators;
+   licence, what to take, the first test.
+   Output: `docs/research_notes/2026-09-21/research_sequential_evidence_and_bandits.md`.
+
+### 16.5 MUST NOT REGRESS (added 2026-09-21)
+
+37. **External reality outranks the internal figure.** Broker equity over
+    internal NAV; provider balance over the cost ledger; market outcome over an
+    LLM's self-score; forward book over backtest. Every receipt that quotes an
+    internal figure quotes the external one beside it when one exists.
+38. **A cap reads the ledger the writer writes.** Two readers of one file that
+    disagree by 8,000 rows is not a rounding error; the run stops on the first
+    disagreement.
+39. **A refusal to fund is not a refusal to learn.** A name with no measured
+    read is PROBE, weight 0, graded — never silently REFUSED out of the ledger.
+40. **CLOSED names its scope.** No new corpse without `what_failed`,
+    `what_remains_open`, `reopening_condition`.
