@@ -74,3 +74,10 @@
   The one construction difference from the live path is printed on the receipt:
   the bulk Form 4 panel excludes 10b5-1 transactions and the live Finnhub feed
   cannot, so the historical score is the cleaner of the two.
+
+## Morning, after Murat's review (Fable)
+
+- `feedback_murat_review_2026-09-21_morning.md` — his forecasting idea (market-structure brief, four roles) and the review, verbatim; roadmap §16 (PROBE, BELIEF_CHANGED, scoped CLOSED, chunks 22c/23a-g).
+- `spec_chunk_23a_probe.md` — PROBE as the virtual graded row; refused rows are already graded, what is missing is the label, the hypothesis id, the per-horizon expiry, the reader, and the selection probability.
+- `research_sequential_evidence_and_bandits.md`, `research_multi_role_llm_forecasting.md`, `research_precursors_before_the_crowd.md` — the three Sonnet reads of §16.4.
+- **N9 measured locally, $0, 581 s:** `N9_candidate_measure_run01.json` — 11,386 candidates on disk (every DeepSeek night since 09-19), 3 unevaluable. ORIGIN read: 564 of 8,486 at raw p ≤ 0.05 vs 424 expected, 0 BH survivors. FOREIGN read (parent barred): 1,142 of 10,247 at p ≤ 0.05 vs 512 expected, median excess +0.19%, 0 BH survivors at q 0.10. Twice now the library screens to nothing that survives the family; the excess over chance on the foreign read is the shared "rebound after stressed drawdown" family firing on correlated dates, not 1,142 findings. **Stop buying candidates**: the next DeepSeek dollar goes to a different question.
