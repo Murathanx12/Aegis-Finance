@@ -1189,7 +1189,11 @@ def _case_pc_broker():
     # The missing input is the ACCOUNT CREDENTIAL. Falling back to another
     # role's key is how one book silently trades another's account, so the
     # absence of the declared pair refuses rather than substituting.
-    saved = {k: os.environ.pop(k, None) for k in (PB.KEY_ENV, PB.SECRET_ENV)}
+    # Clear EVERY accepted spelling. Clearing only the canonical pair left
+    # `PC-PAPER_key` in the environment and the guard correctly did not refuse,
+    # which failed this test for the right reason.
+    saved = {k: os.environ.pop(k, None)
+             for k in (*PB.KEY_ALTS, *PB.SECRET_ALTS)}
 
     def call():
         try:
@@ -1202,7 +1206,52 @@ def _case_pc_broker():
     return call, PB.BrokerError, "credentials() with the PC paper pair absent"
 
 
+def _case_sim_session():
+    import pathlib
+    import tempfile
+
+    from backend.services import sim_session as SS
+    # The missing input is a CHECKPOINT. `resume=True` with nothing to resume
+    # must refuse rather than quietly starting a fresh session under the old
+    # session's id -- that would put two different runs in one history row.
+    tmp = pathlib.Path(tempfile.mkdtemp())
+    orig_state, orig_stop = SS.SESSION_PATH, SS.STOP_FLAG
+
+    def call():
+        SS.SESSION_PATH = tmp / "session.json"      # no session on disk at all
+        SS.STOP_FLAG = tmp / "STOP_REQUESTED"
+        try:
+            return SS.start(hours=6, resume=True)
+        finally:
+            SS.SESSION_PATH, SS.STOP_FLAG = orig_state, orig_stop
+
+    return call, SS.SimRefused, "start(resume=True) with no checkpoint on disk"
+
+
+def _case_telegram_bridge():
+    import os
+
+    from backend.services import telegram_bridge as TG
+    # The missing input is the OWNER CHAT ID. A bridge that falls back to
+    # "whoever spoke last" is how an agent ends up messaging a stranger -- which
+    # is exactly what happened on WhatsApp on 2026-09-22. The destination is
+    # configuration; its absence refuses.
+    saved = {k: os.environ.pop(k, None) for k in (TG.TOKEN_ENV, TG.OWNER_ENV)}
+
+    def call():
+        try:
+            return TG.send("this must never be sent")
+        finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+
+    return call, TG.TelegramRefused, "send() with no owner chat id configured"
+
+
 CASES = {
+    "sim_session": _case_sim_session,
+    "telegram_bridge": _case_telegram_bridge,
     "xs_ranker": _case_xs_ranker,
     "pc_broker": _case_pc_broker,
     "decision_contract": _case_decision_contract,

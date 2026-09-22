@@ -41,8 +41,10 @@ def test_paper_host_is_the_default():
 
 
 def test_missing_credentials_refuse_loudly_and_name_both_variables(monkeypatch):
-    monkeypatch.delenv(PB.KEY_ENV, raising=False)
-    monkeypatch.delenv(PB.SECRET_ENV, raising=False)
+    # every accepted spelling, not just the canonical one: `.env` carries the
+    # pair as `PC-PAPER_key` / `PC-PAPER_secret`
+    for k in (*PB.KEY_ALTS, *PB.SECRET_ALTS):
+        monkeypatch.delenv(k, raising=False)
     with pytest.raises(PB.BrokerError) as exc:
         PB.credentials()
     assert PB.KEY_ENV in str(exc.value) and PB.SECRET_ENV in str(exc.value)
@@ -50,8 +52,8 @@ def test_missing_credentials_refuse_loudly_and_name_both_variables(monkeypatch):
 
 def test_no_other_roles_credential_is_substituted(monkeypatch):
     """A fallback to another account's key is how one book trades another's."""
-    monkeypatch.delenv(PB.KEY_ENV, raising=False)
-    monkeypatch.delenv(PB.SECRET_ENV, raising=False)
+    for k in (*PB.KEY_ALTS, *PB.SECRET_ALTS):
+        monkeypatch.delenv(k, raising=False)
     monkeypatch.setenv("ALPACA_KEY_2", "hack2key")
     monkeypatch.setenv("ALPACA_SECRET_2", "hack2secret")
     with pytest.raises(PB.BrokerError):
@@ -317,3 +319,100 @@ def test_defaults_survive_an_unreadable_state_file(monkeypatch, tmp_path):
     bad.write_text("{not json", encoding="utf-8")
     monkeypatch.setattr(POLICY, "STATE_PATH", bad)
     assert POLICY.load() == POLICY.defaults(), "a corrupt preference file must not halt the night"
+
+
+# ──────────────── the simulation's safe stop, and its resume ────────────────
+
+from backend.services import sim_session as SS                # noqa: E402
+
+
+@pytest.fixture
+def sim_tmp(monkeypatch, tmp_path):
+    monkeypatch.setattr(SS, "STATE_DIR", tmp_path)
+    monkeypatch.setattr(SS, "SESSION_PATH", tmp_path / "session.json")
+    monkeypatch.setattr(SS, "STOP_FLAG", tmp_path / "STOP_REQUESTED")
+    monkeypatch.setattr(SS, "HISTORY_PATH", tmp_path / "sessions.jsonl")
+    # The fake launcher returns a pid that does not exist, and `status()`
+    # correctly reads a dead pid as UNCLEAN. Tests about the RUNNING path
+    # therefore have to say the process is alive; the one test that is ABOUT
+    # a vanished process overrides this back to False.
+    monkeypatch.setattr(SS, "pid_alive", lambda pid: True)
+    return tmp_path
+
+
+def _fake_launch(session):
+    return 424242
+
+
+def test_a_duration_outside_the_declared_set_is_refused(sim_tmp):
+    """An arbitrary duration is how a quick test becomes a 40-hour run."""
+    with pytest.raises(SS.SimRefused, match="must be one of"):
+        SS.start(hours=7, launcher=_fake_launch)
+
+
+def test_two_sessions_cannot_run_at_once(sim_tmp):
+    """One session owns the GPU and the broker lease."""
+    SS.start(hours=6, launcher=_fake_launch)
+    monkey = SS.status()
+    assert monkey["state"] == "RUNNING"
+    with pytest.raises(SS.SimRefused, match="already RUNNING"):
+        SS.start(hours=6, launcher=_fake_launch)
+
+
+def test_a_stop_is_requested_not_executed(sim_tmp):
+    """`request_stop` must NOT kill anything — it raises a flag the loop reads."""
+    SS.start(hours=6, launcher=_fake_launch)
+    r = SS.request_stop(reason="test")
+    assert r["ok"] and r["state"] == "STOPPING"
+    assert SS.stop_requested() is True
+    go, why = SS.should_continue(SS.status()["session"])
+    assert go is False and why == "stop requested"
+
+
+def test_the_loop_keeps_going_until_asked(sim_tmp):
+    SS.start(hours=6, launcher=_fake_launch)
+    go, why = SS.should_continue(SS.status()["session"])
+    assert go is True, why
+
+
+def test_a_checkpoint_survives_the_stop_and_is_resumable(sim_tmp):
+    SS.start(hours=6, launcher=_fake_launch)
+    SS.record_cycle(3, {"units": {"rank": {"ok": True}}, "elapsed_s": 12.0})
+    SS.finish("STOPPED", "stop requested", {"final_cycle": 3})
+    st = SS.status()
+    assert st["state"] == "STOPPED"
+    assert st["resumable"] is True
+    assert st["session"]["checkpoint"]["cycle"] == 3
+
+
+def test_a_resume_keeps_the_session_id_and_counts_itself(sim_tmp):
+    SS.start(hours=6, launcher=_fake_launch)
+    first = SS.status()["session"]["id"]
+    SS.record_cycle(2, {"units": {}, "elapsed_s": 1.0})
+    SS.finish("STOPPED", "stop requested", {"final_cycle": 2})
+    s = SS.start(hours=6, resume=True, launcher=_fake_launch)
+    assert s["id"] == first, "a resume that renames the session loses its history"
+    assert s["resume_count"] == 1
+    assert s["cycle"] == 2
+
+
+def test_a_resume_into_a_different_configuration_is_refused(sim_tmp):
+    SS.start(hours=6, mode="observe", launcher=_fake_launch)
+    SS.record_cycle(1, {"units": {}, "elapsed_s": 1.0})
+    SS.finish("STOPPED", "stop requested", {"final_cycle": 1})
+    with pytest.raises(SS.SimRefused, match="different configuration"):
+        SS.start(hours=6, resume=True, mode="trade", launcher=_fake_launch)
+
+
+def test_a_vanished_process_reads_as_UNCLEAN_not_RUNNING(sim_tmp, monkeypatch):
+    """A crashed process cannot set its own 'I crashed' flag."""
+    SS.start(hours=6, launcher=_fake_launch)
+    monkeypatch.setattr(SS, "pid_alive", lambda pid: False)
+    st = SS.status()
+    assert st["state"] == "UNCLEAN"
+    assert "no stop receipt" in st["session"]["unclean_reason"]
+
+
+def test_nothing_to_resume_is_refused(sim_tmp):
+    with pytest.raises(SS.SimRefused, match="nothing to resume"):
+        SS.start(hours=6, resume=True, launcher=_fake_launch)

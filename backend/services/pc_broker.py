@@ -88,6 +88,16 @@ LEASE_PREFIX = "aegispc"
 KEY_ENV = "ALPACA_PC_KEY_ID"
 SECRET_ENV = "ALPACA_PC_SECRET_KEY"
 
+#: Murat wrote the pair into `.env` on 2026-09-22 as `PC-PAPER_key` /
+#: `PC-PAPER_secret`. A hyphen is not a legal shell identifier, so
+#: `export PC-PAPER_key=...` would be a syntax error and `$PC-PAPER_key` reads
+#: as `$PC` minus `PAPER_key` — but `python-dotenv` puts it into `os.environ`
+#: verbatim and `os.environ["PC-PAPER_key"]` retrieves it fine. Both spellings
+#: are accepted so the file he actually wrote works, and the canonical
+#: underscored names stay the ones the docs and errors name.
+KEY_ALTS = (KEY_ENV, "PC-PAPER_key", "PC_PAPER_KEY")
+SECRET_ALTS = (SECRET_ENV, "PC-PAPER_secret", "PC_PAPER_SECRET")
+
 # ── the mandate, enforced below ─────────────────────────────────────────────
 #: Fraction of equity that may be invested. 1.0 = fully invested, never levered.
 MAX_INVESTED_FRAC = 1.00
@@ -125,7 +135,9 @@ def _host() -> str:
 
 
 def credentials() -> tuple[str, str]:
-    kid, sec = os.environ.get(KEY_ENV), os.environ.get(SECRET_ENV)
+    kid = next((os.environ[k] for k in KEY_ALTS if os.environ.get(k)), None)
+    sec = next((s for s in SECRET_ALTS if os.environ.get(s)), None)
+    sec = os.environ[sec] if sec else None
     if not kid or not sec:
         raise BrokerError(
             f"REFUSED: the PC paper account is not configured. Set {KEY_ENV} and "
