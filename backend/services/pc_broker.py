@@ -110,6 +110,14 @@ MIN_ORDER_USD = 250.0
 #: Orders per session, a circuit breaker on a loop that starts thrashing.
 MAX_ORDERS_PER_SESSION = 120
 
+#: Sampled into every NAV row at the same instant as equity, so a relative
+#: return is computable later without re-fetching a close price and hoping the
+#: clocks matched. SPY is the headline; IWM and QQQ separate "the market rose"
+#: from "large caps rose" -- on 2026-09-21 SPY made +1.55% and IWM only +0.52%,
+#: and a book of small names measured against the wrong one looks better or
+#: worse than it was.
+BENCHMARKS: tuple[str, ...] = ("SPY", "QQQ", "IWM")
+
 assert MAX_INVESTED_FRAC <= 1.0, "MAX_INVESTED_FRAC > 1.0 is leverage"
 
 
@@ -196,11 +204,24 @@ def last_prices(symbols: Iterable[str]) -> dict[str, float]:
     out: dict[str, float] = {}
     for i in range(0, len(syms), 200):
         chunk = syms[i:i + 200]
-        try:
-            d = _call("GET", "/v2/stocks/trades/latest", host=DATA_HOST,
-                      params={"symbols": ",".join(chunk), "feed": "sip"})
-        except BrokerError as exc:
-            logger.warning("pc_broker: latest trades failed for %d symbols: %s", len(chunk), exc)
+        # SIP is the consolidated tape and the PC-PAPER plan does not carry it:
+        # measured 2026-09-22, `feed=sip` answers HTTP 403 "subscription does not
+        # permit querying recent SIP data". IEX is free and real-time, covers a
+        # smaller share of volume, and is the right default for a paper book that
+        # only needs a mark. The feed used is RETURNED, because a price from a
+        # partial tape is a different number and the caller should be able to say
+        # which one it got.
+        d = None
+        for feed in ("sip", "iex"):
+            try:
+                d = _call("GET", "/v2/stocks/trades/latest", host=DATA_HOST,
+                          params={"symbols": ",".join(chunk), "feed": feed})
+                break
+            except BrokerError as exc:
+                if feed == "iex":
+                    logger.warning("pc_broker: latest trades failed for %d symbols "
+                                   "on every feed: %s", len(chunk), exc)
+        if d is None:
             continue
         for sym, t in (d.get("trades") or {}).items():
             if t and t.get("p"):
@@ -239,6 +260,26 @@ def snapshot(*, tag: str = "tick", out_dir: Path | None = None) -> dict:
             for p in pos
         ],
     }
+    # THE BENCHMARK, recorded beside the equity and at the same instant.
+    #
+    # Without this, "paper NAV vs SPY" cannot be answered later at all: an
+    # equity curve with no benchmark sampled on the same clock can only be
+    # compared to a close price fetched afterwards, which is a different
+    # question. Murat, 2026-09-22: the fleet made +0.60% on a day SPY made
+    # +1.55% -- beta without alpha, and invisible until the two numbers sit in
+    # one row.
+    #
+    # A failed quote is recorded as None with its reason. It is never dropped:
+    # a missing benchmark that looks like "no data" would quietly turn a
+    # relative number into an absolute one.
+    try:
+        bench = last_prices(BENCHMARKS)
+        payload["benchmarks"] = {b: bench.get(b) for b in BENCHMARKS}
+        payload["benchmark_error"] = None
+    except BrokerError as exc:
+        payload["benchmarks"] = {b: None for b in BENCHMARKS}
+        payload["benchmark_error"] = str(exc)[:200]
+
     payload["invested_frac"] = (payload["long_market_value"] / payload["equity"]
                                 if payload["equity"] else None)
     payload["intraday_return"] = (
