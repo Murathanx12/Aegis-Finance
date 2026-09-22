@@ -1275,7 +1275,18 @@ def _case_openclaw_client():
     return call, OC.OpenClawRefused, "assert_profile() with the pinned profile absent"
 
 
+def _case_web_events():
+    from backend.services import web_events as WE
+    # The missing input is the EVIDENCE itself. A row with no claim and no
+    # source is not a weak observation, it is not an observation -- and the
+    # ledger it would enter is the one the ranker learns from.
+    return (lambda: WE.validate({"ticker": "MU", "direction_prior": "positive"}),
+            WE.WebEventRefused,
+            "validate() on a row carrying a direction and no evidence")
+
+
 CASES = {
+    "web_events": _case_web_events,
     "openclaw_client": _case_openclaw_client,
     "sim_session": _case_sim_session,
     "telegram_bridge": _case_telegram_bridge,

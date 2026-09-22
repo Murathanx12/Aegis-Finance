@@ -482,3 +482,87 @@ def test_profiles_parser_ignores_indented_continuation_lines(monkeypatch):
     names = [p["name"] for p in OC.profiles()]
     assert names == ["muratclaw", "chrome"], names
     assert OC.profiles()[0]["port"] == 18801
+
+
+# ───────────── the web-event ledger: evidence in, never a decision ──────────
+
+from backend.services import web_events as WE               # noqa: E402
+
+
+def _ev(**over):
+    base = {"ticker": "MU", "entity": "Micron", "source_type": "sec",
+            "source_url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent",
+            "event_type": "filing_8k", "claim": "8-K filed",
+            "evidence_date": "2026-09-21", "confidence_source": "REGULATOR",
+            "retrieved_by": "openclaw:muratclaw"}
+    base.update(over)
+    return base
+
+
+def test_a_web_event_may_never_carry_a_decision():
+    """The ledger records what was OBSERVED; the ranker decides what it is worth."""
+    for field in ("expected_return", "target_price", "rank", "position_size", "action"):
+        with pytest.raises(WE.WebEventRefused, match="may not carry"):
+            WE.validate(_ev(**{field: 1}))
+
+
+def test_event_type_is_a_closed_vocabulary():
+    with pytest.raises(WE.WebEventRefused, match="closed vocabulary"):
+        WE.validate(_ev(event_type="looks_bullish"))
+
+
+def test_a_forum_cannot_file_an_8k():
+    with pytest.raises(WE.WebEventRefused, match="may not carry event_type"):
+        WE.validate(_ev(source_type="reddit"))
+
+
+def test_an_off_registry_url_is_refused():
+    """A wandering browser's evidence cannot be attributed to a tracked source."""
+    with pytest.raises(WE.WebEventRefused, match="not an allowed URL"):
+        WE.validate(_ev(source_url="https://example.com/whatever"))
+
+
+def test_evidence_cannot_be_dated_after_we_read_it():
+    with pytest.raises(WE.WebEventRefused, match="is AFTER"):
+        WE.validate(_ev(evidence_date="2099-01-01"))
+
+
+def test_a_direction_with_no_claim_is_refused():
+    """`claim=""` is caught earlier as a missing field; WHITESPACE is the case
+    this guard actually exists for — a row that looks populated and says
+    nothing."""
+    with pytest.raises(WE.WebEventRefused, match="missing required field"):
+        WE.validate(_ev(claim="", direction_prior="positive"))
+    with pytest.raises(WE.WebEventRefused, match="opinion"):
+        WE.validate(_ev(claim="   ", direction_prior="positive"))
+
+
+def test_observed_at_and_evidence_date_stay_separate():
+    """Conflating them is how a backtest trades on information it never had."""
+    e = WE.validate(_ev(evidence_date="2026-09-21"))
+    assert e["evidence_date"] == "2026-09-21"
+    assert e["observed_at"][:4] >= "2026"
+    assert e["observed_at"][:10] >= e["evidence_date"]
+
+
+def test_pit_safe_asof_filters_on_when_we_SAW_it(monkeypatch, tmp_path):
+    monkeypatch.setattr(WE, "LEDGER_DIR", tmp_path)
+    # a filing dated well before `asof`, but READ after it
+    WE.append([_ev(evidence_date="2026-01-05",
+                   observed_at="2026-06-01T00:00:00+00:00")], day="2026-06-01")
+    assert WE.pit_safe_asof("2026-03-01") == [], (
+        "a filing we had not yet read must not be visible at an earlier asof")
+    assert len(WE.pit_safe_asof("2026-06-02")) == 1
+
+
+def test_a_rescrape_is_not_a_new_event(monkeypatch, tmp_path):
+    monkeypatch.setattr(WE, "LEDGER_DIR", tmp_path)
+    r = WE.append([_ev(), _ev(), _ev()])
+    assert r["written"] == 1 and r["duplicates"] == 2
+
+
+def test_refusals_are_counted_and_returned_never_dropped(monkeypatch, tmp_path):
+    monkeypatch.setattr(WE, "LEDGER_DIR", tmp_path)
+    r = WE.append([_ev(), _ev(event_type="nonsense")])
+    assert r["written"] == 1 and r["refused"] == 1
+    assert "closed vocabulary" in r["refusals"][0]["why"]
