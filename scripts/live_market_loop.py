@@ -136,7 +136,15 @@ class Loop:
         """The ranked opportunity set, and the verdict on whether to act on it."""
         from backend.services import xs_ranker as XR
         t0 = time.time()
-        panel = XR.build_panel()
+        # Rank over the SURVIVORSHIP-FREE panel when it exists. The ranking of
+        # today's names is unaffected by dead names, but the CALIBRATION that
+        # gates trading is not: on the shallow 2025-26 panel the verdict rests
+        # on 14 month-blocks, and 14 blocks said +3.13% at t +3.59 for a
+        # construction that earned -0.20% over 122. The gate must read the long
+        # panel or it is not a gate.
+        paths = XR.survivorship_free_paths()
+        self.log(f"ranking panel: {', '.join(p.parent.name + '/' + p.name for p in paths)}")
+        panel = XR.build_panel(XR.load_bars(paths))
         oos, folds = XR.walk_forward(panel)
         cal = XR.calibrate(oos)
         model, train_end = XR.fit_production(panel)
