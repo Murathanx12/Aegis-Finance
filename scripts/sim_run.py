@@ -42,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import signal
 import sys
 import time
@@ -179,31 +180,66 @@ def u_rank(out: Path) -> dict:
                         "top1": (old.get("top") or [{}])[0].get("symbol")}
         except (OSError, ValueError):
             pass
-    panel = XR.build_panel(XR.load_bars(XR.survivorship_free_paths()))
-    oos, folds = XR.walk_forward(panel)
-    cal = XR.calibrate(oos)
-    model, train_end = XR.fit_production(panel)
-    ranked = XR.rank_asof(panel, model, cal, train_end=train_end)
-    topk = XR.top_k_backtest(oos, k=20)
-    payload = {
-        "receipt": "sim_ranking", "at": _now(),
-        "bars_fingerprint": fp,
-        "asof": str(ranked["asof"].iloc[0]),
-        "n_eligible": int(len(ranked)),
-        "model_version": str(ranked["model_version"].iloc[0]),
-        "ic_mean": cal.get("ic_mean"), "ic_t": cal.get("ic_t"),
-        "top20_net_rel_21d": topk.get("mean_net_rel_21d"),
-        "top": [{"rank": int(r["rank_21d"]), "symbol": r["symbol"],
-                 "decile": int(r["decile"]),
-                 "expected_relative_return_21d_net": r["expected_relative_return_21d_net"],
-                 "calibration_measured": bool(r["calibration_measured"])}
-                for _, r in ranked.head(25).iterrows()],
-    }
-    (out / "ranking.json").write_text(json.dumps(payload, indent=1, default=str),
-                                      encoding="utf-8")
-    return {"n_eligible": payload["n_eligible"], "ic_mean": payload["ic_mean"],
-            "top20_net_rel_21d": payload["top20_net_rel_21d"],
-            "top1": payload["top"][0]["symbol"] if payload["top"] else None}
+    res = _rank_in_subprocess(str(out))
+    if res.get("failed"):
+        raise RuntimeError(f"rank subprocess: {res['failed']} {res.get('stderr','')[:200]}")
+    # stamp the fingerprint so the next cycle can skip
+    prior_p = out / "ranking.json"
+    try:
+        payload = json.loads(prior_p.read_text(encoding="utf-8"))
+        payload["bars_fingerprint"] = fp
+        prior_p.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
+    except (OSError, ValueError):
+        pass
+    return res
+
+
+#: The ranker, out-of-process. `build_panel` peaks around 3 GB on 7M rows and
+#: pandas keeps those pages for the life of the interpreter; over a 12-hour
+#: session that is the difference between a bounded worker and an OOM. The
+#: subprocess writes `ranking.json` itself and returns only the summary.
+_RANK_SRC = """
+import json, warnings, sys
+warnings.filterwarnings('ignore')
+from backend.services import xs_ranker as XR
+from pathlib import Path
+out = Path(sys.argv[1])
+panel = XR.build_panel(XR.load_bars(XR.survivorship_free_paths()))
+oos, folds = XR.walk_forward(panel)
+cal = XR.calibrate(oos)
+model, train_end = XR.fit_production(panel)
+ranked = XR.rank_asof(panel, model, cal, train_end=train_end)
+topk = XR.top_k_backtest(oos, k=20)
+payload = {
+    'receipt': 'sim_ranking',
+    'asof': str(ranked['asof'].iloc[0]),
+    'n_eligible': int(len(ranked)),
+    'model_version': str(ranked['model_version'].iloc[0]),
+    'ic_mean': cal.get('ic_mean'), 'ic_t': cal.get('ic_t'),
+    'top20_net_rel_21d': topk.get('mean_net_rel_21d'),
+    'top': [{'rank': int(r['rank_21d']), 'symbol': r['symbol'],
+             'decile': int(r['decile']),
+             'expected_relative_return_21d_net': r['expected_relative_return_21d_net'],
+             'calibration_measured': bool(r['calibration_measured'])}
+            for _, r in ranked.head(25).iterrows()],
+}
+(out / 'ranking.json').write_text(json.dumps(payload, indent=1, default=str), encoding='utf-8')
+summary = {'n_eligible': payload['n_eligible'], 'ic_mean': payload['ic_mean'],
+           'top20_net_rel_21d': payload['top20_net_rel_21d'],
+           'top1': payload['top'][0]['symbol'] if payload['top'] else None}
+print('<<<' + json.dumps(summary, default=str) + '>>>')
+"""
+
+
+def _rank_in_subprocess(out_dir: str, timeout: float = 2400.0) -> dict:
+    import subprocess
+    r = subprocess.run([sys.executable, "-c", _RANK_SRC, out_dir], cwd=str(REPO),
+                       capture_output=True, text=True, timeout=timeout,
+                       env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    txt = r.stdout or ""
+    if "<<<" in txt and ">>>" in txt:
+        return json.loads(txt.split("<<<", 1)[1].rsplit(">>>", 1)[0])
+    return {"failed": f"rc {r.returncode}", "stderr": (r.stderr or "")[-400:]}
 
 
 def u_grade() -> dict:
@@ -223,20 +259,75 @@ def u_grade() -> dict:
 
 
 def u_learn(cycle_n: int, out: Path) -> dict:
-    """One research unit per cycle, rotating, so a long session covers ground."""
-    from backend.services import xs_ranker as XR
+    """One research unit per cycle -- but only when its INPUT has changed.
+
+    The first version rotated unconditionally, and every `breadth_check` rebuilt
+    a 7-million-row panel. Measured on the live 12-hour run at cycle 19: the
+    worker held **7.8 GB** with 3.6 GB free on the machine. pandas does not hand
+    that memory back to the OS, so a 144-cycle session would have grown until
+    something was OOM-killed -- and the 5-minute pacing made it worse by fitting
+    in MORE cycles, each loading another panel.
+
+    Two fixes, and the second is the one that actually bounds it:
+
+    1. the same bars fingerprint `u_rank` uses, so an unchanged panel is not
+       re-analysed; and
+    2. the heavy units run in a SUBPROCESS, because releasing a Python
+       reference is not the same as returning the pages. A process that exits
+       returns everything, which is the only bound that holds over 12 hours.
+    """
     rota = ("survivorship_audit", "breadth_check", "idle")
     pick = rota[cycle_n % len(rota)]
-    if pick == "survivorship_audit":
-        bars = XR.load_bars(XR.survivorship_free_paths())
-        return {"unit": pick, **XR.survivorship_audit(bars)}
-    if pick == "breadth_check":
-        panel = XR.build_panel(XR.load_bars(XR.survivorship_free_paths()))
-        oos, _ = XR.walk_forward(panel, n_folds=3)
-        return {"unit": pick,
-                **{f"k{k}": XR.top_k_backtest(oos, k=k).get("mean_net_rel_21d")
-                   for k in (20, 100, 300)}}
-    return {"unit": "idle", "why": "rota rest slot; the market loop owns the session"}
+    if pick == "idle":
+        return {"unit": "idle", "why": "rota rest slot; the market loop owns the session"}
+
+    fp = _bars_fingerprint()
+    cache = out / f"learn_{pick}.json"
+    if cache.exists():
+        try:
+            old_res = json.loads(cache.read_text(encoding="utf-8"))
+            if old_res.get("bars_fingerprint") == fp:
+                return {"unit": pick, "skipped": "bars unchanged since this unit last ran",
+                        **{k: v for k, v in old_res.items()
+                           if isinstance(v, (int, float, str, bool, type(None)))}}
+        except (OSError, ValueError):
+            pass
+
+    res = _in_subprocess(pick)
+    res["bars_fingerprint"] = fp
+    cache.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
+    return {"unit": pick, **{k: v for k, v in res.items()
+                             if isinstance(v, (int, float, str, bool, type(None)))}}
+
+
+#: The heavy units, run out-of-process. Releasing a reference is not returning
+#: the pages; only an exiting process does that reliably.
+_LEARN_SRC = {
+    "survivorship_audit": (
+        "from backend.services import xs_ranker as XR;"
+        "bars=XR.load_bars(XR.survivorship_free_paths());"
+        "out=XR.survivorship_audit(bars)"),
+    "breadth_check": (
+        "from backend.services import xs_ranker as XR;"
+        "panel=XR.build_panel(XR.load_bars(XR.survivorship_free_paths()));"
+        "oos,_=XR.walk_forward(panel,n_folds=3);"
+        "out={f'k{k}':XR.top_k_backtest(oos,k=k).get('mean_net_rel_21d') "
+        "for k in (20,100,300)}"),
+}
+
+
+def _in_subprocess(pick: str, timeout: float = 1800.0) -> dict:
+    import subprocess
+    code = ("import json,warnings;warnings.filterwarnings('ignore');"
+            + _LEARN_SRC[pick]
+            + ";print('<<<'+json.dumps(out,default=str)+'>>>')")
+    r = subprocess.run([sys.executable, "-c", code], cwd=str(REPO),
+                       capture_output=True, text=True, timeout=timeout,
+                       env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    txt = r.stdout or ""
+    if "<<<" in txt and ">>>" in txt:
+        return json.loads(txt.split("<<<", 1)[1].rsplit(">>>", 1)[0])
+    return {"failed": f"rc {r.returncode}", "stderr": (r.stderr or "")[-300:]}
 
 
 # ──────────────────────────────── the loop ──────────────────────────────────
