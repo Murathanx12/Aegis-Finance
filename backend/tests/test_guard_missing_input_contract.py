@@ -1168,7 +1168,43 @@ def _case_decision_ledger():
             DecisionLedgerError, "a lifecycle row with no decision under it")
 
 
+def _case_xs_ranker():
+    import pathlib
+    import tempfile
+
+    from backend.services import xs_ranker as XR
+    # The missing input is the PRICE PANEL. A ranker that answered without one
+    # would rank whatever happened to be in memory, and a ranking is acted on
+    # with capital -- so an absent panel must raise, never return an empty
+    # frame that reads downstream as "no opportunities today".
+    absent = pathlib.Path(tempfile.mkdtemp()) / "absent.parquet"
+    return (lambda: XR.load_bars(absent), XR.RankerError,
+            "load_bars over a panel that does not exist")
+
+
+def _case_pc_broker():
+    import os
+
+    from backend.services import pc_broker as PB
+    # The missing input is the ACCOUNT CREDENTIAL. Falling back to another
+    # role's key is how one book silently trades another's account, so the
+    # absence of the declared pair refuses rather than substituting.
+    saved = {k: os.environ.pop(k, None) for k in (PB.KEY_ENV, PB.SECRET_ENV)}
+
+    def call():
+        try:
+            return PB.credentials()
+        finally:
+            for k, v in saved.items():
+                if v is not None:
+                    os.environ[k] = v
+
+    return call, PB.BrokerError, "credentials() with the PC paper pair absent"
+
+
 CASES = {
+    "xs_ranker": _case_xs_ranker,
+    "pc_broker": _case_pc_broker,
     "decision_contract": _case_decision_contract,
     "decision_ledger": _case_decision_ledger,
     "brain_queries": _case_brain_queries,

@@ -65,6 +65,16 @@ KEY_ALIASES: tuple[tuple[str, str], ...] = ()
 STOP_LEAD_MIN = 30
 KILL_JOBS_LEAD_MIN = 5
 KILL_LAB_LEAD_MIN = 3
+#: The live market loop is stopped LAST of the workers. It is the only child
+#: whose job is the market rather than the queue, and on 2026-09-22 the night
+#: had no such child at all -- which is why the queue draining at 01:50 left
+#: five idle hours while the US session was still open.
+KILL_LIVE_LEAD_MIN = 2
+#: Reality grading runs at T-MINUS THIS, not in the shutdown path. On
+#: 2026-09-22 the 06:30 pass was still inside a 160-minute analyst snapshot when
+#: the kill came at T-5, so the night produced a contract and no scoreboard.
+#: A grading pass that can be cut by the clock is a grading pass that will be.
+GRADE_LEAD_MIN = 60
 TICK_S = 30
 
 
@@ -90,12 +100,17 @@ class Night:
         self.paid = a.paid
         self.pids: dict[str, int | None] = {"night_factory_phase1": None,
                                             "night_factory_phase2": None,
-                                            "lab": None, "llama_server": None}
+                                            "lab": None, "llama_server": None,
+                                            "live_market_loop": None}
         self.events: list[dict] = []
         self.children: dict[str, subprocess.Popen] = {}
         self.stopped_written = False
         self.jobs_killed = False
         self.lab_killed = False
+        self.live_killed = False
+        self.graded_late = False
+        self.live = a.live
+        self.live_mode = a.live_mode
 
     # ------------------------------------------------------------ plumbing
     def _resolve(self, hhmm: str) -> datetime:
@@ -193,7 +208,7 @@ class Night:
         except (OSError, subprocess.SubprocessError) as exc:
             self.log(f"balance snapshot ({label}) failed: {exc}")
 
-    def grade_reality(self) -> None:
+    def grade_reality(self, tag: str = "post_bars") -> None:
         code = (
             "import json,sys\n"
             "from pathlib import Path\n"
@@ -206,7 +221,7 @@ class Night:
             "try:\n"
             "    res['score_due']=DL.score_due()\n"
             "except Exception as e: res['score_due']={'status':'FAILED','error':f'{type(e).__name__}: {e}'}\n"
-            "p=out/'REALITY_GRADING_night.json'\n"
+            f"p=out/'REALITY_GRADING_night_{tag}.json'\n"
             "p.write_text(json.dumps(res,indent=1,default=str),encoding='utf-8')\n"
             "print({k:(v.get('status') or v.get('headline') or v.get('error')) for k,v in res.items()})\n"
         )
@@ -237,9 +252,17 @@ class Night:
             self.jobs_killed = True
             self._kill("night_factory_phase1")
             self._kill("night_factory_phase2")
+        if not self.graded_late and left <= GRADE_LEAD_MIN:
+            # BEFORE anything is killed, so the scoreboard always exists.
+            self.graded_late = True
+            self.log(f"T-{GRADE_LEAD_MIN}: protected grading window")
+            self.grade_reality(tag="pre_stop")
         if not self.lab_killed and left <= KILL_LAB_LEAD_MIN:
             self.lab_killed = True
             self._kill("lab")
+        if not self.live_killed and left <= KILL_LIVE_LEAD_MIN:
+            self.live_killed = True
+            self._kill("live_market_loop")
         if int(now.timestamp()) % 600 < TICK_S:
             self.log(f"heartbeat: {left:.0f} min to stop; alive: "
                      f"{[n for n in self.children if self._alive(n)]}")
@@ -284,24 +307,40 @@ class Night:
             return {"rc": None, "error": str(exc)}
 
     def finish(self, why: str) -> None:
-        # order: jobs, lab, model, report, census -- every path, once.
+        """Order: workers, model, STOP RECEIPT, then the report that reads it.
+
+        The receipt is written BEFORE the morning report and rewritten after.
+        On 2026-09-22 the report ran first and had to describe a stop that had
+        not happened yet, so its own Q3 cited itself and the census it printed
+        was of a night still running. A report that reads a receipt must run
+        after the receipt exists; there is no ordering in which both can be
+        first, so the receipt is written twice and says which pass it is on.
+        """
         self._kill("night_factory_phase1")
         self._kill("night_factory_phase2")
         self._kill("lab")
+        self._kill("live_market_loop")
         model = self.stop_model()
         self.log(f"model server: {model}")
         self.balance("end")
-        report = self.morning_report()
-        self.log(f"morning report: rc {report.get('rc')}")
         cen = self.census()
+
         payload = {"receipt": "NIGHT_STOPPED", "date": self.date, "why": why,
                    "stop_at": self.stop_at.isoformat(timespec="minutes"),
                    "stopped_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                   "pids": self.pids, "model_server": model, "morning_report": report,
+                   "pids": self.pids, "model_server": model,
+                   "morning_report": {"status": "PENDING: written after this receipt"},
                    "census": cen, "keys": self.key_census(), "events": self.events[-60:]}
-        (self.out / "NIGHT_STOPPED.json").write_text(json.dumps(payload, indent=1, default=str),
-                                                     encoding="utf-8")
-        self.log(f"NIGHT_STOPPED.json written; census {json.dumps(cen['ours'])[:300]}")
+        path = self.out / "NIGHT_STOPPED.json"
+        path.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
+        self.log(f"NIGHT_STOPPED.json written (pass 1); census {json.dumps(cen['ours'])[:300]}")
+
+        report = self.morning_report()
+        self.log(f"morning report: rc {report.get('rc')}")
+        payload["morning_report"] = report
+        payload["events"] = self.events[-60:]
+        path.write_text(json.dumps(payload, indent=1, default=str), encoding="utf-8")
+        self.log("NIGHT_STOPPED.json rewritten (pass 2) with the report's result")
 
     # ---------------------------------------------------------------- main
     def run(self) -> int:
@@ -315,6 +354,14 @@ class Night:
             self.power_check()
             self.start_model()
             self.balance("start")
+            # The market loop starts FIRST and outlives every queue. It owns the
+            # US session; the research queue is what fills the gaps around it.
+            # Reversing that order is what produced "the queue finished at 01:50,
+            # five idle hours" while the session still had four hours to run.
+            if self.live:
+                self._popen("live_market_loop",
+                            ["-m", "scripts.live_market_loop",
+                             "--mode", self.live_mode, "--date", self.date])
             if self.first:
                 self.run_factory("night_factory_phase1", self.first,
                                  self.stop_at - timedelta(minutes=KILL_JOBS_LEAD_MIN))
@@ -349,6 +396,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--queue", default="", help="NIGHT_QUEUE for phase 2")
     ap.add_argument("--lab", action="store_true")
     ap.add_argument("--paid", action="store_true", help="export AEGIS_NIGHT_PAID_OK=1 to the jobs")
+    ap.add_argument("--live", action="store_true",
+                    help="run scripts.live_market_loop across the whole night")
+    ap.add_argument("--live-mode", choices=("observe", "trade"), default="observe",
+                    help="observe writes the book it would hold; trade submits it")
     a = ap.parse_args(argv)
     if not a.date:
         d = date.today() + (timedelta(days=1) if _now().hour >= 18 else timedelta())

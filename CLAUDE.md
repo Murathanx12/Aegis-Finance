@@ -172,6 +172,41 @@ on. Railway project `selfless-courage` / `Aegis-Finance` is THIS repo's website
 backend and places no orders. `railway logs --service aat-loop-<role>` is the
 heartbeat; a laptop PID is not.
 
+## THE REAL BOTTLENECK WAS A STATIC FILE (found 2026-09-22)
+
+> `investment_committee.funnel_state()` serves `backend/data/funnel_night10.json`.
+> Its `generated_at` is **2026-08-11T02:33:48Z**. Nothing regenerates it.
+
+Every EXPLOIT / EXPLORE / PROBE / REFUSED row, every ROI rank and every decision
+contract for six weeks was computed over the **forty tickers** one August night
+shortlisted. The 2026-09-22 contract scored `roi_ranking.n_considered: 2`. The
+morning report's "all 30 largest moves were outside our universe" was not a
+universe-definition problem; it was a **42-day-old file**.
+
+Meanwhile `prices_2025_26/bars.parquet` held 1,275,452 bars for 3,060 symbols
+through 2026-09-21 and no decision path opened it. **Before diagnosing a ranking,
+print the age and size of the candidate set it ranked.** A model cannot pick a
+name nobody offered it, and `universe_screened: 5324` in the receipt looks
+healthy while `len(candidates) == 40` and the date is last month.
+
+Two things the same day, both measured, both the same shape:
+
+- **The bars panel is SURVIVOR-SELECTED.** Of 3,060 symbols, **zero** stopped
+  trading more than 21 sessions before the end — impossible in a real US
+  cross-section. The symbol list came from a universe file dated 2026-09-01, so
+  membership meant *being alive on 2026-09-01*. Bias is not uniform across
+  strategies: it is concentrated in small, illiquid, distressed names, which is
+  exactly what a size/illiquidity ranker buys. `xs_ranker.survivorship_audit()`
+  prints the verdict on every receipt; `scripts/pull_delisted_bars.py` puts the
+  2,433 dead names back.
+- **A prior is not a prior once you have looked.** The bake-off's `composite`
+  chose NO feature on any training fold, while three cleared the bar on the full
+  sample. That gap is the selection effect, visible only because signs are
+  chosen inside the fold. Anything picked after a full-sample diagnostic is a
+  finding to be tested on foreign data, never a prior.
+
+Accounts, ownership and the execution lease: `docs/ACCOUNTS_2026-09-22_THE_PAPER_FLEET.md`.
+
 ## THE BOTTLENECK (diagnosed 2026-08-24 — `docs/ROADMAP_2026-08-24_CONNECT_THE_BRAIN.md`)
 
 > All ten arena books declare `selection: composite_top_k` over ONE signal.

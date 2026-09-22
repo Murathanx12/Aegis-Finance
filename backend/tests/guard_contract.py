@@ -56,6 +56,16 @@ EXCEPTION_BASES = {"RuntimeError", "Exception", "ValueError", "LookupError",
 #: each says why in one line so that "exempt" costs a sentence instead of
 #: nothing. A new module lands in neither table and fails the enrolment test.
 NOT_INPUT_GUARDS: dict[str, str] = {
+    "policy_state": ("PolicyRefused — raised on an UNDECLARED KEY, an "
+                     "out-of-range value or a change with no evidence, none of "
+                     "which is a missing input. The missing input here is the "
+                     "state file itself, and `load()` deliberately serves "
+                     "DEFAULTS for it: a corrupt preference file must not halt "
+                     "an unattended night, and defaults are the declared "
+                     "starting point rather than an invented answer. The "
+                     "refusals are asserted directly in "
+                     "test_pc_live_stack.py::test_a_risk_limit_is_not_a_preference "
+                     "and its three siblings."),
     "data_fetcher": "RateLimited — upstream throttling, not an inference",
     "data_integrity": "raised on data that arrived wrong, not on data absent",
     "base": "ProviderUnavailable/ProviderError — transport failures",

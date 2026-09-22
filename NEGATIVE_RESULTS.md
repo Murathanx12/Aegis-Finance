@@ -3286,3 +3286,90 @@ been run. The construction the ledger flagged is now measured once and found emp
 has a live book; it is `FAILED_VARIANT`, not `MECHANISM_REJECTED`. The ownership rank carries no value
 before 1996 on this checkout (holdings files 1989-1995 absent; those months are counted on the receipt as
 `months_with_no_rank_in_pool`, nothing is excluded in them).
+
+## 59. Price/volume alone does not rank the US cross-section at 21 sessions — the edge is real, tiny, and lives only in the names that cost more than it pays (2026-09-22)
+
+**Licence: `PRODUCT_EXPERIMENT`. Status: `FAILED_VARIANT` for the price/volume
+feature family at a 21-session horizon. NOT `MECHANISM_REJECTED` — this closes
+one input set, not cross-sectional ranking.**
+
+### What was asked
+
+Given ~3,000 liquid US names, can a cross-sectional model rank them on expected
+**next-21-session relative return** well enough to fund a long-only paper book?
+The horizon is the Bloomberg Challenge's unit and Murat's "great projection in
+the next month".
+
+### The panel
+
+`xs_ranker` over `prices_deep/bars.parquet` + `prices_deep/bars_delisted.parquet`:
+**5,481,309 rows, 3,578 symbols, 2,547 decision dates, 122 month-blocks,
+2016-07-01 .. 2026-08-19.** Survivorship-free: **1,573 of 4,793 symbols (32.8%)
+stop trading before the end.** 24 features (momentum family, reversal,
+volatility, liquidity, Amihud, range position, residual momentum, beta, skew).
+Walk-forward, 5 folds, expanding window, **purged by one full horizon** so
+overlapping 21-session labels cannot leak. Costs by liquidity band
+(mega 6 / large 10 / mid 18 / small 35 bps round trip).
+
+### The result
+
+| model | net /21d | gross /21d | t (blocks) | IC | IC t | hit |
+|---|---:|---:|---:|---:|---:|---:|
+| `composite_prior` | −0.22% | +0.12% | −0.28 | −0.0088 | −3.44 | 45% |
+| `lgbm_full` | −0.47% | −0.30% | −0.69 | **+0.0227** | **+7.56** | 43% |
+| `lgbm_small` | −0.15% | −0.06% | −0.56 | +0.0112 | +4.46 | 48% |
+| `composite` | REFUSED — chose no feature on any training fold | | | | | |
+
+**Every model is negative net at every book size k ∈ {10, 20, 50, 100, 200,
+300, 500}.** Best cell: `composite_prior` at k=50, **net −0.06%, gross +0.28%**.
+
+### The three findings worth keeping
+
+**1. The ordering carries a real signal that cannot pay its own toll.**
+`lgbm_full`'s IC is **+0.0227 at t +7.56** — genuinely positive and stable —
+while its top-20 book loses 0.47%. Those are consistent: top-20 of ~3,000 is the
+0.7% tail, and the tail of a weak signal is whatever is tiny, volatile and thin.
+Widening the book does exactly what theory says (net −0.42% → −0.15%, hit
+43% → 48%, gross turns positive) and still cannot clear costs.
+`composite_prior` is the cleanest case: **gross +0.20% to +0.28% at EVERY k from
+10 to 500**, against a ~35 bps small-cap round trip. **The edge is 28 bps and
+the toll is 35 bps.**
+
+**2. The edge IS the illiquidity, so it cannot be bought cheaply.** Raising the
+floor to $50M median daily dollar volume (1,870 names) collapses
+`composite_prior` from **gross +0.28% to gross −0.18%**. That is not a modelling
+artefact, it is the economics: the illiquidity premium is compensation for
+illiquidity, and it is handed back in spread. *Restricting the universe to make
+the strategy cheaper deletes the thing being bought.* The single positive net
+cell anywhere (`lgbm_small`, liquid, k=10, +0.25%) carries **t +0.33** and is
+negative at all six other book sizes — the maximum of 28 cells, reported here
+only so nobody rediscovers it and believes it.
+
+**3. Momentum is dead here, independently.** Every momentum feature scored
+t between −0.18 and +0.30 univariately. This reproduces `opportunity_funnel`'s
+standing verdict that `momentum_12_1` is CLOSED, from a separate implementation
+over a different panel.
+
+### Two methodological findings that cost more than the result
+
+* **The first fit reported IC −0.0316, t −3.02, top-20 at −4.30%** — a GBM with
+  24 features on 14 month-blocks, learning the training fold's accidents.
+  `lgbm_small` beat it by 3.2 points. On thin data, shrink the hypothesis space
+  before enlarging the model.
+* **A 14-block read said +3.13%, t +3.59. The same construction over 122 blocks
+  said −0.20%.** Nothing about survivorship or costs changed between those two
+  numbers — only the amount of history. A t of +3.6 over seven effective blocks
+  is not evidence; see [[feedback-a-prior-chosen-after-the-diagnostic-is-not-a-prior]].
+
+### Scope, stated so this is not over-read
+
+One horizon (21 sessions), one input family (daily OHLCV), one region (US), one
+decade (2016-2026), long-only, equal-weighted, rebalanced daily into overlapping
+windows. **Not tested and still open:** fundamentals (the repo's one near-miss
+picker, `profitability_small`, is fundamental — net +5.11%, t 2.78, Holm 0.065
+at 126 sessions), analyst revisions, typed news events, intraday data, other
+horizons, sector-neutral construction, short legs. The correct next move is an
+input with more **amplitude**, not a cheaper execution or a larger model.
+
+Receipts: `backend/data/optimus/xs_ranker/bakeoff_survivorship_free.json`,
+`bakeoff_deep_breadth.json`, `bakeoff_liquid50m.json`, `bakeoff_2026-09-22.json`.

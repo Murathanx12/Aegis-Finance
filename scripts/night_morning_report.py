@@ -191,15 +191,130 @@ def cannot(what: str, path) -> str:
     return f"CANNOT DETERMINE: {what} (looked for `{path}`)"
 
 
+def block_money(day: str) -> list[str]:
+    """MONEY FIRST, from the BROKER, not from our own arithmetic.
+
+    Added 2026-09-22. The previous NAV block read `daily_pass.scoreboard`, a
+    path that never carried a broker number, so the report printed
+    "CANNOT DETERMINE" every morning while the account itself was one HTTP call
+    away. `pc_broker.snapshot` now writes the venue's own equity to
+    `pc_book/<date>/nav.jsonl` on every tick of the live loop, and this reads
+    that. If the file is absent the loop did not run, and THAT is the finding —
+    printed as such, not as a missing number.
+    """
+    from pathlib import Path as _P
+    book = _P(__file__).resolve().parents[1] / "backend" / "data" / "optimus" / "pc_book" / day
+    nav = book / "nav.jsonl"
+    if not nav.exists():
+        return ["- " + cannot(
+            "the live market loop wrote no NAV: it did not run, or it held no "
+            "broker lease. This is an OPERATIONAL finding, not a missing number "
+            "— the account can be read in one call", nav)]
+    rows = read_jsonl(nav)
+    if not rows:
+        return ["- " + cannot("nav.jsonl exists but is empty", nav)]
+    first, last = rows[0], rows[-1]
+    d_eq = last["equity"] - first["equity"]
+    pct = (d_eq / first["equity"] * 100) if first["equity"] else float("nan")
+    lines = [
+        f"- **equity ${last['equity']:,.2f}** (account {last.get('account_number')}), "
+        f"cash ${last['cash']:,.2f}, {last['n_positions']} positions, "
+        f"{(last.get('invested_frac') or 0)*100:.0f}% invested",
+        f"- session move: ${d_eq:+,.2f} ({pct:+.2f}%) across {len(rows)} broker reads "
+        f"{first['t'][11:16]}Z -> {last['t'][11:16]}Z",
+    ]
+    if last.get("intraday_return") is not None:
+        lines.append(f"- vs the broker's own last_equity: {last['intraday_return']*100:+.2f}%")
+    pos = sorted(last.get("positions") or [], key=lambda p: p["unrealized_pl"])
+    if pos:
+        w, b = pos[0], pos[-1]
+        lines.append(f"- best {b['symbol']} ${b['unrealized_pl']:+,.0f} "
+                     f"({b['unrealized_plpc']*100:+.1f}%) · "
+                     f"worst {w['symbol']} ${w['unrealized_pl']:+,.0f} "
+                     f"({w['unrealized_plpc']*100:+.1f}%)")
+    stopped = read_json(book / "LIVE_LOOP_STOPPED.json")
+    if isinstance(stopped, dict):
+        v = (stopped.get("ranking_verdict") or {}).get("verdict")
+        lines.append(f"- loop: mode {stopped.get('mode')}, {stopped.get('orders_sent')} orders sent"
+                     + (f", ranking {v}" if v else "")
+                     + (f", HALTED {stopped['halted']}" if stopped.get("halted") else ""))
+    return lines
+
+
+def block_ranking(day: str, top_n: int = 20) -> list[str]:
+    """The twenty best next-month names, with the number that sized them.
+
+    Added 2026-09-22. This is the answer to "what should I own next month" and
+    it is the Bloomberg Challenge's own unit — next-21-session RELATIVE return.
+    The expected return printed is the REALISED out-of-sample mean of that score
+    decile, never a model output; an uncalibrated decile prints so rather than
+    printing a zero that reads as a confident flat call.
+    """
+    from pathlib import Path as _P
+    p = (_P(__file__).resolve().parents[1] / "backend" / "data" / "optimus"
+         / "pc_book" / day / "ranking.json")
+    r = read_json(p)
+    if not isinstance(r, dict):
+        return ["- " + cannot("the live loop wrote no ranking", p)]
+    v = r.get("verdict") or {}
+    out = [f"- {r.get('n_eligible', 0):,} eligible names ranked as of {r.get('asof')} "
+           f"(model {r.get('model_version')}, {r.get('elapsed_s')}s)",
+           f"- **{v.get('verdict')}** — {v.get('why')}"]
+    rows = (r.get("top") or [])[:top_n]
+    if not rows:
+        out.append("- " + cannot("the ranking carries no names", p))
+        return out
+    out.append("")
+    out.append("| # | ticker | decile | exp rel 21d (net) | downside p20 | P(beat) | liquidity |")
+    out.append("|---|---|---|---|---|---|---|")
+    for x in rows:
+        er = x.get("expected_relative_return_21d_net")
+        dn = x.get("downside_21d")
+        pb = x.get("probability_beat_benchmark")
+        out.append(
+            f"| {x.get('rank')} | {x.get('symbol')} | {x.get('decile')} | "
+            f"{'UNMEASURED' if er is None else f'{er*100:+.2f}%'} | "
+            f"{'—' if dn is None else f'{dn*100:+.2f}%'} | "
+            f"{'—' if pb is None else f'{pb*100:.0f}%'} | "
+            f"{x.get('liquidity_band')} |")
+    return out
+
+
+def _nav_summary(nav) -> str:
+    """22 books of raw JSON on the first line nobody can read is not a report.
+
+    Keeps every number that decides anything — the spread, the benchmark, the
+    excess, the worst and best book — and drops the per-book array, which is on
+    disk for anyone who wants it.
+    """
+    if not isinstance(nav, dict):
+        return str(nav) if nav else ""
+    books = nav.get("books") or []
+    if not books:
+        return str(nav)[:300]
+    best = max(books, key=lambda b: b.get("pct", 0))
+    worst = min(books, key=lambda b: b.get("pct", 0))
+    w = nav.get("window") or {}
+    return (f"{nav.get('n_books')} books, mean {nav.get('mean_since_inception_pct'):+.2f}% vs "
+            f"{nav.get('benchmark_symbol')} {nav.get('benchmark_pct'):+.2f}% "
+            f"= excess {nav.get('excess_pct'):+.2f}% "
+            f"({w.get('first_date')}..{w.get('last_date')}); "
+            f"best {best['book'][-8:]} {best['pct']:+.2f}%, "
+            f"worst {worst['book'][-8:]} {worst['pct']:+.2f}%")
+
+
 def block_nav(receipts: dict, folder: Path, day: str) -> list[str]:
+    lines = block_money(day)
     stem, pas = find_receipt(receipts, f"daily_pass_{day}", "daily_pass")
     sb = (pas or {}).get("scoreboard") if isinstance(pas, dict) else None
     if not isinstance(sb, dict):
-        return ["- " + cannot("no daily-pass receipt carries a `scoreboard` block",
-                              folder / f"daily_pass_{day}.json")]
-    lines = [f"- paper NAV vs SPY: {sb.get('nav_vs_spy') or cannot('the scoreboard names no NAV', stem)}",
-             f"- EXPLOIT P&L: {sb.get('exploit_pnl') or 'CANNOT DETERMINE'}",
-             f"- EXPLORE P&L: {sb.get('explore_pnl') or 'CANNOT DETERMINE'}"]
+        lines.append("- internal lanes: " + cannot(
+            "no daily-pass receipt carries a `scoreboard` block",
+            folder / f"daily_pass_{day}.json"))
+        return lines
+    lines += [f"- internal NAV vs SPY: {_nav_summary(sb.get('nav_vs_spy')) or cannot('the scoreboard names no NAV', stem)}",
+              f"- EXPLOIT P&L: {sb.get('exploit_pnl') or 'CANNOT DETERMINE'}",
+              f"- EXPLORE P&L: {sb.get('explore_pnl') or 'CANNOT DETERMINE'}"]
     cap = sb.get("capital_resolution") or {}
     if cap:
         lines.append(f"- capital resolved: {cap.get('nothing_happened_is_not_allowed') or cap}")
@@ -526,6 +641,9 @@ def render(day: str, folder: Path, receipts: dict, contract: dict | None,
     L.append("")
     L.append("## 1. Paper NAV vs SPY")
     L += block_nav(receipts, folder, day)
+    L.append("")
+    L.append("## 1b. The twenty best next-month names")
+    L += block_ranking(day)
     L.append("")
     L.append("## 2. EXPLOIT / EXPLORE / PROBE")
     L += block_authority(contract, ledger, folder, day)
