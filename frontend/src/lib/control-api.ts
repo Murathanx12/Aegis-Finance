@@ -233,6 +233,71 @@ export interface LlamaActionResponse {
   [k: string]: unknown;
 }
 
+
+/**
+ * `GET /api/control/sim` — the simulation's DERIVED state.
+ *
+ * `UNCLEAN` is not stored, it is inferred from a stale heartbeat or a dead pid:
+ * a crashed process cannot set its own "I crashed" flag, and a status that
+ * waits to be told reports RUNNING forever. It means the checkpoint is good and
+ * the cycle after it is unknown — different facts from "it finished".
+ */
+export type SimState =
+  | "IDLE" | "RUNNING" | "STOPPING" | "STOPPED" | "COMPLETED" | "UNCLEAN";
+
+export interface SimSession {
+  id?: string;
+  kind?: string;
+  mode?: string;
+  state?: SimState;
+  started?: string;
+  planned_end?: string;
+  cycle?: number;
+  resume_count?: number;
+  unclean_reason?: string;
+  end_reason?: string;
+  checkpoint?: { cycle?: number; at?: string } | null;
+  cycles?: Array<{ cycle: number; at: string; elapsed_s?: number; errors?: unknown[] }>;
+  [k: string]: unknown;
+}
+
+export interface SimStatus {
+  state: SimState;
+  session: SimSession | null;
+  pid_alive?: boolean;
+  heartbeat_age_s?: number | null;
+  remaining_s?: number | null;
+  cycle?: number;
+  resumable?: boolean;
+  stop_requested?: boolean;
+  allowed_hours: number[];
+  smoke_minutes: number[];
+}
+
+/** A refusal is a normal 200 body — a duration outside the declared set, or a
+ * session already running. The sentence is the point, so it is shown verbatim. */
+export interface SimStartResponse {
+  ok: boolean;
+  session?: SimSession;
+  refused?: string;
+}
+
+export interface SimStopResponse {
+  ok: boolean;
+  state?: string;
+  cycle?: number;
+  detail?: string;
+}
+
+/** `GET /api/control/sim/preflight` — every dependency an 8-hour run needs,
+ * MEASURED (a real broker call, a real completion), not read from config. */
+export interface SimPreflight {
+  green: boolean;
+  red: string[];
+  rows: Record<string, Record<string, unknown>>;
+  at?: string;
+}
+
 /** `POST /api/control/ask`. Two disjoint shapes: an answer, or a refusal. */
 export interface AskResponse {
   ok?: boolean;
@@ -309,6 +374,8 @@ export const getRunLog = (pid: number, tail = 20_000) =>
 
 /** Being added concurrently. 404 => "not built yet", never a thrown page. */
 export const getLlama = () => controlFetch<LlamaStatus>("/llama");
+export const getSim = () => controlFetch<SimStatus>("/sim");
+export const getSimPreflight = () => controlFetch<SimPreflight>("/sim/preflight");
 /** Not in the router yet either; the Fleet page renders "not available" on 404. */
 export const getFleet = () => controlFetch<FleetResponse>("/fleet");
 /** Lane B: every paper book WITH its twins. Never one without the other. */
@@ -321,6 +388,20 @@ export const runJob = (job: string, hours?: number) =>
     `/run/${encodeURIComponent(job)}${hours != null ? `?hours=${hours}` : ""}`,
   );
 export const runNight = (hours: number) => post<StartedRun>(`/night?hours=${hours}`);
+
+/** Start a session. `hours` must be one of `allowed_hours`; `minutes` runs a
+ * named smoke rehearsal. A refusal comes back as `{ok:false, refused}`. */
+export const startSim = (opts: { hours?: number; minutes?: number; resume?: boolean }) => {
+  const q = new URLSearchParams();
+  if (opts.hours != null) q.set("hours", String(opts.hours));
+  if (opts.minutes != null) q.set("minutes", String(opts.minutes));
+  if (opts.resume) q.set("resume", "true");
+  return post<SimStartResponse>(`/sim/start?${q.toString()}`);
+};
+
+/** Ask for a SAFE stop. There is deliberately no force: the loop ends at a unit
+ * boundary, after the current cycle has checkpointed. */
+export const stopSim = () => post<SimStopResponse>("/sim/stop");
 export const stopPid = (pid: number, forceAfterS = 0) =>
   post<StopResponse>(`/stop/${pid}?force_after_s=${forceAfterS}`, undefined, 150_000);
 export const clearStopFile = () =>

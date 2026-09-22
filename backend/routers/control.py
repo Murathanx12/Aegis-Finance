@@ -439,6 +439,66 @@ def llama_stop_if_owned() -> dict:
 
 
 # --------------------------------------------------------------------------
+# The simulation: one button to start, one to stop, and a stop that loses
+# nothing. Murat, 2026-09-22: "it should stop at a safe time save everything
+# and maybe continue not terminate or leave it on the middle."
+#
+# `stop` here is a REQUEST, not a kill. It raises a flag the loop reads between
+# units of work, so the running cycle finishes and checkpoints first. The UI
+# must not offer a "force" — there is deliberately no such route, because the
+# whole design is that a stop cannot land mid-unit.
+# --------------------------------------------------------------------------
+
+@router.get("/sim")
+def sim_status() -> dict:
+    from backend.services import sim_session as ss
+    return ss.status()
+
+
+@router.post("/sim/start")
+def sim_start(hours: float | None = None, minutes: float | None = None,
+              mode: str = "observe", resume: bool = False) -> dict:
+    """Begin a session. A refusal is a normal 200 body carrying the sentence.
+
+    Durations are the declared set (6/8/10/12h, or a named smoke run); an
+    arbitrary number is how a quick test becomes an unattended 40-hour run.
+    """
+    _require_enabled()
+    from backend.services import sim_session as ss
+    try:
+        return {"ok": True, "session": ss.start(hours=hours, minutes=minutes,
+                                                mode=mode, resume=resume)}
+    except ss.SimRefused as exc:
+        return {"ok": False, "refused": str(exc)}
+
+
+@router.post("/sim/stop")
+def sim_stop() -> dict:
+    """Ask for a SAFE stop. Returns at once; the loop ends at a unit boundary."""
+    _require_enabled()
+    from backend.services import sim_session as ss
+    return ss.request_stop(reason="desktop")
+
+
+@router.get("/sim/history")
+def sim_history(limit: int = 10) -> dict:
+    from backend.services import sim_session as ss
+    return {"sessions": ss.history(limit=max(1, min(limit, 50)))}
+
+
+@router.get("/sim/preflight")
+def sim_preflight() -> dict:
+    """Everything an 8-hour session depends on, measured before it is started.
+
+    Six dependencies each have their own status command and nobody runs all six
+    before a long run. A red row here does not block the button — it is shown
+    beside it, so a session is never started in ignorance of what is down.
+    """
+    from scripts.stack_health import run as health
+    return health(deep=False)
+
+
+# --------------------------------------------------------------------------
 # "Ask Aegis": the built-in assistant. A READER of receipts on the local model.
 #
 # It explains what is on disk. It cannot run a job, seal a book, arm a lane or

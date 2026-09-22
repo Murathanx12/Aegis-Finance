@@ -64,6 +64,14 @@ logger = logging.getLogger("sim_run")
 #: the promise the design exists to keep.
 SLOW_UNIT_S = 1800
 
+#: A cycle is paced to at least this period. Once `u_rank` learned to skip an
+#: unchanged panel, a cycle fell from 198s to 4s -- and an 8-hour session would
+#: have spun ~800 near-empty cycles, each writing a receipt, none of them
+#: learning anything the previous one had not. The loop should WAIT for the
+#: world to change, not re-ask an unchanged question. Bars refresh daily and the
+#: broker moves on a 5-minute scale, so that is the natural period.
+MIN_CYCLE_PERIOD_S = 300
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -136,8 +144,41 @@ def u_reconcile(out: Path) -> dict:
             "invested_frac": snap.get("invested_frac")}
 
 
-def u_rank(out: Path) -> dict:
+def _bars_fingerprint() -> str:
+    """What the ranking actually depends on: the bar files' size and mtime."""
     from backend.services import xs_ranker as XR
+    parts = []
+    for p in XR.survivorship_free_paths():
+        try:
+            s = p.stat()
+            parts.append(f"{p.name}:{s.st_size}:{int(s.st_mtime)}")
+        except OSError:
+            parts.append(f"{p.name}:absent")
+    return "|".join(parts)
+
+
+def u_rank(out: Path) -> dict:
+    """Re-rank ONLY when the bars moved.
+
+    `build_panel` reads ~7M rows, costs ~100s and peaks around 3 GB. Daily bars
+    change once a day, so re-ranking every cycle of an 8-hour session would
+    spend the whole night re-deriving one answer and leave the learn unit no
+    room. The fingerprint is the bar files' size and mtime -- the thing the
+    ranking actually depends on -- so a refreshed panel still re-ranks at once.
+    """
+    from backend.services import xs_ranker as XR
+    fp = _bars_fingerprint()
+    prior = out / "ranking.json"
+    if prior.exists():
+        try:
+            old = json.loads(prior.read_text(encoding="utf-8"))
+            if old.get("bars_fingerprint") == fp:
+                return {"skipped": "bars unchanged since the last rank",
+                        "asof": old.get("asof"),
+                        "n_eligible": old.get("n_eligible"),
+                        "top1": (old.get("top") or [{}])[0].get("symbol")}
+        except (OSError, ValueError):
+            pass
     panel = XR.build_panel(XR.load_bars(XR.survivorship_free_paths()))
     oos, folds = XR.walk_forward(panel)
     cal = XR.calibrate(oos)
@@ -146,6 +187,7 @@ def u_rank(out: Path) -> dict:
     topk = XR.top_k_backtest(oos, k=20)
     payload = {
         "receipt": "sim_ranking", "at": _now(),
+        "bars_fingerprint": fp,
         "asof": str(ranked["asof"].iloc[0]),
         "n_eligible": int(len(ranked)),
         "model_version": str(ranked["model_version"].iloc[0]),
@@ -264,11 +306,15 @@ def run(session_id: str) -> int:
             logger.info("cycle %d done in %.0fs (%d error(s))",
                         n, payload["elapsed_s"], len(c.errors))
 
-            # a short breather so a fast cycle cannot spin the machine
-            for _ in range(6):
+            # Pace to MIN_CYCLE_PERIOD_S measured from the cycle's START, so a
+            # slow cycle costs no extra wait and a fast one does not spin.
+            # The stop flag is checked every second: a stop should feel
+            # immediate even when the loop is idling.
+            spent = time.time() - t0
+            for _ in range(int(max(0.0, MIN_CYCLE_PERIOD_S - spent))):
                 if SS.stop_requested() or stopping["flag"]:
                     break
-                time.sleep(5)
+                time.sleep(1)
     except KeyboardInterrupt:
         SS.finish("STOPPED", "KeyboardInterrupt", {"final_cycle": n})
         return 130

@@ -23,12 +23,18 @@ import {
   getBalances,
   getLlama,
   getServices,
+  getSim,
+  getSimPreflight,
   startLlama,
+  startSim,
   stopLlama,
   stopPid,
+  stopSim,
   type LlamaActionResponse,
   type LlamaStatus,
   type ServicesResponse,
+  type SimPreflight,
+  type SimStatus,
 } from "@/lib/control-api";
 import { BoardCards } from "@/components/desktop/board-cards";
 
@@ -84,6 +90,174 @@ function vramLabel(st: LlamaStatus | undefined): string | null {
  * and only then offers the re-post with `allow_foreign=true`. The refusal is not
  * an obstacle to route around; it is the sentence the user has to read.
  */
+
+/**
+ * The simulation: one button to start, one to stop.
+ *
+ * The stop is a REQUEST, not a kill, and the copy says so — the loop finishes
+ * the cycle it is in, checkpoints, and exits. There is deliberately no "force"
+ * control here, because the whole design is that a stop cannot land mid-unit
+ * (`night_g3_evolve_v2` died 3.1 hours into a 5-hour box and its receipt read
+ * `exited with no receipt`).
+ *
+ * Preflight is on demand, not on mount: it makes a real broker call and a real
+ * model completion and takes ~30s, which is worth waiting for once before an
+ * 8-hour session and far too slow to run every time this page renders.
+ */
+function SimulationCard() {
+  const qc = useQueryClient();
+  const [note, setNote] = useState<string | null>(null);
+  const [pre, setPre] = useState<SimPreflight | null>(null);
+
+  const sim = useQuery({
+    queryKey: ["desktop", "sim"],
+    queryFn: getSim,
+    // while a session runs the cycle counter is the thing worth watching
+    refetchInterval: (q) =>
+      q.state.data?.state === "RUNNING" || q.state.data?.state === "STOPPING" ? 5_000 : 15_000,
+    retry: false,
+  });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["desktop", "sim"] });
+
+  const start = useMutation({
+    mutationFn: (opts: { hours?: number; minutes?: number; resume?: boolean }) => startSim(opts),
+    onSuccess: (d) => {
+      // A refusal is a normal 200 body. Show the sentence, do not swallow it.
+      setNote(d.ok ? `started ${d.session?.id} — ends ${d.session?.planned_end}` : d.refused ?? "refused");
+      invalidate();
+    },
+    onError: (e) => setNote(`start failed — ${errorText(e)}`),
+  });
+
+  const stop = useMutation({
+    mutationFn: stopSim,
+    onSuccess: (d) => {
+      setNote(d.detail ?? (d.ok ? "stop requested" : "nothing to stop"));
+      invalidate();
+    },
+    onError: (e) => setNote(`stop failed — ${errorText(e)}`),
+  });
+
+  const preflight = useMutation({
+    mutationFn: getSimPreflight,
+    onSuccess: (d) => {
+      setPre(d);
+      setNote(d.green ? "preflight GREEN — the stack can run a night" : `preflight RED: ${d.red.join(", ")}`);
+    },
+    onError: (e) => setNote(`preflight failed — ${errorText(e)}`),
+  });
+
+  const st = sim.data;
+  const state = st?.state ?? "IDLE";
+  const live = state === "RUNNING" || state === "STOPPING";
+  const hours = st?.allowed_hours ?? [6, 8, 10, 12];
+  const left =
+    st?.remaining_s != null
+      ? `${Math.floor(st.remaining_s / 3600)}h ${Math.floor((st.remaining_s % 3600) / 60)}m left`
+      : null;
+
+  const tone: Record<string, string> = {
+    RUNNING: "bg-emerald-500/15 text-emerald-300",
+    STOPPING: "bg-amber-500/15 text-amber-300",
+    UNCLEAN: "bg-red-500/15 text-red-300",
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Server className="h-4 w-4" /> Simulation
+        </CardTitle>
+        <Badge className={tone[state] ?? "bg-muted text-muted-foreground"}>{state}</Badge>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {sim.isLoading ? (
+          <Skeleton className="h-16 w-full" />
+        ) : (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <Field label="Session" value={st?.session?.id ?? null} />
+            <Field label="Cycle" value={st?.cycle != null ? String(st.cycle) : null} />
+            <Field label="Mode" value={st?.session?.mode ?? null} />
+            <Field label="Remaining" value={left} />
+            <Field
+              label="Heartbeat"
+              value={st?.heartbeat_age_s != null ? `${Math.round(st.heartbeat_age_s)}s ago` : null}
+            />
+            <Field label="Resumable" value={st?.resumable ? "yes" : "no"} />
+          </div>
+        )}
+
+        {state === "UNCLEAN" && st?.session?.unclean_reason ? (
+          <p className="flex gap-2 rounded border border-red-500/30 bg-red-500/10 p-2 text-xs text-red-200">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>{st.session.unclean_reason}</span>
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap items-center gap-2">
+          {hours.map((h) => (
+            <Button
+              key={h}
+              size="sm"
+              variant={h === 8 ? "default" : "secondary"}
+              disabled={live || start.isPending}
+              onClick={() => start.mutate({ hours: h })}
+            >
+              {start.isPending ? "starting…" : `${h}h`}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={live || start.isPending}
+            onClick={() => start.mutate({ minutes: 30 })}
+          >
+            30m smoke
+          </Button>
+          {st?.resumable && !live ? (
+            <Button size="sm" variant="secondary" onClick={() => start.mutate({ hours: 8, resume: true })}>
+              <RefreshCw className="mr-1 h-3 w-3" /> Resume
+            </Button>
+          ) : null}
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={!live || stop.isPending}
+            onClick={() => stop.mutate()}
+          >
+            <Square className="mr-1 h-3 w-3" />
+            {stop.isPending ? "stopping…" : "Stop"}
+          </Button>
+          <Button size="sm" variant="ghost" disabled={preflight.isPending} onClick={() => preflight.mutate()}>
+            {preflight.isPending ? "checking…" : "Preflight"}
+          </Button>
+        </div>
+
+        <p className="text-xs text-muted-foreground">
+          Stop is a <strong>request</strong>, not a kill: the current cycle finishes and checkpoints
+          before the loop exits, and <em>Resume</em> continues from there.
+        </p>
+
+        {pre ? (
+          <div className="space-y-1 rounded border border-border/60 p-2 text-xs">
+            {Object.entries(pre.rows).map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-2">
+                <span className="text-muted-foreground">{k}</span>
+                <span className={v.ok ? "text-emerald-300" : "text-red-300"}>
+                  {v.ok ? "ok" : "red"}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 function LocalAiCard({ services }: { services: ServicesResponse | undefined }) {
   const qc = useQueryClient();
   const [confirm, setConfirm] = useState<LlamaActionResponse | null>(null);
@@ -471,6 +645,7 @@ export default function DesktopServicesPage() {
         </Card>
 
         <LocalAiCard services={s} />
+        <SimulationCard />
       </div>
 
       <RunsCard services={s} />
