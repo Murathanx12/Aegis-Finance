@@ -416,3 +416,69 @@ def test_a_vanished_process_reads_as_UNCLEAN_not_RUNNING(sim_tmp, monkeypatch):
 def test_nothing_to_resume_is_refused(sim_tmp):
     with pytest.raises(SS.SimRefused, match="nothing to resume"):
         SS.start(hours=6, resume=True, launcher=_fake_launch)
+
+
+# ───────────────── the browser: one profile, no money, no JS ────────────────
+
+from backend.services import openclaw_client as OC          # noqa: E402
+
+
+def test_money_domains_are_refused_before_the_call_leaves_python():
+    """Murat's one strict rule: never for payments."""
+    for url in ("https://app.alpaca.markets/paper/dashboard",
+                "https://www.paypal.com/signin",
+                "https://www.coinbase.com/",
+                "https://www.chase.com/personal"):
+        with pytest.raises(OC.OpenClawRefused, match="REFUSED_DOMAIN"):
+            OC.check_url(url)
+
+
+def test_research_domains_are_allowed():
+    for url in ("https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent",
+                "https://www.reddit.com/r/stocks/",
+                "https://investor.nvidia.com/"):
+        OC.check_url(url)          # must not raise
+
+
+def test_evaluate_is_not_an_allowed_verb():
+    """Arbitrary JS in a page the agent did not write is prompt-injection surface."""
+    assert "evaluate" not in OC.ALLOWED_VERBS
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_VERB"):
+        OC.browser("evaluate", "() => document.cookie")
+
+
+def test_a_missing_profile_refuses_and_never_falls_back(monkeypatch):
+    monkeypatch.setenv(OC.PROFILE_ENV, "no_such_profile")
+    monkeypatch.setattr(OC, "profiles", lambda: [{"name": "openclaw", "state": "stopped"}])
+    with pytest.raises(OC.OpenClawRefused, match="REFUSED_BROWSER_PROFILE_UNAVAILABLE"):
+        OC.assert_profile()
+
+
+def test_the_profile_is_named_on_every_browser_call(monkeypatch):
+    """Not 'whatever the default is' — the default moved four times in one day."""
+    seen = {}
+    monkeypatch.setenv(OC.PROFILE_ENV, "muratclaw")
+    monkeypatch.setattr(OC, "profiles", lambda: [{"name": "muratclaw", "state": "stopped"}])
+
+    def fake_run(args, **kw):
+        seen["argv"] = args
+        import subprocess as sp
+        return sp.CompletedProcess(args, 0, "ok", "")
+
+    monkeypatch.setattr(OC, "_run", fake_run)
+    OC.browser("open", url="https://www.sec.gov/")
+    assert seen["argv"][:4] == ["browser", "--browser-profile", "muratclaw", "open"]
+
+
+def test_profiles_parser_ignores_indented_continuation_lines(monkeypatch):
+    """`port:` and `transport:` are not profiles; treating them as such would
+    let assert_profile pass on a name that does not exist."""
+    out = ("muratclaw: stopped [default]\n"
+           "  port: 18801, color: #FF4500\n"
+           "chrome: stopped [extension]\n"
+           "  transport: extension, relayPort: 18799\n")
+    import subprocess as sp
+    monkeypatch.setattr(OC, "_run", lambda a, **k: sp.CompletedProcess(a, 0, out, ""))
+    names = [p["name"] for p in OC.profiles()]
+    assert names == ["muratclaw", "chrome"], names
+    assert OC.profiles()[0]["port"] == 18801

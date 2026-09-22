@@ -1249,7 +1249,34 @@ def _case_telegram_bridge():
     return call, TG.TelegramRefused, "send() with no owner chat id configured"
 
 
+def _case_openclaw_client():
+    import os
+
+    from backend.services import openclaw_client as OC
+    # The missing input is the BROWSER PROFILE. A browser profile is logged-in
+    # account access, so "whatever the default is" must never be substituted:
+    # the fallback is how a run ends up in a Guest window or somebody else's
+    # signed-in Chrome.
+    saved = os.environ.get(OC.PROFILE_ENV)
+    real = OC.profiles
+
+    def call():
+        os.environ[OC.PROFILE_ENV] = "a_profile_that_does_not_exist"
+        OC.profiles = lambda: [{"name": "openclaw", "state": "stopped"}]
+        try:
+            return OC.assert_profile()
+        finally:
+            OC.profiles = real
+            if saved is None:
+                os.environ.pop(OC.PROFILE_ENV, None)
+            else:
+                os.environ[OC.PROFILE_ENV] = saved
+
+    return call, OC.OpenClawRefused, "assert_profile() with the pinned profile absent"
+
+
 CASES = {
+    "openclaw_client": _case_openclaw_client,
     "sim_session": _case_sim_session,
     "telegram_bridge": _case_telegram_bridge,
     "xs_ranker": _case_xs_ranker,

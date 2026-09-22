@@ -44,6 +44,7 @@ import os
 import re
 import subprocess
 import sys
+import types
 import tempfile
 from pathlib import Path
 
@@ -52,6 +53,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend import config as _cfg                         # noqa: E402,F401
+from backend.services import openclaw_client as OC         # noqa: E402
 
 logger = logging.getLogger("openclaw_login")
 
@@ -146,10 +148,20 @@ def credentials() -> tuple[str, str]:
     return acc, pw
 
 
-def _openclaw(*args: str, timeout: float = 120.0) -> subprocess.CompletedProcess:
-    exe = os.environ.get("OPENCLAW_BIN", "openclaw")
-    return subprocess.run([exe, *args], capture_output=True, text=True,
-                          timeout=timeout, shell=(os.name == "nt"))
+def _openclaw(*args: str, timeout: float = 120.0):
+    """Routed through `openclaw_client` so the PROFILE is named on every call.
+
+    The first version shelled out to a bare `openclaw browser ...`, which used
+    whatever `browser.defaultProfile` happened to be. That default moved four
+    times in one afternoon. A browser profile is logged-in account access; it is
+    not something to leave to a default.
+    """
+    assert args and args[0] == "browser", f"only browser verbs here, got {args!r}"
+    verb, rest = args[1], [a for a in args[2:]]
+    url = rest.pop() if rest and rest[-1].lower().startswith("http") else None
+    r = OC.browser(verb, *rest, url=url, timeout=timeout)
+    return types.SimpleNamespace(returncode=r["rc"], stdout=r["stdout"],
+                                 stderr=r["stderr"])
 
 
 def login(site: str, *, submit: bool = False) -> dict:
@@ -223,13 +235,45 @@ def login(site: str, *, submit: bool = False) -> dict:
     return out
 
 
+SIGNED_OUT = re.compile(r"(log ?in|sign ?in|sign ?up|masuk|daftar)", re.I)
+
+
+def check(site: str) -> dict:
+    """Is the persisted session still good? The night runner's question.
+
+    Returns LOGIN_REQUIRED rather than attempting a login: deciding to re-auth
+    is a human's call, because a wrong guess costs the account.
+    """
+    spec = SITES[site]
+    OC.browser("open", url=spec["url"].replace("/login/", "/").replace("/signin/v2/identifier", "/"))
+    snap = snapshot()
+    challenged = looks_challenged(snap)
+    signed_out = bool(SIGNED_OUT.search(snap))
+    return {
+        "site": site,
+        "state": ("CHALLENGE" if challenged else
+                  "LOGIN_REQUIRED" if signed_out else "SESSION_OK"),
+        "challenge": challenged,
+        "profile": OC.profile(),
+        "detail": ("a human-verification step is on screen" if challenged else
+                   "login/signup controls are visible, so the cookie is gone"
+                   if signed_out else
+                   "no login controls visible; the persisted session is holding"),
+    }
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--check", action="store_true",
+                    help="report SESSION_OK / LOGIN_REQUIRED / CHALLENGE and exit")
     ap.add_argument("--site", default="reddit", choices=sorted(SITES))
     ap.add_argument("--submit", action="store_true",
                     help="also click the submit button after filling")
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+    if a.check:
+        print(json.dumps(check(a.site), indent=1))
+        return 0
     res = login(a.site, submit=a.submit)
     # the password is never in `res`; only selectors and outcomes are
     print(json.dumps(res, indent=1))
