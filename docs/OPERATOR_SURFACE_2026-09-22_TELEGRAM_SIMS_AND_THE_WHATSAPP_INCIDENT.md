@@ -180,3 +180,88 @@ working around the step that exists to stop it.
 The browser is Chrome, on OpenClaw's **own managed profile**, isolated from
 Murat's personal Chrome. He signs `muratclaw1@gmail.com` into that window once
 and the session persists there for every later run.
+
+---
+
+## 5. THE BROWSER, AFTER MURAT'S ARCHITECTURE REVIEW
+
+His guidance named the mistake precisely: *"the biggest mistake so far has been
+treating 'Chrome profile', 'OpenClaw managed profile' and 'existing Chrome
+session' as interchangeable. They are not."* An hour went into copying a 519 MB
+Chrome profile directory to work around that confusion. The fix is not a better
+copy — it is to make `muratclaw` **the browser OpenClaw owns**.
+
+### `backend/services/openclaw_client.py` is the only path
+
+| invariant | why |
+|---|---|
+| `--browser-profile` named on **every** call | `browser.defaultProfile` moved **four times in one afternoon**. A browser profile is logged-in account access; it is not something to leave to a default. |
+| `REFUSED_BROWSER_PROFILE_UNAVAILABLE`, **no fallback** | the fallback *is* the failure — a Guest window, the generic profile, or somebody else's signed-in Chrome |
+| `DENIED_DOMAINS` enforced in Python | Murat's one strict rule: never for payments. Brokerage, banking and payment hosts are unreachable from the research browser. The broker is reached through `pc_broker`, where an order carries a `client_order_id`, a mandate check and a receipt. |
+| `evaluate` is not an allowed verb | arbitrary JavaScript in a page the agent did not write turns that page into a place to put instructions for the agent |
+| `agent()` never passes `--deliver` | OpenClaw messages nobody. `OpenClaw → Aegis → Telegram`, never `OpenClaw → human`. |
+
+`health()` is the gate the night runner reads before browsing: gateway probe,
+profile pinned, evaluate disabled, **zero messaging channels**. Red means *do
+not browse* — not *browse with something else*.
+
+### Login is session REPAIR, not a nightly ritual
+
+The point of a persistent managed profile is that the session persists. Logging
+in every night is the most reliable way to trip anti-bot systems and lose the
+account — costing exactly the access this exists for.
+
+```
+night 1     a human signs in once, in the agent's own window
+night 2..n  the cookie is reused; the login script is not called
+expiry      --check reports LOGIN_REQUIRED, Telegram says so, a human finishes
+            any 2FA, and the cycle repeats
+```
+
+`--check` returns `SESSION_OK` / `LOGIN_REQUIRED` / `CHALLENGE` and stops.
+Verified: it reported **`CHALLENGE` on a real CAPTCHA** rather than retrying into
+it. Credentials still never enter a model prompt — `.env` → a `0600` temp file →
+`browser fill --fields-file` → the page, deleted in a `finally`.
+
+## 6. EVIDENCE, NOT DECISIONS
+
+```
+OpenClaw → web-event ledger → features → ranker → decision engine → broker
+```
+
+`backend/services/web_events.py` enforces that shape rather than describing it.
+A row is **refused** if it carries an `expected_return`, `target_price`, `rank`,
+`position_size` or `action` — so the collector *cannot* emit a decision even if
+a model tried. Also refused: a free-text `event_type` (a feature you cannot
+count is a feature you cannot test), a source carrying an event type it cannot
+produce (a forum cannot file an 8-K), an off-registry URL, and a direction with
+no claim behind it.
+
+**`observed_at` and `evidence_date` are separate fields**, and `pit_safe_asof()`
+filters on the first. A filing dated last Tuesday that we only read today is not
+evidence we had last Tuesday — conflating the two is how a backtest learns to
+trade on information it never had.
+
+### Measured end to end, 2026-09-22
+
+| stage | result |
+|---|---|
+| EDGAR sweep | browser → agent → strict JSON |
+| validation | **39 typed 8-K events written, 0 refused** |
+| dedup | 1 duplicate caught — a re-scrape is not a new event |
+| Reddit `.json` | blocked → agent reported `blocked: true`, **invented nothing** |
+| Reddit rendered page | 12 real posts, tickers AVGO / ENRD / NVDA, no login |
+
+### Why EDGAR first
+
+`NEGATIVE_RESULTS.md` §59 closed price/volume at 21 sessions. The amplitude test
+returned **GO on fundamentals** (38.4–39.5 bps/month against a 20 bps floor) and
+our fundamental panel **ends 2024-12-31**. The gap is the last mile of public
+information that does not arrive as an API — the one thing a browser agent is
+genuinely good at, and the one thing it must not be trusted to draw a conclusion
+from.
+
+**Still owed:** `config/web_sources.yaml` as a first-class registry (it currently
+lives as `SOURCE_REGISTRY` in `web_events.py`), and the IR/fundamentals job that
+makes `gp_at`, `ope_be` and `be_me` current. That job is the one with money
+behind it.

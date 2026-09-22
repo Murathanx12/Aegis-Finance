@@ -566,3 +566,49 @@ def test_refusals_are_counted_and_returned_never_dropped(monkeypatch, tmp_path):
     r = WE.append([_ev(), _ev(event_type="nonsense")])
     assert r["written"] == 1 and r["refused"] == 1
     assert "closed vocabulary" in r["refusals"][0]["why"]
+
+
+# ───────────── SEC fundamentals: filed, not ended, is the PIT date ──────────
+
+from scripts.pull_sec_fundamentals import _latest, _ratio     # noqa: E402
+
+
+def _facts(rows):
+    return {"us-gaap": {"Assets": {"units": {"USD": rows}}}}
+
+
+def test_latest_chooses_on_FILED_not_on_period_end():
+    """A figure describing an older period but filed later IS the newer fact.
+
+    Choosing on `end` would prefer a number that has since been restated or
+    superseded, and would let a feature see a value before it was public.
+    """
+    rows = [
+        {"val": 100, "end": "2026-06-30", "filed": "2026-08-05", "form": "10-Q"},
+        {"val": 90, "end": "2026-03-31", "filed": "2026-09-01", "form": "10-Q/A"},
+    ]
+    got = _latest(_facts(rows), ("Assets",))
+    assert got["filed"] == "2026-09-01" and got["val"] == 90
+
+
+def test_an_asof_hides_facts_filed_after_it():
+    """The whole point: a 2026-08-05 filing is not knowable on 2026-07-01."""
+    rows = [{"val": 100, "end": "2026-06-30", "filed": "2026-08-05"}]
+    assert _latest(_facts(rows), ("Assets",), asof="2026-07-01") is None
+    assert _latest(_facts(rows), ("Assets",), asof="2026-08-31")["val"] == 100
+
+
+def test_a_missing_fact_is_None_and_says_which_one():
+    """Never zero-filled: LightGBM reads NaN natively, and a zero where a number
+    is missing is a lie the model will happily fit."""
+    v, why = _ratio(None, {"val": 10})
+    assert v is None and "numerator" in why
+    v, why = _ratio({"val": 10}, None)
+    assert v is None and "denominator" in why
+    v, why = _ratio({"val": 10}, {"val": 0})
+    assert v is None and "zero" in why
+
+
+def test_a_real_ratio_is_computed():
+    v, why = _ratio({"val": 50.0}, {"val": 200.0})
+    assert v == pytest.approx(0.25) and why == "ok"
