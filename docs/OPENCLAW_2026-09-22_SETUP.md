@@ -1,3 +1,14 @@
+> ## SUPERSEDED IN PART, 2026-09-22 — READ THE INCIDENT FIRST
+> This file describes the install, which is still accurate. What it says about
+> **channels is wrong**: WhatsApp was set up, it **messaged one of Murat's
+> friends**, and it has been removed entirely. The operator surface is now
+> Telegram (`t.me/murat_aegis_bot`) through Aegis's own bridge, not an OpenClaw
+> channel.
+>
+> **`docs/OPERATOR_SURFACE_2026-09-22_TELEGRAM_SIMS_AND_THE_WHATSAPP_INCIDENT.md`**
+> is the authority: what happened, why a linked-device channel has no boundary
+> to enforce, and the simulation start/stop protocol.
+
 # OpenClaw — installed and running, and the two things only Murat can do
 
 Installed 2026-09-22 on this PC at Murat's request ("download the openclaw and
