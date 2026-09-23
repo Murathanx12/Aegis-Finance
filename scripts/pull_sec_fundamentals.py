@@ -118,6 +118,55 @@ def ticker_to_cik() -> dict[str, int]:
     return {str(r["ticker"]).upper(): int(r["cik_str"]) for r in rows}
 
 
+def series(facts: dict, tags: tuple[str, ...]) -> list[dict]:
+    """EVERY reported value with the date it became public, oldest first.
+
+    The first version kept only the newest value, which ranks today and cannot
+    backtest anything: a walk-forward needs the number AS IT STOOD at each
+    rebalance date. `companyfacts` returns the whole history in the SAME call,
+    so keeping it costs one dict comprehension and no extra request.
+
+    Deduplicated on `filed` keeping the LAST seen, because a restatement filed
+    the same day supersedes what it restates. Sorted by `filed`, never by
+    `end` — an amended 10-K/A filed in September carrying a December period is
+    information that arrived in September.
+    """
+    out: dict[tuple, dict] = {}
+    for tag in tags:
+        node = (facts.get("us-gaap") or {}).get(tag) or (facts.get("dei") or {}).get(tag)
+        if not node:
+            continue
+        for unit_rows in (node.get("units") or {}).values():
+            for r in unit_rows:
+                filed, val = r.get("filed"), r.get("val")
+                if not filed or val is None:
+                    continue
+                # `start` is what makes a FLOW fact comparable. A 10-K states
+                # annual revenue and a 10-Q a quarter, so without the period
+                # length `revenue / assets` swings 3-4x with the form type --
+                # measured on NVDA 2026-09-23: gp_at read 0.742, 0.236, 0.225
+                # across three consecutive filings of the same company. A
+                # feature that moves with which form filed last is a form-type
+                # indicator, not profitability. Stock facts (assets, equity)
+                # have no `start` and need none.
+                start = r.get("start")
+                days = None
+                if start and r.get("end"):
+                    try:
+                        days = (date.fromisoformat(r["end"])
+                                - date.fromisoformat(start)).days
+                    except ValueError:
+                        days = None
+                key = (filed, days)
+                prev = out.get(key)
+                if prev is None or (r.get("end") or "") >= (prev.get("end") or ""):
+                    out[key] = {"filed": filed, "val": float(val),
+                                "end": r.get("end"), "start": start,
+                                "period_days": days, "tag": tag,
+                                "form": r.get("form")}
+    return sorted(out.values(), key=lambda d: d["filed"])
+
+
 def _latest(facts: dict, tags: tuple[str, ...], *, asof: str | None = None) -> dict | None:
     """The most recently FILED value among these tags, at or before `asof`.
 
@@ -159,6 +208,8 @@ def _ratio(num: dict | None, den: dict | None) -> tuple[float | None, str]:
 def company_row(ticker: str, cik: int, *, asof: str | None = None) -> dict:
     facts = _get(FACTS_URL.format(cik=cik)).get("facts") or {}
     got = {k: _latest(facts, tags, asof=asof) for k, tags in FACTS.items()}
+    hist = {k: series(facts, tags) for k, tags in FACTS.items()}
+    hist = {k: v for k, v in hist.items() if v}
 
     gp = None
     if got["revenue"] and got["cogs"]:
@@ -175,6 +226,8 @@ def company_row(ticker: str, cik: int, *, asof: str | None = None) -> dict:
         "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "latest_filed": max(filed_dates) if filed_dates else None,
         "facts": {k: v for k, v in got.items() if v},
+        "_history": hist,          # stripped from the receipt, written to parquet
+        "n_history_points": {k: len(v) for k, v in hist.items()},
         "missing_facts": [k for k, v in got.items() if not v],
         "ratios": {
             "gp_at": gp_at, "gp_at_why": gp_why,
@@ -207,6 +260,9 @@ def main(argv=None) -> int:
     ap.add_argument("--asof", default=None, help="only facts filed at or before this date")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--history-out", default=None,
+                    help="long-form filing history parquet (default: "
+                         "fundamentals_sec/sec_facts_history.parquet)")
     a = ap.parse_args(argv)
 
     t0 = time.time()
@@ -258,6 +314,36 @@ def main(argv=None) -> int:
         f"({receipt['gp_at_coverage']:.0%}), newest filing {receipt['newest_filing']}")
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # The HISTORY goes to a long-form parquet, not into the receipt. 3,000 names
+    # x 9 facts x ~50 filings is over a million rows; a JSON receipt carrying
+    # that is unreadable and unqueryable, and what a feature builder wants is a
+    # frame it can `merge_asof` on anyway.
+    long_rows = []
+    for r in rows:
+        for fact, pts in (r.pop("_history", None) or {}).items():
+            for pt in pts:
+                long_rows.append({"ticker": r["ticker"], "cik": r["cik"],
+                                  "fact": fact, "filed": pt["filed"],
+                                  "end": pt.get("end"), "start": pt.get("start"),
+                                  "period_days": pt.get("period_days"),
+                                  "val": pt["val"], "form": pt.get("form")})
+    if long_rows:
+        import pandas as pd
+        panel_path = Path(a.history_out) if a.history_out else OUT_DIR / "sec_facts_history.parquet"
+        df = pd.DataFrame(long_rows)
+        df["filed"] = pd.to_datetime(df["filed"])
+        df = df.sort_values(["ticker", "fact", "filed"]).reset_index(drop=True)
+        df.to_parquet(panel_path, index=False)
+        receipt["history_panel"] = {
+            "path": str(panel_path), "rows": int(len(df)),
+            "tickers": int(df["ticker"].nunique()),
+            "facts": sorted(df["fact"].unique().tolist()),
+            "first_filed": str(df["filed"].min().date()),
+            "last_filed": str(df["filed"].max().date()),
+            "mb": round(panel_path.stat().st_size / 1e6, 2),
+        }
+
     out = Path(a.out) if a.out else OUT_DIR / f"sec_fundamentals_{date.today()}.json"
     out.write_text(json.dumps(receipt, indent=1, default=str), encoding="utf-8")
 

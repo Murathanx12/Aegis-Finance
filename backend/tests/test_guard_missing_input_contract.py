@@ -1285,7 +1285,21 @@ def _case_web_events():
             "validate() on a row carrying a direction and no evidence")
 
 
+def _case_fundamental_features():
+    import pathlib
+    import tempfile
+
+    from backend.services import fundamental_features as FF
+    # The missing input is the FILING HISTORY. Ranking on fundamentals that are
+    # not there would silently become ranking on price again, and the receipt
+    # would still say "fundamental".
+    absent = pathlib.Path(tempfile.mkdtemp()) / "absent.parquet"
+    return (lambda: FF.load_history(absent), FF.FundamentalsMissing,
+            "load_history() with no SEC filing panel on disk")
+
+
 CASES = {
+    "fundamental_features": _case_fundamental_features,
     "web_events": _case_web_events,
     "openclaw_client": _case_openclaw_client,
     "sim_session": _case_sim_session,

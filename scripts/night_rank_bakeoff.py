@@ -66,6 +66,7 @@ if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
 from backend.services import xs_ranker as XR      # noqa: E402
+from backend.services import fundamental_features as FF   # noqa: E402
 
 OUT = REPO / "backend" / "data" / "optimus" / "xs_ranker"
 
@@ -150,8 +151,19 @@ def run(panel: pd.DataFrame, *, n_folds: int = 4, book_size: int = 20) -> dict:
     folds = XR.make_folds(fit["date"].values, n_folds=n_folds)
     feats = list(XR.FEATURES)
 
+    have_fund = [f for f in FF.FUNDAMENTAL_FEATURES if f in fit.columns]
+    sets: dict[str, list[str]] = {}
+    if have_fund:
+        # The comparison the 2026-09-22 amplitude test authorised, run on OUR
+        # universe and OUR horizon rather than on JKP's. `price` is the control
+        # and is not optional: without it a positive `fundamental` number would
+        # be unreadable, because the panel, horizon and period all differ from
+        # the run that produced the 39 bps.
+        sets["fundamental"] = have_fund
+        sets["price_plus_fundamental"] = feats + have_fund
     preds: dict[str, list[pd.DataFrame]] = {"composite_prior": [], "composite": [],
-                                            "lgbm_full": [], "lgbm_small": []}
+                                            "lgbm_full": [], "lgbm_small": [],
+                                            **{k: [] for k in sets}}
     fold_log = []
 
     for tr_end, te_start, te_end in folds:
@@ -191,6 +203,23 @@ def run(panel: pd.DataFrame, *, n_folds: int = 4, book_size: int = 20) -> dict:
         m_small.fit(tr[small], tr["y"])
         s_ = base.copy(); s_["score"] = m_small.predict(te[small])
         preds["lgbm_small"].append(s_)
+
+        for name, cols in sets.items():
+            # A row with NO fundamental at all cannot be ranked by a
+            # fundamental model. Dropping it here rather than imputing keeps
+            # the missingness visible -- and `coverage` on the receipt says how
+            # much of the cross-section that removed, because banks file
+            # neither CostOfRevenue nor OperatingIncomeLoss and a silent drop
+            # turns this into a bet against financials.
+            tr_f = tr.dropna(subset=have_fund, how="all")
+            te_f = te.dropna(subset=have_fund, how="all")
+            if len(tr_f) < XR.MIN_TRAIN_ROWS or te_f.empty:
+                continue
+            m = lgb.LGBMRegressor(**XR.LGB_PARAMS)
+            m.fit(tr_f[cols], tr_f["y"])
+            f2 = te_f[["symbol", "date", "fwd_rel", "median_dollar_vol"]].copy()
+            f2["score"] = m.predict(te_f[cols])
+            preds[name].append(f2)
 
         fold_log.append({
             "train_end": str(tr_end.date()),
@@ -310,6 +339,12 @@ def main(argv=None) -> int:
                          "edge that its own ~35bps small-cap round trip ate. "
                          "This asks the next question: does the ordering carry "
                          "anything in names that cost 6-10bps instead?")
+    ap.add_argument("--with-fundamentals", action="store_true",
+                    help="join the SEC PIT filing history onto the panel and add "
+                         "the `fundamental` and `price_plus_fundamental` "
+                         "challengers. The 2026-09-22 amplitude test measured "
+                         "38.4-39.5 bps/month for this input class against a "
+                         "20 bps floor; this is that test on OUR universe.")
     ap.add_argument("--survivorship-free", action="store_true",
                     help="rank over the deep panel PLUS the delisted names "
                          "(xs_ranker.survivorship_free_paths). The only honest "
@@ -331,8 +366,19 @@ def main(argv=None) -> int:
     audit = XR.survivorship_audit(bars)
     print(f"survivorship: {audit['verdict']}")
     panel = XR.build_panel(bars)
+    cov = None
+    if a.with_fundamentals:
+        panel = FF.attach(panel)
+        cov = FF.coverage(panel)
+        print(f"fundamentals: any feature on {cov.get('any_fundamental', 0):.1%} of the "
+              f"latest cross-section ({cov['n']:,} names), median filing age "
+              f"{cov.get('median_age_days')} days")
+        print(f"  gp_at {cov.get('gp_at', 0):.1%} · ope_be {cov.get('ope_be', 0):.1%} "
+              f"· at_gr1 {cov.get('at_gr1', 0):.1%}")
     res = run(panel, n_folds=a.folds, book_size=a.book_size)
     res["survivorship"] = audit
+    if cov is not None:
+        res["fundamental_coverage"] = cov
     res["min_median_dollar_vol"] = XR.MIN_MEDIAN_DOLLAR_VOL
 
     OUT.mkdir(parents=True, exist_ok=True)

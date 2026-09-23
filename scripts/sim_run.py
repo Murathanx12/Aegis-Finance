@@ -11,9 +11,15 @@ writes its own receipt:
 
     reconcile   the broker's own view of the book -> pc_book/<date>/nav.jsonl
     rank        the cross-sectional ranker over the survivorship-free panel
-    plan        the book it would hold, and (in trade mode) the orders
+    plan        the book it would hold, and in paper_profit mode the orders
     grade       whatever reality has resolved since the last cycle
     learn       ONE queued research unit
+
+Until 2026-09-23 this list was a LIE: `plan` was documented and never written,
+so the loop ran reconcile/rank/grade/learn and no ranking could ever become a
+decision. A 144-cycle session produced zero orders for two independent reasons
+and only one of them was reported. A docstring that describes a step the code
+does not take is worse than no docstring -- it is a guarantee nobody checks.
 
 The unit boundary is the only place the loop checks whether to stop. That is the
 whole safety design: `sim_session.should_continue()` is consulted BETWEEN units,
@@ -72,6 +78,9 @@ SLOW_UNIT_S = 1800
 #: world to change, not re-ask an unchanged question. Bars refresh daily and the
 #: broker moves on a 5-minute scale, so that is the natural period.
 MIN_CYCLE_PERIOD_S = 300
+
+#: Names the plan unit holds. 15-20 was the declared mandate 2026-09-22.
+BOOK_SIZE = 18
 
 
 def _now() -> str:
@@ -242,6 +251,98 @@ def _rank_in_subprocess(out_dir: str, timeout: float = 2400.0) -> dict:
     return {"failed": f"rc {r.returncode}", "stderr": (r.stderr or "")[-400:]}
 
 
+def u_plan(out: Path, mode: str) -> dict:
+    """Ranking -> a book. THE UNIT THAT DID NOT EXIST.
+
+    The module docstring claimed a cycle was
+    `reconcile -> rank -> plan -> grade -> learn` and the loop called four
+    units. There was no code path from a ranking to a decision at all, so the
+    2026-09-22 session's 144 cycles would have produced zero orders **even with
+    a positive ranking**. Two independent causes of the same nothing, and only
+    one of them was reported. Found by Murat's external review, 2026-09-23.
+
+    What it does every cycle, in both modes:
+
+    * reads the ranking on disk and the broker's actual holdings;
+    * sizes an equal-weight book of the top `BOOK_SIZE` names, through
+      `pc_broker.plan_orders` -- so the mandate limits (no leverage, no shorts,
+      12% per name, 2% of ADV, $250 minimum) apply identically whether or not
+      the orders are sent;
+    * writes `intended_book.json` and appends every plan to `decisions.jsonl`.
+
+    In `observe` it stops there. In `paper_profit` it submits, but only if the
+    ranking's own verdict permits: a MEASURED_NEGATIVE ranking is refused here
+    as well as in the live loop, because "we measured it and it loses" is not
+    uncertainty and spending paper capital on it would teach the learner that
+    losing is normal.
+    """
+    from backend.services import pc_broker as PB
+    from scripts.live_market_loop import _ranking_verdict
+
+    rank_path = out / "ranking.json"
+    if not rank_path.exists():
+        return {"planned": False, "why": "no ranking on disk yet"}
+    r = json.loads(rank_path.read_text(encoding="utf-8"))
+    top = (r.get("top") or [])[:BOOK_SIZE]
+    if not top:
+        return {"planned": False, "why": "the ranking carries no names"}
+
+    snap = PB.snapshot(tag="plan", out_dir=out)
+    held = {p["symbol"]: p["qty"] for p in snap["positions"]}
+    w = 1.0 / len(top)
+    targets = [PB.Target(symbol=x["symbol"], weight=w, rank=x.get("rank"),
+                         expected_relative_return_21d=x.get("expected_relative_return_21d_net"),
+                         median_dollar_vol=None,
+                         reason=f"rank {x.get('rank')} decile {x.get('decile')}")
+               for x in top]
+    prices = PB.last_prices([t.symbol for t in targets] + list(held))
+    plans = PB.plan_orders(targets, equity=snap["equity"], held=held, prices=prices)
+
+    # The same gate the live loop applies, read from the ranking's own receipt.
+    net = r.get("top20_net_rel_21d")
+    verdict = ("MEASURED_NEGATIVE" if (net is not None and net <= 0)
+               else "MEASURED_POSITIVE" if net is not None
+               else "UNMEASURED_TRADE_SMALL")
+    may_trade = verdict != "MEASURED_NEGATIVE"
+    acting = (mode == "paper_profit") and may_trade
+
+    record = {"t": _now(), "mode": mode, "verdict": verdict, "acting": acting,
+              "equity": snap["equity"], "n_targets": len(targets),
+              "n_orders": sum(1 for p in plans if p.qty > 0),
+              "turnover_usd": sum(p.notional for p in plans if p.qty > 0),
+              "refusals": [{"symbol": p.symbol, "refused": p.refused}
+                           for p in plans if p.refused][:10],
+              "book": [{"rank": t.rank, "symbol": t.symbol, "weight": t.weight,
+                        "expected_relative_return_21d": t.expected_relative_return_21d}
+                       for t in targets]}
+
+    if acting:
+        sent = []
+        for p in plans:
+            if p.qty <= 0:
+                continue
+            try:
+                sent.append(PB.submit(p))
+            except PB.BrokerError as exc:
+                sent.append({"status": "FAILED", "symbol": p.symbol,
+                             "error": str(exc)[:200]})
+        record["sent"] = sent
+    else:
+        record["sent"] = []
+        record["why_not"] = (
+            f"mode={mode}" if mode != "paper_profit"
+            else f"ranking verdict {verdict}: refusing to buy a measured negative")
+
+    (out / "intended_book.json").write_text(
+        json.dumps(record, indent=1, default=str), encoding="utf-8")
+    with (out / "decisions.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, default=str) + "\n")
+
+    return {"planned": True, "verdict": verdict, "acting": acting,
+            "n_orders": record["n_orders"], "turnover_usd": record["turnover_usd"],
+            "top1": targets[0].symbol}
+
+
 def u_grade() -> dict:
     from backend.services import forecast_grader as FG, decision_ledger as DL
     out: dict[str, Any] = {}
@@ -387,6 +488,7 @@ def run(session_id: str) -> int:
                 logger.info("stop seen after reconcile; finishing the cycle short")
             else:
                 c.unit("rank", lambda: u_rank(out))
+                c.unit("plan", lambda: u_plan(out, mode))
                 c.unit("grade", u_grade)
                 c.unit("learn", lambda: u_learn(n, out))
 

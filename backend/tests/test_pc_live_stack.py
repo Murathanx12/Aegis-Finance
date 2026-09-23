@@ -612,3 +612,87 @@ def test_a_missing_fact_is_None_and_says_which_one():
 def test_a_real_ratio_is_computed():
     v, why = _ratio({"val": 50.0}, {"val": 200.0})
     assert v == pytest.approx(0.25) and why == "ok"
+
+
+# ───────── fundamentals: joined on WHEN IT BECAME PUBLIC, never on period ────
+
+from backend.services import fundamental_features as FF     # noqa: E402
+
+
+def _hist(rows):
+    d = pd.DataFrame(rows)
+    d["filed"] = pd.to_datetime(d["filed"])
+    return d
+
+
+def test_a_filing_is_invisible_before_it_was_filed():
+    """The whole defence. Joining on `end` would hand the model six weeks of
+    foresight on every quarter of every name."""
+    hist = _hist([
+        {"ticker": "AAA", "cik": 1, "fact": "assets", "filed": "2026-08-05",
+         "end": "2026-06-30", "start": None, "period_days": None, "val": 100.0, "form": "10-Q"},
+        {"ticker": "AAA", "cik": 1, "fact": "assets", "filed": "2026-02-05",
+         "end": "2025-12-31", "start": None, "period_days": None, "val": 80.0, "form": "10-K"},
+    ])
+    panel = pd.DataFrame({"symbol": ["AAA", "AAA"],
+                          "date": pd.to_datetime(["2026-07-01", "2026-08-20"])})
+    j = FF.attach(panel, history=hist, lag_days=0)
+    before = j[j["date"] == pd.Timestamp("2026-07-01")].iloc[0]
+    after = j[j["date"] == pd.Timestamp("2026-08-20")].iloc[0]
+    assert before["filed"] == pd.Timestamp("2026-02-05"), (
+        "a row dated 2026-07-01 saw a filing made on 2026-08-05")
+    assert after["filed"] == pd.Timestamp("2026-08-05")
+
+
+def test_flow_facts_are_filtered_to_annual_periods():
+    """A 10-K states annual revenue and a 10-Q a quarter. Measured on NVDA,
+    mixing them made gp_at read 0.742 / 0.236 / 0.225 for one company."""
+    hist = _hist([
+        {"ticker": "AAA", "cik": 1, "fact": "revenue", "filed": "2026-05-01",
+         "end": "2026-03-31", "start": "2026-01-01", "period_days": 90, "val": 25.0, "form": "10-Q"},
+        {"ticker": "AAA", "cik": 1, "fact": "revenue", "filed": "2026-02-01",
+         "end": "2025-12-31", "start": "2025-01-01", "period_days": 365, "val": 100.0, "form": "10-K"},
+    ])
+    kept = FF.annual_flows_only(hist)
+    assert list(kept["period_days"]) == [365], "the quarterly row survived"
+
+
+def test_stock_facts_are_never_filtered_by_period():
+    """Assets is a balance at a date and carries no period; a filter that
+    treats it like a flow silently deletes the balance sheet."""
+    hist = _hist([
+        {"ticker": "AAA", "cik": 1, "fact": "assets", "filed": "2026-05-01",
+         "end": "2026-03-31", "start": None, "period_days": None, "val": 500.0, "form": "10-Q"},
+    ])
+    assert len(FF.annual_flows_only(hist)) == 1
+
+
+def test_a_missing_fact_leaves_NaN_and_never_zero():
+    wide = pd.DataFrame({"ticker": ["AAA"], "filed": pd.to_datetime(["2026-01-01"]),
+                         "assets": [100.0], "equity": [np.nan]})
+    r = FF.ratios(wide)
+    assert pd.isna(r["ope_be"].iloc[0]), "a missing fact became a number"
+
+
+def test_a_zero_denominator_is_NaN_not_infinity():
+    wide = pd.DataFrame({"ticker": ["AAA"], "filed": pd.to_datetime(["2026-01-01"]),
+                         "operating_income": [5.0], "equity": [0.0],
+                         "assets": [10.0]})
+    r = FF.ratios(wide)
+    assert pd.isna(r["ope_be"].iloc[0])
+
+
+def test_a_stale_filing_is_dropped_rather_than_carried_forever():
+    """A filing older than ~15 months describes a different company."""
+    hist = _hist([{"ticker": "AAA", "cik": 1, "fact": "assets", "filed": "2020-01-01",
+                   "end": "2019-12-31", "start": None, "period_days": None,
+                   "val": 1.0, "form": "10-K"}])
+    panel = pd.DataFrame({"symbol": ["AAA"], "date": pd.to_datetime(["2026-01-01"])})
+    j = FF.attach(panel, history=hist)
+    assert pd.isna(j["book_equity_log"].iloc[0]) or pd.isna(j["gp_at"].iloc[0])
+    assert j["fundamental_age_days"].iloc[0] > 460
+
+
+def test_missing_history_refuses_rather_than_ranking_on_nothing(tmp_path):
+    with pytest.raises(FF.FundamentalsMissing, match="no SEC filing history"):
+        FF.load_history(tmp_path / "absent.parquet")
