@@ -3373,3 +3373,91 @@ input with more **amplitude**, not a cheaper execution or a larger model.
 
 Receipts: `backend/data/optimus/xs_ranker/bakeoff_survivorship_free.json`,
 `bakeoff_deep_breadth.json`, `bakeoff_liquid50m.json`, `bakeoff_2026-09-22.json`.
+
+## 60. Fundamentals do not replicate on our universe — the GO that a day of work rested on (2026-09-24)
+
+**Licence: `PRODUCT_EXPERIMENT`. Status: `FAILED_VARIANT` for SEC-XBRL-derived
+fundamentals at 21 sessions on our universe. NOT `MECHANISM_REJECTED` — see the
+scope, which is unusually load-bearing here.**
+
+### What was claimed, and by whom
+
+On 2026-09-22 `night_fundamental_amplitude` measured, over the JKP factor panel
+(`aegis_panel_v2`, 240 months, 131 out-of-sample):
+
+| feature set | IC | k=20 | k=50 | k=100 |
+|---|---:|---:|---:|---:|
+| price | +0.0372 | −19.7 | −0.8 | +13.8 |
+| **fundamental** | +0.0295 | **+38.8** | **+39.5** | **+38.4** |
+
+and returned **GO** on building a current fundamental vintage. That decision
+drove a full day: an SEC XBRL puller, a PIT filing history (1,407,348 rows,
+2,920 tickers, 2009-04-15 → 2026-09-22), a join module, and two defects fixed
+along the way.
+
+### What happened when it was tested on our own data
+
+`night_rank_bakeoff --survivorship-free --with-fundamentals`, 5,481,309 rows,
+3,578 symbols, 122 month-blocks:
+
+| model | net/21d | gross | IC (t) | hit |
+|---|---:|---:|---:|---:|
+| composite_prior | −0.22% | +0.12% | −0.0088 | 45% |
+| lgbm_small | −0.08% | +0.02% | +0.0119 (+4.74) | 48% |
+| **fundamental** | **−1.34%** | **−1.15%** | +0.0020 (**+0.72**) | **36%** |
+| price_plus_fundamental | −0.36% | −0.18% | +0.0134 | 44% |
+
+**Fundamentals came LAST of six and were negative at every book size from k=10
+to k=500.** A +39 bps/month claim met a −115 bps gross measurement: a swing of
+about 154 bps in the same direction the hypothesis predicted improvement.
+
+### It is not a coverage artefact
+
+The obvious defence is that missingness selected the sample. It did not:
+
+    any fundamental present   83.2% of the cross-section
+    ni_be / at_gr1 / cash_at  ~80%
+    gp_at                     51.8%
+    median filing age         47 days
+    rows kept vs price model  2,655,185 of 3,032,725  (87.5%)
+
+### Nor is it only the small caps
+
+The most likely reconciliation was universe: JKP's panel excluded **nano and
+micro**, ours is everything above $3M median dollar volume. Re-run at a $50M
+floor (1,870 names), fundamentals improve from −1.34% to **−0.71%** and stay
+negative at every k. Two cells anywhere in the grid turn barely positive —
+`price_plus_fundamental` +0.04% at **t 0.047**, `lgbm_small` k=10 +0.26% at
+t +0.39 — selected as the best of **35 cells**. That is what noise looks like
+when a grid is searched, and it is recorded here so nobody rediscovers it and
+believes it.
+
+### Scope — why this is FAILED_VARIANT and not a closed mechanism
+
+What was tested is **our construction** of fundamentals, not fundamentals:
+
+* ratios built from the latest ANNUAL filing, forward-filled, stale after 460
+  days — JKP's are professionally constructed with fiscal alignment and TTM;
+* six ratios (`gp_at`, `ope_be`, `ni_be`, `at_gr1`, `cash_at`, `debt_at`), where
+  JKP's set was 25;
+* 2016-2026 on our universe, against 2005-2024 on theirs;
+* overlapping 21-session windows, against monthly rebalances.
+
+Any of those could carry the whole 154 bps. What IS closed: this construction,
+these six ratios, this universe, this horizon. What is NOT closed: fundamentals
+as an input class.
+
+### The lesson that generalises
+
+**An amplitude test on somebody else's panel is a reason to BUILD the data, not
+a reason to believe the result.** The 39 bps was real on JKP's panel and did not
+survive contact with ours, and nothing about the GO decision was wrong given
+what was known — the error would be treating the GO as a finding rather than as
+a licence to go and measure.
+
+Cost of learning this: one day, **$0.00 in LLM spend**, and a PIT fundamental
+pipeline that is reusable whatever the next hypothesis is.
+
+Receipts: `xs_ranker/bakeoff_fundamentals.json`,
+`xs_ranker/bakeoff_fund_liquid.json`,
+`fundamentals_sec/sec_fundamentals_2026-09-24.json`.

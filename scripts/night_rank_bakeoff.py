@@ -325,9 +325,27 @@ def _verdict(winner, results: dict) -> str:
                 f"month-blocks. Price/volume alone does not rank this cross-section at "
                 f"this horizon.{extra} The live loop must stay in observe; the next move "
                 f"is another INPUT (fundamentals, revisions, typed news), not another model.")
+    # A THIRD state, added 2026-09-24. The first version knew only
+    # measured-negative and positive, so +0.04% at t 0.047 -- the best of 42
+    # cells (6 models x 7 book sizes) -- read as "tradeable". It is not a
+    # positive expectation, it is a coin flip that won a beauty contest.
+    # PRODUCT_EXPERIMENT removes the SIGNIFICANCE gate; it does not license
+    # reading the maximum of a large grid as a result.
+    t = r.get("t_across_blocks")
+    n_cells = sum(len(rr.get("breadth") or {}) for rr in results.values()) or 1
+    if t is None or abs(t) < 1.0:
+        return (f"MEASURED_ZERO: the best of {len(results)} rankers ({name}) earned "
+                f"{net*100:+.2f}% net per 21 sessions at t {t if t is None else round(t, 2)} "
+                f"over {r.get('n_blocks')} month-blocks -- selected as the best of "
+                f"{n_cells} cells. A number this close to zero, chosen from a grid "
+                f"this wide, carries no information in either direction and must not "
+                f"be traded as though it did. Not a negative result and not a "
+                f"positive one: an ABSENT one.")
     return (f"{name} earned {net*100:+.2f}% relative per 21 sessions net over "
-            f"{r.get('n_blocks')} month-blocks (t {r.get('t_across_blocks')}, "
-            f"IC {r.get('ic_mean')}). Tradeable under PRODUCT_EXPERIMENT.")
+            f"{r.get('n_blocks')} month-blocks (t {round(t, 2)}, "
+            f"IC {r.get('ic_mean')}) across {n_cells} cells. Tradeable under "
+            f"PRODUCT_EXPERIMENT -- no significance gate is applied and none is "
+            f"claimed, but read the WORST breadth cell before sizing it.")
 
 
 def main(argv=None) -> int:
