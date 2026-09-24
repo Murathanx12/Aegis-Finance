@@ -51,6 +51,7 @@ import logging
 import os
 import signal
 import sys
+import threading
 import time
 import traceback
 from datetime import date, datetime, timezone
@@ -127,9 +128,38 @@ class Cycle:
         except Exception:                                          # noqa: BLE001
             # Never let the liveness signal kill the work it is reporting on.
             logger.debug("heartbeat before %s failed", name, exc_info=True)
+
+        # AND KEEP BEATING WHILE IT RUNS.
+        #
+        # Beating only BEFORE a unit fixes a cycle made long by several short
+        # units. It does nothing for a single unit that is legitimately long:
+        # on 2026-09-25 the day rolled over, `u_analyst` correctly began its
+        # nightly 3,214-ticker pull, and the session read UNCLEAN for the 67
+        # minutes that took -- with the process alive and its child visibly
+        # working the whole time.
+        #
+        # A daemon thread, so it can never hold the process open, and every
+        # exception swallowed: a liveness signal must not be able to kill the
+        # work it reports on.
+        stop_beat = threading.Event()
+
+        def _beat() -> None:
+            waited = 0
+            while not stop_beat.wait(IDLE_BEAT_S):
+                waited += IDLE_BEAT_S
+                try:
+                    SS.heartbeat(cycle=self.n,
+                                 note=f"cycle {self.n}: {name} ({waited}s)")
+                except Exception:                                  # noqa: BLE001
+                    logger.debug("beat during %s failed", name, exc_info=True)
+
+        beater = threading.Thread(target=_beat, daemon=True,
+                                  name=f"beat-{self.n}-{name}")
+        beater.start()
         try:
             res = fn()
             dt = time.time() - t0
+            stop_beat.set()
             self.units[name] = {"ok": True, "elapsed_s": round(dt, 1),
                                 "result": _summarise(res)}
             if dt > SLOW_UNIT_S:
@@ -138,6 +168,7 @@ class Cycle:
                     f"not killed — the loop stops at boundaries by design")
             return res
         except Exception as exc:                                   # noqa: BLE001
+            stop_beat.set()
             dt = time.time() - t0
             err = {"unit": name, "error": f"{type(exc).__name__}: {exc}"[:400],
                    "elapsed_s": round(dt, 1),
@@ -604,6 +635,48 @@ def _in_subprocess(pick: str, timeout: float = 1800.0) -> dict:
 
 # ──────────────────────────────── the loop ──────────────────────────────────
 
+#: Windows `SetThreadExecutionState` flags. A long job is allowed to ask the
+#: OS not to idle-sleep underneath it, and should.
+_ES_CONTINUOUS = 0x80000000
+_ES_SYSTEM_REQUIRED = 0x00000001
+
+
+def keep_awake(on: bool) -> str:
+    """Ask Windows not to IDLE-sleep while a session runs. Returns what happened.
+
+    WHY THIS IS HERE, 2026-09-25
+    -----------------------------
+    The machine suspended mid-session. The process was not killed -- it was
+    frozen, resumed 17 minutes later with a stale heartbeat, and its in-flight
+    analyst pull came back on a socket that no longer existed.
+
+    WHAT THIS CAN AND CANNOT DO, stated because the difference matters:
+
+      CAN     stop the OS from idle-sleeping while the loop runs.
+      CANNOT  stop a lid close, a deliberate Start-menu sleep, or a battery
+              running out. Nothing an application can call stops those, and a
+              guard that claims otherwise would be worse than none.
+
+    On this machine `STANDBYIDLE` is already 0 on AC (never) and 600s on
+    battery, so the battery case is the one this actually covers -- and the
+    call is cheap, declared, and released on exit either way.
+
+    Non-Windows is a no-op that says so rather than pretending to have worked.
+    """
+    if sys.platform != "win32":
+        return f"not applicable on {sys.platform}"
+    try:
+        import ctypes
+        flags = (_ES_CONTINUOUS | _ES_SYSTEM_REQUIRED) if on else _ES_CONTINUOUS
+        prev = ctypes.windll.kernel32.SetThreadExecutionState(flags)
+        if prev == 0:
+            return "REFUSED by the OS (SetThreadExecutionState returned 0)"
+        return ("idle-sleep suppressed (a lid close or a manual sleep still "
+                "suspends this process)" if on else "released")
+    except Exception as exc:                                       # noqa: BLE001
+        return f"unavailable: {type(exc).__name__}: {exc}"
+
+
 def run(session_id: str) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
     st = SS.status()
@@ -635,6 +708,7 @@ def run(session_id: str) -> int:
     n = int(s.get("cycle", 0))
     logger.info("sim %s: mode=%s resuming at cycle %d, planned_end %s",
                 session_id, mode, n, s.get("planned_end"))
+    logger.info("keep-awake: %s", keep_awake(True))
 
     try:
         while True:
@@ -644,6 +718,7 @@ def run(session_id: str) -> int:
             if not go:
                 state = ("COMPLETED" if why == "requested duration elapsed"
                          else "STOPPED")
+                keep_awake(False)
                 SS.finish(state, why, {"final_cycle": n})
                 logger.info("sim %s: %s (%s) after %d cycles", session_id, state, why, n)
                 return 0
@@ -700,6 +775,7 @@ def run(session_id: str) -> int:
                         logger.debug("idle heartbeat failed", exc_info=True)
                 time.sleep(1)
     except KeyboardInterrupt:
+        keep_awake(False)
         SS.finish("STOPPED", "KeyboardInterrupt", {"final_cycle": n})
         return 130
     except Exception as exc:                                       # noqa: BLE001

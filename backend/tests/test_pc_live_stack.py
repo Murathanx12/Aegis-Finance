@@ -1224,3 +1224,75 @@ class TestIdlingIsNotDying:
         assert "SS.heartbeat" in idle, (
             "the inter-cycle wait does not beat; a healthy idle will read UNCLEAN")
         assert "IDLE_BEAT_S" in idle
+
+
+class TestALongUnitKeepsTheSessionAlive:
+    """Beating only BEFORE a unit fixes the wrong thing.
+
+    It fixes a cycle made long by several short units. It does nothing for a
+    single unit that is legitimately long -- and on 2026-09-25 the day rolled
+    over, `u_analyst` correctly began its nightly 3,214-ticker pull, and the
+    session read UNCLEAN for the 67 minutes that took while the process was
+    alive and its child visibly working.
+
+    This is the third time the same guard has been wrong in a different place
+    (cycle boundary, then inter-cycle idle, now inside a unit), which is why
+    the beater is now general rather than another special case.
+    """
+
+    def test_it_beats_repeatedly_during_one_slow_unit(self, monkeypatch):
+        import sys
+        import time
+        from pathlib import Path
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+
+        beats = []
+        monkeypatch.setattr(SR.SS, "heartbeat", lambda **kw: beats.append(kw))
+        monkeypatch.setattr(SR, "IDLE_BEAT_S", 1)
+        c = SR.Cycle(3, "observe", Path("."))
+        c.unit("slow", lambda: (time.sleep(3.2), {"ok": True})[1])
+        assert len(beats) >= 3, (
+            f"only {len(beats)} beats during a 3.2s unit at 1s cadence -- a long "
+            f"unit will read as a dead process")
+        assert any("slow" in str(b.get("note")) for b in beats), (
+            "the beat must name the unit, or a stuck cycle is undiagnosable")
+
+    def test_the_beater_does_not_outlive_its_unit(self, monkeypatch):
+        """A thread that keeps beating after the unit ends would report a dead
+        process as alive -- the opposite failure, and the worse one."""
+        import sys
+        import time
+        from pathlib import Path
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+
+        beats = []
+        monkeypatch.setattr(SR.SS, "heartbeat", lambda **kw: beats.append(kw))
+        monkeypatch.setattr(SR, "IDLE_BEAT_S", 1)
+        c = SR.Cycle(3, "observe", Path("."))
+        c.unit("quick", lambda: {"ok": True})
+        n = len(beats)
+        time.sleep(2.5)
+        assert len(beats) == n, f"the beater outlived its unit: {len(beats)-n} extra"
+
+    def test_a_failing_unit_also_stops_its_beater(self, monkeypatch):
+        import sys
+        import time
+        from pathlib import Path
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+
+        beats = []
+        monkeypatch.setattr(SR.SS, "heartbeat", lambda **kw: beats.append(kw))
+        monkeypatch.setattr(SR, "IDLE_BEAT_S", 1)
+        c = SR.Cycle(3, "observe", Path("."))
+
+        def boom():
+            raise RuntimeError("unit failed")
+
+        assert c.unit("bad", boom) is None
+        assert c.errors, "the failure must still be recorded"
+        n = len(beats)
+        time.sleep(2.5)
+        assert len(beats) == n, "the beater survived a failing unit"
