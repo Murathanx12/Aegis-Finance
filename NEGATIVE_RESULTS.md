@@ -3461,3 +3461,108 @@ pipeline that is reusable whatever the next hypothesis is.
 Receipts: `xs_ranker/bakeoff_fundamentals.json`,
 `xs_ranker/bakeoff_fund_liquid.json`,
 `fundamentals_sec/sec_fundamentals_2026-09-24.json`.
+
+---
+
+## 61. Holding the same ordering for 126 sessions turns it gross-positive — and this panel is four blocks long, so that is not a result yet (2026-09-24)
+
+**Status: MEASURED POSITIVE, UNDERPOWERED. Licence: PRODUCT_EXPERIMENT.**
+This entry is in NEGATIVE_RESULTS because its headline number is positive and
+its honest conclusion is that nothing has been demonstrated, which is exactly
+the kind of finding this file exists to stop anyone from over-reading later.
+
+### The hypothesis, and why §59 did not answer it
+
+§59 closed price/volume with one pair of numbers: **gross +0.28%, toll 35 bps**.
+But the toll is paid per ROUND TRIP, not per day. Hold the same names three
+times as long and you pay it once over three times the horizon:
+
+    net(H) = gross(H) − toll,    toll roughly constant in H
+
+So if the ordering is slow-moving there is some H at which it stops losing
+money with no new data, no new model and no new feature.
+
+The first attempt at this swept **`lgbm_full`** — which §59 had already ranked
+**worst of four** at gross −0.30%. The hypothesis has no force on a model that
+loses money before costs: there is no toll to save. That sweep produced a true
+table about the wrong model and a verdict ("horizon does not rescue it") that
+was never established.
+
+### The sweep, on the model that was gross-positive
+
+`composite_prior` — a signed z-score mean over `dollar_vol_log`, `amihud`,
+`skew_63`, `rev_5`, signs declared at module scope before any fold, no fitted
+parameters. Survivorship-free panel (4,793 symbols, 32.8% stop trading), purge
+scaled to H, everything else held fixed. **Reading the WORST cell of the breadth
+sweep, never the best:**
+
+| H | worst k | gross/hold | net/yr worst | net/yr best | strictly indep. blocks |
+|---|---|---:|---:|---:|---:|
+| 21 | k=20 | +0.13% | **−2.57%** | −0.68% | 32 |
+| 42 | k=200 | +0.50% | **+0.98%** | +1.73% | 15 |
+| 63 | k=200 | +0.77% | **+1.74%** | +2.65% | 9 |
+| **126** | k=200 | **+2.38%** | **+4.09%** | +5.24% | **4** |
+
+H=21 reproduces §59 exactly (+0.28% gross at k=200, 34 bps), which is the
+validity check on the whole run. Then gross grows **tenfold** to H=126 while the
+toll does not move. Every book size from k=20 to k=200 is positive at H≥42.
+That is the predicted mechanism, observed.
+
+### And then the error bar, which was wrong in my favour
+
+`top_k_backtest` computed its t by grouping dates into **calendar months**. At
+H=21 that is roughly right — a 21-session return *is* about a month, so adjacent
+blocks barely share an outcome. At H=126 each block's forward return overlaps
+the next **five** almost entirely.
+
+The vicious part: **the understatement grows with H, which is the axis being
+swept.** The t column rising monotonically (−0.24 → +0.58 → +0.67 → **+2.83**)
+is partly the estimator flattering long holds.
+
+| | t monthly | t non-overlapping | blocks |
+|---|---:|---:|---:|
+| H=21 k=200 | −0.24 | **−0.26** | 63 |
+| H=63 k=200 | +0.67 | +0.70 | 18 |
+| H=126 k=200 | **+2.83** | **+1.33** | 7 |
+
+The corrected statistic agrees with the old one **exactly where the old one was
+right** (H=21) and diverges only where it was wrong. That is what a correct
+correction looks like.
+
+**And it is still optimistic.** Blocks of width H share half their span; zero
+overlap needs 2H, which on this panel leaves **four blocks**. Four blocks cannot
+support a t-statistic at all.
+
+### What is and is not established
+
+**Established:** gross return on this ordering grows with the holding period far
+faster than the toll does, and the sign of the net result flips from negative to
+positive somewhere between 21 and 42 sessions. The point estimates are unaffected
+by the overlap problem — overlap inflates *precision*, never the mean.
+
+**Not established:** that any of it is distinguishable from zero. The honest
+sentence is not "the t is low", it is **the panel is too short to test a
+126-session horizon**. A 1.6-year OOS window holds four independent 252-session
+observations, and no statistic computed on four observations licenses anything.
+
+**What follows:** this is grounds to run `composite_prior` at H=63–126 forward in
+paper at small size, where every new month is a genuinely new observation, and
+where §59's verdict can be revisited on evidence that accrues instead of
+evidence that is re-sliced. It is **not** an edge, **not** a `CAPITAL_CANDIDATE`,
+and **not** a `RESEARCH_CLAIM`.
+
+### The lesson that generalises
+
+**A t-statistic whose bias depends on the parameter you are sweeping is not a
+statistic, it is a gradient.** Any sweep over horizon, holding period, or
+rebalance frequency must re-derive its blocking from that parameter, or it will
+measure its own estimator and report it as a finding. `n_blocks_strict` now
+travels on every `top_k_backtest` receipt for exactly this reason.
+
+And the older one, again: **§59's verdict was established for the wrong model
+for two days** because the sweep defaulted to LightGBM and nobody — me — checked
+that the defaulted model was the one the hypothesis was about.
+
+Receipts: `xs_ranker/horizon_sweep_composite_2026-09-24.json`,
+`xs_ranker/horizon_sweep_2026-09-24.json` (the lgbm_full run, kept as the
+record of what was asked and answered wrongly).
