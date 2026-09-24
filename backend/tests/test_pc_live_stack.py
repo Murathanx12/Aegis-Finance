@@ -1092,3 +1092,92 @@ class TestOpenClawHealthCanActuallyGoGreen:
         monkeypatch.setattr(OC, "_channel_count", lambda: 1)
         h = OC.health()
         assert h.ok is False and "messaging channel" in h.rows["verdict"]
+
+
+class TestTheCycleStaysAliveThroughALongUnit:
+    """A heartbeat written only at the cycle boundary says nothing about a
+    cycle containing a long unit.
+
+    On 2026-09-24 the analyst pull ran for 67 minutes inside cycle 1 and the
+    session read UNCLEAN the whole time -- while the process was healthy and
+    its child was visibly working. `sim_session` DERIVES UNCLEAN from a
+    heartbeat older than STALE_AFTER_S, which is the right rule; the beat was
+    simply not being written. A heartbeat means "this process is alive", and it
+    is alive during a unit.
+    """
+
+    def test_every_unit_beats_before_it_runs(self, monkeypatch):
+        import sys
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+        beats = []
+        monkeypatch.setattr(SR.SS, "heartbeat",
+                            lambda **kw: beats.append(kw.get("note")))
+        from pathlib import Path
+        c = SR.Cycle(7, "observe", Path("."))
+        c.unit("slow_thing", lambda: {"ok": True})
+        assert beats, "no heartbeat was written around the unit"
+        assert any("slow_thing" in str(b) for b in beats), (
+            f"the beat must name the unit so a stuck cycle is diagnosable: {beats}")
+
+    def test_a_failing_heartbeat_never_kills_the_work(self, monkeypatch):
+        """The liveness signal must not take down what it reports on."""
+        import sys
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+
+        def boom(**kw):
+            raise OSError("state dir vanished")
+
+        monkeypatch.setattr(SR.SS, "heartbeat", boom)
+        from pathlib import Path
+        c = SR.Cycle(7, "observe", Path("."))
+        assert c.unit("work", lambda: {"done": True}) == {"done": True}
+        assert not c.errors, "a heartbeat failure must not be recorded as a unit error"
+
+
+class TestTheAnalystPullIsOncePerDayNotPerSession:
+    """The vendor's data changes daily, so the gate must key on the DAY.
+
+    The first version stamped per session directory, so starting a second
+    session on the same day re-ran a 67-minute pull that had already completed
+    -- inside cycle 1, for nothing.
+    """
+
+    def test_it_skips_on_todays_receipt_without_a_session_stamp(self, tmp_path, monkeypatch):
+        import json as _j
+        import sys
+        from datetime import date
+        from pathlib import Path
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+        from backend import config as C
+
+        root = tmp_path / "ledger"
+        (root / "analyst").mkdir(parents=True)
+        (root / "analyst" / f"analyst_pull_{date.today().isoformat()}.json").write_text(
+            _j.dumps({"n_snapshots": 3086, "n_revision_rows": 392201}), encoding="utf-8")
+        monkeypatch.setattr(C, "OPTIMUS_LEDGER_DIR", root)
+        monkeypatch.setattr(SR, "_in_subprocess",
+                            lambda *a, **k: pytest.fail("re-pulled after today's receipt"))
+        r = SR.u_analyst(tmp_path)          # no session stamp present
+        assert "already pulled today" in r["skipped"]
+        assert r["n_revision_rows"] == 392201, "the gate must read the WORK, not a note"
+
+    def test_an_unreadable_receipt_is_not_proof_of_a_good_pull(self, tmp_path, monkeypatch):
+        import sys
+        from datetime import date
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+        from backend import config as C
+
+        root = tmp_path / "ledger"
+        (root / "analyst").mkdir(parents=True)
+        (root / "analyst" / f"analyst_pull_{date.today().isoformat()}.json").write_text(
+            "{not json", encoding="utf-8")
+        monkeypatch.setattr(C, "OPTIMUS_LEDGER_DIR", root)
+        calls = []
+        monkeypatch.setattr(SR, "_in_subprocess",
+                            lambda *a, **k: (calls.append(1) or {"rc": 0}))
+        SR.u_analyst(tmp_path)
+        assert calls, "a corrupt receipt must NOT be read as a completed pull"

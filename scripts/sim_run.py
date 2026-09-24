@@ -53,7 +53,7 @@ import signal
 import sys
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -105,6 +105,22 @@ class Cycle:
         The error travels in the receipt so the morning can see it.
         """
         t0 = time.time()
+        # HEARTBEAT BEFORE EVERY UNIT, not only at the cycle boundary.
+        #
+        # `sim_session` DERIVES UNCLEAN from a heartbeat older than
+        # STALE_AFTER_S (300s), which is the right rule -- a vanished process
+        # leaves a stale beat and no stop receipt. But a beat written only when
+        # a CYCLE starts says nothing about a cycle containing a legitimately
+        # long unit. On 2026-09-24 the analyst pull took 67 minutes inside cycle
+        # 1 and the session read UNCLEAN for the whole of it while the process
+        # was healthy and its child was visibly working.
+        #
+        # A heartbeat means "this process is alive". It is alive during a unit.
+        try:
+            SS.heartbeat(cycle=self.n, note=f"cycle {self.n}: {name}")
+        except Exception:                                          # noqa: BLE001
+            # Never let the liveness signal kill the work it is reporting on.
+            logger.debug("heartbeat before %s failed", name, exc_info=True)
         try:
             res = fn()
             dt = time.time() - t0
@@ -270,9 +286,28 @@ def u_analyst(out: Path) -> dict:
     about 50 minutes, and running it every cycle of an 8-hour session would do
     nothing but exhaust the vendor's patience.
     """
+    # ONCE A DAY, not once a session. The vendor's data changes daily, and the
+    # first version of this gate keyed on a per-session stamp -- so starting a
+    # second session on the same day re-ran a 67-minute pull that had already
+    # completed, inside cycle 1, for nothing. Observed on 2026-09-24.
+    #
+    # The day's own receipt is the honest test of "already done": it is written
+    # by the puller itself, so the gate reads the work rather than a note about
+    # the work.
+    day = date.today().isoformat()
+    receipt = (Path(_config.OPTIMUS_LEDGER_DIR) / "analyst"
+               / f"analyst_pull_{day}.json")
+    if receipt.exists():
+        try:
+            r = json.loads(receipt.read_text(encoding="utf-8"))
+            return {"skipped": f"already pulled today ({day})",
+                    "n_snapshots": r.get("n_snapshots"),
+                    "n_revision_rows": r.get("n_revision_rows")}
+        except (OSError, ValueError):
+            pass            # an unreadable receipt is not proof of a good pull
     stamp = out / "analyst_pulled.json"
     if stamp.exists():
-        return {"skipped": "already pulled this session"}
+        return {"skipped": "already attempted this session"}
     res = _in_subprocess("analyst", timeout=5400.0)
     stamp.write_text(json.dumps(
         {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
