@@ -17,7 +17,8 @@ a refuted idea is a result and the next session needs to know it was tried.
 
 | id | idea | settles when |
 |---|---|---|
-| **Q-ANALYST-1** | Nightly analyst pull, 3,214 tickers (`scripts/pull_analyst_targets.py`, wired as `sim_run.u_analyst`) | accrues; the snapshot series only becomes point-in-time from 2026-09-24 forward, so it is a clock, not a question |
+| **Q-ANALYST-1** | Nightly analyst pull, 3,214 tickers (`scripts/pull_analyst_targets.py`, wired as `sim_run.u_analyst`) | accrues; the snapshot series only becomes point-in-time from 2026-09-24 forward, so it is a clock, not a question. **392,201 dated revision rows already in hand (2011-2026) and those ARE backtestable.** |
+| **Q-FORECAST-1** | `investigator:evidence_v2` — 40 forecasts frozen at h=1, shrunk 0.65, resolving **2026-09-28** | the sim's `u_grade` resolves them, then `night_specialist_scoreboard` scores the arm against climatology. **A positive Brier skill here is the first forward confirmation of §64 on an arm we built.** |
 
 ---
 
@@ -199,6 +200,15 @@ claim is about the conjunction, and the conjunction must be pre-specified.
 
 ---
 
+## CLOSED since the queue was written
+
+* **Q-4's precondition** — the full analyst pull finished: 392,201 dated
+  revision rows, 2,982 tickers, 0 failures. The *level* stays CLOSED/PERVERSE;
+  the revision FLOW is now testable and still untested.
+* **The stranded-forecast blocker** — 2,911 records that could never resolve are
+  now 130 (`pull_forecast_bars` + a grader-only panel union). §64 re-ran on 19%
+  more evidence and **strengthened**.
+
 ## Standing traps this queue keeps re-learning
 
 1. **Print by year before believing any positive number** (twice: 2026-08-26, 2026-09-24).
@@ -207,3 +217,5 @@ claim is about the conjunction, and the conjunction must be pre-specified.
 4. **Read the WORST cell of a sweep, never the best.**
 5. **Quote a stop in sigma, not percent.**
 6. **Grade the ledger before running a backtest.** §64 cost one `groupby` and settled more than any panel this month.
+7. **Never `git reset --hard` here.** `predictions.jsonl` is tracked and grows continuously, so uncommitted rows exist at all times; a reset to fix a commit MESSAGE destroyed ~1,200 of them on 2026-09-24.
+8. **Presence is not validity.** `data_credential()` returned a key revoked two days earlier because it merely existed. Verify with one call.
