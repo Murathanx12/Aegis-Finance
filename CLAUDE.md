@@ -239,10 +239,22 @@ prints a date and cannot go red is decoration.
    item 5. Derived from the file now.
 
 Re-ran it: universe **5,339 → 1,500 → 250 → 40 → 25**, and **13 of the 25 were
-absent from the August snapshot**. So the "candidate set" question is closed;
-what is NOT closed is that nothing SCHEDULES the refresh yet — the night's runs
-should call it, and until they do the staleness line is the only thing standing
-between a fresh decision and a month-old one.
+absent from the August snapshot**.
+
+4. **And it has a scheduled caller**, which is the thing actually missing — a
+   staleness line is a warning, not a refresh. `sim_run.u_funnel` runs BEFORE
+   `u_rank` in every cycle (a ranking over last month's candidates is the
+   original failure), gated on the snapshot's AGE rather than a fingerprint
+   because the input always differs and only the answer's shelf life matters. It
+   attempts **once per session**, out of process, and refuses three ways: a
+   failed rebuild is a SKIP not a raise (a stale candidate set beats losing the
+   night's grade and learn units to a 503); `main()`'s rc 2 is read explicitly
+   because the subprocess still exits 0; and **rc 0 with `generated_at` unmoved
+   is reported as a failure**, because a remedy that reports success and changes
+   nothing is this whole section in miniature.
+
+So the candidate-set question is closed end to end: it is fresh, its age is
+checkable, its remedy runs, and something calls the remedy.
 
 Accounts, ownership and the execution lease: `docs/ACCOUNTS_2026-09-22_THE_PAPER_FLEET.md`.
 
