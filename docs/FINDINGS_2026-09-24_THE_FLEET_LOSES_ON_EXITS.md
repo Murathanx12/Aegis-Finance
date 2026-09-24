@@ -5,13 +5,60 @@ $0.00.** The 10-hour simulation ran alongside and is unaffected by any of it.
 
 ---
 
+> ## ⚠ AMENDED THE SAME DAY: the stop proposal is REFUTED
+>
+> This document's headline finding — "a −2% stop would have saved 75% of the
+> fleet's realised loss" — **does not survive being tested.** §4 below called it
+> "a proposal for a human ... the one finding tonight that's worth money", and I
+> repeated that to Murat. It is not worth money. Read §2's stop table as a
+> hindsight artefact.
+>
+> `scripts/night_exit_rules.py` re-ran the same ranking through real exit rules
+> on real OHLC bars, with gap-aware fills and same-session collisions resolved
+> to the stop. **All eleven rules lose to holding**, monotonically:
+>
+> | arm | net rel | mean hold | exited early | vs hold |
+> |---|---:|---:|---:|---:|
+> | **hold** | **−0.13%** | 21.0d | — | — |
+> | stop −2% | −0.96% | 5.1d | **89%** | **−0.83%** |
+> | stop −8% | −0.81% | 13.5d | 57% | −0.68% |
+> | take +10% | −0.29% | 14.8d | 48% | −0.16% |
+> | trail −3% | −0.95% | 2.5d | **100%** (21% through gaps) | −0.82% |
+> | stop −2% + take +10% | **−0.97%** | 3.3d | 98% | **−0.84%** |
+>
+> And the mechanism, which is what makes this general rather than a property of
+> one panel: the eligible cross-section's median `vol_63` is **34.3%/yr = 2.16%
+> per day**, so **a −2% stop is 0.93 DAILY SIGMA.** It sits inside one ordinary
+> session's move. Over a 21-session hold, touching it is close to certain — hence
+> the 89% stop-out rate. At that level a stop is not a risk control; it is an
+> almost-guaranteed exit that pays a spread on the way out.
+>
+> The counterfactual in §2 charged the stop only to the positions that ended up
+> losing. The real rule charges it to the **72% of positions that get stopped and
+> then recover**, and that is the entire difference between +$29,426 and −0.83%.
+>
+> **What survives:** the DIAGNOSIS. `fleet_mimic` (take-profit at +2%, which is
+> what the fleet actually does at its +1.91% mean winner) is −0.66% against
+> hold's −0.13% — so cutting winners early does cost money, as §2 said. What is
+> refuted is the REMEDY. The fix indicated by this test is to stop cutting
+> winners, and explicitly **not** to add a stop.
+>
+> **The honest limit:** the book tested here is itself negative (−0.13% net
+> relative), so this establishes that no exit rule rescues a weak selector. The
+> 0.93-sigma arithmetic is selector-independent; the rest may not be.
+>
+> Full entry: `NEGATIVE_RESULTS.md` §62. Receipt:
+> `xs_ranker/exit_rules_2026-09-24.json`.
+
+---
+
 ## RESULTS SCOREBOARD
 
 | line | state |
 |---|---|
 | best historical net strategy vs market | **none** — §59 stands, and horizon extension does not rescue it |
 | best forward paper strategy | fleet **$452,856 of $500,000, −9.4%**; another **−$9,084 overnight** |
-| new actionable finding | **a −2% stop would have saved 75% of the fleet's realised loss** |
+| new actionable finding | ~~a −2% stop would have saved 75% of the fleet's realised loss~~ **REFUTED the same day by direct test — see the banner below** |
 | hypotheses killed | 3 of 4 (capacity, stale positions, friction) |
 | LLM spend | **$0.00** |
 
@@ -141,18 +188,24 @@ hold, never on IC.
 
 **For the Railway fleet** — the finding is not "pick better". It is that a
 selector with a 28% hit rate is being amplified by an exit rule that cuts
-winners early and holds losers. A stop is worth ~$29k of the last $39k on the
-evidence available. **That is a proposal for a human, not an action from here:**
-these accounts are owned by the Railway loops, and a second writer is exactly
-what `pc_broker`'s execution lease exists to prevent.
+winners early and holds losers. ~~A stop is worth ~$29k of the last $39k on the
+evidence available.~~ **REFUTED — see the banner at the top.** Tested directly,
+a −2% stop costs 0.83% per hold against holding, because at 0.93 daily sigma it
+fires on 89% of positions. Do not send this to a live book. What the evidence
+supports is removing the early exit on winners, not adding one on losers. **That
+is still a proposal for a human, not an action from here:** these accounts are
+owned by the Railway loops, and a second writer is exactly what `pc_broker`'s
+execution lease exists to prevent.
 
 **For the PC book** — its refusal to trade a measured-negative ranking now has a
 live counterfactual. The fleet is what happens when a negative selector is
 traded anyway: −418 bps per position, 358 times.
 
 **For the research queue** — three of tonight's four hypotheses were refuted at
-$0.00, which is the point of running them. The one survivor (exit discipline) is
-an operational fix, not alpha. The alpha question is unchanged and still waits
+$0.00, which is the point of running them. The one survivor (exit discipline)
+**was refuted by the end of the same day**, which is also the point: a
+counterfactual computed from outcomes is a hypothesis, not a finding, and the
+distance between the two was one script. The alpha question is unchanged and still waits
 on the SEC fundamentals join.
 
 ## 5. Receipts

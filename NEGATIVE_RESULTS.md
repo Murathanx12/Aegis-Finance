@@ -3635,3 +3635,128 @@ that the defaulted model was the one the hypothesis was about.
 Receipts: `xs_ranker/horizon_sweep_composite_2026-09-24.json`,
 `xs_ranker/horizon_sweep_2026-09-24.json` (the lgbm_full run, kept as the
 record of what was asked and answered wrongly).
+
+---
+
+## 62. No exit rule rescues a weak book — a −2% stop is 0.93 daily sigma, so it fires on 89% of positions (2026-09-24)
+
+**Status: MECHANISM tested and REFUTED as a remedy; the diagnosis it came from
+survives. Licence: PRODUCT_EXPERIMENT.**
+
+### Where the hypothesis came from, and what was wrong with it
+
+`docs/FINDINGS_2026-09-24_THE_FLEET_LOSES_ON_EXITS.md` measured 358 closed round
+trips across the paper fleet: hit rate **27.7%**, mean winner **+1.91%**, mean
+loser **−7.00%**, losers held 3.5 days against winners' 1.1. At a 28% hit rate,
+break-even needs winners 2.6× losers; instead losers were 3.7× winners.
+
+A hindsight replay then said a **−2% stop would have saved $29,426 of the
+$39,436 realised loss (75%)**, and the document stated the objection itself:
+
+> this counterfactual assumes capping a loss is free and it is not. Stops get
+> whipsawed, some of those −7% losers would have recovered, and a gap can fill
+> below the level.
+
+**The objection was right and the number was quoted anyway** — including by me,
+to Murat, as "the one finding tonight that's worth money." This entry is what
+happened when the objection was executed instead of written down.
+
+### The test
+
+`scripts/night_exit_rules.py`. Same `composite_prior` ranking, k=50, H=21,
+survivorship-free panel, purge scaled to the horizon. Each arm walks real OHLC
+bars position by position. The conventions are the whole validity:
+
+* intraday trigger on the session LOW, not close-to-close;
+* **a level below the open fills AT THE OPEN** — the stop price was never
+  available — and those exits are counted separately as `stop_gap`;
+* a session touching both stop and target resolves to the **STOP**, because
+  daily bars do not record intra-session order;
+* entry at t+1's open, matching `build_target`, so the no-rule arm reproduces
+  `fwd_ret` exactly and any difference is the rule;
+* an early exit sits in **cash** for the rest of the window — conservative
+  *toward* the exit rules, which are charged the idle capital and credited
+  nothing for it;
+* every arm measured **relative to the equal-weight eligible cross-section over
+  the same window**, because a stop that "saves" money while everything falls has
+  saved nothing.
+
+### Every one of eleven arms loses to holding
+
+| arm | net rel/hold | mean hold | exited early | gap fills | t | LOO worst |
+|---|---:|---:|---:|---:|---:|---:|
+| **hold** | **−0.13%** | 21.0d | — | — | −0.49 | −0.44% |
+| stop −2% | −0.96% | 5.1d | **89%** | 5% | −2.73 | −1.25% |
+| stop −3% | −0.93% | 6.9d | 83% | 6% | −3.01 | −1.21% |
+| stop −5% | −0.85% | 10.0d | 72% | 6% | −3.58 | −1.06% |
+| stop −8% | −0.81% | 13.5d | 57% | 6% | −4.36 | −0.98% |
+| take +3% | −0.56% | 7.0d | 82% | 7% | −1.97 | −0.71% |
+| take +5% | −0.44% | 10.0d | 71% | 7% | −1.98 | −0.53% |
+| take +10% | −0.29% | 14.8d | 48% | 6% | −1.76 | −0.44% |
+| trail −3% | −0.95% | 2.5d | **100%** | **21%** | −2.27 | −1.26% |
+| trail −5% | −0.93% | 4.5d | 98% | 16% | −2.40 | −1.21% |
+| `fleet_mimic` (+2% take) | −0.66% | 5.1d | 88% | 6% | −1.99 | −0.86% |
+| stop −2% + take +10% | **−0.97%** | 3.3d | 98% | 6% | −2.42 | −1.26% |
+
+**Both axes are monotone toward doing nothing.** Stops improve as they loosen
+(−0.96 → −0.81), takes improve as they loosen (−0.66 → −0.29), and the limit of
+each is the hold arm at −0.13%. There is no interior optimum, which is the
+signature of a rule contributing pure cost rather than mis-calibrated risk
+control. And the pairing the autopsy implied was correct — cut losers at −2%, let
+winners run to +10% — is the **worst cell in the grid**.
+
+### The mechanism, which is what generalises
+
+The eligible cross-section's median `vol_63` is **34.3%/yr = 2.16% per day**
+(p25 1.57%, p75 3.15%). So:
+
+| stop | daily sigma |
+|---|---:|
+| **−2%** | **0.93σ** |
+| −3% | 1.39σ |
+| −5% | 2.31σ |
+| −8% | 3.70σ |
+
+**A −2% stop sits inside one ordinary session's move.** Over a 21-session hold,
+touching it at least once is close to certain — which is precisely the measured
+89% stop-out rate, and the 100% rate of a −3% *trailing* stop, which exits in 2.5
+days with **21% of its exits gapping through the level**.
+
+That is the whole difference between +$29,426 and −0.83%. The counterfactual
+charged the stop only to positions that ended up losing. The real rule charges it
+to the ~72% that get stopped and then recover.
+
+### What survives, and what does not
+
+**Survives — the diagnosis.** `fleet_mimic`, a +2% take-profit chosen to
+reproduce what the fleet actually does at its +1.91% mean winner, earns −0.66%
+against hold's −0.13%. **Cutting winners early does cost money**, exactly as the
+autopsy said.
+
+**Refuted — the remedy.** The indicated fix is to *stop cutting winners*, and
+explicitly **not** to add a stop. Those are not symmetric interventions, and the
+autopsy treated them as two halves of one repair.
+
+**The scope limit, stated:** the book tested is itself negative (−0.13% net
+relative). So what is established is that **no exit rule rescues a weak
+selector** — the rules cannot manufacture an edge the ordering does not have.
+The 0.93-sigma arithmetic is selector-independent and would apply to any book of
+similar-volatility names; the rest of the table may not transfer to a positive
+selector, and this entry does not claim it does.
+
+### The lesson that generalises
+
+**A counterfactual computed from outcomes is a hypothesis, not a finding.** The
+fleet replay knew which positions lost before deciding where to put the stop, so
+it never paid for a single whipsaw. Nothing in the arithmetic was wrong; what was
+missing was the 72% of positions the rule would also have touched. The distance
+between the hypothesis and the answer was one script and about an hour.
+
+And the smaller one: **quote a stop in units of the instrument's volatility, not
+in percent.** "−2%" reads like a modest risk control and is 0.93σ; "−8%" reads
+reckless and is 3.7σ. The percent figure carries no information about whether the
+level is inside the noise, which is the only thing that determines whether a stop
+is a control or a coin flip.
+
+Receipt: `xs_ranker/exit_rules_2026-09-24.json` (eleven arms, per-arm by-year and
+leave-one-year-out, exit-reason and gap-fill fractions).
