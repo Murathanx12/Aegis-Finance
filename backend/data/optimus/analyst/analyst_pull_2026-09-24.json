@@ -3,16 +3,16 @@
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
  "day": "2026-09-24",
- "written_utc": "2026-09-24T06:34:30+00:00",
- "n_requested": 12,
- "n_snapshots": 12,
- "n_revision_rows": 3658,
+ "written_utc": "2026-09-24T07:41:55+00:00",
+ "n_requested": 3214,
+ "n_snapshots": 3086,
+ "n_revision_rows": 392201,
  "n_failed": 0,
- "elapsed_min": 0.3,
+ "elapsed_min": 66.8,
  "files": {
-  "target_snapshots": "12 rows",
-  "target_revisions": "3,658 rows (deduped on event)",
-  "eps_trend_snapshots": "48 rows"
+  "target_snapshots": "3,098 rows",
+  "target_revisions": "392,201 rows (deduped on event)",
+  "eps_trend_snapshots": "12,384 rows"
  },
  "point_in_time": {
   "target_revisions": "PIT SAFE -- each row carries its own event_date",
