@@ -128,6 +128,22 @@ the wrong path. Fetch first, then check, and check the real path.
     (`test_desktop_control_surface.executable_source`), or the next reader
     deletes the rationale to make the suite green.
 
+11. **When a number comes out POSITIVE, the first question is not how precise it
+    is — it is WHICH PART OF THE SAMPLE IT IS.** On 2026-09-24 a +2.62%/hold
+    cell survived a purge scaled to the horizon, a survivorship-free panel, a
+    breadth sweep read at its worst cell, and a corrected error bar — then died
+    to `groupby(year).mean()`: dropping **2025** alone took it to **+0.12%**,
+    with three of six years negative or flat. The afternoon went on fixing the
+    t-statistic (real defect: monthly blocking understates the SE by
+    ~`sqrt(H/21)`, and the understatement GROWS with the swept parameter, so the
+    t rose with horizon partly because the estimator did). That correction was
+    irrelevant to whether the result was true. `xs_ranker.top_k_backtest` now
+    returns `by_year`, `leave_one_year_out`, `loo_worst_mean_net` and
+    `share_of_total_by_date` on **every** call, and `night_horizon_sweep`'s
+    verdict checks the regime condition BEFORE significance. The same lesson was
+    already in memory from 2026-08-26 with "print by year" as its first rule —
+    which is why it is enforced in code here rather than written down again.
+
 The long-form lessons behind this file (the farm's seven lessons, the feature
 list, layout, test table, retired lab) moved verbatim to
 `docs/CLAUDE_LESSONS_2026-08.md` on 2026-08-29. They are still canon.
@@ -204,6 +220,29 @@ Two things the same day, both measured, both the same shape:
   sample. That gap is the selection effect, visible only because signs are
   chosen inside the fold. Anything picked after a full-sample diagnostic is a
   finding to be tested on foreign data, never a prior.
+
+**FIXED 2026-09-24, and the fix is three things, not one.** By then the file was
+**44 days old** and `ic_health` was still reporting `status: "ok"` — it READ
+`generated_at`, PRINTED it, and never compared it to anything. A health row that
+prints a date and cannot go red is decoration.
+
+1. `investment_committee.FUNNEL_STALE_DAYS = 10`, with `funnel_staleness()`
+   returning a degradation line; an **undateable** stamp is UNKNOWN, never fresh.
+2. The remedy everyone was told to run **was itself a no-op**:
+   `python -m backend.services.opportunity_funnel` had `run()` and **no
+   `__main__`**, so it imported the module and exited 0. An operator following
+   the instruction in `pm_actions` saw the file unchanged and no error. It now
+   has a CLI that writes atomically, archives to `backend/data/funnel_history/`,
+   and REFUSES without overwriting when a stage fails.
+3. `test_health_full` asserted `status == "ok"` on the shipped file — which
+   encoded *"the shipped funnel will never get old."* Same family as protocol
+   item 5. Derived from the file now.
+
+Re-ran it: universe **5,339 → 1,500 → 250 → 40 → 25**, and **13 of the 25 were
+absent from the August snapshot**. So the "candidate set" question is closed;
+what is NOT closed is that nothing SCHEDULES the refresh yet — the night's runs
+should call it, and until they do the staleness line is the only thing standing
+between a fresh decision and a month-old one.
 
 Accounts, ownership and the execution lease: `docs/ACCOUNTS_2026-09-22_THE_PAPER_FLEET.md`.
 

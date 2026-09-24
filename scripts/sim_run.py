@@ -167,6 +167,90 @@ def _bars_fingerprint() -> str:
     return "|".join(parts)
 
 
+def u_funnel(out: Path) -> dict:
+    """Refresh the candidate set ONLY when it is stale, at most once a session.
+
+    THE POINT OF THIS UNIT
+    ----------------------
+    `funnel_night10.json` is what `investment_committee` and every decision
+    contract rank. On 2026-09-22 it was found to be a static file dated
+    2026-08-11 -- forty tickers, `n_considered: 2` -- and the reason it went 44
+    days without a refresh is that NOTHING CALLED THE REFRESH. There was no
+    scheduled caller, and the command printed to operators
+    (`python -m backend.services.opportunity_funnel`) had no `__main__` and
+    exited 0 in silence. Both are fixed; this unit is the scheduled caller, so
+    the staleness line stops being the only thing standing between a fresh
+    decision and a month-old one.
+
+    It is gated the same way `u_rank` is gated, and for the same reason: the
+    funnel costs ~310s, ~25 batch price calls and 80 per-ticker calls, and
+    running it every cycle of an 8-hour session would spend the night rebuilding
+    one answer and burn the finnhub budget by cycle 4. The gate here is the
+    snapshot's own AGE rather than a fingerprint, because the input (the live
+    market) always differs and only the answer's shelf life matters.
+
+    A failure is a SKIP, never a raised error: the existing snapshot is still
+    the best candidate set on disk, and killing a cycle -- and with it the
+    grade and learn units -- because a symbol list 503'd would trade a whole
+    night for a data refresh. The reason is recorded on the cycle payload.
+    """
+    from backend.services import investment_committee as IC
+    path = Path(_config.IC_FUNNEL_PATH)
+    stamp = out / "funnel_refreshed.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        generated_at = payload.get("generated_at")
+        n_before = len(payload.get("candidates") or [])
+    except (OSError, ValueError) as e:
+        generated_at, n_before = None, 0
+        logger.warning("funnel unreadable (%s); refreshing", e)
+
+    stale = IC.funnel_staleness(generated_at)
+    if not stale:
+        return {"skipped": "candidate set is fresh",
+                "generated_at": generated_at,
+                "age_days": round(IC._funnel_age_days(generated_at) or 0.0, 2),
+                "n_candidates": n_before}
+    # Once per session. A snapshot that is still stale after a successful
+    # rebuild means the rebuild wrote an old stamp, which is a bug to see once
+    # rather than a retry loop to run 120 times.
+    if stale and stamp.exists():
+        return {"skipped": "already attempted this session",
+                "why_it_was_stale": stale[:120]}
+
+    res = _in_subprocess("funnel")
+    # `main()` returns 2 on a REFUSED rebuild (a stage failed and the previous
+    # snapshot was deliberately left alone). The subprocess still exits 0, so
+    # the non-zero rc has to be read here or a refusal reads as a success.
+    if not res.get("failed") and res.get("rc") not in (0, None):
+        res = {"failed": f"opportunity_funnel refused (rc {res['rc']})"}
+    stamp.write_text(json.dumps(
+        {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+         "was": generated_at, "result": res}, indent=1, default=str),
+        encoding="utf-8")
+    if res.get("failed"):
+        # Not raised. See the docstring.
+        return {"refresh_failed": str(res["failed"])[:200],
+                "kept": generated_at, "n_candidates": n_before,
+                "note": "the previous snapshot is untouched and still ranks"}
+    try:
+        after = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:
+        return {"refresh_failed": f"snapshot unreadable after refresh: {e}"}
+    now_stamp = after.get("generated_at")
+    if now_stamp == generated_at:
+        # The subprocess said rc 0 and the snapshot's stamp did not move. That
+        # is not a refresh; it is the whole 2026-09-22 failure in miniature --
+        # a remedy that reports success and changes nothing. Verify the
+        # persistence claim, do not take the exit code's word for it.
+        return {"refresh_failed": "rc 0 but `generated_at` did not move",
+                "kept": generated_at, "n_candidates": n_before,
+                "note": "check that opportunity_funnel wrote to IC_FUNNEL_PATH"}
+    return {"refreshed": True, "was": generated_at, "now": now_stamp,
+            "n_candidates": len(after.get("candidates") or []),
+            "n_before": n_before}
+
+
 def u_rank(out: Path) -> dict:
     """Re-rank ONLY when the bars moved.
 
@@ -408,6 +492,14 @@ _LEARN_SRC = {
         "from backend.services import xs_ranker as XR;"
         "bars=XR.load_bars(XR.survivorship_free_paths());"
         "out=XR.survivorship_audit(bars)"),
+    # The funnel runs OUT OF PROCESS like the other heavy units: it loads
+    # yfinance, holds a 5,339-name universe and ~1,500 price histories, and a
+    # released Python reference is not a returned page. The 12-hour run of
+    # 2026-09-23 reached 7,835 MB in-process for exactly this reason.
+    "funnel": (
+        "from backend.services import opportunity_funnel as OF;"
+        "rc=OF.main([]);"
+        "out={'rc':rc}"),
     "breadth_check": (
         "from backend.services import xs_ranker as XR;"
         "panel=XR.build_panel(XR.load_bars(XR.survivorship_free_paths()));"
@@ -487,6 +579,9 @@ def run(session_id: str) -> int:
             if SS.stop_requested():
                 logger.info("stop seen after reconcile; finishing the cycle short")
             else:
+                # BEFORE the rank, not after: a ranking computed over last
+                # month's candidate set is the exact failure of 2026-09-22.
+                c.unit("funnel", lambda: u_funnel(out))
                 c.unit("rank", lambda: u_rank(out))
                 c.unit("plan", lambda: u_plan(out, mode))
                 c.unit("grade", u_grade)

@@ -868,3 +868,68 @@ class TestLeaveOneYearOutIsNotOptional:
         assert 0.7 < tn / tm < 1.4, f"monthly {tm:.2f} vs non-overlap {tn:.2f}"
         # And strict independence is always the smaller count.
         assert bt["n_blocks_strict"] <= bt["n_blocks_nonoverlap"]
+
+
+class TestTheFunnelNowHasAScheduledCaller:
+    """`funnel_night10.json` went 44 days without a refresh because NOTHING
+    CALLED THE REFRESH. `u_funnel` is the scheduled caller."""
+
+    @staticmethod
+    def _stale(td: Path) -> Path:
+        import json as _j
+        p = td / "stale_funnel.json"
+        p.write_text(_j.dumps({"generated_at": "2026-08-11T02:33:48+00:00",
+                               "candidates": [{"ticker": "OLD"}]}), encoding="utf-8")
+        return p
+
+    def test_it_is_wired_into_the_cycle_before_the_rank(self):
+        """A ranking over last month's candidate set is the 09-22 failure."""
+        import scripts.sim_run as SR
+        from pathlib import Path as _P
+        src = _P(SR.__file__).read_text(encoding="utf-8")
+        i, j = src.index('c.unit("funnel"'), src.index('c.unit("rank"')
+        assert i < j, "the funnel must refresh BEFORE the rank reads it"
+
+    def test_a_fresh_snapshot_costs_nothing(self, tmp_path, monkeypatch):
+        import json as _j
+        import scripts.sim_run as SR
+        from backend import config as C
+        from datetime import datetime, timezone
+        p = tmp_path / "fresh.json"
+        p.write_text(_j.dumps({"generated_at": datetime.now(timezone.utc).isoformat(),
+                               "candidates": [{"ticker": "NEW"}]}), encoding="utf-8")
+        monkeypatch.setattr(C, "IC_FUNNEL_PATH", p)
+        monkeypatch.setattr(SR, "_in_subprocess",
+                            lambda *a, **k: pytest.fail("refreshed a fresh funnel"))
+        assert "skipped" in SR.u_funnel(tmp_path)
+
+    def test_it_attempts_once_per_session_not_once_per_cycle(self, tmp_path, monkeypatch):
+        """121 cycles must not mean 121 rebuilds of a 310-second job."""
+        import scripts.sim_run as SR
+        from backend import config as C
+        calls = []
+        monkeypatch.setattr(C, "IC_FUNNEL_PATH", self._stale(tmp_path))
+        monkeypatch.setattr(SR, "_in_subprocess",
+                            lambda *a, **k: (calls.append(1) or {"rc": 0}))
+        for _ in range(5):
+            SR.u_funnel(tmp_path)
+        assert len(calls) == 1, f"attempted {len(calls)} times in one session"
+
+    def test_a_refusal_keeps_the_old_snapshot_and_does_not_raise(self, tmp_path, monkeypatch):
+        """A stale candidate set beats none, and beats losing the night."""
+        import scripts.sim_run as SR
+        from backend import config as C
+        monkeypatch.setattr(C, "IC_FUNNEL_PATH", self._stale(tmp_path))
+        monkeypatch.setattr(SR, "_in_subprocess", lambda *a, **k: {"rc": 2})
+        r = SR.u_funnel(tmp_path)          # must NOT raise
+        assert "refresh_failed" in r and r["kept"] == "2026-08-11T02:33:48+00:00"
+
+    def test_rc_zero_with_an_unmoved_stamp_is_a_failure(self, tmp_path, monkeypatch):
+        """The 09-22 failure in miniature: a remedy that reports success and
+        changes nothing. Verify the persistence claim, not the exit code."""
+        import scripts.sim_run as SR
+        from backend import config as C
+        monkeypatch.setattr(C, "IC_FUNNEL_PATH", self._stale(tmp_path))
+        monkeypatch.setattr(SR, "_in_subprocess", lambda *a, **k: {"rc": 0})
+        r = SR.u_funnel(tmp_path)
+        assert "refresh_failed" in r and "did not move" in r["refresh_failed"]
