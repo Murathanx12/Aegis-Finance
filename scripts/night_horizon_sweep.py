@@ -162,12 +162,15 @@ def run_one(bars: pd.DataFrame, horizon: int, *, n_folds: int = 4,
     ic = XR._information_coefficient(oos)
     cells = {}
     for k in BREADTH_K:
-        bt = XR.top_k_backtest(oos, k=k)
+        bt = XR.top_k_backtest(oos, k=k, horizon=horizon)
         if bt.get("mean_net_rel_21d") is None:
             continue
         net, gross = bt["mean_net_rel_21d"], bt["mean_gross_rel_21d"]
         periods = SESSIONS_PER_YEAR / horizon
         cells[k] = {
+            # `k` is carried INSIDE the cell as well as being its key: the
+            # verdict picks the worst cell by value and printed "k=?" without it.
+            "k": k,
             "gross_per_hold": gross, "net_per_hold": net,
             "cost_bps": bt["mean_cost_bps"],
             # The honest comparison: a 1% edge per 126 sessions is NOT better
@@ -175,6 +178,12 @@ def run_one(bars: pd.DataFrame, horizon: int, *, n_folds: int = 4,
             "net_per_year": net * periods,
             "gross_per_year": gross * periods,
             "t_across_blocks": bt.get("t_across_blocks"),
+            # The monthly t is inflated by sqrt(H/21) here -- the blocks share
+            # outcomes -- and the inflation GROWS with H, which is the axis
+            # being swept. `t_nonoverlap` is the one the verdict may use.
+            "t_nonoverlap": bt.get("t_nonoverlap"),
+            "n_blocks_nonoverlap": bt.get("n_blocks_nonoverlap"),
+            "n_blocks_strict": bt.get("n_blocks_strict"),
             "hit_rate": bt["hit_rate_dates"], "n_blocks": bt["n_blocks"],
         }
     return {"horizon": horizon, "status": "OK", "model": model,
@@ -220,7 +229,11 @@ def main(argv=None) -> int:
             print(f"   k={k:<4} gross {c['gross_per_hold']*100:+6.2f}%/hold "
                   f"net {c['net_per_hold']*100:+6.2f}%/hold  ->  "
                   f"net {c['net_per_year']*100:+6.2f}%/yr  "
-                  f"(cost {c['cost_bps']:.0f}bps, t {(c['t_across_blocks'] or float('nan')):+.2f})")
+                  f"(cost {c['cost_bps']:.0f}bps, t_month "
+                  f"{(c['t_across_blocks'] or float('nan')):+.2f}, "
+                  f"t_NONOVERLAP {(c['t_nonoverlap'] or float('nan')):+.2f} "
+                  f"on {c['n_blocks_nonoverlap']} blocks, {c['n_blocks_strict']} "
+                  f"strictly independent)")
 
     # the verdict compares ANNUALISED net, which is the only comparable number
     best = None
@@ -233,13 +246,44 @@ def main(argv=None) -> int:
     if best:
         h, k, per_yr, per_hold, t, gross = best
         incumbent = ((rows.get(21) or {}).get("by_k") or {}).get(20, {}).get("net_per_year")
-        if per_yr > 0:
+        # The BEST cell is the wrong cell to read. Read the worst of the breadth
+        # sweep at the winning horizon, on the honest (non-overlapping) t: the
+        # best-of-N cell is selected, and `t_across_blocks` shares outcomes
+        # between adjacent blocks by sqrt(H/21) at this horizon.
+        cells_h = (rows.get(h) or {}).get("by_k") or {}
+        worst = min(cells_h.values(), key=lambda c: c["net_per_year"]) if cells_h else {}
+        tn = [c.get("t_nonoverlap") for c in cells_h.values()
+              if c.get("t_nonoverlap") is not None]
+        tn_min = min(tn) if tn else None
+        tn_max = max(tn) if tn else None
+        all_pos = bool(cells_h) and all(c["net_per_year"] > 0 for c in cells_h.values())
+        if per_yr > 0 and (tn_max is None or tn_max < 2.0):
+            verdict = (
+                f"MEASURED POSITIVE, UNDERPOWERED: at H={h} every book size is "
+                f"positive ({'yes' if all_pos else 'no'}: worst cell k={worst.get('k', '?')} "
+                f"at {worst.get('net_per_year', 0)*100:+.2f}%/yr, best k={k} at "
+                f"{per_yr*100:+.2f}%/yr) and gross grew from +0.28% at H=21 to "
+                f"{gross*100:+.2f}% here against an unchanged ~34 bps toll, which is "
+                f"the predicted mechanism. But on NON-OVERLAPPING blocks the t range "
+                f"is {tn_min:+.2f} to {tn_max:+.2f} -- not distinguishable from zero. "
+                f"The monthly t reads higher only because a {h}-session return is "
+                f"shared by {max(1, h // 21)} adjacent monthly blocks. And even "
+                f"that correction is optimistic: at a block width that truly "
+                f"cannot share an outcome this panel holds only "
+                f"{worst.get('n_blocks_strict')} blocks, so the honest statement "
+                f"is THE PANEL IS TOO SHORT TO TEST H={h}, not 'the t is low'. "
+                f"This is a reason to run it forward in paper at small size, NOT "
+                f"a reason to claim an edge, and NOT a RESEARCH_CLAIM. Incumbent "
+                f"H=21 k=20 was {(incumbent or 0)*100:+.2f}%/yr.")
+        elif per_yr > 0:
             verdict = (
                 f"HORIZON HELPS: the best cell is H={h} at k={k}, "
                 f"{per_hold*100:+.2f}% net per hold = {per_yr*100:+.2f}%/yr "
-                f"(gross {gross*100:+.2f}%, t {t:+.2f}). Incumbent H=21 k=20 was "
-                f"{(incumbent or 0)*100:+.2f}%/yr. Holding longer pays the same toll "
-                f"over more time, and this says the signal outlives the extra days.")
+                f"(gross {gross*100:+.2f}%, monthly t {t:+.2f}, NON-OVERLAPPING t "
+                f"{tn_max:+.2f}). Worst cell at this horizon is "
+                f"{worst.get('net_per_year', 0)*100:+.2f}%/yr. Incumbent H=21 k=20 "
+                f"was {(incumbent or 0)*100:+.2f}%/yr. Holding longer pays the same "
+                f"toll over more time, and this says the signal outlives the days.")
         else:
             verdict = (
                 f"HORIZON DOES NOT RESCUE IT: the best cell anywhere is H={h} k={k} "

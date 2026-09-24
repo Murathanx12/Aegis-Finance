@@ -41,7 +41,9 @@ A candidate that cannot say why it is here is a bug, not a suggestion.
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import math
 import time
 from dataclasses import dataclass, field
@@ -733,3 +735,106 @@ def _evidence_basis() -> dict:
             "large/mid and -7.2 in small. The funnel records it for sizing and "
             "refuses to rank on it."),
     }
+
+
+# ──────────────────── the entry point that was advertised ────────────────────
+#
+# `pm_actions` has been telling operators to run
+#
+#     python -m backend.services.opportunity_funnel
+#
+# since this module was written, and until 2026-09-24 that command imported the
+# module, found no `__main__`, and exited 0 in silence. An operator following the
+# instruction saw nothing happen and `funnel_night10.json` unchanged -- which is
+# how its `generated_at` reached 44 days old while the remediation looked
+# available. The same family as a gate that cannot go green: the advertised fix
+# could not work, so nobody's failure to run it was ever visible.
+
+def _write_snapshot(payload: dict, out: Path) -> Path:
+    """Write the snapshot atomically, keeping a dated copy beside it.
+
+    Atomic because the API reads this path on a 1-hour cache: a half-written
+    file served to `funnel_state` raises inside a request instead of degrading.
+    Dated copy because the previous snapshot is the only way to answer "what did
+    the candidate set look like when that decision was made", and the decision
+    contract stamps `information_set` with exactly this `generated_at`.
+    """
+    out.parent.mkdir(parents=True, exist_ok=True)
+    blob = json.dumps(payload, indent=1, default=str)
+    tmp = out.with_suffix(out.suffix + ".tmp")
+    tmp.write_text(blob, encoding="utf-8")
+    os.replace(tmp, out)
+    stamp = str(payload.get("generated_at", ""))[:10] or str(date.today())
+    archive = out.parent / "funnel_history" / f"funnel_{stamp}.json"
+    archive.parent.mkdir(parents=True, exist_ok=True)
+    archive.write_text(blob, encoding="utf-8")
+    return archive
+
+
+def main(argv=None) -> int:
+    import argparse
+
+    from backend import config as _cfg
+
+    ap = argparse.ArgumentParser(
+        description="Rebuild the market opportunity funnel and write the snapshot "
+                    "every decision path reads.")
+    ap.add_argument("--out", default=None,
+                    help="default: config.IC_FUNNEL_PATH, which is what the API reads")
+    ap.add_argument("--force-universe", action="store_true",
+                    help="bypass the cached symbol list")
+    ap.add_argument("--max-universe", type=int, default=None,
+                    help="cap the symbol list (REPORTED on the snapshot as a "
+                         "coverage gap, never silently)")
+    ap.add_argument("--stage1", type=int, default=STAGE1_KEEP)
+    ap.add_argument("--stage2", type=int, default=STAGE2_KEEP)
+    ap.add_argument("--stage3", type=int, default=STAGE3_KEEP)
+    ap.add_argument("--stage4", type=int, default=STAGE4_KEEP)
+    ap.add_argument("--dry-run", action="store_true",
+                    help="build and print, write nothing")
+    a = ap.parse_args(argv)
+
+    logging.basicConfig(level=logging.INFO,
+                        format="%(asctime)s %(levelname)s %(message)s")
+    out = Path(a.out) if a.out else Path(_cfg.IC_FUNNEL_PATH)
+
+    # Print the age of what we are about to replace. The whole point of this
+    # entry point is that nobody knew.
+    if out.exists():
+        try:
+            prev = json.loads(out.read_text(encoding="utf-8"))
+            print(f"replacing: {out.name} generated {prev.get('generated_at')} "
+                  f"with {len(prev.get('candidates') or [])} candidates")
+        except Exception as e:      # a corrupt previous file must not block a refresh
+            print(f"replacing: {out.name} (unreadable: {e})")
+
+    try:
+        payload = run(force_universe=a.force_universe, max_universe=a.max_universe,
+                      stage1_keep=a.stage1, stage2_keep=a.stage2,
+                      stage3_keep=a.stage3, stage4_keep=a.stage4)
+    except FunnelError as exc:
+        # A refusal is a finding. Exit non-zero WITHOUT touching the existing
+        # snapshot: a stale funnel is worse than a fresh one and far better than
+        # an empty one, and overwriting it on failure would destroy the only
+        # candidate set on disk.
+        print(f"REFUSED: {exc}")
+        print("the previous snapshot is untouched")
+        return 2
+
+    st = payload["stages"]
+    print(f"universe {payload['universe']['screened']:,} -> "
+          f"stage1 {st['stage1_eligible']:,} -> stage2 {st['stage2_shortlist']:,} "
+          f"-> stage3 {st['stage3_enriched']} -> candidates {st['stage4_candidates']} "
+          f"in {payload['runtime_secs']}s")
+    if payload["failures"]:
+        print(f"stage failures: {payload['failures']}")
+    if a.dry_run:
+        print("--dry-run: nothing written")
+        return 0
+    archive = _write_snapshot(payload, out)
+    print(f"-> {out}\n-> {archive}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

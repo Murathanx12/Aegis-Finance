@@ -43,6 +43,7 @@ import argparse
 import json
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -102,29 +103,70 @@ def _age_days(iso: str | None) -> float | None:
         return None
 
 
-def entry_dates(kid: str, sec: str) -> dict[str, str]:
-    """When each open position was first entered, from the order history.
+#: Alpaca caps `/v2/orders` at 500 per page, so the history must be PAGED.
+#:
+#: The first version of this function asked for `limit=500&direction=asc` once,
+#: which is "the oldest 500 closed orders". `fleet_trade_autopsy` had already
+#: measured 500 fills across this fleet, so the request was sitting exactly on
+#: the cap -- and every position opened after a book's 500th order came back
+#: with no entry date. The line below it read
+#:
+#:     "stale": (age is not None and age > STALE_DAYS)
+#:
+#: so an UNDATEABLE position was silently counted as FRESH. The published
+#: headline "11 of 18 positions are older than 14 days" was therefore a lower
+#: bound reported as a count, and it failed in the direction that flatters the
+#: fleet. Missing data must not resolve to the benign branch.
+ORDER_PAGE = 500
+#: Hard stop on paging, so a book with a pathological history cannot hang an
+#: audit that is supposed to be cheap and read-only.
+MAX_ORDER_PAGES = 20
+
+
+def entry_dates(kid: str, sec: str) -> tuple[dict[str, str], dict]:
+    """When each open position was first entered, from the FULL order history.
 
     Alpaca's `/v2/positions` says WHAT is held and not SINCE WHEN, and the age
     is the whole point of this audit. Reconstructed from the oldest filled BUY
-    that is not preceded by a flat -- approximate, and labelled as such.
+    -- approximate (it does not reconstruct flats), and labelled as such.
+
+    Returns the map AND a coverage row, because the caller must be able to tell
+    "this position is new" from "this audit could not see far enough back".
     """
     out: dict[str, str] = {}
+    cov = {"pages": 0, "orders_seen": 0, "complete": False, "why": None}
+    cursor: str | None = None
     try:
-        orders = _get("/v2/orders?status=closed&limit=500&direction=asc", kid, sec)
-    except (urllib.error.HTTPError, urllib.error.URLError):
-        return out
-    for o in orders:
-        if o.get("side") != "buy" or not o.get("filled_at"):
-            continue
-        out.setdefault(o["symbol"], o["filled_at"])
-    return out
+        for _ in range(MAX_ORDER_PAGES):
+            q = f"/v2/orders?status=closed&limit={ORDER_PAGE}&direction=asc"
+            if cursor:
+                # `after` is exclusive, so the page cannot repeat its last row.
+                q += f"&after={urllib.parse.quote(cursor)}"
+            page = _get(q, kid, sec)
+            cov["pages"] += 1
+            cov["orders_seen"] += len(page)
+            for o in page:
+                if o.get("side") == "buy" and o.get("filled_at"):
+                    out.setdefault(o["symbol"], o["filled_at"])
+            if len(page) < ORDER_PAGE:
+                cov["complete"] = True
+                break
+            nxt = page[-1].get("submitted_at") or page[-1].get("created_at")
+            if not nxt or nxt == cursor:
+                cov["why"] = "pagination cursor did not advance"
+                break
+            cursor = nxt
+        else:
+            cov["why"] = f"stopped at the {MAX_ORDER_PAGES}-page cap"
+    except (urllib.error.HTTPError, urllib.error.URLError) as e:
+        cov["why"] = f"order history unavailable: {e}"
+    return out, cov
 
 
 def audit_book(role: str, kid: str, sec: str, *, ranks: dict | None = None) -> dict:
     acct = _get("/v2/account", kid, sec)
     pos = _get("/v2/positions", kid, sec)
-    entries = entry_dates(kid, sec)
+    entries, coverage = entry_dates(kid, sec)
 
     eq = float(acct["equity"])
     gross = sum(abs(float(p["market_value"])) for p in pos)
@@ -149,12 +191,18 @@ def audit_book(role: str, kid: str, sec: str, *, ranks: dict | None = None) -> d
             "market_value": mv, "weight": round(mv / eq, 4) if eq else None,
             "unrealized_pl": float(p["unrealized_pl"]),
             "unrealized_plpc": round(float(p["unrealized_plpc"]) * 100, 2),
-            "age_days": age, "stale": (age is not None and age > STALE_DAYS),
+            "age_days": age,
+            "stale": (age is not None and age > STALE_DAYS),
+            # A position whose entry the order history could not reach is
+            # UNKNOWN age, not fresh. It is counted separately and never
+            # allowed to lower the stale fraction.
+            "age_unknown": age is None,
             "current_rank": rank, "would_open_today": would_open, "why": why,
         })
     rows.sort(key=lambda r: -(r["age_days"] or 0))
 
     stale = [r for r in rows if r["stale"]]
+    unknown = [r for r in rows if r["age_unknown"]]
     losers_held = [r for r in rows if r["unrealized_plpc"] < -5 and r["stale"]]
     capacity = gross / eq if eq else None
     return {
@@ -169,6 +217,10 @@ def audit_book(role: str, kid: str, sec: str, *, ranks: dict | None = None) -> d
         "capacity_constrained": bool(capacity and capacity >= CAPACITY_WARN),
         "n_stale": len(stale),
         "oldest_position_days": rows[0]["age_days"] if rows else None,
+        "n_age_unknown": len(unknown),
+        # Paging coverage travels with the number it qualifies. A stale COUNT
+        # read without it is a lower bound presented as a measurement.
+        "order_history": coverage,
         "stale_losers": len(losers_held),
         "positions": rows,
     }
@@ -213,7 +265,12 @@ def main(argv=None) -> int:
     tot_gross = sum(b["gross_notional"] for b in books)
     constrained = [b["role"] for b in books if b["capacity_constrained"]]
     stale_total = sum(b["n_stale"] for b in books)
+    unknown_total = sum(b.get("n_age_unknown") or 0 for b in books)
     pos_total = sum(b["n_positions"] for b in books)
+    # If any position's entry could not be reached, the stale COUNT is a lower
+    # bound and the fleet line must say so rather than printing a bare ratio.
+    paging_complete = all((b.get("order_history") or {}).get("complete")
+                          for b in books) if books else False
 
     res = {
         "receipt": "fleet_audit", "licence": "PRODUCT_EXPERIMENT",
@@ -227,10 +284,13 @@ def main(argv=None) -> int:
             "gross_notional": tot_gross,
             "gross_pct": round(tot_gross / tot_eq * 100, 1) if tot_eq else None,
             "n_positions": pos_total, "n_stale": stale_total,
+            "n_age_unknown": unknown_total,
+            "order_history_complete": paging_complete,
             "stale_share": round(stale_total / pos_total, 3) if pos_total else None,
             "capacity_constrained_books": constrained,
         },
-        "verdict": _verdict(books, constrained, stale_total, pos_total),
+        "verdict": _verdict(books, constrained, stale_total, pos_total,
+                            unknown_total, paging_complete),
         "read_me_first": ("READ-ONLY. The Railway loops own these accounts; a "
                           "second writer is the failure the execution lease "
                           "exists to prevent. Findings are proposals for a "
@@ -257,11 +317,23 @@ def main(argv=None) -> int:
     return 0
 
 
-def _verdict(books, constrained, stale_total, pos_total) -> str:
+def _verdict(books, constrained, stale_total, pos_total,
+             unknown_total: int = 0, paging_complete: bool = True) -> str:
     if not books:
         return "CANNOT DETERMINE: no book answered"
     share = stale_total / pos_total if pos_total else 0
     parts = []
+    # Said FIRST, because it qualifies every count that follows. `stale_total`
+    # can only ever undercount: a position whose entry the order history could
+    # not reach has unknown age, and unknown is not fresh.
+    bound = ""
+    if unknown_total or not paging_complete:
+        bound = (f" This is a LOWER BOUND: {unknown_total} position(s) have no "
+                 f"reachable entry date"
+                 + ("" if paging_complete else
+                    " and at least one book's order history was not paged to the end")
+                 + ", so their age is UNKNOWN and they are excluded from the stale "
+                   "count rather than counted as fresh.")
     if constrained:
         parts.append(
             f"{len(constrained)} book(s) are at or above 90% gross ({', '.join(constrained)}): "
@@ -274,7 +346,7 @@ def _verdict(books, constrained, stale_total, pos_total) -> str:
     if not parts:
         return (f"No rotation pathology found: {stale_total}/{pos_total} stale, "
                 f"no book at the gross ceiling. If the fleet is underperforming, "
-                f"it is the PICKS, not the plumbing.")
+                f"it is the PICKS, not the plumbing." + bound)
     # The conclusion depends on WHICH condition fired, and the first version of
     # this asserted the capacity conclusion whenever EITHER did. Staleness alone
     # does not block a new entry when gross is 38% -- there is room; the old
@@ -289,7 +361,7 @@ def _verdict(books, constrained, stale_total, pos_total) -> str:
             "entries -- there is room. What it shows is that exits are not firing, "
             "which costs whatever the stale names drift rather than costing "
             "opportunity. The ranker is not blocked.")
-    return " AND ".join(parts) + "." + tail
+    return " AND ".join(parts) + "." + tail + bound
 
 
 if __name__ == "__main__":

@@ -124,8 +124,18 @@ class TestHealthFullEndpoint:
         body = client.get("/api/health/full").json()
         ic = body["investment_committee"]
         assert "funnel_available" in ic and "status" in ic
-        # With the artifact shipped under backend/data the row is ok.
-        assert ic["funnel_available"] is True and ic["status"] == "ok"
+        # The artifact ships under backend/data, so the file is THERE. Its
+        # status now depends on its AGE, and this assertion used to read
+        # `status == "ok"` -- which quietly encoded "the shipped funnel will
+        # never get old". It did get old (44 days by 2026-09-24) and the test
+        # would have gone red on the day the staleness check started working,
+        # blaming the check rather than the snapshot. Derive the expectation
+        # from the file, never from the calendar moment the test was written in.
+        assert ic["funnel_available"] is True
+        assert ic["status"] in ("ok", "DEGRADED")
+        if ic["status"] == "DEGRADED":
+            assert "stale" in ic["error"] or "age" in ic["error"].lower(), (
+                f"a present funnel may only degrade on AGE here, not: {ic['error']}")
 
         from pathlib import Path
         from backend import config as cfg

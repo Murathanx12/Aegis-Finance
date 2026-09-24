@@ -696,3 +696,94 @@ def test_a_stale_filing_is_dropped_rather_than_carried_forever():
 def test_missing_history_refuses_rather_than_ranking_on_nothing(tmp_path):
     with pytest.raises(FF.FundamentalsMissing, match="no SEC filing history"):
         FF.load_history(tmp_path / "absent.parquet")
+
+
+# ═══════════════════ the funnel's age, and the audit's blind spot ═══════════
+#
+# Both of these pin failures that were LIVE and invisible on 2026-09-24:
+# a 44-day-old candidate set reporting `status: ok`, and an undateable position
+# counted as fresh. Neither was a crash. Both resolved silently to the benign
+# branch, which is the only reason they survived six weeks and one publication.
+
+class TestFunnelStaleness:
+    """`ic_health` read `generated_at` for months and never compared it."""
+
+    def test_a_fresh_snapshot_is_not_flagged(self):
+        from datetime import datetime, timedelta, timezone
+        from backend.services import investment_committee as IC
+        fresh = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+        assert IC.funnel_staleness(fresh) is None
+
+    def test_an_old_snapshot_is_flagged_and_says_how_old(self):
+        from datetime import datetime, timedelta, timezone
+        from backend.services import investment_committee as IC
+        old = (datetime.now(timezone.utc)
+               - timedelta(days=IC.FUNNEL_STALE_DAYS + 34)).isoformat()
+        why = IC.funnel_staleness(old)
+        assert why and "44 days old" in why
+        # It must name the remedy, or the reader has a red line and no move.
+        assert "opportunity_funnel" in why
+
+    def test_an_undateable_snapshot_is_unknown_not_fresh(self):
+        """The whole defect family: missing data must not take the good branch."""
+        from backend.services import investment_committee as IC
+        for bad in (None, "", "not a date", "2026-13-45"):
+            why = IC.funnel_staleness(bad)
+            assert why is not None, f"{bad!r} was treated as fresh"
+            assert "CANNOT BE DETERMINED" in why
+
+    def test_the_boundary_is_the_configured_limit(self):
+        from datetime import datetime, timedelta, timezone
+        from backend.services import investment_committee as IC
+        now = datetime.now(timezone.utc)
+        inside = (now - timedelta(days=IC.FUNNEL_STALE_DAYS - 1)).isoformat()
+        outside = (now - timedelta(days=IC.FUNNEL_STALE_DAYS + 1)).isoformat()
+        assert IC.funnel_staleness(inside, now=now) is None
+        assert IC.funnel_staleness(outside, now=now) is not None
+
+    def test_the_advertised_refresh_command_actually_runs(self):
+        """`python -m backend.services.opportunity_funnel` was a silent no-op.
+
+        The module had `run()` and no `__main__`, so the command printed in
+        `pm_actions` -- and now in the staleness message -- imported the module
+        and exited 0. An operator following the instruction saw the file
+        unchanged and no error. This asserts the entry point EXISTS; it does not
+        run it (that is a network call).
+        """
+        from backend.services import opportunity_funnel as OF
+        assert callable(getattr(OF, "main", None))
+        from pathlib import Path as _P
+        src = _P(OF.__file__).read_text(encoding="utf-8")
+        assert '__name__ == "__main__"' in src
+
+
+class TestFleetAuditAgeIsNotAssumedFresh:
+    """An entry date the order history could not reach is UNKNOWN, not new."""
+
+    def test_unknown_age_is_never_counted_as_fresh(self):
+        import scripts.fleet_audit as FA
+        from pathlib import Path as _P
+        src = _P(FA.__file__).read_text(encoding="utf-8")
+        # `stale` may only be True with a real age -- that part was already
+        # right. What was wrong is that nothing else recorded the absence.
+        assert '"age_unknown": age is None' in src, (
+            "a position with no reachable entry date must be marked UNKNOWN, "
+            "not silently folded into the fresh side of the stale count")
+
+    def test_the_order_history_is_paged(self):
+        """One 500-row request is 'the oldest 500 orders', not 'the history'."""
+        import scripts.fleet_audit as FA
+        from pathlib import Path as _P
+        src = _P(FA.__file__).read_text(encoding="utf-8")
+        assert "MAX_ORDER_PAGES" in src and "&after=" in src, (
+            "fleet_trade_autopsy measured 500 fills across this fleet, so a "
+            "single limit=500 page sits exactly on the cap and drops the "
+            "newest entries")
+
+    def test_entry_dates_reports_its_own_coverage(self):
+        import inspect
+        import scripts.fleet_audit as FA
+        sig = inspect.signature(FA.entry_dates)
+        assert "tuple" in str(sig.return_annotation), (
+            "the caller must be able to tell 'this position is new' from "
+            "'this audit could not see far enough back'")

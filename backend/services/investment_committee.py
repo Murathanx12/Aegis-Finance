@@ -58,6 +58,70 @@ CORE_AND_TILTS_SENTENCE = (
 
 DEGRADATION_NO_FUNNEL = "no funnel run available"
 
+#: How old a funnel snapshot may be before the page must SAY so.
+#:
+#: This constant exists because of 2026-09-22. `funnel_night10.json` carried
+#: `generated_at: 2026-08-11T02:33:48Z` and forty candidates, and nothing
+#: regenerated it. For six weeks every EXPLOIT/EXPLORE/PROBE/REFUSED row, every
+#: ROI rank and every decision contract was computed over the tickers one
+#: August night shortlisted -- while `prices_2025_26/bars.parquet` held 1.27M
+#: bars for 3,060 symbols that no decision path opened. The morning report's
+#: "all 30 largest moves were outside our universe" was not a universe
+#: definition problem. It was a 42-day-old file.
+#:
+#: `ic_health` already READ `generated_at` and printed it, and reported
+#: `status: "ok"` regardless of what it said. A health row that prints a date
+#: and never compares it is decoration: it cannot go red, which by this repo's
+#: own rule makes it a broken gate, not a lenient one. The number below is what
+#: turns that read into a check.
+#:
+#: 10 sessions ~ two weeks. The funnel's own inputs (60-day median dollar
+#: volume, annualised vol, gross profitability) move slowly, so a week-old
+#: snapshot is honest and a month-old one is fiction: names have been delisted,
+#: the liquidity band of half the shortlist has moved, and anything that became
+#: interesting since is structurally invisible.
+FUNNEL_STALE_DAYS = 10
+DEGRADATION_FUNNEL_STALE = (
+    "funnel snapshot is {age} days old (generated {at}, limit "
+    "{limit}): the candidate set predates today's market, so anything that "
+    "became interesting since cannot be chosen -- not because it was ranked "
+    "low, but because it was never offered. Regenerate with "
+    "`python -m backend.services.opportunity_funnel`.")
+
+
+def _funnel_age_days(generated_at: Any, *, now: Any = None) -> Optional[float]:
+    """Age of a snapshot in days, or None if the stamp is unusable.
+
+    Returns None rather than 0 for a missing or unparseable stamp: an
+    undateable snapshot is UNKNOWN age, and calling it fresh is the failure
+    this function exists to prevent.
+    """
+    if not generated_at:
+        return None
+    try:
+        ts = datetime.fromisoformat(str(generated_at).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    ref = now or datetime.now(timezone.utc)
+    if getattr(ref, "tzinfo", None) is None:
+        ref = ref.replace(tzinfo=timezone.utc)
+    return (ref - ts).total_seconds() / 86400.0
+
+
+def funnel_staleness(generated_at: Any, *, now: Any = None,
+                     limit_days: int = FUNNEL_STALE_DAYS) -> Optional[str]:
+    """The degradation line if the snapshot is too old or undateable, else None."""
+    age = _funnel_age_days(generated_at, now=now)
+    if age is None:
+        return ("funnel snapshot carries no usable `generated_at` stamp, so its "
+                "age CANNOT BE DETERMINED and it must not be treated as fresh")
+    if age > limit_days:
+        return DEGRADATION_FUNNEL_STALE.format(
+            age=f"{age:.0f}", at=str(generated_at)[:19], limit=limit_days)
+    return None
+
 
 def _kill_condition(rec: Any) -> tuple[str, str]:
     """A kill condition tied to the signal that actually decided the rank.
@@ -151,6 +215,11 @@ def build_page(funnel_path: Path) -> dict:
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source_funnel": str(funnel_path),
         "funnel_generated_at": payload.get("generated_at"),
+        "funnel_age_days": _funnel_age_days(payload.get("generated_at")),
+        # None when the snapshot is fresh. The strict page prints the ordering
+        # either way -- a stale shortlist is still the best thing on disk -- but
+        # a reader must be able to see that the candidate set predates today.
+        "funnel_stale": funnel_staleness(payload.get("generated_at")),
         "universe_screened": (payload.get("universe") or {}).get("screened"),
         "registry_gate": {"status": gate["status"],
                           "invariance_checks": gate["invariance_checks"],
@@ -215,12 +284,23 @@ def _compute_funnel_state(path: Path) -> dict:
         # The gate holds: a void ranking licenses NO tilts. The core still
         # prints — that is the whole ruling.
         logger.error("IC ranking gate VOID: %s", exc)
-        state = _empty_state([f"ranking gate VOID — no tilts licensed: {exc}"])
+        void_reasons = [f"ranking gate VOID — no tilts licensed: {exc}"]
+        if (also := funnel_staleness(payload.get("generated_at"))):
+            void_reasons.append(also)
+        state = _empty_state(void_reasons)
         state.update(available=True, gate={"status": "VOID", "error": str(exc)},
                      universe_screened=(payload.get("universe") or {}).get("screened"),
                      funnel_generated_at=payload.get("generated_at"),
                      evidence_basis=payload.get("evidence_basis"))
         return state
+
+    # Staleness is a DEGRADATION, not a refusal: a month-old shortlist is still
+    # the best thing on disk, and blanking the page would lose information as
+    # well as freshness. What is not allowed is serving it silently.
+    stale = funnel_staleness(payload.get("generated_at"))
+    if stale:
+        logger.warning("IC funnel STALE: %s", stale)
+        degradation.append(stale)
 
     recs = REC.score_candidates(cands, registry=reg)
     vols = {c["ticker"]: c.get("vol_annual") for c in cands
@@ -259,7 +339,15 @@ def ic_health(funnel_path: Optional[Path] = None) -> dict:
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
             row["funnel_generated_at"] = payload.get("generated_at")
-            row["status"] = "ok"
+            row["funnel_age_days"] = _funnel_age_days(payload.get("generated_at"))
+            row["funnel_candidates"] = len(payload.get("candidates") or [])
+            # It read this date for months and never compared it. See
+            # FUNNEL_STALE_DAYS for what that cost.
+            if (stale := funnel_staleness(payload.get("generated_at"))):
+                row["status"] = "DEGRADED"
+                row["error"] = stale
+            else:
+                row["status"] = "ok"
         except Exception as e:
             row["status"] = "DEGRADED"
             row["error"] = f"funnel unreadable: {e}"

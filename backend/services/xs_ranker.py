@@ -566,12 +566,51 @@ def _information_coefficient(oos: pd.DataFrame) -> dict:
     }
 
 
-def top_k_backtest(oos: pd.DataFrame, *, k: int = 20, cost: bool = True) -> dict:
+def top_k_backtest(oos: pd.DataFrame, *, k: int = 20, cost: bool = True,
+                   horizon: int | None = None) -> dict:
     """What an equal-weight top-k book earned OOS, per rebalance date, net.
 
     This is the economic objective the champion/challenger comparison uses. It
     is NOT annualised and NOT compounded: each date is one independent-ish
     21-session bet, and the mean of those is the honest headline.
+
+    THE T-STATISTIC AND THE OVERLAP (added 2026-09-24, at my own expense)
+    --------------------------------------------------------------------
+    `t_across_blocks` groups dates by CALENDAR MONTH. At the default horizon
+    that is roughly right: a 21-session forward return is about one month, so
+    two consecutive monthly blocks barely share an outcome.
+
+    It stops being right the moment the horizon moves. At H=126 every block's
+    forward return overlaps the next FIVE blocks almost completely, so 44
+    "independent" monthly blocks carry about 7 blocks' worth of information and
+    the standard error is understated by ~sqrt(6). Worse, the understatement
+    GROWS with the horizon -- so a horizon sweep reading this column sees a t
+    that rises with H partly because the estimator flatters long holds, which
+    is a confound on the very axis being swept.
+
+    Pass `horizon` and the function also blocks on NON-OVERLAPPING windows of
+    `horizon` sessions, where two blocks cannot share a return by construction,
+    and reports that t as `t_nonoverlap` beside `n_blocks_nonoverlap`. Read
+    that one. The monthly figure stays because every receipt on disk quotes it
+    and silently redefining a published number is worse than carrying two.
+
+    The point estimates are untouched either way: overlap inflates PRECISION,
+    never the mean.
+
+    THE CORRECTION IS PARTIAL, AND IT IS OPTIMISTIC
+    -----------------------------------------------
+    Binning `horizon` consecutive rebalance dates does not fully de-overlap the
+    blocks. Block i averages return windows starting in [126i, 126i+126), so it
+    spans outcomes out to 126i+252; block i+1 spans 126i+126 to 126i+378. They
+    share half their span. Zero overlap needs a block width of 2*horizon, which
+    on a panel this length leaves THREE blocks -- too few for a standard error
+    at all.
+
+    So `t_nonoverlap` remains optimistic by up to sqrt(2), and
+    `n_blocks_strict` reports how many truly independent blocks exist. When
+    that number is small, the honest conclusion is not "the t is low", it is
+    THE PANEL IS TOO SHORT TO TEST THIS HORIZON, which is a different sentence
+    and forbids a different set of claims.
     """
     rows = []
     for d, grp in oos.groupby("date"):
@@ -585,14 +624,48 @@ def top_k_backtest(oos: pd.DataFrame, *, k: int = 20, cost: bool = True) -> dict
                      "cost_bps": bps, "n": len(top)})
     if not rows:
         return {"status": "REFUSED", "why": f"no date had {k} eligible ranked names"}
+    rows.sort(key=lambda r: r["date"])
     net = np.array([r["net"] for r in rows])
     blocks = pd.Series([r["date"][:7] for r in rows])
     bm = pd.Series(net).groupby(blocks).mean()
     se = float(bm.std(ddof=1) / math.sqrt(len(bm))) if len(bm) > 1 else float("nan")
+
+    # Non-overlapping blocks: one block per `horizon` distinct rebalance dates,
+    # so no two blocks can share a forward return. This is the honest error bar
+    # whenever the horizon exceeds a month.
+    t_no = se_no = None
+    n_no = n_strict = None
+    if horizon and horizon > 1:
+        dates = sorted({r["date"] for r in rows})
+        # Rank each date, then bin the ranks in groups of `horizon`. Bins are
+        # counted in TRADING DATES because that is what the horizon is measured
+        # in; a calendar-width bin would be wrong across holidays.
+        rank = {d: i for i, d in enumerate(dates)}
+        nb = pd.Series([rank[r["date"]] // horizon for r in rows])
+        bmn = pd.Series(net).groupby(nb).mean()
+        n_no = int(nb.nunique())
+        # How many blocks would exist at a width that CANNOT share a return
+        # window (2*horizon). Reported, never used for a t: when it is small the
+        # finding is about the panel's length, not about the strategy.
+        n_strict = int(pd.Series([rank[r["date"]] // (2 * horizon)
+                                  for r in rows]).nunique())
+        if len(bmn) > 1:
+            s_no = float(bmn.std(ddof=1) / math.sqrt(len(bmn)))
+            if np.isfinite(s_no) and s_no > 0:
+                se_no, t_no = s_no, float(bmn.mean() / s_no)
+
     return {
         "k": k,
         "n_dates": len(rows),
         "n_blocks": int(blocks.nunique()),
+        "n_blocks_nonoverlap": n_no,
+        # Blocks at 2*horizon width, which truly cannot share an outcome. This
+        # is the real independent sample size; `n_blocks_nonoverlap` is ~2x it.
+        "n_blocks_strict": n_strict,
+        "block_se_nonoverlap": se_no,
+        # READ THIS ONE when the horizon is longer than a month. The monthly t
+        # below shares outcomes between adjacent blocks and is optimistic.
+        "t_nonoverlap": t_no,
         "mean_net_rel_21d": float(net.mean()),
         "mean_gross_rel_21d": float(np.mean([r["gross"] for r in rows])),
         "mean_cost_bps": float(np.mean([r["cost_bps"] for r in rows])),
