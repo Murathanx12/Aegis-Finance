@@ -933,3 +933,94 @@ class TestTheFunnelNowHasAScheduledCaller:
         monkeypatch.setattr(SR, "_in_subprocess", lambda *a, **k: {"rc": 0})
         r = SR.u_funnel(tmp_path)
         assert "refresh_failed" in r and "did not move" in r["refresh_failed"]
+
+
+class TestExitRuleFillConventions:
+    """The fill conventions ARE the validity of the exit-rule test.
+
+    A stop backtest that gets any of these wrong reports that stops are free,
+    which is the same optimism the fleet autopsy's "75% saved" was built on.
+    Each of these is a case I checked by hand before running the job; they are
+    here so a later refactor cannot quietly restore the flattering convention.
+    """
+
+    @staticmethod
+    def _p(rows):
+        import pandas as pd
+        from scripts.night_exit_rules import Path_
+        return Path_(pd.DataFrame(rows, columns=["date", "open", "high",
+                                                 "low", "close"]))
+
+    def test_the_stop_fires_intraday_not_close_to_close(self):
+        """Entry 100, dips to 97, CLOSES at 105. A close-only test holds."""
+        from scripts.night_exit_rules import walk_one
+        p = self._p([("2020-01-01", 100, 101, 99, 100),
+                     ("2020-01-02", 104, 106, 97, 105),
+                     ("2020-01-03", 105, 106, 104, 106)])
+        r, held, why = walk_one(p, 0, 3, stop=0.02)
+        assert why == "stop" and abs(r + 0.02) < 1e-9 and held == 2
+        # ... and with no rule the same path is a WINNER, which is the point:
+        # the stop is giving up +6% to avoid a −2% mark.
+        r2, _, why2 = walk_one(p, 0, 3)
+        assert why2 == "horizon" and r2 > 0.05
+
+    def test_a_gap_through_the_level_fills_at_the_open(self):
+        """The largest source of optimism in stop backtests. Stop is 98; the
+        session OPENS at 95, so 98 was never available."""
+        from scripts.night_exit_rules import walk_one
+        p = self._p([("2020-01-01", 100, 101, 99, 100),
+                     ("2020-01-02", 95, 96, 90, 93),
+                     ("2020-01-03", 93, 94, 92, 93)])
+        r, _, why = walk_one(p, 0, 3, stop=0.02)
+        assert why == "stop_gap", "a gap must be distinguishable in the receipt"
+        assert abs(r + 0.05) < 1e-9, f"filled at {r:+.4f}, not the open's −5%"
+
+    def test_a_same_session_collision_resolves_to_the_stop(self):
+        """Daily bars do not record intra-session order, so the worst
+        admissible sequence is assumed. Anything else lets the test pick its
+        own luck."""
+        from scripts.night_exit_rules import walk_one
+        p = self._p([("2020-01-01", 100, 101, 99, 100),
+                     ("2020-01-02", 100, 112, 97, 111)])
+        r, _, why = walk_one(p, 0, 2, stop=0.02, take=0.10)
+        assert why == "stop" and abs(r + 0.02) < 1e-9, (
+            "the session touched both +10% and −2%; the stop must win")
+        # With no stop in play the target fires normally.
+        r2, _, why2 = walk_one(p, 0, 2, take=0.10)
+        assert why2 == "take" and abs(r2 - 0.10) < 1e-9
+
+    def test_the_trail_does_not_use_the_high_that_triggers_it(self):
+        """A trail recomputed from TODAY's high to justify TODAY's exit is
+        using information from after the trigger."""
+        from scripts.night_exit_rules import walk_one
+        p = self._p([("2020-01-01", 100, 120, 99, 119),
+                     ("2020-01-02", 119, 119, 110, 112),
+                     ("2020-01-03", 112, 113, 111, 112)])
+        r, held, why = walk_one(p, 0, 3, trail=0.05)
+        # High 120 set on day 1; 5% below is 114, touched on day 2.
+        assert why == "trail" and held == 2 and abs(r - 0.14) < 1e-9
+
+    def test_entry_is_the_session_after_the_score(self):
+        """Matches `xs_ranker.build_target`: a row dated t is never credited
+        with a move that had already happened when it was scored."""
+        import numpy as np
+        import pandas as pd
+        from scripts.night_exit_rules import _entry_index
+        p = self._p([("2020-01-01", 100, 101, 99, 100),
+                     ("2020-01-02", 200, 201, 199, 200),
+                     ("2020-01-03", 300, 301, 299, 300)])
+        i = _entry_index(p, np.datetime64(pd.Timestamp("2020-01-01"), "ns"))
+        assert i == 1 and p.open[i] == 200, "entry must be t+1's OPEN"
+        # A score dated after the last bar has no entry at all, and that is a
+        # skip, not an entry at the last price.
+        assert _entry_index(p, np.datetime64(pd.Timestamp("2020-01-03"), "ns")) is None
+
+    def test_the_hold_arm_reproduces_the_panel_target(self):
+        """If the no-rule arm does not equal `fwd_ret`, the comparison is
+        measuring the harness rather than the rule."""
+        from scripts.night_exit_rules import walk_one
+        p = self._p([(f"2020-01-{d:02d}", 100 + d, 102 + d, 98 + d, 101 + d)
+                     for d in range(1, 12)])
+        r, held, why = walk_one(p, 1, 5)
+        assert why == "horizon" and held == 5
+        assert abs(r - (p.close[5] / p.open[1] - 1.0)) < 1e-12
