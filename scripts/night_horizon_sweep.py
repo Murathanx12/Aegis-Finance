@@ -90,9 +90,34 @@ def _block(s: pd.Series) -> pd.Series:
     return pd.to_datetime(s).dt.to_period("M").astype(str)
 
 
+#: Signs declared before any fold, from the cross-sectional literature -- the
+#: `composite_prior` of `night_rank_bakeoff`. It is the ONLY model §59 found
+#: gross-POSITIVE (+0.20% to +0.28% at every k from 10 to 500), and the first
+#: version of this sweep tested LightGBM-on-all-features instead, which §59 had
+#: already shown was the WORST of four (gross -0.30%). Sweeping the losing model
+#: across horizons answers a question nobody asked.
+PRIOR_SIGNS: dict[str, float] = {
+    "dollar_vol_log": -1.0, "amihud": +1.0, "skew_63": -1.0, "rev_5": -1.0,
+}
+
+
+def _composite_score(te: pd.DataFrame) -> pd.Series:
+    """Signed z-score mean. No fitted parameters, so nothing to overfit."""
+    parts = []
+    for f, sign in PRIOR_SIGNS.items():
+        if f not in te.columns:
+            continue
+        g = te.groupby("date")[f]
+        z = ((te[f] - g.transform("mean")) / g.transform("std")).clip(-3, 3)
+        parts.append(z * sign)
+    if not parts:
+        return pd.Series(np.nan, index=te.index)
+    return pd.concat(parts, axis=1).mean(axis=1)
+
+
 def run_one(bars: pd.DataFrame, horizon: int, *, n_folds: int = 4,
             model: str = "lgbm") -> dict:
-    """One horizon, everything else held fixed."""
+    """One horizon, everything else held fixed. `model` is lgbm or composite."""
     import lightgbm as lgb
 
     panel = XR.build_panel(bars, horizon=horizon)
@@ -119,10 +144,16 @@ def run_one(bars: pd.DataFrame, horizon: int, *, n_folds: int = 4,
         te = fit[(fit["date"] >= te_start) & (fit["date"] <= te_end)]
         if len(tr) < XR.MIN_TRAIN_ROWS or te.empty:
             continue
-        m = lgb.LGBMRegressor(**XR.LGB_PARAMS)
-        m.fit(tr[feats], tr["y"])
         p = te[["symbol", "date", "fwd_rel", "median_dollar_vol"]].copy()
-        p["score"] = m.predict(te[feats])
+        if model == "composite":
+            p["score"] = _composite_score(te).values
+            p = p.dropna(subset=["score"])
+        else:
+            m = lgb.LGBMRegressor(**XR.LGB_PARAMS)
+            m.fit(tr[feats], tr["y"])
+            p["score"] = m.predict(te[feats])
+        if p.empty:
+            continue
         preds.append(p)
     if not preds:
         return {"horizon": horizon, "status": "REFUSED", "why": "every fold refused"}
@@ -146,7 +177,8 @@ def run_one(bars: pd.DataFrame, horizon: int, *, n_folds: int = 4,
             "t_across_blocks": bt.get("t_across_blocks"),
             "hit_rate": bt["hit_rate_dates"], "n_blocks": bt["n_blocks"],
         }
-    return {"horizon": horizon, "status": "OK", "n_oos_rows": int(len(oos)),
+    return {"horizon": horizon, "status": "OK", "model": model,
+            "n_oos_rows": int(len(oos)),
             "n_folds_used": len(preds), **ic, "by_k": cells,
             "purge_sessions": horizon}
 
@@ -157,6 +189,10 @@ def main(argv=None) -> int:
     ap.add_argument("--bars", default=None)
     ap.add_argument("--folds", type=int, default=4)
     ap.add_argument("--horizons", default=",".join(str(h) for h in HORIZONS))
+    ap.add_argument("--model", default="lgbm", choices=("lgbm", "composite"),
+                    help="`composite` is the prior-signed z-score mean -- the only "
+                         "model §59 found gross-POSITIVE, and the one this sweep "
+                         "should have tested first.")
     ap.add_argument("--out", default=None)
     a = ap.parse_args(argv)
 
@@ -173,7 +209,7 @@ def main(argv=None) -> int:
     rows = {}
     for h in horizons:
         print(f"\n--- horizon {h} sessions (purge {h}) ---", flush=True)
-        r = run_one(bars, h, n_folds=a.folds)
+        r = run_one(bars, h, n_folds=a.folds, model=a.model)
         rows[h] = r
         if r.get("status") != "OK":
             print(f"  {r['status']}: {r.get('why')}")
@@ -212,7 +248,8 @@ def main(argv=None) -> int:
                 f"28-vs-35 bps problem is not a turnover problem. §59 stands and "
                 f"the next move is a different INPUT, not a different holding rule.")
 
-    res = {"receipt": "horizon_sweep", "licence": "PRODUCT_EXPERIMENT",
+    res = {"receipt": "horizon_sweep", "model": a.model,
+           "licence": "PRODUCT_EXPERIMENT",
            "llm_spend_usd": 0.0,
            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "hypothesis": ("§59's toll is paid per ROUND TRIP, not per day. If the "

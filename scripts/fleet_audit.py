@@ -275,10 +275,21 @@ def _verdict(books, constrained, stale_total, pos_total) -> str:
         return (f"No rotation pathology found: {stale_total}/{pos_total} stale, "
                 f"no book at the gross ceiling. If the fleet is underperforming, "
                 f"it is the PICKS, not the plumbing.")
-    return (" AND ".join(parts) +
-            ". If this is the binding constraint then improving the RANKER cannot "
+    # The conclusion depends on WHICH condition fired, and the first version of
+    # this asserted the capacity conclusion whenever EITHER did. Staleness alone
+    # does not block a new entry when gross is 38% -- there is room; the old
+    # positions are simply not being closed. Saying "nothing it produces can
+    # enter the portfolio" in that case is an overclaim, and an overclaim in a
+    # verdict line is worse than none because it is the sentence people quote.
+    tail = (" If this is the binding constraint then improving the RANKER cannot "
             "help, because nothing it produces can enter the portfolio. Test that "
-            "before spending another night on alpha.")
+            "before spending another night on alpha."
+            if constrained else
+            " Note that gross is NOT at the ceiling, so this does not block new "
+            "entries -- there is room. What it shows is that exits are not firing, "
+            "which costs whatever the stale names drift rather than costing "
+            "opportunity. The ranker is not blocked.")
+    return " AND ".join(parts) + "." + tail
 
 
 if __name__ == "__main__":
