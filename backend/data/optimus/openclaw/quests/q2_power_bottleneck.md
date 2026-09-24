@@ -1,0 +1,94 @@
+You are gathering EVIDENCE, not opinions. You will not be asked whether a stock
+is good, and if you answer that question anyway your output is discarded.
+
+# The question
+
+A known pattern: a commodity component becomes a structural bottleneck, supply
+tightens, the supplier gains PRICING POWER, mix shifts to the scarce use, and
+earnings inflect before the market re-rates the company. NAND memory did this
+in 2025-26.
+
+The hypothesis to gather evidence FOR AND AGAINST is that ELECTRICAL POWER --
+grid interconnection, transmission, switchgear, transformers, turbines and data
+centre power delivery -- is the bottleneck now, and that the companies that
+build and connect it have gained pricing power.
+
+A specific, falsifiable version: these companies' own filings show revenue
+accelerating WHILE gross margin expands, which is the signature of price rather
+than volume. Your job is to find out whether their own words agree, and to find
+the evidence that they do not. Two things would falsify it hard: margin
+expansion that management attributes to MIX or COST-CUTTING rather than price,
+and any sign that the backlog is being won on price competition.
+
+Pay particular attention to how long customers are waiting. In a real
+bottleneck, lead times extend and customers pre-pay or reserve slots. If lead
+times are stable, this is a demand boom and not a bottleneck.
+
+# What to collect, for each company below
+
+PWR (Quanta Services), GEV (GE Vernova), NVT (nVent Electric), ETN (Eaton), VRT (Vertiv)
+
+Visit the company's own investor-relations newsroom and recent press releases
+FIRST. Public news pages second. You may also read exchange filings pages.
+
+For each company return ONLY facts that carry a DATE, and prefer the last 12
+months. For each fact record the URL you read it on.
+
+Collect specifically:
+
+1. Any statement about CAPACITY: new fabs, expanded lines, supply agreements,
+   capacity reservations, wafer commitments, "sold out", "capacity constrained",
+   lead times extending.
+2. Any statement about PRICING: price increases, long-term agreements at fixed
+   price, customers pre-paying, "favourable pricing environment".
+3. Any statement about DEMAND CONCENTRATION: named large customers, design
+   wins, qualification at a named platform, share of revenue from one customer.
+4. Any statement about ORDERS or BACKLOG with a number attached.
+5. Any NEW PRODUCT that moves them up the value chain (e.g. from a component to
+   a subsystem), with the date announced and whether it is shipping or sampling.
+6. Anything that CONTRADICTS the thesis: capacity coming online from
+   competitors, customers dual-sourcing, price pressure, inventory build,
+   a customer designing the part out.
+
+Point 6 is not optional. A report with no disconfirming evidence is an
+incomplete report, and I will treat it as one.
+
+# Output format
+
+Return STRICT JSON, no prose before or after, exactly this shape:
+
+{
+  "collected_at_utc": "<ISO timestamp>",
+  "companies": [
+    {
+      "ticker": "MRVL",
+      "facts": [
+        {
+          "date": "YYYY-MM-DD",
+          "type": "capacity|pricing|customer|backlog|product|contradicting",
+          "claim": "<one sentence, no adjectives, quote numbers exactly>",
+          "number": "<the figure if there is one, else null>",
+          "source_url": "<the page you read it on>",
+          "source_kind": "company_ir|company_pr|news|filing",
+          "confidence": "stated_by_company|reported_by_press|inferred"
+        }
+      ],
+      "pages_visited": ["<url>", "..."],
+      "nothing_found_for": ["capacity", "..."]
+    }
+  ]
+}
+
+# Rules
+
+- If you cannot reach a page, record it in "pages_visited" with a note and move
+  on. A short honest report beats a long invented one.
+- NEVER state a number you did not read on a page. If a figure is approximate in
+  the source, keep the source's own wording.
+- "inferred" confidence is allowed but must be rare and the claim must say what
+  it was inferred from.
+- Do not log in to anything. Do not fill in any form. Do not make any purchase,
+  subscription, or payment of any kind. If a page asks for payment or
+  credentials, leave it and record that you did.
+- Distinguish what the COMPANY said from what a JOURNALIST said. That is the
+  "source_kind" field and it matters more than the claim itself.
