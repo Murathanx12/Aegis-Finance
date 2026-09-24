@@ -95,11 +95,48 @@ def data_credential() -> tuple[str, str, str]:
         if "=" in line and not line.strip().startswith("#"):
             k, v = line.split("=", 1)
             env[k.strip()] = v.strip()
-    for role in ("HACK3", "HACK1", "HACK2", "HACK4", "HACK5", "HACK6"):
+    # VERIFY THE PAIR WITH ONE CALL BEFORE RETURNING IT.
+    #
+    # The list used to start at HACK3 and return the first pair that merely
+    # EXISTED. hack3 was retired on 2026-09-22 and its keys revoked, so from
+    # that day every caller of this function received a dead credential, got a
+    # 401, and pulled no bars -- while five working pairs sat further down the
+    # list, never reached. Presence is not validity.
+    #
+    # This is the same lesson as 2026-09-21, when aliasing a credential onto
+    # APCA_* pre-empted a child's own working pair: 401, no bars, night lost.
+    # The rule written down then was "test a pair with one call before the
+    # night", and this is that rule, enforced instead of remembered.
+    #
+    # HACK3 is also no longer first: a retired role should not be the default
+    # even if it were somehow alive.
+    tried: list[str] = []
+    for role in ("HACK1", "HACK2", "HACK4", "HACK5", "HACK6", "HACK3"):
         kid, sec = env.get(f"AAT_{role}_KEY_ID"), env.get(f"AAT_{role}_SECRET_KEY")
-        if kid and sec:
-            return kid, sec, f"terminal repo .env, {role} (data endpoint only)"
-    raise SystemExit("REFUSED: the terminal .env carries no AAT_HACK*_KEY_ID / _SECRET_KEY pair")
+        if not (kid and sec):
+            continue
+        if _credential_works(kid, sec):
+            return kid, sec, f"terminal repo .env, {role} (data endpoint only, verified)"
+        tried.append(role)
+    raise SystemExit(
+        f"REFUSED: no AAT_HACK*_KEY_ID / _SECRET_KEY pair in the terminal .env "
+        f"authenticates against the data endpoint. Tried: {tried or 'none found'}. "
+        f"A 401 here is a revoked key, not a missing file -- hack3's pair was "
+        f"revoked on 2026-09-22 and stayed first in this list.")
+
+
+def _credential_works(kid: str, sec: str, *, timeout: float = 20.0) -> bool:
+    """One cheap call. True only on a 200; any other answer is 'not this pair'."""
+    import urllib.error
+    import urllib.request
+    req = urllib.request.Request(
+        "https://data.alpaca.markets/v2/stocks/bars?symbols=AAPL&timeframe=1Day&limit=1",
+        headers={"APCA-API-KEY-ID": kid, "APCA-API-SECRET-KEY": sec})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as fh:  # noqa: S310
+            return fh.status == 200
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError):
+        return False
 
 
 def _get(path: str, params: dict, kid: str, sec: str, timeout: float = 90.0) -> dict:

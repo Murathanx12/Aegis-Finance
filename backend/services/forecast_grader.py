@@ -192,6 +192,50 @@ def bars_source() -> dict:
     }
 
 
+def _with_forecast_only(bars):
+    """Union the supplementary panel of names the RANKER excludes.
+
+    `forecast_grader` reported the same **2,911 records past their resolution
+    date and still unresolved** on every run, and kept the ledger canary
+    DEGRADED for it. They were not unresolvable: 105 of the 110 stranded
+    tickers were simply absent from `prices_2025_26/bars.parquet` -- ETFs (XBI,
+    SMH), REITs (AVB, DLR) and a tail of microcaps that a universe screen
+    dropped before the panel was built. Something forecast on them; nothing
+    ever fetched a price.
+
+    The extra panel is a SEPARATE file on purpose (`pull_forecast_bars`): the
+    main one is read by the ranker and fingerprinted by `sim_run.u_rank`, and
+    widening the ranker's universe with names its own eligibility screen
+    rejected is a different change with its own survivorship argument. The
+    grader needs prices for names the ranker is entitled to ignore.
+
+    Absent supplementary file -> the main panel, unchanged. This can only ever
+    ADD priceable names.
+    """
+    import pandas as pd
+
+    from backend import config as _cfg
+
+    p = (Path(_cfg.OPTIMUS_LEDGER_DIR) / "prices_2025_26"
+         / "bars_forecast_only.parquet")
+    if not p.exists():
+        return bars
+    try:
+        extra = pd.read_parquet(p)
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("forecast-only panel unreadable (%s); using the main "
+                       "panel alone", exc)
+        return bars
+    cols = [c for c in bars.columns if c in extra.columns]
+    if "symbol" not in cols or "date" not in cols or "close" not in cols:
+        return bars
+    # The MAIN panel wins on a collision: it is the one the books are marked
+    # against, and two prices for one symbol-date is a reconciliation problem
+    # rather than a grading one.
+    return (pd.concat([bars, extra[cols]], ignore_index=True)
+            .drop_duplicates(["symbol", "date"], keep="first"))
+
+
 def local_price_fetch(tickers: list[str], start: str, end: str,
                       *, bars=None):
     """`ledger_resolver.PriceFetch`, served from the LOCAL bars parquet.
@@ -205,6 +249,7 @@ def local_price_fetch(tickers: list[str], start: str, end: str,
     if bars is None:
         from backend.services import paper_books as PB
         bars = PB.load_bars()
+        bars = _with_forecast_only(bars)
     want = [str(t) for t in tickers if t]
     df = bars[bars["symbol"].isin(want)]
     if df.empty:

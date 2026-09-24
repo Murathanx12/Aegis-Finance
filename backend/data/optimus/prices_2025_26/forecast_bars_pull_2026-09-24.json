@@ -1,0 +1,22 @@
+{
+ "receipt": "forecast_bars_pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-24T15:34:51+00:00",
+ "n_requested": 99,
+ "n_returned": 99,
+ "n_rows": 41703,
+ "first_bar": "2025-01-02",
+ "last_bar": "2026-09-24",
+ "still_missing": [],
+ "permanently_unpriceable": [
+  "CL=F",
+  "DX-Y.NYB",
+  "ES=F",
+  "GC=F",
+  "ZN=F",
+  "^VIX"
+ ],
+ "why_a_separate_file": "prices_2025_26/bars.parquet is read by the ranker and fingerprinted by sim_run.u_rank; appending would rewrite a file a live session is reading AND silently widen the ranker's universe",
+ "not_voided": "the permanently-unpriceable records are NOT voided here. Voiding edits a tamper-evident ledger and is Murat's call, not a side effect of a price pull."
+}
