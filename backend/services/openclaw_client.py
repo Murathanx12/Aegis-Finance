@@ -103,9 +103,32 @@ def _bin() -> str:
     return exe
 
 
+#: The CLI colourises its output even when not attached to a terminal, and it
+#: puts the escape sequence BETWEEN the label and the value:
+#:
+#:     'Connectivity probe:[39m [38;2;47;191;113mok[39m'
+#:
+#: so `"Connectivity probe: ok" in text` is False no matter what the gateway is
+#: doing. `health()` matched exactly that literal, which means it had ALWAYS
+#: returned "DO NOT BROWSE: gateway unreachable" and the night runner was never
+#: once permitted to browse -- a gate that could not go green, which this repo
+#: calls a broken gate rather than a strict one. Found 2026-09-24 only because
+#: two agent quests demonstrably succeeded while health() called the gateway
+#: unreachable.
+_ANSI = re.compile(r"\[[0-9;]*m")
+
+
+def _strip(text: str | None) -> str:
+    return _ANSI.sub("", text or "")
+
+
 def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
-    return subprocess.run([_bin(), *args], capture_output=True, text=True,
-                          timeout=timeout, shell=(os.name == "nt"))
+    r = subprocess.run([_bin(), *args], capture_output=True, text=True,
+                       timeout=timeout, shell=(os.name == "nt"))
+    # Strip centrally. Every parser downstream matches on plain text, and a
+    # receipt full of escape codes is unreadable besides.
+    return subprocess.CompletedProcess(r.args, r.returncode,
+                                       _strip(r.stdout), _strip(r.stderr))
 
 
 def check_url(url: str) -> None:

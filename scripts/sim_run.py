@@ -251,6 +251,40 @@ def u_funnel(out: Path) -> dict:
             "n_before": n_before}
 
 
+def u_analyst(out: Path) -> dict:
+    """Pull analyst targets and revisions, once a session.
+
+    WHY THIS RUNS EVERY NIGHT AND NOT ON DEMAND
+    -------------------------------------------
+    `target_revisions` is historical and would be the same tomorrow. But
+    `target_snapshots` has NO history at the vendor: the consensus target is a
+    snapshot of today, and the only way it ever becomes point-in-time usable is
+    if we write one row per night and let the series accrue. A month of nightly
+    pulls is a month of revision data we can difference ourselves; skipping
+    nights leaves holes that cannot be backfilled from anywhere.
+
+    So the cost of missing a night is permanent, which is why this is a unit and
+    not a script someone remembers to run.
+
+    Out of process and once per session: ~1.0s a ticker over ~3,000 names is
+    about 50 minutes, and running it every cycle of an 8-hour session would do
+    nothing but exhaust the vendor's patience.
+    """
+    stamp = out / "analyst_pulled.json"
+    if stamp.exists():
+        return {"skipped": "already pulled this session"}
+    res = _in_subprocess("analyst", timeout=5400.0)
+    stamp.write_text(json.dumps(
+        {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+         "result": res}, indent=1, default=str), encoding="utf-8")
+    if res.get("failed"):
+        # A SKIP, not a raise. The night's ranking and grading do not depend on
+        # this, and losing them to a vendor timeout would be a bad trade.
+        return {"pull_failed": str(res["failed"])[:200],
+                "note": "the existing analyst parquet is untouched"}
+    return {"pulled": True, **{k: v for k, v in res.items() if k != "failed"}}
+
+
 def u_rank(out: Path) -> dict:
     """Re-rank ONLY when the bars moved.
 
@@ -500,6 +534,10 @@ _LEARN_SRC = {
         "from backend.services import opportunity_funnel as OF;"
         "rc=OF.main([]);"
         "out={'rc':rc}"),
+    "analyst": (
+        "from scripts import pull_analyst_targets as PA;"
+        "rc=PA.main([]);"
+        "out={'rc':rc}"),
     "breadth_check": (
         "from backend.services import xs_ranker as XR;"
         "panel=XR.build_panel(XR.load_bars(XR.survivorship_free_paths()));"
@@ -582,6 +620,10 @@ def run(session_id: str) -> int:
                 # BEFORE the rank, not after: a ranking computed over last
                 # month's candidate set is the exact failure of 2026-09-22.
                 c.unit("funnel", lambda: u_funnel(out))
+                # After the funnel, before the rank: both are inputs the
+                # decision reads, and neither should be a day older than it
+                # has to be.
+                c.unit("analyst", lambda: u_analyst(out))
                 c.unit("rank", lambda: u_rank(out))
                 c.unit("plan", lambda: u_plan(out, mode))
                 c.unit("grade", u_grade)

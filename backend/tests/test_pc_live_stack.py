@@ -1024,3 +1024,71 @@ class TestExitRuleFillConventions:
         r, held, why = walk_one(p, 1, 5)
         assert why == "horizon" and held == 5
         assert abs(r - (p.close[5] / p.open[1] - 1.0)) < 1e-12
+
+
+class TestOpenClawHealthCanActuallyGoGreen:
+    """`health()` matched a literal string through the CLI's ANSI colour codes.
+
+    The CLI emits the escape sequence BETWEEN the label and the value --
+    'Connectivity probe:\x1b[39m \x1b[38;2;47;191;113mok\x1b[39m' -- so
+    `"Connectivity probe: ok" in text` was False regardless of what the gateway
+    was doing. health() therefore ALWAYS returned "DO NOT BROWSE: gateway
+    unreachable", and the night runner was never once permitted to browse.
+
+    Found 2026-09-24 only because two agent quests demonstrably succeeded while
+    health() called the gateway unreachable. A gate that cannot go green is a
+    broken gate, not a strict one.
+    """
+
+    def test_run_strips_ansi_from_both_streams(self, monkeypatch):
+        import subprocess
+        from backend.services import openclaw_client as OC
+        coloured = ("Runtime:\x1b[39m \x1b[38;2;47;191;113mrunning\x1b[39m\n"
+                    "Connectivity probe:\x1b[39m \x1b[38;2;47;191;113mok\x1b[39m\n")
+        monkeypatch.setattr(
+            subprocess, "run",
+            lambda *a, **k: subprocess.CompletedProcess(a[0], 0, coloured,
+                                                        "\x1b[31merr\x1b[39m"))
+        r = OC._run(["gateway", "status"])
+        assert "\x1b[" not in r.stdout and "\x1b[" not in r.stderr
+        # And the exact literals health() greps for must now be present.
+        assert "Runtime: running" in r.stdout
+        assert "Connectivity probe: ok" in r.stdout
+
+    def test_health_reports_the_gateway_up_when_it_is_up(self, monkeypatch):
+        """The regression that matters: a healthy gateway must read as healthy."""
+        from backend.services import openclaw_client as OC
+        healthy = ("Runtime:\x1b[39m \x1b[38;2;47;191;113mrunning\x1b[39m\n"
+                   "Connectivity probe:\x1b[39m \x1b[38;2;47;191;113mok\x1b[39m\n")
+        # Stub `subprocess.run`, NOT `_run` -- the stripping happens INSIDE
+        # `_run`, so stubbing that would skip the very thing under test. The
+        # first version of this test did exactly that and failed.
+        import subprocess
+        monkeypatch.setattr(subprocess, "run",
+                            lambda *a, **k: subprocess.CompletedProcess(
+                                a[0] if a else [], 0, healthy, ""))
+        monkeypatch.setattr(OC, "assert_profile",
+                            lambda strict=True: {"ok": True, "state": "running"})
+        monkeypatch.setattr(OC, "_default_profile_matches", lambda: True)
+        monkeypatch.setattr(OC, "_channel_count", lambda: 0)
+        h = OC.health()
+        assert h.rows["gateway_probe_ok"] is True
+        assert h.rows["gateway_running"] is True
+        assert h.ok is True, f"a healthy gateway must read READY: {h.rows['verdict']}"
+
+    def test_health_still_refuses_when_a_messaging_channel_exists(self, monkeypatch):
+        """The WhatsApp incident guard must survive the fix.
+
+        Fixing a gate that could not go green must not make it a gate that
+        cannot go red.
+        """
+        from backend.services import openclaw_client as OC
+        healthy = "Runtime: running\nConnectivity probe: ok\n"
+        monkeypatch.setattr(OC, "_run", lambda args, **k: __import__(
+            "subprocess").CompletedProcess(args, 0, healthy, ""))
+        monkeypatch.setattr(OC, "assert_profile",
+                            lambda strict=True: {"ok": True, "state": "running"})
+        monkeypatch.setattr(OC, "_default_profile_matches", lambda: True)
+        monkeypatch.setattr(OC, "_channel_count", lambda: 1)
+        h = OC.health()
+        assert h.ok is False and "messaging channel" in h.rows["verdict"]

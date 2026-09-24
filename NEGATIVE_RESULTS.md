@@ -3760,3 +3760,96 @@ is a control or a coin flip.
 
 Receipt: `xs_ranker/exit_rules_2026-09-24.json` (eleven arms, per-arm by-year and
 leave-one-year-out, exit-reason and gap-fill fractions).
+
+---
+
+## 64. Fourteen LLM specialists, 14,703 graded forecasts: −17% skill. The five that WORK are a process, not a personality (2026-09-24)
+
+**Status: the first POSITIVE out-of-sample forward result in the programme, and
+it is about method rather than about markets. Licence: PRODUCT_EXPERIMENT.**
+
+### The evidence was already bought and nobody had read it
+
+`predictions.jsonl` held **25,439 probabilistic forecasts** written between
+2026-08-11 and 2026-09-22, each with a probability, a horizon, a resolution date
+and a thesis, committed before the outcome existed. **14,703 were graded.** This
+is forward evidence, not a backtest: no window was chosen, nothing was re-sliced.
+
+### Overall, it is worse than a constant
+
+    Brier                    0.2625
+    Brier of climatology     0.2244     (always predict the base rate)
+    SKILL                   -17.01%
+    calibration gap         +17.0pp     (it says more than happens)
+
+Fourteen specialists and real LLM spend produced probabilities that lose to
+ignoring the question.
+
+### And then the split, which is the finding
+
+| family | n | skill | calibration gap | discrimination |
+|---|---:|---:|---:|---:|
+| `investigator:*` (5 arms) | 4,650 | **+3.7% to +7.95%** | +4.7 to +9.2 | **+13.5 to +16.6** |
+| thematic personas (9 arms) | 10,053 | **−18.7% to −59.9%** | +11.5 to +30.3 | **negative** |
+
+The thematic specialists -- `geopolitical`, `behavioral_narrative`,
+`ownership_flow`, `event_news`, `company_fundamental`, `biotech_pharma`,
+`semis_technology`, `accounting_forensics`, `options_volatility` -- have
+**negative discrimination**. They assign higher probabilities to things that do
+not happen. That is worse than noise; it is anti-signal.
+
+### Held out, which is the only test that counts
+
+The first half by date fits the recalibration; the second half scores it.
+Fitting and scoring on the same rows would guarantee an improvement.
+
+| family | n test | raw skill | recalibrated | optimal weight | discrimination |
+|---|---:|---:|---:|---:|---:|
+| `investigator` | 2,325 | **+4.38%** | **+8.97%** | **0.65** | **+16.7** |
+| thematic | 5,027 | −27.98% | −0.00% | **0.00** | −2.0 |
+
+**The optimal weight on a thematic specialist's probability is ZERO.** Held out,
+the best available use of nine specialists and ten thousand forecasts is to
+discard them and predict the base rate.
+
+The investigator arms survive, and improve to **+8.97%** by shrinking 35% toward
+the base rate -- because their failure is overconfidence, not ignorance, and
+overconfidence is the cheap half to repair when discrimination is positive.
+
+Skill is concentrated at **one day**: investigator h=1 scores +5.75% with +17.8
+discrimination, h=5 scores +0.09%. Consistent with the standing rule that risk
+resolves roughly thirty times faster than return.
+
+### What separates them, and why it is the whole lesson
+
+The investigator arms run a *process*: gather evidence, name the sources, state
+what would falsify it, produce a probability. The thematic arms adopt a
+*persona* -- "you are the geopolitical analyst" -- and reason from it.
+
+**A structured evidence procedure forecasts. A personality does not.** Murat had
+already reached this from the other direction on the same day, arguing that
+OpenClaw and DeepSeek should be "a microscope, not a fortune teller" and given
+"small, falsifiable micro-quests" rather than asked which stock is good. This is
+that claim, measured, on fourteen thousand graded forecasts.
+
+### What follows, concretely
+
+1. **Turn the nine thematic specialists off.** They cost money and produce
+   anti-signal. This is not a research decision, it is a spending one.
+2. **Keep and scale the investigator process**, with a 0.65 shrink applied to
+   its output before anything reads the number.
+3. **Ask it about one day, not twenty.** The skill is at h=1 and gone by h=5.
+4. It is still NOT a trade. +8.97% Brier skill is a probability with information
+   in it; converting that into a position needs a probability-to-return
+   calibration that does not exist, and §61 is what happens when a number gets
+   quoted before it has one.
+
+### The methodological lesson
+
+**A ledger of frozen forecasts is the cheapest instrument this programme owns
+and it had been accruing unread for six weeks.** Every other result here needed
+a panel, a purge, a survivorship audit and an argument about benchmarks. This
+one needed a `groupby`. Grade the ledger first; it settles questions that
+backtests only argue about.
+
+Receipt: `specialists/scoreboard_2026-09-24.json`.
