@@ -304,15 +304,33 @@ def test_holm_is_monotone_and_never_below_the_raw_p():
 @pytest.mark.parametrize("horizon", [5, 21])
 def test_the_e1_receipt_says_it_is_a_proxy(horizon):
     night = REPO / "backend" / "data" / "optimus" / "night_factory_2026-09-13"
-    hits = list(night.glob(f"E1_event_head_h{horizon}_run*.json"))
+    # SORTED, and the NEWEST run -- not `glob()[0]`.
+    #
+    # This test was a coin flip. Six h=5 receipts exist and they disagree:
+    # run01 says "PROXY -- L2 has typed no row this panel holds", while
+    # run02/03/04 say "L2's typed rows (LLM extraction, frozen 40-id
+    # vocabulary)" because by then L2 typing WAS built. `glob()[0]` returns
+    # whatever the filesystem lists first, so the test passed on NTFS (run01)
+    # and failed on CI's Linux (a later run) on byte-identical data. It had
+    # been latent since run02 was committed.
+    hits = sorted(night.glob(f"E1_event_head_h{horizon}_run*.json"))
+    hits = [h for h in hits if "_smoke" not in h.name] or hits
     if not hits:
         pytest.skip(f"E1 h={horizon} has not run on this checkout")
-    r = json.loads(hits[0].read_text(encoding="utf-8"))
+    r = json.loads(hits[-1].read_text(encoding="utf-8"))
     if r.get("status") != "done":
         pytest.skip(f"receipt is {r.get('status')!r}")
     assert r["licence"] == "PRODUCT_EXPERIMENT"
     assert r["stage"] == "signal"
-    assert "PROXY" in r["design"]["typing"]
+    # The invariant is that the receipt NAMES WHICH TYPING IT READ -- not that
+    # the typing is a proxy. Demanding "PROXY" asserted a fact the programme
+    # outgrew the moment L2 typing shipped, and would have to be edited every
+    # time the input improved. Its sibling
+    # `test_the_failed_variant_sentence_names_which_typing_was_read` already
+    # encodes the correct rule; this brings the receipt test into line with it.
+    typing = r["design"]["typing"]
+    assert ("PROXY" in typing) or ("typed rows" in typing), (
+        f"the receipt does not say which typing it read: {typing[:120]!r}")
     assert r["design"]["horizon_sessions"] == horizon
     assert r["design"]["embargo_sessions"] == max(5, horizon)
     assert r["features"]["typing_coverage"]["event_rows_from_entity_tags"] >= 0
