@@ -127,6 +127,17 @@ content-hashed before outcomes exist, graded net of empirical entry cost.
 this tier — so the model is not invited to hallucinate the field. That gap is
 now closeable (below).
 
+**Built and verified**: `briefing_2026-09-21.json`, **3,598 names, 1.6 MB,
+~418,000 tokens**, fundamentals attached to 2,230 names, `inflection_flag` set
+on 117. That fits a 1M context but it is not free — use `--max-names` to trim if
+a run needs to be cheaper, and note that trimming takes the head of the eligible
+list, so say so in the prompt rather than letting the model assume it saw
+everything.
+
+It also hands the model the five standing findings (§59-§63) explicitly, so it
+knows what has already been refuted and does not spend its allocation
+rediscovering that price/volume cannot rank this cross-section.
+
 ### `scripts/pull_analyst_targets.py` — free, and it has the revision history
 
 Murat asked whether to pay for an API or scrape. **Neither.** yfinance is already

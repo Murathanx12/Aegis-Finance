@@ -1168,6 +1168,31 @@ def _case_decision_ledger():
             DecisionLedgerError, "a lifecycle row with no decision under it")
 
 
+def _case_llm_portfolio():
+    from backend.services import llm_portfolio as LP
+    # The missing input is THE HOLDINGS. A book with no positions is not an
+    # empty book, it is an unanswered question -- and a model that returns one
+    # must hear about it rather than have it silently graded as 100% cash. The
+    # same applies to weights that do not sum to 1: a book that is 40% cash by
+    # accident and one that is 40% cash by intent are different forecasts, and
+    # normalising the difference away would make the grade meaningless.
+    return (lambda: LP.freeze({"name": "x", "objective": "y", "positions": []}),
+            LP.Refusal, "freeze() over a book with no positions")
+
+
+def _case_inflection():
+    import pathlib
+    import tempfile
+
+    from backend.services import inflection as INF
+    # The missing input is the SEC FACT HISTORY. A detector that answered
+    # without it would report "nothing is inflecting today", which reads
+    # downstream as a finding rather than as an absent file.
+    absent = pathlib.Path(tempfile.mkdtemp()) / "absent.parquet"
+    return (lambda: INF.load_facts(absent), FileNotFoundError,
+            "load_facts over a history that does not exist")
+
+
 def _case_xs_ranker():
     import pathlib
     import tempfile
@@ -1305,6 +1330,8 @@ CASES = {
     "sim_session": _case_sim_session,
     "telegram_bridge": _case_telegram_bridge,
     "xs_ranker": _case_xs_ranker,
+    "llm_portfolio": _case_llm_portfolio,
+    "inflection": _case_inflection,
     "pc_broker": _case_pc_broker,
     "decision_contract": _case_decision_contract,
     "decision_ledger": _case_decision_ledger,
