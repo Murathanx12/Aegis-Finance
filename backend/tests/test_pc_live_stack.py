@@ -787,3 +787,84 @@ class TestFleetAuditAgeIsNotAssumedFresh:
         assert "tuple" in str(sig.return_annotation), (
             "the caller must be able to tell 'this position is new' from "
             "'this audit could not see far enough back'")
+
+
+class TestLeaveOneYearOutIsNotOptional:
+    """A result that is one calendar year must not read as an edge.
+
+    On 2026-09-24 a +2.62%/hold cell survived a purge, a survivorship-free
+    panel, a breadth sweep and a corrected error bar, then went to +0.12% when
+    2025 was removed. The check that caught it cost one groupby and was run
+    last. It is now unconditional.
+    """
+
+    @staticmethod
+    def _oos(regime_year: str | None = None):
+        """Two names a day over six years; `regime_year` gets all the return."""
+        import numpy as np
+        import pandas as pd
+        rng = np.random.default_rng(11)
+        rows = []
+        # BUSINESS days, not 21-calendar-day steps. The real panel rebalances
+        # every session, so "21 consecutive rebalance dates" is about a month
+        # and lines up with the monthly blocking. A fixture on 21-day spacing
+        # makes one non-overlap block span a YEAR and the two statistics
+        # incomparable -- which is a property of the fixture, not the code.
+        for year in range(2021, 2027):
+            for d in pd.date_range(f"{year}-01-05", f"{year}-11-20", freq="B"):
+                for i, sym in enumerate(("AAA", "BBB", "CCC", "DDD")):
+                    hot = regime_year is not None and str(year) == regime_year
+                    # score orders the names; only in `regime_year` does the
+                    # ordering pay. Elsewhere the forward return is pure noise.
+                    rows.append({
+                        "symbol": sym, "date": d, "score": float(3 - i),
+                        "fwd_rel": (0.10 if (hot and i == 0) else 0.0)
+                                   + rng.normal(0, 0.002),
+                        "median_dollar_vol": 5e8,
+                    })
+        return pd.DataFrame(rows)
+
+    def test_a_single_regime_result_is_visible_in_the_receipt(self):
+        from backend.services import xs_ranker as XR
+        bt = XR.top_k_backtest(self._oos("2025"), k=1, horizon=21)
+        assert bt["mean_net_rel_21d"] > 0, "the fixture should look profitable"
+        assert bt["loo_worst_dropped_year"] == "2025"
+        # Removing the one paying year must remove essentially all of it.
+        assert bt["loo_worst_mean_net"] < bt["mean_net_rel_21d"] / 4, (
+            f"LOO did not expose the regime: {bt['loo_worst_mean_net']} vs "
+            f"{bt['mean_net_rel_21d']}")
+        assert set(bt["by_year"]) == {str(y) for y in range(2021, 2027)}
+
+    def test_a_broad_result_survives_leave_one_year_out(self):
+        """The control: the check must not condemn a result spread evenly."""
+        import numpy as np
+        import pandas as pd
+        from backend.services import xs_ranker as XR
+        rng = np.random.default_rng(12)
+        rows = []
+        for year in range(2021, 2027):
+            for d in pd.date_range(f"{year}-01-05", f"{year}-11-20", freq="B"):
+                for i, sym in enumerate(("AAA", "BBB", "CCC", "DDD")):
+                    rows.append({"symbol": sym, "date": d, "score": float(3 - i),
+                                 "fwd_rel": (0.02 if i == 0 else 0.0)
+                                            + rng.normal(0, 0.002),
+                                 "median_dollar_vol": 5e8})
+        bt = XR.top_k_backtest(pd.DataFrame(rows), k=1, horizon=21)
+        assert bt["loo_worst_mean_net"] > bt["mean_net_rel_21d"] / 2, (
+            "an evenly spread result must survive LOO, or the check is useless")
+
+    def test_the_nonoverlap_t_agrees_where_monthly_was_already_right(self):
+        """Validity check on the corrected statistic, not on the strategy."""
+        from backend.services import xs_ranker as XR
+        bt = XR.top_k_backtest(self._oos(), k=1, horizon=21)
+        tm, tn = bt["t_across_blocks"], bt["t_nonoverlap"]
+        assert tm is not None and tn is not None
+        # RELATIVE, not absolute: the claim is about the RATIO of the two
+        # standard errors. At H=126 on the real panel that ratio was 2.13
+        # (+2.83 -> +1.33); at H=21 monthly blocks barely overlap, so a
+        # corrected statistic that disagreed by much here would be the
+        # suspicious one. An absolute tolerance would pass or fail on the size
+        # of t rather than on the thing being tested.
+        assert 0.7 < tn / tm < 1.4, f"monthly {tm:.2f} vs non-overlap {tn:.2f}"
+        # And strict independence is always the smaller count.
+        assert bt["n_blocks_strict"] <= bt["n_blocks_nonoverlap"]
