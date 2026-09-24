@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -106,8 +107,9 @@ Rules that decide whether your answer is used at all:
 1. Reason ONLY from the evidence given. You have no browsing here and no
    memory of this company's recent news. If a field is null, it is UNKNOWN --
    say so rather than filling it in.
-2. Before the probability, list the specific facts that moved you, each with the
-   FIELD NAME it came from. A fact you cannot name a field for is not a fact.
+2. Before the probability, list the specific facts that moved you. START each
+   one with the FIELD NAME it came from. A fact you cannot name a field for is
+   not a fact.
 3. State the FALSIFIER: what would have to be true for your call to be wrong.
 4. One session is very short. Most of what is interesting about a company does
    not resolve in one day, and the honest answer to most of these is close to
@@ -119,13 +121,16 @@ Rules that decide whether your answer is used at all:
    realised volatility, or a fresh dated analyst revision. Momentum over 63
    sessions is not evidence about tomorrow.
 
-Return STRICT JSON, nothing before or after:
+Return STRICT JSON, nothing before or after. Every string must be PLAIN: no
+quotation marks inside a string, no newlines inside a string, no percent signs
+attached to a quoted number. Use flat strings, not nested objects.
 
-{"ticker": "...", "probability": 0.52,
- "facts_used": [{"field": "rev_qoq", "value": "...", "why_it_matters": "..."}],
- "falsifier": "what would make this wrong",
- "confidence_in_the_evidence": "high|medium|low",
- "what_is_missing": ["the field you most wish you had"]}
+{"ticker": "AAA", "probability": 0.52,
+ "facts_used": ["rev_qoq 0.06 is modest and says nothing about one session",
+                "revisions_90d 70 with net_raises_90d 44 is a live flow"],
+ "falsifier": "what would make this wrong, in one plain sentence",
+ "confidence_in_the_evidence": "medium",
+ "what_is_missing": ["intraday_flow"]}
 """
 
 #: What the model is told is already settled, so the answer is not a rediscovery.
@@ -240,10 +245,31 @@ def ask(packet: dict, *, model: str = MODEL, timeout: float = 420.0) -> dict:
     if "{" not in txt or "}" not in txt:
         return {"refused": f"no JSON in reply (rc {r.returncode})",
                 "raw": txt[:300], "stderr": (r.stderr or "")[-200:]}
+    blob = txt[txt.index("{"):txt.rindex("}") + 1]
     try:
-        return json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+        return json.loads(blob)
     except ValueError as exc:
-        return {"refused": f"unparseable JSON: {exc}", "raw": txt[:300]}
+        # DEGRADED PARSE, never a repaired one.
+        #
+        # 2 of the first 6 replies failed with "Expecting ',' delimiter" deep
+        # inside `facts_used` -- an unescaped quote in a prose field. Discarding
+        # the whole reply throws away a probability the model did state, and
+        # "fixing" the JSON would mean guessing what it meant to write.
+        #
+        # So: lift ONLY the scalar fields that can be read unambiguously, mark
+        # the row `parse: degraded`, and drop the structured reasoning rather
+        # than reconstruct it. The number is the model's own; the missing
+        # `facts_used` is recorded as missing.
+        m = re.search(r'"probability"\s*:\s*([01]?\.?\d+)', blob)
+        if not m:
+            return {"refused": f"unparseable JSON and no probability: {exc}",
+                    "raw": txt[:300]}
+        out = {"probability": float(m.group(1)), "parse": "degraded",
+               "parse_error": str(exc)[:120], "facts_used": None}
+        c = re.search(r'"confidence_in_the_evidence"\s*:\s*"(\w+)"', blob)
+        if c:
+            out["confidence_in_the_evidence"] = c.group(1)
+        return out
 
 
 def main(argv=None) -> int:

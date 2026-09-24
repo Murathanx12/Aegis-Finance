@@ -1181,3 +1181,46 @@ class TestTheAnalystPullIsOncePerDayNotPerSession:
                             lambda *a, **k: (calls.append(1) or {"rc": 0}))
         SR.u_analyst(tmp_path)
         assert calls, "a corrupt receipt must NOT be read as a completed pull"
+
+
+class TestIdlingIsNotDying:
+    """`MIN_CYCLE_PERIOD_S` (300) EQUALS `sim_session.STALE_AFTER_S` (300).
+
+    So a heartbeat written only at a cycle's start is exactly stale at the
+    moment the next cycle begins, and a perfectly healthy session flaps into
+    UNCLEAN once per cycle, forever. The loop therefore beats while it idles,
+    and this pins the relationship between the three constants so that changing
+    any one of them cannot quietly restore the flap.
+    """
+
+    def test_the_idle_beat_sits_well_inside_the_staleness_window(self):
+        import sys
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+        from backend.services import sim_session as SS
+        assert SR.IDLE_BEAT_S < SS.STALE_AFTER_S / 2, (
+            f"IDLE_BEAT_S={SR.IDLE_BEAT_S} against STALE_AFTER_S="
+            f"{SS.STALE_AFTER_S}: one missed beat must not be enough to read "
+            f"as a dead process")
+
+    def test_the_cycle_period_alone_would_not_keep_a_session_alive(self):
+        """The collision this guards is real, not hypothetical."""
+        import sys
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+        from backend.services import sim_session as SS
+        assert SR.MIN_CYCLE_PERIOD_S >= SS.STALE_AFTER_S, (
+            "if the cycle period drops below the staleness window this guard is "
+            "no longer load-bearing -- delete it deliberately, do not let it rot")
+
+    def test_the_loop_actually_beats_while_idling(self):
+        """Read the source: the idle loop must call heartbeat, not just sleep."""
+        import sys
+        from pathlib import Path
+        sys.argv = ["x"]
+        import scripts.sim_run as SR
+        src = Path(SR.__file__).read_text(encoding="utf-8")
+        idle = src[src.index("idle = int(max"):src.index("except KeyboardInterrupt")]
+        assert "SS.heartbeat" in idle, (
+            "the inter-cycle wait does not beat; a healthy idle will read UNCLEAN")
+        assert "IDLE_BEAT_S" in idle

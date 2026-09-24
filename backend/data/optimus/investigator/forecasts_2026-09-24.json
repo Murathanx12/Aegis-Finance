@@ -3,17 +3,17 @@
  "licence": "PRODUCT_EXPERIMENT",
  "specialist": "investigator:evidence_v2",
  "model": "deepseek/deepseek-flash",
- "written_utc": "2026-09-24T14:54:03+00:00",
+ "written_utc": "2026-09-24T15:01:50+00:00",
  "horizon_days": 1,
  "shrink": 0.65,
  "base_rate_assumed": 0.5,
- "n_packets": 2,
- "n_forecast": 2,
- "n_written_to_ledger": 2,
- "mean_probability": 0.5195000000000001,
+ "n_packets": 6,
+ "n_forecast": 6,
+ "n_written_to_ledger": 6,
+ "mean_probability": 0.5270833333333332,
  "spread": [
   0.513,
-  0.526
+  0.5519999999999999
  ],
  "design_from": "\u00a764 -- process not persona (33 points of Brier skill between the two families), h=1 (skill is +5.75% there and +0.09% by h=5), shrink 0.65 (the failure is overconfidence, not ignorance)",
  "not_a_trade": "a probability with information in it still needs a probability-to-return calibration before it can be sized, and that does not exist",
@@ -23,65 +23,25 @@
    "raw_probability": 0.54,
    "probability": 0.526,
    "facts_used": [
-    {
-     "field": "ret_1d",
-     "value": 0.0492,
-     "why_it_matters": "A +4.9% single session is the one genuinely one-day-scoped fact in the packet. With realised_vol_63_annual 0.7294 the daily sigma is roughly 4.6%, so this is only about a 1-sigma day and says little about the next close; it raises dispersion rather than establishing direction, and post-spike next-session behaviour is at best weakly positive."
-    },
-    {
-     "field": "last_revision",
-     "value": "2026-09-21",
-     "why_it_matters": "A dated revision on the packet asof date is the only item that satisfies the rule-5 exception for a fresh dated analyst revision, and the standing results say revisions (unlike target levels) still carry information. It is same-day/reactive to the move, so it nudges rather than drives the call."
-    },
-    {
-     "field": "net_raises_90d",
-     "value": 44,
-     "why_it_matters": "Positive revision breadth (44 net raises out of 70 revisions) means the analyst reaction function around this name is tilted upward, which mildly favours relative performance on a fresh-news day."
-    },
-    {
-     "field": "beta_63",
-     "value": 2.1403,
-     "why_it_matters": "At 2.14 beta, most of a one-session relative return is SPY direction, which is UNKNOWN in the packet. This is the single largest force driving the outcome and it is unobservable here, which is why the estimate stays near 0.50 and the tails are wide."
-    },
-    {
-     "field": "realised_vol_63_annual",
-     "value": 0.7294,
-     "why_it_matters": "Very high realised vol means the next-session relative return has a wide, low-signal distribution; a modest edge in expectation is mostly swamped by noise, so conviction must be capped."
-    },
-    {
-     "field": "gross_margin_chg",
-     "value": -0.0072,
-     "why_it_matters": "Gross margin contracted slightly alongside modest rev_qoq 0.0615; per \u00c2\u00a763 revenue growth with margin expansion has no dose-response, and this is a contraction, so the fundamental mix is not a one-day tailwind \u00e2\u20ac\u201d mildly negative on any slow-burn read, irrelevant to tomorrow."
-    },
-    {
-     "field": "vs_ma200",
-     "value": 0.6897,
-     "why_it_matters": "Deeply extended above the 200-day (and vs_52w_high -0.0039, drawdown_63 0.0) means it is at highs with no recent drawdown; extension is not a one-day fact and is not treated as a predictor."
-    },
-    {
-     "field": "mom_21",
-     "value": 0.31,
-     "why_it_matters": "Logged only to be explicitly discounted: rule 5 says momentum at these horizons, and certainly mom_63 0.4767, is not evidence about tomorrow. It does not enter the probability."
-    },
-    {
-     "field": "cost_bps_round_trip",
-     "value": 6.0,
-     "why_it_matters": "6 bps against a mega-cap liquidity band is a negligible drag (~0.06%) on the relative-return comparison, so it does not push the probability materially."
-    },
-    {
-     "field": "last_filed",
-     "value": "2026-08-27",
-     "why_it_matters": "Last filing was ~3.5 weeks before asof, so no new filing-level disclosure is imminent within the single session; nothing scheduled explains tomorrow."
-    }
+    "ret_1d 0.0492 is the only one-day-scoped fact here and is roughly one sigma against realised_vol_63_annual 0.7294, so it is a real event but does not fix direction for the next close",
+    "last_revision 2026-09-21 is dated on the asof date itself, the one item that qualifies as a fresh dated analyst revision, though it is same-day and therefore partly reactive",
+    "net_raises_90d 44 out of revisions_90d 70 is positive revision breadth, a modest directional tilt, and standing results say revisions unlike target levels still carry information",
+    "beta_63 2.1403 means SPY direction times beta is the largest force on the relative outcome and there is no SPY field in the packet, so it is UNKNOWN and holds the estimate near the middle",
+    "realised_vol_63_annual 0.7294 is very high so next-session relative return is mostly noise and conviction must be capped",
+    "gross_margin_chg -0.0072 with rev_qoq 0.0615 is contraction not expansion, so fundamentals offer no next-session tailwind",
+    "vs_ma200 0.6897 with vs_52w_high -0.0039 and drawdown_63 0.0 is an extended chart at highs, a positioning fact that is not a one-day predictor",
+    "mom_21 0.31 and mom_63 0.4767 are logged only to be discarded because momentum at those horizons is not evidence about tomorrow",
+    "cost_bps_round_trip 6.0 in a mega liquidity band is about 0.06 of one percent, immaterial to the comparison",
+    "last_filed 2026-08-27 is about three and a half weeks stale so no filing catalyst lands inside the session"
    ],
-   "falsifier": "This call is wrong if tomorrow is a large-magnitude SPY day in either direction: with beta_63 at 2.14, a down SPY session should make CRWD underperform even on unchanged company news, and an up session should make it outperform, meaning the relative outcome is decided by a variable the packet does not contain. It is also wrong if the +4.92% ret_1d represented an event gap that mean-reverts on the following session, or if the 2026-09-21 revision was a downgrade or below-consensus target change rather than an upgrade \u00e2\u20ac\u201d the packet gives the revision count and median_target_change (0.0619) but not the direction of that specific dated revision.",
+   "falsifier": "It is wrong if tomorrow is a large SPY session either way, because at beta_63 2.1403 the relative outcome is effectively decided by an unobserved market factor, and it is also wrong if the ret_1d 0.0492 move was an event gap that mean-reverts rather than extends or if the 2026-09-21 revision was a downgrade rather than a raise.",
    "confidence_in_the_evidence": "medium",
    "what_is_missing": [
-    "the news/event flag and cause of the +4.92% ret_1d move (earnings, guidance, contract, index or flow event)",
-    "the direction and size of the specific 2026-09-21 revision (raise vs cut) rather than the 90-day aggregate",
-    "next-session implied volatility or options skew, and any pre-market indication",
-    "the expected SPY direction/session context, which beta_63 2.14 makes decisive",
-    "where the asof close sat within the day's range (close-on-high vs fade), which is the classic next-day continuation input"
+    "catalyst_behind_ret_1d",
+    "spy_direction_for_the_session",
+    "revision_sign_on_2026-09-21",
+    "implied_vol_next_session",
+    "close_position_within_the_day_range"
    ]
   },
   {
@@ -89,70 +49,144 @@
    "raw_probability": 0.52,
    "probability": 0.513,
    "facts_used": [
-    {
-     "field": "beta_63",
-     "value": 0.0809,
-     "why_it_matters": "The decisive structural fact. Near-zero beta means the relative-return question collapses into almost a pure absolute-return bet on CRM's own idiosyncratic distribution; unlike a high-beta name, the unknown SPY direction barely enters. This is what justifies leaning on the name's own recent price action instead of parking at 0.50 by default."
-    },
-    {
-     "field": "ret_5d",
-     "value": -0.0871,
-     "why_it_matters": "An 8.7% five-session decline is the only genuinely recent extreme in the packet, and it is the one item with plausible one-day relevance: a sharp multi-day selloff can bounce the next close. It cuts both ways (oversold reflex vs falling-knife continuation), so it justifies a tilt, not a tail \u00e2\u20ac\u201d and it is 5 sessions, not 1, so rule 5 bars using it to reach 0.30/0.70."
-    },
-    {
-     "field": "ret_1d",
-     "value": -0.0063,
-     "why_it_matters": "The asof session itself was only -0.63%, essentially flat. There is no single-session shock to extrapolate, and with realised_vol_63_annual 0.6131 (daily sigma ~3.9%) the last day is well under one sigma \u00e2\u20ac\u201d i.e. no one-day event evidence."
-    },
-    {
-     "field": "last_revision",
-     "value": "2026-09-18",
-     "why_it_matters": "A dated revision three sessions before asof is the closest thing to a fresh dated analyst revision under rule 5, and per standing results revisions (unlike target levels) still carry information. It sits just before the selloff, implying analysts were constructive before the drop rather than after it."
-    },
-    {
-     "field": "net_raises_90d",
-     "value": 33,
-     "why_it_matters": "33 net raises out of 55 revisions gives a positive revision-breadth tilt, worth a small nudge upward on a low-beta name where company-specific information dominates."
-    },
-    {
-     "field": "median_target_change",
-     "value": 0.0889,
-     "why_it_matters": "Used only as a direction-of-revision sentiment proxy; the standing results say target LEVELS are closed/perverse, so +8.9% median level change is not a price forecast and receives no weight beyond confirming the revision tilt."
-    },
-    {
-     "field": "momentum_63",
-     "value": 0.5776,
-     "why_it_matters": "Logged explicitly to be discarded: 63-session momentum is not evidence about tomorrow per rule 5, and it is directly contradicted by the recent 5-day decline anyway. It does not enter the probability."
-    },
-    {
-     "field": "vs_ma200",
-     "value": 0.1784,
-     "why_it_matters": "Still 17.8% above the 200-day and vs_52w_high -0.1172 with drawdown_63 -0.1044 \u00e2\u20ac\u201d the pullback is off a very extended base, so this is a dip inside an uptrend rather than a broken chart. Mildly supportive of a bounce, but a positioning fact, not a one-day fact."
-    },
-    {
-     "field": "gross_margin_chg",
-     "value": -0.0026,
-     "why_it_matters": "Gross margin essentially flat-to-slightly-down with rev_qoq 0.019 modest; per \u00c2\u00a763 revenue growth with margin expansion has no dose-response, and here there is no margin expansion at all, so fundamentals contribute nothing to a next-session relative call."
-    },
-    {
-     "field": "cost_bps_round_trip",
-     "value": 6.0,
-     "why_it_matters": "6 bps in a mega-liquidity band is ~0.06% drag, negligible against the relative-return spread, so it does not shift the probability."
-    },
-    {
-     "field": "last_filed",
-     "value": "2026-08-27",
-     "why_it_matters": "No filing ~3.5 weeks old; nothing scheduled within the session that would generate a company-specific one-day catalyst."
-    }
+    "beta_63 0.0809 is the decisive structural fact because a near-zero beta means the relative-return question collapses into a nearly pure bet on this name's own idiosyncratic distribution rather than on the unknown SPY direction",
+    "ret_5d -0.0871 is an 8.7 decline over five sessions, the only recent extreme in the packet and the only item with plausible one-day relevance, since a sharp multi-day selloff can produce a reflex bounce at the next close",
+    "ret_1d -0.0063 with realised_vol_63_annual 0.6131 is well under one sigma so the asof session itself was essentially flat and contains no single-session shock to extrapolate",
+    "last_revision 2026-09-18 is three sessions before asof, the closest thing to a fresh dated revision, and standing results say revisions unlike target levels still carry information",
+    "net_raises_90d 33 out of revisions_90d 55 is positive revision breadth worth a small upward nudge on a name where company-specific information does the pricing",
+    "median_target_change 0.0889 is used only as a direction-of-revision proxy because analyst target levels are closed and perverse",
+    "mom_63 0.5776 is logged only to be discarded since momentum at that horizon is not evidence about tomorrow and it is contradicted by the recent ret_5d decline",
+    "vs_ma200 0.1784 with vs_52w_high -0.1172 and drawdown_63 -0.1044 shows a pullback inside an extended uptrend rather than a broken chart, which mildly supports stabilisation",
+    "gross_margin_chg -0.0026 with rev_qoq 0.019 is flat to slightly down with no margin expansion, so fundamentals contribute nothing to a next-session relative call",
+    "cost_bps_round_trip 6.0 in a mega liquidity band is about 0.06 of one percent, immaterial to the comparison",
+    "last_filed 2026-08-27 is about three and a half weeks stale so nothing scheduled inside the session generates a company-specific catalyst"
    ],
-   "falsifier": "This call is wrong if the 8.7% five-session decline (ret_5d) was the start of a company-specific deterioration that continues the next session rather than an oversold dip \u00e2\u20ac\u201d a -0.63% ret_1d close is not a stabilisation signal, it is simply a small number. It is also wrong if beta_63 0.0809 is unstable: if CRM's true next-session beta is materially higher than its 63-day estimate, an SPY move would dominate the relative outcome and swamp the idiosyncratic read. Finally, it is wrong if the 2026-09-18 revision was the last constructive analyst act before a wave of downgrades that had not yet shown up in revisions_90d 55 / net_raises_90d 33, in which case the revision breadth I used is stale.",
+   "falsifier": "It is wrong if the 8.7 five-session decline was the start of company-specific deterioration that continues the next session rather than an oversold dip, and it is also wrong if beta_63 0.0809 is unstable because a materially higher true beta would let an SPY move dominate the relative outcome.",
    "confidence_in_the_evidence": "medium",
    "what_is_missing": [
-    "the catalyst behind ret_5d -0.0871 (earnings, guidance cut, macro/software-multiple de-rating, or an index/flow event)",
-    "the direction and magnitude of the specific 2026-09-18 revision (raise vs cut) rather than the 90-day aggregate",
-    "implied/next-session volatility and any pre-market move, to gauge whether the selloff has exhausted",
-    "whether the asof close sat at the low or recovered off the low of the day \u00e2\u20ac\u201d the classic next-day continuation input",
-    "the composition of revisions_90d 55 by date, to test whether momentum in analyst opinion is decaying"
+    "catalyst_behind_ret_5d_decline",
+    "revision_sign_on_2026-09-18",
+    "implied_vol_next_session",
+    "close_position_within_the_day_range",
+    "expected_spy_direction"
+   ]
+  },
+  {
+   "ticker": "OKTA",
+   "raw_probability": 0.58,
+   "probability": 0.5519999999999999,
+   "facts_used": [
+    "last_revision 2026-09-22 post-dates the asof date by one session, so it is the freshest possible dated revision timed inside the measurement window and the cleanest one-day qualifying item in the packet",
+    "net_raises_90d 54 out of revisions_90d 55 is near-unanimous one-sided breadth and standing results say revisions unlike target levels still carry information",
+    "ret_1d 0.0491 against realised_vol_63_annual 0.7882 is roughly a one-sigma day, a real event rather than noise, though a spike that size can partially retrace",
+    "gross_margin_chg 0.0185 is margin expansion rather than the growth-with-expansion pair that has no dose-response, which is the actual pricing-power signature and supports the move being fundamental",
+    "beta_63 1.5827 means SPY direction times beta is the largest single determinant of the relative outcome and there is no SPY field in the packet, so it is UNKNOWN and keeps the estimate well inside the guardrail",
+    "realised_vol_63_annual 0.7882 is very high at about five percent daily sigma so the next-session relative return is largely noise and conviction must be capped",
+    "mom_21 0.4261 and mom_63 0.6503 are logged only to be discarded because momentum at those horizons is not evidence about tomorrow",
+    "vs_52w_high -0.0065 with drawdown_63 0.0 and vs_ma200 0.7902 is an extended chart at highs with no recent drawdown, a positioning fact that also removes any oversold-bounce logic",
+    "rev_qoq 0.0523 is modest sequential growth and contributes no next-session edge given no dose-response for the growth-margin pair",
+    "liquidity_band large with cost_bps_round_trip 10.0 is about 0.10 of one percent friction, roughly double the mega-cap names, which trims the edge",
+    "median_target_change 0.2061 is used only as a direction-of-revision proxy because analyst target levels are closed and perverse",
+    "last_filed 2026-08-27 is about three and a half weeks stale so no filing catalyst lands inside the session"
+   ],
+   "falsifier": "It is wrong if the 2026-09-22 revision was a downgrade or a below-consensus target cut rather than an upgrade, since the packet gives revision counts and a positive median target change but not the sign of that specific dated revision, and it is also wrong if a large SPY move dominates the relative outcome at beta_63 1.5827.",
+   "confidence_in_the_evidence": "medium",
+   "what_is_missing": [
+    "revision_sign_on_2026-09-22",
+    "expected_spy_direction",
+    "catalyst_behind_ret_1d",
+    "implied_vol_next_session",
+    "close_position_within_the_day_range",
+    "date_distribution_of_revisions_90d"
+   ]
+  },
+  {
+   "ticker": "SNOW",
+   "raw_probability": 0.52,
+   "probability": 0.513,
+   "facts_used": [
+    "last_revision 2026-09-04 is roughly eleven trading sessions before asof so it is NOT a fresh dated revision and cannot anchor a one-day call, which is the main reason the estimate stays near the middle",
+    "ret_1d 0.0209 against realised_vol_63_annual 0.5129 is well under one sigma so the asof session was unremarkable and carries no event signature",
+    "realised_vol_63_annual 0.5129 is moderate and explicitly not the very high realised volatility the rules name as a qualifying condition",
+    "net_raises_90d 47 out of revisions_90d 48 is near-unanimous positive breadth, the strongest directional field available since revisions unlike target levels still carry information, but it is a 90-day aggregate not timed to the session",
+    "gross_margin_chg 0.0042 with gross_margin 0.6702 alongside rev_qoq 0.112 is the strongest growth-plus-expansion pair in this batch, though standing results say that pair has no dose-response",
+    "beta_63 1.1663 means SPY direction times beta is the dominant determinant of the relative outcome and there is no SPY field in the packet, so it is UNKNOWN and pulls the estimate to the middle",
+    "vs_52w_high -0.1175 with drawdown_63 -0.0479 and vs_ma200 0.5212 is a mild pullback inside an extended uptrend, neither oversold nor a fresh-high breakout, so it is a positioning fact and not a one-day predictor",
+    "rev_qoq 0.112 is strong sequential growth but fundamentals do not resolve inside a single session and the growth-margin pair has no dose-response",
+    "mom_21 0.0563 and mom_63 0.4978 are logged only to be discarded because momentum at those horizons is not evidence about tomorrow",
+    "last_filed 2026-09-04 is about eleven sessions stale so no imminent filing catalyst sits inside the session",
+    "median_target_change 0.2333 is used strictly as a direction-of-revision proxy because analyst target levels are closed and perverse",
+    "cost_bps_round_trip 6.0 in a mega liquidity band is about 0.06 of one percent friction and therefore negligible"
+   ],
+   "falsifier": "It is wrong if a large SPY move decides the relative outcome at beta_63 1.1663, and it is also wrong if the 2026-09-04 revision and the 47 of 48 raise breadth are sentiment that is still propagating into price, which would mean treating them as too stale understates a real edge.",
+   "confidence_in_the_evidence": "medium",
+   "what_is_missing": [
+    "fresh_dated_revision_near_asof",
+    "expected_spy_direction",
+    "catalyst_behind_ret_1d",
+    "implied_vol_next_session",
+    "close_position_within_the_day_range",
+    "date_breakdown_of_revisions_90d"
+   ]
+  },
+  {
+   "ticker": "PANW",
+   "raw_probability": 0.55,
+   "probability": 0.5325,
+   "facts_used": [
+    "last_revision 2026-09-21 is dated on the asof date itself, the only rule-5 qualifying item in the packet as a fresh dated analyst revision, though it is same-day and therefore partly reactive to the session move",
+    "net_raises_90d 34 out of revisions_90d 41 is clearly positive revision breadth and revisions unlike target levels still carry information, so it is a modest directional input",
+    "ret_1d 0.0225 against realised_vol_63_annual 0.6258 is only about six tenths of one sigma, an unremarkable day, so there is no extreme recent one-day move and no post-spike continuation or reversal logic",
+    "beta_63 1.706 means SPY direction times beta is the largest single driver of the relative outcome and there is no SPY field in the packet, so it is UNKNOWN and keeps the estimate close to the middle",
+    "realised_vol_63_annual 0.6258 is high but not the very high realised volatility the rules name as a qualifying condition, so the packet lacks one-day-scoped evidence strong enough to leave the guardrail band",
+    "rev_qoq 0.1359 is strong sequential growth but standing results say revenue growth with margin expansion has no dose-response and gross_margin_chg 0.0001 shows margin is flat rather than expanding",
+    "gross_margin_chg 0.0001 against gross_margin 0.6757 is effectively zero change so there is no margin expansion to supply a pricing-power or earnings-inflection interpretation",
+    "ret_5d -0.0058 is flat over five sessions which removes both oversold-bounce and sharp-selloff-continuation logic from the recent tape",
+    "mom_21 0.0639 and mom_63 0.298 are logged only to be discarded because momentum at those horizons is not evidence about tomorrow",
+    "vs_52w_high -0.068 with drawdown_63 -0.0612 and vs_ma200 0.5395 is a mild pullback inside a still-extended uptrend, a positioning fact and not a one-day predictor",
+    "last_filed 2026-09-10 is about seven sessions before asof so no filing-driven catalyst is scheduled inside the session",
+    "median_target_change 0.1765 is used only as a direction-of-revision proxy because analyst target levels are closed and perverse",
+    "cost_bps_round_trip 6.0 in a mega liquidity band is about 0.06 of one percent friction and therefore immaterial"
+   ],
+   "falsifier": "It is wrong if the 2026-09-21 revision was a downgrade or a below-consensus target cut rather than a raise, and it is also wrong if a large SPY session dominates the relative outcome at beta_63 1.706 or if that same-day revision was purely reactive to the 0.0225 ret_1d move.",
+   "confidence_in_the_evidence": "medium",
+   "what_is_missing": [
+    "revision_sign_on_2026-09-21",
+    "expected_spy_direction",
+    "catalyst_behind_ret_1d",
+    "close_position_within_the_day_range",
+    "implied_vol_next_session",
+    "date_distribution_of_revisions_90d"
+   ]
+  },
+  {
+   "ticker": "ABNB",
+   "raw_probability": 0.54,
+   "probability": 0.526,
+   "facts_used": [
+    "last_revision 2026-09-21 is dated on the asof date itself, the packet's only rule-5 qualifying item as a fresh dated analyst revision, though being same-day makes it partly backward-looking",
+    "beta_63 0.6394 is well below one so the unknown SPY direction that dominates higher-beta names is damped here and the relative-return question leans more on this name's own state",
+    "net_raises_90d 28 out of revisions_90d 35 is positive revision breadth and revisions unlike target levels still carry information, so it is a genuine but modest directional input",
+    "gross_margin_chg 0.0415 with gross_margin 0.8246 alongside rev_qoq 0.3473 is the strongest growth-plus-expansion pair in this batch, though standing results say that pair has no dose-response",
+    "ret_1d 0.0037 against realised_vol_63_annual 0.4677 is far under one sigma so the asof session was essentially flat and there is no extreme recent one-day move",
+    "realised_vol_63_annual 0.4677 is moderate and explicitly not the very high realised volatility the rules name as a qualifying condition, so no one-day-scoped evidence supports leaving the guardrail band",
+    "mom_21 -0.0982 is logged only to be discarded because momentum at that horizon is not evidence about tomorrow, and its negative sign conflicts with mom_63 0.1986 which shows why averaging momentum into a one-day view is unreliable",
+    "drawdown_63 -0.1242 with vs_52w_high -0.1376 and vs_ma200 0.1745 is a meaningful pullback inside a still-positive trend and is a positioning fact rather than a one-day predictor",
+    "rev_qoq 0.3473 is very strong sequential growth but fundamentals do not resolve inside a single session and the growth-margin pair has no dose-response",
+    "ret_5d -0.0223 is neither a sharp selloff worth an oversold-bounce tilt nor a collapse worth continuation logic so the recent tape is directionally inert",
+    "last_filed 2026-08-06 is about six weeks stale so no filing-driven catalyst lands inside the single session",
+    "median_target_change 0.1111 is used only as a direction-of-revision proxy because analyst target levels are closed and perverse",
+    "cost_bps_round_trip 10.0 in a large rather than mega liquidity band is about 0.10 of one percent friction, roughly double the mega-cap names, which trims the edge"
+   ],
+   "falsifier": "It is wrong if the 2026-09-21 revision was a downgrade rather than a raise, and it is also wrong if the negative recent state wins instead of the revision tape, since mom_21 -0.0982 with drawdown_63 -0.1242 says price is already drifting lower and a flat ret_1d 0.0037 could have been a fade from a higher intraday level.",
+   "confidence_in_the_evidence": "medium",
+   "what_is_missing": [
+    "revision_sign_on_2026-09-21",
+    "close_position_within_the_day_range",
+    "catalyst_for_mom_21_drift",
+    "implied_vol_next_session",
+    "date_distribution_of_revisions_90d",
+    "expected_spy_direction"
    ]
   }
  ]

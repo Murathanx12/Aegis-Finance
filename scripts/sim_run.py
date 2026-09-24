@@ -79,6 +79,12 @@ SLOW_UNIT_S = 1800
 #: broker moves on a 5-minute scale, so that is the natural period.
 MIN_CYCLE_PERIOD_S = 300
 
+#: How often to beat while WAITING between cycles. Must be comfortably below
+#: `sim_session.STALE_AFTER_S` (300) or a healthy idle reads as a dead process:
+#: the two constants are equal, so a beat only at the cycle boundary is exactly
+#: stale when the next cycle starts.
+IDLE_BEAT_S = 60
+
 #: Names the plan unit holds. 15-20 was the declared mandate 2026-09-22.
 BOOK_SIZE = 18
 
@@ -675,10 +681,23 @@ def run(session_id: str) -> int:
             # slow cycle costs no extra wait and a fast one does not spin.
             # The stop flag is checked every second: a stop should feel
             # immediate even when the loop is idling.
+            #
+            # AND BEAT WHILE IDLING. `MIN_CYCLE_PERIOD_S` (300) is exactly
+            # `sim_session.STALE_AFTER_S` (300), so a beat written only at the
+            # cycle's start is precisely stale at the moment the next cycle
+            # begins -- the session would flap into UNCLEAN once per cycle,
+            # forever, while perfectly healthy. Idling is not dying, and the
+            # heartbeat has to say so.
             spent = time.time() - t0
-            for _ in range(int(max(0.0, MIN_CYCLE_PERIOD_S - spent))):
+            idle = int(max(0.0, MIN_CYCLE_PERIOD_S - spent))
+            for i in range(idle):
                 if SS.stop_requested() or stopping["flag"]:
                     break
+                if i and i % IDLE_BEAT_S == 0:
+                    try:
+                        SS.heartbeat(cycle=n, note=f"idle {i}s of {idle}s")
+                    except Exception:                              # noqa: BLE001
+                        logger.debug("idle heartbeat failed", exc_info=True)
                 time.sleep(1)
     except KeyboardInterrupt:
         SS.finish("STOPPED", "KeyboardInterrupt", {"final_cycle": n})
