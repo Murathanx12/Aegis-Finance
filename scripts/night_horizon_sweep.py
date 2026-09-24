@@ -264,7 +264,11 @@ def main(argv=None) -> int:
                              "a 1% edge per 126 sessions is not better than 0.5% "
                              "per 21, and the per-hold number alone makes it look it.")}
     OUT.mkdir(parents=True, exist_ok=True)
-    out = Path(a.out) if a.out else OUT / f"horizon_sweep_{date.today()}.json"
+    # The model goes in the FILENAME. Without it, sweeping a second model on the
+    # same day silently overwrites the first one's receipt, and the comparison
+    # the two runs exist to make becomes unreadable from disk.
+    out = (Path(a.out) if a.out else
+           OUT / f"horizon_sweep_{a.model}_{date.today()}.json")
     out.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     print(f"\nVERDICT: {verdict}")
     print(f"-> {out}")
