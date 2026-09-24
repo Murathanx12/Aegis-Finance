@@ -654,9 +654,45 @@ def top_k_backtest(oos: pd.DataFrame, *, k: int = 20, cost: bool = True,
             if np.isfinite(s_no) and s_no > 0:
                 se_no, t_no = s_no, float(bmn.mean() / s_no)
 
+    # LEAVE-ONE-YEAR-OUT, computed unconditionally and reported beside the mean.
+    #
+    # On 2026-09-24 a +2.62%/hold cell survived a purge, a survivorship-free
+    # panel, a breadth sweep and a corrected error bar, and died to one
+    # `groupby(year).mean()`: dropping 2025 took it to +0.12%. The correction I
+    # had spent the afternoon on was real and irrelevant. When a number is
+    # positive the first question is not how precise it is, it is WHICH PART OF
+    # THE SAMPLE IT IS -- so that question is no longer optional here.
+    years = pd.Series([r["date"][:4] for r in rows])
+    by_year, loo = {}, {}
+    for y in sorted(years.unique()):
+        m = (years == y).values
+        by_year[y] = {"mean_net": float(net[m].mean()), "n_dates": int(m.sum())}
+        if (~m).sum() > 1:
+            loo[y] = float(net[~m].mean())
+    # The worst leave-one-out mean is the number a reader should quote: it is
+    # what the strategy earns if the single best year does not repeat.
+    loo_worst = min(loo.values()) if loo else None
+    loo_worst_year = min(loo, key=loo.get) if loo else None
+
+    # Concentration by date, for the same reason: 35 rows of 46,361 once carried
+    # 81% of a result in this programme.
+    total = float(net.sum())
+    order = np.argsort(-np.abs(net))
+    conc = {}
+    if total != 0:
+        for frac in (0.01, 0.05, 0.10):
+            n_top = max(1, int(len(net) * frac))
+            conc[f"top_{int(frac*100)}pct_of_dates"] = float(
+                net[order[:n_top]].sum() / total)
+
     return {
         "k": k,
         "n_dates": len(rows),
+        "by_year": by_year,
+        "leave_one_year_out": loo,
+        "loo_worst_mean_net": loo_worst,
+        "loo_worst_dropped_year": loo_worst_year,
+        "share_of_total_by_date": conc,
         "n_blocks": int(blocks.nunique()),
         "n_blocks_nonoverlap": n_no,
         # Blocks at 2*horizon width, which truly cannot share an outcome. This

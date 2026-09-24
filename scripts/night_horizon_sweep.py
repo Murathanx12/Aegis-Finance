@@ -185,6 +185,11 @@ def run_one(bars: pd.DataFrame, horizon: int, *, n_folds: int = 4,
             "n_blocks_nonoverlap": bt.get("n_blocks_nonoverlap"),
             "n_blocks_strict": bt.get("n_blocks_strict"),
             "hit_rate": bt["hit_rate_dates"], "n_blocks": bt["n_blocks"],
+            # What the cell earns if its single best year does not repeat. On
+            # this panel the headline +2.62%/hold became +0.12% without 2025.
+            "loo_worst_net_per_hold": bt.get("loo_worst_mean_net"),
+            "loo_worst_dropped_year": bt.get("loo_worst_dropped_year"),
+            "by_year": bt.get("by_year"),
         }
     return {"horizon": horizon, "status": "OK", "model": model,
             "n_oos_rows": int(len(oos)),
@@ -234,6 +239,10 @@ def main(argv=None) -> int:
                   f"t_NONOVERLAP {(c['t_nonoverlap'] or float('nan')):+.2f} "
                   f"on {c['n_blocks_nonoverlap']} blocks, {c['n_blocks_strict']} "
                   f"strictly independent)")
+            if c.get("loo_worst_net_per_hold") is not None:
+                print(f"          drop {c['loo_worst_dropped_year']}: "
+                      f"{c['loo_worst_net_per_hold']*100:+6.2f}%/hold  <- the "
+                      f"number to quote")
 
     # the verdict compares ANNUALISED net, which is the only comparable number
     best = None
@@ -257,7 +266,26 @@ def main(argv=None) -> int:
         tn_min = min(tn) if tn else None
         tn_max = max(tn) if tn else None
         all_pos = bool(cells_h) and all(c["net_per_year"] > 0 for c in cells_h.values())
-        if per_yr > 0 and (tn_max is None or tn_max < 2.0):
+        # A cell that goes to zero when one year is removed is a REGIME, and
+        # that outranks every other reading: there is no point discussing the
+        # error bar on a mean that is one bull market.
+        loo = [c.get("loo_worst_net_per_hold") for c in cells_h.values()
+               if c.get("loo_worst_net_per_hold") is not None]
+        loo_worst = min(loo) if loo else None
+        dropped = next((c.get("loo_worst_dropped_year") for c in cells_h.values()
+                        if c.get("loo_worst_net_per_hold") == loo_worst), None)
+        if per_yr > 0 and loo_worst is not None and loo_worst <= 0.005:
+            verdict = (
+                f"ONE REGIME, NOT AN EDGE: the best cell at H={h} is "
+                f"{per_hold*100:+.2f}% net per hold, and dropping {dropped} alone "
+                f"takes the worst cell to {loo_worst*100:+.2f}% per hold. The "
+                f"headline is a single year. Leave-one-year-out is reported on "
+                f"every cell of this receipt precisely so that a number surviving "
+                f"a purge, a survivorship-free panel, a breadth sweep and a "
+                f"corrected error bar still has to survive the cheapest question: "
+                f"WHICH PART OF THE SAMPLE IS IT. This one does not. Do not paper "
+                f"it, do not claim it.")
+        elif per_yr > 0 and (tn_max is None or tn_max < 2.0):
             verdict = (
                 f"MEASURED POSITIVE, UNDERPOWERED: at H={h} every book size is "
                 f"positive ({'yes' if all_pos else 'no'}: worst cell k={worst.get('k', '?')} "

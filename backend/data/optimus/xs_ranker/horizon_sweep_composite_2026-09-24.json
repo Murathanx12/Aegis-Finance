@@ -3,7 +3,7 @@
  "model": "composite",
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
- "written_utc": "2026-09-24T02:49:24+00:00",
+ "written_utc": "2026-09-24T03:13:15+00:00",
  "hypothesis": "\u00a759's toll is paid per ROUND TRIP, not per day. If the signal is slow-moving, gross(H) should grow with H faster than the ~constant toll, and some H turns the same ordering profitable with no new data.",
  "held_fixed": [
   "features",
@@ -48,7 +48,35 @@
      "n_blocks_nonoverlap": 63,
      "n_blocks_strict": 32,
      "hit_rate": 0.4537878787878788,
-     "n_blocks": 67
+     "n_blocks": 67,
+     "loo_worst_net_per_hold": -0.005727016326308442,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.02331166112162154,
+       "n_dates": 219
+      },
+      "2022": {
+       "mean_net": -0.0067796545200653185,
+       "n_dates": 231
+      },
+      "2023": {
+       "mean_net": -0.009419958317714956,
+       "n_dates": 230
+      },
+      "2024": {
+       "mean_net": -0.003071380575184849,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.014865467806002125,
+       "n_dates": 230
+      },
+      "2026": {
+       "mean_net": 0.021325851279209017,
+       "n_dates": 158
+      }
+     }
     },
     "50": {
      "k": 50,
@@ -62,7 +90,35 @@
      "n_blocks_nonoverlap": 63,
      "n_blocks_strict": 32,
      "hit_rate": 0.45984848484848484,
-     "n_blocks": 67
+     "n_blocks": 67,
+     "loo_worst_net_per_hold": -0.00399213607232745,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.019244441236078876,
+       "n_dates": 219
+      },
+      "2022": {
+       "mean_net": -0.002603296907707084,
+       "n_dates": 231
+      },
+      "2023": {
+       "mean_net": -0.009631185197370284,
+       "n_dates": 230
+      },
+      "2024": {
+       "mean_net": 0.0007411648887465056,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.014534709438611652,
+       "n_dates": 230
+      },
+      "2026": {
+       "mean_net": 0.015777626208707183,
+       "n_dates": 158
+      }
+     }
     },
     "100": {
      "k": 100,
@@ -76,7 +132,35 @@
      "n_blocks_nonoverlap": 63,
      "n_blocks_strict": 32,
      "hit_rate": 0.46515151515151515,
-     "n_blocks": 67
+     "n_blocks": 67,
+     "loo_worst_net_per_hold": -0.0037724050855977883,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.01456893301548081,
+       "n_dates": 219
+      },
+      "2022": {
+       "mean_net": -0.0023248270248135494,
+       "n_dates": 231
+      },
+      "2023": {
+       "mean_net": -0.009711893309913533,
+       "n_dates": 230
+      },
+      "2024": {
+       "mean_net": -0.00047202738781790065,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.013014038148112068,
+       "n_dates": 230
+      },
+      "2026": {
+       "mean_net": 0.012458203752094065,
+       "n_dates": 158
+      }
+     }
     },
     "200": {
      "k": 200,
@@ -90,7 +174,35 @@
      "n_blocks_nonoverlap": 63,
      "n_blocks_strict": 32,
      "hit_rate": 0.471969696969697,
-     "n_blocks": 67
+     "n_blocks": 67,
+     "loo_worst_net_per_hold": -0.002781251524858063,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.011052333106592356,
+       "n_dates": 219
+      },
+      "2022": {
+       "mean_net": 0.0004103275105481003,
+       "n_dates": 231
+      },
+      "2023": {
+       "mean_net": -0.007948605439578685,
+       "n_dates": 230
+      },
+      "2024": {
+       "mean_net": -0.0011898599065798615,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.009947434753072755,
+       "n_dates": 230
+      },
+      "2026": {
+       "mean_net": 0.009000854942234486,
+       "n_dates": 158
+      }
+     }
     }
    },
    "purge_sessions": 21
@@ -120,7 +232,35 @@
      "n_blocks_nonoverlap": 30,
      "n_blocks_strict": 15,
      "hit_rate": 0.4620408163265306,
-     "n_blocks": 62
+     "n_blocks": 62,
+     "loo_worst_net_per_hold": -0.004457750660759159,
+     "loo_worst_dropped_year": "2026",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.035314343671805956,
+       "n_dates": 208
+      },
+      "2022": {
+       "mean_net": 0.0004861679289477074,
+       "n_dates": 210
+      },
+      "2023": {
+       "mean_net": -0.020959154141362745,
+       "n_dates": 209
+      },
+      "2024": {
+       "mean_net": -0.0024210372023632863,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.035329282728665146,
+       "n_dates": 209
+      },
+      "2026": {
+       "mean_net": 0.05854714071492561,
+       "n_dates": 137
+      }
+     }
     },
     "50": {
      "k": 50,
@@ -134,7 +274,35 @@
      "n_blocks_nonoverlap": 30,
      "n_blocks_strict": 15,
      "hit_rate": 0.4710204081632653,
-     "n_blocks": 62
+     "n_blocks": 62,
+     "loo_worst_net_per_hold": -0.0025621808451829885,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.029771748636766366,
+       "n_dates": 208
+      },
+      "2022": {
+       "mean_net": 0.004898251863789853,
+       "n_dates": 210
+      },
+      "2023": {
+       "mean_net": -0.018439538824795525,
+       "n_dates": 209
+      },
+      "2024": {
+       "mean_net": 0.002324469937978516,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.029328062669750705,
+       "n_dates": 209
+      },
+      "2026": {
+       "mean_net": 0.04254607500990729,
+       "n_dates": 137
+      }
+     }
     },
     "100": {
      "k": 100,
@@ -148,7 +316,35 @@
      "n_blocks_nonoverlap": 30,
      "n_blocks_strict": 15,
      "hit_rate": 0.476734693877551,
-     "n_blocks": 62
+     "n_blocks": 62,
+     "loo_worst_net_per_hold": -0.00306221612833517,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.021717251956926593,
+       "n_dates": 208
+      },
+      "2022": {
+       "mean_net": 0.002842134590237479,
+       "n_dates": 210
+      },
+      "2023": {
+       "mean_net": -0.016163791293141286,
+       "n_dates": 209
+      },
+      "2024": {
+       "mean_net": -0.00022896483026467,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.025692258182094994,
+       "n_dates": 209
+      },
+      "2026": {
+       "mean_net": 0.030985839957631777,
+       "n_dates": 137
+      }
+     }
     },
     "200": {
      "k": 200,
@@ -162,7 +358,35 @@
      "n_blocks_nonoverlap": 30,
      "n_blocks_strict": 15,
      "hit_rate": 0.4922448979591837,
-     "n_blocks": 62
+     "n_blocks": 62,
+     "loo_worst_net_per_hold": -0.0023405846658859225,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.01592380859339796,
+       "n_dates": 208
+      },
+      "2022": {
+       "mean_net": 0.0037202414868851047,
+       "n_dates": 210
+      },
+      "2023": {
+       "mean_net": -0.01321902399471483,
+       "n_dates": 209
+      },
+      "2024": {
+       "mean_net": -0.001144370532039916,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.020944631019861305,
+       "n_dates": 209
+      },
+      "2026": {
+       "mean_net": 0.023387042654089522,
+       "n_dates": 137
+      }
+     }
     }
    },
    "purge_sessions": 42
@@ -192,7 +416,35 @@
      "n_blocks_nonoverlap": 18,
      "n_blocks_strict": 9,
      "hit_rate": 0.4437555358724535,
-     "n_blocks": 58
+     "n_blocks": 58,
+     "loo_worst_net_per_hold": -0.006035305469264062,
+     "loo_worst_dropped_year": "2026",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.05410722878302922,
+       "n_dates": 196
+      },
+      "2022": {
+       "mean_net": -0.006496848372756504,
+       "n_dates": 189
+      },
+      "2023": {
+       "mean_net": -0.022164796479306362,
+       "n_dates": 188
+      },
+      "2024": {
+       "mean_net": 0.0026822357683522514,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.048990505681090625,
+       "n_dates": 188
+      },
+      "2026": {
+       "mean_net": 0.10560523408426233,
+       "n_dates": 116
+      }
+     }
     },
     "50": {
      "k": 50,
@@ -206,7 +458,35 @@
      "n_blocks_nonoverlap": 18,
      "n_blocks_strict": 9,
      "hit_rate": 0.4738706820194863,
-     "n_blocks": 58
+     "n_blocks": 58,
+     "loo_worst_net_per_hold": -0.0015484330513216291,
+     "loo_worst_dropped_year": "2026",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.042462560514587966,
+       "n_dates": 196
+      },
+      "2022": {
+       "mean_net": 0.0006771073582259106,
+       "n_dates": 189
+      },
+      "2023": {
+       "mean_net": -0.01719927167840392,
+       "n_dates": 188
+      },
+      "2024": {
+       "mean_net": 0.006458057623662872,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.04378807682735438,
+       "n_dates": 188
+      },
+      "2026": {
+       "mean_net": 0.0780089447268189,
+       "n_dates": 116
+      }
+     }
     },
     "100": {
      "k": 100,
@@ -220,7 +500,35 @@
      "n_blocks_nonoverlap": 18,
      "n_blocks_strict": 9,
      "hit_rate": 0.47475642161204606,
-     "n_blocks": 58
+     "n_blocks": 58,
+     "loo_worst_net_per_hold": -0.0015631957040727767,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.03165651283785704,
+       "n_dates": 196
+      },
+      "2022": {
+       "mean_net": -0.00045404559434818317,
+       "n_dates": 189
+      },
+      "2023": {
+       "mean_net": -0.01567613068098583,
+       "n_dates": 188
+      },
+      "2024": {
+       "mean_net": 0.003928715392936511,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.039705671839335384,
+       "n_dates": 188
+      },
+      "2026": {
+       "mean_net": 0.05841896780193654,
+       "n_dates": 116
+      }
+     }
     },
     "200": {
      "k": 200,
@@ -234,7 +542,35 @@
      "n_blocks_nonoverlap": 18,
      "n_blocks_strict": 9,
      "hit_rate": 0.48981399468556247,
-     "n_blocks": 58
+     "n_blocks": 58,
+     "loo_worst_net_per_hold": -0.001324213812800955,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.021446494525191477,
+       "n_dates": 196
+      },
+      "2022": {
+       "mean_net": -0.00018406768464869898,
+       "n_dates": 189
+      },
+      "2023": {
+       "mean_net": -0.012388163799323388,
+       "n_dates": 188
+      },
+      "2024": {
+       "mean_net": 0.0010018283228372417,
+       "n_dates": 252
+      },
+      "2025": {
+       "mean_net": 0.032804764477054583,
+       "n_dates": 188
+      },
+      "2026": {
+       "mean_net": 0.043695953262140055,
+       "n_dates": 116
+      }
+     }
     }
    },
    "purge_sessions": 63
@@ -264,7 +600,35 @@
      "n_blocks_nonoverlap": 7,
      "n_blocks_strict": 4,
      "hit_rate": 0.5172004744958482,
-     "n_blocks": 44
+     "n_blocks": 44,
+     "loo_worst_net_per_hold": -0.007130704948896324,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.11499133130544854,
+       "n_dates": 162
+      },
+      "2022": {
+       "mean_net": 0.022989947798614175,
+       "n_dates": 126
+      },
+      "2023": {
+       "mean_net": -0.009209523669766621,
+       "n_dates": 134
+      },
+      "2024": {
+       "mean_net": 0.018354937272241974,
+       "n_dates": 211
+      },
+      "2025": {
+       "mean_net": 0.15723178067487945,
+       "n_dates": 157
+      },
+      "2026": {
+       "mean_net": 0.15474307662679376,
+       "n_dates": 53
+      }
+     }
     },
     "50": {
      "k": 50,
@@ -278,7 +642,35 @@
      "n_blocks_nonoverlap": 7,
      "n_blocks_strict": 4,
      "hit_rate": 0.5551601423487544,
-     "n_blocks": 44
+     "n_blocks": 44,
+     "loo_worst_net_per_hold": 0.0012003701431481679,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.07821261516885768,
+       "n_dates": 162
+      },
+      "2022": {
+       "mean_net": 0.02590592783429199,
+       "n_dates": 126
+      },
+      "2023": {
+       "mean_net": -0.011749091580727247,
+       "n_dates": 134
+      },
+      "2024": {
+       "mean_net": 0.022558233027424147,
+       "n_dates": 211
+      },
+      "2025": {
+       "mean_net": 0.1355440787678922,
+       "n_dates": 157
+      },
+      "2026": {
+       "mean_net": 0.1329121088955614,
+       "n_dates": 53
+      }
+     }
     },
     "100": {
      "k": 100,
@@ -292,7 +684,35 @@
      "n_blocks_nonoverlap": 7,
      "n_blocks_strict": 4,
      "hit_rate": 0.561091340450771,
-     "n_blocks": 44
+     "n_blocks": 44,
+     "loo_worst_net_per_hold": 0.0028500284002719364,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.054534919756766255,
+       "n_dates": 162
+      },
+      "2022": {
+       "mean_net": 0.021920786480252363,
+       "n_dates": 126
+      },
+      "2023": {
+       "mean_net": -0.012043781870736684,
+       "n_dates": 134
+      },
+      "2024": {
+       "mean_net": 0.018410763621703387,
+       "n_dates": 211
+      },
+      "2025": {
+       "mean_net": 0.11622272032952424,
+       "n_dates": 157
+      },
+      "2026": {
+       "mean_net": 0.10862175534283366,
+       "n_dates": 53
+      }
+     }
     },
     "200": {
      "k": 200,
@@ -306,12 +726,40 @@
      "n_blocks_nonoverlap": 7,
      "n_blocks_strict": 4,
      "hit_rate": 0.5871886120996441,
-     "n_blocks": 44
+     "n_blocks": 44,
+     "loo_worst_net_per_hold": 0.0043437171068688146,
+     "loo_worst_dropped_year": "2025",
+     "by_year": {
+      "2021": {
+       "mean_net": -0.031667526891094,
+       "n_dates": 162
+      },
+      "2022": {
+       "mean_net": 0.013821074608414263,
+       "n_dates": 126
+      },
+      "2023": {
+       "mean_net": -0.00909587480334123,
+       "n_dates": 134
+      },
+      "2024": {
+       "mean_net": 0.012712160339445461,
+       "n_dates": 211
+      },
+      "2025": {
+       "mean_net": 0.09084044139832442,
+       "n_dates": 157
+      },
+      "2026": {
+       "mean_net": 0.09254821288742965,
+       "n_dates": 53
+      }
+     }
     }
    },
    "purge_sessions": 126
   }
  },
- "verdict": "MEASURED POSITIVE, UNDERPOWERED: at H=126 every book size is positive (yes: worst cell k=200 at +4.09%/yr, best k=50 at +5.24%/yr) and gross grew from +0.28% at H=21 to +2.96% here against an unchanged ~34 bps toll, which is the predicted mechanism. But on NON-OVERLAPPING blocks the t range is +0.75 to +1.33 -- not distinguishable from zero. The monthly t reads higher only because a 126-session return is shared by 6 adjacent monthly blocks. And even that correction is optimistic: at a block width that truly cannot share an outcome this panel holds only 4 blocks, so the honest statement is THE PANEL IS TOO SHORT TO TEST H=126, not 'the t is low'. This is a reason to run it forward in paper at small size, NOT a reason to claim an edge, and NOT a RESEARCH_CLAIM. Incumbent H=21 k=20 was -2.57%/yr.",
+ "verdict": "ONE REGIME, NOT AN EDGE: the best cell at H=126 is +2.62% net per hold, and dropping 2025 alone takes the worst cell to -0.71% per hold. The headline is a single year. Leave-one-year-out is reported on every cell of this receipt precisely so that a number surviving a purge, a survivorship-free panel, a breadth sweep and a corrected error bar still has to survive the cheapest question: WHICH PART OF THE SAMPLE IS IT. This one does not. Do not paper it, do not claim it.",
  "read_me_first": "Compare the PER-YEAR column, never the per-hold one: a 1% edge per 126 sessions is not better than 0.5% per 21, and the per-hold number alone makes it look it."
 }

@@ -3464,9 +3464,9 @@ Receipts: `xs_ranker/bakeoff_fundamentals.json`,
 
 ---
 
-## 61. Holding the same ordering for 126 sessions turns it gross-positive — and this panel is four blocks long, so that is not a result yet (2026-09-24)
+## 61. Holding the same ordering for 126 sessions turns it gross-positive, and the whole of it is 2025 (2026-09-24)
 
-**Status: MEASURED POSITIVE, UNDERPOWERED. Licence: PRODUCT_EXPERIMENT.**
+**Status: MEASURED POSITIVE IN ONE REGIME → the horizon route out of §59 is CLOSED. Licence: PRODUCT_EXPERIMENT.**
 This entry is in NEGATIVE_RESULTS because its headline number is positive and
 its honest conclusion is that nothing has been demonstrated, which is exactly
 the kind of finding this file exists to stop anyone from over-reading later.
@@ -3533,28 +3533,97 @@ correction looks like.
 overlap needs 2H, which on this panel leaves **four blocks**. Four blocks cannot
 support a t-statistic at all.
 
+### AND THEN LEAVE-ONE-YEAR-OUT KILLED IT
+
+Written after the section above, and the section above is left standing as
+written so the sequence is visible: I had a positive number and a careful
+caveat about its error bar, and I had not yet asked the cheapest question in
+this file's own index -- **sample the window before believing the t**.
+
+H=126, k=50, the best cell, 843 rebalance dates spanning 2021-05-13 to
+2026-03-19:
+
+| year | mean net per hold | dates |
+|---|---:|---:|
+| 2021 | **−7.82%** | 162 |
+| 2022 | +2.59% | 126 |
+| 2023 | **−1.17%** | 134 |
+| 2024 | +2.26% | 211 |
+| 2025 | **+13.55%** | 157 |
+| 2026 | **+13.29%** | 53 |
+
+**Leave one year out:**
+
+| dropped | mean net per hold |
+|---|---:|
+| 2021 | +5.11% |
+| 2022 | +2.63% |
+| 2023 | +3.34% |
+| 2024 | +2.74% |
+| **2025** | **+0.12%** |
+| 2026 | +1.91% |
+
+**Drop 2025 and +2.62% becomes +0.12%.** Three of six years are negative or
+flat. The top 5% of dates carry 53.8% of the total and the top 1% carry 14.4%.
+
+And it is not one unlucky cell. With leave-one-year-out computed on every cell of
+the grid, the worst-year-removed number (the one a reader should quote) is:
+
+| H | k=20 | k=50 | k=100 | k=200 |
+|---|---:|---:|---:|---:|
+| 63 | −0.17% | −0.15% | −0.16% | −0.13% |
+| 126 | **−0.71%** | +0.12% | +0.29% | +0.43% |
+
+**Every cell at H=63 is negative once its best year is removed, and the whole
+H=126 row is inside ±0.7% per 126-session hold** — which annualises to under 1%
+either way, on four independent blocks. The entire positive region of the sweep
+is one or two calendar years.
+
+And the mechanism is not mysterious. `composite_prior` is short liquidity, long
+illiquidity, short skew, short short-term reversal -- a small-and-speculative
+tilt. 2025-26 was a strong regime for exactly that. §59 had already written the
+sentence: **the edge IS the illiquidity** (liquid-only collapsed to −0.18%).
+This is the same finding at a longer holding period, and the longer holding
+period did not make it a different finding. It made the regime dependence
+easier to mistake for an edge, because 126-session returns compound the regime
+into a bigger number while reducing the sample to four blocks.
+
 ### What is and is not established
 
-**Established:** gross return on this ordering grows with the holding period far
-faster than the toll does, and the sign of the net result flips from negative to
-positive somewhere between 21 and 42 sessions. The point estimates are unaffected
-by the overlap problem — overlap inflates *precision*, never the mean.
+**Established:** on this panel, the *gross* return of this ordering grows with
+the holding period far faster than the toll does — tenfold from H=21 to H=126
+against an unchanged 34 bps. That arithmetic is real and the point estimates are
+unaffected by the overlap problem; overlap inflates *precision*, never the mean.
 
-**Not established:** that any of it is distinguishable from zero. The honest
-sentence is not "the t is low", it is **the panel is too short to test a
-126-session horizon**. A 1.6-year OOS window holds four independent 252-session
-observations, and no statistic computed on four observations licenses anything.
+**Refuted:** that this constitutes an edge. Its entire magnitude is one regime.
+Excise 2025 and the best cell of the whole grid earns **+0.12% per 126-session
+hold**, which is zero with extra steps. A statistic computed on four independent
+blocks, whose value collapses when one of six years is removed, licenses
+nothing.
 
-**What follows:** this is grounds to run `composite_prior` at H=63–126 forward in
-paper at small size, where every new month is a genuinely new observation, and
-where §59's verdict can be revisited on evidence that accrues instead of
-evidence that is re-sliced. It is **not** an edge, **not** a `CAPITAL_CANDIDATE`,
-and **not** a `RESEARCH_CLAIM`.
+**What follows:** §59 stands, and it stands for the reason §59 already gave —
+the ordering's return lives in illiquidity, and a longer holding period does not
+change what is being bought, only how long it is held while the regime runs. The
+horizon route out of §59 is **closed**: not because holding longer fails to
+raise gross (it does raise it), but because what it raises is the exposure to a
+factor whose payoff over this panel is one bull market in small speculative
+names.
+
+`composite_prior` at a long horizon is **not** a `CAPITAL_CANDIDATE`, **not** a
+`RESEARCH_CLAIM`, and no longer a paper candidate either. The next move remains
+what §59 and §60 both said it was: **a different INPUT.**
 
 ### The lesson that generalises
 
-**A t-statistic whose bias depends on the parameter you are sweeping is not a
-statistic, it is a gradient.** Any sweep over horizon, holding period, or
+**Leave-one-year-out is cheaper than a t-statistic and it answers a better
+question.** I spent the afternoon correcting an error bar — a real error, worth
+correcting — and the correction was irrelevant to whether the result was true.
+One `groupby(year).mean()` over data already in memory settled it, and it was
+the last thing I ran instead of the first. When a number is positive, the first
+question is not *how precise is it* but **which part of the sample is it**.
+
+And: **a t-statistic whose bias depends on the parameter you are sweeping is not
+a statistic, it is a gradient.** Any sweep over horizon, holding period, or
 rebalance frequency must re-derive its blocking from that parameter, or it will
 measure its own estimator and report it as a finding. `n_blocks_strict` now
 travels on every `top_k_backtest` receipt for exactly this reason.
