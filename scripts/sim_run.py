@@ -586,87 +586,424 @@ def u_review(out: Path, *, now_et: datetime | None = None) -> dict:
                if isinstance(v, (int, float, str, bool, type(None)))}}
 
 
-def u_plan(out: Path, mode: str) -> dict:
-    """Ranking -> a book. THE UNIT THAT DID NOT EXIST.
+#: Where `u_plan`'s PROBE decisions are written as contract-shaped rows. A
+#: SUBFOLDER of the decision contract's folder, not a file in it: the top-level
+#: `decisions/<date>.json` is written whole by `decision_contract`, and rows
+#: appended there by a second writer would be lost on its next run. The grader
+#: (`decision_ledger._open_contract_rows`) and `scripts/decision_autopsy.py`
+#: both read this subfolder as well, so the rows are graded like the rest.
+PC_PLAN_SUBDIR = "pc_plan"
+PROBE_POLICY_ID = "sim_run.u_plan.probe"
+PROBE_POLICY_VERSION = "c3-v0"
 
-    The module docstring claimed a cycle was
-    `reconcile -> rank -> plan -> grade -> learn` and the loop called four
-    units. There was no code path from a ranking to a decision at all, so the
-    2026-09-22 session's 144 cycles would have produced zero orders **even with
-    a positive ranking**. Two independent causes of the same nothing, and only
-    one of them was reported. Found by Murat's external review, 2026-09-23.
 
-    What it does every cycle, in both modes:
+def _asof_et() -> str:
+    """The US session date the plan is for (orders only go while it is open)."""
+    return _now_et().date().isoformat()
 
-    * reads the ranking on disk and the broker's actual holdings;
-    * sizes an equal-weight book of the top `BOOK_SIZE` names, through
-      `pc_broker.plan_orders` -- so the mandate limits (no leverage, no shorts,
-      12% per name, 2% of ADV, $250 minimum) apply identically whether or not
-      the orders are sent;
-    * writes `intended_book.json` and appends every plan to `decisions.jsonl`.
 
-    In `observe` it stops there. In `paper_profit` it submits, but only if the
-    ranking's own verdict permits: a MEASURED_NEGATIVE ranking is refused here
-    as well as in the live loop, because "we measured it and it loses" is not
-    uncertainty and spending paper capital on it would teach the learner that
-    losing is normal.
+def _probe_grade(ledger_path: Path | None = None) -> dict:
+    """The SHORTLIST's own forward grade, from SCORED `decision_ledger` rows.
+
+    Not `top20_net_rel_21d`: that number measures the ranker, and the shortlist
+    is a different selector. Graded on the SHORTEST declared PROBE horizon, one
+    decision day counted once (rows from one day are one observation, CANON
+    §58). Below `PROBE_GRADE_MIN_SESSIONS` distinct days the verdict is
+    UNMEASURED_TRADE_SMALL and the plan may trade at the probe cap.
+    """
+    from backend.services import decision_ledger as DL
+    hid = str(_config.PROBE_SHORTLIST_HYPOTHESIS_ID)
+    h = min(int(x) for x in _config.PROBE_HORIZONS_SESSIONS)
+    by_day: dict[str, list[float]] = {}
+    for r in DL.read(ledger_path):
+        d = r.get("detail") or {}
+        if str(r.get("state")) != "SCORED" or not isinstance(d, dict):
+            continue
+        if d.get("hypothesis_id") != hid or d.get("horizon_sessions") != h:
+            continue
+        ex = d.get("excess_return")
+        if ex is None:
+            continue
+        by_day.setdefault(str(r.get("asof"))[:10], []).append(float(ex))
+    need = int(_config.PROBE_GRADE_MIN_SESSIONS)
+    n_days = len(by_day)
+    day_means = [sum(v) / len(v) for v in by_day.values()]
+    mean = (sum(day_means) / n_days) if n_days else None
+    base = {"hypothesis_id": hid, "horizon_sessions": h, "n_days_scored": n_days,
+            "min_days": need, "mean_excess_per_day": mean}
+    if n_days < need:
+        return {**base, "verdict": "UNMEASURED_TRADE_SMALL", "may_trade": True,
+                "why": (f"{n_days} of {need} scored decision days at h={h}: "
+                        f"unmeasured, so it trades at the probe cap")}
+    if mean is not None and mean <= 0:
+        return {**base, "verdict": "MEASURED_NEGATIVE", "may_trade": False,
+                "why": (f"the shortlist's PROBE rows earned {mean*100:+.2f}% "
+                        f"excess per decision day at h={h} over {n_days} days")}
+    return {**base, "verdict": "MEASURED_POSITIVE", "may_trade": True,
+            "why": (f"the shortlist's PROBE rows earned {mean*100:+.2f}% excess "
+                    f"per decision day at h={h} over {n_days} days")}
+
+
+def _daily_sigma(row: dict) -> float:
+    v = row.get("vol_annual")
+    if isinstance(v, (int, float)) and v > 0:
+        return float(v) / (252 ** 0.5)
+    return float(_config.PROBE_REF_DAILY_SIGMA)
+
+
+def probe_worst_case(*, equity: float, n_names: int, weight: float,
+                     daily_sigma: float, label: str) -> dict:
+    """Session protocol item 4, in dollars: `n x notional% x stop_sigma_pct`
+    and `sum|notional| / equity`.
+
+    u_plan declares NO stop order, so two numbers are printed and neither is
+    hidden: the k-sigma session (every name moves `PROBE_WORST_CASE_SIGMA`
+    daily sigmas against the book at once) and the no-stop ceiling (the whole
+    gross notional, since a long cash position can lose all of it).
+    """
+    k = float(_config.PROBE_WORST_CASE_SIGMA)
+    stop_sigma_pct = k * float(daily_sigma)
+    gross = float(n_names) * float(weight)
+    k_sigma_usd = float(n_names) * float(weight) * stop_sigma_pct * float(equity)
+    ceiling_usd = gross * float(equity)
+    return {
+        "label": label, "n_names": int(n_names), "notional_pct": float(weight),
+        "stop_declared": False, "adverse_sigma": k,
+        "daily_sigma": float(daily_sigma), "stop_sigma_pct": stop_sigma_pct,
+        "gross_over_equity": gross, "equity_usd": float(equity),
+        "worst_case_k_sigma_usd": -k_sigma_usd,
+        "worst_case_no_stop_usd": -ceiling_usd,
+        "line": (f"{label}: {int(n_names)} x {weight:.2%} x {stop_sigma_pct:.2%} "
+                 f"({k:g} sigma of {daily_sigma:.2%}/day) = -${k_sigma_usd:,.0f} "
+                 f"on ${equity:,.0f}; sum|notional|/equity = {gross:.2f}; "
+                 f"no stop is declared, so the ceiling is -${ceiling_usd:,.0f}"),
+    }
+
+
+def _pc_plan_dir(contracts_dir: Path | None) -> Path:
+    if contracts_dir is not None:
+        return Path(contracts_dir)
+    from backend.services import decision_contract as DC
+    return Path(DC.DECISIONS_DIR) / PC_PLAN_SUBDIR
+
+
+def _prior_probe_holdings(folder: Path, asof: str) -> set[str]:
+    """Tickers an EARLIER plan was permitted to buy as PROBE. Their exits are
+    PROBE exits: without this, a PROBE position whose name left the shortlist
+    could only ever be sold by the EXPLOIT gate, which is refused."""
+    out: set[str] = set()
+    if not folder.is_dir():
+        return out
+    for p in folder.glob("20[0-9][0-9]-[01][0-9]-[0-3][0-9].json"):
+        if p.stem >= asof:
+            continue
+        try:
+            blob = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for r in blob.get("rows") or []:
+            if r.get("direction") == "PROBE" and r.get("acting"):
+                out.add(str(r.get("ticker")))
+    return out
+
+
+def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
+                           ledger_path: Path | None) -> dict:
+    """Merge today's PROBE rows into `pc_plan/<asof>.json` and write DECIDED.
+
+    Idempotent per `decision_id` (policy, ticker, asof, horizon): the plan runs
+    every cycle, and the FIRST decision of the day is the one graded. A later
+    cycle neither rewrites it nor adds a second ledger row.
+    """
+    from backend.services import decision_ledger as DL
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"{asof}.json"
+    try:
+        blob = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        blob = {"date": asof, "source": "sim_run.u_plan", "rows": []}
+    have = {str(r.get("decision_id")) for r in blob.get("rows") or []}
+    new = [r for r in rows if str(r["decision_id"]) not in have]
+    if new:
+        blob.setdefault("rows", []).extend(new)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(blob, indent=1, default=str), encoding="utf-8")
+        os.replace(tmp, path)
+    recorded, refused = 0, []
+    for r in new:
+        try:
+            DL.record(r["decision_id"], "DECIDED", by="sim_run.u_plan", asof=asof,
+                      path=ledger_path,
+                      detail={"state": "PROBE", "ticker": r["ticker"],
+                              "horizon_sessions": r["horizon_sessions"],
+                              "weight": r["position_budget"]["weight"],
+                              "dollars": r["position_budget"]["dollars"],
+                              "thesis_source": r["thesis_source"],
+                              "hypothesis_id": r["hypothesis_id"],
+                              "ranking_verdict": r["ranking_verdict"],
+                              "probe_verdict": r["probe_verdict"],
+                              "acting": r["acting"], "virtual": r["virtual"],
+                              "contract_file": str(path)})
+            recorded += 1
+        except DL.DecisionLedgerError as exc:
+            refused.append({"decision_id": r["decision_id"], "reason": str(exc)[:200]})
+    return {"file": str(path), "new_rows": len(new), "ledger_decided": recorded,
+            "ledger_refused": refused}
+
+
+def u_plan(out: Path, mode: str, *, asof: str | None = None,
+           funnel_path: Path | None = None, ledger_path: Path | None = None,
+           contracts_dir: Path | None = None) -> dict:
+    """Ranking + committee shortlist -> a book, under EXPLOIT and PROBE.
+
+    THE UNIT THAT DID NOT EXIST (2026-09-23), and then the unit that could not
+    act (2026-09-25). It read only `ranking.json` and refused whenever the
+    ranker's own `top20_net_rel_21d <= 0` -- measured negative since §59 -- so
+    PC-PAPER never placed an order and nothing it could have decided was ever
+    graded. Murat, 2026-09-25: *"make sure the engine makes decisions that we
+    can then later judge."*
+
+    Two sources, two states, two gates (roadmap 2026-09-25 C3, §16.2):
+
+    * EXPLOIT -- the ranker's top `BOOK_SIZE`. The old gate, EXACTLY: the
+      ranking's `top20_net_rel_21d` <= 0 is MEASURED_NEGATIVE and refused.
+    * PROBE -- the committee shortlist (`investment_committee.shortlist`), at
+      most `PROBE_MAX_NAMES` names at `PROBE_MAX_WEIGHT` each, sum <=
+      `PROBE_GROSS_CAP`. NOT gated on the ranker's number (that measures a
+      different selector). Gated on the shortlist's own forward grade
+      (`_probe_grade`) once `PROBE_GRADE_MIN_SESSIONS` decision days are
+      scored; until then UNMEASURED_TRADE_SMALL, which acts at the cap only in
+      `paper_profit`.
+
+    Every PROBE name writes contract-shaped rows (one per
+    `PROBE_HORIZONS_SESSIONS`) to `decisions/pc_plan/<asof>.json` and a
+    `DECIDED` ledger row, so the grader and `decision_autopsy` score them.
+    An empty or refused shortlist is a RED line on the receipt, never silence.
+    Orders go only while the venue clock says open, and never for a symbol that
+    already has an open order (a 5-minute loop would otherwise re-send a queued
+    order every cycle until it fills).
     """
     from backend.services import pc_broker as PB
-    from scripts.live_market_loop import _ranking_verdict
+    from backend.services import investment_committee as IC
+    from backend.services import decision_contract as DC
 
+    asof = asof or _asof_et()
+    folder = _pc_plan_dir(contracts_dir)
+
+    # ---- the ranker (EXPLOIT) -------------------------------------------------
     rank_path = out / "ranking.json"
-    if not rank_path.exists():
-        return {"planned": False, "why": "no ranking on disk yet"}
-    r = json.loads(rank_path.read_text(encoding="utf-8"))
+    r: dict = {}
+    if rank_path.exists():
+        try:
+            r = json.loads(rank_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            r = {}
     top = (r.get("top") or [])[:BOOK_SIZE]
+    net = r.get("top20_net_rel_21d")
     if not top:
-        return {"planned": False, "why": "the ranking carries no names"}
+        verdict = "NO_RANKING"
+        may_trade = False
+    else:
+        verdict = ("MEASURED_NEGATIVE" if (net is not None and net <= 0)
+                   else "MEASURED_POSITIVE" if net is not None
+                   else "UNMEASURED_TRADE_SMALL")
+        may_trade = verdict != "MEASURED_NEGATIVE"
+    exploit_acting = (mode == "paper_profit") and may_trade
+    ranking_verdict = {"verdict": verdict, "top20_net_rel_21d": net,
+                       "ranking_asof": r.get("asof"),
+                       "model_version": r.get("model_version")}
+
+    # ---- the shortlist (PROBE) ------------------------------------------------
+    shortlist_red = None
+    try:
+        sl = IC.shortlist(asof, funnel_path=funnel_path)
+    except IC.ShortlistRefused as exc:
+        sl, shortlist_red = [], f"shortlist: 0, REFUSED: {exc}"
+    if not sl and shortlist_red is None:
+        shortlist_red = ("shortlist: 0, reason: the funnel's candidate file is "
+                         "fresh and EMPTY -- no PROBE decision can be made today")
+    exploit_syms = [x["symbol"] for x in top]
+    probe_rows = [x for x in sl if not (exploit_acting and x["ticker"] in exploit_syms)]
+    probe_rows = probe_rows[:int(_config.PROBE_MAX_NAMES)]
+    n_probe = len(probe_rows)
+    w_probe = (min(float(_config.PROBE_MAX_WEIGHT),
+                   float(_config.PROBE_GROSS_CAP) / n_probe) if n_probe else 0.0)
+    probe_gross = n_probe * w_probe
+    grade = _probe_grade(ledger_path)
+    probe_acting = (mode == "paper_profit") and grade["may_trade"] and n_probe > 0
 
     snap = PB.snapshot(tag="plan", out_dir=out)
+    equity = float(snap["equity"])
     held = {p["symbol"]: p["qty"] for p in snap["positions"]}
-    w = 1.0 / len(top)
-    targets = [PB.Target(symbol=x["symbol"], weight=w, rank=x.get("rank"),
+
+    probe_syms = [x["ticker"] for x in probe_rows]
+    ex_syms = [s for s in exploit_syms if s not in probe_syms]
+    w_ex = (max(0.0, 1.0 - probe_gross) / len(ex_syms)) if ex_syms else 0.0
+    targets = [PB.Target(symbol=x["symbol"], weight=w_ex, rank=x.get("rank"),
                          expected_relative_return_21d=x.get("expected_relative_return_21d_net"),
                          median_dollar_vol=None,
-                         reason=f"rank {x.get('rank')} decile {x.get('decile')}")
-               for x in top]
-    prices = PB.last_prices([t.symbol for t in targets] + list(held))
-    plans = PB.plan_orders(targets, equity=snap["equity"], held=held, prices=prices)
+                         reason=f"EXPLOIT rank {x.get('rank')} decile {x.get('decile')}")
+               for x in top if x["symbol"] in ex_syms]
+    targets += [PB.Target(symbol=x["ticker"], weight=w_probe,
+                          median_dollar_vol=x.get("median_dollar_vol"),
+                          reason=f"PROBE shortlist score {x.get('score')} ({x['source']})")
+                for x in probe_rows]
+    syms = [t.symbol for t in targets] + list(held)
+    prices = PB.last_prices(syms) if syms else {}
+    plans = PB.plan_orders(targets, equity=equity, held=held, prices=prices) if syms else []
 
-    # The same gate the live loop applies, read from the ranking's own receipt.
-    net = r.get("top20_net_rel_21d")
-    verdict = ("MEASURED_NEGATIVE" if (net is not None and net <= 0)
-               else "MEASURED_POSITIVE" if net is not None
-               else "UNMEASURED_TRADE_SMALL")
-    may_trade = verdict != "MEASURED_NEGATIVE"
-    acting = (mode == "paper_profit") and may_trade
+    prior_probe = _prior_probe_holdings(folder, asof)
 
-    record = {"t": _now(), "mode": mode, "verdict": verdict, "acting": acting,
-              "equity": snap["equity"], "n_targets": len(targets),
+    def _state(sym: str) -> str:
+        if sym in probe_syms:
+            return "PROBE"
+        if sym in ex_syms:
+            return "EXPLOIT"
+        return "PROBE_EXIT" if sym in prior_probe else "EXIT"
+
+    def _may_send(p) -> bool:
+        st = _state(p.symbol)
+        return p.qty > 0 and ((st in ("PROBE", "PROBE_EXIT") and probe_acting)
+                              or (st in ("EXPLOIT", "EXIT") and exploit_acting))
+
+    by_state: dict[str, int] = {}
+    for p in plans:
+        if p.qty > 0:
+            by_state[_state(p.symbol)] = by_state.get(_state(p.symbol), 0) + 1
+
+    # ---- the worst case, in dollars, on every receipt (protocol item 4) -------
+    sig_all = [_daily_sigma(x) for x in sl] or [float(_config.PROBE_REF_DAILY_SIGMA)]
+    n_max = int(_config.PROBE_MAX_NAMES)
+    w_max = min(float(_config.PROBE_MAX_WEIGHT), float(_config.PROBE_GROSS_CAP) / n_max)
+    wc_admissible = probe_worst_case(
+        equity=equity, n_names=n_max, weight=w_max, daily_sigma=max(sig_all),
+        label="largest admissible PROBE book")
+    wc_planned = probe_worst_case(
+        equity=equity, n_names=n_probe, weight=w_probe,
+        daily_sigma=max([_daily_sigma(x) for x in probe_rows] or sig_all),
+        label="planned PROBE book")
+    book_gross = sum(t.weight for t in targets
+                     if (t.symbol in probe_syms and probe_acting)
+                     or (t.symbol in ex_syms and exploit_acting))
+
+    # ---- the decisions, graded later ------------------------------------------
+    by_sym = {p.symbol: p for p in plans}
+    expiries = {int(h): DC.sessions_expiry(date.fromisoformat(asof), int(h))
+                for h in _config.PROBE_HORIZONS_SESSIONS}
+    hid = str(_config.PROBE_SHORTLIST_HYPOTHESIS_ID)
+    rows: list[dict] = []
+    for x in probe_rows:
+        p = by_sym.get(x["ticker"])
+        px = prices.get(x["ticker"])
+        for h, (expiry, basis) in sorted(expiries.items()):
+            row = {
+                "decision_id": DC.decision_id(
+                    policy_id=PROBE_POLICY_ID, policy_version=PROBE_POLICY_VERSION,
+                    ticker=x["ticker"], asof=asof, horizon_sessions=h),
+                "asof": asof, "policy_id": PROBE_POLICY_ID,
+                "policy_version": PROBE_POLICY_VERSION,
+                "information_cutoff_utc": x["source"].split("@", 1)[-1],
+                "licence": "PRODUCT_EXPERIMENT", "ticker": x["ticker"],
+                "source": "investment_committee",
+                "thesis_source": x["source"],
+                "reasons": list(x.get("reasons") or [])[:6],
+                "shortlist_score": x.get("score"),
+                "direction": "PROBE", "authority": "PROBE",
+                "hypothesis_id": hid, "horizon_sessions": h,
+                "horizon": {"sessions": h, "basis": "config.PROBE_HORIZONS_SESSIONS"},
+                "expiry_utc": expiry, "expiry_basis": basis,
+                "mode": mode, "acting": probe_acting, "virtual": not probe_acting,
+                "position_budget": {
+                    "weight": w_probe, "dollars": w_probe * equity,
+                    "shares": int(p.target_qty) if p else 0, "price": px,
+                    "capital_usd": equity, "virtual": not probe_acting,
+                    "basis": ("config.PROBE_MAX_WEIGHT / PROBE_GROSS_CAP; "
+                              "orders only while the venue is open")},
+                "ranking_verdict": ranking_verdict,
+                "probe_verdict": {k: grade[k] for k in ("verdict", "n_days_scored", "min_days")},
+                "maximum_loss": probe_worst_case(
+                    equity=equity, n_names=1, weight=w_probe,
+                    daily_sigma=_daily_sigma(x), label=f"PROBE {x['ticker']}"),
+                "built_utc": _now(),
+            }
+            row["artifact_sha256"] = DC.seal(row)
+            rows.append(row)
+    ledger = (_write_probe_decisions(rows, asof=asof, folder=folder,
+                                     ledger_path=ledger_path)
+              if rows else {"new_rows": 0, "ledger_decided": 0})
+
+    # ---- send ------------------------------------------------------------------
+    to_send = [p for p in plans if _may_send(p)]
+    sent: list[dict] = []
+    send_block = None
+    if to_send:
+        try:
+            is_open = bool((PB.clock() or {}).get("is_open"))
+        except PB.BrokerError as exc:
+            is_open, send_block = False, f"venue clock unreadable: {str(exc)[:120]}"
+        if not is_open:
+            send_block = send_block or "venue closed: orders wait for the open"
+        else:
+            try:
+                open_syms = {o.get("symbol") for o in PB.orders(status="open")}
+            except PB.BrokerError as exc:
+                open_syms, send_block = None, f"open orders unreadable: {str(exc)[:120]}"
+            if open_syms is not None:
+                for p in to_send:
+                    if p.symbol in open_syms:
+                        sent.append({"status": "skipped", "symbol": p.symbol,
+                                     "why": "an order for this symbol is already open"})
+                        continue
+                    try:
+                        res = PB.submit(p)
+                        res["state"] = _state(p.symbol)
+                        sent.append(res)
+                    except PB.BrokerError as exc:
+                        sent.append({"status": "FAILED", "symbol": p.symbol,
+                                     "state": _state(p.symbol), "error": str(exc)[:200]})
+
+    acting = exploit_acting or probe_acting
+    record = {"t": _now(), "asof": asof, "mode": mode,
+              "verdict": verdict, "acting": acting,
+              "exploit_acting": exploit_acting,
+              "probe_verdict": grade["verdict"], "probe_acting": probe_acting,
+              "probe_grade": grade,
+              "equity": equity, "n_targets": len(targets),
+              "n_considered": len(set(exploit_syms) | {x["ticker"] for x in sl}),
+              "shortlist": len(sl), "shortlist_red": shortlist_red,
+              "n_probe": n_probe, "probe_weight": w_probe, "probe_gross": probe_gross,
               "n_orders": sum(1 for p in plans if p.qty > 0),
+              "orders_by_state": by_state,
+              "sendable_by_state": {st: sum(1 for p in to_send if _state(p.symbol) == st)
+                                    for st in ("PROBE", "PROBE_EXIT", "EXPLOIT", "EXIT")},
+              "n_to_send": len(to_send), "send_block": send_block,
               "turnover_usd": sum(p.notional for p in plans if p.qty > 0),
+              "worst_case": {"largest_admissible": wc_admissible,
+                             "planned_probe": wc_planned,
+                             "acting_book_gross_over_equity": book_gross},
+              "worst_case_line": wc_admissible["line"],
+              "decisions": ledger,
               "refusals": [{"symbol": p.symbol, "refused": p.refused}
                            for p in plans if p.refused][:10],
               "book": [{"rank": t.rank, "symbol": t.symbol, "weight": t.weight,
+                        "state": _state(t.symbol),
                         "expected_relative_return_21d": t.expected_relative_return_21d}
-                       for t in targets]}
-
-    if acting:
-        sent = []
-        for p in plans:
-            if p.qty <= 0:
-                continue
-            try:
-                sent.append(PB.submit(p))
-            except PB.BrokerError as exc:
-                sent.append({"status": "FAILED", "symbol": p.symbol,
-                             "error": str(exc)[:200]})
-        record["sent"] = sent
-    else:
-        record["sent"] = []
-        record["why_not"] = (
-            f"mode={mode}" if mode != "paper_profit"
-            else f"ranking verdict {verdict}: refusing to buy a measured negative")
+                       for t in targets],
+              "sent": sent}
+    if not to_send:
+        why = []
+        if mode != "paper_profit":
+            why.append(f"mode={mode}")
+        else:
+            if not exploit_acting:
+                why.append(f"EXPLOIT: ranking verdict {verdict}: refusing to buy "
+                           f"a measured negative" if verdict == "MEASURED_NEGATIVE"
+                           else f"EXPLOIT: ranking verdict {verdict}")
+            if not probe_acting:
+                why.append(f"PROBE: {shortlist_red or grade['why']}")
+        record["why_not"] = "; ".join(why) or "nothing to trade"
+    if shortlist_red:
+        logger.warning("u_plan RED: %s", shortlist_red[:200])
 
     (out / "intended_book.json").write_text(
         json.dumps(record, indent=1, default=str), encoding="utf-8")
@@ -674,8 +1011,22 @@ def u_plan(out: Path, mode: str) -> dict:
         fh.write(json.dumps(record, default=str) + "\n")
 
     return {"planned": True, "verdict": verdict, "acting": acting,
-            "n_orders": record["n_orders"], "turnover_usd": record["turnover_usd"],
-            "top1": targets[0].symbol}
+            "exploit_acting": exploit_acting,
+            "probe_verdict": grade["verdict"], "probe_acting": probe_acting,
+            "shortlist": len(sl), "shortlist_red": shortlist_red,
+            "n_considered": record["n_considered"], "n_probe": n_probe,
+            "n_orders": record["n_orders"],
+            # PERMITTED to be sent (acting gate applied), not merely planned:
+            # the would-be EXPLOIT book is still planned and printed when its
+            # gate refuses it, as it always was.
+            "n_probe_orders": sum(1 for p in to_send if _state(p.symbol) == "PROBE"),
+            "n_exploit_orders": sum(1 for p in to_send if _state(p.symbol) == "EXPLOIT"),
+            "n_sent": sum(1 for s in sent if s.get("status") == "submitted"),
+            "send_block": send_block,
+            "turnover_usd": record["turnover_usd"],
+            "worst_case_line": wc_admissible["line"],
+            "decisions_new": ledger.get("new_rows", 0),
+            "top1": targets[0].symbol if targets else None}
 
 
 def u_grade() -> dict:

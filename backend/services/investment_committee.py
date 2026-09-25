@@ -169,6 +169,82 @@ def _risk_factors(rec: Any, cand: dict) -> list[str]:
     return out
 
 
+
+class ShortlistRefused(RuntimeError):
+    """The funnel's candidate file cannot be used as a decision input today."""
+
+
+def _asof_reference(asof: Any) -> datetime:
+    """The instant a snapshot's age is measured against for `asof`.
+
+    A DATE means the END of that day in UTC: a funnel generated at 02:48Z on the
+    same date is 0-1 days old, not negative. A datetime is used as given.
+    """
+    if asof is None:
+        return datetime.now(timezone.utc)
+    if isinstance(asof, datetime):
+        return asof if asof.tzinfo else asof.replace(tzinfo=timezone.utc)
+    try:
+        from datetime import date as _date, time as _time
+        d = asof if isinstance(asof, _date) else _date.fromisoformat(str(asof)[:10])
+        return datetime.combine(d, _time(23, 59, 59), timezone.utc)
+    except (TypeError, ValueError) as exc:
+        raise ShortlistRefused(f"asof {asof!r} is not a date: {exc}") from exc
+
+
+def shortlist(asof: Any = None, *, funnel_path: Optional[Path] = None) -> list[dict]:
+    """The committee's candidate set as plain rows -- PURE, no router, no cache.
+
+    Each row: ``ticker, score, source, reasons`` (plus ``median_dollar_vol``
+    and ``vol_annual`` when the funnel carries them, because a sizer needs the
+    first for the ADV cap and a worst-case line needs the second). Ordered by
+    the funnel's own score, best first.
+
+    REFUSES (raises `ShortlistRefused`) rather than degrading, unlike
+    `funnel_state`: this feeds ORDERS, and a stale candidate set is the
+    2026-09-22 failure (a 42-day-old file ranked for six weeks). Refused when
+    the file is missing or unreadable, when `generated_at` is undateable or
+    older than `FUNNEL_STALE_DAYS` (`funnel_staleness`), and when the snapshot
+    is dated AFTER `asof` -- a candidate set from the future is lookahead. An
+    EMPTY candidate list is returned as `[]`, not raised: the caller must report
+    it red, which it can only do if it is told.
+    """
+    path = Path(funnel_path or config.IC_FUNNEL_PATH)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ShortlistRefused(
+            f"funnel file {path} unreadable ({type(exc).__name__}: {exc})") from exc
+    generated_at = payload.get("generated_at")
+    ref = _asof_reference(asof)
+    stale = funnel_staleness(generated_at, now=ref)
+    if stale:
+        raise ShortlistRefused(stale)
+    age = _funnel_age_days(generated_at, now=ref)
+    if age is not None and age < 0:
+        raise ShortlistRefused(
+            f"funnel snapshot generated {generated_at} is AFTER asof {asof}: a "
+            f"candidate set from the future is lookahead, refused")
+    basis = payload.get("evidence_basis") or {}
+    ranked_by = ",".join(basis.get("ranked_by") or []) or "unspecified"
+    source = f"funnel:{ranked_by}@{str(generated_at)[:19]}"
+    rows: list[dict] = []
+    for c in payload.get("candidates") or []:
+        t = str(c.get("ticker") or "").strip().upper()
+        if not t:
+            continue
+        sc = c.get("score")
+        rows.append({
+            "ticker": t,
+            "score": float(sc) if isinstance(sc, (int, float)) else None,
+            "source": source,
+            "reasons": list(c.get("why") or []),
+            "median_dollar_vol": c.get("median_dollar_vol"),
+            "vol_annual": c.get("vol_annual"),
+        })
+    rows.sort(key=lambda r: -(r["score"] if r["score"] is not None else -math.inf))
+    return rows
+
 def build_page(funnel_path: Path) -> dict:
     """The strict committee page. RAISES on a dirty ranking gate.
 

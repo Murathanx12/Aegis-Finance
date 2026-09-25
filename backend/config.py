@@ -1879,6 +1879,42 @@ PROBE_MIN_BLOCKS = 6
 #: seeded from the hypothesis id and the horizon, so a panel read reproduces.
 PROBE_BOOTSTRAP_DRAWS = 200
 
+# ── PROBE on the PC-PAPER account (chunk C3, 2026-09-25) ───────────────────
+# §16.2's PROBE row is VIRTUAL ($0). C3 is a different thing wearing the same
+# state name on purpose: the committee SHORTLIST reaching `sim_run.u_plan` as
+# real PAPER orders, small, so that the shortlist's own forward grade can
+# exist. No cap for paper PROBE orders was registered before this block, so
+# these three are the registration. They are RISK LIMITS, not preferences:
+# they live here and not in `policy_state`, which the night may move.
+#
+# Worst case for the largest admissible PROBE book (session protocol item 4),
+# printed on every plan receipt in dollars, not only here:
+#   n x notional% = 10 x 2% = 20% gross = PROBE_GROSS_CAP (Σ|notional|/equity
+#   0.20). u_plan declares NO stop, so the ceiling is the whole 20% of equity
+#   ($200,000 on the $1,000,000 PC-PAPER account); a PROBE_WORST_CASE_SIGMA
+#   session with every name moving together is 20% x 3 x daily sigma
+#   (~2.2%/day at the funnel's ~35%/yr vol) ~ 1.3% of equity (~$13,000).
+#: Largest weight one PROBE name may carry, fraction of equity.
+PROBE_MAX_WEIGHT = 0.02
+#: Most PROBE names held from one plan (best shortlist score first). Not the
+#: same number as PROBE_MAX_NAMES_PER_DAY (200 VIRTUAL contract rows).
+PROBE_MAX_NAMES = 10
+#: Σ PROBE weight ceiling. n x weight is clipped to this, never exceeds it.
+PROBE_GROSS_CAP = 0.20
+#: The adverse session the plan receipt prices in dollars, in DAILY SIGMAS of
+#: each name (stops are quoted in sigma, not percent: 2026-09-24's -2% stop was
+#: 0.93 sigma on the median name and stopped out 89% of trades).
+PROBE_WORST_CASE_SIGMA = 3.0
+#: Daily sigma used when a shortlist row carries no `vol_annual`: the measured
+#: median name, 2.16%/day (2026-09-24, fleet counterfactual on real bars).
+PROBE_REF_DAILY_SIGMA = 0.0216
+#: The shortlist's own forward grade becomes MEASURED at this many distinct
+#: decision days carrying a SCORED `decision_ledger` row for the C3 PROBE
+#: hypothesis; below it the verdict is UNMEASURED_TRADE_SMALL.
+PROBE_GRADE_MIN_SESSIONS = 21
+#: The hypothesis every C3 PROBE row is written under; the grade joins on it.
+PROBE_SHORTLIST_HYPOTHESIS_ID = "C3_committee_shortlist_probe_v0"
+
 #: WHICH REFUSALS ARE AN ABSENCE OF MEASUREMENT rather than evidence
 #: (chunk 23a-ii). A refused, ranked name whose refusal means one of these
 #: becomes PROBE at the contract level: weight 0, a virtual row per horizon,

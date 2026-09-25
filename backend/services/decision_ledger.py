@@ -495,7 +495,12 @@ def _open_contract_rows(*, day: date, out_dir: Path | None,
                if str(r.get("state")) == "SCORED"}
     floor = day - timedelta(days=366)
     rows: list[dict] = []
-    for p in sorted(folder.glob("*.json")):
+    # `pc_plan/` holds `sim_run.u_plan`'s PROBE rows (chunk C3, 2026-09-25):
+    # the same row shape in a subfolder, because the top-level files are
+    # written whole by `decision_contract` and a second writer's rows appended
+    # there would be lost on its next run.
+    files = sorted(folder.glob("*.json")) + sorted((folder / "pc_plan").glob("*.json"))
+    for p in files:
         try:
             stamp = date.fromisoformat(p.stem)
         except ValueError:

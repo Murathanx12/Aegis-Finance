@@ -163,6 +163,21 @@ def _case_charter():
         ExportRefused, "export with no transfer evidence behind it")
 
 
+
+def _case_investment_committee():
+    import json, tempfile
+    from pathlib import Path as _P
+    from backend.services.investment_committee import ShortlistRefused, shortlist
+    # The missing input is a DATEABLE candidate set. A funnel snapshot with no
+    # `generated_at` has UNKNOWN age; `shortlist` feeds paper orders (chunk C3),
+    # so it refuses rather than treat an undateable file as fresh -- the
+    # 2026-09-22 failure was a 42-day-old file nobody could see was old.
+    f = _P(tempfile.mkdtemp()) / "funnel.json"
+    f.write_text(json.dumps({"generated_at": None, "candidates": []}),
+                 encoding="utf-8")
+    return (lambda: shortlist("2026-01-05", funnel_path=f), ShortlistRefused,
+            "a funnel snapshot with no generated_at stamp")
+
 def _case_portfolio_factory():
     from backend.services.portfolio_factory import ArchetypeRefused, build
     from backend.services import portfolio_factory as pf
@@ -1324,6 +1339,7 @@ def _case_fundamental_features():
 
 
 CASES = {
+    "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
     "web_events": _case_web_events,
     "openclaw_client": _case_openclaw_client,
