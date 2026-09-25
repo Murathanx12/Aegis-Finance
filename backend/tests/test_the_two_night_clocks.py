@@ -93,7 +93,7 @@ def test_the_measured_efficiency_IS_a_wall_clock_speedup(r):
     assert m["measured_efficiency"] == pytest.approx(3.529, abs=0.01)
 
 
-def test_the_modelled_serial_branch_was_safe_only_BY_CANCELLATION(r):
+def test_the_modelled_serial_branch_was_safe_only_BY_CANCELLATION(r, tmp_path):
     """The finding that moved the decision basis.
 
     The serial branch was adopted as "a verdict that needs no unverifiable
@@ -105,9 +105,16 @@ def test_the_modelled_serial_branch_was_safe_only_BY_CANCELLATION(r):
     """
     m = r["timing"]["measured"]
     true_serial_min = m["mean_cell_serial_seconds"] * m["n_cells_measured"] / 60.0
+    # calls/cell is derived from THIS receipt alone, through the production
+    # derivation. Reading the live receipts dir made the test a function of
+    # whichever later nights happen to be on disk (a 2026-09-24 night lifted the
+    # max 7.12 -> 7.14 and `modelled` to 207.06); the claim is about Night 1.
+    (tmp_path / RECEIPT.name).write_text(RECEIPT.read_text(encoding="utf-8"), encoding="utf-8")
+    cpc = N.derive_calls_per_cell(receipts_dir=tmp_path)["value"]
+    assert cpc == pytest.approx(r["calls"] / (len(r["tickers"]) * len(r["per_arm"])), abs=1e-9)
+    assert cpc == pytest.approx(7.085, abs=1e-3)
     modelled = N.projected_night_minutes(
-        k=40, n_arms=5, arm_concurrency=1,
-        calls_per_cell=N.derive_calls_per_cell()["value"])
+        k=40, n_arms=5, arm_concurrency=1, calls_per_cell=cpc)
     actual = r["elapsed_s"] / 60.0
 
     assert true_serial_min == pytest.approx(407.0, abs=2.0)
@@ -116,7 +123,7 @@ def test_the_modelled_serial_branch_was_safe_only_BY_CANCELLATION(r):
         "the modelled serial is meant to be a pessimistic bound and is half the "
         "measured serial cost")
     # The cancellation, as an identity: conservatism == speedup / latency error.
-    implied_latency = m["mean_cell_serial_seconds"] / (5 * 7.085)
+    implied_latency = m["mean_cell_serial_seconds"] / (5 * cpc)
     latency_error = implied_latency / N.MEASURED_CALL_SECONDS
     assert latency_error == pytest.approx(1.98, abs=0.05)
     assert (m["measured_efficiency"] / latency_error

@@ -138,12 +138,47 @@ def test_the_benchmark_is_subtracted_not_ignored(tmp_path, monkeypatch):
     assert np.nanmax(np.abs(flat)) == pytest.approx(0.0, abs=1e-12)
 
 
+def test_the_vintage_check_can_go_both_ways(tmp_path, monkeypatch):
+    """A gate that can only say 'different vintage' would skip the exact checks
+    forever. On toy bars it must say MATCH for a panel built on them, and
+    MISMATCH once SPY is re-pulled."""
+    bars = _toy_bars(tmp_path)
+    monkeypatch.setattr(m, "BARS", bars)
+    dates = pd.bdate_range("2025-03-03", periods=12)
+    rows = pd.DataFrame({"entry_date": dates, "r_oc": 0.01, "x_oc": 0.01})  # SPY o->c is 0
+    assert m.bars_vintage_check(rows)["matches_panel_build"] is True
+    b = pd.read_parquet(bars)
+    b.loc[b["symbol"] == "SPY", "close"] = 400.04          # a re-pull moves SPY by 1bp
+    b.to_parquet(bars)
+    v = m.bars_vintage_check(rows)
+    assert v["matches_panel_build"] is False and v["spy_leg_dates_over_tol"] == 12
+    assert "CANNOT DETERMINE" in m.bars_vintage_check(rows[["entry_date", "x_oc"]])["status"]
+
+
+def _skip_unless_the_bars_are_the_panels_vintage(vintage: dict) -> None:
+    """The exact checks below are claims about ONE bar vintage. The panel records
+    no bars fingerprint, so the vintage is read from the panel's own benchmark leg
+    (`m.bars_vintage_check`, which does not go through the label code). On a
+    re-pulled bar file the gap is a statement about pull date, not about the label
+    definition -- CLAUDE.md protocol items 5 and 7 -- so it is a SKIP that names
+    both vintages, never a loosened tolerance."""
+    assert "matches_panel_build" in vintage, f"the vintage was not determined: {vintage}"
+    if not vintage["matches_panel_build"]:
+        pytest.skip(
+            "panel built on a different bars vintage than the local bars.parquet: the SPY leg "
+            f"it subtracted differs from local SPY bars on {vintage['spy_leg_dates_over_tol']} of "
+            f"{vintage['spy_leg_dates']} dates (max {vintage['spy_leg_max_abs_diff']:.2e}, "
+            f"median {vintage['spy_leg_median_abs_diff']:.2e}); re-build the panel on these bars "
+            "or restore the build vintage to run the exact check")
+
+
 def test_horizon_1_reconstructs_the_panels_own_x_oc():
     """One code path for every horizon, checked against the column it replaces."""
     if not PANEL.is_file() or not m.BARS.is_file():
         pytest.skip("the 2025-26 panel or its bars are not on this checkout")
-    p = pd.read_parquet(PANEL, columns=["symbol", "entry_date", "x_oc"])
+    p = pd.read_parquet(PANEL, columns=["symbol", "entry_date", "x_oc", "r_oc"])
     p["entry_date"] = pd.to_datetime(p["entry_date"]).dt.normalize()
+    _skip_unless_the_bars_are_the_panels_vintage(m.bars_vintage_check(p))
     syms = set(p["symbol"].unique())
     lab = m._horizon_labels(syms, 1)
     j = p.merge(lab, on=["symbol", "entry_date"], how="inner").dropna()
@@ -167,9 +202,16 @@ def test_the_label_vintage_gap_is_measured_not_assumed():
     is the same one the test reads."""
     if not PANEL.is_file() or not m.BARS.is_file():
         pytest.skip("the 2025-26 panel or its bars are not on this checkout")
-    p = pd.read_parquet(PANEL, columns=["symbol", "entry_date", "x_oc"])
+    p = pd.read_parquet(PANEL, columns=["symbol", "entry_date", "x_oc", "r_oc"])
     p["entry_date"] = pd.to_datetime(p["entry_date"]).dt.normalize()
     chk = m.label_reconstruction_check(p)
+    # the receipt REPORTS the gap and which vintage it was measured across, on
+    # every vintage -- this part is never skipped
+    for k in ("rows", "median_abs_diff", "max_abs_diff", "rows_over_1e_6", "share_over_1e_6",
+              "bars_vintage"):
+        assert k in chk, f"label_reconstruction_check dropped {k!r}: the gap would be hidden"
+    assert chk["rows"] > 10_000
+    _skip_unless_the_bars_are_the_panels_vintage(chk["bars_vintage"])
     assert chk["median_abs_diff"] == pytest.approx(0.0, abs=1e-9)
     assert 0.0 < chk["share_over_1e_6"] < 0.20
     assert chk["max_abs_diff"] < 5e-3

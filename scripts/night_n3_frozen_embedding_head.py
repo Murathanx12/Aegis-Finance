@@ -232,7 +232,51 @@ def _horizon_labels(symbols: set, horizon: int) -> pd.DataFrame:
     return out[["symbol", "entry_date", f"x_oc_h{horizon}"]]
 
 
-def label_reconstruction_check(cells: pd.DataFrame) -> dict:
+BENCHMARK_LEG_TOL = 1e-9
+
+
+def bars_vintage_check(rows: pd.DataFrame) -> dict:
+    """Is the local bar file the VINTAGE the panel was built from?
+
+    The panel records neither a bars fingerprint nor a build date, so the
+    vintage is read from the panel itself: `r_oc - x_oc` is the SPY open-to-close
+    the panel subtracted on each date, and on the build vintage it reconciled
+    with SPY's own bars EXACTLY on every date (2026-09-13, 424 dates). This
+    comparison does not go through `_horizon_labels`, so a change to the label
+    code cannot make it pass or fail -- only a re-pulled bar file can. When it
+    fails, the one-session reconstruction is measuring two vintages, not one
+    definition, and an exact check against it would be a check on pull date.
+    """
+    if not {"entry_date", "r_oc", "x_oc"} <= set(rows.columns):
+        return {"status": "CANNOT DETERMINE -- rows carry no r_oc, so the benchmark leg "
+                          "the panel subtracted cannot be separated"}
+    leg = rows[["entry_date", "r_oc", "x_oc"]].copy()
+    leg["entry_date"] = pd.to_datetime(leg["entry_date"]).dt.normalize()
+    leg["spy_panel"] = leg["r_oc"].astype(float) - leg["x_oc"].astype(float)
+    leg = leg[np.isfinite(leg["spy_panel"].to_numpy(dtype=float))]
+    per_date = leg.groupby("entry_date")["spy_panel"].median()
+    b = pd.read_parquet(BARS, columns=["symbol", "date", "open", "close"])
+    b = b[b["symbol"] == "SPY"]
+    now = pd.Series((b["close"] / b["open"] - 1.0).to_numpy(dtype=float),
+                    index=pd.to_datetime(b["date"]).dt.normalize().to_numpy())
+    j = pd.concat([per_date.rename("panel"), now.rename("bars")], axis=1, join="inner").dropna()
+    if not len(j):
+        return {"status": "CANNOT DETERMINE -- no panel date has a SPY bar"}
+    d = (j["panel"] - j["bars"]).abs().to_numpy(dtype=float)
+    return {
+        "spy_leg_dates": int(len(d)),
+        "spy_leg_dates_over_tol": int((d > BENCHMARK_LEG_TOL).sum()),
+        "spy_leg_max_abs_diff": float(d.max()),
+        "spy_leg_median_abs_diff": float(np.median(d)),
+        "tol": BENCHMARK_LEG_TOL,
+        "matches_panel_build": bool((d <= BENCHMARK_LEG_TOL).all()),
+        "note": ("SPY open-to-close the panel subtracted vs SPY open-to-close in the local bars. "
+                 "False means the bars were re-pulled after the panel was built, so the label "
+                 "reconstruction gap below is a vintage gap, not a definition gap."),
+    }
+
+
+def label_reconstruction_check(cells: pd.DataFrame, panel_rows: pd.DataFrame | None = None) -> dict:
     """How far the RECONSTRUCTED one-session label is from the panel's own `x_oc`.
 
     It is not zero, and the receipt says so rather than the code hiding it. On
@@ -255,7 +299,9 @@ def label_reconstruction_check(cells: pd.DataFrame) -> dict:
     fin = d[np.isfinite(d)]
     if not len(fin):
         return {"status": "CANNOT DETERMINE -- no cell joined a current bar"}
+    src = panel_rows if panel_rows is not None else cells
     return {
+        "bars_vintage": bars_vintage_check(src),
         "rows": int(len(fin)),
         "median_abs_diff": float(np.median(fin)),
         "max_abs_diff": round(float(fin.max()), 8),
@@ -346,7 +392,7 @@ def load_cells(smoke: bool = False, horizon: int = 1, smoke_symbols: int = SMOKE
                              f"SPY-excess cumulative return, entry-session OPEN to the CLOSE of "
                              f"session +{horizon - 1} ({horizon} sessions held)"),
         "cells_lost_to_short_forward_window": int(cells_before_label - before),
-        "label_reconstruction_check": label_reconstruction_check(cells),
+        "label_reconstruction_check": label_reconstruction_check(cells, panel_rows=df),
         "pit_check": pit,
         "panel_rows_used": int(len(df)),
         "unique_texts": int(len(corpus)),
