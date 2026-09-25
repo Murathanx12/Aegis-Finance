@@ -3685,6 +3685,94 @@ FORECAST_TOP_REVISION_NAMES = 20
 FORECAST_UNIT_TIMEOUT_S = 7200
 
 
+# ── BOOK FACTORY / LLM PORTFOLIO BOOKS (Builder O2, 2026-09-25) ─────────────
+# `llm_portfolio.freeze` constraints by `kind`, the twins' theme ETFs, the
+# global price cache and the book factory's spend cap. Read by
+# `backend/services/llm_portfolio.py`, `backend/services/global_prices.py` and
+# `scripts/book_factory.py`.
+
+#: The Bloomberg Global Trading Challenge contract, as far as a freeze can check
+#: it. WLS membership itself is NOT checked here (chunk K's competition_book).
+BOOK_COMPETITION_MAX_WEIGHT = 0.10
+BOOK_COMPETITION_MIN_NAMES = 8
+BOOK_COMPETITION_MAX_CASH = 0.02
+BOOK_COMPETITION_OBJECTIVE_MUST_NAME = "Relative P&L vs WLS"
+BOOK_COMPETITION_OBJECTIVE = "Relative P&L vs WLS, 2026-10-12 to 2026-11-13"
+BOOK_PERSONAL_OBJECTIVE = "maximise 126-session return vs SPY, net of costs"
+
+#: The WLS series is not on this machine. URTH (iShares MSCI World) is the
+#: PROXY: developed markets only, large/mid only, so it omits EM and small caps
+#: that WLS holds. Every competition grade prints this caveat.
+BOOK_WLS_PROXY = "URTH"
+BOOK_WLS_PROXY_CAVEAT = (
+    "URTH (MSCI World: developed, large/mid) is a PROXY for Bloomberg WLS "
+    "(World Large/Mid/Small incl. EM). Tracking error is UNMEASURED; the "
+    "challenge portal's number is the truth, this is not.")
+
+#: Exchange suffixes (yfinance convention) that the US bars panel never holds.
+BOOK_GLOBAL_SUFFIXES = (".TW", ".KS", ".T", ".HK", ".AS", ".PA", ".DE", ".L",
+                        ".ST", ".OL", ".MI", ".TO", ".AX", ".SW", ".KQ", ".SS",
+                        ".SZ", ".NS", ".CO", ".HE", ".BR", ".MC", ".TWO")
+
+#: Tickers a competition book may not hold (no ETFs). Not exhaustive -- a
+#: freeze cannot look up a fund's legal form offline -- so a position may also
+#: declare `is_etf: true`, and the theme ETFs below are always included.
+BOOK_KNOWN_ETFS = frozenset({
+    "SPY", "QQQ", "IWM", "RSP", "DIA", "VTI", "VOO", "URTH", "ACWI", "VT",
+    "EFA", "EEM", "VEA", "VWO", "SMH", "SOXX", "XLK", "XLE", "XLF", "XLI",
+    "XLV", "XLU", "XLB", "XLY", "XLP", "XLC", "XLRE", "XBI", "IBB", "LIT",
+    "URA", "URNM", "QTUM", "BETZ", "BOTZ", "ROBO", "GRID", "ARKK", "TAN",
+    "ICLN", "GLD", "SLV", "TLT", "HYG", "LQD", "ITA", "IGV", "KWEB", "FXI",
+    "EWJ", "EWT", "EWY", "EWG", "INDA", "COPX", "REMX", "NLR", "HACK",
+})
+
+#: Theme -> the ETF a `sector_etf` twin holds at that theme's weight. A theme
+#: not in the map falls to `default` (SPY for personal, BOOK_WLS_PROXY for
+#: competition books -- see llm_portfolio.twins).
+THEME_ETF_MAP = {
+    "semis": "SMH", "memory": "SMH", "foundry": "SMH",
+    "power_grid": "GRID", "ai_power": "GRID", "industrials": "XLI",
+    "lithium": "LIT", "quantum": "QTUM", "nuclear": "URA", "uranium": "URA",
+    "biotech": "XBI", "pharma": "XBI", "gambling": "BETZ",
+    "robotics": "BOTZ", "policy": "SPY", "defense": "ITA", "energy": "XLE",
+    "software": "IGV", "china": "KWEB", "materials": "XLB", "default": "SPY",
+}
+
+#: Ticker -> theme for names whose thesis text carries no theme keyword
+#: ("Q3 earnings Oct 15" says nothing about semis). Consulted after a declared
+#: `theme` and before keyword inference; recorded as `theme_source: ticker_map`.
+BOOK_TICKER_THEMES = {
+    "TSM": "semis", "2330.TW": "semis", "NVDA": "semis", "AMD": "semis",
+    "AVGO": "semis", "MU": "semis", "ASML": "semis", "ASML.AS": "semis",
+    "000660.KS": "semis", "005930.KS": "semis", "8035.T": "semis",
+    "IONQ": "quantum", "RGTI": "quantum", "QUBT": "quantum", "QBTS": "quantum",
+    "DKNG": "gambling", "FLUT": "gambling", "PENN": "gambling", "MGM": "gambling",
+    "MP": "materials", "CCJ": "nuclear", "LEU": "nuclear", "OKLO": "nuclear",
+    "SMR": "nuclear", "VRT": "power_grid", "GEV": "power_grid",
+    "NVT": "power_grid", "ETN": "power_grid", "ALB": "lithium",
+}
+
+#: Global price cache (yfinance) -- one pull per ticker per UTC day.
+BOOK_GLOBAL_HISTORY_DAYS = 400
+
+#: Book factory: DeepSeek spend cap per RUN, read from the same telemetry
+#: ledger `llm_analyzer` writes (purpose `book_factory`).
+BOOK_FACTORY_CAP_USD = 1.0
+BOOK_FACTORY_PURPOSE = "book_factory"
+#: 8,000 (was 4,000): the 2026-09-25 smoke call hit 4,000 with 20 complete
+#: positions and died inside `what_i_did_not_buy` (finish_reason=length).
+BOOK_FACTORY_MAX_TOKENS = 8000
+#: `what_i_did_not_buy` entries the prompt allows; that list ate 60% of the
+#: truncated smoke answer.
+BOOK_FACTORY_MAX_NOT_BOUGHT = 8
+BOOK_FACTORY_NOTE_MAX_CHARS = 30_000
+BOOK_FACTORY_MAX_CANDIDATES = 160
+BOOK_FACTORY_NEWS_DAYS = 14
+BOOK_FACTORY_REVISION_DAYS = 90
+BOOK_FACTORY_LOCAL_LLM_URL = "http://127.0.0.1:8080"
+BOOK_FACTORY_LOCAL_TIMEOUT_S = 600
+#: Upper bound of one call, used to refuse a call that could cross the cap.
+BOOK_FACTORY_EST_CALL_USD = 0.03
 
 # ── Thesis cards (Builder O5, 2026-09-25) ───────────────────────────────────
 #: One structured analysis per chosen stock: engine side + one OpenClaw web
@@ -3706,3 +3794,7 @@ THESIS_CARD_SYNTH_PURPOSE = "thesis_card_synth"
 THESIS_CARD_EST_QUEST_USD = 0.08
 THESIS_CARD_NEWS_DAYS = 30
 THESIS_CARD_REVISION_DAYS = 90
+#: An answer whose SHAPE is unfinished (too few names, weights not summing to
+#: 1) is re-asked this many times on the same cached prefix before freezing.
+#: The 2026-09-25 smoke call returned one position of an 18-name strategy.
+BOOK_FACTORY_MAX_REASKS = 1
