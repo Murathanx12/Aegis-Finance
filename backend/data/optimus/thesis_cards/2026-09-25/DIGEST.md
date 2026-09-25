@@ -1,6 +1,6 @@
 # Thesis cards 2026-09-25
 
-77 cards. A verdict is about the evidence gathered, not an order.
+81 cards. A verdict is about the evidence gathered, not an order.
 
 | ticker | verdict | confidence | next date | falsifier |
 |---|---|---|---|---|
@@ -9,11 +9,13 @@
 | 010120.KS | supports | med | 2026-10-28 / earnings / Q3 2026 earnings release expected, company IR page publi | Q3 2026 earnings on 2026-10-28 showing order intake below the raised KRW 6.0tn annual run-rate or operating margin under 11.3%. |
 | 012450.KS | supports | med | 2026-10-07 / product launch / Nuriho KSLV-II 5th launch window at Naro Space Cen | Q3 2026 ground systems operating margin reported below 10% (versus 35-39% export margin), or a Poland K9 EC3 award slipping past 2026-12-31. |
 | 034020.KS | neutral | low |  | Any company disclosure or filing before 31 Dec 2026 showing H2 2026 order intake below H1 2026, or a confirmed slip of the US nuclear awards past 2027. |
+| 1772.HK | neutral | med | 2026-11-03 / earnings / Q3 2026 results expected per TipRanks / https://www.tipr | Q3 2026 results on 2026-11-03 showing lithium chemical segment gross margin below 42% or a net loss, proving the H1 profit swing was a price spike already reversing. |
 | 2308.TW | neutral | med | 2026-10-28 / earnings / Q3 2026 results and analyst meeting, Yahoo estimated ear | Q3 2026 results on 2026-10-28: gross margin below 34.3% or an EPS miss would show AI power and cooling demand is not converting into the guided margin expansion. |
 | 2330.TW | supports | high | 2026-10-08 / monthly sales / TSMC Monthly Sales September 2026 / https://investo | 3Q26 earnings on 2026-10-15 showing gross margin below the guided 65% floor or 3Q26 revenue under US$44.6bn. |
-| 267260.KS | REFUSED_EMPTY_LOG | None |  |  |
+| 267260.KS | neutral | med | 2026-10-22 / earnings / 3Q 2026 earnings release estimated; company IR page list | 3Q26 earnings on 2026-10-22 showing operating margin below 25% or backlog below USD8.49B would prove the bull case wrong. |
 | 6669.TW | neutral | low | 2026-11-14 / earnings / Q3 2026 financial results statutory filing deadline unde | Q3 2026 results (TWSE filing deadline 2026-11-14) showing gross margin below 7.5% or revenue growth below 26% YoY. |
 | 6857.T | supports | med | 2026-09-30 / dividend record date / record date for the distribution of interim  | FY2026 Q2 results on 2026-10-28 showing gross margin below Q1 FY2026 and no repeat of the inventory-obsolescence reversal, with guidance not raised again. |
+| 7011.T | neutral | med | 2026-09-29 / dividend ex-date / ex-date for JPY14.00 cash dividend (interim) / h | Any FY2026 quarterly disclosure showing order intake below the JPY7.0tn guidance run-rate, or a guidance cut, e.g. at the Q2 FY2026 results due early November 2026. |
 | 8035.T | supports | med | 2026-09-29 / dividend / ex-dividend date for interim dividend of 384 yen / https | FY2027 Q2 earnings on 2026-10-30 showing gross margin below Q1 FY2027 and no H2 recovery, or H1 net sales under the raised 1,620B yen guidance. |
 | AARD | against | med | 2026-10-13 / legal / securities class action lead plaintiff deadline / https://w | If the promised Q3 2026 unblinded HERO and OLE assessment, unreported as of 2026-09-25, shows ARD-101 efficacy and safety and the FDA lifts the hold, the bear case breaks. |
 | ABBV | neutral | med | 2026-10-15 / dividend record date / Quarterly dividend of 1.73 USD per share rec | Q3 2026 adjusted EPS reported below the guided 3.84-3.88 range, or 2026 adjusted EPS guided below 13.87, would show the growth story is not converting to earnings. |
@@ -47,8 +49,10 @@
 | INSM | neutral | med | 2026-10-29 / earnings / estimated third-quarter 2026 financial results, before m | Q3 2026 results on 2026-10-29 show BRINSUPRI revenue below the pace needed for the $1.25-1.40B 2026 guidance, forcing a guidance cut. |
 | INTC | neutral | med | 2026-10-22 / earnings / estimated Q3 2026 earnings date after market close, not  | Q3 2026 earnings on the estimated 2026-10-22 date showing Intel Foundry revenue growth below 31% YoY or no named external 14A anchor customer would prove the foundry bull case wrong. |
 | IONQ | neutral | med | 2026-09-30 / warrant-expiry / IONQ public warrants expire, last trading day Sep  | Q3 2026 earnings (est. Nov 4 2026) showing FY26 revenue guidance below 450M USD or organic growth under 100%, or gross margin below 33%. |
+| KAP.IL | neutral | med | 2026-10-06 / shareholder meeting / Deadline 18:00 GMT+5 for absentee EGM ballots | Kazatomprom cuts 2027 production guidance below 27,500 tU (100% basis), or states Russian sulphuric-acid volumes for 2027 are not secured, on or before the 20 Nov 2026 earnings date. |
 | KOG.OL | neutral | med | 2026-10-29 / earnings / Kongsberg Gruppen Q3'26 report / docs/research_notes/202 | Q3 2026 report on 29 Oct 2026 showing EBIT margin below 16pc or order intake below NOK 17,067m would break the growth-and-margin bull case. |
 | KYTX | neutral | med | 2026-09-29 / medical conference / KYSA-6 Phase 2 longer-term follow-up oral pres | The rolling SPS BLA is not completed in Q4 2026, or the 2027 miv-cel launch slips past 2027-12-31. |
+| LDO.MI | supports | med | 2026-11-05 / earnings / Board of Directors approves Results for the Nine Months  | 9M 2026 results on 5 Nov 2026 showing free operating cash flow still negative and no further FY2026 guidance raise. |
 | LEU | neutral | med | 2026-12-31 / operational milestone / Complete first new centrifuge in Oak Ridge, | First new Oak Ridge centrifuge not completed by 2026-12-31, or DOE FY2027 budget omits HALEU cascade funding, killing about 0.8B USD Technical Solutions backlog. |
 | LLY | supports | med | 2026-10-29 / earnings / Q3 2026 earnings date, estimated by MarketBeat not confi | Q3 2026 earnings on 2026-10-29 (unconfirmed) showing worldwide realized price decline worse than Q2's 13 pct while volume growth falls below 40 pct, or FY2026 revenue guidance cut below 85B. |
 | MP | supports | med | 2026-11-05 (estimated; NOT confirmed on IR or in filings) / earnings / Q3 2026 r | A successful legal or legislative challenge to the government's equity-taking/floor-price authority, or NdPr volume growth stalling well below the 127% y/y pace, would falsify the bull case. |
