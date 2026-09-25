@@ -20,6 +20,19 @@ a refuted idea is a result and the next session needs to know it was tried.
 | **Q-ANALYST-1** | Nightly analyst pull, 3,214 tickers (`scripts/pull_analyst_targets.py`, wired as `sim_run.u_analyst`) | accrues; the snapshot series only becomes point-in-time from 2026-09-24 forward, so it is a clock, not a question. **392,201 dated revision rows already in hand (2011-2026) and those ARE backtestable.** |
 | **Q-FORECAST-1** | `investigator:evidence_v2` — 40 forecasts frozen at h=1, shrunk 0.65, resolving **2026-09-28** | the sim's `u_grade` resolves them, then `night_specialist_scoreboard` scores the arm against climatology. **A positive Brier skill here is the first forward confirmation of §64 on an arm we built.** |
 
+## ADDED 2026-09-25 (planning session; see `ROADMAP_2026-09-25_CONNECT_WHAT_EXISTS.md`)
+
+| id | idea | settles when |
+|---|---|---|
+| **Q-9 ANALYST-SKILL-1** | run the trial registered 2026-08-31 (IBES `ptgdetu`, 1,348 brokers, 33,043 analysts): does skill-weighting the consensus beat equal-weighting? **Never run; no verdict in `docs/`.** | ΔIC paired by month, NW-3, t ≥ 2 → ADOPT; else the analyst-identity branch is a corpse (build plan C1) |
+| **Q-10 revision flow as a BOOK** | `revision_flow(asof)` (net raises, n_firms, median change, days-since) on the 393,369 rows; sweep with by-year/LOO/worst-cell/small-vs-largemid printed first; `revision_flow_v0` frozen with a random twin regardless of sign. Prior: ANALYST-IBES-1 small +6.05% gross UNRESOLVED | 21 days of forward grade on the frozen book (build plan C2) |
+| **Q-11 reputation layer** | per-arm Brier skill held out by date → shrink by n → **floor 0** → γ → log-odds pool → κ; refit each `u_grade`; p→return calibration for `investigator:*` at h=1/5 by year; **Profit-Mirage check** (post-cutoff tickers/dates only) | weights receipt exists and the restricted-sample skill is printed beside the full one (build plan R) |
+| **Q-12 human + AI thematic v0** | `BOOK_2026-09-25_HUMAN_AI_THEMATIC_V0.md` — AI draft (26 names + cash) + Murat's edits, frozen with `ew` / `sector_etf` / `ai_only` / `spy` twins | 1/5/21/126-session grades; the twin ordering says whether themes, picks, sizing or the human edits paid (build plan H) |
+| **Q-13 triggered investigator** | OpenClaw quests on shortlist entry / rank jump / revision cluster / filing / unexplained move; ten fixed questions → `web_events` → a forecast row at h=1 and h=5, DeepSeek paired with local Qwen; personas retired at weight 0 (Q-3 executed) | the accrual canary returns to `ok`; `investigator:evidence_v2` n grows nightly (build plan W) |
+| **Q-14 Bloomberg challenge books** | five $1M books frozen Oct 9 under the confirmed rules (WLS incl. small caps, long only, ≤20%, fully invested by Oct 16, Relative P&L); objective declared (top-quartile vs grand-prize) | Nov 13 (build plan K) |
+
+Banked this session, not to re-derive: a public upside screener fabricated upside 4-20×; an aggregator's PDUFA date (VERA) was already past; `ANRP`/`PHDC`/`DRUG` are not confirmed Terminal mnemonics; the AGA forecasts a FLAT 2026 legal NFL handle (the "everyone is betting" trend lives in prediction markets, i.e. HOOD, not DKNG).
+
 ---
 
 ## QUEUED — ranked by `P(changes the roadmap) × value − cost`
