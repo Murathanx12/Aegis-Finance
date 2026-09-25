@@ -1100,6 +1100,16 @@ async def health_full():
         fred_source_health = {"status": "DEGRADED", "error": str(e),
                               "degraded_reasons": ["fred health unreadable"]}
 
+    # Is anything still ACCRUING? Forecast rows, collector rows, OpenClaw
+    # calls (an EMPTY_LOG is red), and the decision contract's n_considered
+    # beside the funnel's n_candidates. Presence-only rows stayed green while
+    # the forecast ledger went quiet for thirteen days (chunk C0, 2026-09-25).
+    try:
+        from backend.services import accrual_canary as _ac
+        accrual_canary_health = _ac.health()
+    except Exception as e:                                     # noqa: BLE001
+        accrual_canary_health = {"status": "UNKNOWN", "error": str(e)}
+
     cs = cache_status()
     # The top-level status was hardcoded "ok", which made the prod monitor's
     # status check decorative: prediction_ledger could sit DEGRADED for weeks
@@ -1137,6 +1147,14 @@ async def health_full():
     # Named, never counted: "fred degraded" would send the next reader hunting
     # through 23 series to find out which one stopped arriving.
     _degraded_reasons.extend(fred_source_health.get("degraded_reasons") or [])
+    # Forecasts that stopped accruing, and an OpenClaw call that came back
+    # EMPTY, page by NAME (C0). Collector liveness stays inside the block: on a
+    # replica that never ran a collector it would be a permanent red line, and
+    # a permanent red line teaches the reader to skim red lines.
+    for _k in ("forecast_accrual", "openclaw"):
+        _r = accrual_canary_health.get(_k) or {}
+        if _r.get("status") == "DEGRADED":
+            _degraded_reasons.append(f"{_k}: {_r.get('reason')}")
     return {
         "status": "ok" if not _degraded_reasons else "DEGRADED",
         "degraded_reasons": _degraded_reasons,
@@ -1174,6 +1192,7 @@ async def health_full():
         "information_bus": information_bus,
         "selector_identity": selector_identity,
         "investment_committee": investment_committee_health,
+        "accrual_canary": accrual_canary_health,
         "data_sources": source_health(),
         "fred_health": fred_source_health,
         "recent_warnings": recent_warnings(),

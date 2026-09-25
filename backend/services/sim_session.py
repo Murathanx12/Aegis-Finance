@@ -286,6 +286,13 @@ def start(*, hours: float | None = None, minutes: float | None = None,
     pid = (launcher or _spawn)(session)
     session["pid"] = pid
     _atomic_write(SESSION_PATH, session)
+    # THE HISTORY ROW IS WRITTEN AT START, not only at finish (C0, 2026-09-25).
+    # `finish()` was the only writer of `sessions.jsonl`, and a process that
+    # dies cannot call it -- so the sessions that crashed on 09-22 and 09-23
+    # left no history row at all, and the history read as if they never ran.
+    # A `STARTED` row with no later row for the same run IS the crash.
+    _append_history({**{k: v for k, v in session.items() if k != "cycles"},
+                     "state": "STARTED", "row_type": "start", "ended": None})
     logger.info("sim_session: started %s (%s) pid %s", session["id"], kind, pid)
     return session
 
@@ -382,18 +389,39 @@ def finish(state: str, why: str, extra: dict | None = None) -> dict:
     if extra:
         s.update(extra)
     _atomic_write(SESSION_PATH, s)
-    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with HISTORY_PATH.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps({k: v for k, v in s.items() if k != "cycles"},
-                            default=str) + "\n")
+    _append_history({**{k: v for k, v in s.items() if k != "cycles"},
+                     "row_type": "end"})
     STOP_FLAG.unlink(missing_ok=True)
     logger.info("sim_session: %s -- %s", state, why)
     return s
 
 
+def _append_history(row: dict) -> None:
+    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with HISTORY_PATH.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+
+
 def history(limit: int = 20) -> list[dict]:
+    """One row per run (a resume is its own run), in the order runs began.
+
+    `sessions.jsonl` carries a `start` row and, if the process lived to write
+    it, an `end` row. They are FOLDED on (id, resume_count): the end row's
+    fields win, and a start row with no end row comes back as
+    `state: STARTED, ended: None` -- which is what a crashed run looks like,
+    and must look like. Rows written before 2026-09-25 have no `row_type` and
+    fold the same way.
+    """
     if not HISTORY_PATH.exists():
         return []
-    rows = [json.loads(l) for l in
-            HISTORY_PATH.read_text(encoding="utf-8").splitlines() if l.strip()]
-    return rows[-limit:]
+    folded: dict[tuple, dict] = {}
+    for line in HISTORY_PATH.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        key = (r.get("id"), r.get("resume_count", 0))
+        folded[key] = {**folded.get(key, {}), **r}
+    return list(folded.values())[-limit:]

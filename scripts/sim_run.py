@@ -10,7 +10,11 @@ One cycle is a fixed sequence of UNITS, each of which is small, idempotent and
 writes its own receipt:
 
     reconcile   the broker's own view of the book -> pc_book/<date>/nav.jsonl
+    funnel      refresh the candidate set when it is stale (once a session)
+    analyst     the nightly analyst pull (once a day)
     rank        the cross-sectional ranker over the survivorship-free panel
+    forecast    investigator rows at h=1 and h=5, once per UTC day (zero = red)
+    review      pre-open review of every held name, 2-sigma patience rule
     plan        the book it would hold, and in paper_profit mode the orders
     grade       whatever reality has resolved since the last cycle
     learn       ONE queued research unit
@@ -441,6 +445,147 @@ def _rank_in_subprocess(out_dir: str, timeout: float = 2400.0) -> dict:
     return {"failed": f"rc {r.returncode}", "stderr": (r.stderr or "")[-400:]}
 
 
+#: A unit that failed in its subprocess is retried at most this many times per
+#: session: a deterministic crash must not become a 5-minute retry loop.
+DAILY_UNIT_MAX_ATTEMPTS = 3
+
+
+def _attempts(out: Path, name: str, day: str) -> int:
+    p = out / f"{name}_attempts_{day}.json"
+    try:
+        return int(json.loads(p.read_text(encoding="utf-8")).get("n", 0))
+    except (OSError, ValueError):
+        return 0
+
+
+def _bump_attempts(out: Path, name: str, day: str, res: Any) -> None:
+    p = out / f"{name}_attempts_{day}.json"
+    p.write_text(json.dumps({"n": _attempts(out, name, day) + 1, "last": res},
+                            indent=1, default=str), encoding="utf-8")
+
+
+def u_forecast(out: Path) -> dict:
+    """Investigator forecasts, h=1 AND h=5, once per UTC day. ZERO IS RED.
+
+    Murat, 2026-09-25: "continue making forecasts and decisions everyday with
+    every nightly sim ... so we can review them later." From 2026-09-11 to
+    2026-09-24 the ledger gained no investigator row at all, because the only
+    forecaster with measured skill (§64) was a script somebody had to remember.
+    This unit is the scheduled caller.
+
+    Idempotent through the day receipt `forecasts/day_<date>.json`, which the
+    worker writes at START and after every name: a DONE / REFUSED_CAP /
+    DEGRADED receipt ends the day, a RUNNING one (a crash) resumes where it
+    stopped rather than re-paying for names already written. The dollar cap is
+    read by the worker from the same telemetry ledger its OpenClaw calls write.
+    Out of process: the evidence packets need the bars panel (~3 GB peak).
+    """
+    day = datetime.now(timezone.utc).date().isoformat()
+    receipt = Path(_config.OPTIMUS_LEDGER_DIR) / "forecasts" / f"day_{day}.json"
+    if receipt.exists():
+        try:
+            r = json.loads(receipt.read_text(encoding="utf-8"))
+            if r.get("state") in ("DONE", "REFUSED_CAP", "DEGRADED"):
+                return {"skipped": f"already ran today ({day})",
+                        "state": r["state"],
+                        "n_rows_written": r.get("n_rows_written"),
+                        "status": ("DEGRADED" if not r.get("n_rows_written")
+                                   else "ok")}
+        except (OSError, ValueError):
+            pass
+    if _attempts(out, "forecast", day) >= DAILY_UNIT_MAX_ATTEMPTS:
+        return {"skipped": f"{DAILY_UNIT_MAX_ATTEMPTS} failed attempts today",
+                "status": "DEGRADED"}
+    import subprocess
+    try:
+        res = _in_subprocess("forecast",
+                             timeout=float(_config.FORECAST_UNIT_TIMEOUT_S))
+    except subprocess.TimeoutExpired as exc:
+        # A timeout is an ATTEMPT: uncounted, a worker that always hangs would
+        # be relaunched for two hours every cycle. The RUNNING day receipt
+        # keeps what it wrote, so the next attempt resumes.
+        res = {"failed": f"timeout after {exc.timeout}s"}
+    if res.get("failed") or res.get("state") == "RUNNING":
+        _bump_attempts(out, "forecast", day, res)
+    n = int(res.get("n_rows_written") or 0)
+    return {**{k: v for k, v in res.items()
+               if isinstance(v, (int, float, str, bool, type(None)))},
+            "status": "ok" if n > 0 else "DEGRADED"}
+
+
+#: The review runs pre-open, on the US venue's clock.
+REVIEW_AFTER_ET = (8, 0)
+MARKET_OPEN_ET = (9, 30)
+MARKET_CLOSE_ET = (16, 0)
+
+
+def _now_et() -> datetime:
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo("America/New_York"))
+
+
+def u_review(out: Path, *, now_et: datetime | None = None) -> dict:
+    """The daily review of every held name, with the 2-sigma patience rule.
+
+    First cycle after 08:00 ET on a weekday: `daily_review.run_daily` over
+    Murat's book, PC-PAPER and every frozen llm_portfolio book, writing
+    `review/review_<date>.json` + `morning_<date>.md` and one graded h=5 row
+    per decisive label. Then, during the session, a held name that moves more
+    than 2 sigma_63 intraday triggers ONE re-review for that name that day
+    (`review_<date>_intraday_<HHMM>.json`; mints nothing).
+
+    Weekends are skipped: the patience rule means "decide next SESSION", and a
+    Saturday review would spend Friday's WATCH on a day nothing can trade.
+    """
+    from backend.services import daily_review as DR
+    now = now_et or _now_et()
+    day = now.date().isoformat()
+    if now.weekday() >= 5:
+        return {"skipped": "weekend: no session to review for"}
+    if (now.hour, now.minute) < REVIEW_AFTER_ET:
+        return {"skipped": f"before {REVIEW_AFTER_ET[0]:02d}:{REVIEW_AFTER_ET[1]:02d} ET"}
+    jpath, _ = DR.review_paths(day)
+    if not jpath.exists():
+        if _attempts(out, "review", day) >= DAILY_UNIT_MAX_ATTEMPTS:
+            return {"skipped": f"{DAILY_UNIT_MAX_ATTEMPTS} failed attempts today",
+                    "status": "DEGRADED"}
+        res = _in_subprocess("review", timeout=1800.0,
+                             args=[json.dumps({"asof": day})])
+        if res.get("failed"):
+            _bump_attempts(out, "review", day, res)
+        return {"morning": True, **{k: v for k, v in res.items()
+                                    if isinstance(v, (int, float, str, bool,
+                                                      type(None)))}}
+
+    # INTRADAY: only while the venue is open, only for names not yet re-reviewed.
+    if not (MARKET_OPEN_ET <= (now.hour, now.minute) < MARKET_CLOSE_ET):
+        return {"skipped": "morning review done; market closed",
+                "review": str(jpath)}
+    table = DR.held_sigma_table(jpath)
+    stamp = jpath.parent / f"intraday_{day}.json"
+    try:
+        already = json.loads(stamp.read_text(encoding="utf-8")).get("tickers", [])
+    except (OSError, ValueError):
+        already = []
+    try:
+        from backend.services import pc_broker as PB
+        live = PB.last_prices(sorted(table))
+    except Exception as exc:                                       # noqa: BLE001
+        return {"intraday": "no live prices", "why": f"{type(exc).__name__}: {exc}"[:160]}
+    trig = DR.intraday_triggers(table, live, already=already)
+    if not trig:
+        return {"intraday": "no held name beyond 2 sigma", "n_watched": len(table)}
+    tag = now.strftime("%H%M")
+    res = _in_subprocess("review", timeout=1800.0, args=[json.dumps(
+        {"asof": day, "live_prices": {t["ticker"]: t["price"] for t in trig},
+         "intraday_tag": tag})])
+    stamp.write_text(json.dumps({"tickers": sorted(set(already) | {t["ticker"] for t in trig})},
+                                indent=1), encoding="utf-8")
+    return {"intraday": tag, "triggered": [f"{t['ticker']} {t['z']:+.1f}σ" for t in trig][:10],
+            **{k: v for k, v in res.items()
+               if isinstance(v, (int, float, str, bool, type(None)))}}
+
+
 def u_plan(out: Path, mode: str) -> dict:
     """Ranking -> a book. THE UNIT THAT DID NOT EXIST.
 
@@ -616,15 +761,25 @@ _LEARN_SRC = {
         "oos,_=XR.walk_forward(panel,n_folds=3);"
         "out={f'k{k}':XR.top_k_backtest(oos,k=k).get('mean_net_rel_21d') "
         "for k in (20,100,300)}"),
+    # u_forecast: the worker writes its own day receipt after every name.
+    "forecast": (
+        "from scripts import night_investigator_forecast as NIF;"
+        "out=NIF.daily_forecast()"),
+    # u_review: params arrive as one JSON argv (asof, live_prices, intraday_tag).
+    "review": (
+        "import sys;from backend.services import daily_review as DR;"
+        "kw=json.loads(sys.argv[1]) if len(sys.argv)>1 else {};"
+        "out=DR.run_daily(**kw)"),
 }
 
 
-def _in_subprocess(pick: str, timeout: float = 1800.0) -> dict:
+def _in_subprocess(pick: str, timeout: float = 1800.0,
+                   args: list[str] | None = None) -> dict:
     import subprocess
     code = ("import json,warnings;warnings.filterwarnings('ignore');"
             + _LEARN_SRC[pick]
             + ";print('<<<'+json.dumps(out,default=str)+'>>>')")
-    r = subprocess.run([sys.executable, "-c", code], cwd=str(REPO),
+    r = subprocess.run([sys.executable, "-c", code, *(args or [])], cwd=str(REPO),
                        capture_output=True, text=True, timeout=timeout,
                        env={**os.environ, "PYTHONIOENCODING": "utf-8"})
     txt = r.stdout or ""
@@ -741,6 +896,12 @@ def run(session_id: str) -> int:
                 # has to be.
                 c.unit("analyst", lambda: u_analyst(out))
                 c.unit("rank", lambda: u_rank(out))
+                # After the rank, before the plan: every sim day forecasts
+                # (h=1 and h=5, zero is red) and reviews every held name
+                # pre-open with the 2-sigma patience rule. Both are once per
+                # day behind their own day receipts, so later cycles skip.
+                c.unit("forecast", lambda: u_forecast(out))
+                c.unit("review", lambda: u_review(out))
                 c.unit("plan", lambda: u_plan(out, mode))
                 c.unit("grade", u_grade)
                 c.unit("learn", lambda: u_learn(n, out))

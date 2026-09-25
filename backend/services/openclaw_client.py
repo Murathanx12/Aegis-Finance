@@ -64,6 +64,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
@@ -214,16 +215,144 @@ def browser(verb: str, *args: str, url: str | None = None,
 
 
 def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
-          timeout: float = 600.0) -> dict:
+          timeout: float = 600.0, purpose: str = "openclaw:agent",
+          session_id: str | None = None,
+          telemetry_path: Any = None) -> dict:
     """One agent turn. `--deliver` is NEVER passed: OpenClaw messages nobody.
 
     The reply comes back to Aegis as text. Whether Murat hears about it is
     Aegis's decision and `telegram_bridge`'s job.
+
+    EVERY CALL IS A TELEMETRY ROW (2026-09-25, chunk C0)
+    ----------------------------------------------------
+    Until today an OpenClaw turn spent DeepSeek money and left no row in
+    `llm_calls_<month>.jsonl`, so every spend total and every dollar cap in the
+    repo was blind to it. `--json` returns OpenClaw's own envelope, which
+    carries the token usage (`result.meta.agentMeta.usage`) and the model that
+    actually answered; the row is priced from those tokens with the house table
+    (`LLM_PRICE_PER_MTOK`), and OpenClaw's own cost estimate travels in `meta`
+    beside it so the two can be compared. Measured on the first call: 30,262
+    input + 6,784 cached + 2,034 output tokens for a 2.7k-char prompt -- the
+    agent's system prompt and tool schemas are ~90% of every call.
+
+    AN EMPTY REPLY IS A FAILURE WITH A ROW, NOT A SILENCE. rc 0 with no text is
+    written as `meta.status = "EMPTY_LOG"` and `accrual_canary` turns it red --
+    the 2026-09-24 `q2_power_bottleneck` quest returned exactly that and nothing
+    noticed.
+
+    A FRESH SESSION PER CALL. Without `--session-id` every turn lands in the
+    main session and inherits the previous turns' context: ticker A's evidence
+    sits in ticker B's prompt, and the prompt grows with every call.
     """
-    r = _run(["agent", "--message-file", message_file, "--model", model],
-             timeout=timeout)
-    return {"rc": r.returncode, "reply": (r.stdout or "").strip(),
-            "stderr": (r.stderr or "").strip()[:600], "model": model}
+    import uuid as _uuid
+
+    sid = session_id or f"aegis-{re.sub(r'[^A-Za-z0-9_-]', '-', purpose)}-{_uuid.uuid4().hex[:12]}"
+    t0 = time.time()
+    try:
+        r = _run(["agent", "--message-file", message_file, "--model", model,
+                  "--json", "--session-id", sid], timeout=timeout)
+        rc, out, err = r.returncode, (r.stdout or ""), (r.stderr or "")
+    except subprocess.TimeoutExpired as exc:
+        rc, out, err = None, "", f"TimeoutExpired: {exc}"[:600]
+    latency_ms = (time.time() - t0) * 1000.0
+    env = parse_envelope(out)
+    reply = env["reply"] if env["parsed"] else out.strip()
+    if rc is None:
+        status = "TIMEOUT"
+    elif rc != 0:
+        status = "RC_NONZERO"
+    elif not reply.strip():
+        status = "EMPTY_LOG"
+    elif not env["parsed"]:
+        status = "UNPARSEABLE_ENVELOPE"
+    else:
+        status = "OK"
+    call_id = _record_telemetry(
+        model=env.get("response_model") or model, purpose=purpose,
+        message_file=message_file, usage=env.get("usage") or {},
+        latency_ms=latency_ms, status=status, rc=rc, session_id=sid,
+        openclaw_cost_usd=env.get("openclaw_cost_usd"),
+        run_id=env.get("run_id"), error=(err[:300] if status != "OK" else None),
+        path=telemetry_path)
+    return {"rc": rc, "reply": reply, "stderr": err.strip()[:600],
+            "model": model, "status": status, "session_id": sid,
+            "usage": env.get("usage") or {}, "call_id": call_id,
+            "openclaw_cost_usd": env.get("openclaw_cost_usd"),
+            "latency_s": round(latency_ms / 1000.0, 2)}
+
+
+def parse_envelope(stdout: str) -> dict:
+    """OpenClaw's `--json` envelope -> reply text, usage, cost, model.
+
+    Tolerant of a log line before the JSON (the CLI prints banners on some
+    paths). `parsed` is False when no envelope was found, and the caller then
+    treats raw stdout as the reply -- the pre-`--json` behaviour.
+    """
+    out = {"parsed": False, "reply": "", "usage": {}, "openclaw_cost_usd": None,
+           "response_model": None, "run_id": None}
+    txt = stdout or ""
+    if "{" not in txt:
+        return out
+    try:
+        d = json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+    except ValueError:
+        return out
+    if not isinstance(d, dict) or "result" not in d:
+        return out
+    res = d.get("result") or {}
+    pay = res.get("payloads") or []
+    out["reply"] = "\n".join(str(p.get("text") or "") for p in pay
+                             if isinstance(p, dict)).strip()
+    meta = (res.get("meta") or {}).get("agentMeta") or {}
+    u = meta.get("usage") or {}
+    out["usage"] = {"input": int(u.get("input") or 0),
+                    "output": int(u.get("output") or 0),
+                    "cache_read": int(u.get("cacheRead") or 0),
+                    "reasoning": int(u.get("reasoningTokens") or 0)}
+    out["openclaw_cost_usd"] = meta.get("costUsd")
+    rec = ((meta.get("terminalReceipt") or {}).get("effective") or {})
+    out["response_model"] = rec.get("responseModel") or meta.get("model")
+    out["run_id"] = d.get("runId")
+    out["parsed"] = True
+    return out
+
+
+def _record_telemetry(*, model: str, purpose: str, message_file: str,
+                      usage: dict, latency_ms: float, status: str, rc: Any,
+                      session_id: str, openclaw_cost_usd: Any, run_id: Any,
+                      error: str | None, path: Any) -> str | None:
+    """One row in the SAME ledger `llm_telemetry` writes. Never raises."""
+    try:
+        from backend.services import llm_telemetry as LT
+        bare = str(model).split("/", 1)[-1]
+        try:
+            prompt = open(message_file, encoding="utf-8").read()
+        except OSError:
+            prompt = message_file
+        priced = bool(usage.get("input") or usage.get("output"))
+        rec = LT.build_call(
+            provider="deepseek", model=bare, purpose=purpose, agent="openclaw",
+            prompt=prompt, tokens_in=int(usage.get("input") or 0),
+            tokens_out=int(usage.get("output") or 0),
+            cached_tokens=int(usage.get("cache_read") or 0),
+            latency_ms=latency_ms, schema_valid=(status == "OK"), error=error,
+            meta={"via": "openclaw", "status": status, "rc": rc,
+                  "session_id": session_id, "run_id": run_id,
+                  "openclaw_cost_usd": openclaw_cost_usd,
+                  "reasoning_tokens": usage.get("reasoning"),
+                  "cost_status": ("PRICED_FROM_USAGE" if priced
+                                  else "UNPRICED_OPENCLAW")})
+        if not priced:
+            # No usage came back: the spend is UNKNOWN, not zero. A None cost
+            # makes every total that includes it a declared lower bound.
+            rec.cost_usd = None
+        LT.append([rec], path=path)
+        return rec.call_id
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("openclaw telemetry row not written (%s: %s) -- this "
+                       "call's spend is MISSING from the ledger",
+                       type(exc).__name__, exc)
+        return None
 
 
 # ───────────────────────────────── health ───────────────────────────────────
