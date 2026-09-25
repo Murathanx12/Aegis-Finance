@@ -197,3 +197,15 @@ as its own component and halves `revision_flow` under equal weights (tie its
 weight to revision_flow's); EXPLOIT writes no ledger rows yet; the layer sees
 only the ranker's top 25; `test_u_forecast::…run_after_rank…` is order-dependent
 in the full suite (passes alone and with every sim test).
+
+## 9. 22:10 HKT — the first trades in PC-PAPER's life, and the first churn
+
+At 13:32 ET the loop bought all ten PROBE names (SNDR 632, AVPT 1524, ALLE 131,
+GOOGL 58, INCY 160, NVDA 88, AMZN 80, GOOG 58, AAPL 59, META 26); equity
+$999,143, cash $800,208, gross 0.20 as designed. Then at 13:37 it **sold 1
+GOOGL and at 13:47 bought 1 back**: a 2% target on a $345 stock is 58.3
+shares and the integer flips with the price. `pc_broker.REBALANCE_DRIFT_FRAC =
+0.10`: a held name is rebalanced toward a non-zero target only when the drift
+is ≥ 10% of the target notional (never below MIN_ORDER_USD); entries and exits
+are not gated. The running session keeps the old code until it ends at 23:22
+HKT; Monday's session starts on the fix.
