@@ -54,6 +54,21 @@ def _case_strategy_library():
             "a claim standing in for a measurement")
 
 
+def _case_strategy_library_rules():
+    import pandas as pd
+
+    from backend.services.strategy_library import (RuleInputMissing, Strategy,
+                                                   col, run_strategy)
+    # The missing input is a PANEL COLUMN the rule reads. Scoring NaN everywhere
+    # would select nothing, and a rule that selects nothing reads as flat.
+    panel = pd.DataFrame({"date": [pd.Timestamp("2024-01-31")], "symbol": ["A"],
+                          "eligible": [True], "median_dollar_vol": [1e8],
+                          "fwd_ret": [0.01]})
+    rule = Strategy("ghost", "test", "reads an absent column", col("absent"))
+    return (lambda: run_strategy(panel, rule), RuleInputMissing,
+            "run_strategy() on a panel without the rule's column")
+
+
 def _case_matched_controls():
     from backend.services.teacher_library.matched_controls import (
         Candidate, ControlRefused, run_control_family)
@@ -1410,6 +1425,7 @@ CASES = {
     "autopsy": _case_autopsy,
     "g4_expectation": _case_g4_expectation,
     "strategy_library": _case_strategy_library,
+    "strategy_library_rules": _case_strategy_library_rules,
     "matched_controls": _case_matched_controls,
     "scope": _case_scope,
     "lineage": _case_lineage,
