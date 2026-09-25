@@ -1,0 +1,65 @@
+{
+ "cycle": 48,
+ "at": "2026-09-23T19:55:37+00:00",
+ "mode": "observe",
+ "elapsed_s": 10.3,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.4,
+   "result": {
+    "equity": 1000000.0,
+    "cash": 1000000.0,
+    "n_positions": 0,
+    "invested_frac": 0.0
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "asof": "2026-09-21",
+    "n_eligible": 2929,
+    "top1": "FLNC"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 5.3,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": false,
+    "n_orders": 18,
+    "turnover_usd": 999233.525,
+    "top1": "FLNC"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 1.5,
+   "result": {
+    "forecasts": "0 newly resolved; 14,703 of 25,439 records now carry an outcome; 2,911 wait on a bar, 7,819 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "survivorship_audit",
+    "skipped": "bars unchanged since this unit last ran",
+    "n_symbols": 4793,
+    "panel_last_session": "2026-09-21",
+    "stopped_30d_before_end": 1574,
+    "stopped_90d_before_end": 1573,
+    "stopped_180d_before_end": 1567,
+    "fraction_dead_90d": 0.3282,
+    "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented.",
+    "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
+   }
+  }
+ },
+ "errors": []
+}

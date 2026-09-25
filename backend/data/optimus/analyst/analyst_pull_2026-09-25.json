@@ -1,0 +1,23 @@
+{
+ "receipt": "analyst_pull",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "day": "2026-09-25",
+ "written_utc": "2026-09-24T17:26:15+00:00",
+ "n_requested": 3214,
+ "n_snapshots": 3100,
+ "n_revision_rows": 393367,
+ "n_failed": 0,
+ "elapsed_min": 60.6,
+ "files": {
+  "target_snapshots": "6,198 rows",
+  "target_revisions": "393,369 rows (deduped on event)",
+  "eps_trend_snapshots": "24,780 rows"
+ },
+ "point_in_time": {
+  "target_revisions": "PIT SAFE -- each row carries its own event_date",
+  "target_snapshots": "NOT PIT before the first pull; usable from 2026-09-25 forward as a series",
+  "eps_trend_snapshots": "NOT PIT -- today's estimate for a fixed future period, restated; the 7/30/90-day columns are NOT what consensus was then"
+ },
+ "standing_warning": "signal_registry carries analyst_target_upside_xs as CLOSED/PERVERSE: t -3.6 large/mid, -7.2 small. Do not rank on the LEVEL. The revision series is the thing being collected."
+}

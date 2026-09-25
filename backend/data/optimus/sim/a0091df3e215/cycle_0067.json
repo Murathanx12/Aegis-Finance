@@ -1,0 +1,49 @@
+{
+ "cycle": 67,
+ "at": "2026-09-22T18:43:11+00:00",
+ "mode": "observe",
+ "elapsed_s": 5.5,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.9,
+   "result": {
+    "equity": 1000000.0,
+    "cash": 1000000.0,
+    "n_positions": 0,
+    "invested_frac": 0.0
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "asof": "2026-09-21",
+    "n_eligible": 2929,
+    "top1": "FLNC"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 1.6,
+   "result": {
+    "forecasts": "0 newly resolved; 14,703 of 25,439 records now carry an outcome; 2,911 wait on a bar, 7,819 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "breadth_check",
+    "skipped": "bars unchanged since this unit last ran",
+    "k20": -0.0070031468222908864,
+    "k100": -0.0018183366115846124,
+    "k300": -0.0024791446415821194,
+    "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
+   }
+  }
+ },
+ "errors": []
+}

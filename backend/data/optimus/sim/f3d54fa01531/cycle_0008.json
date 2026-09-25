@@ -1,0 +1,76 @@
+{
+ "cycle": 8,
+ "at": "2026-09-24T15:33:58+00:00",
+ "mode": "observe",
+ "elapsed_s": 10.9,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.3,
+   "result": {
+    "equity": 1000000.0,
+    "cash": 1000000.0,
+    "n_positions": 0,
+    "invested_frac": 0.0
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-09-24T02:48:34+00:00",
+    "age_days": 0.53,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already pulled today (2026-09-24)",
+    "n_snapshots": 3086,
+    "n_revision_rows": 392201
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "asof": "2026-09-21",
+    "n_eligible": 2929,
+    "top1": "FLNC"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 5.0,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": false,
+    "n_orders": 18,
+    "turnover_usd": 999275.3,
+    "top1": "FLNC"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 2.5,
+   "result": {
+    "forecasts": "0 newly resolved; 14,703 of 24,839 records now carry an outcome; 2,911 wait on a bar, 7,219 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "idle",
+    "why": "rota rest slot; the market loop owns the session"
+   }
+  }
+ },
+ "errors": []
+}

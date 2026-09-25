@@ -1,0 +1,45 @@
+{
+ "cycle": 8,
+ "at": "2026-09-22T13:51:00+00:00",
+ "mode": "observe",
+ "elapsed_s": 5.5,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.4,
+   "result": {
+    "equity": 1000000.0,
+    "cash": 1000000.0,
+    "n_positions": 0,
+    "invested_frac": 0.0
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "asof": "2026-09-21",
+    "n_eligible": 2929,
+    "top1": "FLNC"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 2.1,
+   "result": {
+    "forecasts": "0 newly resolved; 14,703 of 25,439 records now carry an outcome; 2,911 wait on a bar, 7,819 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "idle",
+    "why": "rota rest slot; the market loop owns the session"
+   }
+  }
+ },
+ "errors": []
+}
