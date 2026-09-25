@@ -87,7 +87,11 @@ def _write_news(root: Path):
 
 def test_news_last_14_days_by_ticker(tmp_path):
     _write_news(tmp_path)
-    n = BF.news_evidence(["AAA", "ZZZ"], asof=TODAY, root=tmp_path, days=14)
+    # the fixture stamps rows in UTC; `date.today()` is local (UTC+8 here) and
+    # differs from the UTC date for eight hours a day -- asof must be the same
+    # clock the fixture used (protocol item 5: never a wall-clock fixture)
+    n = BF.news_evidence(["AAA", "ZZZ"], asof=datetime.now(timezone.utc).date(),
+                         root=tmp_path, days=14)
     assert n["AAA"]["n_headlines"] == 7
     assert len(n["AAA"]["top_titles"]) == 5
     assert all("ancient" not in t for t in n["AAA"]["top_titles"])
