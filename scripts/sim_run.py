@@ -1309,10 +1309,12 @@ def u_learn(cycle_n: int, out: Path) -> dict:
        reference is not the same as returning the pages. A process that exits
        returns everything, which is the only bound that holds over 12 hours.
     """
-    rota = ("survivorship_audit", "breadth_check", "idle")
+    rota = ("backtest_factory", "distil", "survivorship_audit", "breadth_check", "idle")
     pick = rota[cycle_n % len(rota)]
     if pick == "idle":
         return {"unit": "idle", "why": "rota rest slot; the market loop owns the session"}
+    if pick in _DAILY_MODULE_UNITS:
+        return _daily_module_unit(pick, out)
 
     fp = _bars_fingerprint()
     cache = out / f"learn_{pick}.json"
@@ -1331,6 +1333,52 @@ def u_learn(cycle_n: int, out: Path) -> dict:
     cache.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     return {"unit": pick, **{k: v for k, v in res.items()
                              if isinstance(v, (int, float, str, bool, type(None)))}}
+
+
+#: Murat, 2026-09-26 02:00 HKT: "maximise backtests ... that is your ultimate
+#: purpose on this nightly simulation" — and the audit the same night found the
+#: learning layer had distilled zero rules and never written a policy state.
+#: Both run ONCE PER UTC DAY, out of process, as modules, and a day whose unit
+#: did not run is a red line on the receipt, not a silent skip.
+_DAILY_MODULE_UNITS: dict[str, list[str]] = {
+    "backtest_factory": ["-m", "scripts.night_backtest_factory"],
+    "distil": ["-m", "learner.rule_distillation", "--ledger"],
+}
+
+
+def _daily_module_unit(pick: str, out: Path, *, today: Any = None,
+                       runner: Any = None) -> dict:
+    """Run a module once per UTC day; the receipt carries rc, day and a tail."""
+    import subprocess
+    day = (today or datetime.now(timezone.utc).date()).isoformat()
+    cache = out / f"learn_{pick}.json"
+    if cache.exists():
+        try:
+            old = json.loads(cache.read_text(encoding="utf-8"))
+            if old.get("day") == day and old.get("rc") == 0:
+                return {"unit": pick, "skipped": f"already ran today ({day})", "day": day, "rc": 0}
+        except (OSError, ValueError):
+            pass
+    argv = [sys.executable, *_DAILY_MODULE_UNITS[pick]]
+    run = runner or (lambda a: subprocess.run(a, cwd=str(REPO), capture_output=True, text=True,
+                                              timeout=3600.0,
+                                              env={**os.environ, "PYTHONIOENCODING": "utf-8"}))
+    try:
+        r = run(argv)
+        rc, tail = int(r.returncode), ((r.stdout or "") + (r.stderr or ""))[-600:]
+    except Exception as exc:  # noqa: BLE001  a unit that cannot start is a red line
+        rc, tail = -1, f"{type(exc).__name__}: {exc}"[:600]
+    if pick == "distil" and rc == 0:
+        try:
+            from backend.services import policy_state as PS
+            PS.refresh(None)
+            tail += " | policy_state refreshed"
+        except Exception as exc:  # noqa: BLE001
+            tail += f" | policy_state refresh FAILED {type(exc).__name__}: {exc}"[:200]
+    res = {"unit": pick, "day": day, "rc": rc, "status": "ok" if rc == 0 else f"DEGRADED rc {rc}",
+           "tail": tail, "ran_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    cache.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
+    return res
 
 
 #: The heavy units, run out-of-process. Releasing a reference is not returning

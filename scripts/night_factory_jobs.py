@@ -1462,6 +1462,7 @@ JOBS = {"D1_reaction_book": D1_reaction_book, "D2_reaction_mutations": D2_reacti
         "RW1_random_windows": RW1_random_windows,
         "RW2_event_windows": _lazy("scripts.night_rw2_event_windows", "RW2_event_windows"),
         "G3_evolve_v2": _lazy("scripts.night_g3_evolve_v2", "G3_evolve_v2"),
+        "B_backtest_factory": _lazy("scripts.night_backtest_factory", "B_backtest_factory"),
         "N2_learner_v3": _lazy("scripts.night_n2_learner_v3", "N2_learner_v3"),
         "P6_bars_and_regret": _lazy("scripts.night_p6_bars_and_regret", "P6_bars_and_regret"),
         "E1_news_return_panel": _lazy("scripts.night_e1_news_return_panel", "E1_news_return_panel"),
@@ -1929,7 +1930,7 @@ def main(argv=None) -> int:
                    "C_falsifiers", "C_floor10m", "A_corner", "B_verdict",
                    "B_books_efg_replay", "C_v1", "F_seasonality_export",
                    "G_price_scaled", "G3_lineage_export", "H1_hiring_pull",
-                   "B_books_hi_replay"):
+                   "B_books_hi_replay", "B_backtest_factory"):
         payload = fn(smoke=a.smoke)
     elif a.job == "B_exclusion_screen":
         payload = fn(smoke=a.smoke, floor_usd=a.floor_usd)
