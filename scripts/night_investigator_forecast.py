@@ -27,6 +27,11 @@ read straight off §64 rather than chosen:
   failure mode is overconfidence (+17pp calibration gap), not ignorance, and
   that is the half that recalibration repairs. BOTH numbers are stored: `raw`
   for future recalibration research, `probability` for use.
+  AMENDED 2026-09-26 (adjudication row 2): that shrink was earned on MAGNITUDE
+  and is applied to magnitude rows only. Every row this module writes is a
+  DIRECTION row (`beats_benchmark`), where held-out skill is -8.7% and the best
+  weight is 0 -- so those rows are written RAW, with `raw_probability` and
+  `shrink_basis` as proper fields (`recalibrate`).
 * **no persona in the prompt.** Not a stylistic preference -- the measured
   difference between the two families is 33 points of Brier skill.
 
@@ -83,8 +88,34 @@ OUT = Path(_config.OPTIMUS_LEDGER_DIR) / "investigator"
 #: version is graded on its own record rather than inheriting theirs.
 SPECIALIST = "investigator:evidence_v2"
 
-#: §64, held out. The raw probability is stored too; this is what gets used.
+#: §64, held out -- earned on MAGNITUDE questions (`abs_move_exceeds`) only.
+#: Adjudication 2026-09-26 row 2: on DIRECTION (`return_sign`/`beats_benchmark`)
+#: the same arms score -8.7% held out and the best training-half weight is 0,
+#: so this shrink is NOT applied to direction rows (see `recalibrate`).
 SHRINK = 0.65
+
+#: The `shrink_basis` strings written on every row. Frozen: a report groups on
+#: them, and a reworded basis would split one population in two.
+SHRINK_BASIS_MAGNITUDE = "§64 magnitude held-out"
+SHRINK_BASIS_DIRECTION = "none: direction skill unmeasured"
+
+_DIRECTION_OBSERVABLES = ("beats_benchmark", "return_sign")
+
+
+def recalibrate(raw: float, observable) -> tuple[float, str]:
+    """(probability to write, shrink_basis) for one raw forecast.
+
+    MAGNITUDE rows keep §64's shrink toward `BASE_RATE`, where it was earned.
+    DIRECTION rows are written RAW: no direction calibration exists yet, and
+    borrowing the magnitude one is "the wrong skill with the wrong correction"
+    (audit 2026-09-26 C8). `forecast_reputation` recalibrates direction from
+    `raw_probability` once it has n.
+    """
+    obs = getattr(observable, "value", observable)
+    raw = float(raw)
+    if obs in _DIRECTION_OBSERVABLES:
+        return raw, SHRINK_BASIS_DIRECTION
+    return BASE_RATE + SHRINK * (raw - BASE_RATE), SHRINK_BASIS_MAGNITUDE
 
 #: §64: skill is at one day and gone by five.
 HORIZON_DAYS = 1
@@ -525,6 +556,7 @@ def daily_forecast(*, today: str | None = None,
     rec = {"receipt": "u_forecast_day", "day": day, "state": "RUNNING",
            "licence": "PRODUCT_EXPERIMENT", "specialist": SPECIALIST_DAILY,
            "model": model, "horizons": list(DAILY_HORIZONS), "shrink": SHRINK,
+           "shrink_applied_to": "magnitude rows only", "direction_rows": SHRINK_BASIS_DIRECTION,
            "base_rate_assumed": BASE_RATE, "cap_usd": cap_usd,
            "max_names": max_names, "universe": uni,
            "retired_weight_zero": list(RETIRED_WEIGHT_ZERO),
@@ -601,7 +633,7 @@ def daily_forecast(*, today: str | None = None,
         recs = []
         for h, raw in ps.items():
             raw = float(raw)
-            shrunk = BASE_RATE + SHRINK * (raw - BASE_RATE)
+            shrunk, basis = recalibrate(raw, B.Observable.BEATS_BENCHMARK)
             try:
                 recs.append(B.make_prediction(
                     ticker=t, specialist=SPECIALIST_DAILY,
@@ -613,8 +645,9 @@ def daily_forecast(*, today: str | None = None,
                     model=model, model_version="evidence_v3",
                     prompt=CONTRACT_DAILY, input_snapshot=pk,
                     licence="PRODUCT_EXPERIMENT", decision_date=day,
-                    notes_text=(f"u_forecast {day}: raw {raw:.3f} shrunk to "
-                                f"{shrunk:.3f} at w={SHRINK} toward {BASE_RATE}; "
+                    raw_probability=raw, shrink_basis=basis,
+                    notes_text=(f"u_forecast {day}: raw {raw:.3f} written as "
+                                f"{shrunk:.3f} ({basis}); "
                                 f"source {uni['source_of'].get(t)}")))
             except ValueError as exc:
                 rec["refused"].append({"ticker": t, "why": f"record: {exc}"[:160]})
@@ -688,8 +721,8 @@ def main(argv=None) -> int:
             print(f"  {i:>3}/{len(packets)} {pk['ticker']:<6} REFUSED "
                   f"probability {raw}", flush=True)
             continue
-        # §64's recalibration, applied BEFORE the number is written for use.
-        shrunk = BASE_RATE + SHRINK * (raw - BASE_RATE)
+        # §64's shrink is a MAGNITUDE correction; a direction row goes raw.
+        shrunk, basis = recalibrate(raw, B.Observable.BEATS_BENCHMARK)
         rows.append({"ticker": pk["ticker"], "raw_probability": raw,
                      "probability": shrunk, **{k: v for k, v in ans.items()
                                                if k != "probability"}})
@@ -705,8 +738,8 @@ def main(argv=None) -> int:
                 model=a.model, model_version="evidence_v2",
                 prompt=CONTRACT, input_snapshot=pk,
                 licence="PRODUCT_EXPERIMENT",
-                notes_text=(f"raw {raw:.3f} shrunk to {shrunk:.3f} at w={SHRINK} "
-                            f"toward base {BASE_RATE} -- §64, held out")))
+                raw_probability=raw, shrink_basis=basis,
+                notes_text=(f"raw {raw:.3f} written as {shrunk:.3f} ({basis})")))
         except ValueError as exc:
             print(f"      record refused: {exc}", flush=True)
         print(f"  {i:>3}/{len(packets)} {pk['ticker']:<6} raw {raw:.2f} -> "
@@ -723,6 +756,7 @@ def main(argv=None) -> int:
            "specialist": SPECIALIST, "model": a.model,
            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "horizon_days": HORIZON_DAYS, "shrink": SHRINK,
+           "shrink_applied_to": "magnitude rows only", "direction_rows": SHRINK_BASIS_DIRECTION,
            "base_rate_assumed": BASE_RATE,
            "n_packets": len(packets), "n_forecast": len(ps),
            "n_written_to_ledger": written,

@@ -76,9 +76,9 @@ def test_writes_h1_and_h5_rows_for_every_priced_name(env):
     assert sorted({r["ticker"] for r in rows}) == ["AAA", "BBB", "CCC"]
     assert sorted({r["horizon_days"] for r in rows}) == [1, 5]
     assert all(r["specialist"] == N.SPECIALIST_DAILY for r in rows)
-    # shrink 0.65 toward 0.50: raw 0.60 -> 0.565, raw 0.40 -> 0.435
+    # direction rows go RAW (adjudication 2026-09-26 row 2): no magnitude shrink
     p = {r["horizon_days"]: r["probability"] for r in rows if r["ticker"] == "AAA"}
-    assert p[1] == pytest.approx(0.565) and p[5] == pytest.approx(0.435)
+    assert p[1] == pytest.approx(0.60) and p[5] == pytest.approx(0.40)
     assert res["n_unpriced"] == 1                 # UNP1 reported, not skipped
     rc = json.loads(next(env["receipts"].glob("day_*.json")).read_text(encoding="utf-8"))
     assert rc["unpriced"] == ["UNP1"]
@@ -219,3 +219,26 @@ def test_u_forecast_timeout_counts_as_an_attempt(monkeypatch, tmp_path):
                         lambda *a, **k: pytest.fail("attempts exhausted"))
     r = SR.u_forecast(tmp_path)
     assert "failed attempts" in r["skipped"] and r["status"] == "DEGRADED"
+
+
+# ───── the direction shrink (adjudication 2026-09-26 row 2) ─────
+
+def test_a_direction_row_is_written_raw_with_its_basis(env):
+    _run(env, ask_fn=_stub_ask(), cap_usd=5.0)
+    rows = _ledger(env)
+    assert rows
+    for r in rows:
+        assert r["observable"] == "beats_benchmark"
+        assert r["raw_probability"] == pytest.approx(r["probability"])
+        assert r["shrink_basis"] == "none: direction skill unmeasured"
+        assert r["shrink_basis"] == N.SHRINK_BASIS_DIRECTION
+
+
+def test_magnitude_keeps_the_shrink_and_direction_does_not():
+    from backend.services import belief_state as B
+    p, basis = N.recalibrate(0.60, B.Observable.ABS_MOVE_EXCEEDS)
+    assert p == pytest.approx(0.50 + N.SHRINK * 0.10)
+    assert basis == "§64 magnitude held-out"
+    for obs in (B.Observable.BEATS_BENCHMARK, B.Observable.RETURN_SIGN):
+        p, basis = N.recalibrate(0.60, obs)
+        assert p == pytest.approx(0.60) and basis == N.SHRINK_BASIS_DIRECTION

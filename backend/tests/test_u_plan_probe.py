@@ -332,3 +332,88 @@ def test_one_day_short_of_the_grade_is_still_unmeasured(tmp_path):
     g = S._probe_grade(ledger)
     assert g["verdict"] == "UNMEASURED_TRADE_SMALL"
     assert g["n_days_scored"] == config.PROBE_GRADE_MIN_SESSIONS - 1
+
+
+# ─────────────── the ALLE clash (adjudication 2026-09-26 row 11) ─────────────
+
+def _contract(tmp: Path, rows: list[dict]) -> Path:
+    d = tmp / "decisions"
+    d.mkdir(parents=True, exist_ok=True)
+    p = d / f"{ASOF}.json"
+    p.write_text(json.dumps({"date": ASOF, "rows": rows}), encoding="utf-8")
+    return p
+
+
+def _refused(ticker: str, terminal: str, klass: str, hid: str = "c0ffee000001") -> dict:
+    return {"ticker": ticker, "direction": "REFUSED", "authority": "REFUSED",
+            "terminal_state": terminal, "refusal_class": klass,
+            "refusal_reason": f"{ticker} measured net read is negative",
+            "hypothesis_id": hid, "hypothesis_id_basis": "test contract"}
+
+
+def test_a_contract_negative_ev_refusal_removes_the_name_from_probe(tmp_path, monkeypatch):
+    fb = FakeBroker().install(monkeypatch)
+    _funnel(tmp_path, tickers=["ALLE", "SL01", "SL02", "SL03"])
+    _ranking(tmp_path / "out", net=-0.2)
+    _contract(tmp_path, [_refused("ALLE", "NEGATIVE_EV", "EDGE_BELOW_BAR"),
+                         {"ticker": "SL01", "direction": "PROBE",
+                          "hypothesis_id": "c0ffee000001", "horizon_sessions": 5}])
+
+    res = _run(tmp_path)
+
+    assert res["contract"] == "present" and res["contract_red"] is None
+    assert res["contract_clash"] == ["ALLE"]
+    assert res["contract_refused_excluded"] == 1
+    assert "ALLE" not in {p.symbol for p in fb.submitted}
+    rec = _receipt(tmp_path)
+    assert rec["contract_clash"] == ["ALLE"] and rec["contract_refused_excluded"] == 1
+    assert "NEGATIVE_EV" in rec["contract_clash_reasons"]["ALLE"]
+    assert "ALLE" not in {b["symbol"] for b in rec["book"]}
+
+    decided = [r["detail"] for r in DL.read(tmp_path / "ledger.jsonl")
+               if r["state"] == "DECIDED"]
+    assert "ALLE" not in {d["ticker"] for d in decided}
+    # the contract's hypothesis id where it has one; the shortlist id otherwise
+    by_t = {d["ticker"]: d for d in decided}
+    assert by_t["SL01"]["hypothesis_id"] == "c0ffee000001"
+    assert by_t["SL01"]["shortlist_hypothesis_id"] == config.PROBE_SHORTLIST_HYPOTHESIS_ID
+    assert by_t["SL02"]["hypothesis_id"] == config.PROBE_SHORTLIST_HYPOTHESIS_ID
+
+
+def test_an_absent_contract_is_reported_and_probe_proceeds(tmp_path, monkeypatch):
+    fb = FakeBroker().install(monkeypatch)
+    _funnel(tmp_path, tickers=["ALLE", "SL01"])
+    _ranking(tmp_path / "out", net=-0.2)
+
+    res = _run(tmp_path)
+
+    assert res["contract"] == "absent"
+    assert res["contract_red"] and res["contract_red"].startswith("contract: absent")
+    assert res["contract_clash"] == [] and res["contract_refused_excluded"] == 0
+    assert {p.symbol for p in fb.submitted} == {"ALLE", "SL01"}
+    assert _receipt(tmp_path)["contract"] == "absent"
+
+
+def test_a_refusal_that_is_not_negative_ev_does_not_exclude(tmp_path, monkeypatch):
+    fb = FakeBroker().install(monkeypatch)
+    _funnel(tmp_path, tickers=["ALLE", "SL01"])
+    _ranking(tmp_path / "out", net=-0.2)
+    _contract(tmp_path, [_refused("ALLE", "DATA_MISSING", "UNCLASSIFIED")])
+
+    res = _run(tmp_path)
+
+    assert res["contract"] == "present"
+    assert res["contract_clash"] == [] and res["contract_refused_excluded"] == 0
+    assert "ALLE" in {p.symbol for p in fb.submitted}
+
+
+def test_probe_grade_still_counts_rows_graded_under_a_contract_hypothesis(tmp_path):
+    ledger = tmp_path / "ledger.jsonl"
+    h = min(int(x) for x in config.PROBE_HORIZONS_SESSIONS)
+    DL.record("d1", "DECIDED", by="t", asof=ASOF, path=ledger, detail={})
+    DL.record("d1", "SCORED", by="t", asof=ASOF, path=ledger,
+              detail={"hypothesis_id": "c0ffee000001", "horizon_sessions": h,
+                      "shortlist_hypothesis_id": config.PROBE_SHORTLIST_HYPOTHESIS_ID,
+                      "excess_return": 0.01, "realised_return": 0.01})
+    g = S._probe_grade(ledger)
+    assert g["n_days_scored"] == 1

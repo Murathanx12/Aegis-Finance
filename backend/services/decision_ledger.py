@@ -469,7 +469,7 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
         # and not only on the contract row, because the panel reads the ledger
         # and a join that needed both files would break the day a contract file
         # is rotated out of the year the grader scans.
-        for key in ("hypothesis_id", "horizon_sessions", "virtual",
+        for key in ("hypothesis_id", "shortlist_hypothesis_id", "horizon_sessions", "virtual",
                     "selection_probability", "action_set_sha256"):
             if r.get(key) is not None:
                 detail[key] = r.get(key)

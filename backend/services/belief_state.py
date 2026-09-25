@@ -327,6 +327,16 @@ class PredictionRecord:
     notes_text: str = ""
     #: Pointer to a stored embedding of the thesis, for M3's retrieval.
     embedding_id: str | None = None
+    #: The forecaster's OWN number before any recalibration, when the writer
+    #: transformed it (adjudication 2026-09-26 row 2). `probability` stays the
+    #: graded quantity. None on every row written before 2026-09-26 and on rows
+    #: whose writer applied no transform; those older rows carry the raw number
+    #: in `notes_text` only. Optional and additive: old rows parse unchanged.
+    raw_probability: float | None = None
+    #: WHY `probability` differs (or does not) from `raw_probability`, in words
+    #: -- e.g. "§64 magnitude held-out" or "none: direction skill unmeasured".
+    #: A shrink is a measured correction for ONE skill; this names which.
+    shrink_basis: str | None = None
     # filled at resolution, never at write time
     resolved_at: str | None = None
     void_reason: str | None = None
@@ -406,13 +416,22 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
                     era_tag: str | None = None,
                     licence: str | None = None,
                     n_effective_trials_at_time: int | None = None,
-                    notes_text: str = "") -> PredictionRecord:
+                    notes_text: str = "",
+                    raw_probability: float | None = None,
+                    shrink_basis: str | None = None) -> PredictionRecord:
     """Build a record, refusing the ones that cannot be graded."""
     if horizon_days not in HORIZONS:
         raise ValueError(f"horizon {horizon_days} is not one of {HORIZONS}; a "
                          f"horizon chosen per-prediction is a free parameter")
     if not 0.0 <= probability <= 1.0:
         raise ValueError(f"probability {probability} is not a probability")
+    if raw_probability is not None and not 0.0 <= float(raw_probability) <= 1.0:
+        raise ValueError(f"raw_probability {raw_probability} is not a probability")
+    if raw_probability is not None and not shrink_basis:
+        # A raw number with no stated basis cannot say whether `probability`
+        # was shrunk, by what, or on which skill the shrink was earned.
+        raise ValueError("raw_probability needs a shrink_basis naming the "
+                         "correction applied (or 'none: ...')")
     if observable in (Observable.ABS_MOVE_EXCEEDS, Observable.DRAWDOWN_EXCEEDS):
         if threshold is None or threshold <= 0:
             raise ValueError(f"{observable} needs a positive threshold or there "
@@ -498,7 +517,10 @@ def make_prediction(*, ticker: str, specialist: str, observable: Observable,
         costs_charged=bool(costs_charged), cost_rate_bps=cost_rate_bps,
         era_tag=(era_tag or era_of(made_at)), licence=licence,
         n_effective_trials_at_time=n_effective_trials_at_time,
-        notes_text=notes_text)
+        notes_text=notes_text,
+        raw_probability=(float(raw_probability) if raw_probability is not None
+                         else None),
+        shrink_basis=shrink_basis)
 
 
 # ── persistence: getting the history onto the volume, exactly once ──────────

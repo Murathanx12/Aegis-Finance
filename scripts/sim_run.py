@@ -619,7 +619,10 @@ def _probe_grade(ledger_path: Path | None = None) -> dict:
         d = r.get("detail") or {}
         if str(r.get("state")) != "SCORED" or not isinstance(d, dict):
             continue
-        if d.get("hypothesis_id") != hid or d.get("horizon_sessions") != h:
+        # A PROBE row graded under the day's CONTRACT hypothesis (the ALLE
+        # fix) keeps the shortlist's id in `shortlist_hypothesis_id`.
+        if (hid not in (d.get("hypothesis_id"), d.get("shortlist_hypothesis_id"))
+                or d.get("horizon_sessions") != h):
             continue
         ex = d.get("excess_return")
         if ex is None:
@@ -748,6 +751,64 @@ def _prior_probe_holdings(folder: Path, asof: str) -> set[str]:
     return out
 
 
+#: The day's decision contract REFUSED a name with one of these terminal
+#: states: the contract MEASURED no positive expected value for it. PROBE must
+#: not buy it the same day (the 2026-09-25 ALLE clash: the contract refused
+#: ALLE on insider t 1.40 < 2.0 while PC-PAPER bought 131 shares off the same
+#: shortlist). `EDGE_BELOW_BAR` is the refusal CLASS the contract writes beside
+#: the terminal state `NEGATIVE_EV`; either one excludes. `DATA_MISSING` and
+#: the rest do NOT: a missing input is not a measurement against the name.
+CONTRACT_NEGATIVE_EV_STATES = frozenset({"NEGATIVE_EV", "EDGE_BELOW_BAR"})
+
+
+def _contract_view(folder: Path, asof: str, contract_file: Path | None) -> dict:
+    """What the day's top-level decision contract says about each ticker.
+
+    Returns `{"status": "present"|"absent"|"unreadable", "path", "refused":
+    {TICKER: reason}, "hypothesis": {TICKER: (hypothesis_id, basis)}}`.
+    `refused` holds only REFUSED rows whose `terminal_state` or
+    `refusal_class` is negative-EV. `hypothesis` prefers a PROBE row's id, else
+    any row's, so the plan's PROBE rows are graded under the contract's
+    hypothesis (one grade covers both writers).
+    """
+    if contract_file is None:
+        contract_file = (folder.parent / f"{asof}.json"
+                         if folder.name == PC_PLAN_SUBDIR else None)
+    view: dict = {"status": "absent",
+                  "path": str(contract_file) if contract_file else None,
+                  "refused": {}, "hypothesis": {}}
+    if contract_file is None or not Path(contract_file).is_file():
+        return view
+    try:
+        blob = json.loads(Path(contract_file).read_text(encoding="utf-8"))
+        rows = list(blob.get("rows") or [])
+    except (OSError, ValueError, AttributeError, TypeError) as exc:
+        view["status"] = "unreadable"
+        view["error"] = f"{type(exc).__name__}: {exc}"[:200]
+        return view
+    view["status"] = "present"
+    ranked: dict[str, tuple[int, str, Any]] = {}
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        t = str(r.get("ticker") or "").upper()
+        if not t:
+            continue
+        refused = r.get("direction") == "REFUSED" or r.get("authority") == "REFUSED"
+        states = {str(r.get("terminal_state")), str(r.get("refusal_class"))}
+        if refused and states & CONTRACT_NEGATIVE_EV_STATES:
+            view["refused"].setdefault(t, (
+                f"{r.get('terminal_state')}/{r.get('refusal_class')}: "
+                f"{str(r.get('refusal_reason') or r.get('authority_basis') or '')[:160]}"))
+        hid = r.get("hypothesis_id")
+        if hid:
+            pri = 0 if r.get("direction") == "PROBE" else 1
+            if t not in ranked or pri < ranked[t][0]:
+                ranked[t] = (pri, str(hid), r.get("hypothesis_id_basis"))
+    view["hypothesis"] = {t: (h, b) for t, (_, h, b) in ranked.items()}
+    return view
+
+
 def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
                            ledger_path: Path | None) -> dict:
     """Merge today's PROBE rows into `pc_plan/<asof>.json` and write DECIDED.
@@ -781,6 +842,8 @@ def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
                               "dollars": r["position_budget"]["dollars"],
                               "thesis_source": r["thesis_source"],
                               "hypothesis_id": r["hypothesis_id"],
+                              "shortlist_hypothesis_id": r.get("shortlist_hypothesis_id"),
+                              "hypothesis_id_basis": r.get("hypothesis_id_basis"),
                               "ranking_verdict": r["ranking_verdict"],
                               "probe_verdict": r["probe_verdict"],
                               "acting": r["acting"], "virtual": r["virtual"],
@@ -816,7 +879,7 @@ def _er_summary(view: dict | None, red: str | None) -> dict:
 def u_plan(out: Path, mode: str, *, asof: str | None = None,
            funnel_path: Path | None = None, ledger_path: Path | None = None,
            contracts_dir: Path | None = None, er_sources: Any = None,
-           er_dir: Path | None = None) -> dict:
+           er_dir: Path | None = None, contract_file: Path | None = None) -> dict:
     """Ranking + committee shortlist -> a book, under EXPLOIT and PROBE.
 
     THE UNIT THAT DID NOT EXIST (2026-09-23), and then the unit that could not
@@ -855,6 +918,15 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     OWN 21-session grade exists and is positive (`_blend_grade`), on top of the
     ranker's gate. PROBE is chunk 1's, unchanged. A caller that injects
     `ledger_path` gets sandbox E[r] sources (its ranking and its ledger only).
+
+    THE ALLE CLASH (adjudication 2026-09-26 row 11): the day's decision
+    contract (`decisions/<asof>.json`, or `contract_file`) is read first. A
+    name it REFUSED as `NEGATIVE_EV`/`EDGE_BELOW_BAR` is removed from PROBE and
+    named in `contract_clash`; a refusal for any other reason (DATA_MISSING...)
+    does not exclude. PROBE rows take the contract's `hypothesis_id` for the
+    same ticker where one exists (the shortlist id moves to
+    `shortlist_hypothesis_id`), so one grade covers both writers. An absent
+    contract does not stop PROBE: the receipt says `contract: absent`, red.
     """
     from backend.services import expected_return as ER
     from backend.services import pc_broker as PB
@@ -897,6 +969,19 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     if not sl and shortlist_red is None:
         shortlist_red = ("shortlist: 0, reason: the funnel's candidate file is "
                          "fresh and EMPTY -- no PROBE decision can be made today")
+
+    # ---- the day's decision contract: its negative-EV refusals bind PROBE ----
+    contract = _contract_view(folder, asof, contract_file)
+    contract_clash = sorted({str(x["ticker"]) for x in sl
+                             if str(x["ticker"]).upper() in contract["refused"]})
+    contract_red = None
+    if contract["status"] != "present":
+        contract_red = (f"contract: {contract['status']} ({contract['path']}) -- PROBE "
+                        f"proceeds WITHOUT the contract's negative-EV refusals"
+                        + (f"; {contract['error']}" if contract.get("error") else ""))
+        logger.warning("u_plan RED: %s", contract_red)
+    if contract_clash:
+        sl = [x for x in sl if str(x["ticker"]) not in contract_clash]
 
     # ---- the expected-return layer (chunk 2) ----------------------------------
     er_view, er_red = None, None
@@ -1020,6 +1105,13 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     for x in probe_rows:
         p = by_sym.get(x["ticker"])
         px = prices.get(x["ticker"])
+        c_hid, c_basis = contract["hypothesis"].get(str(x["ticker"]).upper(), (None, None))
+        row_hid = c_hid or hid
+        hid_basis = (f"the day's decision contract ({contract['path']}) carries "
+                     f"hypothesis {c_hid} for {x['ticker']}: one grade covers both "
+                     f"writers. Contract basis: {c_basis}" if c_hid else
+                     f"config.PROBE_SHORTLIST_HYPOTHESIS_ID (contract {contract['status']}"
+                     f" or no contract hypothesis for {x['ticker']})")
         for h, (expiry, basis) in sorted(expiries.items()):
             row = {
                 "decision_id": DC.decision_id(
@@ -1034,7 +1126,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                 "reasons": list(x.get("reasons") or [])[:6],
                 "shortlist_score": x.get("score"),
                 "direction": "PROBE", "authority": "PROBE",
-                "hypothesis_id": hid, "horizon_sessions": h,
+                "hypothesis_id": row_hid, "shortlist_hypothesis_id": hid,
+                "hypothesis_id_basis": hid_basis, "horizon_sessions": h,
                 "horizon": {"sessions": h, "basis": "config.PROBE_HORIZONS_SESSIONS"},
                 "expiry_utc": expiry, "expiry_basis": basis,
                 "mode": mode, "acting": probe_acting, "virtual": not probe_acting,
@@ -1101,6 +1194,12 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "er_top": (ER.format_top(er_view, n=10).splitlines() if er_view else
                          [er_red or "expected_return: no view"]),
               "shortlist": len(sl), "shortlist_red": shortlist_red,
+              "contract": contract["status"], "contract_path": contract["path"],
+              "contract_red": contract_red,
+              "contract_clash": contract_clash,
+              "contract_refused_excluded": len(contract_clash),
+              "contract_clash_reasons": {t: contract["refused"].get(t.upper())
+                                         for t in contract_clash},
               "n_probe": n_probe, "probe_weight": w_probe, "probe_gross": probe_gross,
               "n_orders": sum(1 for p in plans if p.qty > 0),
               "orders_by_state": by_state,
@@ -1150,6 +1249,9 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             "er_present": er_view is not None, "er_red": er_red,
             "probe_verdict": grade["verdict"], "probe_acting": probe_acting,
             "shortlist": len(sl), "shortlist_red": shortlist_red,
+            "contract": contract["status"], "contract_red": contract_red,
+            "contract_clash": contract_clash,
+            "contract_refused_excluded": len(contract_clash),
             "n_considered": record["n_considered"], "n_probe": n_probe,
             "n_orders": record["n_orders"],
             # PERMITTED to be sent (acting gate applied), not merely planned:
