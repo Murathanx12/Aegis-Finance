@@ -170,3 +170,30 @@ postdates the fixture, or freeze the receipt set the test reads.
 - **Next:** chunk 2 (the expected-return layer) is building; chunk 3 (the
   timeline panel) has its research; chunk 5 needs the FX leg before any
   competition book is graded fairly; Murat's X account for chunk 6.
+
+## 8. Chunk 2 landed (`f9b71785`) — the expected-return layer, flat until grades accrue
+
+`expected_return.py`: E[r_h] per name by component (ranker, revision_flow,
+investigator_dir, thesis_card, catalyst, source_reliability × regime), direction
+and magnitude skill never mixed, n<30 at the prior, equal-weight blend printed
+beside the reputation blend with an OOS gate, Shapley exact, every PROBE row
+carries the decomposition. Today: 48 names, weights `equal` (0 graded blocks
+anywhere), awake = ranker 25 / revision_flow 31 / source_reliability 30; asleep =
+investigator_dir, thesis_card (0 of 30 graded), catalyst; regime risk_on (VIX
+14.2). Top E[r_21] +0.05% (NVDA, AMZN) — noise-sized, as it should be before a
+single component has a forward grade. EXPLOIT still refused (ranker measured
+negative; blend ungraded); PROBE unchanged. Worst-case lines: PROBE −$16,452;
+EXPLOIT would be −$64,800 at gross 1.00.
+
+Cards → forecast rows (`aaed4571`): 166 rows at h=20 and h=120 (the ledger's
+horizons), idempotent by card hash. **Autopsy re-benchmarked:** PROBE−REFUSED is
+**−0.68%** at 1 day over the universe median (the reviewer's +0.18% over SPY
+was a day-composition artefact: 38 of 41 REFUSED rows fell on 09-20, the one
+day SPY rose while the universe median fell). Refused-as-negative-EV names
+META, NVDA, NFLX, LLY beat the median by 2–9%.
+
+Open from the chunk-2 builder for the next reviewer: `source_reliability` votes
+as its own component and halves `revision_flow` under equal weights (tie its
+weight to revision_flow's); EXPLOIT writes no ledger rows yet; the layer sees
+only the ranker's top 25; `test_u_forecast::…run_after_rank…` is order-dependent
+in the full suite (passes alone and with every sim test).
