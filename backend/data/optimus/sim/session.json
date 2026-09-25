@@ -2,24 +2,21 @@
  "id": "f85bfe5cd999",
  "kind": "session",
  "mode": "paper_profit",
- "state": "STOPPED",
- "started": "2026-09-25T07:22:11+00:00",
- "planned_end": "2026-09-25T15:22:11+00:00",
+ "state": "RUNNING",
+ "started": "2026-09-25T10:17:30+00:00",
+ "planned_end": "2026-09-25T18:17:30+00:00",
  "duration_s": 28800.0,
  "requested_hours": 8,
  "requested_minutes": null,
- "resumed_from": null,
- "resume_count": 0,
- "cycle": 9,
- "checkpoint": {
-  "cycle": 9,
-  "at": "2026-09-25T08:11:19+00:00",
+ "resumed_from": {
+  "cycle": 16,
+  "at": "2026-09-25T10:15:18+00:00",
   "mode": "paper_profit",
-  "elapsed_s": 13.9,
+  "elapsed_s": 11.1,
   "units": {
    "reconcile": {
     "ok": true,
-    "elapsed_s": 4.8,
+    "elapsed_s": 3.4,
     "result": {
      "equity": 1000000.0,
      "cash": 1000000.0,
@@ -33,7 +30,7 @@
     "result": {
      "skipped": "candidate set is fresh",
      "generated_at": "2026-09-24T02:48:34+00:00",
-     "age_days": 1.22,
+     "age_days": 1.31,
      "n_candidates": 25
     }
    },
@@ -75,7 +72,7 @@
    },
    "plan": {
     "ok": true,
-    "elapsed_s": 7.0,
+    "elapsed_s": 5.0,
     "result": {
      "planned": true,
      "verdict": "MEASURED_NEGATIVE",
@@ -87,9 +84,121 @@
    },
    "grade": {
     "ok": true,
-    "elapsed_s": 2.0,
+    "elapsed_s": 2.5,
     "result": {
      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
+     "decisions": "nothing_to_do"
+    }
+   },
+   "learn": {
+    "ok": true,
+    "elapsed_s": 0.0,
+    "result": {
+     "unit": "breadth_check",
+     "skipped": "bars unchanged since this unit last ran",
+     "k20": -0.0070031468222908864,
+     "k100": -0.0018183366115846124,
+     "k300": -0.0024791446415821194,
+     "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
+    }
+   }
+  },
+  "errors": []
+ },
+ "resume_count": 2,
+ "cycle": 21,
+ "checkpoint": {
+  "cycle": 21,
+  "at": "2026-09-25T10:37:41+00:00",
+  "mode": "paper_profit",
+  "elapsed_s": 11.7,
+  "units": {
+   "reconcile": {
+    "ok": true,
+    "elapsed_s": 3.4,
+    "result": {
+     "equity": 1000000.0,
+     "cash": 1000000.0,
+     "n_positions": 0,
+     "invested_frac": 0.0
+    }
+   },
+   "funnel": {
+    "ok": true,
+    "elapsed_s": 0.0,
+    "result": {
+     "skipped": "candidate set is fresh",
+     "generated_at": "2026-09-24T02:48:34+00:00",
+     "age_days": 1.33,
+     "n_candidates": 25
+    }
+   },
+   "analyst": {
+    "ok": true,
+    "elapsed_s": 0.0,
+    "result": {
+     "skipped": "already pulled today (2026-09-25)",
+     "n_snapshots": 3100,
+     "n_revision_rows": 393367
+    }
+   },
+   "rank": {
+    "ok": true,
+    "elapsed_s": 0.0,
+    "result": {
+     "skipped": "bars unchanged since the last rank",
+     "asof": "2026-09-21",
+     "n_eligible": 2929,
+     "top1": "FLNC"
+    }
+   },
+   "forecast": {
+    "ok": true,
+    "elapsed_s": 0.0,
+    "result": {
+     "skipped": "already ran today (2026-09-25)",
+     "state": "DONE",
+     "n_rows_written": 118,
+     "status": "ok"
+    }
+   },
+   "review": {
+    "ok": true,
+    "elapsed_s": 0.0,
+    "result": {
+     "skipped": "before 08:00 ET"
+    }
+   },
+   "plan": {
+    "ok": true,
+    "elapsed_s": 5.7,
+    "result": {
+     "planned": true,
+     "verdict": "MEASURED_NEGATIVE",
+     "acting": true,
+     "exploit_acting": false,
+     "probe_verdict": "UNMEASURED_TRADE_SMALL",
+     "probe_acting": true,
+     "shortlist": 25,
+     "shortlist_red": null,
+     "n_considered": 42,
+     "n_probe": 10,
+     "n_orders": 28,
+     "n_probe_orders": 10,
+     "n_exploit_orders": 0,
+     "n_sent": 0,
+     "send_block": "venue closed: orders wait for the open",
+     "turnover_usd": 997811.34,
+     "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+     "decisions_new": 0,
+     "top1": "FLNC"
+    }
+   },
+   "grade": {
+    "ok": true,
+    "elapsed_s": 2.5,
+    "result": {
+     "forecasts": "0 newly resolved; 17,484 of 25,763 records now carry an outcome; 130 wait on a bar, 8,143 are not yet due",
      "decisions": "nothing_to_do"
     }
    },
@@ -114,13 +223,13 @@
  },
  "cycles": [
   {
-   "cycle": 1,
-   "at": "2026-09-25T07:36:08+00:00",
-   "elapsed_s": 835.5,
+   "cycle": 17,
+   "at": "2026-09-25T10:17:45+00:00",
+   "elapsed_s": 14.1,
    "units": {
     "reconcile": {
      "ok": true,
-     "elapsed_s": 5.0,
+     "elapsed_s": 3.4,
      "result": {
       "equity": 1000000.0,
       "cash": 1000000.0,
@@ -134,7 +243,7 @@
      "result": {
       "skipped": "candidate set is fresh",
       "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.19,
+      "age_days": 1.31,
       "n_candidates": 25
      }
     },
@@ -149,108 +258,7 @@
     },
     "rank": {
      "ok": true,
-     "elapsed_s": 0.3,
-     "result": {
-      "skipped": "bars unchanged since the last rank",
-      "asof": "2026-09-21",
-      "n_eligible": 2929,
-      "top1": "FLNC"
-     }
-    },
-    "forecast": {
-     "ok": true,
-     "elapsed_s": 820.5,
-     "result": {
-      "state": "DONE",
-      "n_rows_written": 118,
-      "n_done": 59,
-      "n_unpriced": 1,
-      "n_refused": 0,
-      "spent_usd": 0.145568,
-      "why": null,
-      "receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\forecasts\\day_2026-09-25.json",
-      "status": "ok"
-     }
-    },
-    "review": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "before 08:00 ET"
-     }
-    },
-    "plan": {
-     "ok": true,
-     "elapsed_s": 7.0,
-     "result": {
-      "planned": true,
-      "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
-      "top1": "FLNC"
-     }
-    },
-    "grade": {
-     "ok": true,
-     "elapsed_s": 2.6,
-     "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
-      "decisions": "nothing_to_do"
-     }
-    },
-    "learn": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "unit": "breadth_check",
-      "skipped": "bars unchanged since this unit last ran",
-      "k20": -0.0070031468222908864,
-      "k100": -0.0018183366115846124,
-      "k300": -0.0024791446415821194,
-      "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
-     }
-    }
-   },
-   "errors": []
-  },
-  {
-   "cycle": 2,
-   "at": "2026-09-25T07:36:21+00:00",
-   "elapsed_s": 13.3,
-   "units": {
-    "reconcile": {
-     "ok": true,
-     "elapsed_s": 4.5,
-     "result": {
-      "equity": 1000000.0,
-      "cash": 1000000.0,
-      "n_positions": 0,
-      "invested_frac": 0.0
-     }
-    },
-    "funnel": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "candidate set is fresh",
-      "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.2,
-      "n_candidates": 25
-     }
-    },
-    "analyst": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already pulled today (2026-09-25)",
-      "n_snapshots": 3100,
-      "n_revision_rows": 393367
-     }
-    },
-    "rank": {
-     "ok": true,
-     "elapsed_s": 0.0,
+     "elapsed_s": 0.4,
      "result": {
       "skipped": "bars unchanged since the last rank",
       "asof": "2026-09-21",
@@ -276,333 +284,58 @@
      }
     },
     "plan": {
-     "ok": true,
-     "elapsed_s": 6.8,
-     "result": {
-      "planned": true,
-      "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
-      "top1": "FLNC"
-     }
-    },
-    "grade": {
-     "ok": true,
-     "elapsed_s": 1.9,
-     "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
-      "decisions": "nothing_to_do"
-     }
-    },
-    "learn": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "unit": "idle",
-      "why": "rota rest slot; the market loop owns the session"
-     }
-    }
-   },
-   "errors": []
-  },
-  {
-   "cycle": 3,
-   "at": "2026-09-25T07:41:21+00:00",
-   "elapsed_s": 14.2,
-   "units": {
-    "reconcile": {
-     "ok": true,
-     "elapsed_s": 5.2,
-     "result": {
-      "equity": 1000000.0,
-      "cash": 1000000.0,
-      "n_positions": 0,
-      "invested_frac": 0.0
-     }
-    },
-    "funnel": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "candidate set is fresh",
-      "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.2,
-      "n_candidates": 25
-     }
-    },
-    "analyst": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already pulled today (2026-09-25)",
-      "n_snapshots": 3100,
-      "n_revision_rows": 393367
-     }
-    },
-    "rank": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "bars unchanged since the last rank",
-      "asof": "2026-09-21",
-      "n_eligible": 2929,
-      "top1": "FLNC"
-     }
-    },
-    "forecast": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already ran today (2026-09-25)",
-      "state": "DONE",
-      "n_rows_written": 118,
-      "status": "ok"
-     }
-    },
-    "review": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "before 08:00 ET"
-     }
-    },
-    "plan": {
-     "ok": true,
-     "elapsed_s": 7.1,
-     "result": {
-      "planned": true,
-      "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
-      "top1": "FLNC"
-     }
-    },
-    "grade": {
-     "ok": true,
-     "elapsed_s": 1.8,
-     "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
-      "decisions": "nothing_to_do"
-     }
-    },
-    "learn": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "unit": "survivorship_audit",
-      "skipped": "bars unchanged since this unit last ran",
-      "n_symbols": 4793,
-      "panel_last_session": "2026-09-21",
-      "stopped_30d_before_end": 1574,
-      "stopped_90d_before_end": 1573,
-      "stopped_180d_before_end": 1567,
-      "fraction_dead_90d": 0.3282,
-      "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented.",
-      "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
-     }
-    }
-   },
-   "errors": []
-  },
-  {
-   "cycle": 4,
-   "at": "2026-09-25T07:46:20+00:00",
-   "elapsed_s": 13.8,
-   "units": {
-    "reconcile": {
-     "ok": true,
-     "elapsed_s": 5.1,
-     "result": {
-      "equity": 1000000.0,
-      "cash": 1000000.0,
-      "n_positions": 0,
-      "invested_frac": 0.0
-     }
-    },
-    "funnel": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "candidate set is fresh",
-      "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.21,
-      "n_candidates": 25
-     }
-    },
-    "analyst": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already pulled today (2026-09-25)",
-      "n_snapshots": 3100,
-      "n_revision_rows": 393367
-     }
-    },
-    "rank": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "bars unchanged since the last rank",
-      "asof": "2026-09-21",
-      "n_eligible": 2929,
-      "top1": "FLNC"
-     }
-    },
-    "forecast": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already ran today (2026-09-25)",
-      "state": "DONE",
-      "n_rows_written": 118,
-      "status": "ok"
-     }
-    },
-    "review": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "before 08:00 ET"
-     }
-    },
-    "plan": {
-     "ok": true,
-     "elapsed_s": 6.9,
-     "result": {
-      "planned": true,
-      "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
-      "top1": "FLNC"
-     }
-    },
-    "grade": {
-     "ok": true,
-     "elapsed_s": 1.8,
-     "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
-      "decisions": "nothing_to_do"
-     }
-    },
-    "learn": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "unit": "breadth_check",
-      "skipped": "bars unchanged since this unit last ran",
-      "k20": -0.0070031468222908864,
-      "k100": -0.0018183366115846124,
-      "k300": -0.0024791446415821194,
-      "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
-     }
-    }
-   },
-   "errors": []
-  },
-  {
-   "cycle": 5,
-   "at": "2026-09-25T07:51:23+00:00",
-   "elapsed_s": 16.3,
-   "units": {
-    "reconcile": {
-     "ok": true,
-     "elapsed_s": 7.5,
-     "result": {
-      "equity": 1000000.0,
-      "cash": 1000000.0,
-      "n_positions": 0,
-      "invested_frac": 0.0
-     }
-    },
-    "funnel": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "candidate set is fresh",
-      "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.21,
-      "n_candidates": 25
-     }
-    },
-    "analyst": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already pulled today (2026-09-25)",
-      "n_snapshots": 3100,
-      "n_revision_rows": 393367
-     }
-    },
-    "rank": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "bars unchanged since the last rank",
-      "asof": "2026-09-21",
-      "n_eligible": 2929,
-      "top1": "FLNC"
-     }
-    },
-    "forecast": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "already ran today (2026-09-25)",
-      "state": "DONE",
-      "n_rows_written": 118,
-      "status": "ok"
-     }
-    },
-    "review": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "skipped": "before 08:00 ET"
-     }
-    },
-    "plan": {
-     "ok": true,
-     "elapsed_s": 7.0,
-     "result": {
-      "planned": true,
-      "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
-      "top1": "FLNC"
-     }
-    },
-    "grade": {
-     "ok": true,
-     "elapsed_s": 1.8,
-     "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
-      "decisions": "nothing_to_do"
-     }
-    },
-    "learn": {
-     "ok": true,
-     "elapsed_s": 0.0,
-     "result": {
-      "unit": "idle",
-      "why": "rota rest slot; the market loop owns the session"
-     }
-    }
-   },
-   "errors": []
-  },
-  {
-   "cycle": 6,
-   "at": "2026-09-25T07:56:21+00:00",
-   "elapsed_s": 15.3,
-   "units": {
-    "reconcile": {
      "ok": true,
      "elapsed_s": 6.6,
      "result": {
+      "planned": true,
+      "verdict": "MEASURED_NEGATIVE",
+      "acting": true,
+      "exploit_acting": false,
+      "probe_verdict": "UNMEASURED_TRADE_SMALL",
+      "probe_acting": true,
+      "shortlist": 25,
+      "shortlist_red": null,
+      "n_considered": 42,
+      "n_probe": 10,
+      "n_orders": 28,
+      "n_probe_orders": 10,
+      "n_exploit_orders": 0,
+      "n_sent": 0,
+      "send_block": "venue closed: orders wait for the open",
+      "turnover_usd": 997811.34,
+      "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+      "decisions_new": 40,
+      "top1": "FLNC"
+     }
+    },
+    "grade": {
+     "ok": true,
+     "elapsed_s": 3.6,
+     "result": {
+      "forecasts": "0 newly resolved; 17,484 of 25,163 records now carry an outcome; 130 wait on a bar, 7,543 are not yet due",
+      "decisions": "nothing_to_do"
+     }
+    },
+    "learn": {
+     "ok": true,
+     "elapsed_s": 0.0,
+     "result": {
+      "unit": "idle",
+      "why": "rota rest slot; the market loop owns the session"
+     }
+    }
+   },
+   "errors": []
+  },
+  {
+   "cycle": 18,
+   "at": "2026-09-25T10:22:42+00:00",
+   "elapsed_s": 11.6,
+   "units": {
+    "reconcile": {
+     "ok": true,
+     "elapsed_s": 3.3,
+     "result": {
       "equity": 1000000.0,
       "cash": 1000000.0,
       "n_positions": 0,
@@ -615,7 +348,7 @@
      "result": {
       "skipped": "candidate set is fresh",
       "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.21,
+      "age_days": 1.32,
       "n_candidates": 25
      }
     },
@@ -657,21 +390,34 @@
     },
     "plan": {
      "ok": true,
-     "elapsed_s": 6.9,
+     "elapsed_s": 5.8,
      "result": {
       "planned": true,
       "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
+      "acting": true,
+      "exploit_acting": false,
+      "probe_verdict": "UNMEASURED_TRADE_SMALL",
+      "probe_acting": true,
+      "shortlist": 25,
+      "shortlist_red": null,
+      "n_considered": 42,
+      "n_probe": 10,
+      "n_orders": 28,
+      "n_probe_orders": 10,
+      "n_exploit_orders": 0,
+      "n_sent": 0,
+      "send_block": "venue closed: orders wait for the open",
+      "turnover_usd": 997811.34,
+      "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+      "decisions_new": 0,
       "top1": "FLNC"
      }
     },
     "grade": {
      "ok": true,
-     "elapsed_s": 1.8,
+     "elapsed_s": 2.4,
      "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
+      "forecasts": "0 newly resolved; 17,484 of 25,163 records now carry an outcome; 130 wait on a bar, 7,543 are not yet due",
       "decisions": "nothing_to_do"
      }
     },
@@ -695,13 +441,13 @@
    "errors": []
   },
   {
-   "cycle": 7,
-   "at": "2026-09-25T08:01:20+00:00",
-   "elapsed_s": 14.8,
+   "cycle": 19,
+   "at": "2026-09-25T10:27:42+00:00",
+   "elapsed_s": 12.2,
    "units": {
     "reconcile": {
      "ok": true,
-     "elapsed_s": 5.6,
+     "elapsed_s": 3.4,
      "result": {
       "equity": 1000000.0,
       "cash": 1000000.0,
@@ -715,7 +461,7 @@
      "result": {
       "skipped": "candidate set is fresh",
       "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.22,
+      "age_days": 1.32,
       "n_candidates": 25
      }
     },
@@ -757,21 +503,34 @@
     },
     "plan": {
      "ok": true,
-     "elapsed_s": 7.3,
+     "elapsed_s": 5.8,
      "result": {
       "planned": true,
       "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
+      "acting": true,
+      "exploit_acting": false,
+      "probe_verdict": "UNMEASURED_TRADE_SMALL",
+      "probe_acting": true,
+      "shortlist": 25,
+      "shortlist_red": null,
+      "n_considered": 42,
+      "n_probe": 10,
+      "n_orders": 28,
+      "n_probe_orders": 10,
+      "n_exploit_orders": 0,
+      "n_sent": 0,
+      "send_block": "venue closed: orders wait for the open",
+      "turnover_usd": 997811.34,
+      "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+      "decisions_new": 0,
       "top1": "FLNC"
      }
     },
     "grade": {
      "ok": true,
-     "elapsed_s": 1.8,
+     "elapsed_s": 2.8,
      "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
+      "forecasts": "0 newly resolved; 17,484 of 25,163 records now carry an outcome; 130 wait on a bar, 7,543 are not yet due",
       "decisions": "nothing_to_do"
      }
     },
@@ -791,13 +550,13 @@
    "errors": []
   },
   {
-   "cycle": 8,
-   "at": "2026-09-25T08:06:19+00:00",
-   "elapsed_s": 13.7,
+   "cycle": 20,
+   "at": "2026-09-25T10:32:41+00:00",
+   "elapsed_s": 11.7,
    "units": {
     "reconcile": {
      "ok": true,
-     "elapsed_s": 4.8,
+     "elapsed_s": 3.4,
      "result": {
       "equity": 1000000.0,
       "cash": 1000000.0,
@@ -811,7 +570,7 @@
      "result": {
       "skipped": "candidate set is fresh",
       "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.22,
+      "age_days": 1.32,
       "n_candidates": 25
      }
     },
@@ -853,21 +612,34 @@
     },
     "plan": {
      "ok": true,
-     "elapsed_s": 7.0,
+     "elapsed_s": 5.7,
      "result": {
       "planned": true,
       "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
+      "acting": true,
+      "exploit_acting": false,
+      "probe_verdict": "UNMEASURED_TRADE_SMALL",
+      "probe_acting": true,
+      "shortlist": 25,
+      "shortlist_red": null,
+      "n_considered": 42,
+      "n_probe": 10,
+      "n_orders": 28,
+      "n_probe_orders": 10,
+      "n_exploit_orders": 0,
+      "n_sent": 0,
+      "send_block": "venue closed: orders wait for the open",
+      "turnover_usd": 997811.34,
+      "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+      "decisions_new": 0,
       "top1": "FLNC"
      }
     },
     "grade": {
      "ok": true,
-     "elapsed_s": 1.9,
+     "elapsed_s": 2.5,
      "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
+      "forecasts": "0 newly resolved; 17,484 of 25,163 records now carry an outcome; 130 wait on a bar, 7,543 are not yet due",
       "decisions": "nothing_to_do"
      }
     },
@@ -883,13 +655,13 @@
    "errors": []
   },
   {
-   "cycle": 9,
-   "at": "2026-09-25T08:11:19+00:00",
-   "elapsed_s": 13.9,
+   "cycle": 21,
+   "at": "2026-09-25T10:37:41+00:00",
+   "elapsed_s": 11.7,
    "units": {
     "reconcile": {
      "ok": true,
-     "elapsed_s": 4.8,
+     "elapsed_s": 3.4,
      "result": {
       "equity": 1000000.0,
       "cash": 1000000.0,
@@ -903,7 +675,7 @@
      "result": {
       "skipped": "candidate set is fresh",
       "generated_at": "2026-09-24T02:48:34+00:00",
-      "age_days": 1.22,
+      "age_days": 1.33,
       "n_candidates": 25
      }
     },
@@ -945,21 +717,34 @@
     },
     "plan": {
      "ok": true,
-     "elapsed_s": 7.0,
+     "elapsed_s": 5.7,
      "result": {
       "planned": true,
       "verdict": "MEASURED_NEGATIVE",
-      "acting": false,
-      "n_orders": 18,
-      "turnover_usd": 998798.515,
+      "acting": true,
+      "exploit_acting": false,
+      "probe_verdict": "UNMEASURED_TRADE_SMALL",
+      "probe_acting": true,
+      "shortlist": 25,
+      "shortlist_red": null,
+      "n_considered": 42,
+      "n_probe": 10,
+      "n_orders": 28,
+      "n_probe_orders": 10,
+      "n_exploit_orders": 0,
+      "n_sent": 0,
+      "send_block": "venue closed: orders wait for the open",
+      "turnover_usd": 997811.34,
+      "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+      "decisions_new": 0,
       "top1": "FLNC"
      }
     },
     "grade": {
      "ok": true,
-     "elapsed_s": 2.0,
+     "elapsed_s": 2.5,
      "result": {
-      "forecasts": "0 newly resolved; 17,484 of 24,997 records now carry an outcome; 130 wait on a bar, 7,377 are not yet due",
+      "forecasts": "0 newly resolved; 17,484 of 25,763 records now carry an outcome; 130 wait on a bar, 8,143 are not yet due",
       "decisions": "nothing_to_do"
      }
     },
@@ -983,13 +768,8 @@
    "errors": []
   }
  ],
- "heartbeat": "2026-09-25T08:12:19+00:00",
- "pid": 61916,
+ "heartbeat": "2026-09-25T10:37:41+00:00",
+ "pid": 97412,
  "read_me_first": "A STOP finishes the current cycle, checkpoints, and exits. It never interrupts a unit of work. `state` UNCLEAN means the process vanished without a stop receipt -- the checkpoint is still good, the cycle after it is unknown.",
- "note": "idle 60s of 286s",
- "stop_requested": "2026-09-25T08:12:37+00:00",
- "stop_reason": "button",
- "ended": "2026-09-25T08:12:37+00:00",
- "end_reason": "stop requested",
- "final_cycle": 9
+ "note": "cycle 21: learn"
 }

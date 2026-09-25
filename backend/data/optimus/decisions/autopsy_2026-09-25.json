@@ -2,8 +2,26 @@
  "receipt": "decision_autopsy",
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
- "written_utc": "2026-09-25T06:54:03+00:00",
- "convention": "entry at the OPEN of the first session after the decision date, mark at the close h sessions later; relative = stock - SPY over the same window; no cost charged (grades the call, not a book); PENDING is not zero",
+ "written_utc": "2026-09-25T10:13:22+00:00",
+ "convention": "entry at the OPEN of the first session after the decision date, mark at the close h sessions later; rel = stock - SPY over the same window; rel_univ = stock - the MEDIAN same-window return of the names xs_ranker.mark_eligible admits on the decision date (the headline benchmark); no cost charged (grades the call, not a book); PENDING is not zero",
+ "benchmarks": {
+  "spy": "SPY",
+  "universe": "XS_MEDIAN",
+  "universe_info": {
+   "panel": "bars.parquet",
+   "panel_rows": 1275452,
+   "panel_symbols": 3060,
+   "panel_last": "2026-09-21",
+   "eligible_on_panel_last": 2909,
+   "fetch": {
+    "names": 2963,
+    "rows": 8872,
+    "through": "2026-09-24",
+    "last": "2026-09-24"
+   }
+  },
+  "min_universe_names": 200
+ },
  "horizons_sessions": [
   1,
   5,
@@ -12,19 +30,19 @@
  "last_priced_session": "2026-09-24",
  "bar_sources": {
   "bars.parquet": {
-   "rows": 1246,
+   "rows": 1764,
    "last": "2026-09-21"
   },
   "bars_delisted.parquet": {
-   "rows": 0,
-   "last": null
+   "rows": 28,
+   "last": "2026-09-21"
   },
   "bars_forecast_only.parquet": {
    "rows": 17,
    "last": "2026-09-24"
   },
   "alpaca_fetch": {
-   "rows": 1530,
+   "rows": 2159,
    "through": "2026-09-24",
    "last": "2026-09-24"
   }
@@ -41,7 +59,53 @@
  "rows_not_graded_not_a_single_name": {
   "book:BUY": 18
  },
+ "headline": {
+  "1": {
+   "pair": "PROBE-REFUSED",
+   "pooled_vs_universe_median": -0.006785201922595201,
+   "pooled_vs_spy": 0.0018598825931905004,
+   "n_rows_PROBE": 114,
+   "n_rows_REFUSED": 41,
+   "n_rows_PROBE_spy": 114,
+   "n_rows_REFUSED_spy": 41,
+   "n_date_blocks": 3,
+   "day_matched_gap": -0.007603937565567317,
+   "day_matched_t": -0.8313955251122195,
+   "day_matched_by_day": {
+    "2026-09-21": -0.025842127457534024,
+    "2026-09-22": 0.0027291920593690185,
+    "2026-09-23": 0.00030112270146305585
+   }
+  },
+  "5": {
+   "pair": "PROBE-REFUSED",
+   "pooled_vs_universe_median": null,
+   "pooled_vs_spy": null,
+   "n_rows_PROBE": 0,
+   "n_rows_REFUSED": 0,
+   "n_rows_PROBE_spy": 0,
+   "n_rows_REFUSED_spy": 0,
+   "n_date_blocks": 0,
+   "day_matched_gap": null,
+   "day_matched_t": null,
+   "day_matched_by_day": {}
+  },
+  "21": {
+   "pair": "PROBE-REFUSED",
+   "pooled_vs_universe_median": null,
+   "pooled_vs_spy": null,
+   "n_rows_PROBE": 0,
+   "n_rows_REFUSED": 0,
+   "n_rows_PROBE_spy": 0,
+   "n_rows_REFUSED_spy": 0,
+   "n_date_blocks": 0,
+   "day_matched_gap": null,
+   "day_matched_t": null,
+   "day_matched_by_day": {}
+  }
+ },
  "n_decision_rows": 225,
+ "n_decision_days": 6,
  "status_counts": {
   "BUY": {
    "1": {
@@ -91,25 +155,81 @@
    }
   }
  },
+ "benchmarks_by_day": {
+  "2026-09-20": {
+   "1": {
+    "entry": "2026-09-21",
+    "exit": "2026-09-21",
+    "spy": 0.009460346544409193,
+    "universe_median": -0.0023995278673422105,
+    "universe_n": 2908
+   }
+  },
+  "2026-09-21": {
+   "1": {
+    "entry": "2026-09-22",
+    "exit": "2026-09-22",
+    "spy": -0.0008396956426255375,
+    "universe_median": -0.0017303102625297884,
+    "universe_n": 2909
+   }
+  },
+  "2026-09-22": {
+   "1": {
+    "entry": "2026-09-23",
+    "exit": "2026-09-23",
+    "spy": -0.006333904829683434,
+    "universe_median": -0.00754748279008044,
+    "universe_n": 2909
+   }
+  },
+  "2026-09-23": {
+   "1": {
+    "entry": "2026-09-24",
+    "exit": "2026-09-24",
+    "spy": 0.004227416695024022,
+    "universe_median": -0.0012652403956752156,
+    "universe_n": 2907
+   }
+  }
+ },
  "by_direction": {
   "BUY": {
    "1": {
     "n": 4,
     "mean_rel": -0.007415975503796385,
     "median_rel": -0.005507379893693598,
-    "share_up": 0.5
+    "share_up": 0.5,
+    "n_univ": 4,
+    "mean_rel_univ": -0.0025517944831084105,
+    "median_rel_univ": 0.0010293462923806063,
+    "share_up_univ": 0.5,
+    "mean_spy": 0.0016285406917810608,
+    "mean_univ": -0.0032356403289069136
    },
    "5": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    },
    "21": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    }
   },
   "PROBE": {
@@ -117,19 +237,37 @@
     "n": 114,
     "mean_rel": -0.0035670450705406528,
     "median_rel": -0.0032072258140966037,
-    "share_up": 0.42105263157894735
+    "share_up": 0.42105263157894735,
+    "n_univ": 114,
+    "mean_rel_univ": -0.0010347618468738216,
+    "median_rel_univ": -0.00018652275360558912,
+    "share_up_univ": 0.4824561403508772,
+    "mean_spy": -0.0009820612590949833,
+    "mean_univ": -0.0035143444827618144
    },
    "5": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    },
    "21": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    }
   },
   "REFUSED": {
@@ -137,19 +275,37 @@
     "n": 41,
     "mean_rel": -0.005426927663731153,
     "median_rel": -0.004193228410473981,
-    "share_up": 0.3902439024390244
+    "share_up": 0.3902439024390244,
+    "n_univ": 41,
+    "mean_rel_univ": 0.00575044007572138,
+    "median_rel_univ": 0.006213131461533128,
+    "share_up_univ": 0.6097560975609756,
+    "mean_spy": 0.008696267924640594,
+    "mean_univ": -0.0024810998148119376
    },
    "5": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    },
    "21": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    }
   },
   "WATCH": {
@@ -157,19 +313,37 @@
     "n": 1,
     "mean_rel": 0.005682510598447932,
     "median_rel": 0.005682510598447932,
-    "share_up": 1.0
+    "share_up": 1.0,
+    "n_univ": 1,
+    "mean_rel_univ": 0.017542385010199335,
+    "median_rel_univ": 0.017542385010199335,
+    "share_up_univ": 1.0,
+    "mean_spy": 0.009460346544409193,
+    "mean_univ": -0.0023995278673422105
    },
    "5": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    },
    "21": {
     "n": 0,
     "mean_rel": null,
     "median_rel": null,
-    "share_up": null
+    "share_up": null,
+    "n_univ": 0,
+    "mean_rel_univ": null,
+    "median_rel_univ": null,
+    "share_up_univ": null,
+    "mean_spy": null,
+    "mean_univ": null
    }
   }
  },
@@ -180,19 +354,37 @@
      "n": 1,
      "mean_rel": -0.019106648795212955,
      "median_rel": -0.019106648795212955,
-     "share_up": 0.0
+     "share_up": 0.0,
+     "n_univ": 1,
+     "mean_rel_univ": -0.007246774383461552,
+     "median_rel_univ": -0.007246774383461552,
+     "share_up_univ": 0.0,
+     "mean_spy": 0.009460346544409193,
+     "mean_univ": -0.0023995278673422105
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "WATCH": {
@@ -200,19 +392,37 @@
      "n": 1,
      "mean_rel": 0.005682510598447932,
      "median_rel": 0.005682510598447932,
-     "share_up": 1.0
+     "share_up": 1.0,
+     "n_univ": 1,
+     "mean_rel_univ": 0.017542385010199335,
+     "median_rel_univ": 0.017542385010199335,
+     "share_up_univ": 1.0,
+     "mean_spy": 0.009460346544409193,
+     "mean_univ": -0.0023995278673422105
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "REFUSED": {
@@ -220,19 +430,37 @@
      "n": 38,
      "mean_rel": -0.006174071360475191,
      "median_rel": -0.004919985680346128,
-     "share_up": 0.39473684210526316
+     "share_up": 0.39473684210526316,
+     "n_univ": 38,
+     "mean_rel_univ": 0.005685803051276212,
+     "median_rel_univ": 0.006939888731405275,
+     "share_up_univ": 0.6052631578947368,
+     "mean_spy": 0.009460346544409193,
+     "mean_univ": -0.0023995278673422105
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    }
   },
@@ -242,19 +470,37 @@
      "n": 1,
      "mean_rel": 0.011592383814668539,
      "median_rel": 0.011592383814668539,
-     "share_up": 1.0
+     "share_up": 1.0,
+     "n_univ": 1,
+     "mean_rel_univ": 0.01248299843457279,
+     "median_rel_univ": 0.01248299843457279,
+     "share_up_univ": 1.0,
+     "mean_spy": -0.0008396956426255375,
+     "mean_univ": -0.0017303102625297884
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "REFUSED": {
@@ -262,19 +508,37 @@
      "n": 1,
      "mean_rel": 0.021414667457732683,
      "median_rel": 0.021414667457732683,
-     "share_up": 1.0
+     "share_up": 1.0,
+     "n_univ": 1,
+     "mean_rel_univ": 0.022305282077636934,
+     "median_rel_univ": 0.022305282077636934,
+     "share_up_univ": 1.0,
+     "mean_spy": -0.0008396956426255375,
+     "mean_univ": -0.0017303102625297884
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "PROBE": {
@@ -282,19 +546,37 @@
      "n": 38,
      "mean_rel": -0.004427459999801341,
      "median_rel": -0.001873618777920305,
-     "share_up": 0.42105263157894735
+     "share_up": 0.42105263157894735,
+     "n_univ": 38,
+     "mean_rel_univ": -0.0035368453798970893,
+     "median_rel_univ": -0.0009830041580160542,
+     "share_up_univ": 0.47368421052631576,
+     "mean_spy": -0.0008396956426255375,
+     "mean_univ": -0.0017303102625297884
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    }
   },
@@ -304,19 +586,37 @@
      "n": 1,
      "mean_rel": 0.008091889007825759,
      "median_rel": 0.008091889007825759,
-     "share_up": 1.0
+     "share_up": 1.0,
+     "n_univ": 1,
+     "mean_rel_univ": 0.009305466968222764,
+     "median_rel_univ": 0.009305466968222764,
+     "share_up_univ": 1.0,
+     "mean_spy": -0.006333904829683434,
+     "mean_univ": -0.00754748279008044
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "REFUSED": {
@@ -324,19 +624,37 @@
      "n": 1,
      "mean_rel": -0.0061884565298871985,
      "median_rel": -0.0061884565298871985,
-     "share_up": 0.0
+     "share_up": 0.0,
+     "n_univ": 1,
+     "mean_rel_univ": -0.004974878569490193,
+     "median_rel_univ": -0.004974878569490193,
+     "share_up_univ": 0.0,
+     "mean_spy": -0.006333904829683434,
+     "mean_univ": -0.00754748279008044
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "PROBE": {
@@ -344,19 +662,37 @@
      "n": 38,
      "mean_rel": -0.00345926447051818,
      "median_rel": -0.0014001007140025945,
-     "share_up": 0.4473684210526316
+     "share_up": 0.4473684210526316,
+     "n_univ": 38,
+     "mean_rel_univ": -0.0022456865101211747,
+     "median_rel_univ": -0.00018652275360558912,
+     "share_up_univ": 0.47368421052631576,
+     "mean_spy": -0.006333904829683434,
+     "mean_univ": -0.00754748279008044
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    }
   },
@@ -366,19 +702,37 @@
      "n": 1,
      "mean_rel": -0.030241526042466882,
      "median_rel": -0.030241526042466882,
-     "share_up": 0.0
+     "share_up": 0.0,
+     "n_univ": 1,
+     "mean_rel_univ": -0.024748868951767644,
+     "median_rel_univ": -0.024748868951767644,
+     "share_up_univ": 0.0,
+     "mean_spy": 0.004227416695024022,
+     "mean_univ": -0.0012652403956752156
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "REFUSED": {
@@ -386,19 +740,37 @@
      "n": 1,
      "mean_rel": -0.0031155334427654946,
      "median_rel": -0.0031155334427654946,
-     "share_up": 0.0
+     "share_up": 0.0,
+     "n_univ": 1,
+     "mean_rel_univ": 0.002377123647933743,
+     "median_rel_univ": 0.002377123647933743,
+     "share_up_univ": 1.0,
+     "mean_spy": 0.004227416695024022,
+     "mean_univ": -0.0012652403956752156
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    },
    "PROBE": {
@@ -406,19 +778,37 @@
      "n": 38,
      "mean_rel": -0.0028144107413024385,
      "median_rel": -0.005087705687290278,
-     "share_up": 0.39473684210526316
+     "share_up": 0.39473684210526316,
+     "n_univ": 38,
+     "mean_rel_univ": 0.0026782463493967993,
+     "median_rel_univ": 0.00040495140340895963,
+     "share_up_univ": 0.5,
+     "mean_spy": 0.004227416695024022,
+     "mean_univ": -0.0012652403956752156
     },
     "5": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     },
     "21": {
      "n": 0,
      "mean_rel": null,
      "median_rel": null,
-     "share_up": null
+     "share_up": null,
+     "n_univ": 0,
+     "mean_rel_univ": null,
+     "median_rel_univ": null,
+     "share_up_univ": null,
+     "mean_spy": null,
+     "mean_univ": null
     }
    }
   }
@@ -429,6 +819,7 @@
    "ticker": "META",
    "horizon": 1,
    "rel": 0.08013313863481453,
+   "rel_univ": 0.09199301304656593,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -438,6 +829,7 @@
    "ticker": "ANIP",
    "horizon": 1,
    "rel": 0.03491051438274306,
+   "rel_univ": 0.046770388794494466,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -447,6 +839,7 @@
    "ticker": "INDV",
    "horizon": 1,
    "rel": 0.021414667457732683,
+   "rel_univ": 0.022305282077636934,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -456,6 +849,7 @@
    "ticker": "CWK",
    "horizon": 1,
    "rel": 0.014349177265114754,
+   "rel_univ": 0.026209051676866157,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -465,6 +859,7 @@
    "ticker": "OMAB",
    "horizon": 1,
    "rel": 0.012191782752666303,
+   "rel_univ": 0.024051657164417706,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -474,6 +869,7 @@
    "ticker": "NVDA",
    "horizon": 1,
    "rel": 0.010478200565734896,
+   "rel_univ": 0.0223380749774863,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -483,6 +879,7 @@
    "ticker": "NFLX",
    "horizon": 1,
    "rel": 0.010207455248627317,
+   "rel_univ": 0.02206732966037872,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -492,6 +889,7 @@
    "ticker": "LLY",
    "horizon": 1,
    "rel": 0.008359740043998976,
+   "rel_univ": 0.02021961445575038,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -501,6 +899,7 @@
    "ticker": "CSCO",
    "horizon": 1,
    "rel": 0.005565607375998649,
+   "rel_univ": 0.017425481787750052,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -510,6 +909,7 @@
    "ticker": "GRMN",
    "horizon": 1,
    "rel": 0.005273218471518959,
+   "rel_univ": 0.017133092883270362,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -519,6 +919,7 @@
    "ticker": "GOOG",
    "horizon": 1,
    "rel": 0.004058241514171446,
+   "rel_univ": 0.01591811592592285,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -528,6 +929,7 @@
    "ticker": "MSFT",
    "horizon": 1,
    "rel": 0.004005796158315311,
+   "rel_univ": 0.015865670570066714,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -537,6 +939,7 @@
    "ticker": "GOOGL",
    "horizon": 1,
    "rel": 0.002888501276717914,
+   "rel_univ": 0.014748375688469317,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -546,6 +949,7 @@
    "ticker": "AAPL",
    "horizon": 1,
    "rel": 0.001575205829726034,
+   "rel_univ": 0.013435080241477437,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -555,6 +959,7 @@
    "ticker": "IRTC",
    "horizon": 1,
    "rel": 0.0011604188831682016,
+   "rel_univ": 0.013020293294919605,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -564,6 +969,7 @@
    "ticker": "TSM",
    "horizon": 1,
    "rel": 0.0003853884828139975,
+   "rel_univ": 0.0122452628945654,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -575,6 +981,7 @@
    "ticker": "CVLG",
    "horizon": 1,
    "rel": -0.030241526042466882,
+   "rel_univ": -0.024748868951767644,
    "terminal_state": null,
    "refusal_class": null,
    "signal": "profitability_small"
@@ -584,6 +991,7 @@
    "ticker": "CVLG",
    "horizon": 1,
    "rel": -0.019106648795212955,
+   "rel_univ": -0.007246774383461552,
    "terminal_state": null,
    "refusal_class": null,
    "signal": "profitability_small"
@@ -595,6 +1003,7 @@
    "ticker": "CVLG",
    "horizon": 1,
    "rel": 0.011592383814668539,
+   "rel_univ": 0.01248299843457279,
    "terminal_state": null,
    "refusal_class": null,
    "signal": "profitability_small"
@@ -604,6 +1013,7 @@
    "ticker": "CVLG",
    "horizon": 1,
    "rel": 0.008091889007825759,
+   "rel_univ": 0.009305466968222764,
    "terminal_state": null,
    "refusal_class": null,
    "signal": "profitability_small"
@@ -615,6 +1025,7 @@
    "ticker": "META",
    "horizon": 1,
    "rel": 0.04150215895172482,
+   "rel_univ": 0.04699481604242406,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -624,6 +1035,7 @@
    "ticker": "GRMN",
    "horizon": 1,
    "rel": 0.031140664226583237,
+   "rel_univ": 0.036633321317282475,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -633,6 +1045,7 @@
    "ticker": "TSM",
    "horizon": 1,
    "rel": 0.024915216033810195,
+   "rel_univ": 0.025805830653714446,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -642,6 +1055,7 @@
    "ticker": "OMAB",
    "horizon": 1,
    "rel": 0.02488679203057198,
+   "rel_univ": 0.02577740665047623,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -651,6 +1065,7 @@
    "ticker": "LLY",
    "horizon": 1,
    "rel": 0.02164178805762118,
+   "rel_univ": 0.02253240267752543,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -660,6 +1075,7 @@
    "ticker": "LLY",
    "horizon": 1,
    "rel": 0.018486795566416303,
+   "rel_univ": 0.02397945265711554,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -669,6 +1085,7 @@
    "ticker": "PDS",
    "horizon": 1,
    "rel": 0.018159656006224822,
+   "rel_univ": 0.019373233966621828,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -678,6 +1095,7 @@
    "ticker": "GRMN",
    "horizon": 1,
    "rel": 0.018114746016910765,
+   "rel_univ": 0.01932832397730777,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -687,6 +1105,7 @@
    "ticker": "TSM",
    "horizon": 1,
    "rel": 0.016848329218861924,
+   "rel_univ": 0.02234098630956116,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -696,6 +1115,7 @@
    "ticker": "CRAI",
    "horizon": 1,
    "rel": 0.01522638664051612,
+   "rel_univ": 0.016439964600913126,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "profitability_small"
@@ -705,6 +1125,7 @@
    "ticker": "INCY",
    "horizon": 1,
    "rel": 0.014945026098950986,
+   "rel_univ": 0.015835640718855237,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -714,6 +1135,7 @@
    "ticker": "GOOG",
    "horizon": 1,
    "rel": 0.01397406104871357,
+   "rel_univ": 0.01946671813941281,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
@@ -723,6 +1145,7 @@
    "ticker": "GOOGL",
    "horizon": 1,
    "rel": 0.013854367691592984,
+   "rel_univ": 0.01934702478229222,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -732,6 +1155,7 @@
    "ticker": "PHIN",
    "horizon": 1,
    "rel": 0.012733505893513297,
+   "rel_univ": 0.013947083853910303,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -741,6 +1165,7 @@
    "ticker": "VTS",
    "horizon": 1,
    "rel": 0.012223757955387438,
+   "rel_univ": 0.013114372575291688,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "profitability_small"
@@ -750,6 +1175,7 @@
    "ticker": "BBSI",
    "horizon": 1,
    "rel": 0.011791931724158822,
+   "rel_univ": 0.012682546344063073,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "profitability_small"
@@ -759,6 +1185,7 @@
    "ticker": "GRMN",
    "horizon": 1,
    "rel": 0.010911331928886936,
+   "rel_univ": 0.011801946548791187,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -768,6 +1195,7 @@
    "ticker": "AMZN",
    "horizon": 1,
    "rel": 0.009205631448532925,
+   "rel_univ": 0.014698288539232163,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -777,6 +1205,7 @@
    "ticker": "NVDA",
    "horizon": 1,
    "rel": 0.009100517319021506,
+   "rel_univ": 0.009991131938925757,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -786,6 +1215,7 @@
    "ticker": "CSCO",
    "horizon": 1,
    "rel": 0.008604630276896952,
+   "rel_univ": 0.01409728736759619,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -795,6 +1225,7 @@
    "ticker": "PRVA",
    "horizon": 1,
    "rel": 0.008301949005837361,
+   "rel_univ": 0.013794606096536599,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -804,6 +1235,7 @@
    "ticker": "META",
    "horizon": 1,
    "rel": 0.007839251334891273,
+   "rel_univ": 0.008729865954795524,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -813,6 +1245,7 @@
    "ticker": "CSCO",
    "horizon": 1,
    "rel": 0.007462573001241091,
+   "rel_univ": 0.008676150961638096,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "insider_opportunistic"
@@ -822,6 +1255,7 @@
    "ticker": "VTS",
    "horizon": 1,
    "rel": 0.007334990657481111,
+   "rel_univ": 0.012827647748180349,
    "terminal_state": "NEGATIVE_EV",
    "refusal_class": "EDGE_BELOW_BAR",
    "signal": "profitability_small"
@@ -831,16 +1265,37 @@
    "ticker": "FMX",
    "horizon": 1,
    "rel": 0.0072729506222122264,
+   "rel_univ": 0.008163565242116477,
    "terminal_state": "DATA_MISSING",
    "refusal_class": "UNCLASSIFIED",
    "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
   }
  ],
- "n_predictions": 51,
+ "n_predictions": 169,
  "predictions_by_specialist": {
   "book:mom_12_1": {
    "n": 1,
    "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "by_horizon_vs_universe": {
     "1": {
      "n": 0,
      "mean_rel": null,
@@ -887,6 +1342,26 @@
      "share_up": null
     }
    },
+   "by_horizon_vs_universe": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
    "n_graded_at_own_horizon": 0,
    "own_horizon_brier": null,
    "own_horizon_hit": null,
@@ -895,6 +1370,26 @@
   "book:abstention_confidence_z": {
    "n": 2,
    "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "by_horizon_vs_universe": {
     "1": {
      "n": 0,
      "mean_rel": null,
@@ -941,6 +1436,26 @@
      "share_up": null
     }
    },
+   "by_horizon_vs_universe": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
    "n_graded_at_own_horizon": 0,
    "own_horizon_brier": null,
    "own_horizon_hit": null,
@@ -968,10 +1483,77 @@
      "share_up": null
     }
    },
+   "by_horizon_vs_universe": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
    "n_graded_at_own_horizon": 0,
    "own_horizon_brier": null,
    "own_horizon_hit": null,
    "mean_probability": 0.5099125000000001
+  },
+  "investigator:evidence_v3": {
+   "n": 118,
+   "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "by_horizon_vs_universe": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "n_graded_at_own_horizon": 0,
+   "own_horizon_brier": null,
+   "own_horizon_hit": null,
+   "mean_probability": 0.5006059322033898
   }
  },
  "predictions": [
@@ -985,6 +1567,11 @@
    "probability": 0.5,
    "prediction_id": "628f4f648f2522b4",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1009,6 +1596,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "UNPRICED",
     "5": "UNPRICED",
@@ -1025,6 +1617,11 @@
    "probability": 0.5,
    "prediction_id": "fa8ed6b683dba42e",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1049,6 +1646,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "UNPRICED",
     "5": "UNPRICED",
@@ -1065,6 +1667,11 @@
    "probability": 0.5,
    "prediction_id": "c37f7a603b1c68ba",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1089,6 +1696,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "UNPRICED",
     "5": "UNPRICED",
@@ -1105,6 +1717,11 @@
    "probability": 0.4365843561142291,
    "prediction_id": "fd3151afd0bf25e6",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1129,6 +1746,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "UNPRICED",
     "5": "UNPRICED",
@@ -1145,6 +1767,11 @@
    "probability": 0.5634156438857709,
    "prediction_id": "cc0c01e01ff9ca38",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1169,6 +1796,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "UNPRICED",
     "5": "UNPRICED",
@@ -1185,6 +1817,11 @@
    "probability": 0.2198966917366465,
    "prediction_id": "ba1c162441db7d1f",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1209,6 +1846,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1225,6 +1867,11 @@
    "probability": 0.513,
    "prediction_id": "92d4e180605a85e8",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1249,6 +1896,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1265,6 +1917,11 @@
    "probability": 0.513,
    "prediction_id": "d8d1e927e3845a99",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1289,6 +1946,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1305,6 +1967,11 @@
    "probability": 0.526,
    "prediction_id": "b539658a55f8dadb",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1329,6 +1996,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1345,6 +2017,11 @@
    "probability": 0.5065,
    "prediction_id": "833a79197b653fff",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1369,6 +2046,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1385,6 +2067,11 @@
    "probability": 0.487,
    "prediction_id": "75337d3afd422559",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1409,6 +2096,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1425,6 +2117,11 @@
    "probability": 0.5195000000000001,
    "prediction_id": "a0d67cf11c7e9f18",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1449,6 +2146,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1465,6 +2167,11 @@
    "probability": 0.513,
    "prediction_id": "0e0f7a3f5ce77a78",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1489,6 +2196,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1505,6 +2217,11 @@
    "probability": 0.5,
    "prediction_id": "31dcd3767ddb8e41",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1529,6 +2246,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1545,6 +2267,11 @@
    "probability": 0.487,
    "prediction_id": "0733284896f2863b",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1569,6 +2296,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1585,6 +2317,11 @@
    "probability": 0.5195000000000001,
    "prediction_id": "7d73837be80765aa",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1609,6 +2346,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1625,6 +2367,11 @@
    "probability": 0.5065,
    "prediction_id": "1a150735fc944deb",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1649,6 +2396,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1665,6 +2417,11 @@
    "probability": 0.513,
    "prediction_id": "7c7040afec000031",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1689,6 +2446,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1705,6 +2467,11 @@
    "probability": 0.4935,
    "prediction_id": "3cbcffb5a83708d4",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1729,6 +2496,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1745,6 +2517,11 @@
    "probability": 0.5065,
    "prediction_id": "a2fac893ee4d1d79",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1769,6 +2546,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1785,6 +2567,11 @@
    "probability": 0.47400000000000003,
    "prediction_id": "5dff2e683fe3f190",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1809,6 +2596,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1825,6 +2617,11 @@
    "probability": 0.47400000000000003,
    "prediction_id": "6ba188372e296ad5",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1849,6 +2646,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1865,6 +2667,11 @@
    "probability": 0.5325,
    "prediction_id": "5c9d11e7207003c7",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1889,6 +2696,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1905,6 +2717,11 @@
    "probability": 0.539,
    "prediction_id": "81a930c4a4fd6f2d",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1929,6 +2746,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1945,6 +2767,11 @@
    "probability": 0.513,
    "prediction_id": "284cd205adef1567",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null
@@ -1969,6 +2796,11 @@
     "5": null,
     "21": null
    },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
    "status": {
     "1": "PENDING",
     "5": "PENDING",
@@ -1985,6 +2817,2961 @@
    "probability": 0.461,
    "prediction_id": "400a873aafdf76d0",
    "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ABSI",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "b5618f6e006a4833",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ABSI",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "00f6f2f5ebcd45a9",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AMSC",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "9c014c489d6fd369",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AMSC",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.487,
+   "prediction_id": "880fe03d32cf029f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "BHVN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "f8d98bdeaa1be99e",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "BHVN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5,
+   "prediction_id": "639b18cc7c02061c",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DKNG",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "224fc6592b448540",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DKNG",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4805,
+   "prediction_id": "4a6e83acd6fa0051",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HUBS",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "44bf76b15c002161",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HUBS",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.47400000000000003,
+   "prediction_id": "2f67854a537c2f5a",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "KYTX",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "ebb82bedaba4912b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "KYTX",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4675,
+   "prediction_id": "1eefe7d407152036",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NTLA",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "aee2edef8fe97a90",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NTLA",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5,
+   "prediction_id": "721625ab396bad38",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "PRCH",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "3c0fb9d4a125f86a",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "PRCH",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "c7810daafecc0de7",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "QUBT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "3cc6304aa0537187",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "QUBT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "5c38348e54d0d2e8",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "SLDP",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "c08087414fd75301",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "SLDP",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4805,
+   "prediction_id": "6a492e0bcd640dbc",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "SOC",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "4dbfb64daf554bd5",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "SOC",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4675,
+   "prediction_id": "048968e993f85572",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "OKTA",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "1ed760da86dec678",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "OKTA",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5325,
+   "prediction_id": "0570b03fbe411c99",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "SNOW",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "b230318f4ba0f78b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "SNOW",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "0025d9ba899dc8eb",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CRWD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "4701d203eaafa96a",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CRWD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "63957d9e0a8c00a0",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "PANW",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "69a6b696dff0a863",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "PANW",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "b474d4912f703abb",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CRM",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "8f277e0aebe0d0b4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CRM",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "23f7fd6d3059b443",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ABNB",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "8fbe197d7ada592f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ABNB",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5065,
+   "prediction_id": "b46f6ac26d4d7b1b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AFRM",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "ae890be65cd2137c",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AFRM",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.487,
+   "prediction_id": "830709ec0150b50d",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "GTLB",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "182329132d233378",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "GTLB",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "afd12334a8fad1c9",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AMD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "7e4b2eaa2f519137",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AMD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "dca70b4406123b2f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ESTC",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "34f88cc21a9cf7dc",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ESTC",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "d8dbf08cdbcb5fb4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AMGN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "b2407eb9aae09cf6",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "AMGN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "a5ba381959bdfeca",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "TGT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "38f0beb26e2c60ae",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "TGT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "3940d698e881ff7e",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NET",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "6ac515f8222b8189",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NET",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "41f3b65a2fd61649",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DDOG",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "98b007f532aac1ef",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DDOG",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "ac8aa8c0fb9b6809",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "MDB",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "49ffc7ea8cc3efb8",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "MDB",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "68cb70afec95eaf6",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ZS",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "7af75862ca2d08bc",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ZS",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5325,
+   "prediction_id": "5633aedbc3fea7cf",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "WDAY",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "8b536cc632c2be27",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "WDAY",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5065,
+   "prediction_id": "286990f6a62e39a7",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "S",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "f78925e747acc763",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "S",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5325,
+   "prediction_id": "3f88a17ce3507af0",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "XYZ",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "a0b0a03f08fdca79",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "XYZ",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "e8411917d5b34fe4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DELL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "611effa3e8b9f172",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DELL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5325,
+   "prediction_id": "bb7a5d7827cc57a2",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ACAD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "817812b09706f7eb",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ACAD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "315d1e1a18535d61",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ARES",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "a59ee82b34ed713a",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ARES",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "38fecae9182e5076",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ASND",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "2ce13adde0027bde",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ASND",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4935,
+   "prediction_id": "88ca9f217f5819f4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "BTGO",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "f02c78a24c05dade",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "BTGO",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4935,
+   "prediction_id": "c3966372d8f65246",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CASY",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.47400000000000003,
+   "prediction_id": "6da94f89d7678945",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CASY",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4545,
+   "prediction_id": "d49453c84ce34c17",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CCEP",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "6395b6ef3862df5b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CCEP",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4935,
+   "prediction_id": "09e0f828ba356d18",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CENX",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.47400000000000003,
+   "prediction_id": "cd689c52ff4441ba",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CENX",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.461,
+   "prediction_id": "4915f9027c972689",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CG",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "d55289085815c005",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "CG",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.487,
+   "prediction_id": "948383732fe6993b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DNOW",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "4c001bf2cb8a49a4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "DNOW",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "fd977e7bb1d251b1",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "EQPT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "4402637a9526cce4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "EQPT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.47400000000000003,
+   "prediction_id": "bfa3dbae94b34fed",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "FIVN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5325,
+   "prediction_id": "07597264513f8e43",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "FIVN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5455,
+   "prediction_id": "daf623b3949d9e91",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HAL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "7664b162c436d43d",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HAL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.47400000000000003,
+   "prediction_id": "31f771a51f755167",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HXL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "2bc243b4c7293e28",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HXL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4805,
+   "prediction_id": "263f8287d8d28eed",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "INR",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "0ba232fdf432495f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "INR",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.47400000000000003,
+   "prediction_id": "e538552bdb9195ca",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "IQV",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "05be51bed3def468",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "IQV",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5325,
+   "prediction_id": "b9ee81542c8ed5c7",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "KNSL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "c79fa6d0376d0050",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "KNSL",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5065,
+   "prediction_id": "7f61860fec7eff2b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NDAQ",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "967c711511cfc844",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NDAQ",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "80162ac78a5e615b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "REYN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "74595f096b95b368",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "REYN",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4805,
+   "prediction_id": "743b87c18fb79ba7",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "VCTR",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "657bff510464bf29",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "VCTR",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "af7131e400c26bd6",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "WVE",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "1efd574fb8756215",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "WVE",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.461,
+   "prediction_id": "69eabf98d1ddcf53",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "VRT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "66df98adc9720c24",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "VRT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.47400000000000003,
+   "prediction_id": "c331210f05385242",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "GEV",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "5267c6144ebd11b4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "GEV",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "62abd0eedb2648b4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "MU",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "c134784ce9654745",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "MU",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4935,
+   "prediction_id": "ea4805d40c4725aa",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HOOD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "4b0a02754a9de99e",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "HOOD",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5195000000000001,
+   "prediction_id": "244a1fa60b179287",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NOVT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "5837ef381e5c2eef",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NOVT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4935,
+   "prediction_id": "41d96756384ac567",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NVT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "4a3b77d669ec7d10",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "NVT",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.513,
+   "prediction_id": "7c8eb8c09283e991",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "TSM",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "0a68d661c746d977",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "TSM",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.5065,
+   "prediction_id": "87bbbfb11f1e588d",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ENS",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "bc185525d0f972d0",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-25",
+   "made_at": "2026-09-25",
+   "ticker": "ENS",
+   "specialist": "investigator:evidence_v3",
+   "observable": "beats_benchmark",
+   "horizon_days": 5,
+   "probability": 0.4675,
+   "prediction_id": "6edc1c6bdfc01dec",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "rel_univ": {
     "1": null,
     "5": null,
     "21": null

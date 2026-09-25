@@ -1,0 +1,114 @@
+{
+ "cycle": 21,
+ "at": "2026-09-25T10:37:41+00:00",
+ "mode": "paper_profit",
+ "elapsed_s": 11.7,
+ "units": {
+  "reconcile": {
+   "ok": true,
+   "elapsed_s": 3.4,
+   "result": {
+    "equity": 1000000.0,
+    "cash": 1000000.0,
+    "n_positions": 0,
+    "invested_frac": 0.0
+   }
+  },
+  "funnel": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "candidate set is fresh",
+    "generated_at": "2026-09-24T02:48:34+00:00",
+    "age_days": 1.33,
+    "n_candidates": 25
+   }
+  },
+  "analyst": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already pulled today (2026-09-25)",
+    "n_snapshots": 3100,
+    "n_revision_rows": 393367
+   }
+  },
+  "rank": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "bars unchanged since the last rank",
+    "asof": "2026-09-21",
+    "n_eligible": 2929,
+    "top1": "FLNC"
+   }
+  },
+  "forecast": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "already ran today (2026-09-25)",
+    "state": "DONE",
+    "n_rows_written": 118,
+    "status": "ok"
+   }
+  },
+  "review": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "skipped": "before 08:00 ET"
+   }
+  },
+  "plan": {
+   "ok": true,
+   "elapsed_s": 5.7,
+   "result": {
+    "planned": true,
+    "verdict": "MEASURED_NEGATIVE",
+    "acting": true,
+    "exploit_acting": false,
+    "probe_verdict": "UNMEASURED_TRADE_SMALL",
+    "probe_acting": true,
+    "shortlist": 25,
+    "shortlist_red": null,
+    "n_considered": 42,
+    "n_probe": 10,
+    "n_orders": 28,
+    "n_probe_orders": 10,
+    "n_exploit_orders": 0,
+    "n_sent": 0,
+    "send_block": "venue closed: orders wait for the open",
+    "turnover_usd": 997811.34,
+    "worst_case_line": "largest admissible PROBE book: 10 x 2.00% x 8.23% (3 sigma of 2.74%/day) = -$16,452 on $1,000,000; sum|notional|/equity = 0.20; no stop is declared, so the ceiling is -$200,000",
+    "decisions_new": 0,
+    "top1": "FLNC"
+   }
+  },
+  "grade": {
+   "ok": true,
+   "elapsed_s": 2.5,
+   "result": {
+    "forecasts": "0 newly resolved; 17,484 of 25,763 records now carry an outcome; 130 wait on a bar, 8,143 are not yet due",
+    "decisions": "nothing_to_do"
+   }
+  },
+  "learn": {
+   "ok": true,
+   "elapsed_s": 0.0,
+   "result": {
+    "unit": "survivorship_audit",
+    "skipped": "bars unchanged since this unit last ran",
+    "n_symbols": 4793,
+    "panel_last_session": "2026-09-21",
+    "stopped_30d_before_end": 1574,
+    "stopped_90d_before_end": 1573,
+    "stopped_180d_before_end": 1567,
+    "fraction_dead_90d": 0.3282,
+    "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented.",
+    "bars_fingerprint": "bars.parquet:160888761:1790050920|bars_delisted.parquet:38439261:1790051732"
+   }
+  }
+ },
+ "errors": []
+}
