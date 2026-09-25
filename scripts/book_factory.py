@@ -341,7 +341,10 @@ def shape_defect(parsed: dict, kind: str,
     probs = []
     if len(pos) < need:
         probs.append(f"{len(pos)} position(s), need at least {need}")
-    if not 0.98 <= tot <= 1.02:
+    # Strictly inside freeze's own 0.98-1.02 window: a total that lands ON the
+    # boundary (1.0200 by float) passed here and was refused at freeze on
+    # 2026-09-25; anything the freeze could refuse is a defect here first.
+    if not 0.981 <= tot <= 1.019:
         probs.append(f"weights plus cash sum to {tot:.3f}, not 1.0")
     if finish_reason == "length":
         probs.append("reply truncated at max_tokens (finish_reason=length); keep "
