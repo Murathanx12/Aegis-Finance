@@ -163,6 +163,59 @@ def score(d: pd.DataFrame, label: str) -> dict:
     }
 
 
+def previous_receipt(out_dir: Path, exclude: Path | None = None) -> dict | None:
+    """The newest earlier scoreboard receipt, by its own `written_utc` stamp.
+
+    Dated by the stamp inside the file, never by mtime (CLAUDE.md protocol 7).
+    """
+    best = None
+    for f in out_dir.glob("scoreboard_*.json"):
+        if exclude is not None and f.resolve() == exclude.resolve():
+            continue
+        try:
+            d = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        stamp = str(d.get("written_utc") or "")
+        if stamp and (best is None or stamp > best[0]):
+            best = (stamp, f.name, d)
+    if best is None:
+        return None
+    return {"file": best[1], "written_utc": best[0],
+            "n_ledger": best[2].get("n_ledger"), "n_scored": best[2].get("n_scored")}
+
+
+def new_rows_since(prev: dict | None, n_ledger: int, n_scored: int) -> dict:
+    """Ledger growth since the last scoreboard. NEGATIVE is possible and is
+    reported, not clipped: rows destroyed by git surgery are a finding."""
+    if not prev or prev.get("n_ledger") is None:
+        return {"new_rows": None, "new_graded": None,
+                "reason": "no earlier scoreboard receipt with n_ledger"}
+    return {"new_rows": int(n_ledger) - int(prev["n_ledger"]),
+            "new_graded": (int(n_scored) - int(prev["n_scored"])
+                           if prev.get("n_scored") is not None else None),
+            "since": prev["written_utc"], "previous_file": prev["file"]}
+
+
+def reputation_table(g: pd.DataFrame) -> dict:
+    """Held-out skill and weight per arm from `forecast_reputation`, using the
+    constants of the newest refit receipt (or its DEFAULTS, named as such)."""
+    from backend.services import forecast_reputation as fr
+    const, source = fr.latest_constants()
+    frame = pd.DataFrame({"arm": g["specialist"].astype(str),
+                          "p": g["probability"].astype(float),
+                          "y": g["y"].astype(float), "made_at": g["made_at"]})
+    sk = fr.arm_skill(frame)
+    w = fr.weights(sk, k_prior=const["k_prior"], gamma=const["gamma"],
+                   floor=const.get("floor", 0.0))
+    arms = [{"arm": a, "n": int(sk.loc[a, "n"]), "skill": fr._f(sk.loc[a, "skill"]),
+             "disc": fr._f(sk.loc[a, "disc"]), "weight": float(w[a])}
+            for a in sk.index]
+    arms.sort(key=lambda r: (-r["weight"], -(r["skill"] if r["skill"] is not None else -9)))
+    return {"constants": const, "constants_source": source,
+            "split": "held out: later half of each arm by made_at", "arms": arms}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--path", default=None)
@@ -194,6 +247,15 @@ def main(argv=None) -> int:
            "overall": score(g, "ALL"), "by_specialist": [],
            "by_observable": [], "by_horizon": []}
 
+    out = Path(a.out) if a.out else OUT / f"scoreboard_{date.today()}.json"
+    res["new_rows_since_last_run"] = new_rows_since(
+        previous_receipt(OUT, exclude=out), len(d), len(g))
+    nr = res["new_rows_since_last_run"]
+    print(f"new_rows_since_last_run: {nr['new_rows']} ledger rows, "
+          f"{nr['new_graded']} graded "
+          f"({'since ' + nr['since'] if nr.get('since') else nr.get('reason')})",
+          flush=True)
+
     o = res["overall"]
     print(f"\nOVERALL  n={o['n']:,}  base rate {o['base_rate']*100:.0f}%  "
           f"Brier {o['brier']:.4f} vs climatology {o['brier_climatology']:.4f}  "
@@ -213,6 +275,24 @@ def main(argv=None) -> int:
               f"{(r['skill_vs_base_rate'] or 0)*100:>8.2f}%"
               f"{r['calibration_gap']*100:>+7.1f}"
               f"{(r['discrimination'] or 0)*100:>+7.1f}{flag}", flush=True)
+
+    try:
+        rep = reputation_table(g)
+    except (ValueError, KeyError) as e:           # a missing column is a refusal, printed
+        rep = {"refused": f"{type(e).__name__}: {e}"}
+    res["reputation_weights"] = rep
+    if "arms" in rep:
+        c = rep["constants"]
+        print(f"\nREPUTATION WEIGHTS (held out; k={c['k_prior']:g} gamma={c['gamma']:g} "
+              f"floor={c.get('floor', 0.0):g}; from {rep['constants_source']})")
+        print(f"{'arm':<28}{'n test':>8}{'skill':>9}{'disc':>8}{'weight':>9}")
+        for r in rep["arms"]:
+            sk = "n/a" if r["skill"] is None else f"{r['skill'] * 100:.2f}%"
+            dc = "n/a" if r["disc"] is None else f"{r['disc'] * 100:+.1f}"
+            print(f"{r['arm']:<28}{r['n']:>8,}{sk:>9}{dc:>8}{r['weight']:>9.3f}",
+                  flush=True)
+    else:
+        print(f"\nREPUTATION WEIGHTS REFUSED: {rep['refused']}")
 
     print(f"\n{'observable':<24}{'n':>7}{'base':>7}{'skill':>9}{'calib':>8}{'disc':>8}")
     for name, sub in g.groupby("observable"):
@@ -266,8 +346,7 @@ def main(argv=None) -> int:
             f"foundation for anything.")
 
     res["verdict"] = verdict
-    OUT.mkdir(parents=True, exist_ok=True)
-    out = Path(a.out) if a.out else OUT / f"scoreboard_{date.today()}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     print(f"\nVERDICT: {verdict}")
     print(f"-> {out}")
