@@ -478,3 +478,6 @@ now** — "founder is CEO" is a static, cheaply-labelable fact (proxy statements
 even an LLM-read of a company's own "About" page), directly joinable to this repo's existing bars
 panel and `xs_ranker` cross-section as a categorical column, gradeable at all four horizons with no new
 infrastructure beyond a one-time labeling pass over the current ~3,000-name universe.
+
+
+> **Correction (Fable, 2026-09-25 19:05 HKT):** this note says no paper titled "Alpha Illusion" exists. It does — arXiv 2605.16895, *The Alpha Illusion: Reported Alpha from LLM Trading Agents Should Not Be Treated as Deployment Evidence* (Ye, Han, Hu et al.), fetched from arxiv.org directly. The research_llm_engine.md citation stands; this note's "nearest relatives" paragraph is superseded on that point.
