@@ -234,6 +234,11 @@ def test_every_x_lane_receipt_on_disk_carries_the_protocol():
         except Exception as exc:  # noqa: BLE001  an unreadable receipt is a finding
             bad.append(f"{p.name}: unreadable ({type(exc).__name__})")
             continue
+        if pp.is_kill_payload(payload):
+            # a time-box kill or a crash: refused by the board (never quoted),
+            # but not a job that wrote an incomplete receipt -- see
+            # `protocol_p16.KILL_VERDICTS`
+            continue
         reasons = pp.refuse_reasons(p.name.split("_run")[0], payload)
         if reasons:
             bad.append(f"{p.name}: " + "; ".join(reasons))
@@ -292,3 +297,15 @@ def test_ece_on_a_sample_too_small_to_bin_refuses_rather_than_inventing():
 def test_a_deep_copy_of_the_complete_receipt_is_json_round_trippable():
     r = _complete()
     assert pp.validate(json.loads(json.dumps(copy.deepcopy(r)))) == []
+
+
+def test_a_kill_payload_is_refused_as_a_kill_not_as_an_incomplete_receipt():
+    kill = {"verdict": "TIMEOUT", "headline": "killed after 3600s awake against a 60-minute box",
+            "log_tail": "..."}
+    assert pp.is_kill_payload(kill)
+    reasons = pp.refuse_reasons("X2_elasticity", kill)
+    assert len(reasons) == 1 and "kill payload" in reasons[0]
+    # a kill payload that somehow carries a protocol block is a receipt again
+    measured = {**kill, "P1_P6": {}}
+    assert not pp.is_kill_payload(measured)
+    assert any("P1_P6" in r for r in pp.refuse_reasons("X2_elasticity", measured))

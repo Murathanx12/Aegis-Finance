@@ -280,14 +280,34 @@ def _gap_detail(gap: Any) -> list[str]:
     return out
 
 
+#: What `night_factory` writes when it KILLS a job (a time box, a crash): a
+#: verdict and a log tail, never a measurement. Found 2026-09-25 as
+#: `night_factory_2026-09-21/X2_elasticity_run01.json` (`verdict: TIMEOUT`),
+#: which the on-disk gate read as "a job wrote an incomplete receipt". It is
+#: not a receipt at all; it is refused for THAT reason, so the board never
+#: quotes it, and the on-disk completeness gate does not count it as a job
+#: that skipped the protocol.
+KILL_VERDICTS: frozenset[str] = frozenset({"TIMEOUT", "KILLED", "FAILED", "CRASHED"})
+
+
+def is_kill_payload(payload: dict) -> bool:
+    """A factory kill/crash payload: a kill verdict and no protocol block."""
+    return (str(payload.get("verdict") or "").upper() in KILL_VERDICTS
+            and "P1_P6" not in payload)
+
+
 def refuse_reasons(job: str | None, payload: dict) -> list[str]:
     """The reasons the leaderboard must refuse this row, or `[]`.
 
     A receipt that is not lane X is never refused here: this protocol binds LLM
-    reads over history, not the whole factory.
+    reads over history, not the whole factory. A kill payload IS refused, with
+    a single reason that names it as a kill, not as a job that skipped P1-P6.
     """
     if not is_x_lane(job, payload):
         return []
+    if is_kill_payload(payload):
+        return [f"verdict {payload.get('verdict')}: a factory kill payload, not a "
+                f"measurement -- never quoted (headline: {str(payload.get('headline') or '')[:80]})"]
     return validate(payload)
 
 
