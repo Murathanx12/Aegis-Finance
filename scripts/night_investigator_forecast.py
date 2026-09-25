@@ -406,9 +406,14 @@ def llm_book_records(path: Path | None = None) -> list[dict]:
             r = json.loads(ln)
         except ValueError:
             continue
-        if isinstance(r, dict) and not r.get("parent_book_id") \
-                and not r.get("parent_hash"):
-            out.append(r)
+        if not isinstance(r, dict) or r.get("parent_book_id") or r.get("parent_hash"):
+            continue
+        # A twin frozen as a standalone book (revision_flow_v0_random_twin,
+        # 2026-09-25, before twins carried parent_book_id) took 20 of the day's
+        # 60 forecast slots with control names -- the reviewer's row 7.
+        if "random_twin" in str(r.get("name") or "") or str(r.get("kind") or "") == "twin":
+            continue
+        out.append(r)
     return out
 
 

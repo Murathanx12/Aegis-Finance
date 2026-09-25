@@ -3704,7 +3704,7 @@ MISSED_OPP_PAIRED_ALPHA = 0.05
 #: Hard ceiling on names asked per UTC day. The union (Murat's book, every
 #: frozen llm_portfolio book, the funnel shortlist, the top revision names) is
 #: truncated in that priority order; the receipt names what was cut.
-FORECAST_MAX_NAMES_PER_DAY = 60
+FORECAST_MAX_NAMES_PER_DAY = 160  # 60 cut MRK/ASML/VRTX/the Asia book on 2026-09-25 (reviewer row 7); ~$0.40/day at 160
 #: Dollar cap per UTC day, read from the SAME telemetry ledger the calls are
 #: written to (`llm_telemetry.spend(purpose=FORECAST_PURPOSE)`), never from a
 #: counter this process keeps -- 2026-09-21's $10.05 under a $2.00 cap was a cap
