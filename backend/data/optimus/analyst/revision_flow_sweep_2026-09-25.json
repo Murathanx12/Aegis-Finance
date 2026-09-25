@@ -1,0 +1,2774 @@
+{
+ "receipt": "revision_flow_sweep",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-25T05:54:13+00:00",
+ "elapsed_s": 215.4,
+ "question": "Q-4/Q-10: does analyst revision FLOW rank the cross-section, and does the simple net_raises x n_firms rule beat SPY net of cost?",
+ "universe": {
+  "definition": "xs_ranker survivorship-free bars INTERSECT tickers in the revision parquet (covered universe); SPY for beta and the market leg",
+  "n_symbols": 2993,
+  "why_not_the_full_panel": "only 64 of 1,784 delisted names have revision history; on the full panel NaN flow would encode future delisting",
+  "survivorship_audit": {
+   "n_symbols": 2993,
+   "panel_last_session": "2026-09-21",
+   "stopped_30d_before_end": 0,
+   "stopped_90d_before_end": 0,
+   "stopped_180d_before_end": 0,
+   "fraction_dead_90d": 0.0,
+   "verdict": "SURVIVOR-SELECTED: no symbol stops trading, which cannot happen in a real US cross-section. Every result over this panel is biased toward whatever the dead names were \u2014 small, illiquid and distressed."
+  }
+ },
+ "sampling": {
+  "sweep_step_sessions": 5,
+  "n_sweep_dates": 539,
+  "start": "2016-01-01",
+  "purge_dates": "ceil(H/step)+1",
+  "blocking": "t across blocks of ceil(H/step) consecutive decision dates"
+ },
+ "revisions": {
+  "path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\analyst\\target_revisions.parquet",
+  "n_rows": 393369,
+  "window_days": 90,
+  "strictly_before_decision_date": true,
+  "caveat": "yfinance history, pulled 2026-09 for live names; coverage density grows ~5x from 2013 to 2025"
+ },
+ "features_base": [
+  "mom_21",
+  "mom_63",
+  "mom_126",
+  "mom_252_21",
+  "rev_1",
+  "rev_5",
+  "vol_21",
+  "vol_63",
+  "vol_ratio",
+  "dollar_vol_log",
+  "turnover_surge",
+  "trade_surge",
+  "px_vs_52w_high",
+  "px_vs_52w_low",
+  "px_vs_ma50",
+  "px_vs_ma200",
+  "amihud",
+  "gap_share",
+  "vwap_pressure",
+  "resid_mom_63",
+  "beta_63",
+  "up_days_21",
+  "max_drawdown_63",
+  "skew_63"
+ ],
+ "features_flow_extra": [
+  "net_raises",
+  "n_firms",
+  "median_target_change",
+  "days_since_last",
+  "n_events"
+ ],
+ "sweep": {
+  "5": {
+   "base": {
+    "by_k": {
+     "20": {
+      "k": 20,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.017987932109979055,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.008527256171547738,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.0028288063222965494,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.002395575045846277,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.007936801101230226,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.006947811480410036,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.004444307977070063,
+       "2022": -0.0009353754532079519,
+       "2023": 0.0014945243817194272,
+       "2024": 0.00036778869003905294,
+       "2025": -0.0008090335385985292,
+       "2026": -0.00016271122713223517
+      },
+      "loo_worst_mean_net": -0.0009353754532079519,
+      "loo_worst_dropped_year": "2022",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 1.6453811829962959,
+       "top_5pct_of_dates": 1.9883942151703125,
+       "top_10pct_of_dates": 1.5124318389789246
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": 0.0007324984662633739,
+      "mean_gross_rel_21d": 0.0025805020633856775,
+      "mean_cost_bps": 18.48003597122302,
+      "block_se": 0.0024270868785277473,
+      "t_across_blocks": 0.24867586212714995,
+      "hit_rate_dates": 0.5,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": 0.31807411371580985
+     },
+     "50": {
+      "k": 50,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.01321932066515843,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.006004094125121152,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.003966500360397106,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.00016271453793834995,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.003124647502694646,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.003935699906050783,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0017191165763457371,
+       "2022": -0.002198490467318835,
+       "2023": -6.504448570139108e-05,
+       "2024": -0.000953462420096466,
+       "2025": -0.0015823643341358704,
+       "2026": -0.0014279967143903465
+      },
+      "loo_worst_mean_net": -0.002198490467318835,
+      "loo_worst_dropped_year": "2022",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.01276623124562228,
+       "top_5pct_of_dates": -0.5279339329076416,
+       "top_10pct_of_dates": -0.10558650648024305
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": -0.0007527111686513553,
+      "mean_gross_rel_21d": 0.0010570945867443282,
+      "mean_cost_bps": 18.098057553956835,
+      "block_se": 0.001866779311921555,
+      "t_across_blocks": -0.5315953984152024,
+      "hit_rate_dates": 0.4856115107913669,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": -0.4385824900670326
+     },
+     "100": {
+      "k": 100,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.010778544227505639,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.002782317968865329,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.0024173875858466976,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.0004814420798281308,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.002553737018659679,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.003623021994429848,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0012667783468908978,
+       "2022": -0.0014770918710086118,
+       "2023": -0.0003644911191269987,
+       "2024": -0.000991195447271831,
+       "2025": -0.0014281815366851316,
+       "2026": -0.001352782830418171
+      },
+      "loo_worst_mean_net": -0.0014770918710086118,
+      "loo_worst_dropped_year": "2022",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.0002613404686226842,
+       "top_5pct_of_dates": -0.2632734035701802,
+       "top_10pct_of_dates": 0.5129972992630716
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": -0.000726332582685507,
+      "mean_gross_rel_21d": 0.0010667645396166515,
+      "mean_cost_bps": 17.93097122302158,
+      "block_se": 0.0013863109264703169,
+      "t_across_blocks": -0.6709564908747836,
+      "hit_rate_dates": 0.5,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": -0.5534612904440325
+     }
+    },
+    "small_vs_largemid_k20": {
+     "small": {
+      "k": 20,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.011794566572697377,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": -0.00033261315558579484,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.0062579413285752,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": -0.00019380509504179677,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.004997010046061191,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.006304060292276656,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0005727076638392359,
+       "2022": -0.0017178333611776104,
+       "2023": -0.0004499683809309685,
+       "2024": -0.0017543492525495033,
+       "2025": -0.0028582330855474883,
+       "2026": -0.0025939259035516857
+      },
+      "loo_worst_mean_net": -0.0028582330855474883,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.242116393205316,
+       "top_5pct_of_dates": -1.5209694809924816,
+       "top_10pct_of_dates": -1.3114490069148195
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": -0.001473675842925816,
+      "mean_gross_rel_21d": 0.0020263241570741847,
+      "mean_cost_bps": 35.0,
+      "block_se": 0.0017406073589781477,
+      "t_across_blocks": -1.0150406517881565,
+      "hit_rate_dates": 0.44244604316546765,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": -0.8055658196926726
+     },
+     "largemid": {
+      "k": 20,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.017678181636402314,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.006661965535218598,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.0007641376039940741,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.00014484958122290407,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.0072924264766862715,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.006593391431767928,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0038117829532786714,
+       "2022": -0.0011148428879457037,
+       "2023": 0.00047414861345788136,
+       "2024": 0.00028024039835526405,
+       "2025": -0.0012497450107924973,
+       "2026": -0.0006569193836449887
+      },
+      "loo_worst_mean_net": -0.0012497450107924973,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 4.72870266899203,
+       "top_5pct_of_dates": 5.484000723391868,
+       "top_10pct_of_dates": 0.4193464010226764
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": 0.0002558895319645511,
+      "mean_gross_rel_21d": 0.0015452420499501636,
+      "mean_cost_bps": 12.893525179856114,
+      "block_se": 0.0023096248451269486,
+      "t_across_blocks": 0.05341687933161713,
+      "hit_rate_dates": 0.49280575539568344,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": 0.11361028463552005
+     }
+    },
+    "ic_mean": 0.01408799006328004,
+    "ic_std": 0.1146570889949441,
+    "ic_t": 2.048662996804644,
+    "ic_n_dates": 278,
+    "ic_hit": 0.579136690647482,
+    "n_oos_rows": 632025,
+    "folds": [
+     {
+      "train_end": "2021-01-27",
+      "test_start": "2021-02-10",
+      "test_end": "2022-06-16",
+      "n_train": 378748,
+      "n_test": 143087,
+      "refused": null
+     },
+     {
+      "train_end": "2022-06-16",
+      "test_start": "2022-07-01",
+      "test_end": "2023-11-07",
+      "n_train": 523746,
+      "n_test": 145565,
+      "refused": null
+     },
+     {
+      "train_end": "2023-11-07",
+      "test_start": "2023-11-21",
+      "test_end": "2025-04-02",
+      "n_train": 671449,
+      "n_test": 156918,
+      "refused": null
+     },
+     {
+      "train_end": "2025-04-02",
+      "test_start": "2025-04-16",
+      "test_end": "2026-09-09",
+      "n_train": 830477,
+      "n_test": 186455,
+      "refused": null
+     }
+    ]
+   },
+   "flow": {
+    "by_k": {
+     "20": {
+      "k": 20,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.014807621527578177,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.005721712235599932,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": 0.001079196356381901,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.00435503252766354,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.004394351818708426,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.01210090663331904,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.005128668614970543,
+       "2022": 0.000997103182795516,
+       "2023": 0.0019904799429775405,
+       "2024": 0.0012760916755324254,
+       "2025": 0.0012811235340081087,
+       "2026": 0.0003504888734090675
+      },
+      "loo_worst_mean_net": 0.0003504888734090675,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.6661127877850804,
+       "top_5pct_of_dates": 0.5007820657252949,
+       "top_10pct_of_dates": 0.7718228789986727
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": 0.0018298580158437768,
+      "mean_gross_rel_21d": 0.0035863688072106828,
+      "mean_cost_bps": 17.565107913669067,
+      "block_se": 0.0022164601025762656,
+      "t_across_blocks": 0.8396713152788954,
+      "hit_rate_dates": 0.4856115107913669,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": 0.8191856657886117
+     },
+     "50": {
+      "k": 50,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.012479303519182817,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.0026436451765872323,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.0001949226082298189,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.0012316677468893306,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.00243066520684081,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.007177322072265586,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0023787916416313577,
+       "2022": -0.0006624756099419604,
+       "2023": -5.5096476946171775e-05,
+       "2024": -0.0003673319665280747,
+       "2025": -0.0006169034766774421,
+       "2026": -0.0011249982450750207
+      },
+      "loo_worst_mean_net": -0.0011249982450750207,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 10.429145358316703,
+       "top_5pct_of_dates": -3.174709318663661,
+       "top_10pct_of_dates": 0.850121768946222
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": -7.974209001415296e-05,
+      "mean_gross_rel_21d": 0.0016699197804894439,
+      "mean_cost_bps": 17.496618705035974,
+      "block_se": 0.001635009001777285,
+      "t_across_blocks": -0.125792458190627,
+      "hit_rate_dates": 0.5035971223021583,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": -0.04967915348801082
+     },
+     "100": {
+      "k": 100,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.01024381088960459,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.0026182554622906085,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": -0.0023974473566052198,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": -0.0008852225244959541,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.001595884421682908,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.004734991243441654,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0009072478497271841,
+       "2022": -0.0016988136132635122,
+       "2023": -0.0006255846258141861,
+       "2024": -0.0009494415507030994,
+       "2025": -0.0014800529975876283,
+       "2026": -0.0017549732234796798
+      },
+      "loo_worst_mean_net": -0.0017549732234796798,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.013437338949194265,
+       "top_5pct_of_dates": -0.17182407259774013,
+       "top_10pct_of_dates": -0.18876502534067993
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": -0.0009378913661334693,
+      "mean_gross_rel_21d": 0.0008221266194780415,
+      "mean_cost_bps": 17.60017985611511,
+      "block_se": 0.0013259450450124912,
+      "t_across_blocks": -0.8058617743788876,
+      "hit_rate_dates": 0.4748201438848921,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": -0.6956443033882219
+     }
+    },
+    "small_vs_largemid_k20": {
+     "small": {
+      "k": 20,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.011495084897542042,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": -0.0015444028231541348,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": 0.00010211080971736295,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.0012975392927613142,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": -0.00010276177066417714,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.00951144184572566,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0013882318699030922,
+       "2022": -0.0005721763018989684,
+       "2023": -0.0009244870792382851,
+       "2024": -0.0011911450706468514,
+       "2025": -0.0008806497148771696,
+       "2026": -0.002220594963250266
+      },
+      "loo_worst_mean_net": -0.002220594963250266,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -1.5071380036706161,
+       "top_5pct_of_dates": -2.6634773064508037,
+       "top_10pct_of_dates": -2.673830058566191
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": -0.0007435399693144476,
+      "mean_gross_rel_21d": 0.0027564600306855523,
+      "mean_cost_bps": 35.0,
+      "block_se": 0.0017766982852144373,
+      "t_across_blocks": -0.5894291715082154,
+      "hit_rate_dates": 0.44244604316546765,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": -0.3915570629137338
+     },
+     "largemid": {
+      "k": 20,
+      "n_dates": 278,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.013565910874754377,
+        "n_dates": 46
+       },
+       "2022": {
+        "mean_net": 0.005585858493221285,
+        "n_dates": 49
+       },
+       "2023": {
+        "mean_net": 0.0034209985233248827,
+        "n_dates": 49
+       },
+       "2024": {
+        "mean_net": 0.00413323200564634,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.004447094184516605,
+        "n_dates": 49
+       },
+       "2026": {
+        "mean_net": 0.008890870961981262,
+        "n_dates": 35
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0050736452276023145,
+       "2022": 0.0012198547004244223,
+       "2023": 0.0016830780127603331,
+       "2024": 0.0015192640012399942,
+       "2025": 0.001463520425867782,
+       "2026": 0.0009953634110933802
+      },
+      "loo_worst_mean_net": 0.0009953634110933802,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.646110955601996,
+       "top_5pct_of_dates": 0.4716380651113606,
+       "top_10pct_of_dates": 0.03788823787072017
+      },
+      "n_blocks": 68,
+      "n_blocks_nonoverlap": null,
+      "n_blocks_strict": null,
+      "block_se_nonoverlap": null,
+      "t_nonoverlap": null,
+      "mean_net_rel_21d": 0.0019894021315289053,
+      "mean_gross_rel_21d": 0.0032457330667807036,
+      "mean_cost_bps": 12.563309352517985,
+      "block_se": 0.0020331751340139904,
+      "t_across_blocks": 0.9197060387605688,
+      "hit_rate_dates": 0.5251798561151079,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 278,
+      "block_width_dates": 1,
+      "t_horizon_blocks": 0.9244000258752958
+     }
+    },
+    "ic_mean": 0.013166133583556717,
+    "ic_std": 0.11136420127120161,
+    "ic_t": 1.9712197806493608,
+    "ic_n_dates": 278,
+    "ic_hit": 0.5719424460431655,
+    "n_oos_rows": 632025,
+    "folds": [
+     {
+      "train_end": "2021-01-27",
+      "test_start": "2021-02-10",
+      "test_end": "2022-06-16",
+      "n_train": 378748,
+      "n_test": 143087,
+      "refused": null
+     },
+     {
+      "train_end": "2022-06-16",
+      "test_start": "2022-07-01",
+      "test_end": "2023-11-07",
+      "n_train": 523746,
+      "n_test": 145565,
+      "refused": null
+     },
+     {
+      "train_end": "2023-11-07",
+      "test_start": "2023-11-21",
+      "test_end": "2025-04-02",
+      "n_train": 671449,
+      "n_test": 156918,
+      "refused": null
+     },
+     {
+      "train_end": "2025-04-02",
+      "test_start": "2025-04-16",
+      "test_end": "2026-09-09",
+      "n_train": 830477,
+      "n_test": 186455,
+      "refused": null
+     }
+    ]
+   }
+  },
+  "21": {
+   "base": {
+    "by_k": {
+     "20": {
+      "k": 20,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.05809433904335105,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.036073843164548536,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": 0.002368021671922407,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.0026409878179171065,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.01931608687899072,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.013409339736018835,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.0016151547325200266,
+       "2022": -0.005698707969377938,
+       "2023": -0.013744679679336973,
+       "2024": -0.01293569411869088,
+       "2025": -0.0172919491412815,
+       "2026": -0.014375631699006769
+      },
+      "loo_worst_mean_net": -0.0172919491412815,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.006167207112192193,
+       "top_5pct_of_dates": 0.5020104081592159,
+       "top_10pct_of_dates": 0.7366441932344382
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.007002457604442445,
+      "t_nonoverlap": -1.564585396426111,
+      "mean_net_rel_21d": -0.010955942907003618,
+      "mean_gross_rel_21d": -0.009262154445465158,
+      "mean_cost_bps": 16.93788461538462,
+      "block_se": 0.00685268880990095,
+      "t_across_blocks": -1.4985426361066474,
+      "hit_rate_dates": 0.4230769230769231,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.564585396426111
+     },
+     "50": {
+      "k": 50,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.04376296194137937,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.026688694258055628,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": 5.340469901881994e-05,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.001655339570308183,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.011082335096137435,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.010075011782351588,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.002120965678850831,
+       "2022": -0.005307282205476465,
+       "2023": -0.010904465708119954,
+       "2024": -0.010758523510831114,
+       "2025": -0.01321284648891222,
+       "2026": -0.011686216196601727
+      },
+      "loo_worst_mean_net": -0.01321284648891222,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.17119401863171865,
+       "top_5pct_of_dates": 0.4844958495975586,
+       "top_10pct_of_dates": 0.5926810850316733
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.005504117780632107,
+      "t_nonoverlap": -1.6365767546388175,
+      "mean_net_rel_21d": -0.009007911214576704,
+      "mean_gross_rel_21d": -0.007323057368422859,
+      "mean_cost_bps": 16.848538461538464,
+      "block_se": 0.005386629442702924,
+      "t_across_blocks": -1.4276087366972368,
+      "hit_rate_dates": 0.4346153846153846,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.6365767546388175
+     },
+     "100": {
+      "k": 100,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.03223455788585502,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.017847102198134845,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": -0.002484268599352315,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.0009577363459417863,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.003443263237212483,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.006233460773719534,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.0028035986762692373,
+       "2022": -0.005541150246168013,
+       "2023": -0.008756627045913191,
+       "2024": -0.009269428974024293,
+       "2025": -0.009997273244263966,
+       "2026": -0.00962253353772463
+      },
+      "loo_worst_mean_net": -0.009997273244263966,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.15481513305793326,
+       "top_5pct_of_dates": 0.42882016506599097,
+       "top_10pct_of_dates": 0.6317553500855478
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.0043405641293113514,
+      "t_nonoverlap": -1.767287918578438,
+      "mean_net_rel_21d": -0.007671026545546887,
+      "mean_gross_rel_21d": -0.005971341930162272,
+      "mean_cost_bps": 16.996846153846153,
+      "block_se": 0.0041599077806068,
+      "t_across_blocks": -1.6404902898576499,
+      "hit_rate_dates": 0.4269230769230769,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.767287918578438
+     }
+    },
+    "small_vs_largemid_k20": {
+     "small": {
+      "k": 20,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.04091397022528082,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.015182381876855881,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": 0.002034644247778893,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": 0.006300335194920753,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.0062481849785848,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.011647163579632677,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0017384614056319583,
+       "2022": -0.003250453070727563,
+       "2023": -0.0068540166782092606,
+       "2024": -0.008081292163861803,
+       "2025": -0.007735920552098869,
+       "2026": -0.007696332584268362
+      },
+      "loo_worst_mean_net": -0.008081292163861803,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.27482882108206647,
+       "top_5pct_of_dates": 0.537060970344151,
+       "top_10pct_of_dates": 0.9264508694712889
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.005278914868565165,
+      "t_nonoverlap": -1.006948345865248,
+      "mean_net_rel_21d": -0.005315594594865156,
+      "mean_gross_rel_21d": -0.0018155945948651552,
+      "mean_cost_bps": 35.0,
+      "block_se": 0.00509718797987364,
+      "t_across_blocks": -0.8673979253126166,
+      "hit_rate_dates": 0.47692307692307695,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.006948345865248
+     },
+     "largemid": {
+      "k": 20,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.05023741945631127,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.03369721818331334,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": -1.1038308772315144e-05,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.004871997279891508,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.011904997068339624,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.01316532163174933,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.003702563344917826,
+       "2022": -0.006731583554509081,
+       "2023": -0.013782179342203715,
+       "2024": -0.0129526924689237,
+       "2025": -0.01627623325834342,
+       "2026": -0.014846296380195313
+      },
+      "loo_worst_mean_net": -0.01627623325834342,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.01595824922862621,
+       "top_5pct_of_dates": 0.33739634168140753,
+       "top_10pct_of_dates": 0.637975497218987
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.00675644459824446,
+      "t_nonoverlap": -1.687087411009156,
+      "mean_net_rel_21d": -0.01139871262487905,
+      "mean_gross_rel_21d": -0.010210328009494434,
+      "mean_cost_bps": 11.883846153846154,
+      "block_se": 0.0066956824753459125,
+      "t_across_blocks": -1.5339707722688127,
+      "hit_rate_dates": 0.4153846153846154,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.687087411009156
+     }
+    },
+    "ic_mean": 0.015535813669513043,
+    "ic_std": 0.10995990071789499,
+    "ic_t": 2.278171102654881,
+    "ic_n_dates": 260,
+    "ic_hit": 0.5461538461538461,
+    "n_oos_rows": 590956,
+    "folds": [
+     {
+      "train_end": "2021-01-20",
+      "test_start": "2021-03-04",
+      "test_end": "2022-06-09",
+      "n_train": 376854,
+      "n_test": 135138,
+      "refused": null
+     },
+     {
+      "train_end": "2022-06-09",
+      "test_start": "2022-07-25",
+      "test_end": "2023-10-31",
+      "n_train": 521617,
+      "n_test": 137080,
+      "refused": null
+     },
+     {
+      "train_end": "2023-10-31",
+      "test_start": "2023-12-13",
+      "test_end": "2025-03-26",
+      "n_train": 669333,
+      "n_test": 148160,
+      "refused": null
+     },
+     {
+      "train_end": "2025-03-26",
+      "test_start": "2025-05-08",
+      "test_end": "2026-08-18",
+      "n_train": 828081,
+      "n_test": 170578,
+      "refused": null
+     }
+    ]
+   },
+   "flow": {
+    "by_k": {
+     "20": {
+      "k": 20,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.046402629919395484,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.01923454560230061,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": 0.004732342404057631,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.004181776558831656,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.005509903472358947,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.027242510210031382,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0011890230926941928,
+       "2022": -0.004054607085189944,
+       "2023": -0.009070932481869576,
+       "2024": -0.007277172607037061,
+       "2025": -0.009233677821746597,
+       "2026": -0.011443225447984078
+      },
+      "loo_worst_mean_net": -0.011443225447984078,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.001868790808024825,
+       "top_5pct_of_dates": 0.11481964507473896,
+       "top_10pct_of_dates": 0.594425130164478
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.006660260466660851,
+      "t_nonoverlap": -1.0032496731435385,
+      "mean_net_rel_21d": -0.0066819041362283305,
+      "mean_gross_rel_21d": -0.005043634905459099,
+      "mean_cost_bps": 16.38269230769231,
+      "block_se": 0.006356169267184357,
+      "t_across_blocks": -0.8087095354702362,
+      "hit_rate_dates": 0.43846153846153846,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.0032496731435385
+     },
+     "50": {
+      "k": 50,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.03495597849698499,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.020892395165136825,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": -0.0014787607242334416,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.0026320972398699623,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.004888816359642987,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.021136515482926586,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.0011149384579611742,
+       "2022": -0.0037436787828687076,
+       "2023": -0.007806997619336858,
+       "2024": -0.007683065994068722,
+       "2025": -0.009139746311310997,
+       "2026": -0.010620250948252547
+      },
+      "loo_worst_mean_net": -0.010620250948252547,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.19932049835534757,
+       "top_5pct_of_dates": 0.44582416628352906,
+       "top_10pct_of_dates": 0.6871728988594704
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.005159733037664457,
+      "t_nonoverlap": -1.3007893625575149,
+      "mean_net_rel_21d": -0.006711725849030499,
+      "mean_gross_rel_21d": -0.005040610464415114,
+      "mean_cost_bps": 16.711153846153845,
+      "block_se": 0.0049080659996628,
+      "t_across_blocks": -1.1054327191872984,
+      "hit_rate_dates": 0.45,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.3007893625575149
+     },
+     "100": {
+      "k": 100,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.024218363801519694,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.016054895824926946,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": -0.0029356625305795936,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": 0.0006631180829155888,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.0025961302795511764,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.011624676723330797,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.0015327359637125632,
+       "2022": -0.003030339699857027,
+       "2023": -0.005776225738208799,
+       "2024": -0.006700710722555964,
+       "2025": -0.00693404283800361,
+       "2026": -0.007657820187445433
+      },
+      "loo_worst_mean_net": -0.007657820187445433,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.18807353269535296,
+       "top_5pct_of_dates": 0.6779749104642088,
+       "top_10pct_of_dates": 0.7357038414721803
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.00391474941596213,
+      "t_nonoverlap": -1.3499177691627608,
+      "mean_net_rel_21d": -0.00528458979842682,
+      "mean_gross_rel_21d": -0.0035568782599652827,
+      "mean_cost_bps": 17.277115384615385,
+      "block_se": 0.003692093269221498,
+      "t_across_blocks": -1.1892738012435566,
+      "hit_rate_dates": 0.4461538461538462,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.3499177691627608
+     }
+    },
+    "small_vs_largemid_k20": {
+     "small": {
+      "k": 20,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.026866274554646574,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.0167714690470295,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": -0.0057022308654244,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": 0.011364402807002752,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.01640612326001791,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.013483495852383629,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0033486223883262417,
+       "2022": 0.0015168249280619515,
+       "2023": -0.0007999923657623731,
+       "2024": -0.004746756609205457,
+       "2025": -0.005427322298994487,
+       "2026": -0.0037722395388565108
+      },
+      "loo_worst_mean_net": -0.005427322298994487,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.01338020598773936,
+       "top_5pct_of_dates": 1.3709175480813698,
+       "top_10pct_of_dates": 1.98858953881502
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.005356869262893449,
+      "t_nonoverlap": -0.3077276372772097,
+      "mean_net_rel_21d": -0.0016484567214731084,
+      "mean_gross_rel_21d": 0.001851543278526893,
+      "mean_cost_bps": 35.0,
+      "block_se": 0.00526359023862789,
+      "t_across_blocks": -0.03249586716390381,
+      "hit_rate_dates": 0.48846153846153845,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -0.3077276372772097
+     },
+     "largemid": {
+      "k": 20,
+      "n_dates": 260,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.04320228633885244,
+        "n_dates": 43
+       },
+       "2022": {
+        "mean_net": -0.026096033286037486,
+        "n_dates": 45
+       },
+       "2023": {
+        "mean_net": 0.0037048671418284515,
+        "n_dates": 45
+       },
+       "2024": {
+        "mean_net": -0.002361633761878074,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": -0.0003948684673562022,
+        "n_dates": 45
+       },
+       "2026": {
+        "mean_net": 0.02633912704028603,
+        "n_dates": 32
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.0013852588955077718,
+       "2022": -0.004576641837321646,
+       "2023": -0.01081403960129359,
+       "2024": -0.009715322880009229,
+       "2025": -0.009955955404022384,
+       "2026": -0.01316294543063594
+      },
+      "loo_worst_mean_net": -0.01316294543063594,
+      "loo_worst_dropped_year": "2026",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.018060675007779883,
+       "top_5pct_of_dates": 0.20378080919610753,
+       "top_10pct_of_dates": 0.5955316960171366
+      },
+      "n_blocks": 64,
+      "n_blocks_nonoverlap": 52,
+      "n_blocks_strict": 26,
+      "block_se_nonoverlap": 0.006378948422386798,
+      "t_nonoverlap": -1.3013354782146378,
+      "mean_net_rel_21d": -0.008301151895753239,
+      "mean_gross_rel_21d": -0.007123151895753236,
+      "mean_cost_bps": 11.780000000000001,
+      "block_se": 0.006206223644342266,
+      "t_across_blocks": -1.1283956130956694,
+      "hit_rate_dates": 0.4461538461538462,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 52,
+      "block_width_dates": 5,
+      "t_horizon_blocks": -1.3013354782146378
+     }
+    },
+    "ic_mean": 0.01702247157475134,
+    "ic_std": 0.10310626661094141,
+    "ic_t": 2.6620991693276426,
+    "ic_n_dates": 260,
+    "ic_hit": 0.5615384615384615,
+    "n_oos_rows": 590956,
+    "folds": [
+     {
+      "train_end": "2021-01-20",
+      "test_start": "2021-03-04",
+      "test_end": "2022-06-09",
+      "n_train": 376854,
+      "n_test": 135138,
+      "refused": null
+     },
+     {
+      "train_end": "2022-06-09",
+      "test_start": "2022-07-25",
+      "test_end": "2023-10-31",
+      "n_train": 521617,
+      "n_test": 137080,
+      "refused": null
+     },
+     {
+      "train_end": "2023-10-31",
+      "test_start": "2023-12-13",
+      "test_end": "2025-03-26",
+      "n_train": 669333,
+      "n_test": 148160,
+      "refused": null
+     },
+     {
+      "train_end": "2025-03-26",
+      "test_start": "2025-05-08",
+      "test_end": "2026-08-18",
+      "n_train": 828081,
+      "n_test": 170578,
+      "refused": null
+     }
+    ]
+   }
+  },
+  "63": {
+   "base": {
+    "by_k": {
+     "20": {
+      "k": 20,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.08412857823313659,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.08926775746227568,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.00991795891967841,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.03239330539863514,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.02936837965056273,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.021958174454857676,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.003992854573561126,
+       "2022": -0.0038322191748568495,
+       "2023": -0.023562711143310076,
+       "2024": -0.03257436452346434,
+       "2025": -0.027431880858593518,
+       "2026": -0.017553308900829238
+      },
+      "loo_worst_mean_net": -0.03257436452346434,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.0019727858992276996,
+       "top_5pct_of_dates": 0.5177616890139092,
+       "top_10pct_of_dates": 1.04400361474011
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.020903506287563496,
+      "t_nonoverlap": -0.8929967970788089,
+      "mean_net_rel_21d": -0.018007622388464456,
+      "mean_gross_rel_21d": -0.016318676200123654,
+      "mean_cost_bps": 16.889461883408075,
+      "block_se": 0.013434517546326881,
+      "t_across_blocks": -1.0489975852822497,
+      "hit_rate_dates": 0.5022421524663677,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -0.8929967970788089
+     },
+     "50": {
+      "k": 50,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.06855586674496428,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.09044287709598635,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.0006187882807083822,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.020269365217465873,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.02021873438320524,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.018775572977227113,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.010835695823856633,
+       "2022": -0.007102475172536198,
+       "2023": -0.02521689247865289,
+       "2024": -0.03283765951165619,
+       "2025": -0.02911580648828936,
+       "2026": -0.021178043280835022
+      },
+      "loo_worst_mean_net": -0.03283765951165619,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.11378634573983541,
+       "top_5pct_of_dates": 0.44468516124070606,
+       "top_10pct_of_dates": 0.6994683599395325
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.015885250986432262,
+      "t_nonoverlap": -1.2760058201016757,
+      "mean_net_rel_21d": -0.020930254863870974,
+      "mean_gross_rel_21d": -0.019339088944588464,
+      "mean_cost_bps": 15.911659192825113,
+      "block_se": 0.010108031767995502,
+      "t_across_blocks": -1.7181807851355055,
+      "hit_rate_dates": 0.42152466367713004,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -1.2760058201016757
+     },
+     "100": {
+      "k": 100,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.051470340742478575,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.07361833705973964,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.002128000110495036,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.012517377675500404,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.011427483806340412,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.020640103348158224,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.011256407932174313,
+       "2022": -0.0072830315982063,
+       "2023": -0.02235085135787664,
+       "2024": -0.027193012903189356,
+       "2025": -0.02420074865221147,
+       "2026": -0.018018999857345494
+      },
+      "loo_worst_mean_net": -0.027193012903189356,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.10444054502227355,
+       "top_5pct_of_dates": 0.4695374810967252,
+       "top_10pct_of_dates": 0.6832232737263831
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.01215829618146945,
+      "t_nonoverlap": -1.4415274811480707,
+      "mean_net_rel_21d": -0.018289337885545914,
+      "mean_gross_rel_21d": -0.016721055374335148,
+      "mean_cost_bps": 15.68282511210762,
+      "block_se": 0.0075698102343047975,
+      "t_across_blocks": -2.080066136860914,
+      "hit_rate_dates": 0.4125560538116592,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -1.4415274811480707
+     }
+    },
+    "small_vs_largemid_k20": {
+     "small": {
+      "k": 20,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.06069214403117044,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.09764212443923136,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": -0.0027335334296851787,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.039997155276767025,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.07291221728747445,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.014405640253532921,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.003545547480944228,
+       "2022": 0.010205084535105645,
+       "2023": -0.008674581418406222,
+       "2024": -0.021470928581273186,
+       "2025": -0.023722392044937986,
+       "2026": -0.006916415774453264
+      },
+      "loo_worst_mean_net": -0.023722392044937986,
+      "loo_worst_dropped_year": "2025",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -0.05366533052613286,
+       "top_5pct_of_dates": -0.19812081488714706,
+       "top_10pct_of_dates": 0.37599513939055534
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.0169577030723357,
+      "t_nonoverlap": -0.5572967447317769,
+      "mean_net_rel_21d": -0.007688846998752957,
+      "mean_gross_rel_21d": -0.004188846998752953,
+      "mean_cost_bps": 35.0,
+      "block_se": 0.011229572468895188,
+      "t_across_blocks": -0.6969898993108075,
+      "hit_rate_dates": 0.49327354260089684,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -0.5572967447317769
+     },
+     "largemid": {
+      "k": 20,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.0880991135190938,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.10403160567422468,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": -0.006419718443231433,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.009652625272366629,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.014485639774576557,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.028396501212224482,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.020224014048637905,
+       "2022": -0.017784487108858712,
+       "2023": -0.03720190553652941,
+       "2024": -0.04416020390642986,
+       "2025": -0.041360498300286916,
+       "2026": -0.03251982242156434
+      },
+      "loo_worst_mean_net": -0.04416020390642986,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.0015660617074107301,
+       "top_5pct_of_dates": 0.37576958779439606,
+       "top_10pct_of_dates": 0.6199604681396342
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.01991528275209274,
+      "t_nonoverlap": -1.6014025329024426,
+      "mean_net_rel_21d": -0.03209454713988356,
+      "mean_gross_rel_21d": -0.0309552646286728,
+      "mean_cost_bps": 11.392825112107623,
+      "block_se": 0.012488698934964395,
+      "t_across_blocks": -2.366208937525892,
+      "hit_rate_dates": 0.3901345291479821,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -1.6014025329024426
+     }
+    },
+    "ic_mean": -0.0014406890966334911,
+    "ic_std": 0.099149220195787,
+    "ic_t": -0.2169868414286767,
+    "ic_n_dates": 223,
+    "ic_hit": 0.5201793721973094,
+    "n_oos_rows": 504291,
+    "folds": [
+     {
+      "train_end": "2020-12-18",
+      "test_start": "2021-04-01",
+      "test_end": "2022-05-04",
+      "n_train": 369423,
+      "n_test": 116448,
+      "refused": null
+     },
+     {
+      "train_end": "2022-05-04",
+      "test_start": "2022-08-15",
+      "test_end": "2023-09-19",
+      "n_train": 510884,
+      "n_test": 118053,
+      "refused": null
+     },
+     {
+      "train_end": "2023-09-19",
+      "test_start": "2023-12-28",
+      "test_end": "2025-02-04",
+      "n_train": 656687,
+      "n_test": 127143,
+      "refused": null
+     },
+     {
+      "train_end": "2025-02-04",
+      "test_start": "2025-05-15",
+      "test_end": "2026-06-12",
+      "n_train": 811349,
+      "n_test": 142647,
+      "refused": null
+     }
+    ]
+   },
+   "flow": {
+    "by_k": {
+     "20": {
+      "k": 20,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.06239016506215394,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.07645772356050919,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.014920469105772143,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.02896603407466956,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.008199753533341467,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.0025871748547219155,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.0031776676740041397,
+       "2022": -0.001015975901623258,
+       "2023": -0.019193358313732985,
+       "2024": -0.025816236954764416,
+       "2025": -0.01785644177513118,
+       "2026": -0.014792011338910806
+      },
+      "loo_worst_mean_net": -0.025816236954764416,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.007421037420304474,
+       "top_5pct_of_dates": 0.7425042649230091,
+       "top_10pct_of_dates": 0.9717316227138265
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.0168746455797623,
+      "t_nonoverlap": -0.7519171671368301,
+      "mean_net_rel_21d": -0.013533216544577424,
+      "mean_gross_rel_21d": -0.011869135827088635,
+      "mean_cost_bps": 16.640807174887893,
+      "block_se": 0.010657742765450161,
+      "t_across_blocks": -0.9878401391814313,
+      "hit_rate_dates": 0.4798206278026906,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -0.7519171671368301
+     },
+     "50": {
+      "k": 50,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.03635157646742155,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.09248053260497936,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.009845187731235588,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.016019958181552593,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.007623439068968935,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.012919071085266002,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.012345550220979114,
+       "2022": -0.0014382420242223732,
+       "2023": -0.021793358435189866,
+       "2024": -0.025955437179001315,
+       "2025": -0.021351397679792737,
+       "2026": -0.016960770439642395
+      },
+      "loo_worst_mean_net": -0.025955437179001315,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.12428575814915581,
+       "top_5pct_of_dates": 0.47690959855330933,
+       "top_10pct_of_dates": 0.6005067400936427
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.013634707184000798,
+      "t_nonoverlap": -1.134198755281003,
+      "mean_net_rel_21d": -0.016543913555558735,
+      "mean_gross_rel_21d": -0.014882657950177567,
+      "mean_cost_bps": 16.61255605381166,
+      "block_se": 0.008516800373862364,
+      "t_across_blocks": -1.7746441248481475,
+      "hit_rate_dates": 0.42152466367713004,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -1.134198755281003
+     },
+     "100": {
+      "k": 100,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.0310531959189849,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.0776559280060467,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.0046979079966024155,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.009521418310094164,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.0007136734732848647,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.008445508669623842,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.01299574242247032,
+       "2022": -0.003919472636296892,
+       "2023": -0.02030168732499591,
+       "2024": -0.023574347757685885,
+       "2025": -0.019509124543475753,
+       "2026": -0.017040222735868006
+      },
+      "loo_worst_mean_net": -0.023574347757685885,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.11699089714447754,
+       "top_5pct_of_dates": 0.3571970393569301,
+       "top_10pct_of_dates": 0.6471811494668235
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.011224542466239783,
+      "t_nonoverlap": -1.3300425457490035,
+      "mean_net_rel_21d": -0.016153772406165695,
+      "mean_gross_rel_21d": -0.014495131150560314,
+      "mean_cost_bps": 16.58641255605381,
+      "block_se": 0.007124865508092164,
+      "t_across_blocks": -2.0449272682488613,
+      "hit_rate_dates": 0.4439461883408072,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -1.3300425457490035
+     }
+    },
+    "small_vs_largemid_k20": {
+     "small": {
+      "k": 20,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.014103347297429191,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.07998764473747033,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": -0.010922143564419576,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.043225930426676815,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": 0.05822377424302533,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": -0.035061226179194604,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": 0.0007907923860563888,
+       "2022": 0.013736656503876558,
+       "2023": -2.179750977624772e-06,
+       "2024": -0.014831336802885566,
+       "2025": -0.01375701286321129,
+       "2026": 0.0020094172827805636
+      },
+      "loo_worst_mean_net": -0.014831336802885566,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": -1.2426182529831717,
+       "top_5pct_of_dates": -0.8380261555795775,
+       "top_10pct_of_dates": -0.491092509241622
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.01442403737722299,
+      "t_nonoverlap": -0.1232596722425341,
+      "mean_net_rel_21d": -0.001814012311952293,
+      "mean_gross_rel_21d": 0.0016859876880477049,
+      "mean_cost_bps": 35.0,
+      "block_se": 0.009948798862827474,
+      "t_across_blocks": -0.15769834017391512,
+      "hit_rate_dates": 0.47085201793721976,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -0.1232596722425341
+     },
+     "largemid": {
+      "k": 20,
+      "n_dates": 223,
+      "by_year": {
+       "2021": {
+        "mean_net": -0.0584571156428421,
+        "n_dates": 39
+       },
+       "2022": {
+        "mean_net": -0.09226761691381109,
+        "n_dates": 37
+       },
+       "2023": {
+        "mean_net": 0.016370815816754973,
+        "n_dates": 37
+       },
+       "2024": {
+        "mean_net": 0.00856603831745288,
+        "n_dates": 50
+       },
+       "2025": {
+        "mean_net": -0.012214312092186213,
+        "n_dates": 37
+       },
+       "2026": {
+        "mean_net": 0.009256345561216827,
+        "n_dates": 23
+       }
+      },
+      "leave_one_year_out": {
+       "2021": -0.014233224588159435,
+       "2022": -0.007983005421941757,
+       "2023": -0.029593876448989843,
+       "2024": -0.030792154625230175,
+       "2025": -0.023907587563877893,
+       "2026": -0.025558183911000825
+      },
+      "loo_worst_mean_net": -0.030792154625230175,
+      "loo_worst_dropped_year": "2024",
+      "share_of_total_by_date": {
+       "top_1pct_of_dates": 0.12734650159666575,
+       "top_5pct_of_dates": 0.37837173433176885,
+       "top_10pct_of_dates": 0.6030410679554702
+      },
+      "n_blocks": 57,
+      "n_blocks_nonoverlap": 18,
+      "n_blocks_strict": 9,
+      "block_se_nonoverlap": 0.01748959260243786,
+      "t_nonoverlap": -1.096220750420058,
+      "mean_net_rel_21d": -0.021967447687408874,
+      "mean_gross_rel_21d": -0.020815071005794522,
+      "mean_cost_bps": 11.523766816143498,
+      "block_se": 0.010661500550337828,
+      "t_across_blocks": -2.0320174336695995,
+      "hit_rate_dates": 0.4349775784753363,
+      "read_me_first": "PRODUCT_EXPERIMENT. Net of an empirical round-trip cost by liquidity band. One regime, ~1.6 years. NOT an alpha claim.",
+      "n_date_blocks": 18,
+      "block_width_dates": 13,
+      "t_horizon_blocks": -1.096220750420058
+     }
+    },
+    "ic_mean": -0.002158430124188522,
+    "ic_std": 0.08761080931859612,
+    "ic_t": -0.36790249485589893,
+    "ic_n_dates": 223,
+    "ic_hit": 0.5336322869955157,
+    "n_oos_rows": 504291,
+    "folds": [
+     {
+      "train_end": "2020-12-18",
+      "test_start": "2021-04-01",
+      "test_end": "2022-05-04",
+      "n_train": 369423,
+      "n_test": 116448,
+      "refused": null
+     },
+     {
+      "train_end": "2022-05-04",
+      "test_start": "2022-08-15",
+      "test_end": "2023-09-19",
+      "n_train": 510884,
+      "n_test": 118053,
+      "refused": null
+     },
+     {
+      "train_end": "2023-09-19",
+      "test_start": "2023-12-28",
+      "test_end": "2025-02-04",
+      "n_train": 656687,
+      "n_test": 127143,
+      "refused": null
+     },
+     {
+      "train_end": "2025-02-04",
+      "test_start": "2025-05-15",
+      "test_end": "2026-06-12",
+      "n_train": 811349,
+      "n_test": 142647,
+      "refused": null
+     }
+    ]
+   }
+  }
+ },
+ "n_date_blocks": {
+  "H5_base_k20": 278,
+  "H5_base_k50": 278,
+  "H5_base_k100": 278,
+  "H5_flow_k20": 278,
+  "H5_flow_k50": 278,
+  "H5_flow_k100": 278,
+  "H21_base_k20": 52,
+  "H21_base_k50": 52,
+  "H21_base_k100": 52,
+  "H21_flow_k20": 52,
+  "H21_flow_k50": 52,
+  "H21_flow_k100": 52,
+  "H63_base_k20": 18,
+  "H63_base_k50": 18,
+  "H63_base_k100": 18,
+  "H63_flow_k20": 18,
+  "H63_flow_k50": 18,
+  "H63_flow_k100": 18
+ },
+ "rule_backtest": {
+  "H21_k20": {
+   "horizon_sessions": 21,
+   "k": 20,
+   "n_months": 121,
+   "by_year": {
+    "2016": {
+     "mean_net": 0.0019805151279767355,
+     "mean_spy": 0.008073603152297437,
+     "mean_vs_spy": -0.006093088024320702,
+     "mean_vs_covered_ew": -0.008483263500059644,
+     "n_months": 6
+    },
+    "2017": {
+     "mean_net": 0.02073286130075964,
+     "mean_spy": 0.019229417472767334,
+     "mean_vs_spy": 0.0015034438279923062,
+     "mean_vs_covered_ew": 0.0049233002330331755,
+     "n_months": 12
+    },
+    "2018": {
+     "mean_net": 0.001385725205230218,
+     "mean_spy": -0.001041570018666486,
+     "mean_vs_spy": 0.0024272952238967014,
+     "mean_vs_covered_ew": -0.002417434331874053,
+     "n_months": 12
+    },
+    "2019": {
+     "mean_net": 0.018025379412956535,
+     "mean_spy": 0.012950178099951396,
+     "mean_vs_spy": 0.00507520131300514,
+     "mean_vs_covered_ew": 0.007470165707630416,
+     "n_months": 12
+    },
+    "2020": {
+     "mean_net": 0.05489271573018283,
+     "mean_spy": 0.024751564487814903,
+     "mean_vs_spy": 0.03014115124236792,
+     "mean_vs_covered_ew": 0.015695973109242815,
+     "n_months": 12
+    },
+    "2021": {
+     "mean_net": 0.0010654777952718239,
+     "mean_spy": 0.013584560928090164,
+     "mean_vs_spy": -0.01251908313281834,
+     "mean_vs_covered_ew": -0.0018463257307559256,
+     "n_months": 12
+    },
+    "2022": {
+     "mean_net": -0.010310410301387308,
+     "mean_spy": -0.0014515620035429795,
+     "mean_vs_spy": -0.00885884829784433,
+     "mean_vs_covered_ew": -0.014726674429327248,
+     "n_months": 12
+    },
+    "2023": {
+     "mean_net": 0.019759721146877855,
+     "mean_spy": 0.01450333536680167,
+     "mean_vs_spy": 0.0052563857800761865,
+     "mean_vs_covered_ew": 0.015331521033601215,
+     "n_months": 12
+    },
+    "2024": {
+     "mean_net": 0.02621158549214403,
+     "mean_spy": 0.02047396932418148,
+     "mean_vs_spy": 0.005737616167962551,
+     "mean_vs_covered_ew": 0.012537011999535996,
+     "n_months": 12
+    },
+    "2025": {
+     "mean_net": 0.01272936609210136,
+     "mean_spy": 0.01506287213608933,
+     "mean_vs_spy": -0.0023335060439879716,
+     "mean_vs_covered_ew": -0.0018078126639469205,
+     "n_months": 12
+    },
+    "2026": {
+     "mean_net": 0.03237622699158532,
+     "mean_spy": 0.01695259238061096,
+     "mean_vs_spy": 0.015423634610974363,
+     "mean_vs_covered_ew": 0.01251639946886471,
+     "n_months": 7
+    }
+   },
+   "leave_one_year_out_vs_spy": {
+    "2016": 0.003696707089083675,
+    "2017": 0.0033992794602090886,
+    "2018": 0.0032975710496508078,
+    "2019": 0.003006058452684741,
+    "2020": 0.00024650433202094767,
+    "2021": 0.004943043896261638,
+    "2022": 0.004540082263053489,
+    "2023": 0.002986111538878753,
+    "2024": 0.0029331320466343827,
+    "2025": 0.0038216959598766425,
+    "2026": 0.00246138021773577
+   },
+   "loo_worst_vs_spy": 0.00024650433202094767,
+   "mean_net_per_hold": 0.01630103919172398,
+   "mean_spy_per_hold": 0.013089776488428951,
+   "mean_vs_spy_per_hold": 0.0032112627032950276,
+   "mean_vs_covered_ew_per_hold": 0.0037903464000608993,
+   "mean_cost_bps": 9.669834710743801,
+   "hit_rate_vs_spy": 0.5041322314049587,
+   "n_date_blocks": 121,
+   "block_width_dates": 1,
+   "t_horizon_blocks": 0.9403615911411336,
+   "compounded_nonoverlap": {
+    "strategy_net": 4.530838692750476,
+    "spy": 3.297097227101826,
+    "n_holds": 121,
+    "span": [
+     "2016-07-29",
+     "2026-07-31"
+    ]
+   },
+   "market_benchmark": {
+    "schema": 1,
+    "module": "learner.benchmark",
+    "benchmark_id": "matched:spy_bars_same_window",
+    "freq": "M",
+    "overlapping": false,
+    "provenance": {
+     "source": "learner.benchmark.matched",
+     "construction": "SPY from the same local bars, entered at the open after each month-end, exited at the close 21 sessions later; price-only (no dividends); non-overlapping every 1 month-end(s)",
+     "label": "spy_bars_same_window",
+     "network": false
+    },
+    "provenance_sha256": "3dd97ec93803233e7eb6c794a7971c9be9b1ab4dfd9ba45768a550e3c25b47a9",
+    "span": [
+     "2016-07-29",
+     "2026-07-31"
+    ],
+    "n_periods": 121
+   }
+  },
+  "H21_k50": {
+   "horizon_sessions": 21,
+   "k": 50,
+   "n_months": 121,
+   "by_year": {
+    "2016": {
+     "mean_net": 0.006374071362892786,
+     "mean_spy": 0.008073603152297437,
+     "mean_vs_spy": -0.0016995317894046506,
+     "mean_vs_covered_ew": -0.004089707265143593,
+     "n_months": 6
+    },
+    "2017": {
+     "mean_net": 0.017301695062077294,
+     "mean_spy": 0.019229417472767334,
+     "mean_vs_spy": -0.001927722410690039,
+     "mean_vs_covered_ew": 0.0014921339943508311,
+     "n_months": 12
+    },
+    "2018": {
+     "mean_net": 0.0012177231354365756,
+     "mean_spy": -0.001041570018666486,
+     "mean_vs_spy": 0.0022592931541030627,
+     "mean_vs_covered_ew": -0.002585436401667693,
+     "n_months": 12
+    },
+    "2019": {
+     "mean_net": 0.014270597350054731,
+     "mean_spy": 0.012950178099951396,
+     "mean_vs_spy": 0.0013204192501033347,
+     "mean_vs_covered_ew": 0.0037153836447286104,
+     "n_months": 12
+    },
+    "2020": {
+     "mean_net": 0.047443841591502244,
+     "mean_spy": 0.024751564487814903,
+     "mean_vs_spy": 0.02269227710368733,
+     "mean_vs_covered_ew": 0.00824709897056222,
+     "n_months": 12
+    },
+    "2021": {
+     "mean_net": -0.0021518476613337795,
+     "mean_spy": 0.013584560928090164,
+     "mean_vs_spy": -0.015736408589423944,
+     "mean_vs_covered_ew": -0.005063651187361527,
+     "n_months": 12
+    },
+    "2022": {
+     "mean_net": -0.006697864377722143,
+     "mean_spy": -0.0014515620035429795,
+     "mean_vs_spy": -0.0052463023741791655,
+     "mean_vs_covered_ew": -0.011114128505662083,
+     "n_months": 12
+    },
+    "2023": {
+     "mean_net": 0.010187155156652134,
+     "mean_spy": 0.01450333536680167,
+     "mean_vs_spy": -0.004316180210149536,
+     "mean_vs_covered_ew": 0.005758955043375491,
+     "n_months": 12
+    },
+    "2024": {
+     "mean_net": 0.019830549195704362,
+     "mean_spy": 0.02047396932418148,
+     "mean_vs_spy": -0.0006434201284771165,
+     "mean_vs_covered_ew": 0.006155975703096328,
+     "n_months": 12
+    },
+    "2025": {
+     "mean_net": 0.015111609465729446,
+     "mean_spy": 0.01506287213608933,
+     "mean_vs_spy": 4.873732964011621e-05,
+     "mean_vs_covered_ew": 0.0005744307096811641,
+     "n_months": 12
+    },
+    "2026": {
+     "mean_net": 0.02727447065478351,
+     "mean_spy": 0.01695259238061096,
+     "mean_vs_spy": 0.010321878274172542,
+     "mean_vs_covered_ew": 0.0074146431320628965,
+     "n_months": 7
+    }
+   },
+   "leave_one_year_out_vs_spy": {
+    "2016": 0.0004666214383876202,
+    "2017": 0.0006109811340039342,
+    "2018": 0.00015002529200836345,
+    "2019": 0.00025338755666888383,
+    "2020": -0.002099477528129354,
+    "2021": 0.002131203465607667,
+    "2022": 0.0009763293868651227,
+    "2023": 0.0008739306165132367,
+    "2024": 0.0004695900570630625,
+    "2025": 0.00039338923598593594,
+    "2026": -0.00025253397579876654
+   },
+   "loo_worst_vs_spy": -0.002099477528129354,
+   "mean_net_per_hold": 0.01344898537006654,
+   "mean_spy_per_hold": 0.013089776488428951,
+   "mean_vs_spy_per_hold": 0.00035920888163759016,
+   "mean_vs_covered_ew_per_hold": 0.000938292578403461,
+   "mean_cost_bps": 10.673719008264463,
+   "hit_rate_vs_spy": 0.48760330578512395,
+   "n_date_blocks": 121,
+   "block_width_dates": 1,
+   "t_horizon_blocks": 0.13347116079466087,
+   "compounded_nonoverlap": {
+    "strategy_net": 3.149168996432647,
+    "spy": 3.297097227101826,
+    "n_holds": 121,
+    "span": [
+     "2016-07-29",
+     "2026-07-31"
+    ]
+   },
+   "market_benchmark": {
+    "schema": 1,
+    "module": "learner.benchmark",
+    "benchmark_id": "matched:spy_bars_same_window",
+    "freq": "M",
+    "overlapping": false,
+    "provenance": {
+     "source": "learner.benchmark.matched",
+     "construction": "SPY from the same local bars, entered at the open after each month-end, exited at the close 21 sessions later; price-only (no dividends); non-overlapping every 1 month-end(s)",
+     "label": "spy_bars_same_window",
+     "network": false
+    },
+    "provenance_sha256": "3dd97ec93803233e7eb6c794a7971c9be9b1ab4dfd9ba45768a550e3c25b47a9",
+    "span": [
+     "2016-07-29",
+     "2026-07-31"
+    ],
+    "n_periods": 121
+   }
+  },
+  "H63_k20": {
+   "horizon_sessions": 63,
+   "k": 20,
+   "n_months": 119,
+   "by_year": {
+    "2016": {
+     "mean_net": 0.024453158343806864,
+     "mean_spy": 0.043097858782857656,
+     "mean_vs_spy": -0.018644700439050792,
+     "mean_vs_covered_ew": -0.0199024318630745,
+     "n_months": 6
+    },
+    "2017": {
+     "mean_net": 0.053428324024255076,
+     "mean_spy": 0.0408869085367769,
+     "mean_vs_spy": 0.012541415487478176,
+     "mean_vs_covered_ew": 0.00923842855983724,
+     "n_months": 12
+    },
+    "2018": {
+     "mean_net": 0.02937712945766747,
+     "mean_spy": 0.01212735204414154,
+     "mean_vs_spy": 0.01724977741352593,
+     "mean_vs_covered_ew": 0.005898819911380609,
+     "n_months": 12
+    },
+    "2019": {
+     "mean_net": 0.03627757487352317,
+     "mean_spy": 0.022283146429496508,
+     "mean_vs_spy": 0.01399442844402666,
+     "mean_vs_covered_ew": 0.030305515119489285,
+     "n_months": 12
+    },
+    "2020": {
+     "mean_net": 0.14860169077674548,
+     "mean_spy": 0.08383407824051876,
+     "mean_vs_spy": 0.0647676125362267,
+     "mean_vs_covered_ew": 0.008593427331596612,
+     "n_months": 12
+    },
+    "2021": {
+     "mean_net": 0.0166943732459657,
+     "mean_spy": 0.03930468273271496,
+     "mean_vs_spy": -0.02261030948674927,
+     "mean_vs_covered_ew": 0.006253086058106274,
+     "n_months": 12
+    },
+    "2022": {
+     "mean_net": -0.03456600228932997,
+     "mean_spy": -0.0151723421489199,
+     "mean_vs_spy": -0.019393660140410066,
+     "mean_vs_covered_ew": -0.02295277882044514,
+     "n_months": 12
+    },
+    "2023": {
+     "mean_net": 0.07823675817047555,
+     "mean_spy": 0.0632878760031114,
+     "mean_vs_spy": 0.01494888216736416,
+     "mean_vs_covered_ew": 0.038463561334783826,
+     "n_months": 12
+    },
+    "2024": {
+     "mean_net": 0.003373052334661286,
+     "mean_spy": 0.029176003920535248,
+     "mean_vs_spy": -0.02580295158587396,
+     "mean_vs_covered_ew": -0.007101821546660114,
+     "n_months": 12
+    },
+    "2025": {
+     "mean_net": 0.04362683573024969,
+     "mean_spy": 0.04381322932507222,
+     "mean_vs_spy": -0.00018639359482253265,
+     "mean_vs_covered_ew": -0.0067333291464671445,
+     "n_months": 12
+    },
+    "2026": {
+     "mean_net": 0.167361284273386,
+     "mean_spy": 0.07561687342822551,
+     "mean_vs_spy": 0.0917444108451605,
+     "mean_vs_covered_ew": 0.0806757064933777,
+     "n_months": 5
+    }
+   },
+   "leave_one_year_out_vs_spy": {
+    "2016": 0.009954227160309663,
+    "2017": 0.008060397015242516,
+    "2018": 0.007532356425405385,
+    "2019": 0.00789744229114362,
+    "2020": 0.0022032534209903442,
+    "2021": 0.012002646545062416,
+    "2022": 0.011641900823977645,
+    "2023": 0.007790400752077733,
+    "2024": 0.012360699864590418,
+    "2025": 0.009487814856248201,
+    "2026": 0.004861731686446358
+   },
+   "loo_worst_vs_spy": 0.0022032534209903442,
+   "mean_net_per_hold": 0.046085060565717074,
+   "mean_spy_per_hold": 0.03757279614150962,
+   "mean_vs_spy_per_hold": 0.008512264424207454,
+   "mean_vs_covered_ew_per_hold": 0.008634813839562173,
+   "mean_cost_bps": 9.719747899159664,
+   "hit_rate_vs_spy": 0.5042016806722689,
+   "n_date_blocks": 40,
+   "block_width_dates": 3,
+   "t_horizon_blocks": 0.9379469242801323,
+   "compounded_nonoverlap": {
+    "strategy_net": 3.800839778815585,
+    "spy": 3.0533889249693082,
+    "n_holds": 40,
+    "span": [
+     "2016-07-29",
+     "2026-04-30"
+    ]
+   },
+   "market_benchmark": {
+    "schema": 1,
+    "module": "learner.benchmark",
+    "benchmark_id": "matched:spy_bars_same_window",
+    "freq": "M",
+    "overlapping": false,
+    "provenance": {
+     "source": "learner.benchmark.matched",
+     "construction": "SPY from the same local bars, entered at the open after each month-end, exited at the close 63 sessions later; price-only (no dividends); non-overlapping every 3 month-end(s)",
+     "label": "spy_bars_same_window",
+     "network": false
+    },
+    "provenance_sha256": "d3948f281266e4121ade9aaeff671d0ba6a08865ffd49e5f37e6307b221f28d2",
+    "span": [
+     "2016-07-29",
+     "2026-04-30"
+    ],
+    "n_periods": 40
+   }
+  },
+  "H63_k50": {
+   "horizon_sessions": 63,
+   "k": 50,
+   "n_months": 119,
+   "by_year": {
+    "2016": {
+     "mean_net": 0.03902694068872246,
+     "mean_spy": 0.043097858782857656,
+     "mean_vs_spy": -0.004070918094135199,
+     "mean_vs_covered_ew": -0.005328649518158905,
+     "n_months": 6
+    },
+    "2017": {
+     "mean_net": 0.04562633260471125,
+     "mean_spy": 0.0408869085367769,
+     "mean_vs_spy": 0.004739424067934356,
+     "mean_vs_covered_ew": 0.0014364371402934208,
+     "n_months": 12
+    },
+    "2018": {
+     "mean_net": 0.023339320139249168,
+     "mean_spy": 0.01212735204414154,
+     "mean_vs_spy": 0.011211968095107628,
+     "mean_vs_covered_ew": -0.000138989407037692,
+     "n_months": 12
+    },
+    "2019": {
+     "mean_net": 0.029374852683481136,
+     "mean_spy": 0.022283146429496508,
+     "mean_vs_spy": 0.007091706253984634,
+     "mean_vs_covered_ew": 0.023402792929447257,
+     "n_months": 12
+    },
+    "2020": {
+     "mean_net": 0.13351704607844353,
+     "mean_spy": 0.08383407824051876,
+     "mean_vs_spy": 0.04968296783792477,
+     "mean_vs_covered_ew": -0.006491217366705338,
+     "n_months": 12
+    },
+    "2021": {
+     "mean_net": 0.013755214556259415,
+     "mean_spy": 0.03930468273271496,
+     "mean_vs_spy": -0.025549468176455547,
+     "mean_vs_covered_ew": 0.003313927368399996,
+     "n_months": 12
+    },
+    "2022": {
+     "mean_net": -0.025178834998986373,
+     "mean_spy": -0.0151723421489199,
+     "mean_vs_spy": -0.010006492850066474,
+     "mean_vs_covered_ew": -0.013565611530101546,
+     "n_months": 12
+    },
+    "2023": {
+     "mean_net": 0.06965359895732999,
+     "mean_spy": 0.0632878760031114,
+     "mean_vs_spy": 0.0063657229542185894,
+     "mean_vs_covered_ew": 0.029880402121638266,
+     "n_months": 12
+    },
+    "2024": {
+     "mean_net": 0.0006703112174918253,
+     "mean_spy": 0.029176003920535248,
+     "mean_vs_spy": -0.028505692703043418,
+     "mean_vs_covered_ew": -0.009804562663829574,
+     "n_months": 12
+    },
+    "2025": {
+     "mean_net": 0.049631483704293766,
+     "mean_spy": 0.04381322932507222,
+     "mean_vs_spy": 0.005818254379221549,
+     "mean_vs_covered_ew": -0.0007286811724230661,
+     "n_months": 12
+    },
+    "2026": {
+     "mean_net": 0.14330771696915626,
+     "mean_spy": 0.07561687342822551,
+     "mean_vs_spy": 0.06769084354093075,
+     "mean_vs_covered_ew": 0.056622139189147935,
+     "n_months": 5
+    }
+   },
+   "leave_one_year_out_vs_spy": {
+    "2016": 0.005209158371774926,
+    "2017": 0.004741460734864889,
+    "2018": 0.004015567946770691,
+    "2019": 0.0044776533868966335,
+    "2020": -0.00029893669728356696,
+    "2021": 0.008138345846385252,
+    "2022": 0.006395208426603298,
+    "2023": 0.004559072074720863,
+    "2024": 0.008469885045628752,
+    "2025": 0.004620470419580344,
+    "2026": 0.001980308506500892
+   },
+   "loo_worst_vs_spy": -0.00029893669728356696,
+   "mean_net_per_hold": 0.04231405149819665,
+   "mean_spy_per_hold": 0.03757279614150962,
+   "mean_vs_spy_per_hold": 0.00474125535668702,
+   "mean_vs_covered_ew_per_hold": 0.00486380477204174,
+   "mean_cost_bps": 10.716638655462182,
+   "hit_rate_vs_spy": 0.4957983193277311,
+   "n_date_blocks": 40,
+   "block_width_dates": 3,
+   "t_horizon_blocks": 0.6513928433542704,
+   "compounded_nonoverlap": {
+    "strategy_net": 4.380782670340703,
+    "spy": 3.0533889249693082,
+    "n_holds": 40,
+    "span": [
+     "2016-07-29",
+     "2026-04-30"
+    ]
+   },
+   "market_benchmark": {
+    "schema": 1,
+    "module": "learner.benchmark",
+    "benchmark_id": "matched:spy_bars_same_window",
+    "freq": "M",
+    "overlapping": false,
+    "provenance": {
+     "source": "learner.benchmark.matched",
+     "construction": "SPY from the same local bars, entered at the open after each month-end, exited at the close 63 sessions later; price-only (no dividends); non-overlapping every 3 month-end(s)",
+     "label": "spy_bars_same_window",
+     "network": false
+    },
+    "provenance_sha256": "d3948f281266e4121ade9aaeff671d0ba6a08865ffd49e5f37e6307b221f28d2",
+    "span": [
+     "2016-07-29",
+     "2026-04-30"
+    ],
+    "n_periods": 40
+   }
+  }
+ },
+ "books": {
+  "revision_flow_v0": {
+   "book_id": "cb8d492bb8bf9ade",
+   "status": "FROZEN",
+   "tickers": [
+    "OKTA",
+    "SNOW",
+    "CRWD",
+    "PANW",
+    "CRM",
+    "ABNB",
+    "AFRM",
+    "GTLB",
+    "AMD",
+    "ESTC",
+    "AMGN",
+    "TGT",
+    "NET",
+    "DDOG",
+    "MDB",
+    "ZS",
+    "WDAY",
+    "S",
+    "XYZ",
+    "DELL"
+   ]
+  },
+  "revision_flow_v0_random_twin": {
+   "book_id": "e74c9063d451e316",
+   "status": "FROZEN",
+   "tickers": [
+    "ACAD",
+    "ARES",
+    "ASND",
+    "BTGO",
+    "CASY",
+    "CCEP",
+    "CENX",
+    "CG",
+    "DNOW",
+    "EQPT",
+    "FIVN",
+    "HAL",
+    "HXL",
+    "INR",
+    "IQV",
+    "KNSL",
+    "NDAQ",
+    "REYN",
+    "VCTR",
+    "WVE"
+   ]
+  },
+  "pool_size": 1624,
+  "bars_asof": "2026-09-21",
+  "books_path": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_portfolio\\books.jsonl"
+ },
+ "verdict": "H=5: worst cell base  -0.08% vs flow  -0.09%; LOO-worst base  -0.22% vs flow  -0.18% (net rel per hold) | H=21: worst cell base  -1.10% vs flow  -0.67%; LOO-worst base  -1.73% vs flow  -1.14% (net rel per hold) | H=63: worst cell base  -2.09% vs flow  -1.65%; LOO-worst base  -3.28% vs flow  -2.60% (net rel per hold)",
+ "read_me_first": "PRODUCT_EXPERIMENT; NOT an alpha claim. Both arms and the rule are survivor-selected (the revision source covers live names). Read by_year and loo_worst before any t."
+}

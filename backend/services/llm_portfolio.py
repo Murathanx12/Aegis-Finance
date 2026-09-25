@@ -71,7 +71,7 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 
 import numpy as np
 import pandas as pd
@@ -228,13 +228,100 @@ class Refusal(Exception):
         return self.why
 
 
+#: The kinds a book may declare. `twin` is minted by `twins()` only.
+KINDS = ("personal", "competition", "twin")
+
+#: A book whose `state` starts with this is a draft awaiting the human edit.
+DRAFT_PREFIX = "DRAFT"
+
+#: Draft provenance carried onto the frozen record, outside `book_id`.
+PROVENANCE_KEYS = ("supersedes", "dropped_from_v0", "human_edits",
+                   "twins_requested", "drafted_at")
+
+#: Ordered keyword -> theme rules for positions that do not declare a `theme`.
+#: Used only to pick the `sector_etf` twin's ETF; recorded as `inferred`.
+THEME_KEYWORDS: tuple[tuple[str, str], ...] = (
+    (r"pdufa|fda|bla\b|nda\b|phase 3|biotech|pharma|clinical|glp-1|obesity|bioprocess", "biotech"),
+    (r"quantum", "quantum"),
+    (r"uranium|nuclear|haleu|smr\b|reactor", "nuclear"),
+    (r"lithium|battery", "lithium"),
+    (r"betting|gambling|casino|sportsbook|prediction market|event-contract", "gambling"),
+    (r"robot|actuator|humanoid|servo", "robotics"),
+    (r"hbm|memory|dram|foundry|wafer|semicap|lithograph|chip|semiconductor|packaging|cowos", "semis"),
+    (r"power|grid|turbine|cooling|data[- ]cent|utility", "power_grid"),
+    (r"defen[cs]e|missile|rearmament", "defense"),
+    (r"rare earth|minerals|mining|copper", "materials"),
+    (r"oil|gas\b|lng|energy", "energy"),
+)
+
+
+def infer_theme(text: str) -> Optional[str]:
+    import re
+    low = (text or "").lower()
+    for pat, theme in THEME_KEYWORDS:
+        if re.search(pat, low):
+            return theme
+    return None
+
+
+def is_etf(ticker: str, declared: Any = None) -> bool:
+    if declared is True:
+        return True
+    t = str(ticker).upper()
+    return (t in _config.BOOK_KNOWN_ETFS or t in set(_config.THEME_ETF_MAP.values())
+            or t == _config.BOOK_WLS_PROXY)
+
+
+def _split_falsifier(thesis: str) -> tuple[str, str]:
+    """`"... Falsifier: X"` -> (thesis before, X). The draft embeds it that way."""
+    import re
+    m = re.search(r"\bfalsifier\s*:\s*", thesis or "", flags=re.I)
+    if not m:
+        return thesis or "", ""
+    return thesis[:m.start()].strip(), thesis[m.end():].strip()
+
+
+def constraints_for(kind: str) -> dict:
+    if kind == "competition":
+        return {"long_only": True,
+                "max_weight": _config.BOOK_COMPETITION_MAX_WEIGHT,
+                "min_names": _config.BOOK_COMPETITION_MIN_NAMES,
+                "max_cash": _config.BOOK_COMPETITION_MAX_CASH,
+                "no_etfs": True,
+                "objective_must_name": _config.BOOK_COMPETITION_OBJECTIVE_MUST_NAME,
+                "falsifier_required": True,
+                "wls_membership_checked": False}
+    if kind == "personal":
+        return {"long_only": True, "max_weight": None, "cash_declared": True,
+                "falsifier_required": True}
+    return {"long_only": True}
+
+
 def freeze(book: dict, *, briefing: Optional[dict] = None,
-           today: Optional[Any] = None) -> dict:
+           today: Optional[Any] = None,
+           universe: Optional[Iterable[str]] = None,
+           resolve: Optional[Callable[[list[str]], set]] = None,
+           accept_draft: bool = False) -> dict:
     """Validate and commit a portfolio. After this it is evidence, not a draft.
 
     Refuses rather than repairs. A book that does not say what it holds, or
     whose weights do not add up, is not a forecast that can be graded, and
     silently normalising it would make the grade meaningless.
+
+    `kind` (2026-09-25): `competition` = long only, <= 10%/name, >= 8 names, no
+    ETFs, cash <= 2%, objective names "Relative P&L vs WLS"; `personal` = long
+    only, no cap, CASH declared as a row. Both require a falsifier per name. A
+    book with no `kind` is the legacy contract (recorded `kind_declared: False`).
+
+    `universe` (the US panel's symbols) turns on the priceability check: a name
+    outside it is refused unless `resolve` (normally `global_prices.resolve`)
+    prices it. A book on a name nobody prices cannot be graded.
+
+    Unknown top-level keys are ignored. The draft-provenance keys
+    (`PROVENANCE_KEYS`: `supersedes`, `dropped_from_v0`, `human_edits`,
+    `twins_requested`, `drafted_at`) are carried onto the record but are NOT
+    part of `book_id`. A `DRAFT*` state refuses unless `accept_draft=True`, and
+    then the record says `draft_accepted_by_override: True` beside that state.
     """
     name = str(book.get("name") or "").strip()
     if not name:
@@ -248,6 +335,18 @@ def freeze(book: dict, *, briefing: Optional[dict] = None,
     if not pos:
         raise Refusal("REFUSED: no positions. An empty book is a decision to "
                       "hold cash and must say so explicitly as CASH 1.0.")
+    state = str(book.get("state") or "")
+    if state.upper().startswith(DRAFT_PREFIX) and not accept_draft:
+        raise Refusal(f"REFUSED: state is {state!r}. A draft awaits its human "
+                      f"edit; set `state` to READY after the edit, then freeze.")
+    kind_raw = book.get("kind")
+    kind = str(kind_raw or "personal").strip().lower()
+    if kind not in KINDS:
+        raise Refusal(f"REFUSED: kind {kind_raw!r} is not one of {KINDS}.")
+    declared = kind_raw is not None
+    if kind == "twin" and not book.get("parent_book_id"):
+        raise Refusal("REFUSED: a twin without `parent_book_id` is a book "
+                      "compared to nothing.")
 
     clean, seen = [], set()
     total = 0.0
@@ -267,8 +366,25 @@ def freeze(book: dict, *, briefing: Optional[dict] = None,
             raise Refusal(f"REFUSED: {t} weight {w} -- long-only for now; a short "
                           f"needs a borrow model this does not have.")
         total += w
-        clean.append({"ticker": t, "weight": w,
-                      "thesis": str(p.get("thesis") or "")[:600]})
+        thesis = str(p.get("thesis") or "")
+        falsifier = str(p.get("falsifier") or "").strip()
+        if not falsifier:
+            thesis, falsifier = _split_falsifier(thesis)
+        theme = str(p.get("theme") or "").strip().lower() or None
+        theme_src = "declared" if theme else None
+        if theme is None and t in _config.BOOK_TICKER_THEMES:
+            theme, theme_src = _config.BOOK_TICKER_THEMES[t], "ticker_map"
+        if theme is None and t != "CASH":
+            theme = infer_theme(thesis + " " + falsifier)
+            theme_src = "inferred" if theme else None
+        c = {"ticker": t, "weight": w, "thesis": thesis[:600]}
+        if falsifier:
+            c["falsifier"] = falsifier[:400]
+        if theme:
+            c["theme"], c["theme_source"] = theme, theme_src
+        if p.get("is_etf") is True:
+            c["is_etf"] = True
+        clean.append(c)
     if not (0.98 <= total <= 1.02):
         raise Refusal(f"REFUSED: weights sum to {total:.4f}, not 1.0. This is "
                       f"not a rounding fix I am willing to make for you -- a "
@@ -278,24 +394,214 @@ def freeze(book: dict, *, briefing: Optional[dict] = None,
     for c in clean:
         c["weight"] = c["weight"] / total
 
+    names = [c for c in clean if c["ticker"] != "CASH"]
+    cash = sum(c["weight"] for c in clean if c["ticker"] == "CASH")
+    cons = constraints_for(kind) if declared else {"long_only": True}
+    if declared and cons.get("falsifier_required"):
+        bare = [c["ticker"] for c in names if not c.get("falsifier")]
+        if bare:
+            raise Refusal(f"REFUSED: no falsifier on {bare[:10]}. Every position "
+                          f"names the observation that would make it wrong.")
+    if kind == "competition":
+        mw = cons["max_weight"]
+        over = [f"{c['ticker']} {c['weight']:.3f}" for c in names
+                if c["weight"] > mw + 1e-6]
+        if over:
+            raise Refusal(f"REFUSED: competition max_weight is {mw:.2f}; over "
+                          f"it: {over[:10]}")
+        if len(names) < cons["min_names"]:
+            raise Refusal(f"REFUSED: a competition book holds at least "
+                          f"{cons['min_names']} names; this one holds {len(names)}.")
+        if cash > cons["max_cash"] + 1e-6:
+            raise Refusal(f"REFUSED: competition cash {cash:.3f} exceeds "
+                          f"{cons['max_cash']:.2f}; cash earns nothing against WLS.")
+        etfs = [c["ticker"] for c in names if is_etf(c["ticker"], c.get("is_etf"))]
+        if etfs:
+            raise Refusal(f"REFUSED: competition books hold no ETF: {etfs}")
+        if cons["objective_must_name"].lower() not in objective.lower():
+            raise Refusal(f"REFUSED: a competition objective must name "
+                          f"{cons['objective_must_name']!r}; got {objective!r}.")
+    if kind == "personal" and declared and not any(
+            c["ticker"] == "CASH" for c in clean):
+        raise Refusal("REFUSED: a personal book declares its cash as a CASH row "
+                      "(weight 0 is a declaration; absence is not).")
+
+    priced_by: dict = {"checked": universe is not None}
+    if universe is not None:
+        uni = {str(u).upper() for u in universe}
+        missing = [c["ticker"] for c in names if c["ticker"] not in uni]
+        resolved: set = set()
+        if missing and resolve is not None:
+            resolved = {str(x).upper() for x in (resolve(missing) or set())}
+        still = [t for t in missing if t not in resolved]
+        if still:
+            raise Refusal(f"REFUSED: nobody prices {still[:15]} -- not in the US "
+                          f"panel and not resolved by global_prices. A book on a "
+                          f"name nobody prices cannot be graded.")
+        priced_by.update({"us_panel": len(names) - len(missing),
+                          "global_prices": sorted(resolved & set(missing))})
+
+    parent_kind = book.get("parent_kind")
+    bench = book.get("benchmark") or (
+        _config.BOOK_WLS_PROXY if "competition" in (kind, parent_kind) else "SPY")
     rec = {
-        "schema": SCHEMA_VERSION, "kind": "book",
+        "schema": SCHEMA_VERSION, "kind": kind if declared else "personal",
+        "kind_declared": declared,
+        "constraints": cons,
         "name": name, "objective": objective,
         "model": str(book.get("model") or "unknown"),
         "strategy": str(book.get("strategy") or "")[:2000],
+        "what_i_did_not_buy": book.get("what_i_did_not_buy") or [],
         "horizon_days": book.get("horizon_days") or list(HORIZON_DAYS),
         "frozen_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "asof": str(today or date.today()),
         "start_capital_usd": START_CAPITAL,
+        "benchmark": bench,
         "n_positions": len(clean),
         "n_tiny_positions": sum(1 for c in clean if c["weight"] < TINY_WEIGHT),
         "max_weight": max(c["weight"] for c in clean),
+        "cash_weight": round(cash, 6),
         "briefing_hash": (briefing or {}).get("briefing_hash"),
         "briefing_asof": (briefing or {}).get("asof"),
+        "priced_by": priced_by,
         "positions": clean,
     }
+    for k in ("parent_book_id", "parent_kind", "twin", "source", "parse",
+              "evidence_hash", "prompt_hash") + PROVENANCE_KEYS:
+        if book.get(k) is not None:
+            rec[k] = book[k]
+    if state:
+        rec["state"] = state
+    if state.upper().startswith(DRAFT_PREFIX):
+        rec["draft_accepted_by_override"] = True
+    if book.get("max_weight") is not None:
+        # The draft's DECLARED cap, beside the realised `max_weight`.
+        rec["declared_max_weight"] = book["max_weight"]
     rec["book_id"] = _hash({k: rec[k] for k in ("name", "positions", "asof")})
     return rec
+
+
+# ───────────────────────────────── twins ────────────────────────────────────
+
+#: A random twin draws only names whose last bar is at most this many calendar
+#: days before `asof` -- a name that stopped trading is not a live alternative.
+TWIN_LIVE_DAYS = 10
+
+
+def liquidity_bands(bars: pd.DataFrame, *, asof: Any,
+                    window: int = 63) -> dict[str, str]:
+    """Band per symbol from the median dollar volume of the `window` sessions
+    up to `asof` -- the same bands `xs_ranker.round_trip_bps` charges."""
+    from backend.services import xs_ranker as XR
+    b = bars[bars["date"] <= pd.Timestamp(asof)]
+    if b.empty:
+        return {}
+    b = b.sort_values(["symbol", "date"]).groupby("symbol").tail(window)
+    mdv = (b["close"] * b["volume"]).groupby(b["symbol"]).median()
+    return {s: XR.liquidity_band(float(v)) for s, v in mdv.items()}
+
+
+def _live_pool(bars: pd.DataFrame, asof: Any, exclude: set) -> list[str]:
+    from backend.services import xs_ranker as XR
+    a = pd.Timestamp(asof)
+    b = bars[bars["date"] <= a]
+    if b.empty:
+        return []
+    last = b.sort_values("date").groupby("symbol").tail(1)
+    ok = last[(last["date"] >= a - pd.Timedelta(days=TWIN_LIVE_DAYS))
+              & (last["close"] >= XR.MIN_PRICE)]
+    return sorted(s for s in ok["symbol"]
+                  if s not in exclude and s not in XR.INDEX_PROXIES
+                  and not is_etf(s) and s != "CASH")
+
+
+def twins(book: dict, *, asof: Any, seed: int,
+          bars: Optional[pd.DataFrame] = None,
+          ai_draft: Optional[dict] = None) -> dict[str, dict]:
+    """The comparison books a frozen book is graded beside, each frozen.
+
+    * `ew` -- the same non-cash names, equal weight, fully invested.
+    * `sector_etf` -- each name's theme ETF (`THEME_ETF_MAP`) at the theme's
+      weight, fully invested. Beating it means the PICKS added something.
+    * `spy` (personal) / `urth` (competition, the WLS proxy) -- the market.
+    * `random_same_band` -- every name replaced one-for-one by a random live
+      name from the same liquidity band, SAME weight, same cash. Isolates
+      selection from sizing and liquidity. `np.random.default_rng(seed)`.
+    * `ai_only` -- only when `ai_draft` is given: the draft's positions exactly.
+    """
+    if not book.get("book_id"):
+        raise Refusal("REFUSED: twins are minted from a FROZEN book (it has no "
+                      "book_id). Freeze the parent first.")
+    if bars is None:
+        raise Refusal("REFUSED: twins need the price panel -- the random twin "
+                      "draws from live names in the parent's liquidity bands.")
+    parent_kind = book.get("kind")
+    competition = parent_kind == "competition"
+    names = [p for p in book["positions"] if p["ticker"] != "CASH"]
+    cash = [p for p in book["positions"] if p["ticker"] == "CASH"]
+    if not names:
+        raise Refusal("REFUSED: an all-cash book has nothing to twin.")
+    default_etf = (_config.BOOK_WLS_PROXY if competition
+                   else _config.THEME_ETF_MAP.get("default", "SPY"))
+
+    def _mk(twin: str, positions: list[dict]) -> dict:
+        return freeze({
+            "name": f"{book['name']}__{twin}", "kind": "twin", "twin": twin,
+            "objective": f"twin of {book['name']}: {book['objective']}",
+            "strategy": f"{twin} twin of {book['book_id']}",
+            "model": "twin", "parent_book_id": book["book_id"],
+            "parent_kind": parent_kind, "benchmark": book.get("benchmark"),
+            "horizon_days": book.get("horizon_days"),
+            "positions": positions}, today=asof)
+
+    out: dict[str, dict] = {}
+    n = len(names)
+    out["ew"] = _mk("ew", [{"ticker": p["ticker"], "weight": 1.0 / n,
+                            "thesis": "equal weight"} for p in names])
+
+    nw = sum(p["weight"] for p in names)
+    etf_w: dict[str, float] = {}
+    for p in names:
+        theme = p.get("theme") or infer_theme(p.get("thesis", ""))
+        etf = (_config.THEME_ETF_MAP.get(theme, default_etf)
+               if theme and theme != "default" else default_etf)
+        etf_w[etf] = etf_w.get(etf, 0.0) + p["weight"] / nw
+    out["sector_etf"] = _mk("sector_etf", [
+        {"ticker": e, "weight": w, "thesis": "theme ETF at the theme weight"}
+        for e, w in sorted(etf_w.items())])
+
+    bench_key = "urth" if competition else "spy"
+    out[bench_key] = _mk(bench_key, [{"ticker": default_etf if competition else "SPY",
+                                      "weight": 1.0, "thesis": "the market"}])
+
+    rng = np.random.default_rng(seed)
+    bands = liquidity_bands(bars, asof=asof)
+    pool = _live_pool(bars, asof, {p["ticker"] for p in names})
+    by_band: dict[str, list[str]] = {}
+    for s in pool:
+        by_band.setdefault(bands.get(s, "small"), []).append(s)
+    chosen: set = set()
+    rnd = []
+    for p in sorted(names, key=lambda x: x["ticker"]):
+        cands = [s for s in by_band.get(bands.get(p["ticker"], ""), []) if s not in chosen]
+        if not cands:
+            cands = [s for s in pool if s not in chosen]
+        if not cands:
+            raise Refusal("REFUSED: the random twin ran out of live names.")
+        pick = str(cands[int(rng.integers(len(cands)))])
+        chosen.add(pick)
+        rnd.append({"ticker": pick, "weight": p["weight"],
+                    "thesis": f"random same-band replacement for {p['ticker']}"})
+    rnd += [{"ticker": "CASH", "weight": c["weight"], "thesis": "parent's cash"}
+            for c in cash]
+    out["random_same_band"] = _mk("random_same_band", rnd)
+
+    if ai_draft is not None:
+        out["ai_only"] = _mk("ai_only", [
+            {"ticker": p["ticker"], "weight": p["weight"],
+             "thesis": p.get("thesis", ""), "falsifier": p.get("falsifier")}
+            for p in ai_draft.get("positions", [])])
+    return out
 
 
 def append_book(rec: dict) -> Path:
@@ -323,23 +629,62 @@ def read_books(path: Optional[Path] = None) -> list[dict]:
 
 # ──────────────────────────────── grading ───────────────────────────────────
 
+def benchmark_of(rec: dict) -> str:
+    """SPY for personal books, the WLS proxy for competition books and their
+    twins. A benchmark written into the record wins."""
+    if rec.get("benchmark"):
+        return str(rec["benchmark"])
+    if "competition" in (rec.get("kind"), rec.get("parent_kind")):
+        return _config.BOOK_WLS_PROXY
+    return "SPY"
+
+
+def _entry_mdv(g: pd.DataFrame, j: int, window: int = 63) -> Optional[float]:
+    """Median dollar volume of the `window` sessions BEFORE entry -- what was
+    knowable when the order went in. Raw bars carry no such column, and before
+    2026-09-25 a missing value fell to the `small` band (35 bps) for every name."""
+    if "median_dollar_vol" in g.columns:
+        v = g["median_dollar_vol"].iloc[j]
+        return float(v) if pd.notna(v) else None
+    lo = max(0, j - window)
+    if j - lo < 5:
+        return None
+    dv = (g["close"].iloc[lo:j] * g["volume"].iloc[lo:j]).astype(float)
+    m = float(dv.median())
+    return m if np.isfinite(m) else None
+
+
 def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict:
     """NAV the book forward from its own as-of date, net of entry cost.
 
     Entry is the OPEN of the session after `asof`, which is the first price the
     book could actually have been filled at. A book priced at the close of its
     own decision date has already been given the day it was deciding on.
+
+    Sessions are counted on the BENCHMARK's calendar when the benchmark is in
+    `bars` (SPY, or URTH for competition books): a union of US and Asian
+    calendars would count a Taiwan-only session as a US one.
     """
     from backend.services import xs_ranker as XR
 
+    bench_sym = benchmark_of(rec)
     start = pd.Timestamp(rec["asof"])
-    dates = np.sort(bars["date"].unique()).astype("datetime64[ns]")
+    px = {s: g.sort_values("date").reset_index(drop=True)
+          for s, g in bars.groupby("symbol", sort=False)}
+    bench = px.get(bench_sym)
+    cal = bench["date"] if bench is not None and len(bench) else bars["date"]
+    dates = np.sort(pd.Series(cal).unique()).astype("datetime64[ns]")
+    if today is not None:
+        dates = dates[dates <= np.datetime64(pd.Timestamp(today), "ns")]
     i0 = int(np.searchsorted(dates, np.datetime64(start, "ns"), side="right"))
+    base = {"book_id": rec["book_id"], "name": rec["name"],
+            "kind": rec.get("kind"), "twin": rec.get("twin"),
+            "parent_book_id": rec.get("parent_book_id"),
+            "benchmark": bench_sym}
     if i0 >= len(dates):
-        return {"book_id": rec["book_id"], "name": rec["name"],
-                "status": "PENDING", "why": "no session has opened since it was frozen"}
+        return {**base, "status": "PENDING",
+                "why": "no session has opened since it was frozen"}
 
-    px = {s: g.sort_values("date") for s, g in bars.groupby("symbol", sort=False)}
     held, missing, cost_bps = [], [], 0.0
     for p in rec["positions"]:
         t = p["ticker"]
@@ -359,20 +704,18 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
         if not np.isfinite(o) or o <= 0:
             missing.append(t)
             continue
-        mdv = float(g["median_dollar_vol"].iloc[j]) if "median_dollar_vol" in g else None
-        cost_bps += p["weight"] * XR.round_trip_bps(mdv)
+        cost_bps += p["weight"] * XR.round_trip_bps(_entry_mdv(g, j))
         held.append((t, p["weight"], g, j))
 
     if not held:
-        return {"book_id": rec["book_id"], "name": rec["name"],
-                "status": "REFUSED", "why": f"no position could be priced; "
-                                            f"missing {missing[:10]}"}
+        return {**base, "status": "REFUSED",
+                "why": f"no position could be priced; missing {missing[:10]}"}
 
     # A book whose names we cannot price is NOT silently re-weighted onto the
     # ones we can. That would grade a different book than the one frozen.
     priced_w = sum(w for _t, w, _g, _j in held)
-    out = {"book_id": rec["book_id"], "name": rec["name"],
-           "objective": rec["objective"], "model": rec.get("model"),
+    proxy = bench_sym == _config.BOOK_WLS_PROXY
+    out = {**base, "objective": rec["objective"], "model": rec.get("model"),
            "asof": rec["asof"], "status": "OK",
            "n_positions": rec["n_positions"],
            "n_unpriceable": len(missing), "unpriceable": missing[:20],
@@ -380,19 +723,13 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
            # Charged ONCE, on entry, at the empirical band cost. Half of a round
            # trip, because the book has not sold yet.
            "entry_cost_bps": round(cost_bps / 2.0, 1),
+           "benchmark_is_proxy": proxy,
+           "caveat": _config.BOOK_WLS_PROXY_CAVEAT if proxy else None,
            "horizons": {}}
 
-    spy = px.get("SPY")
-    for h in (rec.get("horizon_days") or HORIZON_DAYS):
-        h = int(h)
-        i1 = i0 + h - 1
-        if i1 > len(dates) - 1:
-            out["horizons"][h] = {"status": "PENDING",
-                                  "why": f"needs {h} sessions, has {len(dates)-i0}"}
-            continue
-        asof_d = dates[i1]
+    def _nav_at(asof_d):
         tot = 0.0
-        for t, w, g, j in held:
+        for _t, w, g, j in held:
             if g is None:                       # CASH earns nothing here
                 tot += w
                 continue
@@ -404,18 +741,133 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
             tot += w * float(g["close"].iloc[k]) / float(g["open"].iloc[j])
         gross = tot / priced_w - 1.0 if priced_w else None
         net = gross - (cost_bps / 2.0) / 10_000.0 if gross is not None else None
-        bench = None
-        if spy is not None:
-            sd = spy["date"].values.astype("datetime64[ns]")
+        b = None
+        if bench is not None:
+            sd = bench["date"].values.astype("datetime64[ns]")
             a = int(np.searchsorted(sd, dates[i0], side="left"))
-            b = int(np.searchsorted(sd, asof_d, side="right")) - 1
-            if 0 <= a < len(sd) and a <= b:
-                bench = float(spy["close"].iloc[b]) / float(spy["open"].iloc[a]) - 1.0
-        out["horizons"][h] = {
-            "status": "OK", "gross": gross, "net": net,
-            "nav_usd": round(START_CAPITAL * (1.0 + (net or 0.0)), 2),
-            "spy": bench,
-            "vs_spy": (net - bench) if (net is not None and bench is not None) else None,
-            "as_of": str(pd.Timestamp(asof_d))[:10],
-        }
+            z = int(np.searchsorted(sd, asof_d, side="right")) - 1
+            if 0 <= a < len(sd) and a <= z:
+                b = float(bench["close"].iloc[z]) / float(bench["open"].iloc[a]) - 1.0
+        return gross, net, b
+
+    def _cell(asof_d) -> dict:
+        gross, net, b = _nav_at(asof_d)
+        vs = (net - b) if (net is not None and b is not None) else None
+        return {"status": "OK", "gross": gross, "net": net,
+                "nav_usd": round(START_CAPITAL * (1.0 + (net or 0.0)), 2),
+                "benchmark_return": b, "vs_benchmark": vs,
+                # kept for readers of the 09-24 receipts
+                "spy": b if bench_sym == "SPY" else None,
+                "vs_spy": vs if bench_sym == "SPY" else None,
+                "as_of": str(pd.Timestamp(asof_d))[:10]}
+
+    for h in (rec.get("horizon_days") or HORIZON_DAYS):
+        h = int(h)
+        i1 = i0 + h - 1
+        if i1 > len(dates) - 1:
+            out["horizons"][h] = {"status": "PENDING",
+                                  "why": f"needs {h} sessions, has {len(dates)-i0}"}
+            continue
+        out["horizons"][h] = _cell(dates[i1])
+    out["to_date"] = {**_cell(dates[-1]), "sessions": len(dates) - i0}
     return out
+
+
+# ────────────────────────────── the leaderboard ─────────────────────────────
+
+def union_bars(us: Optional[pd.DataFrame], glob: Optional[pd.DataFrame]) -> pd.DataFrame:
+    """US panel and global cache, ONE source per symbol: whichever reaches the
+    later date (the US panel on a tie). Never interleaves two vendors' rows for
+    one symbol, which would splice an adjusted series onto an unadjusted one."""
+    cols = ["symbol", "date", "open", "high", "low", "close", "volume"]
+    frames = [f[[c for c in cols if c in f.columns]] for f in (us, glob)
+              if f is not None and len(f)]
+    if not frames:
+        return pd.DataFrame(columns=cols)
+    if len(frames) == 1:
+        return frames[0].reset_index(drop=True)
+    u, g = frames
+    lu = u.groupby("symbol")["date"].max()
+    lg = g.groupby("symbol")["date"].max()
+    take_g = {s for s, d in lg.items() if s not in lu.index or d > lu[s]}
+    out = pd.concat([u[~u["symbol"].isin(take_g)], g[g["symbol"].isin(take_g)]],
+                    ignore_index=True)
+    return out.sort_values(["symbol", "date"], kind="mergesort").reset_index(drop=True)
+
+
+def book_tickers(books: Iterable[dict]) -> set[str]:
+    """Every ticker a set of books (and their benchmarks) needs priced."""
+    out: set[str] = set()
+    for b in books:
+        out.add(benchmark_of(b))
+        out.update(p["ticker"] for p in b.get("positions", []) if p["ticker"] != "CASH")
+    return out
+
+
+TWIN_TYPES = ("ew", "sector_etf", "random_same_band", "ai_only")
+
+
+def leaderboard(books: list[dict], bars: pd.DataFrame, *,
+                today: Optional[Any] = None) -> dict:
+    """Grade every book and twin; compare each parent to its own twins.
+
+    `vs_<twin>` = parent's to-date net minus that twin's to-date net over the
+    same window. Positive means the parent beat the twin.
+    """
+    grades = [grade(b, bars, today=today) for b in books]
+    twins_of: dict[str, dict] = {}
+    for g in grades:
+        if g.get("parent_book_id"):
+            twins_of.setdefault(g["parent_book_id"], {})[g.get("twin")] = g
+
+    def _td(g: Optional[dict]) -> Optional[float]:
+        if not g or g.get("status") != "OK":
+            return None
+        return (g.get("to_date") or {}).get("net")
+
+    rows = []
+    for g in grades:
+        td = g.get("to_date") or {}
+        row = {"book_id": g["book_id"], "name": g["name"], "kind": g.get("kind"),
+               "twin": g.get("twin"), "parent_book_id": g.get("parent_book_id"),
+               "status": g.get("status"), "why": g.get("why"),
+               "benchmark": g.get("benchmark"),
+               "benchmark_is_proxy": g.get("benchmark_is_proxy"),
+               "sessions": td.get("sessions"),
+               "net_to_date": td.get("net"), "nav_usd": td.get("nav_usd"),
+               "benchmark_to_date": td.get("benchmark_return"),
+               "vs_benchmark": td.get("vs_benchmark"),
+               "n_unpriceable": g.get("n_unpriceable"),
+               "entry_cost_bps": g.get("entry_cost_bps")}
+        if not g.get("parent_book_id"):
+            mine = _td(g)
+            for tname in TWIN_TYPES:
+                other = _td(twins_of.get(g["book_id"], {}).get(tname))
+                row[f"vs_{tname}"] = (mine - other if mine is not None
+                                      and other is not None else None)
+        rows.append(row)
+
+    by_kind: dict[str, dict] = {}
+    for r in rows:
+        if r["parent_book_id"]:
+            continue
+        k = by_kind.setdefault(r["kind"] or "personal",
+                               {"n_books": 0, "n_graded": 0, "n_beat_benchmark": 0,
+                                "mean_vs_benchmark": None, "_v": []})
+        k["n_books"] += 1
+        if r["vs_benchmark"] is not None:
+            k["n_graded"] += 1
+            k["_v"].append(r["vs_benchmark"])
+            k["n_beat_benchmark"] += int(r["vs_benchmark"] > 0)
+    for k in by_kind.values():
+        v = k.pop("_v")
+        k["mean_vs_benchmark"] = float(np.mean(v)) if v else None
+
+    return {"schema": SCHEMA_VERSION, "kind": "leaderboard",
+            "graded_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "bars_through": (str(pd.Timestamp(bars["date"].max()))[:10]
+                             if len(bars) else None),
+            "n_books": sum(1 for r in rows if not r["parent_book_id"]),
+            "n_twins": sum(1 for r in rows if r["parent_book_id"]),
+            "by_kind": by_kind, "books": rows, "grades": grades,
+            "wls_caveat": _config.BOOK_WLS_PROXY_CAVEAT}

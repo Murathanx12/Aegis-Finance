@@ -1,0 +1,1999 @@
+{
+ "receipt": "decision_autopsy",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-25T06:54:03+00:00",
+ "convention": "entry at the OPEN of the first session after the decision date, mark at the close h sessions later; relative = stock - SPY over the same window; no cost charged (grades the call, not a book); PENDING is not zero",
+ "horizons_sessions": [
+  1,
+  5,
+  21
+ ],
+ "last_priced_session": "2026-09-24",
+ "bar_sources": {
+  "bars.parquet": {
+   "rows": 1246,
+   "last": "2026-09-21"
+  },
+  "bars_delisted.parquet": {
+   "rows": 0,
+   "last": null
+  },
+  "bars_forecast_only.parquet": {
+   "rows": 17,
+   "last": "2026-09-24"
+  },
+  "alpaca_fetch": {
+   "rows": 1530,
+   "through": "2026-09-24",
+   "last": "2026-09-24"
+  }
+ },
+ "decision_files": [
+  "2026-09-20.json",
+  "2026-09-21.json",
+  "2026-09-22.json",
+  "2026-09-23.json",
+  "2026-09-24.json",
+  "2026-09-25.json"
+ ],
+ "predictions_since": "2026-09-11",
+ "rows_not_graded_not_a_single_name": {
+  "book:BUY": 18
+ },
+ "n_decision_rows": 225,
+ "status_counts": {
+  "BUY": {
+   "1": {
+    "OK": 4,
+    "PENDING": 1
+   },
+   "5": {
+    "PENDING": 5
+   },
+   "21": {
+    "PENDING": 5
+   }
+  },
+  "WATCH": {
+   "1": {
+    "OK": 1
+   },
+   "5": {
+    "PENDING": 1
+   },
+   "21": {
+    "PENDING": 1
+   }
+  },
+  "REFUSED": {
+   "1": {
+    "OK": 41,
+    "PENDING": 3
+   },
+   "5": {
+    "PENDING": 44
+   },
+   "21": {
+    "PENDING": 44
+   }
+  },
+  "PROBE": {
+   "1": {
+    "OK": 114,
+    "PENDING": 61
+   },
+   "5": {
+    "PENDING": 175
+   },
+   "21": {
+    "PENDING": 175
+   }
+  }
+ },
+ "by_direction": {
+  "BUY": {
+   "1": {
+    "n": 4,
+    "mean_rel": -0.007415975503796385,
+    "median_rel": -0.005507379893693598,
+    "share_up": 0.5
+   },
+   "5": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   },
+   "21": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   }
+  },
+  "PROBE": {
+   "1": {
+    "n": 114,
+    "mean_rel": -0.0035670450705406528,
+    "median_rel": -0.0032072258140966037,
+    "share_up": 0.42105263157894735
+   },
+   "5": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   },
+   "21": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   }
+  },
+  "REFUSED": {
+   "1": {
+    "n": 41,
+    "mean_rel": -0.005426927663731153,
+    "median_rel": -0.004193228410473981,
+    "share_up": 0.3902439024390244
+   },
+   "5": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   },
+   "21": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   }
+  },
+  "WATCH": {
+   "1": {
+    "n": 1,
+    "mean_rel": 0.005682510598447932,
+    "median_rel": 0.005682510598447932,
+    "share_up": 1.0
+   },
+   "5": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   },
+   "21": {
+    "n": 0,
+    "mean_rel": null,
+    "median_rel": null,
+    "share_up": null
+   }
+  }
+ },
+ "by_day": {
+  "2026-09-20": {
+   "BUY": {
+    "1": {
+     "n": 1,
+     "mean_rel": -0.019106648795212955,
+     "median_rel": -0.019106648795212955,
+     "share_up": 0.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "WATCH": {
+    "1": {
+     "n": 1,
+     "mean_rel": 0.005682510598447932,
+     "median_rel": 0.005682510598447932,
+     "share_up": 1.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "REFUSED": {
+    "1": {
+     "n": 38,
+     "mean_rel": -0.006174071360475191,
+     "median_rel": -0.004919985680346128,
+     "share_up": 0.39473684210526316
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   }
+  },
+  "2026-09-21": {
+   "BUY": {
+    "1": {
+     "n": 1,
+     "mean_rel": 0.011592383814668539,
+     "median_rel": 0.011592383814668539,
+     "share_up": 1.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "REFUSED": {
+    "1": {
+     "n": 1,
+     "mean_rel": 0.021414667457732683,
+     "median_rel": 0.021414667457732683,
+     "share_up": 1.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "PROBE": {
+    "1": {
+     "n": 38,
+     "mean_rel": -0.004427459999801341,
+     "median_rel": -0.001873618777920305,
+     "share_up": 0.42105263157894735
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   }
+  },
+  "2026-09-22": {
+   "BUY": {
+    "1": {
+     "n": 1,
+     "mean_rel": 0.008091889007825759,
+     "median_rel": 0.008091889007825759,
+     "share_up": 1.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "REFUSED": {
+    "1": {
+     "n": 1,
+     "mean_rel": -0.0061884565298871985,
+     "median_rel": -0.0061884565298871985,
+     "share_up": 0.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "PROBE": {
+    "1": {
+     "n": 38,
+     "mean_rel": -0.00345926447051818,
+     "median_rel": -0.0014001007140025945,
+     "share_up": 0.4473684210526316
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   }
+  },
+  "2026-09-23": {
+   "BUY": {
+    "1": {
+     "n": 1,
+     "mean_rel": -0.030241526042466882,
+     "median_rel": -0.030241526042466882,
+     "share_up": 0.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "REFUSED": {
+    "1": {
+     "n": 1,
+     "mean_rel": -0.0031155334427654946,
+     "median_rel": -0.0031155334427654946,
+     "share_up": 0.0
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "PROBE": {
+    "1": {
+     "n": 38,
+     "mean_rel": -0.0028144107413024385,
+     "median_rel": -0.005087705687290278,
+     "share_up": 0.39473684210526316
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   }
+  }
+ },
+ "refused_but_rose": [
+  {
+   "date": "2026-09-20",
+   "ticker": "META",
+   "horizon": 1,
+   "rel": 0.08013313863481453,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "ANIP",
+   "horizon": 1,
+   "rel": 0.03491051438274306,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "INDV",
+   "horizon": 1,
+   "rel": 0.021414667457732683,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "CWK",
+   "horizon": 1,
+   "rel": 0.014349177265114754,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "OMAB",
+   "horizon": 1,
+   "rel": 0.012191782752666303,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "NVDA",
+   "horizon": 1,
+   "rel": 0.010478200565734896,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "NFLX",
+   "horizon": 1,
+   "rel": 0.010207455248627317,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "LLY",
+   "horizon": 1,
+   "rel": 0.008359740043998976,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "CSCO",
+   "horizon": 1,
+   "rel": 0.005565607375998649,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "GRMN",
+   "horizon": 1,
+   "rel": 0.005273218471518959,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "GOOG",
+   "horizon": 1,
+   "rel": 0.004058241514171446,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "MSFT",
+   "horizon": 1,
+   "rel": 0.004005796158315311,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "GOOGL",
+   "horizon": 1,
+   "rel": 0.002888501276717914,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "AAPL",
+   "horizon": 1,
+   "rel": 0.001575205829726034,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "IRTC",
+   "horizon": 1,
+   "rel": 0.0011604188831682016,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "TSM",
+   "horizon": 1,
+   "rel": 0.0003853884828139975,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  }
+ ],
+ "bought_but_fell": [
+  {
+   "date": "2026-09-23",
+   "ticker": "CVLG",
+   "horizon": 1,
+   "rel": -0.030241526042466882,
+   "terminal_state": null,
+   "refusal_class": null,
+   "signal": "profitability_small"
+  },
+  {
+   "date": "2026-09-20",
+   "ticker": "CVLG",
+   "horizon": 1,
+   "rel": -0.019106648795212955,
+   "terminal_state": null,
+   "refusal_class": null,
+   "signal": "profitability_small"
+  }
+ ],
+ "bought_and_rose": [
+  {
+   "date": "2026-09-21",
+   "ticker": "CVLG",
+   "horizon": 1,
+   "rel": 0.011592383814668539,
+   "terminal_state": null,
+   "refusal_class": null,
+   "signal": "profitability_small"
+  },
+  {
+   "date": "2026-09-22",
+   "ticker": "CVLG",
+   "horizon": 1,
+   "rel": 0.008091889007825759,
+   "terminal_state": null,
+   "refusal_class": null,
+   "signal": "profitability_small"
+  }
+ ],
+ "probed_but_rose": [
+  {
+   "date": "2026-09-23",
+   "ticker": "META",
+   "horizon": 1,
+   "rel": 0.04150215895172482,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "GRMN",
+   "horizon": 1,
+   "rel": 0.031140664226583237,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "TSM",
+   "horizon": 1,
+   "rel": 0.024915216033810195,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "OMAB",
+   "horizon": 1,
+   "rel": 0.02488679203057198,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "LLY",
+   "horizon": 1,
+   "rel": 0.02164178805762118,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "LLY",
+   "horizon": 1,
+   "rel": 0.018486795566416303,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-22",
+   "ticker": "PDS",
+   "horizon": 1,
+   "rel": 0.018159656006224822,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-22",
+   "ticker": "GRMN",
+   "horizon": 1,
+   "rel": 0.018114746016910765,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "TSM",
+   "horizon": 1,
+   "rel": 0.016848329218861924,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-22",
+   "ticker": "CRAI",
+   "horizon": 1,
+   "rel": 0.01522638664051612,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "profitability_small"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "INCY",
+   "horizon": 1,
+   "rel": 0.014945026098950986,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "GOOG",
+   "horizon": 1,
+   "rel": 0.01397406104871357,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "GOOGL",
+   "horizon": 1,
+   "rel": 0.013854367691592984,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-22",
+   "ticker": "PHIN",
+   "horizon": 1,
+   "rel": 0.012733505893513297,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "VTS",
+   "horizon": 1,
+   "rel": 0.012223757955387438,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "profitability_small"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "BBSI",
+   "horizon": 1,
+   "rel": 0.011791931724158822,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "profitability_small"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "GRMN",
+   "horizon": 1,
+   "rel": 0.010911331928886936,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "AMZN",
+   "horizon": 1,
+   "rel": 0.009205631448532925,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "NVDA",
+   "horizon": 1,
+   "rel": 0.009100517319021506,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "CSCO",
+   "horizon": 1,
+   "rel": 0.008604630276896952,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "PRVA",
+   "horizon": 1,
+   "rel": 0.008301949005837361,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "META",
+   "horizon": 1,
+   "rel": 0.007839251334891273,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-22",
+   "ticker": "CSCO",
+   "horizon": 1,
+   "rel": 0.007462573001241091,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "insider_opportunistic"
+  },
+  {
+   "date": "2026-09-23",
+   "ticker": "VTS",
+   "horizon": 1,
+   "rel": 0.007334990657481111,
+   "terminal_state": "NEGATIVE_EV",
+   "refusal_class": "EDGE_BELOW_BAR",
+   "signal": "profitability_small"
+  },
+  {
+   "date": "2026-09-21",
+   "ticker": "FMX",
+   "horizon": 1,
+   "rel": 0.0072729506222122264,
+   "terminal_state": "DATA_MISSING",
+   "refusal_class": "UNCLASSIFIED",
+   "signal": "CANNOT DETERMINE: no rank-bearing signal is available for this name"
+  }
+ ],
+ "n_predictions": 51,
+ "predictions_by_specialist": {
+  "book:mom_12_1": {
+   "n": 1,
+   "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "n_graded_at_own_horizon": 0,
+   "own_horizon_brier": null,
+   "own_horizon_hit": null,
+   "mean_probability": 0.5
+  },
+  "base_rate": {
+   "n": 3,
+   "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "n_graded_at_own_horizon": 0,
+   "own_horizon_brier": null,
+   "own_horizon_hit": null,
+   "mean_probability": 0.5
+  },
+  "book:abstention_confidence_z": {
+   "n": 2,
+   "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "n_graded_at_own_horizon": 0,
+   "own_horizon_brier": null,
+   "own_horizon_hit": null,
+   "mean_probability": 0.5
+  },
+  "headline_arena": {
+   "n": 5,
+   "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "n_graded_at_own_horizon": 0,
+   "own_horizon_brier": null,
+   "own_horizon_hit": null,
+   "mean_probability": 0.3752755479175044
+  },
+  "investigator:evidence_v2": {
+   "n": 40,
+   "by_horizon": {
+    "1": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "5": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    },
+    "21": {
+     "n": 0,
+     "mean_rel": null,
+     "median_rel": null,
+     "share_up": null
+    }
+   },
+   "n_graded_at_own_horizon": 0,
+   "own_horizon_brier": null,
+   "own_horizon_hit": null,
+   "mean_probability": 0.5099125000000001
+  }
+ },
+ "predictions": [
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "BOOK:8DBBB73B6159D61D",
+   "specialist": "book:mom_12_1",
+   "observable": "beats_benchmark",
+   "horizon_days": 20,
+   "probability": 0.5,
+   "prediction_id": "628f4f648f2522b4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "BOOK:8DBBB73B6159D61D",
+   "specialist": "base_rate",
+   "observable": "beats_benchmark",
+   "horizon_days": 20,
+   "probability": 0.5,
+   "prediction_id": "dc42cecc7e1982ba",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "BOOK:B109C8861C43E3C6",
+   "specialist": "book:abstention_confidence_z",
+   "observable": "beats_benchmark",
+   "horizon_days": 20,
+   "probability": 0.5,
+   "prediction_id": "fa8ed6b683dba42e",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "BOOK:B109C8861C43E3C6",
+   "specialist": "base_rate",
+   "observable": "beats_benchmark",
+   "horizon_days": 20,
+   "probability": 0.5,
+   "prediction_id": "b8d41dd6244bae6f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "BOOK:3B3E7049E693C3E4",
+   "specialist": "book:abstention_confidence_z",
+   "observable": "beats_benchmark",
+   "horizon_days": 20,
+   "probability": 0.5,
+   "prediction_id": "c37f7a603b1c68ba",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "BOOK:3B3E7049E693C3E4",
+   "specialist": "base_rate",
+   "observable": "beats_benchmark",
+   "horizon_days": 20,
+   "probability": 0.5,
+   "prediction_id": "4804cbf4e06e18a3",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "ES=F",
+   "specialist": "headline_arena",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.4365843561142291,
+   "prediction_id": "fd3151afd0bf25e6",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "CL=F",
+   "specialist": "headline_arena",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.4365843561142291,
+   "prediction_id": "e0aafe370293f93a",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "ZN=F",
+   "specialist": "headline_arena",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.5634156438857709,
+   "prediction_id": "cc0c01e01ff9ca38",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "GC=F",
+   "specialist": "headline_arena",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.2198966917366465,
+   "prediction_id": "cf5fb1ace4be56dc",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-11",
+   "made_at": "2026-09-11",
+   "ticker": "DX-Y.NYB",
+   "specialist": "headline_arena",
+   "observable": "return_sign",
+   "horizon_days": 1,
+   "probability": 0.2198966917366465,
+   "prediction_id": "ba1c162441db7d1f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "UNPRICED",
+    "5": "UNPRICED",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "CRWD",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "b02756518714baf5",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "CRM",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "92d4e180605a85e8",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "OKTA",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5519999999999999,
+   "prediction_id": "b2ca5ee5631c94cf",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "SNOW",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "d8d1e927e3845a99",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "PANW",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5325,
+   "prediction_id": "20ea1c7b1ddfae58",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "ABNB",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "b539658a55f8dadb",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AFRM",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "a7b89215af2ece9f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "MDB",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "833a79197b653fff",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "MSFT",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "41b01f44a7def445",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AMD",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "75337d3afd422559",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "ESTC",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5325,
+   "prediction_id": "c665c403c12b06b5",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AMGN",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "a0d67cf11c7e9f18",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "JBHT",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "386c54348a31f989",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "GTLB",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "0e0f7a3f5ce77a78",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "TGT",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "687726fcebf1599f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AMAT",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5,
+   "prediction_id": "31dcd3767ddb8e41",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "NKE",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.461,
+   "prediction_id": "ad864ea4b7905722",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AAPL",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "0733284896f2863b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AMZN",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "7b6f91672d4c4b8b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "CHYM",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "7d73837be80765aa",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "HUBS",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4805,
+   "prediction_id": "84469c3fc9d85463",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "NOW",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "1a150735fc944deb",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "NVDA",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "01958bb30aff5ab8",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "WDAY",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "7c7040afec000031",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "ZS",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "837fb572ad831fdb",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "CRWV",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "3cbcffb5a83708d4",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "EAT",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5325,
+   "prediction_id": "93745394f11d3f98",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "HOOD",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5065,
+   "prediction_id": "a2fac893ee4d1d79",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "NET",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.539,
+   "prediction_id": "ba541b8f5a5e3abd",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "ON",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.47400000000000003,
+   "prediction_id": "5dff2e683fe3f190",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "TSLA",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.4935,
+   "prediction_id": "617f08e6c0d7faa5",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "AVAV",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.47400000000000003,
+   "prediction_id": "6ba188372e296ad5",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "DDOG",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "2b31dc85de8c0571",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "RVMD",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5325,
+   "prediction_id": "5c9d11e7207003c7",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "ALL",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.5195000000000001,
+   "prediction_id": "d39047aeb595821f",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "DELL",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.539,
+   "prediction_id": "81a930c4a4fd6f2d",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "DT",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.526,
+   "prediction_id": "5d62bae96e79991b",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "FROG",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.513,
+   "prediction_id": "284cd205adef1567",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "INTC",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.487,
+   "prediction_id": "0c82542a78e87712",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  },
+  {
+   "date": "2026-09-24",
+   "made_at": "2026-09-24",
+   "ticker": "INTU",
+   "specialist": "investigator:evidence_v2",
+   "observable": "beats_benchmark",
+   "horizon_days": 1,
+   "probability": 0.461,
+   "prediction_id": "400a873aafdf76d0",
+   "rel": {
+    "1": null,
+    "5": null,
+    "21": null
+   },
+   "status": {
+    "1": "PENDING",
+    "5": "PENDING",
+    "21": "PENDING"
+   }
+  }
+ ]
+}

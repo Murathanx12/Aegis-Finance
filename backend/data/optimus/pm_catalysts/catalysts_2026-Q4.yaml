@@ -1,0 +1,59 @@
+# Q4-2026 catalyst calendar, hand-entered (pm_catalysts has no entitled
+# FDA/PDUFA source; see pm_catalysts.UNCOVERED). Built 2026-09-25 by Builder O2
+# from three research notes:
+#   docs/research_notes/2026-09-25/research_fda_catalysts.md  (the 11 primary-
+#       verified PDUFA dates; CYTK STRUCK -- MYQORZO is already approved, no
+#       2026-11-14 sNDA date is supported by a primary source)
+#   docs/research_notes/2026-09-25/research_pharma.md  (SVRA, BBIO, COGT x2,
+#       SMMT, INSM, BLTE re-verified against primary sources; MRK Oct 10 moved
+#       from aggregator to primary)
+#   docs/research_notes/2026-09-25/research_themes.md and
+#   docs/research_notes/2026-09-25/research_global_candidates.md  (earnings
+#       dates marked [CONFIRMED] / "confirmed")
+#
+# Row shape (a superset of pm_catalysts.book_catalysts' {date, kind, what}):
+#   date, ticker, kind, what, source_url, verified_from: primary|aggregator
+# `source_url` is the URL the note recorded. Where the note named the primary
+# source but recorded NO URL, `source_url` points at the note section and
+# `url_recorded: false` says so -- re-open the primary before sizing on it.
+# `date_precision: approximate` marks a date that is not a single fixed day.
+# Tickers use the yfinance convention (2317.TW, RHM.DE) so global_prices can
+# price them.
+schema: pm_catalysts_manual/1
+built: 2026-09-25
+window: 2026-10-01 to 2027-02-28
+catalysts:
+  # ── PDUFA, primary-verified (research_fda_catalysts.md) ─────────────────
+  - {date: 2026-10-30, ticker: INO, kind: pdufa, what: "INO-3107 BLA, recurrent respiratory papillomatosis (adults)", source_url: "https://ir.inovio.com/news/news-details/2025/FDA-Accepts-for-Review-INOVIOs-BLA-for-INO-3107-for-the-Treatment-of-Adults-with-Recurrent-Respiratory-Papillomatosis-RRP/default.aspx", verified_from: primary}
+  - {date: 2026-11-01, ticker: AGIO, kind: pdufa, what: "mitapivat sNDA, sickle cell disease, priority review (accelerated approval)", source_url: "https://investor.agios.com/news-releases/news-release-details/us-fda-grants-priority-review-agios-snda-mitapivat-sickle-cell", verified_from: primary}
+  - {date: 2026-11-14, ticker: BTAI, kind: pdufa, what: "IGALMI (dexmedetomidine) sNDA, at-home use for acute agitation", source_url: "https://www.globenewswire.com/news-release/2026/04/01/3266468/0/en/bioxcel-therapeutics-announces-food-drug-administration-acceptance-of-supplemental-new-drug-application-for-use-of-igalmi-in-the-at-home-setting.html", verified_from: primary}
+  - {date: 2026-11-22, ticker: CAPR, kind: pdufa, what: "deramiocel (CAP-1002) BLA, DMD cardiomyopathy, extended PDUFA; adcom July 2026", source_url: "https://www.capricor.com/investors/news-events/press-releases/detail/354/capricor-therapeutics-announces-extension-of-pdufa-target", verified_from: primary}
+  - {date: 2026-11-27, ticker: NUVL, kind: pdufa, what: "neladalkib (NVL-655) NDA, TKI-pretreated ALK+ NSCLC", source_url: "docs/research_notes/2026-09-25/research_fda_catalysts.md#catalyst-list", url_recorded: false, source_note: "SEC 8-K / investors.nuvalent.com", verified_from: primary}
+  - {date: 2026-11-30, ticker: VRTX, kind: pdufa, what: "povetacicept BLA, IgA nephropathy (accelerated approval)", source_url: "https://news.vrtx.com/news-releases/news-release-details/vertex-announces-us-fda-acceptance-biologics-license-application", verified_from: primary}
+  - {date: 2026-12-17, ticker: CORT, kind: pdufa, what: "relacorilant NDA resubmission after Dec 2025 CRL, Cushing's syndrome", source_url: "https://ir.corcept.com/news-releases/news-release-details/corcept-resubmits-new-drug-application-relacorilant-treatment", verified_from: aggregator, date_precision: approximate, source_note: "resubmission is primary; the Dec 17 day is aggregator-only (~mid-Dec)"}
+  - {date: 2026-12-22, ticker: MLYS, kind: pdufa, what: "lorundrostat NDA, uncontrolled/resistant hypertension", source_url: "https://ir.mineralystx.com/news-events/press-releases/detail/93/mineralys-therapeutics-announces-fda-acceptance-of-nda-for", verified_from: primary}
+  - {date: 2026-12-23, ticker: GILD, kind: pdufa, what: "anitocabtagene autoleucel (anito-cel, via Arcellx) BLA, 4L R/R multiple myeloma", source_url: "https://www.kitepharma.com/news/press-releases/2026/2/gilead-sciences-to-acquire-arcellx-to-maximize-long-term-potential-of-anito-cel", verified_from: primary}
+  - {date: 2026-12-27, ticker: PRAX, kind: pdufa, what: "relutrigine (PRAX-562) NDA, SCN2A/SCN8A DEE, extended PDUFA", source_url: "https://investors.praxismedicines.com/news-releases/news-release-details/praxis-precision-medicines-announces-extension-period", verified_from: primary}
+  # ── PDUFA, newly primary-verified (research_pharma.md) ──────────────────
+  - {date: 2026-10-10, ticker: MRK, kind: pdufa, what: "ifinatamab deruxtecan (I-DXd) BLA, 2L+ extensive-stage SCLC", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-1", url_recorded: false, source_note: "merck.com + Daiichi Sankyo PR 2026-04-13", verified_from: primary}
+  - {date: 2026-11-14, ticker: SMMT, kind: pdufa, what: "ivonescimab + chemo BLA, EGFR-mutated NSCLC post-TKI (HARMONi)", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "8-K / IR", verified_from: primary}
+  - {date: 2026-11-22, ticker: SVRA, kind: pdufa, what: "molgramostim BLA, autoimmune PAP; extended 3 months from Aug 22", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "company PR on the FDA extension", verified_from: primary}
+  - {date: 2026-11-27, ticker: BBIO, kind: pdufa, what: "BBP-418 (ribitol) NDA, LGMD2I/R9", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "8-K", verified_from: primary}
+  - {date: 2026-11-30, ticker: COGT, kind: pdufa, what: "bezuclastinib NDA #1, GIST (PEAK)", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "Cogent IR / GlobeNewswire", verified_from: primary}
+  - {date: 2026-12-30, ticker: COGT, kind: pdufa, what: "bezuclastinib NDA #2, non-advanced systemic mastocytosis (SUMMIT)", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "Cogent IR / GlobeNewswire", verified_from: primary}
+  - {date: 2027-01-28, ticker: INSM, kind: pdufa, what: "ARIKAYCE sNDA, earlier-line MAC lung disease (ENCORE)", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "PR Newswire / IR, filed 2026-09-21", verified_from: primary}
+  - {date: 2027-02-12, ticker: BLTE, kind: pdufa, what: "tinlarebant NDA, Stargardt disease type 1", source_url: "docs/research_notes/2026-09-25/research_pharma.md#bucket-2", url_recorded: false, source_note: "SEC 6-K 2026-08-11", verified_from: primary}
+  # ── Earnings / investor days marked [CONFIRMED] (themes + global notes) ─
+  - {date: 2026-10-14, ticker: ASML, kind: earnings, what: "Q3'26 earnings (also ASML.AS)", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-10-15, ticker: TSM, kind: earnings, what: "Q3'26 earnings, before market open (also 2330.TW)", source_url: "docs/research_notes/2026-09-25/research_themes.md", url_recorded: false, source_note: "research_themes.md says confirmed; research_global_candidates.md says [EST., unconfirmed] -- the notes DISAGREE, so aggregator until the IR page is read", verified_from: aggregator}
+  - {date: 2026-10-22, ticker: ARGX, kind: earnings, what: "Q3'26 results", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-10-23, ticker: EVO.ST, kind: earnings, what: "Evolution AB Q3'26 report", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-10-23, ticker: SAAB-B.ST, kind: earnings, what: "Saab Q3'26 report", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-10-27, ticker: TER, kind: earnings, what: "Q3'26 earnings, after close", source_url: "docs/research_notes/2026-09-25/research_themes.md", url_recorded: false, source_note: "research_themes.md: confirmed Oct 27, after close", verified_from: primary}
+  - {date: 2026-10-29, ticker: KOG.OL, kind: earnings, what: "Kongsberg Gruppen Q3'26 report", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-10-30, ticker: 2317.TW, kind: investor_day, what: "Hon Hai Tech Day Oct 30-31", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR [CONFIRMED]", verified_from: primary}
+  - {date: 2026-11-03, ticker: CCJ, kind: earnings, what: "Cameco Q3'26 earnings, Nov 3-4 (also CCO.TO)", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "[CONFIRMED-ish, multiple sources agree]", verified_from: aggregator, date_precision: approximate}
+  - {date: 2026-11-04, ticker: NVO, kind: earnings, what: "Novo Nordisk Q3'26 results (also NOVO-B.CO)", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-11-05, ticker: RHM.DE, kind: earnings, what: "Rheinmetall Q3'26 results", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-11-05, ticker: HAG.DE, kind: earnings, what: "Hensoldt 9-month 2026 results", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
+  - {date: 2026-11-12, ticker: ALL.AX, kind: earnings, what: "Aristocrat Leisure FY26 annual results", source_url: "docs/research_notes/2026-09-25/research_global_candidates.md#candidate-table", url_recorded: false, source_note: "company IR financial calendar [CONFIRMED]", verified_from: primary}
