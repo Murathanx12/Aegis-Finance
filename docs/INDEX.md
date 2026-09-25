@@ -30,6 +30,7 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 
 ## TIER 1 — CURRENT ROADMAP (one file; supersedes dated execution roadmaps)
 
+- **`ROADMAP_2026-09-25_CHUNKS_AND_THE_REVIEW_LOOP.md` — ACTIVE amendment (2026-09-25 evening, Murat's order):** every chunk = Sonnet research → Opus build → a SECOND Opus reviews it as an investor ("you are wrong, I would have done this") → Fable adjudicates; chunks 1-7 (PROBE path · the expected-return layer · the dot on the timeline · future-facing quests · the competition engine · social cues · reviewer ideas); v2 book `5d137b013692a737` frozen beside v1. Reviews live in `docs/reviews/`.
 - **`ROADMAP_2026-09-25_CONNECT_WHAT_EXISTS.md` — ACTIVE (adopted 2026-09-25, Fable 5.1, plan only).**
   Seven Sonnet reads (`research_notes/2026-09-25/`): the decision path is ONE function (`u_plan`) reading
   23 price-only features, so it refuses by construction; 393,369 dated analyst revisions, the registered

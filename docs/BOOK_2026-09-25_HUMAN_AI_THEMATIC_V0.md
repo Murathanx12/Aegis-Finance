@@ -173,3 +173,14 @@ The thesis cards written the same day (`backend/data/optimus/thesis_cards/2026-0
 put QUBT at **against / high** and DKNG at **neutral / med**; both are held
 positions carried at 1% / 3% on the human side, and the `ai_only` reading of
 this book is "QUBT 0%".
+
+## 10. v2 FROZEN — 2026-09-25 evening, from the review Murat forwarded (v1 keeps running as the un-reviewed control)
+
+| book | id |
+|---|---|
+| `human_ai_thematic_v2` (24 positions incl. CASH 2%, max 12%) | `5d137b013692a737` |
+| twins ew / sector_etf / spy / random_same_band | `e02b91c77e5f51c4` / `ac85112e5328973d` / `2846d8d12db2346e` / `4204177563615b9a` |
+
+Changes and the one rejection (AMZN) are recorded in the draft's `human_edits`
+and in `ROADMAP_2026-09-25_CHUNKS_AND_THE_REVIEW_LOOP.md` §4. **v1 vs v2 on the
+leaderboard is the first graded measurement of an external review.**

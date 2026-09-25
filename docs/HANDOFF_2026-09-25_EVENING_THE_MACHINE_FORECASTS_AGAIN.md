@@ -16,7 +16,7 @@ that we can then later judge, use openclaw and deepseek"*).
 | best forward paper strategy | PC-PAPER **$1,000,000, connected (verified by one `GET /v2/account`), idle**; fleet unchanged |
 | forecasts | **accrual restarted**: `u_forecast` wrote its first rows today (`investigator:evidence_v3`, h=1 and h=5, $0.03 for 14 names at the time of writing); nine personas RETIRED_WEIGHT_ZERO on the day receipt |
 | books on the clock | **human_ai_thematic_v1** `a20a2b972988eec6` + 4 twins; `revision_flow_v0` + random twin; **6 factory books** (3 personal, 3 competition) + twins; 14 more regenerating after the rescale fix. Entry = Monday 09-28 open; first grade Monday night |
-| thesis cards | **65 of 81** written (12 seed + O5's run, ~$0.05/quest), 0 refusals, `validate` clean; DKNG neutral/med, QUBT **against/high** |
+| thesis cards | **81 of 81** written ($3.07 for the day, ~$0.05/quest; 3 refused during the lid close and retried clean), `validate` 0 drift. Supports: 000660.KS, 010120.KS, 012450.KS, 2330.TW, 6857.T, 8035.T, ARGX, ENR.DE, ENS, GEV, HOOD, LDO.MI, LLY, MP, MU, NOVT, NVT, RGTI, TSM, VRT. **Against: AARD, BHVN, SLDP, QUBT (all held by Murat), CAPR, SRAD.** DKNG neutral |
 | reputation | investigator arms weight 0.03–0.42, **every persona 0.0**; calibration overconfident above p≈0.15; k_prior unidentified (equal n) |
 | LLM spend today | seed cards $0.65 · main cards ≈ $3.5 (68 × ~$0.05) · factory $0.09 + reruns · forecasts ≤ $2 cap · smoke calls $0.11 |
 | suite | 10,794 passed, **3 failed, all local-data gates** (below); CI expected green |
