@@ -3663,3 +3663,24 @@ MISSED_OPP_CURRICULUM_MIN_NAMES = 3
 #: BELIEF_CHANGED; one night is one night, and the standing question is whether
 #: the difference accumulates across nights.
 MISSED_OPP_PAIRED_ALPHA = 0.05
+
+# ── Thesis cards (Builder O5, 2026-09-25) ───────────────────────────────────
+#: One structured analysis per chosen stock: engine side + one OpenClaw web
+#: quest + one DeepSeek synthesis. `backend/services/thesis_card.py`,
+#: `scripts/thesis_cards.py`. Cards land in OPTIMUS_LEDGER_DIR/thesis_cards/<date>/.
+THESIS_CARD_SUBDIR = "thesis_cards"
+THESIS_CARD_MAX_QUESTS = 40
+#: Per run-day cap, read from the SAME telemetry ledger the calls write
+#: (`llm_telemetry.spend(purpose=...)` summed over both purposes below).
+THESIS_CARD_CAP_USD = 5.0
+THESIS_CARD_PARALLEL = 2
+THESIS_CARD_MODEL = "deepseek/deepseek-flash"
+THESIS_CARD_QUEST_TIMEOUT_S = 900
+THESIS_CARD_QUEST_PURPOSE = "thesis_card_quest"
+THESIS_CARD_SYNTH_PURPOSE = "thesis_card_synth"
+#: Reserved per in-flight quest when checking the cap, so `--parallel` cannot
+#: start N quests that together cross it. Measured 2026-09-25: VRT $0.056 / 158 s,
+#: 000660.KS $0.063 / 314 s (OpenClaw), synthesis ~$0.0007 each.
+THESIS_CARD_EST_QUEST_USD = 0.08
+THESIS_CARD_NEWS_DAYS = 30
+THESIS_CARD_REVISION_DAYS = 90
