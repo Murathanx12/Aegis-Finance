@@ -398,8 +398,12 @@ import pytest as _pytest
 
 
 @_pytest.fixture(autouse=True)
-def _frozen_iif1_night_receipts(monkeypatch):
+def _frozen_iif1_night_receipts(monkeypatch, request):
     from pathlib import Path as _P
+    # The integrity test asserts WHERE the real receipts live (the persistent
+    # volume); it must see the unpatched constant.
+    if "test_investigator_integrity" in str(getattr(request, "fspath", "")):
+        return
     frozen = _P(__file__).resolve().parent / "fixtures" / "iif1_nights_frozen"
     try:
         from backend.services import investigator_night as _N
