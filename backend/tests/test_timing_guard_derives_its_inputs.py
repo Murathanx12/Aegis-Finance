@@ -206,8 +206,28 @@ def test_every_concurrency_branch_underprojects_night_1s_real_wall_clock():
         "it measures calls in flight, not wall-clock speedup")
 
 
+@pytest.fixture
+def pinned_night_receipts(monkeypatch):
+    """Pin the two inputs the guard DERIVES FROM DISK to Night 1's values.
+
+    `derive_calls_per_cell()` and `derive_night_duration_bound()` read every
+    completed night under `backend/data/optimus/`; a night written this
+    afternoon (2026-09-25) moved the measured duration bound and two tests that
+    pinned `now` but not the receipts went red on a laptop and green in CI --
+    the same family as the night-clocks test. A test is a function of its own
+    fixture, never of what the machine did today.
+    """
+    monkeypatch.setattr(N, "derive_calls_per_cell",
+                        lambda receipts_dir=None: {"value": 7.085, "basis": "MEASURED_MAX_OVER_COMPLETED_NIGHTS",
+                                                   "n_nights": 1, "observed": [], "declared": 4.8})
+    monkeypatch.setattr(N, "derive_night_duration_bound",
+                        lambda *a, **k: {"value": None, "basis": "DECLARED_NO_COMPLETED_NIGHTS",
+                                         "n_nights": 0})
+    return None
+
+
 def test_an_underivable_concurrency_does_not_block_the_serial_decision(
-        monkeypatch):
+        monkeypatch, pinned_night_receipts):
     """THE SCOPING LESSON, AND CI TAUGHT IT.
 
     The first version of this fix made `derive_runner_concurrency()` a hard
@@ -260,7 +280,7 @@ def test_a_caller_supplied_concurrency_IS_refused_when_it_cannot_be_checked(
 
 
 def test_the_decision_basis_and_every_input_basis_are_on_the_report(
-        monkeypatch, prereg_readable):
+        monkeypatch, prereg_readable, pinned_night_receipts):
     """Night 1's headroom was a number with no provenance attached.
 
     Two constants were wrong in opposite directions and cancelled, and the
