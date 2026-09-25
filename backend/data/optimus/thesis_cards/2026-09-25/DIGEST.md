@@ -1,6 +1,6 @@
 # Thesis cards 2026-09-25
 
-81 cards. A verdict is about the evidence gathered, not an order.
+84 cards. A verdict is about the evidence gathered, not an order.
 
 | ticker | verdict | confidence | next date | falsifier |
 |---|---|---|---|---|
@@ -28,11 +28,14 @@
 | AMSC | neutral | med | 2026-11-04 / earnings / estimated Q2 fiscal 2026 results date for quarter ended  | Q2 FY26 results (estimated 2026-11-04) showing revenue below 85M or gross margin still near 26 pct would prove the bull case wrong. |
 | ARGX | supports | med | 2026-09-08 / investor conference / Wells Fargo 21st Annual Healthcare Conference | The Q4 2026 EMPASSION MMN readout (empasiprubart) fails its primary endpoint, or the Q3 2026 report on 2026-10-22 shows product sales growth decelerating below 40% y/y. |
 | ASML.AS | neutral | med | 2027-06-10 / investor day / Capital Markets Day, ASML to update longer-term view | Any ASML disclosure of 2026 order pushouts or cancellations, or a cut to the FY2026 EUR43-45bn sales / 54-56% margin outlook, on or before the 2027-06-10 Capital Markets Day. |
+| AVGO | supports | med | 2026-09-30 / dividend / Quarterly cash dividend of $0.65 per share payable to ho | Any named hyperscaler (Google, Meta, Anthropic, OpenAI, ByteDance) publicly pushes out or cancels a custom XPU program before the Q4 FY2026 report. |
 | BBIO | neutral | med | 2026-10-08 / investor day / BridgeBio Commercial Day in New York City on commerc | BBP-418 receives a CRL on or before its 2026-11-27 PDUFA date, or Attruby sequential US net product revenue fails to grow from $222.4M in Q3 2026. |
+| BE | neutral | med | 2026-09-28 / legal / deadline to move for lead plaintiff in Bloom Energy securit | Oracle terminates or formally suspends the Project Jupiter master agreement, or Bloom discloses a scandium supply disruption, on or before the Q3-2026 earnings call. |
 | BHVN | against | med | 2026-10-01 / clinical_data / BHV-1530 Phase 1 data at ESMO Congress, stated as O | If the FDA escalates the Sep 4, 2026 partial hold to a full clinical hold on BHV-7000, or RISE3 topline slips past the stated 2H 2026 window, the bull case fails. |
 | CAPR | against | med | 2026-09-29 / conference / WMS 2026 late-breaking poster: Deramiocel HOPE-3 OLE d | A complete response letter for deramiocel on or before the 2026-11-22 PDUFA date, or the FDA refusing the refined upper-limb-function indication. |
 | CCJ | neutral | med | 2026-11-03 / earnings / Cameco Q3'26 earnings, Nov 3-4 (also CCO.TO) / docs/rese | Cameco's Q3 2026 report on Nov 3-4 2026 shows another production or delivery cut, or Westinghouse equity earnings still negative, versus unchanged 2026 guidance of 19.5-21.5 Mlb. |
 | CEG | neutral | med | 2026-11-09 / earnings / Q3 2026 earnings release before market open, date estima | Q3 2026 earnings (est. 2026-11-09) showing FY adjusted EPS guidance below $11.50 or another GAAP EPS decline with nuclear output down again. |
+| CLS | neutral | med | 2026-10-01 / Leadership / Mandeep Chawla becomes Group President Global Markets  | Q3 2026 results (Oct 26-27 2026) showing revenue below the raised $20.5B annual run-rate or adjusted operating margin under 8.2%. |
 | COGT | neutral | med | 2026-11-06 / earnings / Q3 2026 earnings date estimated / https://www.marketbeat | A complete response letter or delay announced for the Nov 30 2026 GIST PDUFA, or the Dec 30 2026 NonAdvSM PDUFA, would break the bull case. |
 | DHR | neutral | med | 2026-10-01 / leadership / Julie Sawyer Montgomery becomes President and CEO as R | Q3 2026 earnings on 2026-10-21: core growth below the guided 2-3% or a cut to the FY26 adjusted EPS range of 8.45-8.60. |
 | DKNG | neutral | med | 2026-09-30 / webcast_replay_expiry / DKNG Q2 2026 earnings-call audio webcast re | A confirmed Q3 print (expected ~early Nov, unconfirmed) showing handle/EBITDA reacceleration together with the 30-day net-revision count turning positive would falsify the bear case; a third consecuti |

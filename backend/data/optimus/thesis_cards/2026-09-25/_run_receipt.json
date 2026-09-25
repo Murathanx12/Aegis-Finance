@@ -3,20 +3,20 @@
  "day": "2026-09-25",
  "model": "deepseek/deepseek-flash",
  "cap_usd": 6.0,
- "max_quests": 6,
+ "max_quests": 3,
  "parallel": 2,
- "n_universe": 69,
- "n_skipped_existing": 66,
+ "n_universe": 3,
+ "n_skipped_existing": 0,
  "n_todo": 3,
  "cut_by_max_quests": [],
  "done": [
-  "267260.KS",
-  "KAP.IL",
-  "1772.HK"
+  "CLS",
+  "AVGO",
+  "BE"
  ],
  "refused": [],
  "state": "DONE",
- "spent_usd_before_last_admit": 2.949436,
- "spent_usd_today": 3.068296,
+ "spent_usd_before_last_admit": 3.109519,
+ "spent_usd_today": 3.204646,
  "digest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\2026-09-25\\DIGEST.md"
 }
