@@ -81,7 +81,7 @@ def _write_news(root: Path):
                  "first_seen_utc": datetime.now(timezone.utc).isoformat(),
                  "published_utc": (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
                  "title": "BBB only", "tickers": ["BBB"]})
-    (src / f"{TODAY}.jsonl").write_text(
+    (src / f"{datetime.now(timezone.utc).date()}.jsonl").write_text(
         "\n".join(json.dumps(r) for r in rows), encoding="utf-8")
 
 
