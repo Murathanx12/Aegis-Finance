@@ -107,6 +107,9 @@ MAX_NAME_FRAC = 0.12
 MAX_ADV_PARTICIPATION = 0.02
 #: Smallest order worth sending. Below this the cost is all of the edge.
 MIN_ORDER_USD = 250.0
+#: A held name is rebalanced toward a non-zero target only when the drift is at
+#: least this fraction of the target notional (and never below MIN_ORDER_USD).
+REBALANCE_DRIFT_FRAC: float = float(os.getenv("AEGIS_PC_REBALANCE_DRIFT_FRAC", "0.10"))
 #: Orders per session, a circuit breaker on a loop that starts thrashing.
 MAX_ORDERS_PER_SESSION = 120
 
@@ -448,6 +451,21 @@ def plan_orders(targets: list[Target], *, equity: float, held: dict[str, float],
 
         if delta == 0:
             continue
+        # THE DRIFT BAND (2026-09-25, first live PROBE day): a 2% target on a
+        # $345 stock is 58.3 shares; as the price moves the integer flips and the
+        # loop sold 1 GOOGL at 13:37 and bought it back at 13:47. A rebalance of
+        # a name we already hold, toward a non-zero target, is sent only when
+        # the drift is worth the spread. Entries and exits are never gated here.
+        if cur_qty and target_qty:
+            band_usd = max(min_order_usd, REBALANCE_DRIFT_FRAC * want_w * equity)
+            if notional < band_usd:
+                plans.append(PlannedOrder(sym, "buy" if delta > 0 else "sell", 0, notional,
+                                          (t.reason if t else "exit"),
+                                          refused=(f"drift ${notional:,.0f} < band "
+                                                   f"${band_usd:,.0f} ({REBALANCE_DRIFT_FRAC:.0%} "
+                                                   f"of the target): rounding churn, not a decision"),
+                                          current_qty=cur_qty, target_qty=target_qty, price=px))
+                continue
         if notional < min_order_usd and target_qty != 0:
             plans.append(PlannedOrder(sym, "buy" if delta > 0 else "sell", 0, notional,
                                       (t.reason if t else "exit"),
