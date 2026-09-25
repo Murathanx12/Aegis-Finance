@@ -187,15 +187,31 @@ def _score(p: np.ndarray, y: np.ndarray) -> dict:
             "base_rate": base, "calib_gap": float(p.mean() - base)}
 
 
+#: The reputation key that keeps DIRECTION and MAGNITUDE skill apart
+#: (adjudication 2026-09-25 row 2): an arm's 0.42 weight was earned on
+#: `abs_move_exceeds`, and fed in as direction it would have bought the bin
+#: that fell. Pass `by=KEY_ARM_OBSERVABLE_HORIZON` to score each
+#: (arm, observable, horizon) cell on its own.
+KEY_ARM: tuple[str, ...] = ("arm",)
+KEY_ARM_OBSERVABLE_HORIZON: tuple[str, ...] = ("arm", "observable", "horizon_days")
+DIRECTION_OBSERVABLE = "beats_benchmark"
+MAGNITUDE_OBSERVABLE = "abs_move_exceeds"
+
+
 def arm_skill(graded: pd.DataFrame, *, arm_col: str = "arm", p_col: str = "p",
               y_col: str = "y", split: str = "date_half",
-              date_col: str | None = None) -> pd.DataFrame:
+              date_col: str | None = None,
+              by: tuple[str, ...] | None = None) -> pd.DataFrame:
     """Per-arm Brier skill vs climatology, on the LATER half by date.
 
     `split="date_half"` scores the last n - n//2 rows of each arm in date order;
     `split="none"` scores every row (used inside CV folds, where the fold is
     already the hold-out). Index = arm; columns n, brier, clim, skill, disc,
     base_rate, calib_gap, n_total, test_from, test_to.
+
+    `by` replaces the arm-only key: with `KEY_ARM_OBSERVABLE_HORIZON` the index
+    is an (arm, observable, horizon_days) MultiIndex and each cell is held out
+    on its own later half. The default (arm only) is unchanged.
     """
     if split not in ("date_half", "none"):
         raise ValueError(f"unknown split {split!r}")
@@ -204,8 +220,13 @@ def arm_skill(graded: pd.DataFrame, *, arm_col: str = "arm", p_col: str = "p",
     if graded.empty:
         return pd.DataFrame(columns=cols)
     dc = _date_col(graded, date_col)
+    keys = list(by) if by else [arm_col]
+    missing = [k for k in keys if k not in graded.columns]
+    if missing:
+        raise ValueError(f"arm_skill key columns {missing} not in frame")
     recs = {}
-    for arm, sub in graded.groupby(arm_col, sort=True):
+    grouper = keys if len(keys) > 1 else keys[0]
+    for arm, sub in graded.groupby(grouper, sort=True, dropna=False):
         sub = sub.assign(_t=pd.to_datetime(sub[dc], utc=True, errors="coerce",
                                            format="ISO8601"))
         sub = sub.sort_values("_t", kind="stable")
@@ -216,7 +237,26 @@ def arm_skill(graded: pd.DataFrame, *, arm_col: str = "arm", p_col: str = "p",
         s["test_from"] = test["_t"].min() if len(test) else pd.NaT
         s["test_to"] = test["_t"].max() if len(test) else pd.NaT
         recs[arm] = s
-    return pd.DataFrame.from_dict(recs, orient="index")[cols]
+    out = pd.DataFrame.from_dict(recs, orient="index")[cols]
+    if len(keys) > 1:
+        out.index = pd.MultiIndex.from_tuples(list(out.index), names=keys)
+    return out
+
+
+def direction_skill(graded: pd.DataFrame, **kw: Any) -> pd.DataFrame:
+    """Held-out skill on DIRECTION only (`beats_benchmark`), keyed
+    (arm, observable, horizon). The only reputation an expected-return
+    direction term may read."""
+    g = graded[graded["observable"].astype(str) == DIRECTION_OBSERVABLE]
+    return arm_skill(g, by=KEY_ARM_OBSERVABLE_HORIZON, **kw)
+
+
+def magnitude_skill(graded: pd.DataFrame, **kw: Any) -> pd.DataFrame:
+    """Held-out skill on MAGNITUDE only (`abs_move_exceeds`), keyed
+    (arm, observable, horizon). Sizing and vol scaling read this; an
+    expected-return direction term never does."""
+    g = graded[graded["observable"].astype(str) == MAGNITUDE_OBSERVABLE]
+    return arm_skill(g, by=KEY_ARM_OBSERVABLE_HORIZON, **kw)
 
 
 def weights(skill: pd.DataFrame, *, k_prior: float, gamma: float,
@@ -546,6 +586,14 @@ def refit(ledger_path: Path | str | None = None, *, today: str | None = None,
                      "disc": _f(r["disc"]), "calib_gap": _f(r["calib_gap"]),
                      "weight": float(w[arm])})
     rec["arms"] = sorted(arms, key=lambda a: (-a["weight"], -(a["skill"] or -9)))
+
+    keyed = arm_skill(g, by=KEY_ARM_OBSERVABLE_HORIZON)
+    rec["arms_by_observable"] = [
+        {"arm": a, "observable": o, "horizon_days": _f(h), "n": int(r["n"]),
+         "n_total": int(r["n_total"]), "skill": _f(r["skill"]), "disc": _f(r["disc"]),
+         "kind": ("direction" if o == DIRECTION_OBSERVABLE else
+                  "magnitude" if o == MAGNITUDE_OBSERVABLE else "other")}
+        for (a, o, h), r in keyed.iterrows()]
 
     cal = {f"h{h}": _records(calibration_curve(g, horizon=h)) for h in (1, 5)}
     rec["calibration"] = cal

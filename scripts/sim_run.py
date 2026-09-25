@@ -644,6 +644,47 @@ def _probe_grade(ledger_path: Path | None = None) -> dict:
                     f"per decision day at h={h} over {n_days} days")}
 
 
+def _blend_grade(ledger_path: Path | None = None) -> dict:
+    """The E[r] BLEND's own forward grade (chunk 2), from SCORED ledger rows.
+
+    A row counts when it carried `er_total` at `ER_BLEND_GRADE_HORIZON`: its
+    score is `sign(er_total) * excess_return` -- what following the blend's
+    direction on that row earned. One decision day counts once (CANON §58).
+    Below `ER_BLEND_GRADE_MIN_SESSIONS` distinct days the blend is UNMEASURED
+    and EXPLOIT refuses: nothing sized on E[r] trades before E[r] is graded.
+    """
+    from backend.services import decision_ledger as DL
+    h = int(_config.ER_BLEND_GRADE_HORIZON)
+    by_day: dict[str, list[float]] = {}
+    for r in DL.read(ledger_path):
+        d = r.get("detail") or {}
+        if str(r.get("state")) != "SCORED" or not isinstance(d, dict):
+            continue
+        if d.get("er_total") is None or d.get("excess_return") is None:
+            continue
+        if int(d.get("er_horizon") or d.get("horizon_sessions") or 0) != h:
+            continue
+        er, ex = float(d["er_total"]), float(d["excess_return"])
+        if er == 0:
+            continue
+        by_day.setdefault(str(r.get("asof"))[:10], []).append((1.0 if er > 0 else -1.0) * ex)
+    need = int(_config.ER_BLEND_GRADE_MIN_SESSIONS)
+    n_days = len(by_day)
+    means = [sum(v) / len(v) for v in by_day.values()]
+    mean = (sum(means) / n_days) if n_days else None
+    base = {"horizon_sessions": h, "n_days_scored": n_days, "min_days": need,
+            "mean_signed_excess_per_day": mean}
+    if n_days < need:
+        return {**base, "verdict": "UNMEASURED", "may_trade": False,
+                "why": (f"the E[r] blend has {n_days} of {need} scored decision days at "
+                        f"h={h}: EXPLOIT waits for its own grade")}
+    if mean is not None and mean <= 0:
+        return {**base, "verdict": "MEASURED_NEGATIVE", "may_trade": False,
+                "why": f"the E[r] blend earned {mean*100:+.2f}%/day signed excess over {n_days} days"}
+    return {**base, "verdict": "MEASURED_POSITIVE", "may_trade": True,
+            "why": f"the E[r] blend earned {mean*100:+.2f}%/day signed excess over {n_days} days"}
+
+
 def _daily_sigma(row: dict) -> float:
     v = row.get("vol_annual")
     if isinstance(v, (int, float)) and v > 0:
@@ -743,7 +784,8 @@ def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
                               "ranking_verdict": r["ranking_verdict"],
                               "probe_verdict": r["probe_verdict"],
                               "acting": r["acting"], "virtual": r["virtual"],
-                              "contract_file": str(path)})
+                              "contract_file": str(path),
+                              **{k: r.get(k) for k in DL.ER_ROW_FIELDS}})
             recorded += 1
         except DL.DecisionLedgerError as exc:
             refused.append({"decision_id": r["decision_id"], "reason": str(exc)[:200]})
@@ -751,9 +793,30 @@ def _write_probe_decisions(rows: list[dict], *, asof: str, folder: Path,
             "ledger_refused": refused}
 
 
+def _er_summary(view: dict | None, red: str | None) -> dict:
+    """The plan receipt's E[r] block: which components woke, whose weights."""
+    if not view:
+        return {"present": False, "red": red}
+    names = view.get("names") or {}
+    awake: dict[str, int] = {}
+    priced = 0
+    for v in names.values():
+        c = v.get("h21") or {}
+        if c.get("er") is not None:
+            priced += 1
+        for k in c.get("components_awake") or []:
+            awake[k] = awake.get(k, 0) + 1
+    return {"present": True, "red": red, "path": view.get("path"),
+            "weights_source": view.get("weights_source"), "regime": view.get("regime"),
+            "n_names": len(names), "n_priced_h21": priced, "awake_h21": awake,
+            "unavailable": view.get("unavailable"),
+            "calibration_vintage": view.get("calibration_vintage")}
+
+
 def u_plan(out: Path, mode: str, *, asof: str | None = None,
            funnel_path: Path | None = None, ledger_path: Path | None = None,
-           contracts_dir: Path | None = None) -> dict:
+           contracts_dir: Path | None = None, er_sources: Any = None,
+           er_dir: Path | None = None) -> dict:
     """Ranking + committee shortlist -> a book, under EXPLOIT and PROBE.
 
     THE UNIT THAT DID NOT EXIST (2026-09-23), and then the unit that could not
@@ -782,7 +845,18 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     Orders go only while the venue clock says open, and never for a symbol that
     already has an open order (a 5-minute loop would otherwise re-send a queued
     order every cycle until it fills).
+
+    CHUNK 2 (2026-09-25): every candidate gets `E[r_h]` from
+    `expected_return.build`, decomposed by component, and every decision row
+    carries the decomposition (`decision_ledger.ER_ROW_FIELDS`). EXPLOIT names
+    are the ranker's list ordered by `E[r_21]` (E > 0 only), sized in proportion
+    to E[r] under `ER_EXPLOIT_MAX_WEIGHT` and shrunk (never lifted) by the
+    magnitude and regime scales -- and EXPLOIT still refuses until the blend's
+    OWN 21-session grade exists and is positive (`_blend_grade`), on top of the
+    ranker's gate. PROBE is chunk 1's, unchanged. A caller that injects
+    `ledger_path` gets sandbox E[r] sources (its ranking and its ledger only).
     """
+    from backend.services import expected_return as ER
     from backend.services import pc_broker as PB
     from backend.services import investment_committee as IC
     from backend.services import decision_contract as DC
@@ -798,7 +872,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             r = json.loads(rank_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             r = {}
-    top = (r.get("top") or [])[:BOOK_SIZE]
+    pool = list(r.get("top") or [])
+    top = pool[:BOOK_SIZE]
     net = r.get("top20_net_rel_21d")
     if not top:
         verdict = "NO_RANKING"
@@ -808,10 +883,10 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                    else "MEASURED_POSITIVE" if net is not None
                    else "UNMEASURED_TRADE_SMALL")
         may_trade = verdict != "MEASURED_NEGATIVE"
-    exploit_acting = (mode == "paper_profit") and may_trade
     ranking_verdict = {"verdict": verdict, "top20_net_rel_21d": net,
                        "ranking_asof": r.get("asof"),
                        "model_version": r.get("model_version")}
+    blend_grade = _blend_grade(ledger_path)
 
     # ---- the shortlist (PROBE) ------------------------------------------------
     shortlist_red = None
@@ -822,7 +897,40 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     if not sl and shortlist_red is None:
         shortlist_red = ("shortlist: 0, reason: the funnel's candidate file is "
                          "fresh and EMPTY -- no PROBE decision can be made today")
-    exploit_syms = [x["symbol"] for x in top]
+
+    # ---- the expected-return layer (chunk 2) ----------------------------------
+    er_view, er_red = None, None
+    cand = [str(x.get("symbol")) for x in pool] + [str(x["ticker"]) for x in sl]
+    sandbox = ledger_path is not None or er_sources is not None
+    try:
+        src = er_sources or (ER.Sources.sandbox(out=out, decision_ledger=ledger_path)
+                             if ledger_path is not None else
+                             ER.Sources.production(asof=asof, out=out))
+        er_view = ER.build(asof, cand, src,
+                           out_dir=(er_dir if er_dir is not None else
+                                    (out / "expected_return") if sandbox else None))
+    except Exception as exc:                                       # noqa: BLE001
+        er_red = f"expected_return: REFUSED {type(exc).__name__}: {exc}"[:300]
+        logger.warning("u_plan RED: %s", er_red)
+
+    def _er(sym: str, h: int = 21) -> dict | None:
+        return (((er_view or {}).get("names") or {}).get(str(sym).upper()) or {}).get(f"h{h}")
+
+    def _scale(sym: str) -> float:
+        return float((((er_view or {}).get("names") or {}).get(str(sym).upper()) or {})
+                     .get("size_scale", 1.0))
+
+    er_pool = [(x, (_er(x["symbol"]) or {}).get("er")) for x in pool]
+    if er_view is not None and any(e is not None for _, e in er_pool):
+        ex_pick = sorted([(x, e) for x, e in er_pool if e is not None and e > 0],
+                         key=lambda z: -z[1])[:BOOK_SIZE]
+        exploit_basis = "E[r_21] > 0, descending"
+    else:
+        ex_pick = [(x, None) for x in top]
+        exploit_basis = "ranker order (no E[r] priced)"
+    exploit_acting = ((mode == "paper_profit") and may_trade
+                      and blend_grade["may_trade"] and bool(ex_pick))
+    exploit_syms = [x["symbol"] for x, _ in ex_pick]
     probe_rows = [x for x in sl if not (exploit_acting and x["ticker"] in exploit_syms)]
     probe_rows = probe_rows[:int(_config.PROBE_MAX_NAMES)]
     n_probe = len(probe_rows)
@@ -838,12 +946,24 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
 
     probe_syms = [x["ticker"] for x in probe_rows]
     ex_syms = [s for s in exploit_syms if s not in probe_syms]
-    w_ex = (max(0.0, 1.0 - probe_gross) / len(ex_syms)) if ex_syms else 0.0
-    targets = [PB.Target(symbol=x["symbol"], weight=w_ex, rank=x.get("rank"),
-                         expected_relative_return_21d=x.get("expected_relative_return_21d_net"),
+    room = max(0.0, 1.0 - probe_gross)
+    ex_er = {x["symbol"]: e for x, e in ex_pick if x["symbol"] in ex_syms}
+    if ex_syms and all(ex_er.get(s) is not None for s in ex_syms):
+        tot = sum(ex_er[s] for s in ex_syms)
+        w_by = {s: min(float(_config.ER_EXPLOIT_MAX_WEIGHT), room * ex_er[s] / tot) * _scale(s)
+                for s in ex_syms}
+    else:
+        w_ex = (room / len(ex_syms)) if ex_syms else 0.0
+        w_by = {s: w_ex for s in ex_syms}
+    targets = [PB.Target(symbol=x["symbol"], weight=w_by[x["symbol"]], rank=x.get("rank"),
+                         expected_relative_return_21d=(ex_er.get(x["symbol"])
+                                                       if ex_er.get(x["symbol"]) is not None
+                                                       else x.get("expected_relative_return_21d_net")),
                          median_dollar_vol=None,
-                         reason=f"EXPLOIT rank {x.get('rank')} decile {x.get('decile')}")
-               for x in top if x["symbol"] in ex_syms]
+                         reason=(f"EXPLOIT rank {x.get('rank')} decile {x.get('decile')}"
+                                 + (f" E[r_21] {ex_er[x['symbol']]*100:+.2f}%"
+                                    if ex_er.get(x["symbol"]) is not None else "")))
+               for x, _ in ex_pick if x["symbol"] in ex_syms]
     targets += [PB.Target(symbol=x["ticker"], weight=w_probe,
                           median_dollar_vol=x.get("median_dollar_vol"),
                           reason=f"PROBE shortlist score {x.get('score')} ({x['source']})")
@@ -882,6 +1002,11 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         equity=equity, n_names=n_probe, weight=w_probe,
         daily_sigma=max([_daily_sigma(x) for x in probe_rows] or sig_all),
         label="planned PROBE book")
+    wc_exploit = probe_worst_case(
+        equity=equity, n_names=BOOK_SIZE, weight=1.0 / BOOK_SIZE,
+        daily_sigma=float(_config.PROBE_REF_DAILY_SIGMA),
+        label=(f"largest admissible EXPLOIT book (gross <= 1 - PROBE gross, "
+               f"<= {float(_config.ER_EXPLOIT_MAX_WEIGHT):.0%}/name)"))
     book_gross = sum(t.weight for t in targets
                      if (t.symbol in probe_syms and probe_acting)
                      or (t.symbol in ex_syms and exploit_acting))
@@ -926,6 +1051,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
                     daily_sigma=_daily_sigma(x), label=f"PROBE {x['ticker']}"),
                 "built_utc": _now(),
             }
+            row.update(ER.row_fields(er_view, x["ticker"], h))
             row["artifact_sha256"] = DC.seal(row)
             rows.append(row)
     ledger = (_write_probe_decisions(rows, asof=asof, folder=folder,
@@ -969,7 +1095,11 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "probe_verdict": grade["verdict"], "probe_acting": probe_acting,
               "probe_grade": grade,
               "equity": equity, "n_targets": len(targets),
-              "n_considered": len(set(exploit_syms) | {x["ticker"] for x in sl}),
+              "n_considered": len({str(x.get("symbol")) for x in pool} | {x["ticker"] for x in sl}),
+              "blend_grade": blend_grade, "exploit_basis": exploit_basis,
+              "er": _er_summary(er_view, er_red),
+              "er_top": (ER.format_top(er_view, n=10).splitlines() if er_view else
+                         [er_red or "expected_return: no view"]),
               "shortlist": len(sl), "shortlist_red": shortlist_red,
               "n_probe": n_probe, "probe_weight": w_probe, "probe_gross": probe_gross,
               "n_orders": sum(1 for p in plans if p.qty > 0),
@@ -979,6 +1109,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
               "n_to_send": len(to_send), "send_block": send_block,
               "turnover_usd": sum(p.notional for p in plans if p.qty > 0),
               "worst_case": {"largest_admissible": wc_admissible,
+                             "largest_admissible_exploit": wc_exploit,
                              "planned_probe": wc_planned,
                              "acting_book_gross_over_equity": book_gross},
               "worst_case_line": wc_admissible["line"],
@@ -998,7 +1129,10 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             if not exploit_acting:
                 why.append(f"EXPLOIT: ranking verdict {verdict}: refusing to buy "
                            f"a measured negative" if verdict == "MEASURED_NEGATIVE"
-                           else f"EXPLOIT: ranking verdict {verdict}")
+                           else f"EXPLOIT: ranking verdict {verdict}; "
+                                f"blend {blend_grade['verdict']}: {blend_grade['why']}"
+                           if not blend_grade["may_trade"]
+                           else f"EXPLOIT: ranking verdict {verdict}; no name with E[r_21] > 0")
             if not probe_acting:
                 why.append(f"PROBE: {shortlist_red or grade['why']}")
         record["why_not"] = "; ".join(why) or "nothing to trade"
@@ -1012,6 +1146,8 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
 
     return {"planned": True, "verdict": verdict, "acting": acting,
             "exploit_acting": exploit_acting,
+            "blend_verdict": blend_grade["verdict"],
+            "er_present": er_view is not None, "er_red": er_red,
             "probe_verdict": grade["verdict"], "probe_acting": probe_acting,
             "shortlist": len(sl), "shortlist_red": shortlist_red,
             "n_considered": record["n_considered"], "n_probe": n_probe,
@@ -1042,6 +1178,14 @@ def u_grade() -> dict:
         out["decisions"] = r.get("status") or r.get("headline")
     except Exception as exc:                                       # noqa: BLE001
         out["decisions"] = f"FAILED {type(exc).__name__}: {exc}"[:200]
+    # After the grader: the E[r] components re-grade on whatever just scored.
+    try:
+        from backend.services import expected_return as ER
+        r = ER.refit()
+        out["expected_return"] = {f"h{h}": r["oos"][f"h{h}"].get("licensed")
+                                  for h in _config.ER_HORIZONS}
+    except Exception as exc:                                       # noqa: BLE001
+        out["expected_return"] = f"FAILED {type(exc).__name__}: {exc}"[:200]
     return out
 
 

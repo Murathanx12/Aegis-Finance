@@ -112,6 +112,15 @@ EXECUTION_ARTERY_STATES: frozenset[str] = frozenset({"ORDER_SUBMITTED", "FILLED"
 _SIBLINGS: dict[str, str] = {"REFUSED": "ORDER_SUBMITTED",
                              "ORDER_SUBMITTED": "REFUSED"}
 
+#: Chunk 2 (2026-09-25): the expected-return decomposition every decision row
+#: carries (`expected_return.row_fields`), so `decision_autopsy` can say WHICH
+#: component was wrong. Written on DECIDED by the planner and COPIED onto
+#: SCORED by the grader, beside the realised excess return -- the join the
+#: blend's own forward grade and every component's reputation are fit on.
+ER_ROW_FIELDS: tuple[str, ...] = ("er_total", "er_equal", "er_by_component", "weights",
+                                  "weights_source", "components_awake", "regime",
+                                  "er_horizon")
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -464,6 +473,9 @@ def score_due(*, today: date | None = None, contracts: list[dict] | None = None,
                     "selection_probability", "action_set_sha256"):
             if r.get(key) is not None:
                 detail[key] = r.get(key)
+        for key in ER_ROW_FIELDS:
+            if key in r:
+                detail[key] = r.get(key)
         try:
             record(str(r.get("decision_id")), "SCORED", by="decision_grader",
                    detail=detail, asof=r.get("asof"), path=path)
@@ -522,6 +534,6 @@ def _open_contract_rows(*, day: date, out_dir: Path | None,
     return rows
 
 
-__all__ = ["DecisionLedgerError", "EXECUTION_ARTERY_STATES", "LEDGER", "RANK",
+__all__ = ["DecisionLedgerError", "ER_ROW_FIELDS", "EXECUTION_ARTERY_STATES", "LEDGER", "RANK",
            "STATES", "default_price_fetch", "deliver", "ledger_path", "read",
            "record", "record_many", "score_due", "states_of", "summary"]

@@ -1950,6 +1950,60 @@ PROBE_REFUSAL_VERDICTS: tuple = ("HOLD", "NO_ACTION", "")
 #: only ever be scored by Thompson's own math. It changes no decision today.
 EXPLORE_SELECTION_REPLAYS = 2000
 
+# ── THE EXPECTED-RETURN LAYER (chunk 2, 2026-09-25) ────────────────────────
+# `backend/services/expected_return.py`. Spec:
+# `docs/research_notes/2026-09-25/spec_chunk2_expected_return_layer.md`.
+# E[r_h] = regime_scale * sum_c w_c x_c over the AWAKE components; the weights
+# come from each component's own forward grade (never hand-set). What is set
+# here is the machinery's shape, not any component's weight.
+
+#: The horizons E[r] is computed at, in sessions.
+ER_HORIZONS: tuple = (5, 21, 63)
+#: A ledger horizon -> the E[r] horizon it grades. The forecast grid is
+#: (1, 2, 5, 20, 60, 120, 252); 20 ~ 21 and 60 ~ 63 are the same question.
+ER_HORIZON_ALIASES: dict = {5: 5, 20: 21, 21: 21, 60: 63, 63: 63}
+#: Below this many graded DATE BLOCKS (CANON §58) a component is shrunk to the
+#: prior (half an equal share), not zeroed and not trusted.
+ER_MIN_GRADED = 30
+#: The prior share of an ungraded component, as a fraction of an equal share.
+ER_PRIOR_SHARE = 0.5
+#: forecast_reputation's recipe on an IC skill: s = n/(n+k) * IC ; w = clip(s, 0, 1)**gamma.
+#: Declared, not tuned: IC lives on a different scale from Brier skill, so the
+#: Brier-tuned constants in the reputation receipt do not transfer.
+ER_K_PRIOR = 30.0
+ER_GAMMA = 1.0
+ER_FLOOR = 0.0
+#: Calibration shrink (p-bin -> realised relative return), toward the median (0).
+ER_CALIB_K = 30.0
+#: The reputation blend is used by u_plan only when its held-out advantage over
+#: the equal-weight blend is positive on at least this many evaluable dates.
+ER_OOS_MIN_DATES = 20
+#: The blend's OWN forward grade that licenses EXPLOIT: distinct scored decision
+#: days at this horizon (same count as the PROBE grade).
+ER_BLEND_GRADE_HORIZON = 21
+ER_BLEND_GRADE_MIN_SESSIONS = 21
+#: EXPLOIT per-name cap when sized on E[r] (weights proportional to E[r]+).
+ER_EXPLOIT_MAX_WEIGHT = 0.10
+#: Sizing multipliers are never above 1: a scale can shrink a position, never
+#: lift it past the caps the worst-case line was computed on.
+ER_SIZE_SCALE_MIN = 0.25
+#: market_sensor regime -> the scalar on every component's weight. A declared
+#: prior, printed on every receipt; `unknown` does not invent a regime.
+ER_REGIME_SCALE: dict = {"risk_on": 1.0, "risk_off": 0.5, "unknown": 1.0}
+#: PDUFA: approval +5% vs CRL -33% over five days (our own receipt, review
+#: 2026-09-25) puts break-even at p ~ 0.87. The CRL loss is DERIVED from the
+#: break-even so the sign flips exactly there.
+ER_PDUFA_BREAKEVEN_P = 0.87
+ER_PDUFA_UP_RETURN = 0.05
+#: No card p_approval -> the ~70% first-cycle rate (first-cycle CR ~30%,
+#: research_fda_catalysts.md), i.e. a NEGATIVE term by default.
+ER_PDUFA_PRIOR_P_APPROVAL = 0.70
+#: source_reliability multiplier on revision_flow, clipped.
+ER_SR_MULT_MIN = 0.5
+ER_SR_MULT_MAX = 1.5
+#: Revision-flow rule: minimum distinct firms (revision_flow.rule_score).
+ER_REVISION_MIN_FIRMS = 3
+
 # ── THE MORNING SCOREBOARD (chunk 21, Murat's item 12) ──────────────────────
 # `backend/services/morning_scoreboard.py`. Reads receipts, writes nothing.
 

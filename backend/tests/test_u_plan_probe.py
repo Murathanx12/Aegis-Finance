@@ -270,9 +270,27 @@ def test_observe_never_acts(tmp_path, monkeypatch):
 
 
 def test_the_exploit_gate_is_unchanged_when_the_ranking_is_positive(tmp_path, monkeypatch):
+    # Chunk 2 (2026-09-25) ADDED a gate: EXPLOIT also waits for the E[r]
+    # blend's own 21-session grade, and only names with E[r_21] > 0 qualify.
+    # The ranker's gate itself is unchanged; this test now plants both.
     fb = FakeBroker().install(monkeypatch)
     _funnel(tmp_path, n=25)
     _ranking(tmp_path / "out", net=+0.01)
+    rk = json.loads((tmp_path / "out" / "ranking.json").read_text(encoding="utf-8"))
+    for x in rk["top"]:
+        x["expected_relative_return_21d_net"] = 0.004
+    (tmp_path / "out" / "ranking.json").write_text(json.dumps(rk), encoding="utf-8")
+    first = _run(tmp_path)
+    assert first["verdict"] == "MEASURED_POSITIVE" and first["exploit_acting"] is False
+    assert first["blend_verdict"] == "UNMEASURED"
+    with (tmp_path / "ledger.jsonl").open("a", encoding="utf-8") as fh:
+        for i in range(config.ER_BLEND_GRADE_MIN_SESSIONS):
+            fh.write(json.dumps({
+                "decision_id": f"bg{i}", "state": "SCORED",
+                "asof": (TODAY - timedelta(days=90 - i)).isoformat(),
+                "detail": {"horizon_sessions": config.ER_BLEND_GRADE_HORIZON,
+                           "er_total": 0.01, "excess_return": 0.01}}) + "\n")
+    fb = FakeBroker().install(monkeypatch)
     res = _run(tmp_path)
     assert res["verdict"] == "MEASURED_POSITIVE" and res["exploit_acting"] is True
     assert res["n_exploit_orders"] == 18
