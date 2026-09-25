@@ -349,6 +349,46 @@ def shape_defect(parsed: dict, kind: str,
     return "; ".join(probs) or None
 
 
+#: A weight total inside this band, with every position present, is the model
+#: failing to add (measured 2026-09-25: 7 of 10 personal books came back at
+#: 1.02-1.12 after one re-ask). Outside it the book is a different book and
+#: stays refused. The rescale is STAMPED on the record; it is never silent.
+RESCALE_BAND = (0.90, 1.15)
+#: When the model STATED its cash weight, the overshoot is in the position
+#: weights alone (competition books came back at 1.22-1.54 with 20 names at
+#: 5-10% each and "cash_weight: 0.02"): the names and their relative sizes are
+#: the intent, the total is not. A stated cash line widens the band.
+RESCALE_BAND_WITH_CASH = (0.85, 1.60)
+
+
+def rescale_arithmetic(parsed: dict) -> tuple[dict, Optional[float]]:
+    """Scale positions + cash to 1.0 when the total is an arithmetic slip.
+
+    Returns (parsed, original_total) when rescaled, (parsed, None) otherwise.
+    The original total is written into the book so the freeze record says
+    the factory touched the weights and by how much.
+    """
+    pos = [p for p in parsed.get("positions") or [] if p.get("ticker") != "CASH"]
+    cash_stated = parsed.get("cash_weight") is not None
+    try:
+        cash = float(parsed.get("cash_weight") or 0.0)
+    except (TypeError, ValueError):
+        cash, cash_stated = 0.0, False
+    tot = sum(float(p.get("weight") or 0.0) for p in pos) + cash
+    band = RESCALE_BAND_WITH_CASH if cash_stated else RESCALE_BAND
+    if tot <= 0 or not (band[0] <= tot <= band[1]) or abs(tot - 1.0) < 1e-9:
+        return parsed, None
+    for p in parsed.get("positions") or []:
+        if p.get("ticker") != "CASH":
+            p["weight"] = round(float(p.get("weight") or 0.0) / tot, 6)
+    parsed["cash_weight"] = round(cash / tot, 6)
+    parsed["weights_rescaled_from"] = round(tot, 4)
+    parsed["strategy"] = (str(parsed.get("strategy") or "") +
+                          f" [factory: weights and cash rescaled from a stated total "
+                          f"of {tot:.4f} to 1.0 -- the model's arithmetic, not its intent]")
+    return parsed, round(tot, 4)
+
+
 def _defect(parsed: dict, status: str, ans: dict, kind: str) -> Optional[str]:
     """Shape defect of one answer. A failed parse is re-askable only when the
     reply was cut off; garbage asked again is the same garbage."""
@@ -585,6 +625,7 @@ def generate(*, kind: str, n: int, asof: date, out_dir: Path, notes: list[str],
              us_bars: Optional[pd.DataFrame] = None,
              resolve: Optional[Callable] = None,
              revisions: Optional[pd.DataFrame] = None,
+             only: Optional[set[str]] = None,
              news_root: Path = NEWS_ROOT, catalysts: Optional[list] = None,
              briefing_rows: Optional[dict] = None,
              extra_tickers: Iterable[str] = (),
@@ -623,6 +664,8 @@ def generate(*, kind: str, n: int, asof: date, out_dir: Path, notes: list[str],
         f"{len(catalysts)} catalysts, briefing {brief_src}, hash {pack['evidence_hash']}")
 
     strategies = STRATEGIES[kind][:n]
+    if only:
+        strategies = [st for st in strategies if st['id'] in only]
     cap = float(C.BOOK_FACTORY_CAP_USD)
     est = float(C.BOOK_FACTORY_EST_CALL_USD)
     rc = {"kind": kind, "asof": str(asof), "run_start_utc": run_start,
@@ -685,11 +728,18 @@ def generate(*, kind: str, n: int, asof: date, out_dir: Path, notes: list[str],
             own_cost += float(ans.get("cost_usd") or 0.0)
             parsed, status = parse_answer(ans.get("text") or "")
             defect = _defect(parsed, status, ans, kind)
+        rescaled_from = None
+        if (defect and status != "failed" and defect.startswith("weights plus cash sum")
+                and ";" not in defect):
+            parsed, rescaled_from = rescale_arithmetic(parsed)
+            if rescaled_from is not None:
+                say(f"  {stem}: weights summed to {rescaled_from:.4f}; rescaled to 1.0 and stamped")
+                defect = _defect(parsed, status, ans, kind)
         (out_dir / f"{stem}.deepseek.json").write_text(json.dumps(
             {**ans, "parse": status, "parsed": parsed, "prompt_hash": ph,
              "strategy": strat}, indent=1, default=str), encoding="utf-8")
         entry = {"strategy": strat["id"], "parse": status, "reasks": reasks,
-                 "shape_defect": defect,
+                 "shape_defect": defect, "weights_rescaled_from": rescaled_from,
                  "cost_usd": ans.get("cost_usd"), "error": ans.get("error"),
                  "served_model": ans.get("served_model")}
 
@@ -756,7 +806,8 @@ def cmd_generate(a) -> int:
                   freeze=not a.no_freeze, twins=not a.no_twins, seed=a.seed,
                   us_bars=us_bars, resolve=GP.resolve,
                   local=(lambda *x, **k: None) if a.no_local else local_call,
-                  max_candidates=a.max_candidates)
+                  max_candidates=a.max_candidates,
+                  only=set(x.strip() for x in a.only.split(',') if x.strip()) if a.only else None)
     print(f"-> {out_dir}")
     return 0 if rc["n_called"] and not rc["stopped"] else 2
 
@@ -780,6 +831,7 @@ def main(argv=None) -> int:
     g.add_argument("--no-freeze", action="store_true", help="save answers only")
     g.add_argument("--no-twins", action="store_true")
     g.add_argument("--no-local", action="store_true", help="skip llama-server")
+    g.add_argument("--only", default=None, help="comma list of strategy ids to (re)generate")
     g.set_defaults(fn=cmd_generate)
     s = sub.add_parser("strategies", help="print STRATEGIES")
     s.set_defaults(fn=cmd_strategies)

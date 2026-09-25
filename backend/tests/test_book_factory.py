@@ -370,3 +370,44 @@ def test_truncated_answer_is_reasked(ledger):
     rc = _gen(ledger, llm, _Spend(llm), n=1)
     assert llm.calls == 2 and rc["n_frozen"] == 1
     assert "truncated" in llm.users[1]
+
+
+# ── 2026-09-25 evening: an arithmetic slip is rescaled and STAMPED, a different
+# book stays refused ─────────────────────────────────────────────────────────
+def test_rescale_arithmetic_inside_band_stamps_the_original_total():
+    from scripts.book_factory import rescale_arithmetic
+    parsed = {"positions": [{"ticker": "AAA", "weight": 0.60}, {"ticker": "BBB", "weight": 0.40}],
+              "cash_weight": 0.06, "strategy": "s"}
+    out, orig = rescale_arithmetic(parsed)
+    assert orig == 1.06
+    tot = sum(p["weight"] for p in out["positions"]) + out["cash_weight"]
+    assert abs(tot - 1.0) < 1e-6
+    assert out["weights_rescaled_from"] == 1.06
+    assert "rescaled from a stated total of 1.0600" in out["strategy"]
+
+
+def test_rescale_arithmetic_outside_band_is_left_alone():
+    from scripts.book_factory import rescale_arithmetic
+    parsed = {"positions": [{"ticker": "AAA", "weight": 0.60}], "cash_weight": 0.0}
+    out, orig = rescale_arithmetic(parsed)
+    assert orig is None and out["positions"][0]["weight"] == 0.60
+    assert "weights_rescaled_from" not in out
+
+
+def test_rescale_arithmetic_exact_total_is_untouched():
+    from scripts.book_factory import rescale_arithmetic
+    parsed = {"positions": [{"ticker": "AAA", "weight": 0.97}], "cash_weight": 0.03, "strategy": "s"}
+    out, orig = rescale_arithmetic(parsed)
+    assert orig is None and out["strategy"] == "s"
+
+
+def test_rescale_band_widens_only_when_cash_is_stated():
+    from scripts.book_factory import rescale_arithmetic
+    twenty = [{"ticker": f"T{i}", "weight": 0.07} for i in range(20)]      # 1.40
+    with_cash = {"positions": [dict(p) for p in twenty], "cash_weight": 0.02, "strategy": "s"}
+    out, orig = rescale_arithmetic(with_cash)
+    assert orig == 1.42
+    assert abs(sum(p["weight"] for p in out["positions"]) + out["cash_weight"] - 1.0) < 1e-4
+    no_cash = {"positions": [dict(p) for p in twenty], "strategy": "s"}   # 1.40, cash unstated
+    out2, orig2 = rescale_arithmetic(no_cash)
+    assert orig2 is None
