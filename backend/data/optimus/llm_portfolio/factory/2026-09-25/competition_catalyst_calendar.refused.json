@@ -1,0 +1,126 @@
+{
+ "name": "comp_catalyst_calendar_2026-09-25",
+ "kind": "competition",
+ "objective": "Relative P&L vs WLS, 2026-10-12 to 2026-11-13",
+ "model": "deepseek-flash",
+ "strategy": "Own only names with a hand-verified dated event inside Oct 12-Nov 13, 2026: semicap earnings (ASML Oct 14, TSM Oct 15, TER Oct 27), biotech prints and one PDUFA (MRK Oct 10, ARGX Oct 22, NVO Nov 4), defense reports (Saab Oct 23, Kongsberg Oct 29, Rheinmetall and Hensoldt Nov 5), Hon Hai Tech Day Oct 30, Cameco Nov 3, Aristocrat Nov 12, Evolution Oct 23. Dates are spread so no single day decides the book. I would be wrong if a macro shock or a beat-but-sell-the-news reaction hits several prints at once, or if any estimated date slips outside the window.",
+ "what_i_did_not_buy": [
+  "VRTX|PDUFA Nov 30 falls outside the Nov 13 window",
+  "GILD|PDUFA Dec 23 falls outside the window",
+  "COGT|Both PDUFAs Nov 30 and Dec 30 are outside",
+  "SMMT|PDUFA Nov 14 is one day past the window",
+  "AGIO|PDUFA Nov 1 but no analyst revision flow evidence",
+  "CAPR|PDUFA Nov 22 outside window and 9-of-12 negative adcom",
+  "PRAX|PDUFA Dec 27 outside the window",
+  "ALB|No dated catalyst and net_raises minus 12"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "f7101df3ca49dc11",
+ "positions": [
+  {
+   "ticker": "ASML",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "Q3'26 earnings Oct 14 primary, net_raises 5 of 5 firms",
+   "falsifier": "Q3 bookings miss or 2027 guidance cut on Oct 14"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "Q3'26 earnings Oct 15 aggregator, net_raises 6 of 6 firms",
+   "falsifier": "capex guide cut or margin miss on Oct 15"
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "Q3'26 results Oct 22 primary, net_raises 17 with 14 firms",
+   "falsifier": "EMPASSION or Vyvgart guidance disappoints on Oct 22"
+  },
+  {
+   "ticker": "EVO.ST",
+   "weight": 0.08,
+   "theme": "gambling",
+   "thesis": "Q3'26 report Oct 23 primary",
+   "falsifier": "Asia revenue declines again in the Oct 23 print"
+  },
+  {
+   "ticker": "SAAB-B.ST",
+   "weight": 0.08,
+   "theme": "defense",
+   "thesis": "Q3'26 report Oct 23 primary",
+   "falsifier": "order intake or margin misses on Oct 23"
+  },
+  {
+   "ticker": "TER",
+   "weight": 0.08,
+   "theme": "semis",
+   "thesis": "Q3'26 earnings Oct 27 after close primary, net_raises 6 of 6",
+   "falsifier": "robotics or AI test orders miss on Oct 27"
+  },
+  {
+   "ticker": "KOG.OL",
+   "weight": 0.07,
+   "theme": "defense",
+   "thesis": "Q3'26 report Oct 29 primary",
+   "falsifier": "missile/defense order growth stalls on Oct 29"
+  },
+  {
+   "ticker": "2317.TW",
+   "weight": 0.07,
+   "theme": "semis",
+   "thesis": "Hon Hai Tech Day Oct 30-31 primary, AI server ODM",
+   "falsifier": "AI server guidance disappoints at Tech Day Oct 30"
+  },
+  {
+   "ticker": "CCJ",
+   "weight": 0.07,
+   "theme": "nuclear",
+   "thesis": "Q3'26 earnings Nov 3-4 aggregator",
+   "falsifier": "production or contract pricing misses on Nov 3"
+  },
+  {
+   "ticker": "NVO",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "Q3'26 results Nov 4 primary",
+   "falsifier": "CagriSema US launch guidance cut on Nov 4"
+  },
+  {
+   "ticker": "RHM.DE",
+   "weight": 0.07,
+   "theme": "defense",
+   "thesis": "Q3'26 results Nov 5 primary",
+   "falsifier": "order timing or margin miss on Nov 5"
+  },
+  {
+   "ticker": "HAG.DE",
+   "weight": 0.06,
+   "theme": "defense",
+   "thesis": "9-month 2026 results Nov 5 primary",
+   "falsifier": "negative free cash flow worsens on Nov 5"
+  },
+  {
+   "ticker": "ALL.AX",
+   "weight": 0.06,
+   "theme": "gambling",
+   "thesis": "FY26 annual results Nov 12 primary",
+   "falsifier": "Anaxi/digital growth misses on Nov 12"
+  },
+  {
+   "ticker": "MRK",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "I-DXd PDUFA Oct 10 primary, net_raises 22 of 22 firms",
+   "falsifier": "CRL on Daiichi manufacturing on Oct 10"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.02,
+   "thesis": "declared cash"
+  }
+ ]
+}

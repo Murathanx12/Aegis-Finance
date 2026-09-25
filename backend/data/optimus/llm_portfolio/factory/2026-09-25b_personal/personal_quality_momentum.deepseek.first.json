@@ -1,0 +1,199 @@
+{
+ "text": "{\"name\": \"quality_momentum_biotech_ai_power\", \"cash_weight\": 0.06, \"positions\": [\"MRK|0.09|biotech|net_raises 22 with zero lowers and mom_252_21 0.87 (revision_flow_90d)|I-DXd CRL on Oct 10 or Keytruda LOE guidance cut\", \"GILD|0.08|biotech|mom_252_21 0.29 with gross_margin_chg +0.0053 and drawdown_63 -0.0022 (briefing)|anito-cel CRL on Dec 23 or a further net-lower revision quarter\", \"VRTX|0.08|biotech|9 net raises and zero lowers over 90d with mom_252_21 0.40 (revision_flow_90d)|povetacicept CRL on Nov 30 or CF revenue guide cut\", \"LLY|0.08|biotech|inflection_flag true with gross_margin_chg +0.0384 and 13 net raises (briefing)|retatrutide filing slips past Q1 2027 or margin expansion reverses\", \"AMGN|0.07|biotech|26 net raises on 22 firms with inflection_flag true and gross_margin_chg +0.0388 (briefing)|MariTide MARITIME-1/2 timing slips past Jan 21 2027\", \"ABBV|0.07|biotech|20 net raises with zero lowers and drawdown_63 only -0.0056 (revision_flow_90d)|tavapadon PDUFA slips or Skyrizi/Rinvoq growth decelerates\", \"ARGX|0.06|biotech|17 net raises across 14 firms with mom_252_21 0.42 (revision_flow_90d)|EMPASSION Phase 3 MMN topline misses in Q4 2026\", \"COGT|0.05|biotech|two separate Phase-3-backed PDUFAs Nov 30 and Dec 30 with 2 net raises (catalysts)|either bezuclastinib NDA draws a CRL\", \"WST|0.05|biotech|7 net raises with zero lowers and gross_margin_chg +0.0266 (revision_flow_90d)|GLP-1 device orders normalize and FY26 guide is not raised again\", \"RGEN|0.04|biotech|mom_63 0.43 with 4 net raises and drawdown_63 -0.0073 (briefing)|bioprocessing orders turn negative at the next print\", \"BBIO|0.04|biotech|9 net raises on 11 firms with rev_yoy 1.20 (revision_flow_90d)|BBP-418 CRL on Nov 27 or LGMD2I launch economics disappoint\", \"INSM|0.03|biotech|rev_yoy 2.96 with 4 raises and a Jan 28 2027 label-expansion PDUFA (briefing)|ENCORE sNDA CRL or brensocatib pipeline setback\", \"NVDA|0.08|semis|16 net raises across 21 firms with drawdown_63 only -0.0118 (revision_flow_90d)|hyperscaler capex digestion headline or a data-center order pushout\", \"TSM|0.07|semis|6 net raises with zero lowers and vs_ma200 +0.176 (revision_flow_90d)|Oct 15 earnings cuts the FY26 capex guide\", \"ASML|0.06|semis|5 net raises with zero lowers and median_target_change +0.1364 (revision_flow_90d)|Oct 14 earnings shows order lumpiness or China restriction tightening\", \"GEV|0.06|power_grid|8 net raises with zero lowers and inflection_flag true on +88% orders (revision_flow_90d)|the 116GW turbine backlog shows a rising cancellation rate\", \"NVT|0.05|power_grid|6 net raises with zero lowers and inflection_flag true on +53% sales (revision_flow_90d)|the fall-2026 modular liquid-cooling launch slips\", \"AME|0.04|robotics|12 net raises with zero lowers and drawdown_63 only -0.0655 (revision_flow_90d)|the $5B deal integration dilutes margin or robotics orders stall\", \"OKTA|0.04|software|63 net raises with zero lowers and mom_63 0.65 (revision_flow_90d)|identity growth decelerates or the next guide disappoints\", \"CRWD|0.04|software|44 net raises on 35 firms with drawdown_63 0.0 (revision_flow_90d)|net-new ARR deceleration at the next print\", \"PANW|0.04|software|34 net raises with zero lowers and mom_252_21 0.70 (revision_flow_90d)|platformization bookings miss or billings growth slows\", \"SNOW|0.04|software|47 net raises with zero lowers and mom_63 0.50 (revision_flow_90d)|product revenue growth decelerates below 30%\", \"NET|0.03|software|27 net raises with zero lowers and drawdown_63 0.0 (revision_flow_90d)|enterprise net-new ACV slows at the next print\", \"DELL|0.03|software|24 net raises with zero lowers and rev_yoy 0.58 (revision_flow_90d)|AI server margin mix compresses or backlog converts slower\"], \"strategy\": \"Bet on liquid quality-momentum: names with strong 6-12 month price momentum, rising analyst targets (net raises with few or zero lowers), and stable-to-improving gross margins, concentrated in biotech catalysts, AI semis, power/grid, and software. I avoided names far above their 200-day with falling margins and negative revision flow (ALB, VRT, CEG, LEU, OKLO, SMR, FLUT). I would be wrong if a hyperscaler capex digestion headline hits the semis/power sleeve simultaneously, or if several Q4 PDUFAs draw CRLs, or if the momentum factor itself mean-reverts against SPY.\", \"objective\": \"Maximise 126-session return vs SPY, net of costs, via liquid quality-momentum names with positive revision flow and stable margins.\", \"what_i_did_not_buy\": [\"ALB|12 net lowers and mom_63 -0.28, falling margins\", \"VRT|4 net lowers and mom_63 -0.30, negative revision flow\", \"CEG|6 net lowers and rev_qoq -0.33\", \"LEU|4 net lowers and gross_margin_chg -0.1273\", \"OKLO|4 net lowers, zero revenue, huge target dispersion\", \"SMR|6 net lowers and rev_yoy -0.99\", \"FLUT|15 net lowers and mom_252_21 -0.65\", \"GME|no revision flow and rev_yoy -0.19\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00232729,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 314,
+ "tokens_out": 1587,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "quality_momentum_biotech_ai_power",
+  "strategy": "Bet on liquid quality-momentum: names with strong 6-12 month price momentum, rising analyst targets (net raises with few or zero lowers), and stable-to-improving gross margins, concentrated in biotech catalysts, AI semis, power/grid, and software. I avoided names far above their 200-day with falling margins and negative revision flow (ALB, VRT, CEG, LEU, OKLO, SMR, FLUT). I would be wrong if a hyperscaler capex digestion headline hits the semis/power sleeve simultaneously, or if several Q4 PDUFAs draw CRLs, or if the momentum factor itself mean-reverts against SPY.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via liquid quality-momentum names with positive revision flow and stable margins.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 22 with zero lowers and mom_252_21 0.87 (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on Oct 10 or Keytruda LOE guidance cut"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "mom_252_21 0.29 with gross_margin_chg +0.0053 and drawdown_63 -0.0022 (briefing)",
+    "falsifier": "anito-cel CRL on Dec 23 or a further net-lower revision quarter"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "9 net raises and zero lowers over 90d with mom_252_21 0.40 (revision_flow_90d)",
+    "falsifier": "povetacicept CRL on Nov 30 or CF revenue guide cut"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "inflection_flag true with gross_margin_chg +0.0384 and 13 net raises (briefing)",
+    "falsifier": "retatrutide filing slips past Q1 2027 or margin expansion reverses"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "26 net raises on 22 firms with inflection_flag true and gross_margin_chg +0.0388 (briefing)",
+    "falsifier": "MariTide MARITIME-1/2 timing slips past Jan 21 2027"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "20 net raises with zero lowers and drawdown_63 only -0.0056 (revision_flow_90d)",
+    "falsifier": "tavapadon PDUFA slips or Skyrizi/Rinvoq growth decelerates"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "17 net raises across 14 firms with mom_252_21 0.42 (revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 MMN topline misses in Q4 2026"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "two separate Phase-3-backed PDUFAs Nov 30 and Dec 30 with 2 net raises (catalysts)",
+    "falsifier": "either bezuclastinib NDA draws a CRL"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "7 net raises with zero lowers and gross_margin_chg +0.0266 (revision_flow_90d)",
+    "falsifier": "GLP-1 device orders normalize and FY26 guide is not raised again"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "mom_63 0.43 with 4 net raises and drawdown_63 -0.0073 (briefing)",
+    "falsifier": "bioprocessing orders turn negative at the next print"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "9 net raises on 11 firms with rev_yoy 1.20 (revision_flow_90d)",
+    "falsifier": "BBP-418 CRL on Nov 27 or LGMD2I launch economics disappoint"
+   },
+   {
+    "ticker": "INSM",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "rev_yoy 2.96 with 4 raises and a Jan 28 2027 label-expansion PDUFA (briefing)",
+    "falsifier": "ENCORE sNDA CRL or brensocatib pipeline setback"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "16 net raises across 21 firms with drawdown_63 only -0.0118 (revision_flow_90d)",
+    "falsifier": "hyperscaler capex digestion headline or a data-center order pushout"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "6 net raises with zero lowers and vs_ma200 +0.176 (revision_flow_90d)",
+    "falsifier": "Oct 15 earnings cuts the FY26 capex guide"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "5 net raises with zero lowers and median_target_change +0.1364 (revision_flow_90d)",
+    "falsifier": "Oct 14 earnings shows order lumpiness or China restriction tightening"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.06,
+    "theme": "power_grid",
+    "thesis": "8 net raises with zero lowers and inflection_flag true on +88% orders (revision_flow_90d)",
+    "falsifier": "the 116GW turbine backlog shows a rising cancellation rate"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "6 net raises with zero lowers and inflection_flag true on +53% sales (revision_flow_90d)",
+    "falsifier": "the fall-2026 modular liquid-cooling launch slips"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.04,
+    "theme": "robotics",
+    "thesis": "12 net raises with zero lowers and drawdown_63 only -0.0655 (revision_flow_90d)",
+    "falsifier": "the $5B deal integration dilutes margin or robotics orders stall"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "63 net raises with zero lowers and mom_63 0.65 (revision_flow_90d)",
+    "falsifier": "identity growth decelerates or the next guide disappoints"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "44 net raises on 35 firms with drawdown_63 0.0 (revision_flow_90d)",
+    "falsifier": "net-new ARR deceleration at the next print"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "34 net raises with zero lowers and mom_252_21 0.70 (revision_flow_90d)",
+    "falsifier": "platformization bookings miss or billings growth slows"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "47 net raises with zero lowers and mom_63 0.50 (revision_flow_90d)",
+    "falsifier": "product revenue growth decelerates below 30%"
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "27 net raises with zero lowers and drawdown_63 0.0 (revision_flow_90d)",
+    "falsifier": "enterprise net-new ACV slows at the next print"
+   },
+   {
+    "ticker": "DELL",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "24 net raises with zero lowers and rev_yoy 0.58 (revision_flow_90d)",
+    "falsifier": "AI server margin mix compresses or backlog converts slower"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers and mom_63 -0.28, falling margins",
+   "VRT|4 net lowers and mom_63 -0.30, negative revision flow",
+   "CEG|6 net lowers and rev_qoq -0.33",
+   "LEU|4 net lowers and gross_margin_chg -0.1273",
+   "OKLO|4 net lowers, zero revenue, huge target dispersion",
+   "SMR|6 net lowers and rev_yoy -0.99",
+   "FLUT|15 net lowers and mom_252_21 -0.65",
+   "GME|no revision flow and rev_yoy -0.19"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.380, not 1.0"
+}

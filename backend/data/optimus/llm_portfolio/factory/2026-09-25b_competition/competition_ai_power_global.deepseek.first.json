@@ -1,0 +1,129 @@
+{
+ "text": "{\"name\":\"ai_power_global\",\"cash_weight\":0.01,\"positions\":[\"GEV|0.10|power_grid|Q2 orders +88% to $24.2B and $176B backlog (research_themes Theme 2)|Q3 print shows book-to-bill below 1.0 or backlog cancellation disclosed\",\"VRT|0.09|power_grid|$2.6B Utility Innovations deal Sep 3 2026 extends grid-to-chip (research_themes Theme 2)|Q3 backlog growth stalls or Utility Innovations earnout terms disclosed as dilutive\",\"NVT|0.09|power_grid|Q1 sales +53% and FY26 guide raised to 37-39% (research_themes Theme 2)|Fall-2026 modular liquid-cooling launch slips past the window\",\"2308.TW|0.08|power_grid|Liquid-cooling/800V DC power leader for AI racks (research_global_candidates)|Q3 earnings show power/cooling margin compression on component costs\",\"267260.KS|0.08|power_grid|765kV transformer export boom to US grid, 25% H1 margin (research_global_candidates)|Q3 op profit misses the KRW316.6bn consensus\",\"ENR.DE|0.08|power_grid|Q3 orders record EUR17.9bn, book-to-bill 1.57x, Grid backlog EUR51bn (research_global_candidates)|FY26 results show Grid Technologies order intake decelerating QoQ\",\"ASML|0.08|semis|Q3'26 earnings confirmed Oct 14 2026 (catalysts)|Oct 14 bookings guide implies 2027 order digestion\",\"MU|0.08|semis|HBM4 shortage, ~20% of NVIDIA HBM4 allocation, inflection_flag true (research_themes Theme 2)|HBM pricing commentary signals 2027 capex digestion\",\"000660.KS|0.08|semis|HBM leader ~50% share, record Q3 op profit consensus (research_global_candidates)|Bernstein-flagged HBM4 ramp lag vs Samsung confirmed in Q3 print\",\"6857.T|0.07|semis|Raised FY26 sales guide +21% to JPY1,714bn on AI test demand (research_global_candidates)|FY26 Q2 order intake misses the raised guide\",\"TSM|0.07|semis|Q3'26 earnings confirmed Oct 15 2026, capex guide raised to $60-64B (catalysts)|Oct 15 capex guide cut or gross margin below 65%\",\"2330.TW|0.06|semis|Q3'26 earnings Oct 15 and Sept sales Oct 8 (catalysts)|Monthly sales decelerate below the >40% FY growth guide\",\"005930.KS|0.06|semis|Bernstein raised Q3 HBM revenue est 23% to ~$11.4bn (research_global_candidates)|Q3 preliminary guidance shows HBM4 share still below 30%\",\"2317.TW|0.05|power_grid|Hon Hai Tech Day Oct 30-31 2026 confirmed, Aug revenue +52% YoY (catalysts)|Tech Day reveals no new AI server rack ramp or Q3 misses Street\"],\"strategy\":\"Bet that the AI capex bottleneck in Oct 12-Nov 13 2026 is physical, not computational: grid transformers, switchgear, liquid cooling, gas turbines and the HBM/memory those racks consume. Every name has a dated observable inside the window (GEV/VRT/NVT backlog and orders, ASML Oct 14, TSM Oct 15, Hon Hai Tech Day Oct 30-31, Korean/Japanese Q3 prints), so relative P&L is driven by real prints rather than theme momentum. I would be wrong if a hyperscaler capex-digestion headline or a China export-control shock hits the whole chain at once, or if HBM4 pricing rolls over before the memory prints land.\",\"objective\":\"Beat the Bloomberg WLS index on relative P&L from 2026-10-12 to 2026-11-13 with a global AI power-and-memory book.\",\"what_i_did_not_buy\":[\"ALB|12 target cuts in 90d, lithium spot falling, no dated catalyst\",\"OKLO|Zero revenue, target dispersion $55-$150, no dated catalyst\",\"SMR|Six downgrades, revenue -99% YoY, no dated catalyst\",\"LEU|Six lowers vs two raises, gross margin down 12.7pts\",\"CEG|Seven lowers vs one raise, revenue -32.5% QoQ\",\"FLUT|Sixteen lowers vs one raise, four 2026 guidance cuts\",\"INTC|Government-equity lawsuit overhang, not a power-chain name\",\"ORCL|Force-majeure data-center notice, eight target cuts\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.01230197,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 64494,
+ "tokens_out": 1057,
+ "cached_tokens": 5248,
+ "parse": "ok",
+ "parsed": {
+  "name": "ai_power_global",
+  "strategy": "Bet that the AI capex bottleneck in Oct 12-Nov 13 2026 is physical, not computational: grid transformers, switchgear, liquid cooling, gas turbines and the HBM/memory those racks consume. Every name has a dated observable inside the window (GEV/VRT/NVT backlog and orders, ASML Oct 14, TSM Oct 15, Hon Hai Tech Day Oct 30-31, Korean/Japanese Q3 prints), so relative P&L is driven by real prints rather than theme momentum. I would be wrong if a hyperscaler capex-digestion headline or a China export-control shock hits the whole chain at once, or if HBM4 pricing rolls over before the memory prints land.",
+  "objective": "Beat the Bloomberg WLS index on relative P&L from 2026-10-12 to 2026-11-13 with a global AI power-and-memory book.",
+  "cash_weight": 0.01,
+  "positions": [
+   {
+    "ticker": "GEV",
+    "weight": 0.1,
+    "theme": "power_grid",
+    "thesis": "Q2 orders +88% to $24.2B and $176B backlog (research_themes Theme 2)",
+    "falsifier": "Q3 print shows book-to-bill below 1.0 or backlog cancellation disclosed"
+   },
+   {
+    "ticker": "VRT",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "$2.6B Utility Innovations deal Sep 3 2026 extends grid-to-chip (research_themes Theme 2)",
+    "falsifier": "Q3 backlog growth stalls or Utility Innovations earnout terms disclosed as dilutive"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "Q1 sales +53% and FY26 guide raised to 37-39% (research_themes Theme 2)",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past the window"
+   },
+   {
+    "ticker": "2308.TW",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "Liquid-cooling/800V DC power leader for AI racks (research_global_candidates)",
+    "falsifier": "Q3 earnings show power/cooling margin compression on component costs"
+   },
+   {
+    "ticker": "267260.KS",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "765kV transformer export boom to US grid, 25% H1 margin (research_global_candidates)",
+    "falsifier": "Q3 op profit misses the KRW316.6bn consensus"
+   },
+   {
+    "ticker": "ENR.DE",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "Q3 orders record EUR17.9bn, book-to-bill 1.57x, Grid backlog EUR51bn (research_global_candidates)",
+    "falsifier": "FY26 results show Grid Technologies order intake decelerating QoQ"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 14 2026 (catalysts)",
+    "falsifier": "Oct 14 bookings guide implies 2027 order digestion"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "HBM4 shortage, ~20% of NVIDIA HBM4 allocation, inflection_flag true (research_themes Theme 2)",
+    "falsifier": "HBM pricing commentary signals 2027 capex digestion"
+   },
+   {
+    "ticker": "000660.KS",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "HBM leader ~50% share, record Q3 op profit consensus (research_global_candidates)",
+    "falsifier": "Bernstein-flagged HBM4 ramp lag vs Samsung confirmed in Q3 print"
+   },
+   {
+    "ticker": "6857.T",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Raised FY26 sales guide +21% to JPY1,714bn on AI test demand (research_global_candidates)",
+    "falsifier": "FY26 Q2 order intake misses the raised guide"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 15 2026, capex guide raised to $60-64B (catalysts)",
+    "falsifier": "Oct 15 capex guide cut or gross margin below 65%"
+   },
+   {
+    "ticker": "2330.TW",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 and Sept sales Oct 8 (catalysts)",
+    "falsifier": "Monthly sales decelerate below the >40% FY growth guide"
+   },
+   {
+    "ticker": "005930.KS",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Bernstein raised Q3 HBM revenue est 23% to ~$11.4bn (research_global_candidates)",
+    "falsifier": "Q3 preliminary guidance shows HBM4 share still below 30%"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "Hon Hai Tech Day Oct 30-31 2026 confirmed, Aug revenue +52% YoY (catalysts)",
+    "falsifier": "Tech Day reveals no new AI server rack ramp or Q3 misses Street"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 target cuts in 90d, lithium spot falling, no dated catalyst",
+   "OKLO|Zero revenue, target dispersion $55-$150, no dated catalyst",
+   "SMR|Six downgrades, revenue -99% YoY, no dated catalyst",
+   "LEU|Six lowers vs two raises, gross margin down 12.7pts",
+   "CEG|Seven lowers vs one raise, revenue -32.5% QoQ",
+   "FLUT|Sixteen lowers vs one raise, four 2026 guidance cuts",
+   "INTC|Government-equity lawsuit overhang, not a power-chain name",
+   "ORCL|Force-majeure data-center notice, eight target cuts"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.080, not 1.0"
+}

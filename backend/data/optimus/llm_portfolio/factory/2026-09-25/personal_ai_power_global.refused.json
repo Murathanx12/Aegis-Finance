@@ -1,0 +1,126 @@
+{
+ "name": "pers_ai_power_global_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY, net of costs",
+ "model": "deepseek-flash",
+ "strategy": "Bet that the AI capex bottleneck is physical, not narrative: power generation and grid gear (GEV, VRT, NVT), the memory and foundry layer that capex actually buys (MU, TSM, ASML), and the large-cap pharma names with the strongest analyst revision breadth and dated Q4 catalysts (MRK, AMGN, ARGX, WST). CCJ adds uranium supply. Software and OKTA/SNOW/CRWD are the revision-breadth sleeve. I would be wrong if hyperscaler capex pauses (killing GEV/VRT/NVT/MU together), if the Oct 10 MRK or Nov 30 VRTX-type PDUFAs draw CRLs, or if the revision-breadth names mean-revert after their run.",
+ "what_i_did_not_buy": [
+  "ALB|net_raises -12 of 11 firms, lithium price forecast cut 40%",
+  "OKLO|net_raises -4, zero revenue, analyst targets dispersed $55-$150",
+  "SMR|net_raises -6 of 7 firms, revenue -99% yoy",
+  "INTC|net_raises 11 of 20 but 36 headlines mostly noise, no dated catalyst",
+  "FLUT|net_raises -15 of 15 firms, four guidance cuts in 2026",
+  "SERV|net_raises -3 of 3 firms, 2026 revenue guidance cut sharply",
+  "IONQ|no revision data, 35x forward sales, chronic ATM dilution",
+  "QUBT|gross margin -21%, opex +114% yoy, targets dispersed $10-$32"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "83c88cce77cf7213",
+ "positions": [
+  {
+   "ticker": "GEV",
+   "weight": 0.11,
+   "theme": "power_grid",
+   "thesis": "Q2 orders +88% to $24.2B and $176B backlog with inflection_flag true (briefing)",
+   "falsifier": "Q3 backlog or book-to-bill falls below 1.0x when reported in late Oct"
+  },
+  {
+   "ticker": "VRT",
+   "weight": 0.09,
+   "theme": "power_grid",
+   "thesis": "$2.6B Utility Innovations deal Sep 3 2026 extends grid-to-chip power (news_14d)",
+   "falsifier": "Q3 liquid-cooling revenue per MW shipped stays flat while backlog grows in late Oct"
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.09,
+   "theme": "power_grid",
+   "thesis": "rev_yoy +52.7% with inflection_flag true and net_raises 6 of 6 firms (briefing, revision_flow_90d)",
+   "falsifier": "Fall-2026 modular liquid-cooling launch slips past December"
+  },
+  {
+   "ticker": "MU",
+   "weight": 0.1,
+   "theme": "semis",
+   "thesis": "rev_yoy +345.7% and gross_margin_chg +10.15pp with inflection_flag true (briefing)",
+   "falsifier": "HBM4 allocation share loss to SK Hynix or Samsung confirmed in the Dec quarter print"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "net_raises 6 of 6 firms and Q3 earnings Oct 15 2026 (revision_flow_90d, catalysts)",
+   "falsifier": "FY26 capex guide cut below $60B on the Oct 15 call"
+  },
+  {
+   "ticker": "ASML",
+   "weight": 0.08,
+   "theme": "semis",
+   "thesis": "net_raises 5 of 5 firms with median target change +13.6% and Q3 earnings Oct 14 (revision_flow_90d, catalysts)",
+   "falsifier": "Q3 bookings miss and 2027 order guidance trimmed on Oct 14"
+  },
+  {
+   "ticker": "MRK",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "net_raises 22 of 22 firms with median target change +12.4% (revision_flow_90d)",
+   "falsifier": "I-DXd CRL on Oct 10 2026 PDUFA due to Daiichi manufacturing issues"
+  },
+  {
+   "ticker": "AMGN",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 26 of 28 firms with inflection_flag true (revision_flow_90d, briefing)",
+   "falsifier": "MariTide MARITIME-1/2 interim data disappoints before Jan 21 2027"
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 17 of 18 firms with Q3 earnings Oct 22 2026 (revision_flow_90d, catalysts)",
+   "falsifier": "EMPASSION Phase 3 empasiprubart MMN topline misses in Q4 2026"
+  },
+  {
+   "ticker": "WST",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "net_raises 7 of 7 firms with median target change +9.6% (revision_flow_90d)",
+   "falsifier": "GLP-1 delivery-device organic growth decelerates below high-teens in the late-Oct print"
+  },
+  {
+   "ticker": "CCJ",
+   "weight": 0.05,
+   "theme": "nuclear",
+   "thesis": "Q3 earnings Nov 3-4 2026 with uranium term price at record $96/lb (catalysts)",
+   "falsifier": "Q3 production guidance cut or Westinghouse JV write-down on Nov 3"
+  },
+  {
+   "ticker": "OKTA",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 63 of 63 firms with median target change +19.4% (revision_flow_90d)",
+   "falsifier": "Identity-security net-new ARR decelerates in the next quarterly print"
+  },
+  {
+   "ticker": "SNOW",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 47 of 47 firms with median target change +23.3% (revision_flow_90d)",
+   "falsifier": "Product revenue growth falls below 30% in the next quarterly print"
+  },
+  {
+   "ticker": "CRWD",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 44 of 49 firms with mom_63 +47.7% (revision_flow_90d, briefing)",
+   "falsifier": "Net-new ARR misses and FY guide trimmed at the next print"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.06,
+   "thesis": "declared cash"
+  }
+ ]
+}

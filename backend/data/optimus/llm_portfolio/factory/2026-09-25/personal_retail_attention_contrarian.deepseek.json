@@ -1,0 +1,133 @@
+{
+ "text": "{\"name\":\"retail_attention_contrarian_pharma_power\",\"cash_weight\":0.06,\"positions\":[\"VRTX|0.09|biotech|net_raises 9 of 9 firms with median target +3.3% into Nov 30 povetacicept PDUFA (revision_flow_90d)|CRL on the povetacicept BLA on or before Nov 30 2026\",\"MRK|0.09|biotech|net_raises 22 with zero lowers across 17 firms into Oct 10 I-DXd PDUFA (revision_flow_90d)|I-DXd CRL on manufacturing grounds on Oct 10 2026\",\"GILD|0.08|biotech|rev_yoy +10.2% with drawdown_63 only -0.2% and Dec 23 anito-cel PDUFA (briefing)|anito-cel CRL or a guidance cut at the Q3 print in late Oct 2026\",\"COGT|0.07|biotech|two PDUFAs Nov 30 and Dec 30 with net_raises 2 of 4 firms and no lowers (revision_flow_90d)|either bezuclastinib NDA rejected, first on Nov 30 2026\",\"AGIO|0.07|biotech|net_raises 5 of 6 firms, median target +9.7%, into Nov 1 mitapivat sickle cell PDUFA (revision_flow_90d)|mitapivat sNDA CRL on Nov 1 2026\",\"BBIO|0.07|biotech|net_raises 9 of 11 firms with rev_yoy +120% into Nov 27 BBP-418 PDUFA (revision_flow_90d)|BBP-418 CRL on Nov 27 2026\",\"GEV|0.08|power_grid|inflection_flag true with net_raises 8 of 9 firms and rev_yoy +21.9% (briefing)|backlog cancellation or book-to-bill below 1.0 disclosed at the next report\",\"NVT|0.07|power_grid|inflection_flag true, rev_yoy +52.8%, net_raises 6 of 5 firms with no lowers (briefing)|the fall-2026 modular liquid-cooling launch slips past Dec 2026\",\"TSM|0.08|semis|net_raises 6 of 7 firms, median target +10.2%, into Oct 15 Q3 earnings (revision_flow_90d)|capex guide cut on the Oct 15 2026 earnings call\",\"ASML|0.07|semis|net_raises 5 of 5 firms, median target +13.6%, into Oct 14 Q3 earnings (revision_flow_90d)|2027 order book guided down on Oct 14 2026\",\"MU|0.07|semis|inflection_flag true with rev_yoy +346% and gross_margin_chg +10.2pp (briefing)|HBM pricing or allocation cut disclosed before the Dec 2026 print\",\"AME|0.06|robotics|net_raises 12 of 10 firms with zero lowers and rev_yoy +15.0% (revision_flow_90d)|the $5B deal closes with FY27 margin guidance cut\",\"WST|0.05|biotech|net_raises 7 of 6 firms, median target +9.6%, on GLP-1 device demand (revision_flow_90d)|management flags GLP-1 device orders normalizing at the late-Oct print\",\"cash|0.06|cash|undeployed reserve for the Oct-Nov PDUFA and earnings cluster (asof 2026-09-25)|n/a\"],\"strategy\":\"I fade the retail-attention crowd: I avoid the names whose only evidence is a headline-count spike (IONQ, RGTX, QBTS, QUBT, RKLB, NBIS, BB, SNDT-style meme pops, BYND/DNUT/GPRO) and buy where the analyst flow is one-sided and dated catalysts sit inside the 126-session window. The book is Q4-2026 FDA decisions (VRTX, MRK, GILD, COGT, AGIO, BBIO) plus AI power/grid and semicap names with net_raises and inflection_flag true (GEV, NVT, TSM, ASML, MU, AME, WST). I am wrong if a CRL cluster or a single hyperscaler capex pause hits the power/semis sleeve at once, or if the PDUFA approvals are already priced in and sell the news.\",\"objective\":\"Maximise 126-session return vs SPY net of costs by owning one-sided analyst-flow names with dated Q4-2026 catalysts and refusing attention-only tickers.\",\"what_i_did_not_buy\":[\"IONQ|headline spike only, no revision_flow_90d data at all\",\"QUBT|gross_margin -21% and $10-$32 target dispersion, attention-only\",\"RGTI|no revision_flow signal, pure quantum sentiment beta\",\"QBTS|rev_yoy -0.6% and no analyst revision flow\",\"RKLB|mention surge with no dated catalyst found\",\"NBIS|+160% mention surge, no dated catalyst, beta 5.0\",\"FLUT|net_raises -15, sixteen lowers, four guidance cuts\",\"ALB|net_raises -12 with twelve lowers, lithium price cut\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00185032,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 249,
+ "tokens_out": 1224,
+ "cached_tokens": 69504,
+ "parse": "ok",
+ "parsed": {
+  "name": "retail_attention_contrarian_pharma_power",
+  "strategy": "I fade the retail-attention crowd: I avoid the names whose only evidence is a headline-count spike (IONQ, RGTX, QBTS, QUBT, RKLB, NBIS, BB, SNDT-style meme pops, BYND/DNUT/GPRO) and buy where the analyst flow is one-sided and dated catalysts sit inside the 126-session window. The book is Q4-2026 FDA decisions (VRTX, MRK, GILD, COGT, AGIO, BBIO) plus AI power/grid and semicap names with net_raises and inflection_flag true (GEV, NVT, TSM, ASML, MU, AME, WST). I am wrong if a CRL cluster or a single hyperscaler capex pause hits the power/semis sleeve at once, or if the PDUFA approvals are already priced in and sell the news.",
+  "objective": "Maximise 126-session return vs SPY net of costs by owning one-sided analyst-flow names with dated Q4-2026 catalysts and refusing attention-only tickers.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 9 firms with median target +3.3% into Nov 30 povetacicept PDUFA (revision_flow_90d)",
+    "falsifier": "CRL on the povetacicept BLA on or before Nov 30 2026"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 22 with zero lowers across 17 firms into Oct 10 I-DXd PDUFA (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on manufacturing grounds on Oct 10 2026"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "rev_yoy +10.2% with drawdown_63 only -0.2% and Dec 23 anito-cel PDUFA (briefing)",
+    "falsifier": "anito-cel CRL or a guidance cut at the Q3 print in late Oct 2026"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "two PDUFAs Nov 30 and Dec 30 with net_raises 2 of 4 firms and no lowers (revision_flow_90d)",
+    "falsifier": "either bezuclastinib NDA rejected, first on Nov 30 2026"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 5 of 6 firms, median target +9.7%, into Nov 1 mitapivat sickle cell PDUFA (revision_flow_90d)",
+    "falsifier": "mitapivat sNDA CRL on Nov 1 2026"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 11 firms with rev_yoy +120% into Nov 27 BBP-418 PDUFA (revision_flow_90d)",
+    "falsifier": "BBP-418 CRL on Nov 27 2026"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true with net_raises 8 of 9 firms and rev_yoy +21.9% (briefing)",
+    "falsifier": "backlog cancellation or book-to-bill below 1.0 disclosed at the next report"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true, rev_yoy +52.8%, net_raises 6 of 5 firms with no lowers (briefing)",
+    "falsifier": "the fall-2026 modular liquid-cooling launch slips past Dec 2026"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 7 firms, median target +10.2%, into Oct 15 Q3 earnings (revision_flow_90d)",
+    "falsifier": "capex guide cut on the Oct 15 2026 earnings call"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 5 of 5 firms, median target +13.6%, into Oct 14 Q3 earnings (revision_flow_90d)",
+    "falsifier": "2027 order book guided down on Oct 14 2026"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "inflection_flag true with rev_yoy +346% and gross_margin_chg +10.2pp (briefing)",
+    "falsifier": "HBM pricing or allocation cut disclosed before the Dec 2026 print"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.06,
+    "theme": "robotics",
+    "thesis": "net_raises 12 of 10 firms with zero lowers and rev_yoy +15.0% (revision_flow_90d)",
+    "falsifier": "the $5B deal closes with FY27 margin guidance cut"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 7 of 6 firms, median target +9.6%, on GLP-1 device demand (revision_flow_90d)",
+    "falsifier": "management flags GLP-1 device orders normalizing at the late-Oct print"
+   },
+   {
+    "ticker": "CASH",
+    "weight": 0.06,
+    "theme": "cash",
+    "thesis": "undeployed reserve for the Oct-Nov PDUFA and earnings cluster (asof 2026-09-25)",
+    "falsifier": "n/a"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "IONQ|headline spike only, no revision_flow_90d data at all",
+   "QUBT|gross_margin -21% and $10-$32 target dispersion, attention-only",
+   "RGTI|no revision_flow signal, pure quantum sentiment beta",
+   "QBTS|rev_yoy -0.6% and no analyst revision flow",
+   "RKLB|mention surge with no dated catalyst found",
+   "NBIS|+160% mention surge, no dated catalyst, beta 5.0",
+   "FLUT|net_raises -15, sixteen lowers, four guidance cuts",
+   "ALB|net_raises -12 with twelve lowers, lithium price cut"
+  ]
+ },
+ "prompt_hash": "3a3387250883587b",
+ "strategy": {
+  "id": "retail_attention_contrarian",
+  "brief": "Retail-attention contrarian: where headline counts spiked but analyst flow disagrees, side with the flow; avoid names that are only attention. Say which crowd you are fading. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

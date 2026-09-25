@@ -1,0 +1,213 @@
+{
+ "text": "{\"name\": \"revision_flow_leaders_global\", \"cash_weight\": 0.02, \"positions\": [\"OKTA|0.09|software|net_raises 63 across 32 firms (revision_flow_90d)|Q3 billings guide cut at next print\", \"SNOW|0.09|software|net_raises 47 across 33 firms (revision_flow_90d)|product revenue guide trimmed on Oct call\", \"CRWD|0.08|software|net_raises 44 across 35 firms (revision_flow_90d)|net retention slips below 110%\", \"PANW|0.08|software|net_raises 34 across 30 firms (revision_flow_90d)|platformization ARR decelerates\", \"CRM|0.07|software|net_raises 33 across 29 firms (revision_flow_90d)|Agentforce bookings miss\", \"GTLB|0.06|software|net_raises 29 across 21 firms (revision_flow_90d)|net expansion below 120%\", \"ESTC|0.06|software|net_raises 28 across 21 firms (revision_flow_90d)|subscription revenue decelerates\", \"NET|0.06|software|net_raises 27 across 19 firms (revision_flow_90d)|enterprise net-new slows\", \"DDOG|0.05|software|net_raises 22 across 23 firms (revision_flow_90d)|AI-native revenue mix stalls\", \"MDB|0.05|software|net_raises 21 across 24 firms (revision_flow_90d)|Atlas consumption growth slows\", \"ZS|0.05|software|net_raises 21 across 23 firms (revision_flow_90d)|federal deal slippage\", \"WDAY|0.04|software|net_raises 20 across 24 firms (revision_flow_90d)|subscription backlog growth stalls\", \"S|0.04|software|net_raises 23 across 20 firms (revision_flow_90d)|ARR guide cut at Q3 print\", \"DT|0.04|software|net_raises 23 across 18 firms (revision_flow_90d)|net expansion slips below 115%\", \"FTNT|0.04|software|net_raises 23 across 17 firms (revision_flow_90d)|product revenue growth fades\", \"AMD|0.06|semis|net_raises 22 across 27 firms (revision_flow_90d)|MI-series order cut by a hyperscaler\", \"NVDA|0.06|semis|net_raises 16 across 21 firms (revision_flow_90d)|data-center guide trimmed\", \"TSM|0.05|semis|net_raises 6 across 7 firms (revision_flow_90d)|capex guide cut on Oct 15 earnings\", \"ASML|0.05|semis|net_raises 5 across 4 firms (revision_flow_90d)|2027 order book disappoints Oct 14\", \"TER|0.05|semis|net_raises 6 across 7 firms (revision_flow_90d)|robotics segment growth stalls Oct 27\", \"MRK|0.05|biotech|net_raises 22 across 17 firms (revision_flow_90d)|I-DXd CRL on Oct 10 PDUFA\", \"ABBV|0.05|biotech|net_raises 20 across 21 firms (revision_flow_90d)|Skyrizi/Rinvoq guidance trimmed\", \"AMGN|0.05|biotech|net_raises 26 across 22 firms (revision_flow_90d)|MariTide timeline slips\", \"ARGX|0.05|biotech|net_raises 17 across 14 firms (revision_flow_90d)|EMPASSION Phase 3 topline misses\", \"LLY|0.04|biotech|net_raises 13 across 13 firms (revision_flow_90d)|retatrutide filing slips past Q1 2027\", \"VRTX|0.04|biotech|net_raises 9 across 8 firms (revision_flow_90d)|povetacicept CRL on Nov 30 PDUFA\"], \"strategy\": \"Bet on analyst revision flow, not target levels: every name here has net positive 90-day target raises across at least 3 distinct firms, with the software complex (OKTA 63/32, SNOW 47/33, CRWD 44/35) and large pharma (AMGN 26/22, MRK 22/17, ABBV 20/21) carrying the densest, broadest upgrade breadth. I deliberately excluded high-raise names with negative price momentum or pending binary events I cannot underwrite (MU, INTC, GEV, VRT, ALB). I would be wrong if the Oct-Nov earnings cluster shows the raises were lagging rather than leading indicators, or if a single AI-capex digestion headline hits the correlated software/semis sleeve at once.\", \"objective\": \"Maximize relative P&L vs Bloomberg WLS, 2026-10-12 to 2026-11-13, by holding the strongest 90-day analyst revision-flow names.\", \"what_i_did_not_buy\": [\"MU|net_raises 0, 3 lowers, memory cycle risk\", \"INTC|net_raises 11 but 6 lowers, policy-driven not flow\", \"GEV|no dated in-window catalyst, news is negative\", \"VRT|net_raises -4, 4 lowers, flow negative\", \"ALB|net_raises -12, 12 lowers, flow deeply negative\", \"FLUT|net_raises -15, 16 lowers, flow negative\", \"CEG|net_raises -6, 7 lowers, flow negative\", \"SMMT|net_raises 1, 3 lowers, consensus Hold\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00206047,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 362,
+ "tokens_out": 1373,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "revision_flow_leaders_global",
+  "strategy": "Bet on analyst revision flow, not target levels: every name here has net positive 90-day target raises across at least 3 distinct firms, with the software complex (OKTA 63/32, SNOW 47/33, CRWD 44/35) and large pharma (AMGN 26/22, MRK 22/17, ABBV 20/21) carrying the densest, broadest upgrade breadth. I deliberately excluded high-raise names with negative price momentum or pending binary events I cannot underwrite (MU, INTC, GEV, VRT, ALB). I would be wrong if the Oct-Nov earnings cluster shows the raises were lagging rather than leading indicators, or if a single AI-capex digestion headline hits the correlated software/semis sleeve at once.",
+  "objective": "Maximize relative P&L vs Bloomberg WLS, 2026-10-12 to 2026-11-13, by holding the strongest 90-day analyst revision-flow names.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "OKTA",
+    "weight": 0.09,
+    "theme": "software",
+    "thesis": "net_raises 63 across 32 firms (revision_flow_90d)",
+    "falsifier": "Q3 billings guide cut at next print"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.09,
+    "theme": "software",
+    "thesis": "net_raises 47 across 33 firms (revision_flow_90d)",
+    "falsifier": "product revenue guide trimmed on Oct call"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 44 across 35 firms (revision_flow_90d)",
+    "falsifier": "net retention slips below 110%"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 34 across 30 firms (revision_flow_90d)",
+    "falsifier": "platformization ARR decelerates"
+   },
+   {
+    "ticker": "CRM",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 33 across 29 firms (revision_flow_90d)",
+    "falsifier": "Agentforce bookings miss"
+   },
+   {
+    "ticker": "GTLB",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 29 across 21 firms (revision_flow_90d)",
+    "falsifier": "net expansion below 120%"
+   },
+   {
+    "ticker": "ESTC",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 28 across 21 firms (revision_flow_90d)",
+    "falsifier": "subscription revenue decelerates"
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 27 across 19 firms (revision_flow_90d)",
+    "falsifier": "enterprise net-new slows"
+   },
+   {
+    "ticker": "DDOG",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 22 across 23 firms (revision_flow_90d)",
+    "falsifier": "AI-native revenue mix stalls"
+   },
+   {
+    "ticker": "MDB",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 21 across 24 firms (revision_flow_90d)",
+    "falsifier": "Atlas consumption growth slows"
+   },
+   {
+    "ticker": "ZS",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 21 across 23 firms (revision_flow_90d)",
+    "falsifier": "federal deal slippage"
+   },
+   {
+    "ticker": "WDAY",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 20 across 24 firms (revision_flow_90d)",
+    "falsifier": "subscription backlog growth stalls"
+   },
+   {
+    "ticker": "S",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 20 firms (revision_flow_90d)",
+    "falsifier": "ARR guide cut at Q3 print"
+   },
+   {
+    "ticker": "DT",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 18 firms (revision_flow_90d)",
+    "falsifier": "net expansion slips below 115%"
+   },
+   {
+    "ticker": "FTNT",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 17 firms (revision_flow_90d)",
+    "falsifier": "product revenue growth fades"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "net_raises 22 across 27 firms (revision_flow_90d)",
+    "falsifier": "MI-series order cut by a hyperscaler"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "net_raises 16 across 21 firms (revision_flow_90d)",
+    "falsifier": "data-center guide trimmed"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "net_raises 6 across 7 firms (revision_flow_90d)",
+    "falsifier": "capex guide cut on Oct 15 earnings"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "net_raises 5 across 4 firms (revision_flow_90d)",
+    "falsifier": "2027 order book disappoints Oct 14"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "net_raises 6 across 7 firms (revision_flow_90d)",
+    "falsifier": "robotics segment growth stalls Oct 27"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 22 across 17 firms (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on Oct 10 PDUFA"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 20 across 21 firms (revision_flow_90d)",
+    "falsifier": "Skyrizi/Rinvoq guidance trimmed"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 26 across 22 firms (revision_flow_90d)",
+    "falsifier": "MariTide timeline slips"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 17 across 14 firms (revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 topline misses"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "net_raises 13 across 13 firms (revision_flow_90d)",
+    "falsifier": "retatrutide filing slips past Q1 2027"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "net_raises 9 across 8 firms (revision_flow_90d)",
+    "falsifier": "povetacicept CRL on Nov 30 PDUFA"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "MU|net_raises 0, 3 lowers, memory cycle risk",
+   "INTC|net_raises 11 but 6 lowers, policy-driven not flow",
+   "GEV|no dated in-window catalyst, news is negative",
+   "VRT|net_raises -4, 4 lowers, flow negative",
+   "ALB|net_raises -12, 12 lowers, flow deeply negative",
+   "FLUT|net_raises -15, 16 lowers, flow negative",
+   "CEG|net_raises -6, 7 lowers, flow negative",
+   "SMMT|net_raises 1, 3 lowers, consensus Hold"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.470, not 1.0"
+}

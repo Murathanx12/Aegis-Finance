@@ -1,0 +1,143 @@
+{
+ "text": "{\"name\":\"catalyst_calendar_oct_nov_2026\",\"cash_weight\":0.01,\"positions\":[\"ASML|0.09|semis|Q3'26 earnings Oct 14 (catalysts) with 5 net raises and +13.6% median target change (revision_flow_90d)|Q3 bookings miss or 2027 litho guide cut on Oct 14\",\"TSM|0.09|semis|Q3'26 earnings Oct 15 (catalysts) after 6 net raises from 7 firms (revision_flow_90d)|capex guide cut or gross margin below 65% on Oct 15\",\"ARGX|0.08|biotech|Q3'26 results Oct 22 (catalysts) with 17 net raises across 14 firms (revision_flow_90d)|EMPASSION MMN topline slips or Vyvgart guidance trimmed on Oct 22\",\"EVO.ST|0.08|gambling|Evolution AB Q3'26 report Oct 23 (catalysts), ex-Asia live-casino growth|Asia revenue declines again or a new regulatory settlement on Oct 23\",\"SAAB-B.ST|0.08|defense|Saab Q3'26 report Oct 23 (catalysts), European rearmament order intake|order intake decelerates or Gripen export slips on Oct 23\",\"TER|0.08|semis|Q3'26 earnings Oct 27 after close (catalysts) with 6 net raises and +13.6% median change (revision_flow_90d)|robotics segment growth stalls or test orders soften on Oct 27\",\"KOG.OL|0.07|defense|Kongsberg Gruppen Q3'26 report Oct 29 (catalysts), missile/defense demand|order backlog or margin guidance disappoints on Oct 29\",\"2317.TW|0.07|semis|Hon Hai Tech Day Oct 30-31 (catalysts) after Aug revenue +52% YoY record|AI server guidance or Vera Rubin ramp commentary disappoints on Oct 30\",\"CCJ|0.07|nuclear|Cameco Q3'26 earnings Nov 3-4 (catalysts), uranium term-price leverage|production or delivery guidance cut on Nov 3\",\"NVO|0.06|biotech|Novo Nordisk Q3'26 results Nov 4 (catalysts) after CagriSema REIMAGINE 5 win Sept 21|CagriSema share-loss commentary or guidance cut on Nov 4\",\"RHM.DE|0.07|defense|Rheinmetall Q3'26 results Nov 5 (catalysts), German defense budget +30% YoY|order timing or margin guidance disappoints on Nov 5\",\"HAG.DE|0.06|defense|Hensoldt 9-month 2026 results Nov 5 (catalysts), book-to-bill 2.4x H1|negative free cash flow worsens or backlog stalls on Nov 5\",\"ALL.AX|0.06|gambling|Aristocrat Leisure FY26 annual results Nov 12 (catalysts), Anaxi/digital growth|FY26 digital guidance or pokies regulation hits on Nov 12\",\"MRK|0.05|biotech|PDUFA Oct 10 for ifinatamab deruxtecan in SCLC (catalysts) with 22 net raises from 17 firms (revision_flow_90d)|CRL on Daiichi manufacturing on Oct 10\",\"AGIO|0.04|biotech|PDUFA Nov 1 for mitapivat sNDA in sickle cell (catalysts) with 5 net raises from 6 firms (revision_flow_90d)|CRL or a narrow label excluding broad genotypes on Nov 1\",\"SMMT|0.04|biotech|PDUFA Nov 14 for ivonescimab BLA in EGFR-mutated NSCLC (catalysts)|CRL or an FDA request for more OS data on Nov 14\"],\"strategy\":\"I only hold names with a dated event inside Oct 12-Nov 13, 2026, spread across semis (ASML Oct 14, TSM Oct 15, TER Oct 27, Hon Hai Oct 30), biotech PDUFAs (MRK Oct 10, AGIO Nov 1, SMMT Nov 14), defense (Saab/Kongsberg Oct 23-29, Rheinmetall/Hensoldt Nov 5), gambling (Evolution Oct 23, Aristocrat Nov 12), nuclear (Cameco Nov 3) and pharma (Novo Nov 4). No single day carries more than two names. I would be wrong if a macro shock or a broad AI-capex digestion headline hits the semis cluster at once, or if several PDUFAs return CRLs, since rejection moves are 2-4x larger than approval pops.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 by holding only dated-catalyst names.\",\"what_i_did_not_buy\":[\"2330.TW|no dated catalyst in evidence, duplicate of TSM\",\"000660.KS|no dated catalyst in evidence\",\"005930.KS|no dated catalyst in evidence\",\"8035.T\",\"6857.T\",\"6146.T\",\"6920.T\",\"ASML.AS\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.0018363,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 366,
+ "tokens_out": 1198,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "catalyst_calendar_oct_nov_2026",
+  "strategy": "I only hold names with a dated event inside Oct 12-Nov 13, 2026, spread across semis (ASML Oct 14, TSM Oct 15, TER Oct 27, Hon Hai Oct 30), biotech PDUFAs (MRK Oct 10, AGIO Nov 1, SMMT Nov 14), defense (Saab/Kongsberg Oct 23-29, Rheinmetall/Hensoldt Nov 5), gambling (Evolution Oct 23, Aristocrat Nov 12), nuclear (Cameco Nov 3) and pharma (Novo Nov 4). No single day carries more than two names. I would be wrong if a macro shock or a broad AI-capex digestion headline hits the semis cluster at once, or if several PDUFAs return CRLs, since rejection moves are 2-4x larger than approval pops.",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 by holding only dated-catalyst names.",
+  "cash_weight": 0.01,
+  "positions": [
+   {
+    "ticker": "ASML",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 (catalysts) with 5 net raises and +13.6% median target change (revision_flow_90d)",
+    "falsifier": "Q3 bookings miss or 2027 litho guide cut on Oct 14"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 (catalysts) after 6 net raises from 7 firms (revision_flow_90d)",
+    "falsifier": "capex guide cut or gross margin below 65% on Oct 15"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "Q3'26 results Oct 22 (catalysts) with 17 net raises across 14 firms (revision_flow_90d)",
+    "falsifier": "EMPASSION MMN topline slips or Vyvgart guidance trimmed on Oct 22"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.08,
+    "theme": "gambling",
+    "thesis": "Evolution AB Q3'26 report Oct 23 (catalysts), ex-Asia live-casino growth",
+    "falsifier": "Asia revenue declines again or a new regulatory settlement on Oct 23"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Saab Q3'26 report Oct 23 (catalysts), European rearmament order intake",
+    "falsifier": "order intake decelerates or Gripen export slips on Oct 23"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 27 after close (catalysts) with 6 net raises and +13.6% median change (revision_flow_90d)",
+    "falsifier": "robotics segment growth stalls or test orders soften on Oct 27"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "Kongsberg Gruppen Q3'26 report Oct 29 (catalysts), missile/defense demand",
+    "falsifier": "order backlog or margin guidance disappoints on Oct 29"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 (catalysts) after Aug revenue +52% YoY record",
+    "falsifier": "AI server guidance or Vera Rubin ramp commentary disappoints on Oct 30"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.07,
+    "theme": "nuclear",
+    "thesis": "Cameco Q3'26 earnings Nov 3-4 (catalysts), uranium term-price leverage",
+    "falsifier": "production or delivery guidance cut on Nov 3"
+   },
+   {
+    "ticker": "NVO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Novo Nordisk Q3'26 results Nov 4 (catalysts) after CagriSema REIMAGINE 5 win Sept 21",
+    "falsifier": "CagriSema share-loss commentary or guidance cut on Nov 4"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "Rheinmetall Q3'26 results Nov 5 (catalysts), German defense budget +30% YoY",
+    "falsifier": "order timing or margin guidance disappoints on Nov 5"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.06,
+    "theme": "defense",
+    "thesis": "Hensoldt 9-month 2026 results Nov 5 (catalysts), book-to-bill 2.4x H1",
+    "falsifier": "negative free cash flow worsens or backlog stalls on Nov 5"
+   },
+   {
+    "ticker": "ALL.AX",
+    "weight": 0.06,
+    "theme": "gambling",
+    "thesis": "Aristocrat Leisure FY26 annual results Nov 12 (catalysts), Anaxi/digital growth",
+    "falsifier": "FY26 digital guidance or pokies regulation hits on Nov 12"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "PDUFA Oct 10 for ifinatamab deruxtecan in SCLC (catalysts) with 22 net raises from 17 firms (revision_flow_90d)",
+    "falsifier": "CRL on Daiichi manufacturing on Oct 10"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 1 for mitapivat sNDA in sickle cell (catalysts) with 5 net raises from 6 firms (revision_flow_90d)",
+    "falsifier": "CRL or a narrow label excluding broad genotypes on Nov 1"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 14 for ivonescimab BLA in EGFR-mutated NSCLC (catalysts)",
+    "falsifier": "CRL or an FDA request for more OS data on Nov 14"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "2330.TW|no dated catalyst in evidence, duplicate of TSM",
+   "000660.KS|no dated catalyst in evidence",
+   "005930.KS|no dated catalyst in evidence",
+   "8035.T",
+   "6857.T",
+   "6146.T",
+   "6920.T",
+   "ASML.AS"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.100, not 1.0"
+}

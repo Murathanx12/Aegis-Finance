@@ -1,0 +1,150 @@
+{
+ "text": "{\"name\":\"ai_power_global\",\"cash_weight\":0.06,\"positions\":[\"GEV|0.10|power_grid|Q2 orders +88% to $24.2B and $176B backlog with inflection_flag true (briefing)|Backlog book-to-bill below 1.0 or an AI data-center order pause disclosed at Q3 earnings\",\"NVT|0.09|power_grid|Q1 sales +53% YoY with FY26 guide raised to 37-39% and inflection_flag true (briefing)|Fall-2026 modular liquid-cooling launch slips or data-center sales guide is cut\",\"VRT|0.08|power_grid|$2.6B Utility Innovations deal Sept 3 plus $15B backlog (news_14d)|Q3 backlog growth stalls or liquid-cooling revenue per MW shipped goes flat\",\"MU|0.08|semis|rev_qoq +73.8% and gross_margin_chg +10.2pp with inflection_flag true (briefing)|HBM4 allocation share falls or a 2027 capex digestion cuts HBM pricing\",\"TSM|0.08|semis|Q3'26 earnings Oct 15 and capex guide raised to $60-64B (catalysts)|Capex guidance cut or gross margin misses the 65-67% guide on Oct 15\",\"ASML|0.07|semis|Q3'26 earnings Oct 14 confirmed with net_raises +5 (catalysts, revision_flow_90d)|Order intake misses and 2027 capacity-tightness language is withdrawn on Oct 14\",\"MRK|0.07|biotech|net_raises +22 with zero lowers across 17 firms (revision_flow_90d)|I-DXd CRL on manufacturing at the Oct 10 PDUFA or 2027 guidance cut\",\"ABBV|0.07|biotech|net_raises +20 with zero lowers across 21 firms (revision_flow_90d)|Skyrizi/Rinvoq growth decelerates below guidance or MFN pricing bites deeper than modeled\",\"AMGN|0.06|biotech|net_raises +26 across 22 firms with inflection_flag true (briefing)|MariTide MARITIME readout slips past Jan 21 2027 or Sjogren's launch disappoints\",\"ARGX|0.06|biotech|Q3'26 results Oct 22 confirmed with net_raises +17 (catalysts, revision_flow_90d)|EMPASSION Phase 3 MMN topline misses in Q4 2026\",\"CCJ|0.05|nuclear|Q3'26 earnings Nov 3-4 with uranium term price at record $96/lb (catalysts)|Production stays below delivery commitments or term price rolls over\",\"CORT|0.05|biotech|net_raises +4 with zero lowers and rev_qoq +55.3% (revision_flow_90d, briefing)|Relacorilant NDA resubmission draws a second CRL on Dec 17\",\"COGT|0.04|biotech|Two primary-sourced PDUFAs Nov 30 and Dec 30 off positive Phase 3 (catalysts)|Either bezuclastinib NDA draws a CRL or the GIST filing slips past Nov 30\",\"SMMT|0.03|biotech|PDUFA Nov 14 with ivonescimab HARMONi BLA filed (catalysts)|FDA requests more OS data or the Nov 14 decision is a CRL\",\"PRAX|0.03|biotech|PDUFA Dec 27 with net_raises +5 and zero lowers (catalysts, revision_flow_90d)|Relutrigine NDA draws a CRL on the extended Dec 27 date\",\"AGIO|0.02|biotech|PDUFA Nov 1 with net_raises +5 and rev_yoy +259% (catalysts, briefing)|Mitapivat sickle-cell sNDA is rejected or approved only for a narrow genotype\",\"BBIO|0.02|biotech|PDUFA Nov 27 with net_raises +9 across 11 firms (catalysts, revision_flow_90d)|BBP-418 NDA draws a CRL on Nov 27\"],\"strategy\":\"Bet on the AI power bottleneck expressed through names with a dated observable inside the six-month window: GEV/NVT/VRT for grid, cooling and transformers, MU/TSM/ASML for the memory and tool layer AI capex actually buys, and large-cap pharma with one-sided revision flow (MRK, ABBV, AMGN, ARGX) as the non-AI ballast. Small binary PDUFA names are sized at 2-4% because CRLs average -13.7% on the day and -33% over five days. I would be wrong if hyperscaler capex pauses (killing the power and memory sleeve at once), if a single macro or FX shock hits the correlated AI complex, or if the Q4 PDUFA slate produces more CRLs than the base rate implies.\",\"objective\":\"Maximise 126-session return versus SPY, net of costs, via dated AI-power and catalyst observables.\",\"what_i_did_not_buy\":[\"ALB|net_raises -12 with 12 lowers and no raises\",\"OKLO|net_raises -4, zero revenue, analyst targets dispersed $55-$150\",\"SMR|net_raises -6 and rev_yoy -99%\",\"LEU|net_raises -4 and gross_margin_chg -12.7pp\",\"FLUT|net_raises -15 with 16 lowers\",\"SERV|net_raises -3 and 2026 revenue guidance cut\",\"QUBT|opex +114% YoY, $10-$32 target dispersion, no converged conviction\",\"BYND|retail pump-shaped, mom_252_21 -82.6%\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.0134896,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 69698,
+ "tokens_out": 1309,
+ "cached_tokens": 0,
+ "parse": "ok",
+ "parsed": {
+  "name": "ai_power_global",
+  "strategy": "Bet on the AI power bottleneck expressed through names with a dated observable inside the six-month window: GEV/NVT/VRT for grid, cooling and transformers, MU/TSM/ASML for the memory and tool layer AI capex actually buys, and large-cap pharma with one-sided revision flow (MRK, ABBV, AMGN, ARGX) as the non-AI ballast. Small binary PDUFA names are sized at 2-4% because CRLs average -13.7% on the day and -33% over five days. I would be wrong if hyperscaler capex pauses (killing the power and memory sleeve at once), if a single macro or FX shock hits the correlated AI complex, or if the Q4 PDUFA slate produces more CRLs than the base rate implies.",
+  "objective": "Maximise 126-session return versus SPY, net of costs, via dated AI-power and catalyst observables.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "GEV",
+    "weight": 0.1,
+    "theme": "power_grid",
+    "thesis": "Q2 orders +88% to $24.2B and $176B backlog with inflection_flag true (briefing)",
+    "falsifier": "Backlog book-to-bill below 1.0 or an AI data-center order pause disclosed at Q3 earnings"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "Q1 sales +53% YoY with FY26 guide raised to 37-39% and inflection_flag true (briefing)",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips or data-center sales guide is cut"
+   },
+   {
+    "ticker": "VRT",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "$2.6B Utility Innovations deal Sept 3 plus $15B backlog (news_14d)",
+    "falsifier": "Q3 backlog growth stalls or liquid-cooling revenue per MW shipped goes flat"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "rev_qoq +73.8% and gross_margin_chg +10.2pp with inflection_flag true (briefing)",
+    "falsifier": "HBM4 allocation share falls or a 2027 capex digestion cuts HBM pricing"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 and capex guide raised to $60-64B (catalysts)",
+    "falsifier": "Capex guidance cut or gross margin misses the 65-67% guide on Oct 15"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 confirmed with net_raises +5 (catalysts, revision_flow_90d)",
+    "falsifier": "Order intake misses and 2027 capacity-tightness language is withdrawn on Oct 14"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises +22 with zero lowers across 17 firms (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on manufacturing at the Oct 10 PDUFA or 2027 guidance cut"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises +20 with zero lowers across 21 firms (revision_flow_90d)",
+    "falsifier": "Skyrizi/Rinvoq growth decelerates below guidance or MFN pricing bites deeper than modeled"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises +26 across 22 firms with inflection_flag true (briefing)",
+    "falsifier": "MariTide MARITIME readout slips past Jan 21 2027 or Sjogren's launch disappoints"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Q3'26 results Oct 22 confirmed with net_raises +17 (catalysts, revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 MMN topline misses in Q4 2026"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.05,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 with uranium term price at record $96/lb (catalysts)",
+    "falsifier": "Production stays below delivery commitments or term price rolls over"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises +4 with zero lowers and rev_qoq +55.3% (revision_flow_90d, briefing)",
+    "falsifier": "Relacorilant NDA resubmission draws a second CRL on Dec 17"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "Two primary-sourced PDUFAs Nov 30 and Dec 30 off positive Phase 3 (catalysts)",
+    "falsifier": "Either bezuclastinib NDA draws a CRL or the GIST filing slips past Nov 30"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 14 with ivonescimab HARMONi BLA filed (catalysts)",
+    "falsifier": "FDA requests more OS data or the Nov 14 decision is a CRL"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "PDUFA Dec 27 with net_raises +5 and zero lowers (catalysts, revision_flow_90d)",
+    "falsifier": "Relutrigine NDA draws a CRL on the extended Dec 27 date"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 1 with net_raises +5 and rev_yoy +259% (catalysts, briefing)",
+    "falsifier": "Mitapivat sickle-cell sNDA is rejected or approved only for a narrow genotype"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 27 with net_raises +9 across 11 firms (catalysts, revision_flow_90d)",
+    "falsifier": "BBP-418 NDA draws a CRL on Nov 27"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12 with 12 lowers and no raises",
+   "OKLO|net_raises -4, zero revenue, analyst targets dispersed $55-$150",
+   "SMR|net_raises -6 and rev_yoy -99%",
+   "LEU|net_raises -4 and gross_margin_chg -12.7pp",
+   "FLUT|net_raises -15 with 16 lowers",
+   "SERV|net_raises -3 and 2026 revenue guidance cut",
+   "QUBT|opex +114% YoY, $10-$32 target dispersion, no converged conviction",
+   "BYND|retail pump-shaped, mom_252_21 -82.6%"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.060, not 1.0"
+}

@@ -1,0 +1,155 @@
+{
+ "text": "{\"name\":\"policy_geopolitics_global\",\"cash_weight\":0.02,\"positions\":[\"RHM.DE|0.09|defense|Bernstein reiterated Buy PT EUR1,900 (Sept 18-21) into Q3'26 results Nov 5 (catalysts)|Q3 order intake misses and PT dispersion widens below EUR1,300\",\"HAG.DE|0.08|defense|9-month 2026 results Nov 5 (catalysts) with book-to-bill 2.4x H1 per research|Negative free cash flow worsens at the Nov 5 print\",\"SAAB-B.ST|0.08|defense|Q3'26 report Oct 23 (catalysts) on Gripen export pipeline|Q3 order bookings fall short of rearmament run-rate on Oct 23\",\"KOG.OL|0.08|defense|Q3'26 report Oct 29 (catalysts) on missile/defense order visibility|Q3 margin or order intake disappoints on Oct 29\",\"012450.KS|0.07|defense|Q3'26 report early Nov (research) after Q3'25 sales +147% YoY comp|Q3 YoY growth turns negative versus the record 2025 comp\",\"INTC|0.08|policy|10% US government stake now worth ~$45B (Sept 13, 2026) plus 11 net raises in revision_flow_90d|Adverse ruling in the shareholder lawsuit against the CHIPS-tied equity taking\",\"MP|0.07|materials|~15% as-converted government stake plus 10-yr DoD magnet offtake at fixed floor (research)|Magnet offtake volumes undershoot the fixed-price floor commitment\",\"TMQ|0.06|materials|US government closed 10% stake for $35.6M on Sept 14, 2026 (research)|Ambler Road federal permitting stalls or is reversed\",\"CCJ|0.08|nuclear|Q3'26 earnings Nov 3-4 (catalysts) with BofA uranium $130/lb 2027 forecast|Production stays below delivery commitments and term contracting stalls\",\"LEU|0.06|nuclear|$900M DOE task order finalized July 2026, total $1.07B contract (research)|No non-DOE HALEU offtake signed from SMR developers by year-end\",\"GEV|0.09|power_grid|inflection_flag true with Q2 orders +88% to $24.2B and $176B backlog (research)|Backlog cancellation or book-to-bill below 1 on hyperscaler capex pause\",\"NVT|0.08|power_grid|inflection_flag true, Q1 sales +53% and FY guide raised to 37-39% (research)|Fall-2026 modular liquid-cooling launch slips past the window\",\"267260.KS|0.07|power_grid|Q3'26 report mid-Nov (research) on 765kV transformer export boom to US grid|US tariff action or Q3 order slowdown hits transformer exports\",\"ASML|0.07|semis|Q3'26 earnings Oct 14 (catalysts) with 5 net raises in revision_flow_90d|Q3 bookings miss and 2027 guidance is cut on Oct 14\",\"TSM|0.08|semis|Q3'26 earnings Oct 15 (catalysts) after FY26 capex guide raised to $60-64B|Capex guidance cut or gross margin misses 65-67% guide on Oct 15\",\"2330.TW|0.06|semis|Same Oct 15 Q3'26 earnings as TSM (catalysts), local-line exposure|Taiwan geopolitical shock or CoWoS capacity-easing signal\",\"2317.TW|0.06|semis|Hon Hai Tech Day Oct 30-31 (catalysts) with Aug revenue +52% YoY record|Tech Day reveals no new AI server rack ramp and Q3 misses Street\"],\"strategy\":\"Bet that the fastest-moving policy variables in the Oct 12-Nov 13 window are defense rearmament (German budget +30% YoY), US government equity stakes in critical minerals and chips (Intel/MP/Trilogy template), nuclear fuel security, and the AI power-grid bottleneck - expressed through names with confirmed earnings or events inside the window. I am wrong if a de-escalation headline (Ukraine ceasefire progress, US-China trade detente) compresses the geopolitical risk premium, if the Intel equity-stake lawsuit produces an adverse ruling hitting every government-stake name at once, or if a hyperscaler capex digestion quarter breaks the power-grid and semis legs simultaneously.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 through policy and geopolitical catalysts.\",\"what_i_did_not_buy\":[\"FLUT|16 target cuts in 90 days, four 2026 guidance cuts\",\"SMR|Six net lowers and revenue down 99% YoY\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150\",\"ALB|Twelve net target cuts, lithium price forecast cut 40%\",\"VRT|Four net target cuts, negative skew, no dated catalyst\",\"ORCL|Eight net lowers, data-center force-majeure headline Sept 24\",\"LAC|No catalyst, 71% below 52-week high, thin liquidity\",\"SERV|Guidance cut on Uber Eats volumes, three net lowers\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00181475,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 173,
+ "tokens_out": 1206,
+ "cached_tokens": 69632,
+ "parse": "ok",
+ "parsed": {
+  "name": "policy_geopolitics_global",
+  "strategy": "Bet that the fastest-moving policy variables in the Oct 12-Nov 13 window are defense rearmament (German budget +30% YoY), US government equity stakes in critical minerals and chips (Intel/MP/Trilogy template), nuclear fuel security, and the AI power-grid bottleneck - expressed through names with confirmed earnings or events inside the window. I am wrong if a de-escalation headline (Ukraine ceasefire progress, US-China trade detente) compresses the geopolitical risk premium, if the Intel equity-stake lawsuit produces an adverse ruling hitting every government-stake name at once, or if a hyperscaler capex digestion quarter breaks the power-grid and semis legs simultaneously. [factory: weights and cash rescaled from a stated total of 1.2800 to 1.0 -- the model's arithmetic, not its intent]",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 through policy and geopolitical catalysts.",
+  "cash_weight": 0.015625,
+  "positions": [
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.070312,
+    "theme": "defense",
+    "thesis": "Bernstein reiterated Buy PT EUR1,900 (Sept 18-21) into Q3'26 results Nov 5 (catalysts)",
+    "falsifier": "Q3 order intake misses and PT dispersion widens below EUR1,300"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.0625,
+    "theme": "defense",
+    "thesis": "9-month 2026 results Nov 5 (catalysts) with book-to-bill 2.4x H1 per research",
+    "falsifier": "Negative free cash flow worsens at the Nov 5 print"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.0625,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 23 (catalysts) on Gripen export pipeline",
+    "falsifier": "Q3 order bookings fall short of rearmament run-rate on Oct 23"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.0625,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 29 (catalysts) on missile/defense order visibility",
+    "falsifier": "Q3 margin or order intake disappoints on Oct 29"
+   },
+   {
+    "ticker": "012450.KS",
+    "weight": 0.054688,
+    "theme": "defense",
+    "thesis": "Q3'26 report early Nov (research) after Q3'25 sales +147% YoY comp",
+    "falsifier": "Q3 YoY growth turns negative versus the record 2025 comp"
+   },
+   {
+    "ticker": "INTC",
+    "weight": 0.0625,
+    "theme": "policy",
+    "thesis": "10% US government stake now worth ~$45B (Sept 13, 2026) plus 11 net raises in revision_flow_90d",
+    "falsifier": "Adverse ruling in the shareholder lawsuit against the CHIPS-tied equity taking"
+   },
+   {
+    "ticker": "MP",
+    "weight": 0.054688,
+    "theme": "materials",
+    "thesis": "~15% as-converted government stake plus 10-yr DoD magnet offtake at fixed floor (research)",
+    "falsifier": "Magnet offtake volumes undershoot the fixed-price floor commitment"
+   },
+   {
+    "ticker": "TMQ",
+    "weight": 0.046875,
+    "theme": "materials",
+    "thesis": "US government closed 10% stake for $35.6M on Sept 14, 2026 (research)",
+    "falsifier": "Ambler Road federal permitting stalls or is reversed"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.0625,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 (catalysts) with BofA uranium $130/lb 2027 forecast",
+    "falsifier": "Production stays below delivery commitments and term contracting stalls"
+   },
+   {
+    "ticker": "LEU",
+    "weight": 0.046875,
+    "theme": "nuclear",
+    "thesis": "$900M DOE task order finalized July 2026, total $1.07B contract (research)",
+    "falsifier": "No non-DOE HALEU offtake signed from SMR developers by year-end"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.070312,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true with Q2 orders +88% to $24.2B and $176B backlog (research)",
+    "falsifier": "Backlog cancellation or book-to-bill below 1 on hyperscaler capex pause"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.0625,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true, Q1 sales +53% and FY guide raised to 37-39% (research)",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past the window"
+   },
+   {
+    "ticker": "267260.KS",
+    "weight": 0.054688,
+    "theme": "power_grid",
+    "thesis": "Q3'26 report mid-Nov (research) on 765kV transformer export boom to US grid",
+    "falsifier": "US tariff action or Q3 order slowdown hits transformer exports"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.054688,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 (catalysts) with 5 net raises in revision_flow_90d",
+    "falsifier": "Q3 bookings miss and 2027 guidance is cut on Oct 14"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.0625,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 (catalysts) after FY26 capex guide raised to $60-64B",
+    "falsifier": "Capex guidance cut or gross margin misses 65-67% guide on Oct 15"
+   },
+   {
+    "ticker": "2330.TW",
+    "weight": 0.046875,
+    "theme": "semis",
+    "thesis": "Same Oct 15 Q3'26 earnings as TSM (catalysts), local-line exposure",
+    "falsifier": "Taiwan geopolitical shock or CoWoS capacity-easing signal"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.046875,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 (catalysts) with Aug revenue +52% YoY record",
+    "falsifier": "Tech Day reveals no new AI server rack ramp and Q3 misses Street"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "FLUT|16 target cuts in 90 days, four 2026 guidance cuts",
+   "SMR|Six net lowers and revenue down 99% YoY",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150",
+   "ALB|Twelve net target cuts, lithium price forecast cut 40%",
+   "VRT|Four net target cuts, negative skew, no dated catalyst",
+   "ORCL|Eight net lowers, data-center force-majeure headline Sept 24",
+   "LAC|No catalyst, 71% below 52-week high, thin liquidity",
+   "SERV|Guidance cut on Uber Eats volumes, three net lowers"
+  ],
+  "weights_rescaled_from": 1.28
+ },
+ "prompt_hash": "0e3016233a2e9dbc",
+ "strategy": {
+  "id": "policy_geopolitics",
+  "brief": "Policy and geopolitics: tariffs, CHIPS/industrial policy, defence rearmament, critical minerals, government equity stakes. Name the policy event each position depends on. Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

@@ -1,0 +1,176 @@
+{
+ "text": "{\"name\":\"ai_power_global\",\"cash_weight\":0.02,\"positions\":[\"GEV|0.09|power_grid|Q2 orders +88% to $24.2B and $176B backlog (research_themes)|Q3 order growth decelerates below 20% when reported\",\"VRT|0.08|power_grid|$2.6B Utility Innovations deal Sep 3 extends grid-to-chip (research_themes)|Q3 backlog growth stalls or deal integration slips in late Oct\",\"NVT|0.08|power_grid|Q1 sales +53% YoY and FY26 guide raised to 37-39% (research_themes)|Fall-2026 modular liquid-cooling launch slips past Nov 13\",\"ASML|0.08|semis|Q3'26 earnings confirmed Oct 14, 2026 (catalysts)|Order intake or 2027 guidance cut on Oct 14\",\"TSM|0.08|semis|Q3'26 earnings confirmed Oct 15 before open (catalysts)|Capex guide cut or gross margin below 65% on Oct 15\",\"MU|0.08|semis|HBM4 shortage with ~20% of NVIDIA allocation (research_themes)|HBM pricing or allocation commentary weakens at next print\",\"AMD|0.07|semis|22 net raises over 90 days, median target +13.4% (revision_flow_90d)|MI-series AI revenue guide disappoints at next earnings\",\"NVDA|0.07|semis|16 net raises from 21 firms, median target +5% (revision_flow_90d)|Hyperscaler capex pause headline before Nov 13\",\"DELL|0.06|semis|24 net raises, median target +11.4%, rev_yoy +57.8% (revision_flow_90d)|AI server order backlog commentary weakens at next print\",\"TER|0.06|semis|Q3'26 earnings confirmed Oct 27 after close (catalysts)|Robotics segment growth falls below 33% on Oct 27\",\"MRK|0.06|biotech|22 net raises from 17 firms, median target +12.4% (revision_flow_90d)|I-DXd CRL on manufacturing on Oct 10\",\"ARGX|0.05|biotech|17 net raises from 14 firms, median target +6.2% (revision_flow_90d)|EMPASSION Phase 3 MMN topline misses in Q4\",\"CCJ|0.05|nuclear|Q3'26 earnings Nov 3-4 confirmed by multiple sources (catalysts)|Uranium spot or contract pricing rolls over before Nov 3\",\"SAAB-B.ST|0.05|defense|Q3'26 report confirmed Oct 23, 2026 (catalysts)|Gripen order pipeline stalls or margin guide cut on Oct 23\",\"RHM.DE|0.05|defense|Q3'26 results confirmed Nov 5, 2026 (catalysts)|Order intake misses or 2026 guidance trimmed on Nov 5\",\"KOG.OL|0.05|defense|Q3'26 report confirmed Oct 29, 2026 (catalysts)|Missile/defense order intake disappoints on Oct 29\",\"EVO.ST|0.05|gambling|Q3'26 report confirmed Oct 23, 2026 (catalysts)|Asia revenue decline accelerates on Oct 23\",\"ALL.AX|0.05|gambling|FY26 annual results confirmed Nov 12, 2026 (catalysts)|Anaxi/digital growth misses FY26 consensus on Nov 12\",\"2317.TW|0.05|semis|Hon Hai Tech Day confirmed Oct 30-31, 2026 (catalysts)|AI server rack guidance disappoints at Tech Day\",\"2330.TW|0.05|semis|Q3'26 earnings Oct 15, also TSM ADR (catalysts)|Monthly sales or capex commentary weakens in October\"],\"strategy\":\"Bet that the AI-capex bottleneck is physical: power generation, grid gear, cooling, transformers, turbines and the memory/HBM that the build-out consumes, plus defense and gambling names with confirmed in-window prints. Every holding has a dated observable (earnings, Tech Day, PDUFA) between Oct 12 and Nov 13, so relative P&L is driven by real reports rather than theme momentum. I would be wrong if a hyperscaler capex-digestion headline, a China export-control shock, or a de-escalation in defense risk premia hits the whole book at once, or if ASML/TSM guide capex down on Oct 14-15.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a global AI-power and semis book.\",\"what_i_did_not_buy\":[\"ALB|12 net lowers, lithium spot falling, no dated catalyst\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150\",\"SMR|Six net lowers, revenue collapsed, consensus Hold\",\"LEU|Six lowers vs two raises, median target -12.9%\",\"FLUT|16 lowers vs 1 raise, down 69% from peak\",\"NVO|Morgan Stanley Sell, CagriSema missed non-inferiority vs tirzepatide\",\"SERV|Guidance cut, three lowers, median target -55.6%\",\"QUBT|Opex +114% YoY, $10-$32 target dispersion, no dated catalyst\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00185114,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 183,
+ "tokens_out": 1233,
+ "cached_tokens": 69632,
+ "parse": "ok",
+ "parsed": {
+  "name": "ai_power_global",
+  "strategy": "Bet that the AI-capex bottleneck is physical: power generation, grid gear, cooling, transformers, turbines and the memory/HBM that the build-out consumes, plus defense and gambling names with confirmed in-window prints. Every holding has a dated observable (earnings, Tech Day, PDUFA) between Oct 12 and Nov 13, so relative P&L is driven by real reports rather than theme momentum. I would be wrong if a hyperscaler capex-digestion headline, a China export-control shock, or a de-escalation in defense risk premia hits the whole book at once, or if ASML/TSM guide capex down on Oct 14-15. [factory: weights and cash rescaled from a stated total of 1.2800 to 1.0 -- the model's arithmetic, not its intent]",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a global AI-power and semis book.",
+  "cash_weight": 0.015625,
+  "positions": [
+   {
+    "ticker": "GEV",
+    "weight": 0.070312,
+    "theme": "power_grid",
+    "thesis": "Q2 orders +88% to $24.2B and $176B backlog (research_themes)",
+    "falsifier": "Q3 order growth decelerates below 20% when reported"
+   },
+   {
+    "ticker": "VRT",
+    "weight": 0.0625,
+    "theme": "power_grid",
+    "thesis": "$2.6B Utility Innovations deal Sep 3 extends grid-to-chip (research_themes)",
+    "falsifier": "Q3 backlog growth stalls or deal integration slips in late Oct"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.0625,
+    "theme": "power_grid",
+    "thesis": "Q1 sales +53% YoY and FY26 guide raised to 37-39% (research_themes)",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past Nov 13"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.0625,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 14, 2026 (catalysts)",
+    "falsifier": "Order intake or 2027 guidance cut on Oct 14"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.0625,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 15 before open (catalysts)",
+    "falsifier": "Capex guide cut or gross margin below 65% on Oct 15"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.0625,
+    "theme": "semis",
+    "thesis": "HBM4 shortage with ~20% of NVIDIA allocation (research_themes)",
+    "falsifier": "HBM pricing or allocation commentary weakens at next print"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.054688,
+    "theme": "semis",
+    "thesis": "22 net raises over 90 days, median target +13.4% (revision_flow_90d)",
+    "falsifier": "MI-series AI revenue guide disappoints at next earnings"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.054688,
+    "theme": "semis",
+    "thesis": "16 net raises from 21 firms, median target +5% (revision_flow_90d)",
+    "falsifier": "Hyperscaler capex pause headline before Nov 13"
+   },
+   {
+    "ticker": "DELL",
+    "weight": 0.046875,
+    "theme": "semis",
+    "thesis": "24 net raises, median target +11.4%, rev_yoy +57.8% (revision_flow_90d)",
+    "falsifier": "AI server order backlog commentary weakens at next print"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.046875,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 27 after close (catalysts)",
+    "falsifier": "Robotics segment growth falls below 33% on Oct 27"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.046875,
+    "theme": "biotech",
+    "thesis": "22 net raises from 17 firms, median target +12.4% (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on manufacturing on Oct 10"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.039062,
+    "theme": "biotech",
+    "thesis": "17 net raises from 14 firms, median target +6.2% (revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 MMN topline misses in Q4"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.039062,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 confirmed by multiple sources (catalysts)",
+    "falsifier": "Uranium spot or contract pricing rolls over before Nov 3"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.039062,
+    "theme": "defense",
+    "thesis": "Q3'26 report confirmed Oct 23, 2026 (catalysts)",
+    "falsifier": "Gripen order pipeline stalls or margin guide cut on Oct 23"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.039062,
+    "theme": "defense",
+    "thesis": "Q3'26 results confirmed Nov 5, 2026 (catalysts)",
+    "falsifier": "Order intake misses or 2026 guidance trimmed on Nov 5"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.039062,
+    "theme": "defense",
+    "thesis": "Q3'26 report confirmed Oct 29, 2026 (catalysts)",
+    "falsifier": "Missile/defense order intake disappoints on Oct 29"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.039062,
+    "theme": "gambling",
+    "thesis": "Q3'26 report confirmed Oct 23, 2026 (catalysts)",
+    "falsifier": "Asia revenue decline accelerates on Oct 23"
+   },
+   {
+    "ticker": "ALL.AX",
+    "weight": 0.039062,
+    "theme": "gambling",
+    "thesis": "FY26 annual results confirmed Nov 12, 2026 (catalysts)",
+    "falsifier": "Anaxi/digital growth misses FY26 consensus on Nov 12"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.039062,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day confirmed Oct 30-31, 2026 (catalysts)",
+    "falsifier": "AI server rack guidance disappoints at Tech Day"
+   },
+   {
+    "ticker": "2330.TW",
+    "weight": 0.039062,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15, also TSM ADR (catalysts)",
+    "falsifier": "Monthly sales or capex commentary weakens in October"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers, lithium spot falling, no dated catalyst",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150",
+   "SMR|Six net lowers, revenue collapsed, consensus Hold",
+   "LEU|Six lowers vs two raises, median target -12.9%",
+   "FLUT|16 lowers vs 1 raise, down 69% from peak",
+   "NVO|Morgan Stanley Sell, CagriSema missed non-inferiority vs tirzepatide",
+   "SERV|Guidance cut, three lowers, median target -55.6%",
+   "QUBT|Opex +114% YoY, $10-$32 target dispersion, no dated catalyst"
+  ],
+  "weights_rescaled_from": 1.28
+ },
+ "prompt_hash": "71ee820d12d866eb",
+ "strategy": {
+  "id": "ai_power_global",
+  "brief": "AI power bottleneck, worldwide: power generation, grid, cooling, transformers, turbines and the memory that AI capex buys. Prefer names with a dated observable (backlog, orders, earnings) in the window. Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

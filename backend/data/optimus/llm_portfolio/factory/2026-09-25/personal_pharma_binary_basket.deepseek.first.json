@@ -1,0 +1,199 @@
+{
+ "text": "{\"name\":\"pharma_binary_basket\",\"cash_weight\":0.10,\"positions\":[\"VRTX|0.05|biotech|povetacicept BLA PDUFA 2026-11-30 (catalysts) with 9 net raises from 8 firms (revision_flow_90d)|CRL on CMC grounds before 2026-11-30\",\"MRK|0.05|biotech|I-DXd SCLC PDUFA 2026-10-10 (catalysts) with 22 net raises from 17 firms (revision_flow_90d)|CRL on the Daiichi ADC facility on 2026-10-10\",\"LLY|0.05|biotech|inflection_flag true with rev_yoy 0.4767 and 13 net raises (briefing, revision_flow_90d)|retatrutide filing slips past Q1 2027\",\"ABBV|0.05|biotech|20 net raises from 21 firms, zero lowers (revision_flow_90d), drawdown_63 -0.0056 (briefing)|any net lowers appearing in the next 90-day revision window\",\"AMGN|0.04|biotech|inflection_flag true with 26 net raises from 22 firms (briefing, revision_flow_90d)|MARITIME-1/2 readout slips past 2027-03-25\",\"GILD|0.04|biotech|anito-cel BLA PDUFA 2026-12-23 (catalysts) with drawdown_63 -0.0022 (briefing)|facility inspection finding before 2026-12-23\",\"COGT|0.04|biotech|two NDAs PDUFA 2026-11-30 and 2026-12-30 (catalysts) with 2 net raises (revision_flow_90d)|either PDUFA slips or a CRL lands on the first NDA\",\"BBIO|0.03|biotech|BBP-418 PDUFA 2026-11-27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)|CRL on the LGMD2I/R9 filing on 2026-11-27\",\"AGIO|0.03|biotech|mitapivat sickle cell PDUFA 2026-11-01 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)|narrow label or CRL on 2026-11-01\",\"SMMT|0.03|biotech|ivonescimab BLA PDUFA 2026-11-14 (catalysts) with mom_21 0.3602 (briefing)|FDA asks for more OS data before 2026-11-14\",\"PRAX|0.03|biotech|relutrigine PDUFA extended to 2026-12-27 (catalysts) with 5 net raises (revision_flow_90d)|second major amendment pushes past 2027-03-25\",\"SVRA|0.02|biotech|molgramostim BLA PDUFA 2026-11-22 (catalysts), extended from Aug 22 with no safety flag|inhaled-biologic CMC finding before 2026-11-22\",\"CAPR|0.02|biotech|deramiocel PDUFA 2026-11-22 (catalysts) after 9-of-12 negative adcom|CRL on the narrower upper-limb label on 2026-11-22\",\"INSM|0.02|biotech|ARIKAYCE sNDA PDUFA 2027-01-28 (catalysts) with rev_yoy 2.9611 (briefing)|patient-reported endpoint read fails on 2027-01-28\",\"WST|0.04|biotech|7 net raises from 6 firms and vs_ma200 0.2156 (revision_flow_90d, briefing)|GLP-1 device orders decelerate in the late-Oct print\",\"RGEN|0.03|biotech|4 net raises from 5 firms and mom_63 0.4277 (revision_flow_90d, briefing)|bioprocessing orders turn negative in the late-Oct print\",\"VKTX|0.03|biotech|positive Phase 1 maintenance data 2026-09-22 with oral Phase 3 starting Q4 2026|oral VK2735 tolerability worsens in the next readout\",\"DHR|0.03|biotech|Goldman raised target to $250 on 2026-09-22 with Q3 print 2026-10-20|core biotech growth stays below 4% on 2026-10-20\",\"TMO|0.03|biotech|3 net raises with drawdown_63 0.0 and vs_ma200 0.2259 (revision_flow_90d, briefing)|GLP-1 fill-finish volumes disappoint in the next print\",\"ARWR|0.00|biotech|placeholder\",\"ARGX|0.03|biotech|17 net raises from 14 firms (revision_flow_90d) with Q3 results 2026-10-22 (catalysts)|EMPASSION Phase 3 topline misses in Q4 2026\",\"REGN|0.03|biotech|cemdisiran+pozelimab gMG NDA priority review, PDUFA November 2026 (catalysts)|manufacturing inspection delay pushes past 2027-03-25\",\"NTLA|0.02|biotech|lonvo-z PDUFA 2027-03-10 with 3 net raises (catalysts, revision_flow_90d)|nex-z HLA safety signal forces a broader program delay\",\"GPCR|0.02|biotech|three interim readouts dated Q4 2026 (catalysts)|another ATM raise without matching backlog growth\"],\"strategy\":\"I bet on dated FDA binary events in Q4 2026 and Q1 2027, sized small because a CRL averages -33% over five days while approvals are largely priced in by the pre-date run-up. Large-cap pharma with heavy net analyst raises (MRK, ABBV, AMGN, LLY, VRTX) is ballast; the small PDUFA names (COGT, BBIO, AGIO, SMMT, PRAX, SVRA, CAPR) are the variance. I am wrong if a cluster of CRLs lands in November-December 2026, if the Section 232 tariff go-live on 2026-09-29 hits unshielded names like VRTX and ARGX, or if the small-cap binary tail is larger than the base rates imply.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via dated pharma catalysts with CRL-tail-aware sizing\",\"what_i_did_not_buy\":[\"NVO|CagriSema decision does not fix structural share loss to Lilly\",\"INO|no briefing row, no revision flow, no news coverage\",\"BTAI|no briefing row and no analyst revision data\",\"NUVL|no briefing row and no analyst revision data\",\"MLYS|no revision flow data and no news coverage\",\"BLTE|valuation has run ahead of the Feb 2027 catalyst\",\"CORT|PDUFA date is aggregator-only, not primary-sourced\",\"LNTH|Curium acquisition makes it merger arb, capped upside\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00242944,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 333,
+ "tokens_out": 1664,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "pharma_binary_basket",
+  "strategy": "I bet on dated FDA binary events in Q4 2026 and Q1 2027, sized small because a CRL averages -33% over five days while approvals are largely priced in by the pre-date run-up. Large-cap pharma with heavy net analyst raises (MRK, ABBV, AMGN, LLY, VRTX) is ballast; the small PDUFA names (COGT, BBIO, AGIO, SMMT, PRAX, SVRA, CAPR) are the variance. I am wrong if a cluster of CRLs lands in November-December 2026, if the Section 232 tariff go-live on 2026-09-29 hits unshielded names like VRTX and ARGX, or if the small-cap binary tail is larger than the base rates imply.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via dated pharma catalysts with CRL-tail-aware sizing",
+  "cash_weight": 0.1,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "povetacicept BLA PDUFA 2026-11-30 (catalysts) with 9 net raises from 8 firms (revision_flow_90d)",
+    "falsifier": "CRL on CMC grounds before 2026-11-30"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "I-DXd SCLC PDUFA 2026-10-10 (catalysts) with 22 net raises from 17 firms (revision_flow_90d)",
+    "falsifier": "CRL on the Daiichi ADC facility on 2026-10-10"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "inflection_flag true with rev_yoy 0.4767 and 13 net raises (briefing, revision_flow_90d)",
+    "falsifier": "retatrutide filing slips past Q1 2027"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "20 net raises from 21 firms, zero lowers (revision_flow_90d), drawdown_63 -0.0056 (briefing)",
+    "falsifier": "any net lowers appearing in the next 90-day revision window"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "inflection_flag true with 26 net raises from 22 firms (briefing, revision_flow_90d)",
+    "falsifier": "MARITIME-1/2 readout slips past 2027-03-25"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "anito-cel BLA PDUFA 2026-12-23 (catalysts) with drawdown_63 -0.0022 (briefing)",
+    "falsifier": "facility inspection finding before 2026-12-23"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "two NDAs PDUFA 2026-11-30 and 2026-12-30 (catalysts) with 2 net raises (revision_flow_90d)",
+    "falsifier": "either PDUFA slips or a CRL lands on the first NDA"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "BBP-418 PDUFA 2026-11-27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)",
+    "falsifier": "CRL on the LGMD2I/R9 filing on 2026-11-27"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "mitapivat sickle cell PDUFA 2026-11-01 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)",
+    "falsifier": "narrow label or CRL on 2026-11-01"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "ivonescimab BLA PDUFA 2026-11-14 (catalysts) with mom_21 0.3602 (briefing)",
+    "falsifier": "FDA asks for more OS data before 2026-11-14"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "relutrigine PDUFA extended to 2026-12-27 (catalysts) with 5 net raises (revision_flow_90d)",
+    "falsifier": "second major amendment pushes past 2027-03-25"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "molgramostim BLA PDUFA 2026-11-22 (catalysts), extended from Aug 22 with no safety flag",
+    "falsifier": "inhaled-biologic CMC finding before 2026-11-22"
+   },
+   {
+    "ticker": "CAPR",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "deramiocel PDUFA 2026-11-22 (catalysts) after 9-of-12 negative adcom",
+    "falsifier": "CRL on the narrower upper-limb label on 2026-11-22"
+   },
+   {
+    "ticker": "INSM",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "ARIKAYCE sNDA PDUFA 2027-01-28 (catalysts) with rev_yoy 2.9611 (briefing)",
+    "falsifier": "patient-reported endpoint read fails on 2027-01-28"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "7 net raises from 6 firms and vs_ma200 0.2156 (revision_flow_90d, briefing)",
+    "falsifier": "GLP-1 device orders decelerate in the late-Oct print"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "4 net raises from 5 firms and mom_63 0.4277 (revision_flow_90d, briefing)",
+    "falsifier": "bioprocessing orders turn negative in the late-Oct print"
+   },
+   {
+    "ticker": "VKTX",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "positive Phase 1 maintenance data 2026-09-22 with oral Phase 3 starting Q4 2026",
+    "falsifier": "oral VK2735 tolerability worsens in the next readout"
+   },
+   {
+    "ticker": "DHR",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "Goldman raised target to $250 on 2026-09-22 with Q3 print 2026-10-20",
+    "falsifier": "core biotech growth stays below 4% on 2026-10-20"
+   },
+   {
+    "ticker": "TMO",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "3 net raises with drawdown_63 0.0 and vs_ma200 0.2259 (revision_flow_90d, briefing)",
+    "falsifier": "GLP-1 fill-finish volumes disappoint in the next print"
+   },
+   {
+    "ticker": "ARWR",
+    "weight": 0.0,
+    "theme": "biotech",
+    "thesis": "placeholder",
+    "falsifier": ""
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "17 net raises from 14 firms (revision_flow_90d) with Q3 results 2026-10-22 (catalysts)",
+    "falsifier": "EMPASSION Phase 3 topline misses in Q4 2026"
+   },
+   {
+    "ticker": "REGN",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "cemdisiran+pozelimab gMG NDA priority review, PDUFA November 2026 (catalysts)",
+    "falsifier": "manufacturing inspection delay pushes past 2027-03-25"
+   },
+   {
+    "ticker": "NTLA",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "lonvo-z PDUFA 2027-03-10 with 3 net raises (catalysts, revision_flow_90d)",
+    "falsifier": "nex-z HLA safety signal forces a broader program delay"
+   },
+   {
+    "ticker": "GPCR",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "three interim readouts dated Q4 2026 (catalysts)",
+    "falsifier": "another ATM raise without matching backlog growth"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVO|CagriSema decision does not fix structural share loss to Lilly",
+   "INO|no briefing row, no revision flow, no news coverage",
+   "BTAI|no briefing row and no analyst revision data",
+   "NUVL|no briefing row and no analyst revision data",
+   "MLYS|no revision flow data and no news coverage",
+   "BLTE|valuation has run ahead of the Feb 2027 catalyst",
+   "CORT|PDUFA date is aggregator-only, not primary-sourced",
+   "LNTH|Curium acquisition makes it merger arb, capped upside"
+  ]
+ },
+ "defect": "weights plus cash sum to 0.860, not 1.0"
+}

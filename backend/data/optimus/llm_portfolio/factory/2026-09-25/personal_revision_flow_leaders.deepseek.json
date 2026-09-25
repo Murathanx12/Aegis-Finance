@@ -1,0 +1,126 @@
+{
+ "text": "{\"name\":\"revision_flow_leaders\",\"cash_weight\":0.06,\"positions\":[\"MRK|0.09|biotech|net_raises 22 with 17 distinct firms and median target change +0.1244 (revision_flow_90d)|Any October 10 I-DXd CRL on manufacturing plus a Keytruda LOE headline before late Oct\",\"AMGN|0.09|biotech|net_raises 26 across 22 firms, median target change +0.0539 and gross_margin_chg +0.0388 (revision_flow_90d, briefing)|Q3 print shows MariTide spend compressing margin and revisions flip net negative by mid-Nov\",\"ABBV|0.09|biotech|net_raises 20 with zero lowers across 21 firms, median target change +0.0762 (revision_flow_90d)|Any net target cut or a Skyrizi/Rinvoq guidance trim at the next print\",\"LLY|0.08|biotech|net_raises 13 of 14 actions across 13 firms plus inflection_flag true and gross_margin_chg +0.0384 (revision_flow_90d, briefing)|Retatrutide EASD tolerability data disappoints or the Q1 2027 filing slips past March\",\"ARGX|0.08|biotech|net_raises 17 across 14 firms, median target change +0.0618 (revision_flow_90d)|EMPASSION Phase 3 empasiprubart topline misses in Q4 2026\",\"VRTX|0.08|biotech|net_raises 9 with zero lowers across 8 firms, median target change +0.0332 (revision_flow_90d)|Povetacicept CRL on CMC grounds at the Nov 30 PDUFA\",\"OKTA|0.08|software|net_raises 63 with zero lowers across 32 firms, median target change +0.1944 (revision_flow_90d)|Next print shows billings deceleration and any of the 63 raises is reversed\",\"SNOW|0.08|software|net_raises 47 with zero lowers across 33 firms, median target change +0.2333 (revision_flow_90d)|Product revenue growth decelerates below 30% and net_raises turns negative\",\"PANW|0.07|software|net_raises 34 across 30 firms, median target change +0.1765 (revision_flow_90d)|Platformization bookings stall or a large target cut lands before the next report\",\"CRWD|0.07|software|net_raises 44 across 35 firms, median target change +0.0619 (revision_flow_90d)|Net retention falls below 110% and the raise streak breaks\",\"NVDA|0.07|semis|net_raises 16 across 21 firms with zero lowers, median target change +0.05 (revision_flow_90d)|A hyperscaler capex digestion headline cuts the 2027 order book\",\"AMD|0.07|semis|net_raises 22 with zero lowers across 27 firms, median target change +0.1341 (revision_flow_90d)|MI-series order pushout or a guidance cut at the next print\",\"TER|0.06|semis|net_raises 6 across 7 firms, median target change +0.1357, with the Oct 27 Q3 print inside the window (revision_flow_90d, catalysts)|Oct 27 print shows AI test orders slipping versus Advantest\"],\"strategy\":\"I bet on analyst revision flow, not target levels: every name has net target raises across at least three distinct firms over the trailing 90 days, and I deliberately excluded high-upside names where the flow is negative (ALB -12, FLUT -15, CEG -6, OKLO -4). The book is pharma/biotech plus software plus semis, each with a dated Q4 print or PDUFA inside the six-month window so the flow can be confirmed or broken by real events. I would be wrong if the revision flow mean-reverts: a single guidance cut or CRL at any of the 13 names flips its flow negative and the stock de-rates faster than SPY.\",\"objective\":\"Maximise 126-session return versus SPY, net of costs, by holding the strongest 90-day net analyst-target-raise flows across at least three distinct firms.\",\"what_i_did_not_buy\":[\"ALB|net_raises -12 across 11 firms, flow is negative\",\"FLUT|net_raises -15, 16 lowers across 15 firms\",\"CEG|net_raises -6 with 7 lowers\",\"OKLO|net_raises -4, zero raises, no revenue\",\"SMR|net_raises -6, revenue down 99% YoY\",\"LEU|net_raises -4 with 6 lowers\",\"SERV|net_raises -3, median target change -0.5556\",\"QUBT|targets dispersed $10-$32, no converged revision flow\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00174016,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 251,
+ "tokens_out": 1138,
+ "cached_tokens": 69504,
+ "parse": "ok",
+ "parsed": {
+  "name": "revision_flow_leaders",
+  "strategy": "I bet on analyst revision flow, not target levels: every name has net target raises across at least three distinct firms over the trailing 90 days, and I deliberately excluded high-upside names where the flow is negative (ALB -12, FLUT -15, CEG -6, OKLO -4). The book is pharma/biotech plus software plus semis, each with a dated Q4 print or PDUFA inside the six-month window so the flow can be confirmed or broken by real events. I would be wrong if the revision flow mean-reverts: a single guidance cut or CRL at any of the 13 names flips its flow negative and the stock de-rates faster than SPY.",
+  "objective": "Maximise 126-session return versus SPY, net of costs, by holding the strongest 90-day net analyst-target-raise flows across at least three distinct firms.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 22 with 17 distinct firms and median target change +0.1244 (revision_flow_90d)",
+    "falsifier": "Any October 10 I-DXd CRL on manufacturing plus a Keytruda LOE headline before late Oct"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 26 across 22 firms, median target change +0.0539 and gross_margin_chg +0.0388 (revision_flow_90d, briefing)",
+    "falsifier": "Q3 print shows MariTide spend compressing margin and revisions flip net negative by mid-Nov"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 20 with zero lowers across 21 firms, median target change +0.0762 (revision_flow_90d)",
+    "falsifier": "Any net target cut or a Skyrizi/Rinvoq guidance trim at the next print"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 13 of 14 actions across 13 firms plus inflection_flag true and gross_margin_chg +0.0384 (revision_flow_90d, briefing)",
+    "falsifier": "Retatrutide EASD tolerability data disappoints or the Q1 2027 filing slips past March"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 17 across 14 firms, median target change +0.0618 (revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 empasiprubart topline misses in Q4 2026"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 9 with zero lowers across 8 firms, median target change +0.0332 (revision_flow_90d)",
+    "falsifier": "Povetacicept CRL on CMC grounds at the Nov 30 PDUFA"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 63 with zero lowers across 32 firms, median target change +0.1944 (revision_flow_90d)",
+    "falsifier": "Next print shows billings deceleration and any of the 63 raises is reversed"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 47 with zero lowers across 33 firms, median target change +0.2333 (revision_flow_90d)",
+    "falsifier": "Product revenue growth decelerates below 30% and net_raises turns negative"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 34 across 30 firms, median target change +0.1765 (revision_flow_90d)",
+    "falsifier": "Platformization bookings stall or a large target cut lands before the next report"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 44 across 35 firms, median target change +0.0619 (revision_flow_90d)",
+    "falsifier": "Net retention falls below 110% and the raise streak breaks"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 16 across 21 firms with zero lowers, median target change +0.05 (revision_flow_90d)",
+    "falsifier": "A hyperscaler capex digestion headline cuts the 2027 order book"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 22 with zero lowers across 27 firms, median target change +0.1341 (revision_flow_90d)",
+    "falsifier": "MI-series order pushout or a guidance cut at the next print"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "net_raises 6 across 7 firms, median target change +0.1357, with the Oct 27 Q3 print inside the window (revision_flow_90d, catalysts)",
+    "falsifier": "Oct 27 print shows AI test orders slipping versus Advantest"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12 across 11 firms, flow is negative",
+   "FLUT|net_raises -15, 16 lowers across 15 firms",
+   "CEG|net_raises -6 with 7 lowers",
+   "OKLO|net_raises -4, zero raises, no revenue",
+   "SMR|net_raises -6, revenue down 99% YoY",
+   "LEU|net_raises -4 with 6 lowers",
+   "SERV|net_raises -3, median target change -0.5556",
+   "QUBT|targets dispersed $10-$32, no converged revision flow"
+  ]
+ },
+ "prompt_hash": "535b6f73a02a6687",
+ "strategy": {
+  "id": "revision_flow_leaders",
+  "brief": "Analyst revision flow: names with the strongest 90-day net target RAISES across >= 3 distinct firms. The flow, not the target level (target-level upside is measured perverse). Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

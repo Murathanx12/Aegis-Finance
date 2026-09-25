@@ -1,0 +1,133 @@
+{
+ "name": "pers_ensemble_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY, net of costs",
+ "model": "deepseek-flash",
+ "strategy": "Only names at least two lenses would pick. Biotech PDUFA sleeve (VRTX, MRK, GILD, ARGX, AGIO, COGT, BBIO, SMMT) is chosen by catalysts plus revision flow: every one has a dated FDA decision or print inside six months and net-positive analyst target actions. Power and semis sleeve (GEV, NVT, ASML, TSM) is chosen by power_grid plus revision flow: inflection flags, double-digit revenue growth, and near-unanimous raises into confirmed October earnings. AME, WST, RGEN are quality-momentum plus revision-flow names. I am wrong if a CRL cluster hits the PDUFA sleeve, or if AI capex digestion cuts semicap orders and grid backlog at once.",
+ "what_i_did_not_buy": [
+  "ALB|net_raises -12 of 11 firms, lithium price forecast cut",
+  "VRT|net_raises -4, mom_63 -0.299, no dated catalyst",
+  "CEG|net_raises -6 of 7 firms, rev_qoq -0.3253",
+  "FLUT|net_raises -15 of 15 firms, four 2026 guidance cuts",
+  "SMR|net_raises -6 of 7 firms, rev_yoy -0.9907",
+  "OKLO|net_raises -4, zero revenue, target dispersion 55 to 150",
+  "QUBT|opex +114 percent YoY, targets 10 to 32, no dual-lens support",
+  "NVO|zero raises, mom_252_21 -0.2286, CagriSema non-inferiority miss"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "78c6456b4fe8c5b7",
+ "positions": [
+  {
+   "ticker": "VRTX",
+   "weight": 0.1,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 9 of 9 firms with povetacicept PDUFA Nov 30 2026 (catalysts)",
+   "falsifier": "CRL on povetacicept BLA announced on or before Nov 30 2026"
+  },
+  {
+   "ticker": "MRK",
+   "weight": 0.1,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 22 with zero lowers plus I-DXd PDUFA Oct 10 2026 (catalysts)",
+   "falsifier": "ifinatamab deruxtecan CRL or delay disclosed on Oct 10 2026"
+  },
+  {
+   "ticker": "GILD",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d 8 firms 12 events plus anito-cel PDUFA Dec 23 2026 (catalysts)",
+   "falsifier": "anitocabtagene autoleucel CRL or facility finding on Dec 23 2026"
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 17 across 14 firms plus Q3 results Oct 22 2026 (catalysts)",
+   "falsifier": "Q3 print on Oct 22 2026 shows Vyvgart growth decelerating"
+  },
+  {
+   "ticker": "AGIO",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 5 with mitapivat sickle cell PDUFA Nov 1 2026 (catalysts)",
+   "falsifier": "mitapivat sNDA CRL or narrow label on Nov 1 2026"
+  },
+  {
+   "ticker": "COGT",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 2 plus two bezuclastinib PDUFAs Nov 30 and Dec 30 2026 (catalysts)",
+   "falsifier": "either bezuclastinib NDA receives a CRL in Nov or Dec 2026"
+  },
+  {
+   "ticker": "BBIO",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 9 across 11 firms plus BBP-418 PDUFA Nov 27 2026 (catalysts)",
+   "falsifier": "BBP-418 ribitol NDA CRL on Nov 27 2026"
+  },
+  {
+   "ticker": "SMMT",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "ivonescimab BLA PDUFA Nov 14 2026 with 8-K filings in news_14d (catalysts)",
+   "falsifier": "ivonescimab CRL or FDA request for more OS data on Nov 14 2026"
+  },
+  {
+   "ticker": "GEV",
+   "weight": 0.08,
+   "theme": "power_grid",
+   "thesis": "inflection_flag true with rev_qoq 0.189 and net_raises 8 of 9 firms (revision_flow_90d)",
+   "falsifier": "Q3 orders or backlog growth stalls versus the 88 percent organic print"
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.07,
+   "theme": "power_grid",
+   "thesis": "inflection_flag true with rev_yoy 0.5277 and net_raises 6 of 5 firms (revision_flow_90d)",
+   "falsifier": "liquid-cooling launch slips or data-center orders decelerate next quarter"
+  },
+  {
+   "ticker": "AME",
+   "weight": 0.06,
+   "theme": "robotics",
+   "thesis": "revision_flow_90d net_raises 12 of 10 firms with 5B deal in news_14d (quality momentum)",
+   "falsifier": "the 5B acquisition closes at a price that compresses margins"
+  },
+  {
+   "ticker": "WST",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 7 of 6 firms with gross_margin_chg 0.0266 (quality momentum)",
+   "falsifier": "GLP-1 device orders normalize and FY guidance is not raised again"
+  },
+  {
+   "ticker": "RGEN",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 4 of 5 firms with mom_63 0.4277 (quality momentum)",
+   "falsifier": "bioprocessing orders turn negative at the next print"
+  },
+  {
+   "ticker": "ASML",
+   "weight": 0.05,
+   "theme": "semis",
+   "thesis": "revision_flow_90d net_raises 5 of 4 firms with Q3 earnings Oct 14 2026 (catalysts)",
+   "falsifier": "Q3 order intake or 2027 guidance disappoints on Oct 14 2026"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.05,
+   "theme": "semis",
+   "thesis": "revision_flow_90d net_raises 6 of 7 firms with Q3 earnings Oct 15 2026 (catalysts)",
+   "falsifier": "capex guide cut or gross margin misses on Oct 15 2026"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.06,
+   "thesis": "declared cash"
+  }
+ ]
+}

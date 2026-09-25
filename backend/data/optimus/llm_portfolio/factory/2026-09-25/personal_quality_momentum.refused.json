@@ -1,0 +1,133 @@
+{
+ "name": "pers_quality_momentum_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY, net of costs",
+ "model": "deepseek-flash",
+ "strategy": "Bet on liquid quality-momentum: names with strong 6-12 month momentum, positive net analyst raises, and improving gross margin, concentrated in large-cap pharma/biotech with dated Q4 PDUFA catalysts plus semicap and AI power-grid hardware. I avoid names far above their 200-day with falling margins (ALB, VRT, FLUT, CEG, LEU, SMR, OKLO all show negative net_raises). I would be wrong if a hyperscaler capex pause hits semis and power together, or if a cluster of Q4 PDUFAs draws CRLs, or if the momentum factor reverses sharply.",
+ "what_i_did_not_buy": [
+  "ALB|net_raises -12 of 11 firms, vs_ma200 -27%, margins falling",
+  "VRT|net_raises -4, mom_63 -30%, no dated catalyst in window",
+  "FLUT|net_raises -15 of 15 firms, down 70% from high",
+  "CEG|net_raises -6, rev_qoq -33%, no dated catalyst",
+  "LEU|net_raises -4, gross margin down 1273bps",
+  "SMR|net_raises -6, rev_yoy -99%, no revenue base",
+  "OKLO|net_raises -4, pre-revenue, no dated catalyst",
+  "NVO|net_raises 0, mom_252_21 -23%, Hold/Sell-leaning Street"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "ba0c162102db16b4",
+ "positions": [
+  {
+   "ticker": "MRK",
+   "weight": 0.1,
+   "theme": "biotech",
+   "thesis": "net_raises 22 of 22 firms with median target +12.4% and mom_252_21 +0.87 (revision_flow_90d, briefing)",
+   "falsifier": "I-DXd PDUFA Oct 10 2026 CRL or a Keytruda-LOE headline before late Oct"
+  },
+  {
+   "ticker": "VRTX",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "net_raises 9 with zero lowers and mom_252_21 +0.40 on 29.5% vol (revision_flow_90d, briefing)",
+   "falsifier": "povetacicept CRL on Nov 30 2026 or a CF franchise guidance cut"
+  },
+  {
+   "ticker": "GILD",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "mom_252_21 +0.29 with drawdown_63 only -0.2% and gross margin up 53bps (briefing)",
+   "falsifier": "anito-cel CRL Dec 23 2026 or a further net_raises deterioration below -3"
+  },
+  {
+   "ticker": "ASML",
+   "weight": 0.08,
+   "theme": "semis",
+   "thesis": "net_raises 5 of 5 firms, median target +13.6%, mom_252_21 +0.90 (revision_flow_90d, briefing)",
+   "falsifier": "Q3 earnings Oct 14 2026 order book miss or a 2027 guidance cut"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.08,
+   "theme": "semis",
+   "thesis": "net_raises 6 of 6 firms, median target +10.2%, vs_ma200 +17.6% (revision_flow_90d, briefing)",
+   "falsifier": "Q3 earnings Oct 15 2026 capex guide cut or gross margin below the 65-67% guide"
+  },
+  {
+   "ticker": "AMD",
+   "weight": 0.07,
+   "theme": "semis",
+   "thesis": "net_raises 22 of 22 firms with median target +13.4% and mom_252_21 +1.97 (revision_flow_90d, briefing)",
+   "falsifier": "any AI accelerator order deferral headline or a Q3 gross margin miss"
+  },
+  {
+   "ticker": "AMGN",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 26 of 28 firms, median target +5.4%, gross margin up 388bps (revision_flow_90d, briefing)",
+   "falsifier": "MariTide MARITIME-1/2 slip past Jan 21 2027 or a Sjogren's launch miss"
+  },
+  {
+   "ticker": "LLY",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 13 of 14 firms, gross margin up 384bps, inflection_flag true (revision_flow_90d, briefing)",
+   "falsifier": "retatrutide filing slips past Q1 2027 or EASD tolerability data disappoints"
+  },
+  {
+   "ticker": "ABBV",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "net_raises 20 of 20 firms, median target +7.6%, drawdown_63 only -0.6% (revision_flow_90d, briefing)",
+   "falsifier": "a Skyrizi/Rinvoq script slowdown or an MFN pricing step-down deeper than modeled"
+  },
+  {
+   "ticker": "TER",
+   "weight": 0.06,
+   "theme": "robotics",
+   "thesis": "net_raises 6 of 6 firms, median target +13.6%, rev_yoy +104% (revision_flow_90d, briefing)",
+   "falsifier": "Q3 earnings Oct 27 2026 robotics-segment growth decelerating below 33%"
+  },
+  {
+   "ticker": "WST",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "net_raises 7 of 7 firms, median target +9.6%, gross margin up 266bps (revision_flow_90d, briefing)",
+   "falsifier": "GLP-1 device orders normalize and FY26 guidance is not raised a third time"
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.05,
+   "theme": "power_grid",
+   "thesis": "net_raises 6 of 6 firms, rev_yoy +52.8%, gross margin up 205bps, inflection_flag true (revision_flow_90d, briefing)",
+   "falsifier": "the fall-2026 modular liquid-cooling launch slips or data-center orders stall"
+  },
+  {
+   "ticker": "GEV",
+   "weight": 0.05,
+   "theme": "power_grid",
+   "thesis": "net_raises 8 of 8 firms, rev_yoy +21.9%, gross margin up 218bps, inflection_flag true (revision_flow_90d, briefing)",
+   "falsifier": "a hyperscaler capex pause or backlog cancellation rate rising on the 116GW book"
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "net_raises 17 of 18 firms, median target +6.2%, mom_252_21 +0.42 (revision_flow_90d, briefing)",
+   "falsifier": "EMPASSION Phase 3 empasiprubart topline miss in Q4 2026"
+  },
+  {
+   "ticker": "COGT",
+   "weight": 0.03,
+   "theme": "biotech",
+   "thesis": "net_raises 2 of 2 firms with two PDUFAs Nov 30 and Dec 30 2026 (revision_flow_90d, catalysts)",
+   "falsifier": "either bezuclastinib NDA draws a CRL or an FDA complete-response on manufacturing"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.08,
+   "thesis": "declared cash"
+  }
+ ]
+}

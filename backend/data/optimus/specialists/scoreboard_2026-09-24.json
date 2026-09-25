@@ -2,308 +2,308 @@
  "receipt": "specialist_scoreboard",
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
- "written_utc": "2026-09-24T06:35:50+00:00",
- "n_ledger": 25439,
- "n_scored": 14703,
+ "written_utc": "2026-09-24T15:35:52+00:00",
+ "n_ledger": 24839,
+ "n_scored": 17484,
  "scoring": "Brier, and skill against CLIMATOLOGY (always predict the base rate). A specialist that cannot beat the base rate has demonstrated nothing however good its thesis reads.",
  "overall": {
   "arm": "ALL",
-  "n": 14703,
-  "base_rate": 0.33993062640277494,
-  "brier": 0.2625383919723866,
-  "brier_climatology": 0.22437779563619192,
-  "skill_vs_base_rate": -0.1700729621128314,
-  "calibration_gap": 0.16993529891858805,
-  "mean_probability": 0.509865925321363,
-  "discrimination": 0.054921745143188705,
+  "n": 17484,
+  "base_rate": 0.33996797071608326,
+  "brier": 0.2678159822792267,
+  "brier_climatology": 0.22438974960327165,
+  "skill_vs_base_rate": -0.1935303762882843,
+  "calibration_gap": 0.179193073667353,
+  "mean_probability": 0.5191610443834362,
+  "discrimination": 0.046710219471858605,
   "skill_by_month": {
-   "2026-08": -0.1700729621128314
+   "2026-08": -0.1935303762882843
   },
   "thin": false
  },
  "by_specialist": [
   {
    "arm": "investigator:A_snapshot",
-   "n": 930,
-   "base_rate": 0.26344086021505375,
-   "brier": 0.17860747634408602,
-   "brier_climatology": 0.19403977338420622,
-   "skill_vs_base_rate": 0.07953161751824789,
-   "calibration_gap": 0.04704193548387092,
-   "mean_probability": 0.3104827956989247,
-   "discrimination": 0.13500011917175625,
+   "n": 936,
+   "base_rate": 0.26175213675213677,
+   "brier": 0.17802762072649572,
+   "brier_climatology": 0.19323795565782745,
+   "skill_vs_base_rate": 0.07871297789066423,
+   "calibration_gap": 0.048118589743589735,
+   "mean_probability": 0.3098707264957265,
+   "discrimination": 0.13552039339614286,
    "skill_by_month": {
-    "2026-08": 0.07953161751824789
+    "2026-08": 0.07871297789066423
    },
    "thin": false
   },
   {
    "arm": "investigator:D_all",
-   "n": 930,
-   "base_rate": 0.26344086021505375,
-   "brier": 0.18334524129032256,
-   "brier_climatology": 0.19403977338420622,
-   "skill_vs_base_rate": 0.055115154524057686,
-   "calibration_gap": 0.08621118279569895,
-   "mean_probability": 0.3496520430107527,
-   "discrimination": 0.16487723521525405,
+   "n": 936,
+   "base_rate": 0.26175213675213677,
+   "brier": 0.1830153572649573,
+   "brier_climatology": 0.19323795565782745,
+   "skill_vs_base_rate": 0.05290160702678737,
+   "calibration_gap": 0.08737863247863253,
+   "mean_probability": 0.3491307692307693,
+   "discrimination": 0.16520617856404501,
    "skill_by_month": {
-    "2026-08": 0.055115154524057686
+    "2026-08": 0.05290160702678737
    },
    "thin": false
   },
   {
    "arm": "investigator:C_tools_only",
-   "n": 930,
-   "base_rate": 0.26344086021505375,
-   "brier": 0.18388895676344086,
-   "brier_climatology": 0.19403977338420622,
-   "skill_vs_base_rate": 0.052313071921942234,
-   "calibration_gap": 0.09167666666666674,
-   "mean_probability": 0.3551175268817205,
-   "discrimination": 0.16611274541933552,
+   "n": 936,
+   "base_rate": 0.26175213675213677,
+   "brier": 0.18356868246794872,
+   "brier_climatology": 0.19323795565782745,
+   "skill_vs_base_rate": 0.050038167486104124,
+   "calibration_gap": 0.09305801282051285,
+   "mean_probability": 0.3548101495726496,
+   "discrimination": 0.16614912726306147,
    "skill_by_month": {
-    "2026-08": 0.052313071921942234
+    "2026-08": 0.050038167486104124
    },
    "thin": false
   },
   {
    "arm": "investigator:B_tools",
-   "n": 930,
-   "base_rate": 0.26344086021505375,
-   "brier": 0.1838923763548387,
-   "brier_climatology": 0.19403977338420622,
-   "skill_vs_base_rate": 0.05229544877521208,
-   "calibration_gap": 0.08691172043010753,
-   "mean_probability": 0.3503525806451613,
-   "discrimination": 0.16107227469089824,
+   "n": 936,
+   "base_rate": 0.26175213675213677,
+   "brier": 0.18363013889957266,
+   "brier_climatology": 0.19323795565782745,
+   "skill_vs_base_rate": 0.04972013249440321,
+   "calibration_gap": 0.08839519230769227,
+   "mean_probability": 0.35014732905982904,
+   "discrimination": 0.1609818512064739,
    "skill_by_month": {
-    "2026-08": 0.05229544877521208
+    "2026-08": 0.04972013249440321
    },
    "thin": false
   },
   {
    "arm": "investigator:B_anon",
-   "n": 930,
-   "base_rate": 0.26344086021505375,
-   "brier": 0.1868273225483871,
-   "brier_climatology": 0.19403977338420622,
-   "skill_vs_base_rate": 0.037169961137494156,
-   "calibration_gap": 0.09225387096774196,
-   "mean_probability": 0.3556947311827957,
-   "discrimination": 0.15439685088633986,
+   "n": 936,
+   "base_rate": 0.26175213675213677,
+   "brier": 0.18655610039529913,
+   "brier_climatology": 0.19323795565782745,
+   "skill_vs_base_rate": 0.03457837897209015,
+   "calibration_gap": 0.09376720085470086,
+   "mean_probability": 0.3555193376068376,
+   "discrimination": 0.15428125284267102,
    "skill_by_month": {
-    "2026-08": 0.037169961137494156
+    "2026-08": 0.03457837897209015
    },
    "thin": false
   },
   {
    "arm": "skeptic",
-   "n": 921,
-   "base_rate": 0.40390879478827363,
-   "brier": 0.285828773072747,
-   "brier_climatology": 0.24076648028095796,
-   "skill_vs_base_rate": -0.1871618206122565,
-   "calibration_gap": 0.11469055374592835,
-   "mean_probability": 0.518599348534202,
-   "discrimination": -0.02831599976496857,
+   "n": 1162,
+   "base_rate": 0.39414802065404475,
+   "brier": 0.29071523235800345,
+   "brier_climatology": 0.23879535846854347,
+   "skill_vs_base_rate": -0.21742413346069878,
+   "calibration_gap": 0.132039586919105,
+   "mean_probability": 0.5261876075731498,
+   "discrimination": -0.031656039102818556,
    "skill_by_month": {
-    "2026-08": -0.1871618206122565
-   },
-   "thin": false
-  },
-  {
-   "arm": "execution_momentum",
-   "n": 1002,
-   "base_rate": 0.40818363273453095,
-   "brier": 0.2978544910179641,
-   "brier_climatology": 0.24156975470217243,
-   "skill_vs_base_rate": -0.23299579198225473,
-   "calibration_gap": 0.18628742514970043,
-   "mean_probability": 0.5944710578842314,
-   "discrimination": -0.024204059586784732,
-   "skill_by_month": {
-    "2026-08": -0.23299579198225473
-   },
-   "thin": false
-  },
-  {
-   "arm": "energy_materials",
-   "n": 117,
-   "base_rate": 0.41025641025641024,
-   "brier": 0.3003529914529914,
-   "brier_climatology": 0.24194608809993423,
-   "skill_vs_base_rate": -0.2414046195652173,
-   "calibration_gap": 0.18999999999999984,
-   "mean_probability": 0.6002564102564101,
-   "discrimination": -0.030815217391304217,
-   "skill_by_month": {
-    "2026-08": -0.2414046195652173
-   },
-   "thin": false
-  },
-  {
-   "arm": "behavioral_narrative",
-   "n": 852,
-   "base_rate": 0.3931924882629108,
-   "brier": 0.29720164319248826,
-   "brier_climatology": 0.23859215543653153,
-   "skill_vs_base_rate": -0.24564716995294322,
-   "calibration_gap": 0.19645539906103288,
-   "mean_probability": 0.5896478873239437,
-   "discrimination": -0.01796553018274205,
-   "skill_by_month": {
-    "2026-08": -0.24564716995294322
+    "2026-08": -0.21742413346069878
    },
    "thin": false
   },
   {
    "arm": "ownership_flow",
-   "n": 899,
-   "base_rate": 0.38264738598442716,
-   "brier": 0.29520222469410456,
-   "brier_climatology": 0.236228363983712,
-   "skill_vs_base_rate": -0.24964767022836787,
-   "calibration_gap": 0.21417130144605112,
-   "mean_probability": 0.5968186874304783,
-   "discrimination": -0.009067358055730113,
+   "n": 1139,
+   "base_rate": 0.38191395961369623,
+   "brier": 0.2921028094820018,
+   "brier_climatology": 0.2360556870658842,
+   "skill_vs_base_rate": -0.237431781935737,
+   "calibration_gap": 0.2096488147497806,
+   "mean_probability": 0.5915627743634768,
+   "discrimination": -0.0015613897596656878,
    "skill_by_month": {
-    "2026-08": -0.24964767022836787
+    "2026-08": -0.237431781935737
+   },
+   "thin": false
+  },
+  {
+   "arm": "execution_momentum",
+   "n": 1277,
+   "base_rate": 0.3946750195771339,
+   "brier": 0.29999091620986684,
+   "brier_climatology": 0.23890664849892285,
+   "skill_vs_base_rate": -0.25568257767099944,
+   "calibration_gap": 0.1945653876272514,
+   "mean_probability": 0.5892404072043853,
+   "discrimination": -0.023099113944844762,
+   "skill_by_month": {
+    "2026-08": -0.25568257767099944
+   },
+   "thin": false
+  },
+  {
+   "arm": "energy_materials",
+   "n": 132,
+   "base_rate": 0.4015151515151515,
+   "brier": 0.3027560606060606,
+   "brier_climatology": 0.24030073461891643,
+   "skill_vs_base_rate": -0.2599048483401003,
+   "calibration_gap": 0.1953030303030303,
+   "mean_probability": 0.5968181818181818,
+   "discrimination": -0.03283018867924514,
+   "skill_by_month": {
+    "2026-08": -0.2599048483401003
+   },
+   "thin": false
+  },
+  {
+   "arm": "behavioral_narrative",
+   "n": 1096,
+   "base_rate": 0.38047445255474455,
+   "brier": 0.2975691605839416,
+   "brier_climatology": 0.235713643507912,
+   "skill_vs_base_rate": -0.2624180601321593,
+   "calibration_gap": 0.2057299270072993,
+   "mean_probability": 0.5862043795620439,
+   "discrimination": -0.012646895738195885,
+   "skill_by_month": {
+    "2026-08": -0.2624180601321593
    },
    "thin": false
   },
   {
    "arm": "analyst_revisions",
-   "n": 952,
-   "base_rate": 0.38760504201680673,
-   "brier": 0.29689695378151265,
-   "brier_climatology": 0.23736737341995626,
-   "skill_vs_base_rate": -0.25079091327448433,
-   "calibration_gap": 0.20242647058823532,
-   "mean_probability": 0.590031512605042,
-   "discrimination": -0.019168723591181158,
+   "n": 1225,
+   "base_rate": 0.3746938775510204,
+   "brier": 0.29627681632653063,
+   "brier_climatology": 0.23429837567680134,
+   "skill_vs_base_rate": -0.2645278289731907,
+   "calibration_gap": 0.20983673469387748,
+   "mean_probability": 0.5845306122448979,
+   "discrimination": -0.013865282115167021,
    "skill_by_month": {
-    "2026-08": -0.25079091327448433
+    "2026-08": -0.2645278289731907
    },
    "thin": false
   },
   {
    "arm": "macro_rates",
-   "n": 888,
-   "base_rate": 0.38513513513513514,
-   "brier": 0.29739414414414417,
-   "brier_climatology": 0.2368060628195764,
-   "skill_vs_base_rate": -0.2558552792237001,
-   "calibration_gap": 0.21011261261261255,
-   "mean_probability": 0.5952477477477477,
-   "discrimination": -0.01414626309363154,
+   "n": 1122,
+   "base_rate": 0.3770053475935829,
+   "brier": 0.29790035650623886,
+   "brier_climatology": 0.2348723154794246,
+   "skill_vs_base_rate": -0.26835023488468845,
+   "calibration_gap": 0.21616755793226378,
+   "mean_probability": 0.5931729055258467,
+   "discrimination": -0.010026075751580321,
    "skill_by_month": {
-    "2026-08": -0.2558552792237001
+    "2026-08": -0.26835023488468845
    },
    "thin": false
   },
   {
    "arm": "geopolitical",
-   "n": 830,
-   "base_rate": 0.37349397590361444,
-   "brier": 0.30200614457831326,
-   "brier_climatology": 0.23399622586732471,
-   "skill_vs_base_rate": -0.2906453660049628,
-   "calibration_gap": 0.2251686746987952,
-   "mean_probability": 0.5986626506024096,
-   "discrimination": -0.016555831265508636,
+   "n": 1049,
+   "base_rate": 0.36892278360343184,
+   "brier": 0.2992113441372736,
+   "brier_climatology": 0.23281876334172724,
+   "skill_vs_base_rate": -0.2851685140947877,
+   "calibration_gap": 0.22714013346043854,
+   "mean_probability": 0.5960629170638704,
+   "discrimination": -0.008010374950233046,
    "skill_by_month": {
-    "2026-08": -0.2906453660049628
-   },
-   "thin": false
-  },
-  {
-   "arm": "options_volatility",
-   "n": 1037,
-   "base_rate": 0.3722275795564127,
-   "brier": 0.30571494696239154,
-   "brier_climatology": 0.23367420857398716,
-   "skill_vs_base_rate": -0.30829563445635655,
-   "calibration_gap": 0.21755062680810033,
-   "mean_probability": 0.5897782063645131,
-   "discrimination": -0.029772132152209085,
-   "skill_by_month": {
-    "2026-08": -0.30829563445635655
+    "2026-08": -0.2851685140947877
    },
    "thin": false
   },
   {
    "arm": "accounting_forensics",
-   "n": 666,
-   "base_rate": 0.35285285285285284,
-   "brier": 0.3008087087087087,
-   "brier_climatology": 0.22834771708645585,
-   "skill_vs_base_rate": -0.3173274186700892,
-   "calibration_gap": 0.23459459459459464,
-   "mean_probability": 0.5874474474474475,
-   "discrimination": -0.016045218936663885,
+   "n": 866,
+   "base_rate": 0.3568129330254042,
+   "brier": 0.29630854503464205,
+   "brier_climatology": 0.22949746385121253,
+   "skill_vs_base_rate": -0.29111903923585136,
+   "calibration_gap": 0.22526558891454962,
+   "mean_probability": 0.5820785219399538,
+   "discrimination": -0.007961281251270824,
    "skill_by_month": {
-    "2026-08": -0.3173274186700892
+    "2026-08": -0.29111903923585136
+   },
+   "thin": false
+  },
+  {
+   "arm": "options_volatility",
+   "n": 1322,
+   "base_rate": 0.3638426626323752,
+   "brier": 0.3034546142208775,
+   "brier_climatology": 0.23146117948095873,
+   "skill_vs_base_rate": -0.3110389176334485,
+   "calibration_gap": 0.22024205748865366,
+   "mean_probability": 0.5840847201210289,
+   "discrimination": -0.022238351037399795,
+   "skill_by_month": {
+    "2026-08": -0.3110389176334485
    },
    "thin": false
   },
   {
    "arm": "event_news",
-   "n": 890,
-   "base_rate": 0.3348314606741573,
-   "brier": 0.2996265168539326,
-   "brier_climatology": 0.22271935361696749,
-   "skill_vs_base_rate": -0.34530974514783286,
-   "calibration_gap": 0.25514606741573037,
-   "mean_probability": 0.5899775280898877,
-   "discrimination": -0.005919191003083801,
+   "n": 1118,
+   "base_rate": 0.33094812164579607,
+   "brier": 0.3006094812164579,
+   "brier_climatology": 0.2214214624249154,
+   "skill_vs_base_rate": -0.3576347926000867,
+   "calibration_gap": 0.2556171735241502,
+   "mean_probability": 0.5865652951699463,
+   "discrimination": -0.006621549356843448,
    "skill_by_month": {
-    "2026-08": -0.34530974514783286
+    "2026-08": -0.3576347926000867
    },
    "thin": false
   },
   {
    "arm": "company_fundamental",
-   "n": 606,
-   "base_rate": 0.3234323432343234,
-   "brier": 0.3066374587458746,
-   "brier_climatology": 0.21882386258427824,
-   "skill_vs_base_rate": -0.40129808113489296,
-   "calibration_gap": 0.27572607260726084,
-   "mean_probability": 0.5991584158415842,
-   "discrimination": -0.009313588850174415,
+   "n": 799,
+   "base_rate": 0.32916145181476847,
+   "brier": 0.304473717146433,
+   "brier_climatology": 0.22081419045396225,
+   "skill_vs_base_rate": -0.37886843468021136,
+   "calibration_gap": 0.2636670838548186,
+   "mean_probability": 0.592828535669587,
+   "discrimination": -0.00784390783723976,
    "skill_by_month": {
-    "2026-08": -0.40129808113489296
+    "2026-08": -0.37886843468021136
    },
    "thin": false
   },
   {
    "arm": "semis_technology",
-   "n": 258,
-   "base_rate": 0.3372093023255814,
-   "brier": 0.3184554263565892,
-   "brier_climatology": 0.22349918875067604,
-   "skill_vs_base_rate": -0.424861665658399,
-   "calibration_gap": 0.27476744186046503,
-   "mean_probability": 0.6119767441860464,
-   "discrimination": -0.022925993143778967,
+   "n": 310,
+   "base_rate": 0.3387096774193548,
+   "brier": 0.3189706451612903,
+   "brier_climatology": 0.22398543184183148,
+   "skill_vs_base_rate": -0.4240687108013934,
+   "calibration_gap": 0.2726129032258064,
+   "mean_probability": 0.6113225806451612,
+   "discrimination": -0.02403484320557492,
    "skill_by_month": {
-    "2026-08": -0.424861665658399
+    "2026-08": -0.4240687108013934
    },
    "thin": false
   },
   {
    "arm": "biotech_pharma",
-   "n": 119,
-   "base_rate": 0.2773109243697479,
-   "brier": 0.3205386554621849,
-   "brier_climatology": 0.20040957559494385,
-   "skill_vs_base_rate": -0.5994178646934463,
-   "calibration_gap": 0.3027731092436977,
-   "mean_probability": 0.5800840336134456,
-   "discrimination": -0.04078928823114869,
+   "n": 163,
+   "base_rate": 0.27607361963190186,
+   "brier": 0.3229852760736196,
+   "brier_climatology": 0.19985697617524184,
+   "skill_vs_base_rate": -0.6160820715630881,
+   "calibration_gap": 0.3023312883435583,
+   "mean_probability": 0.5784049079754602,
+   "discrimination": -0.04322787193973654,
    "skill_by_month": {
-    "2026-08": -0.5994178646934463
+    "2026-08": -0.6160820715630881
    },
    "thin": false
   }
@@ -311,61 +311,61 @@
  "by_observable": [
   {
    "arm": "abs_move_exceeds",
-   "n": 7486,
-   "base_rate": 0.23417045150948437,
-   "brier": 0.2597778489406893,
-   "brier_climatology": 0.17933465114932856,
-   "skill_vs_base_rate": -0.4485647211836221,
-   "calibration_gap": 0.24496643067058513,
-   "mean_probability": 0.4791368821800695,
-   "discrimination": 0.09800471068062128,
+   "n": 8734,
+   "base_rate": 0.23551637279596976,
+   "brier": 0.26944646601442634,
+   "brier_climatology": 0.1800484109409996,
+   "skill_vs_base_rate": -0.49652232200328483,
+   "calibration_gap": 0.2641506411724297,
+   "mean_probability": 0.49966701396839946,
+   "discrimination": 0.09388180104260857,
    "skill_by_month": {
-    "2026-08": -0.4485647211836221
+    "2026-08": -0.49652232200328483
    },
    "thin": false
   },
   {
    "arm": "beats_benchmark",
-   "n": 1856,
-   "base_rate": 0.4369612068965517,
-   "brier": 0.26344789870689655,
-   "brier_climatology": 0.24602611056406062,
-   "skill_vs_base_rate": -0.07081276090124433,
-   "calibration_gap": 0.07247306034482759,
-   "mean_probability": 0.5094342672413793,
-   "discrimination": 0.0035013657897687844,
+   "n": 2233,
+   "base_rate": 0.4496193461710703,
+   "brier": 0.26245844155844156,
+   "brier_climatology": 0.24746178971976956,
+   "skill_vs_base_rate": -0.060601888702310314,
+   "calibration_gap": 0.046363636363636385,
+   "mean_probability": 0.4959829825347067,
+   "discrimination": 0.003860214147478447,
    "skill_by_month": {
-    "2026-08": -0.07081276090124433
+    "2026-08": -0.060601888702310314
    },
    "thin": false
   },
   {
    "arm": "drawdown_exceeds",
-   "n": 291,
-   "base_rate": 0.5738831615120275,
-   "brier": 0.25198041237113405,
-   "brier_climatology": 0.24454127844498763,
-   "skill_vs_base_rate": -0.030420769750821197,
-   "calibration_gap": -0.017216494845360808,
-   "mean_probability": 0.5566666666666666,
-   "discrimination": 0.013724647479235186,
+   "n": 396,
+   "base_rate": 0.547979797979798,
+   "brier": 0.25339974747474747,
+   "brier_climatology": 0.24769793898581782,
+   "skill_vs_base_rate": -0.023019200370723025,
+   "calibration_gap": 0.02749999999999997,
+   "mean_probability": 0.575479797979798,
+   "discrimination": 0.01489354581263036,
    "skill_by_month": {
-    "2026-08": -0.030420769750821197
+    "2026-08": -0.023019200370723025
    },
    "thin": false
   },
   {
    "arm": "return_sign",
-   "n": 5070,
-   "base_rate": 0.44714003944773173,
-   "brier": 0.2668874556213018,
-   "brier_climatology": 0.24720582457041268,
-   "skill_vs_base_rate": -0.07961637265259136,
-   "calibration_gap": 0.10557001972386582,
-   "mean_probability": 0.5527100591715975,
-   "discrimination": -0.0029391251826882403,
+   "n": 6121,
+   "base_rate": 0.435549746773403,
+   "brier": 0.26837660512988076,
+   "brier_climatology": 0.2458461648590275,
+   "skill_vs_base_rate": -0.09164446508153845,
+   "calibration_gap": 0.11623917660512978,
+   "mean_probability": 0.5517889233785328,
+   "discrimination": -0.0025313716272772346,
    "skill_by_month": {
-    "2026-08": -0.07961637265259136
+    "2026-08": -0.09164446508153845
    },
    "thin": false
   }
@@ -373,64 +373,64 @@
  "by_horizon": [
   {
    "arm": "h=1",
-   "n": 1631,
-   "base_rate": 0.16554261189454322,
-   "brier": 0.1209469625751073,
-   "brier_climatology": 0.13813825554167586,
-   "skill_vs_base_rate": 0.12444990635763464,
-   "calibration_gap": 0.043734396076027,
-   "mean_probability": 0.20927700797057022,
-   "discrimination": 0.19699298446131652,
+   "n": 1668,
+   "base_rate": 0.1642685851318945,
+   "brier": 0.1238617457793765,
+   "brier_climatology": 0.13728441707066003,
+   "skill_vs_base_rate": 0.09777272306422735,
+   "calibration_gap": 0.05072829736211035,
+   "mean_probability": 0.21499688249400484,
+   "discrimination": 0.1935838913382693,
    "skill_by_month": {
-    "2026-08": 0.12444990635763464
+    "2026-08": 0.09777272306422735
    },
    "thin": false
   },
   {
    "arm": "h=2",
-   "n": 61,
-   "base_rate": 0.3770491803278688,
-   "brier": 0.3165377049180327,
-   "brier_climatology": 0.23488309594195117,
-   "skill_vs_base_rate": -0.3476393592677336,
-   "calibration_gap": 0.22852459016393445,
-   "mean_probability": 0.6055737704918033,
-   "discrimination": -0.04105263157894712,
+   "n": 91,
+   "base_rate": 0.34065934065934067,
+   "brier": 0.334767032967033,
+   "brier_climatology": 0.22461055428088395,
+   "skill_vs_base_rate": -0.49043322580645166,
+   "calibration_gap": 0.2828571428571429,
+   "mean_probability": 0.6235164835164836,
+   "discrimination": -0.048387096774193505,
    "skill_by_month": {
-    "2026-08": -0.3476393592677336
+    "2026-08": -0.49043322580645166
    },
    "thin": true
   },
   {
    "arm": "h=5",
-   "n": 6555,
-   "base_rate": 0.3682684973302822,
-   "brier": 0.2599061146010679,
-   "brier_climatology": 0.23264681120437813,
-   "skill_vs_base_rate": -0.11717032894443036,
-   "calibration_gap": 0.14313926773455377,
-   "mean_probability": 0.511407765064836,
-   "discrimination": 0.044650401275502516,
+   "n": 7640,
+   "base_rate": 0.3600785340314136,
+   "brier": 0.2659021913887435,
+   "brier_climatology": 0.2304219833612017,
+   "skill_vs_base_rate": -0.15397926669142592,
+   "calibration_gap": 0.162040170157068,
+   "mean_probability": 0.5221187041884816,
+   "discrimination": 0.03832692952576644,
    "skill_by_month": {
-    "2026-08": -0.11717032894443036
+    "2026-08": -0.15397926669142592
    },
    "thin": false
   },
   {
    "arm": "h=20",
-   "n": 6456,
-   "base_rate": 0.3548636926889715,
-   "brier": 0.30047151486988843,
-   "brier_climatology": 0.22893545230011875,
-   "skill_vs_base_rate": -0.3124726286429014,
-   "calibration_gap": 0.2284711895910781,
-   "mean_probability": 0.5833348822800496,
-   "discrimination": -0.016089376300498448,
+   "n": 8085,
+   "base_rate": 0.3572047000618429,
+   "brier": 0.2985697835497836,
+   "brier_climatology": 0.22960950231557178,
+   "skill_vs_base_rate": -0.3003372270692606,
+   "calibration_gap": 0.22073840445269022,
+   "mean_probability": 0.5779431045145331,
+   "discrimination": -0.013655345722041856,
    "skill_by_month": {
-    "2026-08": -0.3124726286429014
+    "2026-08": -0.3003372270692606
    },
    "thin": false
   }
  ],
- "verdict": "NO SKILL: 14,703 graded forecasts score Brier 0.2625 against 0.2244 for always predicting the base rate -- skill -17.01%. Fourteen specialists, 25,439 forecasts and real LLM spend have produced probabilities that are worse than a constant. The reasoning reads well and does not predict; that is exactly what this ledger was built to be able to say."
+ "verdict": "NO SKILL: 17,484 graded forecasts score Brier 0.2678 against 0.2244 for always predicting the base rate -- skill -19.35%. Fourteen specialists, 24,839 forecasts and real LLM spend have produced probabilities that are worse than a constant. The reasoning reads well and does not predict; that is exactly what this ledger was built to be able to say."
 }

@@ -1,0 +1,126 @@
+{
+ "text": "{\"name\":\"ai_power_global\",\"cash_weight\":0.06,\"positions\":[\"GEV|0.11|power_grid|Q2 orders +88% organically to $24.2B and backlog $176B (research_notes) with inflection_flag true and 8 net raises|Q3 orders or backlog growth stalls when reported in late Oct 2026\",\"VRT|0.10|power_grid|$2.6B Utility Innovations deal Sept 3 2026 plus 31% sales growth guidance (research_notes) and rev_qoq 0.2358|Q3 backlog or liquid-cooling revenue per MW flat at the late-Oct 2026 print\",\"NVT|0.09|power_grid|Q1 2026 sales +53% YoY, FY guide raised to 37-39%, inflection_flag true and 6 net raises|Fall-2026 modular liquid-cooling launch slips past Nov 2026\",\"MU|0.09|semis|HBM4 shortage with DRAM inventory under 10 days and rev_yoy 3.4572 with inflection_flag true|HBM4 allocation share loss or a 2027 capex digestion signal by Dec 2026 earnings\",\"ASML|0.08|semis|Q3'26 earnings confirmed Oct 14 2026 with Q3 revenue guide $12.8-14.0bn vs Street $11.3bn and 5 net raises|Order intake or 2027 guidance cut on the Oct 14 2026 call\",\"TSM|0.08|semis|FY26 capex guide raised to $60-64B and Q3 earnings confirmed Oct 15 2026 (catalysts)|Capex guidance cut or gross margin below the 65-67% guide on Oct 15 2026\",\"TER|0.07|semis|Q3'26 earnings confirmed Oct 27 2026 with ~70% AI-related revenue and 6 net raises|Robotics-segment growth decelerates below 33% or Advantest qualification wins stall at the Oct 27 print\",\"AME|0.06|robotics|12 net raises with zero lowers and a $5B deal (news_14d) plus rev_yoy 0.1498|Deal integration charges or order growth turning negative in the Q3 print\",\"MRK|0.06|biotech|22 net raises from 17 firms and I-DXd PDUFA Oct 10 2026 (catalysts)|CRL on the I-DXd BLA on Oct 10 2026\",\"ARGX|0.05|biotech|17 net raises from 14 firms and Q3'26 results confirmed Oct 22 2026 (catalysts)|EMPASSION Phase 3 topline miss or Q3 guidance cut on Oct 22 2026\",\"CCJ|0.05|nuclear|Q3'26 earnings Nov 3-4 2026 (catalysts) with uranium term price at a record $96/lb|Production guidance cut or uranium spot falling below $80/lb by Nov 2026\",\"WST|0.05|biotech|7 net raises with zero lowers and HVP Delivery Devices +27-30% organic on the GLP-1 supply chain|GLP-1 device orders decelerating at the late-Oct/early-Nov 2026 print\",\"EVO.ST|0.05|gambling|Q3'26 report confirmed Oct 23 2026 (catalysts) with Americas +9.5% and LatAm +26.3% growth|Asia revenue declines more than 3.7% QoQ in the Oct 23 2026 report\"],\"strategy\":\"Bet that the AI capex bottleneck is physical: power generation, grid gear, cooling, and the memory and litho tools that capex buys, plus a few dated healthcare and uranium catalysts. Every name has a dated observable inside the six-month window (GEV/VRT/NVT orders, ASML Oct 14, TSM Oct 15, TER Oct 27, MRK Oct 10, ARGX Oct 22, EVO Oct 23, CCJ Nov 3-4). I am wrong if a hyperscaler capex pause hits the whole chain at once, if memory pricing rolls over, or if any single PDUFA prints a CRL.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via dated AI power and memory catalysts.\",\"what_i_did_not_buy\":[\"ALB|12 net lowers and lithium spot down 16% in a month\",\"INTC|Government equity stake carries live legal-authority lawsuit risk\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week\",\"SMR|Six net lowers and revenue down 99% YoY\",\"FLUT|15 net lowers and four guidance cuts in 2026\",\"IONQ|35x forward sales with chronic ATM dilution and 71% share count growth\",\"SERV|Revenue guidance cut sharply on weaker Uber Eats volumes\",\"QUBT|Opex +114% YoY and analyst targets dispersed $10-$32\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00170101,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 255,
+ "tokens_out": 1107,
+ "cached_tokens": 69504,
+ "parse": "ok",
+ "parsed": {
+  "name": "ai_power_global",
+  "strategy": "Bet that the AI capex bottleneck is physical: power generation, grid gear, cooling, and the memory and litho tools that capex buys, plus a few dated healthcare and uranium catalysts. Every name has a dated observable inside the six-month window (GEV/VRT/NVT orders, ASML Oct 14, TSM Oct 15, TER Oct 27, MRK Oct 10, ARGX Oct 22, EVO Oct 23, CCJ Nov 3-4). I am wrong if a hyperscaler capex pause hits the whole chain at once, if memory pricing rolls over, or if any single PDUFA prints a CRL.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via dated AI power and memory catalysts.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "GEV",
+    "weight": 0.11,
+    "theme": "power_grid",
+    "thesis": "Q2 orders +88% organically to $24.2B and backlog $176B (research_notes) with inflection_flag true and 8 net raises",
+    "falsifier": "Q3 orders or backlog growth stalls when reported in late Oct 2026"
+   },
+   {
+    "ticker": "VRT",
+    "weight": 0.1,
+    "theme": "power_grid",
+    "thesis": "$2.6B Utility Innovations deal Sept 3 2026 plus 31% sales growth guidance (research_notes) and rev_qoq 0.2358",
+    "falsifier": "Q3 backlog or liquid-cooling revenue per MW flat at the late-Oct 2026 print"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "Q1 2026 sales +53% YoY, FY guide raised to 37-39%, inflection_flag true and 6 net raises",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past Nov 2026"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "HBM4 shortage with DRAM inventory under 10 days and rev_yoy 3.4572 with inflection_flag true",
+    "falsifier": "HBM4 allocation share loss or a 2027 capex digestion signal by Dec 2026 earnings"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 14 2026 with Q3 revenue guide $12.8-14.0bn vs Street $11.3bn and 5 net raises",
+    "falsifier": "Order intake or 2027 guidance cut on the Oct 14 2026 call"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "FY26 capex guide raised to $60-64B and Q3 earnings confirmed Oct 15 2026 (catalysts)",
+    "falsifier": "Capex guidance cut or gross margin below the 65-67% guide on Oct 15 2026"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 27 2026 with ~70% AI-related revenue and 6 net raises",
+    "falsifier": "Robotics-segment growth decelerates below 33% or Advantest qualification wins stall at the Oct 27 print"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.06,
+    "theme": "robotics",
+    "thesis": "12 net raises with zero lowers and a $5B deal (news_14d) plus rev_yoy 0.1498",
+    "falsifier": "Deal integration charges or order growth turning negative in the Q3 print"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "22 net raises from 17 firms and I-DXd PDUFA Oct 10 2026 (catalysts)",
+    "falsifier": "CRL on the I-DXd BLA on Oct 10 2026"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "17 net raises from 14 firms and Q3'26 results confirmed Oct 22 2026 (catalysts)",
+    "falsifier": "EMPASSION Phase 3 topline miss or Q3 guidance cut on Oct 22 2026"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.05,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 2026 (catalysts) with uranium term price at a record $96/lb",
+    "falsifier": "Production guidance cut or uranium spot falling below $80/lb by Nov 2026"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "7 net raises with zero lowers and HVP Delivery Devices +27-30% organic on the GLP-1 supply chain",
+    "falsifier": "GLP-1 device orders decelerating at the late-Oct/early-Nov 2026 print"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.05,
+    "theme": "gambling",
+    "thesis": "Q3'26 report confirmed Oct 23 2026 (catalysts) with Americas +9.5% and LatAm +26.3% growth",
+    "falsifier": "Asia revenue declines more than 3.7% QoQ in the Oct 23 2026 report"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers and lithium spot down 16% in a month",
+   "INTC|Government equity stake carries live legal-authority lawsuit risk",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week",
+   "SMR|Six net lowers and revenue down 99% YoY",
+   "FLUT|15 net lowers and four guidance cuts in 2026",
+   "IONQ|35x forward sales with chronic ATM dilution and 71% share count growth",
+   "SERV|Revenue guidance cut sharply on weaker Uber Eats volumes",
+   "QUBT|Opex +114% YoY and analyst targets dispersed $10-$32"
+  ]
+ },
+ "prompt_hash": "9e575a7ab8999498",
+ "strategy": {
+  "id": "ai_power_global",
+  "brief": "AI power bottleneck, worldwide: power generation, grid, cooling, transformers, turbines and the memory that AI capex buys. Prefer names with a dated observable (backlog, orders, earnings) in the window. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

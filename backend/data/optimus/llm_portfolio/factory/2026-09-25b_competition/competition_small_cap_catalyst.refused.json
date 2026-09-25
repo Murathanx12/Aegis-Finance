@@ -1,0 +1,140 @@
+{
+ "name": "comp_small_cap_catalyst_2026-09-25",
+ "kind": "competition",
+ "objective": "Relative P&L vs WLS, 2026-10-12 to 2026-11-13",
+ "model": "deepseek-flash",
+ "strategy": "Bet on a dense cluster of dated FDA PDUFA decisions landing inside Oct 12-Nov 13 plus the adjacent Nov-Dec dates, concentrated in small/mid-cap biotech where a single binary event moves the stock. Every name carries a primary-sourced catalyst date and most show positive 90-day analyst revision flow. I avoid the pre-PDUFA run-up names with the worst CRL-tail asymmetry by keeping weights at 3-9% and holding 16 names. I would be wrong if a broad risk-off tape or a cluster of CRLs hits the book at once, since these are highly correlated binary events.",
+ "what_i_did_not_buy": [
+  "ALB|net_raises -12 and lithium price forecast cut",
+  "LAC|pre-revenue, no dated catalyst in window",
+  "SLI|thin liquidity, no dated catalyst",
+  "SMR|stacking downgrades, net_raises -6",
+  "OKLO|zero revenue, target dispersion $55-$150",
+  "SERV|guidance cut, net_raises -3",
+  "FLUT|four guidance cuts, net_raises -15",
+  "VRT|net_raises -4, no dated catalyst"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "46224ab6a154e604",
+ "prompt_hash": "e18cfa1bdc5e5e5c",
+ "positions": [
+  {
+   "ticker": "COGT",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "two Phase-3-backed NDAs with PDUFA Nov 30 and Dec 30 (catalysts)",
+   "falsifier": "either PDUFA slips past Dec 30 or a CRL on the GIST filing"
+  },
+  {
+   "ticker": "SVRA",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "molgramostim BLA PDUFA Nov 22 with FDA extension letter disclaiming safety concerns (catalysts)",
+   "falsifier": "CRL or a further major-amendment delay announced before Nov 22"
+  },
+  {
+   "ticker": "BBIO",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "BBP-418 NDA PDUFA Nov 27 off positive FORTIFY Phase 3 (catalysts)",
+   "falsifier": "CRL on the LGMD2I filing or a manufacturing-inspection finding"
+  },
+  {
+   "ticker": "AGIO",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "mitapivat sickle-cell sNDA PDUFA Nov 1 with net_raises 5 of 6 firms (revision_flow_90d)",
+   "falsifier": "narrow label or CRL on the sickle-cell sNDA on Nov 1"
+  },
+  {
+   "ticker": "SMMT",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "ivonescimab BLA PDUFA Nov 14 with 8-K news flow (news_14d)",
+   "falsifier": "CRL or an FDA request for more OS data before Nov 14"
+  },
+  {
+   "ticker": "MLYS",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "lorundrostat NDA PDUFA Dec 22 for resistant hypertension (catalysts)",
+   "falsifier": "CRL or a safety-signal disclosure before Dec 22"
+  },
+  {
+   "ticker": "PRAX",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "relutrigine NDA PDUFA Dec 27 after major-amendment extension (catalysts)",
+   "falsifier": "second major amendment or CRL pushing past Dec 27"
+  },
+  {
+   "ticker": "CORT",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "relacorilant NDA resubmission PDUFA Dec 17 with net_raises 4 of 4 (revision_flow_90d)",
+   "falsifier": "second CRL on the Cushing's resubmission"
+  },
+  {
+   "ticker": "CAPR",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "deramiocel BLA PDUFA Nov 22 on narrower upper-limb indication (catalysts)",
+   "falsifier": "CRL after the 9-of-12 negative adcom vote"
+  },
+  {
+   "ticker": "VRTX",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "povetacicept BLA PDUFA Nov 30 with net_raises 9 of 9 firms (revision_flow_90d)",
+   "falsifier": "CRL on CMC grounds for the accelerated-approval BLA"
+  },
+  {
+   "ticker": "GILD",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "anito-cel BLA PDUFA Dec 23 for 4L R/R myeloma (catalysts)",
+   "falsifier": "facility-inspection finding or CRL on the CAR-T filing"
+  },
+  {
+   "ticker": "INSM",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "ARIKAYCE sNDA PDUFA Jan 28 on already-approved drug (catalysts)",
+   "falsifier": "CRL on the ENCORE label expansion"
+  },
+  {
+   "ticker": "NUVL",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "neladalkib NDA PDUFA Nov 27 in TKI-pretreated ALK+ NSCLC (catalysts)",
+   "falsifier": "CRL or a complete-response letter on the NDA"
+  },
+  {
+   "ticker": "BTAI",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "IGALMI sNDA PDUFA Nov 14 for at-home acute agitation (catalysts)",
+   "falsifier": "CRL or an FDA request for a REMS before Nov 14"
+  },
+  {
+   "ticker": "INO",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "INO-3107 BLA PDUFA Oct 30 for recurrent respiratory papillomatosis (catalysts)",
+   "falsifier": "CRL on the BLA or a manufacturing finding"
+  },
+  {
+   "ticker": "BLTE",
+   "weight": 0.03,
+   "theme": "biotech",
+   "thesis": "tinlarebant NDA PDUFA Feb 12 with net_raises 5 of 5 firms (revision_flow_90d)",
+   "falsifier": "CRL on the DDAF surrogate endpoint"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.02,
+   "thesis": "declared cash"
+  }
+ ]
+}

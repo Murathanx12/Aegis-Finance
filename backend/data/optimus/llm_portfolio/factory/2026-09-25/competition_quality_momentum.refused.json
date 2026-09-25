@@ -1,0 +1,175 @@
+{
+ "name": "comp_quality_momentum_2026-09-25",
+ "kind": "competition",
+ "objective": "Relative P&L vs WLS, 2026-10-12 to 2026-11-13",
+ "model": "deepseek-flash",
+ "strategy": "Bet on liquid global quality-momentum: names with strong 6-12 month momentum (mom_252_21) and either improving gross margin or unanimous analyst raise flow, concentrated in AI semis, power/grid, biotech PDUFAs and enterprise software. Every holding has a dated Q3 print or FDA decision inside Oct 12-Nov 13 or shortly after, so relative P&L is driven by real events. I would be wrong if a single AI-capex digestion headline hits the semis/power sleeve simultaneously, or if the biotech PDUFA cluster produces CRLs that overwhelm the software and industrial winners.",
+ "what_i_did_not_buy": [
+  "ALB|net_raises -12 with 12 lowers and mom_63 -0.277",
+  "VRT|net_raises -4 with 4 lowers and mom_63 -0.299",
+  "ORCL|net_raises -5 with 8 lowers and mom_252_21 -0.516",
+  "FLUT|net_raises -15 with 16 lowers and mom_252_21 -0.647",
+  "CEG|net_raises -6 with 7 lowers and rev_qoq -0.325",
+  "LEU|net_raises -4 with 6 lowers and gross_margin_chg -0.127",
+  "SMR|net_raises -6 with 6 lowers and rev_yoy -0.991",
+  "NVO|zero raises zero lowers and mom_252_21 -0.229"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "39185c65bace67cb",
+ "positions": [
+  {
+   "ticker": "NVDA",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "net_raises 16 of 16 firms with mom_252_21 +0.232 and gross_margin 0.7498 stable (briefing)",
+   "falsifier": "Q3 data-center revenue guide cut at the next print"
+  },
+  {
+   "ticker": "AVGO",
+   "weight": 0.0,
+   "theme": "semis",
+   "thesis": "placeholder",
+   "falsifier": ""
+  },
+  {
+   "ticker": "AMD",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "net_raises 22 with zero lowers and mom_252_21 +1.973 (revision_flow_90d)",
+   "falsifier": "MI400 hyperscaler order slippage disclosed before Nov 13"
+  },
+  {
+   "ticker": "MU",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "inflection_flag true with rev_qoq +0.7375 and gross_margin_chg +0.1015 (briefing)",
+   "falsifier": "HBM4 pricing rolls over in the December print"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.09,
+   "theme": "semis",
+   "thesis": "net_raises 6 of 6 firms and Q3 earnings Oct 15 (catalysts)",
+   "falsifier": "capex guide cut on the Oct 15 call"
+  },
+  {
+   "ticker": "ASML",
+   "weight": 0.08,
+   "theme": "semis",
+   "thesis": "net_raises 5 of 5 and Q3 earnings Oct 14 (catalysts)",
+   "falsifier": "2027 order intake guided below consensus on Oct 14"
+  },
+  {
+   "ticker": "TER",
+   "weight": 0.07,
+   "theme": "semis",
+   "thesis": "net_raises 6 of 6 with Q3 earnings Oct 27 after close (catalysts)",
+   "falsifier": "robotics segment growth decelerates below 20% on Oct 27"
+  },
+  {
+   "ticker": "AME",
+   "weight": 0.07,
+   "theme": "robotics",
+   "thesis": "net_raises 12 of 12 firms and gross_margin_chg -0.0126 offset by $5B deal (news_14d)",
+   "falsifier": "deal synergies guided below plan at Q3"
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.07,
+   "theme": "power_grid",
+   "thesis": "inflection_flag true with gross_margin_chg +0.0205 and net_raises 6 (briefing)",
+   "falsifier": "liquid-cooling launch slips past fall 2026"
+  },
+  {
+   "ticker": "GEV",
+   "weight": 0.07,
+   "theme": "power_grid",
+   "thesis": "inflection_flag true with net_raises 8 of 8 and rev_yoy +0.2187 (briefing)",
+   "falsifier": "gas-turbine backlog cancellation rate rises at Q3"
+  },
+  {
+   "ticker": "MRK",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 22 of 22 firms and PDUFA Oct 10 (catalysts)",
+   "falsifier": "I-DXd CRL on manufacturing on Oct 10"
+  },
+  {
+   "ticker": "LLY",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "inflection_flag true with gross_margin_chg +0.0384 and net_raises 13 (briefing)",
+   "falsifier": "retatrutide filing slips past Q1 2027"
+  },
+  {
+   "ticker": "ABBV",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 20 of 20 firms with gross_margin_chg +0.0286 (briefing)",
+   "falsifier": "Skyrizi/Rinvoq growth guide cut at Q3"
+  },
+  {
+   "ticker": "WST",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "net_raises 7 of 7 firms and vs_ma200 +0.2156 (briefing)",
+   "falsifier": "GLP-1 device orders normalize below high-teens growth"
+  },
+  {
+   "ticker": "SNOW",
+   "weight": 0.06,
+   "theme": "software",
+   "thesis": "net_raises 47 of 47 firms with median_target_change +0.2333 (revision_flow_90d)",
+   "falsifier": "product revenue guide cut at Q3 print"
+  },
+  {
+   "ticker": "CRWD",
+   "weight": 0.06,
+   "theme": "software",
+   "thesis": "net_raises 44 of 49 firms with mom_63 +0.4767 (briefing)",
+   "falsifier": "net-new ARR decelerates below 20% at Q3"
+  },
+  {
+   "ticker": "PANW",
+   "weight": 0.06,
+   "theme": "software",
+   "thesis": "net_raises 34 of 35 firms with mom_252_21 +0.6989 (briefing)",
+   "falsifier": "platformization bookings miss at Q1 FY27"
+  },
+  {
+   "ticker": "OKTA",
+   "weight": 0.06,
+   "theme": "software",
+   "thesis": "net_raises 63 of 63 firms with mom_63 +0.6503 (briefing)",
+   "falsifier": "seat-based revenue growth stalls at Q3"
+  },
+  {
+   "ticker": "NET",
+   "weight": 0.06,
+   "theme": "software",
+   "thesis": "net_raises 27 of 27 firms with mom_63 +0.6104 (briefing)",
+   "falsifier": "enterprise net retention falls below 110% at Q3"
+  },
+  {
+   "ticker": "GILD",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "PDUFA Dec 23 for anito-cel with gross_margin_chg +0.0053 (briefing)",
+   "falsifier": "anito-cel CRL on facility inspection on Dec 23"
+  },
+  {
+   "ticker": "COGT",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "two PDUFAs Nov 30 and Dec 30 with net_raises 2 (catalysts)",
+   "falsifier": "PEAK GIST CRL on Nov 30"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.02,
+   "thesis": "declared cash"
+  }
+ ]
+}

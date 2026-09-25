@@ -1,0 +1,192 @@
+{
+ "text": "{\"name\":\"quality_momentum_global\",\"cash_weight\":0.01,\"positions\":[\"NVDA|0.09|semis|net_raises 16 of 16 firms with mom_252_21 +0.232 and gross_margin 0.7498 stable|Q3 datacenter guide cut or gross margin below 74% on the Nov print\",\"TSM|0.09|semis|net_raises 6/6 and Oct 15 Q3 earnings catalyst with mom_252_21 +0.558|Oct 15 capex guide trimmed below $60B or GM guide under 60%\",\"MU|0.08|semis|inflection_flag true with rev_yoy 3.4572 and gross_margin_chg +0.1015|HBM pricing commentary turns negative or GM slips below 80%\",\"AMD|0.08|semis|net_raises 22 of 22 firms and mom_252_21 +1.973 with GM +0.0095|Q3 MI-series guide disappoints or GM falls below 53%\",\"AVGO|0.07|semis|net_raises 22 of 22 with mom_252_21 +0.232 and stable 74.98% gross margin|AI ASIC backlog commentary weakens on the December print\",\"ASML|0.07|semis|net_raises 5/5 and Oct 14 Q3 earnings catalyst with mom_252_21 +0.897|Oct 14 bookings miss or 2027 guidance is trimmed\",\"AMGN|0.06|biotech|net_raises 26 of 28 firms with inflection_flag true and gross_margin_chg +0.0388|MariTide Phase 3 timing slips or GM gain reverses\",\"LLY|0.06|biotech|net_raises 13 of 14 firms with inflection_flag true and gross_margin_chg +0.0384|Retatrutide filing slips past Q1 2027 or GM gain reverses\",\"ABBV|0.06|biotech|net_raises 20 of 20 firms with mom_252_21 +0.216 and gross_margin_chg +0.0286|Skyrizi/Rinvoq growth decelerates on the Q3 print\",\"MRK|0.05|biotech|net_raises 22 of 22 firms and Oct 10 I-DXd PDUFA catalyst|Oct 10 CRL on the Daiichi manufacturing facility\",\"GEV|0.05|power_grid|net_raises 8 of 8 with inflection_flag true and gross_margin_chg +0.0218|Q3 orders or backlog growth stalls versus the $176B base\",\"NVT|0.05|power_grid|net_raises 6 of 6 with inflection_flag true and gross_margin_chg +0.0205|Fall liquid-cooling launch slips or GM gain reverses\",\"WST|0.05|biotech|net_raises 7 of 7 firms with gross_margin_chg +0.0266 and mom_252_21 +0.392|GLP-1 device orders normalize faster than guided\",\"ARGX|0.04|biotech|net_raises 17 of 18 firms and Oct 22 Q3 earnings catalyst|EMPASSION MMN topline misses in Q4 2026\",\"OKTA|0.04|software|net_raises 63 of 63 firms with mom_63 +0.650 and gross_margin_chg +0.0185|Identity growth decelerates or GM gain reverses\",\"SNOW|0.04|software|net_raises 47 of 47 firms with mom_63 +0.498 and gross_margin_chg +0.0042|Product revenue guide trimmed on the next print\",\"CRWD|0.04|software|net_raises 44 of 49 firms with mom_63 +0.477 and vs_52w_high -0.004|Net retention falls below 115% on the Q3 print\",\"PANW|0.04|software|net_raises 34 of 35 firms with mom_252_21 +0.699 and GM stable at 67.57%|Platformization billings miss the Q1 guide\",\"DELL|0.04|software|net_raises 24 of 24 firms with rev_yoy 0.578 and gross_margin_chg +0.0318|AI server backlog conversion slips on the next print\",\"AMKR|0.03|semis|net_raises 0 net with rev_yoy 0.275 and Arizona packaging ramp|Arizona ramp milestone slips or GM falls below 14%\",\"COGT|0.03|biotech|net_raises 2 of 2 firms with dual Nov 30 and Dec 30 PDUFA catalysts|Either bezuclastinib PDUFA returns a CRL\",\"BBIO|0.03|biotech|net_raises 9 of 10 firms with rev_yoy 1.204 and Nov 27 PDUFA|Nov 27 BBP-418 CRL on the LGMD2I filing\",\"SVRA|0.02|biotech|net_raises 0 net but Nov 22 molgramostim PDUFA with Priority Review|Nov 22 CRL on the inhaled-biologic CMC package\"],\"strategy\":\"Buy liquid global quality-momentum: names with positive 90-day net analyst raises, 6-12 month price momentum, and flat-to-rising gross margins (NVDA, TSM, MU, AMD, AVGO, ASML, AMGN, LLY, ABBV, MRK, GEV, NVT, WST, ARGX, OKTA, SNOW, CRWD, PANW, DELL, AMKR, COGT, BBIO, SVRA). Avoid names far above their 200-day with falling margins and negative revision flow (ALB, VRT, CEG, LEU, SMR, FLUT, NVO, PFE). I would be wrong if a single AI-capex digestion headline or a broad Q3 earnings miss hits the semis/power cluster simultaneously, or if the small-cap PDUFA names (COGT, BBIO, SVRA) return CRLs and the CRL tail overwhelms the book.\",\"objective\":\"Beat the Bloomberg WLS index on relative P&L from 2026-10-12 to 2026-11-13 with a long-only quality-momentum book.\",\"what_i_did_not_buy\":[\"ALB|net_raises -12 and gross_margin_chg -0.012 with mom_63 -0.277\",\"VRT|net_raises -4 with gross_margin_chg -0.0002 and mom_63 -0.299\",\"CEG|net_raises -6 with rev_qoq -0.325 and mom_252_21 -0.150\",\"LEU|net_raises -4 with gross_margin_chg -0.127 and mom_63 -0.157\",\"SMR|net_raises -6 with rev_yoy -0.991 and mom_252_21 -0.762\",\"FLUT|net_raises -15 with mom_252_21 -0.647 and GM -0.031\",\"NVO|net_raises 0 with mom_252_21 -0.229 and GM trend negative\",\"PFE|net_raises -5 with gross_margin_chg -0.027\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00240413,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 358,
+ "tokens_out": 1641,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "quality_momentum_global",
+  "strategy": "Buy liquid global quality-momentum: names with positive 90-day net analyst raises, 6-12 month price momentum, and flat-to-rising gross margins (NVDA, TSM, MU, AMD, AVGO, ASML, AMGN, LLY, ABBV, MRK, GEV, NVT, WST, ARGX, OKTA, SNOW, CRWD, PANW, DELL, AMKR, COGT, BBIO, SVRA). Avoid names far above their 200-day with falling margins and negative revision flow (ALB, VRT, CEG, LEU, SMR, FLUT, NVO, PFE). I would be wrong if a single AI-capex digestion headline or a broad Q3 earnings miss hits the semis/power cluster simultaneously, or if the small-cap PDUFA names (COGT, BBIO, SVRA) return CRLs and the CRL tail overwhelms the book.",
+  "objective": "Beat the Bloomberg WLS index on relative P&L from 2026-10-12 to 2026-11-13 with a long-only quality-momentum book.",
+  "cash_weight": 0.01,
+  "positions": [
+   {
+    "ticker": "NVDA",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "net_raises 16 of 16 firms with mom_252_21 +0.232 and gross_margin 0.7498 stable",
+    "falsifier": "Q3 datacenter guide cut or gross margin below 74% on the Nov print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "net_raises 6/6 and Oct 15 Q3 earnings catalyst with mom_252_21 +0.558",
+    "falsifier": "Oct 15 capex guide trimmed below $60B or GM guide under 60%"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "inflection_flag true with rev_yoy 3.4572 and gross_margin_chg +0.1015",
+    "falsifier": "HBM pricing commentary turns negative or GM slips below 80%"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "net_raises 22 of 22 firms and mom_252_21 +1.973 with GM +0.0095",
+    "falsifier": "Q3 MI-series guide disappoints or GM falls below 53%"
+   },
+   {
+    "ticker": "AVGO",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 22 of 22 with mom_252_21 +0.232 and stable 74.98% gross margin",
+    "falsifier": "AI ASIC backlog commentary weakens on the December print"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 5/5 and Oct 14 Q3 earnings catalyst with mom_252_21 +0.897",
+    "falsifier": "Oct 14 bookings miss or 2027 guidance is trimmed"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 26 of 28 firms with inflection_flag true and gross_margin_chg +0.0388",
+    "falsifier": "MariTide Phase 3 timing slips or GM gain reverses"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 13 of 14 firms with inflection_flag true and gross_margin_chg +0.0384",
+    "falsifier": "Retatrutide filing slips past Q1 2027 or GM gain reverses"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 20 of 20 firms with mom_252_21 +0.216 and gross_margin_chg +0.0286",
+    "falsifier": "Skyrizi/Rinvoq growth decelerates on the Q3 print"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 22 of 22 firms and Oct 10 I-DXd PDUFA catalyst",
+    "falsifier": "Oct 10 CRL on the Daiichi manufacturing facility"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "net_raises 8 of 8 with inflection_flag true and gross_margin_chg +0.0218",
+    "falsifier": "Q3 orders or backlog growth stalls versus the $176B base"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "net_raises 6 of 6 with inflection_flag true and gross_margin_chg +0.0205",
+    "falsifier": "Fall liquid-cooling launch slips or GM gain reverses"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "net_raises 7 of 7 firms with gross_margin_chg +0.0266 and mom_252_21 +0.392",
+    "falsifier": "GLP-1 device orders normalize faster than guided"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "net_raises 17 of 18 firms and Oct 22 Q3 earnings catalyst",
+    "falsifier": "EMPASSION MMN topline misses in Q4 2026"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 63 of 63 firms with mom_63 +0.650 and gross_margin_chg +0.0185",
+    "falsifier": "Identity growth decelerates or GM gain reverses"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 47 of 47 firms with mom_63 +0.498 and gross_margin_chg +0.0042",
+    "falsifier": "Product revenue guide trimmed on the next print"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 44 of 49 firms with mom_63 +0.477 and vs_52w_high -0.004",
+    "falsifier": "Net retention falls below 115% on the Q3 print"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 34 of 35 firms with mom_252_21 +0.699 and GM stable at 67.57%",
+    "falsifier": "Platformization billings miss the Q1 guide"
+   },
+   {
+    "ticker": "DELL",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 24 of 24 firms with rev_yoy 0.578 and gross_margin_chg +0.0318",
+    "falsifier": "AI server backlog conversion slips on the next print"
+   },
+   {
+    "ticker": "AMKR",
+    "weight": 0.03,
+    "theme": "semis",
+    "thesis": "net_raises 0 net with rev_yoy 0.275 and Arizona packaging ramp",
+    "falsifier": "Arizona ramp milestone slips or GM falls below 14%"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "net_raises 2 of 2 firms with dual Nov 30 and Dec 30 PDUFA catalysts",
+    "falsifier": "Either bezuclastinib PDUFA returns a CRL"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 10 firms with rev_yoy 1.204 and Nov 27 PDUFA",
+    "falsifier": "Nov 27 BBP-418 CRL on the LGMD2I filing"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.02,
+    "theme": "biotech",
+    "thesis": "net_raises 0 net but Nov 22 molgramostim PDUFA with Priority Review",
+    "falsifier": "Nov 22 CRL on the inhaled-biologic CMC package"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12 and gross_margin_chg -0.012 with mom_63 -0.277",
+   "VRT|net_raises -4 with gross_margin_chg -0.0002 and mom_63 -0.299",
+   "CEG|net_raises -6 with rev_qoq -0.325 and mom_252_21 -0.150",
+   "LEU|net_raises -4 with gross_margin_chg -0.127 and mom_63 -0.157",
+   "SMR|net_raises -6 with rev_yoy -0.991 and mom_252_21 -0.762",
+   "FLUT|net_raises -15 with mom_252_21 -0.647 and GM -0.031",
+   "NVO|net_raises 0 with mom_252_21 -0.229 and GM trend negative",
+   "PFE|net_raises -5 with gross_margin_chg -0.027"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.220, not 1.0"
+}

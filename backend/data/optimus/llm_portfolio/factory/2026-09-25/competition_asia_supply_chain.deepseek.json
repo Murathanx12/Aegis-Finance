@@ -1,0 +1,119 @@
+{
+ "text": "{\"name\":\"asia_supply_chain_ai_power\",\"cash_weight\":0.02,\"positions\":[\"2330.TW|0.10|semis|Q3'26 earnings Oct 15 (catalysts) with capex guide raised to $60-64B per research_global_candidates|Oct 15 capex guide cut or CoWoS capacity-easing signal\",\"000660.KS|0.10|semis|HBM leader with record Q3 op profit ~KRW78.1tn consensus per research_global_candidates|Bernstein Sept 22 HBM4 ramp-lag vs Samsung confirmed in Q3 print\",\"005930.KS|0.09|semis|Bernstein Sept 22 raised Q3 HBM revenue est 23% to ~$11.4bn per research_global_candidates|Q3 HBM4 mix or foundry profitability misses the raised bar\",\"8035.T|0.09|semis|FY26 Q2 results late Oct (research_global_candidates) on WFE spend cycle|China export-control headline or order pushout in FY26 Q2 print\",\"6857.T|0.09|semis|FY26 sales guide raised +21% to JPY1,714bn Jul 29 (research_global_candidates)|AI test order lumpiness shows in late-Oct FY26 Q2 results\",\"ASML|0.09|semis|Q3'26 earnings Oct 14 confirmed (catalysts) after Q2 guided Q3 rev $12.8-14.0bn|Oct 14 order bookings or 2027 guidance disappoint vs the raised bar\",\"2317.TW|0.09|semis|Hon Hai Tech Day Oct 30-31 confirmed (catalysts); Aug revenue +52% YoY record|Tech Day reveals no new AI server rack content or Q3 margin dilutes\",\"2308.TW|0.08|semis|Liquid-cooling/800V DC power leader for AI infra per research_global_candidates|Component cost inflation (T-glass, substrates) compresses Q3 margin\",\"6669.TW|0.08|semis|Hyperscaler direct AI server ODM exposure per research_global_candidates|Q3 earnings early Nov show customer concentration or margin miss\",\"6146.T|0.07|semis|FY26 Q2 results late Oct (research_global_candidates) on HBM dicing/grinding demand|China capex slowdown hits advanced-packaging dicing orders\",\"6920.T|0.06|semis|FY27 Q1 results late Oct (research_global_candidates) on EUV mask-inspection monopoly|Lumpy order book produces a guidance cut in the late-Oct print\",\"2454.TW|0.06|semis|Won Google TPU-related order in 2026 per research_global_candidates|Smartphone SoC pricing pressure offsets AI ASIC design-win narrative\"],\"strategy\":\"Bet that the AI capex chain's Q3 prints (Oct 14 ASML through early Nov) surprise up across Taiwan foundry/ODM, Korean memory and Japanese semicap, all of which report inside the Oct 12-Nov 13 window. Every name has a dated catalyst, so relative P&L is driven by real numbers, not theme drift. I would be wrong if a single hyperscaler capex-digestion headline, a China export-control action, or an HBM4 ramp disappointment hits the whole correlated stack at once - this book is one factor wearing twelve tickers' clothing.\",\"objective\":\"Maximize relative P&L vs Bloomberg WLS from 2026-10-12 to 2026-11-13 via Asia AI supply-chain Q3 earnings catalysts.\",\"what_i_did_not_buy\":[\"NVDA|US mega-cap, not Asia supply chain, and no dated in-window print\",\"MU|Already crowded WSB name; memory cycle risk overlaps SK Hynix\",\"TSM|Same exposure as 2330.TW but ADR, no incremental edge\",\"AMKR|Arizona ramp is 2026-2030, no clean in-window catalyst\",\"TER|Q3 Oct 27 confirmed but robotics segment too small vs semi-test cycle\",\"VRT|US power name, revision flow net -4, outside Asia mandate\",\"GEV|US power name, outside Asia supply-chain mandate\",\"IONQ|Quantum, no dated in-window catalyst, extreme dilution risk\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00151225,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 372,
+ "tokens_out": 945,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "asia_supply_chain_ai_power",
+  "strategy": "Bet that the AI capex chain's Q3 prints (Oct 14 ASML through early Nov) surprise up across Taiwan foundry/ODM, Korean memory and Japanese semicap, all of which report inside the Oct 12-Nov 13 window. Every name has a dated catalyst, so relative P&L is driven by real numbers, not theme drift. I would be wrong if a single hyperscaler capex-digestion headline, a China export-control action, or an HBM4 ramp disappointment hits the whole correlated stack at once - this book is one factor wearing twelve tickers' clothing.",
+  "objective": "Maximize relative P&L vs Bloomberg WLS from 2026-10-12 to 2026-11-13 via Asia AI supply-chain Q3 earnings catalysts.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "2330.TW",
+    "weight": 0.1,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 (catalysts) with capex guide raised to $60-64B per research_global_candidates",
+    "falsifier": "Oct 15 capex guide cut or CoWoS capacity-easing signal"
+   },
+   {
+    "ticker": "000660.KS",
+    "weight": 0.1,
+    "theme": "semis",
+    "thesis": "HBM leader with record Q3 op profit ~KRW78.1tn consensus per research_global_candidates",
+    "falsifier": "Bernstein Sept 22 HBM4 ramp-lag vs Samsung confirmed in Q3 print"
+   },
+   {
+    "ticker": "005930.KS",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Bernstein Sept 22 raised Q3 HBM revenue est 23% to ~$11.4bn per research_global_candidates",
+    "falsifier": "Q3 HBM4 mix or foundry profitability misses the raised bar"
+   },
+   {
+    "ticker": "8035.T",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "FY26 Q2 results late Oct (research_global_candidates) on WFE spend cycle",
+    "falsifier": "China export-control headline or order pushout in FY26 Q2 print"
+   },
+   {
+    "ticker": "6857.T",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "FY26 sales guide raised +21% to JPY1,714bn Jul 29 (research_global_candidates)",
+    "falsifier": "AI test order lumpiness shows in late-Oct FY26 Q2 results"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 confirmed (catalysts) after Q2 guided Q3 rev $12.8-14.0bn",
+    "falsifier": "Oct 14 order bookings or 2027 guidance disappoint vs the raised bar"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 confirmed (catalysts); Aug revenue +52% YoY record",
+    "falsifier": "Tech Day reveals no new AI server rack content or Q3 margin dilutes"
+   },
+   {
+    "ticker": "2308.TW",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Liquid-cooling/800V DC power leader for AI infra per research_global_candidates",
+    "falsifier": "Component cost inflation (T-glass, substrates) compresses Q3 margin"
+   },
+   {
+    "ticker": "6669.TW",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Hyperscaler direct AI server ODM exposure per research_global_candidates",
+    "falsifier": "Q3 earnings early Nov show customer concentration or margin miss"
+   },
+   {
+    "ticker": "6146.T",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "FY26 Q2 results late Oct (research_global_candidates) on HBM dicing/grinding demand",
+    "falsifier": "China capex slowdown hits advanced-packaging dicing orders"
+   },
+   {
+    "ticker": "6920.T",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "FY27 Q1 results late Oct (research_global_candidates) on EUV mask-inspection monopoly",
+    "falsifier": "Lumpy order book produces a guidance cut in the late-Oct print"
+   },
+   {
+    "ticker": "2454.TW",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Won Google TPU-related order in 2026 per research_global_candidates",
+    "falsifier": "Smartphone SoC pricing pressure offsets AI ASIC design-win narrative"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVDA|US mega-cap, not Asia supply chain, and no dated in-window print",
+   "MU|Already crowded WSB name; memory cycle risk overlaps SK Hynix",
+   "TSM|Same exposure as 2330.TW but ADR, no incremental edge",
+   "AMKR|Arizona ramp is 2026-2030, no clean in-window catalyst",
+   "TER|Q3 Oct 27 confirmed but robotics segment too small vs semi-test cycle",
+   "VRT|US power name, revision flow net -4, outside Asia mandate",
+   "GEV|US power name, outside Asia supply-chain mandate",
+   "IONQ|Quantum, no dated in-window catalyst, extreme dilution risk"
+  ]
+ },
+ "prompt_hash": "4f7520b46ecc5219",
+ "strategy": {
+  "id": "asia_supply_chain",
+  "brief": "Asia supply chain: Taiwan/Korea/Japan semis, packaging, test and components, plus their US customers; global tickers use the yfinance suffix (2330.TW, 000660.KS, 8035.T). Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

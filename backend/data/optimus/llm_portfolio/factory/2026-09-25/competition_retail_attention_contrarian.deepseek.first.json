@@ -1,0 +1,213 @@
+{
+ "text": "{\"name\":\"retail_attention_contrarian\",\"cash_weight\":0.02,\"positions\":[\"VRTX|0.08|biotech|9 net raises with zero lowers in revision_flow_90d and a Nov 30 povetacicept PDUFA|capex or CRL on povetacicept before Nov 30\",\"MRK|0.08|biotech|22 net raises from 17 firms in revision_flow_90d plus Oct 10 I-DXd PDUFA|CRL on the Daiichi facility before Oct 10\",\"ARGX|0.08|biotech|17 net raises from 14 firms in revision_flow_90d and Oct 22 Q3 print|EMPASSION MMN topline misses in Q4\",\"AMGN|0.07|biotech|26 net raises from 22 firms in revision_flow_90d with inflection_flag true|MariTide MARITIME-1 slips past Jan 21 2027\",\"LLY|0.07|biotech|13 net raises from 13 firms and inflection_flag true on rev_yoy 0.4767|retatrutide filing slips out of Q1 2027\",\"ABBV|0.07|biotech|20 net raises from 21 firms in revision_flow_90d with zero lowers|tavapadon PDUFA date proves aggregator-only and slips\",\"GILD|0.07|biotech|Dec 23 anito-cel PDUFA despite net_raises of -3 in revision_flow_90d|CMC or facility finding delays anito-cel past Dec 23\",\"WST|0.06|biotech|7 net raises from 6 firms and GLP-1 device demand per research_pharma|GLP-1 device growth normalizes below high-teens\",\"RGEN|0.06|biotech|4 net raises from 5 firms and bioprocessing recovery per research_pharma|Q3 order recovery fails to convert to revenue\",\"TMO|0.06|biotech|3 net raises and drawdown_63 of 0.0 with vs_52w_high -0.0072|GLP-1 fill-finish re-rating already priced per research_pharma\",\"DHR|0.05|biotech|Goldman and UBS raises cited in research_pharma into the Oct 20 print|Q3 core biotech growth stays below 4 percent\",\"COGT|0.05|biotech|2 net raises and two PDUFAs Nov 30 and Dec 30 per catalysts|either bezuclastinib NDA draws a CRL\",\"BBIO|0.05|biotech|9 net raises from 11 firms and Nov 27 BBP-418 PDUFA|LGMD2I CRL on a tiny addressable population\",\"INSM|0.04|biotech|Jan 28 ARIKAYCE sNDA label expansion on an approved drug|ENCORE symptom endpoint read as a miss\",\"SMMT|0.04|biotech|Nov 14 ivonescimab PDUFA with 58 percent implied upside|HARMONi OS superiority not confirmed before Nov 14\",\"ASML|0.05|semis|5 net raises from 4 firms and Oct 14 Q3 earnings per catalysts|order book or 2027 guide cut on Oct 14\",\"TSM|0.05|semis|6 net raises from 7 firms and Oct 15 Q3 earnings per catalysts|capex guide cut on Oct 15\",\"NVDA|0.04|semis|16 net raises from 21 firms with zero lowers in revision_flow_90d|hyperscaler capex digestion headline before Nov 13\",\"AME|0.04|semis|12 net raises from 10 firms in revision_flow_90d|industrial capex cycle rolls over into Q3\",\"OKTA|0.03|software|63 net raises from 32 firms in revision_flow_90d|identity demand decelerates from the 10.6 percent growth\",\"SNOW|0.03|software|47 net raises from 33 firms in revision_flow_90d|consumption growth slows below 35 percent\",\"PANW|0.03|software|34 net raises from 30 firms in revision_flow_90d|platformization billings miss in the next print\",\"CRWD|0.03|software|44 net raises from 35 firms in revision_flow_90d|net-new ARR decelerates from 25.8 percent\",\"FTNT|0.03|software|23 net raises from 17 firms with median_target_change 0.3438|firewall refresh cycle stalls after the run\",\"S|0.03|software|23 net raises from 20 firms with zero lowers in revision_flow_90d|AI security ARR growth decelerates\",\"DT|0.03|software|23 net raises from 18 firms with zero lowers in revision_flow_90d|consumption-based revenue growth slows\"],\"strategy\":\"I fade the retail-attention crowd: names whose only evidence is a headline spike (ALB, INTC, ORCL, MU, GEV, VRT, RGTI, QUBT, BYND, DNUT, GTLB, ABNB, AFRM, TGT, PLTR, AMD, RKLB, NBIS, BB, SNDK) get zero weight even where news counts are huge. I buy where revision_flow_90d shows broad net raises from many distinct firms and a dated catalyst sits inside Oct 12-Nov 13: pharma PDUFAs, semicap earnings, and enterprise software. I am wrong if the attention names keep running on flow alone, or if a PDUFA CRL or a capex-digestion headline hits several holdings at once.\",\"objective\":\"Beat the Bloomberg WLS index on relative P&L from 2026-10-12 to 2026-11-13 by owning analyst-flow-confirmed catalyst names and refusing attention-only spikes.\",\"what_i_did_not_buy\":[\"ALB|12 net lowers and lithium price cuts, pure attention\",\"INTC|government equity stake story, no revision-flow support\",\"ORCL|net_raises -5 and data-center force-majeure headlines\",\"MU|net_raises 0 with 3 lowers, retail memory mania\",\"GEV|strong backlog but no dated in-window catalyst\",\"VRT|net_raises -4, four lowers, no in-window catalyst\",\"RGTI|government contract pop, no analyst flow\",\"QUBT|target dispersion 10 to 32, no converged conviction\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00214493,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 360,
+ "tokens_out": 1439,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "retail_attention_contrarian",
+  "strategy": "I fade the retail-attention crowd: names whose only evidence is a headline spike (ALB, INTC, ORCL, MU, GEV, VRT, RGTI, QUBT, BYND, DNUT, GTLB, ABNB, AFRM, TGT, PLTR, AMD, RKLB, NBIS, BB, SNDK) get zero weight even where news counts are huge. I buy where revision_flow_90d shows broad net raises from many distinct firms and a dated catalyst sits inside Oct 12-Nov 13: pharma PDUFAs, semicap earnings, and enterprise software. I am wrong if the attention names keep running on flow alone, or if a PDUFA CRL or a capex-digestion headline hits several holdings at once.",
+  "objective": "Beat the Bloomberg WLS index on relative P&L from 2026-10-12 to 2026-11-13 by owning analyst-flow-confirmed catalyst names and refusing attention-only spikes.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "9 net raises with zero lowers in revision_flow_90d and a Nov 30 povetacicept PDUFA",
+    "falsifier": "capex or CRL on povetacicept before Nov 30"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "22 net raises from 17 firms in revision_flow_90d plus Oct 10 I-DXd PDUFA",
+    "falsifier": "CRL on the Daiichi facility before Oct 10"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "17 net raises from 14 firms in revision_flow_90d and Oct 22 Q3 print",
+    "falsifier": "EMPASSION MMN topline misses in Q4"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "26 net raises from 22 firms in revision_flow_90d with inflection_flag true",
+    "falsifier": "MariTide MARITIME-1 slips past Jan 21 2027"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "13 net raises from 13 firms and inflection_flag true on rev_yoy 0.4767",
+    "falsifier": "retatrutide filing slips out of Q1 2027"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "20 net raises from 21 firms in revision_flow_90d with zero lowers",
+    "falsifier": "tavapadon PDUFA date proves aggregator-only and slips"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Dec 23 anito-cel PDUFA despite net_raises of -3 in revision_flow_90d",
+    "falsifier": "CMC or facility finding delays anito-cel past Dec 23"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "7 net raises from 6 firms and GLP-1 device demand per research_pharma",
+    "falsifier": "GLP-1 device growth normalizes below high-teens"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "4 net raises from 5 firms and bioprocessing recovery per research_pharma",
+    "falsifier": "Q3 order recovery fails to convert to revenue"
+   },
+   {
+    "ticker": "TMO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "3 net raises and drawdown_63 of 0.0 with vs_52w_high -0.0072",
+    "falsifier": "GLP-1 fill-finish re-rating already priced per research_pharma"
+   },
+   {
+    "ticker": "DHR",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "Goldman and UBS raises cited in research_pharma into the Oct 20 print",
+    "falsifier": "Q3 core biotech growth stays below 4 percent"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "2 net raises and two PDUFAs Nov 30 and Dec 30 per catalysts",
+    "falsifier": "either bezuclastinib NDA draws a CRL"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "9 net raises from 11 firms and Nov 27 BBP-418 PDUFA",
+    "falsifier": "LGMD2I CRL on a tiny addressable population"
+   },
+   {
+    "ticker": "INSM",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "Jan 28 ARIKAYCE sNDA label expansion on an approved drug",
+    "falsifier": "ENCORE symptom endpoint read as a miss"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "Nov 14 ivonescimab PDUFA with 58 percent implied upside",
+    "falsifier": "HARMONi OS superiority not confirmed before Nov 14"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "5 net raises from 4 firms and Oct 14 Q3 earnings per catalysts",
+    "falsifier": "order book or 2027 guide cut on Oct 14"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "6 net raises from 7 firms and Oct 15 Q3 earnings per catalysts",
+    "falsifier": "capex guide cut on Oct 15"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "16 net raises from 21 firms with zero lowers in revision_flow_90d",
+    "falsifier": "hyperscaler capex digestion headline before Nov 13"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "12 net raises from 10 firms in revision_flow_90d",
+    "falsifier": "industrial capex cycle rolls over into Q3"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "63 net raises from 32 firms in revision_flow_90d",
+    "falsifier": "identity demand decelerates from the 10.6 percent growth"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "47 net raises from 33 firms in revision_flow_90d",
+    "falsifier": "consumption growth slows below 35 percent"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "34 net raises from 30 firms in revision_flow_90d",
+    "falsifier": "platformization billings miss in the next print"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "44 net raises from 35 firms in revision_flow_90d",
+    "falsifier": "net-new ARR decelerates from 25.8 percent"
+   },
+   {
+    "ticker": "FTNT",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "23 net raises from 17 firms with median_target_change 0.3438",
+    "falsifier": "firewall refresh cycle stalls after the run"
+   },
+   {
+    "ticker": "S",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "23 net raises from 20 firms with zero lowers in revision_flow_90d",
+    "falsifier": "AI security ARR growth decelerates"
+   },
+   {
+    "ticker": "DT",
+    "weight": 0.03,
+    "theme": "software",
+    "thesis": "23 net raises from 18 firms with zero lowers in revision_flow_90d",
+    "falsifier": "consumption-based revenue growth slows"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers and lithium price cuts, pure attention",
+   "INTC|government equity stake story, no revision-flow support",
+   "ORCL|net_raises -5 and data-center force-majeure headlines",
+   "MU|net_raises 0 with 3 lowers, retail memory mania",
+   "GEV|strong backlog but no dated in-window catalyst",
+   "VRT|net_raises -4, four lowers, no in-window catalyst",
+   "RGTI|government contract pop, no analyst flow",
+   "QUBT|target dispersion 10 to 32, no converged conviction"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.340, not 1.0"
+}

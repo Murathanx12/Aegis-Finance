@@ -1,0 +1,161 @@
+{
+ "name": "comp_ensemble_2026-09-25",
+ "kind": "competition",
+ "objective": "Relative P&L vs WLS, 2026-10-12 to 2026-11-13",
+ "model": "deepseek-flash",
+ "strategy": "Only names at least two independent lenses would pick: revision flow (net raises from many firms), dated catalysts inside Oct 12-Nov 13, power-grid inflection flags, and Asia supply-chain momentum. The book is semis/memory plus AI power hardware plus dated FDA and defense prints, so relative P&L comes from real Q3 numbers and PDUFA decisions rather than theme drift. I would be wrong if a single macro shock (hyperscaler capex digestion, Taiwan tension, or a broad CRL cluster) hits the correlated semis and biotech sleeves at once, or if the defense and gambling prints sell off on in-line results.",
+ "what_i_did_not_buy": [
+  "ALB|12 net lowers and lithium price forecast cut",
+  "OKLO|4 net lowers, zero revenue, analyst target dispersion",
+  "SMR|6 net lowers, revenue down 99% YoY",
+  "LEU|6 net lowers, gross margin fell 12.7pts",
+  "FLUT|16 net lowers, four guidance cuts in 2026",
+  "SERV|3 net lowers, 2026 revenue guidance cut",
+  "VRT|4 net lowers, no dated in-window catalyst",
+  "NVO|Morgan Stanley Sell, CagriSema non-inferiority failure"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "5f904162bb1cf6b8",
+ "positions": [
+  {
+   "ticker": "TSM",
+   "weight": 0.08,
+   "theme": "semis",
+   "thesis": "Q3 earnings Oct 15 (catalysts) plus 6 net raises in revision_flow_90d",
+   "falsifier": "Oct 15 capex guide cut or gross margin below 60%"
+  },
+  {
+   "ticker": "ASML",
+   "weight": 0.07,
+   "theme": "semis",
+   "thesis": "Q3 earnings Oct 14 (catalysts) plus 5 net raises and 32 news_14d headlines",
+   "falsifier": "Oct 14 order bookings miss or 2027 guidance trimmed"
+  },
+  {
+   "ticker": "MU",
+   "weight": 0.07,
+   "theme": "semis",
+   "thesis": "inflection_flag true with rev_yoy 3.46 and gross_margin_chg +0.10 (briefing)",
+   "falsifier": "HBM pricing commentary softens at next print"
+  },
+  {
+   "ticker": "NVDA",
+   "weight": 0.07,
+   "theme": "semis",
+   "thesis": "16 net raises from 21 firms in revision_flow_90d",
+   "falsifier": "Hyperscaler capex digestion headline before Nov 13"
+  },
+  {
+   "ticker": "AMD",
+   "weight": 0.06,
+   "theme": "semis",
+   "thesis": "22 net raises from 27 firms in revision_flow_90d",
+   "falsifier": "Nov guidance disappoints after 31% mom_21 run"
+  },
+  {
+   "ticker": "GEV",
+   "weight": 0.07,
+   "theme": "power_grid",
+   "thesis": "inflection_flag true with rev_yoy 0.22 and 8 net raises (briefing, revision_flow_90d)",
+   "falsifier": "Backlog cancellation or book-to-bill below 1.0"
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.06,
+   "theme": "power_grid",
+   "thesis": "inflection_flag true with rev_yoy 0.53 and 6 net raises (briefing, revision_flow_90d)",
+   "falsifier": "Fall liquid-cooling launch slips past Nov 13"
+  },
+  {
+   "ticker": "MRK",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "22 net raises from 17 firms plus Oct 10 I-DXd PDUFA (revision_flow_90d, catalysts)",
+   "falsifier": "Oct 10 CRL on Daiichi manufacturing"
+  },
+  {
+   "ticker": "VRTX",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "9 net raises from 8 firms plus Nov 30 povetacicept PDUFA (revision_flow_90d, catalysts)",
+   "falsifier": "Nov 30 CRL on CMC grounds"
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "17 net raises from 14 firms plus Oct 22 earnings (revision_flow_90d, catalysts)",
+   "falsifier": "Oct 22 EMPASSION topline miss"
+  },
+  {
+   "ticker": "COGT",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "Nov 30 and Dec 30 bezuclastinib PDUFAs plus 2 net raises (catalysts, revision_flow_90d)",
+   "falsifier": "Either PDUFA draws a CRL on CMC"
+  },
+  {
+   "ticker": "BBIO",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "9 net raises from 11 firms plus Nov 27 BBP-418 PDUFA (revision_flow_90d, catalysts)",
+   "falsifier": "Nov 27 CRL on the LGMD2I filing"
+  },
+  {
+   "ticker": "AGIO",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "5 net raises from 6 firms plus Nov 1 mitapivat PDUFA (revision_flow_90d, catalysts)",
+   "falsifier": "Nov 1 narrow or denied sickle cell label"
+  },
+  {
+   "ticker": "CCJ",
+   "weight": 0.05,
+   "theme": "nuclear",
+   "thesis": "Nov 3-4 earnings (catalysts) plus uranium term-price record $96/lb (research_global)",
+   "falsifier": "Uranium spot falls through $80/lb before Nov 13"
+  },
+  {
+   "ticker": "SAAB-B.ST",
+   "weight": 0.05,
+   "theme": "defense",
+   "thesis": "Oct 23 Q3 report (catalysts) plus European rearmament order pipeline (research_global)",
+   "falsifier": "Oct 23 order intake misses consensus"
+  },
+  {
+   "ticker": "RHM.DE",
+   "weight": 0.05,
+   "theme": "defense",
+   "thesis": "Nov 5 Q3 results (catalysts) plus Bernstein Buy EUR1,900 (research_global)",
+   "falsifier": "Nov 5 margin guide cut on program charges"
+  },
+  {
+   "ticker": "KOG.OL",
+   "weight": 0.05,
+   "theme": "defense",
+   "thesis": "Oct 29 Q3 report (catalysts) plus missile demand visibility (research_global)",
+   "falsifier": "Oct 29 order backlog growth stalls"
+  },
+  {
+   "ticker": "EVO.ST",
+   "weight": 0.05,
+   "theme": "gambling",
+   "thesis": "Oct 23 Q3 report (catalysts) plus Americas +9.5% and LatAm +26.3% (research_global)",
+   "falsifier": "Oct 23 Asia revenue declines again QoQ"
+  },
+  {
+   "ticker": "2317.TW",
+   "weight": 0.04,
+   "theme": "semis",
+   "thesis": "Oct 30-31 Hon Hai Tech Day (catalysts) plus Aug revenue +52% YoY (research_global)",
+   "falsifier": "Tech Day AI server guidance disappoints"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.02,
+   "thesis": "declared cash"
+  }
+ ]
+}

@@ -1,0 +1,190 @@
+{
+ "text": "{\"name\":\"quality_momentum_global\",\"cash_weight\":0.02,\"positions\":[\"MU|0.08|semis|rev_yoy 3.46 and gross_margin_chg +0.1015 with inflection_flag true (briefing)|HBM pricing or DRAM inventory data weakens before Dec quarter print\",\"NVDA|0.08|semis|net_raises 16 of 16 firms and rev_yoy 1.06 with gross margin 0.75 (briefing)|hyperscaler capex guide cut or gross margin slips below 0.74\",\"TSM|0.08|semis|net_raises 6 of 6 firms, median target +10.2%, Q3 earnings Oct 15 (catalysts)|capex guide cut or margin guide below 65% on Oct 15 call\",\"AMD|0.07|semis|net_raises 22 of 22 firms, median target +13.4%, rev_yoy 0.50 (briefing)|data-center GPU guide disappoints at next print\",\"ASML|0.07|semis|net_raises 5 of 5 firms, median target +13.6%, Q3 earnings Oct 14 (catalysts)|order bookings miss or 2027 guidance trimmed on Oct 14\",\"AVGO|0.06|semis|net_raises 47 of 47 firms, median target +23.3%, rev_yoy 0.35 (briefing)|product revenue growth decelerates below 20%\",\"DELL|0.06|software|net_raises 24 of 24 firms, rev_yoy 0.58, mom_252_21 2.33 (briefing)|AI server backlog conversion slips or margin guide cut\",\"MRK|0.06|biotech|net_raises 22 of 22 firms, median target +12.4%, I-DXd PDUFA Oct 10 (catalysts)|CRL on I-DXd manufacturing or Keytruda LOE guidance worsens\",\"ABBV|0.06|biotech|net_raises 20 of 20 firms, median target +7.6%, gross_margin_chg +0.029 (briefing)|Skyrizi/Rinvoq growth decelerates below 15%\",\"LLY|0.06|biotech|net_raises 13 of 14 firms, gross_margin_chg +0.038, inflection_flag true (briefing)|retatrutide tolerability data disappoints at EASD or filing slips past Q1 2027\",\"AMGN|0.05|biotech|net_raises 26 of 28 firms, median target +5.4%, inflection_flag true (briefing)|MariTide Phase 3 timing slips or Sjogren's launch underwhelms\",\"GEV|0.05|power_grid|net_raises 8 of 8 firms, rev_yoy 0.22, gross_margin_chg +0.022, inflection_flag true (briefing)|gas-turbine backlog cancellation rate rises or book-to-bill falls below 1.0\",\"NVT|0.05|power_grid|net_raises 6 of 6 firms, rev_yoy 0.53, gross_margin_chg +0.021, inflection_flag true (briefing)|fall-2026 liquid-cooling launch slips or data-center orders slow\",\"WST|0.05|biotech|net_raises 7 of 7 firms, median target +9.6%, vs_ma200 0.216 (briefing)|GLP-1 delivery-device orders normalize faster than guided\",\"RGEN|0.04|biotech|net_raises 4 of 4 firms, mom_63 0.43, vs_ma200 0.269 (briefing)|bioprocessing orders turn negative or FY26 EPS guide cut\",\"VRTX|0.04|biotech|net_raises 9 of 9 firms, mom_252_21 0.40, povetacicept PDUFA Nov 30 (catalysts)|CRL on povetacicept CMC grounds on Nov 30\",\"ARGX|0.04|biotech|net_raises 17 of 18 firms, median target +6.2%, Q3 earnings Oct 22 (catalysts)|EMPASSION Phase 3 MMN topline misses in Q4\",\"CCJ|0.03|nuclear|net_raises 8 of 8 firms, median target +2.7%, Q3 earnings Nov 3-4 (catalysts)|uranium spot falls below $80/lb or Westinghouse JV execution slips\",\"SAAB-B.ST|0.03|defense|Q3'26 report Oct 23 primary-sourced (catalysts), European rearmament order pipeline|Gripen export order slips or Q3 margin misses on Oct 23\",\"RHM.DE|0.03|defense|Q3'26 results Nov 5 primary-sourced (catalysts), German defense budget +30% YoY|order intake misses or 2027 guidance trimmed on Nov 5\",\"HAG.DE|0.03|defense|9-month 2026 results Nov 5 primary-sourced (catalysts), book-to-bill 2.4x H1|free cash flow turns more negative than seasonal or backlog stalls\",\"KOG.OL|0.03|defense|Q3'26 report Oct 29 primary-sourced (catalysts), missile/defense order visibility|Q3 order intake misses or NOK FX drag exceeds guidance\"],\"strategy\":\"Bet on liquid global quality-momentum: semis/memory with rising gross margins (MU, NVDA, TSM, AMD, ASML, AVGO), AI power/grid names with positive estimate revisions and margin expansion (GEV, NVT), large-cap pharma with unanimous net raises (MRK, ABBV, LLY, AMGN, VRTX, ARGX), and European defense primes with confirmed in-window Q3 prints (SAAB-B.ST, RHM.DE, HAG.DE, KOG.OL). I would be wrong if a single macro shock (hyperscaler capex digestion, China export-control headline, or Ukraine de-escalation) hits the correlated AI and defense sleeves at once, or if a PDUFA CRL lands on a top-10 name.\",\"objective\":\"Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only quality-momentum global book.\",\"what_i_did_not_buy\":[\"FLUT|net_raises -15, sixteen lowers, down 69% from peak\",\"ALB|net_raises -12, twelve lowers, lithium price forecast cut\",\"CEG|net_raises -6, seven lowers, revenue -32.5% QoQ\",\"OKLO|net_raises -4, zero revenue, target dispersion $55-$150\",\"SMR|net_raises -6, revenue -99% YoY, stacking downgrades\",\"LEU|net_raises -4, six lowers, gross margin -12.7pp\",\"MP|net_raises -3, four lowers, no dated catalyst\",\"VRT|net_raises -4, four lowers, mom_63 -0.30\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00234573,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 175,
+ "tokens_out": 1619,
+ "cached_tokens": 69632,
+ "parse": "ok",
+ "parsed": {
+  "name": "quality_momentum_global",
+  "strategy": "Bet on liquid global quality-momentum: semis/memory with rising gross margins (MU, NVDA, TSM, AMD, ASML, AVGO), AI power/grid names with positive estimate revisions and margin expansion (GEV, NVT), large-cap pharma with unanimous net raises (MRK, ABBV, LLY, AMGN, VRTX, ARGX), and European defense primes with confirmed in-window Q3 prints (SAAB-B.ST, RHM.DE, HAG.DE, KOG.OL). I would be wrong if a single macro shock (hyperscaler capex digestion, China export-control headline, or Ukraine de-escalation) hits the correlated AI and defense sleeves at once, or if a PDUFA CRL lands on a top-10 name. [factory: weights and cash rescaled from a stated total of 1.1700 to 1.0 -- the model's arithmetic, not its intent]",
+  "objective": "Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only quality-momentum global book.",
+  "cash_weight": 0.017094,
+  "positions": [
+   {
+    "ticker": "MU",
+    "weight": 0.068376,
+    "theme": "semis",
+    "thesis": "rev_yoy 3.46 and gross_margin_chg +0.1015 with inflection_flag true (briefing)",
+    "falsifier": "HBM pricing or DRAM inventory data weakens before Dec quarter print"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.068376,
+    "theme": "semis",
+    "thesis": "net_raises 16 of 16 firms and rev_yoy 1.06 with gross margin 0.75 (briefing)",
+    "falsifier": "hyperscaler capex guide cut or gross margin slips below 0.74"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.068376,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 firms, median target +10.2%, Q3 earnings Oct 15 (catalysts)",
+    "falsifier": "capex guide cut or margin guide below 65% on Oct 15 call"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.059829,
+    "theme": "semis",
+    "thesis": "net_raises 22 of 22 firms, median target +13.4%, rev_yoy 0.50 (briefing)",
+    "falsifier": "data-center GPU guide disappoints at next print"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.059829,
+    "theme": "semis",
+    "thesis": "net_raises 5 of 5 firms, median target +13.6%, Q3 earnings Oct 14 (catalysts)",
+    "falsifier": "order bookings miss or 2027 guidance trimmed on Oct 14"
+   },
+   {
+    "ticker": "AVGO",
+    "weight": 0.051282,
+    "theme": "semis",
+    "thesis": "net_raises 47 of 47 firms, median target +23.3%, rev_yoy 0.35 (briefing)",
+    "falsifier": "product revenue growth decelerates below 20%"
+   },
+   {
+    "ticker": "DELL",
+    "weight": 0.051282,
+    "theme": "software",
+    "thesis": "net_raises 24 of 24 firms, rev_yoy 0.58, mom_252_21 2.33 (briefing)",
+    "falsifier": "AI server backlog conversion slips or margin guide cut"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.051282,
+    "theme": "biotech",
+    "thesis": "net_raises 22 of 22 firms, median target +12.4%, I-DXd PDUFA Oct 10 (catalysts)",
+    "falsifier": "CRL on I-DXd manufacturing or Keytruda LOE guidance worsens"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.051282,
+    "theme": "biotech",
+    "thesis": "net_raises 20 of 20 firms, median target +7.6%, gross_margin_chg +0.029 (briefing)",
+    "falsifier": "Skyrizi/Rinvoq growth decelerates below 15%"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.051282,
+    "theme": "biotech",
+    "thesis": "net_raises 13 of 14 firms, gross_margin_chg +0.038, inflection_flag true (briefing)",
+    "falsifier": "retatrutide tolerability data disappoints at EASD or filing slips past Q1 2027"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.042735,
+    "theme": "biotech",
+    "thesis": "net_raises 26 of 28 firms, median target +5.4%, inflection_flag true (briefing)",
+    "falsifier": "MariTide Phase 3 timing slips or Sjogren's launch underwhelms"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.042735,
+    "theme": "power_grid",
+    "thesis": "net_raises 8 of 8 firms, rev_yoy 0.22, gross_margin_chg +0.022, inflection_flag true (briefing)",
+    "falsifier": "gas-turbine backlog cancellation rate rises or book-to-bill falls below 1.0"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.042735,
+    "theme": "power_grid",
+    "thesis": "net_raises 6 of 6 firms, rev_yoy 0.53, gross_margin_chg +0.021, inflection_flag true (briefing)",
+    "falsifier": "fall-2026 liquid-cooling launch slips or data-center orders slow"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.042735,
+    "theme": "biotech",
+    "thesis": "net_raises 7 of 7 firms, median target +9.6%, vs_ma200 0.216 (briefing)",
+    "falsifier": "GLP-1 delivery-device orders normalize faster than guided"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.034188,
+    "theme": "biotech",
+    "thesis": "net_raises 4 of 4 firms, mom_63 0.43, vs_ma200 0.269 (briefing)",
+    "falsifier": "bioprocessing orders turn negative or FY26 EPS guide cut"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.034188,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 9 firms, mom_252_21 0.40, povetacicept PDUFA Nov 30 (catalysts)",
+    "falsifier": "CRL on povetacicept CMC grounds on Nov 30"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.034188,
+    "theme": "biotech",
+    "thesis": "net_raises 17 of 18 firms, median target +6.2%, Q3 earnings Oct 22 (catalysts)",
+    "falsifier": "EMPASSION Phase 3 MMN topline misses in Q4"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.025641,
+    "theme": "nuclear",
+    "thesis": "net_raises 8 of 8 firms, median target +2.7%, Q3 earnings Nov 3-4 (catalysts)",
+    "falsifier": "uranium spot falls below $80/lb or Westinghouse JV execution slips"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.025641,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 23 primary-sourced (catalysts), European rearmament order pipeline",
+    "falsifier": "Gripen export order slips or Q3 margin misses on Oct 23"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.025641,
+    "theme": "defense",
+    "thesis": "Q3'26 results Nov 5 primary-sourced (catalysts), German defense budget +30% YoY",
+    "falsifier": "order intake misses or 2027 guidance trimmed on Nov 5"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.025641,
+    "theme": "defense",
+    "thesis": "9-month 2026 results Nov 5 primary-sourced (catalysts), book-to-bill 2.4x H1",
+    "falsifier": "free cash flow turns more negative than seasonal or backlog stalls"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.025641,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 29 primary-sourced (catalysts), missile/defense order visibility",
+    "falsifier": "Q3 order intake misses or NOK FX drag exceeds guidance"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "FLUT|net_raises -15, sixteen lowers, down 69% from peak",
+   "ALB|net_raises -12, twelve lowers, lithium price forecast cut",
+   "CEG|net_raises -6, seven lowers, revenue -32.5% QoQ",
+   "OKLO|net_raises -4, zero revenue, target dispersion $55-$150",
+   "SMR|net_raises -6, revenue -99% YoY, stacking downgrades",
+   "LEU|net_raises -4, six lowers, gross margin -12.7pp",
+   "MP|net_raises -3, four lowers, no dated catalyst",
+   "VRT|net_raises -4, four lowers, mom_63 -0.30"
+  ],
+  "weights_rescaled_from": 1.17
+ },
+ "prompt_hash": "65afc2e6e6b4404f",
+ "strategy": {
+  "id": "quality_momentum",
+  "brief": "Quality momentum: liquid names with strong 6-12 month momentum (mom_252_21) AND improving gross margin; avoid names far above their 200-day with falling margins. Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

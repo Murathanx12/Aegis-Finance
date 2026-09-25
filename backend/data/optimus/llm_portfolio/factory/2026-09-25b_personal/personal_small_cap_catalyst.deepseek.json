@@ -1,0 +1,134 @@
+{
+ "text": "{\"name\":\"small_cap_catalyst_biotech_2026\",\"cash_weight\":0.10,\"positions\":[\"AGIO|0.09|biotech|net_raises 5 of 6 firms with median target change +9.7% into Nov 1 mitapivat sickle-cell PDUFA|CRL or narrow all-genotype label on Nov 1\",\"COGT|0.09|biotech|two primary-sourced PDUFAs Nov 30 and Dec 30 with Wedbush Outperform reiterated Sep 16|either bezuclastinib NDA gets a CRL in Nov or Dec\",\"BBIO|0.08|biotech|net_raises 9 with 11 firms and median target change +4.1% into Nov 27 BBP-418 PDUFA|CRL on BBP-418 on Nov 27\",\"SVRA|0.07|biotech|PDUFA Nov 22 extended 3 months with FDA disclaiming safety/efficacy/manufacturing concerns|CRL on molgramostim on Nov 22\",\"INSM|0.07|biotech|ARIKAYCE sNDA PDUFA Jan 28 2027 filed Sep 21 with label-expansion base rate|CRL or delay on the ENCORE sNDA\",\"VRTX|0.09|biotech|net_raises 9 with zero lowers across 8 firms into Nov 30 povetacicept PDUFA|CRL on povetacicept on Nov 30\",\"MRK|0.08|biotech|net_raises 22 with 17 firms and median target change +12.4% into Oct 10 I-DXd PDUFA|CRL on I-DXd on Oct 10\",\"CORT|0.07|biotech|net_raises 4 with zero lowers and rev_qoq +55% into Dec 17 relacorilant resubmission|second CRL on relacorilant on Dec 17\",\"PRAX|0.06|biotech|net_raises 5 with zero lowers into Dec 27 relutrigine PDUFA after major-amendment extension|CRL on relutrigine on Dec 27\",\"SMMT|0.05|biotech|PDUFA Nov 14 ivonescimab BLA with HARMONi OS data at WCLC Sep 15|CRL on ivonescimab on Nov 14\",\"WST|0.07|biotech|net_raises 7 with zero lowers and GLP-1 delivery-device guidance raised twice|Q3 organic growth decelerates below high-teens in late Oct\",\"RGEN|0.06|biotech|net_raises 4 with zero lowers and bioprocessing recovery beats in Q1 and Q2|Q3 core growth turns negative in late Oct\",\"VKTX|0.05|biotech|Sep 22 positive Phase 1 maintenance-dosing data with oral Phase 3 starting Q4 2026|oral VK2735 Phase 3 start slips past Q4 2026\",\"DHR|0.07|biotech|Goldman raised target to $250 Sep 22 with Q3 earnings Oct 20|Q3 core biotech growth stays below 4% on Oct 20\"],\"strategy\":\"Concentrate in small/mid-cap biotech with primary-sourced Q4 2026 PDUFA dates, where the evidence shows dated catalysts and positive revision flow (net_raises) rather than narrative. AGIO, COGT, BBIO, SVRA, INSM, VRTX, MRK, CORT, PRAX and SMMT all carry hand-verified FDA decisions between Oct 10 and Jan 28, and WST, RGEN, VKTX and DHR add dated earnings or data inside the window. I would be wrong if the CRL tail materializes on several of these names at once, if the Section 232 pharma tariff go-live on Sep 29 hits unshielded names like VRTX, or if small-cap risk appetite collapses and the whole sleeve de-rates regardless of the binary outcomes.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via dated small/mid-cap biotech catalysts.\",\"what_i_did_not_buy\":[\"CAPR|9-of-12 negative adcom vote and vol_63 2.14\",\"ALB|net_raises -12 with 12 lowers and lithium price cuts\",\"FLUT|net_raises -15 with 16 lowers and four 2026 guidance cuts\",\"SMR|net_raises -6 with 6 lowers and revenue down 99% YoY\",\"OKLO|zero revenue with analyst targets dispersed $55 to $150\",\"QUBT|opex +114% YoY and analyst targets dispersed $10 to $32\",\"SERV|net_raises -3 with 3 lowers and 2026 guidance cut\",\"NVO|net_raises 0 and mom_252_21 -22.9%\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00168451,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 241,
+ "tokens_out": 1096,
+ "cached_tokens": 69504,
+ "parse": "ok",
+ "parsed": {
+  "name": "small_cap_catalyst_biotech_2026",
+  "strategy": "Concentrate in small/mid-cap biotech with primary-sourced Q4 2026 PDUFA dates, where the evidence shows dated catalysts and positive revision flow (net_raises) rather than narrative. AGIO, COGT, BBIO, SVRA, INSM, VRTX, MRK, CORT, PRAX and SMMT all carry hand-verified FDA decisions between Oct 10 and Jan 28, and WST, RGEN, VKTX and DHR add dated earnings or data inside the window. I would be wrong if the CRL tail materializes on several of these names at once, if the Section 232 pharma tariff go-live on Sep 29 hits unshielded names like VRTX, or if small-cap risk appetite collapses and the whole sleeve de-rates regardless of the binary outcomes. [factory: weights and cash rescaled from a stated total of 1.1000 to 1.0 -- the model's arithmetic, not its intent]",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via dated small/mid-cap biotech catalysts.",
+  "cash_weight": 0.090909,
+  "positions": [
+   {
+    "ticker": "AGIO",
+    "weight": 0.081818,
+    "theme": "biotech",
+    "thesis": "net_raises 5 of 6 firms with median target change +9.7% into Nov 1 mitapivat sickle-cell PDUFA",
+    "falsifier": "CRL or narrow all-genotype label on Nov 1"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.081818,
+    "theme": "biotech",
+    "thesis": "two primary-sourced PDUFAs Nov 30 and Dec 30 with Wedbush Outperform reiterated Sep 16",
+    "falsifier": "either bezuclastinib NDA gets a CRL in Nov or Dec"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.072727,
+    "theme": "biotech",
+    "thesis": "net_raises 9 with 11 firms and median target change +4.1% into Nov 27 BBP-418 PDUFA",
+    "falsifier": "CRL on BBP-418 on Nov 27"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.063636,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 22 extended 3 months with FDA disclaiming safety/efficacy/manufacturing concerns",
+    "falsifier": "CRL on molgramostim on Nov 22"
+   },
+   {
+    "ticker": "INSM",
+    "weight": 0.063636,
+    "theme": "biotech",
+    "thesis": "ARIKAYCE sNDA PDUFA Jan 28 2027 filed Sep 21 with label-expansion base rate",
+    "falsifier": "CRL or delay on the ENCORE sNDA"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.081818,
+    "theme": "biotech",
+    "thesis": "net_raises 9 with zero lowers across 8 firms into Nov 30 povetacicept PDUFA",
+    "falsifier": "CRL on povetacicept on Nov 30"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.072727,
+    "theme": "biotech",
+    "thesis": "net_raises 22 with 17 firms and median target change +12.4% into Oct 10 I-DXd PDUFA",
+    "falsifier": "CRL on I-DXd on Oct 10"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.063636,
+    "theme": "biotech",
+    "thesis": "net_raises 4 with zero lowers and rev_qoq +55% into Dec 17 relacorilant resubmission",
+    "falsifier": "second CRL on relacorilant on Dec 17"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.054545,
+    "theme": "biotech",
+    "thesis": "net_raises 5 with zero lowers into Dec 27 relutrigine PDUFA after major-amendment extension",
+    "falsifier": "CRL on relutrigine on Dec 27"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.045455,
+    "theme": "biotech",
+    "thesis": "PDUFA Nov 14 ivonescimab BLA with HARMONi OS data at WCLC Sep 15",
+    "falsifier": "CRL on ivonescimab on Nov 14"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.063636,
+    "theme": "biotech",
+    "thesis": "net_raises 7 with zero lowers and GLP-1 delivery-device guidance raised twice",
+    "falsifier": "Q3 organic growth decelerates below high-teens in late Oct"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.054545,
+    "theme": "biotech",
+    "thesis": "net_raises 4 with zero lowers and bioprocessing recovery beats in Q1 and Q2",
+    "falsifier": "Q3 core growth turns negative in late Oct"
+   },
+   {
+    "ticker": "VKTX",
+    "weight": 0.045455,
+    "theme": "biotech",
+    "thesis": "Sep 22 positive Phase 1 maintenance-dosing data with oral Phase 3 starting Q4 2026",
+    "falsifier": "oral VK2735 Phase 3 start slips past Q4 2026"
+   },
+   {
+    "ticker": "DHR",
+    "weight": 0.063636,
+    "theme": "biotech",
+    "thesis": "Goldman raised target to $250 Sep 22 with Q3 earnings Oct 20",
+    "falsifier": "Q3 core biotech growth stays below 4% on Oct 20"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "CAPR|9-of-12 negative adcom vote and vol_63 2.14",
+   "ALB|net_raises -12 with 12 lowers and lithium price cuts",
+   "FLUT|net_raises -15 with 16 lowers and four 2026 guidance cuts",
+   "SMR|net_raises -6 with 6 lowers and revenue down 99% YoY",
+   "OKLO|zero revenue with analyst targets dispersed $55 to $150",
+   "QUBT|opex +114% YoY and analyst targets dispersed $10 to $32",
+   "SERV|net_raises -3 with 3 lowers and 2026 guidance cut",
+   "NVO|net_raises 0 and mom_252_21 -22.9%"
+  ],
+  "weights_rescaled_from": 1.1
+ },
+ "prompt_hash": "8ad89f90a543f833",
+ "strategy": {
+  "id": "small_cap_catalyst",
+  "brief": "Small-cap catalyst: smaller but liquid names (band small/mid) with a dated catalyst; pay attention to cost_bps, you pay it. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

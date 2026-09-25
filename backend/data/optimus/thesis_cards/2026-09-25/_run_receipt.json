@@ -1,0 +1,21 @@
+{
+ "receipt": "thesis_cards_run",
+ "day": "2026-09-25",
+ "model": "deepseek/deepseek-flash",
+ "cap_usd": 1.0,
+ "max_quests": 2,
+ "parallel": 2,
+ "n_universe": 2,
+ "n_skipped_existing": 0,
+ "n_todo": 2,
+ "cut_by_max_quests": [],
+ "done": [
+  "VRT",
+  "000660.KS"
+ ],
+ "refused": [],
+ "state": "DONE",
+ "spent_usd_before_last_admit": 0.0,
+ "spent_usd_today": 0.092906,
+ "digest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\thesis_cards\\2026-09-25\\DIGEST.md"
+}

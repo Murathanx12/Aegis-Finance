@@ -1,0 +1,136 @@
+{
+ "text": "{\"name\":\"ensemble_two_lens_biotech_power\",\"cash_weight\":0.06,\"positions\":[\"VRTX|0.09|biotech|revision_flow_90d net_raises 9 of 9 firms with no lowers plus Nov 30 povetacicept PDUFA (catalysts)|CRL on povetacicept BLA on or before Nov 30 2026\",\"MRK|0.09|biotech|revision_flow_90d net_raises 22 across 17 firms plus Oct 10 ifinatamab deruxtecan PDUFA (catalysts)|CRL or delay on the I-DXd BLA announced Oct 10 2026\",\"GILD|0.08|biotech|large-cap quality momentum (mom_63 0.2125, drawdown_63 -0.0022) plus Dec 23 anito-cel PDUFA (catalysts)|CRL on anito-cel BLA on or before Dec 23 2026\",\"AGIO|0.07|biotech|revision_flow_90d net_raises 5 of 6 firms plus Nov 1 mitapivat sickle-cell sNDA PDUFA (catalysts)|CRL or narrow label on mitapivat sNDA on or before Nov 1 2026\",\"COGT|0.06|biotech|revision_flow_90d net_raises 2 with zero lowers plus dual Nov 30 and Dec 30 bezuclastinib PDUFAs (catalysts)|CRL on either bezuclastinib NDA on or before Dec 30 2026\",\"BBIO|0.06|biotech|revision_flow_90d net_raises 9 across 11 firms plus Nov 27 BBP-418 PDUFA (catalysts)|CRL on BBP-418 NDA on or before Nov 27 2026\",\"CEG|0.08|power_grid|power-lens AI nuclear PPA demand plus quality momentum vs_ma200 -0.1009 with 0.38 vol (power, quality)|Crane restart EA slips past 2026 or Microsoft PPA terms renegotiated\",\"GEV|0.08|power_grid|power-lens AI data-center orders >$5B YTD plus revision_flow_90d net_raises 8 of 9 firms (power, revision flow)|Book-to-bill on the 116GW turbine backlog turns below 1.0 by the Q3 print\",\"NVT|0.07|power_grid|power-lens liquid-cooling capacity expansion plus revision_flow_90d net_raises 6 of 5 firms (power, revision flow)|Fall-2026 modular liquid-cooling launch slips past December 2026\",\"ASML|0.07|semis|Asia-supply-chain semicap gatekeeper plus revision_flow_90d net_raises 5 of 5 firms into Oct 14 earnings (Asia supply chain, catalysts)|2027 order book or China restriction guidance cut on the Oct 14 call\",\"TSM|0.07|semis|Asia-supply-chain foundry plus revision_flow_90d net_raises 6 of 7 firms into Oct 15 earnings (Asia supply chain, catalysts)|FY26 capex guide cut below $60B on the Oct 15 call\",\"MU|0.06|semis|Asia-supply-chain HBM4 shortage plus inflection_flag true with rev_yoy 3.4572 (Asia supply chain, quality momentum)|HBM4 allocation share loss or DRAM pricing rollover disclosed at the Dec print\",\"NVDA|0.06|semis|revision_flow_90d net_raises 16 across 21 firms plus quality momentum vs_52w_high -0.0365 (revision flow, quality)|Hyperscaler capex guide cut or a data-center order pushout disclosed before March 2027\",\"CCJ|0.05|nuclear|power-lens uranium upswing plus Nov 3-4 Q3 earnings catalyst (power, catalysts)|Production guidance cut below 19.5Mlb or uranium term price stalls below $90/lb\",\"LEU|0.05|nuclear|power-lens sole US HALEU producer plus $1.07B DOE task order (power, policy)|DOE task-order option not exercised or new capacity slips past 2029\"],\"strategy\":\"Only names at least two independent lenses would pick. Biotech sleeve: dated Q4-2026 PDUFAs where revision flow is net-positive (VRTX, MRK, GILD, AGIO, COGT, BBIO) - the catalyst calendar plus analyst-flow lens agree. Power sleeve: AI electricity bottleneck names with both order momentum and positive revisions (CEG, GEV, NVT, CCJ, LEU). Semis sleeve: Asia supply-chain gatekeepers with confirmed earnings dates and net raises (ASML, TSM, MU, NVDA). I am wrong if a single macro shock - hyperscaler capex digestion, a China export-control headline, or a cluster of PDUFA CRLs - hits the correlated sleeves at once, or if the CRL tail (median -13.7% on the day) lands on two or more biotech names.\",\"objective\":\"Maximise 126-session return vs SPY net of costs by holding only names two or more independent lenses would select.\",\"what_i_did_not_buy\":[\"ALB|revision_flow_90d net_raises -12 with 12 lowers and no catalyst\",\"SMR|net_raises -6, rev_yoy -0.9907, consensus Hold with stacked cuts\",\"OKLO|zero revenue, one-week target dispersion $55-$150, no dated catalyst\",\"FLUT|net_raises -15 across 15 firms, four 2026 guidance cuts\",\"NVO|net_raises 0, mom_252_21 -0.2286, REDEFINE 4 failed non-inferiority\",\"PFE|revision_flow_90d net_raises -5 with 6 lowers, no dated catalyst\",\"SERV|net_raises -3, guidance cut on weaker Uber Eats volumes\",\"QUBT|opex +114% YoY, $10-$32 target dispersion, no dated catalyst\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00206262,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 314,
+ "tokens_out": 1381,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "ensemble_two_lens_biotech_power",
+  "strategy": "Only names at least two independent lenses would pick. Biotech sleeve: dated Q4-2026 PDUFAs where revision flow is net-positive (VRTX, MRK, GILD, AGIO, COGT, BBIO) - the catalyst calendar plus analyst-flow lens agree. Power sleeve: AI electricity bottleneck names with both order momentum and positive revisions (CEG, GEV, NVT, CCJ, LEU). Semis sleeve: Asia supply-chain gatekeepers with confirmed earnings dates and net raises (ASML, TSM, MU, NVDA). I am wrong if a single macro shock - hyperscaler capex digestion, a China export-control headline, or a cluster of PDUFA CRLs - hits the correlated sleeves at once, or if the CRL tail (median -13.7% on the day) lands on two or more biotech names.",
+  "objective": "Maximise 126-session return vs SPY net of costs by holding only names two or more independent lenses would select.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "revision_flow_90d net_raises 9 of 9 firms with no lowers plus Nov 30 povetacicept PDUFA (catalysts)",
+    "falsifier": "CRL on povetacicept BLA on or before Nov 30 2026"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "revision_flow_90d net_raises 22 across 17 firms plus Oct 10 ifinatamab deruxtecan PDUFA (catalysts)",
+    "falsifier": "CRL or delay on the I-DXd BLA announced Oct 10 2026"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "large-cap quality momentum (mom_63 0.2125, drawdown_63 -0.0022) plus Dec 23 anito-cel PDUFA (catalysts)",
+    "falsifier": "CRL on anito-cel BLA on or before Dec 23 2026"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "revision_flow_90d net_raises 5 of 6 firms plus Nov 1 mitapivat sickle-cell sNDA PDUFA (catalysts)",
+    "falsifier": "CRL or narrow label on mitapivat sNDA on or before Nov 1 2026"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "revision_flow_90d net_raises 2 with zero lowers plus dual Nov 30 and Dec 30 bezuclastinib PDUFAs (catalysts)",
+    "falsifier": "CRL on either bezuclastinib NDA on or before Dec 30 2026"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "revision_flow_90d net_raises 9 across 11 firms plus Nov 27 BBP-418 PDUFA (catalysts)",
+    "falsifier": "CRL on BBP-418 NDA on or before Nov 27 2026"
+   },
+   {
+    "ticker": "CEG",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "power-lens AI nuclear PPA demand plus quality momentum vs_ma200 -0.1009 with 0.38 vol (power, quality)",
+    "falsifier": "Crane restart EA slips past 2026 or Microsoft PPA terms renegotiated"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "power-lens AI data-center orders >$5B YTD plus revision_flow_90d net_raises 8 of 9 firms (power, revision flow)",
+    "falsifier": "Book-to-bill on the 116GW turbine backlog turns below 1.0 by the Q3 print"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "power-lens liquid-cooling capacity expansion plus revision_flow_90d net_raises 6 of 5 firms (power, revision flow)",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past December 2026"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Asia-supply-chain semicap gatekeeper plus revision_flow_90d net_raises 5 of 5 firms into Oct 14 earnings (Asia supply chain, catalysts)",
+    "falsifier": "2027 order book or China restriction guidance cut on the Oct 14 call"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Asia-supply-chain foundry plus revision_flow_90d net_raises 6 of 7 firms into Oct 15 earnings (Asia supply chain, catalysts)",
+    "falsifier": "FY26 capex guide cut below $60B on the Oct 15 call"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Asia-supply-chain HBM4 shortage plus inflection_flag true with rev_yoy 3.4572 (Asia supply chain, quality momentum)",
+    "falsifier": "HBM4 allocation share loss or DRAM pricing rollover disclosed at the Dec print"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "revision_flow_90d net_raises 16 across 21 firms plus quality momentum vs_52w_high -0.0365 (revision flow, quality)",
+    "falsifier": "Hyperscaler capex guide cut or a data-center order pushout disclosed before March 2027"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.05,
+    "theme": "nuclear",
+    "thesis": "power-lens uranium upswing plus Nov 3-4 Q3 earnings catalyst (power, catalysts)",
+    "falsifier": "Production guidance cut below 19.5Mlb or uranium term price stalls below $90/lb"
+   },
+   {
+    "ticker": "LEU",
+    "weight": 0.05,
+    "theme": "nuclear",
+    "thesis": "power-lens sole US HALEU producer plus $1.07B DOE task order (power, policy)",
+    "falsifier": "DOE task-order option not exercised or new capacity slips past 2029"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|revision_flow_90d net_raises -12 with 12 lowers and no catalyst",
+   "SMR|net_raises -6, rev_yoy -0.9907, consensus Hold with stacked cuts",
+   "OKLO|zero revenue, one-week target dispersion $55-$150, no dated catalyst",
+   "FLUT|net_raises -15 across 15 firms, four 2026 guidance cuts",
+   "NVO|net_raises 0, mom_252_21 -0.2286, REDEFINE 4 failed non-inferiority",
+   "PFE|revision_flow_90d net_raises -5 with 6 lowers, no dated catalyst",
+   "SERV|net_raises -3, guidance cut on weaker Uber Eats volumes",
+   "QUBT|opex +114% YoY, $10-$32 target dispersion, no dated catalyst"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.100, not 1.0"
+}

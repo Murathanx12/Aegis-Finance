@@ -1,0 +1,136 @@
+{
+ "text": "{\"name\":\"small_cap_catalyst_biotech_pdufa\",\"cash_weight\":0.06,\"positions\":[\"AGIO|0.09|biotech|revision_flow_90d net_raises 5 of 6 firms with median_target_change +9.7% into the Nov 1 mitapivat sickle-cell sNDA|A CRL or a narrow all-genotype-excluding label on Nov 1\",\"COGT|0.09|biotech|two primary PDUFAs Nov 30 GIST and Dec 30 non-adv SM off positive Phase 3 PEAK/SUMMIT with net_raises 2|Either NDA draws a CRL or a CMC major amendment pushes past Dec 30\",\"SMMT|0.08|biotech|Nov 14 ivonescimab BLA PDUFA plus 8-K flow and net_raises 1 with median_target_change +8.3%|FDA issues a CRL or demands more OS follow-up before Nov 14\",\"BBIO|0.08|biotech|Nov 27 BBP-418 PDUFA with revision_flow_90d net_raises 9 of 11 firms and rev_yoy 1.20|FORTIFY-based NDA gets a CRL or an FDA facility-inspection finding\",\"SVRA|0.07|biotech|Nov 22 molgramostim BLA PDUFA, extended 3 months from Aug 22 with FDA disclaiming safety or efficacy concerns|Inhaled-biologic CMC issue triggers a second extension or CRL\",\"PRAX|0.07|biotech|Dec 27 relutrigine PDUFA after major-amendment extension with net_raises 5 of 6 firms and median_target_change +2.1%|FDA finds the sensitivity analysis inadequate and issues a CRL\",\"INSM|0.07|biotech|Jan 28 ARIKAYCE sNDA PDUFA, an already-commercial label expansion with rev_yoy 2.96|ENCORE patient-reported endpoint read as not clinically meaningful\",\"VRTX|0.07|biotech|Nov 30 povetacicept BLA PDUFA with revision_flow_90d net_raises 9 of 9 firms and zero lowers|Accelerated-approval CRL on CMC grounds or a RAINIER data-integrity question\",\"CORT|0.06|biotech|Dec 17 relacorilant NDA resubmission after the Dec 2025 CRL, net_raises 4 of 4 firms, rev_qoq 0.55|Second CRL on the resubmission or an FDA request for another trial\",\"MRK|0.06|biotech|Oct 10 ifinatamab deruxtecan PDUFA with revision_flow_90d net_raises 22 of 17 firms and median_target_change +12.4%|A Daiichi ADC facility inspection finding forces a CRL on I-DXd\",\"GILD|0.06|biotech|Dec 23 anito-cel BLA PDUFA with drawdown_63 only -0.2% and rev_qoq 0.12|A cell-therapy facility inspection finding or a CRL on the anito-cel BLA\",\"MLYS|0.05|biotech|Dec 22 lorundrostat NDA PDUFA for resistant hypertension with mom_21 +9.9%|A CRL or an FDA demand for additional blood-pressure outcome data\",\"BLTE|0.05|biotech|Feb 12 tinlarebant NDA PDUFA with net_raises 5 of 5 firms and median_target_change +6.4%|The DDAF surrogate endpoint is rejected or a CRL lands on the first-time filer\",\"TER|0.05|semis|Oct 27 Q3 earnings with net_raises 6 of 7 firms and median_target_change +13.6% on ~70% AI-related revenue|Q3 guide cut or a device-qualification loss versus Advantest on Oct 27\",\"ASML|0.05|semis|Oct 14 Q3 earnings with net_raises 5 of 5 firms and median_target_change +13.6%|A 2027 order-book cut or a China export-control headline on Oct 14\"],\"strategy\":\"Buy a dated-catalyst book: thirteen FDA PDUFA decisions between Oct 10 and Feb 12, each sized small because the CRL tail is 2-4x the approval pop, plus two Oct earnings prints (ASML Oct 14, TER Oct 27) where the revision_flow_90d is unanimously positive. I deliberately avoid the names where the evidence is negative (ALB, FLUT, SMR, OKLO, SERV, VRT) and the illiquid small caps where the 35bps cost eats the edge. I would be wrong if a broad biotech risk-off hits every binary at once, or if the FDA's first-cycle base rate (~33% for first-time filers) bites harder than the revision flow suggests.\",\"objective\":\"Maximise 126-session return versus SPY, net of costs, by owning dated small/mid-cap catalysts with positive analyst revision flow.\",\"what_i_did_not_buy\":[\"ALB|revision_flow_90d net_raises -12 with 12 lowers and no catalysts\",\"FLUT|net_raises -15 with 16 lowers and mom_252_21 -0.65\",\"VRT|net_raises -4 with 4 lowers and mom_63 -0.30\",\"SMR|net_raises -6 with 6 lowers and rev_yoy -0.99\",\"OKLO|net_raises -4 with 4 lowers and no revenue\",\"SERV|net_raises -3 with 3 lowers and median_target_change -55.6%\",\"CAPR|vol_63 2.14 and drawdown_63 -0.71 after a 9-of-12 negative adcom\",\"LEU|net_raises -4 with 6 lowers and gross_margin_chg -12.7%\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00200764,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 308,
+ "tokens_out": 1339,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "small_cap_catalyst_biotech_pdufa",
+  "strategy": "Buy a dated-catalyst book: thirteen FDA PDUFA decisions between Oct 10 and Feb 12, each sized small because the CRL tail is 2-4x the approval pop, plus two Oct earnings prints (ASML Oct 14, TER Oct 27) where the revision_flow_90d is unanimously positive. I deliberately avoid the names where the evidence is negative (ALB, FLUT, SMR, OKLO, SERV, VRT) and the illiquid small caps where the 35bps cost eats the edge. I would be wrong if a broad biotech risk-off hits every binary at once, or if the FDA's first-cycle base rate (~33% for first-time filers) bites harder than the revision flow suggests.",
+  "objective": "Maximise 126-session return versus SPY, net of costs, by owning dated small/mid-cap catalysts with positive analyst revision flow.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "AGIO",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "revision_flow_90d net_raises 5 of 6 firms with median_target_change +9.7% into the Nov 1 mitapivat sickle-cell sNDA",
+    "falsifier": "A CRL or a narrow all-genotype-excluding label on Nov 1"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "two primary PDUFAs Nov 30 GIST and Dec 30 non-adv SM off positive Phase 3 PEAK/SUMMIT with net_raises 2",
+    "falsifier": "Either NDA draws a CRL or a CMC major amendment pushes past Dec 30"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "Nov 14 ivonescimab BLA PDUFA plus 8-K flow and net_raises 1 with median_target_change +8.3%",
+    "falsifier": "FDA issues a CRL or demands more OS follow-up before Nov 14"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "Nov 27 BBP-418 PDUFA with revision_flow_90d net_raises 9 of 11 firms and rev_yoy 1.20",
+    "falsifier": "FORTIFY-based NDA gets a CRL or an FDA facility-inspection finding"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Nov 22 molgramostim BLA PDUFA, extended 3 months from Aug 22 with FDA disclaiming safety or efficacy concerns",
+    "falsifier": "Inhaled-biologic CMC issue triggers a second extension or CRL"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Dec 27 relutrigine PDUFA after major-amendment extension with net_raises 5 of 6 firms and median_target_change +2.1%",
+    "falsifier": "FDA finds the sensitivity analysis inadequate and issues a CRL"
+   },
+   {
+    "ticker": "INSM",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Jan 28 ARIKAYCE sNDA PDUFA, an already-commercial label expansion with rev_yoy 2.96",
+    "falsifier": "ENCORE patient-reported endpoint read as not clinically meaningful"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Nov 30 povetacicept BLA PDUFA with revision_flow_90d net_raises 9 of 9 firms and zero lowers",
+    "falsifier": "Accelerated-approval CRL on CMC grounds or a RAINIER data-integrity question"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Dec 17 relacorilant NDA resubmission after the Dec 2025 CRL, net_raises 4 of 4 firms, rev_qoq 0.55",
+    "falsifier": "Second CRL on the resubmission or an FDA request for another trial"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Oct 10 ifinatamab deruxtecan PDUFA with revision_flow_90d net_raises 22 of 17 firms and median_target_change +12.4%",
+    "falsifier": "A Daiichi ADC facility inspection finding forces a CRL on I-DXd"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Dec 23 anito-cel BLA PDUFA with drawdown_63 only -0.2% and rev_qoq 0.12",
+    "falsifier": "A cell-therapy facility inspection finding or a CRL on the anito-cel BLA"
+   },
+   {
+    "ticker": "MLYS",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "Dec 22 lorundrostat NDA PDUFA for resistant hypertension with mom_21 +9.9%",
+    "falsifier": "A CRL or an FDA demand for additional blood-pressure outcome data"
+   },
+   {
+    "ticker": "BLTE",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "Feb 12 tinlarebant NDA PDUFA with net_raises 5 of 5 firms and median_target_change +6.4%",
+    "falsifier": "The DDAF surrogate endpoint is rejected or a CRL lands on the first-time filer"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Oct 27 Q3 earnings with net_raises 6 of 7 firms and median_target_change +13.6% on ~70% AI-related revenue",
+    "falsifier": "Q3 guide cut or a device-qualification loss versus Advantest on Oct 27"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Oct 14 Q3 earnings with net_raises 5 of 5 firms and median_target_change +13.6%",
+    "falsifier": "A 2027 order-book cut or a China export-control headline on Oct 14"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|revision_flow_90d net_raises -12 with 12 lowers and no catalysts",
+   "FLUT|net_raises -15 with 16 lowers and mom_252_21 -0.65",
+   "VRT|net_raises -4 with 4 lowers and mom_63 -0.30",
+   "SMR|net_raises -6 with 6 lowers and rev_yoy -0.99",
+   "OKLO|net_raises -4 with 4 lowers and no revenue",
+   "SERV|net_raises -3 with 3 lowers and median_target_change -55.6%",
+   "CAPR|vol_63 2.14 and drawdown_63 -0.71 after a 9-of-12 negative adcom",
+   "LEU|net_raises -4 with 6 lowers and gross_margin_chg -12.7%"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.060, not 1.0"
+}

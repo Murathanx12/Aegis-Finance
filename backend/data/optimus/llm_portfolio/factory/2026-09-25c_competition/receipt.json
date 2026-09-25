@@ -1,0 +1,43 @@
+{
+ "kind": "competition",
+ "asof": "2026-09-25",
+ "run_start_utc": "2026-09-25T07:31:16+00:00",
+ "cap_usd": 1.0,
+ "n_requested": 1,
+ "n_called": 2,
+ "n_frozen": 1,
+ "n_refused": 0,
+ "stopped": null,
+ "books": [
+  {
+   "strategy": "small_cap_catalyst",
+   "parse": "ok",
+   "reasks": 1,
+   "shape_defect": null,
+   "weights_rescaled_from": 1.49,
+   "cost_usd": 0.00218668,
+   "error": null,
+   "served_model": "deepseek-flash",
+   "local_parse": "failed",
+   "local_error": "NOT SENT: prompt ~50505 tokens + 8000 reply > n_ctx 8192",
+   "frozen": true,
+   "book_id": "a978a7d6c8b1a962"
+  }
+ ],
+ "local": {
+  "status": "saved (not frozen)"
+ },
+ "notes_missing": [],
+ "ledger_spend_usd": 0.004504,
+ "own_cost_usd": 0.004504,
+ "lines": [
+  "evidence: 160 candidates, 4 notes, 31 catalysts, briefing briefing_2026-09-21.json (asof 2026-09-21), hash 46224ab6a154e604",
+  "  competition_small_cap_catalyst: incomplete answer (weights plus cash sum to 1.240, not 1.0); re-asking once",
+  "  competition_small_cap_catalyst: weights summed to 1.4900; rescaled to 1.0 and stamped",
+  "  FROZEN comp_small_cap_catalyst_2026-09-25 a978a7d6c8b1a962  competition  25 pos, max 5.4%, cash 1.3%, global-priced ['2317.TW', 'ALL.AX', 'EVO.ST', 'HAG.DE', 'KOG.OL', 'RHM.DE', 'SAAB-B.ST']",
+  "    twin ew                fafc1f60d5ce38e9  AGIO, CAPR, SMMT, COGT, BBIO, SVRA ...",
+  "    twin sector_etf        6103abe0f2ffa4e3  BETZ, GRID, ITA, SMH, URA, XBI",
+  "    twin urth              38444ca62468a269  URTH",
+  "    twin random_same_band  1e3bada0f3d8f655  RNST, BRBR, NI, CLX, GE, INIO ..."
+ ]
+}

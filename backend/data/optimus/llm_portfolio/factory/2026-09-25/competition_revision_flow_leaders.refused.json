@@ -1,0 +1,196 @@
+{
+ "name": "comp_revision_flow_leaders_2026-09-25",
+ "kind": "competition",
+ "objective": "Relative P&L vs WLS, 2026-10-12 to 2026-11-13",
+ "model": "deepseek-flash",
+ "strategy": "Bet on the strongest 90-day analyst revision flow, not on target-level upside: 24 names where net target raises came from at least three distinct firms, concentrated in software (OKTA, SNOW, CRWD, PANW, CRM, GTLB, ESTC, NET, DDOG, WDAY, S, DT, ZS, MDB), large-cap pharma (MRK, ABBV, AMGN, LLY, ARGX), semis (NVDA, AMD, ASML, TSM) and AME. Every name has a Q3 print or PDUFA inside the Oct 12-Nov 13 window, so relative P&L is driven by real events. I would be wrong if the revision flow was already fully priced and the prints sell off on beats, or if a single AI-capex digestion headline hits the correlated software/semis sleeve at once.",
+ "what_i_did_not_buy": [
+  "FLUT|net_raises -15, 16 lowers across 15 firms",
+  "ALB|net_raises -12, 12 lowers across 11 firms",
+  "VRT|net_raises -4, four lowers, zero raises",
+  "CEG|net_raises -6, seven lowers across seven firms",
+  "LEU|net_raises -4, six lowers across nine firms",
+  "SMR|net_raises -6, six lowers across seven firms",
+  "GILD|net_raises -3, six lowers across eight firms",
+  "NVO|no raises, no lowers, one firm only"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "bdcdf4d8490c5609",
+ "positions": [
+  {
+   "ticker": "MRK",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "net_raises 22 across 17 firms (revision_flow_90d)",
+   "falsifier": "Oct 10 I-DXd PDUFA CRL or weak Q3 oncology print"
+  },
+  {
+   "ticker": "ABBV",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "net_raises 20 across 21 firms (revision_flow_90d)",
+   "falsifier": "Skyrzi/Rinvoq growth decelerates in Q3 print"
+  },
+  {
+   "ticker": "AMGN",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "net_raises 26 across 22 firms (revision_flow_90d)",
+   "falsifier": "MariTide Phase 3 timing slips past Jan 21 2027"
+  },
+  {
+   "ticker": "LLY",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "net_raises 13 across 13 firms (revision_flow_90d)",
+   "falsifier": "retatrutide Q1 2027 filing slips or EASD GI data disappoints"
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "net_raises 17 across 14 firms (revision_flow_90d)",
+   "falsifier": "EMPASSION MMN topline misses in Q4 2026"
+  },
+  {
+   "ticker": "OKTA",
+   "weight": 0.08,
+   "theme": "software",
+   "thesis": "net_raises 63 across 32 firms (revision_flow_90d)",
+   "falsifier": "identity growth decelerates in next print"
+  },
+  {
+   "ticker": "SNOW",
+   "weight": 0.08,
+   "theme": "software",
+   "thesis": "net_raises 47 across 33 firms (revision_flow_90d)",
+   "falsifier": "product revenue guide cut at next earnings"
+  },
+  {
+   "ticker": "CRWD",
+   "weight": 0.07,
+   "theme": "software",
+   "thesis": "net_raises 44 across 35 firms (revision_flow_90d)",
+   "falsifier": "net retention falls below 110% in Q3 print"
+  },
+  {
+   "ticker": "PANW",
+   "weight": 0.07,
+   "theme": "software",
+   "thesis": "net_raises 34 across 30 firms (revision_flow_90d)",
+   "falsifier": "platformization bookings stall in next quarter"
+  },
+  {
+   "ticker": "CRM",
+   "weight": 0.06,
+   "theme": "software",
+   "thesis": "net_raises 33 across 29 firms (revision_flow_90d)",
+   "falsifier": "Agentforce ARR disclosure disappoints"
+  },
+  {
+   "ticker": "GTLB",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 29 across 21 firms (revision_flow_90d)",
+   "falsifier": "net expansion rate falls in Q3 print"
+  },
+  {
+   "ticker": "ESTC",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 28 across 21 firms (revision_flow_90d)",
+   "falsifier": "Elastic Cloud growth decelerates below 25%"
+  },
+  {
+   "ticker": "NET",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 27 across 19 firms (revision_flow_90d)",
+   "falsifier": "enterprise net adds slow in Q3"
+  },
+  {
+   "ticker": "DDOG",
+   "weight": 0.05,
+   "theme": "software",
+   "thesis": "net_raises 22 across 23 firms (revision_flow_90d)",
+   "falsifier": "usage growth decelerates in next print"
+  },
+  {
+   "ticker": "WDAY",
+   "weight": 0.04,
+   "theme": "software",
+   "thesis": "net_raises 20 across 24 firms (revision_flow_90d)",
+   "falsifier": "subscription backlog growth stalls"
+  },
+  {
+   "ticker": "S",
+   "weight": 0.04,
+   "theme": "software",
+   "thesis": "net_raises 23 across 20 firms (revision_flow_90d)",
+   "falsifier": "net new ARR misses in Q3"
+  },
+  {
+   "ticker": "DT",
+   "weight": 0.04,
+   "theme": "software",
+   "thesis": "net_raises 23 across 18 firms (revision_flow_90d)",
+   "falsifier": "consumption growth slows in Q3 print"
+  },
+  {
+   "ticker": "ZS",
+   "weight": 0.04,
+   "theme": "software",
+   "thesis": "net_raises 21 across 23 firms (revision_flow_90d)",
+   "falsifier": "billings guide cut at next earnings"
+  },
+  {
+   "ticker": "MDB",
+   "weight": 0.04,
+   "theme": "software",
+   "thesis": "net_raises 21 across 24 firms (revision_flow_90d)",
+   "falsifier": "Atlas consumption growth stalls"
+  },
+  {
+   "ticker": "AME",
+   "weight": 0.04,
+   "theme": "materials",
+   "thesis": "net_raises 12 across 10 firms (revision_flow_90d)",
+   "falsifier": "$5B deal integration costs hit Q3 margin"
+  },
+  {
+   "ticker": "NVDA",
+   "weight": 0.04,
+   "theme": "semis",
+   "thesis": "net_raises 16 across 21 firms (revision_flow_90d)",
+   "falsifier": "hyperscaler capex digestion headline hits Q3 guide"
+  },
+  {
+   "ticker": "AMD",
+   "weight": 0.04,
+   "theme": "semis",
+   "thesis": "net_raises 22 across 27 firms (revision_flow_90d)",
+   "falsifier": "MI-series order pushout disclosed at next print"
+  },
+  {
+   "ticker": "ASML",
+   "weight": 0.03,
+   "theme": "semis",
+   "thesis": "net_raises 5 across 4 firms (revision_flow_90d)",
+   "falsifier": "Oct 14 order intake misses guide"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.03,
+   "theme": "semis",
+   "thesis": "net_raises 6 across 7 firms (revision_flow_90d)",
+   "falsifier": "Oct 15 capex guide cut"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.02,
+   "thesis": "declared cash"
+  }
+ ]
+}

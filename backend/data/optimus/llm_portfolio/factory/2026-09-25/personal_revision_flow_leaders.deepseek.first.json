@@ -1,0 +1,122 @@
+{
+ "text": "{\"name\":\"revision_flow_leaders_6m\",\"cash_weight\":0.06,\"positions\":[\"ARGX|0.09|biotech|net_raises 17 across 14 firms, the strongest revision flow in the panel|Q3 print on Oct 22 shows Vyvgart growth decelerating\",\"MRK|0.09|biotech|net_raises 22 across 17 firms plus Oct 10 I-DXd PDUFA|I-DXd CRL on Oct 10 or Keytruda LOE guidance cut\",\"ABBV|0.09|biotech|net_raises 20 across 21 firms, zero lowers, near 52w high|Skyrizi/Rinvoq guidance trimmed at next print\",\"AMGN|0.09|biotech|net_raises 26 across 22 firms, the largest firm count in the panel|MariTide MARITIME-1/2 slips past Jan 21 2027\",\"LLY|0.08|biotech|net_raises 13 across 13 firms with inflection_flag true|Retatrutide filing slips out of Q1 2027\",\"OKTA|0.08|software|net_raises 63 across 32 firms, highest net_raises in the panel|Identity growth decelerates below 10% yoy\",\"SNOW|0.08|software|net_raises 47 across 33 firms, zero lowers|Product revenue growth falls below 30% yoy\",\"CRWD|0.08|software|net_raises 44 across 35 firms, zero drawdown_63|Net new ARR misses at next print\",\"PANW|0.08|software|net_raises 34 across 30 firms, rev_yoy 0.3445|Platformization deal metrics stall\",\"NVDA|0.07|semis|net_raises 16 across 21 firms, 199 headlines, 3.6% off 52w high|Hyperscaler capex guide cut hits the Oct print\",\"TSM|0.07|semis|net_raises 6 across 7 firms into Oct 15 earnings|Capex guide cut on Oct 15\",\"ASML|0.06|semis|net_raises 5 across 4 firms, median target change 0.1364|Q3 orders on Oct 14 disappoint\",\"GEV|0.05|power_grid|net_raises 8 across 9 firms with inflection_flag true|Backlog cancellation rate rises on the 116GW book\"],\"strategy\":\"Bet on the names where sell-side target flow is most one-sidedly positive over the last 90 days: ARGX, MRK, ABBV, AMGN, LLY in biotech (net_raises 13-26 across 13-22 firms), the security/data software complex (OKTA 63, SNOW 47, CRWD 44, PANW 34 net raises) and the AI semis/power chain (NVDA, TSM, ASML, GEV). I deliberately ignore target-level upside, which the evidence measures as perverse. I would be wrong if the flow is stale: a single bad print (Oct 14 ASML, Oct 15 TSM, Oct 22 ARGX) or a hyperscaler capex pause compresses the whole book at once.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, by owning the strongest 90-day analyst revision-flow names.\",\"what_i_did_not_buy\":[\"FLUT|net_raises -15 across 15 firms, worst revision flow in panel\",\"ALB|net_raises -12 across 11 firms, lithium targets being cut\",\"SMR|net_raises -6 across 7 firms, revenue down 99% yoy\",\"CEG|net_raises -6 across 7 firms, rev_qoq -0.3253\",\"VRT|net_raises -4 across 5 firms, zero raises\",\"OKLO|net_raises -4 across 6 firms, zero raises\",\"LEU|net_raises -4 across 9 firms, gross margin down 12.7pts\",\"GILD|net_raises -3 across 8 firms, six lowers\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00148126,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 318,
+ "tokens_out": 928,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "revision_flow_leaders_6m",
+  "strategy": "Bet on the names where sell-side target flow is most one-sidedly positive over the last 90 days: ARGX, MRK, ABBV, AMGN, LLY in biotech (net_raises 13-26 across 13-22 firms), the security/data software complex (OKTA 63, SNOW 47, CRWD 44, PANW 34 net raises) and the AI semis/power chain (NVDA, TSM, ASML, GEV). I deliberately ignore target-level upside, which the evidence measures as perverse. I would be wrong if the flow is stale: a single bad print (Oct 14 ASML, Oct 15 TSM, Oct 22 ARGX) or a hyperscaler capex pause compresses the whole book at once.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, by owning the strongest 90-day analyst revision-flow names.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "ARGX",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 17 across 14 firms, the strongest revision flow in the panel",
+    "falsifier": "Q3 print on Oct 22 shows Vyvgart growth decelerating"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 22 across 17 firms plus Oct 10 I-DXd PDUFA",
+    "falsifier": "I-DXd CRL on Oct 10 or Keytruda LOE guidance cut"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 20 across 21 firms, zero lowers, near 52w high",
+    "falsifier": "Skyrizi/Rinvoq guidance trimmed at next print"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 26 across 22 firms, the largest firm count in the panel",
+    "falsifier": "MariTide MARITIME-1/2 slips past Jan 21 2027"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 13 across 13 firms with inflection_flag true",
+    "falsifier": "Retatrutide filing slips out of Q1 2027"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 63 across 32 firms, highest net_raises in the panel",
+    "falsifier": "Identity growth decelerates below 10% yoy"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 47 across 33 firms, zero lowers",
+    "falsifier": "Product revenue growth falls below 30% yoy"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 44 across 35 firms, zero drawdown_63",
+    "falsifier": "Net new ARR misses at next print"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 34 across 30 firms, rev_yoy 0.3445",
+    "falsifier": "Platformization deal metrics stall"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 16 across 21 firms, 199 headlines, 3.6% off 52w high",
+    "falsifier": "Hyperscaler capex guide cut hits the Oct print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 6 across 7 firms into Oct 15 earnings",
+    "falsifier": "Capex guide cut on Oct 15"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "net_raises 5 across 4 firms, median target change 0.1364",
+    "falsifier": "Q3 orders on Oct 14 disappoint"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "net_raises 8 across 9 firms with inflection_flag true",
+    "falsifier": "Backlog cancellation rate rises on the 116GW book"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "FLUT|net_raises -15 across 15 firms, worst revision flow in panel",
+   "ALB|net_raises -12 across 11 firms, lithium targets being cut",
+   "SMR|net_raises -6 across 7 firms, revenue down 99% yoy",
+   "CEG|net_raises -6 across 7 firms, rev_qoq -0.3253",
+   "VRT|net_raises -4 across 5 firms, zero raises",
+   "OKLO|net_raises -4 across 6 firms, zero raises",
+   "LEU|net_raises -4 across 9 firms, gross margin down 12.7pts",
+   "GILD|net_raises -3 across 8 firms, six lowers"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.070, not 1.0"
+}

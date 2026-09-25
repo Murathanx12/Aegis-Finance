@@ -1,0 +1,143 @@
+{
+ "text": "{\"name\":\"policy_geopolitics_global\",\"cash_weight\":0.01,\"positions\":[\"RHM.DE|0.09|defense|German defense budget +30% YoY to ~$150bn 2026 (research_global_candidates)|Q3'26 results Nov 5 2026 miss or order-timing guidance cut\",\"HAG.DE|0.08|defense|Order backlog >\u20ac10bn and book-to-bill 2.4x H1 (research_global_candidates)|9-month 2026 results Nov 5 2026 show negative FCF worse than seasonal\",\"SAAB-B.ST|0.08|defense|Gripen export pipeline as European rearmament beneficiary (research_global_candidates)|Q3'26 report Oct 23 2026 shows order intake below Q2 run-rate\",\"KOG.OL|0.08|defense|Missile/defense systems demand with Nordic order visibility (research_global_candidates)|Q3'26 report Oct 29 2026 misses on missile-segment margin\",\"012450.KS|0.07|defense|K9 export deals plus GTF engine and space exposure (research_global_candidates)|Q3'26 report shows YoY growth decelerating below +50%\",\"LDO.MI|0.07|defense|FY guidance upgraded twice in 2026 on defense+space demand (research_global_candidates)|Q3'26 results show program execution charge on a large platform\",\"CCJ|0.08|nuclear|Long-term contracts locking $120+/lb midpoints plus Westinghouse stake (research_global_candidates)|Q3'26 earnings Nov 3-4 2026 cut production or delivery guidance\",\"LEU|0.06|nuclear|$900M DOE HALEU task order finalized July 2026, sole US HALEU producer (research_themes)|Q3 print shows no non-DOE HALEU offtake signed with SMR developers\",\"TMQ|0.05|materials|US government closed 10% stake for $35.6M on Sept 14 2026 (research_themes)|Ambler Road permitting slips or a court blocks the federal stake\",\"MP|0.06|materials|~15% as-converted government stake plus 10-yr DoD magnet offtake at price floor (research_themes)|Magnet offtake volumes come in below the fixed floor commitment\",\"INTC|0.07|semis|10% government stake now worth ~$45B and 11 net analyst raises 90d (briefing)|Shareholder lawsuit over the CHIPS-Act equity taking gets an adverse ruling\",\"ASML|0.08|semis|Q3'26 earnings Oct 14 2026 confirmed, 5 net raises 90d (catalysts)|Oct 14 earnings shows bookings below the guided $12.8-14.0bn range\",\"TSM|0.08|semis|Q3'26 earnings Oct 15 2026, capex guide raised to $60-64B (research_themes)|Oct 15 earnings cuts FY26 capex guide below $60B\",\"2317.TW|0.06|semis|Hon Hai Tech Day Oct 30-31 2026 confirmed, Aug revenue +52% YoY (research_global_candidates)|Tech Day reveals no new AI server rack design win or Q3 misses Street\",\"2330.TW|0.05|semis|Q3'26 earnings Oct 15 2026, AI wafer and CoWoS capacity tight through 2027 (research_global_candidates)|Q3 call signals 3nm or CoWoS capacity easing into 2027\",\"MRK|0.06|policy|22 net raises 90d and I-DXd PDUFA Oct 10 2026 primary-sourced (briefing)|Oct 10 PDUFA yields a CRL on Daiichi manufacturing grounds\"],\"strategy\":\"Bet that the fastest-moving policy variables in the Oct 12-Nov 13 window are defense budgets (German spend +30% YoY, NATO glidepath), nuclear-fuel security (DOE HALEU task order, uranium term contracts), critical-minerals nationalism (US government equity stakes in MP and Trilogy Metals), and CHIPS/industrial policy (Intel's 10% stake, TSMC/ASML capex). Every name has a confirmed or primary-sourced dated event inside the window, so relative P&L is driven by real prints and policy headlines, not theme drift. I would be wrong on a de-escalation headline (Ukraine ceasefire progress, US-China trade detente, or a court striking the government equity-taking authority) that compresses the whole geopolitical-risk-premium complex at once.\",\"objective\":\"Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 through policy- and geopolitics-driven global names with in-window catalysts.\",\"what_i_did_not_buy\":[\"FLUT|16 target cuts 90d, four 2026 guidance cuts, near 52-week low\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week\",\"SMR|Stacking downgrades, RBC cut to $10 and Citi to $6.50\",\"ALB|12 net target cuts 90d, lithium spot normalizing, down 21.5% YTD\",\"NVO|Morgan Stanley downgraded to Sell, REDEFINE 4 failed non-inferiority\",\"GME|Meme rally on insider buy, no policy or fundamental catalyst\",\"QUBT|Opex +114% YoY, $10-$32 target dispersion, weak factor rank\",\"SERV|Cut 2026 revenue guidance on weaker Uber Eats volumes\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00189371,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 356,
+ "tokens_out": 1244,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "policy_geopolitics_global",
+  "strategy": "Bet that the fastest-moving policy variables in the Oct 12-Nov 13 window are defense budgets (German spend +30% YoY, NATO glidepath), nuclear-fuel security (DOE HALEU task order, uranium term contracts), critical-minerals nationalism (US government equity stakes in MP and Trilogy Metals), and CHIPS/industrial policy (Intel's 10% stake, TSMC/ASML capex). Every name has a confirmed or primary-sourced dated event inside the window, so relative P&L is driven by real prints and policy headlines, not theme drift. I would be wrong on a de-escalation headline (Ukraine ceasefire progress, US-China trade detente, or a court striking the government equity-taking authority) that compresses the whole geopolitical-risk-premium complex at once.",
+  "objective": "Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 through policy- and geopolitics-driven global names with in-window catalysts.",
+  "cash_weight": 0.01,
+  "positions": [
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.09,
+    "theme": "defense",
+    "thesis": "German defense budget +30% YoY to ~$150bn 2026 (research_global_candidates)",
+    "falsifier": "Q3'26 results Nov 5 2026 miss or order-timing guidance cut"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Order backlog >\u20ac10bn and book-to-bill 2.4x H1 (research_global_candidates)",
+    "falsifier": "9-month 2026 results Nov 5 2026 show negative FCF worse than seasonal"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Gripen export pipeline as European rearmament beneficiary (research_global_candidates)",
+    "falsifier": "Q3'26 report Oct 23 2026 shows order intake below Q2 run-rate"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Missile/defense systems demand with Nordic order visibility (research_global_candidates)",
+    "falsifier": "Q3'26 report Oct 29 2026 misses on missile-segment margin"
+   },
+   {
+    "ticker": "012450.KS",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "K9 export deals plus GTF engine and space exposure (research_global_candidates)",
+    "falsifier": "Q3'26 report shows YoY growth decelerating below +50%"
+   },
+   {
+    "ticker": "LDO.MI",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "FY guidance upgraded twice in 2026 on defense+space demand (research_global_candidates)",
+    "falsifier": "Q3'26 results show program execution charge on a large platform"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.08,
+    "theme": "nuclear",
+    "thesis": "Long-term contracts locking $120+/lb midpoints plus Westinghouse stake (research_global_candidates)",
+    "falsifier": "Q3'26 earnings Nov 3-4 2026 cut production or delivery guidance"
+   },
+   {
+    "ticker": "LEU",
+    "weight": 0.06,
+    "theme": "nuclear",
+    "thesis": "$900M DOE HALEU task order finalized July 2026, sole US HALEU producer (research_themes)",
+    "falsifier": "Q3 print shows no non-DOE HALEU offtake signed with SMR developers"
+   },
+   {
+    "ticker": "TMQ",
+    "weight": 0.05,
+    "theme": "materials",
+    "thesis": "US government closed 10% stake for $35.6M on Sept 14 2026 (research_themes)",
+    "falsifier": "Ambler Road permitting slips or a court blocks the federal stake"
+   },
+   {
+    "ticker": "MP",
+    "weight": 0.06,
+    "theme": "materials",
+    "thesis": "~15% as-converted government stake plus 10-yr DoD magnet offtake at price floor (research_themes)",
+    "falsifier": "Magnet offtake volumes come in below the fixed floor commitment"
+   },
+   {
+    "ticker": "INTC",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "10% government stake now worth ~$45B and 11 net analyst raises 90d (briefing)",
+    "falsifier": "Shareholder lawsuit over the CHIPS-Act equity taking gets an adverse ruling"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 2026 confirmed, 5 net raises 90d (catalysts)",
+    "falsifier": "Oct 14 earnings shows bookings below the guided $12.8-14.0bn range"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 2026, capex guide raised to $60-64B (research_themes)",
+    "falsifier": "Oct 15 earnings cuts FY26 capex guide below $60B"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 2026 confirmed, Aug revenue +52% YoY (research_global_candidates)",
+    "falsifier": "Tech Day reveals no new AI server rack design win or Q3 misses Street"
+   },
+   {
+    "ticker": "2330.TW",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 2026, AI wafer and CoWoS capacity tight through 2027 (research_global_candidates)",
+    "falsifier": "Q3 call signals 3nm or CoWoS capacity easing into 2027"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.06,
+    "theme": "policy",
+    "thesis": "22 net raises 90d and I-DXd PDUFA Oct 10 2026 primary-sourced (briefing)",
+    "falsifier": "Oct 10 PDUFA yields a CRL on Daiichi manufacturing grounds"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "FLUT|16 target cuts 90d, four 2026 guidance cuts, near 52-week low",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week",
+   "SMR|Stacking downgrades, RBC cut to $10 and Citi to $6.50",
+   "ALB|12 net target cuts 90d, lithium spot normalizing, down 21.5% YTD",
+   "NVO|Morgan Stanley downgraded to Sell, REDEFINE 4 failed non-inferiority",
+   "GME|Meme rally on insider buy, no policy or fundamental catalyst",
+   "QUBT|Opex +114% YoY, $10-$32 target dispersion, weak factor rank",
+   "SERV|Cut 2026 revenue guidance on weaker Uber Eats volumes"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.130, not 1.0"
+}

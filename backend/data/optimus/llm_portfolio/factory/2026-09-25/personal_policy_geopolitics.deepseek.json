@@ -1,0 +1,126 @@
+{
+ "text": "{\"name\":\"policy_geopolitics_book\",\"cash_weight\":0.06,\"positions\":[\"INTC|0.10|policy|US government holds a ~10% CHIPS-tied equity stake worth ~$45B (Sept 13 2026) and revision_flow_90d shows net_raises +11 with median target change +22.9%|A court ruling against executive equity-taking authority or a Q3 print that fails to justify the +32% 21-day move\",\"MP|0.08|materials|DoD holds a ~15% as-converted stake plus a 10-year magnet offtake at a fixed price floor (Jul 2025 template), the purest Section 232 critical-minerals beneficiary|Section 232 negotiation resolves without price floors or the DoD offtake volume undershoots the fixed floor\",\"TMQ|0.04|materials|US government closed a 10% stake for $35.6M on Sept 14 2026 (Dept of War) backing the Ambler Metals JV in Alaska|Ambler Road federal permitting stalls or the stake terms are unwound\",\"RHM.DE|0.09|defense|German defense budget +30% YoY to ~$150bn in 2026 with Bernstein Buy PT EUR1,900 (Sept 18-21); Q3'26 results confirmed Nov 5 2026|Q3 order intake misses or the analyst split resolves toward the MWB EUR1,050 bear case\",\"SAAB-B.ST|0.08|defense|European rearmament beneficiary with Q3'26 report confirmed Oct 23 2026 and a Gripen export pipeline|Q3 order bookings disappoint or a Ukraine de-escalation headline compresses the whole rearmament premium\",\"KOG.OL|0.08|defense|Nordic missile/defense systems demand with Q3'26 report confirmed Oct 29 2026|Q3 margins miss on FX or a defense-budget pause in Norway\",\"HAG.DE|0.07|defense|Order backlog above EUR10bn and book-to-bill 2.4x in H1, with 9-month 2026 results confirmed Nov 5 2026|Negative free cash flow worsens beyond the seasonal pattern or backlog conversion slips\",\"CCJ|0.08|nuclear|Uranium term price hit a record $96/lb (Sept 10 2026) and BofA sees $130/lb in 2027; Q3'26 earnings Nov 3-4 2026|Uranium spot rolls over or the production shortfall versus delivery commitments forces expensive purchases\",\"LEU|0.05|nuclear|Sole US HALEU producer with a finalized $900M DOE task order (July 2026) and 900kg delivered two weeks early|A non-DOE HALEU offtake fails to materialize or the 2029 capacity target slips\",\"GEV|0.09|power_grid|Q2 2026 orders +88% organically to $24.2B with a $176B backlog and inflection_flag true; Bernstein Buy PT $1,298 (Sept 2026)|Backlog cancellation rate rises or a hyperscaler capex pause hits the 116GW turbine slot reservations\",\"NVT|0.07|power_grid|Q1 2026 sales +53% YoY, FY26 guide raised to 37-39% growth, inflection_flag true and net_raises +6|The fall-2026 modular liquid-cooling launch slips or data-center sales fail to exceed $2B in 2026\",\"VRTX|0.06|biotech|Povetacicept BLA PDUFA Nov 30 2026 with net_raises +9 and zero lowers across 8 firms|A CRL on CMC/manufacturing grounds removes the first nephrology product leg\",\"MRK|0.05|biotech|Ifinatamab deruxtecan PDUFA Oct 10 2026 with net_raises +22 across 17 firms and median target change +12.4%|A CRL on the Daiichi ADC manufacturing facility delays the franchise\"],\"strategy\":\"I bet on the policy variables that move fastest over 126 sessions: US government equity stakes and critical-minerals nationalism (INTC, MP, TMQ), European defense rearmament into confirmed Q3 prints (RHM.DE, SAAB-B.ST, KOG.OL, HAG.DE), nuclear fuel security (CCJ, LEU), the AI power-grid bottleneck (GEV, NVT), and two dated FDA catalysts (VRTX, MRK). I would be wrong if a legal ruling strikes down executive equity-taking authority, a Ukraine de-escalation headline compresses the defense premium, or a hyperscaler capex pause hits the grid names simultaneously.\",\"objective\":\"Maximise 126-session return versus SPY, net of costs, through policy-driven and geopolitical catalysts.\",\"what_i_did_not_buy\":[\"ALB|net_raises -12 with 12 lowers and no raises; lithium forecast cut 40%\",\"SMR|net_raises -6, revenue -99% YoY, consensus Hold with stacked downgrades\",\"OKLO|Zero revenue and a $55-$150 one-week analyst target dispersion\",\"FLUT|net_raises -15 with 16 lowers and four 2026 guidance cuts\",\"SERV|net_raises -3 with median target change -55.6% after a guidance cut\",\"BYND|Meme-cluster spike with no fundamental news and -95% from 52-week high\",\"QUBT|Operating expenses +114% YoY; $10-$32 analyst target dispersion\",\"2330.TW|Semis exposure already covered; no policy catalyst in the evidence\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00189268,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 312,
+ "tokens_out": 1249,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "policy_geopolitics_book",
+  "strategy": "I bet on the policy variables that move fastest over 126 sessions: US government equity stakes and critical-minerals nationalism (INTC, MP, TMQ), European defense rearmament into confirmed Q3 prints (RHM.DE, SAAB-B.ST, KOG.OL, HAG.DE), nuclear fuel security (CCJ, LEU), the AI power-grid bottleneck (GEV, NVT), and two dated FDA catalysts (VRTX, MRK). I would be wrong if a legal ruling strikes down executive equity-taking authority, a Ukraine de-escalation headline compresses the defense premium, or a hyperscaler capex pause hits the grid names simultaneously.",
+  "objective": "Maximise 126-session return versus SPY, net of costs, through policy-driven and geopolitical catalysts.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "INTC",
+    "weight": 0.1,
+    "theme": "policy",
+    "thesis": "US government holds a ~10% CHIPS-tied equity stake worth ~$45B (Sept 13 2026) and revision_flow_90d shows net_raises +11 with median target change +22.9%",
+    "falsifier": "A court ruling against executive equity-taking authority or a Q3 print that fails to justify the +32% 21-day move"
+   },
+   {
+    "ticker": "MP",
+    "weight": 0.08,
+    "theme": "materials",
+    "thesis": "DoD holds a ~15% as-converted stake plus a 10-year magnet offtake at a fixed price floor (Jul 2025 template), the purest Section 232 critical-minerals beneficiary",
+    "falsifier": "Section 232 negotiation resolves without price floors or the DoD offtake volume undershoots the fixed floor"
+   },
+   {
+    "ticker": "TMQ",
+    "weight": 0.04,
+    "theme": "materials",
+    "thesis": "US government closed a 10% stake for $35.6M on Sept 14 2026 (Dept of War) backing the Ambler Metals JV in Alaska",
+    "falsifier": "Ambler Road federal permitting stalls or the stake terms are unwound"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.09,
+    "theme": "defense",
+    "thesis": "German defense budget +30% YoY to ~$150bn in 2026 with Bernstein Buy PT EUR1,900 (Sept 18-21); Q3'26 results confirmed Nov 5 2026",
+    "falsifier": "Q3 order intake misses or the analyst split resolves toward the MWB EUR1,050 bear case"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "European rearmament beneficiary with Q3'26 report confirmed Oct 23 2026 and a Gripen export pipeline",
+    "falsifier": "Q3 order bookings disappoint or a Ukraine de-escalation headline compresses the whole rearmament premium"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Nordic missile/defense systems demand with Q3'26 report confirmed Oct 29 2026",
+    "falsifier": "Q3 margins miss on FX or a defense-budget pause in Norway"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "Order backlog above EUR10bn and book-to-bill 2.4x in H1, with 9-month 2026 results confirmed Nov 5 2026",
+    "falsifier": "Negative free cash flow worsens beyond the seasonal pattern or backlog conversion slips"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.08,
+    "theme": "nuclear",
+    "thesis": "Uranium term price hit a record $96/lb (Sept 10 2026) and BofA sees $130/lb in 2027; Q3'26 earnings Nov 3-4 2026",
+    "falsifier": "Uranium spot rolls over or the production shortfall versus delivery commitments forces expensive purchases"
+   },
+   {
+    "ticker": "LEU",
+    "weight": 0.05,
+    "theme": "nuclear",
+    "thesis": "Sole US HALEU producer with a finalized $900M DOE task order (July 2026) and 900kg delivered two weeks early",
+    "falsifier": "A non-DOE HALEU offtake fails to materialize or the 2029 capacity target slips"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "Q2 2026 orders +88% organically to $24.2B with a $176B backlog and inflection_flag true; Bernstein Buy PT $1,298 (Sept 2026)",
+    "falsifier": "Backlog cancellation rate rises or a hyperscaler capex pause hits the 116GW turbine slot reservations"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "Q1 2026 sales +53% YoY, FY26 guide raised to 37-39% growth, inflection_flag true and net_raises +6",
+    "falsifier": "The fall-2026 modular liquid-cooling launch slips or data-center sales fail to exceed $2B in 2026"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Povetacicept BLA PDUFA Nov 30 2026 with net_raises +9 and zero lowers across 8 firms",
+    "falsifier": "A CRL on CMC/manufacturing grounds removes the first nephrology product leg"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "Ifinatamab deruxtecan PDUFA Oct 10 2026 with net_raises +22 across 17 firms and median target change +12.4%",
+    "falsifier": "A CRL on the Daiichi ADC manufacturing facility delays the franchise"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12 with 12 lowers and no raises; lithium forecast cut 40%",
+   "SMR|net_raises -6, revenue -99% YoY, consensus Hold with stacked downgrades",
+   "OKLO|Zero revenue and a $55-$150 one-week analyst target dispersion",
+   "FLUT|net_raises -15 with 16 lowers and four 2026 guidance cuts",
+   "SERV|net_raises -3 with median target change -55.6% after a guidance cut",
+   "BYND|Meme-cluster spike with no fundamental news and -95% from 52-week high",
+   "QUBT|Operating expenses +114% YoY; $10-$32 analyst target dispersion",
+   "2330.TW|Semis exposure already covered; no policy catalyst in the evidence"
+  ]
+ },
+ "prompt_hash": "50851d00152dcac3",
+ "strategy": {
+  "id": "policy_geopolitics",
+  "brief": "Policy and geopolitics: tariffs, CHIPS/industrial policy, defence rearmament, critical minerals, government equity stakes. Name the policy event each position depends on. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

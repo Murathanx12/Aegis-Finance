@@ -1,0 +1,192 @@
+{
+ "text": "{\"name\":\"ensemble_consensus_global\",\"cash_weight\":0.02,\"positions\":[\"ASML|0.09|semis|catalysts+revision_flow: Q3'26 earnings confirmed Oct 14 (primary) with net_raises 5 of 5 firms, median target +13.6%|Oct 14 order intake or 2027 guidance misses and the stock breaks the Oct 14 pre-print level\",\"TSM|0.09|semis|catalysts+revision_flow: Q3'26 earnings Oct 15 (aggregator, also 2330.TW) with 6 net raises, 0 lowers, median target +10.2%|Oct 15 capex guide cut below the raised FY26 $60-64B range\",\"MU|0.08|semis|quality_momentum+power: rev_yoy 3.46x, gross_margin_chg +10.2pts, inflection_flag true, mom_252_21 4.78, vs_ma200 +62%|HBM pricing or the Dec quarter guide breaks the inflection flag at the next print\",\"NVDA|0.08|semis|revision_flow+quality_momentum: 16 net raises from 21 firms, median target +5%, rev_yoy 1.06x, drawdown_63 only -1.2%|Any hyperscaler capex digestion headline that pushes the stock below its 63-day drawdown low\",\"AMD|0.07|semis|revision_flow+quality_momentum: 22 net raises from 27 firms, median target +13.4%, mom_21 +31%, drawdown_63 0.0%|A guidance miss or AI-accelerator share loss that ends the zero-drawdown streak\",\"MRK|0.07|biotech|catalysts+revision_flow: PDUFA Oct 10 for I-DXd (primary) with 22 net raises from 17 firms, median target +12.4%|Oct 10 CRL on the Daiichi manufacturing facility, or a Keytruda LOE headline that resets the multiple\",\"ABBV|0.07|biotech|revision_flow+quality_momentum: 20 net raises from 21 firms, median target +7.6%, vs_52w_high only -1.1%, drawdown_63 -0.6%|A Skyzri/Rinvoq pricing or MFN headline that breaks the near-high trend\",\"LLY|0.07|biotech|revision_flow+quality_momentum: 13 net raises from 13 firms, median target +6.6%, gross_margin_chg +3.8pts, inflection_flag true|Retatrutide tolerability data at EASD disappoints or the Q1 2027 filing slips\",\"AMGN|0.06|biotech|revision_flow+quality_momentum: 26 net raises from 22 firms, median target +5.4%, gross_margin_chg +3.9pts, inflection_flag true|MariTide Phase 3 timing slips past Jan 21 2027 or the Sjogren's data fails to convert\",\"ARGX|0.06|biotech|catalysts+revision_flow: Q3'26 results confirmed Oct 22 (primary) with 17 net raises from 14 firms, median target +6.2%|EMPASSION MMN topline misses or the Oct 22 print guides below consensus\",\"VRTX|0.06|biotech|catalysts+revision_flow: povetacicept PDUFA Nov 30 (primary) with 9 net raises from 8 firms, zero lowers|Nov 30 CRL on CMC grounds removes the first nephrology product leg\",\"GILD|0.05|biotech|catalysts+revision_flow: anito-cel PDUFA Dec 23 (primary) with rev_yoy +10.2% and gross_margin_chg +0.5pts|Dec 23 CRL or a facility inspection finding on the Arcellx CAR-T line\",\"GEV|0.06|power_grid|power+revision_flow: 8 net raises from 9 firms, median target +2.7%, rev_yoy +21.9%, gross_margin_chg +2.2pts, inflection_flag true|Backlog cancellation or a hyperscaler power pause that breaks the inflection flag\",\"NVT|0.05|power_grid|power+revision_flow: 6 net raises from 5 firms, median target +6.4%, rev_yoy +52.8%, gross_margin_chg +2.1pts, inflection_flag true|The fall-2026 modular liquid-cooling launch slips or data-center orders decelerate\",\"WST|0.05|biotech|revision_flow+quality_momentum: 7 net raises from 6 firms, median target +9.6%, vs_ma200 +21.6%, drawdown_63 -1.3%|GLP-1 device demand normalizes faster than guided at the late-Oct print\",\"RGEN|0.04|biotech|revision_flow+quality_momentum: 4 net raises from 5 firms, median target +6.4%, mom_63 +42.8%, drawdown_63 -0.7%|Bioprocessing orders turn negative and the recovery thesis breaks at the next print\",\"VKTX|0.04|biotech|catalysts+quality_momentum: oral Phase 3 initiation guided for Q4 2026 after the Sep 22 maintenance-dosing data, mom_21 -12.4% into the event|Oral VK2735 AE-discontinuation rate repeats its 20% Phase 2 level in the Phase 3 start\",\"CCJ|0.04|nuclear|policy+revision_flow: Q3'26 earnings Nov 3-4 (confirmed-ish) with the uranium term-price record and Westinghouse optionality|Production guidance cut below the 19.5-21.5Mlb range or a uranium spot break\",\"SAAB-B.ST|0.04|defense|catalysts+policy: Q3'26 report confirmed Oct 23 (primary) into a European rearmament budget cycle|Oct 23 order intake misses the Gripen export pipeline expectations\",\"RHM.DE|0.04|defense|catalysts+policy: Q3'26 results confirmed Nov 5 (primary) with Bernstein Buy EUR1,900 into a +30% German defense budget|Nov 5 order timing disappoints and the wide EUR1,050-1,900 target dispersion resolves lower\",\"KOG.OL|0.03|defense|catalysts+policy: Q3'26 report confirmed Oct 29 (primary) on missile and Nordic defense order visibility|Oct 29 print shows order intake decelerating from the Nordic rearmament pace\",\"EVO.ST|0.03|gambling|catalysts+quality_momentum: Q3'26 report confirmed Oct 23 (primary) with Americas +9.5% and LatAm +26.3% growth|Oct 23 Asia revenue declines more than the -3.7% QoQ already reported\",\"ALL.AX|0.03|gambling|catalysts+quality_momentum: FY26 annual results confirmed Nov 12 (primary) with Anaxi/digital gaming growth|Nov 12 digital gaming growth stalls or Australian pokies regulation bites\"],\"strategy\":\"Only names at least two independent lenses would pick: catalysts (a dated event inside Oct 12-Nov 13 or a primary PDUFA), revision flow (net_raises positive with a real n_firms count), power/grid (AI bottleneck capex), quality momentum (inflection_flag, gross_margin_chg positive, near 52w high), or policy (defense budgets, MFN shielding). The book is semis plus biotech catalysts plus power/grid plus European defense, all with dated prints or PDUFAs in the window. I would be wrong if a single macro shock (hyperscaler capex pause, China export-control headline, or a de-escalation that compresses defense premia) hits the correlated semis and defense sleeves at once, or if the binary PDUFAs (MRK Oct 10, VRTX Nov 30) draw CRLs.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 using only names two or more independent lenses would select.\",\"what_i_did_not_buy\":[\"INTC|Only policy lens; revision flow mixed and no dated in-window print\",\"ORCL|Negative revision flow, 8 lowers, and force-majeure data-center headlines\",\"ALB|12 net lowers, 0 raises, and UBS cut 2027 lithium price 40%\",\"FLUT|15 net lowers, 16 lowers, four 2026 guidance cuts, near 52w low\",\"SMR|6 net lowers and rev_yoy -99%, stacking downgrades\",\"OKLO|Zero revenue with $55-$150 target dispersion, story stock not cash flow\",\"SERV|3 net lowers, median target -55.6%, guidance cut on Uber Eats volumes\",\"QUBT|$10-$32 target dispersion and weak independent factor-model rank\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00290778,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 358,
+ "tokens_out": 2033,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "ensemble_consensus_global",
+  "strategy": "Only names at least two independent lenses would pick: catalysts (a dated event inside Oct 12-Nov 13 or a primary PDUFA), revision flow (net_raises positive with a real n_firms count), power/grid (AI bottleneck capex), quality momentum (inflection_flag, gross_margin_chg positive, near 52w high), or policy (defense budgets, MFN shielding). The book is semis plus biotech catalysts plus power/grid plus European defense, all with dated prints or PDUFAs in the window. I would be wrong if a single macro shock (hyperscaler capex pause, China export-control headline, or a de-escalation that compresses defense premia) hits the correlated semis and defense sleeves at once, or if the binary PDUFAs (MRK Oct 10, VRTX Nov 30) draw CRLs.",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 using only names two or more independent lenses would select.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "ASML",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "catalysts+revision_flow: Q3'26 earnings confirmed Oct 14 (primary) with net_raises 5 of 5 firms, median target +13.6%",
+    "falsifier": "Oct 14 order intake or 2027 guidance misses and the stock breaks the Oct 14 pre-print level"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "catalysts+revision_flow: Q3'26 earnings Oct 15 (aggregator, also 2330.TW) with 6 net raises, 0 lowers, median target +10.2%",
+    "falsifier": "Oct 15 capex guide cut below the raised FY26 $60-64B range"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "quality_momentum+power: rev_yoy 3.46x, gross_margin_chg +10.2pts, inflection_flag true, mom_252_21 4.78, vs_ma200 +62%",
+    "falsifier": "HBM pricing or the Dec quarter guide breaks the inflection flag at the next print"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "revision_flow+quality_momentum: 16 net raises from 21 firms, median target +5%, rev_yoy 1.06x, drawdown_63 only -1.2%",
+    "falsifier": "Any hyperscaler capex digestion headline that pushes the stock below its 63-day drawdown low"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "revision_flow+quality_momentum: 22 net raises from 27 firms, median target +13.4%, mom_21 +31%, drawdown_63 0.0%",
+    "falsifier": "A guidance miss or AI-accelerator share loss that ends the zero-drawdown streak"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: PDUFA Oct 10 for I-DXd (primary) with 22 net raises from 17 firms, median target +12.4%",
+    "falsifier": "Oct 10 CRL on the Daiichi manufacturing facility, or a Keytruda LOE headline that resets the multiple"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "revision_flow+quality_momentum: 20 net raises from 21 firms, median target +7.6%, vs_52w_high only -1.1%, drawdown_63 -0.6%",
+    "falsifier": "A Skyzri/Rinvoq pricing or MFN headline that breaks the near-high trend"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "revision_flow+quality_momentum: 13 net raises from 13 firms, median target +6.6%, gross_margin_chg +3.8pts, inflection_flag true",
+    "falsifier": "Retatrutide tolerability data at EASD disappoints or the Q1 2027 filing slips"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "revision_flow+quality_momentum: 26 net raises from 22 firms, median target +5.4%, gross_margin_chg +3.9pts, inflection_flag true",
+    "falsifier": "MariTide Phase 3 timing slips past Jan 21 2027 or the Sjogren's data fails to convert"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: Q3'26 results confirmed Oct 22 (primary) with 17 net raises from 14 firms, median target +6.2%",
+    "falsifier": "EMPASSION MMN topline misses or the Oct 22 print guides below consensus"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: povetacicept PDUFA Nov 30 (primary) with 9 net raises from 8 firms, zero lowers",
+    "falsifier": "Nov 30 CRL on CMC grounds removes the first nephrology product leg"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: anito-cel PDUFA Dec 23 (primary) with rev_yoy +10.2% and gross_margin_chg +0.5pts",
+    "falsifier": "Dec 23 CRL or a facility inspection finding on the Arcellx CAR-T line"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.06,
+    "theme": "power_grid",
+    "thesis": "power+revision_flow: 8 net raises from 9 firms, median target +2.7%, rev_yoy +21.9%, gross_margin_chg +2.2pts, inflection_flag true",
+    "falsifier": "Backlog cancellation or a hyperscaler power pause that breaks the inflection flag"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "power+revision_flow: 6 net raises from 5 firms, median target +6.4%, rev_yoy +52.8%, gross_margin_chg +2.1pts, inflection_flag true",
+    "falsifier": "The fall-2026 modular liquid-cooling launch slips or data-center orders decelerate"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "revision_flow+quality_momentum: 7 net raises from 6 firms, median target +9.6%, vs_ma200 +21.6%, drawdown_63 -1.3%",
+    "falsifier": "GLP-1 device demand normalizes faster than guided at the late-Oct print"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "revision_flow+quality_momentum: 4 net raises from 5 firms, median target +6.4%, mom_63 +42.8%, drawdown_63 -0.7%",
+    "falsifier": "Bioprocessing orders turn negative and the recovery thesis breaks at the next print"
+   },
+   {
+    "ticker": "VKTX",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "catalysts+quality_momentum: oral Phase 3 initiation guided for Q4 2026 after the Sep 22 maintenance-dosing data, mom_21 -12.4% into the event",
+    "falsifier": "Oral VK2735 AE-discontinuation rate repeats its 20% Phase 2 level in the Phase 3 start"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.04,
+    "theme": "nuclear",
+    "thesis": "policy+revision_flow: Q3'26 earnings Nov 3-4 (confirmed-ish) with the uranium term-price record and Westinghouse optionality",
+    "falsifier": "Production guidance cut below the 19.5-21.5Mlb range or a uranium spot break"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.04,
+    "theme": "defense",
+    "thesis": "catalysts+policy: Q3'26 report confirmed Oct 23 (primary) into a European rearmament budget cycle",
+    "falsifier": "Oct 23 order intake misses the Gripen export pipeline expectations"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.04,
+    "theme": "defense",
+    "thesis": "catalysts+policy: Q3'26 results confirmed Nov 5 (primary) with Bernstein Buy EUR1,900 into a +30% German defense budget",
+    "falsifier": "Nov 5 order timing disappoints and the wide EUR1,050-1,900 target dispersion resolves lower"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.03,
+    "theme": "defense",
+    "thesis": "catalysts+policy: Q3'26 report confirmed Oct 29 (primary) on missile and Nordic defense order visibility",
+    "falsifier": "Oct 29 print shows order intake decelerating from the Nordic rearmament pace"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.03,
+    "theme": "gambling",
+    "thesis": "catalysts+quality_momentum: Q3'26 report confirmed Oct 23 (primary) with Americas +9.5% and LatAm +26.3% growth",
+    "falsifier": "Oct 23 Asia revenue declines more than the -3.7% QoQ already reported"
+   },
+   {
+    "ticker": "ALL.AX",
+    "weight": 0.03,
+    "theme": "gambling",
+    "thesis": "catalysts+quality_momentum: FY26 annual results confirmed Nov 12 (primary) with Anaxi/digital gaming growth",
+    "falsifier": "Nov 12 digital gaming growth stalls or Australian pokies regulation bites"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "INTC|Only policy lens; revision flow mixed and no dated in-window print",
+   "ORCL|Negative revision flow, 8 lowers, and force-majeure data-center headlines",
+   "ALB|12 net lowers, 0 raises, and UBS cut 2027 lithium price 40%",
+   "FLUT|15 net lowers, 16 lowers, four 2026 guidance cuts, near 52w low",
+   "SMR|6 net lowers and rev_yoy -99%, stacking downgrades",
+   "OKLO|Zero revenue with $55-$150 target dispersion, story stock not cash flow",
+   "SERV|3 net lowers, median target -55.6%, guidance cut on Uber Eats volumes",
+   "QUBT|$10-$32 target dispersion and weak independent factor-model rank"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.320, not 1.0"
+}

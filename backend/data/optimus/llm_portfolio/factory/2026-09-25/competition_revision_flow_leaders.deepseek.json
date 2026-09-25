@@ -1,0 +1,203 @@
+{
+ "text": "{\"name\":\"revision_flow_leaders_global\",\"cash_weight\":0.02,\"positions\":[\"MRK|0.09|biotech|net_raises 22 across 17 firms (revision_flow_90d)|Oct 10 I-DXd PDUFA CRL or weak Q3 oncology print\",\"ABBV|0.09|biotech|net_raises 20 across 21 firms (revision_flow_90d)|Skyrzi/Rinvoq growth decelerates in Q3 print\",\"AMGN|0.08|biotech|net_raises 26 across 22 firms (revision_flow_90d)|MariTide Phase 3 timing slips past Jan 21 2027\",\"LLY|0.08|biotech|net_raises 13 across 13 firms (revision_flow_90d)|retatrutide Q1 2027 filing slips or EASD GI data disappoints\",\"ARGX|0.08|biotech|net_raises 17 across 14 firms (revision_flow_90d)|EMPASSION MMN topline misses in Q4 2026\",\"OKTA|0.08|software|net_raises 63 across 32 firms (revision_flow_90d)|identity growth decelerates in next print\",\"SNOW|0.08|software|net_raises 47 across 33 firms (revision_flow_90d)|product revenue guide cut at next earnings\",\"CRWD|0.07|software|net_raises 44 across 35 firms (revision_flow_90d)|net retention falls below 110% in Q3 print\",\"PANW|0.07|software|net_raises 34 across 30 firms (revision_flow_90d)|platformization bookings stall in next quarter\",\"CRM|0.06|software|net_raises 33 across 29 firms (revision_flow_90d)|Agentforce ARR disclosure disappoints\",\"GTLB|0.05|software|net_raises 29 across 21 firms (revision_flow_90d)|net expansion rate falls in Q3 print\",\"ESTC|0.05|software|net_raises 28 across 21 firms (revision_flow_90d)|Elastic Cloud growth decelerates below 25%\",\"NET|0.05|software|net_raises 27 across 19 firms (revision_flow_90d)|enterprise net adds slow in Q3\",\"DDOG|0.05|software|net_raises 22 across 23 firms (revision_flow_90d)|usage growth decelerates in next print\",\"WDAY|0.04|software|net_raises 20 across 24 firms (revision_flow_90d)|subscription backlog growth stalls\",\"S|0.04|software|net_raises 23 across 20 firms (revision_flow_90d)|net new ARR misses in Q3\",\"DT|0.04|software|net_raises 23 across 18 firms (revision_flow_90d)|consumption growth slows in Q3 print\",\"ZS|0.04|software|net_raises 21 across 23 firms (revision_flow_90d)|billings guide cut at next earnings\",\"MDB|0.04|software|net_raises 21 across 24 firms (revision_flow_90d)|Atlas consumption growth stalls\",\"AME|0.04|materials|net_raises 12 across 10 firms (revision_flow_90d)|$5B deal integration costs hit Q3 margin\",\"NVDA|0.04|semis|net_raises 16 across 21 firms (revision_flow_90d)|hyperscaler capex digestion headline hits Q3 guide\",\"AMD|0.04|semis|net_raises 22 across 27 firms (revision_flow_90d)|MI-series order pushout disclosed at next print\",\"ASML|0.03|semis|net_raises 5 across 4 firms (revision_flow_90d)|Oct 14 order intake misses guide\",\"TSM|0.03|semis|net_raises 6 across 7 firms (revision_flow_90d)|Oct 15 capex guide cut\"],\"strategy\":\"Bet on the strongest 90-day analyst revision flow, not on target-level upside: 24 names where net target raises came from at least three distinct firms, concentrated in software (OKTA, SNOW, CRWD, PANW, CRM, GTLB, ESTC, NET, DDOG, WDAY, S, DT, ZS, MDB), large-cap pharma (MRK, ABBV, AMGN, LLY, ARGX), semis (NVDA, AMD, ASML, TSM) and AME. Every name has a Q3 print or PDUFA inside the Oct 12-Nov 13 window, so relative P&L is driven by real events. I would be wrong if the revision flow was already fully priced and the prints sell off on beats, or if a single AI-capex digestion headline hits the correlated software/semis sleeve at once.\",\"objective\":\"Beat the Bloomberg WLS index over Oct 12-Nov 13 2026 by owning the strongest 90-day analyst revision-flow names into their in-window prints.\",\"what_i_did_not_buy\":[\"FLUT|net_raises -15, 16 lowers across 15 firms\",\"ALB|net_raises -12, 12 lowers across 11 firms\",\"VRT|net_raises -4, four lowers, zero raises\",\"CEG|net_raises -6, seven lowers across seven firms\",\"LEU|net_raises -4, six lowers across nine firms\",\"SMR|net_raises -6, six lowers across seven firms\",\"GILD|net_raises -3, six lowers across eight firms\",\"NVO|no raises, no lowers, one firm only\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00196866,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 179,
+ "tokens_out": 1325,
+ "cached_tokens": 69632,
+ "parse": "ok",
+ "parsed": {
+  "name": "revision_flow_leaders_global",
+  "strategy": "Bet on the strongest 90-day analyst revision flow, not on target-level upside: 24 names where net target raises came from at least three distinct firms, concentrated in software (OKTA, SNOW, CRWD, PANW, CRM, GTLB, ESTC, NET, DDOG, WDAY, S, DT, ZS, MDB), large-cap pharma (MRK, ABBV, AMGN, LLY, ARGX), semis (NVDA, AMD, ASML, TSM) and AME. Every name has a Q3 print or PDUFA inside the Oct 12-Nov 13 window, so relative P&L is driven by real events. I would be wrong if the revision flow was already fully priced and the prints sell off on beats, or if a single AI-capex digestion headline hits the correlated software/semis sleeve at once.",
+  "objective": "Beat the Bloomberg WLS index over Oct 12-Nov 13 2026 by owning the strongest 90-day analyst revision-flow names into their in-window prints.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 22 across 17 firms (revision_flow_90d)",
+    "falsifier": "Oct 10 I-DXd PDUFA CRL or weak Q3 oncology print"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 20 across 21 firms (revision_flow_90d)",
+    "falsifier": "Skyrzi/Rinvoq growth decelerates in Q3 print"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 26 across 22 firms (revision_flow_90d)",
+    "falsifier": "MariTide Phase 3 timing slips past Jan 21 2027"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 13 across 13 firms (revision_flow_90d)",
+    "falsifier": "retatrutide Q1 2027 filing slips or EASD GI data disappoints"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 17 across 14 firms (revision_flow_90d)",
+    "falsifier": "EMPASSION MMN topline misses in Q4 2026"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 63 across 32 firms (revision_flow_90d)",
+    "falsifier": "identity growth decelerates in next print"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 47 across 33 firms (revision_flow_90d)",
+    "falsifier": "product revenue guide cut at next earnings"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 44 across 35 firms (revision_flow_90d)",
+    "falsifier": "net retention falls below 110% in Q3 print"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 34 across 30 firms (revision_flow_90d)",
+    "falsifier": "platformization bookings stall in next quarter"
+   },
+   {
+    "ticker": "CRM",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 33 across 29 firms (revision_flow_90d)",
+    "falsifier": "Agentforce ARR disclosure disappoints"
+   },
+   {
+    "ticker": "GTLB",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 29 across 21 firms (revision_flow_90d)",
+    "falsifier": "net expansion rate falls in Q3 print"
+   },
+   {
+    "ticker": "ESTC",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 28 across 21 firms (revision_flow_90d)",
+    "falsifier": "Elastic Cloud growth decelerates below 25%"
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 27 across 19 firms (revision_flow_90d)",
+    "falsifier": "enterprise net adds slow in Q3"
+   },
+   {
+    "ticker": "DDOG",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 22 across 23 firms (revision_flow_90d)",
+    "falsifier": "usage growth decelerates in next print"
+   },
+   {
+    "ticker": "WDAY",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 20 across 24 firms (revision_flow_90d)",
+    "falsifier": "subscription backlog growth stalls"
+   },
+   {
+    "ticker": "S",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 20 firms (revision_flow_90d)",
+    "falsifier": "net new ARR misses in Q3"
+   },
+   {
+    "ticker": "DT",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 18 firms (revision_flow_90d)",
+    "falsifier": "consumption growth slows in Q3 print"
+   },
+   {
+    "ticker": "ZS",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 21 across 23 firms (revision_flow_90d)",
+    "falsifier": "billings guide cut at next earnings"
+   },
+   {
+    "ticker": "MDB",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 21 across 24 firms (revision_flow_90d)",
+    "falsifier": "Atlas consumption growth stalls"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.04,
+    "theme": "materials",
+    "thesis": "net_raises 12 across 10 firms (revision_flow_90d)",
+    "falsifier": "$5B deal integration costs hit Q3 margin"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "net_raises 16 across 21 firms (revision_flow_90d)",
+    "falsifier": "hyperscaler capex digestion headline hits Q3 guide"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "net_raises 22 across 27 firms (revision_flow_90d)",
+    "falsifier": "MI-series order pushout disclosed at next print"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.03,
+    "theme": "semis",
+    "thesis": "net_raises 5 across 4 firms (revision_flow_90d)",
+    "falsifier": "Oct 14 order intake misses guide"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.03,
+    "theme": "semis",
+    "thesis": "net_raises 6 across 7 firms (revision_flow_90d)",
+    "falsifier": "Oct 15 capex guide cut"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "FLUT|net_raises -15, 16 lowers across 15 firms",
+   "ALB|net_raises -12, 12 lowers across 11 firms",
+   "VRT|net_raises -4, four lowers, zero raises",
+   "CEG|net_raises -6, seven lowers across seven firms",
+   "LEU|net_raises -4, six lowers across nine firms",
+   "SMR|net_raises -6, six lowers across seven firms",
+   "GILD|net_raises -3, six lowers across eight firms",
+   "NVO|no raises, no lowers, one firm only"
+  ]
+ },
+ "prompt_hash": "bdcdf4d8490c5609",
+ "strategy": {
+  "id": "revision_flow_leaders",
+  "brief": "Analyst revision flow: names with the strongest 90-day net target RAISES across >= 3 distinct firms. The flow, not the target level (target-level upside is measured perverse). Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

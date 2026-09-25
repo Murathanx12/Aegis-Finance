@@ -1,0 +1,143 @@
+{
+ "text": "{\"name\":\"revision_flow_leaders_oct_nov_2026\",\"cash_weight\":0.02,\"positions\":[\"OKTA|0.10|software|net_raises 63 across 32 firms (revision_flow_90d) with price at 52w high|any Q3 print or guidance cut that breaks the 63-raise streak before mid-Nov\",\"SNOW|0.09|software|net_raises 47 across 33 firms (revision_flow_90d), mom_63 +0.50|a consumption-growth deceleration headline or product-revenue guide cut in early Nov\",\"CRWD|0.09|software|net_raises 44 across 35 firms (revision_flow_90d), drawdown_63 0.0|a billings or net-new ARR miss that forces the first net-lower revision since June\",\"PANW|0.08|software|net_raises 34 across 30 firms (revision_flow_90d), vs_ma200 +0.54|platformization bookings disappoint or a guidance reset at the next print\",\"CRM|0.08|software|net_raises 33 across 29 firms (revision_flow_90d), mom_63 +0.58|agentforce bookings fail to show in cRPO and the 33-raise flow reverses\",\"GTLB|0.07|software|net_raises 29 across 21 firms (revision_flow_90d), median_target_change +0.295|a growth guide-down or the leaked-issue security story escalates into churn\",\"ESTC|0.07|software|net_raises 28 across 21 firms (revision_flow_90d), median_target_change +0.25|subscription revenue decelerates below 20% and revisions flip negative\",\"NET|0.07|software|net_raises 27 across 19 firms (revision_flow_90d), price at 52w high|enterprise net-new weakness or a large-deal pushout disclosed in the Q3 update\",\"AFRM|0.06|software|net_raises 27 across 23 firms (revision_flow_90d), rev_yoy +0.33|funding-cost pressure or credit deterioration drives the first net-lower revision\",\"DDOG|0.06|software|net_raises 22 across 23 firms (revision_flow_90d), median_target_change +0.154|usage growth slows and the 22-raise flow turns net negative\",\"MDB|0.05|software|net_raises 21 across 24 firms (revision_flow_90d), rev_yoy +0.305|Atlas consumption decelerates or the high-severity server vulnerability hits renewals\",\"WDAY|0.05|software|net_raises 20 across 24 firms (revision_flow_90d), mom_63 +0.70|subscription backlog growth slips and the 20-raise flow stalls\",\"ZS|0.05|software|net_raises 21 across 23 firms (revision_flow_90d), mom_63 +0.67|billings guidance disappoints or the 21-raise streak breaks at the next print\",\"S|0.04|software|net_raises 23 across 20 firms (revision_flow_90d), price within 2% of 52w high|ARR growth decelerates and the 23-raise flow reverses\",\"DT|0.04|software|net_raises 23 across 18 firms (revision_flow_90d), median_target_change +0.18|net-expansion or ARR guide cut breaks the 23-raise streak\",\"FTNT|0.04|software|net_raises 23 across 17 firms (revision_flow_90d), median_target_change +0.344|billings or firewall-refresh demand softens and revisions flip negative\"],\"strategy\":\"Bet on the strongest 90-day analyst revision flow in the evidence: software/internet names with 20-63 net target raises across 17-35 distinct firms (OKTA, SNOW, CRWD, PANW, CRM, GTLB, ESTC, NET, AFRM, DDOG, MDB, WDAY, ZS, S, DT, FTNT), each with a dated print or update inside the Oct 12-Nov 13 window. I ignore target-level upside (measured perverse) and buy the direction of estimate revisions. I would be wrong if the flow is already fully priced: a single high-multiple software guidance cut, a broad AI-capex or rate shock, or a rotation out of momentum software would hit all sixteen names at once, since they share one factor.\",\"objective\":\"Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 by holding the strongest 90-day analyst revision-flow names.\",\"what_i_did_not_buy\":[\"NVDA|flow strong but no dated in-window catalyst and mega-cap beta\",\"AMD|net_raises 22 but no dated print inside the window\",\"MRK|net_raises 22 but pharma flow is not the software factor\",\"ABBV|net_raises 20, no dated in-window catalyst\",\"AMGN|net_raises 26, no dated in-window catalyst\",\"LLY|net_raises 13, catalyst is a filing not a decision\",\"ASML|net_raises 5, only 4 firms, below the flow threshold\",\"TSM|net_raises 6, only 7 firms, weaker flow than software\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00188316,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 362,
+ "tokens_out": 1235,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "revision_flow_leaders_oct_nov_2026",
+  "strategy": "Bet on the strongest 90-day analyst revision flow in the evidence: software/internet names with 20-63 net target raises across 17-35 distinct firms (OKTA, SNOW, CRWD, PANW, CRM, GTLB, ESTC, NET, AFRM, DDOG, MDB, WDAY, ZS, S, DT, FTNT), each with a dated print or update inside the Oct 12-Nov 13 window. I ignore target-level upside (measured perverse) and buy the direction of estimate revisions. I would be wrong if the flow is already fully priced: a single high-multiple software guidance cut, a broad AI-capex or rate shock, or a rotation out of momentum software would hit all sixteen names at once, since they share one factor.",
+  "objective": "Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 by holding the strongest 90-day analyst revision-flow names.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "OKTA",
+    "weight": 0.1,
+    "theme": "software",
+    "thesis": "net_raises 63 across 32 firms (revision_flow_90d) with price at 52w high",
+    "falsifier": "any Q3 print or guidance cut that breaks the 63-raise streak before mid-Nov"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.09,
+    "theme": "software",
+    "thesis": "net_raises 47 across 33 firms (revision_flow_90d), mom_63 +0.50",
+    "falsifier": "a consumption-growth deceleration headline or product-revenue guide cut in early Nov"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.09,
+    "theme": "software",
+    "thesis": "net_raises 44 across 35 firms (revision_flow_90d), drawdown_63 0.0",
+    "falsifier": "a billings or net-new ARR miss that forces the first net-lower revision since June"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 34 across 30 firms (revision_flow_90d), vs_ma200 +0.54",
+    "falsifier": "platformization bookings disappoint or a guidance reset at the next print"
+   },
+   {
+    "ticker": "CRM",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 33 across 29 firms (revision_flow_90d), mom_63 +0.58",
+    "falsifier": "agentforce bookings fail to show in cRPO and the 33-raise flow reverses"
+   },
+   {
+    "ticker": "GTLB",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 29 across 21 firms (revision_flow_90d), median_target_change +0.295",
+    "falsifier": "a growth guide-down or the leaked-issue security story escalates into churn"
+   },
+   {
+    "ticker": "ESTC",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 28 across 21 firms (revision_flow_90d), median_target_change +0.25",
+    "falsifier": "subscription revenue decelerates below 20% and revisions flip negative"
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 27 across 19 firms (revision_flow_90d), price at 52w high",
+    "falsifier": "enterprise net-new weakness or a large-deal pushout disclosed in the Q3 update"
+   },
+   {
+    "ticker": "AFRM",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 27 across 23 firms (revision_flow_90d), rev_yoy +0.33",
+    "falsifier": "funding-cost pressure or credit deterioration drives the first net-lower revision"
+   },
+   {
+    "ticker": "DDOG",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 22 across 23 firms (revision_flow_90d), median_target_change +0.154",
+    "falsifier": "usage growth slows and the 22-raise flow turns net negative"
+   },
+   {
+    "ticker": "MDB",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 21 across 24 firms (revision_flow_90d), rev_yoy +0.305",
+    "falsifier": "Atlas consumption decelerates or the high-severity server vulnerability hits renewals"
+   },
+   {
+    "ticker": "WDAY",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 20 across 24 firms (revision_flow_90d), mom_63 +0.70",
+    "falsifier": "subscription backlog growth slips and the 20-raise flow stalls"
+   },
+   {
+    "ticker": "ZS",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 21 across 23 firms (revision_flow_90d), mom_63 +0.67",
+    "falsifier": "billings guidance disappoints or the 21-raise streak breaks at the next print"
+   },
+   {
+    "ticker": "S",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 20 firms (revision_flow_90d), price within 2% of 52w high",
+    "falsifier": "ARR growth decelerates and the 23-raise flow reverses"
+   },
+   {
+    "ticker": "DT",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 18 firms (revision_flow_90d), median_target_change +0.18",
+    "falsifier": "net-expansion or ARR guide cut breaks the 23-raise streak"
+   },
+   {
+    "ticker": "FTNT",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 across 17 firms (revision_flow_90d), median_target_change +0.344",
+    "falsifier": "billings or firewall-refresh demand softens and revisions flip negative"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVDA|flow strong but no dated in-window catalyst and mega-cap beta",
+   "AMD|net_raises 22 but no dated print inside the window",
+   "MRK|net_raises 22 but pharma flow is not the software factor",
+   "ABBV|net_raises 20, no dated in-window catalyst",
+   "AMGN|net_raises 26, no dated in-window catalyst",
+   "LLY|net_raises 13, catalyst is a filing not a decision",
+   "ASML|net_raises 5, only 4 firms, below the flow threshold",
+   "TSM|net_raises 6, only 7 firms, weaker flow than software"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.060, not 1.0"
+}

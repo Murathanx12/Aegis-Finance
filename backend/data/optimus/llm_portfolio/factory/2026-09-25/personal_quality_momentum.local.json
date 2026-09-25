@@ -1,0 +1,16 @@
+{
+ "text": null,
+ "model": "llama-server",
+ "n_ctx": 8192,
+ "error": "NOT SENT: prompt ~50507 tokens + 8000 reply > n_ctx 8192",
+ "parse": "failed",
+ "parsed": {
+  "name": null,
+  "strategy": null,
+  "objective": null,
+  "cash_weight": null,
+  "positions": [],
+  "what_i_did_not_buy": []
+ },
+ "prompt_hash": "ba0c162102db16b4"
+}

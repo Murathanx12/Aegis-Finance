@@ -1,0 +1,150 @@
+{
+ "text": "{\"name\":\"ensemble_global_catalyst_book\",\"cash_weight\":0.02,\"positions\":[\"ASML|0.08|semis|catalysts+revision_flow: Q3'26 earnings Oct 14 primary and net_raises 5/5 firms, median target +13.6% (revision_flow_90d)|Q3 bookings guide cut or 2027 order commentary softens on the Oct 14 call\",\"TSM|0.08|semis|catalysts+Asia supply chain: Q3'26 earnings Oct 15 aggregator plus net_raises 6/6 firms and mom_252_21 +0.56 (briefing)|Capex guide trimmed below $60-64B or gross margin guide falls under 65% on Oct 15\",\"MU|0.08|semis|revision_flow+Asia supply chain: inflection_flag true, rev_qoq +0.74, rev_yoy +3.46, gross_margin_chg +0.10 (briefing) in the HBM shortage|HBM pricing or allocation commentary deteriorates at the next print; gross margin chg turns negative\",\"NVDA|0.08|semis|revision_flow+quality momentum: 16 net raises from 21 firms, median target +5%, mom_63 +0.091, drawdown_63 -0.012 (briefing)|Any hyperscaler capex digestion headline or a guidance cut on the next print\",\"AMD|0.08|semis|revision_flow+quality momentum: 22 net raises from 27 firms, median target +13.4%, vs_52w_high -0.002, drawdown_63 0.0 (briefing)|AI accelerator order pushout or gross margin guide below 53.8%\",\"GEV|0.08|power_grid|power+revision_flow: inflection_flag true, rev_qoq +0.19, gross_margin_chg +0.022 (briefing), 8 net raises from 9 firms|Backlog cancellation or book-to-bill below 1.0 on the next report\",\"NVT|0.08|power_grid|power+revision_flow: inflection_flag true, rev_yoy +0.53, gross_margin_chg +0.021 (briefing), 6 net raises from 5 firms|Fall-2026 modular liquid-cooling launch slips or data-center orders decelerate\",\"MRK|0.08|biotech|catalysts+revision_flow: I-DXd PDUFA Oct 10 primary and 22 net raises from 17 firms, median target +12.4% (revision_flow_90d)|CRL on the I-DXd BLA or a manufacturing finding at the Daiichi facility\",\"VRTX|0.08|biotech|catalysts+revision_flow: povetacicept PDUFA Nov 30 primary and 9 net raises from 8 firms (revision_flow_90d)|CRL on povetacicept or a manufacturing/CMC finding on the accelerated-approval BLA\",\"ARGX|0.08|biotech|catalysts+revision_flow: Q3'26 results Oct 22 primary and 17 net raises from 14 firms, median target +6.2% (revision_flow_90d)|EMPASSION Phase 3 MMN readout misses or Q3 Vyvgart growth decelerates\",\"COGT|0.06|biotech|catalysts+revision_flow: bezuclastinib PDUFAs Nov 30 and Dec 30 primary, 2 net raises (revision_flow_90d)|Either bezuclastinib NDA draws a CRL or an FDA information request delays both decisions\",\"BBIO|0.06|biotech|catalysts+revision_flow: BBP-418 PDUFA Nov 27 primary and 9 net raises from 11 firms (revision_flow_90d)|CRL on BBP-418 or an FDA manufacturing finding on the NDA\",\"CCJ|0.06|nuclear|catalysts+policy: Q3'26 earnings Nov 3-4 aggregator with uranium term-price strength (research notes)|Q3 production/delivery guidance cut or uranium spot rolls over below $80/lb\",\"SAAB-B.ST|0.06|defense|catalysts+policy: Q3'26 report Oct 23 primary inside the window with European rearmament budget tailwind|Q3 order intake misses or Gripen export pipeline stalls\",\"RHM.DE|0.06|defense|catalysts+policy: Q3'26 results Nov 5 primary inside the window with German defense budget +30% YoY|Q3 order timing disappoints or guidance is trimmed on Nov 5\",\"KOG.OL|0.06|defense|catalysts+policy: Q3'26 report Oct 29 primary inside the window with Nordic missile/defense order visibility|Q3 order intake or margin guidance misses on Oct 29\",\"EVO.ST|0.06|gambling|catalysts+quality momentum: Q3'26 report Oct 23 primary with Americas +9.5% and LatAm +26.3% growth (research notes)|Asia revenue decline accelerates or a new UK GC settlement hits the print\"],\"strategy\":\"Only names at least two independent lenses would pick: catalysts (a dated event inside Oct 12-Nov 13), revision flow (net analyst raises), power/grid bottleneck, policy, quality momentum, or Asia supply chain. The book concentrates in semicap/memory/foundry with confirmed Q3 prints, AI power and grid equipment with inflection flags, dated Q4 biotech PDUFAs, European defense names reporting inside the window, and uranium/gambling calendar names. I would be wrong if a single macro shock (hyperscaler capex digestion, China export controls, or a de-escalation headline) hits the correlated AI-power and defense sleeves at once, or if binary PDUFA names draw CRLs.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only, catalyst-dated, multi-lens ensemble book.\",\"what_i_did_not_buy\":[\"ALB|12 target cuts, negative revision flow, lithium price weakness\",\"INTC|government-equity legal challenge is unresolved binary risk\",\"OKLO|zero revenue, analyst targets dispersed $55-$150\",\"SMR|stacking downgrades, revenue collapsed -99% YoY\",\"FLUT|16 target cuts, four 2026 guidance cuts, near 52-week low\",\"NVO|Hold/Sell-leaning Street, structural share loss to Lilly\",\"IONQ|no revision flow, 35x forward sales, chronic dilution\",\"SERV|guidance cut sharply on weaker Uber Eats volumes\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00220626,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 358,
+ "tokens_out": 1487,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "ensemble_global_catalyst_book",
+  "strategy": "Only names at least two independent lenses would pick: catalysts (a dated event inside Oct 12-Nov 13), revision flow (net analyst raises), power/grid bottleneck, policy, quality momentum, or Asia supply chain. The book concentrates in semicap/memory/foundry with confirmed Q3 prints, AI power and grid equipment with inflection flags, dated Q4 biotech PDUFAs, European defense names reporting inside the window, and uranium/gambling calendar names. I would be wrong if a single macro shock (hyperscaler capex digestion, China export controls, or a de-escalation headline) hits the correlated AI-power and defense sleeves at once, or if binary PDUFA names draw CRLs.",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only, catalyst-dated, multi-lens ensemble book.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "catalysts+revision_flow: Q3'26 earnings Oct 14 primary and net_raises 5/5 firms, median target +13.6% (revision_flow_90d)",
+    "falsifier": "Q3 bookings guide cut or 2027 order commentary softens on the Oct 14 call"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "catalysts+Asia supply chain: Q3'26 earnings Oct 15 aggregator plus net_raises 6/6 firms and mom_252_21 +0.56 (briefing)",
+    "falsifier": "Capex guide trimmed below $60-64B or gross margin guide falls under 65% on Oct 15"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "revision_flow+Asia supply chain: inflection_flag true, rev_qoq +0.74, rev_yoy +3.46, gross_margin_chg +0.10 (briefing) in the HBM shortage",
+    "falsifier": "HBM pricing or allocation commentary deteriorates at the next print; gross margin chg turns negative"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "revision_flow+quality momentum: 16 net raises from 21 firms, median target +5%, mom_63 +0.091, drawdown_63 -0.012 (briefing)",
+    "falsifier": "Any hyperscaler capex digestion headline or a guidance cut on the next print"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "revision_flow+quality momentum: 22 net raises from 27 firms, median target +13.4%, vs_52w_high -0.002, drawdown_63 0.0 (briefing)",
+    "falsifier": "AI accelerator order pushout or gross margin guide below 53.8%"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "power+revision_flow: inflection_flag true, rev_qoq +0.19, gross_margin_chg +0.022 (briefing), 8 net raises from 9 firms",
+    "falsifier": "Backlog cancellation or book-to-bill below 1.0 on the next report"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "power+revision_flow: inflection_flag true, rev_yoy +0.53, gross_margin_chg +0.021 (briefing), 6 net raises from 5 firms",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips or data-center orders decelerate"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: I-DXd PDUFA Oct 10 primary and 22 net raises from 17 firms, median target +12.4% (revision_flow_90d)",
+    "falsifier": "CRL on the I-DXd BLA or a manufacturing finding at the Daiichi facility"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: povetacicept PDUFA Nov 30 primary and 9 net raises from 8 firms (revision_flow_90d)",
+    "falsifier": "CRL on povetacicept or a manufacturing/CMC finding on the accelerated-approval BLA"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: Q3'26 results Oct 22 primary and 17 net raises from 14 firms, median target +6.2% (revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 MMN readout misses or Q3 Vyvgart growth decelerates"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: bezuclastinib PDUFAs Nov 30 and Dec 30 primary, 2 net raises (revision_flow_90d)",
+    "falsifier": "Either bezuclastinib NDA draws a CRL or an FDA information request delays both decisions"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "catalysts+revision_flow: BBP-418 PDUFA Nov 27 primary and 9 net raises from 11 firms (revision_flow_90d)",
+    "falsifier": "CRL on BBP-418 or an FDA manufacturing finding on the NDA"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.06,
+    "theme": "nuclear",
+    "thesis": "catalysts+policy: Q3'26 earnings Nov 3-4 aggregator with uranium term-price strength (research notes)",
+    "falsifier": "Q3 production/delivery guidance cut or uranium spot rolls over below $80/lb"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.06,
+    "theme": "defense",
+    "thesis": "catalysts+policy: Q3'26 report Oct 23 primary inside the window with European rearmament budget tailwind",
+    "falsifier": "Q3 order intake misses or Gripen export pipeline stalls"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.06,
+    "theme": "defense",
+    "thesis": "catalysts+policy: Q3'26 results Nov 5 primary inside the window with German defense budget +30% YoY",
+    "falsifier": "Q3 order timing disappoints or guidance is trimmed on Nov 5"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.06,
+    "theme": "defense",
+    "thesis": "catalysts+policy: Q3'26 report Oct 29 primary inside the window with Nordic missile/defense order visibility",
+    "falsifier": "Q3 order intake or margin guidance misses on Oct 29"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.06,
+    "theme": "gambling",
+    "thesis": "catalysts+quality momentum: Q3'26 report Oct 23 primary with Americas +9.5% and LatAm +26.3% growth (research notes)",
+    "falsifier": "Asia revenue decline accelerates or a new UK GC settlement hits the print"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 target cuts, negative revision flow, lithium price weakness",
+   "INTC|government-equity legal challenge is unresolved binary risk",
+   "OKLO|zero revenue, analyst targets dispersed $55-$150",
+   "SMR|stacking downgrades, revenue collapsed -99% YoY",
+   "FLUT|16 target cuts, four 2026 guidance cuts, near 52-week low",
+   "NVO|Hold/Sell-leaning Street, structural share loss to Lilly",
+   "IONQ|no revision flow, 35x forward sales, chronic dilution",
+   "SERV|guidance cut sharply on weaker Uber Eats volumes"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.240, not 1.0"
+}

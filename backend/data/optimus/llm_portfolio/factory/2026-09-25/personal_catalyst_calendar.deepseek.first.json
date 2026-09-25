@@ -1,0 +1,150 @@
+{
+ "text": "{\"name\":\"catalyst_calendar_6m\",\"cash_weight\":0.06,\"positions\":[\"VRTX|0.09|biotech|povetacicept BLA PDUFA 2026-11-30 (catalysts) with 9 net raises and zero lowers (revision_flow_90d)|CRL on the povetacicept BLA or a manufacturing-hold letter dated on or before 2026-11-30\",\"MRK|0.09|biotech|ifinatamab deruxtecan PDUFA 2026-10-10 (catalysts) with 22 net raises from 17 firms (revision_flow_90d)|CRL for I-DXd on 2026-10-10 or a Keytruda-LOE guidance cut at the next print\",\"GILD|0.08|biotech|anito-cel BLA PDUFA 2026-12-23 (catalysts) on a large liquid name with rev_yoy 0.1018 (briefing)|CRL or facility-inspection finding for anito-cel dated on or before 2026-12-23\",\"CORT|0.08|biotech|relacorilant NDA resubmission PDUFA 2026-12-17 (catalysts) with 4 net raises and rev_qoq 0.5533 (briefing)|a second CRL for relacorilant on 2026-12-17 or a resubmission withdrawal before that date\",\"AGIO|0.07|biotech|mitapivat sickle-cell sNDA PDUFA 2026-11-01 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)|a CRL or a narrow label excluding the VOC endpoint on 2026-11-01\",\"PRAX|0.07|biotech|relutrigine NDA PDUFA 2026-12-27 (catalysts) with 5 net raises and zero lowers (revision_flow_90d)|a second major-amendment delay pushing the relutrigine action past 2026-12-27\",\"SMMT|0.06|biotech|ivonescimab BLA PDUFA 2026-11-14 (catalysts) plus two 8-K filings in news_14d|a CRL on 2026-11-14 or an FDA request for additional OS follow-up before that date\",\"BBIO|0.06|biotech|BBP-418 NDA PDUFA 2026-11-27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)|a CRL for BBP-418 on 2026-11-27 or a disclosed FDA manufacturing finding before then\",\"COGT|0.06|biotech|bezuclastinib GIST PDUFA 2026-11-30 and NonAdvSM PDUFA 2026-12-30 (catalysts)|either bezuclastinib NDA drawing a CRL on its respective 2026 action date\",\"SVRA|0.05|biotech|molgramostim BLA PDUFA 2026-11-22 (catalysts) extended from Aug 22 with no safety flag|a CRL for molgramostim on 2026-11-22 or a further FDA information request before then\",\"ASML|0.08|semis|Q3'26 earnings 2026-10-14 (catalysts) with 5 net raises and zero lowers (revision_flow_90d)|a 2027 order-book or China-revenue cut disclosed at the 2026-10-14 print\",\"TSM|0.08|semis|Q3'26 earnings 2026-10-15 (catalysts) with 6 net raises from 7 firms (revision_flow_90d)|a FY26 capex guidance cut on the 2026-10-15 call\",\"TER|0.06|semis|Q3'26 earnings 2026-10-27 after close (catalysts) with 6 net raises and zero lowers (revision_flow_90d)|a Q4 guide-down or an Advantest share-gain disclosure on the 2026-10-27 call\",\"ARGX|0.07|biotech|Q3'26 results 2026-10-22 (catalysts) with 17 net raises from 14 firms (revision_flow_90d)|a Vyvgart franchise guidance cut on the 2026-10-22 call\",\"CCJ|0.05|energy|Q3'26 earnings 2026-11-03 (catalysts) on a large liquid uranium name|a 2026 production or delivery guidance cut on the 2026-11-03 call\",\"SAAB-B.ST|0.05|defense|Q3'26 report 2026-10-23 (catalysts) on a liquid Nordic defense name|a 2026 order-intake or margin guidance cut on the 2026-10-23 report\",\"EVO.ST|0.05|gambling|Q3'26 report 2026-10-23 (catalysts) on a liquid live-casino operator|an Asia revenue decline or UK regulatory charge disclosed on the 2026-10-23 report\"],\"strategy\":\"I only hold names with a dated catalyst inside the six-month horizon, spread across dates so no single day decides the book: a 10-name FDA PDUFA cluster (Oct 10 through Dec 30), a semicap earnings cluster (ASML Oct 14, TSM Oct 15, TER Oct 27), and single-date events for ARGX, CCJ, SAAB-B.ST and EVO.ST. The bet is that dated binary and print events, not theme momentum, drive relative return versus SPY. I would be wrong if a broad risk-off tape swamps event-specific outcomes, if the FDA cluster draws multiple CRLs in the same month, or if the semicap prints show AI-capex digestion rather than acceleration.\",\"objective\":\"Maximise 126-session return versus SPY, net of costs, using only dated-catalyst names.\",\"what_i_did_not_buy\":[\"ALB|12 net lowers and no raises, lithium price forecast cut\",\"VRT|4 net lowers and no raises, backlog growth questioned\",\"CEG|6 net lowers versus 1 raise, no dated catalyst\",\"OKLO|4 net lowers, zero revenue, no dated catalyst\",\"SMR|6 net lowers, revenue down 99% YoY\",\"FLUT|15 net lowers versus 1 raise, four 2026 guidance cuts\",\"NVO|no analyst revisions, stock down 36% from 52w high\",\"SERV|3 net lowers, median target change -55.6%\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00222586,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 322,
+ "tokens_out": 1507,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "catalyst_calendar_6m",
+  "strategy": "I only hold names with a dated catalyst inside the six-month horizon, spread across dates so no single day decides the book: a 10-name FDA PDUFA cluster (Oct 10 through Dec 30), a semicap earnings cluster (ASML Oct 14, TSM Oct 15, TER Oct 27), and single-date events for ARGX, CCJ, SAAB-B.ST and EVO.ST. The bet is that dated binary and print events, not theme momentum, drive relative return versus SPY. I would be wrong if a broad risk-off tape swamps event-specific outcomes, if the FDA cluster draws multiple CRLs in the same month, or if the semicap prints show AI-capex digestion rather than acceleration.",
+  "objective": "Maximise 126-session return versus SPY, net of costs, using only dated-catalyst names.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "povetacicept BLA PDUFA 2026-11-30 (catalysts) with 9 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "CRL on the povetacicept BLA or a manufacturing-hold letter dated on or before 2026-11-30"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "ifinatamab deruxtecan PDUFA 2026-10-10 (catalysts) with 22 net raises from 17 firms (revision_flow_90d)",
+    "falsifier": "CRL for I-DXd on 2026-10-10 or a Keytruda-LOE guidance cut at the next print"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "anito-cel BLA PDUFA 2026-12-23 (catalysts) on a large liquid name with rev_yoy 0.1018 (briefing)",
+    "falsifier": "CRL or facility-inspection finding for anito-cel dated on or before 2026-12-23"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "relacorilant NDA resubmission PDUFA 2026-12-17 (catalysts) with 4 net raises and rev_qoq 0.5533 (briefing)",
+    "falsifier": "a second CRL for relacorilant on 2026-12-17 or a resubmission withdrawal before that date"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "mitapivat sickle-cell sNDA PDUFA 2026-11-01 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)",
+    "falsifier": "a CRL or a narrow label excluding the VOC endpoint on 2026-11-01"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "relutrigine NDA PDUFA 2026-12-27 (catalysts) with 5 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "a second major-amendment delay pushing the relutrigine action past 2026-12-27"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "ivonescimab BLA PDUFA 2026-11-14 (catalysts) plus two 8-K filings in news_14d",
+    "falsifier": "a CRL on 2026-11-14 or an FDA request for additional OS follow-up before that date"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "BBP-418 NDA PDUFA 2026-11-27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)",
+    "falsifier": "a CRL for BBP-418 on 2026-11-27 or a disclosed FDA manufacturing finding before then"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "bezuclastinib GIST PDUFA 2026-11-30 and NonAdvSM PDUFA 2026-12-30 (catalysts)",
+    "falsifier": "either bezuclastinib NDA drawing a CRL on its respective 2026 action date"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "molgramostim BLA PDUFA 2026-11-22 (catalysts) extended from Aug 22 with no safety flag",
+    "falsifier": "a CRL for molgramostim on 2026-11-22 or a further FDA information request before then"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings 2026-10-14 (catalysts) with 5 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "a 2027 order-book or China-revenue cut disclosed at the 2026-10-14 print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings 2026-10-15 (catalysts) with 6 net raises from 7 firms (revision_flow_90d)",
+    "falsifier": "a FY26 capex guidance cut on the 2026-10-15 call"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings 2026-10-27 after close (catalysts) with 6 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "a Q4 guide-down or an Advantest share-gain disclosure on the 2026-10-27 call"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Q3'26 results 2026-10-22 (catalysts) with 17 net raises from 14 firms (revision_flow_90d)",
+    "falsifier": "a Vyvgart franchise guidance cut on the 2026-10-22 call"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.05,
+    "theme": "energy",
+    "thesis": "Q3'26 earnings 2026-11-03 (catalysts) on a large liquid uranium name",
+    "falsifier": "a 2026 production or delivery guidance cut on the 2026-11-03 call"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.05,
+    "theme": "defense",
+    "thesis": "Q3'26 report 2026-10-23 (catalysts) on a liquid Nordic defense name",
+    "falsifier": "a 2026 order-intake or margin guidance cut on the 2026-10-23 report"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.05,
+    "theme": "gambling",
+    "thesis": "Q3'26 report 2026-10-23 (catalysts) on a liquid live-casino operator",
+    "falsifier": "an Asia revenue decline or UK regulatory charge disclosed on the 2026-10-23 report"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers and no raises, lithium price forecast cut",
+   "VRT|4 net lowers and no raises, backlog growth questioned",
+   "CEG|6 net lowers versus 1 raise, no dated catalyst",
+   "OKLO|4 net lowers, zero revenue, no dated catalyst",
+   "SMR|6 net lowers, revenue down 99% YoY",
+   "FLUT|15 net lowers versus 1 raise, four 2026 guidance cuts",
+   "NVO|no analyst revisions, stock down 36% from 52w high",
+   "SERV|3 net lowers, median target change -55.6%"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.210, not 1.0"
+}

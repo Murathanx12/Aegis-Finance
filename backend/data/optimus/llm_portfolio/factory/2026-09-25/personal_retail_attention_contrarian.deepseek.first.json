@@ -1,0 +1,150 @@
+{
+ "text": "{\"name\": \"retail_attention_contrarian_flow\", \"cash_weight\": 0.07, \"positions\": [\"MRK|0.09|biotech|22 net raises from 17 firms and 3 news headlines vs zero retail-tracker presence (revision_flow_90d, news_14d)|I-DXd CRL on Oct 10 or any net-lowers print in the next 90 days\", \"ABBV|0.09|biotech|20 net raises from 21 firms with 65 headlines but no WSB/ApeWisdom crowding (revision_flow_90d, news_14d)|Two consecutive net-lowers months or a Skyrizi/Rinvoq guidance cut\", \"AMGN|0.08|biotech|26 net raises from 22 firms, inflection_flag true, 44 headlines yet absent from retail trackers (revision_flow_90d, briefing)|MariTide MARITIME-1/2 slips past Jan 21 2027 or net raises turn negative\", \"GILD|0.07|biotech|Only large pharma with net lowers (-3) and zero headlines - the crowd is elsewhere, not here (revision_flow_90d, news_14d)|Anito-cel CRL on Dec 23 2026 or net lowers widening past -6\", \"VRTX|0.07|biotech|9 net raises from 8 firms with zero retail-tracker presence and no MFN deal priced in (revision_flow_90d)|Povetacicept CRL on Nov 30 2026 or a net-lowers month\", \"ARGX|0.07|biotech|17 net raises from 14 firms, 7 headlines, and no MFN deal - tariff gap the crowd ignores (revision_flow_90d)|EMPASSION Phase 3 MMN topline miss in Q4 2026\", \"COGT|0.06|biotech|2 net raises, two separate PDUFAs Nov 30 and Dec 30, zero retail mentions (revision_flow_90d, catalysts)|Either bezuclastinib NDA draws a CRL or a major amendment pushes a date\", \"BBIO|0.06|biotech|9 net raises from 11 firms plus an MFN deal that de-risks tariffs (revision_flow_90d)|BBP-418 CRL on Nov 27 2026 or net raises turning negative\", \"WST|0.06|biotech|7 net raises from 6 firms, zero headlines, zero retail-tracker presence (revision_flow_90d, news_14d)|GLP-1 device orders decelerate or a net-lowers print appears\", \"RGEN|0.05|biotech|4 net raises from 5 firms with no crowding and bioprocessing recovery still order-driven (revision_flow_90d)|Q3 core growth stays below 4% or a net-lowers month\", \"TSM|0.05|semis|6 net raises from 7 firms, 3 headlines, no retail-tracker surge despite being the AI bellwether (revision_flow_90d)|Oct 15 capex guide cut or gross margin below the 65-67% guide\", \"ASML|0.05|semis|5 net raises from 4 firms and 32 headlines but no WSB/ApeWisdom crowding (revision_flow_90d, news_14d)|Oct 14 order book miss or China export-control headline\", \"TER|0.04|semis|6 net raises from 7 firms with zero headlines - the quietest AI-capex name in the panel (revision_flow_90d, news_14d)|Oct 27 print shows robotics or AI-test orders stalling\", \"AME|0.04|robotics|12 net raises from 10 firms, zero retail-tracker presence, robotics optionality unpriced (revision_flow_90d)|The $5B deal integration slips or net raises turn negative\", \"NVT|0.03|power_grid|6 net raises from 5 firms, inflection_flag true, only 8-K headlines not retail chatter (revision_flow_90d, briefing)|Fall-2026 liquid-cooling launch slips or a net-lowers month\", \"GEV|0.03|power_grid|8 net raises from 9 firms and inflection_flag true despite Oracle data-center delay headlines (revision_flow_90d, news_14d)|Backlog cancellation rate rises or a hyperscaler pauses capex\", \"CORT|0.03|biotech|4 net raises from 4 firms with zero headlines and zero retail mentions (revision_flow_90d, news_14d)|Relacorilant resubmission draws a second CRL on Dec 17 2026\"], \"strategy\": \"I fade the retail-attention crowd: the WSB/ApeWisdom/AltIndex lists are dominated by GME, MU, ORCL, RKLB, NBIS, BB, SNDK and the BYND/DNUT/GPRO meme cluster, none of which I own. Instead I buy the names where analyst revision flow is strongly positive (MRK +22, AMGN +26, ABBV +20, ARGX +17, AME +12 net raises) while headline counts and retail-tracker presence are near zero - the flow knows something the crowd has not noticed. Biotech PDUFA dates give dated catalysts; semis and power-grid give the AI-capex leg. I would be wrong if the quiet names start appearing on ApeWisdom (crowding arrives), if net raises turn negative, or if a CRL or capex cut hits before the flow can be validated.\", \"objective\": \"Maximise 126-session return vs SPY net of costs by owning positive analyst-revision-flow names that retail attention trackers have not yet crowded into.\", \"what_i_did_not_buy\": [\"GME|Top WSB mention count, pure attention with no analyst flow\", \"MU|Retail-crowded AI memory trade, net raises exactly zero\", \"ORCL|+3100% mention surge on bad news, net lowers -5\", \"RKLB|+550% mention spike with no dated catalyst found\", \"NBIS|+160% mention surge, no dated catalyst, beta 5.0\", \"BB|+83% mention surge, no dated catalyst found\", \"SNDK|Meme-adjacent memory name, prior archetype already refuted\", \"FLUT|15 net lowers from 15 firms, four guidance cuts in 2026\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00212977,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 316,
+ "tokens_out": 1433,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "retail_attention_contrarian_flow",
+  "strategy": "I fade the retail-attention crowd: the WSB/ApeWisdom/AltIndex lists are dominated by GME, MU, ORCL, RKLB, NBIS, BB, SNDK and the BYND/DNUT/GPRO meme cluster, none of which I own. Instead I buy the names where analyst revision flow is strongly positive (MRK +22, AMGN +26, ABBV +20, ARGX +17, AME +12 net raises) while headline counts and retail-tracker presence are near zero - the flow knows something the crowd has not noticed. Biotech PDUFA dates give dated catalysts; semis and power-grid give the AI-capex leg. I would be wrong if the quiet names start appearing on ApeWisdom (crowding arrives), if net raises turn negative, or if a CRL or capex cut hits before the flow can be validated.",
+  "objective": "Maximise 126-session return vs SPY net of costs by owning positive analyst-revision-flow names that retail attention trackers have not yet crowded into.",
+  "cash_weight": 0.07,
+  "positions": [
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "22 net raises from 17 firms and 3 news headlines vs zero retail-tracker presence (revision_flow_90d, news_14d)",
+    "falsifier": "I-DXd CRL on Oct 10 or any net-lowers print in the next 90 days"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "20 net raises from 21 firms with 65 headlines but no WSB/ApeWisdom crowding (revision_flow_90d, news_14d)",
+    "falsifier": "Two consecutive net-lowers months or a Skyrizi/Rinvoq guidance cut"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "26 net raises from 22 firms, inflection_flag true, 44 headlines yet absent from retail trackers (revision_flow_90d, briefing)",
+    "falsifier": "MariTide MARITIME-1/2 slips past Jan 21 2027 or net raises turn negative"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Only large pharma with net lowers (-3) and zero headlines - the crowd is elsewhere, not here (revision_flow_90d, news_14d)",
+    "falsifier": "Anito-cel CRL on Dec 23 2026 or net lowers widening past -6"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "9 net raises from 8 firms with zero retail-tracker presence and no MFN deal priced in (revision_flow_90d)",
+    "falsifier": "Povetacicept CRL on Nov 30 2026 or a net-lowers month"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "17 net raises from 14 firms, 7 headlines, and no MFN deal - tariff gap the crowd ignores (revision_flow_90d)",
+    "falsifier": "EMPASSION Phase 3 MMN topline miss in Q4 2026"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "2 net raises, two separate PDUFAs Nov 30 and Dec 30, zero retail mentions (revision_flow_90d, catalysts)",
+    "falsifier": "Either bezuclastinib NDA draws a CRL or a major amendment pushes a date"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "9 net raises from 11 firms plus an MFN deal that de-risks tariffs (revision_flow_90d)",
+    "falsifier": "BBP-418 CRL on Nov 27 2026 or net raises turning negative"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "7 net raises from 6 firms, zero headlines, zero retail-tracker presence (revision_flow_90d, news_14d)",
+    "falsifier": "GLP-1 device orders decelerate or a net-lowers print appears"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "4 net raises from 5 firms with no crowding and bioprocessing recovery still order-driven (revision_flow_90d)",
+    "falsifier": "Q3 core growth stays below 4% or a net-lowers month"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "6 net raises from 7 firms, 3 headlines, no retail-tracker surge despite being the AI bellwether (revision_flow_90d)",
+    "falsifier": "Oct 15 capex guide cut or gross margin below the 65-67% guide"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "5 net raises from 4 firms and 32 headlines but no WSB/ApeWisdom crowding (revision_flow_90d, news_14d)",
+    "falsifier": "Oct 14 order book miss or China export-control headline"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "6 net raises from 7 firms with zero headlines - the quietest AI-capex name in the panel (revision_flow_90d, news_14d)",
+    "falsifier": "Oct 27 print shows robotics or AI-test orders stalling"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.04,
+    "theme": "robotics",
+    "thesis": "12 net raises from 10 firms, zero retail-tracker presence, robotics optionality unpriced (revision_flow_90d)",
+    "falsifier": "The $5B deal integration slips or net raises turn negative"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.03,
+    "theme": "power_grid",
+    "thesis": "6 net raises from 5 firms, inflection_flag true, only 8-K headlines not retail chatter (revision_flow_90d, briefing)",
+    "falsifier": "Fall-2026 liquid-cooling launch slips or a net-lowers month"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.03,
+    "theme": "power_grid",
+    "thesis": "8 net raises from 9 firms and inflection_flag true despite Oracle data-center delay headlines (revision_flow_90d, news_14d)",
+    "falsifier": "Backlog cancellation rate rises or a hyperscaler pauses capex"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "4 net raises from 4 firms with zero headlines and zero retail mentions (revision_flow_90d, news_14d)",
+    "falsifier": "Relacorilant resubmission draws a second CRL on Dec 17 2026"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "GME|Top WSB mention count, pure attention with no analyst flow",
+   "MU|Retail-crowded AI memory trade, net raises exactly zero",
+   "ORCL|+3100% mention surge on bad news, net lowers -5",
+   "RKLB|+550% mention spike with no dated catalyst found",
+   "NBIS|+160% mention surge, no dated catalyst, beta 5.0",
+   "BB|+83% mention surge, no dated catalyst found",
+   "SNDK|Meme-adjacent memory name, prior archetype already refuted",
+   "FLUT|15 net lowers from 15 firms, four guidance cuts in 2026"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.040, not 1.0"
+}

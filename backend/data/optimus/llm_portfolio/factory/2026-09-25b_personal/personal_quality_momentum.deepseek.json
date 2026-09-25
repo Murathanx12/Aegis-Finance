@@ -1,0 +1,141 @@
+{
+ "text": "{\"name\":\"quality_momentum_biotech_semis\",\"cash_weight\":0.06,\"positions\":[\"VRTX|0.09|biotech|net_raises 9 of 9 firms with median target +3.3% and mom_252_21 +39.5% on a large liquid book|povetacicept CRL or a Q3 miss on the Nov 30 PDUFA date\",\"GILD|0.08|biotech|mom_252_21 +28.6% with gross_margin_chg +0.0053 and drawdown_63 only -0.2%|anito-cel CRL on Dec 23 or further net target cuts beyond -3\",\"MRK|0.09|biotech|net_raises 22 with zero lowers across 17 firms and mom_252_21 +87%|I-DXd CRL on the Oct 10 PDUFA or Keytruda LOE guidance worsening\",\"CORT|0.07|biotech|mom_252_21 +51.7% with gross_margin 98.4% and net_raises 4 of 4 firms|relacorilant resubmission rejected at the Dec 17 PDUFA\",\"BBIO|0.06|biotech|net_raises 9 of 11 firms and rev_yoy +120% with gross_margin 93.8%|BBP-418 CRL at the Nov 27 PDUFA or a wider Q3 loss\",\"SMMT|0.05|biotech|net_raises 1 with mom_21 +36% into the Nov 14 ivonescimab PDUFA|HARMONi OS data fails to show superiority and the BLA is rejected\",\"ASML|0.08|semis|net_raises 5 of 5 firms with median target +13.6% and mom_252_21 +89.7%|an order cut or China restriction headline at the Oct 14 Q3 print\",\"TSM|0.09|semis|net_raises 6 of 6 firms with median target +10.2% and vs_ma200 +17.6%|a capex guidance cut at the Oct 15 Q3 earnings\",\"NVDA|0.10|semis|net_raises 16 of 16 firms across 21 and gross_margin_chg +0.0004 with mom_63 +9.1%|a hyperscaler capex digestion signal or gross margin guide cut\",\"MU|0.07|semis|inflection_flag true with gross_margin_chg +10.2pp and rev_yoy +346%|HBM pricing rolls over or the next print shows inventory building\",\"AMD|0.07|semis|net_raises 22 of 22 firms and mom_252_21 +197% with drawdown_63 at 0.0%|an AI accelerator order cut or gross margin guide below 54%\",\"TER|0.05|semis|net_raises 6 of 6 firms with median target +13.6% and mom_252_21 +223%|the Oct 27 Q3 print shows robotics and test orders rolling over\",\"GEV|0.06|power_grid|inflection_flag true with net_raises 8 of 8 firms and gross_margin_chg +2.2pp|backlog cancellation or an AI data-center pause headline before Q3\",\"NVT|0.05|power_grid|inflection_flag true with net_raises 6 of 6 firms and gross_margin_chg +2.1pp|the fall liquid-cooling launch slips or data-center orders stall\",\"AME|0.05|robotics|net_raises 12 of 12 firms with median target +6.7% and vol_63 only 23.9%|the $5B deal integration disappoints or Q3 organic growth stalls\"],\"strategy\":\"Buy liquid quality-momentum: names with strong 6-12 month relative momentum, positive gross-margin change, and broad analyst net raises, concentrated in biotech PDUFA names with dated Q4 catalysts and in semis/power-grid where the AI capex chain still shows margin expansion. I avoid names far above their 200-day with falling margins (ALB, VRT, LEU, OKLO, SMR, FLUT) and unprofitable quantum/meme tickers. I would be wrong if a single AI-capex digestion headline hits the semis and power names together, or if several Q4 PDUFAs return CRLs, which the base rates say are 2-4x larger than approval pops.\",\"objective\":\"Maximise 126-session return vs SPY net of costs via liquid quality-momentum names with dated Q4 catalysts.\",\"what_i_did_not_buy\":[\"ALB|net_raises -12 with mom_63 -27.7% and falling gross margin\",\"VRT|net_raises -4 and mom_63 -29.9% despite AI narrative\",\"LEU|net_raises -4 with median target change -12.9%\",\"OKLO|net_raises -4 and zero revenue, pre-commercial story stock\",\"SMR|net_raises -6 and rev_yoy -99%\",\"FLUT|net_raises -15 with mom_252_21 -64.7%\",\"IONQ|no revision data and mom_252_21 -37.8% with dilution risk\",\"BYND|mom_252_21 -82.6% and pump-shaped with no fundamental news\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00183585,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 247,
+ "tokens_out": 1213,
+ "cached_tokens": 69504,
+ "parse": "ok",
+ "parsed": {
+  "name": "quality_momentum_biotech_semis",
+  "strategy": "Buy liquid quality-momentum: names with strong 6-12 month relative momentum, positive gross-margin change, and broad analyst net raises, concentrated in biotech PDUFA names with dated Q4 catalysts and in semis/power-grid where the AI capex chain still shows margin expansion. I avoid names far above their 200-day with falling margins (ALB, VRT, LEU, OKLO, SMR, FLUT) and unprofitable quantum/meme tickers. I would be wrong if a single AI-capex digestion headline hits the semis and power names together, or if several Q4 PDUFAs return CRLs, which the base rates say are 2-4x larger than approval pops. [factory: weights and cash rescaled from a stated total of 1.1200 to 1.0 -- the model's arithmetic, not its intent]",
+  "objective": "Maximise 126-session return vs SPY net of costs via liquid quality-momentum names with dated Q4 catalysts.",
+  "cash_weight": 0.053571,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.080357,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 9 firms with median target +3.3% and mom_252_21 +39.5% on a large liquid book",
+    "falsifier": "povetacicept CRL or a Q3 miss on the Nov 30 PDUFA date"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.071429,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +28.6% with gross_margin_chg +0.0053 and drawdown_63 only -0.2%",
+    "falsifier": "anito-cel CRL on Dec 23 or further net target cuts beyond -3"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.080357,
+    "theme": "biotech",
+    "thesis": "net_raises 22 with zero lowers across 17 firms and mom_252_21 +87%",
+    "falsifier": "I-DXd CRL on the Oct 10 PDUFA or Keytruda LOE guidance worsening"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.0625,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +51.7% with gross_margin 98.4% and net_raises 4 of 4 firms",
+    "falsifier": "relacorilant resubmission rejected at the Dec 17 PDUFA"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.053571,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 11 firms and rev_yoy +120% with gross_margin 93.8%",
+    "falsifier": "BBP-418 CRL at the Nov 27 PDUFA or a wider Q3 loss"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.044643,
+    "theme": "biotech",
+    "thesis": "net_raises 1 with mom_21 +36% into the Nov 14 ivonescimab PDUFA",
+    "falsifier": "HARMONi OS data fails to show superiority and the BLA is rejected"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.071429,
+    "theme": "semis",
+    "thesis": "net_raises 5 of 5 firms with median target +13.6% and mom_252_21 +89.7%",
+    "falsifier": "an order cut or China restriction headline at the Oct 14 Q3 print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.080357,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 firms with median target +10.2% and vs_ma200 +17.6%",
+    "falsifier": "a capex guidance cut at the Oct 15 Q3 earnings"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.089286,
+    "theme": "semis",
+    "thesis": "net_raises 16 of 16 firms across 21 and gross_margin_chg +0.0004 with mom_63 +9.1%",
+    "falsifier": "a hyperscaler capex digestion signal or gross margin guide cut"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.0625,
+    "theme": "semis",
+    "thesis": "inflection_flag true with gross_margin_chg +10.2pp and rev_yoy +346%",
+    "falsifier": "HBM pricing rolls over or the next print shows inventory building"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.0625,
+    "theme": "semis",
+    "thesis": "net_raises 22 of 22 firms and mom_252_21 +197% with drawdown_63 at 0.0%",
+    "falsifier": "an AI accelerator order cut or gross margin guide below 54%"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.044643,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 firms with median target +13.6% and mom_252_21 +223%",
+    "falsifier": "the Oct 27 Q3 print shows robotics and test orders rolling over"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.053571,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true with net_raises 8 of 8 firms and gross_margin_chg +2.2pp",
+    "falsifier": "backlog cancellation or an AI data-center pause headline before Q3"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.044643,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true with net_raises 6 of 6 firms and gross_margin_chg +2.1pp",
+    "falsifier": "the fall liquid-cooling launch slips or data-center orders stall"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.044643,
+    "theme": "robotics",
+    "thesis": "net_raises 12 of 12 firms with median target +6.7% and vol_63 only 23.9%",
+    "falsifier": "the $5B deal integration disappoints or Q3 organic growth stalls"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12 with mom_63 -27.7% and falling gross margin",
+   "VRT|net_raises -4 and mom_63 -29.9% despite AI narrative",
+   "LEU|net_raises -4 with median target change -12.9%",
+   "OKLO|net_raises -4 and zero revenue, pre-commercial story stock",
+   "SMR|net_raises -6 and rev_yoy -99%",
+   "FLUT|net_raises -15 with mom_252_21 -64.7%",
+   "IONQ|no revision data and mom_252_21 -37.8% with dilution risk",
+   "BYND|mom_252_21 -82.6% and pump-shaped with no fundamental news"
+  ],
+  "weights_rescaled_from": 1.12
+ },
+ "prompt_hash": "bd017dc2cfb1d28d",
+ "strategy": {
+  "id": "quality_momentum",
+  "brief": "Quality momentum: liquid names with strong 6-12 month momentum (mom_252_21) AND improving gross margin; avoid names far above their 200-day with falling margins. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

@@ -1,0 +1,183 @@
+{
+ "text": "{\"name\":\"catalyst_calendar_q4_2026\",\"cash_weight\":0.06,\"positions\":[\"VRTX|0.09|biotech|povetacicept BLA PDUFA Nov 30 2026 (catalysts) with 9 net raises and zero lowers (revision_flow_90d)|CRL on CMC grounds before Nov 30 2026\",\"MRK|0.09|biotech|ifinatamab deruxtecan PDUFA Oct 10 2026 (catalysts) plus 22 net raises from 17 firms (revision_flow_90d)|FDA action delayed past Oct 10 2026 or a manufacturing CRL\",\"GILD|0.08|biotech|anito-cel BLA PDUFA Dec 23 2026 (catalysts) on a large liquid name at only -0.2% 63d drawdown (briefing)|CRL or facility-inspection finding before Dec 23 2026\",\"CORT|0.08|biotech|relacorilant NDA resubmission PDUFA Dec 17 2026 (catalysts) with 4 net raises and rev_qoq +55% (briefing)|second CRL on the resubmission around Dec 17 2026\",\"AGIO|0.07|biotech|mitapivat sickle-cell sNDA PDUFA Nov 1 2026 (catalysts) with 5 net raises and rev_yoy +259% (briefing)|narrow or negative label decision on Nov 1 2026\",\"COGT|0.07|biotech|two bezuclastinib PDUFAs Nov 30 and Dec 30 2026 (catalysts) give two shots 30 days apart|either NDA rejected, starting with the Nov 30 2026 GIST decision\",\"BBIO|0.07|biotech|BBP-418 NDA PDUFA Nov 27 2026 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)|CRL on the LGMD2I filing on Nov 27 2026\",\"SMMT|0.06|biotech|ivonescimab BLA PDUFA Nov 14 2026 (catalysts) with 8-K filings in the last 14 days (news_14d)|FDA requests more OS data, pushing past Nov 14 2026\",\"PRAX|0.06|biotech|relutrigine NDA PDUFA Dec 27 2026 (catalysts) with 5 net raises and zero lowers (revision_flow_90d)|second major-amendment delay past Dec 27 2026\",\"ASML|0.08|semis|Q3'26 earnings Oct 14 2026 (catalysts) with 5 net raises from 4 firms (revision_flow_90d)|order guidance cut on the Oct 14 2026 print\",\"TSM|0.07|semis|Q3'26 earnings Oct 15 2026 (catalysts) with 6 net raises and zero lowers (revision_flow_90d)|capex guide cut on the Oct 15 2026 call\",\"TER|0.06|semis|Q3'26 earnings Oct 27 2026 (catalysts) with 6 net raises and rev_yoy +104% (briefing)|robotics and test orders miss on the Oct 27 2026 print\",\"CCJ|0.05|nuclear|Q3'26 earnings Nov 3-4 2026 (catalysts) on the uranium supply theme|production or contract guidance cut on the Nov 3 2026 report\",\"NVO|0.05|biotech|Q3'26 results Nov 4 2026 (catalysts) after the CagriSema readout|further share-loss guidance on the Nov 4 2026 call\",\"RHM.DE|0.05|defense|Q3'26 results Nov 5 2026 (catalysts) on the European rearmament theme|order intake miss on the Nov 5 2026 report\",\"HAG.DE|0.04|defense|9-month 2026 results Nov 5 2026 (catalysts) with a >EUR10bn backlog|negative free cash flow worsens on the Nov 5 2026 report\",\"SAAB-B.ST|0.04|defense|Q3'26 report Oct 23 2026 (catalysts) on the Gripen export pipeline|order or delivery slip on the Oct 23 2026 report\",\"KOG.OL|0.04|defense|Q3'26 report Oct 29 2026 (catalysts) on missile and defense demand|margin or order miss on the Oct 29 2026 report\",\"EVO.ST|0.04|gambling|Q3'26 report Oct 23 2026 (catalysts) on live-casino growth|Asia revenue decline accelerates on the Oct 23 2026 report\",\"ALL.AX|0.04|gambling|FY26 annual results Nov 12 2026 (catalysts) on Anaxi and digital growth|digital gaming guidance cut on the Nov 12 2026 print\",\"2317.TW|0.04|semis|Hon Hai Tech Day Oct 30-31 2026 (catalysts) on AI server rack demand|no new AI server customer disclosed at the Oct 30 2026 event\"],\"strategy\":\"Only names with a hand-verified dated catalyst inside the six-month horizon: PDUFAs (MRK Oct 10, AGIO Nov 1, SMMT Nov 14, CAPR-adjacent names, BBIO Nov 27, VRTX Nov 30, COGT Nov 30/Dec 30, CORT Dec 17, GILD Dec 23, PRAX Dec 27), earnings (ASML Oct 14, TSM Oct 15, SAAB/EVO Oct 23, TER Oct 27, KOG Oct 29, 2317.TW Oct 30, CCJ Nov 3, NVO Nov 4, RHM/HAG Nov 5, ALL.AX Nov 12), spread so no single day decides the book. I am wrong if the dated events slip, or if CRLs cluster in the small-cap PDUFA sleeve where the downside tail is 2-4x the approval pop.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via dated Q4-2026 catalysts only\",\"what_i_did_not_buy\":[\"ALB|12 target cuts, no raises, lithium price falling\",\"VRT|4 net lowers and no dated catalyst in evidence\",\"GEV|no dated catalyst in the evidence\",\"FLUT|15 net lowers, four 2026 guidance cuts\",\"SMR|6 net lowers, revenue down 99% YoY\",\"OKLO|4 net lowers, zero revenue, no dated catalyst\",\"QUBT|opex +114% YoY, $10-$32 target dispersion\",\"SERV|guidance cut, 3 net lowers, no dated catalyst\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00230745,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 255,
+ "tokens_out": 1579,
+ "cached_tokens": 69504,
+ "parse": "ok",
+ "parsed": {
+  "name": "catalyst_calendar_q4_2026",
+  "strategy": "Only names with a hand-verified dated catalyst inside the six-month horizon: PDUFAs (MRK Oct 10, AGIO Nov 1, SMMT Nov 14, CAPR-adjacent names, BBIO Nov 27, VRTX Nov 30, COGT Nov 30/Dec 30, CORT Dec 17, GILD Dec 23, PRAX Dec 27), earnings (ASML Oct 14, TSM Oct 15, SAAB/EVO Oct 23, TER Oct 27, KOG Oct 29, 2317.TW Oct 30, CCJ Nov 3, NVO Nov 4, RHM/HAG Nov 5, ALL.AX Nov 12), spread so no single day decides the book. I am wrong if the dated events slip, or if CRLs cluster in the small-cap PDUFA sleeve where the downside tail is 2-4x the approval pop. [factory: weights and cash rescaled from a stated total of 1.3300 to 1.0 -- the model's arithmetic, not its intent]",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via dated Q4-2026 catalysts only",
+  "cash_weight": 0.045113,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.067669,
+    "theme": "biotech",
+    "thesis": "povetacicept BLA PDUFA Nov 30 2026 (catalysts) with 9 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "CRL on CMC grounds before Nov 30 2026"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.067669,
+    "theme": "biotech",
+    "thesis": "ifinatamab deruxtecan PDUFA Oct 10 2026 (catalysts) plus 22 net raises from 17 firms (revision_flow_90d)",
+    "falsifier": "FDA action delayed past Oct 10 2026 or a manufacturing CRL"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.06015,
+    "theme": "biotech",
+    "thesis": "anito-cel BLA PDUFA Dec 23 2026 (catalysts) on a large liquid name at only -0.2% 63d drawdown (briefing)",
+    "falsifier": "CRL or facility-inspection finding before Dec 23 2026"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.06015,
+    "theme": "biotech",
+    "thesis": "relacorilant NDA resubmission PDUFA Dec 17 2026 (catalysts) with 4 net raises and rev_qoq +55% (briefing)",
+    "falsifier": "second CRL on the resubmission around Dec 17 2026"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.052632,
+    "theme": "biotech",
+    "thesis": "mitapivat sickle-cell sNDA PDUFA Nov 1 2026 (catalysts) with 5 net raises and rev_yoy +259% (briefing)",
+    "falsifier": "narrow or negative label decision on Nov 1 2026"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.052632,
+    "theme": "biotech",
+    "thesis": "two bezuclastinib PDUFAs Nov 30 and Dec 30 2026 (catalysts) give two shots 30 days apart",
+    "falsifier": "either NDA rejected, starting with the Nov 30 2026 GIST decision"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.052632,
+    "theme": "biotech",
+    "thesis": "BBP-418 NDA PDUFA Nov 27 2026 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)",
+    "falsifier": "CRL on the LGMD2I filing on Nov 27 2026"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.045113,
+    "theme": "biotech",
+    "thesis": "ivonescimab BLA PDUFA Nov 14 2026 (catalysts) with 8-K filings in the last 14 days (news_14d)",
+    "falsifier": "FDA requests more OS data, pushing past Nov 14 2026"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.045113,
+    "theme": "biotech",
+    "thesis": "relutrigine NDA PDUFA Dec 27 2026 (catalysts) with 5 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "second major-amendment delay past Dec 27 2026"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.06015,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 2026 (catalysts) with 5 net raises from 4 firms (revision_flow_90d)",
+    "falsifier": "order guidance cut on the Oct 14 2026 print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.052632,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 2026 (catalysts) with 6 net raises and zero lowers (revision_flow_90d)",
+    "falsifier": "capex guide cut on the Oct 15 2026 call"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.045113,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 27 2026 (catalysts) with 6 net raises and rev_yoy +104% (briefing)",
+    "falsifier": "robotics and test orders miss on the Oct 27 2026 print"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.037594,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 2026 (catalysts) on the uranium supply theme",
+    "falsifier": "production or contract guidance cut on the Nov 3 2026 report"
+   },
+   {
+    "ticker": "NVO",
+    "weight": 0.037594,
+    "theme": "biotech",
+    "thesis": "Q3'26 results Nov 4 2026 (catalysts) after the CagriSema readout",
+    "falsifier": "further share-loss guidance on the Nov 4 2026 call"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.037594,
+    "theme": "defense",
+    "thesis": "Q3'26 results Nov 5 2026 (catalysts) on the European rearmament theme",
+    "falsifier": "order intake miss on the Nov 5 2026 report"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.030075,
+    "theme": "defense",
+    "thesis": "9-month 2026 results Nov 5 2026 (catalysts) with a >EUR10bn backlog",
+    "falsifier": "negative free cash flow worsens on the Nov 5 2026 report"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.030075,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 23 2026 (catalysts) on the Gripen export pipeline",
+    "falsifier": "order or delivery slip on the Oct 23 2026 report"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.030075,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 29 2026 (catalysts) on missile and defense demand",
+    "falsifier": "margin or order miss on the Oct 29 2026 report"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.030075,
+    "theme": "gambling",
+    "thesis": "Q3'26 report Oct 23 2026 (catalysts) on live-casino growth",
+    "falsifier": "Asia revenue decline accelerates on the Oct 23 2026 report"
+   },
+   {
+    "ticker": "ALL.AX",
+    "weight": 0.030075,
+    "theme": "gambling",
+    "thesis": "FY26 annual results Nov 12 2026 (catalysts) on Anaxi and digital growth",
+    "falsifier": "digital gaming guidance cut on the Nov 12 2026 print"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.030075,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 2026 (catalysts) on AI server rack demand",
+    "falsifier": "no new AI server customer disclosed at the Oct 30 2026 event"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 target cuts, no raises, lithium price falling",
+   "VRT|4 net lowers and no dated catalyst in evidence",
+   "GEV|no dated catalyst in the evidence",
+   "FLUT|15 net lowers, four 2026 guidance cuts",
+   "SMR|6 net lowers, revenue down 99% YoY",
+   "OKLO|4 net lowers, zero revenue, no dated catalyst",
+   "QUBT|opex +114% YoY, $10-$32 target dispersion",
+   "SERV|guidance cut, 3 net lowers, no dated catalyst"
+  ],
+  "weights_rescaled_from": 1.33
+ },
+ "prompt_hash": "9ec97025f7070dc0",
+ "strategy": {
+  "id": "catalyst_calendar",
+  "brief": "Catalyst calendar: only names with a DATED catalyst in the CATALYSTS evidence (earnings, PDUFA, investor day) inside the horizon. Diversify across dates so no single day decides the book. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

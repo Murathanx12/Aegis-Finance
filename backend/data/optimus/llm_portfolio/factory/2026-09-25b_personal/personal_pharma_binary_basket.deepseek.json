@@ -1,0 +1,168 @@
+{
+ "text": "{\"name\":\"pharma_binary_basket\",\"cash_weight\":0.12,\"positions\":[\"VRTX|0.08|biotech|povetacicept BLA PDUFA 2026-11-30 (catalysts) plus 9 net raises with zero lowers (revision_flow_90d)|CRL or CMC delay on povetacicept announced on or before 2026-11-30\",\"MRK|0.08|biotech|ifinatamab deruxtecan PDUFA 2026-10-10 (catalysts) with 22 net raises from 17 firms (revision_flow_90d)|I-DXd CRL on the 2026-10-10 PDUFA date\",\"LLY|0.07|biotech|13 net raises, 14 up vs 1 down, and inflection_flag true on 47.7% rev_yoy (briefing)|Q3 print shows rev_yoy decelerating below 30% or a 2026-10/11 target cut\",\"ABBV|0.07|biotech|20 net raises from 21 firms with zero lowers (revision_flow_90d) and drawdown_63 of only -0.0056 (briefing)|Two or more of the 21 firms cut targets before the Q3 print\",\"GILD|0.06|biotech|anito-cel BLA PDUFA 2026-12-23 (catalysts) with drawdown_63 -0.0022 and rev_yoy 10.2% (briefing)|Anito-cel CRL or manufacturing finding on 2026-12-23\",\"AGIO|0.05|biotech|mitapivat sickle cell PDUFA 2026-11-01 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)|FDA grants only a narrow genotype label or issues a CRL on 2026-11-01\",\"COGT|0.05|biotech|two bezuclastinib NDAs 2026-11-30 and 2026-12-30 (catalysts) with 2 net raises (revision_flow_90d)|Either bezuclastinib NDA draws a CRL on 2026-11-30 or 2026-12-30\",\"BBIO|0.05|biotech|BBP-418 PDUFA 2026-11-27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)|BBP-418 CRL on 2026-11-27\",\"SMMT|0.04|biotech|ivonescimab BLA PDUFA 2026-11-14 (catalysts) and two 8-K filings in news_14d|CRL or an FDA request for more OS data on 2026-11-14\",\"SVRA|0.03|biotech|molgramostim BLA PDUFA 2026-11-22 (catalysts), extended 3 months from Aug 22|Inhaled-biologic CMC finding or CRL on 2026-11-22\",\"CAPR|0.03|biotech|deramiocel PDUFA 2026-11-22 (catalysts) after the narrower upper-limb resubmission|FDA rejects the narrower label and issues a CRL on 2026-11-22\",\"PRAX|0.03|biotech|relutrigine PDUFA 2026-12-27 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)|Major-amendment review ends in a CRL on 2026-12-27\",\"AMGN|0.04|biotech|26 net raises from 22 firms (revision_flow_90d) and inflection_flag true on 16.7% rev_qoq (briefing)|Q3 print shows rev_qoq below 10% or a cluster of target cuts\",\"WST|0.04|biotech|7 net raises with zero lowers (revision_flow_90d) and gross_margin_chg +0.0266 (briefing)|Late-Oct earnings cut FY26 guidance or GLP-1 device orders stall\",\"RGEN|0.04|biotech|4 net raises with zero lowers (revision_flow_90d) and mom_63 +0.4277 (briefing)|Oct 27/Nov 3 earnings show bioprocessing orders turning negative\",\"VKTX|0.04|biotech|positive Phase 1 maintenance-dosing data 2026-09-22 (research_pharma) and oral Phase 3 start Q4 2026|Oral VK2735 Phase 3 start slips past 2026 or discontinuation rate stays above 20%\",\"REGN|0.03|biotech|cemdisiran+pozelimab gMG NDA PDUFA November 2026 (research_pharma) with 4 net raises (revision_flow_90d)|Manufacturing-inspection delay pushes the November 2026 PDUFA past the window\",\"DHR|0.03|biotech|Q3 earnings 2026-10-20 (research_pharma) with bioprocessing orders up mid-teens in Q2|Q3 core Biotech revenue growth stays below 4% on 2026-10-20\",\"INSM|0.03|biotech|ARIKAYCE sNDA PDUFA 2027-01-28 (catalysts) and rev_yoy 2.9611 (briefing)|ENCORE sNDA CRL on 2027-01-28 or a brensocatib pipeline setback\"],\"strategy\":\"Bet on dated Q4-2026/Q1-2027 FDA decisions and readouts, sized so no single binary exceeds 8% and the CRL tail (roughly -33% over five days) cannot break the book. The core is large-cap pharma with one-sided revision flow (MRK 22 net raises, ABBV 20, LLY 13, AMGN 26) plus VRTX's povetacicept PDUFA on 2026-11-30; the satellites are small-cap PDUFAs (AGIO, COGT, BBIO, SMMT, SVRA, CAPR, PRAX) and platform names (WST, RGEN, VKTX, DHR). I am wrong if a cluster of CRLs lands in November-December, if the 2026-09-29 Section 232 pharma tariff go-live hits unshielded names (VRTX, ARGX), or if a broad risk-off de-rates small-cap biotech regardless of data.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via a diversified dated-catalyst pharma basket with large-cap ballast.\",\"what_i_did_not_buy\":[\"NVO|Hold/Sell-leaning Street after REDEFINE 4 non-inferiority failure\",\"ALB|12 target cuts, zero raises, lithium spot normalizing\",\"VRT|4 target cuts, zero raises, mom_63 -0.299\",\"FLUT|15 net lowers, down ~69% from year-ago peak\",\"OKLO|4 net lowers, zero raises, no revenue\",\"SMR|6 net lowers, rev_yoy -0.9907\",\"BYND|Meme pop with no fundamental news cited\",\"QUBT|$10-$32 target dispersion, opex +114% YoY\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00242173,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 333,
+ "tokens_out": 1658,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "pharma_binary_basket",
+  "strategy": "Bet on dated Q4-2026/Q1-2027 FDA decisions and readouts, sized so no single binary exceeds 8% and the CRL tail (roughly -33% over five days) cannot break the book. The core is large-cap pharma with one-sided revision flow (MRK 22 net raises, ABBV 20, LLY 13, AMGN 26) plus VRTX's povetacicept PDUFA on 2026-11-30; the satellites are small-cap PDUFAs (AGIO, COGT, BBIO, SMMT, SVRA, CAPR, PRAX) and platform names (WST, RGEN, VKTX, DHR). I am wrong if a cluster of CRLs lands in November-December, if the 2026-09-29 Section 232 pharma tariff go-live hits unshielded names (VRTX, ARGX), or if a broad risk-off de-rates small-cap biotech regardless of data.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via a diversified dated-catalyst pharma basket with large-cap ballast.",
+  "cash_weight": 0.12,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "povetacicept BLA PDUFA 2026-11-30 (catalysts) plus 9 net raises with zero lowers (revision_flow_90d)",
+    "falsifier": "CRL or CMC delay on povetacicept announced on or before 2026-11-30"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "ifinatamab deruxtecan PDUFA 2026-10-10 (catalysts) with 22 net raises from 17 firms (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on the 2026-10-10 PDUFA date"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "13 net raises, 14 up vs 1 down, and inflection_flag true on 47.7% rev_yoy (briefing)",
+    "falsifier": "Q3 print shows rev_yoy decelerating below 30% or a 2026-10/11 target cut"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "20 net raises from 21 firms with zero lowers (revision_flow_90d) and drawdown_63 of only -0.0056 (briefing)",
+    "falsifier": "Two or more of the 21 firms cut targets before the Q3 print"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "anito-cel BLA PDUFA 2026-12-23 (catalysts) with drawdown_63 -0.0022 and rev_yoy 10.2% (briefing)",
+    "falsifier": "Anito-cel CRL or manufacturing finding on 2026-12-23"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mitapivat sickle cell PDUFA 2026-11-01 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)",
+    "falsifier": "FDA grants only a narrow genotype label or issues a CRL on 2026-11-01"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "two bezuclastinib NDAs 2026-11-30 and 2026-12-30 (catalysts) with 2 net raises (revision_flow_90d)",
+    "falsifier": "Either bezuclastinib NDA draws a CRL on 2026-11-30 or 2026-12-30"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "BBP-418 PDUFA 2026-11-27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)",
+    "falsifier": "BBP-418 CRL on 2026-11-27"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "ivonescimab BLA PDUFA 2026-11-14 (catalysts) and two 8-K filings in news_14d",
+    "falsifier": "CRL or an FDA request for more OS data on 2026-11-14"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "molgramostim BLA PDUFA 2026-11-22 (catalysts), extended 3 months from Aug 22",
+    "falsifier": "Inhaled-biologic CMC finding or CRL on 2026-11-22"
+   },
+   {
+    "ticker": "CAPR",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "deramiocel PDUFA 2026-11-22 (catalysts) after the narrower upper-limb resubmission",
+    "falsifier": "FDA rejects the narrower label and issues a CRL on 2026-11-22"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "relutrigine PDUFA 2026-12-27 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)",
+    "falsifier": "Major-amendment review ends in a CRL on 2026-12-27"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "26 net raises from 22 firms (revision_flow_90d) and inflection_flag true on 16.7% rev_qoq (briefing)",
+    "falsifier": "Q3 print shows rev_qoq below 10% or a cluster of target cuts"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "7 net raises with zero lowers (revision_flow_90d) and gross_margin_chg +0.0266 (briefing)",
+    "falsifier": "Late-Oct earnings cut FY26 guidance or GLP-1 device orders stall"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "4 net raises with zero lowers (revision_flow_90d) and mom_63 +0.4277 (briefing)",
+    "falsifier": "Oct 27/Nov 3 earnings show bioprocessing orders turning negative"
+   },
+   {
+    "ticker": "VKTX",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "positive Phase 1 maintenance-dosing data 2026-09-22 (research_pharma) and oral Phase 3 start Q4 2026",
+    "falsifier": "Oral VK2735 Phase 3 start slips past 2026 or discontinuation rate stays above 20%"
+   },
+   {
+    "ticker": "REGN",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "cemdisiran+pozelimab gMG NDA PDUFA November 2026 (research_pharma) with 4 net raises (revision_flow_90d)",
+    "falsifier": "Manufacturing-inspection delay pushes the November 2026 PDUFA past the window"
+   },
+   {
+    "ticker": "DHR",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "Q3 earnings 2026-10-20 (research_pharma) with bioprocessing orders up mid-teens in Q2",
+    "falsifier": "Q3 core Biotech revenue growth stays below 4% on 2026-10-20"
+   },
+   {
+    "ticker": "INSM",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "ARIKAYCE sNDA PDUFA 2027-01-28 (catalysts) and rev_yoy 2.9611 (briefing)",
+    "falsifier": "ENCORE sNDA CRL on 2027-01-28 or a brensocatib pipeline setback"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVO|Hold/Sell-leaning Street after REDEFINE 4 non-inferiority failure",
+   "ALB|12 target cuts, zero raises, lithium spot normalizing",
+   "VRT|4 target cuts, zero raises, mom_63 -0.299",
+   "FLUT|15 net lowers, down ~69% from year-ago peak",
+   "OKLO|4 net lowers, zero raises, no revenue",
+   "SMR|6 net lowers, rev_yoy -0.9907",
+   "BYND|Meme pop with no fundamental news cited",
+   "QUBT|$10-$32 target dispersion, opex +114% YoY"
+  ]
+ },
+ "prompt_hash": "8e6e92ece259b2ca",
+ "strategy": {
+  "id": "pharma_binary_basket",
+  "brief": "Pharma binary basket: PDUFA/readout names from the CATALYSTS evidence, sized for the CRL tail (a CRL averages -33% over 5 days), plus large-cap pharma ballast. No single binary above 5%. Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

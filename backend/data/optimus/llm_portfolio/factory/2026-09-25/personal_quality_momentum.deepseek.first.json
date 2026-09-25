@@ -1,0 +1,136 @@
+{
+ "text": "{\"name\": \"quality_momentum_biotech_semis\", \"cash_weight\": 0.06, \"positions\": [\"MRK|0.09|biotech|net_raises 22 with zero lowers and mom_252_21 0.87 (briefing)|I-DXd CRL on Oct 10 or Keytruda LOE guidance cut\", \"GILD|0.08|biotech|mom_252_21 0.286 with gross_margin_chg +0.0053 and drawdown_63 -0.0022 (briefing)|anito-cel CRL Dec 23 or HIV franchise guide cut\", \"ABBV|0.08|biotech|net_raises 20 of 20 firms and gross_margin_chg +0.0286 (briefing)|Skyrizi/Rinvoq script growth stalls in the Q3 print\", \"LLY|0.08|biotech|inflection_flag true with rev_yoy 0.4767 and gross_margin_chg +0.0384 (briefing)|retatrutide tolerability disappoints at EASD Sep 28-Oct 2\", \"AMGN|0.07|biotech|net_raises 26 and inflection_flag true with gross_margin_chg +0.0388 (briefing)|MariTide MARITIME-1/2 slips past Jan 21 2027\", \"VRTX|0.07|biotech|net_raises 9 of 9 firms and mom_252_21 0.3953 (briefing)|povetacicept CRL on Nov 30 on CMC grounds\", \"TMO|0.06|biotech|mom_63 0.4208 with drawdown_63 0.0 and vs_52w_high -0.0072 (briefing)|Q3 core bioprocessing growth stays below 4%\", \"WST|0.06|biotech|net_raises 7 of 7 and vs_ma200 0.2156 (briefing)|GLP-1 device orders normalize in the late-Oct print\", \"RGEN|0.05|biotech|mom_63 0.4277 with net_raises 4 and drawdown_63 -0.0073 (briefing)|bioprocessing orders turn negative at the Oct 27 print\", \"TSM|0.08|semis|net_raises 6 of 6 and vs_ma200 0.1757 (briefing)|capex guide cut on the Oct 15 earnings call\", \"ASML|0.07|semis|net_raises 5 of 5 and vs_ma200 0.1336 (briefing)|Q3 orders miss on Oct 14 or China restrictions tighten\", \"NVDA|0.07|semis|net_raises 16 of 16 firms and drawdown_63 -0.0118 (briefing)|a hyperscaler capex digestion headline before the next print\", \"MU|0.06|semis|inflection_flag true with gross_margin_chg +0.1015 and rev_yoy 3.4572 (briefing)|HBM4 pricing rolls over or inventory days rebuild\", \"AME|0.05|robotics|net_raises 12 of 12 firms with vol_63 0.2387 (briefing)|the $5B deal integration slips or orders turn negative\", \"NVT|0.05|power_grid|inflection_flag true with gross_margin_chg +0.0205 and net_raises 6 (briefing)|fall-2026 liquid-cooling launch slips past Q4\"], \"strategy\": \"Bet on liquid quality-momentum: names with strong 6-12 month momentum, positive analyst revision flow (net_raises) and improving gross margin, concentrated in pharma/biotech FDA-catalyst names and the AI semis/power chain that the evidence shows still compounding. I avoid names far above their 200-day with deteriorating margins (ALB, VRT, CEG, FLUT) and unprofitable story stocks. I would be wrong if a hyperscaler capex digestion headline hits the semis sleeve, if a Q4 PDUFA cluster delivers CRLs (MRK Oct 10, VRTX Nov 30, GILD Dec 23), or if GLP-1 supply-chain orders normalize at the WST/RGEN prints.\", \"objective\": \"Maximise 126-session return vs SPY, net of costs, via liquid quality-momentum names with positive revision flow and improving gross margins.\", \"what_i_did_not_buy\": [\"ALB|net_raises -12 and gross_margin_chg -0.012, momentum broken\", \"VRT|net_raises -4, mom_63 -0.299, far above 200-day\", \"CEG|net_raises -6 and rev_qoq -0.3253, negative revisions\", \"FLUT|net_raises -15 of 16 lowers, near 52-week low\", \"SMMT|consensus Hold despite Nov 14 PDUFA, split Street\", \"CAPR|adcom voted 9-of-12 against, vol_63 2.14\", \"OKLO|net_raises -4, zero revenue, target dispersion $55-$150\", \"QUBT|opex +114% YoY, $10-$32 target dispersion, no Reddit crowd\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.0018185,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 314,
+ "tokens_out": 1191,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "quality_momentum_biotech_semis",
+  "strategy": "Bet on liquid quality-momentum: names with strong 6-12 month momentum, positive analyst revision flow (net_raises) and improving gross margin, concentrated in pharma/biotech FDA-catalyst names and the AI semis/power chain that the evidence shows still compounding. I avoid names far above their 200-day with deteriorating margins (ALB, VRT, CEG, FLUT) and unprofitable story stocks. I would be wrong if a hyperscaler capex digestion headline hits the semis sleeve, if a Q4 PDUFA cluster delivers CRLs (MRK Oct 10, VRTX Nov 30, GILD Dec 23), or if GLP-1 supply-chain orders normalize at the WST/RGEN prints.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via liquid quality-momentum names with positive revision flow and improving gross margins.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "net_raises 22 with zero lowers and mom_252_21 0.87 (briefing)",
+    "falsifier": "I-DXd CRL on Oct 10 or Keytruda LOE guidance cut"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "mom_252_21 0.286 with gross_margin_chg +0.0053 and drawdown_63 -0.0022 (briefing)",
+    "falsifier": "anito-cel CRL Dec 23 or HIV franchise guide cut"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 20 of 20 firms and gross_margin_chg +0.0286 (briefing)",
+    "falsifier": "Skyrizi/Rinvoq script growth stalls in the Q3 print"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "inflection_flag true with rev_yoy 0.4767 and gross_margin_chg +0.0384 (briefing)",
+    "falsifier": "retatrutide tolerability disappoints at EASD Sep 28-Oct 2"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 26 and inflection_flag true with gross_margin_chg +0.0388 (briefing)",
+    "falsifier": "MariTide MARITIME-1/2 slips past Jan 21 2027"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 9 firms and mom_252_21 0.3953 (briefing)",
+    "falsifier": "povetacicept CRL on Nov 30 on CMC grounds"
+   },
+   {
+    "ticker": "TMO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "mom_63 0.4208 with drawdown_63 0.0 and vs_52w_high -0.0072 (briefing)",
+    "falsifier": "Q3 core bioprocessing growth stays below 4%"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 7 of 7 and vs_ma200 0.2156 (briefing)",
+    "falsifier": "GLP-1 device orders normalize in the late-Oct print"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mom_63 0.4277 with net_raises 4 and drawdown_63 -0.0073 (briefing)",
+    "falsifier": "bioprocessing orders turn negative at the Oct 27 print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 and vs_ma200 0.1757 (briefing)",
+    "falsifier": "capex guide cut on the Oct 15 earnings call"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 5 of 5 and vs_ma200 0.1336 (briefing)",
+    "falsifier": "Q3 orders miss on Oct 14 or China restrictions tighten"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "net_raises 16 of 16 firms and drawdown_63 -0.0118 (briefing)",
+    "falsifier": "a hyperscaler capex digestion headline before the next print"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "inflection_flag true with gross_margin_chg +0.1015 and rev_yoy 3.4572 (briefing)",
+    "falsifier": "HBM4 pricing rolls over or inventory days rebuild"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.05,
+    "theme": "robotics",
+    "thesis": "net_raises 12 of 12 firms with vol_63 0.2387 (briefing)",
+    "falsifier": "the $5B deal integration slips or orders turn negative"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "inflection_flag true with gross_margin_chg +0.0205 and net_raises 6 (briefing)",
+    "falsifier": "fall-2026 liquid-cooling launch slips past Q4"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12 and gross_margin_chg -0.012, momentum broken",
+   "VRT|net_raises -4, mom_63 -0.299, far above 200-day",
+   "CEG|net_raises -6 and rev_qoq -0.3253, negative revisions",
+   "FLUT|net_raises -15 of 16 lowers, near 52-week low",
+   "SMMT|consensus Hold despite Nov 14 PDUFA, split Street",
+   "CAPR|adcom voted 9-of-12 against, vol_63 2.14",
+   "OKLO|net_raises -4, zero revenue, target dispersion $55-$150",
+   "QUBT|opex +114% YoY, $10-$32 target dispersion, no Reddit crowd"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.080, not 1.0"
+}

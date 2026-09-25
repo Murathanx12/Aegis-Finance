@@ -1,0 +1,143 @@
+{
+ "text": "{\"name\": \"policy_geopolitics_rearmament_critical_minerals\", \"cash_weight\": 0.02, \"positions\": [\"RHM.DE|0.09|defense|German defence budget +30% YoY to ~$150bn 2026 (research_global_candidates)|Q3'26 results Nov 5 2026 show order intake below H1 run-rate\", \"HAG.DE|0.08|defense|Order backlog >EUR10bn with 2.4x H1 book-to-bill (research_global_candidates)|9-month 2026 results Nov 5 show negative FCF worse than seasonal norm\", \"SAAB-B.ST|0.08|defense|Gripen export pipeline into European rearmament (research_global_candidates)|Q3'26 report Oct 23 2026 misses order expectations\", \"KOG.OL|0.08|defense|Missile/defence systems demand with Nordic order visibility (research_global_candidates)|Q3'26 report Oct 29 2026 shows defence order slowdown\", \"012450.KS|0.07|defense|K9 export deals plus GTF engine and space exposure (research_global_candidates)|Q3'26 report shows sales growth decelerating from +147% YoY comp\", \"CCJ|0.08|nuclear|BofA sees uranium averaging $130/lb in 2027 (research_global_candidates)|Q3'26 earnings Nov 3-4 2026 show production below delivery commitments\", \"LEU|0.06|nuclear|$900M DOE HALEU task order finalized July 2026 (research_themes)|Non-DOE HALEU offtakes from SMR developers fail to materialize by Q3 print\", \"TMQ|0.05|materials|US government closed 10% stake for $35.6M on Sept 14 2026 (research_themes)|Ambler Road federal permitting timeline slips past year-end 2026\", \"MP|0.06|materials|~15% as-converted government stake plus 10-yr DoD magnet offtake at fixed floor (research_themes)|Magnet offtake volumes come in below the fixed floor price commitment\", \"INTC|0.07|semis|10% government stake now worth ~$45B as of Sept 13 2026 (research_themes)|Shareholder lawsuit challenging CHIPS-Act equity taking gets adverse ruling\", \"2330.TW|0.08|semis|Raised FY26 capex guide to $60-64B with sales guide >40% growth (research_themes)|Q3'26 earnings Oct 15 2026 come with a capex-guidance cut\", \"ASML.AS|0.07|semis|Q3'26 earnings Oct 14 2026 confirmed with Q3 rev guide $12.8-14.0bn (research_global_candidates)|Oct 14 2026 print shows order lumpiness or China restriction impact\", \"6857.T|0.06|semis|Raised FY26 sales guide +21% to JPY1,714bn on AI test demand (research_global_candidates)|Late-Oct FY26 Q2 results show order lumpiness after the rally\", \"267260.KS|0.07|power_grid|765kV transformer export boom to US grid with 25% H1 margin (research_global_candidates)|Mid-Nov Q3'26 report shows US tariff impact on transformer margins\", \"ENR.DE|0.06|power_grid|Q3 orders record EUR17.9bn with 1.57x book-to-bill and EUR51bn backlog (research_global_candidates)|Mid-Nov Q4 FY26 results show Siemens Gamesa execution drag worsening\", \"GEV|0.06|power_grid|Q2 2026 orders +88% organically to $24.2B with $176B backlog (research_themes)|Backlog cancellation rate rises or book-to-bill falls below 1.0\"], \"strategy\": \"Bet that the fastest-moving policy variables in the Oct 12-Nov 13 window are defence budgets (German +30% YoY, NATO glidepath), nuclear-fuel security (DOE HALEU task order, uranium term pricing), critical-minerals nationalism (Section 232 negotiation, government equity stakes in MP/TMQ/INTC), and the AI power/grid bottleneck that policy is subsidising (transformers, turbines, semicap). Every name has a dated Q3 print or confirmed event inside the window, so relative P&L is driven by real numbers, not theme drift. I would be wrong on a de-escalation headline (Ukraine ceasefire, US-China detente, Kazakh acid resolution) or an adverse ruling on executive equity-taking authority, which hits the policy bucket simultaneously.\", \"objective\": \"Maximise relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 via policy-driven defence, nuclear, critical-minerals and AI-power names with dated in-window catalysts.\", \"what_i_did_not_buy\": [\"FLUT|Four 2026 guidance cuts, near 52-week low, Rothschild downgrade Sept 21\", \"SMR|Stacking downgrades, consensus Hold, RBC and Citi target cuts\", \"OKLO|Zero revenue, $55-$150 one-week target dispersion, story stock\", \"ALB|Mizuho cut target, 12 net lowers, lithium spot down 16% in month\", \"NVO|Morgan Stanley downgraded to Sell, CagriSema failed non-inferiority vs tirzepatide\", \"SERV|Cut 2026 revenue guidance sharply on weaker Uber Eats volumes\", \"BYND|Meme rally with no fundamental news, down 95% from 52-week high\", \"RKLB|Mention surge with no identified dated catalyst, pump-shaped\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00193868,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 356,
+ "tokens_out": 1279,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "policy_geopolitics_rearmament_critical_minerals",
+  "strategy": "Bet that the fastest-moving policy variables in the Oct 12-Nov 13 window are defence budgets (German +30% YoY, NATO glidepath), nuclear-fuel security (DOE HALEU task order, uranium term pricing), critical-minerals nationalism (Section 232 negotiation, government equity stakes in MP/TMQ/INTC), and the AI power/grid bottleneck that policy is subsidising (transformers, turbines, semicap). Every name has a dated Q3 print or confirmed event inside the window, so relative P&L is driven by real numbers, not theme drift. I would be wrong on a de-escalation headline (Ukraine ceasefire, US-China detente, Kazakh acid resolution) or an adverse ruling on executive equity-taking authority, which hits the policy bucket simultaneously.",
+  "objective": "Maximise relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 via policy-driven defence, nuclear, critical-minerals and AI-power names with dated in-window catalysts.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.09,
+    "theme": "defense",
+    "thesis": "German defence budget +30% YoY to ~$150bn 2026 (research_global_candidates)",
+    "falsifier": "Q3'26 results Nov 5 2026 show order intake below H1 run-rate"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Order backlog >EUR10bn with 2.4x H1 book-to-bill (research_global_candidates)",
+    "falsifier": "9-month 2026 results Nov 5 show negative FCF worse than seasonal norm"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Gripen export pipeline into European rearmament (research_global_candidates)",
+    "falsifier": "Q3'26 report Oct 23 2026 misses order expectations"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Missile/defence systems demand with Nordic order visibility (research_global_candidates)",
+    "falsifier": "Q3'26 report Oct 29 2026 shows defence order slowdown"
+   },
+   {
+    "ticker": "012450.KS",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "K9 export deals plus GTF engine and space exposure (research_global_candidates)",
+    "falsifier": "Q3'26 report shows sales growth decelerating from +147% YoY comp"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.08,
+    "theme": "nuclear",
+    "thesis": "BofA sees uranium averaging $130/lb in 2027 (research_global_candidates)",
+    "falsifier": "Q3'26 earnings Nov 3-4 2026 show production below delivery commitments"
+   },
+   {
+    "ticker": "LEU",
+    "weight": 0.06,
+    "theme": "nuclear",
+    "thesis": "$900M DOE HALEU task order finalized July 2026 (research_themes)",
+    "falsifier": "Non-DOE HALEU offtakes from SMR developers fail to materialize by Q3 print"
+   },
+   {
+    "ticker": "TMQ",
+    "weight": 0.05,
+    "theme": "materials",
+    "thesis": "US government closed 10% stake for $35.6M on Sept 14 2026 (research_themes)",
+    "falsifier": "Ambler Road federal permitting timeline slips past year-end 2026"
+   },
+   {
+    "ticker": "MP",
+    "weight": 0.06,
+    "theme": "materials",
+    "thesis": "~15% as-converted government stake plus 10-yr DoD magnet offtake at fixed floor (research_themes)",
+    "falsifier": "Magnet offtake volumes come in below the fixed floor price commitment"
+   },
+   {
+    "ticker": "INTC",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "10% government stake now worth ~$45B as of Sept 13 2026 (research_themes)",
+    "falsifier": "Shareholder lawsuit challenging CHIPS-Act equity taking gets adverse ruling"
+   },
+   {
+    "ticker": "2330.TW",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Raised FY26 capex guide to $60-64B with sales guide >40% growth (research_themes)",
+    "falsifier": "Q3'26 earnings Oct 15 2026 come with a capex-guidance cut"
+   },
+   {
+    "ticker": "ASML.AS",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 2026 confirmed with Q3 rev guide $12.8-14.0bn (research_global_candidates)",
+    "falsifier": "Oct 14 2026 print shows order lumpiness or China restriction impact"
+   },
+   {
+    "ticker": "6857.T",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Raised FY26 sales guide +21% to JPY1,714bn on AI test demand (research_global_candidates)",
+    "falsifier": "Late-Oct FY26 Q2 results show order lumpiness after the rally"
+   },
+   {
+    "ticker": "267260.KS",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "765kV transformer export boom to US grid with 25% H1 margin (research_global_candidates)",
+    "falsifier": "Mid-Nov Q3'26 report shows US tariff impact on transformer margins"
+   },
+   {
+    "ticker": "ENR.DE",
+    "weight": 0.06,
+    "theme": "power_grid",
+    "thesis": "Q3 orders record EUR17.9bn with 1.57x book-to-bill and EUR51bn backlog (research_global_candidates)",
+    "falsifier": "Mid-Nov Q4 FY26 results show Siemens Gamesa execution drag worsening"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.06,
+    "theme": "power_grid",
+    "thesis": "Q2 2026 orders +88% organically to $24.2B with $176B backlog (research_themes)",
+    "falsifier": "Backlog cancellation rate rises or book-to-bill falls below 1.0"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "FLUT|Four 2026 guidance cuts, near 52-week low, Rothschild downgrade Sept 21",
+   "SMR|Stacking downgrades, consensus Hold, RBC and Citi target cuts",
+   "OKLO|Zero revenue, $55-$150 one-week target dispersion, story stock",
+   "ALB|Mizuho cut target, 12 net lowers, lithium spot down 16% in month",
+   "NVO|Morgan Stanley downgraded to Sell, CagriSema failed non-inferiority vs tirzepatide",
+   "SERV|Cut 2026 revenue guidance sharply on weaker Uber Eats volumes",
+   "BYND|Meme rally with no fundamental news, down 95% from 52-week high",
+   "RKLB|Mention surge with no identified dated catalyst, pump-shaped"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.140, not 1.0"
+}

@@ -1,0 +1,150 @@
+{
+ "text": "{\"name\":\"quality_momentum_global_oct26\",\"cash_weight\":0.02,\"positions\":[\"MU|0.09|semis|mom_252_21 +4.78 with gross_margin_chg +0.1015 and inflection_flag true (briefing)|HBM pricing or DRAM contract resets lower before the Dec quarter print\",\"SNDK|0.08|semis|mom_252_21 +15.19, rev_yoy +3.72 and gross_margin_chg +0.0622 (briefing)|NAND contract prices roll over or the 8-K flags inventory build\",\"AMD|0.08|semis|mom_252_21 +1.97 with 22 net raises and zero lowers over 90d (revision_flow_90d)|Any hyperscaler capex digestion headline before the Q3 print\",\"NVDA|0.08|semis|mom_252_21 +0.23, 16 net raises from 21 firms, gross_margin_chg +0.0004 (briefing)|Data-center revenue guide below the whisper on the next print\",\"TSM|0.08|semis|mom_252_21 +0.56, 6 net raises, vs_ma200 +0.1757 (briefing)|Oct 15 earnings cuts the FY26 capex guide\",\"ASML|0.07|semis|mom_252_21 +0.90, 5 net raises, median_target_change +0.1364 (revision_flow_90d)|Oct 14 earnings shows order lumpiness or China restriction hit\",\"TER|0.06|semis|mom_252_21 +2.23, 6 net raises, gross_margin 0.5979 (briefing)|Oct 27 earnings misses on semi-test cyclicality\",\"AME|0.06|robotics|mom_252_21 +0.27, 12 net raises from 10 firms, gross_margin_chg -0.0126 (briefing)|The $5B deal integration drags margin below guide\",\"WST|0.06|biotech|mom_252_21 +0.39, 7 net raises, gross_margin_chg +0.0266, vs_ma200 +0.2156 (briefing)|GLP-1 device demand normalizes faster than guided\",\"RGEN|0.05|biotech|mom_252_21 +0.45, 4 net raises, gross_margin 0.5391 (briefing)|Bioprocessing orders fail to convert to revenue in the next print\",\"LLY|0.05|biotech|mom_252_21 +0.64, 13 net raises, gross_margin_chg +0.0384, inflection_flag true (briefing)|Retatrutide tolerability data disappoints at EASD\",\"ABBV|0.05|biotech|mom_252_21 +0.22, 20 net raises from 21 firms, gross_margin_chg +0.0286 (briefing)|Skyrizi/Rinvoq growth decelerates or MFN pricing bites\",\"AMGN|0.05|biotech|mom_252_21 +0.61, 26 net raises from 22 firms, gross_margin_chg +0.0388 (briefing)|MariTide Phase 3 slips past the window or Sjogren's data fades\",\"CRWD|0.05|software|mom_252_21 +0.51, 44 net raises from 35 firms, vs_ma200 +0.6897 (briefing)|Net-new ARR guide disappoints on the next print\",\"PANW|0.05|software|mom_252_21 +0.70, 34 net raises from 30 firms, gross_margin_chg +0.0001 (briefing)|Billings growth decelerates below the guide\",\"SNOW|0.05|software|mom_252_21 +0.45, 47 net raises from 33 firms, rev_yoy +0.3509 (briefing)|Product revenue growth decelerates or consumption guide cut\",\"OKTA|0.05|software|mom_252_21 +0.43, 63 net raises from 32 firms, median_target_change +0.1944 (revision_flow_90d)|Identity-security demand normalizes and the 63-raise cluster unwinds\"],\"strategy\":\"Bet on liquid global quality-momentum: names with strong 6-12 month momentum (mom_252_21) plus improving or stable gross margins, concentrated in AI semis/memory (MU, SNDK, AMD, NVDA, TSM, ASML, TER), GLP-1 and bioprocessing platforms (LLY, WST, RGEN, ABBV, AMGN), and high-revision software (CRWD, PANW, SNOW, OKTA), with AME as the robotics-adjacent industrial. Every name carries positive 90-day revision flow and sits near or above its 200-day. I would be wrong if a hyperscaler capex digestion headline or a memory pricing rollover hits the semis sleeve simultaneously, or if the software revision clusters unwind on a single weak guide.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only quality-momentum book.\",\"what_i_did_not_buy\":[\"ALB|12 net lowers and mom_63 -0.28, falling margins\",\"VRT|4 net lowers, mom_63 -0.30, margin flat\",\"GEV|No dated in-window catalyst, mom_63 -0.16\",\"CCJ|Net raises -1, mom_63 -0.13, no in-window print\",\"OKLO|4 net lowers, no revenue, mom_63 -0.31\",\"SMR|6 net lowers, rev_yoy -0.99, mom_63 -0.22\",\"FLUT|15 net lowers, mom_252_21 -0.65, four guidance cuts\",\"NVO|Zero net raises, mom_252_21 -0.23, Hold/Sell-leaning Street\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.0020251,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 358,
+ "tokens_out": 1346,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "quality_momentum_global_oct26",
+  "strategy": "Bet on liquid global quality-momentum: names with strong 6-12 month momentum (mom_252_21) plus improving or stable gross margins, concentrated in AI semis/memory (MU, SNDK, AMD, NVDA, TSM, ASML, TER), GLP-1 and bioprocessing platforms (LLY, WST, RGEN, ABBV, AMGN), and high-revision software (CRWD, PANW, SNOW, OKTA), with AME as the robotics-adjacent industrial. Every name carries positive 90-day revision flow and sits near or above its 200-day. I would be wrong if a hyperscaler capex digestion headline or a memory pricing rollover hits the semis sleeve simultaneously, or if the software revision clusters unwind on a single weak guide.",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only quality-momentum book.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "MU",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "mom_252_21 +4.78 with gross_margin_chg +0.1015 and inflection_flag true (briefing)",
+    "falsifier": "HBM pricing or DRAM contract resets lower before the Dec quarter print"
+   },
+   {
+    "ticker": "SNDK",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "mom_252_21 +15.19, rev_yoy +3.72 and gross_margin_chg +0.0622 (briefing)",
+    "falsifier": "NAND contract prices roll over or the 8-K flags inventory build"
+   },
+   {
+    "ticker": "AMD",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "mom_252_21 +1.97 with 22 net raises and zero lowers over 90d (revision_flow_90d)",
+    "falsifier": "Any hyperscaler capex digestion headline before the Q3 print"
+   },
+   {
+    "ticker": "NVDA",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "mom_252_21 +0.23, 16 net raises from 21 firms, gross_margin_chg +0.0004 (briefing)",
+    "falsifier": "Data-center revenue guide below the whisper on the next print"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "mom_252_21 +0.56, 6 net raises, vs_ma200 +0.1757 (briefing)",
+    "falsifier": "Oct 15 earnings cuts the FY26 capex guide"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "mom_252_21 +0.90, 5 net raises, median_target_change +0.1364 (revision_flow_90d)",
+    "falsifier": "Oct 14 earnings shows order lumpiness or China restriction hit"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "mom_252_21 +2.23, 6 net raises, gross_margin 0.5979 (briefing)",
+    "falsifier": "Oct 27 earnings misses on semi-test cyclicality"
+   },
+   {
+    "ticker": "AME",
+    "weight": 0.06,
+    "theme": "robotics",
+    "thesis": "mom_252_21 +0.27, 12 net raises from 10 firms, gross_margin_chg -0.0126 (briefing)",
+    "falsifier": "The $5B deal integration drags margin below guide"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +0.39, 7 net raises, gross_margin_chg +0.0266, vs_ma200 +0.2156 (briefing)",
+    "falsifier": "GLP-1 device demand normalizes faster than guided"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +0.45, 4 net raises, gross_margin 0.5391 (briefing)",
+    "falsifier": "Bioprocessing orders fail to convert to revenue in the next print"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +0.64, 13 net raises, gross_margin_chg +0.0384, inflection_flag true (briefing)",
+    "falsifier": "Retatrutide tolerability data disappoints at EASD"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +0.22, 20 net raises from 21 firms, gross_margin_chg +0.0286 (briefing)",
+    "falsifier": "Skyrizi/Rinvoq growth decelerates or MFN pricing bites"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mom_252_21 +0.61, 26 net raises from 22 firms, gross_margin_chg +0.0388 (briefing)",
+    "falsifier": "MariTide Phase 3 slips past the window or Sjogren's data fades"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "mom_252_21 +0.51, 44 net raises from 35 firms, vs_ma200 +0.6897 (briefing)",
+    "falsifier": "Net-new ARR guide disappoints on the next print"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "mom_252_21 +0.70, 34 net raises from 30 firms, gross_margin_chg +0.0001 (briefing)",
+    "falsifier": "Billings growth decelerates below the guide"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "mom_252_21 +0.45, 47 net raises from 33 firms, rev_yoy +0.3509 (briefing)",
+    "falsifier": "Product revenue growth decelerates or consumption guide cut"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "mom_252_21 +0.43, 63 net raises from 32 firms, median_target_change +0.1944 (revision_flow_90d)",
+    "falsifier": "Identity-security demand normalizes and the 63-raise cluster unwinds"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers and mom_63 -0.28, falling margins",
+   "VRT|4 net lowers, mom_63 -0.30, margin flat",
+   "GEV|No dated in-window catalyst, mom_63 -0.16",
+   "CCJ|Net raises -1, mom_63 -0.13, no in-window print",
+   "OKLO|4 net lowers, no revenue, mom_63 -0.31",
+   "SMR|6 net lowers, rev_yoy -0.99, mom_63 -0.22",
+   "FLUT|15 net lowers, mom_252_21 -0.65, four guidance cuts",
+   "NVO|Zero net raises, mom_252_21 -0.23, Hold/Sell-leaning Street"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.080, not 1.0"
+}

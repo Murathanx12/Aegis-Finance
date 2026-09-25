@@ -1,0 +1,129 @@
+{
+ "text": "{\"name\":\"ai_power_global\",\"cash_weight\":0.06,\"positions\":[\"GEV|0.11|power_grid|Q2 orders +88% organically to $24.2B and $176B backlog (research_themes) with inflection_flag true and 8 net raises|Q3 backlog or book-to-bill below 1.0 when reported in late Oct 2026\",\"VRT|0.09|power_grid|$2.6B Utility Innovations deal Sep 3 2026 plus 31% sales growth guidance (research_themes)|Q3 liquid-cooling revenue per MW shipped flat while backlog grows, print late Oct 2026\",\"NVT|0.09|power_grid|Q1 sales +53% YoY, FY guide raised to 37-39%, inflection_flag true, 6 net raises|Fall-2026 modular liquid-cooling launch slips past Dec 2026\",\"MU|0.09|semis|HBM4 shortage with DRAM inventory under 10 days and rev_qoq +0.7375, rev_yoy +3.4572, inflection_flag true|HBM pricing rolls over or a 2027 capex digestion headline before Dec 2026 earnings\",\"TSM|0.08|semis|FY26 capex guide raised to $60-64B and Q3 earnings confirmed Oct 15 2026 (catalysts)|Capex guidance cut or gross margin below 60% on the Oct 15 2026 print\",\"ASML|0.08|semis|Q3'26 earnings confirmed Oct 14 2026 (catalysts) with 5 net raises and median target change +0.1364|Order intake misses and 2027 capacity-tightness language softens on Oct 14 2026\",\"MRK|0.07|biotech|22 net raises from 17 firms and I-DXd PDUFA Oct 10 2026 (catalysts, revision_flow_90d)|CRL on the I-DXd BLA on Oct 10 2026\",\"ABBV|0.07|biotech|20 net raises from 21 firms, drawdown_63 only -0.0056, gross_margin_chg +0.0286|Two consecutive quarters of Skyrizi/Rinvoq share loss reported before Mar 2027\",\"AMGN|0.07|biotech|26 net raises from 22 firms with inflection_flag true and gross_margin_chg +0.0388|MariTide MARITIME-1/2 data disappoints at the Jan 21 2027 primary completion\",\"CCJ|0.06|nuclear|Q3'26 earnings Nov 3-4 2026 (catalysts) with uranium term price at a record $96/lb (research_global_candidates)|Production stays below delivery commitments or uranium spot breaks below $80/lb before Nov 2026\",\"ARGX|0.06|biotech|17 net raises from 14 firms and Q3'26 results confirmed Oct 22 2026 (catalysts)|EMPASSION Phase 3 empasiprubart topline misses in Q4 2026\",\"WST|0.05|biotech|7 net raises, vs_ma200 +0.2156, and GLP-1 delivery-device revenue +27-30% organic (research_pharma)|Management flags GLP-1 growth normalizing on the late-Oct/early-Nov 2026 print\",\"COGT|0.04|biotech|Two primary-sourced PDUFAs Nov 30 and Dec 30 2026 off positive PEAK and SUMMIT Phase 3 data (catalysts)|CRL on the Nov 30 2026 GIST NDA\",\"VRTX|0.04|biotech|9 net raises from 8 firms and povetacicept PDUFA Nov 30 2026 (catalysts)|CRL on the povetacicept BLA on Nov 30 2026\"],\"strategy\":\"Bet that the AI capex bottleneck sits in physical infrastructure and the memory it consumes: turbines and grid gear (GEV, VRT, NVT), leading-edge foundry and lithography (TSM, ASML), HBM (MU), plus cash-generative pharma with dated Q4 PDUFA or earnings events (MRK, ABBV, AMGN, ARGX, WST, COGT, VRTX) and uranium (CCJ). Every name has a dated observable inside the six-month window. I would be wrong if hyperscaler capex digestion hits the power/semis sleeve at once, if the Oct 14-15 ASML/TSM prints guide capex down, or if the Q4 PDUFA cluster produces CRLs.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via dated AI power, semis and pharma catalysts.\",\"what_i_did_not_buy\":[\"ALB|12 net lowers and lithium spot down 16% in a month\",\"SMR|6 net lowers, revenue -99% YoY, consensus Hold\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week\",\"FLUT|15 net lowers, four 2026 guidance cuts, near 52-week low\",\"LEU|4 net lowers, gross margin -12.7pp, 67% below 52-week high\",\"NVDA|No dated catalyst in window, 199 headlines already priced\",\"IONQ|35x forward sales, chronic ATM dilution, no dated catalyst\",\"SERV|Cut 2026 revenue guidance on weaker Uber Eats volumes\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.01251878,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 64578,
+ "tokens_out": 1215,
+ "cached_tokens": 5120,
+ "parse": "ok",
+ "parsed": {
+  "name": "ai_power_global",
+  "strategy": "Bet that the AI capex bottleneck sits in physical infrastructure and the memory it consumes: turbines and grid gear (GEV, VRT, NVT), leading-edge foundry and lithography (TSM, ASML), HBM (MU), plus cash-generative pharma with dated Q4 PDUFA or earnings events (MRK, ABBV, AMGN, ARGX, WST, COGT, VRTX) and uranium (CCJ). Every name has a dated observable inside the six-month window. I would be wrong if hyperscaler capex digestion hits the power/semis sleeve at once, if the Oct 14-15 ASML/TSM prints guide capex down, or if the Q4 PDUFA cluster produces CRLs.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via dated AI power, semis and pharma catalysts.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "GEV",
+    "weight": 0.11,
+    "theme": "power_grid",
+    "thesis": "Q2 orders +88% organically to $24.2B and $176B backlog (research_themes) with inflection_flag true and 8 net raises",
+    "falsifier": "Q3 backlog or book-to-bill below 1.0 when reported in late Oct 2026"
+   },
+   {
+    "ticker": "VRT",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "$2.6B Utility Innovations deal Sep 3 2026 plus 31% sales growth guidance (research_themes)",
+    "falsifier": "Q3 liquid-cooling revenue per MW shipped flat while backlog grows, print late Oct 2026"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "Q1 sales +53% YoY, FY guide raised to 37-39%, inflection_flag true, 6 net raises",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past Dec 2026"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "HBM4 shortage with DRAM inventory under 10 days and rev_qoq +0.7375, rev_yoy +3.4572, inflection_flag true",
+    "falsifier": "HBM pricing rolls over or a 2027 capex digestion headline before Dec 2026 earnings"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "FY26 capex guide raised to $60-64B and Q3 earnings confirmed Oct 15 2026 (catalysts)",
+    "falsifier": "Capex guidance cut or gross margin below 60% on the Oct 15 2026 print"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 14 2026 (catalysts) with 5 net raises and median target change +0.1364",
+    "falsifier": "Order intake misses and 2027 capacity-tightness language softens on Oct 14 2026"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "22 net raises from 17 firms and I-DXd PDUFA Oct 10 2026 (catalysts, revision_flow_90d)",
+    "falsifier": "CRL on the I-DXd BLA on Oct 10 2026"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "20 net raises from 21 firms, drawdown_63 only -0.0056, gross_margin_chg +0.0286",
+    "falsifier": "Two consecutive quarters of Skyrizi/Rinvoq share loss reported before Mar 2027"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "26 net raises from 22 firms with inflection_flag true and gross_margin_chg +0.0388",
+    "falsifier": "MariTide MARITIME-1/2 data disappoints at the Jan 21 2027 primary completion"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.06,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 2026 (catalysts) with uranium term price at a record $96/lb (research_global_candidates)",
+    "falsifier": "Production stays below delivery commitments or uranium spot breaks below $80/lb before Nov 2026"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "17 net raises from 14 firms and Q3'26 results confirmed Oct 22 2026 (catalysts)",
+    "falsifier": "EMPASSION Phase 3 empasiprubart topline misses in Q4 2026"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "7 net raises, vs_ma200 +0.2156, and GLP-1 delivery-device revenue +27-30% organic (research_pharma)",
+    "falsifier": "Management flags GLP-1 growth normalizing on the late-Oct/early-Nov 2026 print"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "Two primary-sourced PDUFAs Nov 30 and Dec 30 2026 off positive PEAK and SUMMIT Phase 3 data (catalysts)",
+    "falsifier": "CRL on the Nov 30 2026 GIST NDA"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "9 net raises from 8 firms and povetacicept PDUFA Nov 30 2026 (catalysts)",
+    "falsifier": "CRL on the povetacicept BLA on Nov 30 2026"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 net lowers and lithium spot down 16% in a month",
+   "SMR|6 net lowers, revenue -99% YoY, consensus Hold",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week",
+   "FLUT|15 net lowers, four 2026 guidance cuts, near 52-week low",
+   "LEU|4 net lowers, gross margin -12.7pp, 67% below 52-week high",
+   "NVDA|No dated catalyst in window, 199 headlines already priced",
+   "IONQ|35x forward sales, chronic ATM dilution, no dated catalyst",
+   "SERV|Cut 2026 revenue guidance on weaker Uber Eats volumes"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.060, not 1.0"
+}

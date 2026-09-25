@@ -1,0 +1,136 @@
+{
+ "text": "{\"name\":\"catalyst_calendar_6m\",\"cash_weight\":0.06,\"positions\":[\"VRTX|0.09|biotech|povetacicept BLA PDUFA 2026-11-30 (catalysts) plus 9 net raises 90d (revision_flow_90d)|CRL on CMC grounds announced on or before Nov 30\",\"MRK|0.09|biotech|ifinatamab deruxtecan PDUFA 2026-10-10 (catalysts) with 22 net raises (revision_flow_90d)|I-DXd CRL on Daiichi manufacturing on Oct 10\",\"GILD|0.08|biotech|anito-cel BLA PDUFA 2026-12-23 (catalysts) on a large liquid name|CMC or facility-inspection finding delays the Dec 23 action\",\"AGIO|0.07|biotech|mitapivat sickle-cell sNDA PDUFA 2026-11-01 (catalysts) with 5 net raises (revision_flow_90d)|FDA grants only a narrow genotype label on Nov 1\",\"COGT|0.07|biotech|two bezuclastinib NDAs PDUFA 2026-11-30 and 2026-12-30 (catalysts)|either NDA draws a CRL on its PDUFA date\",\"BBIO|0.06|biotech|BBP-418 NDA PDUFA 2026-11-27 (catalysts) with 9 net raises (revision_flow_90d)|CRL on the LGMD2I filing on Nov 27\",\"PRAX|0.06|biotech|relutrigine NDA PDUFA 2026-12-27 (catalysts) with 5 net raises (revision_flow_90d)|second major amendment pushes past Dec 27\",\"SMMT|0.05|biotech|ivonescimab BLA PDUFA 2026-11-14 (catalysts)|FDA requests more OS data instead of approving Nov 14\",\"CORT|0.05|biotech|relacorilant NDA resubmission PDUFA 2026-12-17 (catalysts) with 4 net raises (revision_flow_90d)|second CRL on the resubmission on Dec 17\",\"SVRA|0.04|biotech|molgramostim BLA PDUFA 2026-11-22 (catalysts), extended from Aug 22|inhaled-biologic CMC finding blocks approval Nov 22\",\"ASML|0.08|semis|Q3'26 earnings 2026-10-14 (catalysts) with 5 net raises (revision_flow_90d)|order book or 2027 guidance cut on Oct 14\",\"TSM|0.08|semis|Q3'26 earnings 2026-10-15 (catalysts) with 6 net raises (revision_flow_90d)|capex guide cut on Oct 15\",\"TER|0.06|semis|Q3'26 earnings 2026-10-27 (catalysts) with 6 net raises (revision_flow_90d)|robotics-segment growth stalls in the Oct 27 print\",\"ARGX|0.06|biotech|Q3'26 results 2026-10-22 (catalysts) with 17 net raises (revision_flow_90d)|Q3 Vyvgart growth decelerates on Oct 22\",\"CCJ|0.05|energy|Q3'26 earnings Nov 3-4 (catalysts)|production guidance cut at the Nov 3-4 print\"],\"strategy\":\"Own only names with a dated event inside the six-month horizon: Q4 PDUFA decisions (VRTX Nov 30, MRK Oct 10, GILD Dec 23, AGIO Nov 1, COGT Nov 30/Dec 30, BBIO Nov 27, PRAX Dec 27, SMMT Nov 14, CORT Dec 17, SVRA Nov 22) and confirmed earnings (ASML Oct 14, TSM Oct 15, ARGX Oct 22, TER Oct 27, CCJ Nov 3-4). Dates are spread across Oct, Nov and Dec so no single day decides the book, and every name carries positive 90-day revision flow. I would be wrong if the FDA issues CRLs on the small-cap PDUFAs, or if the Oct 14-15 semicap prints guide capex down.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, by holding only dated-catalyst names.\",\"what_i_did_not_buy\":[\"NVDA|no dated catalyst in evidence\",\"MU|no dated catalyst in evidence\",\"ALB|12 net lowers, no dated catalyst\",\"FLUT|15 net lowers, no dated catalyst\",\"VRT|4 net lowers, no dated catalyst\",\"GEV|no dated catalyst in evidence\",\"OKLO|4 net lowers, no dated catalyst\",\"SMR|6 net lowers, no dated catalyst\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00175304,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 322,
+ "tokens_out": 1139,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "catalyst_calendar_6m",
+  "strategy": "Own only names with a dated event inside the six-month horizon: Q4 PDUFA decisions (VRTX Nov 30, MRK Oct 10, GILD Dec 23, AGIO Nov 1, COGT Nov 30/Dec 30, BBIO Nov 27, PRAX Dec 27, SMMT Nov 14, CORT Dec 17, SVRA Nov 22) and confirmed earnings (ASML Oct 14, TSM Oct 15, ARGX Oct 22, TER Oct 27, CCJ Nov 3-4). Dates are spread across Oct, Nov and Dec so no single day decides the book, and every name carries positive 90-day revision flow. I would be wrong if the FDA issues CRLs on the small-cap PDUFAs, or if the Oct 14-15 semicap prints guide capex down.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, by holding only dated-catalyst names.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "VRTX",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "povetacicept BLA PDUFA 2026-11-30 (catalysts) plus 9 net raises 90d (revision_flow_90d)",
+    "falsifier": "CRL on CMC grounds announced on or before Nov 30"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.09,
+    "theme": "biotech",
+    "thesis": "ifinatamab deruxtecan PDUFA 2026-10-10 (catalysts) with 22 net raises (revision_flow_90d)",
+    "falsifier": "I-DXd CRL on Daiichi manufacturing on Oct 10"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "anito-cel BLA PDUFA 2026-12-23 (catalysts) on a large liquid name",
+    "falsifier": "CMC or facility-inspection finding delays the Dec 23 action"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "mitapivat sickle-cell sNDA PDUFA 2026-11-01 (catalysts) with 5 net raises (revision_flow_90d)",
+    "falsifier": "FDA grants only a narrow genotype label on Nov 1"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "two bezuclastinib NDAs PDUFA 2026-11-30 and 2026-12-30 (catalysts)",
+    "falsifier": "either NDA draws a CRL on its PDUFA date"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "BBP-418 NDA PDUFA 2026-11-27 (catalysts) with 9 net raises (revision_flow_90d)",
+    "falsifier": "CRL on the LGMD2I filing on Nov 27"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "relutrigine NDA PDUFA 2026-12-27 (catalysts) with 5 net raises (revision_flow_90d)",
+    "falsifier": "second major amendment pushes past Dec 27"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "ivonescimab BLA PDUFA 2026-11-14 (catalysts)",
+    "falsifier": "FDA requests more OS data instead of approving Nov 14"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "relacorilant NDA resubmission PDUFA 2026-12-17 (catalysts) with 4 net raises (revision_flow_90d)",
+    "falsifier": "second CRL on the resubmission on Dec 17"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "molgramostim BLA PDUFA 2026-11-22 (catalysts), extended from Aug 22",
+    "falsifier": "inhaled-biologic CMC finding blocks approval Nov 22"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings 2026-10-14 (catalysts) with 5 net raises (revision_flow_90d)",
+    "falsifier": "order book or 2027 guidance cut on Oct 14"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings 2026-10-15 (catalysts) with 6 net raises (revision_flow_90d)",
+    "falsifier": "capex guide cut on Oct 15"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings 2026-10-27 (catalysts) with 6 net raises (revision_flow_90d)",
+    "falsifier": "robotics-segment growth stalls in the Oct 27 print"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Q3'26 results 2026-10-22 (catalysts) with 17 net raises (revision_flow_90d)",
+    "falsifier": "Q3 Vyvgart growth decelerates on Oct 22"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.05,
+    "theme": "energy",
+    "thesis": "Q3'26 earnings Nov 3-4 (catalysts)",
+    "falsifier": "production guidance cut at the Nov 3-4 print"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVDA|no dated catalyst in evidence",
+   "MU|no dated catalyst in evidence",
+   "ALB|12 net lowers, no dated catalyst",
+   "FLUT|15 net lowers, no dated catalyst",
+   "VRT|4 net lowers, no dated catalyst",
+   "GEV|no dated catalyst in evidence",
+   "OKLO|4 net lowers, no dated catalyst",
+   "SMR|6 net lowers, no dated catalyst"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.050, not 1.0"
+}

@@ -1,0 +1,119 @@
+{
+ "name": "pers_small_cap_catalyst_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY, net of costs",
+ "model": "deepseek-flash",
+ "strategy": "Bet on dated, primary-sourced binary catalysts in small and mid-cap biotech where the analyst revision flow is one-sidedly positive into the event, plus two GLP-1 picks-and-shovels names with zero analyst lowers. The edge is the pre-PDUFA drift documented in the research notes, not the decision-day pop, so I size for the CRL tail rather than the approval median and hold 14% cash to absorb it. I am wrong if a cluster of these PDUFAs draws CRLs on CMC or manufacturing grounds, if the FDA pushes dates past the 126-session window, or if the GLP-1 supply-chain names guide growth lower.",
+ "what_i_did_not_buy": [
+  "ALB|net_raises -12 across 11 firms and mom_63 -27.7%",
+  "CCJ|net_raises -1 and mom_63 -12.9% into Nov 3 print",
+  "LEU|net_raises -4 across 9 firms with median target change -12.9%",
+  "OKLO|net_raises -4 across 6 firms and zero revenue",
+  "SMR|net_raises -6 across 7 firms with rev_yoy -99%",
+  "FLUT|net_raises -15 across 15 firms with median target change -10.3%",
+  "CAPR|vol_63 2.14 and mom_63 -69.7% on a 9-of-12 negative adcom",
+  "QUBT|gross_margin -21% and analyst targets dispersed $10 to $32"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "8bcd7f9bd39a7a55",
+ "positions": [
+  {
+   "ticker": "AGIO",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 5 of 6 firms with median target change +9.7% into the Nov 1 mitapivat sickle-cell sNDA",
+   "falsifier": "PDUFA slips past Nov 1 or approval is restricted to a narrow genotype"
+  },
+  {
+   "ticker": "COGT",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "two primary-sourced bezuclastinib PDUFAs Nov 30 and Dec 30 2026 off positive PEAK and SUMMIT Phase 3 data",
+   "falsifier": "either NDA draws a CRL or an FDA facility inspection finding"
+  },
+  {
+   "ticker": "BBIO",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 9 with 11 firms covering into the Nov 27 BBP-418 LGMD2I PDUFA",
+   "falsifier": "CRL on the ribitol NDA or a delay past Nov 27"
+  },
+  {
+   "ticker": "SVRA",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "Nov 22 molgramostim PDUFA was extended only 3 months with FDA disclaiming safety or efficacy concerns",
+   "falsifier": "an FDA major-amendment request or CMC finding before Nov 22"
+  },
+  {
+   "ticker": "INSM",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "Jan 28 2027 ARIKAYCE sNDA is a label expansion on an already-approved drug with Priority Review",
+   "falsifier": "ENCORE symptom endpoint read as not clinically meaningful by FDA"
+  },
+  {
+   "ticker": "SMMT",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "Nov 14 ivonescimab BLA PDUFA with HARMONi OS data presented at WCLC Sept 15 2026",
+   "falsifier": "FDA requests more OS follow-up or issues a CRL on the China-origin dataset"
+  },
+  {
+   "ticker": "PRAX",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 5 of 6 firms into the Dec 27 relutrigine PDUFA after the major-amendment extension",
+   "falsifier": "second major amendment pushes the PDUFA past Dec 27 2026"
+  },
+  {
+   "ticker": "MRK",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 22 across 17 firms with median target change +12.4% into the Oct 10 I-DXd PDUFA",
+   "falsifier": "CRL on manufacturing at the Daiichi Sankyo ADC facility"
+  },
+  {
+   "ticker": "VRTX",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 9 with zero lowers across 8 firms into the Nov 30 povetacicept BLA",
+   "falsifier": "CRL on CMC grounds for the accelerated-approval IgA nephropathy filing"
+  },
+  {
+   "ticker": "CORT",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 4 of 4 firms with median target change +11.1% into the Dec 17 relacorilant resubmission",
+   "falsifier": "second CRL on the Cushing's syndrome NDA resubmission"
+  },
+  {
+   "ticker": "WST",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 7 with zero lowers and gross_margin_chg +2.66pp on GLP-1 device demand",
+   "falsifier": "management guides GLP-1 component growth to normalize on the next print"
+  },
+  {
+   "ticker": "RGEN",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "revision_flow_90d net_raises 4 with zero lowers and mom_63 +42.8% on bioprocessing recovery",
+   "falsifier": "Q3 orders turn negative or bioprocessing revenue growth stalls"
+  },
+  {
+   "ticker": "VKTX",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "Sept 22 2026 Phase 1 maintenance-dosing data showed 17.7-21.7% weight loss with 83-97% retention",
+   "falsifier": "oral VK2735 Phase 3 start slips past Q4 2026 or tolerability data worsens"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.14,
+   "thesis": "declared cash"
+  }
+ ]
+}

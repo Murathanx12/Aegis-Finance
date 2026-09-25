@@ -1,0 +1,164 @@
+{
+ "text": "{\"name\":\"small_cap_catalyst_book\",\"cash_weight\":0.06,\"positions\":[\"AGIO|0.08|biotech|net_raises 5 of 6 firms and rev_yoy 2.59 into Nov 1 mitapivat sickle-cell PDUFA (catalysts)|CRL or a narrow label on Nov 1 2026\",\"CORT|0.08|biotech|net_raises 4 of 4 firms, rev_qoq 0.55, gross_margin 0.98 into Dec 17 relacorilant resubmission (catalysts)|another CRL on Dec 17 2026\",\"COGT|0.07|biotech|two primary PDUFAs Nov 30 and Dec 30 2026 with net_raises 2 of 4 firms (catalysts)|either bezuclastinib NDA rejected in late 2026\",\"SMMT|0.06|biotech|Nov 14 ivonescimab BLA plus two 8-K filings in news_14d and mom_21 0.36 (news_14d)|HARMONi OS weakness surfaces before Nov 14 2026\",\"BBIO|0.06|biotech|net_raises 9 of 11 firms and rev_yoy 1.20 into Nov 27 BBP-418 PDUFA (catalysts)|BBP-418 CRL on Nov 27 2026\",\"PRAX|0.06|biotech|net_raises 5 of 5 firms and mom_252_21 7.05 into Dec 27 relutrigine PDUFA (catalysts)|second major amendment or CRL on Dec 27 2026\",\"SVRA|0.05|biotech|Nov 22 molgramostim PDUFA extended only 3 months with no safety flag (catalysts)|molgramostim CRL on Nov 22 2026\",\"MLYS|0.05|biotech|Dec 22 lorundrostat NDA PDUFA with mom_21 0.10 and mom_63 0.12 (catalysts)|lorundrostat CRL on Dec 22 2026\",\"BLTE|0.04|biotech|net_raises 5 of 5 firms and mom_252_21 1.21 into Feb 12 tinlarebant PDUFA (catalysts)|tinlarebant CRL on Feb 12 2027\",\"ABAT|0.04|materials|rev_yoy 1.97 and gross_margin_chg 0.062 with record Q4 revenue in news_14d (news_14d)|Q1 revenue growth stalls or DOE grant reversed\",\"VRTX|0.07|biotech|net_raises 9 of 9 firms and rev_yoy 0.12 into Nov 30 povetacipet BLA (catalysts)|povetacicept CRL on Nov 30 2026\",\"MRK|0.07|biotech|net_raises 22 of 22 firms and Oct 10 I-DXd PDUFA (catalysts)|I-DXd CRL on Oct 10 2026\",\"GILD|0.06|biotech|rev_yoy 0.10 and Dec 23 anito-cel BLA PDUFA (catalysts)|anito-cel CRL on Dec 23 2026\",\"ARGX|0.06|biotech|net_raises 17 of 18 firms and Oct 22 Q3 earnings (catalysts)|EMPASSION MMN readout misses in Q4 2026\",\"ASML|0.05|semis|net_raises 5 of 5 firms and 32 headlines into Oct 14 Q3 earnings (catalysts)|order book or 2027 guide cut on Oct 14 2026\",\"TSM|0.05|semis|net_raises 6 of 6 firms and Oct 15 Q3 earnings (catalysts)|capex guide cut on Oct 15 2026\",\"TER|0.04|semis|net_raises 6 of 6 firms and Oct 27 Q3 earnings (catalysts)|robotics-segment growth stalls in the Oct 27 print\",\"EVO.ST|0.04|gambling|Oct 23 Q3 report confirmed as primary catalyst (catalysts)|Americas growth decelerates in the Oct 23 report\",\"SAAB-B.ST|0.03|defense|Oct 23 Q3 report confirmed as primary catalyst (catalysts)|Gripen order pipeline stalls in the Oct 23 report\"],\"strategy\":\"Bet on dated, primary-sourced catalysts inside a 126-session window: FDA PDUFAs from Nov 2026 to Feb 2027 in small/mid biotech where revision_flow_90d shows net raises, plus confirmed Oct earnings in semis (ASML, TSM, TER), gambling (EVO.ST) and defense (SAAB-B.ST). Small caps carry 18-35bp costs, so weights stay modest and cash is 6%. I would be wrong if a cluster of CRLs hits the biotech sleeve (rejections run 2-4x approval moves), if a hyperscaler capex digestion breaks the semis names, or if de-escalation compresses the defense and gambling catalysts.\",\"objective\":\"Maximise 126-session return vs SPY, net of costs, via dated small/mid-cap catalysts.\",\"what_i_did_not_buy\":[\"CAPR|adcom voted 9-against and vol_63 2.14 is extreme\",\"INO|no briefing row and no revision or news coverage\",\"NUVL|no briefing row and no revision or news coverage\",\"BTAI|no briefing row and no revision or news coverage\",\"ALB|net_raises -12 with 12 lowers and no catalyst\",\"FLUT|net_raises -15 with 16 lowers and four guidance cuts\",\"QUBT|opex +114% YoY and $10-$32 target dispersion\",\"SMR|net_raises -6 and rev_yoy -0.99\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00203076,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 308,
+ "tokens_out": 1357,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "small_cap_catalyst_book",
+  "strategy": "Bet on dated, primary-sourced catalysts inside a 126-session window: FDA PDUFAs from Nov 2026 to Feb 2027 in small/mid biotech where revision_flow_90d shows net raises, plus confirmed Oct earnings in semis (ASML, TSM, TER), gambling (EVO.ST) and defense (SAAB-B.ST). Small caps carry 18-35bp costs, so weights stay modest and cash is 6%. I would be wrong if a cluster of CRLs hits the biotech sleeve (rejections run 2-4x approval moves), if a hyperscaler capex digestion breaks the semis names, or if de-escalation compresses the defense and gambling catalysts.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, via dated small/mid-cap catalysts.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "AGIO",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 5 of 6 firms and rev_yoy 2.59 into Nov 1 mitapivat sickle-cell PDUFA (catalysts)",
+    "falsifier": "CRL or a narrow label on Nov 1 2026"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "net_raises 4 of 4 firms, rev_qoq 0.55, gross_margin 0.98 into Dec 17 relacorilant resubmission (catalysts)",
+    "falsifier": "another CRL on Dec 17 2026"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "two primary PDUFAs Nov 30 and Dec 30 2026 with net_raises 2 of 4 firms (catalysts)",
+    "falsifier": "either bezuclastinib NDA rejected in late 2026"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "Nov 14 ivonescimab BLA plus two 8-K filings in news_14d and mom_21 0.36 (news_14d)",
+    "falsifier": "HARMONi OS weakness surfaces before Nov 14 2026"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 11 firms and rev_yoy 1.20 into Nov 27 BBP-418 PDUFA (catalysts)",
+    "falsifier": "BBP-418 CRL on Nov 27 2026"
+   },
+   {
+    "ticker": "PRAX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 5 of 5 firms and mom_252_21 7.05 into Dec 27 relutrigine PDUFA (catalysts)",
+    "falsifier": "second major amendment or CRL on Dec 27 2026"
+   },
+   {
+    "ticker": "SVRA",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "Nov 22 molgramostim PDUFA extended only 3 months with no safety flag (catalysts)",
+    "falsifier": "molgramostim CRL on Nov 22 2026"
+   },
+   {
+    "ticker": "MLYS",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "Dec 22 lorundrostat NDA PDUFA with mom_21 0.10 and mom_63 0.12 (catalysts)",
+    "falsifier": "lorundrostat CRL on Dec 22 2026"
+   },
+   {
+    "ticker": "BLTE",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "net_raises 5 of 5 firms and mom_252_21 1.21 into Feb 12 tinlarebant PDUFA (catalysts)",
+    "falsifier": "tinlarebant CRL on Feb 12 2027"
+   },
+   {
+    "ticker": "ABAT",
+    "weight": 0.04,
+    "theme": "materials",
+    "thesis": "rev_yoy 1.97 and gross_margin_chg 0.062 with record Q4 revenue in news_14d (news_14d)",
+    "falsifier": "Q1 revenue growth stalls or DOE grant reversed"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 9 of 9 firms and rev_yoy 0.12 into Nov 30 povetacipet BLA (catalysts)",
+    "falsifier": "povetacicept CRL on Nov 30 2026"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 22 of 22 firms and Oct 10 I-DXd PDUFA (catalysts)",
+    "falsifier": "I-DXd CRL on Oct 10 2026"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "rev_yoy 0.10 and Dec 23 anito-cel BLA PDUFA (catalysts)",
+    "falsifier": "anito-cel CRL on Dec 23 2026"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 17 of 18 firms and Oct 22 Q3 earnings (catalysts)",
+    "falsifier": "EMPASSION MMN readout misses in Q4 2026"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "net_raises 5 of 5 firms and 32 headlines into Oct 14 Q3 earnings (catalysts)",
+    "falsifier": "order book or 2027 guide cut on Oct 14 2026"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 firms and Oct 15 Q3 earnings (catalysts)",
+    "falsifier": "capex guide cut on Oct 15 2026"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 firms and Oct 27 Q3 earnings (catalysts)",
+    "falsifier": "robotics-segment growth stalls in the Oct 27 print"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.04,
+    "theme": "gambling",
+    "thesis": "Oct 23 Q3 report confirmed as primary catalyst (catalysts)",
+    "falsifier": "Americas growth decelerates in the Oct 23 report"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.03,
+    "theme": "defense",
+    "thesis": "Oct 23 Q3 report confirmed as primary catalyst (catalysts)",
+    "falsifier": "Gripen order pipeline stalls in the Oct 23 report"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "CAPR|adcom voted 9-against and vol_63 2.14 is extreme",
+   "INO|no briefing row and no revision or news coverage",
+   "NUVL|no briefing row and no revision or news coverage",
+   "BTAI|no briefing row and no revision or news coverage",
+   "ALB|net_raises -12 with 12 lowers and no catalyst",
+   "FLUT|net_raises -15 with 16 lowers and four guidance cuts",
+   "QUBT|opex +114% YoY and $10-$32 target dispersion",
+   "SMR|net_raises -6 and rev_yoy -0.99"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.120, not 1.0"
+}

@@ -1,0 +1,133 @@
+{
+ "text": "{\"name\": \"revision_flow_leaders\", \"cash_weight\": 0.05, \"positions\": [\"OKTA|0.09|software|net_raises 63 across 32 firms with zero lowers (revision_flow_90d)|any net-lower print or momentum reversal before the next earnings date\", \"SNOW|0.08|software|net_raises 47 across 33 firms, zero lowers (revision_flow_90d)|a single net-negative revision week or a data-cloud consumption guide cut\", \"CRWD|0.08|software|net_raises 44 across 35 firms (revision_flow_90d) with price at 52w high|a net-lower revision cluster or a billings deceleration headline\", \"PANW|0.07|software|net_raises 34 across 30 firms, zero lowers (revision_flow_90d)|any guidance cut or net-lower revision before the next print\", \"CRM|0.07|software|net_raises 33 across 29 firms (revision_flow_90d) with mom_63 0.58|a net-negative revision week or an agent-monetization disappointment\", \"TGT|0.07|policy|net_raises 30 across 19 firms, zero lowers (revision_flow_90d)|a net-lower revision or a gross-margin reversal in the next report\", \"ABNB|0.07|software|net_raises 28 across 29 firms and inflection_flag true (briefing)|a net-lower revision cluster or a nights-booked guide cut\", \"NET|0.06|software|net_raises 27 across 19 firms, zero lowers (revision_flow_90d)|a net-lower revision or a large-enterprise deal slippage headline\", \"AFRM|0.06|software|net_raises 27 across 23 firms, zero lowers (revision_flow_90d)|a net-lower revision or a funding-cost/credit deterioration headline\", \"AMGN|0.06|biotech|net_raises 26 across 22 firms and inflection_flag true (briefing)|a net-lower revision cluster or a MariTide timeline slip\", \"DELL|0.06|software|net_raises 24 across 18 firms, zero lowers (revision_flow_90d)|a net-lower revision or an AI-server backlog decline\", \"DT|0.06|software|net_raises 23 across 18 firms, zero lowers (revision_flow_90d)|a net-lower revision or an ARR growth deceleration\", \"S|0.06|software|net_raises 23 across 20 firms, zero lowers (revision_flow_90d)|a net-lower revision or a net-retention miss\", \"FTNT|0.06|software|net_raises 23 across 17 firms, zero lowers (revision_flow_90d)|a net-lower revision or a billings guide cut\"], \"strategy\": \"Buy the names where the 90-day analyst revision flow is most one-sidedly positive across many distinct firms, not the names with the biggest target upside. The bet is that broad, firm-diverse net raises (OKTA 63/32 firms, SNOW 47/33, CRWD 44/35, PANW 34/30, CRM 33/29) reflect real estimate momentum that persists over 126 sessions. I would be wrong if the flow reverses: any name printing a net-lower revision cluster, a guidance cut, or a momentum break gets cut, since the whole edge is the flow, not the level.\", \"objective\": \"Maximise 126-session return vs SPY, net of costs, by holding the strongest firm-diverse 90-day analyst revision-flow names.\", \"what_i_did_not_buy\": [\"ALB|net_raises -12, twelve lowers, no raises\", \"FLUT|net_raises -15, sixteen lowers, no flow support\", \"SMR|net_raises -6, revenue collapsing, no raises\", \"OKLO|net_raises -4, pre-revenue story stock, no raises\", \"LEU|net_raises -4, six lowers, flow negative\", \"CEG|net_raises -6, seven lowers, flow negative\", \"VRT|net_raises -4, four lowers, zero raises\", \"GILD|net_raises -3, six lowers, flow negative\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00155193,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 318,
+ "tokens_out": 983,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "revision_flow_leaders",
+  "strategy": "Buy the names where the 90-day analyst revision flow is most one-sidedly positive across many distinct firms, not the names with the biggest target upside. The bet is that broad, firm-diverse net raises (OKTA 63/32 firms, SNOW 47/33, CRWD 44/35, PANW 34/30, CRM 33/29) reflect real estimate momentum that persists over 126 sessions. I would be wrong if the flow reverses: any name printing a net-lower revision cluster, a guidance cut, or a momentum break gets cut, since the whole edge is the flow, not the level.",
+  "objective": "Maximise 126-session return vs SPY, net of costs, by holding the strongest firm-diverse 90-day analyst revision-flow names.",
+  "cash_weight": 0.05,
+  "positions": [
+   {
+    "ticker": "OKTA",
+    "weight": 0.09,
+    "theme": "software",
+    "thesis": "net_raises 63 across 32 firms with zero lowers (revision_flow_90d)",
+    "falsifier": "any net-lower print or momentum reversal before the next earnings date"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 47 across 33 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a single net-negative revision week or a data-cloud consumption guide cut"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.08,
+    "theme": "software",
+    "thesis": "net_raises 44 across 35 firms (revision_flow_90d) with price at 52w high",
+    "falsifier": "a net-lower revision cluster or a billings deceleration headline"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 34 across 30 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "any guidance cut or net-lower revision before the next print"
+   },
+   {
+    "ticker": "CRM",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 33 across 29 firms (revision_flow_90d) with mom_63 0.58",
+    "falsifier": "a net-negative revision week or an agent-monetization disappointment"
+   },
+   {
+    "ticker": "TGT",
+    "weight": 0.07,
+    "theme": "policy",
+    "thesis": "net_raises 30 across 19 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or a gross-margin reversal in the next report"
+   },
+   {
+    "ticker": "ABNB",
+    "weight": 0.07,
+    "theme": "software",
+    "thesis": "net_raises 28 across 29 firms and inflection_flag true (briefing)",
+    "falsifier": "a net-lower revision cluster or a nights-booked guide cut"
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 27 across 19 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or a large-enterprise deal slippage headline"
+   },
+   {
+    "ticker": "AFRM",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 27 across 23 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or a funding-cost/credit deterioration headline"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 26 across 22 firms and inflection_flag true (briefing)",
+    "falsifier": "a net-lower revision cluster or a MariTide timeline slip"
+   },
+   {
+    "ticker": "DELL",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 24 across 18 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or an AI-server backlog decline"
+   },
+   {
+    "ticker": "DT",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 23 across 18 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or an ARR growth deceleration"
+   },
+   {
+    "ticker": "S",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 23 across 20 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or a net-retention miss"
+   },
+   {
+    "ticker": "FTNT",
+    "weight": 0.06,
+    "theme": "software",
+    "thesis": "net_raises 23 across 17 firms, zero lowers (revision_flow_90d)",
+    "falsifier": "a net-lower revision or a billings guide cut"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12, twelve lowers, no raises",
+   "FLUT|net_raises -15, sixteen lowers, no flow support",
+   "SMR|net_raises -6, revenue collapsing, no raises",
+   "OKLO|net_raises -4, pre-revenue story stock, no raises",
+   "LEU|net_raises -4, six lowers, flow negative",
+   "CEG|net_raises -6, seven lowers, flow negative",
+   "VRT|net_raises -4, four lowers, zero raises",
+   "GILD|net_raises -3, six lowers, flow negative"
+  ]
+ },
+ "prompt_hash": "e91538a96827d3b1",
+ "strategy": {
+  "id": "revision_flow_leaders",
+  "brief": "Analyst revision flow: names with the strongest 90-day net target RAISES across >= 3 distinct firms. The flow, not the target level (target-level upside is measured perverse). Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

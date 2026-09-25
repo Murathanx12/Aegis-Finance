@@ -1,0 +1,175 @@
+{
+ "text": "{\"name\":\"ai_power_global\",\"cash_weight\":0.02,\"positions\":[\"GEV|0.09|power_grid|Q2 orders +88% to $24.2B and $176B backlog (research_themes)|Q3 backlog or gas-turbine slot reservations miss the $200B 2027 path\",\"VRT|0.08|power_grid|$2.6B Utility Innovations deal Sep 3 extends grid-to-chip power (research_themes)|Q3 liquid-cooling revenue per MW shipped stays flat while backlog grows\",\"NVT|0.08|power_grid|Q1 sales +53% and FY26 guide raised to 37-39% growth (research_themes)|Fall-2026 modular liquid-cooling launch slips past the window\",\"2308.TW|0.07|power_grid|Liquid-cooling and 800V DC power leader for AI racks (research_global_candidates)|Q3 monthly sales decelerate sequentially into early Nov\",\"267260.KS|0.07|power_grid|765kV transformer export boom to US grid, 25% H1 margin (research_global_candidates)|Mid-Nov Q3 op profit misses the KRW316.6bn consensus\",\"010120.KS|0.06|power_grid|Record KRW7.0tn backlog on data-center distribution orders (research_global_candidates)|Q3 op profit undershoots KRW185.3bn consensus\",\"ENR.DE|0.06|power_grid|Grid Technologies record EUR51bn backlog, Q3 orders EUR17.9bn (research_global_candidates)|Mid-Nov FY26 results show Siemens Gamesa charges swamping grid profit\",\"SU.PA|0.05|power_grid|Data-center electrification capex beneficiary, Oct 20 trading update (research_global_candidates)|Oct 20 update shows data-center order growth flattening\",\"PRY.MI|0.05|power_grid|HV and submarine cable backlog on grid buildout, Nov 5 results (research_global_candidates)|Nov 5 results flag input-cost inflation eating mega-project margins\",\"MU|0.08|semis|HBM4 shortage, ~20% of NVIDIA HBM4 allocation, inflection_flag true (briefing)|Q4 FY26 print shows HBM pricing rolling over on 2027 capex digestion\",\"000660.KS|0.07|semis|HBM leader ~50% share, record Q3 op profit consensus (research_global_candidates)|Bernstein Sept 22 HBM4 ramp lag vs Samsung confirmed in the late-Oct print\",\"005930.KS|0.07|semis|Bernstein Sept 22 raised Q3 HBM revenue 23% to ~$11.4bn (research_global_candidates)|Oct 8 prelim guidance shows HBM4 mix or won strength disappointing\",\"2330.TW|0.06|semis|Raised FY26 capex to $60-64B, sales guide >40% growth (research_themes)|Oct 15 earnings cut the capex guide or guide gross margin below 65%\",\"ASML.AS|0.05|semis|Q3 guided $12.8-14.0bn vs Street $11.3bn, Oct 14 earnings (research_global_candidates)|Oct 14 bookings show order lumpiness and China restrictions biting\",\"6857.T|0.05|semis|Raised FY26 sales guide +21% to JPY1,714bn on AI test demand (research_global_candidates)|Late-Oct FY26 Q2 orders show Advantest test demand lumpy\",\"8035.T|0.04|semis|WFE spend cycle and advanced-node tool share (research_global_candidates)|Late-Oct FY26 Q2 results show China export-control drag on orders\",\"2317.TW|0.04|semis|Aug revenue +52% YoY record, Hon Hai Tech Day Oct 30-31 (research_global_candidates)|Tech Day reveals no Vera Rubin rack ramp and Q3 misses Street\",\"CCJ|0.05|nuclear|Long-term contracts locking $120+/lb, Q3 Nov 3-4 (research_global_candidates)|Nov 3-4 print shows production shortfall forcing spot purchases at a loss\",\"LEU|0.04|nuclear|$900M DOE HALEU task order finalized July 2026 (research_themes)|No non-DOE HALEU offtake disclosed and 2029 capacity slips\",\"034020.KS|0.04|nuclear|SMR/nuclear restart plus gas-turbine cycle, mid-Nov Q3 (research_global_candidates)|Mid-Nov Q3 shows large-project execution charges on turbine backlog\"],\"strategy\":\"Bet that the AI capex bottleneck sits in physical power, not chips: grid transformers, switchgear, cables, turbines, liquid cooling and the HBM that feeds the racks. Every name has a dated observable inside Oct 12-Nov 13 (GEV/NVT/VRT prints, ASML Oct 14, TSMC Oct 15, SK Hynix/Samsung late Oct, Hon Hai Tech Day Oct 30-31, Cameco Nov 3-4, Siemens Energy and Korean grid names mid-Nov). I would be wrong if a hyperscaler capex digestion headline, a China export-control shock, or a de-escalation-driven risk-premium compression hits the whole chain at once, since these names are highly correlated to one AI-power factor.\",\"objective\":\"Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only global AI power and memory book.\",\"what_i_did_not_buy\":[\"ALB|12 target cuts, lithium spot down, no dated catalyst in window\",\"SMR|Stacking downgrades, revenue collapsed 87% QoQ\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150\",\"FLUT|Four 2026 guidance cuts, near 52-week low\",\"NVO|Morgan Stanley downgraded to Sell, structural share loss to Lilly\",\"INTC|Government equity stake legal challenge unresolved, no dated catalyst\",\"IONQ|35x forward sales, chronic ATM dilution, no dated catalyst\",\"ORCL|Force-majeure data-center notice, 8 target cuts, AI financing stress\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00200018,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 183,
+ "tokens_out": 1349,
+ "cached_tokens": 69632,
+ "parse": "ok",
+ "parsed": {
+  "name": "ai_power_global",
+  "strategy": "Bet that the AI capex bottleneck sits in physical power, not chips: grid transformers, switchgear, cables, turbines, liquid cooling and the HBM that feeds the racks. Every name has a dated observable inside Oct 12-Nov 13 (GEV/NVT/VRT prints, ASML Oct 14, TSMC Oct 15, SK Hynix/Samsung late Oct, Hon Hai Tech Day Oct 30-31, Cameco Nov 3-4, Siemens Energy and Korean grid names mid-Nov). I would be wrong if a hyperscaler capex digestion headline, a China export-control shock, or a de-escalation-driven risk-premium compression hits the whole chain at once, since these names are highly correlated to one AI-power factor.",
+  "objective": "Maximize relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only global AI power and memory book.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "GEV",
+    "weight": 0.09,
+    "theme": "power_grid",
+    "thesis": "Q2 orders +88% to $24.2B and $176B backlog (research_themes)",
+    "falsifier": "Q3 backlog or gas-turbine slot reservations miss the $200B 2027 path"
+   },
+   {
+    "ticker": "VRT",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "$2.6B Utility Innovations deal Sep 3 extends grid-to-chip power (research_themes)",
+    "falsifier": "Q3 liquid-cooling revenue per MW shipped stays flat while backlog grows"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.08,
+    "theme": "power_grid",
+    "thesis": "Q1 sales +53% and FY26 guide raised to 37-39% growth (research_themes)",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips past the window"
+   },
+   {
+    "ticker": "2308.TW",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "Liquid-cooling and 800V DC power leader for AI racks (research_global_candidates)",
+    "falsifier": "Q3 monthly sales decelerate sequentially into early Nov"
+   },
+   {
+    "ticker": "267260.KS",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "765kV transformer export boom to US grid, 25% H1 margin (research_global_candidates)",
+    "falsifier": "Mid-Nov Q3 op profit misses the KRW316.6bn consensus"
+   },
+   {
+    "ticker": "010120.KS",
+    "weight": 0.06,
+    "theme": "power_grid",
+    "thesis": "Record KRW7.0tn backlog on data-center distribution orders (research_global_candidates)",
+    "falsifier": "Q3 op profit undershoots KRW185.3bn consensus"
+   },
+   {
+    "ticker": "ENR.DE",
+    "weight": 0.06,
+    "theme": "power_grid",
+    "thesis": "Grid Technologies record EUR51bn backlog, Q3 orders EUR17.9bn (research_global_candidates)",
+    "falsifier": "Mid-Nov FY26 results show Siemens Gamesa charges swamping grid profit"
+   },
+   {
+    "ticker": "SU.PA",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "Data-center electrification capex beneficiary, Oct 20 trading update (research_global_candidates)",
+    "falsifier": "Oct 20 update shows data-center order growth flattening"
+   },
+   {
+    "ticker": "PRY.MI",
+    "weight": 0.05,
+    "theme": "power_grid",
+    "thesis": "HV and submarine cable backlog on grid buildout, Nov 5 results (research_global_candidates)",
+    "falsifier": "Nov 5 results flag input-cost inflation eating mega-project margins"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "HBM4 shortage, ~20% of NVIDIA HBM4 allocation, inflection_flag true (briefing)",
+    "falsifier": "Q4 FY26 print shows HBM pricing rolling over on 2027 capex digestion"
+   },
+   {
+    "ticker": "000660.KS",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "HBM leader ~50% share, record Q3 op profit consensus (research_global_candidates)",
+    "falsifier": "Bernstein Sept 22 HBM4 ramp lag vs Samsung confirmed in the late-Oct print"
+   },
+   {
+    "ticker": "005930.KS",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Bernstein Sept 22 raised Q3 HBM revenue 23% to ~$11.4bn (research_global_candidates)",
+    "falsifier": "Oct 8 prelim guidance shows HBM4 mix or won strength disappointing"
+   },
+   {
+    "ticker": "2330.TW",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Raised FY26 capex to $60-64B, sales guide >40% growth (research_themes)",
+    "falsifier": "Oct 15 earnings cut the capex guide or guide gross margin below 65%"
+   },
+   {
+    "ticker": "ASML.AS",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Q3 guided $12.8-14.0bn vs Street $11.3bn, Oct 14 earnings (research_global_candidates)",
+    "falsifier": "Oct 14 bookings show order lumpiness and China restrictions biting"
+   },
+   {
+    "ticker": "6857.T",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Raised FY26 sales guide +21% to JPY1,714bn on AI test demand (research_global_candidates)",
+    "falsifier": "Late-Oct FY26 Q2 orders show Advantest test demand lumpy"
+   },
+   {
+    "ticker": "8035.T",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "WFE spend cycle and advanced-node tool share (research_global_candidates)",
+    "falsifier": "Late-Oct FY26 Q2 results show China export-control drag on orders"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.04,
+    "theme": "semis",
+    "thesis": "Aug revenue +52% YoY record, Hon Hai Tech Day Oct 30-31 (research_global_candidates)",
+    "falsifier": "Tech Day reveals no Vera Rubin rack ramp and Q3 misses Street"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.05,
+    "theme": "nuclear",
+    "thesis": "Long-term contracts locking $120+/lb, Q3 Nov 3-4 (research_global_candidates)",
+    "falsifier": "Nov 3-4 print shows production shortfall forcing spot purchases at a loss"
+   },
+   {
+    "ticker": "LEU",
+    "weight": 0.04,
+    "theme": "nuclear",
+    "thesis": "$900M DOE HALEU task order finalized July 2026 (research_themes)",
+    "falsifier": "No non-DOE HALEU offtake disclosed and 2029 capacity slips"
+   },
+   {
+    "ticker": "034020.KS",
+    "weight": 0.04,
+    "theme": "nuclear",
+    "thesis": "SMR/nuclear restart plus gas-turbine cycle, mid-Nov Q3 (research_global_candidates)",
+    "falsifier": "Mid-Nov Q3 shows large-project execution charges on turbine backlog"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|12 target cuts, lithium spot down, no dated catalyst in window",
+   "SMR|Stacking downgrades, revenue collapsed 87% QoQ",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150",
+   "FLUT|Four 2026 guidance cuts, near 52-week low",
+   "NVO|Morgan Stanley downgraded to Sell, structural share loss to Lilly",
+   "INTC|Government equity stake legal challenge unresolved, no dated catalyst",
+   "IONQ|35x forward sales, chronic ATM dilution, no dated catalyst",
+   "ORCL|Force-majeure data-center notice, 8 target cuts, AI financing stress"
+  ]
+ },
+ "prompt_hash": "4dd63a039a0862c6",
+ "strategy": {
+  "id": "ai_power_global",
+  "brief": "AI power bottleneck, worldwide: power generation, grid, cooling, transformers, turbines and the memory that AI capex buys. Prefer names with a dated observable (backlog, orders, earnings) in the window. Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

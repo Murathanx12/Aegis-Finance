@@ -1,0 +1,154 @@
+{
+ "name": "pers_pharma_binary_basket_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY, net of costs",
+ "model": "deepseek-flash",
+ "strategy": "I bet the Q4-2026 FDA calendar pays: a diversified basket of PDUFA names with positive revision flow, sized small because a CRL averages -33% over five days, plus large-cap pharma ballast (MRK, LLY, ABBV, AMGN) that carries the same dated catalysts with far less binary risk. I overweight names where analysts raised targets into the event (VRTX, AGIO, CORT, PRAX) and keep every single binary at or under 5%. I would be wrong if a cluster of CRLs lands in November-December, if the Section 232 pharma tariff go-live on Sept 29 hits unshielded names like VRTX and ARGX, or if large-cap pharma de-rates on MFN pricing before year-end.",
+ "what_i_did_not_buy": [
+  "INO|no briefing row, no revision flow, zero news coverage",
+  "BTAI|no briefing row, no revision flow, zero news coverage",
+  "NUVL|no briefing row, no revision flow, zero news coverage",
+  "MLYS|no revision flow and mom_252_21 -0.3542",
+  "BLTE|valuation ran ahead of the Feb 12 2027 PDUFA",
+  "NTLA|nex-z HLA safety signal unresolved, Street rating Hold",
+  "VKTX|no dated PDUFA, pivotal data outside window",
+  "GPCR|no clean consensus target sourced, burn rate doubled"
+ ],
+ "source": "book_factory",
+ "parse": "ok",
+ "evidence_hash": "a0ed99f6a0524c3c",
+ "prompt_hash": "d83e31bd3441da88",
+ "positions": [
+  {
+   "ticker": "MRK",
+   "weight": 0.09,
+   "theme": "biotech",
+   "thesis": "net_raises 22 of 22 firms over 90d plus Oct 10 I-DXd PDUFA (catalysts)",
+   "falsifier": "CRL on the I-DXd BLA or a Keytruda LOE headline before Oct 10"
+  },
+  {
+   "ticker": "VRTX",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "net_raises 9 with zero lowers (revision_flow_90d) into Nov 30 povetacicept PDUFA (catalysts)",
+   "falsifier": "CRL on povetacicept accelerated-approval BLA on Nov 30"
+  },
+  {
+   "ticker": "GILD",
+   "weight": 0.08,
+   "theme": "biotech",
+   "thesis": "rev_yoy 0.1018 with drawdown_63 of only -0.0022 (briefing) into Dec 23 anito-cel PDUFA (catalysts)",
+   "falsifier": "anito-cel CRL or facility-inspection finding on Dec 23"
+  },
+  {
+   "ticker": "AGIO",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "net_raises 5 of 6 firms and median target +9.7% (revision_flow_90d) into Nov 1 mitapivat PDUFA (catalysts)",
+   "falsifier": "mitapivat sickle-cell sNDA CRL on Nov 1"
+  },
+  {
+   "ticker": "CORT",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "net_raises 4 with zero lowers and rev_qoq 0.5533 (briefing) into Dec 17 relacorilant resubmission (catalysts)",
+   "falsifier": "second CRL on relacorilant on Dec 17"
+  },
+  {
+   "ticker": "COGT",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "two primary PDUFAs Nov 30 and Dec 30 off positive PEAK and SUMMIT Phase 3 (catalysts)",
+   "falsifier": "either bezuclastinib NDA CRLs on Nov 30 or Dec 30"
+  },
+  {
+   "ticker": "BBIO",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "net_raises 9 of 11 firms and rev_yoy 1.2039 (briefing) into Nov 27 BBP-418 PDUFA (catalysts)",
+   "falsifier": "BBP-418 CRL on Nov 27"
+  },
+  {
+   "ticker": "SMMT",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "net_raises 1 of 6 firms with median target +8.3% (revision_flow_90d) into Nov 14 ivonescimab PDUFA (catalysts)",
+   "falsifier": "ivonescimab CRL or an OS-superiority miss on Nov 14"
+  },
+  {
+   "ticker": "SVRA",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "Nov 22 molgramostim PDUFA extended only 3 months with FDA disclaiming safety concerns (catalysts)",
+   "falsifier": "molgramostim CRL on Nov 22"
+  },
+  {
+   "ticker": "PRAX",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "net_raises 5 with zero lowers (revision_flow_90d) into Dec 27 relutrigine PDUFA (catalysts)",
+   "falsifier": "relutrigine CRL on Dec 27"
+  },
+  {
+   "ticker": "CAPR",
+   "weight": 0.03,
+   "theme": "biotech",
+   "thesis": "B. Riley upgrade to $21 and narrower upper-limb resubmission (catalysts) into Nov 22 deramiocel PDUFA",
+   "falsifier": "deramiocel CRL on Nov 22 after the 9-of-12 negative adcom"
+  },
+  {
+   "ticker": "INSM",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "net_raises 1 of 7 firms and rev_yoy 2.9611 (briefing) into Jan 28 ARIKAYCE sNDA (catalysts)",
+   "falsifier": "ARIKAYCE sNDA CRL on Jan 28"
+  },
+  {
+   "ticker": "LLY",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 13 of 14 firms and gross_margin_chg +0.0384 with inflection_flag true (briefing)",
+   "falsifier": "retatrutide filing slips past Q1 2027 or EASD tolerability data disappoints"
+  },
+  {
+   "ticker": "ABBV",
+   "weight": 0.07,
+   "theme": "biotech",
+   "thesis": "net_raises 20 of 21 firms and drawdown_63 of only -0.0056 (briefing)",
+   "falsifier": "Skyrizi/Rinvoq growth decelerates or MFN pricing bites deeper than modeled"
+  },
+  {
+   "ticker": "AMGN",
+   "weight": 0.06,
+   "theme": "biotech",
+   "thesis": "net_raises 26 of 28 firms and inflection_flag true on gross_margin_chg +0.0388 (briefing)",
+   "falsifier": "MariTide MARITIME-1/2 timing slips past Jan 21 2027"
+  },
+  {
+   "ticker": "WST",
+   "weight": 0.05,
+   "theme": "biotech",
+   "thesis": "net_raises 7 of 7 firms and vs_ma200 +0.2156 (briefing) on GLP-1 device demand",
+   "falsifier": "GLP-1 component growth normalizes and late-Oct guidance disappoints"
+  },
+  {
+   "ticker": "RGEN",
+   "weight": 0.04,
+   "theme": "biotech",
+   "thesis": "net_raises 4 of 5 firms and mom_63 +0.4277 (briefing) on bioprocessing recovery",
+   "falsifier": "Q3 orders turn negative and the recovery proves order-driven not revenue-driven"
+  },
+  {
+   "ticker": "DHR",
+   "weight": 0.03,
+   "theme": "biotech",
+   "thesis": "net_raises -4 of 6 firms but mom_63 +0.2138 (briefing) into the Oct 20 Q3 print",
+   "falsifier": "Q3 core biotech growth stays below 4% on Oct 20"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.12,
+   "thesis": "declared cash"
+  }
+ ]
+}

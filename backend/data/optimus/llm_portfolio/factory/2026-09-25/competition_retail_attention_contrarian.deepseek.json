@@ -1,0 +1,168 @@
+{
+ "text": "{\"name\":\"retail_attention_contrarian\",\"cash_weight\":0.02,\"positions\":[\"ASML|0.08|semis|net_raises 5 of 5 firms with median target +13.6% into confirmed Oct 14 Q3 earnings|Q3 bookings miss or 2027 litho guide cut on Oct 14\",\"TSM|0.08|semis|net_raises 6 of 6 firms, median target +10.2%, into Oct 15 Q3 print|Oct 15 capex guide cut below the raised $60-64B range\",\"ARGX|0.07|biotech|net_raises 17 of 18 firms, median target +6.2%, into confirmed Oct 22 Q3 results|EMPASSION MMN topline slips past Q4 2026 or misses\",\"MRK|0.07|biotech|net_raises 22 of 22 firms, median target +12.4%, into Oct 10 I-DXd PDUFA|CRL on the Oct 10 ifinatamab deruxtecan BLA\",\"AMGN|0.06|biotech|net_raises 26 of 28 firms, median target +5.4%, inflection_flag true|MariTide MARITIME-1/2 timing slips past Jan 21 2027\",\"ABBV|0.06|biotech|net_raises 20 of 20 firms, median target +7.6%, vs_52w_high only -1.1%|Skyrizi/Rinvoq guidance cut at the next print\",\"LLY|0.06|biotech|net_raises 13 of 14 firms, median target +6.6%, inflection_flag true|Retatrutide Q1 2027 filing slips or EASD tolerability disappoints\",\"OKTA|0.05|software|net_raises 63 of 63 firms, median target +19.4%, mom_63 +65%|Identity growth decelerates below 10% yoy at next print\",\"SNOW|0.05|software|net_raises 47 of 47 firms, median target +23.3%, rev_yoy +35%|Product revenue guide cut or consumption growth stalls\",\"CRWD|0.05|software|net_raises 44 of 49 firms, median target +6.2%, at 52w high|Net-new ARR guide cut at the next print\",\"PANW|0.05|software|net_raises 34 of 35 firms, median target +17.6%, rev_yoy +34%|Platformization bookings miss or billings guide cut\",\"FTNT|0.04|software|net_raises 23 of 23 firms, median target +34.4%, at 52w high|Firewall refresh cycle stalls, billings guide cut\",\"DDOG|0.04|software|net_raises 22 of 23 firms, median target +15.4%, rev_yoy +36%|Usage growth decelerates or FY guide trimmed\",\"NET|0.04|software|net_raises 27 of 27 firms, median target +19.4%, at 52w high|Large-enterprise net retention falls below 115%\",\"GEV|0.04|power_grid|net_raises 8 of 8 firms, median target +2.7%, inflection_flag true|Gas-turbine backlog cancellation or hyperscaler order pause\",\"NVT|0.04|power_grid|net_raises 6 of 6 firms, median target +6.4%, inflection_flag true|Fall-2026 modular liquid-cooling launch slips\",\"WST|0.04|biotech|net_raises 7 of 7 firms, median target +9.6%, vs_ma200 +21.6%|GLP-1 device orders normalize below high-teens growth\",\"RGEN|0.03|biotech|net_raises 4 of 4 firms, median target +6.4%, mom_63 +42.8%|Bioprocessing orders turn negative at the next print\",\"COGT|0.03|biotech|net_raises 2 of 2 firms into two NDAs, Nov 30 GIST and Dec 30 SM|Either bezuclastinib NDA draws a CRL in Nov or Dec\"],\"strategy\":\"I fade the retail-attention crowd: names whose headline counts spiked with no analyst confirmation (SNDK, INTC, ORCL, RKLB, NBIS, BB, BYND, DNUT, GPRO, GME) are excluded, and I buy where revision_flow_90d shows near-unanimous net raises into dated Q3 prints inside the Oct 12-Nov 13 window. The book is software/cyber (OKTA, SNOW, CRWD, PANW, FTNT, DDOG, NET), semis (ASML, TSM), power grid (GEV, NVT) and large/mid biotech (ARGX, MRK, AMGN, ABBV, LLY, WST, RGEN, COGT). I am wrong if a single hyperscaler capex pause or a broad risk-off shock hits the correlated software/semis sleeve at once, or if the crowded PDUFA names draw CRLs.\",\"objective\":\"Beat the Bloomberg WLS index over 2026-10-12 to 2026-11-13 by owning analyst-confirmed, dated-catalyst names and refusing attention-only spikes.\",\"what_i_did_not_buy\":[\"SNDK|+15x 252d move, only 1 net raise, pure retail attention\",\"INTC|36 headlines, 6 lowers, no dated in-window catalyst\",\"ORCL|25 headlines, net -5 raises, data-center force-majeure news\",\"RKLB|+550% mention surge, no dated catalyst found\",\"NBIS|+160% mention surge, no dated catalyst found\",\"BB|+83% mention surge, no dated catalyst found\",\"BYND|+95% one-day meme pop, no fundamental news\",\"GME|top WSB mention count, no analyst flow, no catalyst\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00199145,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 177,
+ "tokens_out": 1343,
+ "cached_tokens": 69632,
+ "parse": "ok",
+ "parsed": {
+  "name": "retail_attention_contrarian",
+  "strategy": "I fade the retail-attention crowd: names whose headline counts spiked with no analyst confirmation (SNDK, INTC, ORCL, RKLB, NBIS, BB, BYND, DNUT, GPRO, GME) are excluded, and I buy where revision_flow_90d shows near-unanimous net raises into dated Q3 prints inside the Oct 12-Nov 13 window. The book is software/cyber (OKTA, SNOW, CRWD, PANW, FTNT, DDOG, NET), semis (ASML, TSM), power grid (GEV, NVT) and large/mid biotech (ARGX, MRK, AMGN, ABBV, LLY, WST, RGEN, COGT). I am wrong if a single hyperscaler capex pause or a broad risk-off shock hits the correlated software/semis sleeve at once, or if the crowded PDUFA names draw CRLs.",
+  "objective": "Beat the Bloomberg WLS index over 2026-10-12 to 2026-11-13 by owning analyst-confirmed, dated-catalyst names and refusing attention-only spikes.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "ASML",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "net_raises 5 of 5 firms with median target +13.6% into confirmed Oct 14 Q3 earnings",
+    "falsifier": "Q3 bookings miss or 2027 litho guide cut on Oct 14"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "net_raises 6 of 6 firms, median target +10.2%, into Oct 15 Q3 print",
+    "falsifier": "Oct 15 capex guide cut below the raised $60-64B range"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 17 of 18 firms, median target +6.2%, into confirmed Oct 22 Q3 results",
+    "falsifier": "EMPASSION MMN topline slips past Q4 2026 or misses"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "net_raises 22 of 22 firms, median target +12.4%, into Oct 10 I-DXd PDUFA",
+    "falsifier": "CRL on the Oct 10 ifinatamab deruxtecan BLA"
+   },
+   {
+    "ticker": "AMGN",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 26 of 28 firms, median target +5.4%, inflection_flag true",
+    "falsifier": "MariTide MARITIME-1/2 timing slips past Jan 21 2027"
+   },
+   {
+    "ticker": "ABBV",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 20 of 20 firms, median target +7.6%, vs_52w_high only -1.1%",
+    "falsifier": "Skyrizi/Rinvoq guidance cut at the next print"
+   },
+   {
+    "ticker": "LLY",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "net_raises 13 of 14 firms, median target +6.6%, inflection_flag true",
+    "falsifier": "Retatrutide Q1 2027 filing slips or EASD tolerability disappoints"
+   },
+   {
+    "ticker": "OKTA",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 63 of 63 firms, median target +19.4%, mom_63 +65%",
+    "falsifier": "Identity growth decelerates below 10% yoy at next print"
+   },
+   {
+    "ticker": "SNOW",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 47 of 47 firms, median target +23.3%, rev_yoy +35%",
+    "falsifier": "Product revenue guide cut or consumption growth stalls"
+   },
+   {
+    "ticker": "CRWD",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 44 of 49 firms, median target +6.2%, at 52w high",
+    "falsifier": "Net-new ARR guide cut at the next print"
+   },
+   {
+    "ticker": "PANW",
+    "weight": 0.05,
+    "theme": "software",
+    "thesis": "net_raises 34 of 35 firms, median target +17.6%, rev_yoy +34%",
+    "falsifier": "Platformization bookings miss or billings guide cut"
+   },
+   {
+    "ticker": "FTNT",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 23 of 23 firms, median target +34.4%, at 52w high",
+    "falsifier": "Firewall refresh cycle stalls, billings guide cut"
+   },
+   {
+    "ticker": "DDOG",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 22 of 23 firms, median target +15.4%, rev_yoy +36%",
+    "falsifier": "Usage growth decelerates or FY guide trimmed"
+   },
+   {
+    "ticker": "NET",
+    "weight": 0.04,
+    "theme": "software",
+    "thesis": "net_raises 27 of 27 firms, median target +19.4%, at 52w high",
+    "falsifier": "Large-enterprise net retention falls below 115%"
+   },
+   {
+    "ticker": "GEV",
+    "weight": 0.04,
+    "theme": "power_grid",
+    "thesis": "net_raises 8 of 8 firms, median target +2.7%, inflection_flag true",
+    "falsifier": "Gas-turbine backlog cancellation or hyperscaler order pause"
+   },
+   {
+    "ticker": "NVT",
+    "weight": 0.04,
+    "theme": "power_grid",
+    "thesis": "net_raises 6 of 6 firms, median target +6.4%, inflection_flag true",
+    "falsifier": "Fall-2026 modular liquid-cooling launch slips"
+   },
+   {
+    "ticker": "WST",
+    "weight": 0.04,
+    "theme": "biotech",
+    "thesis": "net_raises 7 of 7 firms, median target +9.6%, vs_ma200 +21.6%",
+    "falsifier": "GLP-1 device orders normalize below high-teens growth"
+   },
+   {
+    "ticker": "RGEN",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "net_raises 4 of 4 firms, median target +6.4%, mom_63 +42.8%",
+    "falsifier": "Bioprocessing orders turn negative at the next print"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "net_raises 2 of 2 firms into two NDAs, Nov 30 GIST and Dec 30 SM",
+    "falsifier": "Either bezuclastinib NDA draws a CRL in Nov or Dec"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "SNDK|+15x 252d move, only 1 net raise, pure retail attention",
+   "INTC|36 headlines, 6 lowers, no dated in-window catalyst",
+   "ORCL|25 headlines, net -5 raises, data-center force-majeure news",
+   "RKLB|+550% mention surge, no dated catalyst found",
+   "NBIS|+160% mention surge, no dated catalyst found",
+   "BB|+83% mention surge, no dated catalyst found",
+   "BYND|+95% one-day meme pop, no fundamental news",
+   "GME|top WSB mention count, no analyst flow, no catalyst"
+  ]
+ },
+ "prompt_hash": "f5b4b19037506732",
+ "strategy": {
+  "id": "retail_attention_contrarian",
+  "brief": "Retail-attention contrarian: where headline counts spiked but analyst flow disagrees, side with the flow; avoid names that are only attention. Say which crowd you are fading. Competition rules: long only, global, <= 10% per name, >= 8 names, NO ETFs, cash <= 2%, graded as relative P&L vs the Bloomberg WLS index from 2026-10-12 to 2026-11-13."
+ }
+}

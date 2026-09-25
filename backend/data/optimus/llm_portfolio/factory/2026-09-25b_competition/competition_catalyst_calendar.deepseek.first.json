@@ -1,0 +1,136 @@
+{
+ "text": "{\"name\": \"catalyst_calendar_oct_nov_2026\", \"cash_weight\": 0.01, \"positions\": [\"ASML|0.09|semis|Q3'26 earnings Oct 14 primary (catalysts) plus 5 net raises in 90d (revision_flow_90d)|Q3 orders or 2027 guidance cut on the Oct 14 call\", \"TSM|0.09|semis|Q3'26 earnings Oct 15 (catalysts) with 6 net raises and 0 lowers (revision_flow_90d)|capex guide cut or gross margin miss on Oct 15\", \"ARGX|0.08|biotech|Q3'26 results Oct 22 primary (catalysts) and 17 net raises across 14 firms (revision_flow_90d)|EMPASSION MMN topline slips or Q3 Vyvgart miss on Oct 22\", \"EVO.ST|0.08|gambling|Q3'26 report Oct 23 primary (catalysts); ex-Asia live casino growth per research|Asia revenue declines again or new regulatory action disclosed Oct 23\", \"SAAB-B.ST|0.08|defense|Q3'26 report Oct 23 primary (catalysts); European rearmament order pipeline|order intake or margin misses on the Oct 23 report\", \"TER|0.08|semis|Q3'26 earnings Oct 27 after close primary (catalysts) with 6 net raises (revision_flow_90d)|robotics segment growth stalls or Q4 guide disappoints Oct 27\", \"KOG.OL|0.07|defense|Q3'26 report Oct 29 primary (catalysts); missile/defense order visibility|order backlog or margin miss on the Oct 29 report\", \"2317.TW|0.07|semis|Hon Hai Tech Day Oct 30-31 primary (catalysts); AI server rack demand|no AI server capacity or Vera Rubin update at Tech Day Oct 30\", \"CCJ|0.07|nuclear|Q3'26 earnings Nov 3-4 (catalysts); uranium term-price leverage|production or contract-mix guidance cut on the Nov 3-4 call\", \"NVO|0.07|biotech|Q3'26 results Nov 4 primary (catalysts); CagriSema REIMAGINE 5 data Sept 21|CagriSema US launch timing or guidance cut on Nov 4\", \"RHM.DE|0.07|defense|Q3'26 results Nov 5 primary (catalysts); German defense budget +30% YoY|order intake or FY guidance miss on the Nov 5 report\", \"HAG.DE|0.06|defense|9-month 2026 results Nov 5 primary (catalysts); book-to-bill 2.4x H1|free cash flow worsens or backlog slips on the Nov 5 report\", \"ALL.AX|0.06|gambling|FY26 annual results Nov 12 primary (catalysts); Anaxi/digital gaming growth|FY26 digital margin or FY27 guidance disappoints Nov 12\", \"MRK|0.06|biotech|PDUFA ifinatamab deruxtecan Oct 10 primary (catalysts) with 22 net raises (revision_flow_90d)|CRL on the I-DXd BLA around Oct 10\", \"AGIO|0.05|biotech|PDUFA mitapivat sickle cell Nov 1 primary (catalysts) with 5 net raises (revision_flow_90d)|CRL or narrow all-genotype label denial Nov 1\"], \"strategy\": \"Every holding has a hand-verified dated event inside Oct 12-Nov 13: ASML Oct 14, TSM Oct 15, ARGX Oct 22, Saab/Evolution Oct 23, Teradyne Oct 27, Kongsberg Oct 29, Hon Hai Oct 30, Cameco/Novo Nov 3-4, Rheinmetall/Hensoldt Nov 5, Aristocrat Nov 12, plus two early-window PDUFAs (MRK Oct 10, AGIO Nov 1). Dates are spread across semis, biotech, defense, gambling and nuclear so no single print decides the book. I am wrong if a broad risk-off or AI-capex digestion headline hits the semis sleeve simultaneously, or if the PDUFAs return CRLs (CRLs average -13.7% on the day).\", \"objective\": \"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 by holding only names with dated in-window catalysts.\", \"what_i_did_not_buy\": [\"NVDA|no dated catalyst inside the Oct 12-Nov 13 window\", \"LLY|no dated catalyst; retatrutide filing is Q1 2027\", \"VRT|no dated catalyst and 4 net target cuts in 90d\", \"GEV|no dated catalyst in the evidence\", \"MU|no dated catalyst in the evidence\", \"FLUT|16 net target cuts in 90d, no dated catalyst\", \"CAPR|PDUFA Nov 22 falls after the Nov 13 window close\", \"SMMT|PDUFA Nov 14 falls one day after the window\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00182731,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 366,
+ "tokens_out": 1191,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "catalyst_calendar_oct_nov_2026",
+  "strategy": "Every holding has a hand-verified dated event inside Oct 12-Nov 13: ASML Oct 14, TSM Oct 15, ARGX Oct 22, Saab/Evolution Oct 23, Teradyne Oct 27, Kongsberg Oct 29, Hon Hai Oct 30, Cameco/Novo Nov 3-4, Rheinmetall/Hensoldt Nov 5, Aristocrat Nov 12, plus two early-window PDUFAs (MRK Oct 10, AGIO Nov 1). Dates are spread across semis, biotech, defense, gambling and nuclear so no single print decides the book. I am wrong if a broad risk-off or AI-capex digestion headline hits the semis sleeve simultaneously, or if the PDUFAs return CRLs (CRLs average -13.7% on the day).",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 by holding only names with dated in-window catalysts.",
+  "cash_weight": 0.01,
+  "positions": [
+   {
+    "ticker": "ASML",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 14 primary (catalysts) plus 5 net raises in 90d (revision_flow_90d)",
+    "falsifier": "Q3 orders or 2027 guidance cut on the Oct 14 call"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 (catalysts) with 6 net raises and 0 lowers (revision_flow_90d)",
+    "falsifier": "capex guide cut or gross margin miss on Oct 15"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "Q3'26 results Oct 22 primary (catalysts) and 17 net raises across 14 firms (revision_flow_90d)",
+    "falsifier": "EMPASSION MMN topline slips or Q3 Vyvgart miss on Oct 22"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.08,
+    "theme": "gambling",
+    "thesis": "Q3'26 report Oct 23 primary (catalysts); ex-Asia live casino growth per research",
+    "falsifier": "Asia revenue declines again or new regulatory action disclosed Oct 23"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 23 primary (catalysts); European rearmament order pipeline",
+    "falsifier": "order intake or margin misses on the Oct 23 report"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 27 after close primary (catalysts) with 6 net raises (revision_flow_90d)",
+    "falsifier": "robotics segment growth stalls or Q4 guide disappoints Oct 27"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "Q3'26 report Oct 29 primary (catalysts); missile/defense order visibility",
+    "falsifier": "order backlog or margin miss on the Oct 29 report"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 primary (catalysts); AI server rack demand",
+    "falsifier": "no AI server capacity or Vera Rubin update at Tech Day Oct 30"
+   },
+   {
+    "ticker": "CCJ",
+    "weight": 0.07,
+    "theme": "nuclear",
+    "thesis": "Q3'26 earnings Nov 3-4 (catalysts); uranium term-price leverage",
+    "falsifier": "production or contract-mix guidance cut on the Nov 3-4 call"
+   },
+   {
+    "ticker": "NVO",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "Q3'26 results Nov 4 primary (catalysts); CagriSema REIMAGINE 5 data Sept 21",
+    "falsifier": "CagriSema US launch timing or guidance cut on Nov 4"
+   },
+   {
+    "ticker": "RHM.DE",
+    "weight": 0.07,
+    "theme": "defense",
+    "thesis": "Q3'26 results Nov 5 primary (catalysts); German defense budget +30% YoY",
+    "falsifier": "order intake or FY guidance miss on the Nov 5 report"
+   },
+   {
+    "ticker": "HAG.DE",
+    "weight": 0.06,
+    "theme": "defense",
+    "thesis": "9-month 2026 results Nov 5 primary (catalysts); book-to-bill 2.4x H1",
+    "falsifier": "free cash flow worsens or backlog slips on the Nov 5 report"
+   },
+   {
+    "ticker": "ALL.AX",
+    "weight": 0.06,
+    "theme": "gambling",
+    "thesis": "FY26 annual results Nov 12 primary (catalysts); Anaxi/digital gaming growth",
+    "falsifier": "FY26 digital margin or FY27 guidance disappoints Nov 12"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "PDUFA ifinatamab deruxtecan Oct 10 primary (catalysts) with 22 net raises (revision_flow_90d)",
+    "falsifier": "CRL on the I-DXd BLA around Oct 10"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "PDUFA mitapivat sickle cell Nov 1 primary (catalysts) with 5 net raises (revision_flow_90d)",
+    "falsifier": "CRL or narrow all-genotype label denial Nov 1"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVDA|no dated catalyst inside the Oct 12-Nov 13 window",
+   "LLY|no dated catalyst; retatrutide filing is Q1 2027",
+   "VRT|no dated catalyst and 4 net target cuts in 90d",
+   "GEV|no dated catalyst in the evidence",
+   "MU|no dated catalyst in the evidence",
+   "FLUT|16 net target cuts in 90d, no dated catalyst",
+   "CAPR|PDUFA Nov 22 falls after the Nov 13 window close",
+   "SMMT|PDUFA Nov 14 falls one day after the window"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.090, not 1.0"
+}

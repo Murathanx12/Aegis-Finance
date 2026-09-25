@@ -1,0 +1,133 @@
+{
+ "text": "{\"name\":\"asia_ai_supply_chain_6m\",\"cash_weight\":0.06,\"positions\":[\"2330.TW|0.12|semis|Q3'26 earnings Oct 15 and FY26 capex raised to $60-64B with >40% sales growth (research_themes Theme 2)|Oct 15 call guides capex below $60B or gross margin under 60%\",\"000660.KS|0.10|semis|Bernstein Sept 22 flags HBM4 ramp lagging Samsung while consensus Q3 op profit ~KRW78.1tn record (research_global_candidates)|Q3 print shows HBM4 share loss to Samsung or DRAM contract prices rolling over\",\"005930.KS|0.09|semis|Bernstein Sept 22 raised Q3 HBM revenue estimate 23% to ~$11.4bn, +72% QoQ (research_global_candidates)|Oct 8 prelim guidance misses and HBM4 mix stays below 30%\",\"ASML|0.09|semis|Q3'26 earnings confirmed Oct 14 with Q2 guiding Q3 revenue $12.8-14.0bn vs Street $11.3bn (research_global_candidates)|Oct 14 bookings disappoint or 2027 guidance implies order digestion\",\"6857.T|0.08|semis|Raised FY26 sales guide +21% to JPY1,714bn on AI inference test demand (research_global_candidates)|Late-Oct FY26 Q2 orders show Advantest test demand rolling over\",\"8035.T|0.07|semis|WFE spend cycle and advanced-node tool share into late-Oct/early-Nov FY26 Q2 results (research_global_candidates)|China export-control headline or FY26 Q2 bookings decline sequentially\",\"2317.TW|0.07|semis|Aug revenue +52% YoY record and Hon Hai Tech Day Oct 30-31 confirmed (research_global_candidates)|Tech Day or Q3 print shows AI server rack ramp slipping versus guidance\",\"2308.TW|0.07|power_grid|Named the liquid-cooling/800V DC power leader for AI infrastructure at Computex (research_global_candidates)|Monthly sales decelerate or component cost inflation compresses AI power margins\",\"2382.TW|0.06|semis|Custom-ASIC server volume production this quarter with order visibility into 2027 (research_global_candidates)|Early-Nov Q3 print shows AI server revenue below the custom-ASIC ramp plan\",\"6146.T|0.05|semis|Advanced packaging and HBM dicing demand into late-Oct FY26 Q2 results (research_global_candidates)|FY26 Q2 orders fall on China capex slowdown or HBM dicing demand stalls\",\"AMKR|0.05|semis|$2.5-3B 2026 capex with 65-70% into the Arizona campus and ~80k CoWoS wafers of 2026 demand (research_themes Theme 2)|Arizona ramp milestones slip or TSMC in-house CoWoS capacity displaces OSAT need\",\"TER|0.05|semis|Q3'26 earnings confirmed Oct 27 after close with ~70% AI-related revenue and H2 device qualifications (research_themes Theme 2)|Oct 27 print shows no new device qualification wins versus Advantest\",\"MU|0.05|semis|HBM4 shortage with Samsung/SK Hynix DRAM inventory under 10 days and ~20% of NVIDIA HBM4 allocation (research_themes Theme 2)|HBM pricing rolls over or a 2027 memory capex digestion is guided\",\"cash|0.06|cash|Declared cash buffer for the 6% residual after summing all position weights|n/a\"],\"strategy\":\"Bet that the AI capex chain's Q3 prints confirm tightness rather than digestion, concentrated in the physical chokepoints: leading-edge foundry and HBM memory (2330.TW, 000660.KS, 005930.KS, MU), the semicap tools that gate capacity (ASML, 8035.T, 6857.T, 6146.T, TER, AMKR), and the AI server/power layer one step down (2317.TW, 2382.TW, 2308.TW). Every name has an earnings or sales print inside the next six months, so relative return is driven by real numbers, not theme momentum. I would be wrong if any hyperscaler signals capex digestion, if HBM4 share shifts decisively to Samsung against SK Hynix, or if a China export-control headline hits the tool names simultaneously.\",\"objective\":\"Maximise 126-session return versus SPY, net of costs, via Asia-listed AI supply-chain chokepoints and their US-listed peers.\",\"what_i_did_not_buy\":[\"NVDA|199 headlines, no dated catalyst, crowded mega-cap beta\",\"INTC|Government equity stake legal challenge is unresolved binary risk\",\"ALB|Net 12 target cuts and lithium spot normalizing, negative revision flow\",\"SMR|Six downgrades and revenue down 99% YoY, negative evidence name\",\"OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week\",\"FLUT|Net 15 target cuts, four 2026 guidance cuts, near 52-week low\",\"LAC|Down 71% from 52w high, no dated catalyst in evidence\",\"SERV|Guidance cut on weaker Uber Eats volumes, clean falsifying datapoint\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00183115,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 328,
+ "tokens_out": 1199,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "asia_ai_supply_chain_6m",
+  "strategy": "Bet that the AI capex chain's Q3 prints confirm tightness rather than digestion, concentrated in the physical chokepoints: leading-edge foundry and HBM memory (2330.TW, 000660.KS, 005930.KS, MU), the semicap tools that gate capacity (ASML, 8035.T, 6857.T, 6146.T, TER, AMKR), and the AI server/power layer one step down (2317.TW, 2382.TW, 2308.TW). Every name has an earnings or sales print inside the next six months, so relative return is driven by real numbers, not theme momentum. I would be wrong if any hyperscaler signals capex digestion, if HBM4 share shifts decisively to Samsung against SK Hynix, or if a China export-control headline hits the tool names simultaneously.",
+  "objective": "Maximise 126-session return versus SPY, net of costs, via Asia-listed AI supply-chain chokepoints and their US-listed peers.",
+  "cash_weight": 0.06,
+  "positions": [
+   {
+    "ticker": "2330.TW",
+    "weight": 0.12,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 and FY26 capex raised to $60-64B with >40% sales growth (research_themes Theme 2)",
+    "falsifier": "Oct 15 call guides capex below $60B or gross margin under 60%"
+   },
+   {
+    "ticker": "000660.KS",
+    "weight": 0.1,
+    "theme": "semis",
+    "thesis": "Bernstein Sept 22 flags HBM4 ramp lagging Samsung while consensus Q3 op profit ~KRW78.1tn record (research_global_candidates)",
+    "falsifier": "Q3 print shows HBM4 share loss to Samsung or DRAM contract prices rolling over"
+   },
+   {
+    "ticker": "005930.KS",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Bernstein Sept 22 raised Q3 HBM revenue estimate 23% to ~$11.4bn, +72% QoQ (research_global_candidates)",
+    "falsifier": "Oct 8 prelim guidance misses and HBM4 mix stays below 30%"
+   },
+   {
+    "ticker": "ASML",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 14 with Q2 guiding Q3 revenue $12.8-14.0bn vs Street $11.3bn (research_global_candidates)",
+    "falsifier": "Oct 14 bookings disappoint or 2027 guidance implies order digestion"
+   },
+   {
+    "ticker": "6857.T",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Raised FY26 sales guide +21% to JPY1,714bn on AI inference test demand (research_global_candidates)",
+    "falsifier": "Late-Oct FY26 Q2 orders show Advantest test demand rolling over"
+   },
+   {
+    "ticker": "8035.T",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "WFE spend cycle and advanced-node tool share into late-Oct/early-Nov FY26 Q2 results (research_global_candidates)",
+    "falsifier": "China export-control headline or FY26 Q2 bookings decline sequentially"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.07,
+    "theme": "semis",
+    "thesis": "Aug revenue +52% YoY record and Hon Hai Tech Day Oct 30-31 confirmed (research_global_candidates)",
+    "falsifier": "Tech Day or Q3 print shows AI server rack ramp slipping versus guidance"
+   },
+   {
+    "ticker": "2308.TW",
+    "weight": 0.07,
+    "theme": "power_grid",
+    "thesis": "Named the liquid-cooling/800V DC power leader for AI infrastructure at Computex (research_global_candidates)",
+    "falsifier": "Monthly sales decelerate or component cost inflation compresses AI power margins"
+   },
+   {
+    "ticker": "2382.TW",
+    "weight": 0.06,
+    "theme": "semis",
+    "thesis": "Custom-ASIC server volume production this quarter with order visibility into 2027 (research_global_candidates)",
+    "falsifier": "Early-Nov Q3 print shows AI server revenue below the custom-ASIC ramp plan"
+   },
+   {
+    "ticker": "6146.T",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Advanced packaging and HBM dicing demand into late-Oct FY26 Q2 results (research_global_candidates)",
+    "falsifier": "FY26 Q2 orders fall on China capex slowdown or HBM dicing demand stalls"
+   },
+   {
+    "ticker": "AMKR",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "$2.5-3B 2026 capex with 65-70% into the Arizona campus and ~80k CoWoS wafers of 2026 demand (research_themes Theme 2)",
+    "falsifier": "Arizona ramp milestones slip or TSMC in-house CoWoS capacity displaces OSAT need"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 27 after close with ~70% AI-related revenue and H2 device qualifications (research_themes Theme 2)",
+    "falsifier": "Oct 27 print shows no new device qualification wins versus Advantest"
+   },
+   {
+    "ticker": "MU",
+    "weight": 0.05,
+    "theme": "semis",
+    "thesis": "HBM4 shortage with Samsung/SK Hynix DRAM inventory under 10 days and ~20% of NVIDIA HBM4 allocation (research_themes Theme 2)",
+    "falsifier": "HBM pricing rolls over or a 2027 memory capex digestion is guided"
+   },
+   {
+    "ticker": "CASH",
+    "weight": 0.06,
+    "theme": "cash",
+    "thesis": "Declared cash buffer for the 6% residual after summing all position weights",
+    "falsifier": "n/a"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "NVDA|199 headlines, no dated catalyst, crowded mega-cap beta",
+   "INTC|Government equity stake legal challenge is unresolved binary risk",
+   "ALB|Net 12 target cuts and lithium spot normalizing, negative revision flow",
+   "SMR|Six downgrades and revenue down 99% YoY, negative evidence name",
+   "OKLO|Zero revenue, analyst targets dispersed $55-$150 in one week",
+   "FLUT|Net 15 target cuts, four 2026 guidance cuts, near 52-week low",
+   "LAC|Down 71% from 52w high, no dated catalyst in evidence",
+   "SERV|Guidance cut on weaker Uber Eats volumes, clean falsifying datapoint"
+  ]
+ },
+ "prompt_hash": "4ddc39fb812661a4",
+ "strategy": {
+  "id": "asia_supply_chain",
+  "brief": "Asia supply chain: Taiwan/Korea/Japan semis, packaging, test and components, plus their US customers; global tickers use the yfinance suffix (2330.TW, 000660.KS, 8035.T). Personal book: long only, 6-month horizon (126 sessions), no per-name cap, declare cash explicitly (0 is a declaration), graded net of costs against SPY."
+ }
+}

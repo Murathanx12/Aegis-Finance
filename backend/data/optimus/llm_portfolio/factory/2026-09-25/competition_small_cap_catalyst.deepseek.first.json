@@ -1,0 +1,143 @@
+{
+ "text": "{\"name\":\"small_cap_catalyst_wls_oct_nov_2026\",\"cash_weight\":0.02,\"positions\":[\"ASML|0.09|semis|Q3'26 earnings confirmed Oct 14 (catalysts) with net_raises 5 of 5 firms (revision_flow_90d)|Oct 14 bookings guide below the $12.8-14.0bn Q3 revenue guide\",\"TSM|0.09|semis|Q3'26 earnings Oct 15 before open (catalysts) after 6 net raises from 7 firms (revision_flow_90d)|Oct 15 capex guide cut below the raised $60-64B FY26 plan\",\"TER|0.08|semis|Q3'26 earnings confirmed Oct 27 after close (catalysts) with 6 net raises, 0 lowers (revision_flow_90d)|Oct 27 robotics segment growth decelerates below the Q2 +33% y/y pace\",\"ARGX|0.08|biotech|Q3'26 results confirmed Oct 22 (catalysts) with 17 net raises from 14 firms (revision_flow_90d)|Oct 22 EMPASSION MMN topline slips past Q4 2026 or misses\",\"EVO.ST|0.08|gambling|Q3'26 report confirmed Oct 23 (catalysts), ex-Asia live-casino growth per research note|Oct 23 Asia revenue declines more than the Q2 -3.7% q/q\",\"SAAB-B.ST|0.08|defense|Q3'26 report confirmed Oct 23 (catalysts) into European rearmament order flow|Oct 23 order intake falls below the Q2 run-rate\",\"KOG.OL|0.08|defense|Q3'26 report confirmed Oct 29 (catalysts) on missile/defense demand|Oct 29 order backlog guidance trimmed\",\"2317.TW|0.08|semis|Hon Hai Tech Day Oct 30-31 confirmed (catalysts) after Aug revenue +52% y/y per research note|Oct 30-31 AI server guidance below the Q3 beat-Street guide\",\"MRK|0.08|biotech|I-DXd PDUFA Oct 10 primary-sourced (catalysts) with 22 net raises from 17 firms (revision_flow_90d)|Oct 10 CRL on Daiichi manufacturing grounds\",\"CORT|0.07|biotech|relacorilant NDA resubmission PDUFA Dec 17 (catalysts) with 4 net raises, 0 lowers (revision_flow_90d)|Dec 17 second CRL on the resubmitted Cushing's NDA\",\"COGT|0.06|biotech|bezuclastinib PDUFA Nov 30 GIST and Dec 30 SM (catalysts), 2 net raises (revision_flow_90d)|Nov 30 GIST CRL on the PEAK filing\",\"BBIO|0.05|biotech|BBP-418 PDUFA Nov 27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)|Nov 27 CRL on the LGMD2I/R9 NDA\",\"AGIO|0.05|biotech|mitapivat sickle cell PDUFA Nov 1 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)|Nov 1 approval limited to a narrow genotype subset\",\"VRTX|0.05|biotech|povetacicept PDUFA Nov 30 (catalysts) with 9 net raises, 0 lowers (revision_flow_90d)|Nov 30 CRL on CMC/manufacturing grounds\",\"GILD|0.05|biotech|anito-cel PDUFA Dec 23 (catalysts) after Q2 rev_yoy +10.2% (briefing)|Dec 23 facility-inspection finding delays the CAR-T BLA\",\"SMMT|0.03|biotech|ivonescimab PDUFA Nov 14 (catalysts) after HARMONi OS update at WCLC Sept 15|Nov 14 CRL or an FDA request for more OS data\"],\"strategy\":\"Bet that the Oct 12-Nov 13 window is long enough only to monetize dated events, so every name has a confirmed or primary-sourced catalyst inside or just after it: semicap earnings (ASML Oct 14, TSM Oct 15, TER Oct 27), European defense/gambling prints (Saab and Evolution Oct 23, Kongsberg Oct 29), Hon Hai Tech Day Oct 30-31, and a dense FDA PDUFA cluster (MRK Oct 10, AGIO Nov 1, SMMT Nov 14, BBIO Nov 27, COGT Nov 30, VRTX Nov 30, CORT Dec 17, GILD Dec 23). I avoid names where revision_flow_90d is negative (ALB -12, FLUT -15, CEG -6, SMR -6, LEU -4, OKLO -4) and the thin small caps where cost_bps of 35 eats the edge. I would be wrong if a single macro shock or a de-escalation headline hits the whole book at once, or if the PDUFA cluster delivers CRLs rather than approvals.\",\"objective\":\"Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only book of dated-catalyst small/mid/large caps.\",\"what_i_did_not_buy\":[\"ALB|net_raises -12, 12 lowers, lithium price cuts\",\"FLUT|net_raises -15, 16 lowers, four 2026 guidance cuts\",\"CEG|net_raises -6, 7 lowers, rev_qoq -32.5%\",\"SMR|net_raises -6, rev_yoy -99%, stacked downgrades\",\"LEU|net_raises -4, 6 lowers, gross margin -12.7pp\",\"OKLO|net_raises -4, zero revenue, PT dispersion $55-150\",\"SERV|net_raises -3, guidance cut on Uber Eats volumes\",\"VRT|net_raises -4, 4 lowers, mom_63 -29.9%\"]}",
+ "model": "deepseek-chat",
+ "served_model": "deepseek-flash",
+ "cost_usd": 0.00211659,
+ "finish_reason": "stop",
+ "error": null,
+ "tokens_in": 352,
+ "tokens_out": 1418,
+ "cached_tokens": 69376,
+ "parse": "ok",
+ "parsed": {
+  "name": "small_cap_catalyst_wls_oct_nov_2026",
+  "strategy": "Bet that the Oct 12-Nov 13 window is long enough only to monetize dated events, so every name has a confirmed or primary-sourced catalyst inside or just after it: semicap earnings (ASML Oct 14, TSM Oct 15, TER Oct 27), European defense/gambling prints (Saab and Evolution Oct 23, Kongsberg Oct 29), Hon Hai Tech Day Oct 30-31, and a dense FDA PDUFA cluster (MRK Oct 10, AGIO Nov 1, SMMT Nov 14, BBIO Nov 27, COGT Nov 30, VRTX Nov 30, CORT Dec 17, GILD Dec 23). I avoid names where revision_flow_90d is negative (ALB -12, FLUT -15, CEG -6, SMR -6, LEU -4, OKLO -4) and the thin small caps where cost_bps of 35 eats the edge. I would be wrong if a single macro shock or a de-escalation headline hits the whole book at once, or if the PDUFA cluster delivers CRLs rather than approvals.",
+  "objective": "Maximize relative P&L versus the Bloomberg WLS index from 2026-10-12 to 2026-11-13 with a long-only book of dated-catalyst small/mid/large caps.",
+  "cash_weight": 0.02,
+  "positions": [
+   {
+    "ticker": "ASML",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 14 (catalysts) with net_raises 5 of 5 firms (revision_flow_90d)",
+    "falsifier": "Oct 14 bookings guide below the $12.8-14.0bn Q3 revenue guide"
+   },
+   {
+    "ticker": "TSM",
+    "weight": 0.09,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings Oct 15 before open (catalysts) after 6 net raises from 7 firms (revision_flow_90d)",
+    "falsifier": "Oct 15 capex guide cut below the raised $60-64B FY26 plan"
+   },
+   {
+    "ticker": "TER",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Q3'26 earnings confirmed Oct 27 after close (catalysts) with 6 net raises, 0 lowers (revision_flow_90d)",
+    "falsifier": "Oct 27 robotics segment growth decelerates below the Q2 +33% y/y pace"
+   },
+   {
+    "ticker": "ARGX",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "Q3'26 results confirmed Oct 22 (catalysts) with 17 net raises from 14 firms (revision_flow_90d)",
+    "falsifier": "Oct 22 EMPASSION MMN topline slips past Q4 2026 or misses"
+   },
+   {
+    "ticker": "EVO.ST",
+    "weight": 0.08,
+    "theme": "gambling",
+    "thesis": "Q3'26 report confirmed Oct 23 (catalysts), ex-Asia live-casino growth per research note",
+    "falsifier": "Oct 23 Asia revenue declines more than the Q2 -3.7% q/q"
+   },
+   {
+    "ticker": "SAAB-B.ST",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Q3'26 report confirmed Oct 23 (catalysts) into European rearmament order flow",
+    "falsifier": "Oct 23 order intake falls below the Q2 run-rate"
+   },
+   {
+    "ticker": "KOG.OL",
+    "weight": 0.08,
+    "theme": "defense",
+    "thesis": "Q3'26 report confirmed Oct 29 (catalysts) on missile/defense demand",
+    "falsifier": "Oct 29 order backlog guidance trimmed"
+   },
+   {
+    "ticker": "2317.TW",
+    "weight": 0.08,
+    "theme": "semis",
+    "thesis": "Hon Hai Tech Day Oct 30-31 confirmed (catalysts) after Aug revenue +52% y/y per research note",
+    "falsifier": "Oct 30-31 AI server guidance below the Q3 beat-Street guide"
+   },
+   {
+    "ticker": "MRK",
+    "weight": 0.08,
+    "theme": "biotech",
+    "thesis": "I-DXd PDUFA Oct 10 primary-sourced (catalysts) with 22 net raises from 17 firms (revision_flow_90d)",
+    "falsifier": "Oct 10 CRL on Daiichi manufacturing grounds"
+   },
+   {
+    "ticker": "CORT",
+    "weight": 0.07,
+    "theme": "biotech",
+    "thesis": "relacorilant NDA resubmission PDUFA Dec 17 (catalysts) with 4 net raises, 0 lowers (revision_flow_90d)",
+    "falsifier": "Dec 17 second CRL on the resubmitted Cushing's NDA"
+   },
+   {
+    "ticker": "COGT",
+    "weight": 0.06,
+    "theme": "biotech",
+    "thesis": "bezuclastinib PDUFA Nov 30 GIST and Dec 30 SM (catalysts), 2 net raises (revision_flow_90d)",
+    "falsifier": "Nov 30 GIST CRL on the PEAK filing"
+   },
+   {
+    "ticker": "BBIO",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "BBP-418 PDUFA Nov 27 (catalysts) with 9 net raises from 11 firms (revision_flow_90d)",
+    "falsifier": "Nov 27 CRL on the LGMD2I/R9 NDA"
+   },
+   {
+    "ticker": "AGIO",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "mitapivat sickle cell PDUFA Nov 1 (catalysts) with 5 net raises from 6 firms (revision_flow_90d)",
+    "falsifier": "Nov 1 approval limited to a narrow genotype subset"
+   },
+   {
+    "ticker": "VRTX",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "povetacicept PDUFA Nov 30 (catalysts) with 9 net raises, 0 lowers (revision_flow_90d)",
+    "falsifier": "Nov 30 CRL on CMC/manufacturing grounds"
+   },
+   {
+    "ticker": "GILD",
+    "weight": 0.05,
+    "theme": "biotech",
+    "thesis": "anito-cel PDUFA Dec 23 (catalysts) after Q2 rev_yoy +10.2% (briefing)",
+    "falsifier": "Dec 23 facility-inspection finding delays the CAR-T BLA"
+   },
+   {
+    "ticker": "SMMT",
+    "weight": 0.03,
+    "theme": "biotech",
+    "thesis": "ivonescimab PDUFA Nov 14 (catalysts) after HARMONi OS update at WCLC Sept 15",
+    "falsifier": "Nov 14 CRL or an FDA request for more OS data"
+   }
+  ],
+  "what_i_did_not_buy": [
+   "ALB|net_raises -12, 12 lowers, lithium price cuts",
+   "FLUT|net_raises -15, 16 lowers, four 2026 guidance cuts",
+   "CEG|net_raises -6, 7 lowers, rev_qoq -32.5%",
+   "SMR|net_raises -6, rev_yoy -99%, stacked downgrades",
+   "LEU|net_raises -4, 6 lowers, gross margin -12.7pp",
+   "OKLO|net_raises -4, zero revenue, PT dispersion $55-150",
+   "SERV|net_raises -3, guidance cut on Uber Eats volumes",
+   "VRT|net_raises -4, 4 lowers, mom_63 -29.9%"
+  ]
+ },
+ "defect": "weights plus cash sum to 1.120, not 1.0"
+}
