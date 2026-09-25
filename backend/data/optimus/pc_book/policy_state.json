@@ -1,0 +1,118 @@
+{
+ "receipt": "policy_state",
+ "values": {
+  "book_size": 18,
+  "replan_drift_frac": 0.05,
+  "heartbeat_minutes": 30,
+  "exploration_temperature": 0.1,
+  "min_decile_confidence": 0.0,
+  "reader_reliability_local": 0.5,
+  "reader_reliability_deepseek": 0.5,
+  "source_trust": {},
+  "horizon_weights": {
+   "21": 1.0
+  },
+  "watchlist_attention": {},
+  "reputation_weights": {
+   "investigator:D_all": 0.4226,
+   "investigator:A_snapshot": 0.2483,
+   "investigator:C_tools_only": 0.2406,
+   "investigator:B_tools": 0.0566,
+   "investigator:B_anon": 0.032,
+   "macro_rates": 0.0,
+   "skeptic": 0.0,
+   "ownership_flow": 0.0,
+   "execution_momentum": 0.0,
+   "energy_materials": 0.0,
+   "analyst_revisions": 0.0,
+   "behavioral_narrative": 0.0,
+   "accounting_forensics": 0.0,
+   "geopolitical": 0.0,
+   "options_volatility": 0.0,
+   "company_fundamental": 0.0,
+   "event_news": 0.0,
+   "semis_technology": 0.0,
+   "biotech_pharma": 0.0,
+   "biotech": 0.0,
+   "why_moved:company_news": 0.0,
+   "why_moved:geopolitical": 0.0,
+   "why_moved:macro_rates": 0.0,
+   "why_moved:options_vol": 0.0,
+   "why_moved:revisions": 0.0,
+   "why_moved:sector_factor": 0.0,
+   "why_moved:skeptic": 0.0
+  },
+  "persona_weights": {
+   "macro_rates": 0.0,
+   "skeptic": 0.0,
+   "ownership_flow": 0.0,
+   "execution_momentum": 0.0,
+   "energy_materials": 0.0,
+   "analyst_revisions": 0.0,
+   "behavioral_narrative": 0.0,
+   "accounting_forensics": 0.0,
+   "geopolitical": 0.0,
+   "options_volatility": 0.0,
+   "company_fundamental": 0.0,
+   "event_news": 0.0,
+   "semis_technology": 0.0,
+   "biotech_pharma": 0.0,
+   "biotech": 0.0
+  }
+ },
+ "updated": "2026-09-25T18:56:00+00:00",
+ "schema_keys": [
+  "book_size",
+  "exploration_temperature",
+  "heartbeat_minutes",
+  "horizon_weights",
+  "min_decile_confidence",
+  "persona_weights",
+  "reader_reliability_deepseek",
+  "reader_reliability_local",
+  "replan_drift_frac",
+  "reputation_weights",
+  "source_trust",
+  "watchlist_attention"
+ ],
+ "refreshed_utc": "2026-09-25T18:56:00+00:00",
+ "changed_since_last": [],
+ "changes": [],
+ "sources": {
+  "reputation_receipt": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\reputation\\reputation_2026-09-25.json",
+  "reputation_date": "2026-09-25",
+  "persona_receipt_section_64": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\specialists\\scoreboard_2026-09-24.json"
+ },
+ "observed": {
+  "status": "OK",
+  "persona_weights_note": "personas pooled at their reputation weight, which is 0.0 while their held-out skill is <= 0 (\u00a764: optimal weight ZERO)",
+  "probe_gate": {
+   "verdict": "UNMEASURED_TRADE_SMALL",
+   "sessions_graded": 0,
+   "sessions_needed": 21,
+   "horizon_sessions": 5,
+   "mean_excess_per_day": null,
+   "why": "0 of 21 scored decision days at h=5: unmeasured, so it trades at the probe cap",
+   "source": "scripts.sim_run._probe_grade"
+  },
+  "direction_vs_magnitude": {
+   "note": "investigator: magnitude held-out skill 0.0408 (n 1560) vs direction -0.0872 (n 780) -- size on the magnitude read, never the direction read",
+   "by_family": {
+    "investigator": {
+     "direction_skill_heldout": -0.0872,
+     "direction_n_heldout": 780,
+     "magnitude_skill_heldout": 0.0408,
+     "magnitude_n_heldout": 1560
+    },
+    "personas": {
+     "direction_skill_heldout": -0.1055,
+     "direction_n_heldout": 3388,
+     "magnitude_skill_heldout": -0.6903,
+     "magnitude_n_heldout": 3006
+    }
+   },
+   "source": "learned_rules.jsonl (MEASURED class cells)"
+  }
+ },
+ "contract": "the night changes preferences, never code or risk limits: only SCHEMA keys move, each with a receipt"
+}
