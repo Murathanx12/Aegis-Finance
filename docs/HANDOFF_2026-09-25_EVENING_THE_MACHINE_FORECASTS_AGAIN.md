@@ -138,3 +138,35 @@ postdates the fixture, or freeze the receipt set the test reads.
 - A factory that refuses an LLM's arithmetic loses the book; rescale inside a
   band and stamp, refuse outside it.
 - `predictions.jsonl` moved today (u_forecast rows). Never reset.
+
+---
+
+## 7. Evening 2 (18:30 HKT) — the review loop ran once, PROBE is live, v2 is frozen
+
+- **Chunk 1 landed** (`7311dae2`): `u_plan` now takes the committee shortlist
+  under PROBE (10 names × 2%, gross cap 20%, `paper_profit` only, orders only
+  while the venue is open, never a second order on a symbol with one open;
+  every PROBE name writes decision rows at 5/21/63/126 sessions to
+  `decisions/pc_plan/<date>.json`). The sim was restarted on it (session
+  `f85bfe5cd999`, pid 97412): cycle 17 planned NVDA, INCY, AAPL, SNDR, META,
+  AVPT, AMZN, GOOGL, GOOG, ALLE at 2% each, `send_block: venue closed`. **The
+  first PC-PAPER orders in the account's life go out at the 21:30 HKT open.**
+  Worst case: `10 × 2.00% × 8.23% (3σ of 2.74%/day) = −$16,452; gross 0.20;
+  no stop, ceiling −$200,000`.
+- **The first adversarial review** (`docs/reviews/REVIEW_2026-09-25_CHUNK0_THE_DAYS_BUILD.md`)
+  and its adjudication (`ADJUDICATION_2026-09-25_CHUNK0.md`): 13 of 14 points
+  accepted. The line that matters most: the investigator's 0.42 reputation
+  weight is MAGNITUDE skill; on direction at h=5 its most bullish bin rose
+  35.5%. Chunk 2 keeps direction and magnitude apart (spec committed).
+- **Books frozen tonight:** `human_ai_thematic_v2` `5d137b013692a737` (from the
+  review Murat forwarded; AMZN rejected), `reviewer_opus_2026-09-25`
+  `919892d54f6e3190`, `cards_supports_2026-09-25` `89761b53e2cd82ba` (the 20
+  supports names, no human hand). v1 keeps running as the un-reviewed control.
+- **Cards:** 84 (AVGO supports, CLS and BE neutral). Forecast rows per card:
+  builder in flight. Forecast universe: standalone random twin excluded, cap
+  160 (`98b3cd8d`). Test gates: E2 skips on a different bar vintage, the
+  night-clocks test reads its own fixture, a factory kill payload is refused
+  as a kill (`40111a01`, `aa279c53`).
+- **Next:** chunk 2 (the expected-return layer) is building; chunk 3 (the
+  timeline panel) has its research; chunk 5 needs the FX leg before any
+  competition book is graded fairly; Murat's X account for chunk 6.
