@@ -94,3 +94,20 @@ Keys present: DeepSeek, **NVIDIA (integrate.api.nvidia.com)**, Polygon, Finnhub,
 chunk 3b strategy library (tonight) → chunk 3 timeline panel → chunk 4
 future-facing quests (CEO, pivots, politics) → chunk 5 competition engine with
 the FX leg → chunk 6 source registry + social → era replay 2020→now.
+
+## 8. The hackathon pitch (from `research_notes/2026-09-26/research_differentiation_and_interdisciplinary.md` §A.4; every sentence provable from receipts)
+
+> "Aegis is not another AI stock-picker chatbot — it is a system where every
+> decision is written down and dated *before* the outcome is known, and then
+> graded against what actually happened, which almost none of the ~20
+> 'AI-investing' products we surveyed do at all. Our one measured result so far
+> is that a structured evidence-gathering *process* beats persona-styled LLM
+> prompting by a wide margin out of sample (+8.97% vs −27.98% held-out skill),
+> which is evidence that discipline matters more than model choice. What we
+> cannot yet say — and won't claim until we can show the receipt, not a
+> backtest — is that this beats the S&P 500 forward, net of costs; that test is
+> running now, live, in paper accounts, and the honest answer today is 'best
+> historical net strategy vs market: none.'"
+
+Of ~21 products surveyed, none publishes independently audited, cost-inclusive
+forward evidence vs SPY; only Danelfin and Numerai grade their own calls at all.
