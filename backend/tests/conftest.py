@@ -386,3 +386,24 @@ def _block_network(request):
         socket.create_connection = _REAL_CREATE_CONNECTION
         for mod, real in _curl_patched:
             mod.Session.request = real
+
+
+# ── The night guards derive their inputs from `iif1_nights/*.json`, which the
+# lab APPENDS to on this machine (2026-09-25 18:32: a new night moved the
+# measured duration bound and six tests that pinned `now` but not the receipts
+# went red locally and stayed green in CI). A test is a function of its own
+# fixture: every test derives from the frozen set below unless it passes an
+# explicit `receipts_dir`. The set is the tree as it stood before that night.
+import pytest as _pytest
+
+
+@_pytest.fixture(autouse=True)
+def _frozen_iif1_night_receipts(monkeypatch):
+    from pathlib import Path as _P
+    frozen = _P(__file__).resolve().parent / "fixtures" / "iif1_nights_frozen"
+    try:
+        from backend.services import investigator_night as _N
+    except Exception:  # noqa: BLE001  a test that cannot import it never reads it
+        return
+    if frozen.is_dir():
+        monkeypatch.setattr(_N, "RECEIPTS_DIR", frozen, raising=False)
