@@ -3889,24 +3889,29 @@ THESIS_CARD_REVISION_DAYS = 90
 #: The 2026-09-25 smoke call returned one position of an 18-name strategy.
 BOOK_FACTORY_MAX_REASKS = 1
 
-# ── Strategy library + nightly backtest factory (chunk 3b, 2026-09-26) ──────
-#: `backend/services/strategy_library.py` (rules) and
-#: `scripts/night_backtest_factory.py` (the night unit). Output folder under
-#: OPTIMUS_LEDGER_DIR. CPU only, no LLM, no broker.
-STRATEGY_LIB_SUBDIR = "strategy_library"
-#: First bar the panel reads; features need 252 sessions, so the first
-#: decision month is ~a year later.
-STRATEGY_LIB_START = "2016-01-01"
-#: The "if Aegis had existed in 2020" line starts here (hindsight-labelled).
-STRATEGY_LIB_SINCE = "2020-01-01"
-#: Return credited to a held name whose bars stop before the exit session --
-#: the same declared assumption as `portfolio_farm.Policy.delisting_return`.
-STRATEGY_LIB_DELIST_RETURN = -0.30
-#: A crash loses at most this many strategies of work.
-STRATEGY_LIB_CHECKPOINT_EVERY = 10
-#: The night's box, in awake minutes. Past it the factory checkpoints and
-#: writes a PARTIAL leaderboard naming how many rules it reached.
-STRATEGY_LIB_TIME_BOX_MIN = 90
-#: Rows per leaderboard table, and how many DSR leaders get a forward book.
-STRATEGY_LIB_TOP_N = 10
-STRATEGY_LIB_FREEZE_TOP = 10
+
+# ── LANE M: THE LEARNING LAYER (2026-09-26, adjudication row 9) ───────────────
+#: The monthly ExpeL distillation (`learner.rule_distillation.distill_ledger`)
+#: wrote 0 rules for a month because the local reader refused the connection and
+#: nothing fell back. These are its knobs. A night that writes 0 rules writes a
+#: `LEARN_DEGRADED` line naming the reason; these numbers decide which reason.
+#: Hard ceiling on DeepSeek spend for the distillation per UTC day, read from
+#: `llm_telemetry.spend(purpose=LEARN_PURPOSE)` -- the writer's own ledger.
+LEARN_DAILY_CAP_USD = 0.50
+#: Telemetry purpose every distillation call is recorded under.
+LEARN_PURPOSE = "learn_distill"
+#: A (group x observable x horizon) cell needs this many GRADED rows to become a
+#: fact the model may write a rule about. Below it the cell is not shown.
+LEARN_MIN_GROUP_N = 30
+#: Facts per night, strongest evidence first (|held-out skill| x sqrt(n)).
+LEARN_MAX_FACTS = 24
+#: Facts per model call. DeepSeek via `llm_analyzer._call_llm` answers in at most
+#: `llm.max_tokens` (500) tokens, so a call must fit its rules in that budget.
+LEARN_FACTS_PER_CALL = 6
+#: The local reader tried first (llama-server on 127.0.0.1:8080, 8k context).
+LEARN_LOCAL_BACKEND = "local_gguf"
+LEARN_LOCAL_TIMEOUT_S = 180
+LEARN_LOCAL_MAX_TOKENS = 700
+#: A percentage quoted in a rule must match a number of the fact it cites within
+#: this many percentage points, or the rule is REFUSED (invented numbers).
+LEARN_NUMBER_TOL_PP = 0.15

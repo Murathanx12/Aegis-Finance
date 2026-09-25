@@ -9,7 +9,8 @@ had not happened yet, retrieved into a prompt about an earlier date, makes the
 model look like a forecaster and makes the backtest look like alpha. It is the
 same defect as training on future information, moved one layer up into text.
 
-M2's rule store does not exist yet. This module ships anyway, and that is
+M2's rule store did not exist when this shipped (it does since 2026-09-26:
+`learner.rule_distillation.distill_ledger` writes it nightly). It shipped anyway, and that was
 deliberate: the gate has to be in place BEFORE the first rule is written, or the
 first rule will be retrieved by whatever code happens to be convenient, and the
 leak will be discovered by someone reading a suspiciously good number.
@@ -72,6 +73,10 @@ def _repo_root() -> Path:
 #: creates it, and its absence is an empty retrieval rather than an error.
 LEARNED_RULES = (_repo_root() / "backend" / "data" / "optimus" / "brain"
                  / "learned_rules.jsonl")
+
+#: Rule states that carry a verdict reached on evidence that closed before the
+#: rule's date. `MEASURED` is the graded-ledger distillation's (2026-09-26).
+SCORED_RULE_STATES = ("GENERALISED", "NOT_GENERALISED", "MEASURED")
 
 #: The reason a candidate was dropped, per clause. Returned in the report so a
 #: retrieval that came back thin can be explained without re-running it.
@@ -147,8 +152,17 @@ def visible_at(record: dict, t: date) -> tuple[bool, str | None]:
         # evidence that closed before `t`. A `CANDIDATE` rule -- too few
         # firings to have a Brier -- is NOT visible, which is the same refusal
         # under a different name.
+        #
+        # `MEASURED` (2026-09-26) is the graded-ledger distillation's state: its
+        # n, Brier and skill were computed on rows resolved strictly before the
+        # rule's date (`hindsight_safe`), so it is scored the moment it exists.
+        # A row that claims `MEASURED` without `hindsight_safe: true` is refused:
+        # the flag is the evidence, and a rule that cannot show it is not one.
         if str(record.get("schema_version") or "").startswith("learned-rule-"):
-            if record.get("state") in ("GENERALISED", "NOT_GENERALISED"):
+            if record.get("state") in SCORED_RULE_STATES:
+                if (record.get("state") == "MEASURED"
+                        and record.get("hindsight_safe") is not True):
+                    return False, "rule_not_scored_yet"
                 return True, None
             return False, "rule_not_scored_yet"
         return False, "voided"

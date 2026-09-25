@@ -62,6 +62,7 @@ import logging
 import math
 import os
 import random
+import re
 import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -889,10 +890,25 @@ def render_month(month: str, rows: Sequence[dict], meta: dict) -> str:
 
 def write_month(month: str, rows: Sequence[dict], meta: dict,
                 dir_: Path | None = None) -> Path:
-    p = Path(dir_ or BRAIN) / f"LEARNED_{month}.md"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(render_month(month, rows, meta), encoding="utf-8")
-    return p
+    """The M2 pair block, written INSIDE the one month file.
+
+    Until 2026-09-26 this overwrote `LEARNED_<month>.md` with the pair block
+    alone, so a PENDING_MODEL night would have erased every graded-ledger rule
+    the same file listed. The file is now regenerated from `learned_rules.jsonl`
+    and `learn_runs.jsonl` (in `dir_`), with this block as its M2 section.
+    """
+    d = Path(dir_ or BRAIN)
+    return write_learned(month, rules_path=d / "learned_rules.jsonl",
+                         runs_path=d / "learn_runs.jsonl", dir_=d,
+                         pair_text=render_month(month, rows, meta))
+
+
+def _log_m2_run(month: str, status: str, reason: str | None, meta: dict,
+                n_rules: int, dir_: Path | None) -> None:
+    _append_jsonl(Path(dir_ or BRAIN) / "learn_runs.jsonl", {
+        "job": "M2_pairs", "as_of": f"{month}-01" if len(month) == 7 else month,
+        "written_utc": _now(), "status": status, "reason": reason,
+        "n_rules_written": n_rules, "meta": meta})
 
 
 # ------------------------------------------------------------- the night job
@@ -1010,7 +1026,7 @@ def M2_distill(smoke: bool = False, run: int = 1, *, month: str | None = None,
                       CAL.MIN_N_FOR_DECOMPOSITION))),
         })
         if write:
-            payload["learned_md"] = str(write_month(month, [], {
+            meta = {
                 "noise_floor": {}, "shuffle_seed": shuffled.get("shuffle_seed"),
                 "pairs_sampled": built["pairs_sampled"],
                 "pairs_possible": built["pairs_possible"],
@@ -1019,7 +1035,10 @@ def M2_distill(smoke: bool = False, run: int = 1, *, month: str | None = None,
                 "model": f"{backend} (NOT ANSWERING)",
                 "contract_hash": pool_hash,
                 "pending_model": refusal,
-            }, dir_=out_dir))
+            }
+            _log_m2_run(month, "LEARN_DEGRADED",
+                        f"model refused (M2 pairs): {refusal}", meta, 0, out_dir)
+            payload["learned_md"] = str(write_month(month, [], meta, dir_=out_dir))
         return payload
 
     fn = complete_fn
@@ -1056,14 +1075,19 @@ def M2_distill(smoke: bool = False, run: int = 1, *, month: str | None = None,
     if write and out_rows:
         payload["learned_rules"] = str(append_rules(out_rows, rules_path))
     if write:
-        payload["learned_md"] = str(write_month(month, out_rows, {
+        meta = {
             "noise_floor": floor, "shuffle_seed": shuffled.get("shuffle_seed"),
             "pairs_sampled": built["pairs_sampled"],
             "pairs_possible": built["pairs_possible"],
             "n_shuffled": len(shuffled["pairs"]),
             "dropped_degenerate": built["dropped_degenerate"],
             "model": backend, "contract_hash": pool_hash,
-        }, dir_=out_dir))
+        }
+        _log_m2_run(month, "LEARNED" if out_rows else "LEARN_DEGRADED",
+                    None if out_rows else "model returned no valid pair rule",
+                    meta, len(out_rows), out_dir)
+        payload["learned_md"] = str(write_month(month, out_rows, meta,
+                                                dir_=out_dir))
     scored_rules = [r for r in out_rows if r.get("brier") is not None]
     payload.update({
         "model_state": "ok", "refusals": real["refusals"],
@@ -1086,6 +1110,785 @@ def M2_distill(smoke: bool = False, run: int = 1, *, month: str | None = None,
     return payload
 
 
+# ======================================================================
+# LANE M: DISTIL THE GRADED LEDGER (2026-09-26, adjudication row 9)
+# ======================================================================
+#
+# THE FAILURE THIS CLOSES
+# -----------------------
+# For a month the only writer of `learned_rules.jsonl` was the pair path above,
+# and it needs the local reader for rule TEXT. The reader refused the
+# connection, the job said PENDING_MODEL, and `LEARNED_2026-09.md` distilled
+# **0 rules** while 17,484 graded forecasts sat in the ledger. The 126 daily
+# `LEARNED_<date>.md` lines were heartbeats. A learning layer that learns only
+# when one process on one laptop is up has learned nothing.
+#
+# WHAT THIS PATH DOES DIFFERENTLY
+# -------------------------------
+# * The NUMBERS are computed here, never by a model: every graded row, grouped
+#   by (group x observable x horizon), scored with `forecast_reputation`'s own
+#   held-out convention (later half by `made_at`, climatology = the scored
+#   rows' base rate) so a rule's skill and the reputation receipt's skill are
+#   one number, not two implementations of it.
+# * The model writes only the SENTENCE, and a sentence that quotes a
+#   percentage the cited fact does not contain is REFUSED (invented numbers).
+# * Local first; when the local reader refuses, times out or answers with
+#   nothing usable, the same batch goes to DeepSeek through
+#   `llm_analyzer._call_llm` (the one API path, language pin central). Every
+#   batch records which model answered, `local_status`, and the spend.
+# * Hindsight-safe by construction: only rows with `resolved_at` STRICTLY
+#   BEFORE the rule's date are read, and each rule says so.
+# * A night that writes 0 rules writes `LEARN_DEGRADED` with the reason --
+#   model refused / no new graded rows / cap -- never a heartbeat.
+
+LEDGER_RULE_SCHEMA = "learned-rule-ledger-1.0.0"
+LEARN_RUNS = BRAIN / "learn_runs.jsonl"
+
+#: Families that are a PROCESS (a pipeline with tools), not a thematic persona.
+#: Everything else in the ledger is pooled as `personas` at class level, which
+#: is the split §64 found (+8.97% vs -27.98%).
+PROCESS_FAMILIES = ("investigator",)
+EXCLUDED_FROM_PERSONAS = ("investigator", "why_moved", "review", "thesis_card")
+
+_PCT = re.compile(r"([+\-−]?\d+(?:\.\d+)?)\s*%")
+
+
+def _cfg():
+    from backend import config as C
+    return C
+
+
+def _family_of(arm: str) -> str:
+    arm = str(arm or "")
+    return "investigator" if arm.startswith("investigator:") else arm.split(":")[0]
+
+
+def graded_rows_before(rows: Iterable[dict], as_of: str) -> list[dict]:
+    """Graded, un-voided, scorable rows RESOLVED STRICTLY BEFORE `as_of`.
+
+    The same asymmetry `ledger_retrieval.visible_at` enforces: a row graded on
+    the rule's own date is not yet evidence for it.
+    """
+    from backend.services.ledger_retrieval import _as_date
+    from backend.services import forecast_reputation as FR
+    cut = _as_date(as_of)
+    if cut is None:
+        raise DistillationRefused(f"as_of {as_of!r} is not a date")
+    out = []
+    for r in rows:
+        if r.get("void_reason") or FR._outcome01(r.get("outcome")) is None:
+            continue
+        if not 0.0 <= FR._num(r.get("probability")) <= 1.0:
+            continue
+        g = _as_date(r.get("resolved_at") or r.get("graded_at"))
+        if g is None or not g < cut:
+            continue
+        out.append(r)
+    return out
+
+
+def ledger_facts(rows: Sequence[dict], *, as_of: str,
+                 min_n: int | None = None) -> list[dict]:
+    """Every (group x observable x horizon) cell with >= `min_n` graded rows.
+
+    Two levels: CLASS (`investigator` = the process; `personas` = every thematic
+    specialist pooled) and FAMILY (each non-process specialist family). Numbers
+    only -- no model is involved in anything this function returns.
+    """
+    import numpy as np
+    from backend.services import forecast_reputation as FR
+    min_n = int(min_n if min_n is not None else _cfg().LEARN_MIN_GROUP_N)
+    usable = graded_rows_before(rows, as_of)
+    g = FR.graded_frame_from_rows(usable)
+    if g.empty:
+        return []
+    # graded_frame_from_rows keeps exactly the rows graded_rows_before kept
+    # (same outcome and probability predicates), in order.
+    g["resolved_on"] = [str(r.get("resolved_at") or r.get("graded_at"))[:10]
+                        for r in usable]
+    g["family"] = g["arm"].map(_family_of)
+    g["klass"] = np.where(g["family"].isin(PROCESS_FAMILIES), g["family"],
+                          np.where(g["family"].isin(EXCLUDED_FROM_PERSONAS),
+                                   "", "personas"))
+    facts: list[dict] = []
+    for level, col in (("class", "klass"), ("family", "family")):
+        sub = g[g[col].astype(str) != ""]
+        if level == "family":
+            sub = sub[~sub["family"].isin(PROCESS_FAMILIES)]
+        for (grp, obs, h), cell in sub.groupby([col, "observable", "horizon_days"],
+                                               sort=True, dropna=False):
+            if len(cell) < min_n:
+                continue
+            full = FR._score(cell["p"].to_numpy(float), cell["y"].to_numpy(float))
+            cell = cell.sort_values("made_at", kind="stable")
+            test = cell.iloc[len(cell) // 2:]
+            held = FR._score(test["p"].to_numpy(float), test["y"].to_numpy(float))
+            days = sorted(str(d) for d in cell["made_day"].dropna().unique())
+            try:
+                hd = int(h)
+            except (TypeError, ValueError):
+                hd = None
+            facts.append({
+                "fact_key": f"{level}:{grp}|{obs}|h{hd}",
+                "source": "graded_ledger", "level": level, "group": str(grp),
+                "n_arms": int(cell["arm"].nunique()), "observable": obs,
+                "kind": ("direction" if obs in ("return_sign", FR.DIRECTION_OBSERVABLE)
+                         else "magnitude" if obs in (FR.MAGNITUDE_OBSERVABLE,
+                                                     "drawdown_exceeds")
+                         else "other"),
+                "horizon_days": hd,
+                "n": int(len(cell)), "n_heldout": int(held["n"]),
+                "brier": _r(held["brier"], 5), "climatology_brier": _r(held["clim"], 5),
+                "skill": _r(held["skill"], 4), "skill_all": _r(full["skill"], 4),
+                "brier_all": _r(full["brier"], 5),
+                "disc": _r(held["disc"], 4), "base_rate": _r(full["base_rate"], 4),
+                "made_from_dates": days, "n_date_blocks": len(days),
+                "resolved_through": max(cell["resolved_on"]),
+                "split": ("held out: later half by made_at; climatology = base "
+                          "rate of the scored rows"),
+            })
+    return facts
+
+
+def autopsy_facts(autopsy: dict | None, *, as_of: str,
+                  path: str | None = None) -> list[dict]:
+    """The decision grade (PROBE vs REFUSED), from `decisions/autopsy_*.json`.
+
+    Not a probability forecast, so `brier`/`skill` are None and the metric is
+    named. Hindsight-safe only if the autopsy was written before `as_of`.
+    """
+    if not isinstance(autopsy, dict):
+        return []
+    written = str(autopsy.get("written_utc") or "")[:10]
+    if not written or not written < str(as_of)[:10]:
+        return []
+    out = []
+    for h, row in sorted((autopsy.get("headline") or {}).items(),
+                         key=lambda kv: int(kv[0]) if str(kv[0]).isdigit() else 0):
+        if not isinstance(row, dict) or not row.get("n_date_blocks"):
+            continue
+        out.append({
+            "fact_key": f"decision:{row.get('pair')}|excess_vs_universe_median|h{h}",
+            "source": "decision_autopsy", "level": "decision",
+            "group": str(row.get("pair")), "n_arms": None,
+            "observable": "excess_vs_universe_median",
+            "kind": "decision_grade", "horizon_days": int(h),
+            "n": int((row.get("n_rows_PROBE") or 0) + (row.get("n_rows_REFUSED") or 0)),
+            "n_heldout": None, "brier": None, "climatology_brier": None,
+            "skill": None, "skill_all": None, "disc": None, "base_rate": None,
+            "mean_gap_per_day": _r(row.get("pooled_vs_universe_median"), 5),
+            "day_matched_t": _r(row.get("day_matched_t"), 3),
+            "made_from_dates": sorted((row.get("day_matched_by_day") or {}).keys()),
+            "n_date_blocks": int(row.get("n_date_blocks") or 0),
+            "resolved_through": written, "receipt": path,
+            "metric": "mean excess return per decision day, PROBE minus REFUSED",
+        })
+    return out
+
+
+#: Below this many distinct decision dates a POSITIVE number is not a result
+#: (CANON §58: n_effective counts date blocks, not rows).
+LEARN_MIN_DATE_BLOCKS = 5
+#: |discrimination| under this (2pp) is "cannot tell cases apart".
+NO_DISCRIMINATION = 0.02
+
+VERDICTS = {
+    "SKILL": "beats the base rate held out on enough date blocks: may be weighted "
+             "at its measured skill",
+    "UNPROVEN": "positive but on too few date blocks: not a result yet, weight 0",
+    "NO_DISCRIMINATION": "cannot tell cases apart: weight 0",
+    "NO_SKILL": "worse than always predicting the base rate: weight 0",
+    "NOT_A_RESULT": "too few date blocks to read either way",
+}
+
+
+def fact_verdict(f: dict) -> str:
+    """The verdict is COMPUTED; the model may only phrase it.
+
+    The first real run (2026-09-26) let a 7B model pick the stance and it wrote
+    "Trust the forecast; skill -74.08%". Numbers can be checked against the
+    fact; so can the stance, once the stance is a number's function.
+    """
+    blocks = int(f.get("n_date_blocks") or 0)
+    if f.get("source") == "decision_autopsy":
+        return "NOT_A_RESULT" if blocks < LEARN_MIN_DATE_BLOCKS else (
+            "SKILL" if (f.get("mean_gap_per_day") or 0) > 0 else "NO_SKILL")
+    skill = f.get("skill")
+    if skill is not None and skill > 0:
+        return "SKILL" if blocks >= LEARN_MIN_DATE_BLOCKS else "UNPROVEN"
+    if f.get("disc") is not None and abs(float(f["disc"])) < NO_DISCRIMINATION:
+        return "NO_DISCRIMINATION"
+    return "NO_SKILL"
+
+
+_NEG = re.compile(r"\b(do not|don't|never|not trust|zero|ignore|not a result|"
+                  r"anti-?signal|no skill|no discrimination|cannot|distrust|"
+                  r"weight 0|0 weight|not yet|unproven|discard|worse)\b", re.I)
+_POS = re.compile(r"\b(trust|trusted|rely|use|used|usable|may be|weight|size|keep)\b",
+                  re.I)
+_VERDICT_WORD = re.compile(r"\b(NO_SKILL|NO_DISCRIMINATION|NOT_A_RESULT|UNPROVEN|SKILL)\b")
+#: An arm label (`D_all`, `A_snapshot`): the model saw them in context and
+#: pinned them onto persona rules on the first real run. A rule is about its
+#: fact's GROUP, never an arm the fact does not name.
+_ARM_LABEL = re.compile(r"\b[A-Z]_[a-z][a-z_]*\b")
+
+
+def stance_mismatch(text: str, verdict: str) -> str | None:
+    """None if the sentence's stance agrees with the computed verdict.
+
+    The second real run (2026-09-26) wrote "SKILL: may be used at -74.08%" for
+    a NO_DISCRIMINATION fact: a named verdict must be the fact's verdict.
+    """
+    named = set(_VERDICT_WORD.findall(text or ""))
+    if named and named != {verdict}:
+        return f"names verdict {sorted(named)} for a {verdict} fact"
+    arm = _ARM_LABEL.search(text or "")
+    if arm:
+        return f"names arm {arm.group(0)!r}, not the fact's group"
+    neg = bool(_NEG.search(text or ""))
+    if verdict == "SKILL" and neg:
+        return f"says do-not-use for a {verdict} fact"
+    if verdict != "SKILL" and not neg and _POS.search(text or ""):
+        return f"says use/trust for a {verdict} fact"
+    return None
+
+
+def _fact_numbers_pct(f: dict) -> list[float]:
+    """Every number of a fact a rule may quote as a percentage."""
+    return [float(f[k]) * 100.0
+            for k in ("skill", "skill_all", "base_rate", "mean_gap_per_day", "disc")
+            if f.get(k) is not None]
+
+
+def select_facts(facts: Sequence[dict], *, max_facts: int | None = None) -> list[dict]:
+    """Class cells and decision grades first, then the strongest family cells."""
+    max_facts = int(max_facts if max_facts is not None else _cfg().LEARN_MAX_FACTS)
+    first = [f for f in facts if f["level"] in ("class", "decision")]
+    rest = [f for f in facts if f["level"] not in ("class", "decision")]
+    rest.sort(key=lambda f: -(abs(f.get("skill") or 0.0) * math.sqrt(f["n"])))
+    return (first + rest)[:max_facts]
+
+
+def _fact_line(i: int, f: dict) -> str:
+    if f["source"] == "decision_autopsy":
+        return (f"F{i} | decision grade {f['group']} | h={f['horizon_days']} "
+                f"session(s) | n={f['n']} rows over {f['n_date_blocks']} date blocks "
+                f"| mean gap {(f['mean_gap_per_day'] or 0) * 100:+.2f}% per day vs "
+                f"universe median | day-matched t {f['day_matched_t']} | "
+                f"VERDICT {fact_verdict(f)}")
+    who = ("investigator (a tool-using PROCESS, %d arms)" % f["n_arms"]
+           if f["group"] == "investigator" else
+           "personas (all thematic specialists pooled, %d arms)" % f["n_arms"]
+           if f["group"] == "personas" else f"specialist family {f['group']}")
+    return (f"F{i} | {who} | {f['observable']} ({f['kind']}) | h={f['horizon_days']} "
+            f"| n={f['n']} graded (held-out {f['n_heldout']}) | base rate "
+            f"{(f['base_rate'] or 0) * 100:.1f}% | held-out skill vs climatology "
+            f"{(f['skill'] or 0) * 100:+.2f}% | discrimination "
+            f"{(f['disc'] or 0) * 100:+.1f}pp | {f['n_date_blocks']} date blocks | "
+            f"VERDICT {fact_verdict(f)}")
+
+
+LEARN_SYSTEM = (
+    "You distil forecasting lessons for a trading research system from GRADED "
+    "forecast statistics. Every number is already computed; you only write the "
+    "sentence. Reply with JSON only.")
+
+
+def learn_prompt(batch: Sequence[dict], context: str) -> str:
+    lines = "\n".join(_fact_line(i, f) for i, f in enumerate(batch, start=1))
+    return (
+        f"Context: {context}\n\n"
+        "Skill is the Brier skill score against always predicting the base rate "
+        "(positive = better than the base rate, negative = worse). "
+        "Discrimination is the mean stated probability when the event happened "
+        "minus when it did not (near 0 = the forecaster cannot tell cases apart).\n\n"
+        f"FACTS:\n{lines}\n\n"
+        "Each fact ends with a VERDICT that is already decided: "
+        + "; ".join(f"{k} = {v}" for k, v in VERDICTS.items()) + ".\n\n"
+        "Write ONE rule per fact, at most 35 words, that states the verdict in "
+        "plain words (SKILL: may be used at its measured weight; every other "
+        "verdict: weight 0 / do not use / not a result yet), names who and which "
+        "observable and horizon, and quotes the held-out skill (or the mean gap) "
+        "copied exactly as printed. Quote no number that is not in that fact. "
+        'Reply exactly: {"rules": [{"fact": "F1", "rule": "..."}, ...]}')
+
+
+def verify_rule_numbers(text: str, fact: dict, *,
+                        tol_pp: float | None = None) -> str | None:
+    """None if every percentage in `text` is a number of `fact`; else why not."""
+    tol = float(tol_pp if tol_pp is not None else _cfg().LEARN_NUMBER_TOL_PP)
+    allowed = _fact_numbers_pct(fact)
+    for m in _PCT.finditer(text or ""):
+        raw = m.group(1).replace("−", "-")
+        v = float(raw)
+        signed = raw.startswith(("+", "-"))
+        ok = any(abs(abs(v) - abs(a)) <= tol
+                 and (not signed or (v >= 0) == (a >= 0) or abs(a) <= tol)
+                 for a in allowed)
+        if not ok:
+            return f"quotes {m.group(0)!r}, which is not a number of {fact['fact_key']}"
+    return None
+
+
+def parse_rules(text: str | None,
+                batch: Sequence[dict]) -> tuple[list[dict], list[str]]:
+    """(valid [{fact, rule_text}], refusal reasons). Never raises."""
+    obj = _parse_json(text or "")
+    if not isinstance(obj, dict) or not isinstance(obj.get("rules"), list):
+        return [], ['reply is not {"rules": [...]} JSON']
+    ok, bad, seen = [], [], set()
+    for item in obj["rules"]:
+        if not isinstance(item, dict):
+            bad.append("rule is not an object")
+            continue
+        fid = str(item.get("fact") or "").strip().upper()
+        txt = str(item.get("rule") or "").strip()
+        if (not fid.startswith("F") or not fid[1:].isdigit()
+                or not 1 <= int(fid[1:]) <= len(batch)):
+            bad.append(f"cites unknown fact {fid!r}")
+            continue
+        if fid in seen:
+            bad.append(f"second rule for {fid}")
+            continue
+        if not txt or len(txt) > 400:
+            bad.append(f"{fid}: empty or over-long rule")
+            continue
+        fact = batch[int(fid[1:]) - 1]
+        why = verify_rule_numbers(txt, fact)
+        if why is None and not _PCT.search(txt):
+            why = "quotes no number (a rule must carry its skill)"
+        if why is None:
+            why = stance_mismatch(txt, fact_verdict(fact))
+        if why:
+            bad.append(f"{fid}: {why}")
+            continue
+        seen.add(fid)
+        ok.append({"fact": fact, "rule_text": txt})
+    return ok, bad
+
+
+def _default_local(prompt: str) -> tuple[str, dict]:
+    from backend.services import free_inference as FI
+    C = _cfg()
+    rep = FI.complete(C.LEARN_LOCAL_BACKEND, prompt, system=LEARN_SYSTEM,
+                      max_tokens=int(C.LEARN_LOCAL_MAX_TOKENS), temperature=0.0,
+                      timeout=int(C.LEARN_LOCAL_TIMEOUT_S), purpose=C.LEARN_PURPOSE)
+    return rep.text, {"model": f"{rep.backend}/{rep.model}", "cost_usd": rep.cost_usd}
+
+
+def _default_remote(prompt: str) -> tuple[str | None, dict]:
+    """DeepSeek through `llm_analyzer._call_llm`: the one API path, whose
+    language pin, refusal and telemetry are central (CLAUDE.md)."""
+    from backend.services import llm_analyzer as LA
+    C = _cfg()
+    text = LA._call_llm(LEARN_SYSTEM, prompt, purpose=C.LEARN_PURPOSE,
+                        validate=lambda t: _parse_json(t) is not None)
+    return text, {"model": f"{LA._get_provider()}/{LA._DEEPSEEK_MODEL}"}
+
+
+def _default_spend(since: str) -> dict:
+    from backend.services import llm_telemetry as T
+    return T.spend(since=since, purpose=_cfg().LEARN_PURPOSE)
+
+
+def _hash_rule(row: dict) -> str:
+    body = {k: v for k, v in row.items() if k not in ("rule_hash", "created_utc")}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, default=str)
+                          .encode()).hexdigest()[:20]
+
+
+def ledger_rule_row(fact: dict, rule_text: str, *, as_of: str, answered_by: str,
+                    local_status: str, receipts: dict) -> dict:
+    """One hashed `learned_rules.jsonl` row. Every number is the FACT's, never
+    the model's; the model contributed `rule_text` only."""
+    skill = fact.get("skill")
+    resolved_through = fact.get("resolved_through")
+    row = {
+        "rule_id": f"LRULE-{as_of}-" + hashlib.sha1(
+            fact["fact_key"].encode()).hexdigest()[:8],
+        "created_utc": _now(),
+        "rule_text": rule_text,
+        "fact_key": fact["fact_key"], "source": fact["source"],
+        "group": fact["group"], "observable": fact["observable"],
+        "kind": fact["kind"], "horizon_days": fact["horizon_days"],
+        "n": fact["n"], "n_heldout": fact.get("n_heldout"),
+        "brier": fact.get("brier"), "climatology_brier": fact.get("climatology_brier"),
+        "skill": skill, "skill_all": fact.get("skill_all"),
+        "disc": fact.get("disc"), "base_rate": fact.get("base_rate"),
+        "mean_gap_per_day": fact.get("mean_gap_per_day"),
+        "day_matched_t": fact.get("day_matched_t"),
+        "n_date_blocks": fact.get("n_date_blocks"),
+        "made_from_dates": fact.get("made_from_dates") or [],
+        "hindsight_safe": bool(resolved_through is not None
+                               and str(resolved_through)[:10] < as_of),
+        # `ledger_retrieval.visible_at` gates a rule on these, like a forecast.
+        "resolution_date": resolved_through,
+        "resolved_at": as_of, "outcome": None,
+        "state": "MEASURED", "verdict": fact_verdict(fact),
+        # THE CAP, not the number: a measured skill clamped to MAX_RULE_WEIGHT;
+        # a negative or absent skill weighs 0.0 (shown, never weighted).
+        "prompt_weight": _r(prompt_weight(skill, state="GENERALISED"), 4),
+        "answered_by": answered_by, "local_status": local_status,
+        "receipts": receipts, "as_of": as_of, "month": as_of[:7],
+        "schema_version": LEDGER_RULE_SCHEMA,
+    }
+    if not row["hindsight_safe"]:
+        raise DistillationRefused(
+            f"{fact['fact_key']} was resolved through {resolved_through}, not "
+            f"before {as_of}: a rule on its own date's grades is hindsight")
+    row["rule_hash"] = _hash_rule(row)
+    return row
+
+
+def _read_jsonl(p: Path) -> list[dict]:
+    if not Path(p).is_file():
+        return []
+    out = []
+    for line in Path(p).read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if line:
+            try:
+                out.append(json.loads(line))
+            except ValueError:
+                continue
+    return out
+
+
+def _append_jsonl(p: Path, row: dict) -> None:
+    p = Path(p)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+
+
+def render_learned(month: str, rules: Sequence[dict], runs: Sequence[dict],
+                   pair_text: str | None = None) -> str:
+    """`LEARNED_<month>.md`, regenerated from `learned_rules.jsonl` + the run log.
+
+    The ledger rules come first because they are the ones that exist; the M2
+    pair section follows, unchanged in shape.
+    """
+    out = [f"# LEARNED_{month}.md -- rules distilled from {month}'s graded ledger", ""]
+    mine = [r for r in runs if str(r.get("as_of", ""))[:7] == month]
+    last: dict[str, dict] = {}
+    for r in mine:
+        last[str(r.get("job"))] = r
+    lr = last.get("ledger_distill")
+    if lr:
+        out.append(f"Last ledger distillation: {lr.get('as_of')} -- "
+                   f"**{lr.get('status')}**"
+                   + (f" -- {lr.get('reason')}" if lr.get("reason") else "")
+                   + f" ({lr.get('n_rules_written', 0)} rules written; answered by "
+                   f"{lr.get('answered_by')}; local {lr.get('local_status')}; "
+                   f"DeepSeek ${lr.get('cost_usd')}"
+                   + (" (lower bound)" if lr.get("cost_is_lower_bound") else "")
+                   + ")")
+    else:
+        out.append("Last ledger distillation: never ran this month")
+    for r in [r for r in mine if r.get("status") == "LEARN_DEGRADED"][-10:]:
+        out.append(f"- LEARN_DEGRADED {r.get('as_of')} ({r.get('job')}): "
+                   f"{r.get('reason')}")
+    out.append("")
+    led = [r for r in rules if r.get("schema_version") == LEDGER_RULE_SCHEMA
+           and r.get("month") == month]
+    latest: dict[str, dict] = {}
+    for r in led:
+        latest[r["fact_key"]] = r      # append-only file; the newest wins
+    rows = sorted(latest.values(),
+                  key=lambda r: ({"investigator": 0, "personas": 1}.get(
+                                     str(r.get("group")),
+                                     2 if r.get("source") == "decision_autopsy" else 3),
+                                 -(abs(r.get("skill") or 0)
+                                   * math.sqrt(r.get("n") or 0))))
+    out.append(f"## MEASURED -- graded-ledger rules (n={len(rows)} current, "
+               f"{len(led)} rows written this month)")
+    out.append("")
+    if not rows:
+        out.append("(none this month)")
+        out.append("")
+    for r in rows:
+        out.append(f"### {r['rule_id']} ({r['fact_key']})")
+        out.append(f"- Rule ({r.get('verdict')}): \"{r['rule_text']}\"")
+        if r.get("source") == "decision_autopsy":
+            out.append(f"- Numbers: n={r['n']}, mean gap {r.get('mean_gap_per_day')}"
+                       f"/day, t {r.get('day_matched_t')}, "
+                       f"{r.get('n_date_blocks')} date blocks; Brier n/a (not a "
+                       f"probability forecast)")
+        else:
+            out.append(f"- Numbers: n={r['n']} (held-out {r.get('n_heldout')}), "
+                       f"Brier {r.get('brier')} vs climatology "
+                       f"{r.get('climatology_brier')}, skill {r.get('skill')} "
+                       f"(all rows {r.get('skill_all')}), disc {r.get('disc')}, "
+                       f"{r.get('n_date_blocks')} date blocks")
+        out.append(f"- Made from: {', '.join(r.get('made_from_dates') or [])}; "
+                   f"resolved through {r.get('resolution_date')}; hindsight_safe "
+                   f"{r.get('hindsight_safe')}; as of {r.get('as_of')}")
+        out.append(f"- Written by {r.get('answered_by')} (local: "
+                   f"{r.get('local_status')}); prompt_weight "
+                   f"{r.get('prompt_weight')}; hash {r.get('rule_hash')}")
+        out.append("")
+    if pair_text is None:
+        pr = last.get("M2_pairs")
+        pair_rows = [r for r in rules if r.get("schema_version") == SCHEMA_VERSION
+                     and r.get("month") == month]
+        pair_text = render_month(month, pair_rows, (pr or {}).get("meta") or {
+            "model": "the M2 pair path has not run this month"})
+    out.append("---")
+    out.append("")
+    out.append(pair_text.replace(
+        f"# LEARNED_{month}.md -- distilled rules from {month}'s graded ledger",
+        "# M2 -- winner vs matched-loser pairs"))
+    return "\n".join(out) + "\n"
+
+
+def write_learned(month: str, *, rules_path: Path | None = None,
+                  runs_path: Path | None = None, dir_: Path | None = None,
+                  pair_text: str | None = None) -> Path:
+    rules = _read_jsonl(Path(rules_path or LEARNED_RULES))
+    runs = _read_jsonl(Path(runs_path or LEARN_RUNS))
+    p = Path(dir_ or BRAIN) / f"LEARNED_{month}.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_name(p.name + ".tmp")
+    tmp.write_text(render_learned(month, rules, runs, pair_text), encoding="utf-8")
+    tmp.replace(p)
+    return p
+
+
+def _latest_receipt(dir_: Path, pattern: str,
+                    before: str) -> tuple[dict | None, str | None]:
+    """The newest `<stem>_<YYYY-MM-DD>.json` whose date is < `before`."""
+    best = None
+    for f in sorted(Path(dir_).glob(pattern)):
+        if f.stem.split("_")[-1] < before:
+            best = f
+    if best is None:
+        return None, None
+    try:
+        return json.loads(best.read_text(encoding="utf-8")), str(best)
+    except (OSError, ValueError):
+        return None, str(best)
+
+
+def distill_ledger(*, as_of: str | None = None, rows: Sequence[dict] | None = None,
+                   reputation: dict | None = None, reputation_path: str | None = None,
+                   autopsy: dict | None = None, autopsy_path: str | None = None,
+                   local_fn: Callable | None = None, remote_fn: Callable | None = None,
+                   spend_fn: Callable | None = None,
+                   rules_path: Path | None = None, runs_path: Path | None = None,
+                   md_dir: Path | None = None, write: bool = True,
+                   force: bool = False) -> dict:
+    """The night's distillation of the GRADED ledger into hashed, scored rules.
+
+    Returns a receipt. Writes `learned_rules.jsonl` (append-only), one line of
+    `learn_runs.jsonl`, and regenerates `LEARNED_<month>.md`. Zero rules is a
+    `LEARN_DEGRADED` receipt naming the reason, never a silent heartbeat.
+    """
+    C = _cfg()
+    as_of = str(as_of or date.today().isoformat())[:10]
+    rules_path = Path(rules_path or LEARNED_RULES)
+    runs_path = Path(runs_path or LEARN_RUNS)
+    led = Path(C.OPTIMUS_LEDGER_DIR)
+    if rows is None:
+        from backend.services import forecast_reputation as FR
+        rows = FR.load_ledger()
+    if reputation is None and reputation_path is None:
+        reputation, reputation_path = _latest_receipt(
+            led / "reputation", "reputation_*.json", as_of + "~")
+    if autopsy is None and autopsy_path is None:
+        autopsy, autopsy_path = _latest_receipt(
+            led / "decisions", "autopsy_*.json", as_of)
+    usable = graded_rows_before(rows, as_of)
+    fingerprint = {"n_graded_before": len(usable),
+                   "resolved_through": max((str(r.get("resolved_at"))[:10]
+                                            for r in usable), default=None),
+                   "autopsy": autopsy_path}
+    receipt: dict[str, Any] = {
+        "receipt": "ledger_distill", "job": "ledger_distill", "as_of": as_of,
+        "licence": "PRODUCT_EXPERIMENT", "written_utc": _now(),
+        "input": {"ledger_rows": len(rows), **fingerprint,
+                  "reputation_receipt": reputation_path},
+        "cap_usd": float(C.LEARN_DAILY_CAP_USD), "cost_usd": 0.0,
+        "cost_is_lower_bound": False, "batches": [], "refused_rules": [],
+        "n_rules_written": 0, "answered_by": None, "local_status": None,
+    }
+
+    def _finish(status: str, reason: str | None, new_rules: list[dict]) -> dict:
+        receipt.update({"status": status, "reason": reason,
+                        "n_rules_written": len(new_rules),
+                        "rules": [{k: r[k] for k in ("rule_id", "fact_key",
+                                                     "rule_text", "n", "brier",
+                                                     "skill", "rule_hash")}
+                                  for r in new_rules]})
+        if write:
+            for r in new_rules:
+                _append_jsonl(rules_path, r)
+            _append_jsonl(runs_path, {k: receipt.get(k) for k in (
+                "job", "as_of", "written_utc", "status", "reason",
+                "n_rules_written", "answered_by", "local_status", "cost_usd",
+                "cost_is_lower_bound", "input")})
+            receipt["learned_md"] = str(write_learned(
+                as_of[:7], rules_path=rules_path, runs_path=runs_path, dir_=md_dir))
+        if status == "LEARN_DEGRADED":
+            logger.warning("LEARN_DEGRADED %s: %s", as_of, reason)
+        return receipt
+
+    facts = select_facts(ledger_facts(rows, as_of=as_of)
+                         + autopsy_facts(autopsy, as_of=as_of, path=autopsy_path))
+    receipt["n_facts"] = len(facts)
+    if not facts:
+        return _finish("LEARN_DEGRADED",
+                       f"no new graded rows: no (group x observable x horizon) cell "
+                       f"has {C.LEARN_MIN_GROUP_N} rows resolved before {as_of}", [])
+    prev_ok = [r for r in _read_jsonl(runs_path)
+               if r.get("job") == "ledger_distill" and r.get("status") == "LEARNED"]
+    if prev_ok and not force:
+        pin = prev_ok[-1].get("input") or {}
+        if all(pin.get(k) == fingerprint[k] for k in fingerprint):
+            return _finish("LEARN_DEGRADED",
+                           f"no new graded rows since {prev_ok[-1].get('as_of')} "
+                           f"({fingerprint['n_graded_before']} graded, resolved "
+                           f"through {fingerprint['resolved_through']})", [])
+
+    rep_ctx = "no reputation receipt"
+    if isinstance(reputation, dict) and reputation.get("arms"):
+        # FAMILY totals, never arm labels: on the second real run the model
+        # copied arm ids from this line onto rules about other groups.
+        fam: dict[str, float] = {}
+        for a in reputation["arms"]:
+            k = ("investigator" if _family_of(a.get("arm")) == "investigator"
+                 else "personas")
+            fam[k] = fam.get(k, 0.0) + float(a.get("weight") or 0.0)
+        rep_ctx = ("reputation refit %s: total pooling weight on the investigator "
+                   "process %.2f, on all personas %.2f."
+                   % (reputation.get("date"), fam.get("investigator", 0.0),
+                      fam.get("personas", 0.0)))
+    local_fn = local_fn or _default_local
+    remote_fn = remote_fn or _default_remote
+    spend_fn = spend_fn or _default_spend
+    per = max(1, int(C.LEARN_FACTS_PER_CALL))
+    local_status, local_dead, cap_hit = "not tried", False, False
+    new_rules: list[dict] = []
+    answered: set[str] = set()
+    t_start = _now()
+    for b0 in range(0, len(facts), per):
+        batch = facts[b0:b0 + per]
+        entry: dict[str, Any] = {"facts": [f["fact_key"] for f in batch]}
+        got: list[dict] = []
+        if not local_dead:
+            try:
+                text, meta = local_fn(learn_prompt(batch, rep_ctx))
+                got, bad = parse_rules(text, batch)
+                for g in got:
+                    g["by"] = meta.get("model")
+                entry["local"] = {"model": meta.get("model"), "valid": len(got),
+                                  "refused": bad}
+                local_status = "ok" if got else f"INVALID: {'; '.join(bad)[:200]}"
+                receipt["refused_rules"] += [f"local {x}" for x in bad]
+            except Exception as exc:                            # noqa: BLE001
+                # Refused / timed out: the reader is down for the night; do not
+                # wait on it once per batch.
+                local_status = f"REFUSED: {type(exc).__name__}: {str(exc)[:160]}"
+                local_dead = True
+                entry["local"] = {"error": local_status}
+        entry["local_status"] = local_status
+        # PAIRED FALLBACK: every fact the local reader left without a valid rule
+        # goes to DeepSeek -- the whole batch when it refused, the remainder when
+        # it answered part of it.
+        covered = {g["fact"]["fact_key"] for g in got}
+        missing = [f for f in batch if f["fact_key"] not in covered]
+        if missing:
+            spent = spend_fn(t_start[:10])
+            if not spent:
+                entry["remote"] = {"skipped": "spend UNKNOWN (telemetry unreadable)"}
+                cap_hit = True
+            elif float(spent.get("total_cost_usd") or 0.0) >= float(C.LEARN_DAILY_CAP_USD):
+                entry["remote"] = {"skipped": f"cap ${C.LEARN_DAILY_CAP_USD} reached "
+                                              f"(${spent.get('total_cost_usd')} today)"}
+                cap_hit = True
+            else:
+                try:
+                    text, meta = remote_fn(learn_prompt(missing, rep_ctx))
+                except Exception as exc:                        # noqa: BLE001
+                    text, meta = None, {"error": f"{type(exc).__name__}: {exc}"[:200]}
+                rgot, bad = parse_rules(text, missing) if text else (
+                    [], ["no reply (provider refused, budget or breaker)"])
+                for g in rgot:
+                    g["by"] = meta.get("model")
+                got += rgot
+                entry["remote"] = {"model": meta.get("model"),
+                                   "facts": [f["fact_key"] for f in missing],
+                                   "valid": len(rgot), "refused": bad,
+                                   **({"error": meta["error"]} if "error" in meta
+                                      else {})}
+                receipt["refused_rules"] += [f"deepseek {x}" for x in bad]
+        entry["answered_by"] = sorted({str(g.get("by")) for g in got})
+        for g in got:
+            new_rules.append(ledger_rule_row(
+                g["fact"], g["rule_text"], as_of=as_of,
+                answered_by=str(g.get("by") or "?"),
+                local_status=local_status,
+                receipts={"reputation": reputation_path,
+                          "autopsy": (autopsy_path if g["fact"]["source"]
+                                      == "decision_autopsy" else None)}))
+            answered.add(str(g.get("by")))
+        receipt["batches"].append(entry)
+    spent_run = spend_fn(t_start) or {}
+    receipt["cost_usd"] = float(spent_run.get("total_cost_usd") or 0.0)
+    receipt["cost_is_lower_bound"] = bool(spent_run.get("total_is_lower_bound")
+                                          or not spent_run)
+    receipt["answered_by"] = ", ".join(sorted(answered)) or None
+    receipt["local_status"] = local_status
+    if not new_rules:
+        if cap_hit:
+            reason = (f"cap: DeepSeek spend reached ${C.LEARN_DAILY_CAP_USD} "
+                      f"today (or is unknown)")
+        else:
+            reason = (f"model refused: local {local_status}; DeepSeek returned no "
+                      f"valid rule ({len(receipt['refused_rules'])} refused)")
+        return _finish("LEARN_DEGRADED", reason, [])
+    return _finish("LEARNED", None, new_rules)
+
+
+def night_learn(*, as_of: str | None = None, refit: bool = True,
+                write: bool = True) -> dict:
+    """The one nightly entry point: reputation refit -> distil -> policy_state.
+
+    Each stage's failure is recorded and does not stop the next: a policy file
+    written from the newest receipt beats no policy file.
+    """
+    C = _cfg()
+    as_of = str(as_of or date.today().isoformat())[:10]
+    out: dict[str, Any] = {"as_of": as_of}
+    rep, rpath = None, None
+    if refit:
+        try:
+            from backend.services import forecast_reputation as FR
+            rep = FR.refit(today=as_of)
+            rpath = str(Path(C.OPTIMUS_LEDGER_DIR) / "reputation"
+                        / f"reputation_{as_of}.json")
+            out["reputation"] = rep.get("status")
+        except Exception as exc:                                # noqa: BLE001
+            out["reputation"] = f"FAILED {type(exc).__name__}: {exc}"[:200]
+    try:
+        d = distill_ledger(as_of=as_of, write=write)
+        out["distill"] = {k: d.get(k) for k in (
+            "status", "reason", "n_rules_written", "answered_by", "local_status",
+            "cost_usd", "cost_is_lower_bound", "learned_md", "rules")}
+    except Exception as exc:                                    # noqa: BLE001
+        out["distill"] = f"FAILED {type(exc).__name__}: {exc}"[:200]
+    try:
+        from backend.services import policy_state as PS
+        if rep is None:
+            rep, rpath = _latest_receipt(Path(C.OPTIMUS_LEDGER_DIR) / "reputation",
+                                         "reputation_*.json", as_of + "~")
+        ps = PS.refresh(rep, receipt_path=rpath, write=write)
+        out["policy_state"] = {"changed_since_last": ps.get("changed_since_last"),
+                               "path": str(PS.STATE_PATH)}
+    except Exception as exc:                                    # noqa: BLE001
+        out["policy_state"] = f"FAILED {type(exc).__name__}: {exc}"[:200]
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--month", default=None)
@@ -1093,7 +1896,16 @@ def main(argv=None) -> int:
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--backend", default="local_gguf")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--ledger", action="store_true",
+                    help="the nightly graded-ledger distillation + policy_state")
+    ap.add_argument("--as-of", default=None)
+    ap.add_argument("--no-refit", action="store_true")
     a = ap.parse_args(argv)
+    if a.ledger:
+        res = night_learn(as_of=a.as_of, refit=not a.no_refit)
+        print(json.dumps(res, indent=1, default=str))
+        d = res.get("distill")
+        return 0 if isinstance(d, dict) and d.get("status") == "LEARNED" else 3
     payload = M2_distill(smoke=a.smoke, run=a.run, month=a.month,
                          backend=a.backend)
     dest = (Path(a.out) if a.out else

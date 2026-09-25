@@ -90,6 +90,14 @@ SCHEMA: dict[str, tuple[Any, float, float, str]] = {
     "watchlist_attention": ({}, 0.0, 1.0,
                             "extra attention per symbol, so a name that surprised "
                             "us is examined sooner next session"),
+    # 2026-09-26 (adjudication row 9): the two keys a GRADE moves every night.
+    "reputation_weights": ({}, 0.0, 1.0,
+                           "per-arm pooling weight from the newest "
+                           "forecast_reputation refit; moved only by a refit "
+                           "receipt, never by hand"),
+    "persona_weights": ({}, 0.0, 1.0,
+                        "weight on each thematic persona's forecast; its "
+                        "reputation weight, 0.0 while held-out skill <= 0 (§64)"),
 }
 
 
@@ -200,3 +208,224 @@ def declaration() -> dict:
         ],
         "n_changes_recorded": len(journal(limit=10_000)),
     }
+
+
+# ─────────────────────────── the nightly refresh ────────────────────────────
+#
+# ADJUDICATION 2026-09-26 ROW 9: `policy_state.json` had NEVER been written.
+# Every nightly measurement since 09-22 had been computed and none of them moved
+# a declared preference, because `update()` needed a caller and had none. The
+# refresh below is that caller, and it has one rule: **it moves only the keys a
+# GRADE decides** (per-arm pooling weights from the reputation refit, persona
+# weights) and writes the file every night, `changed_since_last: []` included,
+# so "nothing changed" and "nothing ran" are different files.
+#
+# It never touches a risk limit or code: it goes through `_check`, which
+# refuses any key outside `SCHEMA`, and the sizing bounds are not in `SCHEMA`.
+
+#: Families that are a tool-using PROCESS rather than a thematic persona.
+PROCESS_FAMILIES = ("investigator",)
+#: Families that are neither (too few rows to be a bench, or not a forecaster).
+NON_PERSONA_FAMILIES = ("investigator", "why_moved", "review", "thesis_card")
+
+#: Rounding before comparison, so a refit that moves a weight in the 7th decimal
+#: is not a journal line.
+WEIGHT_DP = 4
+
+
+def _family(arm: str) -> str:
+    arm = str(arm or "")
+    return "investigator" if arm.startswith("investigator:") else arm.split(":")[0]
+
+
+def _latest(dir_: Path, pattern: str) -> Path | None:
+    files = sorted(Path(dir_).glob(pattern)) if Path(dir_).is_dir() else []
+    return files[-1] if files else None
+
+
+def _probe_gate() -> dict:
+    """The PROBE gate's state, read from the gate's own function.
+
+    `sim_run._probe_grade` owns the verdict; this reads it and never
+    re-implements it (two implementations of a gate drift). If it cannot be
+    read the state is CANNOT DETERMINE, never a default verdict.
+    """
+    try:
+        from scripts import sim_run as SR
+        g = SR._probe_grade()
+        return {"verdict": g.get("verdict"),
+                "sessions_graded": g.get("n_days_scored"),
+                "sessions_needed": g.get("min_days"),
+                "horizon_sessions": g.get("horizon_sessions"),
+                "mean_excess_per_day": g.get("mean_excess_per_day"),
+                "why": g.get("why"), "source": "scripts.sim_run._probe_grade"}
+    except Exception as exc:                                    # noqa: BLE001
+        return {"verdict": "CANNOT DETERMINE",
+                "why": f"{type(exc).__name__}: {exc}"[:200],
+                "source": "scripts.sim_run._probe_grade"}
+
+
+#: The distillation's rule store: the fallback source of per-cell skill when a
+#: reputation receipt predates `arms_by_observable` (the 2026-09-25 one does).
+LEARNED_RULES = _cfg.OPTIMUS_LEDGER_DIR / "brain" / "learned_rules.jsonl"
+
+
+def _cells_from_learned_rules(path: Path | None = None) -> list[dict]:
+    """Held-out (group, observable, horizon) cells from MEASURED ledger rules,
+    newest row per fact, shaped like `arms_by_observable`."""
+    p = Path(path or LEARNED_RULES)
+    if not p.is_file():
+        return []
+    latest: dict[str, dict] = {}
+    for line in p.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            r = json.loads(line)
+        except ValueError:
+            continue
+        if r.get("state") == "MEASURED" and r.get("fact_key", "").startswith("class:"):
+            latest[r["fact_key"]] = r
+    return [{"arm": ("investigator:*" if r.get("group") == "investigator"
+                     else str(r.get("group"))),
+             "observable": r.get("observable"), "horizon_days": r.get("horizon_days"),
+             "n": r.get("n_heldout") or 0, "skill": r.get("skill"),
+             "kind": r.get("kind")} for r in latest.values()]
+
+
+def _direction_vs_magnitude(rec: dict, *, rules_path: Path | None = None) -> dict:
+    """Per family: n-weighted held-out skill on DIRECTION vs MAGNITUDE cells.
+
+    From the reputation receipt's `arms_by_observable`; when the receipt has
+    none, from the distillation's MEASURED rules, and the source says which.
+    """
+    acc: dict[str, dict[str, list[float]]] = {}
+    cells = rec.get("arms_by_observable") or []
+    source = "reputation receipt arms_by_observable"
+    if not cells:
+        cells = _cells_from_learned_rules(rules_path)
+        source = "learned_rules.jsonl (MEASURED class cells)" if cells else "none"
+    for c in cells:
+        kind = c.get("kind")
+        if c.get("observable") == "return_sign":
+            kind = "direction"
+        if kind not in ("direction", "magnitude") or c.get("skill") is None:
+            continue
+        fam = _family(c.get("arm"))
+        a = acc.setdefault(fam, {"direction": [0.0, 0.0], "magnitude": [0.0, 0.0]})
+        a[kind][0] += float(c["skill"]) * int(c.get("n") or 0)
+        a[kind][1] += int(c.get("n") or 0)
+    out = {}
+    for fam, a in sorted(acc.items()):
+        row = {}
+        for kind in ("direction", "magnitude"):
+            s, n = a[kind]
+            row[f"{kind}_skill_heldout"] = round(s / n, 4) if n else None
+            row[f"{kind}_n_heldout"] = int(n)
+        out[fam] = row
+    inv = out.get("investigator") or {}
+    note = ("investigator: magnitude held-out skill %s (n %s) vs direction %s "
+            "(n %s) -- size on the magnitude read, never the direction read"
+            % (inv.get("magnitude_skill_heldout"), inv.get("magnitude_n_heldout"),
+               inv.get("direction_skill_heldout"), inv.get("direction_n_heldout"))
+            if inv else "no investigator cells in the receipt or the rule store")
+    return {"note": note, "by_family": out, "source": source}
+
+
+def _diff(old: dict, new: dict) -> list[str]:
+    keys = sorted(set(old) | set(new))
+    return [k for k in keys if old.get(k) != new.get(k)]
+
+
+def refresh(reputation_receipt: dict | str | Path | None, *,
+            receipt_path: str | None = None, persona_receipt: str | None = None,
+            probe_gate: dict | None = None, write: bool = True,
+            now: str | None = None, rules_path: Path | None = None) -> dict:
+    """Rewrite `policy_state.json` from the newest GRADES. Every night.
+
+    Moves `reputation_weights` and `persona_weights` only, each change one
+    journal line carrying the receipt that caused it. An identical receipt
+    changes nothing and journals nothing; the file is still written, with
+    `changed_since_last: []`. A missing or REFUSED receipt keeps every previous
+    value and says why in `observed.status`.
+    """
+    t = now or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    rec: dict | None
+    if isinstance(reputation_receipt, (str, Path)):
+        receipt_path = receipt_path or str(reputation_receipt)
+        try:
+            rec = json.loads(Path(reputation_receipt).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            rec = None
+    else:
+        rec = reputation_receipt
+    if persona_receipt is None:
+        p = _latest(_cfg.OPTIMUS_LEDGER_DIR / "specialists", "scoreboard_*.json")
+        persona_receipt = str(p) if p else None
+
+    prev_values = load()
+    values = {k: (v.copy() if isinstance(v, dict) else v)
+              for k, v in prev_values.items()}
+    ok = isinstance(rec, dict) and rec.get("status") == "OK" and rec.get("arms")
+    status = "OK" if ok else (
+        "NO_RECEIPT" if not isinstance(rec, dict) else
+        f"RECEIPT_{rec.get('status') or 'EMPTY'}: {rec.get('reason') or 'no arms'}")
+    changes: list[dict] = []
+    if ok:
+        rep_w = {str(a["arm"]): round(float(a.get("weight") or 0.0), WEIGHT_DP)
+                 for a in rec["arms"]}
+        persona_w = {arm: w for arm, w in rep_w.items()
+                     if _family(arm) not in NON_PERSONA_FAMILIES}
+        for key, new, why, ev in (
+            ("reputation_weights", rep_w,
+             "per-arm pooling weight from the newest forecast_reputation refit "
+             "(held-out skill, shrunk, normalised)", receipt_path),
+            ("persona_weights", persona_w,
+             "thematic personas are weighted by their own held-out grade; §64: "
+             "optimal weight ZERO (negative discrimination)",
+             {"reputation": receipt_path, "section_64": persona_receipt}),
+        ):
+            _check(key, new)
+            old = prev_values.get(key) or {}
+            moved = _diff(old, new)
+            if not moved:
+                continue
+            values[key] = new
+            changes.append({
+                "t": t, "actor": "night:policy_state.refresh", "key": key,
+                "old": {k: old.get(k) for k in moved},
+                "new": {k: new.get(k) for k in moved},
+                "reason": why, "evidence": ev})
+
+    dvm = _direction_vs_magnitude(rec if isinstance(rec, dict) else {},
+                                  rules_path=rules_path)
+    state = {
+        "receipt": "policy_state", "values": values, "updated": t,
+        "schema_keys": sorted(SCHEMA),
+        "refreshed_utc": t,
+        "changed_since_last": [c["key"] for c in changes],
+        "changes": [{k: c[k] for k in ("key", "old", "new")} for c in changes],
+        "sources": {"reputation_receipt": receipt_path,
+                    "reputation_date": (rec or {}).get("date") if isinstance(rec, dict) else None,
+                    "persona_receipt_section_64": persona_receipt},
+        # OBSERVED, not preferences: read-only facts the night reports beside
+        # the values it may move. Nothing here is a knob.
+        "observed": {
+            "status": status,
+            "persona_weights_note": (
+                "personas pooled at their reputation weight, which is 0.0 while "
+                "their held-out skill is <= 0 (§64: optimal weight ZERO)"),
+            "probe_gate": probe_gate if probe_gate is not None else _probe_gate(),
+            "direction_vs_magnitude": dvm,
+        },
+        "contract": ("the night changes preferences, never code or risk limits: "
+                     "only SCHEMA keys move, each with a receipt"),
+    }
+    if write:
+        STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = STATE_PATH.with_name(STATE_PATH.name + ".tmp")
+        tmp.write_text(json.dumps(state, indent=1, default=str), encoding="utf-8")
+        tmp.replace(STATE_PATH)
+        if changes:
+            with JOURNAL_PATH.open("a", encoding="utf-8") as fh:
+                for c in changes:
+                    fh.write(json.dumps(c, default=str) + "\n")
+    return state
