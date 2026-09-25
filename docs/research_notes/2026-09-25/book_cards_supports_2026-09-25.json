@@ -1,0 +1,150 @@
+{
+ "name": "cards_supports_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY; the pure-evidence arm: every thesis card that came back 'supports' on 2026-09-25, equal weight, no human override",
+ "model": "thesis_card v1 (engine + OpenClaw + DeepSeek synthesis), 2026-09-25",
+ "state": "HUMAN_REVIEWED",
+ "drafted_at": "2026-09-25",
+ "strategy": "20 names whose card verdict is supports, equal weight, no human edits. Exists because the reviewer found v2 left nine supports names out and added three un-carded ones. Graded beside v1, v2 and the reviewer's book: if this beats them, the human side cost money.",
+ "horizon_days": [
+  1,
+  5,
+  21,
+  126
+ ],
+ "max_weight": 0.049,
+ "positions": [
+  {
+   "ticker": "000660.KS",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "3Q26 earnings on 2026-10-27 showing HBM or DRAM average selling prices falling versus 2Q26, or operating profit below the KRW 60.54T reported for 2Q26."
+  },
+  {
+   "ticker": "010120.KS",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "Q3 2026 earnings on 2026-10-28 showing order intake below the raised KRW 6.0tn annual run-rate or operating margin under 11.3%."
+  },
+  {
+   "ticker": "012450.KS",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "Q3 2026 ground systems operating margin reported below 10% (versus 35-39% export margin), or a Poland K9 EC3 award slipping past 2026-12-31."
+  },
+  {
+   "ticker": "2330.TW",
+   "weight": 0.049,
+   "thesis": "card: supports / high",
+   "falsifier": "3Q26 earnings on 2026-10-15 showing gross margin below the guided 65% floor or 3Q26 revenue under US$44.6bn."
+  },
+  {
+   "ticker": "6857.T",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "FY2026 Q2 results on 2026-10-28 showing gross margin below Q1 FY2026 and no repeat of the inventory-obsolescence reversal, with guidance not raised again."
+  },
+  {
+   "ticker": "8035.T",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "FY2027 Q2 earnings on 2026-10-30 showing gross margin below Q1 FY2027 and no H2 recovery, or H1 net sales under the raised 1,620B yen guidance."
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "The Q4 2026 EMPASSION MMN readout (empasiprubart) fails its primary endpoint, or the Q3 2026 report on 2026-10-22 shows product sales growth decelerating below "
+  },
+  {
+   "ticker": "ENR.DE",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "FY2026 results on 2026-11-11 show comparable revenue growth below the guided 14-16 pct or Siemens Gamesa back at a loss."
+  },
+  {
+   "ticker": "ENS",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "The lithium data-center-backup line staying near 0% of segment revenue by the Dec earnings call would falsify the decoupling thesis -- the book's own stated fal"
+  },
+  {
+   "ticker": "GEV",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "Turbine-backlog slot reservations failing to convert into signed orders by the 2026-10-28 Q3 print would falsify the bull case -- again the book's own stated fa"
+  },
+  {
+   "ticker": "HOOD",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "A state or federal action forcing Robinhood's event contracts under state gambling licensing (raising costs / restricting states) would falsify the bull thesis;"
+  },
+  {
+   "ticker": "LDO.MI",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "9M 2026 results on 5 Nov 2026 showing free operating cash flow still negative and no further FY2026 guidance raise."
+  },
+  {
+   "ticker": "LLY",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "Q3 2026 earnings on 2026-10-29 (unconfirmed) showing worldwide realized price decline worse than Q2's 13 pct while volume growth falls below 40 pct, or FY2026 r"
+  },
+  {
+   "ticker": "MP",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "A successful legal or legislative challenge to the government's equity-taking/floor-price authority, or NdPr volume growth stalling well below the 127% y/y pace"
+  },
+  {
+   "ticker": "MU",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "The 2026-09-30 FQ4 print missing the ~86% gross-margin guide, or DRAM/NAND spot pricing rolling over shortly after, would falsify the pricing-cycle bull case."
+  },
+  {
+   "ticker": "NOVT",
+   "weight": 0.049,
+   "thesis": "card: supports / low",
+   "falsifier": "The servo-drive order being cancelled, or absent from disclosed backlog, at the ~2026-11-10 Q3 call would falsify the bull case -- the thematic book's own state"
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "The Maverick Power acquisition failing to close by its 2026-11-20 outside date (or extending to Feb 2027, signaling deal friction) would be the first concrete n"
+  },
+  {
+   "ticker": "RGTI",
+   "weight": 0.049,
+   "thesis": "card: supports / low",
+   "falsifier": "If the 10-Q/8-K terms show the government's $100M as a grant/award rather than an actual equity stake -- the book's own stated falsifier for this position -- or"
+  },
+  {
+   "ticker": "TSM",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "Q3-2026 gross margin reported below 65% on 2026-10-15, or September monthly sales (2026-10-08) showing YoY growth decelerating below 30%."
+  },
+  {
+   "ticker": "VRT",
+   "weight": 0.049,
+   "thesis": "card: supports / med",
+   "falsifier": "A confirmed Q3 (Oct, date unconfirmed on IR) organic growth print below the 34-36% guide, or evidence that MW backlog is not converting to signed/shipped orders"
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.02,
+   "thesis": "declared"
+  }
+ ],
+ "human_edits": [],
+ "twins_requested": [
+  "ew",
+  "sector_etf",
+  "random_same_band",
+  "spy"
+ ]
+}

@@ -1,0 +1,90 @@
+{
+ "name": "reviewer_opus_2026-09-25",
+ "kind": "personal",
+ "objective": "maximise 126-session return vs SPY; the adversarial reviewer's own book, graded like every other arm (docs/reviews/REVIEW_2026-09-25_CHUNK0_THE_DAYS_BUILD.md section 6)",
+ "model": "claude-opus-5-5 reviewer, 2026-09-25",
+ "state": "HUMAN_REVIEWED",
+ "drafted_at": "2026-09-25",
+ "strategy": "The reviewer's ten: the AI power/memory chain at its Asian and European source (SK Hynix, Advantest, Siemens Energy, LS Electric), the US grid names (GEV, NVT), prediction markets (HOOD), one operating biotech with a Q4 readout (ARGX), and European/Korean defence (Hanwha Aerospace, Leonardo). Every name carries its thesis card's falsifier. Worst case stated by the reviewer: about -$220k on a -35% AI/power drawdown. 60% of the book is non-USD and is graded in local currency until the FX leg exists (chunk 5) -- the caveat travels with the grade.",
+ "horizon_days": [
+  1,
+  5,
+  21,
+  126
+ ],
+ "max_weight": 0.14,
+ "positions": [
+  {
+   "ticker": "000660.KS",
+   "weight": 0.14,
+   "thesis": "HBM leader; 3Q26 print 2026-10-27.",
+   "falsifier": "3Q26 shows HBM/DRAM ASPs falling."
+  },
+  {
+   "ticker": "GEV",
+   "weight": 0.12,
+   "thesis": "116 GW backlog; Q3 Oct 28.",
+   "falsifier": "reservations fail to convert by Oct 28."
+  },
+  {
+   "ticker": "6857.T",
+   "weight": 0.1,
+   "thesis": "HBM/AI test leader.",
+   "falsifier": "FY26 Q2 (Oct 28) gross margin below Q1."
+  },
+  {
+   "ticker": "HOOD",
+   "weight": 0.1,
+   "thesis": "event contracts; Q3 Nov 4.",
+   "falsifier": "state/federal action on event contracts."
+  },
+  {
+   "ticker": "ARGX",
+   "weight": 0.1,
+   "thesis": "EMPASSION Phase 3 topline Q4 2026.",
+   "falsifier": "EMPASSION misses its primary endpoint."
+  },
+  {
+   "ticker": "ENR.DE",
+   "weight": 0.09,
+   "thesis": "grid/turbines; FY results Nov 11.",
+   "falsifier": "comparable growth below the 14-16% guide."
+  },
+  {
+   "ticker": "010120.KS",
+   "weight": 0.09,
+   "thesis": "switchgear/transformers; Q3 Oct 28.",
+   "falsifier": "order intake below the raised KRW 6.0tn."
+  },
+  {
+   "ticker": "012450.KS",
+   "weight": 0.09,
+   "thesis": "defence exports.",
+   "falsifier": "ground-systems operating margin below 10%."
+  },
+  {
+   "ticker": "LDO.MI",
+   "weight": 0.09,
+   "thesis": "European defence; 9M results Nov 5.",
+   "falsifier": "free operating cash flow still negative."
+  },
+  {
+   "ticker": "NVT",
+   "weight": 0.08,
+   "thesis": "data-center electrical; Maverick close by Nov 20.",
+   "falsifier": "Maverick fails to close; launch slips."
+  },
+  {
+   "ticker": "CASH",
+   "weight": 0.0,
+   "thesis": "declared: the reviewer runs fully invested"
+  }
+ ],
+ "human_edits": [],
+ "twins_requested": [
+  "ew",
+  "sector_etf",
+  "random_same_band",
+  "spy"
+ ]
+}
