@@ -47,6 +47,7 @@ Big local artefacts that are deliberately NOT committed are catalogued in
   frozen books Oct 9) · **D** feeds only once consumed. Builder contract:
   `HANDOFF_2026-09-25_FABLE_TO_OPUS_BUILD_PLAN.md` (chunks C0-C3, R, H, W, K, D with tests).
   The 09-11 roadmap's §14-§16 (the loop, the five states, PROBE) remain binding.
+  **Evening 2026-09-25: `HANDOFF_2026-09-25_EVENING_THE_MACHINE_FORECASTS_AGAIN.md`** — five builders landed (reputation, thesis cards, revision flow + autopsy, book factory + daily grade, `u_forecast`/`u_review`); v1 book + 20 factory books frozen; 65 thesis cards; the three red tests are local-data gates.
 - **`ROADMAP_2026-09-11_ROOT_FIRST_THE_OPERATOR_BOARD_AND_THE_LEARNING_LOOP.md` — SUPERSEDED 2026-09-25 (its §14-§16 still bind).**
   Five ROOTS before any product: (R1) the packaged app runs without a single API key — `backend/config.py:21,97`
   roots `.env` on `__file__`, which is the bundle when frozen, and pywebview's `private_mode=True` default
