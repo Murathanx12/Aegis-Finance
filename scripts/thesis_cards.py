@@ -7,6 +7,11 @@ DeepSeek synthesis per ticker.
     python -m scripts.thesis_cards run --universe my_tickers.txt
     python -m scripts.thesis_cards validate [--date YYYY-MM-DD]
     python -m scripts.thesis_cards digest [--date YYYY-MM-DD]
+    python -m scripts.thesis_cards forecast [--date YYYY-MM-DD]   # backfill ledger rows
+
+Every card written by `run` also becomes forecast rows (`thesis_card:v1`,
+`beats_benchmark` vs SPY at h=20 and h=120; `TC.write_forecasts`), idempotent
+per card hash. `forecast` writes the rows for a day's cards that lack them.
 
 Universe (default), in priority order, de-duplicated, `kind` per source:
   1. backend/data/murat_book.yaml positions                       -> holding
@@ -361,9 +366,13 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
         synth_fn: Callable | None = None,
         spend_fn: Callable[[str], float | None] | None = None,
         dry_run: bool = False, retry_refused: bool = False,
-        timeout: float | None = None) -> dict:
+        timeout: float | None = None, forecast_path: Path | None = None) -> dict:
     asof_d = TC._asof_date(asof or datetime.now(timezone.utc).date())
     day = asof_d.isoformat()
+    # A run against a non-default root (a test's tmp_path) must never append to
+    # the real forecast ledger: its rows go beside its cards unless told otherwise.
+    if forecast_path is None and root is not None:
+        forecast_path = Path(root) / "_predictions.jsonl"
     root = Path(root) if root is not None else TC.cards_root()
     max_quests = int(max_quests if max_quests is not None else _cfg.THESIS_CARD_MAX_QUESTS)
     cap_usd = float(cap_usd if cap_usd is not None else _cfg.THESIS_CARD_CAP_USD)
@@ -397,7 +406,8 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
                            "parallel": parallel, "n_universe": len(universe),
                            "n_skipped_existing": len(skipped),
                            "n_todo": len(todo), "cut_by_max_quests": [u["ticker"] for u in todo_cut],
-                           "done": [], "refused": [], "state": "RUNNING"}
+                           "done": [], "refused": [], "state": "RUNNING",
+                           "forecast_rows_written": 0}
     print(f"thesis cards {day}: universe {len(universe)}, {len(skipped)} already "
           f"carded, {len(todo)} to do (max {max_quests}), cap ${cap_usd:.2f}, "
           f"parallel {parallel}, model {model}", flush=True)
@@ -495,6 +505,14 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
             with lock:
                 TC.write_card(card, root=root)
                 TC.write_digest(day, root=root)
+                try:
+                    fw = TC.write_forecasts([card], today=datetime.now(timezone.utc).date(),
+                                            path=forecast_path)
+                    res["forecast_rows_written"] += fw["n_rows_written"]
+                except Exception as exc:                           # noqa: BLE001
+                    # The card is on disk; `forecast --date` writes its rows later.
+                    res.setdefault("forecast_errors", []).append(
+                        {"ticker": t, "error": f"{type(exc).__name__}: {str(exc)[:200]}"})
                 (res["refused"] if str(card.get("verdict", "")).startswith("REFUSED_")
                  else res["done"]).append(t)
             print(f"  {t:<11} {str(card.get('verdict')):<24} conf "
@@ -537,6 +555,7 @@ def run(*, universe: list[dict], asof: Any = None, root: Path | None = None,
     (day_dir / "_run_receipt.json").write_text(json.dumps(res, indent=1, default=str),
                                                encoding="utf-8")
     print(f"{res['state']}: {len(res['done'])} carded, {len(res['refused'])} refused, "
+          f"{res['forecast_rows_written']} forecast rows, "
           f"spent today ${s}; {res.get('why') or ''}", flush=True)
     return res
 
@@ -567,6 +586,32 @@ def _validate(day: str, root: Path | None = None) -> int:
     return 0 if bad == 0 else 1
 
 
+def forecast(day: str, *, root: Path | None = None, path: Path | None = None,
+             today: Any = None) -> dict:
+    """Backfill: every card of `day` that has no ledger rows gets them. $0, no LLM.
+    Prints the ledger's row count before and after."""
+    from backend.services import belief_state as B
+    ledger = Path(path) if path is not None else B.PREDICTIONS
+    def _n() -> int:
+        if not ledger.exists():
+            return 0
+        with ledger.open("rb") as fh:
+            return sum(1 for ln in fh if ln.strip())
+    before = _n()
+    cards = TC.read_cards(day, root=root)
+    res = TC.write_forecasts(cards, today=today or datetime.now(timezone.utc).date(),
+                             path=path)
+    after = _n()
+    res.update({"day": day, "ledger": str(ledger), "ledger_rows_before": before,
+                "ledger_rows_after": after})
+    print(f"thesis-card forecasts {day}: {res['n_cards']} cards, "
+          f"{res['n_rows_written']} rows written, {res['n_already_written']} already in "
+          f"the ledger, {res['n_not_a_forecast']} not a forecast "
+          f"{res['not_a_forecast'][:10]}")
+    print(f"ledger {ledger}: {before} rows before, {after} after")
+    return res
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -581,7 +626,7 @@ def main(argv=None) -> int:
     r.add_argument("--dry-run", action="store_true")
     r.add_argument("--retry-refused", action="store_true")
     r.add_argument("--only", default=None, help="comma list: restrict the universe")
-    for name in ("validate", "digest"):
+    for name in ("validate", "digest", "forecast"):
         s = sub.add_parser(name)
         s.add_argument("--date", default=None)
     a = ap.parse_args(argv)
@@ -596,6 +641,9 @@ def main(argv=None) -> int:
     if a.cmd == "digest":
         print(TC.write_digest(day))
         return 0
+    if a.cmd == "forecast":
+        res = forecast(day)
+        return 0 if res["ledger_rows_after"] - res["ledger_rows_before"] == res["n_rows_written"] else 1
 
     uni = (default_universe() if a.universe == "default"
            else universe_from_file(Path(a.universe)))

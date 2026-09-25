@@ -501,3 +501,86 @@ def test_dry_run_builds_prompt_without_calling(tmp_path, capsys):
     assert r["state"] == "DRY_RUN"
     assert "AAA" in out and "FLAT JSON" in out
     assert not (tmp_path / ASOF / "AAA.json").exists()
+
+
+# ── review 2026-09-25 row 8: every card becomes forecast rows ────────────────
+
+@pytest.mark.parametrize("verdict,conf,p", [
+    ("supports", "high", 0.60), ("supports", "med", 0.56), ("supports", "low", 0.53),
+    ("neutral", "high", 0.50), ("neutral", "low", 0.50),
+    ("against", "high", 0.40), ("against", "med", 0.44), ("against", "low", 0.47),
+])
+def test_forecast_probability_maps_verdict_and_shrinks_by_confidence(verdict, conf, p):
+    assert TC.forecast_probability(verdict, conf) == pytest.approx(p)
+
+
+def test_forecast_rows_shape():
+    c = _card(verdict="supports", confidence="med", falsifier="Q3 misses")
+    rows = TC.forecast_rows(c, today=ASOF)
+    assert [r["horizon_days"] for r in rows] == list(TC.FORECAST_HORIZONS)
+    for r in rows:
+        assert r["specialist"] == "thesis_card:v1"
+        assert r["observable"] == "beats_benchmark" and r["benchmark"] == "SPY"
+        assert r["probability"] == pytest.approx(0.56)
+        assert r["counter_thesis"] == "Q3 misses"
+        assert r["licence"] == "PRODUCT_EXPERIMENT"
+        assert r["inputs_used"]["card_hash"] == c["card_hash"]
+        assert r["decision_date"] == ASOF
+    snap = TC.forecast_snapshot(c)
+    assert snap["card_hash"] == c["card_hash"]
+    assert all(k in snap for k in TC.ENGINE_KEYS)
+
+
+@pytest.mark.parametrize("over", [
+    {"verdict": "REFUSED_EMPTY_LOG"}, {"verdict": "maybe"}, {"confidence": None},
+    {"asof": "2026-09-26"},                                    # after `today`
+])
+def test_a_card_that_is_not_a_forecast_writes_no_row(over):
+    assert TC.forecast_rows(_card(**over), today=ASOF) == []
+    assert TC.forecast_rows({"_unreadable": "x.json"}, today=ASOF) == []
+
+
+def test_refusal_card_writes_no_row():
+    e = TC.engine_side("AAA", asof=ASOF, bars=_bars(), revisions=_revisions(),
+                       news_rows=_news(), catalysts=_catalysts(), predictions=_preds())
+    c = TC.refusal_card("AAA", kind="holding", asof=ASOF, engine=e,
+                        verdict="REFUSED_EMPTY_LOG", why="empty")
+    assert TC.forecast_rows(c, today=ASOF) == []
+
+
+def test_write_forecasts_is_idempotent_per_card_hash(tmp_path):
+    from backend.services import belief_state as B
+    led = tmp_path / "predictions.jsonl"
+    a = _card(verdict="supports", confidence="high")
+    b = _card(ticker="BBB", verdict="REFUSED_EMPTY_LOG")
+    r1 = TC.write_forecasts([a, b], today=ASOF, path=led)
+    assert r1["n_rows_written"] == 2 and r1["n_not_a_forecast"] == 1
+    r2 = TC.write_forecasts([a, b], today=ASOF, path=led)       # same day, again
+    assert r2["n_rows_written"] == 0 and r2["n_already_written"] == 2
+    r3 = TC.write_forecasts([a], today="2026-09-26", path=led)  # a later backfill
+    assert r3["n_rows_written"] == 0
+    rows = B.read_predictions(led)
+    assert len(rows) == 2 and {r["probability"] for r in rows} == {0.6}
+
+
+def test_run_writes_forecast_rows_beside_a_tmp_root_never_the_real_ledger(tmp_path):
+    from scripts import thesis_cards as S
+
+    def quest(ticker, prompt, *, model, timeout, log_dir):
+        return {"status": "OK", "reply": json.dumps({"name": ticker}), "elapsed_s": 0,
+                "log_path": "", "cost_usd": 0}
+
+    uni = [{"ticker": "SUP", "kind": "personal", "source": "s"}]
+    res = S.run(universe=uni, asof=ASOF, root=tmp_path, max_quests=5, cap_usd=5,
+                parallel=1, model="m", inputs=_fake_inputs(), quest_fn=quest,
+                synth_fn=lambda e, w, *, model: {"verdict": "against", "confidence": "high",
+                                                 "bull": "b", "bear": "r", "falsifier": "f",
+                                                 "synth_status": "OK"},
+                spend_fn=lambda day: 0.0)
+    assert res["forecast_rows_written"] == 2
+    led = tmp_path / "_predictions.jsonl"
+    rows = [json.loads(x) for x in led.read_text(encoding="utf-8").splitlines() if x.strip()]
+    assert {r["probability"] for r in rows} == {0.4}
+    out = S.forecast(ASOF, root=tmp_path, path=led, today=ASOF)   # backfill: nothing new
+    assert out["n_rows_written"] == 0
+    assert out["ledger_rows_before"] == out["ledger_rows_after"] == 2

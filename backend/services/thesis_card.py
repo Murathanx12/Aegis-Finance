@@ -804,3 +804,142 @@ def write_digest(day: Any, *, root: Path | None = None) -> Path:
     tmp.write_text("\n".join(lines) + "\n", encoding="utf-8")
     tmp.replace(p)
     return p
+
+
+# ─────────────────────────── the card as a forecast ─────────────────────────
+#
+# Review 2026-09-25 row 8 (accepted): the 81 verdicts were never forecast rows,
+# so none of them could ever be graded. A card is evidence, not an order -- and
+# a verdict nobody grades is an opinion. Each card now writes one
+# `beats_benchmark` row per horizon under `specialist = thesis_card:v1`.
+
+FORECAST_SPECIALIST = "thesis_card:v1"
+FORECAST_MECHANISM = "thesis_card_v1"
+FORECAST_BENCHMARK = "SPY"
+#: verdict -> the probability the name beats SPY, before the confidence shrink.
+VERDICT_P: dict[str, float] = {"supports": 0.60, "neutral": 0.50, "against": 0.40}
+#: confidence -> the share of the distance from 0.50 that is kept.
+CONFIDENCE_KEEP: dict[str, float] = {"high": 1.0, "med": 0.6, "low": 0.3}
+#: ~one month and ~six months. The spec said 21 / 126 sessions; the ledger's
+#: grid (`belief_state.HORIZONS` = 1, 2, 5, 20, 60, 120, 252) REFUSES any other
+#: horizon ("a horizon chosen per-prediction is a free parameter"), so the rows
+#: sit on its nearest points, 20 and 120. Graded on the same grid as every
+#: other specialist, which is what makes them comparable at all.
+FORECAST_HORIZONS: tuple[int, ...] = (20, 120)
+FORECAST_CONTRACT = (
+    "thesis_card:v1 -> ledger. P(ticker beats SPY over h sessions) = 0.50 + "
+    "keep[confidence] * (base[verdict] - 0.50); base supports 0.60 / neutral "
+    "0.50 / against 0.40; keep high 1.0 / med 0.6 / low 0.3; h in (20, 120); "
+    "counter_thesis = the card's falsifier; REFUSED_* cards write nothing.")
+
+
+def forecast_probability(verdict: Any, confidence: Any) -> float | None:
+    """The mapping, alone. None = this card cannot be a forecast."""
+    if verdict not in VERDICT_P or confidence not in CONFIDENCE_KEEP:
+        return None
+    return round(0.5 + CONFIDENCE_KEEP[confidence] * (VERDICT_P[verdict] - 0.5), 6)
+
+
+def forecast_snapshot(card: dict) -> dict:
+    """What the row saw: the card's hash, its verdict, and the engine side."""
+    snap = {"card_hash": card.get("card_hash") or card_hash(card),
+            "asof": card.get("asof"), "verdict": card.get("verdict"),
+            "confidence": card.get("confidence")}
+    for k in (*ENGINE_KEYS, "engine_unavailable", "engine_last_filed"):
+        snap[k] = card.get(k)
+    return snap
+
+
+def forecast_records(card: dict, *, today: Any, made_at: str | None = None) -> list:
+    """`belief_state.PredictionRecord`s for one card; [] for a card that is not
+    a forecast (REFUSED_*, an unknown verdict or confidence, unreadable, or a
+    card dated after `today` -- a forecast cannot be about evidence from the
+    future)."""
+    from backend.services import belief_state as B
+    if not isinstance(card, dict) or card.get("_unreadable") or not card.get("ticker"):
+        return []
+    p = forecast_probability(card.get("verdict"), card.get("confidence"))
+    if p is None:
+        return []
+    today_d = _asof_date(today)
+    asof = _day(card.get("asof"))
+    if asof is None or asof > today_d.isoformat():
+        return []
+    snap = forecast_snapshot(card)
+    ud = card.get("upcoming_dates") or []
+    nxt = str(ud[0]) if isinstance(ud, list) and ud else ""
+    out = []
+    for h in FORECAST_HORIZONS:
+        out.append(B.make_prediction(
+            ticker=str(card["ticker"]).upper(), specialist=FORECAST_SPECIALIST,
+            observable=B.Observable.BEATS_BENCHMARK, horizon_days=h,
+            probability=p, benchmark=FORECAST_BENCHMARK,
+            thesis=str(card.get("bull") or "")[:1200],
+            counter_thesis=str(card.get("falsifier") or "")[:800],
+            next_observable=nxt[:300],
+            model=str(card.get("synth_model") or card.get("quest_model") or "unknown"),
+            model_version=str(card.get("schema") or SCHEMA_VERSION),
+            prompt=FORECAST_CONTRACT, input_snapshot=snap, made_at=made_at,
+            mechanism_id=FORECAST_MECHANISM, decision_date=today_d.isoformat(),
+            inputs_used={"source": "thesis_card", "as_of": asof,
+                         "card_hash": snap["card_hash"],
+                         "card_kind": card.get("kind")},
+            confidence=CONFIDENCE_KEEP[card["confidence"]],
+            licence="PRODUCT_EXPERIMENT",
+            notes_text=(f"thesis card {asof}: verdict {card.get('verdict')} / "
+                        f"confidence {card.get('confidence')} -> p {p:.3f}")))
+    return out
+
+
+def forecast_rows(card: dict, *, today: Any, made_at: str | None = None) -> list[dict]:
+    """The rows one card writes, as ledger dicts. See `forecast_records`."""
+    from dataclasses import asdict
+    return [asdict(r) for r in forecast_records(card, today=today, made_at=made_at)]
+
+
+def _written_keys(ledger_rows: Iterable[dict]) -> set[tuple[str, int]]:
+    """(card_hash, horizon) already in the ledger for this specialist."""
+    out = set()
+    for r in ledger_rows:
+        if r.get("specialist") != FORECAST_SPECIALIST:
+            continue
+        h = (r.get("inputs_used") or {}).get("card_hash")
+        if h:
+            out.add((str(h), int(r.get("horizon_days") or 0)))
+    return out
+
+
+def write_forecasts(cards: Iterable[dict], *, today: Any,
+                    path: Path | None = None) -> dict:
+    """Append every card's rows that are not already in the ledger.
+
+    IDEMPOTENT per (card_hash, horizon): a card is ONE forecast, ever. A re-run,
+    a later day's backfill, or the run's per-card write followed by a backfill
+    writes nothing twice (the hash covers `asof`, so tomorrow's card of the same
+    name is a new card and a new forecast). The ledger is
+    the record of what was written -- the card file is not touched, so its hash
+    stays valid.
+    """
+    from backend.services import belief_state as B
+    today_d = _asof_date(today).isoformat()
+    have = _written_keys(B.read_predictions(path))
+    recs, res = [], {"n_cards": 0, "n_not_a_forecast": 0, "n_already_written": 0,
+                     "not_a_forecast": []}
+    for c in cards:
+        res["n_cards"] += 1
+        rs = forecast_records(c, today=today_d)
+        if not rs:
+            res["n_not_a_forecast"] += 1
+            res["not_a_forecast"].append(f"{c.get('ticker')}:{c.get('verdict')}")
+            continue
+        for r in rs:
+            key = (r.inputs_used["card_hash"], r.horizon_days)
+            if key in have:
+                res["n_already_written"] += 1
+                continue
+            have.add(key)
+            recs.append(r)
+    if recs:
+        B.append(recs, path=path)
+    res["n_rows_written"] = len(recs)
+    return res
