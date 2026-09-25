@@ -22,6 +22,7 @@ Big local artefacts that are deliberately NOT committed are catalogued in
 **`DATA_MANIFEST.md`** — check it before concluding a dataset was never pulled.
 
 ## TIER 0 — CANON (changes a few times a year; read every session)
+- **`AEGIS_STRATEGY_2026-09-26_ONE_PIPELINE.md` — the strategy in one page (2026-09-26):** the sentence, the pipeline with every box's live module and grade, the three claims we can make and the one we cannot (beating SPY forward), what the nightly sim is FOR (the strategy library), the process census, experiments vs accidental clashes. Read it before any roadmap.
 - `AEGIS_STRATEGIC_INVARIANTS.md` — the sixteen points.
 - `AEGIS_VISION_2026-08-28_MURAT_IN_HIS_OWN_WORDS.md` — the intent, verbatim, with corrections and the one missing artery.
 - `AEGIS_VISION_2026-08-30_LOG_REVISION_ERA_REPLAY.md` -- TIER 0 addendum (30 Aug): two independent LLMs, the news funnel, the anonymised/fantasy ERA REPLAY backtest (T13), and why the books were not deciding.
