@@ -3888,3 +3888,25 @@ THESIS_CARD_REVISION_DAYS = 90
 #: 1) is re-asked this many times on the same cached prefix before freezing.
 #: The 2026-09-25 smoke call returned one position of an 18-name strategy.
 BOOK_FACTORY_MAX_REASKS = 1
+
+# ── Strategy library + nightly backtest factory (chunk 3b, 2026-09-26) ──────
+#: `backend/services/strategy_library.py` (rules) and
+#: `scripts/night_backtest_factory.py` (the night unit). Output folder under
+#: OPTIMUS_LEDGER_DIR. CPU only, no LLM, no broker.
+STRATEGY_LIB_SUBDIR = "strategy_library"
+#: First bar the panel reads; features need 252 sessions, so the first
+#: decision month is ~a year later.
+STRATEGY_LIB_START = "2016-01-01"
+#: The "if Aegis had existed in 2020" line starts here (hindsight-labelled).
+STRATEGY_LIB_SINCE = "2020-01-01"
+#: Return credited to a held name whose bars stop before the exit session --
+#: the same declared assumption as `portfolio_farm.Policy.delisting_return`.
+STRATEGY_LIB_DELIST_RETURN = -0.30
+#: A crash loses at most this many strategies of work.
+STRATEGY_LIB_CHECKPOINT_EVERY = 10
+#: The night's box, in awake minutes. Past it the factory checkpoints and
+#: writes a PARTIAL leaderboard naming how many rules it reached.
+STRATEGY_LIB_TIME_BOX_MIN = 90
+#: Rows per leaderboard table, and how many DSR leaders get a forward book.
+STRATEGY_LIB_TOP_N = 10
+STRATEGY_LIB_FREEZE_TOP = 10
