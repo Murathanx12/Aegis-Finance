@@ -206,3 +206,18 @@ Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044
 - **Owed**: `xs_ranker.share_of_total_by_date` re-key; Newey-West SE for hold > 1 month; pooled
   per-family tests; size/vol/past-return-matched random twins; WLS membership check; the sim's
   factory unit froze 30 `lib_*` books at 17:37Z (in `books.jsonl`, `d46c34b5`).
+
+## 13. 05:20 HKT 09-27 — the reading queue's tally, and where it stopped
+- Queue `QUEUE_2026-09-26.txt` ran to its claims line on the cached-verb code: **+23 articles**
+  (corpus 12 → 35) and **12 MarketWatch analyst snapshots**; claims → **48 `wsj_heard_on_the_street`
+  + 3 `barrons_stock_picks` forecast rows** (graded by the existing grader from Monday).
+- The **archive line refused** (`REFUSED_GATEWAY_DOWN`, gateway timeout 04:48) and after a gateway
+  restart `tabs` times out at 45 s on every attempt — Chrome itself is slow under the tab load
+  (Murat's 33 + the reader's leftovers). **Left for the morning**: close the leftover Dow Jones tabs
+  in the MuratClaw window (or restart Chrome — the remote-debugging toggle persists), restart the
+  gateway, rerun `python -m scripts.dowjones_pull --queue backend/data/optimus/dowjones/QUEUE_2026-09-26.txt --handoff --profile user`
+  (DONE lines skip). Next reader change owed: navigate each lane tab to `about:blank` between reads
+  so heavy pages do not pile up.
+- Matched twins `4b9f9d9c`: ~40% of the 2024-26 top-10's excess over random is style (size/vol/
+  past-return); HAC t changes no verdict (floored at the plain SE); `xs_ranker` by-year re-keyed
+  on the hold period. CI green through `f0182c54`.
