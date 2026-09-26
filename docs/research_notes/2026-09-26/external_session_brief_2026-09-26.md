@@ -75,3 +75,35 @@ them; best historical / sealed / forward strategy; features surviving matched
 controls; data nobody consumed; more/less compute tomorrow; and the three
 sentences: WHAT CURRENTLY WORKS? WHAT DOES NOT? THE SINGLE HIGHEST-EV NEXT
 EXPERIMENT. Not a roadmap.
+
+
+---
+
+## Murat's ORIGINAL prompt (13:30 HKT) — this outranks the GPT list above
+"I'm going out for five hours ... use OpenClaw again because I logged into X ...
+work on the market analysis more, find demands, review the forecasts and the
+reviews and the analysis — anything we manufactured — grade them, what was true,
+what was not. Some of the paper cards moved so much — the ones that moved 10%,
+and they are very new. Why did they move this fast? Why are they this good?
+What can we learn, how can we improve them? There is no roadmap left; find ways
+to improve, using Sonnet, OpenClaw, DeepSeek and everything built in. I will be
+reading the PDF over the weekend and make my own review. Work more on the
+backtest: the GitHub still says Aegis is ~30% on the backtest and the benchmark
+~110%. We need to show 'we made 700% on the backtest and this correlates to
+this on paper'. Till Monday focus on backtests; use OpenClaw to access the
+website we used at the beginning to find backtest strategies and upload ours;
+OpenClaw can research Reddit and GitHub — we are not utilising it. Telegram:
+the bot should respond using the local model, but the local model should not
+always run (4 GB VRAM); message OpenClaw, it opens X, uses all our files.
+Review Railway, make it cheaper, look at other projects, copy from them. Our
+value proposition: (1) a cheap, accessible tool for the average person — a
+small hedge fund for people who don't know how to invest, educational, guidance
+— how do we make revenue; (2) my investing tool — beat the S&P 500, manage my
+money without me involved much. Continuous learning. We don't have a solid
+strategy we can say wins. Use all the news: articles, patents, politicians,
+insider-trading news — Trump's insider-trading leak, the Goldman Sachs list
+leak — documents we can utilise. From news, demand, forecasts and analysis, an
+LLM plus our infrastructure makes investments more profitable than the S&P: a
+human investor, but better, with infinite data. Review and rank us against
+competitors, firms, projects: why we are better, what to focus on. Be
+interdisciplinary: patents, research papers, anything we can utilise."

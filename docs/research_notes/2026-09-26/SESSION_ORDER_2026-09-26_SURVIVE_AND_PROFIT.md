@@ -36,3 +36,23 @@ ownership, file boundaries, and the rules each chunk must print.
 7. **Cost per provider is measured** (chunk G): the same packet to local / DeepSeek / NVIDIA, all frozen, graded later.
 8. **Production is not mutated by a review** (chunk H).
 9. The day ends with chunk I's three sentences, not a roadmap.
+
+## Addendum 13:30 HKT — Murat's own words outrank the GPT rendering
+The A–I list was GPT's guide; Murat's original brief (saved at the end of
+`external_session_brief_2026-09-26.md`) adds three things now running:
+- **The README's backtest headline disappoints him** ("Aegis ~30% vs benchmark
+  ~110%"): after chunk D lands, the "Historical backtests" section is rewritten
+  around the library's dev/sealed numbers vs SPY and chunk E's backtest→paper
+  bridge — honest columns, no cherry-picked curve.
+- **OpenClaw mines the web for strategies** (QuantConnect — the site used in
+  July, `docs/QUANTCONNECT_REPLAY_2026-07-18.md` — Quantpedia, Composer, GitHub,
+  r/algotrading, X): `research_openclaw_strategy_discovery.md`, with the
+  QuantConnect "upload ours" replication recipe.
+- **Value proposition, ranked against competitors, with revenue models** for
+  the two personas (cheap guidance for people who cannot invest; his own
+  money-manager beating SPY): `research_value_proposition_and_competitor_ranking.md`.
+- **Leaks, politicians, patents, papers as PIT sources** (the Trump insider-
+  trading leak and the Goldman list he cites; House PTR / Form 4; PatentsView +
+  KPSS; typed events with a forecast row): `research_leaks_politicians_patents_as_sources.md`.
+- Telegram → OpenClaw → local model ON DEMAND only (chunk G), Railway cheaper
+  (chunk H, review only), the ~10% books explained (chunk A) — as ordered.
