@@ -173,3 +173,36 @@ Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044
   `filing_similarity_change`, `distance_to_default_rising`, `call_tone_drift`, `opex_week_large_hold`;
   enablers `news_tone_z` (FinBERT column) and the `VAL-01` market-value fix.
 - Sim `24b89eb2f80a` cycle 11 at 02:03 (first cycle was the slow daily analyst pull).
+
+## 12. 03:30 → 04:15 HKT 09-27 — the reviewer overturned the night's loudest sentence
+`reviews/REVIEW_2026-09-27_SIGNAL_STRUCTURE_ROUND2_BRIDGE.md` + `ADJUDICATION_2026-09-27_...md`.
+- **"The momentum win is semis beta" is WITHDRAWN.** Median alpha SE 0.88%/mo on 32 blocks → MDE
+  2.46%/mo; betas flip between windows (MTUM 1.4 → 0, SMH 0.4 → 1.0). Every alpha now prints SE +
+  MDE and a verdict; **all 30 of the 2024-26 top-30 are CANNOT_DISTINGUISH**; 14 ALPHA_DETECTED
+  across 282 (12 negative; `small_dv`, `insider_cluster_small` positive); 0 BETA_EXPLAINS (`e30e5bc2`).
+- **The IWM tilt is the panel's**: random controls' IWM β 0.65–0.92. Rules beating the benchmark in
+  both windows: 68 vs SPY / 117 vs IWM / 137 vs the panel's random portfolio (T164302Z). The README
+  now says "vs SPY" understates every rule by the panel's own tilt.
+- **Bet-count curve** (282 rules): active 35/79/131/187/238 at ρ 0.5…0.9; after 6 ETFs 99/147/183/216/250.
+  DSR at n=216: `mom_12_1_q` 0.347, `eap_mom@k10` 0.617 — nothing reaches 0.95.
+- **A DEFECT fixed**: by-year / LOO were keyed on the DECISION date, not the hold month. Re-keyed;
+  `leaderboard_2026-09-26T164302Z.rekeyed.json` lists **29 rules whose LOO-worst verdict flips**
+  (28 fail→pass, `lowvol_252_mega` pass→fail; none in the 2024-26 top-10); distance-to-default's
+  "2020 +61%" becomes 2020 −3.2% / 2021 +75.5% (January 2021, the meme squeeze). New rows carry
+  `by_year_hold` + the deprecated decision table (`5f2f36fb`).
+- **VAL-01 mapping by the dated CRSP–Compustat link** (`d46c34b5`): 371 of 983 renamed dead
+  securities now map (612 have no link row); market-value rows 231,196 → 248,232; value rules REFUSE
+  a date below k eligible names (factory wired `c298b363`).
+- **The dress rehearsal is frozen for 09-28** (`docs/BOOK_2026-09-27_BLOOMBERG_DRESS_REHEARSAL.md`):
+  `bloomberg_rehearsal_2026-09-27` id `4d0cebfeb8867fb8` — 10 names × 10% with a Q3 print inside
+  21 sessions, ranked by the σ63 predicted move, fundamentals-tilted, one semi (NVEC); expected σ
+  8.3% / 21 sessions; declared β: SPY 0.89, IWM−SPY 0.94, SMH−SPY −0.03, **MTUM−SPY −0.73 (anti-
+  momentum, unplanned)**; stop at −2σ; the 10-26 checks: move-size rank ρ ≥ 0.3, realised exposure
+  within ±0.3 (a 21-session β has ±0.5 error — read beside it), fills vs plan. Twins: ranks 11–20
+  `d1b5b566e58b9b39`, random `672d2b4cdcdb76a0`, IWM `e1211de4cbd952c0`, SPY `dbc218ccb553a6ba`.
+  `murat_core_satellite_2026-09-27` id `5517aa50a29bc95b`: 80% SPY + 10 × 2% fundamentals sleeve,
+  TE 4.09%/yr; twins 100% SPY `923e79dbd12a963a`, random sleeve `c05861aebd4361c0`. The
+  fundamentals score is a five-ratio stand-in (the +39 bps model's data ends 2024-12).
+- **Owed**: `xs_ranker.share_of_total_by_date` re-key; Newey-West SE for hold > 1 month; pooled
+  per-family tests; size/vol/past-return-matched random twins; WLS membership check; the sim's
+  factory unit froze 30 `lib_*` books at 17:37Z (in `books.jsonl`, `d46c34b5`).
