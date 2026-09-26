@@ -45,7 +45,7 @@ What landed in the commit that carries this note, and the two patches it could n
 
 ## Owed patch 1: `attention_z` archive exclusion (`backend/services/pit_features.py`, not mine tonight)
 
-> **APPLIED 2026-09-27** in commit `COMMIT_HASH` ("Owed hooks applied: ..."). It mirrors
+> **APPLIED 2026-09-27** in commit `6a57132f` ("Owed hooks applied: ..."). It mirrors
 > `tone_frame` and uses `news_registry.grade_row`. `load_news_corpus` now carries
 > `published_utc` and `pit_grade`. Without them every row lacked a stamp pair and the patch
 > would have excluded 0. `compute()` writes `attention_archive_rows_excluded` and
@@ -122,7 +122,7 @@ by image name. The new loop proves itself with its first `lab_status.json` row
 
 ## Owed patch 3: footprint fields on the run receipt (`scripts/dowjones_pull.py`)
 
-> **APPLIED 2026-09-27** in commit `COMMIT_HASH`.
+> **APPLIED 2026-09-27** in commit `6a57132f`.
 > - `FOOTPRINT_RECEIPT_KEYS` and `_footprint_fields` replace the two fixed key lists: the one in
 >   `run_reads` and the one in `_merged_footprint`.
 > - The run receipt's `footprint` block now carries `cli_scope`, `cli_calls`, `cli_seconds`,
