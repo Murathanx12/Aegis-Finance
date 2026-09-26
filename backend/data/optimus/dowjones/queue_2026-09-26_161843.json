@@ -1,0 +1,15 @@
+{
+ "receipt": "dowjones_pull.queue",
+ "queue": "backend\\data\\optimus\\dowjones\\QUEUE_2026-09-26.txt",
+ "started_utc": "2026-09-26T16:18:18+00:00",
+ "lines": [
+  {
+   "line": 4,
+   "args": "--plan \"barrons:stock_picks:10,wsj:heard_on_the_street:10,barrons:big_money_poll:3,marketwatch:analyst_estimates:AARD|ABSI|AMSC|BHVN|DKNG|HUBS|KYTX|NTLA|PRCH|QUBT|SLDP|SOC|VRT|GEV|MU|TSM|HOOD|NVT|AVGO|CLS|BE|MP|LEU|CCJ|NOVT|IONQ|VRTX|WST|COGT|VKTX|AGIO|RGEN|BBIO|PRAX|AAPL|ADUS|ALG|AMZN|ARCO|AVPT\"",
+   "rc": 2,
+   "seconds": 25.9,
+   "status": "FAILED_WILL_RETRY"
+  }
+ ],
+ "finished_utc": "2026-09-26T16:18:43+00:00"
+}

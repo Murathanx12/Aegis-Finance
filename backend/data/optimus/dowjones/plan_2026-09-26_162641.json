@@ -1,0 +1,19 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "plan": "barrons:stock_picks:10,wsj:heard_on_the_street:10,barrons:big_money_poll:3,marketwatch:analyst_estimates:AARD|ABSI|AMSC|BHVN|DKNG|HUBS|KYTX|NTLA|PRCH|QUBT|SLDP|SOC|VRT|GEV|MU|TSM|HOOD|NVT|AVGO|CLS|BE|MP|LEU|CCJ|NOVT|IONQ|VRTX|WST|COGT|VKTX|AGIO|RGEN|BBIO|PRAX|AAPL|ADUS|ALG|AMZN|ARCO|AVPT",
+ "n_articles": 0,
+ "reattach_log": [
+  {
+   "at": "2026-09-26T16:27:16+00:00",
+   "profile": "user",
+   "attempt": 1,
+   "from_state": "stopped",
+   "start_rc": 1,
+   "start_out": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.",
+   "ok": false,
+   "why": "GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified."
+  }
+ ],
+ "refused": "ReaderRefused: REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered 'GatewayClientRequestError: Error: Chrome MCP subprocess tree cleanup could not be verified.'; the reader does not restart the gateway",
+ "finished_utc": "2026-09-26T16:27:16+00:00"
+}

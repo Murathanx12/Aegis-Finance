@@ -1,0 +1,7 @@
+{
+ "receipt": "dowjones_pull.plan",
+ "plan": "barrons:stock_picks:10,wsj:heard_on_the_street:10,barrons:big_money_poll:3,marketwatch:analyst_estimates:AARD|ABSI|AMSC|BHVN|DKNG|HUBS|KYTX|NTLA|PRCH|QUBT|SLDP|SOC|VRT|GEV|MU|TSM|HOOD|NVT|AVGO|CLS|BE|MP|LEU|CCJ|NOVT|IONQ|VRTX|WST|COGT|VKTX|AGIO|RGEN|BBIO|PRAX|AAPL|ADUS|ALG|AMZN|ARCO|AVPT",
+ "n_articles": 0,
+ "refused": "OpenClawRefused: REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped', not running. It attaches to Murat's own open Chrome (chrome://inspect/#remote-debugging toggle on); Aegis never launches a browser in its place.",
+ "finished_utc": "2026-09-26T16:18:43+00:00"
+}

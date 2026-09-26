@@ -357,3 +357,37 @@ navigate` now removes a query that contains a cmd metacharacter (Dow Jones artic
 complete without their referral tags) and records the original as `url_shown`. **The root fix
 (quote the arguments or avoid the shell in `_run`) belongs in `openclaw_client`, which is not
 this chunk's file.**
+
+### 12.1 Re-attach (coordinator's requirement, same night)
+
+`user` drops to `stopped` between sections: the Chrome MCP subprocess dies while Chrome stays
+up with remote debugging on. The 16:01 MarketWatch pass was refused this way.
+`web_reader.ensure_attached(profile)` now handles it:
+
+* `profiles` shows `stopped` → `openclaw browser --browser-profile user start` → the profile
+  is polled for up to `REATTACH_WAIT_S` = 20 s, and counts as attached only when the state
+  is `running` **and** `tabs` is non-empty. Every attempt goes into `reattach_log`
+  (`start_rc`, `start_out`, seconds) and is counted in `reattaches`. The call refuses
+  `REFUSED_REATTACH_FAILED` after **two** failed attempts.
+* **The gateway is never restarted from the reader.** If `start` or `profiles` shows a gateway
+  timeout (`gateway timeout after 45000ms`, a CLI timeout, or the profile missing from
+  `profiles`), the call refuses `REFUSED_GATEWAY_DOWN` straight away. The same applies to
+  `Chrome MCP subprocess tree cleanup could not be verified`, which comes back as
+  `GATEWAY_NEEDS_RESTART` on the first attempt: retrying `start` does not clear it.
+* `--plan` / `--archive` call `ensure_attached` **before** `tabs`. During a run, any
+  detached error (`is 'stopped'`, `REFUSED_OPERATOR_TAB_MISSING`, `REFUSED_TABS_UNREADABLE`)
+  triggers `_Recovery.recover`: it re-attaches, then remaps **every** tab the run holds by the
+  URL that tab last loaded (the newest matching tab, because tab ids change after a
+  re-attach), re-resolves the parents by host, and reopens a lane whose tab cannot be found
+  from its new parent. The item that failed is retried. The receipt holds `tab_remaps`,
+  `orphaned_tabs` and `parent_tabs_final`. A close that fails because the profile detached
+  gets one recovery and a second try. There is a cap of 6 recoveries per run.
+
+**Live result, 2026-09-26 16:17-16:27 UTC:** the profile had been `stopped` since the 16:01
+MarketWatch run. `start` answered `GatewayClientRequestError: Error: Chrome MCP subprocess
+tree cleanup could not be verified.` (rc 1) on every attempt: three from this builder (two
+through a test that reached the live CLI before it was stubbed, one by hand) and three from
+the queue runs. Each time, the state stayed `stopped`. The queue's first line refused with
+`REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART` (`dowjones/plan_2026-09-26_162641.json`) and is
+**not** marked done, so the next `--queue` run starts with it. It needs a gateway restart by
+the operator first.

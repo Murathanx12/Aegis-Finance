@@ -134,6 +134,115 @@ class ReaderRefused(RuntimeError):
     """The reader will not take this step. Never swallowed into a no-op."""
 
 
+# ───────────────────────────── re-attach (J2) ───────────────────────────────
+#
+# 2026-09-26: `user` dropped to `stopped` BETWEEN sections -- the Chrome MCP
+# subprocess dies while Chrome itself stays up with remote debugging on -- and
+# the MarketWatch pass was refused. `openclaw browser --browser-profile user
+# start` re-attaches to the SAME running Chrome (existing-session is
+# attachOnly; it never launches a browser). A dead GATEWAY is different: the
+# reader never restarts it (the operator does), it refuses by name.
+
+#: An operator-profile error that means "detached", not "refused".
+DETACHED = re.compile(r"REFUSED_BROWSER_PROFILE_UNAVAILABLE|is 'stopped'|not running|"
+                      r"REFUSED_OPERATOR_TAB_MISSING|REFUSED_TABS_UNREADABLE", re.I)
+#: The gateway itself is down or timing out -- never restarted from here.
+GATEWAY_DOWN = re.compile(r"gateway timeout|timeout after \d+\s*ms|gateway (?:closed|"
+                          r"unreachable|not running|is not running)|ECONNREFUSED", re.I)
+#: `start` answered this on 2026-09-26 16:27 UTC after the MCP subprocess died:
+#: the gateway cannot re-attach until IT is cleaned up (an operator restart).
+#: Retrying `start` does not help, so it refuses by name at once.
+GATEWAY_STUCK = re.compile(r"subprocess tree cleanup could not be verified", re.I)
+REATTACH_WAIT_S = 20.0
+REATTACH_POLL_S = 2.0
+REATTACH_MAX_FAILURES = 2
+
+
+def is_detached(msg: str) -> bool:
+    return bool(DETACHED.search(msg or "")) and not GATEWAY_DOWN.search(msg or "")
+
+
+def is_gateway_down(msg: str) -> bool:
+    return bool(GATEWAY_DOWN.search(msg or ""))
+
+
+def ensure_attached(profile: str = "user", *, oc: Any = None, log: list | None = None,
+                    sleep_fn: Callable[[float], None] = time.sleep,
+                    clock: Callable[[], float] = time.monotonic) -> dict:
+    """The operator profile is RUNNING with tabs, re-attaching if it is not.
+
+    `stopped` -> `browser --browser-profile <p> start`, then poll `profiles`
+    and `tabs` for up to `REATTACH_WAIT_S`; a success needs state `running`
+    AND a non-empty tab list. Each attempt is appended to `log`. Refuses
+    `REFUSED_REATTACH_FAILED` after `REATTACH_MAX_FAILURES` failed attempts,
+    and `REFUSED_GATEWAY_DOWN` at once when the gateway itself times out --
+    the reader never restarts the gateway. Tab ids CHANGE after a re-attach:
+    the caller re-resolves every tab it holds."""
+    import subprocess
+    if oc is None:
+        from backend.services import openclaw_client as oc  # type: ignore[no-redef]
+    log = log if log is not None else []
+
+    def state() -> str | None:
+        try:
+            ps = oc.profiles()
+        except subprocess.TimeoutExpired as exc:
+            raise ReaderRefused(f"REFUSED_GATEWAY_DOWN: `browser profiles` timed out ({exc}); "
+                                f"the reader does not restart the gateway") from exc
+        f = next((p for p in ps if p.get("name") == profile), None)
+        return f.get("state") if f else None
+
+    st = state()
+    if st == "running":
+        return {"reattached": False, "state": st}
+    if st is None:
+        raise ReaderRefused(f"REFUSED_GATEWAY_DOWN: `browser profiles` did not list {profile!r} "
+                            f"(gateway down or timing out?); the reader does not restart it")
+    fails = 0
+    while fails < REATTACH_MAX_FAILURES:
+        t0 = clock()
+        rc_start: int | None = None
+        try:
+            r = oc._run(["browser", "--browser-profile", profile, "start"], timeout=60)
+            rc_start, out = r.returncode, f"{r.stdout or ''}\n{r.stderr or ''}"
+        except subprocess.TimeoutExpired:
+            out = "gateway timeout: `start` timed out after 60000ms"
+        entry: dict[str, Any] = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                                 "profile": profile, "attempt": fails + 1, "from_state": st,
+                                 "start_rc": rc_start, "start_out": out.strip()[:300]}
+        if GATEWAY_STUCK.search(out):
+            entry.update(ok=False, why=out.strip()[:200])
+            log.append(entry)
+            raise ReaderRefused(f"REFUSED_GATEWAY_DOWN: GATEWAY_NEEDS_RESTART: `start` answered "
+                                f"{out.strip()[:160]!r}; the reader does not restart the gateway")
+        if GATEWAY_DOWN.search(out):
+            entry.update(ok=False, why=out.strip()[:200])
+            log.append(entry)
+            raise ReaderRefused(f"REFUSED_GATEWAY_DOWN: {out.strip()[:200]!r}; the reader does "
+                                f"not restart the gateway")
+        ok, n_tabs = False, 0
+        while True:
+            if state() == "running":
+                try:
+                    n_tabs = len(oc.tabs(profile_name=profile))
+                except Exception:  # noqa: BLE001 -- not ready yet
+                    n_tabs = 0
+                if n_tabs:
+                    ok = True
+                    break
+            if clock() - t0 >= REATTACH_WAIT_S:
+                break
+            sleep_fn(REATTACH_POLL_S)
+        entry.update(ok=ok, tabs=n_tabs, seconds=round(clock() - t0, 1))
+        log.append(entry)
+        if ok:
+            getattr(oc, "_ATTACHED_CACHE", {}).pop(profile, None)
+            return {"reattached": True, "state": "running", "tabs": n_tabs}
+        fails += 1
+    raise ReaderRefused(f"REFUSED_REATTACH_FAILED: {profile!r} still not running with tabs after "
+                        f"{REATTACH_MAX_FAILURES} `start` attempts ({REATTACH_WAIT_S:.0f} s each)")
+
+
 # ───────────────────────────── snapshot parsing ─────────────────────────────
 
 def parse_snapshot(text: str) -> dict:

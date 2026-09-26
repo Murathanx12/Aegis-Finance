@@ -1001,3 +1001,167 @@ def test_a_url_with_a_shell_metacharacter_loses_only_its_tracking_query(tmp_path
     rd.navigate(u)
     nav = [c for c in drv.calls if c[0] == "navigate"][0]
     assert "&" not in nav[2][0] and rd.log[-1]["url_shown"] == u
+
+
+class FakeOC:
+    """`profiles` / `_run` / `tabs` for `ensure_attached`; never the real CLI."""
+
+    def __init__(self, start_works=True, start_out="", tabs=None):
+        self.state, self.start_works, self.start_out = "stopped", start_works, start_out
+        self.runs, self._tabs = [], tabs if tabs is not None else [{"tabId": "t1", "url": "u"}]
+
+    def profiles(self):
+        return [{"name": "user", "state": self.state}]
+
+    def _run(self, args, timeout=180.0):
+        self.runs.append(args)
+        if args[-1] == "start" and self.start_works:
+            self.state = "running"
+        return subprocess.CompletedProcess(args, 0, self.start_out, "")
+
+    def tabs(self, profile_name=None):
+        return self._tabs if self.state == "running" else []
+
+
+@pytest.fixture
+def fast_reattach(monkeypatch):
+    monkeypatch.setattr(WR, "REATTACH_WAIT_S", 4.0)
+    monkeypatch.setattr(WR, "REATTACH_POLL_S", 1.0)
+    t = [0.0]
+
+    def sleep(s):
+        t[0] += s
+    return {"sleep_fn": sleep, "clock": lambda: t[0]}
+
+
+def test_a_stopped_profile_is_reattached_with_start_and_logged(fast_reattach):
+    oc, log = FakeOC(), []
+    r = WR.ensure_attached("user", oc=oc, log=log, **fast_reattach)
+    assert r["reattached"] and oc.runs == [["browser", "--browser-profile", "user", "start"]]
+    assert len(log) == 1 and log[0]["ok"] and log[0]["from_state"] == "stopped"
+    # already running -> nothing is started
+    assert WR.ensure_attached("user", oc=oc, log=log, **fast_reattach) == {
+        "reattached": False, "state": "running"}
+    assert len(oc.runs) == 1
+
+
+def test_reattach_refuses_after_two_failed_starts(fast_reattach):
+    oc, log = FakeOC(start_works=False), []
+    with pytest.raises(WR.ReaderRefused, match="REATTACH_FAILED"):
+        WR.ensure_attached("user", oc=oc, log=log, **fast_reattach)
+    assert len(oc.runs) == 2 and [x["ok"] for x in log] == [False, False]
+    # running but NO tabs is not attached either
+    oc2 = FakeOC(tabs=[])
+    with pytest.raises(WR.ReaderRefused, match="REATTACH_FAILED"):
+        WR.ensure_attached("user", oc=oc2, log=[], **fast_reattach)
+
+
+def test_a_gateway_timeout_refuses_by_name_and_never_restarts_the_gateway(fast_reattach):
+    oc = FakeOC(start_works=False, start_out="Error: gateway timeout after 45000ms")
+    with pytest.raises(WR.ReaderRefused, match="GATEWAY_DOWN"):
+        WR.ensure_attached("user", oc=oc, log=[], **fast_reattach)
+    assert oc.runs == [["browser", "--browser-profile", "user", "start"]]
+    assert not any("gateway" in a for r in oc.runs for a in r)
+    assert not WR.is_detached("OpenClawRefused: gateway timeout after 45000ms; is 'stopped'")
+    assert WR.is_detached("REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile 'user' is 'stopped'")
+
+
+def test_a_stopped_user_profile_is_reattached_before_any_tabs_call(ledger, monkeypatch, capsys):
+    from scripts import dowjones_pull as DP
+    monkeypatch.setattr(C, "DOWJONES_HANDOFF_FILE", ledger / "HANDOFF_PC")
+    (ledger / "HANDOFF_PC").write_text("x")
+    monkeypatch.setattr(WR, "REATTACH_WAIT_S", 0.0)
+    fake = FakeOC(start_works=False)
+    monkeypatch.setattr(OC, "profiles", fake.profiles)
+    monkeypatch.setattr(OC, "_run", fake._run)       # NEVER the live CLI in a test
+
+    def no_tabs(**k):
+        raise AssertionError("tabs must not be called on a stopped operator profile")
+    monkeypatch.setattr(OC, "tabs", no_tabs)
+    assert DP.main(["--handoff", "--plan", "wsj:heard_on_the_street:2"]) == 2
+    out = capsys.readouterr().out
+    assert "REFUSED_REATTACH_FAILED" in out and "ToU 9.4.1" in out
+    assert [r[-1] for r in fake.runs] == ["start", "start"]
+    rc = json.loads(sorted((ledger / "dowjones").glob("plan_*.json"))[-1].read_text(encoding="utf-8"))
+    assert rc["n_articles"] == 0 and "REATTACH_FAILED" in rc["refused"]
+
+
+class DetachingStub(MultiStub):
+    """Drops to `stopped` on the Nth read; `start` re-attaches and RENUMBERS
+    every tab id, as a real re-attach does."""
+
+    def __init__(self, drop_at=3, **kw):
+        super().__init__(**kw)
+        self.state, self.reads, self.drop_at, self.runs = "running", 0, drop_at, []
+        self._OPENED_TABS = set()
+
+    def profiles(self):
+        return [{"name": "user", "state": self.state}]
+
+    def _run(self, args, timeout=180.0):
+        self.runs.append(args)
+        if args[-1] == "start":
+            self.state = "running"
+            shift = lambda t: f"t{int(t[1:]) + 100}"   # noqa: E731
+            self._tabs = [dict(t, tabId=shift(t["tabId"])) for t in self._tabs]
+            self.cur = {shift(k): v for k, v in self.cur.items()}
+        return subprocess.CompletedProcess(args, 0, "", "")
+
+    def tabs(self, profile_name=None):
+        return self._tabs + [{"tabId": k, "url": v} for k, v in self.cur.items()]
+
+    def open_from_tab(self, parent, url, profile_name="user"):
+        r = super().open_from_tab(parent, url, profile_name)
+        self._OPENED_TABS.add(r["new_tab"])
+        return r
+
+    def _check(self, target_id):
+        if self.state != "running":
+            raise OC.OpenClawRefused("REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile "
+                                     "'user' is 'stopped', not running.")
+        if target_id and target_id not in self.cur:
+            raise OC.OpenClawRefused(f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r}")
+
+    def browser(self, verb, *args, profile_name=None, target_id=None, url=None):
+        self._check(target_id)
+        return super().browser(verb, *args, profile_name=profile_name, target_id=target_id,
+                               url=url)
+
+    def read_text(self, tab, profile_name=None):
+        self.reads += 1
+        if self.reads == self.drop_at:
+            self.state = "stopped"
+        self._check(tab)
+        return super().read_text(tab, profile_name)
+
+
+def test_run_plan_reattaches_mid_run_remaps_tabs_and_finishes(ledger, fast_reattach, monkeypatch):
+    from scripts import dowjones_pull as DP
+    monkeypatch.setattr(WR, "REATTACH_WAIT_S", 0.0)
+    drv = DetachingStub(drop_at=3)
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("barrons:stock_picks:3,wsj:heard_on_the_street:5,"
+                          "marketwatch:analyst_estimates:MU|DKNG")
+    parents = DP.resolve_parent_tabs(["barrons", "wsj", "marketwatch"], drv.tabs())
+    rc = DP.run_plan(lanes, parents=parents, driver=drv, throttle=th, stored={})
+    assert rc["reattaches"] == 1 and rc["stopped"] is None
+    assert rc["reattach_log"][0]["ok"] and [r[-1] for r in drv.runs] == ["start"]
+    assert rc["per_source"]["barrons"]["articles"] == 3
+    assert rc["per_source"]["wsj"]["articles"] == 1
+    assert rc["per_source"]["marketwatch"]["articles"] == 2
+    # every tab id moved by +100; the run closed the NEW ids and re-resolved parents
+    remap = rc["tab_remaps"][0]["remap"]
+    assert all(v == f"t{int(k[1:]) + 100}" for k, v in remap.items())
+    assert sorted(drv.closed) == sorted(remap.values()) and all(rc["tabs_closed"].values())
+    assert rc["parent_tabs_final"] == {"barrons": "t113", "wsj": "t120", "marketwatch": "t132"}
+    assert any(o.get("why", "").startswith("DETACHED") for o in rc["order"])
+
+
+def test_a_gateway_that_cannot_clean_up_its_mcp_subprocess_refuses_at_once(fast_reattach):
+    # the live answer on 2026-09-26 after the MCP subprocess died: retrying `start` is futile
+    oc = FakeOC(start_works=False, start_out="GatewayClientRequestError: Error: Chrome MCP "
+                                             "subprocess tree cleanup could not be verified.")
+    log: list = []
+    with pytest.raises(WR.ReaderRefused, match="GATEWAY_NEEDS_RESTART"):
+        WR.ensure_attached("user", oc=oc, log=log, **fast_reattach)
+    assert len(oc.runs) == 1 and log[0]["ok"] is False and "cleanup" in log[0]["start_out"]

@@ -280,7 +280,7 @@ def _summary(art: dict) -> dict:
 
 #: Fatal for the WHOLE run (every lane stops): the budget is gone.
 _RUN_FATAL = ("REFUSED_THROTTLE_DAY", "REFUSED_THROTTLE_HOUR", "REFUSED_SESSION_CAP",
-              "REFUSED_READER_BUSY")
+              "REFUSED_READER_BUSY", "REFUSED_GATEWAY_DOWN", "REFUSED_REATTACH")
 #: Fatal for ONE lane: its tab is gone or wandered off the allowed hosts.
 _LANE_FATAL = ("REFUSED_LEFT_HOSTS", "REFUSED_VERB_FAILED", "REFUSED_OPERATOR_TAB",
                "REFUSED_TABS_UNREADABLE", "REFUSED_PROFILE")
@@ -419,6 +419,106 @@ def _classify(msg: str) -> str:
     return "item"
 
 
+class _Recovery:
+    """Re-attach after `user` drops to `stopped` mid-run (2026-09-26: the
+    Chrome MCP subprocess dies between sections while Chrome stays up).
+
+    `recover()` runs `WR.ensure_attached` (start, wait <= 20 s for running +
+    tabs, refuse after two failed attempts, never touch a dead gateway), then
+    -- because tab ids CHANGE after a re-attach -- remaps every tab this run
+    holds by the URL it last loaded (the newest matching tab), re-resolves the
+    parents by host, and reopens a lane whose tab cannot be found from its
+    re-resolved parent at the URL it was on. Everything goes in the receipt:
+    `reattaches`, `reattach_log`, `tab_remaps`, `orphaned_tabs`."""
+
+    MAX_PER_RUN = 6
+
+    def __init__(self, driver: Any, profile: str, rc: dict, thr: Any) -> None:
+        self.driver, self.profile, self.rc, self.thr, self.n = driver, profile, rc, thr, 0
+        rc.setdefault("reattaches", 0)
+        rc.setdefault("reattach_log", [])
+        rc.setdefault("tab_remaps", [])
+        rc.setdefault("orphaned_tabs", [])
+
+    def recover(self, readers: dict[str, WR.Reader], parents: dict[str, dict],
+                source_of: dict[str, str]) -> dict:
+        if self.n >= self.MAX_PER_RUN:
+            raise WR.ReaderRefused(f"REFUSED_REATTACH_BUDGET: {self.n} recoveries this run")
+        self.n += 1
+        res = WR.ensure_attached(self.profile, oc=self.driver, log=self.rc["reattach_log"])
+        self.rc["reattaches"] += bool(res.get("reattached"))
+        tabs = self.driver.tabs(profile_name=self.profile)
+        opened = getattr(self.driver, "_OPENED_TABS", None)
+        taken: set[str] = set()
+        remap: dict[str, str | None] = {}
+        lost: list[str] = []
+        for key, rd in readers.items():
+            last = next((pg["url"] for pg in reversed(rd.log) if pg.get("url")), "") or ""
+            want = WR.norm_url(last)
+            cands = sorted((t for t in tabs if str(t.get("tabId")) not in taken
+                            and WR.norm_url(str(t.get("url") or "")) == want),
+                           key=lambda t: -_tab_num(str(t.get("tabId"))))
+            old = rd.tab
+            if cands:
+                new = str(cands[0]["tabId"])
+                taken.add(new)
+                if opened is not None:
+                    opened.discard(old)
+                    opened.add(new)
+                rd.tab, remap[old] = new, new
+            else:
+                remap[old] = None
+                lost.append(key)
+        fresh = resolve_parent_tabs(sorted(set(parents)), tabs, exclude=taken)
+        parents.update(fresh)
+        for key in lost:
+            rd = readers[key]
+            self.rc["orphaned_tabs"].append(rd.tab)
+            last = next((pg["url"] for pg in reversed(rd.log) if pg.get("url")), "") or ""
+            src = source_of[key]
+            self.thr.acquire("open_from_tab", host=f"{src}.com")
+            op = self.driver.open_from_tab(parents[src]["tab"], last, profile_name=self.profile)
+            rd.tab = op["new_tab"]
+            rd.last_snapshot = ""
+            rd.pages += 1
+            rd.log.append({"page": rd.pages, "what": "reopen_after_reattach", "url": last,
+                           "waited_s": self.thr.waits[-1] if self.thr.waits else 0.0,
+                           "at": self.thr.now_fn().isoformat(timespec="seconds")})
+            remap[f"{key}:reopened"] = rd.tab
+        self.rc["tab_remaps"].append({
+            "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "reattached": bool(res.get("reattached")), "remap": remap,
+            "parents": {k: v["tab"] for k, v in parents.items()}})
+        return remap
+
+
+def _close_all(driver: Any, profile: str, readers: dict[str, WR.Reader], rc: dict,
+               recovery: _Recovery | None, parents: dict[str, dict],
+               source_of: dict[str, str]) -> None:
+    """Close every tab this run opened; a close refused because the profile
+    detached gets ONE recovery (re-attach + remap) and a second try."""
+    rc["tabs_closed"] = {}
+    for attempt in (1, 2):
+        detached = False
+        for key, rd in readers.items():
+            if rc["tabs_closed"].get(rd.tab):
+                continue
+            try:
+                cl = driver.browser("close", profile_name=profile, target_id=rd.tab)
+                rc["tabs_closed"][rd.tab] = cl.get("rc") == 0
+            except Exception as exc:  # noqa: BLE001 -- say it, never hide it
+                rc["tabs_closed"][rd.tab] = False
+                rc.setdefault("close_errors", {})[rd.tab] = str(exc)[:200]
+                detached = detached or WR.is_detached(str(exc))
+        if not detached or recovery is None or attempt == 2:
+            return
+        try:
+            recovery.recover(readers, parents, source_of)
+        except Exception as exc:  # noqa: BLE001
+            rc["close_recovery_error"] = str(exc)[:200]
+            return
+
+
 def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "user",
              driver: Any = None, throttle: Any = None, max_pages: int | None = None,
              progress_path: Path | None = None, stored: dict[str, set[str]] | None = None
@@ -441,6 +541,9 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
     lock = WR.acquire_reader_lock()
     readers: dict[str, WR.Reader] = {}
     queues: dict[str, list] = {}
+    parents = {k: dict(v) for k, v in parents.items()}
+    source_of = {ln["lane"]: ln["source"] for ln in lanes}
+    recovery = _Recovery(driver, profile, rc, thr)
 
     def total_pages() -> int:
         return sum(r.pages for r in readers.values())
@@ -473,14 +576,27 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 first_url = listing.format(ticker=todo[0].lower())
             else:
                 first_url = listing
-            try:
-                thr.acquire("open_from_tab", host=f"{src}.com")
-                opened = driver.open_from_tab(parents[src]["tab"], first_url,
-                                              profile_name=profile)
-            except Exception as exc:  # noqa: BLE001 -- the lane stops, said by name
-                st["dropped"] = f"OPEN_FAILED: {type(exc).__name__}: {str(exc)[:200]}"
-                if _classify(str(exc)) == "run":
-                    rc["stopped"] = str(exc)[:200]
+            opened, err = None, None
+            for attempt in (1, 2):
+                try:
+                    thr.acquire("open_from_tab", host=f"{src}.com")
+                    opened = driver.open_from_tab(parents[src]["tab"], first_url,
+                                                  profile_name=profile)
+                    break
+                except Exception as exc:  # noqa: BLE001 -- detached -> re-attach once
+                    err = f"{type(exc).__name__}: {str(exc)[:200]}"
+                    if attempt == 1 and WR.is_detached(str(exc)):
+                        try:
+                            recovery.recover(readers, parents, source_of)
+                            st["parent_tab"] = parents[src]["tab"]
+                            continue
+                        except Exception as exc2:  # noqa: BLE001
+                            err = f"{type(exc2).__name__}: {str(exc2)[:200]}"
+                    break
+            if opened is None:
+                st["dropped"] = f"OPEN_FAILED: {err}"
+                if _classify(err or "") == "run" or WR.is_gateway_down(err or ""):
+                    rc["stopped"] = (err or "")[:200]
                     break
                 continue
             tab = opened["new_tab"]
@@ -546,14 +662,27 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                                         "waited_s": rd.log[-1]["waited_s"] if loaded else 0.0,
                                         "chars": art.get("chars"), "ok": True})
                 except Exception as exc:  # noqa: BLE001 -- classified, never swallowed
-                    first_mw_read[lid] = False
                     msg = f"{type(exc).__name__}: {exc}"[:300]
                     what = item if kind == "ticker" else item.get("url")
+                    if WR.is_detached(msg):
+                        # the profile dropped: re-attach, remap, and retry this item
+                        rc["order"].append({"turn": turn, "lane": lid, "item": what,
+                                            "at": thr.now_fn().isoformat(timespec="seconds"),
+                                            "ok": False, "why": "DETACHED: " + msg[:100]})
+                        try:
+                            recovery.recover(readers, parents, source_of)
+                            q.insert(0, (kind, item))
+                            queues[lid] = q
+                            save()
+                            continue
+                        except Exception as exc2:  # noqa: BLE001
+                            msg = f"{type(exc2).__name__}: {exc2}"[:300]
+                    first_mw_read[lid] = False
                     st["refusals"].append({"item": what, "why": msg})
                     rc["order"].append({"turn": turn, "lane": lid, "item": what,
                                         "at": thr.now_fn().isoformat(timespec="seconds"),
                                         "ok": False, "why": msg[:120]})
-                    cls = _classify(msg)
+                    cls = "run" if WR.is_gateway_down(msg) else _classify(msg)
                     if cls == "run":
                         rc["stopped"] = msg
                         break
@@ -569,14 +698,10 @@ def run_plan(lanes: list[dict], *, parents: dict[str, dict], profile: str = "use
                 save()
     finally:
         # 3. every tab this run opened is closed, whatever happened
-        rc["tabs_closed"] = {}
         for lid, rd in readers.items():
-            try:
-                cl = driver.browser("close", profile_name=profile, target_id=rd.tab)
-                rc["tabs_closed"][rd.tab] = cl.get("rc") == 0
-            except Exception as exc:  # noqa: BLE001 -- say it, never hide it
-                rc["tabs_closed"][rd.tab] = False
-                rc["lanes"][lid]["close_error"] = str(exc)[:200]
+            rc["lanes"][lid]["tab"] = rd.tab           # the id after any re-attach
+        _close_all(driver, profile, readers, rc, recovery, parents, source_of)
+        rc["parent_tabs_final"] = {k: v["tab"] for k, v in parents.items()}
         rc["footprint"] = _merged_footprint(list(readers.values()))
         WR.release_reader_lock(lock)
     rc["hour_cap_waits_s"] = list(getattr(thr, "hour_cap_waits", []))
@@ -658,12 +783,27 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
         return rc
     lock = WR.acquire_reader_lock()
     rd: WR.Reader | None = None
+    readers: dict[str, WR.Reader] = {}
+    parents = {"wsj": {"tab": parent_tab, "url": "", "how": "given"}}
+    recovery = _Recovery(driver, profile, rc, thr)
+
+    def guarded(fn: Any) -> Any:
+        """Run one step; a DETACHED failure gets one re-attach and one retry."""
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001
+            if not WR.is_detached(str(exc)) or not readers:
+                raise
+            recovery.recover(readers, parents, {"wsj": "wsj"})
+            return fn()
+
     try:
         first = archive_url("wsj", days[0])
         thr.acquire("open_from_tab", host="wsj.com")
         opened = driver.open_from_tab(parent_tab, first, profile_name=profile)
         rd = WR.Reader(profile=profile, tab=opened["new_tab"], throttle=thr, driver=driver,
                        max_pages=budget, lock=False)
+        readers["wsj"] = rd
         rc["tab_opened"] = rd.tab
         rd.pages = 1
         rd.log.append({"page": 1, "what": "open_from_tab", "url": first,
@@ -677,10 +817,10 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
             rc["per_day"][d.isoformat()] = st
             try:
                 if i > 0:
-                    rd.navigate(url)
+                    guarded(lambda: rd.navigate(url))
                 rc["order"].append({"day": d.isoformat(), "what": "day_page", "url": url,
                                     "at": rd.log[-1]["at"], "ok": True})
-                links = WR.select_links(rd.snapshot(), ARCHIVE_PATTERN)
+                links = WR.select_links(guarded(rd.snapshot), ARCHIVE_PATTERN)
             except WR.ReaderRefused as exc:
                 st["refusals"].append({"why": str(exc)[:200]})
                 if _classify(str(exc)) in ("run", "host", "lane"):
@@ -695,7 +835,7 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
                 st["refusals"].append({"why": "NO_LINKS_ON_LISTING"})
             for lk in fresh[:room]:
                 try:
-                    art = rd.read_article(lk, column=None)
+                    art = guarded(lambda: rd.read_article(lk, column=None))
                     stored.setdefault(WR.norm_url(lk["url"]), set()).add(_today())
                     st["read"] += 1
                     rc["order"].append({"day": d.isoformat(), "url": art.get("url"),
@@ -714,12 +854,8 @@ def run_archive(days: list[date], *, parent_tab: str, max_per_day: int | None = 
         rc["stopped"] = rc["stopped"] or f"{type(exc).__name__}: {str(exc)[:200]}"
     finally:
         if rd is not None:
-            try:
-                cl = driver.browser("close", profile_name=profile, target_id=rd.tab)
-                rc["tab_closed"] = cl.get("rc") == 0
-            except Exception as exc:  # noqa: BLE001
-                rc["tab_closed"] = False
-                rc["close_error"] = str(exc)[:200]
+            _close_all(driver, profile, readers, rc, recovery, parents, {"wsj": "wsj"})
+            rc["tab_closed"] = bool(rc["tabs_closed"]) and all(rc["tabs_closed"].values())
             rc["footprint"] = _merged_footprint([rd])
         WR.release_reader_lock(lock)
     rc["n_articles"] = sum(v["read"] for v in rc["per_day"].values())
@@ -1029,8 +1165,12 @@ def main(argv: list[str] | None = None) -> int:
                                                   ARCHIVE_NOT_BUILT_FOR.items()), flush=True)
         stamp = datetime.now(timezone.utc).strftime("%H%M%S")
         rpath = DF.receipts_dir() / f"archive_{day}_{stamp}.json"
+        pre_log: list = []
         try:
             from backend.services import openclaw_client as OCm
+            # RUNNING before `tabs`: a stopped profile is re-attached with
+            # `browser start` (<= 2 attempts, 20 s each); a dead gateway refuses
+            WR.ensure_attached(a.profile, oc=OCm, log=pre_log)
             parents = resolve_parent_tabs(
                 ["wsj"], OCm.tabs(profile_name=a.profile),
                 explicit=({"wsj": a.parent_tab} if a.parent_tab else
@@ -1041,9 +1181,12 @@ def main(argv: list[str] | None = None) -> int:
             r = run_archive(days, parent_tab=parents["wsj"]["tab"], max_per_day=a.max_per_day,
                             profile=a.profile, progress_path=rpath)
             r["parent_tabs"] = parents
+            r["reattach_log"] = pre_log + r.get("reattach_log", [])
+            r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
         except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
             print(f"REFUSED: {type(exc).__name__}: {exc}")
             _write({"receipt": "dowjones_pull.archive", "n_articles": 0, "days": a.archive,
+                    "reattach_log": pre_log,
                     "refused": f"{type(exc).__name__}: {exc}"[:400]}, rpath.name)
             return 2
         p = _write(r, rpath.name)
@@ -1052,6 +1195,7 @@ def main(argv: list[str] | None = None) -> int:
                                                             "read")}
                                       for k, v in r["per_day"].items()},
                           "stopped": r["stopped"], "tab_closed": r.get("tab_closed"),
+                          "reattaches": r.get("reattaches"),
                           "footprint": (r.get("footprint") or {}).get("verdict")}
         rc = 0 if r["complete"] else 2
     if a.plan:
@@ -1062,9 +1206,11 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         stamp = datetime.now(timezone.utc).strftime("%H%M%S")
         rpath = DF.receipts_dir() / f"plan_{day}_{stamp}.json"
+        pre_log: list = []
         try:
             lanes = parse_plan(a.plan)
             from backend.services import openclaw_client as OCm
+            WR.ensure_attached(a.profile, oc=OCm, log=pre_log)   # before `tabs` (see --archive)
             srcs = list(dict.fromkeys(ln["source"] for ln in lanes))
             explicit = parse_parent_tabs(a.parent_tabs)
             if a.parent_tab and len(srcs) == 1:
@@ -1078,9 +1224,12 @@ def main(argv: list[str] | None = None) -> int:
             r = run_plan(lanes, parents=parents, profile=a.profile,
                          max_pages=a.max_pages if a.max_pages != 20 else None,
                          progress_path=rpath)
+            r["reattach_log"] = pre_log + r.get("reattach_log", [])
+            r["reattaches"] = r.get("reattaches", 0) + sum(1 for x in pre_log if x.get("ok"))
         except Exception as exc:  # noqa: BLE001 -- a refusal is a finding, rc 2
             print(f"REFUSED: {type(exc).__name__}: {exc}")
             _write({"receipt": "dowjones_pull.plan", "plan": a.plan, "n_articles": 0,
+                    "reattach_log": pre_log,
                     "refused": f"{type(exc).__name__}: {exc}"[:400],
                     "finished_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")},
                    rpath.name)
@@ -1092,6 +1241,7 @@ def main(argv: list[str] | None = None) -> int:
                                      "skipped_already_stored": v["skipped_already_stored"],
                                      "dropped": v["dropped"]} for k, v in r["lanes"].items()},
                        "tabs_closed": r["tabs_closed"], "stopped": r["stopped"],
+                       "reattaches": r["reattaches"],
                        "footprint": r["footprint"].get("verdict"),
                        "hour_cap_waits_s": r["hour_cap_waits_s"]}
         rc = 0 if not r["stopped"] and all(
