@@ -249,7 +249,6 @@ def company_row(ticker: str, cik: int, *, asof: str | None = None) -> dict:
 
 
 def universe_from_bars(limit: int | None) -> list[str]:
-    import pandas as pd
     from backend.services import xs_ranker as XR
     bars = XR.load_bars(XR.survivorship_free_paths())
     last = bars["date"].max()
@@ -260,11 +259,40 @@ def universe_from_bars(limit: int | None) -> list[str]:
     return syms
 
 
+
+#: 2026-09-26: a re-extraction run with the DEFAULT `--limit 25` rebuilt the
+#: 3,000-name facts history as a 25-name one, and the strategy factory then
+#: scored every fundamentals rule on 25 companies (seven refused, one printed
+#: +149% on zero dev months). The table is UNTRACKED, so there was nothing to
+#: restore from. A rebuild that would shrink the universe below this fraction
+#: of what is on disk refuses unless `--allow-shrink` is given.
+HISTORY_SHRINK_FLOOR = 0.5
+
+
+def history_shrink_refusal(panel_path, df, *, allow: bool = False):
+    """A refusal string when writing `df` would replace a wider history, else None."""
+    try:
+        import pandas as pd
+        from pathlib import Path as _P
+        if allow or not _P(panel_path).exists():
+            return None
+        old = pd.read_parquet(panel_path, columns=["ticker"])
+        n_old, n_new = int(old["ticker"].nunique()), int(df["ticker"].nunique())
+    except Exception as exc:                                       # noqa: BLE001
+        return f"REFUSED: cannot compare the existing history at {panel_path} ({type(exc).__name__}); pass --allow-shrink to overwrite"
+    if n_new < HISTORY_SHRINK_FLOOR * n_old:
+        return (f"REFUSED: the new history covers {n_new} tickers, the one on disk {n_old}; "
+                f"a rebuild below {HISTORY_SHRINK_FLOOR:.0%} of the existing universe is not written "
+                f"(did you forget --limit 3000?). Pass --allow-shrink to overwrite on purpose.")
+    return None
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tickers", default=None, help="comma separated")
     ap.add_argument("--universe-from-bars", action="store_true")
     ap.add_argument("--limit", type=int, default=25)
+    ap.add_argument("--allow-shrink", action="store_true",
+                    help="overwrite a wider facts history with a narrower one on purpose")
     ap.add_argument("--asof", default=None, help="only facts filed at or before this date")
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--out", default=None)
@@ -283,7 +311,7 @@ def main(argv=None) -> int:
     if a.smoke:
         syms = syms[:5]
 
-    print(f"ticker->CIK map from SEC ...", flush=True)
+    print("ticker->CIK map from SEC ...", flush=True)
     cmap = ticker_to_cik()
     print(f"  {len(cmap):,} tickers mapped", flush=True)
 
@@ -342,6 +370,11 @@ def main(argv=None) -> int:
         df = pd.DataFrame(long_rows)
         df["filed"] = pd.to_datetime(df["filed"])
         df = df.sort_values(["ticker", "fact", "filed"]).reset_index(drop=True)
+        shrink = history_shrink_refusal(panel_path, df, allow=getattr(a, "allow_shrink", False))
+        if shrink:
+            print(shrink)
+            receipt["history_panel"] = {"refused": shrink, "path": str(panel_path)}
+            return 2
         df.to_parquet(panel_path, index=False)
         receipt["history_panel"] = {
             "path": str(panel_path), "rows": int(len(df)),
