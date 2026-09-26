@@ -820,6 +820,330 @@ if not INTANGIBLES_EXTRACTED:
                               "SellingGeneralAndAdministrativeExpense"))]
 
 
+# ── paper rules round 2 (2026-09-27): SSRN read through OpenClaw's browser ────
+#
+# Source: `docs/research_notes/2026-09-26/research_ssrn_via_openclaw_browser_signal_candidates.md`
+# §3 (five register()-ready specs) and §4 (interaction hypotheses). Result
+# note: `docs/research_notes/2026-09-26/paper_rules_round2_2026-09-27.md`.
+#
+# Every one of the five lands in exactly one place, decided by its column:
+#
+#   distance_to_default_rising  SCORES -- `d2d_chg` is built in
+#       `attach_round2_columns` from `mkt_value` (the VAL-01 fix below),
+#       `vol_252`, `mom_252` and SEC-facts `debt`.
+#   news_tone_reversal_5d       REGISTERED, FORWARD-ONLY -- `news_tone_z`
+#       (pit_features.news_tone_features over the FinBERT tone cache, archive
+#       rows excluded) has no history: the corpus's first_seen_utc began
+#       2026-09-11, exactly like attention_z it is gated on.
+#   filing_similarity_change    EXT_NOT_REACHABLE -- `filing_similarity` needs
+#       10-K/10-Q narrative text, which no file on disk carries.
+#   call_tone_drift             EXT_NOT_REACHABLE -- `call_tone_z` needs call
+#       TRANSCRIPTS; no free, legal source was confirmed.
+#   opex_week_large_hold        EXT_NOT_REACHABLE -- `is_opex_week` is a free
+#       calendar derivation, but EVERY decision date of this monthly engine is
+#       a month-end, and a month-end is never in the third-Friday week, so the
+#       rule would select nothing on every date (measured on the panel by
+#       `attach_round2_columns`, not asserted).
+#
+# THE VAL-01 FIX. `strategy_library.NOT_REACHABLE["VAL-01"]` refused market cap
+# because bars are split- AND dividend-adjusted while SEC `shares` is as-filed,
+# so close x shares is mis-scaled by every FUTURE split. The fix is a join on
+# ONE basis: Compustat `cshoq x prccq` is a RAW market value at the quarter's
+# `datadate` (both as reported then), available at `rdq + 2d` (datadate + 92d
+# when rdq is missing). It is rolled to the decision date by the ratio of two
+# ADJUSTED closes, adj(t) / adj(datadate): both carry the same future-split
+# factor, which cancels, so no split after t can reach the number. Residual
+# error: dividends paid between datadate and t (the ratio is a total return,
+# ~yield x age, <= ~2%) and share issuance/buybacks after datadate (ignored,
+# as in every quarterly market-cap join). Compustat fundq on disk ends at
+# datadate 2024-12-31; with MV_STALE_DAYS = 460 the column is NaN from
+# 2026-04-06 -- that is the one data gap (a Compustat pull for 2025Q1+), named
+# on the receipt.
+
+#: When the round-2 rules were written down, before any of them was scored.
+REGISTERED_ROUND2 = "2026-09-26T18:15:00+00:00"
+
+_SSO = "research_ssrn_via_openclaw_browser_signal_candidates.md 2026-09-27"
+VX04 = ("Vassalou & Xing 2004, JF 59(2) 'Default Risk in Equity Returns' "
+        "https://doi.org/10.1111/j.1540-6261.2004.00650.x (SSRN title: 'Equity Returns "
+        "Following Changes in Default Risk', posted 2003-07-23)")
+BS08 = ("Bharath & Shumway 2008, RFS 21(3) 'Forecasting Default with the Merton Distance to "
+        "Default Model' https://doi.org/10.1093/rfs/hhn044 (the naive DD used here)")
+TET07 = ("Tetlock 2007, JF 62(3) 'Giving Content to Investor Sentiment' "
+         "https://doi.org/10.1111/j.1540-6261.2007.01232.x; Naumer & Yurtoglu 2020 "
+         "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3541037")
+PAD21 = ("Padysak 2021, SSRN 'The Positive Similarity of Company Filings and the Cross-Section "
+         "of Stock Returns' https://quantpedia.com/strategies/the-positive-similarity-of-company-"
+         "filings-and-stock-returns")
+PDPB12 = ("Price, Doran, Peterson & Bliss 2012, JBF 36(4) 'Earnings Conference Calls and Stock "
+          "Returns: The Incremental Informativeness of Textual Tone' "
+          "https://doi.org/10.1016/j.jbankfin.2011.10.013")
+SS10 = ("Stivers & Sun, SSRN #1571786 'Returns and Option Activity over the Option-Expiration "
+        "Week for S&P 100 Stocks' https://quantpedia.com/strategies/option-expiration-week-effect")
+_LIT2 = ("[LIT: abstract read live via OpenClaw's browser 2026-09-27; paper body not re-read; "
+         "DOIs resolved via api.crossref.org 2026-09-27]")
+
+EXTRA_FAMILIES["credit_risk"] = (
+    "investors demand compensation for rising default risk; a distress-risk premium that "
+    "price momentum, quality and ownership breadth do not carry")
+EXTRA_FAMILIES["news_tone"] = (
+    "attention-constrained investors overreact to a pessimistic tone spike; the "
+    "overreaction reverses once attention fades")
+EXTRA_FAMILIES["textual_similarity"] = (
+    "a large change in a firm's OWN filing language is news the market under-reads next to "
+    "the numeric disclosures it already reacts to")
+EXTRA_FAMILIES["earnings_call_tone"] = (
+    "call tone carries private managerial information beyond the numeric surprise; the "
+    "market under-reacts to tone specifically")
+EXTRA_FAMILIES["calendar_options"] = (
+    "market-maker delta-hedge unwind as option open interest declines into expiration "
+    "lifts large, actively-optioned names during that one week")
+EXTRA_FAMILIES["value"] = ("cheap stocks are cheap because they are unloved or risky; the "
+                           "premium is paid for holding them through the distress")
+
+_MV_CAVEAT = ("mkt_value = Compustat cshoq x prccq (raw, at datadate) x adj_close(t) / "
+              "adj_close(datadate), anchor available at rdq + 2d, NaN when the anchor's "
+              "datadate is > 460 days old; gvkey -> ticker by comp.security (USA, primary iid, "
+              "a ticker claimed by two gvkeys is dropped); Compustat fundq ends datadate "
+              "2024-12-31, so every market-value column is NaN from 2026-04-06")
+_D2D_CAVEAT = ("naive Merton DD (Bharath-Shumway): E = mkt_value, F = SEC 'debt' "
+               "(LongTermDebtNoncurrent/LongTermDebt, filed + 2d, strictly before the date; "
+               "short-term debt is NOT in the default point), sigma_E = vol_252, sigma_D = "
+               "0.05 + 0.25 sigma_E, mu = mom_252, T = 1y; a firm with no debt fact has NO DD "
+               "(not an infinite one); d2d_chg = DD minus the same name's DD on the previous "
+               "panel date 20-40 days earlier. " + _MV_CAVEAT)
+_TONE_CAVEAT = ("news_tone_z (pit_features.news_tone_features): FinBERT tone per headline from "
+                "the stored cache (news_corpus/_tone/finbert_tone.jsonl), archive rows "
+                "(published > 30d before first seen, news_registry.grade_row) EXCLUDED, bucketed "
+                "by first_seen_utc, 5 vs 126 covered sessions strictly before the date. The "
+                "corpus began 2026-09-11: no history, forward book only")
+
+
+def _r2(did, rid, family, desc, signal, *, cite, claimed, falsifier, controls, caveat="",
+        reason=None, **kw):
+    kw.setdefault("first_registered_utc", REGISTERED_ROUND2)
+    return PaperStrategy(
+        rid, family, desc, signal, source=f"literature:{did} {cite} {_LIT2} ({_SSO})",
+        claimed_number=claimed, literature_reported=f"CLAIMED by source: {claimed}",
+        discovery_id=did, economic_reason=reason or EXTRA_FAMILIES[family], caveat=caveat,
+        falsifier=falsifier, controls=tuple(controls), **kw)
+
+
+def _round2_rules() -> list:
+    """The two round-2 rules whose columns exist (+ their pre-declared controls)."""
+    d2d = col("d2d_chg", -1)
+    tone = gated(col("news_tone_z", -1), "attention_z", lo=2.0)
+    d2d_claim = ("firms whose default risk RISES subsequently earn HIGHER returns than firms "
+                 "whose default risk falls (a distress-risk premium; no number in the abstract)")
+    return [
+        _r2("SSA-D2D", "distance_to_default_rising", "credit_risk",
+            "Merton distance-to-default recomputed monthly from market value, vol_252 and "
+            "SEC-facts debt; the LARGEST monthly FALL in distance-to-default (rise in default "
+            "risk) first",
+            d2d, cite=f"{VX04}; {BS08}", claimed=d2d_claim,
+            falsifier=("(a) if its dev excess vs SPY is not above BOTH gross_margin's and "
+                       "random_1's, the 'premium' is indistinguishable from the quality/random "
+                       "baseline; (b) if distance_to_default_rising_21_40 earns as much as the "
+                       "top 20, the ordering is uninformative; (c) read its IWM-SPY beta before "
+                       "any 'beats SPY' line -- a rising-default book is a small/distressed tilt "
+                       "until the decomposition says otherwise"),
+            controls=("gross_margin", "random_1", "distance_to_default_rising_21_40",
+                      "distance_to_default_rising_in_stress"),
+            caveat=_D2D_CAVEAT),
+        _r2("SSA-D2D-CTL", "distance_to_default_rising_21_40", "credit_risk",
+            "distance_to_default_rising's own ranks 21-40 (the k+1..2k twin)",
+            rank_band(d2d, 21, 40), cite=VX04,
+            claimed="none: the k+1..2k control for distance_to_default_rising",
+            falsifier="this row IS distance_to_default_rising's ordering falsifier",
+            reason="control: is the ORDERING inside the default-risk-change ranking informative",
+            controls=("distance_to_default_rising",), control=True, caveat=_D2D_CAVEAT),
+        # §4 hypothesis 1, registered as a control BEFORE the first score: the
+        # Friewald-Wagner-Zechner reading says the PRICED part is a premium, so
+        # the raw-probability rule should pay only when credit is stressed.
+        _r2("SSA-D2D-X1", "distance_to_default_rising_in_stress", "credit_risk",
+            "distance_to_default_rising, book to cash unless the market is in stress (SPY 21d "
+            "vol in its top tercile) -- the premium-not-probability interaction",
+            d2d, cite=(f"{VX04}; Friewald, Wagner & Zechner 2014, JF 69(6) 'The Cross-Section "
+                       "of Credit Risk Premia and Equity Returns' "
+                       "https://doi.org/10.1111/jofi.12143"),
+            claimed="none: the note's §4 hypothesis 1 (interaction), no source number",
+            falsifier=("if its Sharpe is NOT above distance_to_default_rising's, the premium-vs-"
+                       "probability distinction does not show on this panel and the plain Merton "
+                       "row is read at face value"),
+            reason="control: does the default-risk premium live only in stressed markets",
+            controls=("distance_to_default_rising",), control=True, regime_gate="mkt_stress",
+            caveat=_D2D_CAVEAT + "; mkt_stress is market vol, not a credit spread (none on disk)"),
+        _r2("SSA-NEWSTONE", "news_tone_reversal_5d", "news_tone",
+            "5-session LOWEST FinBERT tone z-score (most pessimistic) vs the name's own "
+            "126-session baseline, scored only where attention_z > 2 (the spike Tetlock's "
+            "mechanism requires)",
+            tone, cite=TET07,
+            claimed=("high media pessimism -> lower next-day return -> partial reversal within "
+                     "~1 week (Tetlock 2007; not re-derived here)"),
+            falsifier=("against fomo_reversal_5d (the COUNT-based spike-reversal rule, same gate): "
+                       "if its forward excess vs SPY is not above it, tone carries nothing beyond "
+                       "the count spike; if news_tone_reversal_5d_21_40 earns as much, the "
+                       "ordering is uninformative"),
+            controls=("fomo_reversal_5d", "attention_shock_fade", "news_tone_reversal_5d_21_40"),
+            caveat=_TONE_CAVEAT, forward_only=True),
+        _r2("SSA-NEWSTONE-CTL", "news_tone_reversal_5d_21_40", "news_tone",
+            "news_tone_reversal_5d's own ranks 21-40 (the k+1..2k twin)",
+            rank_band(tone, 21, 40), cite=TET07,
+            claimed="none: the k+1..2k control for news_tone_reversal_5d",
+            falsifier="this row IS news_tone_reversal_5d's ordering falsifier",
+            reason="control: is the ORDERING inside the tone ranking informative",
+            controls=("news_tone_reversal_5d",), control=True, caveat=_TONE_CAVEAT,
+            forward_only=True),
+    ]
+
+
+def _round2_waiting_rules() -> list:
+    """The three round-2 specs whose column does not exist -- kept as rules so the
+    day a column lands, registration is one line and the falsifier is already written."""
+    return [
+        _r2("SSA-FILINGSIM", "filing_similarity_change", "textual_similarity",
+            "cosine similarity of each firm's latest 10-K/10-Q language vs its OWN prior filing "
+            "of the same type; LOWEST similarity (biggest change) first",
+            col("filing_similarity", -1), cite=PAD21,
+            claimed=("5.47%/yr, vol 6.48%, Sharpe 0.84, backtest 2007-2020, Brain Company data, "
+                     "~1,000 large caps (Quantpedia's page)"),
+            falsifier=("if its dev excess vs SPY is not above rd_intensity's and random_1's, "
+                       "textual change adds nothing beyond the filing-number rules"),
+            controls=("rd_intensity", "random_1", "filing_similarity_change_21_40")),
+        _r2("SSA-CALLTONE", "call_tone_drift", "earnings_call_tone",
+            "FinBERT tone of the latest earnings-call transcript's prepared remarks, held 60 "
+            "trading days after the call",
+            col("call_tone_z"), cite=PDPB12,
+            claimed=("conference call tone dominates earnings surprises over the 60 trading days "
+                     "following the call (source's own words; no number carried)"),
+            falsifier=("if its dev excess is not above BOTH ear_drift's and "
+                       "news_tone_reversal_5d's, transcript tone adds nothing beyond the price-"
+                       "reaction drift and the cheaper news tone"),
+            controls=("ear_drift", "news_tone_reversal_5d", "call_tone_drift_21_40")),
+        _r2("SSA-OPEX", "opex_week_large_hold", "calendar_options",
+            "hold the large band ONLY during the week containing the month's 3rd Friday "
+            "(option-expiration week); cash otherwise",
+            gated(col("mkt_not_stress"), "is_opex_week", lo=1.0, hi=1.0), universe_rule="large",
+            cite=SS10,
+            claimed="9.3%/yr, vol 8.7%, Sharpe 0.61, max DD -15.1%, S&P 100, 1988-2010",
+            falsifier=("against the same large band held in a NON-opex week of the same month: "
+                       "if not above it, the effect is not opex-specific"),
+            controls=("random_1",)),
+    ]
+
+
+# -- the value rows VAL-01 unblocks (they were EXT_NOT_REACHABLE until tonight) --
+
+def _value_inputs_present() -> bool:
+    try:
+        from pathlib import Path
+
+        from backend import config as _cfg
+        w = Path(_cfg.OPTIMUS_LEDGER_DIR) / "wrds"
+        return (w / "compustat_fundq.parquet").exists() and (w / "bulk" / "comp__security.parquet").exists()
+    except Exception:                                  # noqa: BLE001 -- unknown = absent
+        return False
+
+
+#: True when the Compustat anchor + link files are on disk (the VAL-01 fix's inputs).
+VALUE_INPUTS_PRESENT: bool = _value_inputs_present()
+
+#: EXT_NOT_REACHABLE ids the market-value column unblocks -> the rule that replaces each.
+VALUE_UNLOCKS: dict = {"EXT-QC-14g": "qc409_book_to_market",
+                       "EXT-QC-10": "qc241_value_composite_small_annual",
+                       "EXT-QC-13": "qc761_ebit_ev_ebit_ic_large_annual"}
+
+
+def _value_unlock_rules() -> list:
+    rows = {r["id"]: r for r in EXT_NOT_REACHABLE}
+
+    def U(did, rid, desc, signal, *, caveat, **kw):
+        r = rows[did]
+        return PaperStrategy(
+            rid, "value", desc, signal,
+            source=f"unlocked:{did} {r['source']} ({_NOTE}; unblocked by the VAL-01 fix 2026-09-27)",
+            claimed_number=r["claimed_number"],
+            literature_reported=f"CLAIMED by source: {r['claimed_number']}",
+            discovery_id=did, economic_reason=EXTRA_FAMILIES["value"],
+            falsifier=("if its dev excess vs SPY is not above random_1's, value carries nothing "
+                       "on this panel; read its IWM-SPY beta before any 'beats SPY' line"),
+            controls=("random_1", "gross_margin"),
+            first_registered_utc=REGISTERED_ROUND2, caveat=caveat + "; " + _MV_CAVEAT, **kw)
+
+    ev = ("ebit_ev = annual SEC operating_income / (mkt_value + debt - cash), EV > 0; "
+          "ebit_ic = annual operating_income / (equity + debt - cash), IC > 0; a missing "
+          "debt or cash fact leaves the row NaN (never filled with 0)")
+    return [
+        U("EXT-QC-14g", "qc409_book_to_market",
+          "book-to-market (SEC stockholders' equity / market value), highest first",
+          col("book_to_market"),
+          caveat="the source page's construction beyond 'price-to-book' was not captured; "
+          "realised as the plain monthly B/M sort; equity > 0 only"),
+        U("EXT-QC-10", "qc241_value_composite_small_annual",
+          "rank-avg: book-to-market, earnings yield, EBIT/EV; small band, top 25, held twelve "
+          "months (the source's $80M-$1B annual value book)",
+          combo(("book_to_market", 1), ("earnings_yield", 1), ("ebit_ev", 1)),
+          universe_rule="small", k=25, hold_months=12,
+          caveat="PARTIAL: the $80M-$1B cap band is the 'small' dollar-volume band, the size "
+          "leg and the convex weighting are not modelled; " + ev),
+        U("EXT-QC-13", "qc761_ebit_ev_ebit_ic_large_annual",
+          "rank-avg: EBIT/EV, EBIT/invested capital; large band, top 50, held twelve months",
+          combo(("ebit_ev", 1), ("ebit_ic", 1)), universe_rule="large", k=50, hold_months=12,
+          caveat="PARTIAL: S&P 500 ex-financials/real estate is the 'large' band (financials "
+          "kept); the 5%/25% position caps are not modelled; " + ev),
+    ]
+
+
+#: Controls for rules that are not registered yet are listed, never invented as rules.
+ROUND2_STRATEGIES: list = _round2_rules()
+ROUND2_WAITING: list = _round2_waiting_rules()
+VALUE_UNLOCK_STRATEGIES: list = _value_unlock_rules() if VALUE_INPUTS_PRESENT else []
+
+_ROUND2_GAP = {
+    "filing_similarity_change": (
+        "filing_similarity (same-firm cosine similarity of consecutive 10-K / 10-Q narrative "
+        "text)",
+        "FREE: EDGAR full submission text https://www.sec.gov/Archives/edgar/data/<CIK>/"
+        "<accession>.txt, filing list from https://data.sec.gov/submissions/CIK##########.json "
+        "(PIT by acceptance date); sec_facts_history carries 11 numeric XBRL facts, no prose"),
+    "call_tone_drift": (
+        "call_tone_z (FinBERT tone of earnings-call TRANSCRIPT text)",
+        "NO FREE SOURCE CONFIRMED: transcripts are not an EDGAR form type; the 8-K EX-99 bodies "
+        "already pulled (news_corpus/sec_edgar_8k_ex99_body) are press releases, not calls; "
+        "free-to-read transcript sites were not checked for terms of use tonight"),
+    "opex_week_large_hold": (
+        "weekly decision dates (is_opex_week itself is a free calendar derivation)",
+        "ENGINE, not data: the factory decides at month-ends, a month-end is never in the "
+        "third-Friday week, so is_opex_week is 0 on every decision date and the rule would "
+        "select nothing; needs a weekly engine"),
+}
+EXT_NOT_REACHABLE += [
+    {"id": r.discovery_id, "rule_id": r.id, "missing_column": _ROUND2_GAP[r.id][0],
+     "free_source": _ROUND2_GAP[r.id][1], "source": r.source, "claimed_number": r.claimed_number,
+     "falsifier": r.falsifier, "controls": list(r.controls), "why": _ROUND2_GAP[r.id][1]}
+    for r in ROUND2_WAITING]
+if VALUE_INPUTS_PRESENT:
+    EXT_NOT_REACHABLE = [r for r in EXT_NOT_REACHABLE if r["id"] not in VALUE_UNLOCKS]
+
+#: How many rules each round-2 enabler takes out of EXT_NOT_REACHABLE (printed).
+ENABLER_EFFECT: dict = {
+    "mkt_value (VAL-01 fix)": {
+        "left_ext_not_reachable": sorted(VALUE_UNLOCKS) if VALUE_INPUTS_PRESENT else [],
+        "new_rules_scoring": ([r.id for r in VALUE_UNLOCK_STRATEGIES]
+                              + ["distance_to_default_rising"]) if VALUE_INPUTS_PRESENT else [],
+        "still_blocked": {"EXT-QP-05": "net payout needs buyback/dividend facts, not only market value",
+                          "INV-02": "net issuance from as-filed shares is still split-contaminated"}},
+    "news_tone_z": {
+        "left_ext_not_reachable": ["SSA-NEWSTONE (was never filed there: registered forward-only)"],
+        "new_rules_scoring": [],
+        "why_zero": "forward-only: the corpus began 2026-09-11, 60 covered baseline sessions "
+                    "are needed, and no FinBERT tone cache exists yet (score_corpus_tone not run)",
+        "still_blocked": {"call_tone_drift": "transcripts, not tone, are the gap"}},
+}
+
+EXTRA_STRATEGIES += ROUND2_STRATEGIES + VALUE_UNLOCK_STRATEGIES
+
+
 # ── the factory hook: put the six columns on the panel ──────────────────────
 
 def _bars_from_wide(W: dict) -> "pd.DataFrame":
@@ -876,6 +1200,10 @@ def attach(panel, W: dict | None = None):
     info0 = {"derived": {c: int(panel[c].notna().sum()) for c in DERIVED_COLUMNS if c in panel.columns}}
     panel, info0["paper"] = attach_paper_columns(panel)
     try:
+        panel, info0["round2"] = attach_round2_columns(panel, W)
+    except Exception as e:                           # noqa: BLE001 -- named in info
+        info0["round2"] = f"REFUSED: {type(e).__name__}: {e}"
+    try:
         out, info = _attach_pit(panel, W)
     except Exception as e:                           # noqa: BLE001 -- named in info
         return panel, {**info0, "pit_refused": f"{type(e).__name__}: {e}"}
@@ -906,9 +1234,13 @@ def _asof_join(panel, feats, value_cols, *, on_right: str, exact: bool, max_age_
     import numpy as np
     import pandas as pd
     left = pd.DataFrame({"_i": np.arange(len(panel)), "symbol": panel["symbol"].astype(str).to_numpy(),
-                         "date": pd.to_datetime(panel["date"]).dt.normalize().to_numpy()})
+                         "date": pd.to_datetime(panel["date"]).dt.normalize()
+                         .astype("datetime64[ns]").to_numpy()})
     left = left.sort_values("date", kind="mergesort")
-    right = feats.sort_values(on_right, kind="mergesort")
+    right = feats.copy()
+    for c in {on_right, age_from} - {None}:             # one datetime unit on both sides
+        right[c] = pd.to_datetime(right[c]).astype("datetime64[ns]")
+    right = right.sort_values(on_right, kind="mergesort")
     m = pd.merge_asof(left, right, left_on="date", right_on=on_right, by="symbol",
                       direction="backward", allow_exact_matches=exact)
     if max_age_days is not None and age_from:
@@ -1087,6 +1419,283 @@ def attach_paper_columns(panel):
             info["intangibles"] = {c: int(out[c].notna().sum()) for c in cols}
     except Exception as e:                          # noqa: BLE001 -- named
         info["intangibles"] = f"REFUSED: {type(e).__name__}: {e}"
+    return out, info
+
+
+# ── round-2 columns: market value (the VAL-01 fix), value ratios, DD, tone, opex ──
+
+#: an anchor older than this at the decision date is stale (FUND_STALE_DAYS' convention)
+MV_STALE_DAYS = 460
+#: the anchor's adjusted close must be within this many days before its datadate
+MV_ANCHOR_MAX_GAP_DAYS = 10
+#: availability of a Compustat quarter when `rdq` is missing (10-K deadline + margin)
+MV_NO_RDQ_DAYS = 92
+SEC_LAG_DAYS = 2
+SEC_STALE_DAYS = 460
+D2D_PREV_GAP = (20, 40)
+ROUND2_COLUMNS: tuple[str, ...] = ("mkt_value", "book_to_market", "earnings_yield", "ebit_ev",
+                                   "ebit_ic", "d2d", "d2d_chg", "is_opex_week")
+
+
+def compustat_ticker_map(security) -> dict:
+    """ticker -> gvkey from comp.security: USA, primary issue (iid '01' first),
+    and a ticker claimed by two gvkeys is DROPPED (never guessed)."""
+    import pandas as pd
+    s = security[["tic", "gvkey", "iid", "excntry"]].dropna(subset=["tic", "gvkey"]).copy()
+    s = s[s["excntry"].astype(str) == "USA"]
+    s["tic"] = s["tic"].astype(str).str.upper().str.strip()
+    s["pri"] = (s["iid"].astype(str) != "01").astype(int)
+    s = s.sort_values(["gvkey", "pri"], kind="mergesort").drop_duplicates("gvkey")
+    n = s.groupby("tic")["gvkey"].transform("nunique")
+    s = s[n == 1]
+    return dict(zip(s["tic"], s["gvkey"].astype(str)))
+
+
+def market_value_anchors(fundq, tic_map: dict):
+    """(symbol, datadate, available, mv_q): RAW cshoq x prccq (millions -> $) per quarter."""
+    import numpy as np
+    import pandas as pd
+    q = fundq[["gvkey", "datadate", "rdq", "cshoq", "prccq"]].copy()
+    q["gvkey"] = q["gvkey"].astype(str)
+    inv = {g: t for t, g in tic_map.items()}
+    q["symbol"] = q["gvkey"].map(inv)
+    q = q.dropna(subset=["symbol", "cshoq", "prccq", "datadate"])
+    q["datadate"] = pd.to_datetime(q["datadate"])
+    rdq = pd.to_datetime(q["rdq"], errors="coerce")
+    avail = rdq.where(rdq.notna() & (rdq >= q["datadate"]),
+                      q["datadate"] + pd.Timedelta(days=MV_NO_RDQ_DAYS))
+    q["available"] = avail + pd.Timedelta(days=SEC_LAG_DAYS)
+    q["mv_q"] = q["cshoq"].astype(float) * q["prccq"].astype(float) * 1e6
+    q = q[np.isfinite(q["mv_q"]) & (q["mv_q"] > 0)]
+    q = q.sort_values(["symbol", "datadate", "available"], kind="mergesort")
+    q = q.drop_duplicates(["symbol", "datadate"], keep="first")
+    return q[["symbol", "datadate", "available", "mv_q"]].reset_index(drop=True)
+
+
+def closes_at(px, symbols, dates, max_gap_days: int = MV_ANCHOR_MAX_GAP_DAYS):
+    """The last ADJUSTED close on or before each (symbol, date), NaN if older than max_gap.
+
+    `px` is either the factory's wide dict W (dates x symbols `close`) or a long
+    DataFrame (symbol, date, close). Both are on the panel's own adjustment basis.
+    """
+    import numpy as np
+    import pandas as pd
+    sy = np.asarray(symbols).astype(str)
+    dt = pd.to_datetime(pd.Series(dates)).dt.normalize().astype("datetime64[ns]").to_numpy()
+    out = np.full(len(sy), np.nan)
+    if isinstance(px, dict):
+        D = pd.DatetimeIndex(px["dates"]).normalize().values
+        C = np.asarray(px["close"], dtype=float)
+        col = {s: i for i, s in enumerate(np.asarray(px["symbols"]).astype(str))}
+        ci = np.array([col.get(s, -1) for s in sy])
+        ri = np.searchsorted(D, dt, side="right") - 1
+        ok = (ci >= 0) & (ri >= 0)
+        for k in np.nonzero(ok)[0]:
+            j, c = ri[k], ci[k]
+            lo = np.searchsorted(D, D[j] - np.timedelta64(max_gap_days, "D"), side="left")
+            seg = C[lo:j + 1, c]
+            fin = np.nonzero(np.isfinite(seg))[0]
+            if len(fin) and (dt[k] - D[lo + fin[-1]]) <= np.timedelta64(max_gap_days, "D"):
+                out[k] = seg[fin[-1]]
+        return out
+    left = pd.DataFrame({"_i": np.arange(len(sy)), "symbol": sy, "date": dt.astype("datetime64[ns]")})
+    r = px[["symbol", "date", "close"]].copy()
+    r["symbol"] = r["symbol"].astype(str)
+    r["date"] = pd.to_datetime(r["date"]).dt.normalize().astype("datetime64[ns]")
+    r = r.dropna(subset=["close"]).rename(columns={"date": "px_date"})
+    m = pd.merge_asof(left.sort_values("date", kind="mergesort"), r.sort_values("px_date", kind="mergesort"),
+                      left_on="date", right_on="px_date", by="symbol", direction="backward",
+                      allow_exact_matches=True, tolerance=pd.Timedelta(days=max_gap_days))
+    m = m.sort_values("_i")
+    return m["close"].to_numpy(dtype=float)
+
+
+def market_value_column(panel, anchors, px):
+    """mkt_value at each panel row: the latest anchor AVAILABLE strictly before the
+    date, x adj_close(date) / adj_close(anchor datadate). Split-invariant by
+    construction (the future adjustment factor is in both closes)."""
+    import numpy as np
+    import pandas as pd
+    a = anchors.copy()
+    a["px_anchor"] = closes_at(px, a["symbol"], a["datadate"])
+    a = a.dropna(subset=["px_anchor"])
+    got = _asof_join(panel, a, ["mv_q", "px_anchor"],
+                     on_right="available", exact=False)
+    # the anchor's age is measured from its datadate, not its availability
+    left = pd.DataFrame({"_i": np.arange(len(panel)), "symbol": panel["symbol"].astype(str).to_numpy(),
+                         "date": pd.to_datetime(panel["date"]).dt.normalize()
+                         .astype("datetime64[ns]").to_numpy()})
+    ar = a[["symbol", "available", "datadate"]].astype({"available": "datetime64[ns]",
+                                                        "datadate": "datetime64[ns]"})
+    m = pd.merge_asof(left.sort_values("date", kind="mergesort"),
+                      ar.sort_values("available", kind="mergesort"),
+                      left_on="date", right_on="available", by="symbol", direction="backward",
+                      allow_exact_matches=False).sort_values("_i")
+    age = (m["date"] - m["datadate"]).dt.days.to_numpy(dtype=float)
+    px_t = closes_at(px, panel["symbol"], panel["date"])
+    mv = got["mv_q"] * px_t / got["px_anchor"]
+    mv[~(age <= MV_STALE_DAYS)] = np.nan
+    mv[~np.isfinite(mv) | (mv <= 0)] = np.nan
+    return mv
+
+
+def sec_latest_frame(facts, fact: str, *, annual: bool = False):
+    """(symbol, filed, available, val) for one SEC fact at its FIRST filing per period end."""
+    import pandas as pd
+    f = facts[facts["fact"] == fact].copy()
+    if annual:
+        f = f[pd.to_numeric(f["period_days"], errors="coerce").between(350, 380)]
+    f["filed"] = pd.to_datetime(f["filed"])
+    f = f.sort_values("filed", kind="mergesort").drop_duplicates(["ticker", "end"], keep="first")
+    f["symbol"] = f["ticker"].astype(str).str.upper()
+    f["available"] = f["filed"] + pd.Timedelta(days=SEC_LAG_DAYS)
+    return f[["symbol", "filed", "available", "val"]].rename(columns={"val": fact}).reset_index(drop=True)
+
+
+def distance_to_default(E, F, sigma_e, mu):
+    """Bharath-Shumway naive Merton DD, T = 1 year. NaN unless E, F, sigma_e > 0."""
+    import numpy as np
+    E, F, se, mu = (np.asarray(x, dtype=float) for x in (E, F, sigma_e, mu))
+    ok = np.isfinite(E) & np.isfinite(F) & np.isfinite(se) & np.isfinite(mu) & (E > 0) & (F > 0) & (se > 0)
+    out = np.full(E.shape, np.nan)
+    V = E + F
+    sd = 0.05 + 0.25 * se
+    sv = (E / V) * se + (F / V) * sd
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dd = (np.log(V / F) + (mu - 0.5 * sv ** 2)) / sv
+    out[ok] = dd[ok]
+    return out
+
+
+def prev_panel_change(panel, values, gap=D2D_PREV_GAP):
+    """values minus the same symbol's value on its previous panel date, when that
+    date is gap[0]..gap[1] days earlier (else NaN). Uses only earlier rows."""
+    import numpy as np
+    import pandas as pd
+    df = pd.DataFrame({"_i": np.arange(len(panel)), "s": panel["symbol"].astype(str).to_numpy(),
+                       "d": pd.to_datetime(panel["date"]).to_numpy(), "v": np.asarray(values, dtype=float)})
+    df = df.sort_values(["s", "d"], kind="mergesort")
+    g = df.groupby("s", sort=False)
+    pv, pd_ = g["v"].shift(1), g["d"].shift(1)
+    days = (df["d"] - pd_).dt.days
+    ch = (df["v"] - pv).where(days.between(*gap))
+    return ch.to_numpy()[np.argsort(df["_i"].to_numpy())]
+
+
+def is_opex_week(dates):
+    """1.0 when the date falls in the Mon..Sun week holding its month's 3rd Friday."""
+    import numpy as np
+    import pandas as pd
+    d = pd.to_datetime(pd.Series(dates)).dt.normalize()
+    first = d.dt.to_period("M").dt.to_timestamp()
+    third_fri = first + pd.to_timedelta((4 - first.dt.dayofweek) % 7 + 14, unit="D")
+    wk_start = third_fri - pd.Timedelta(days=4)
+    return ((d >= wk_start) & (d <= wk_start + pd.Timedelta(days=6))).astype(float).to_numpy()
+
+
+def attach_news_tone(panel, W: dict | None = None, tone_rows: list | None = None):
+    """(panel + news_tone_z when a tone cache exists, info). Features at t+1d, mapped to t."""
+    import pandas as pd
+
+    from backend.services import pit_features as pf
+    rows = pf.load_tone_rows() if tone_rows is None else tone_rows
+    if not rows:
+        return panel, {"news_tone_z": (f"AWAITING SCORING: no FinBERT tone cache at "
+                                       f"{pf.tone_cache_path()} (python -m backend.services.pit_features "
+                                       f"--score-tone); the rule stays forward-only and unscored")}
+    tf = pf.tone_frame(rows)
+    rws = panel["is_month_end"] if "is_month_end" in panel.columns else pd.Series(True, index=panel.index)
+    me = pd.DatetimeIndex(sorted(pd.to_datetime(panel.loc[rws, "date"]).unique()))
+    sess = (pd.DatetimeIndex(W["dates"]) if W is not None
+            else pd.bdate_range(me.min() - pd.Timedelta(days=400), me.max() + pd.Timedelta(days=1)))
+    f = pf.news_tone_features(tf, me + pd.Timedelta(days=1), sess, panel["symbol"].astype(str).unique())
+    f["date"] = f["date"] - pd.Timedelta(days=1)
+    out = panel.drop(columns=[c for c in ("news_tone_z", "news_tone_z_n") if c in panel.columns])
+    key = pd.MultiIndex.from_arrays([out["symbol"].astype(str), pd.to_datetime(out["date"]).dt.normalize()])
+    fi = f.set_index(["ticker", "date"])
+    out = out.copy()
+    out["news_tone_z"] = fi["news_tone_z"].reindex(key).to_numpy(dtype=float)
+    return out, {"news_tone_z": {"non_nan": int(out["news_tone_z"].notna().sum()),
+                                 "archive_rows_excluded": int(tf.attrs.get("n_archive_excluded", 0)),
+                                 "toned_items": int(len(tf))}}
+
+
+def attach_round2_columns(panel, W: dict | None = None, *, fundq=None, security=None, facts=None):
+    """(panel + ROUND2_COLUMNS, info). Each source under its own try; a refusal is named."""
+    import numpy as np
+    import pandas as pd
+
+    from backend.services import pit_features as pf
+    opt = pf._optimus()
+    out = panel.copy()
+    info: dict = {}
+    out["is_opex_week"] = is_opex_week(out["date"])
+    me = out["is_month_end"].astype(bool) if "is_month_end" in out.columns else pd.Series(True, index=out.index)
+    info["is_opex_week"] = {"decision_rows": int(len(out)),
+                            "rows_in_opex_week": int(out["is_opex_week"].sum()),
+                            "month_end_rows_in_opex_week": int(out.loc[me, "is_opex_week"].sum()),
+                            "reading": "0 month-end rows in an opex week = the monthly engine cannot "
+                                       "hold opex_week_large_hold (engine mismatch, measured)"}
+    try:
+        if fundq is None:
+            fp = opt / "wrds" / "compustat_fundq.parquet"
+            sp = opt / "wrds" / "bulk" / "comp__security.parquet"
+            if not (fp.exists() and sp.exists()):
+                raise FileNotFoundError(f"missing {[x.name for x in (fp, sp) if not x.exists()]}")
+            fundq = pd.read_parquet(fp, columns=["gvkey", "datadate", "rdq", "cshoq", "prccq"])
+            security = pd.read_parquet(sp, columns=["tic", "gvkey", "iid", "excntry"])
+        tmap = compustat_ticker_map(security)
+        anchors = market_value_anchors(fundq, tmap)
+        px = W if W is not None else out[["symbol", "date", "close"]]
+        out["mkt_value"] = market_value_column(out, anchors, px)
+        yrs = pd.to_datetime(out["date"]).dt.year
+        info["mkt_value"] = {
+            "non_nan": int(out["mkt_value"].notna().sum()),
+            "by_year_non_nan": {int(y): int(v) for y, v in out["mkt_value"].notna().groupby(yrs).sum().items()},
+            "anchors": int(len(anchors)), "tickers_mapped": len(tmap),
+            "anchor_datadate_range": [str(anchors["datadate"].min().date()), str(anchors["datadate"].max().date())],
+            "pit": "Compustat anchor available at rdq + 2d strictly before the date; rolled by adj_close ratio",
+            "gap": "Compustat fundq on disk ends datadate 2024-12-31: NaN from 2026-04-06 (MV_STALE_DAYS 460)"}
+    except Exception as e:                          # noqa: BLE001 -- named
+        info["mkt_value"] = f"REFUSED: {type(e).__name__}: {e}"
+        return out, info
+    try:
+        if facts is None:
+            fp = opt / "fundamentals_sec" / "sec_facts_history.parquet"
+            facts = pd.read_parquet(fp, columns=["ticker", "fact", "filed", "end", "period_days", "val"])
+        need = {"equity": False, "debt": False, "cash": False,
+                "net_income": True, "operating_income": True}
+        for fact, annual in need.items():
+            fr = sec_latest_frame(facts, fact, annual=annual)
+            got = _asof_join(out, fr, [fact], on_right="available", exact=False,
+                             max_age_days=SEC_STALE_DAYS, age_from="filed")
+            out[f"_{fact}"] = got[fact]
+        mv = out["mkt_value"].astype(float)
+        eq, debt, cash = out["_equity"], out["_debt"], out["_cash"]
+        out["book_to_market"] = (eq / mv).where(eq > 0)
+        out["earnings_yield"] = out["_net_income"] / mv
+        ev = mv + debt - cash
+        out["ebit_ev"] = (out["_operating_income"] / ev).where(ev > 0)
+        ic = eq + debt - cash
+        out["ebit_ic"] = (out["_operating_income"] / ic).where(ic > 0)
+        if {"vol_252", "mom_252"} <= set(out.columns):
+            out["d2d"] = distance_to_default(mv, debt, out["vol_252"], out["mom_252"])
+            out["d2d_chg"] = prev_panel_change(out, out["d2d"])
+        out = out.drop(columns=[f"_{f}" for f in need])
+        for c in ("book_to_market", "earnings_yield", "ebit_ev", "ebit_ic", "d2d", "d2d_chg"):
+            if c in out.columns:
+                out[c] = out[c].replace([np.inf, -np.inf], np.nan)
+        info["value_and_d2d"] = {c: int(out[c].notna().sum()) for c in
+                                 ("book_to_market", "earnings_yield", "ebit_ev", "ebit_ic", "d2d", "d2d_chg")
+                                 if c in out.columns}
+    except Exception as e:                          # noqa: BLE001 -- named
+        info["value_and_d2d"] = f"REFUSED: {type(e).__name__}: {e}"
+    try:
+        out, info_t = attach_news_tone(out, W)
+        info.update(info_t)
+    except Exception as e:                          # noqa: BLE001 -- named
+        info["news_tone_z"] = f"REFUSED: {type(e).__name__}: {e}"
+    info["enablers"] = ENABLER_EFFECT
     return out, info
 
 

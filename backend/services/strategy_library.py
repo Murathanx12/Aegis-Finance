@@ -1972,13 +1972,19 @@ NOT_REACHABLE: dict = {
     "MOM-10": "beta-neutral L/S needs a short leg; the library is long-only",
     "REV-01": "daily rebalance; the library rebalances monthly",
     "REV-05": "short leg",
-    "VAL-01": ("bars are split- AND dividend-adjusted (NVDA closes at 12.68 in 2020-08) "
-               "while SEC `shares` is as-filed, so close x shares mis-scales market cap "
-               "by every FUTURE split -- look-ahead toward future winners. Refused until "
-               "a split-factor table exists"),
-    "VAL-02": "same market-cap defect as VAL-01",
-    "VAL-03": "same defect, and no EV/EBIT facts",
-    "VAL-04": "composite of VAL-01..03", "VAL-05": "needs VAL-01",
+    "VAL-01": ("FIXED 2026-09-27, reachable via strategy_library_ext.qc409_book_to_market: the "
+               "defect was adjusted close x as-filed SEC shares (mis-scaled by every FUTURE "
+               "split). `mkt_value` is now Compustat cshoq x prccq (RAW, at datadate, available "
+               "rdq + 2d) x adj_close(t) / adj_close(datadate) -- one basis, the future split "
+               "factor cancels (strategy_library_ext.market_value_column; vs CRSP prc x shrout: "
+               "median |log error| 0.2-0.8% on 2019-2024 samples). NaN from 2026-04-06: "
+               "Compustat fundq on disk ends datadate 2024-12-31"),
+    "VAL-02": ("unblocked by the VAL-01 fix (earnings_yield on the panel); the single leg is not "
+               "registered -- it is a leg of strategy_library_ext.qc241_value_composite_small_annual"),
+    "VAL-03": ("unblocked by the VAL-01 fix (ebit_ev = operating_income / (mkt_value + debt - "
+               "cash)); single leg not registered -- a leg of qc241_* and qc761_* in strategy_library_ext"),
+    "VAL-04": "reachable as strategy_library_ext.qc241_value_composite_small_annual (B/M + E/P + EBIT/EV)",
+    "VAL-05": "unblocked by the VAL-01 fix (book_to_market x gross_margin); not registered",
     "VAL-06": "tiny-cap net-net universe is not on the panel",
     "INV-02": "net issuance from as-filed shares is split-contaminated (VAL-01)",
     "QUAL-03": "no operating-cash-flow fact, so no accruals",

@@ -243,3 +243,163 @@ def test_excluding_top_keeps_names_without_the_screen_column():
     assert np.isnan(s.iloc[9])                         # the top-decile dispersion name is out
     assert s.iloc[10] == 10.0                          # no reading: kept, not filtered away
     assert s.iloc[:9].notna().all()
+
+
+# ── paper rules round 2 (2026-09-27): SSRN via OpenClaw, the VAL-01 fix ────────
+
+ROUND2_FIVE = ("news_tone_reversal_5d", "filing_similarity_change", "distance_to_default_rising",
+               "call_tone_drift", "opex_week_large_hold")
+
+
+def test_round2_rules_carry_source_claim_falsifier_controls_and_twin():
+    lib = {r.id for r in sl.RULES}
+    for r in ext.ROUND2_STRATEGIES + ext.VALUE_UNLOCK_STRATEGIES:
+        m = r.meta()
+        for k in ext.REQUIRED_KEYS + ext.PAPER_KEYS:
+            assert m.get(k) not in (None, "", []), (r.id, k)
+        assert m["first_registered_utc"] == ext.REGISTERED_ROUND2
+        assert m["claimed_number"] in m["literature_reported"]
+        for c in m["controls"]:                       # a named control is a real rule
+            assert c in lib, (r.id, c)
+    got = {r.id: r for r in ext.ROUND2_STRATEGIES}
+    for rid in ("distance_to_default_rising", "news_tone_reversal_5d"):
+        twin = got[f"{rid}_21_40"]
+        assert twin.control and f"{rid}_21_40" in got[rid].controls
+        assert "rank_band" in twin.shape and "21-40" in twin.shape
+    assert got["news_tone_reversal_5d"].forward_only and got["news_tone_reversal_5d_21_40"].forward_only
+    assert not got["distance_to_default_rising"].forward_only
+    assert got["distance_to_default_rising_in_stress"].regime_gate == "mkt_stress"
+
+
+def test_each_of_the_five_is_in_exactly_one_place():
+    registered = {r.id for r in ext.ROUND2_STRATEGIES}
+    waiting = {row.get("rule_id"): row for row in ext.EXT_NOT_REACHABLE if row.get("rule_id")}
+    for rid in ROUND2_FIVE:
+        assert (rid in registered) != (rid in waiting), rid
+        if rid in waiting:
+            row = waiting[rid]
+            assert row["missing_column"] and row["free_source"] and row["falsifier"], rid
+            assert row["controls"], rid
+    assert {"filing_similarity_change", "call_tone_drift", "opex_week_large_hold"} <= set(waiting)
+
+
+def test_round2_rules_were_accepted_by_the_loader():
+    ours = {r.id for r in ext.ROUND2_STRATEGIES + ext.VALUE_UNLOCK_STRATEGIES}
+    assert not (set(sl.EXTRA_REFUSED) & ours), sl.EXTRA_REFUSED
+    assert ours <= {r.id for r in sl.RULES}
+
+
+def test_value_unlocks_leave_ext_not_reachable_only_when_the_inputs_exist():
+    ids = {row["id"] for row in ext.EXT_NOT_REACHABLE}
+    unl = {r.discovery_id for r in ext.VALUE_UNLOCK_STRATEGIES}
+    if ext.VALUE_INPUTS_PRESENT:
+        assert unl == set(ext.VALUE_UNLOCKS) and not (ids & unl)
+    else:
+        assert not unl and set(ext.VALUE_UNLOCKS) <= ids
+
+
+def _split_world():
+    """One name; a 2:1 split on 2024-07-01, AFTER the decision date 2024-05-31.
+
+    Raw price 100 at the 2024-03-31 quarter end (10 shares -> raw mv 1,000),
+    110 on the decision date (true mv 1,100). The vendor's adjusted series
+    halves every close before the split: 50 and 55.
+    """
+    days = pd.bdate_range("2023-12-01", "2024-08-30")
+    raw = np.where(days < pd.Timestamp("2024-01-15"), 90.0,
+                   np.where(days < pd.Timestamp("2024-04-15"), 100.0, 110.0))
+    raw = np.where(days >= pd.Timestamp("2024-07-01"), raw / 2.0, raw)
+    adj = np.where(days < pd.Timestamp("2024-07-01"), raw / 2.0, raw)
+    px = pd.DataFrame({"symbol": "AAA", "date": days, "close": adj})
+    fundq = pd.DataFrame({"gvkey": ["1", "1", "1"],
+                          "datadate": ["2024-03-31", "2024-06-30", "2023-12-31"],
+                          # the June quarter is reported 2024-07-25: after the decision date
+                          "rdq": ["2024-04-25", "2024-07-25", "2024-02-01"],
+                          "cshoq": [10e-6, 20e-6, 10e-6], "prccq": [100.0, 55.0, 90.0]})
+    sec = pd.DataFrame({"tic": ["AAA"], "gvkey": ["1"], "iid": ["01"], "excntry": ["USA"]})
+    return px, fundq, sec
+
+
+def _mv_at(a, px, day):
+    return ext.market_value_column(pd.DataFrame({"symbol": ["AAA"], "date": [pd.Timestamp(day)]}), a, px)[0]
+
+
+def test_market_value_is_split_invariant_and_point_in_time():
+    px, fundq, sec = _split_world()
+    a = ext.market_value_anchors(fundq, ext.compustat_ticker_map(sec))
+    t = pd.Timestamp("2024-05-31")
+    assert _mv_at(a, px, t) == pytest.approx(1100.0)       # raw 1,000 x adj 55 / adj 50
+    naive = ext.closes_at(px, ["AAA"], [t])[0] * 10.0
+    assert naive == pytest.approx(550.0)                   # the refused VAL-01 construction: halved
+    # the June anchor is public at rdq + 2d = 2024-07-27; before that the March one rolls on
+    assert _mv_at(a, px, "2024-07-26") == pytest.approx(1000.0 * 55.0 / 50.0)
+    assert _mv_at(a, px, "2024-07-29") == pytest.approx(20.0 * 55.0)
+    # an anchor available ON the decision date is not used (strictly before)
+    a2 = a.copy()
+    a2.loc[a2["datadate"] == pd.Timestamp("2024-03-31"), "available"] = t
+    assert _mv_at(a2, px, t) == pytest.approx(10.0 * 90.0 * 55.0 / 45.0)   # the December anchor
+
+
+def test_market_value_is_nan_when_the_anchor_is_stale():
+    px, fundq, sec = _split_world()
+    a = ext.market_value_anchors(fundq, ext.compustat_ticker_map(sec))
+    late = pd.Timestamp("2024-06-30") + pd.Timedelta(days=ext.MV_STALE_DAYS + 5)
+    px2 = pd.concat([px, pd.DataFrame({"symbol": ["AAA"], "date": [late], "close": [60.0]})])
+    assert np.isnan(_mv_at(a, px2, late))
+
+
+def test_ticker_map_drops_a_ticker_two_gvkeys_claim():
+    sec = pd.DataFrame({"tic": ["AAA", "AAA", "BBB", "BBB"], "gvkey": ["1", "2", "3", "3"],
+                        "iid": ["01", "01", "02", "01"], "excntry": ["USA"] * 4})
+    m = ext.compustat_ticker_map(sec)
+    assert "AAA" not in m and m["BBB"] == "3"
+
+
+def test_round2_columns_use_only_filings_before_the_date():
+    px, fundq, sec = _split_world()
+    t = pd.Timestamp("2024-05-31")
+    facts = pd.DataFrame({
+        "ticker": ["AAA"] * 4, "fact": ["equity", "debt", "equity", "cash"],
+        "filed": pd.to_datetime(["2024-05-01", "2024-05-01", "2024-05-30", "2024-05-01"]),
+        "end": ["2024-03-31", "2024-03-31", "2024-04-30", "2024-03-31"],
+        "period_days": [np.nan] * 4, "val": [550.0, 300.0, 9999.0, 50.0]})
+    panel = pd.DataFrame({"symbol": ["AAA"], "date": [t], "is_month_end": [True],
+                          "vol_252": [0.4], "mom_252": [0.1]})
+    W = {"dates": px["date"].values, "symbols": np.array(["AAA"]), "close": px["close"].to_numpy()[:, None]}
+    out, info = ext.attach_round2_columns(panel, W, fundq=fundq, security=sec, facts=facts)
+    # equity filed 2024-05-30 is available 06-01 > t: the 05-01 filing (550) is used
+    assert out.loc[0, "book_to_market"] == pytest.approx(550.0 / 1100.0)
+    assert out.loc[0, "d2d"] == pytest.approx(ext.distance_to_default([1100.0], [300.0], [0.4], [0.1])[0])
+    assert np.isnan(out.loc[0, "earnings_yield"])          # no annual net income filed
+    assert out.loc[0, "is_opex_week"] == 0.0
+    assert "news_tone_z" not in out.columns or out["news_tone_z"].isna().all()
+
+
+def test_distance_to_default_is_nan_without_debt_and_falls_with_leverage():
+    dd = ext.distance_to_default([100.0, 100.0, 100.0, 100.0], [0.0, np.nan, 10.0, 90.0],
+                                 [0.3] * 4, [0.05] * 4)
+    assert np.isnan(dd[0]) and np.isnan(dd[1])
+    assert dd[2] > dd[3] > 0
+
+
+def test_d2d_change_reads_only_the_previous_row_and_its_gap():
+    p = pd.DataFrame({"symbol": ["A", "A", "A", "B"],
+                      "date": pd.to_datetime(["2024-01-31", "2024-02-29", "2024-05-31", "2024-02-29"])})
+    ch = ext.prev_panel_change(p, [1.0, 1.5, 9.0, 2.0])
+    assert np.isnan(ch[0]) and ch[1] == pytest.approx(0.5)
+    assert np.isnan(ch[2]) and np.isnan(ch[3])            # a 92-day gap is not a monthly change
+    ch2 = ext.prev_panel_change(p, [1.0, 1.5, -50.0, 2.0])   # a later value changes no earlier row
+    assert ch2[1] == pytest.approx(0.5)
+
+
+def test_opex_week_flag_and_why_the_monthly_engine_cannot_hold_it():
+    d = pd.to_datetime(["2024-03-11", "2024-03-15", "2024-03-17", "2024-03-18", "2024-03-08"])
+    assert list(ext.is_opex_week(d)) == [1.0, 1.0, 1.0, 0.0, 0.0]
+    month_ends = pd.bdate_range("2017-01-01", "2026-09-30", freq="BME")
+    assert ext.is_opex_week(month_ends).sum() == 0       # the measured engine mismatch
+
+
+def test_attach_news_tone_refuses_without_a_cache():
+    p = pd.DataFrame({"symbol": ["A"], "date": [pd.Timestamp("2026-09-25")], "is_month_end": [True]})
+    out, info = ext.attach_news_tone(p, None, tone_rows=[])
+    assert "news_tone_z" not in out.columns and info["news_tone_z"].startswith("AWAITING SCORING")

@@ -61,6 +61,13 @@ pricing_power_cost_pressure
                        for NAICS PPI from FRED; that series is NOT on disk, so
                        the default is this in-house proxy and the receipt says
                        so. A PPI series can be passed as `cost_pressure=`.
+
+ROUND 2 (2026-09-27), outside FEATURE_COLUMNS and `compute`:
+news_tone_z            `news_tone_features`: FinBERT tone of the name's items in
+                       the last 5 covered sessions vs its own 126-session
+                       baseline, by `first_seen_utc`, ARCHIVE rows excluded
+                       (`news_registry.grade_row`). Its input is the stored
+                       cache `score_corpus_tone` writes; forward-only.
 """
 
 from __future__ import annotations
@@ -609,6 +616,197 @@ def map_firms_to_estimid(revisions: pd.DataFrame, ibes_targets: pd.DataFrame, *,
     return dict(zip(ok["firm"], ok["estimid"])), best.reset_index(drop=True)
 
 
+# ── news TONE: news_tone_z (paper rules round 2, 2026-09-27) ────────────────
+#
+# The count column above (`attention_z`) says HOW MUCH was written about a
+# name; this one says in WHAT TONE. Same PIT rule, same session bucketing by
+# `first_seen_utc`, same 5-vs-126 covered-session windows -- but two
+# differences that are the point of the column, not decoration:
+#
+# * ARCHIVE ROWS ARE EXCLUDED. `news_registry.grade_row` grades a row
+#   `archive` when it was published > 30 days before we first saw it (36,720
+#   Benzinga headlines from 2015 carry a 2026-09-11 `first_seen_utc`). Such a
+#   row is not news at first_seen and would pile a decade of tone onto one
+#   session. It is dropped from both the items AND the coverage stamps.
+# * THE TONE IS A STORED SCORE, NEVER A FALLBACK. The repo's FinBERT
+#   (`sentiment_analyzer._score_with_finbert`, ProsusAI/finbert) scores on
+#   demand for the website; nothing stored a per-row score over the corpus
+#   before this column. `score_corpus_tone` writes that cache and REFUSES when
+#   FinBERT is unavailable -- the keyword fallback is a different instrument,
+#   and a column mixing the two would be a column about which scorer loaded.
+
+NEWS_TONE_MIN_SESSIONS = 60        # covered baseline sessions (attention_z's floor)
+NEWS_TONE_MIN_BASE_ITEMS = 5       # the name's own baseline items with a tone
+NEWS_TONE_SD_FLOOR = 0.10          # tone is in [-1, 1]; a flat baseline is not infinitely precise
+TONE_CACHE_REL = ("news_corpus", "_tone", "finbert_tone.jsonl")
+TONE_MODEL = ("ProsusAI/finbert via sentiment_analyzer._score_with_finbert "
+              "(+p positive, -p negative, 0 neutral)")
+
+
+def tone_frame(rows: Iterable[dict] | pd.DataFrame) -> pd.DataFrame:
+    """Rows with a `tone` -> (ticker, first_seen, tone), archive rows EXCLUDED.
+
+    Only `first_seen_utc` dates a row (as in `news_frame`); `published_utc` is
+    read only by `news_registry.grade_row`, to find archives. Coverage stamps
+    come from the KEPT rows only, so an archive-only pull does not mark a
+    session covered.
+    """
+    from backend.services import news_registry as NR
+    recs = rows.to_dict("records") if isinstance(rows, pd.DataFrame) else list(rows)
+    out, stamps, n_arch = [], [], 0
+    for r in recs:
+        fs, tone = r.get("first_seen_utc"), r.get("tone")
+        try:
+            tone = float(tone)
+        except (TypeError, ValueError):
+            continue
+        if not fs or not np.isfinite(tone):
+            continue
+        if NR.grade_row(r).get("pit_grade") == NR.ARCHIVE_GRADE:
+            n_arch += 1
+            continue
+        stamps.append(fs)
+        for t in _parse_tickers(r.get("tickers")):
+            out.append((t, fs, tone))
+    df = pd.DataFrame(out, columns=["ticker", "first_seen", "tone"])
+    df["first_seen"] = _naive(df["first_seen"])
+    df.attrs["coverage_stamps"] = stamps
+    df.attrs["n_archive_excluded"] = n_arch
+    return df
+
+
+def news_tone_features(tone: pd.DataFrame, dates: pd.DatetimeIndex,
+                       sessions: pd.DatetimeIndex, tickers: Iterable[str]) -> pd.DataFrame:
+    """(ticker, date) -> news_tone_z, news_tone_z_n from items first seen < date.
+
+    z = (mean tone of the name's items in the last 5 covered sessions - mean
+    tone of its items in the 126 covered sessions before them) / (baseline sd /
+    sqrt(n recent items)). NaN when the name has no recent item (no news is not
+    neutral news), fewer than NEWS_TONE_MIN_BASE_ITEMS baseline items, or the
+    corpus covers fewer than NEWS_TONE_MIN_SESSIONS baseline sessions.
+    `_n` = covered baseline sessions, as `attention_z_n`.
+    """
+    cov_stamps = pd.Series(tone.attrs.get("coverage_stamps", []), dtype=object)
+    covered = (pd.DatetimeIndex(sorted(set(_session_of(_naive(cov_stamps), sessions).dropna())))
+               if len(cov_stamps) else pd.DatetimeIndex([]))
+    items: dict[str, pd.DataFrame] = {}
+    if len(tone):
+        n = tone.assign(session=_session_of(tone["first_seen"], sessions)).dropna(subset=["session"])
+        for t, g in n.groupby("ticker"):
+            items[t] = g[["session", "tone"]]
+    tick = sorted(set(tickers))
+    svals = sessions.values.astype("datetime64[ns]")
+    rows = []
+    for d in dates:
+        j = int(np.searchsorted(svals, np.datetime64(d, "ns"), side="left"))   # sessions < d
+        recent = sessions[max(0, j - ATT_RECENT):j]
+        base = sessions[max(0, j - ATT_RECENT - ATT_BASELINE):max(0, j - ATT_RECENT)]
+        rec_c, base_c = recent[recent.isin(covered)], base[base.isin(covered)]
+        nb = len(base_c)
+        if nb < NEWS_TONE_MIN_SESSIONS or len(rec_c) < ATT_MIN_RECENT_COVERED:
+            rows.extend((t, d, np.nan, nb) for t in tick)
+            continue
+        for t in tick:
+            g = items.get(t)
+            if g is None:
+                rows.append((t, d, np.nan, nb))
+                continue
+            rv = g.loc[g["session"].isin(rec_c), "tone"].to_numpy(dtype=float)
+            bv = g.loc[g["session"].isin(base_c), "tone"].to_numpy(dtype=float)
+            if len(rv) == 0 or len(bv) < NEWS_TONE_MIN_BASE_ITEMS:
+                rows.append((t, d, np.nan, nb))
+                continue
+            sd = max(float(bv.std(ddof=1)), NEWS_TONE_SD_FLOOR)
+            rows.append((t, d, float((rv.mean() - bv.mean()) / (sd / np.sqrt(len(rv)))), nb))
+    return pd.DataFrame(rows, columns=["ticker", "date", "news_tone_z", "news_tone_z_n"])
+
+
+def tone_cache_path(root: Path | None = None) -> Path:
+    return Path(root or _optimus()).joinpath(*TONE_CACHE_REL)
+
+
+def load_tone_rows(path: Path | None = None) -> list[dict]:
+    """The stored per-row tones (`score_corpus_tone`'s cache); [] when absent."""
+    p = Path(path or tone_cache_path())
+    if not p.exists():
+        return []
+    out = []
+    with p.open(encoding="utf-8") as fh:
+        for line in fh:
+            try:
+                out.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return out
+
+
+def _row_key(r: dict) -> str:
+    import hashlib
+    k = f"{r.get('source')}|{r.get('url') or r.get('raw_id') or ''}|{r.get('title') or ''}"
+    return hashlib.sha256(k.encode("utf-8")).hexdigest()[:24]
+
+
+def score_corpus_tone(corpus_dir: Path | None = None, out_path: Path | None = None, *,
+                      limit: int = 0, batch: int = 64) -> dict:
+    """FinBERT over every NON-archive, ticker-tagged corpus title not yet cached.
+
+    Appends {key, source, first_seen_utc, published_utc, tickers, pit_grade,
+    tone, model} per row. REFUSES (writes nothing) when FinBERT does not load.
+    Not run on 2026-09-27 (memory); it has no scheduled caller yet.
+    """
+    from backend.services import news_registry as NR
+    from backend.services import sentiment_analyzer as SA
+    root = Path(corpus_dir or _optimus() / "news_corpus")
+    out = Path(out_path or tone_cache_path())
+    done = {r.get("key") for r in load_tone_rows(out)}
+    todo: list[dict] = []
+    n_arch = 0
+    for src in sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith("_")):
+        for f in sorted(src.glob("*.jsonl")):
+            with f.open(encoding="utf-8") as fh:
+                for line in fh:
+                    try:
+                        r = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if not (r.get("first_seen_utc") and r.get("title")
+                            and _parse_tickers(r.get("tickers"))):
+                        continue
+                    if NR.is_archive(r):
+                        n_arch += 1
+                        continue
+                    k = _row_key(r)
+                    if k in done:
+                        continue
+                    done.add(k)
+                    todo.append({"key": k, "source": r.get("source") or src.name,
+                                 "first_seen_utc": r.get("first_seen_utc"),
+                                 "published_utc": r.get("published_utc"),
+                                 "tickers": _parse_tickers(r.get("tickers")),
+                                 "pit_grade": r.get("pit_grade"), "title": str(r["title"])[:512]})
+                    if limit and len(todo) >= limit:
+                        break
+    if not todo:
+        return {"status": "NOTHING_TO_DO", "archive_excluded": n_arch, "cache": str(out)}
+    if SA._get_finbert() is None:
+        return {"status": "REFUSED", "pending": len(todo),
+                "why": "FinBERT did not load; the keyword fallback is not this column"}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    n = 0
+    with out.open("a", encoding="utf-8") as fh:
+        for i in range(0, len(todo), batch):
+            chunk = todo[i:i + batch]
+            sc = SA._score_with_finbert([c["title"] for c in chunk])
+            if len(sc) != len(chunk):
+                return {"status": "REFUSED", "why": f"FinBERT scored {len(sc)} of {len(chunk)}",
+                        "written": n}
+            for c, s_ in zip(chunk, sc):
+                row = {k: v for k, v in c.items() if k != "title"}
+                fh.write(json.dumps({**row, "tone": float(s_["numeric"]), "model": TONE_MODEL}) + "\n")
+                n += 1
+    return {"status": "OK", "written": n, "archive_excluded": n_arch, "cache": str(out)}
+
+
 # ── the real-panel run: support counts + receipt ────────────────────────────
 
 def load_news_corpus(root: Path | None = None) -> list[dict]:
@@ -633,7 +831,13 @@ def main(argv: list[str] | None = None) -> int:
     from datetime import datetime, timezone
     ap = argparse.ArgumentParser(description="pit_features over the real panel -> receipt")
     ap.add_argument("--start", default="2013-01-01")
+    ap.add_argument("--score-tone", action="store_true",
+                    help="only: FinBERT over the non-archive corpus titles -> the news_tone_z cache")
+    ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args(argv)
+    if a.score_tone:
+        print(json.dumps(score_corpus_tone(limit=a.limit), indent=1))
+        return 0
     opt = _optimus()
     from backend.services import xs_ranker
     paths = xs_ranker.survivorship_free_paths()

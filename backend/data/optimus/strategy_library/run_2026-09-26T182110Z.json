@@ -1,0 +1,249 @@
+{
+ "job": "B_backtest_factory",
+ "date": "2026-09-27",
+ "run_id": "2026-09-26T182110Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-26T18:26:58+00:00",
+ "elapsed_s": 348.6,
+ "partial": null,
+ "n_rules_done": 306,
+ "n_computed_this_run": 306,
+ "panel": {
+  "rows": 372754,
+  "dates": 117,
+  "symbols": 4787,
+  "first": "2017-01-31",
+  "last": "2026-09-25",
+  "fingerprint": "3a8c19576fafb9a4"
+ },
+ "survivorship_audit": {
+  "n_symbols": 4793,
+  "panel_last_session": "2026-09-25",
+  "stopped_30d_before_end": 1575,
+  "stopped_90d_before_end": 1573,
+  "stopped_180d_before_end": 1568,
+  "fraction_dead_90d": 0.3282,
+  "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented."
+ },
+ "fundamentals": {
+  "status": "OK",
+  "lag_days": 2,
+  "n_filings": 127660,
+  "gp_at_coverage_last_date": 0.5573
+ },
+ "flow": {
+  "status": "OK",
+  "n_revision_rows": 393586,
+  "n_covered": 2992,
+  "windows_days": [
+   90,
+   30,
+   180
+  ],
+  "strictly_before_decision_date": true
+ },
+ "chunk_d_inputs": {
+  "ratings": {
+   "status": "OK",
+   "n_events": 393586,
+   "n_raises": 170161,
+   "lead_share_of_raises": 0.2435,
+   "chase_share_of_raises": 0.2823,
+   "strictly_before_decision_date": true,
+   "skill_rule": ">= 20 resolved raises, mean 63-session excess vs SPY > 0, resolved before the decision date",
+   "skilled_share_of_active_firms": {
+    "median": 0.272727,
+    "min": 0.126866,
+    "max": 0.429825,
+    "share_of_dates_above_0_70": 0.0,
+    "n_dates": 117
+   }
+  },
+  "insider": {
+   "status": "OK",
+   "n_events": 996601,
+   "n_symbols": 9971,
+   "last_observed": "2026-07-01 03:00:00",
+   "pit": "observed_at_utc (filing date EOD, conservative) strictly before the decision day",
+   "caveat": "the file ends at its last observed date; windows after it undercount"
+  },
+  "eightk": {
+   "status": "OK",
+   "n_filings": 293619,
+   "n_202": 97545,
+   "n_202_priced": 87010,
+   "n_tickers": 2594,
+   "pit": "counts: acceptance day strictly before the decision day; the 3-day announcement return is used only once its last session has closed",
+   "expected_print_rule": "2.02 filed 364d earlier, or the last 2.02 + 91d"
+  },
+  "short_interest": {
+   "status": "OK",
+   "n_prints": 2511804,
+   "n_symbols": 22184,
+   "publication_lag_days": 26,
+   "last_available": "2026-09-09 00:00:00",
+   "basis": "shortintadj (split-adjusted) over split-adjusted bar volume: both on the current share basis, so the ratio carries no split look-ahead",
+   "caveat": "gvkey->symbol by CURRENT Compustat ticker; dead issuers mostly absent"
+  },
+  "sector": {
+   "status": "OK",
+   "n_mapped_tickers": 28169,
+   "eligible_coverage_last_date": 0.8596,
+   "caveat": "CURRENT classification applied to every past month (static map)"
+  },
+  "extension": {
+   "status": "OK",
+   "derived": {
+    "sharpe_252": 349432,
+    "mkt_not_stress": 366378,
+    "low_vs_high_252": 363071,
+    "ear_filed_dow": 222842
+   },
+   "paper": {
+    "cluster_age_days": {
+     "non_nan": 64284,
+     "pit": "raises strictly before the date"
+    },
+    "inst_breadth_chg": {
+     "non_nan": 229694,
+     "quarters": [
+      "2013-06-30",
+      "2025-12-31"
+     ],
+     "pit": "rdate + 45d strictly before the date (fdate == rdate)"
+    },
+    "intangibles": {
+     "rd_intensity": 106701,
+     "org_capital": 110095
+    }
+   },
+   "round2": {
+    "is_opex_week": {
+     "decision_rows": 372754,
+     "rows_in_opex_week": 0,
+     "month_end_rows_in_opex_week": 0,
+     "reading": "0 month-end rows in an opex week = the monthly engine cannot hold opex_week_large_hold (engine mismatch, measured)"
+    },
+    "mkt_value": {
+     "non_nan": 215945,
+     "by_year_non_nan": {
+      "2017": 22096,
+      "2018": 23123,
+      "2019": 23173,
+      "2020": 22811,
+      "2021": 23251,
+      "2022": 23515,
+      "2023": 23587,
+      "2024": 24096,
+      "2025": 24510,
+      "2026": 5783
+     },
+     "anchors": 188415,
+     "tickers_mapped": 53949,
+     "anchor_datadate_range": [
+      "2013-01-31",
+      "2024-12-31"
+     ],
+     "pit": "Compustat anchor available at rdq + 2d strictly before the date; rolled by adj_close ratio",
+     "gap": "Compustat fundq on disk ends datadate 2024-12-31: NaN from 2026-04-06 (MV_STALE_DAYS 460)"
+    },
+    "value_and_d2d": {
+     "book_to_market": 180972,
+     "earnings_yield": 173863,
+     "ebit_ev": 93083,
+     "ebit_ic": 118248,
+     "d2d": 115330,
+     "d2d_chg": 113621
+    },
+    "news_tone_z": "AWAITING SCORING: no FinBERT tone cache at C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\_tone\\finbert_tone.jsonl (python -m backend.services.pit_features --score-tone); the rule stays forward-only and unscored",
+    "enablers": {
+     "mkt_value (VAL-01 fix)": {
+      "left_ext_not_reachable": [
+       "EXT-QC-10",
+       "EXT-QC-13",
+       "EXT-QC-14g"
+      ],
+      "new_rules_scoring": [
+       "qc409_book_to_market",
+       "qc241_value_composite_small_annual",
+       "qc761_ebit_ev_ebit_ic_large_annual",
+       "distance_to_default_rising"
+      ],
+      "still_blocked": {
+       "EXT-QP-05": "net payout needs buyback/dividend facts, not only market value",
+       "INV-02": "net issuance from as-filed shares is still split-contaminated"
+      }
+     },
+     "news_tone_z": {
+      "left_ext_not_reachable": [
+       "SSA-NEWSTONE (was never filed there: registered forward-only)"
+      ],
+      "new_rules_scoring": [],
+      "why_zero": "forward-only: the corpus began 2026-09-11, 60 covered baseline sessions are needed, and no FinBERT tone cache exists yet (score_corpus_tone not run)",
+      "still_blocked": {
+       "call_tone_drift": "transcripts, not tone, are the gap"
+      }
+     }
+    }
+   },
+   "pit": "features at t+1d from rows dated <= t, mapped back to t",
+   "firm_map": "146 firms from firm_estimid_map.json",
+   "support_non_nan": {
+    "analyst_skill_weight": 120687,
+    "max_21": 371599,
+    "attention_z": 0,
+    "fomo_reversal": 0,
+    "first_mover_rank": 96129,
+    "pricing_power_cost_pressure": 58266
+   }
+  }
+ },
+ "objective": {
+  "primary_sort": "sealed_vs_spy = the 2024-26 selection window (split declared, data seen): net CAGR minus SPY CAGR, same months. A SORT, not a holdout -- the out-of-sample read is `dev_selected_sealed_evaluated`",
+  "window_label": "2024-26 selection window (split declared, data seen)",
+  "dev_end": "2023-12-31",
+  "sealed_start": "2024-01-01",
+  "recent": "last 6 completed monthly periods (~126 sessions)",
+  "split_rule": "a period belongs to the window its ENTRY session (decision + 1 business day) is in",
+  "n_sealed_months": 32,
+  "n_dev_months_max": 83,
+  "honest_note": "The 2024-26 selection window (split declared, data seen) is 32 monthly blocks. The split was declared in code before this run; nobody's eyes were closed to 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 868 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=868), the dev column, and `dev_selected_sealed_evaluated` (rules picked on dev only, read on 2024-26).",
+  "noise_sharpe_ceiling_monthly_full": 0.301079,
+  "noise_sharpe_ceiling_monthly_sealed": 0.577367,
+  "noise_sharpe_ceiling_annual_sealed": 2.000059,
+  "expected_noise_cells_ir_above_0_5_annual_full": 53.508554,
+  "expected_noise_cells_ir_above_0_5_annual_sealed": 182.977144
+ },
+ "spy": {
+  "source": "spy_tr_yf_adjclose",
+  "alignment": "daily total return compounded over (month-end, next month-end]"
+ },
+ "market_benchmark": {
+  "schema": 1,
+  "module": "learner.benchmark",
+  "benchmark_id": "spy_tr_yf_adjclose",
+  "freq": "D",
+  "overlapping": false,
+  "provenance": {
+   "source": "yfinance",
+   "ticker": "SPY",
+   "construction": "pct_change of auto_adjust=True Close (total return)",
+   "dividends_included": true,
+   "network": true,
+   "fetched_utc": "2026-09-26T18:25:20.684700+00:00"
+  },
+  "provenance_sha256": "a09d1134533fc0ebba68f9d24c14296a671ac60b7cb94aea62bfb838ea40cd85",
+  "span": [
+   "2017-01-24",
+   "2026-09-25"
+  ],
+  "n_periods": 2432
+ },
+ "books": null,
+ "backtest_vs_forward": null,
+ "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26T182110Z.json",
+ "leaderboard_latest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-27.json",
+ "markdown": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\LEADERBOARD.md",
+ "replication": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-09-26T182110Z.json"
+}

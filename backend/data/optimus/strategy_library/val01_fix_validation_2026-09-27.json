@@ -1,0 +1,62 @@
+{
+ "what": "VAL-01 fix: strategy_library_ext.market_value_column vs CRSP |prc| x shrout (crsp__msf, msenames ticker at date, shrcd 10/11), ~400 random CRSP names per date, matched to prices_deep bars by ticker; refused = adjusted close x as-filed SEC shares at filed+2d",
+ "generated": "2026-09-27",
+ "by_date": {
+  "2019-06-28": {
+   "fixed": {
+    "n": 148,
+    "median_abs_log_err": 0.0054,
+    "within_10pct": 0.9054,
+    "off_by_2x_or_more": 0.0338
+   },
+   "refused_adjclose_x_sec_shares": {
+    "n": 144,
+    "median_abs_log_err": 0.1346,
+    "within_10pct": 0.4028,
+    "off_by_2x_or_more": 0.1042
+   }
+  },
+  "2020-08-31": {
+   "fixed": {
+    "n": 170,
+    "median_abs_log_err": 0.0023,
+    "within_10pct": 0.9118,
+    "off_by_2x_or_more": 0.0118
+   },
+   "refused_adjclose_x_sec_shares": {
+    "n": 170,
+    "median_abs_log_err": 0.1088,
+    "within_10pct": 0.4706,
+    "off_by_2x_or_more": 0.0824
+   }
+  },
+  "2022-06-30": {
+   "fixed": {
+    "n": 153,
+    "median_abs_log_err": 0.0065,
+    "within_10pct": 0.8954,
+    "off_by_2x_or_more": 0.0327
+   },
+   "refused_adjclose_x_sec_shares": {
+    "n": 151,
+    "median_abs_log_err": 0.0535,
+    "within_10pct": 0.6424,
+    "off_by_2x_or_more": 0.0927
+   }
+  },
+  "2024-06-28": {
+   "fixed": {
+    "n": 194,
+    "median_abs_log_err": 0.0084,
+    "within_10pct": 0.8351,
+    "off_by_2x_or_more": 0.0155
+   },
+   "refused_adjclose_x_sec_shares": {
+    "n": 188,
+    "median_abs_log_err": 0.0322,
+    "within_10pct": 0.7819,
+    "off_by_2x_or_more": 0.0798
+   }
+  }
+ }
+}

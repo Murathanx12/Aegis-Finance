@@ -315,3 +315,67 @@ def test_attach_maps_features_back_to_the_month_end_row(monkeypatch, tmp_path):
     assert out.loc[0, "max_21"] == pytest.approx(r[-21:].max())      # includes t's close
     assert np.isnan(out.loc[2, "max_21"])                              # not a month-end row
     assert out["analyst_skill_weight"].isna().all()                    # no revisions on disk
+
+
+# ── news_tone_z (paper rules round 2, 2026-09-27) ────────────────────────────
+
+def _tone_world(end=D, n_sessions=160):
+    """Every session covered (a filler row on ZZZ); AAA's baseline tone hovers
+    near +0.1, its last 5 sessions are pessimistic (-0.8)."""
+    sess = pd.bdate_range(end=end - pd.Timedelta(days=1), periods=n_sessions)
+    rows = []
+    for k, s in enumerate(sess):
+        stamp = (s + pd.Timedelta(hours=14)).isoformat() + "+00:00"
+        rows.append({"first_seen_utc": stamp, "published_utc": stamp, "tickers": ["ZZZ"], "tone": 0.0})
+        recent = k >= n_sessions - 5
+        tone = -0.8 if recent else (0.1 + (0.2 if k % 2 else -0.2))
+        rows.append({"first_seen_utc": stamp, "published_utc": stamp, "tickers": ["AAA"], "tone": tone})
+    return rows, _sessions(end)
+
+
+def test_news_tone_z_is_pessimistic_and_strictly_before_the_date():
+    rows, sess = _tone_world()
+    base = pf.news_tone_features(pf.tone_frame(rows), pd.DatetimeIndex([D]), sess, ["AAA", "BBB"])
+    z = base.set_index("ticker")["news_tone_z"]
+    assert z["AAA"] < -5 and np.isnan(z["BBB"])            # no news is not neutral news
+    # an item first seen ON the decision date, and one after it, change nothing
+    late = [{"first_seen_utc": (D + pd.Timedelta(hours=h)).isoformat() + "+00:00",
+             "published_utc": (D + pd.Timedelta(hours=h)).isoformat() + "+00:00",
+             "tickers": ["AAA"], "tone": 1.0} for h in (1, 30)]
+    again = pf.news_tone_features(pf.tone_frame(rows + late), pd.DatetimeIndex([D]), sess, ["AAA", "BBB"])
+    assert again.set_index("ticker")["news_tone_z"]["AAA"] == pytest.approx(z["AAA"])
+
+
+def test_news_tone_z_excludes_archive_rows():
+    rows, sess = _tone_world()
+    recent_stamp = (D - pd.Timedelta(days=2) + pd.Timedelta(hours=15)).isoformat() + "+00:00"
+    archive = [{"first_seen_utc": recent_stamp, "published_utc": "2015-01-02T13:00:00+00:00",
+                "tickers": ["AAA"], "tone": 1.0, "pit_grade": "native_stamp"} for _ in range(20)]
+    tf = pf.tone_frame(rows + archive)
+    assert tf.attrs["n_archive_excluded"] == 20
+    assert len(tf) == len(pf.tone_frame(rows))
+    a = pf.news_tone_features(tf, pd.DatetimeIndex([D]), sess, ["AAA"])
+    b = pf.news_tone_features(pf.tone_frame(rows), pd.DatetimeIndex([D]), sess, ["AAA"])
+    assert a["news_tone_z"].iloc[0] == pytest.approx(b["news_tone_z"].iloc[0])
+    # an archive-only pull does not mark a session covered
+    only_arch = pf.tone_frame(archive)
+    assert only_arch.attrs["coverage_stamps"] == []
+
+
+def test_news_tone_z_is_nan_below_the_covered_session_floor():
+    rows, sess = _tone_world(n_sessions=pf.NEWS_TONE_MIN_SESSIONS)   # < 60 + 5 covered sessions
+    z = pf.news_tone_features(pf.tone_frame(rows), pd.DatetimeIndex([D]), sess, ["AAA"])
+    assert z["news_tone_z"].isna().all()
+
+
+def test_tone_frame_skips_rows_without_a_stored_tone():
+    rows = [{"first_seen_utc": "2024-05-01T12:00:00+00:00", "published_utc": "2024-05-01T12:00:00+00:00",
+             "tickers": ["AAA"]},
+            {"first_seen_utc": "2024-05-01T12:00:00+00:00", "published_utc": "2024-05-01T12:00:00+00:00",
+             "tickers": ["AAA"], "tone": None}]
+    assert pf.tone_frame(rows).empty
+
+
+def test_news_tone_rule_reads_the_new_column():
+    r = sl.rule_by_id("news_tone_reversal_5d")
+    assert set(r.requires) == {"news_tone_z", "attention_z"} and r.forward_only
