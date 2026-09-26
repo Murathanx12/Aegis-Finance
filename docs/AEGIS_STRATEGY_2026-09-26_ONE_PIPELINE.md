@@ -111,3 +111,29 @@ the FX leg → chunk 6 source registry + social → era replay 2020→now.
 
 Of ~21 products surveyed, none publishes independently audited, cost-inclusive
 forward evidence vs SPY; only Danelfin and Numerai grade their own calls at all.
+
+## 9. Value proposition, ranked (from `research_notes/2026-09-26/research_value_proposition_and_competitor_ranking.md`)
+Two personas, 21 competitors, ten criteria scored 0-3 with a source each:
+- **P2 — the sophisticated investor who wants a machine to beat SPY hands-off:**
+  Aegis leads on paper (12) over Danelfin (11) and Numerai (9); on the one
+  criterion P2 pays for — forward, cost-inclusive evidence vs SPY — Aegis
+  scores 1/3, level with Numerai, below Danelfin. The 39 priced paper accounts
+  at −1.12% are the honest number.
+- **P1 — the person who does not know how to invest:** Betterment/Wealthfront
+  lead; Aegis ties on substance and scores **0 on accessibility** — no novice
+  product exists yet.
+- **Revenue:** the SEC and the SFC draw the same line — an impersonal,
+  transparent screen/ledger is not advice; output tailored to one user's
+  supplied information is (RIA / Type 4/9). Comparable pricing: Danelfin
+  $29–179/mo, Composer $30/mo as an RIA, robo-advisors 0.25%. Our cost to
+  serve is a broadcast cost (~$0.05 per card, ~$0.30 per 100 names per day,
+  ~$50/mo Railway), near-zero marginal per subscriber — contingent on a
+  first paying user, of which there are none.
+- **Positioning, one sentence each:**
+  - P1: *"Aegis writes down what it believes about the market every day,
+    grades itself against what actually happens, and shows you both — for
+    free, in plain language, before it ever asks you for a dollar."*
+  - P2: *"Aegis is the only system we found that freezes every forecast
+    before the outcome and grades it against reality at scale — the
+    discipline a real edge would need to prove itself is built and running;
+    the edge itself is not proven yet, and we say so."*
