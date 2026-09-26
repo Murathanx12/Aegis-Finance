@@ -1,0 +1,180 @@
+{
+ "job": "B_backtest_factory",
+ "date": "2026-09-27",
+ "run_id": "2026-09-26T164302Z",
+ "licence": "PRODUCT_EXPERIMENT",
+ "llm_spend_usd": 0.0,
+ "written_utc": "2026-09-26T16:48:47+00:00",
+ "elapsed_s": 344.4,
+ "partial": null,
+ "n_rules_done": 298,
+ "n_computed_this_run": 298,
+ "panel": {
+  "rows": 372754,
+  "dates": 117,
+  "symbols": 4787,
+  "first": "2017-01-31",
+  "last": "2026-09-25",
+  "fingerprint": "71b175470e447d78"
+ },
+ "survivorship_audit": {
+  "n_symbols": 4793,
+  "panel_last_session": "2026-09-25",
+  "stopped_30d_before_end": 1575,
+  "stopped_90d_before_end": 1573,
+  "stopped_180d_before_end": 1568,
+  "fraction_dead_90d": 0.3282,
+  "verdict": "1,573 of 4,793 symbols (32.8%) stop trading well before the end, so delistings are represented."
+ },
+ "fundamentals": {
+  "status": "OK",
+  "lag_days": 2,
+  "n_filings": 127660,
+  "gp_at_coverage_last_date": 0.5573
+ },
+ "flow": {
+  "status": "OK",
+  "n_revision_rows": 393581,
+  "n_covered": 2992,
+  "windows_days": [
+   90,
+   30,
+   180
+  ],
+  "strictly_before_decision_date": true
+ },
+ "chunk_d_inputs": {
+  "ratings": {
+   "status": "OK",
+   "n_events": 393581,
+   "n_raises": 170160,
+   "lead_share_of_raises": 0.2435,
+   "chase_share_of_raises": 0.2823,
+   "strictly_before_decision_date": true,
+   "skill_rule": ">= 20 resolved raises, mean 63-session excess vs SPY > 0, resolved before the decision date",
+   "skilled_share_of_active_firms": {
+    "median": 0.272727,
+    "min": 0.126866,
+    "max": 0.429825,
+    "share_of_dates_above_0_70": 0.0,
+    "n_dates": 117
+   }
+  },
+  "insider": {
+   "status": "OK",
+   "n_events": 996601,
+   "n_symbols": 9971,
+   "last_observed": "2026-07-01 03:00:00",
+   "pit": "observed_at_utc (filing date EOD, conservative) strictly before the decision day",
+   "caveat": "the file ends at its last observed date; windows after it undercount"
+  },
+  "eightk": {
+   "status": "OK",
+   "n_filings": 293619,
+   "n_202": 97545,
+   "n_202_priced": 87010,
+   "n_tickers": 2594,
+   "pit": "counts: acceptance day strictly before the decision day; the 3-day announcement return is used only once its last session has closed",
+   "expected_print_rule": "2.02 filed 364d earlier, or the last 2.02 + 91d"
+  },
+  "short_interest": {
+   "status": "OK",
+   "n_prints": 2511804,
+   "n_symbols": 22184,
+   "publication_lag_days": 26,
+   "last_available": "2026-09-09 00:00:00",
+   "basis": "shortintadj (split-adjusted) over split-adjusted bar volume: both on the current share basis, so the ratio carries no split look-ahead",
+   "caveat": "gvkey->symbol by CURRENT Compustat ticker; dead issuers mostly absent"
+  },
+  "sector": {
+   "status": "OK",
+   "n_mapped_tickers": 28169,
+   "eligible_coverage_last_date": 0.8596,
+   "caveat": "CURRENT classification applied to every past month (static map)"
+  },
+  "extension": {
+   "status": "OK",
+   "derived": {
+    "sharpe_252": 349432,
+    "mkt_not_stress": 366378,
+    "low_vs_high_252": 363071,
+    "ear_filed_dow": 222842
+   },
+   "paper": {
+    "cluster_age_days": {
+     "non_nan": 64284,
+     "pit": "raises strictly before the date"
+    },
+    "inst_breadth_chg": {
+     "non_nan": 229694,
+     "quarters": [
+      "2013-06-30",
+      "2025-12-31"
+     ],
+     "pit": "rdate + 45d strictly before the date (fdate == rdate)"
+    },
+    "intangibles": {
+     "rd_intensity": 106701,
+     "org_capital": 110095
+    }
+   },
+   "pit": "features at t+1d from rows dated <= t, mapped back to t",
+   "firm_map": "146 firms from firm_estimid_map.json",
+   "support_non_nan": {
+    "analyst_skill_weight": 120687,
+    "max_21": 371599,
+    "attention_z": 0,
+    "fomo_reversal": 0,
+    "first_mover_rank": 96129,
+    "pricing_power_cost_pressure": 58266
+   }
+  }
+ },
+ "objective": {
+  "primary_sort": "sealed_vs_spy = the 2024-26 selection window (split declared, data seen): net CAGR minus SPY CAGR, same months. A SORT, not a holdout -- the out-of-sample read is `dev_selected_sealed_evaluated`",
+  "window_label": "2024-26 selection window (split declared, data seen)",
+  "dev_end": "2023-12-31",
+  "sealed_start": "2024-01-01",
+  "recent": "last 6 completed monthly periods (~126 sessions)",
+  "split_rule": "a period belongs to the window its ENTRY session (decision + 1 business day) is in",
+  "n_sealed_months": 32,
+  "n_dev_months_max": 83,
+  "honest_note": "The 2024-26 selection window (split declared, data seen) is 32 monthly blocks. The split was declared in code before this run; nobody's eyes were closed to 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 855 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=855), the dev column, and `dev_selected_sealed_evaluated` (rules picked on dev only, read on 2024-26).",
+  "noise_sharpe_ceiling_monthly_full": 0.300673,
+  "noise_sharpe_ceiling_monthly_sealed": 0.576588,
+  "noise_sharpe_ceiling_annual_sealed": 1.997358,
+  "expected_noise_cells_ir_above_0_5_annual_full": 52.707158,
+  "expected_noise_cells_ir_above_0_5_annual_sealed": 180.236703
+ },
+ "spy": {
+  "source": "spy_tr_yf_adjclose",
+  "alignment": "daily total return compounded over (month-end, next month-end]"
+ },
+ "market_benchmark": {
+  "schema": 1,
+  "module": "learner.benchmark",
+  "benchmark_id": "spy_tr_yf_adjclose",
+  "freq": "D",
+  "overlapping": false,
+  "provenance": {
+   "source": "yfinance",
+   "ticker": "SPY",
+   "construction": "pct_change of auto_adjust=True Close (total return)",
+   "dividends_included": true,
+   "network": true,
+   "fetched_utc": "2026-09-26T16:47:10.442072+00:00"
+  },
+  "provenance_sha256": "85f56abd5528e9434566d3737e5769e210225ecf733a2c6a9ec5cd3280fb34e2",
+  "span": [
+   "2017-01-24",
+   "2026-09-25"
+  ],
+  "n_periods": 2432
+ },
+ "books": null,
+ "backtest_vs_forward": null,
+ "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26T164302Z.json",
+ "leaderboard_latest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-27.json",
+ "markdown": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\LEADERBOARD.md",
+ "replication": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-09-26T164302Z.json"
+}

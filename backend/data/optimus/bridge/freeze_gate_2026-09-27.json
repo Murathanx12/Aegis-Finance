@@ -1,0 +1,1278 @@
+{
+ "schema": "bridge/freeze_gate/1",
+ "date": "2026-09-27",
+ "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T164302Z.json",
+ "rule": "Every boolean of the freeze rule and the verdict: PASS or CONTROL(reasons).",
+ "notes": [
+  "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket."
+ ],
+ "gates": {
+  "lib_mom_12_1_q_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "momentum",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_no_downgrades_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "MAX_DD"
+   ],
+   "label": "CONTROL(MAX_DD)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "revision_flow",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_net_raises_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "OKTA",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "CRWD",
+     "FTNT",
+     "OKTA",
+     "PANW",
+     "S"
+    ],
+    "max_cluster_share": 0.25,
+    "pairs_above_rho": [
+     [
+      "CRWD",
+      "FTNT",
+      0.851
+     ],
+     [
+      "CRWD",
+      "OKTA",
+      0.903
+     ],
+     [
+      "CRWD",
+      "PANW",
+      0.9
+     ],
+     [
+      "CRWD",
+      "S",
+      0.851
+     ],
+     [
+      "FTNT",
+      "OKTA",
+      0.807
+     ],
+     [
+      "FTNT",
+      "PANW",
+      0.852
+     ],
+     [
+      "FTNT",
+      "S",
+      0.879
+     ],
+     [
+      "PANW",
+      "S",
+      0.844
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "revision_flow",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_big_dv_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "MAX_DD"
+   ],
+   "label": "CONTROL(MAX_DD)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "MU",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "AMAT",
+     "AMD",
+     "INTC",
+     "TSM"
+    ],
+    "max_cluster_share": 0.2,
+    "pairs_above_rho": [
+     [
+      "AMAT",
+      "TSM",
+      0.832
+     ],
+     [
+      "AMD",
+      "INTC",
+      0.826
+     ],
+     [
+      "AMD",
+      "TSM",
+      0.805
+     ],
+     [
+      "GOOG",
+      "GOOGL",
+      0.995
+     ],
+     [
+      "INTC",
+      "TSM",
+      0.832
+     ],
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "size_liquidity",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_12_1_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "momentum",
+    "family_books_before": 1
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_12_1_small_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "2024_26_NOT_ABOVE_SPY",
+    "FAMILY_CAP"
+   ],
+   "label": "CONTROL(2024_26_NOT_ABOVE_SPY, FAMILY_CAP)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": false,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": false
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [],
+    "max_cluster_share": 0.0,
+    "pairs_above_rho": [],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "momentum",
+    "family_books_before": 2
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_flow_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "RVMD",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "AMD",
+     "INTC"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "AMD",
+      "INTC",
+      0.826
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "combination",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_trend_quality_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "2024_26_NOT_ABOVE_SPY"
+   ],
+   "label": "CONTROL(2024_26_NOT_ABOVE_SPY)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": false,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "CORT",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [],
+    "max_cluster_share": 0.0,
+    "pairs_above_rho": [],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "combination",
+    "family_books_before": 1
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_frog_in_pan_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "FAMILY_CAP"
+   ],
+   "label": "CONTROL(FAMILY_CAP)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": false
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "ASX",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "CIEN",
+     "COHR",
+     "LITE"
+    ],
+    "max_cluster_share": 0.15,
+    "pairs_above_rho": [
+     [
+      "AMAT",
+      "TER",
+      0.832
+     ],
+     [
+      "CIEN",
+      "LITE",
+      0.809
+     ],
+     [
+      "COHR",
+      "LITE",
+      0.888
+     ],
+     [
+      "STX",
+      "WDC",
+      0.87
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "momentum",
+    "family_books_before": 2
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_inflection_flow_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "MU",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [],
+    "max_cluster_share": 0.0,
+    "pairs_above_rho": [],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "combination",
+    "family_books_before": 1
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_forecast_dispersion_v1_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "NO_BACKTEST_ROW"
+   ],
+   "label": "CONTROL(NO_BACKTEST_ROW)",
+   "selection": {
+    "dev_vs_spy_gt_0": null,
+    "selection_window_vs_spy_gt_0": null,
+    "top5_month_share_lt_0_6": null,
+    "max_dd_gt_m40": null,
+    "loo_worst_mean_active_gt_0": null,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "ABUS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "ARIS",
+     "CGAU"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "ARIS",
+      "CGAU",
+      0.819
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": null,
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_book_f_seasonality_11_20_v0_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "NO_BACKTEST_ROW"
+   ],
+   "label": "CONTROL(NO_BACKTEST_ROW)",
+   "selection": {
+    "dev_vs_spy_gt_0": null,
+    "selection_window_vs_spy_gt_0": null,
+    "top5_month_share_lt_0_6": null,
+    "max_dd_gt_m40": null,
+    "loo_worst_mean_active_gt_0": null,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 30,
+    "max_name": "LNG",
+    "max_weight": 0.03333333333333334,
+    "weight_cap": 0.1,
+    "effective_n": 30.0,
+    "max_cluster": [
+     "ALK",
+     "UAL"
+    ],
+    "max_cluster_share": 0.0667,
+    "pairs_above_rho": [
+     [
+      "ALK",
+      "UAL",
+      0.881
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 33333.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": null,
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_12_1_liqw_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "DEV_NOT_ABOVE_SPY",
+    "TOP5_MONTH_SHARE",
+    "MAX_DD",
+    "NAME_WEIGHT",
+    "EFFECTIVE_N",
+    "CORRELATED_CLUSTER",
+    "EARNINGS",
+    "WORST_CASE_NAME"
+   ],
+   "label": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, NAME_WEIGHT, EFFECTIVE_N, CORRELATED_CLUSTER, EARNINGS, WORST_CASE_NAME)",
+   "selection": {
+    "dev_vs_spy_gt_0": false,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": false,
+    "effective_n_ge_8": false,
+    "no_rho_0_8_cluster_above_40pct": false,
+    "no_name_gt_10pct_printing_in_first_5_sessions": false,
+    "largest_name_to_zero_le_150k": false
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "MU",
+    "max_weight": 0.6028739639712604,
+    "weight_cap": 0.1,
+    "effective_n": 1.992,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.975,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {
+     "SNDK": {
+      "status": "NOT_DUE",
+      "last_202": "2026-08-05",
+      "due_from": "2026-10-19",
+      "window_end": "2026-10-02",
+      "file_ends": "2026-09-03"
+     },
+     "MU": {
+      "status": "DUE",
+      "last_202": "2026-06-24",
+      "due_from": "2026-09-07",
+      "window_end": "2026-10-02",
+      "file_ends": "2026-09-03"
+     }
+    },
+    "largest_name_to_zero_usd": 602874.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "weighted",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_rev_5d_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "DEV_NOT_ABOVE_SPY",
+    "TOP5_MONTH_SHARE",
+    "MAX_DD"
+   ],
+   "label": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD)",
+   "selection": {
+    "dev_vs_spy_gt_0": false,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "ALHC",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [],
+    "max_cluster_share": 0.0,
+    "pairs_above_rho": [],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "reversal",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_skill_mom_sealed_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "RVMD",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "AMD",
+     "INTC",
+     "MXL"
+    ],
+    "max_cluster_share": 0.15,
+    "pairs_above_rho": [
+     [
+      "AMD",
+      "INTC",
+      0.826
+     ],
+     [
+      "AMD",
+      "MXL",
+      0.811
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "analyst_skill",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_margin_mom_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "MAX_DD",
+    "FAMILY_CAP"
+   ],
+   "label": "CONTROL(MAX_DD, FAMILY_CAP)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": false
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "KOPN",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "COHU",
+      "INTC",
+      0.806
+     ],
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "combination",
+    "family_books_before": 2
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_illiquid_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "DEV_NOT_ABOVE_SPY",
+    "TOP5_MONTH_SHARE",
+    "MAX_DD",
+    "LOO_WORST"
+   ],
+   "label": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, LOO_WORST)",
+   "selection": {
+    "dev_vs_spy_gt_0": false,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": false,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "SDOT",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [],
+    "max_cluster_share": 0.0,
+    "pairs_above_rho": [],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "size_liquidity",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_low_dtc_mom_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "DEV_NOT_ABOVE_SPY",
+    "LOO_WORST"
+   ],
+   "label": "CONTROL(DEV_NOT_ABOVE_SPY, LOO_WORST)",
+   "selection": {
+    "dev_vs_spy_gt_0": false,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": false,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "SNDK",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "AMD",
+      "INTC",
+      0.826
+     ],
+     [
+      "BTE",
+      "OILU",
+      0.816
+     ],
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "short_interest",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_low_asset_growth_sealed_2026-09-26": {
+   "verdict": "PASS",
+   "reasons": [],
+   "label": "PASS",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": true,
+    "max_dd_gt_m40": true,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "ARI",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [],
+    "max_cluster_share": 0.0,
+    "pairs_above_rho": [],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "investment",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_resid_mom_12_1_large_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "TOP5_MONTH_SHARE",
+    "MAX_DD",
+    "FAMILY_CAP"
+   ],
+   "label": "CONTROL(TOP5_MONTH_SHARE, MAX_DD, FAMILY_CAP)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": false
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "WOLF",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "AAOI",
+      "LITE",
+      0.84
+     ],
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ],
+     [
+      "STX",
+      "WDC",
+      0.87
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "momentum",
+    "family_books_before": 2
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_12_1_secrel_sealed_2026-09-26": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "TOP5_MONTH_SHARE",
+    "MAX_DD"
+   ],
+   "label": "CONTROL(TOP5_MONTH_SHARE, MAX_DD)",
+   "selection": {
+    "dev_vs_spy_gt_0": true,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "sector_relative",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  },
+  "lib_mom_12_1_liqw_sealed_2026-09-26__ew": {
+   "verdict": "CONTROL",
+   "reasons": [
+    "DEV_NOT_ABOVE_SPY",
+    "TOP5_MONTH_SHARE",
+    "MAX_DD"
+   ],
+   "label": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD)",
+   "selection": {
+    "dev_vs_spy_gt_0": false,
+    "selection_window_vs_spy_gt_0": true,
+    "top5_month_share_lt_0_6": false,
+    "max_dd_gt_m40": false,
+    "loo_worst_mean_active_gt_0": true,
+    "family_books_le_2": true
+   },
+   "construction": {
+    "max_name_weight_le_0.10": true,
+    "effective_n_ge_8": true,
+    "no_rho_0_8_cluster_above_40pct": true,
+    "no_name_gt_10pct_printing_in_first_5_sessions": true,
+    "largest_name_to_zero_le_150k": true
+   },
+   "timing": {
+    "bars_le_1_session_old": true
+   },
+   "detail": {
+    "k": 20,
+    "max_name": "AKTS",
+    "max_weight": 0.04999999999999999,
+    "weight_cap": 0.1,
+    "effective_n": 20.0,
+    "max_cluster": [
+     "MU",
+     "SNDK"
+    ],
+    "max_cluster_share": 0.1,
+    "pairs_above_rho": [
+     [
+      "MU",
+      "SNDK",
+      0.877
+     ]
+    ],
+    "earnings_names_over_10pct": {},
+    "largest_name_to_zero_usd": 50000.0,
+    "decision_date": "2026-09-26",
+    "bar_date": "2026-09-25",
+    "staleness_sessions": 0,
+    "family": "weighted",
+    "family_books_before": 0
+   },
+   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+   "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket.",
+   "evaluated": "retroactively (frozen before the gate existed)"
+  }
+ }
+}
