@@ -156,13 +156,20 @@ def _mem_guard(note: str) -> dict:
 # ------------------------------------------------------------- corpus loading
 
 def load_news_rows(corpus_dir: Path, tracker: PROV.InputTracker | None = None,
-                   max_files: int | None = None) -> pd.DataFrame:
+                   max_files: int | None = None, census: dict | None = None) -> pd.DataFrame:
     """One row per (news observation, primary symbol). A moving-target snapshot.
 
     `symbols[0]` is taken as the row's company -- a multi-symbol wire item is
     attributed to the first-listed name only, so counts here are a (small)
     undercount of true cross-symbol syndication, never an overcount.
+
+    Graded at READ time (`news_registry.grade_row`, wave-2 §3): a
+    `pit_grade: archive` row is dropped, and `census` receives the
+    `news_registry.archive_receipt` block for the receipt.
     """
+    from backend.services import news_registry as NR
+    n_read = n_unstamped = 0
+    arch: dict = {}
     files = sorted(glob.glob(str(corpus_dir / "*.jsonl")))
     if max_files:
         files = files[:max_files]
@@ -182,6 +189,12 @@ def load_news_rows(corpus_dir: Path, tracker: PROV.InputTracker | None = None,
                         continue
                     if r.get("kind") != "news":
                         continue
+                    n_read += 1
+                    n_unstamped += 0 if NR.has_stamp_pair(r) else 1
+                    if NR.is_archive(r):
+                        src = str(r.get("source") or "?")
+                        arch[src] = arch.get(src, 0) + 1
+                        continue
                     syms = r.get("symbols") or []
                     if not syms:
                         continue
@@ -197,6 +210,8 @@ def load_news_rows(corpus_dir: Path, tracker: PROV.InputTracker | None = None,
                     })
         except OSError:
             continue
+    if census is not None:
+        census.update(NR.archive_receipt(n_read, sum(arch.values()), n_unstamped, arch))
     if not recs:
         return pd.DataFrame(columns=["symbol", "title", "body", "source",
                                      "independence_group", "observed_at",
@@ -628,8 +643,12 @@ def main() -> dict:
         return receipt
 
     max_files = 6 if args.quick else None
-    news = load_news_rows(corpus_dir, tracker, max_files=max_files)
+    archive: dict = {}
+    news = load_news_rows(corpus_dir, tracker, max_files=max_files, census=archive)
+    log(f"[N5.1] archive rows excluded: {archive.get('archive_rows_excluded', 0)} of "
+        f"{archive.get('rows_read', 0)} ({archive.get('rows_without_stamp_pair', 0)} without a stamp pair)")
     receipt["corpus_snapshot"] = {
+        "archive": archive,
         "files_read": max_files or len(list(corpus_dir.glob("*.jsonl"))),
         "news_rows_read": int(len(news)),
         "distinct_symbols": int(news["symbol"].nunique()) if len(news) else 0,

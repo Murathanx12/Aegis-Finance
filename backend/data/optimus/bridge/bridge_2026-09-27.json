@@ -2,19 +2,19 @@
  "schema": "bridge/1",
  "date": "2026-09-27",
  "licence": "PRODUCT_EXPERIMENT",
- "generated_utc": "2026-09-26T16:51:43+00:00",
- "git_head": "b4b89c8a",
- "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T164302Z.json",
+ "generated_utc": "2026-09-26T18:37:01+00:00",
+ "git_head": "615256bd",
+ "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T182110Z.json",
  "receipt_json": "backend/data/optimus/bridge/bridge_2026-09-27.json",
  "replication": "backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26T164302Z.json",
  "library_facts": {
-  "n_rules": 284,
-  "n_beat": 109,
-  "median_sealed_vs_spy": -0.034941,
-  "best_dsr": 0.1993,
+  "n_rules": 288,
+  "n_beat": 110,
+  "median_sealed_vs_spy": -0.034991999999999995,
+  "best_dsr": 0.198,
   "best_dsr_id": "mom_12_1_q",
-  "n_cells": 855,
-  "n_families": 33,
+  "n_cells": 868,
+  "n_families": 35,
   "n_sealed": 32,
   "ctrl_lo": -0.106089,
   "ctrl_hi": -0.018466,
@@ -26,7 +26,7 @@
  },
  "dev_selected": {
   "label": "2024-26 selection window (split declared, data seen)",
-  "n_rules": 284,
+  "n_rules": 288,
   "selection": "top-n by dev_vs_spy (dev net CAGR - SPY CAGR, entry <= 2023-12-31); evaluated on sealed_vs_spy (entry >= 2024-01-01)",
   "top_10": {
    "n": 10,
@@ -136,21 +136,21 @@
    "mean_dev_vs_spy": 0.151865
   },
   "spearman_dev_vs_selection_window": {
-   "rho": 0.205328,
-   "p_value": 0.000497,
-   "n": 284
+   "rho": 0.205269,
+   "p_value": 0.000455,
+   "n": 288
   },
-  "n_beat_spy_in_both_windows": 68,
+  "n_beat_spy_in_both_windows": 69,
   "n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40": 39,
   "mde": {
-   "active_sigma_monthly_median": 0.054038,
+   "active_sigma_monthly_median": 0.054367,
    "n_blocks": 32,
-   "se_monthly": 0.009553,
-   "mde_monthly_80pct_power": 0.026747,
-   "mde_annualised_simple": 0.320968,
+   "se_monthly": 0.009611,
+   "mde_monthly_80pct_power": 0.02691,
+   "mde_annualised_simple": 0.322922,
    "basis": "median across rules of |mean_active_monthly * sqrt(12) / IR_annual| (the full-window monthly active sigma); SE = sigma / sqrt(blocks); MDE = 2.8 SE (two-sided 5%, 80% power)"
   },
-  "sentence": "Choosing the top 10 rules by dev (pre-2024) results alone gave +8.8 pp/yr mean vs SPY in the 2024-26 selection window (split declared, data seen) (median +2.6 pp; 6 of 10 beat SPY); dev-to-2024-26 rank Spearman 0.21 over 284 rules; 68 rules beat SPY in both windows; the MDE of a 32-block window at 80% power is 2.7%/month."
+  "sentence": "Choosing the top 10 rules by dev (pre-2024) results alone gave +8.8 pp/yr mean vs SPY in the 2024-26 selection window (split declared, data seen) (median +2.6 pp; 6 of 10 beat SPY); dev-to-2024-26 rank Spearman 0.21 over 288 rules; 69 rules beat SPY in both windows; the MDE of a 32-block window at 80% power is 2.7%/month."
  },
  "n_forward_graded": 0,
  "voided_before_entry": [
@@ -163,8 +163,8 @@
   }
  ],
  "gate_summary": {
-  "n_books": 20,
-  "n_pass": 7,
+  "n_books": 26,
+  "n_pass": 11,
   "pass_but_timing": [],
   "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
   "log": "backend/data/optimus/bridge/freeze_gate_2026-09-27.json",
@@ -184,6 +184,135 @@
   "vol_21_annual": 0.1075,
   "label": "SPY above 200d, vol mid"
  },
+ "structure": {
+  "status": "OK",
+  "receipt": "backend/data/optimus/signal_structure/signal_structure_2026-09-26T182110Z.json",
+  "rho_cut": 0.8,
+  "series_source": "working tree backend/data/optimus/strategy_library/checkpoint_2026-09-27.json",
+  "label": "HINDSIGHT: every rule was registered 2026-09-26, after every month here",
+  "monthly_returns": "backend/data/optimus/signal_structure/monthly_returns_2026-09-26T182110Z.parquet",
+  "etf_monthly": "backend/data/optimus/signal_structure/etf_monthly.parquet",
+  "decomposition_status": "OK"
+ },
+ "distinct_bets": {
+  "full": {
+   "window": "cluster_full",
+   "n_books": 27,
+   "n_distinct": 17,
+   "n_clustered_books": 25,
+   "n_clusters": 15,
+   "n_unclustered": 2,
+   "multi_book_clusters": {
+    "170": [
+     "lib_mom_12_1_q_2026-09-26",
+     "lib_mom_no_downgrades_2026-09-26",
+     "lib_mom_12_1_2026-09-26",
+     "lib_mom_12_1_secrel_sealed_2026-09-26",
+     "lib_disp_short_avoid_2026-09-27",
+     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+    ],
+    "186": [
+     "lib_mom_12_1_small_2026-09-26",
+     "lib_mom_no_downgrades_small_2026-09-27__control"
+    ],
+    "179": [
+     "lib_mom_flow_2026-09-26",
+     "lib_skill_mom_sealed_2026-09-26",
+     "lib_skill_mom_2026-09-27",
+     "lib_mom_flow_ivw_2026-09-27"
+    ],
+    "167": [
+     "lib_resid_mom_12_1_large_sealed_2026-09-26",
+     "lib_qc395_sharpe252_above_trend_large_2026-09-27"
+    ]
+   },
+   "unclustered": [
+    "lib_forecast_dispersion_v1_2026-09-26",
+    "lib_book_f_seasonality_11_20_v0_2026-09-26"
+   ]
+  },
+  "sealed": {
+   "window": "cluster_sealed",
+   "n_books": 27,
+   "n_distinct": 16,
+   "n_clustered_books": 25,
+   "n_clusters": 14,
+   "n_unclustered": 2,
+   "multi_book_clusters": {
+    "94": [
+     "lib_mom_12_1_q_2026-09-26",
+     "lib_mom_no_downgrades_2026-09-26",
+     "lib_mom_12_1_2026-09-26",
+     "lib_mom_12_1_secrel_sealed_2026-09-26",
+     "lib_disp_short_avoid_2026-09-27",
+     "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+    ],
+    "41": [
+     "lib_mom_12_1_small_2026-09-26",
+     "lib_mom_no_downgrades_small_2026-09-27__control"
+    ],
+    "53": [
+     "lib_mom_flow_2026-09-26",
+     "lib_mom_flow_ivw_2026-09-27"
+    ],
+    "96": [
+     "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+     "lib_skill_mom_sealed_2026-09-26",
+     "lib_resid_mom_12_1_large_sealed_2026-09-26",
+     "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+     "lib_skill_mom_2026-09-27"
+    ]
+   },
+   "unclustered": [
+    "lib_forecast_dispersion_v1_2026-09-26",
+    "lib_book_f_seasonality_11_20_v0_2026-09-26"
+   ]
+  }
+ },
+ "cluster_observations": [
+  {
+   "cluster": "170",
+   "books": [
+    "lib_mom_12_1_q_2026-09-26",
+    "lib_mom_no_downgrades_2026-09-26",
+    "lib_mom_12_1_2026-09-26",
+    "lib_mom_12_1_secrel_sealed_2026-09-26",
+    "lib_disp_short_avoid_2026-09-27",
+    "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control"
+   ],
+   "n_books": 6,
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+  },
+  {
+   "cluster": "186",
+   "books": [
+    "lib_mom_12_1_small_2026-09-26",
+    "lib_mom_no_downgrades_small_2026-09-27__control"
+   ],
+   "n_books": 2,
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+  },
+  {
+   "cluster": "179",
+   "books": [
+    "lib_mom_flow_2026-09-26",
+    "lib_skill_mom_sealed_2026-09-26",
+    "lib_skill_mom_2026-09-27",
+    "lib_mom_flow_ivw_2026-09-27"
+   ],
+   "n_books": 4,
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+  },
+  {
+   "cluster": "167",
+   "books": [
+    "lib_resid_mom_12_1_large_sealed_2026-09-26",
+    "lib_qc395_sharpe252_above_trend_large_2026-09-27"
+   ],
+   "n_books": 2,
+   "forward_relative_one_observation": "PENDING (entry 2026-09-28)"
+  }
+ ],
  "rule": {
   "trail_sessions": 21,
   "trail_sigmas": 1.0,
@@ -191,6 +320,7 @@
    "IMPLEMENTATION",
    "UNIVERSE_CHANGE",
    "COST",
+   "FACTOR_BETA",
    "RANDOMNESS",
    "REGIME_SHIFT",
    "CROWDING",
@@ -206,6 +336,7 @@
    "IMPLEMENTATION",
    "COST",
    "UNIVERSE_CHANGE",
+   "FACTOR_BETA",
    "RANDOMNESS",
    "UNKNOWN"
   ]
@@ -224,7 +355,7 @@
    "sealed_cagr": 0.588691,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.378698,
-   "sealed_dsr": 0.0564,
+   "sealed_dsr": 0.0559,
    "max_dd": -0.359042,
    "turnover_annual": 2.446957,
    "sigma_active_monthly": 0.09836851677560673,
@@ -251,7 +382,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01952657489243023,
+    "t_alpha": 1.09487716936366,
+    "r2": 0.19082215537015979,
+    "betas": {
+     "SMH": 0.4640552079778444,
+     "MTUM": -0.041327638002566405,
+     "IWM": 0.8233124936838374
+    },
+    "t_betas": {
+     "SMH": 1.4401681947895075,
+     "MTUM": -0.06892019628986301,
+     "IWM": 1.5641674396154277
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.481997701056123,
+   "dominant_t": 5.983628185600615,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_mom_no_downgrades_2026-09-26",
@@ -266,7 +425,7 @@
    "sealed_cagr": 0.213837,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.003844,
-   "sealed_dsr": 0.0026,
+   "sealed_dsr": 0.0025,
    "max_dd": -0.423046,
    "turnover_annual": 4.184348,
    "sigma_active_monthly": 0.10326764655765078,
@@ -293,7 +452,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(MAX_DD)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.006126921161694346,
+    "t_alpha": -0.34296161577852863,
+    "r2": 0.3615491302656457,
+    "betas": {
+     "SMH": 0.7325781083090415,
+     "MTUM": -0.13406330218324444,
+     "IWM": 1.3155795869458322
+    },
+    "t_betas": {
+     "SMH": 2.2696631007689043,
+     "MTUM": -0.2231925682266243,
+     "IWM": 2.4951666532349215
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.5905481901900103,
+   "dominant_t": 6.370329024357701,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_net_raises_2026-09-26",
@@ -308,7 +495,7 @@
    "sealed_cagr": 0.268498,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.058505,
-   "sealed_dsr": 0.0052,
+   "sealed_dsr": 0.0051,
    "max_dd": -0.239801,
    "turnover_annual": 5.363478,
    "sigma_active_monthly": 0.038466826124146036,
@@ -335,7 +522,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 103,
+   "cluster_sealed": 54,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.004047704156540799,
+    "t_alpha": -0.5237587940579853,
+    "r2": 0.4083574049640897,
+    "betas": {
+     "SMH": 0.35512345750121105,
+     "MTUM": 0.21055586062939807,
+     "IWM": 0.058350219842437136
+    },
+    "t_betas": {
+     "SMH": 2.5433501905079874,
+     "MTUM": 0.8103198763248547,
+     "IWM": 0.25582575753899855
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.5213846543329241,
+   "dominant_t": 4.888693929557073,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "MTUM_SERIES_MISSING",
+   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_big_dv_2026-09-26",
@@ -350,10 +565,10 @@
    "sealed_cagr": 0.345336,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.135343,
-   "sealed_dsr": 0.0163,
+   "sealed_dsr": 0.0162,
    "max_dd": -0.407504,
    "turnover_annual": 0.845217,
-   "sigma_active_monthly": 0.041938997684505416,
+   "sigma_active_monthly": 0.041939067058138976,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -377,7 +592,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(MAX_DD)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 95,
+   "cluster_sealed": 58,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.001696602468897312,
+    "t_alpha": -0.2111560994291792,
+    "r2": 0.496446979527146,
+    "betas": {
+     "SMH": 0.4833037778658885,
+     "MTUM": 0.1764473246929162,
+     "IWM": -0.04170079535143577
+    },
+    "t_betas": {
+     "SMH": 3.3292619123271745,
+     "MTUM": 0.65313838303602,
+     "IWM": -0.1758519066655632
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 0.41909173706119485,
+   "dominant_t": 7.7141121186806565,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "SMH_SERIES_MISSING",
+   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_mom_12_1_2026-09-26",
@@ -395,7 +638,7 @@
    "sealed_dsr": 0.0035,
    "max_dd": -0.363856,
    "turnover_annual": 4.106087,
-   "sigma_active_monthly": 0.10419127719008475,
+   "sigma_active_monthly": 0.10419110546556384,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -419,7 +662,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.002847164061933273,
+    "t_alpha": -0.15487876307895102,
+    "r2": 0.31167827151460725,
+    "betas": {
+     "SMH": 0.7246617461065659,
+     "MTUM": -0.2696528227429711,
+     "IWM": 1.2145941626851906
+    },
+    "t_betas": {
+     "SMH": 2.1818201615821535,
+     "MTUM": -0.43626557185019943,
+     "IWM": 2.2386684303058044
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.5827324688905688,
+   "dominant_t": 6.122699350813633,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_mom_12_1_small_2026-09-26",
@@ -461,7 +732,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(2024_26_NOT_ABOVE_SPY, FAMILY_CAP)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 186,
+   "cluster_sealed": 41,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.004106224235187687,
+    "t_alpha": 0.30780569855156237,
+    "r2": 0.4597146318050326,
+    "betas": {
+     "SMH": -0.15696726480615952,
+     "MTUM": 0.7837186556256063,
+     "IWM": 1.6722381241010613
+    },
+    "t_betas": {
+     "SMH": -0.6512493768936196,
+     "MTUM": 1.7472730215503423,
+     "IWM": 4.247284192465669
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4883691471899672,
+   "dominant_t": 7.7157511149778975,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_mom_flow_2026-09-26",
@@ -476,7 +775,7 @@
    "sealed_cagr": 0.438998,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.229005,
-   "sealed_dsr": 0.0412,
+   "sealed_dsr": 0.0409,
    "max_dd": -0.271737,
    "turnover_annual": 5.113043,
    "sigma_active_monthly": 0.06343963034993956,
@@ -503,7 +802,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 53,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.006858679975323886,
+    "t_alpha": 0.6984420993622182,
+    "r2": 0.5557534877180393,
+    "betas": {
+     "SMH": 0.3419813772395586,
+     "MTUM": 0.7301663462443485,
+     "IWM": 0.6328279452713068
+    },
+    "t_betas": {
+     "SMH": 1.9275096587380975,
+     "MTUM": 2.2114558556960406,
+     "IWM": 2.183507690388075
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9867380943045782,
+   "dominant_t": 6.057113112729538,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "MTUM_SERIES_MISSING",
+   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_trend_quality_2026-09-26",
@@ -518,7 +845,7 @@
    "sealed_cagr": 0.200592,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": -0.0094,
-   "sealed_dsr": 0.0007,
+   "sealed_dsr": 0.0006,
    "max_dd": -0.248402,
    "turnover_annual": 3.735652,
    "sigma_active_monthly": 0.043544067186053415,
@@ -545,7 +872,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(2024_26_NOT_ABOVE_SPY)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 190,
+   "cluster_sealed": 165,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.004240979354884234,
+    "t_alpha": 0.6625913789136618,
+    "r2": 0.331919063781694,
+    "betas": {
+     "SMH": -0.1883159873409736,
+     "MTUM": 0.301157668644131,
+     "IWM": 0.6134149921941343
+    },
+    "t_betas": {
+     "SMH": -1.628437333163278,
+     "MTUM": 1.3993944320010332,
+     "IWM": 3.2472312344185363
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 0.7845147813275344,
+   "dominant_t": 7.21472824528781,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_frog_in_pan_2026-09-26",
@@ -587,7 +942,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(FAMILY_CAP)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 138,
+   "cluster_sealed": 8,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.00900597444208288,
+    "t_alpha": 0.608913146204149,
+    "r2": 0.2617980969986534,
+    "betas": {
+     "SMH": 0.025482877733230214,
+     "MTUM": 0.8984134536556951,
+     "IWM": 0.6527545262481879
+    },
+    "t_betas": {
+     "SMH": 0.09536243829926015,
+     "MTUM": 1.8066227699269082,
+     "IWM": 1.495387476272971
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 0.8026913941760873,
+   "dominant_t": 4.78538283846685,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_inflection_flow_2026-09-26",
@@ -602,7 +985,7 @@
    "sealed_cagr": 0.272601,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.062608,
-   "sealed_dsr": 0.0058,
+   "sealed_dsr": 0.0057,
    "max_dd": -0.259791,
    "turnover_annual": 4.403478,
    "sigma_active_monthly": 0.046787314141273656,
@@ -629,7 +1012,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 148,
+   "cluster_sealed": 71,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": -0.0007837035045793966,
+    "t_alpha": -0.09608592900018485,
+    "r2": 0.3710712625796596,
+    "betas": {
+     "SMH": 0.21183790699852295,
+     "MTUM": 0.4005249871185622,
+     "IWM": 0.32760692240078365
+    },
+    "t_betas": {
+     "SMH": 1.437526692643424,
+     "MTUM": 1.4605089148786758,
+     "IWM": 1.3609440820963885
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 0.6103859930018447,
+   "dominant_t": 5.268392764652452,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_forecast_dispersion_v1_2026-09-26",
@@ -671,7 +1082,19 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(NO_BACKTEST_ROW)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": null,
+   "cluster_sealed": null,
+   "structure_status": "NO_CELL (no backtest row)",
+   "decomposition": null,
+   "dominant_etf": null,
+   "dominant_beta": null,
+   "dominant_t": null,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "NO_DOMINANT_FACTOR",
+   "forward_vs_factor_etf": "NO_DOMINANT_FACTOR",
+   "factor_twin_why": "NO_CELL (no backtest row)"
   },
   {
    "book": "lib_book_f_seasonality_11_20_v0_2026-09-26",
@@ -713,7 +1136,19 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(NO_BACKTEST_ROW)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": null,
+   "cluster_sealed": null,
+   "structure_status": "NO_CELL (no backtest row)",
+   "decomposition": null,
+   "dominant_etf": null,
+   "dominant_beta": null,
+   "dominant_t": null,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "NO_DOMINANT_FACTOR",
+   "forward_vs_factor_etf": "NO_DOMINANT_FACTOR",
+   "factor_twin_why": "NO_CELL (no backtest row)"
   },
   {
    "book": "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
@@ -728,7 +1163,7 @@
    "sealed_cagr": 0.893997,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.684004,
-   "sealed_dsr": 0.0704,
+   "sealed_dsr": 0.0699,
    "max_dd": -0.70632,
    "turnover_annual": 5.790725,
    "sigma_active_monthly": 0.15485599741898318,
@@ -755,7 +1190,35 @@
    "kind": "twin",
    "strategy_test_for_voided": true,
    "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 169,
+   "cluster_sealed": 96,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01922385224385529,
+    "t_alpha": 0.7499369334392016,
+    "r2": 0.5623023512380316,
+    "betas": {
+     "SMH": 1.695700118481745,
+     "MTUM": 0.36523574691039384,
+     "IWM": 1.5336131533996231
+    },
+    "t_betas": {
+     "SMH": 3.6613193383339286,
+     "MTUM": 0.4237641296201874,
+     "IWM": 2.0271195143723952
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 1.0608691397780445,
+   "dominant_t": 5.180237105961473,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "SMH_SERIES_MISSING",
+   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_rev_5d_sealed_2026-09-26",
@@ -770,7 +1233,7 @@
    "sealed_cagr": 0.69442,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.484427,
-   "sealed_dsr": 0.1544,
+   "sealed_dsr": 0.1533,
    "max_dd": -0.665099,
    "turnover_annual": 11.64,
    "sigma_active_monthly": 0.1190398522232588,
@@ -797,7 +1260,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 129,
+   "cluster_sealed": 110,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.02356843532664154,
+    "t_alpha": 1.8921164575300988,
+    "r2": 0.3871297368466081,
+    "betas": {
+     "SMH": 0.5844276972521769,
+     "MTUM": -0.47387771088007385,
+     "IWM": 1.1341341499366573
+    },
+    "t_betas": {
+     "SMH": 2.596881532384007,
+     "MTUM": -1.1314880882715894,
+     "IWM": 3.0850396245770293
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.9542817834977768,
+   "dominant_t": 6.622305729886489,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_skill_mom_sealed_2026-09-26",
@@ -812,7 +1303,7 @@
    "sealed_cagr": 0.57962,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.369627,
-   "sealed_dsr": 0.1005,
+   "sealed_dsr": 0.0998,
    "max_dd": -0.2727,
    "turnover_annual": 5.222609,
    "sigma_active_monthly": 0.06526570709601288,
@@ -839,7 +1330,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 96,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.012373897845294739,
+    "t_alpha": 1.098817479224284,
+    "r2": 0.5396163051258838,
+    "betas": {
+     "SMH": 0.5615775523759389,
+     "MTUM": 0.45903103173533016,
+     "IWM": 0.706541717698635
+    },
+    "t_betas": {
+     "SMH": 2.7601520616236064,
+     "MTUM": 1.2123490360179119,
+     "IWM": 2.1258668009282147
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9630885793045083,
+   "dominant_t": 5.947678116913122,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "MTUM_SERIES_MISSING",
+   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_margin_mom_sealed_2026-09-26",
@@ -854,7 +1373,7 @@
    "sealed_cagr": 0.588446,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.378453,
-   "sealed_dsr": 0.0594,
+   "sealed_dsr": 0.0589,
    "max_dd": -0.513118,
    "turnover_annual": 5.055652,
    "sigma_active_monthly": 0.08288497813000952,
@@ -881,7 +1400,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(MAX_DD, FAMILY_CAP)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 149,
+   "cluster_sealed": 99,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.019649644494029145,
+    "t_alpha": 1.184891254018799,
+    "r2": 0.3794488223907665,
+    "betas": {
+     "SMH": 0.46026282512755906,
+     "MTUM": 0.3739123498668825,
+     "IWM": 1.3388702409145905
+    },
+    "t_betas": {
+     "SMH": 1.536151083290926,
+     "MTUM": 0.6705948264049878,
+     "IWM": 2.735530063136098
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3678272781403005,
+   "dominant_t": 7.249431064397763,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_illiquid_sealed_2026-09-26",
@@ -896,7 +1443,7 @@
    "sealed_cagr": 0.551891,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.341898,
-   "sealed_dsr": 0.0105,
+   "sealed_dsr": 0.0103,
    "max_dd": -0.807075,
    "turnover_annual": 7.966957,
    "sigma_active_monthly": 0.1010686909193766,
@@ -923,7 +1470,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, LOO_WORST)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 120,
+   "cluster_sealed": 158,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.012519062302625414,
+    "t_alpha": 0.6900315542548804,
+    "r2": 0.40063845296987766,
+    "betas": {
+     "SMH": 0.7054152221821344,
+     "MTUM": 0.3111840134897406,
+     "IWM": 1.2042063688353148
+    },
+    "t_betas": {
+     "SMH": 2.1520195552545154,
+     "MTUM": 0.5101301832201223,
+     "IWM": 2.248936934195173
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.7708567315758663,
+   "dominant_t": 7.512092981252197,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_low_dtc_mom_sealed_2026-09-26",
@@ -938,7 +1513,7 @@
    "sealed_cagr": 0.472292,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.262299,
-   "sealed_dsr": 0.0656,
+   "sealed_dsr": 0.0651,
    "max_dd": -0.383839,
    "turnover_annual": 6.297391,
    "sigma_active_monthly": 0.05766303947424504,
@@ -965,7 +1540,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(DEV_NOT_ABOVE_SPY, LOO_WORST)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 181,
+   "cluster_sealed": 88,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.011941150946788333,
+    "t_alpha": 1.0471367956402122,
+    "r2": 0.395520627980539,
+    "betas": {
+     "SMH": 0.2382107880833449,
+     "MTUM": 0.6304887595545836,
+     "IWM": 0.669418611133446
+    },
+    "t_betas": {
+     "SMH": 1.1561731899837933,
+     "MTUM": 1.6443761654843958,
+     "IWM": 1.9889974291604908
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.8395969950353895,
+   "dominant_t": 5.353587063535217,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "MTUM_SERIES_MISSING",
+   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_low_asset_growth_sealed_2026-09-26",
@@ -980,7 +1583,7 @@
    "sealed_cagr": 0.463616,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.253623,
-   "sealed_dsr": 0.0174,
+   "sealed_dsr": 0.0172,
    "max_dd": -0.354039,
    "turnover_annual": 2.598261,
    "sigma_active_monthly": 0.07524841105616577,
@@ -1007,7 +1610,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "PASS",
-   "gate_verdict": "PASS"
+   "gate_verdict": "PASS",
+   "cluster_full": 153,
+   "cluster_sealed": 84,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.015870929226095464,
+    "t_alpha": 0.9502242294294381,
+    "r2": 0.17301805797566405,
+    "betas": {
+     "SMH": 0.37967662400407554,
+     "MTUM": -0.32555654709497167,
+     "IWM": 0.9781280904258839
+    },
+    "t_betas": {
+     "SMH": 1.2581772860406573,
+     "MTUM": -0.5797179814185013,
+     "IWM": 1.984260483557546
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.312333927908916,
+   "dominant_t": 6.990323421711004,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   },
   {
    "book": "lib_resid_mom_12_1_large_sealed_2026-09-26",
@@ -1022,7 +1653,7 @@
    "sealed_cagr": 0.45475,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.244757,
-   "sealed_dsr": 0.0179,
+   "sealed_dsr": 0.0177,
    "max_dd": -0.453326,
    "turnover_annual": 3.667826,
    "sigma_active_monthly": 0.10322003334529616,
@@ -1049,7 +1680,35 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(TOP5_MONTH_SHARE, MAX_DD, FAMILY_CAP)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 167,
+   "cluster_sealed": 96,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.001175484539226026,
+    "t_alpha": 0.05902012936353705,
+    "r2": 0.42829763596045267,
+    "betas": {
+     "SMH": 0.9681488370990592,
+     "MTUM": 0.44333867809157335,
+     "IWM": 0.5524223828012209
+    },
+    "t_betas": {
+     "SMH": 2.690478959222244,
+     "MTUM": 0.6620418601286477,
+     "IWM": 0.9397962537343236
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 0.7416197553131639,
+   "dominant_t": 5.632738873309246,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "SMH_SERIES_MISSING",
+   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
   },
   {
    "book": "lib_mom_12_1_secrel_sealed_2026-09-26",
@@ -1064,7 +1723,7 @@
    "sealed_cagr": 0.45137,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.241377,
-   "sealed_dsr": 0.0211,
+   "sealed_dsr": 0.0208,
    "max_dd": -0.480914,
    "turnover_annual": 4.904348,
    "sigma_active_monthly": 0.08722193267312693,
@@ -1091,7 +1750,455 @@
    "kind": "personal",
    "strategy_test_for_voided": false,
    "gate": "CONTROL(TOP5_MONTH_SHARE, MAX_DD)",
-   "gate_verdict": "CONTROL"
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01368315819786249,
+    "t_alpha": 0.8153300602219928,
+    "r2": 0.2954950721087869,
+    "betas": {
+     "SMH": 0.2835929318622224,
+     "MTUM": 0.529798343083079,
+     "IWM": 1.0959721753974352
+    },
+    "t_betas": {
+     "SMH": 0.9352909780424944,
+     "MTUM": 0.9389107136235004,
+     "IWM": 2.2127168435915294
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3431900794936662,
+   "dominant_t": 6.3267917083379395,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
+  },
+  {
+   "book": "lib_disp_short_avoid_2026-09-27",
+   "book_id": "d93fbf2c301248ca",
+   "rule": "disp_short_avoid",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.352966,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.500033,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.290041,
+   "sealed_dsr": 0.0401,
+   "max_dd": -0.313071,
+   "turnover_annual": 2.634783,
+   "sigma_active_monthly": 0.0945363157613802,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.014052369513903958,
+    "t_alpha": 0.9039555163681531,
+    "r2": 0.17719830410738413,
+    "betas": {
+     "SMH": 0.4113079714614518,
+     "MTUM": -0.01843088321061842,
+     "IWM": 0.5949173925158275
+    },
+    "t_betas": {
+     "SMH": 1.4644308216518216,
+     "MTUM": -0.03526226767401583,
+     "IWM": 1.2966816676197481
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4197093758690311,
+   "dominant_t": 5.921311966428685,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
+  },
+  {
+   "book": "lib_qc395_sharpe252_above_trend_large_2026-09-27",
+   "book_id": "69dc804d44b74f12",
+   "rule": "qc395_sharpe252_above_trend_large",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 11,
+   "receipt_row": true,
+   "dev_cagr": 0.267538,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.562375,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.352383,
+   "sealed_dsr": 0.0356,
+   "max_dd": -0.325876,
+   "turnover_annual": 5.04,
+   "sigma_active_monthly": 0.09634348825632484,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 167,
+   "cluster_sealed": 96,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.0071297974686254425,
+    "t_alpha": 0.36646083334369317,
+    "r2": 0.4225025560365907,
+    "betas": {
+     "SMH": 0.9207655894212815,
+     "MTUM": 0.48800984851363827,
+     "IWM": 0.4313201822402369
+    },
+    "t_betas": {
+     "SMH": 2.6194112493926833,
+     "MTUM": 0.746011548679288,
+     "IWM": 0.7511546473481655
+    }
+   },
+   "dominant_etf": "SMH",
+   "dominant_beta": 0.6007432490621344,
+   "dominant_t": 4.491429885646206,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "SMH_SERIES_MISSING",
+   "forward_vs_factor_etf": "SMH_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for SMH in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+  },
+  {
+   "book": "lib_skill_mom_2026-09-27",
+   "book_id": "2f3dd36e85505710",
+   "rule": "skill_mom",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.178963,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.57962,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.369627,
+   "sealed_dsr": 0.0998,
+   "max_dd": -0.2727,
+   "turnover_annual": 5.222609,
+   "sigma_active_monthly": 0.06526570709601288,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 96,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.012373897845294739,
+    "t_alpha": 1.098817479224284,
+    "r2": 0.5396163051258838,
+    "betas": {
+     "SMH": 0.5615775523759389,
+     "MTUM": 0.45903103173533016,
+     "IWM": 0.706541717698635
+    },
+    "t_betas": {
+     "SMH": 2.7601520616236064,
+     "MTUM": 1.2123490360179119,
+     "IWM": 2.1258668009282147
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9630885793045083,
+   "dominant_t": 5.947678116913122,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "MTUM_SERIES_MISSING",
+   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+  },
+  {
+   "book": "lib_mom_flow_ivw_2026-09-27",
+   "book_id": "68ba5c780776be27",
+   "rule": "mom_flow_ivw",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.205478,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.439956,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.229963,
+   "sealed_dsr": 0.0487,
+   "max_dd": -0.254505,
+   "turnover_annual": 5.686522,
+   "sigma_active_monthly": 0.058658070250809644,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "PASS",
+   "gate_verdict": "PASS",
+   "cluster_full": 179,
+   "cluster_sealed": 53,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.00726033049799316,
+    "t_alpha": 0.7807461929634572,
+    "r2": 0.5431620425086616,
+    "betas": {
+     "SMH": 0.28612864390078246,
+     "MTUM": 0.7617957107889654,
+     "IWM": 0.495592886126246
+    },
+    "t_betas": {
+     "SMH": 1.7030172901368374,
+     "MTUM": 2.4364561529850035,
+     "IWM": 1.8057505476672246
+    }
+   },
+   "dominant_etf": "MTUM",
+   "dominant_beta": 0.9627723429074009,
+   "dominant_t": 6.3039692060136066,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "MTUM_SERIES_MISSING",
+   "forward_vs_factor_etf": "MTUM_SERIES_MISSING",
+   "factor_twin_why": "no daily bars for MTUM in the survivorship-free panel or the global_prices cache; the twin will refuse at entry unless the series is added"
+  },
+  {
+   "book": "lib_qc470_mom252_quarterly_riskparity_2026-09-27__control",
+   "book_id": "7a65d45f09962ead",
+   "rule": "qc470_mom252_quarterly_riskparity",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.259141,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.520896,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": 0.310903,
+   "sealed_dsr": 0.0498,
+   "max_dd": -0.476581,
+   "turnover_annual": 2.661136,
+   "sigma_active_monthly": 0.094011033603558,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(MAX_DD)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 170,
+   "cluster_sealed": 94,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.01052851615226085,
+    "t_alpha": 0.7047933358355797,
+    "r2": 0.3046120359076723,
+    "betas": {
+     "SMH": 0.5442236573632256,
+     "MTUM": 0.22635511420792162,
+     "IWM": 0.46519211547407446
+    },
+    "t_betas": {
+     "SMH": 2.0163980742047993,
+     "MTUM": 0.45066260734466973,
+     "IWM": 1.055130491142171
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.3511976995509112,
+   "dominant_t": 5.796156615305982,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
+  },
+  {
+   "book": "lib_mom_no_downgrades_small_2026-09-27__control",
+   "book_id": "36d2c89bd8f45b59",
+   "rule": "mom_no_downgrades_small",
+   "asof": "2026-09-27",
+   "entry": "2026-09-28",
+   "n_positions": 21,
+   "receipt_row": true,
+   "dev_cagr": 0.351113,
+   "dev_spy_cagr": 0.131815,
+   "sealed_cagr": 0.154884,
+   "sealed_spy_cagr": 0.209993,
+   "sealed_vs_spy": -0.055109,
+   "sealed_dsr": 0.0007,
+   "max_dd": -0.311502,
+   "turnover_annual": 4.721739,
+   "sigma_active_monthly": 0.07802934987382797,
+   "forward_return": "PENDING (entry 2026-09-28)",
+   "forward_spy": "PENDING (entry 2026-09-28)",
+   "forward_relative": "PENDING (entry 2026-09-28)",
+   "expected_relative_to_date": "PENDING (entry 2026-09-28)",
+   "twins_relative": "PENDING (entry 2026-09-28)",
+   "regime_now": "SPY above 200d, vol mid",
+   "regime_at_entry": {
+    "status": "OK",
+    "asof": "2026-09-25",
+    "spy_vs_200d": "above_200d",
+    "spy_close": 771.35,
+    "spy_ma200": 714.83,
+    "vol_tercile": "mid",
+    "vol_21_annual": 0.1075,
+    "label": "SPY above 200d, vol mid"
+   },
+   "days_since_inception": 0,
+   "sessions_since_entry": 0,
+   "status": "PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "control",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY)",
+   "gate_verdict": "CONTROL",
+   "cluster_full": 186,
+   "cluster_sealed": 41,
+   "structure_status": "OK (placed by rule; frozen after the receipt)",
+   "decomposition": {
+    "status": "OK",
+    "n": 32,
+    "alpha_monthly": 0.0022228363491729216,
+    "t_alpha": 0.16270677141568987,
+    "r2": 0.45773367406376164,
+    "betas": {
+     "SMH": -0.07221681286284456,
+     "MTUM": 0.7044999719588828,
+     "IWM": 1.7112639367434184
+    },
+    "t_betas": {
+     "SMH": -0.29257734289954357,
+     "MTUM": 1.5337186906564684,
+     "IWM": 4.244185355628422
+    }
+   },
+   "dominant_etf": "IWM",
+   "dominant_beta": 1.4693742710866382,
+   "dominant_t": 8.093045532128698,
+   "dominant_why": null,
+   "expected_alpha_to_date": "PENDING (entry 2026-09-28)",
+   "forward_factor_etf": "PENDING (entry 2026-09-28)",
+   "forward_vs_factor_etf": "PENDING (entry 2026-09-28)",
+   "factor_twin_why": null
   }
  ],
  "carried_investigations": [],

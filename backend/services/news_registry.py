@@ -36,7 +36,7 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import yaml
 
@@ -421,6 +421,48 @@ def grade_row(row: dict, *, lag_days: int = ARCHIVE_LAG_DAYS) -> dict:
 
 def is_archive(row: dict, *, lag_days: int = ARCHIVE_LAG_DAYS) -> bool:
     return effective_pit_grade(row, lag_days=lag_days) == ARCHIVE_GRADE
+
+
+def has_stamp_pair(row: dict) -> bool:
+    """Both `published_utc` and `first_seen_utc` parse: only such a row CAN be
+    proven an archive. A reader prints the rest as `rows_without_stamp_pair`,
+    because 'excluded 0' over rows that could never be graded is not 'clean'."""
+    return _row_ts(row.get("published_utc")) is not None and         _row_ts(row.get("first_seen_utc")) is not None
+
+
+def exclude_archive(rows, *, lag_days: int = ARCHIVE_LAG_DAYS) -> tuple[list[dict], dict]:
+    """(kept rows, each `grade_row`-graded; census for the receipt).
+
+    The one call every corpus reader makes (wave-2 handoff §3 owed): a row
+    published more than `lag_days` before we first saw it is dropped and
+    COUNTED, per source, so the receipt says how much archive it refused."""
+    kept: list[dict] = []
+    by_source: dict[str, int] = {}
+    n = unstamped = 0
+    for r in rows:
+        n += 1
+        if not has_stamp_pair(r):
+            unstamped += 1
+        g = grade_row(r, lag_days=lag_days)
+        if g["pit_grade"] == ARCHIVE_GRADE:
+            src = str(r.get("source") or "?")
+            by_source[src] = by_source.get(src, 0) + 1
+            continue
+        kept.append(g)
+    return kept, archive_receipt(n, sum(by_source.values()), unstamped, by_source,
+                                 lag_days=lag_days)
+
+
+def archive_receipt(rows_read: int, excluded: int, unstamped: int,
+                    by_source: Optional[dict] = None, *,
+                    lag_days: int = ARCHIVE_LAG_DAYS) -> dict:
+    """The receipt block every corpus reader prints beside its own funnel."""
+    return {"rows_read": int(rows_read), "archive_rows_excluded": int(excluded),
+            "archive_rows_excluded_by_source": dict(sorted((by_source or {}).items())),
+            "rows_without_stamp_pair": int(unstamped),
+            "rule": (f"news_registry.grade_row: pit_grade '{ARCHIVE_GRADE}' when first_seen_utc - "
+                     f"published_utc > {lag_days} days; a row without both stamps cannot be "
+                     "proven an archive and is kept, counted in rows_without_stamp_pair")}
 
 
 def archive_census(corpus_dir: Path | str | None = None, *,

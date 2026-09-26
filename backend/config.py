@@ -3253,6 +3253,10 @@ DAILY_PASS_STEP_BOX_S: dict = {
     # promises vs the 8-K EX-99, no LLM, once per UTC day (the stamp is shared
     # with the Telegram digest, so the two callers never grade twice).
     "grade_promises": 600,
+    # 2026-09-27: the health probes (`system_health.run`) -- file reads plus a
+    # few read-only CLIs (schtasks, gh, railway, openclaw status), each with its
+    # own timeout inside the probe. Sum of boxes 12,300 s < LAB_DRIVER_BOX_S.
+    "health": 300,
 }
 
 # ── SYSTEMS FIXES (review 2026-09-26) ────────────────────────────────────────

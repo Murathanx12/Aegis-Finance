@@ -243,3 +243,98 @@ def test_semis_regression_says_smh_not_in_panel_or_recovers_a_planted_alpha():
     x = out["rows"][0]
     assert x["n"] == 39 and x["alpha"] == pytest.approx(0.02, abs=0.002)
     assert x["beta_smh"] == pytest.approx(0.5, abs=0.02) and x["t_alpha"] > 5
+
+
+# ───────────── 2026-09-27: clusters, factor twins, FACTOR_BETA ──────────────
+
+def _struct(books: dict) -> dict:
+    return {"status": "OK", "receipt": "backend/data/optimus/signal_structure/x.json",
+            "rho_cut": 0.8, "label": "HINDSIGHT", "books": books}
+
+
+def _dec(alpha: float = 0.01) -> dict:
+    return {"status": "OK", "n": 32, "alpha_monthly": alpha, "t_alpha": 1.0, "r2": 0.4,
+            "betas": {"SMH": 0.5, "MTUM": 0.2, "IWM": 1.0},
+            "t_betas": {"SMH": 1.0, "MTUM": 0.5, "IWM": 3.0}}
+
+
+def test_two_books_in_one_cluster_are_one_distinct_bet(tmp_path):
+    a = dict(_book("lib_toy_rule_2026-09-26"), book_id="a")
+    b = dict(_book("lib_toy_rule_sealed_2026-09-26"), book_id="b")
+    c = dict(_book("lib_other_2026-09-26"), book_id="c")
+    st = _struct({
+        "lib_toy_rule_2026-09-26": {"cell": "toy_rule@k20", "cluster_full": 7, "cluster_sealed": 3,
+                                    "decomposition": _dec(), "dominant_etf": "IWM",
+                                    "dominant_beta": 1.0, "dominant_t": 3.0},
+        "lib_toy_rule_sealed_2026-09-26": {"cell": "toy_rule@k20", "cluster_full": 7,
+                                           "cluster_sealed": 3, "decomposition": _dec(),
+                                           "dominant_etf": "IWM", "dominant_beta": 1.0,
+                                           "dominant_t": 3.0},
+        "lib_other_2026-09-26": {"cell": "other@k20", "cluster_full": 9, "cluster_sealed": 4,
+                                 "decomposition": _dec(), "dominant_etf": "SMH",
+                                 "dominant_beta": 0.5, "dominant_t": 2.5}})
+    doc = BR.report(today=date(2026, 9, 26), out_md=tmp_path / "B.md", out_dir=tmp_path,
+                    books=[a, b, c], bars=_bars(), board={"all_rows": [ROW]},
+                    board_path="lb.json", earnings={}, semis={"status": "SKIPPED", "why": "t"},
+                    structure=st)
+    db = doc["distinct_bets"]["full"]
+    assert db["n_books"] == 3 and db["n_distinct"] == 2
+    assert db["multi_book_clusters"] == {"7": ["lib_toy_rule_2026-09-26",
+                                               "lib_toy_rule_sealed_2026-09-26"]}
+    md = (tmp_path / "B.md").read_text(encoding="utf-8")
+    assert "**3 books under test = 2 distinct bets**" in md
+    assert "## Distinct bets and factor twins" in md and "7 (x2)" in md
+    # the SMH twin refuses BY NAME: the toy bars carry no SMH series
+    other = next(r for r in doc["rows"] if r["book"] == "lib_other_2026-09-26")
+    assert other["forward_vs_factor_etf"] == "SMH_SERIES_MISSING"
+    assert "`SMH_SERIES_MISSING`" in md
+    # a book the structure receipt never saw is its own bet, and says so
+    assert BR.distinct_bets([{"book": "x", "cluster_full": None}, {"book": "y", "cluster_full": 1},
+                             {"book": "z", "cluster_full": 1}])["n_distinct"] == 2
+
+
+def test_factor_beta_names_a_shortfall_the_factor_etf_explains():
+    fb = _inv(_path(30, -0.20), factor={"etf": "IWM", "beta": 1.5, "etf_minus_spy": -0.12})
+    assert fb["cause"] == "FACTOR_BETA"
+    assert fb["factor"]["explained"] == pytest.approx(-0.18)
+    assert fb["tests"]["FACTOR_BETA"] and "FACTOR_BETA" in BR.TAXONOMY
+    # the factor moved a little: most of the loss is the book's own -> not FACTOR_BETA
+    assert _inv(_path(30, -0.20), factor={"etf": "IWM", "beta": 1.0,
+                                          "etf_minus_spy": -0.01})["cause"] == "UNKNOWN"
+    # the factor ROSE: it cannot explain a loss
+    assert _inv(_path(30, -0.20), factor={"etf": "IWM", "beta": 1.0,
+                                          "etf_minus_spy": 0.15})["cause"] == "UNKNOWN"
+    # checkable price evidence first: an unpriceable book is IMPLEMENTATION regardless
+    assert _inv(_path(30, -0.20), book_grade={"n_unpriceable": 1},
+                factor={"etf": "IWM", "beta": 1.5, "etf_minus_spy": -0.12})["cause"] == "IMPLEMENTATION"
+
+
+def test_a_synthetic_forward_month_where_the_book_is_its_factor_is_factor_beta(tmp_path):
+    """SPY rises; the book's only name and IWM fall together for 30 sessions.
+    The book trails its expectation on every one of the last 21 sessions, and
+    with beta 1 to IWM - SPY the whole shortfall is the factor's move."""
+    cal = pd.bdate_range(end="2026-09-25", periods=320)
+    rows = []
+    for k, d in enumerate(cal):
+        f = max(0, k - 289)                                  # the last 30 sessions
+        down = 50.0 * (1 - 0.007) ** f
+        for s, p in (("SPY", 500 + k * 0.2), ("AAA", down), ("IWM", down * 4)):
+            rows.append((s, d, p, p * 1.01, p * 0.99, p, 1e7))
+    bars = pd.DataFrame(rows, columns=["symbol", "date", "open", "high", "low", "close", "volume"])
+    asof = str(cal[289].date())
+    bk = dict(_book("lib_toy_rule_sealed_2026-09-26", asof=asof),
+              positions=[{"ticker": "AAA", "weight": 1.0}], n_positions=1)
+    st = _struct({"lib_toy_rule_sealed_2026-09-26": {
+        "cell": "toy_rule@k20", "cluster_full": 1, "cluster_sealed": 1,
+        "decomposition": _dec(0.0), "dominant_etf": "IWM", "dominant_beta": 1.0,
+        "dominant_t": 4.0}})
+    doc = BR.report(today=cal[-1].date(), out_md=tmp_path / "B.md", out_dir=tmp_path,
+                    books=[bk], bars=bars, board={"all_rows": [ROW]}, board_path="lb.json",
+                    earnings={}, semis={"status": "SKIPPED", "why": "t"}, structure=st)
+    r = doc["rows"][0]
+    assert isinstance(r["forward_factor_etf"], float) and r["forward_factor_etf"] < -0.15
+    assert abs(r["forward_vs_factor_etf"]) < 0.01          # the book IS its factor ETF
+    assert r["investigation"]["cause"] == "FACTOR_BETA"
+    assert r["expected_alpha_to_date"] == pytest.approx(0.0)
+    md = (tmp_path / "B.md").read_text(encoding="utf-8")
+    assert "**FACTOR_BETA**" in md

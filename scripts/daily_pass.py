@@ -158,6 +158,14 @@ STEPS: tuple[tuple[str, str], ...] = (
     # `backend/data` inside every unit test of this driver.
     ("scoreboard", "the economic scoreboard, composed from the receipts this "
                    "pass has just written -- printed FIRST on the receipt"),
+    # 2026-09-27 (docs/HEALTH_PROBES_2026-09-26.md, owed caller). The very END:
+    # the derived-evidence probes (`system_health.run`, persisted) read what the
+    # steps above just wrote. It NEVER fails the pass -- a DEAD row is a finding
+    # printed on the receipt, not a reason to lose the day's other rows -- and
+    # its row lists every non-ALIVE subsystem so the reader sees them without
+    # opening `health/HEALTH.md`.
+    ("health", "every subsystem probed once from the evidence it wrote; the "
+               "non-ALIVE rows printed here (never fails the pass)"),
 )
 
 #: `timeout` joined the five on 2026-09-18. It is deliberately the SAME word
@@ -383,6 +391,14 @@ def morning_scoreboard(**kw) -> dict:
     """The economic scoreboard, behind a name like every other seam."""
     from backend.services import morning_scoreboard as MS
     return MS.compose(**kw)
+
+
+def run_health_probes(**kw) -> dict:
+    """`system_health.run(persist=True)` behind a name like every other seam:
+    writes `health/health_<stamp>.json`, `HEALTH.md` and the index line."""
+    from backend.services import system_health as SH
+    return SH.run(ctx=SH.make_ctx(allow_proc=bool(kw.get("allow_proc", True))),
+                  persist=bool(kw.get("persist", True)))
 
 
 def cadence_list() -> tuple[str, ...]:
@@ -828,6 +844,32 @@ def step_scoreboard(ctx: dict) -> dict:
                 headline=board.get("headline"))
 
 
+def step_health(ctx: dict) -> dict:
+    """The derived-evidence health table, as the pass's LAST row.
+
+    Never fails the pass: a probe run that raises is `refused` naming the
+    exception, and DEAD/STALE rows leave the status `ok` -- the verdicts ARE the
+    output. Every non-ALIVE row is copied into `refusals` so `print_receipt`
+    prints it; `exit_code` is `health_probe`'s (1 DEAD, 2 STALE, 3 all UNKNOWN).
+    Caveat stated: the `daily_pass` probe reads TODAY's receipt, which this
+    pass writes after this step, so it judges the previous pass."""
+    t0 = time.time()
+    try:
+        out = run_health_probes()
+    except Exception as exc:                                       # noqa: BLE001
+        return _row("health", "refused", rows=0, seconds=round(time.time() - t0, 2),
+                    refusals=[f"health probes raised: {_trunc(exc)}"])
+    rows = list(out.get("rows") or [])
+    bad = [r for r in rows if r.get("verdict") != "ALIVE"]
+    lines = [f"{r.get('verdict')} {r.get('name')} -- {str(r.get('detail'))[:160]}" for r in bad]
+    return _row("health", ("ok" if rows else "nothing_to_do"), rows=len(rows),
+                seconds=round(time.time() - t0, 2), refusals=lines,
+                counts=out.get("counts"), exit_code=out.get("exit_code"),
+                receipt_path=out.get("path"),
+                headline=(f"health rc {out.get('exit_code')}: {out.get('counts')}; "
+                          f"{len(bad)} of {len(rows)} subsystems not ALIVE"))
+
+
 _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "bars_refresh": step_bars_refresh,
     "grade_promises": step_grade_promises,
@@ -839,6 +881,7 @@ _HANDLERS: dict[str, Callable[[dict], dict]] = {
     "grade_forecasts": step_grade_forecasts,
     "coverage": step_coverage,
     "scoreboard": step_scoreboard,
+    "health": step_health,
 }
 assert set(_HANDLERS) == {s for s, _ in STEPS}, "every declared step needs a handler"
 
@@ -1033,7 +1076,9 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
                         "news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "grade_forecasts": "pnl",
-                        "coverage": "raw", "scoreboard": "pnl"},
+                        "coverage": "raw", "scoreboard": "pnl",
+                        # reads the receipts every stage wrote; nothing trades on it
+                        "health": "pnl"},
         "date": day, "run": run,
         "git_head": git_head(),
         "started_utc": started.isoformat(timespec="seconds"),

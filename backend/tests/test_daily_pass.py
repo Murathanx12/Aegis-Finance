@@ -200,6 +200,20 @@ def calls(monkeypatch) -> list[str]:
                 "headline": "fixture scoreboard"}
 
     monkeypatch.setattr(DP, "morning_scoreboard", _board)
+
+    # 2026-09-27. The real probes read `backend/data/optimus` and shell out
+    # (schtasks, gh, railway); the fixture hands back one DEAD, one STALE and
+    # one ALIVE row so the step's copy-the-non-ALIVE branch runs.
+    def _health(**kw):
+        seen.append("health")
+        return {"receipt": "system_health", "exit_code": 1,
+                "counts": {"DEAD": 1, "STALE": 1, "UNKNOWN": 0, "ALIVE": 1},
+                "path": None,
+                "rows": [{"name": "telegram_agent", "verdict": "DEAD", "detail": "pid gone"},
+                         {"name": "ranking", "verdict": "STALE", "detail": "4 sessions behind"},
+                         {"name": "bars_panel", "verdict": "ALIVE", "detail": "current"}]}
+
+    monkeypatch.setattr(DP, "run_health_probes", _health)
     return seen
 
 
@@ -256,7 +270,7 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     assert outer == ["bars_refresh", "news_pull", "decision_contract",
                      "analyst_snapshot", "e1_append", "book_cadence",
                      "book_cadence", "book_cadence", "grade_forecasts",
-                     "grade_promises", "coverage", "scoreboard"]
+                     "grade_promises", "coverage", "scoreboard", "health"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:
@@ -455,7 +469,9 @@ def test_the_scoreboard_is_the_first_block_and_the_last_step(out, calls,
     list of what the machine did.
     """
     rec = DP.run_daily_pass(day=_today())
-    assert calls[-1] == "scoreboard"
+    # the scoreboard is the last step that COMPOSES anything; only the health
+    # probes (2026-09-27), which read every receipt including its, come after
+    assert calls[-2:] == ["scoreboard", "health"]
     keys = list(rec)
     assert keys.index("scoreboard") < keys.index("steps")
     assert rec["scoreboard"]["headline"] == "fixture scoreboard"
@@ -770,3 +786,26 @@ def test_grade_promises_is_a_declared_step_with_a_receipt_line(
     rec = DP.run_daily_pass(day=_today())
     row = next(r for r in rec["steps"] if r["step"] == "grade_promises")
     assert row["status"] == "ok" and row["receipt"] == "grade_promises_daily.jsonl"
+
+
+def test_the_health_step_is_last_prints_the_non_alive_rows_and_never_fails(
+        out, calls, rth_open, monkeypatch) -> None:
+    """docs/HEALTH_PROBES_2026-09-26.md owed caller: a `health` step at the END,
+    status `ok` even with DEAD rows (the verdicts are the output), every
+    non-ALIVE row copied into `refusals`, `health_probe`'s exit code carried."""
+    rec = DP.run_daily_pass(day=_today())
+    assert DP.STEPS[-1][0] == "health" and calls[-1] == "health"
+    row = next(r for r in rec["steps"] if r["step"] == "health")
+    assert row["status"] == "ok" and row["exit_code"] == 1 and row["rows"] == 3
+    assert row["refusals"] == ["DEAD telegram_agent -- pid gone",
+                               "STALE ranking -- 4 sessions behind"]
+    assert "health" not in rec["steps_that_did_not_run"]
+
+    def _boom(**kw):
+        raise RuntimeError("probe table unreadable")
+    monkeypatch.setattr(DP, "run_health_probes", _boom)
+    rec2 = DP.run_daily_pass(day=_today(), force=True)
+    row2 = next(r for r in rec2["steps"] if r["step"] == "health")
+    assert row2["status"] == "refused"
+    assert "probe table unreadable" in row2["refusals"][0]
+    assert Path(rec2["path"]).exists()          # the day's receipt is never lost

@@ -284,9 +284,14 @@ def step_digest(ctx: dict) -> dict:
                     **base)
 
     from scripts.r7_news_representation import mask_company, tokenise
+    from backend.services import news_registry as NR
 
     by_symbol: dict[str, list[str]] = {}
     n_rows = 0
+    # wave-2 §3: graded at READ time (`news_registry.grade_row`); an archive row
+    # is not yesterday's news, whatever its stamp says -- dropped and counted
+    n_arch = n_unstamped = 0
+    arch_by_src: dict[str, int] = {}
     for line in shard.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
         if not line:
@@ -299,6 +304,12 @@ def step_digest(ctx: dict) -> dict:
         if not stamp or stamp.group(1) != day:
             continue
         n_rows += 1
+        n_unstamped += 0 if NR.has_stamp_pair(rec) else 1
+        if NR.is_archive(rec):
+            n_arch += 1
+            src = str(rec.get("source") or "?")
+            arch_by_src[src] = arch_by_src.get(src, 0) + 1
+            continue
         syms = rec.get("symbols") or []
         if not syms:
             continue
@@ -317,6 +328,7 @@ def step_digest(ctx: dict) -> dict:
     digests = {s: "\n".join(f"- {t}" for t in items)
                for s, items in by_symbol.items() if items}
     base.update({"corpus_day": day, "shard": str(shard), "rows_on_day": n_rows,
+                 "archive": NR.archive_receipt(n_rows, n_arch, n_unstamped, arch_by_src),
                  "n_symbols": len(digests),
                  "names_table_symbols": len(names)})
     if not digests:

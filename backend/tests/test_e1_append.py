@@ -175,7 +175,10 @@ def test_a_first_seen_only_row_still_anchors_on_our_own_stamp(env):
     entry = days[-5]
     seen = datetime(entry.year, entry.month, entry.day, 12, 0, tzinfo=timezone.utc)
     row = _row("gdelt-1", seen, source="gdelt_doc_v2")
-    row["published_utc"] = "2015-01-01T00:00:00+00:00"   # the provider's, not ours
+    # the provider's, not ours -- 10 days earlier, INSIDE the 30-day archive lag
+    # (2026-09-27: a 2015 provider stamp first seen today is `pit_grade: archive`
+    # under `news_registry.grade_row` and never reaches the anchor at all)
+    row["published_utc"] = (seen - timedelta(days=10)).isoformat(timespec="seconds")
     row["pit_grade"] = "first_seen_only"
     _corpus(env, "gdelt_doc_v2", [row])
 
@@ -184,7 +187,7 @@ def test_a_first_seen_only_row_still_anchors_on_our_own_stamp(env):
     assert rec["anchors_used"]["first_seen_utc"] == 1
     df = pd.read_parquet(env / "optimus" / "text_return_panel" / "news_returns_2025_26.parquet")
     assert df.iloc[0]["entry_date"] == entry.isoformat(), \
-        "the 2015 provider stamp must NOT have been used"
+        "the provider's own stamp must NOT have been used"
 
 
 def test_a_publication_before_the_calendar_is_off_calendar_not_session_zero(env):
@@ -197,11 +200,18 @@ def test_a_publication_before_the_calendar_is_off_calendar_not_session_zero(env)
     days = _bars(env)
     row = _row("acc-ancient", datetime.now(timezone.utc))
     row["published_utc"] = "2015-01-05T13:00:00+00:00"
+    # first seen in 2015 too: a row first seen TODAY with a 2015 stamp is an
+    # ARCHIVE row and is excluded before the calendar is consulted (below)
+    row["first_seen_utc"] = "2015-01-05T14:00:00+00:00"
     row["pit_grade"] = "native_stamp"
-    _corpus(env, "sec_edgar_8k_current_atom", [row])
+    arch = _row("acc-archive", datetime.now(timezone.utc))
+    arch["published_utc"] = "2015-01-05T13:00:00+00:00"
+    _corpus(env, "sec_edgar_8k_current_atom", [row, arch])
 
     rec = e1.E1_append()
     assert rec["rows_appended"] == 0, "a 2015 row must not be labelled on a 2026 bar"
+    assert rec["archive"]["archive_rows_excluded"] == 1       # wave-2 §3, counted
+    assert "1 archive rows excluded" in rec["headline"]
     # Counted APART from the rows that are merely newer than the last bar: those
     # two need opposite fixes (older bars vs the next session), and the first
     # live run put 3,370 rows into one counter before they were split.

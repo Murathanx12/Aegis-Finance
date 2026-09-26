@@ -59,11 +59,15 @@ PLAN_DIR = REPO / "backend" / "data" / "optimus" / "decisions" / "pc_plan"
 DOC = REPO / "docs" / "BRIDGE.md"
 
 TAXONOMY = ("REGIME_SHIFT", "CROWDING", "FACTOR_DECAY", "DATA_LEAK", "IMPLEMENTATION",
-            "COST", "UNIVERSE_CHANGE", "RANDOMNESS", "UNKNOWN")
+            "COST", "UNIVERSE_CHANGE", "FACTOR_BETA", "RANDOMNESS", "UNKNOWN")
 #: The first test that fires names the cause. Evidence that can be CHECKED on
 #: the book itself (prices, membership, costs) comes first; RANDOMNESS comes
 #: before any story about the world, because at a few months it is the likeliest.
-INVESTIGATION_ORDER = ("IMPLEMENTATION", "UNIVERSE_CHANGE", "COST", "RANDOMNESS",
+#: FACTOR_BETA (2026-09-27, `docs/SIGNAL_STRUCTURE_2026-09-26.md` §4) is checked on
+#: prices too -- the dominant factor ETF's own forward move -- so it sits before
+#: RANDOMNESS: a shortfall that IS the factor ETF's move is not a failure of the
+#: mechanism, it is the beta the backtest was already carrying.
+INVESTIGATION_ORDER = ("IMPLEMENTATION", "UNIVERSE_CHANGE", "COST", "FACTOR_BETA", "RANDOMNESS",
                        "REGIME_SHIFT", "CROWDING", "FACTOR_DECAY", "DATA_LEAK", "UNKNOWN")
 TRAIL_SESSIONS = 21
 TRAIL_SIGMAS = 1.0
@@ -165,17 +169,243 @@ def regime(spy: pd.DataFrame) -> dict:
             "label": f"SPY {trend.replace('_', ' ')}, vol {terc}"}
 
 
+# ───────────────────────── signal structure (clusters, factors) ─────────────
+#
+# `docs/SIGNAL_STRUCTURE_2026-09-26.md` §4: four frozen momentum books are ONE
+# bet (monthly active rho 0.83-0.97), and most books' 2024-26 excess loads on
+# SMH / MTUM / IWM spreads anyone can buy. So every row carries its cluster (a
+# cluster is graded as ONE observation), a "distinct bets" count sits beside the
+# book count, and every expectation / forward column has a factor-ETF twin.
+
+STRUCT_DIR = REPO / "backend" / "data" / "optimus" / "signal_structure"
+FACTOR_ETFS = ("SMH", "MTUM", "IWM")
+#: The dominant factor ETF is the largest POSITIVE t(beta) in the FULL-window
+#: (2017-26, ~115 months) three-spread regression, and only if that t >= this.
+#: Full window because it has the months; the expectation columns use 2024-26
+#: because that is the window "expected rel. to SPY" already uses.
+DOMINANT_T = 2.0
+
+
+def latest_structure(struct_dir: Path = STRUCT_DIR) -> Optional[Path]:
+    ps = sorted(struct_dir.glob("signal_structure_*T*Z.json"))
+    return ps[-1] if ps else None
+
+
+def load_structure(struct_dir: Path = STRUCT_DIR) -> dict:
+    """{status, receipt, books: {book name: {...}}} from the newest
+    signal_structure receipt, its monthly NET parquet and `etf_monthly.parquet`.
+    Missing inputs refuse BY NAME; the bridge still renders."""
+    from backend.services import signal_structure as SS
+    p = latest_structure(struct_dir)
+    if p is None:
+        return {"status": "NO_STRUCTURE_RECEIPT",
+                "why": f"no signal_structure_*.json under {_relpath(struct_dir)}", "books": {}}
+    doc = json.loads(p.read_text(encoding="utf-8"))
+    run = doc.get("run_id") or p.stem.split("_", 2)[-1]
+    net_p = struct_dir / f"monthly_returns_{run}.parquet"
+    etf_p = struct_dir / "etf_monthly.parquet"
+    out = {"status": "OK", "receipt": _relpath(p), "rho_cut": SS.RHO_CUT,
+           "series_source": doc.get("series_source"), "label": doc.get("label"),
+           "monthly_returns": _relpath(net_p), "etf_monthly": _relpath(etf_p),
+           "decomposition_status": "OK", "books": {}}
+    decomp_ok = net_p.exists() and etf_p.exists()
+    if not decomp_ok:
+        out["decomposition_status"] = ("NO_MONTHLY_SERIES: " + ", ".join(
+            _relpath(x) for x in (net_p, etf_p) if not x.exists()))
+    net = pd.read_parquet(net_p) if decomp_ok else None
+    etf = pd.read_parquet(etf_p) if decomp_ok else None
+    if etf is not None:
+        miss = [t for t in ("SPY",) + FACTOR_ETFS if t not in etf.columns]
+        if miss:
+            decomp_ok = False
+            out["decomposition_status"] = f"ETF_SERIES_MISSING: {miss} not in {_relpath(etf_p)}"
+    # one primary cell per rule (`clusters.rules_*`): the clustering the receipt's
+    # own `frozen_books` ids come from, so a book frozen AFTER the receipt is
+    # placed by its rule instead of being miscounted as a new bet
+    rc: dict = {}
+    for w in ("full", "sealed"):
+        for g in (doc.get("clusters") or {}).get(f"rules_{w}") or []:
+            for cell in g.get("members") or []:
+                rc.setdefault(cell.split("@")[0], {"cell": cell})[f"cluster_{w}"] = g["cluster"]
+    out["rule_cells"] = rc
+
+    def _entry(rule: Optional[str], cell: Optional[str], cf, cs, why: Optional[str]) -> dict:
+        e = {"rule": rule, "cell": cell, "cluster_full": cf, "cluster_sealed": cs}
+        if not cell:
+            e["why"] = why or "no backtest cell"
+        elif decomp_ok and cell in net.columns:
+            e.update(book_decomposition(net[cell], etf))
+        elif decomp_ok:
+            e["decomposition"] = {"status": "CELL_NOT_IN_SERIES",
+                                  "why": f"{cell} not in {_relpath(net_p)}"}
+        else:
+            e["decomposition"] = {"status": "NO_DECOMPOSITION", "why": out["decomposition_status"]}
+        return e
+    out["_entry"] = _entry
+    for name, v in (doc.get("frozen_books") or {}).items():
+        out["books"][name] = _entry(v.get("rule"), v.get("cell"), v.get("cluster_full"),
+                                    v.get("cluster_sealed"), v.get("why"))
+    return out
+
+
+def book_decomposition(net: pd.Series, etf: pd.DataFrame) -> dict:
+    """Monthly ACTIVE (net - SPY) on SMH/MTUM/IWM spreads (each - SPY): the
+    2024-26 fit (alpha, betas, R2) for the expectation, the full-window fit for
+    the dominant ETF. Refuses by name below `signal_structure.MIN_MONTHS`."""
+    from backend.services import signal_structure as SS
+    y = (net - etf["SPY"].reindex(net.index)).dropna()
+    X = SS.factor_spreads(etf, FACTOR_ETFS).reindex(y.index)
+    masks = SS.window_masks(pd.DatetimeIndex(y.index))
+    out: dict = {}
+    for w, sub in (("sealed", y[masks["sealed"]]), ("full", y)):
+        try:
+            f = SS.ols(sub, X.loc[sub.index])
+            out[w] = {"status": "OK", "n": f["n"], "alpha_monthly": f["alpha_monthly"],
+                      "t_alpha": f["t_alpha"], "r2": f["r2"],
+                      "betas": {k.split("-")[0]: b for k, b in f["betas"].items()},
+                      "t_betas": {k.split("-")[0]: t for k, t in f["t_betas"].items()}}
+        except SS.InsufficientHistory as ex:
+            out[w] = {"status": "INSUFFICIENT_HISTORY", "why": str(ex)}
+    return {"decomposition": out["sealed"], "decomposition_full": out["full"],
+            **dominant_etf(out["full"])}
+
+
+def dominant_etf(fit: dict) -> dict:
+    """The factor ETF a forward shortfall is first checked against."""
+    if fit.get("status") != "OK":
+        return {"dominant_etf": None, "dominant_why": fit.get("why", "no full-window fit")}
+    t = {k: v for k, v in fit["t_betas"].items() if v is not None and np.isfinite(v)}
+    best = max(t, key=t.get) if t else None
+    if best is None or t[best] < DOMINANT_T:
+        return {"dominant_etf": None,
+                "dominant_why": (f"no positive factor t >= {DOMINANT_T:g} (max {best} "
+                                 f"{t.get(best, float('nan')):.2f})")}
+    return {"dominant_etf": best, "dominant_beta": fit["betas"][best], "dominant_t": t[best]}
+
+
+def distinct_bets(rows: list[dict], key: str = "cluster_full") -> dict:
+    """Books that share a cluster are ONE observation. A book with no cluster
+    (no backtest series) counts as its own bet, and is counted separately."""
+    groups: dict = {}
+    loose = []
+    for r in rows:
+        c = r.get(key)
+        if c is None:
+            loose.append(r["book"])
+        else:
+            groups.setdefault(str(c), []).append(r["book"])
+    return {"window": key, "n_books": len(rows), "n_distinct": len(groups) + len(loose),
+            "n_clustered_books": sum(len(v) for v in groups.values()),
+            "n_clusters": len(groups), "n_unclustered": len(loose),
+            "multi_book_clusters": {k: v for k, v in groups.items() if len(v) > 1},
+            "unclustered": loose}
+
+
+def cluster_observations(rows: list[dict]) -> list[dict]:
+    """One forward observation per multi-book cluster: the members' mean
+    forward relative (PENDING until every member has one)."""
+    out = []
+    for cid, members in distinct_bets(rows)["multi_book_clusters"].items():
+        rs = [r for r in rows if r["book"] in members]
+        fr = [r.get("forward_relative") for r in rs]
+        ok = all(isinstance(x, (int, float)) for x in fr)
+        out.append({"cluster": cid, "books": members, "n_books": len(members),
+                    "forward_relative_one_observation": (float(np.mean(fr)) if ok else
+                                                         next((x for x in fr if isinstance(x, str)),
+                                                              "n/a"))})
+    return out
+
+
+def etf_forward(bars: pd.DataFrame, etf: str, asof: str, today: date) -> dict:
+    """The ETF's return over the book's own forward window: open of the first
+    SPY session after `asof` to the last close at or before `today` (the
+    `llm_portfolio.grade` convention). A missing series refuses BY NAME."""
+    s = bars[bars["symbol"] == etf].sort_values("date")
+    spy = bars[bars["symbol"] == "SPY"]
+    cal = pd.DatetimeIndex(sorted((spy if len(spy) else s)["date"].unique()))
+    cal = cal[(cal > pd.Timestamp(asof)) & (cal <= pd.Timestamp(today))]
+    if not len(cal):
+        return {"status": "PENDING"}
+    d = pd.DatetimeIndex(s["date"])
+    if not len(s) or d.min() > cal[0] or d.max() < cal[-1]:
+        return {"status": f"{etf}_SERIES_MISSING",
+                "why": (f"{etf} has no daily bars covering {cal[0].date()}..{cal[-1].date()} in the "
+                        "survivorship-free panel or the global_prices cache; the twin is refused "
+                        "rather than graded on a partial window")}
+    a = int(np.searchsorted(d.values, np.datetime64(cal[0]), "left"))
+    z = int(np.searchsorted(d.values, np.datetime64(cal[-1]), "right")) - 1
+    return {"status": "OK", "return": float(s["close"].iloc[z]) / float(s["open"].iloc[a]) - 1.0}
+
+
+def factor_bars(bars: pd.DataFrame) -> pd.DataFrame:
+    """The factor ETFs' daily bars: the panel first, then the global_prices cache
+    (one source per symbol, `llm_portfolio.union_bars`)."""
+    have = bars[bars["symbol"].isin(FACTOR_ETFS + ("SPY",))]
+    try:
+        from backend.services import global_prices as GP
+        from backend.services import llm_portfolio as LP
+        g = GP.read_cache()
+        g = g[g["symbol"].isin(FACTOR_ETFS)] if len(g) else g
+        return LP.union_bars(have, g) if len(g) else have
+    except Exception:                                  # noqa: BLE001 -- absence is the answer
+        return have
+
+
+def attach_structure(row: dict, st: Optional[dict], rule: Optional[str] = None) -> dict:
+    """The cluster and the SMH/MTUM/IWM decomposition for one bridge row: by
+    book name from the receipt's `frozen_books`, else by the book's RULE (a book
+    frozen after the receipt is the same bet as its rule's cluster)."""
+    st = st or {}
+    e = (st.get("books") or {}).get(row["book"])
+    rc = (st.get("rule_cells") or {}).get(rule) if rule else None
+    if e is None and rc is not None:
+        mk = st.get("_entry")
+        e = (mk(rule, rc["cell"], rc.get("cluster_full"), rc.get("cluster_sealed"), None) if mk
+             else {"rule": rule, "cell": rc["cell"], "cluster_full": rc.get("cluster_full"),
+                   "cluster_sealed": rc.get("cluster_sealed")})
+        st.setdefault("books", {})[row["book"]] = e
+        e["placed_by"] = "rule"
+    if e is None:
+        row.update({"cluster_full": None, "cluster_sealed": None, "decomposition": None,
+                    "dominant_etf": None,
+                    "structure_status": ("NOT_IN_STRUCTURE_RECEIPT" if (st or {}).get("status") == "OK"
+                                         else (st or {}).get("status", "NO_STRUCTURE"))})
+        return row
+    row.update({"cluster_full": e.get("cluster_full"), "cluster_sealed": e.get("cluster_sealed"),
+                "structure_status": (("OK" + (" (placed by rule; frozen after the receipt)"
+                                              if e.get("placed_by") == "rule" else ""))
+                                     if e.get("cell") else f"NO_CELL ({e.get('why')})"),
+                "decomposition": e.get("decomposition"),
+                "dominant_etf": e.get("dominant_etf"), "dominant_beta": e.get("dominant_beta"),
+                "dominant_t": e.get("dominant_t"), "dominant_why": e.get("dominant_why")})
+    return row
+
+
+def expected_alpha(dec: Optional[dict], sessions: int) -> Optional[float]:
+    """What is left of the 2024-26 excess after the SMH/MTUM/IWM betas,
+    compounded over the sessions to date: (1 + alpha_monthly)^(sessions/21) - 1."""
+    if not dec or dec.get("status") != "OK" or sessions <= 0:
+        return None
+    return (1.0 + dec["alpha_monthly"]) ** (sessions / 21.0) - 1.0
+
+
 # ───────────────────────────── the rule ─────────────────────────────────────
 
 def investigate(*, path: list[dict], sigma_m: Optional[float], row: dict,
                 book_grade: dict, twins: dict, regime_now: dict,
                 regime_at_entry: Optional[dict], family_flags: Optional[list] = None,
-                daily_sigma: Optional[float] = None) -> Optional[dict]:
+                daily_sigma: Optional[float] = None,
+                factor: Optional[dict] = None) -> Optional[dict]:
     """None unless the book trails its sealed expectation by > TRAIL_SIGMAS
     monthly sigma on EACH of the last TRAIL_SESSIONS sessions; else the cause.
 
     `path`: one {"as_of", "sessions", "relative", "expected"} per session since
     entry. `twins`: {"random_same_band": relative-to-date, ...}.
+    `factor`: {"etf", "beta", "etf_minus_spy"} -- the dominant factor ETF's
+    forward return minus SPY's over the same window, and the book's full-window
+    beta to that spread. FACTOR_BETA fires when the factor explains a loss
+    (beta * spread < 0) and the book, net of it, no longer trails SPY by more
+    than TRAIL_SIGMAS monthly sigma.
     """
     if sigma_m is None or len(path) < TRAIL_SESSIONS:
         return None
@@ -193,11 +423,16 @@ def investigate(*, path: list[dict], sigma_m: Optional[float], row: dict,
     worst5 = (min(rels[i] - rels[i - 5] for i in range(5, len(rels)))
               if len(rels) > 5 else None)
     caveat = str(row.get("caveat") or "")
+    explained = (float(factor["beta"]) * float(factor["etf_minus_spy"])
+                 if factor and factor.get("beta") is not None
+                 and factor.get("etf_minus_spy") is not None else None)
     tests = {
         "IMPLEMENTATION": bool((book_grade.get("n_unpriceable") or 0) > 0
                                or (book_grade.get("weight_priced") or 1.0) < 0.99),
         "UNIVERSE_CHANGE": bool((book_grade.get("dead_share") or 0.0) >= UNIVERSE_DEAD_SHARE),
         "COST": bool((book_grade.get("entry_cost_bps") or 0.0) / 1e4 >= abs(shortfall) - sigma_m),
+        "FACTOR_BETA": bool(explained is not None and explained < 0
+                            and last["relative"] - explained > -TRAIL_SIGMAS * sigma_m),
         "RANDOMNESS": bool(abs(z) < RANDOMNESS_Z),
         "REGIME_SHIFT": bool(regime_at_entry and regime_now.get("status") == "OK"
                              and regime_at_entry.get("label") != regime_now.get("label")),
@@ -213,6 +448,9 @@ def investigate(*, path: list[dict], sigma_m: Optional[float], row: dict,
     return {"opened_asof": last.get("as_of"), "cause": cause, "tests": tests,
             "shortfall": round(shortfall, 6), "sigma_monthly": round(sigma_m, 6),
             "z_random_walk": round(z, 3), "sessions": n,
+            "factor": ({**factor, "explained": round(explained, 6),
+                        "relative_net_of_factor": round(last["relative"] - explained, 6)}
+                       if explained is not None else None),
             "rule": (f"trails expectation by > {TRAIL_SIGMAS:g} monthly sigma on each of the "
                      f"last {TRAIL_SESSIONS} sessions; cause = first True in "
                      f"{list(INVESTIGATION_ORDER)}")}
@@ -306,7 +544,8 @@ def gates_for(books: list[dict], board: dict, bars: pd.DataFrame, *,
 
 def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
                today: date, regime_now: dict, prior: Optional[dict] = None,
-               gates: Optional[dict] = None) -> list[dict]:
+               gates: Optional[dict] = None, structure: Optional[dict] = None,
+               fbars: Optional[pd.DataFrame] = None) -> list[dict]:
     from backend.services import llm_portfolio as LP
     by_id = {r["id"]: r for r in board.get("all_rows", [])}
     cal = pd.DatetimeIndex(sorted(bars.loc[bars["symbol"] == "SPY", "date"].unique()))
@@ -342,6 +581,23 @@ def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
         sessions = int(td.get("sessions") or 0) if started else 0
         sig = sigma_active_monthly(r)
         reg_entry = (prior or {}).get(nm, {}).get("regime_at_entry") or regime_now
+        st_row = attach_structure({"book": nm}, structure, rid)
+        dom = st_row.get("dominant_etf")
+        fwd_etf: dict = {"status": "PENDING"}
+        if dom is None:
+            fwd_etf = {"status": "NO_DOMINANT_FACTOR",
+                       "why": st_row.get("dominant_why") or st_row.get("structure_status")}
+        elif started:
+            fwd_etf = etf_forward(fbars if fbars is not None else bars, dom, b["asof"], today)
+        elif not ((fbars if fbars is not None else bars)["symbol"] == dom).any():
+            fwd_etf = {"status": f"{dom}_SERIES_MISSING",
+                       "why": (f"no daily bars for {dom} in the survivorship-free panel or the "
+                               "global_prices cache; the twin will refuse at entry unless the "
+                               "series is added")}
+        factor = None
+        if fwd_etf.get("status") == "OK" and td.get("benchmark_return") is not None:
+            factor = {"etf": dom, "beta": st_row.get("dominant_beta"),
+                      "etf_minus_spy": fwd_etf["return"] - td["benchmark_return"]}
         inv = None
         if started and r:
             path = _path(b, bars, cal, r)
@@ -349,7 +605,7 @@ def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
             recent = set(bars.loc[bars["date"] >= cal[-5], "symbol"]) if len(cal) >= 5 else set()
             g["dead_share"] = (sum(1 for t in held if t not in recent) / len(held)) if held else 0.0
             inv = investigate(path=path, sigma_m=sig, row=r, book_grade=g, twins=tw,
-                              regime_now=regime_now, regime_at_entry=reg_entry)
+                              regime_now=regime_now, regime_at_entry=reg_entry, factor=factor)
         status = ("FORWARD" if started else pend)
         if not r:
             status = f"FORWARD-ONLY (no backtest row); {status}"
@@ -374,6 +630,19 @@ def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
             "sessions_since_entry": sessions, "status": status, "investigation": inv,
             "kind": b.get("kind"), "strategy_test_for_voided": strategy_test,
             "gate": g_.get("label"), "gate_verdict": g_.get("verdict"),
+            **{k: st_row.get(k) for k in ("cluster_full", "cluster_sealed", "structure_status",
+                                           "decomposition", "dominant_etf", "dominant_beta",
+                                           "dominant_t", "dominant_why")},
+            "expected_alpha_to_date": (expected_alpha(st_row.get("decomposition"), sessions)
+                                       if started else pend),
+            "forward_factor_etf": (fwd_etf["return"] if fwd_etf.get("status") == "OK"
+                                   else (pend if fwd_etf.get("status") == "PENDING"
+                                         else fwd_etf["status"])),
+            "forward_vs_factor_etf": ((td["net"] - fwd_etf["return"])
+                                      if fwd_etf.get("status") == "OK" and td.get("net") is not None
+                                      else (pend if fwd_etf.get("status") == "PENDING"
+                                            else fwd_etf["status"])),
+            "factor_twin_why": fwd_etf.get("why"),
         })
     return rows
 
@@ -438,15 +707,37 @@ def render_md(doc: dict) -> str:
               f"**{sp.get('rho', float('nan')):.2f}** over {sp.get('n')} rules "
               f"(`{doc['leaderboard']}`, `dev_selected_sealed_evaluated`).", ""]
     L += [f"Current regime ({reg.get('asof', '?')}): **{reg.get('label', 'UNKNOWN')}** "
-          "(SPY vs its 200-session mean; 21-session realised-vol tercile since 2017).", "",
-          "| book | rule | gate | dev CAGR | 2024-26 CAGR (SPY) | hist max DD | turnover/yr | "
+          "(SPY vs its 200-session mean; 21-session realised-vol tercile since 2017).", ""]
+    db = (doc.get("distinct_bets") or {})
+    dbf, dbs = db.get("full") or {}, db.get("sealed") or {}
+    stc = doc.get("structure") or {}
+    if dbf:
+        L += [f"**{dbf['n_books']} books under test = {dbf['n_distinct']} distinct bets** "
+              f"({dbf['n_clusters']} clusters of monthly active returns at rho >= "
+              f"{stc.get('rho_cut', 0.8)} over the full window, plus {dbf['n_unclustered']} "
+              f"book(s) with no backtest series counted as one bet each; "
+              f"{dbs.get('n_distinct', 'n/a')} on the 2024-26 window). Books in one cluster are "
+              "graded as ONE observation (`## Distinct bets and factor twins` below; clusters "
+              f"from `{stc.get('receipt', stc.get('status', 'n/a'))}`).", ""]
+    counts: dict = {}
+    for r in doc["rows"]:
+        if r.get("cluster_full") is not None:
+            counts[r["cluster_full"]] = counts.get(r["cluster_full"], 0) + 1
+
+    def _cl(r: dict) -> str:
+        c = r.get("cluster_full")
+        if c is None:
+            return "none"
+        n = counts.get(c, 1)
+        return f"{c}" + (f" (x{n})" if n > 1 else "")
+    L += ["| book | rule | cluster | gate | dev CAGR | 2024-26 CAGR (SPY) | hist max DD | turnover/yr | "
           "forward return | forward SPY | forward relative | expected rel. to date (2024-26 window) "
           "| regime | days | status |",
-          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in doc["rows"]:
         tv = r.get("turnover_annual")
         L.append(
-            f"| `{r['book']}` | `{r['rule']}` | {r.get('gate') or 'n/a'} | {_p(r['dev_cagr'])} | "
+            f"| `{r['book']}` | `{r['rule']}` | {_cl(r)} | {r.get('gate') or 'n/a'} | {_p(r['dev_cagr'])} | "
             f"{_p(r['sealed_cagr'])} ({_p(r['sealed_spy_cagr'])}) | {_p(r['max_dd'])} | "
             f"{(f'{tv:.1f}x' if isinstance(tv, (int, float)) else 'n/a')} | "
             f"{_p(r['forward_return'], 2)} | {_p(r['forward_spy'], 2)} | "
@@ -463,6 +754,7 @@ def render_md(doc: dict) -> str:
                   + 
                   f"Rule: {gl.get('rule')}. Booleans per book: `{gl.get('log')}`. "
                   f"{gl.get('todo', '')}"]
+    L += render_structure(doc)
     vd = doc.get("voided_before_entry") or []
     L += ["", "## Voided before entry (never graded, never deleted)", ""]
     if not vd:
@@ -526,6 +818,67 @@ def render_md(doc: dict) -> str:
           f"(`{doc.get('replication') or 'not yet run'}`): a re-implementation of the arithmetic "
           "from raw bars, not an independent engine (shares holdings, fills, cost formula).", ""]
     return "\n".join(L)
+
+
+def _f(v: Any, fmt: str = "{:.2f}") -> str:
+    return "n/a" if v is None or (isinstance(v, float) and not np.isfinite(v)) else fmt.format(v)
+
+
+def render_structure(doc: dict) -> list[str]:
+    """The cluster table (one observation per cluster) and, per book, the
+    SMH/MTUM/IWM decomposition with the factor-ETF twin of every SPY column."""
+    stc = doc.get("structure") or {}
+    L = ["", "## Distinct bets and factor twins", ""]
+    if stc.get("status") != "OK":
+        return L + [f"`{stc.get('status', 'NO_STRUCTURE')}`: {stc.get('why', '')}"]
+    L += [f"Clusters and decomposition from `{stc['receipt']}` (monthly NET series "
+          f"`{stc.get('monthly_returns')}`, ETFs `{stc.get('etf_monthly')}`; "
+          f"{stc.get('label', '')}). Average-linkage clusters on 1 - rho of monthly ACTIVE "
+          f"returns (net - SPY), cut at rho {stc.get('rho_cut', 0.8)}, full window "
+          "2017-26. A cluster of several books is ONE bet: its forward observation is the "
+          "members' mean, never n separate confirmations.", "",
+          "| cluster (full) | books | forward relative, one observation |", "|---|---|---|"]
+    obs = doc.get("cluster_observations") or []
+    for o in obs:
+        L.append(f"| {o['cluster']} | " + ", ".join(f"`{b}`" for b in o["books"])
+                 + f" | {_p(o['forward_relative_one_observation'], 2)} |")
+    if not obs:
+        L.append("| none | every book is its own cluster | n/a |")
+    L += ["", "Per book, the 2024-26 monthly active return regressed on the SMH, MTUM and IWM "
+          "spreads (each minus SPY): alpha is what is left once the betas are paid for. "
+          "**expected rel. to SPY** is the selection-window expectation above; **expected alpha "
+          "after SMH/MTUM/IWM** = (1 + alpha/mo)^(sessions/21) - 1 is the same expectation with "
+          "the factor betas removed. The **dominant ETF** is the largest positive factor t in "
+          f"the FULL-window fit (t >= {DOMINANT_T:g}; SMH = semis-loaded, IWM = small-cap-loaded, "
+          "MTUM = momentum-loaded); the forward twin grades the book against it beside SPY, and "
+          "a missing ETF series refuses by name. A forward shortfall the dominant ETF's own "
+          "move explains is investigated as `FACTOR_BETA`, not as a failed mechanism.", "",
+          "| book | cluster full / 2024-26 | alpha/mo (t) | beta SMH | beta MTUM | beta IWM | R2 | "
+          "dominant ETF (full t) | expected rel. to SPY | expected alpha after SMH/MTUM/IWM | "
+          "forward vs SPY | forward vs dominant ETF |",
+          "|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|"]
+    for r in doc["rows"]:
+        d = r.get("decomposition") or {}
+        ok = d.get("status") == "OK"
+        be = (d.get("betas") or {}) if ok else {}
+        dom = (f"{r['dominant_etf']} ({_f(r.get('dominant_t'), '{:.1f}')})" if r.get("dominant_etf")
+               else f"none: {r.get('dominant_why') or r.get('structure_status')}")
+        fvs = r.get("forward_vs_factor_etf")
+        L.append(f"| `{r['book']}` | {r.get('cluster_full') if r.get('cluster_full') is not None else 'none'}"
+                 f" / {r.get('cluster_sealed') if r.get('cluster_sealed') is not None else 'none'}"
+                 + (" (by rule)" if "placed by rule" in str(r.get("structure_status")) else "") + " | "
+                 + (f"{_p(d['alpha_monthly'], 2)} ({_f(d['t_alpha'])}) | {_f(be.get('SMH'))} | "
+                    f"{_f(be.get('MTUM'))} | {_f(be.get('IWM'))} | {_f(d.get('r2'))} | "
+                    if ok else f"{d.get('status') or r.get('structure_status')} | n/a | n/a | n/a | n/a | ")
+                 + f"{dom} | {_p(r['expected_relative_to_date'], 2)} | "
+                 f"{_p(r.get('expected_alpha_to_date'), 2)} | {_p(r['forward_relative'], 2)} | "
+                 f"{_p(fvs, 2)} |")
+    why = sorted({f"`{r['forward_vs_factor_etf']}`: {r['factor_twin_why']}" for r in doc["rows"]
+                  if r.get("factor_twin_why") and isinstance(r.get("forward_vs_factor_etf"), str)
+                  and r["forward_vs_factor_etf"].endswith("_SERIES_MISSING")})
+    if why:
+        L += [""] + [f"- {w}" for w in why]
+    return L
 
 
 def _facts_or_none(board: dict) -> Optional[dict]:
@@ -648,7 +1001,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
            out_dir: Path = BRIDGE_DIR, books: Optional[list] = None,
            bars: Optional[pd.DataFrame] = None, board: Optional[dict] = None,
            board_path: Optional[str] = None, earnings: Optional[dict] = None,
-           semis: Optional[dict] = None) -> dict:
+           semis: Optional[dict] = None, structure: Optional[dict] = None) -> dict:
     from backend.services import llm_portfolio as LP
     today = today or date.today()
     if board is None:
@@ -657,7 +1010,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
     books = LP.read_books(include_voided=True) if books is None else books
     lib = [b for b in books if str(b.get("name") or "").startswith(("lib_",) + PROBE_BOOKS)]
     if bars is None:
-        syms = {p["ticker"] for b in lib for p in b["positions"]} | {"SPY"}
+        syms = {p["ticker"] for b in lib for p in b["positions"]} | {"SPY"} | set(FACTOR_ETFS)
         syms.discard("CASH")
         bars = load_bars(syms, since="2016-01-01")
     reg = regime(bars[bars["symbol"] == "SPY"])
@@ -670,7 +1023,10 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
         except (ValueError, KeyError):
             prior = {}
     gates = gates_for(lib, board, bars, earnings=earnings)
-    rows = build_rows(lib, board, bars, today=today, regime_now=reg, prior=prior, gates=gates)
+    if structure is None:
+        structure = load_structure()
+    rows = build_rows(lib, board, bars, today=today, regime_now=reg, prior=prior, gates=gates,
+                      structure=structure, fbars=factor_bars(bars))
     open_now = {r["book"] for r in rows if r.get("investigation")}
     carried = [v for k, v in load_investigations(out_dir).items() if k not in open_now]
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -704,6 +1060,11 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
            "semis_umd_regression": (semis if semis is not None
                                     else semis_umd_regression(board, bars)),
            "regime": reg,
+           "structure": {k: v for k, v in structure.items()
+                         if k not in ("books", "rule_cells") and not k.startswith("_")},
+           "distinct_bets": {"full": distinct_bets(rows, "cluster_full"),
+                             "sealed": distinct_bets(rows, "cluster_sealed")},
+           "cluster_observations": cluster_observations(rows),
            "rule": {"trail_sessions": TRAIL_SESSIONS, "trail_sigmas": TRAIL_SIGMAS,
                     "order": list(INVESTIGATION_ORDER), "taxonomy": list(TAXONOMY)},
            "rows": rows, "carried_investigations": carried,
@@ -845,6 +1206,14 @@ def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = No
         fwd += (f" The freeze gate (selection, construction and timing booleans, "
                 f"`{gs.get('log')}`) passes {gs.get('n_pass')} of {gs.get('n_books')} library "
                 f"books (bridge receipt `{bridge_path}`); the rest are CONTROLs, not headlines.")
+    dbf = ((bridge or {}).get("distinct_bets") or {}).get("full") or {}
+    if dbf:
+        mb = dbf.get("multi_book_clusters") or {}
+        fwd += (f" The {dbf['n_books']} library books are **{dbf['n_distinct']} distinct bets**: "
+                "books whose monthly active returns cluster at rho >= 0.8 are graded as one "
+                "observation"
+                + (f" ({'; '.join(', '.join(f'`{x}`' for x in v) for v in mb.values())})" if mb else "")
+                + f" (bridge receipt `{bridge_path}`, `distinct_bets.full`).")
     for v in vd:
         fwd += (f" `{v.get('name')}` was **voided before entry** ({v.get('reason')}); its `__ew` "
                 "twin is the strategy test.")

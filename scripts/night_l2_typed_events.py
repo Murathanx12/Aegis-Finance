@@ -638,6 +638,27 @@ def load_panel(path: Path | None = None):
     return df
 
 
+def exclude_archive_panel(df):
+    """(panel without `pit_grade: archive` rows, the receipt block).
+
+    The same rule as `news_registry.grade_row` (published_utc more than
+    ARCHIVE_LAG_DAYS before first_seen_utc), vectorised over the panel: most
+    panel rows predate the `first_seen_utc` column and cannot be proven an
+    archive, which the block says as `rows_without_stamp_pair`."""
+    import pandas as pd
+    from backend.services import news_registry as NR
+    n = int(len(df))
+    if n == 0:
+        return df, NR.archive_receipt(0, 0, 0)
+    pub = pd.to_datetime(df["published_utc"], utc=True, errors="coerce", format="mixed")
+    seen = pd.to_datetime(df["first_seen_utc"], utc=True, errors="coerce", format="mixed")
+    both = pub.notna() & seen.notna()
+    arch = both & ((seen - pub) > pd.Timedelta(days=NR.ARCHIVE_LAG_DAYS))
+    by_src = df.loc[arch, "source"].fillna("?").astype(str).value_counts().to_dict()
+    return (df.loc[~arch].reset_index(drop=True),
+            NR.archive_receipt(n, int(arch.sum()), int((~both).sum()), by_src))
+
+
 def symbol_frequency_buckets(df) -> dict:
     """Each symbol -> `Q1`..`Q4` by how many panel rows it carries.
 
@@ -1448,6 +1469,11 @@ def _corpus_plan(smoke: bool, max_rows: int) -> dict:
     sources = label_sources()
     files = corpus_files(sources)
     rows, unreadable = read_rows(files)
+    # wave-2 §3: the read-time PIT grade (`news_registry.grade_row`); a
+    # `pit_grade: archive` row is not typed -- a 2015 wire story first seen in
+    # 2026 is not an event at its first_seen -- and the count is on the receipt
+    from backend.services.news_registry import exclude_archive
+    rows, archive = exclude_archive(rows)
     cursor = load_cursor()
     waiting = pending(rows, cursor)
     n_waiting = len(waiting)
@@ -1463,7 +1489,9 @@ def _corpus_plan(smoke: bool, max_rows: int) -> dict:
             "source": "corpus",
             "label_sources": sources,
             "files": len(files),
-            "rows_on_disk": len(rows),
+            "rows_on_disk": archive["rows_read"],
+            "rows_after_archive_exclusion": len(rows),
+            "archive": archive,
             "unreadable_lines": len(unreadable),
             "unreadable_examples": unreadable[:3],
             "rows_already_typed": len(rows) - n_waiting,
@@ -1487,7 +1515,8 @@ def _panel_plan(smoke: bool, max_rows: int, stratified: int, seed: int,
     whose feed id the panel spells differently (`alpaca:benzinga`, not
     `alpaca_benzinga_news`) and silently type a third of what was asked.
     """
-    units = panel_units(path=panel_path)
+    df, archive = exclude_archive_panel(load_panel(panel_path))
+    units = panel_units(df)
     total = len(units)
     done = panel_typed_hashes()
     fresh = [u for u in units if u["text_sha256"] not in done]
@@ -1506,6 +1535,7 @@ def _panel_plan(smoke: bool, max_rows: int, stratified: int, seed: int,
         "block": {
             "source": "panel",
             "panel": str(Path(panel_path or PANEL_PARQUET)),
+            "archive": archive,
             "panel_rows": int(sum(int(u.get("panel_rows") or 0) for u in units)),
             "distinct_texts": total,
             "texts_already_typed": total - n_waiting,

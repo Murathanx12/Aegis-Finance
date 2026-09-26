@@ -162,8 +162,11 @@ def build(max_rows=None, years=("2025", "2026")) -> dict:
     bench = per.get(BENCH)
     have = set(per)
     rows, seen = [], set()
-    stats = {"news_rows": 0, "no_symbol_bar": 0, "off_calendar": 0,
+    stats = {"news_rows": 0, "archive_excluded": 0, "no_symbol_bar": 0, "off_calendar": 0,
              "no_bar_that_day": 0, "dup": 0, "kept": 0}
+    from backend.services import news_registry as NR
+    arch_by_src: dict = {}
+    n_read = n_unstamped = 0
     files = [f for f in sorted(glob.glob(str(CORPUS / "*.jsonl")))
              if Path(f).name[:4] in years]
     stop = False
@@ -176,6 +179,14 @@ def build(max_rows=None, years=("2025", "2026")) -> dict:
             except Exception:                                        # noqa: BLE001
                 continue
             if d.get("kind") != "news" or not d.get("body"):
+                continue
+            # wave-2 §3: the read-time PIT grade, same as book_signals.load_news_rows
+            n_read += 1
+            n_unstamped += 0 if NR.has_stamp_pair(d) else 1
+            if NR.is_archive(d):
+                stats["archive_excluded"] += 1
+                src = str(d.get("source") or "?")
+                arch_by_src[src] = arch_by_src.get(src, 0) + 1
                 continue
             syms = _symbols(d.get("symbols"))
             if not syms:
@@ -256,7 +267,9 @@ def build(max_rows=None, years=("2025", "2026")) -> dict:
         "what": "every 2025-26 corpus news row joined to the Alpaca bar of the first "
                 "session whose OPEN is strictly after publication; two labels, each minus SPY",
         "path": str(path), "wall_s": round(time.time() - t0, 1),
-        "funnel": stats, "rows": int(len(df)),
+        "funnel": stats,
+        "archive": NR.archive_receipt(n_read, stats["archive_excluded"], n_unstamped, arch_by_src),
+        "rows": int(len(df)),
         "symbols": int(df["symbol"].nunique()) if len(df) else 0,
         "date_range": ([df["entry_date"].min(), df["entry_date"].max()]
                        if len(df) else None),
@@ -354,7 +367,7 @@ def _anchor(row) -> tuple[str, str]:
     return (row.get("first_seen_utc") or "").strip(), "first_seen_utc"
 
 
-def _corpus_rows(sources, since_iso: str, max_rows=None):
+def _corpus_rows(sources, since_iso: str, max_rows=None, census: dict | None = None):
     """Corpus rows newer than the watermark, from the labelling sources only.
 
     Read through `jsonl_io`, NOT `str.splitlines()`. MEASURED 2026-09-13: nine
@@ -363,9 +376,23 @@ def _corpus_rows(sources, since_iso: str, max_rows=None):
     rows arrived here as two unparseable fragments and was dropped by the
     `except: continue` below -- silently, with no count. 9 of 3,799 today; the
     share is a property of the publisher's copy-paste, not a constant.
+
+    Every row is graded at READ time (`news_registry.grade_row`, wave-2 §3) and a
+    `pit_grade: archive` row is dropped and counted into `census` (the
+    `news_registry.archive_receipt` block) -- a 2015 headline first seen in 2026
+    is not news at its first_seen and must not be labelled as if it were.
     """
     from backend.services import jsonl_io as jio
+    from backend.services import news_registry as NR
     from scripts.news_pull import corpus_dir
+
+    n_read = n_unstamped = 0
+    arch: dict = {}
+
+    def _close(out):
+        if census is not None:
+            census.update(NR.archive_receipt(n_read, sum(arch.values()), n_unstamped, arch))
+        return out
 
     root = corpus_dir()
     out = []
@@ -384,10 +411,17 @@ def _corpus_rows(sources, since_iso: str, max_rows=None):
                 fs = row.get("first_seen_utc") or ""
                 if since_iso and fs <= since_iso:
                     continue
-                out.append(row)
+                n_read += 1
+                n_unstamped += 0 if NR.has_stamp_pair(row) else 1
+                g = NR.grade_row(row)
+                if g["pit_grade"] == NR.ARCHIVE_GRADE:
+                    src = str(row.get("source") or sid)
+                    arch[src] = arch.get(src, 0) + 1
+                    continue
+                out.append(g)
                 if max_rows and len(out) >= max_rows:
-                    return out
-    return out
+                    return _close(out)
+    return _close(out)
 
 
 def _pit_verify(rows, per) -> list[str]:
@@ -430,7 +464,8 @@ def E1_append(max_rows=None) -> dict:
         watermark = str(vals.max()) if len(vals) else ""
 
     sources = _label_sources()
-    raw = _corpus_rows(sources, watermark, max_rows)
+    archive: dict = {}
+    raw = _corpus_rows(sources, watermark, max_rows, census=archive)
     # `before_calendar` and `pending_future_session` are OPPOSITE causes and were
     # one counter until the first live run put 3,370 rows in it: the Alpaca
     # backfill's 2015 rows (older than the bars) and tonight's rows (newer than
@@ -442,7 +477,7 @@ def E1_append(max_rows=None) -> dict:
     if not BARS().exists():
         return {
             "job": "E1_append", "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
-            "verdict": "REFUSED", "rows_appended": 0, "funnel": stats,
+            "verdict": "REFUSED", "rows_appended": 0, "funnel": stats, "archive": archive,
             "headline": f"REFUSED: no bars parquet at {BARS()} — nothing can be labelled",
             "next_test": "run P6_bars_and_regret to land prices_2025_26/bars.parquet, then re-run E1_append",
             "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
@@ -538,6 +573,7 @@ def E1_append(max_rows=None) -> dict:
         "skipped_index_state_sources": _skipped_sources(sources),
         "watermark_first_seen_utc": watermark or None,
         "funnel": stats,
+        "archive": archive,
         "rows_appended": 0,
         "panel_rows_before": int(len(existing)),
         "pit_violations": len(violations),
@@ -574,7 +610,8 @@ def E1_append(max_rows=None) -> dict:
     receipt["verdict"] = "APPENDED" if new_rows else ("NOTHING TO DO" if not raw else "PENDING")
     receipt["headline"] = (
         f"{len(new_rows):,} rows appended from {len(raw):,} corpus rows over "
-        f"{len(sources)} labelling sources; {pending:,} awaiting a session that "
+        f"{len(sources)} labelling sources ({archive.get('archive_rows_excluded', 0):,} "
+        f"archive rows excluded); {pending:,} awaiting a session that "
         f"has not happened yet; {ancient:,} older than the first bar; "
         f"0 PIT violations"
     )
