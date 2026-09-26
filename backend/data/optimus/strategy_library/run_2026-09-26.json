@@ -3,18 +3,18 @@
  "date": "2026-09-26",
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
- "written_utc": "2026-09-26T08:36:48+00:00",
- "elapsed_s": 152.3,
+ "written_utc": "2026-09-26T09:04:10+00:00",
+ "elapsed_s": 287.8,
  "partial": null,
- "n_rules_done": 258,
- "n_computed_this_run": 258,
+ "n_rules_done": 284,
+ "n_computed_this_run": 284,
  "panel": {
   "rows": 372753,
   "dates": 117,
   "symbols": 4787,
   "first": "2017-01-31",
   "last": "2026-09-21",
-  "fingerprint": "01b3e118969b0bf5"
+  "fingerprint": "d02b35ad43618dd4"
  },
  "survivorship_audit": {
   "n_symbols": 4793,
@@ -85,8 +85,22 @@
    "caveat": "CURRENT classification applied to every past month (static map)"
   },
   "extension": {
-   "status": "ABSENT",
-   "why": "absent (backend/services/strategy_library_ext.py does not exist)"
+   "status": "OK",
+   "derived": {
+    "sharpe_252": 349430,
+    "mkt_not_stress": 366377,
+    "low_vs_high_252": 363064
+   },
+   "pit": "features at t+1d from rows dated <= t, mapped back to t",
+   "firm_map": "146 firms from firm_estimid_map.json",
+   "support_non_nan": {
+    "analyst_skill_weight": 120685,
+    "max_21": 371598,
+    "attention_z": 0,
+    "fomo_reversal": 0,
+    "first_mover_rank": 96096,
+    "pricing_power_cost_pressure": 58174
+   }
   }
  },
  "objective": {
@@ -97,12 +111,12 @@
   "split_rule": "a period belongs to the window its ENTRY session (decision + 1 business day) is in",
   "n_sealed_months": 32,
   "n_dev_months_max": 83,
-  "honest_note": "The sealed window is 32 monthly blocks (the brief assumed 21). 'Sealed' means the split was declared in code before this run, NOT that nobody has seen 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 762 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=762) and the dev column beside every sealed number.",
-  "noise_sharpe_ceiling_monthly_full": 0.297554,
-  "noise_sharpe_ceiling_monthly_sealed": 0.570608,
-  "noise_sharpe_ceiling_annual_sealed": 1.976643,
-  "expected_noise_cells_ir_above_0_5_annual_full": 46.974099,
-  "expected_noise_cells_ir_above_0_5_annual_sealed": 160.632009
+  "honest_note": "The sealed window is 32 monthly blocks (the brief assumed 21). 'Sealed' means the split was declared in code before this run, NOT that nobody has seen 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 834 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=834) and the dev column beside every sealed number.",
+  "noise_sharpe_ceiling_monthly_full": 0.300002,
+  "noise_sharpe_ceiling_monthly_sealed": 0.575301,
+  "noise_sharpe_ceiling_annual_sealed": 1.992901,
+  "expected_noise_cells_ir_above_0_5_annual_full": 51.412596,
+  "expected_noise_cells_ir_above_0_5_annual_sealed": 175.809837
  },
  "spy": {
   "source": "spy_tr_yf_adjclose",
@@ -120,9 +134,9 @@
    "construction": "pct_change of auto_adjust=True Close (total return)",
    "dividends_included": true,
    "network": true,
-   "fetched_utc": "2026-09-26T08:35:31.883065+00:00"
+   "fetched_utc": "2026-09-26T09:02:47.180067+00:00"
   },
-  "provenance_sha256": "11f442035d3fa247e569149c396a83a73aefbd07c9f69ead9859d2adccc73e91",
+  "provenance_sha256": "348e583390de40b057d880f7479ed24ac02e15a0309b9b96d361360c8d8014a8",
   "span": [
    "2017-01-24",
    "2026-09-25"

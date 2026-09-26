@@ -270,12 +270,12 @@ def test_firm_mapping_by_cooccurrence():
 # ── the rule list ────────────────────────────────────────────────────────────
 
 def test_extra_strategies_shape():
-    assert len(ext.EXTRA_STRATEGIES) == 8
-    ours = {r.id for r in ext.EXTRA_STRATEGIES}
+    assert len(ext.CHUNK_C_STRATEGIES) == 8
+    ours = {r.id for r in ext.CHUNK_C_STRATEGIES}
     base = [r for r in sl.RULES if r.id not in ours]      # the library may already merge ours
     base_fams = set(sl.FAMILY_REASON) | {r.family for r in base}
     base_sigs = {r.signature() for r in base}
-    for r in ext.EXTRA_STRATEGIES:
+    for r in ext.CHUNK_C_STRATEGIES:
         m = r.meta()
         for k in ext.REQUIRED_KEYS:
             assert k in m, (r.id, k)
@@ -283,10 +283,10 @@ def test_extra_strategies_shape():
         assert m["first_registered_utc"] == ext.REGISTERED_CHUNK_C
         assert r.family not in base_fams, f"{r.id}: family {r.family} is a base family"
         assert r.signature() not in base_sigs
-    fwd = {r.id for r in ext.EXTRA_STRATEGIES if r.forward_only}
+    fwd = {r.id for r in ext.CHUNK_C_STRATEGIES if r.forward_only}
     assert fwd == {"attention_shock_fade", "fomo_reversal_5d", "fomo_reversal_21d"}
     lib = list(base)
-    for r in ext.EXTRA_STRATEGIES:
+    for r in ext.CHUNK_C_STRATEGIES:
         sl.register(lib, r)                   # no id clash, no signature twin
     assert not (set(getattr(sl, "EXTRA_REFUSED", {})) & ours), sl.EXTRA_REFUSED
 
