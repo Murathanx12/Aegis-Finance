@@ -197,6 +197,7 @@ def llm_usage() -> dict:
             # the failure is SILENT otherwise: the caller falls back to its
             # template and the page still renders.
             "language_refusals": dict(_LANGUAGE_REFUSALS),
+            "empty_content_refusals": dict(EMPTY_CONTENT_REFUSALS),
             "providers": provider_status(),
         }
 
@@ -408,8 +409,57 @@ _local_client = None
 
 
 def _nvidia_model() -> str:
-    return str(getattr(_config_mod, "MODEL_ROUTING_NVIDIA_MODEL",
-                       "nvidia/nemotron-3-super-120b-a12b"))
+    return str(getattr(_config_mod, "NVIDIA_ADJUDICATOR_MODEL", None)
+               or getattr(_config_mod, "MODEL_ROUTING_NVIDIA_MODEL",
+                          "meta/llama-3.2-11b-vision-instruct"))
+
+
+#: Replies whose `content` was empty, by provider (G-fix, adjudication row 7).
+#: A reasoning model can return content=None with its chain of thought in
+#: `reasoning_content`; chunk G parsed that thought as the answer, so a
+#: truncated "if momentum holds, P: 0.6 ... but" could be frozen as a forecast.
+#: An empty content is now a REFUSAL, counted here and on `llm_usage()`.
+EMPTY_CONTENT_REFUSALS: dict[str, int] = {}
+
+
+def _is_rate_limited(e: Exception) -> bool:
+    code = getattr(e, "status_code", None)
+    if code is None:
+        code = getattr(getattr(e, "response", None), "status_code", None)
+    return code == 429 or type(e).__name__ == "RateLimitError"
+
+
+def _create_with_429_retry(client, provider: str, *, tries: int | None = None,
+                           sleep=None, rng=None, **kw):
+    """`client.chat.completions.create(**kw)`, retrying HTTP 429 only.
+
+    NVIDIA's free tier answered 429 in 2 of 5 runs on 2026-09-07. Other errors
+    raise at once: retrying a 401 or a 400 spends nothing and learns nothing.
+    Backoff doubles from MODEL_ROUTING_NVIDIA_BACKOFF_S plus uniform jitter.
+    Returns (response, n_429). A final 429 re-raises carrying `n_429`.
+    """
+    import random as _random
+    tries = int(tries or getattr(_config_mod, "MODEL_ROUTING_NVIDIA_TRIES", 3))
+    base = float(getattr(_config_mod, "MODEL_ROUTING_NVIDIA_BACKOFF_S", 4.0))
+    jit = float(getattr(_config_mod, "MODEL_ROUTING_NVIDIA_JITTER_S", 2.0))
+    rng = rng or _random.Random()
+    sleep = sleep or time.sleep
+    n429 = 0
+    for i in range(tries):
+        try:
+            return client.chat.completions.create(**kw), n429
+        except Exception as e:                                 # noqa: BLE001
+            if not _is_rate_limited(e):
+                raise
+            n429 += 1
+            if i == tries - 1:
+                try:
+                    e.n_429 = n429                             # type: ignore[attr-defined]
+                except AttributeError:
+                    pass
+                raise
+            sleep(base * (2 ** i) + rng.uniform(0.0, jit))
+    raise RuntimeError("unreachable")                          # pragma: no cover
 
 
 def _nvidia_base_url() -> str:
@@ -451,23 +501,37 @@ def cost_status(model: str) -> str:
 
 
 def _reply_text(response) -> str:
-    """content, else `reasoning_content` (a reasoning model can put its whole
-    answer there and return content=None -- model_provider measured it)."""
+    """`content` ONLY. A thought is not an answer: `reasoning_content` is never
+    read as the reply (G-fix, adjudication row 7 -- chunk G fell back to it, a
+    test pinned that, and a truncated chain of thought could be frozen as a
+    forecast row). Empty content -> "" -> the caller's REFUSED_EMPTY_CONTENT."""
     msg = response.choices[0].message
-    text = getattr(msg, "content", None)
-    if not text:
-        text = getattr(msg, "reasoning_content", None) or ""
-    return str(text).strip()
+    return str(getattr(msg, "content", None) or "").strip()
+
+
+def _has_reasoning_only(response) -> bool:
+    try:
+        return bool(getattr(response.choices[0].message, "reasoning_content", None))
+    except (AttributeError, IndexError):
+        return False
 
 
 def call_named(provider: str, system_prompt: str, user_prompt: str, *,
                purpose: str, max_tokens: int | None = None,
-               validate=None, ensure_reason: str | None = None) -> dict:
+               validate=None, ensure_reason: str | None = None,
+               temperature: float | None = None,
+               production_budget: bool = True) -> dict:
     """One chat turn from the NAMED provider. Never raises for a provider error.
 
-    Returns `{provider, model, text, ok, status, latency_s, cost_usd,
-    cost_status, tokens_in, tokens_out, cached_tokens, error}`. `text` is None
-    whenever `ok` is False. `provider` is one of `deepseek`, `nvidia`, `local`.
+    Returns `{provider, model, served_model, text, ok, status, latency_s,
+    cost_usd, cost_status, tokens_in, tokens_out, cached_tokens, n_429, error}`.
+    `text` is None whenever `ok` is False. `provider` is one of `deepseek`,
+    `nvidia`, `local`. `served_model` is what the PROVIDER says answered.
+
+    G-fix (adjudication row 7): `text` is `content` only -- an empty content is
+    `REFUSED_EMPTY_CONTENT`, counted in `EMPTY_CONTENT_REFUSALS`, never the
+    reasoning parsed as an answer; NVIDIA retries HTTP 429 (3 tries, backoff
+    with jitter) and a last 429 is `RATE_LIMITED`.
     """
     from backend.services import llm_telemetry as _tel
 
@@ -482,9 +546,17 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
         if client is None:
             return {**out, "model": model, "status": "NOT_CONFIGURED",
                     "error": "DEEPSEEK_API_KEY is not set"}
-        if not _acquire_call_budget():
+        # `production_budget=False` is for an attended BATCH that enforces its
+        # own dollar cap (the E-G1 bake-off, $0.15): the 150-call production
+        # counter is sized for a user-facing endpoint, not a 240-item batch. The
+        # billing breaker binds either way.
+        if production_budget:
+            if not _acquire_call_budget():
+                return {**out, "model": model, "status": "BUDGET_REFUSED",
+                        "error": "daily call cap or billing breaker"}
+        elif time.time() < _spend_state["breaker_until"]:
             return {**out, "model": model, "status": "BUDGET_REFUSED",
-                    "error": "daily call cap or billing breaker"}
+                    "error": "billing breaker"}
     elif provider == "nvidia":
         model, client = _nvidia_model(), _get_nvidia_client()
         if client is None:
@@ -506,22 +578,29 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
     out["model"] = model
     out["cost_status"] = cost_status(model)
     tel_provider = provider
+    out["served_model"] = None
+    out["n_429"] = 0
     t0 = time.perf_counter()
+    kw = dict(model=model,
+              messages=[{"role": "system", "content": system_prompt + _LANGUAGE_PIN},
+                        {"role": "user", "content": user_prompt}],
+              max_tokens=mt,
+              temperature=(_llm_cfg.get("temperature", 0.3) if temperature is None
+                           else float(temperature)))
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "system", "content": system_prompt + _LANGUAGE_PIN},
-                      {"role": "user", "content": user_prompt}],
-            max_tokens=mt,
-            temperature=_llm_cfg.get("temperature", 0.3),
-        )
+        if provider == "nvidia":
+            response, out["n_429"] = _create_with_429_retry(client, provider, **kw)
+        else:
+            response = client.chat.completions.create(**kw)
         text = _reply_text(response)
     except Exception as e:                                     # noqa: BLE001
         _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
                 t0=t0, error=e)
         if provider == "deepseek" and _is_billing_error(e):
             _trip_breaker(e)
-        return {**out, "status": "ERROR", "latency_s": round(time.perf_counter() - t0, 3),
+        return {**out, "status": "RATE_LIMITED" if _is_rate_limited(e) else "ERROR",
+                "n_429": int(getattr(e, "n_429", 0) or 0),
+                "latency_s": round(time.perf_counter() - t0, 3),
                 "error": f"{type(e).__name__}: {str(e)[:300]}"}
     latency = round(time.perf_counter() - t0, 3)
     _record(tel_provider, model, purpose, system=system_prompt, user=user_prompt,
@@ -529,13 +608,23 @@ def call_named(provider: str, system_prompt: str, user_prompt: str, *,
     usage = _tel.extract_usage(response, tel_provider)
     out.update(usage)
     out["latency_s"] = latency
-    out["cost_usd"] = _tel.price_call(model, usage["tokens_in"], usage["tokens_out"],
+    # the model the PROVIDER says answered (DeepSeek has said `deepseek-flash`
+    # for `deepseek-chat` since 09-14); priced by it when the table knows it.
+    served = getattr(response, "model", None)
+    out["served_model"] = str(served) if isinstance(served, str) and served else None
+    price_model = (out["served_model"] if out["served_model"]
+                   and cost_status(out["served_model"]) == "LISTED" else model)
+    out["cost_status"] = cost_status(price_model)
+    out["cost_usd"] = _tel.price_call(price_model, usage["tokens_in"], usage["tokens_out"],
                                       usage["cached_tokens"])
     if provider == "local":
         from backend.services import llama_server as _ls
         _ls.touch(ensure_reason or purpose)
     if not text:
-        return {**out, "status": "EMPTY", "error": "the model returned an empty message"}
+        EMPTY_CONTENT_REFUSALS[provider] = EMPTY_CONTENT_REFUSALS.get(provider, 0) + 1
+        why = ("content empty, reasoning_content present: a thought is not an answer"
+               if _has_reasoning_only(response) else "the model returned an empty message")
+        return {**out, "status": "REFUSED_EMPTY_CONTENT", "error": why}
     if _refuse_non_english(tel_provider, purpose, text):
         return {**out, "status": "LANGUAGE_REFUSED",
                 "error": "reply was mostly non-Latin script; discarded, not repaired"}

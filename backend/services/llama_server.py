@@ -471,6 +471,11 @@ def start(wait_s: float = 90.0, bind: bool = True) -> dict:
     _write_owner({"pid": proc.pid, "started_utc": _now(), "model": LLAMA_MODEL.name,
                   "cmd": cmd, "port": LLAMA_PORT, "lifetime_bound": bound,
                   "owner_pid": os.getpid(), "owner_started_utc": _now()})
+    if not bind:
+        # an UNBOUND server outlives this process; the detached reaper is what
+        # stops it (G-fix row 7) -- including for the lab, which calls start()
+        # directly and never ensure().
+        spawn_reaper()
     if wait_s <= 0:
         # the desktop shell starts it and gets on with opening the window; a
         # multi-GB model loads while the splash is up. "starting" is a state,
@@ -653,6 +658,7 @@ def touch(reason: str | None = None, *, now: float | None = None) -> dict:
     if not owner.get("pid"):
         return {"touched": False, "reason": "no ownership note (server not started by Aegis)"}
     owner["last_used_ts"] = float(now if now is not None else time.time())
+    owner["last_used_utc"] = datetime.fromtimestamp(owner["last_used_ts"], timezone.utc)         .isoformat(timespec="seconds")
     owner["last_used_for"] = reason or owner.get("last_used_for")
     owner["uses"] = int(owner.get("uses") or 0) + 1
     _write_owner(owner)
@@ -686,22 +692,48 @@ def _wait_ready(wait_s: float) -> bool:
         time.sleep(1.0)
 
 
-def ensure(reason: str, *, wait_s: float | None = None, bind: bool = True,
-           watchdog: bool = True) -> dict:
+def ensure(reason: str, *, wait_s: float | None = None, bind: bool | None = None,
+           watchdog: bool = True, reaper: bool = True) -> dict:
     """Make the local model answer, starting it only if nothing is listening.
 
     Returns `status()` plus `ok`, `action` (`reused` | `started` | `refused` |
     `died` | `timeout`), `started_for` (the reason recorded when THIS server was
     started) and `requested_for` (this call's reason). A foreign server is
     USED, never adopted: it is not ours to stop, so no watchdog is armed for it.
+
+    THE REAPER (G-fix, adjudication row 7). The in-process watchdog dies with
+    its process and a lab loop never called `ensure()`, so the idle stop
+    depended on which process happened to be alive. Now every `ensure()` that
+    finds an Aegis-started server makes sure ONE detached `scripts/llama_reaper`
+    is alive (pid file); the reaper reads the owner note, stops the server BY
+    PID after MODEL_ROUTING_IDLE_MIN idle, and exits when the server is gone.
+    With a reaper available the server is started UNBOUND (`bind=None` ->
+    False): one client's restart must not kill another client's batch. Where
+    no reaper can run (the frozen .exe), `bind` falls back to True.
     """
     wait = ENSURE_WAIT_S if wait_s is None else float(wait_s)
+    if bind is None:
+        bind = not (reaper and reaper_available())
     with _ENSURE_LOCK:
         st = status()
         if st["listening"]:
             ready = bool(st["ready"]) or _wait_ready(wait)
             if st["started_by_aegis"]:
                 touch(reason)
+                # An Aegis-started server whose STARTER has died is an orphan to
+                # every `stop_if_owned()` ("a dead owner is not a veto"). Measured
+                # 2026-09-26: the E-G1 re-run reused such a server, a desktop
+                # shell exiting in a test run then stopped it mid-batch. The
+                # process now USING it becomes the owner of record; the reaper
+                # still owns the idle stop.
+                inst = owning_instance()
+                if inst["owner_pid"] and not inst["owner_alive"]:
+                    o = _read_owner()
+                    o.update({"owner_pid": os.getpid(), "owner_started_utc": _now(),
+                              "owner_adopted_from": inst["owner_pid"]})
+                    _write_owner(o)
+                if reaper:
+                    spawn_reaper()
             owner = _read_owner()
             return {**status(), "ok": ready, "action": "reused",
                     "requested_for": reason,
@@ -718,6 +750,8 @@ def ensure(reason: str, *, wait_s: float | None = None, bind: bool = True,
                           "last_used_for": reason, "uses": 1,
                           "idle_shutdown_s": IDLE_SHUTDOWN_S})
             _write_owner(owner)
+            if reaper:
+                spawn_reaper()
             if watchdog:
                 start_watchdog()
         return {**(r.get("status") or status()), "ok": bool(r.get("ok")),
@@ -787,6 +821,211 @@ def stop_watchdog() -> None:
     _WATCHDOG_STOP.set()
 
 
+# ------------------------------------------------------------------ the reaper
+#
+# A STANDALONE process (scripts/llama_reaper.py), not a thread: it outlives the
+# Telegram bot, the lab, the CLI -- whoever started the server. It trusts only
+# two things: the owner note the server's starter wrote (pid, started_utc,
+# last_used_ts) and the socket table (`status()` refuses to call a server
+# Aegis-started unless the note's PID is the PID holding the port, so a
+# recycled PID cannot license a kill). It never touches a foreign server.
+
+REAPER_PID_FILE = Path(os.getenv("AEGIS_LLAMA_REAPER_PID_FILE",
+                                 str(OWNER_FILE.parent / "llama_reaper.pid.json")))
+REAPER_TICK_S = float(_conf("MODEL_ROUTING_REAPER_TICK_S", 30))
+REAPER_SCRIPT = REPO / "scripts" / "llama_reaper.py"
+
+
+def idle_limit_s() -> float:
+    """MODEL_ROUTING_IDLE_MIN in seconds (env AEGIS_LLAMA_IDLE_SHUTDOWN_S wins)."""
+    env = os.getenv("AEGIS_LLAMA_IDLE_SHUTDOWN_S")
+    if env:
+        return float(env)
+    return float(_conf("MODEL_ROUTING_IDLE_MIN", IDLE_SHUTDOWN_S / 60.0)) * 60.0
+
+
+def _read_reaper() -> dict:
+    try:
+        return json.loads(REAPER_PID_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def reaper_alive() -> dict:
+    """{"alive": bool, "pid": int|None} from the reaper's pid file."""
+    r = _read_reaper()
+    try:
+        pid = int(r.get("pid") or 0)
+    except (TypeError, ValueError):
+        pid = 0
+    return {"alive": bool(pid) and pid_alive(pid), "pid": pid or None,
+            "started_utc": r.get("started_utc")}
+
+
+def reaper_available() -> bool:
+    """False inside a frozen build (sys.executable is the app, not python --
+    the path-that-resolves-differently-when-frozen family) or when the script
+    is missing; the caller then keeps the job-object binding instead."""
+    return not getattr(sys, "frozen", False) and REAPER_SCRIPT.exists()
+
+
+#: Do not spawn again within this many seconds of the last spawn/start stamp.
+REAPER_RESPAWN_S = 60.0
+
+
+def _reaper_lock_path() -> Path:
+    return REAPER_PID_FILE.with_suffix(".lock")
+
+
+def _try_lock(fh) -> bool:
+    """Non-blocking exclusive lock on an open file; released when it closes."""
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+            fh.seek(0)
+            msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return True
+    except OSError:
+        return False
+
+
+def spawn_reaper(*, now: float | None = None) -> dict:
+    """Start ONE detached reaper unless one is alive. Never raises.
+
+    Measured 2026-09-26 on the first E-G1 run: ten reapers in four minutes.
+    `reaper_alive()` asks `tasklist`, which under memory pressure timed out,
+    read as "dead", and every `ensure()` spawned another -- which added memory
+    pressure. Two guards now: a spawn within REAPER_RESPAWN_S of the last
+    stamp is skipped, and the reaper itself takes an exclusive OS lock and
+    exits at once when another holds it, so a duplicate cannot LIVE.
+    """
+    cur = reaper_alive()
+    if cur["alive"]:
+        return {"spawned": False, "reason": "already alive", "pid": cur["pid"]}
+    t = float(now if now is not None else time.time())
+    try:
+        age = t - REAPER_PID_FILE.stat().st_mtime
+    except OSError:
+        age = None
+    if age is not None and age < REAPER_RESPAWN_S:
+        return {"spawned": False, "reason": f"stamped {age:.0f}s ago (< {REAPER_RESPAWN_S:.0f}s)",
+                "pid": cur["pid"]}
+    if not reaper_available():
+        return {"spawned": False, "reason": "reaper unavailable (frozen build or no script)"}
+    flags = 0
+    if sys.platform == "win32":
+        flags = (getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x200)
+                 | getattr(subprocess, "DETACHED_PROCESS", 0x8))
+    env = dict(os.environ)
+    env["AEGIS_LLAMA_OWNER_FILE"] = str(OWNER_FILE)
+    env["AEGIS_LLAMA_REAPER_PID_FILE"] = str(REAPER_PID_FILE)
+    env["AEGIS_LLAMA_PORT"] = str(LLAMA_PORT)
+    try:
+        # quiet_subprocess adds CREATE_NO_WINDOW (ignored beside DETACHED_PROCESS,
+        # which already means "no console"); argv is fixed, no shell
+        proc = qsp.popen(
+            [sys.executable, str(REAPER_SCRIPT)], cwd=str(REPO), env=env,
+            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, close_fds=True, creationflags=flags)
+    except OSError as exc:
+        return {"spawned": False, "reason": f"{type(exc).__name__}: {exc}"}
+    # the reaper writes its own pid file on its first line; write it here too so
+    # a second ensure() in the same second does not spawn a twin.
+    REAPER_PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    REAPER_PID_FILE.write_text(json.dumps({"pid": proc.pid, "started_utc": _now(),
+                                           "spawned_by": os.getpid()}), encoding="utf-8")
+    return {"spawned": True, "pid": proc.pid}
+
+
+def reap_check(*, now: float | None = None, idle_s: float | None = None,
+               busy_fn=None) -> dict:
+    """One reaper tick. `action`: none | idle_stopped | stop_failed | exit.
+
+    `exit` means the reaper's job is over: no Aegis-started server is alive
+    (the note is gone, its PID is dead, or what holds the port is foreign).
+    Unlike `idle_check` this does NOT require being the starting process --
+    stopping an orphan is the whole point.
+    """
+    owner = _read_owner()
+    try:
+        spid = int(owner.get("pid") or 0)
+    except (TypeError, ValueError):
+        spid = 0
+    if not spid:
+        return {"action": "exit", "reason": "no owner note: no Aegis-started server"}
+    if not pid_alive(spid):
+        _clear_owner()
+        return {"action": "exit", "reason": f"server pid {spid} is gone", "pid": spid}
+    st = status()
+    if not st["listening"]:
+        return {"action": "none", "reason": "server alive but not listening yet", "pid": spid}
+    if not st["started_by_aegis"]:
+        return {"action": "exit", "reason": "the listener is not the note's pid (foreign)",
+                "pid": st.get("pid"), "note_pid": spid}
+    t = float(now if now is not None else time.time())
+    limit = float(idle_s if idle_s is not None else idle_limit_s())
+    last = owner.get("last_used_ts")
+    if last is None:
+        try:
+            last = datetime.fromisoformat(str(owner.get("started_utc"))).timestamp()
+        except (TypeError, ValueError):
+            last = t
+    idle = t - float(last)
+    if idle < limit:
+        return {"action": "none", "reason": "in use", "idle_s": round(idle, 1),
+                "idle_limit_s": limit, "pid": spid}
+    if (busy_fn or busy)():
+        touch("reaper:busy", now=t)
+        return {"action": "none", "reason": "a request is mid-flight", "idle_s": round(idle, 1)}
+    r = stop(allow_foreign=False)
+    return {"action": "idle_stopped" if r.get("ok") else "stop_failed",
+            "idle_s": round(idle, 1), "pid": r.get("pid"),
+            "started_for": owner.get("started_for"),
+            "stop": {k: r.get(k) for k in ("ok", "action", "reason", "pid")}}
+
+
+def reaper_loop(*, tick_s: float | None = None, idle_s: float | None = None,
+                max_ticks: int | None = None, log=None) -> dict:
+    """The reaper's body: take the lock, write the pid file, tick until the
+    server is gone. A second reaper finds the lock held and exits at once."""
+    REAPER_PID_FILE.parent.mkdir(parents=True, exist_ok=True)
+    lock_fh = open(_reaper_lock_path(), "a+")                    # noqa: SIM115 - held for life
+    if not _try_lock(lock_fh):
+        lock_fh.close()
+        return {"ticks": 0, "last": {"action": "exit",
+                                     "reason": "another reaper holds the lock"}}
+    REAPER_PID_FILE.write_text(json.dumps({"pid": os.getpid(), "started_utc": _now(),
+                                           "owner_file": str(OWNER_FILE),
+                                           "idle_limit_s": idle_s or idle_limit_s()}),
+                               encoding="utf-8")
+    tick = float(tick_s if tick_s is not None else REAPER_TICK_S)
+    n, last = 0, {}
+    try:
+        while max_ticks is None or n < max_ticks:
+            n += 1
+            try:
+                last = reap_check(idle_s=idle_s)
+            except Exception as exc:                          # noqa: BLE001 - a tick never kills the reaper
+                last = {"action": "none", "reason": f"tick error {type(exc).__name__}: {exc}"}
+            if log:
+                log({"t": _now(), "tick": n, **last})
+            if last.get("action") in ("idle_stopped", "exit"):
+                break
+            time.sleep(tick)
+    finally:
+        cur = _read_reaper()
+        if int(cur.get("pid") or 0) == os.getpid():
+            try:
+                REAPER_PID_FILE.unlink()
+            except OSError:
+                pass
+        lock_fh.close()
+    return {"ticks": n, "last": last}
+
+
 def main() -> int:                                            # tiny CLI for the shell and for humans
     import argparse
     ap = argparse.ArgumentParser(description="local llama.cpp server: status / start / stop")
@@ -804,7 +1043,7 @@ def main() -> int:                                            # tiny CLI for the
         out = stop(allow_foreign=a.allow_foreign)
     elif a.action == "ensure":
         # a CLI process exits at once, so no watchdog could outlive it: unbound,
-        # and the note says so -- stop it with `stop` when done.
+        # and the detached reaper (spawned by ensure) owns the idle stop.
         out = ensure(a.reason, bind=False, watchdog=False)
     elif a.action == "idle-check":
         out = idle_check()

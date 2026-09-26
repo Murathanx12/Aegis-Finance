@@ -3,6 +3,7 @@
     python -m scripts.telegram_agent --serve         # long-poll, run commands
     python -m scripts.telegram_agent --brief         # send the daily brief, exit
     python -m scripts.telegram_agent --claim         # capture the owner chat id
+    python -m scripts.telegram_agent --daily         # the daily digest jobs, exit
 
 WHAT THIS IS FOR (Murat, 2026-09-22)
 ====================================
@@ -67,9 +68,9 @@ HELP = """*AEGIS remote*
 
 *Models* (each reply names provider, cost, latency)
 `/ask <q>` local model, started on demand
-`/research <ticker>` OpenClaw quest + local synthesis
+`/research <ticker>` evidence from disk, no model (`--quest` runs the card first)
 `/deep <q>` DeepSeek · add `--nvidia` for NVIDIA
-`/compare <ticker>` one packet to local, DeepSeek, NVIDIA; three graded rows
+`/compare [ticker]` the extraction bake-off table (read-only)
 
 *Simulation*
 `/sim status` what is running and how far in
@@ -293,12 +294,38 @@ HANDLERS = {
 }
 
 
+_DAILY_DONE: dict[str, str] = {}
+
+
+def daily_jobs(*, today=None) -> list[str]:
+    """The digest's once-per-UTC-day jobs, one receipt line each.
+
+    G-fix (adjudication row 7): nothing called `source_reads --grade-promises`,
+    so MU's 2026-09-30 promises would never have been graded. The grader runs
+    here once per UTC day from MODEL_ROUTING_GRADE_PROMISES_FROM on; its own
+    stamp file (`model_routing/grade_promises_daily.jsonl`) keeps it to one run
+    however often the serve loop or `--brief` fires.
+    """
+    from backend.services import model_routing as MR
+    day = str(today or datetime.now(timezone.utc).date())
+    if _DAILY_DONE.get("grade_promises") == day:
+        return []
+    r = MR.grade_promises_daily(today=today)
+    if r.get("action") == "ran" or r.get("reason") == "already ran today":
+        _DAILY_DONE["grade_promises"] = day
+    if r.get("action") != "ran":
+        return []
+    return [f"_promises graded ({r.get('day')}): {r.get('state')} in {r.get('elapsed_s')}s_"
+            + (f" `{TG.redact(r.get('error'))}`" if r.get("error") else "")]
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--serve", action="store_true", help="long-poll and run commands")
     ap.add_argument("--brief", action="store_true", help="send the brief and exit")
     ap.add_argument("--claim", action="store_true", help="capture the owner chat id")
     ap.add_argument("--once", action="store_true", help="one poll pass and exit")
+    ap.add_argument("--daily", action="store_true", help="run the daily digest jobs and exit")
     ap.add_argument("--interval", type=float, default=3.0)
     a = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
@@ -306,8 +333,12 @@ def main(argv=None) -> int:
     if a.claim:
         print(json.dumps(TG.claim_owner(), indent=1))
         return 0
+    if a.daily:
+        print(json.dumps(daily_jobs(), indent=1))
+        return 0
     if a.brief:
-        TG.send(cmd_brief([], {}), tag="brief")
+        extra = daily_jobs()
+        TG.send("\n".join([cmd_brief([], {})] + ([""] + extra if extra else [])), tag="brief")
         print("brief sent")
         return 0
 
@@ -324,6 +355,11 @@ def main(argv=None) -> int:
 
     logger.info("telegram agent serving as %s", TG.me().get("username"))
     while True:
+        try:
+            for line in daily_jobs():
+                TG.send(line, tag="daily")
+        except Exception:                                          # noqa: BLE001
+            logger.exception("daily jobs failed")
         try:
             TG.poll(HANDLERS)
         except TG.TelegramRefused as exc:

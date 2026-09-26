@@ -45,17 +45,101 @@ Both sides follow the same rule: **reuse a healthy server, never adopt it.**
   `healthUrl`, this process reuses it without adopting it (each process only
   manages the child it personally started)." (its docs, quoted)
 * Aegis: `llama_server.ensure(reason)` reuses anything listening; a server it
-  did not start is `foreign` and is never stopped by the idle watchdog.
+  did not start is `foreign` and is never stopped by the watchdog or the reaper.
 
 So whichever starts first owns the stop, and each stops only its own child
-after 15 idle minutes.
+after 15 idle minutes (Aegis's side: the detached reaper, below).
 
-## What /research does
+## What /research does (G-fix, adjudication row 7)
 
-`/research <ticker>` = the thesis-card quest (`thesis_card.quest_prompt`)
-through `openclaw_client.agent` (DeepSeek does the browsing, as before), then
-`thesis_card.synthesize` with the LOCAL model as the synthesiser via
-`llm_analyzer.call_named("local", …)` → `llama_server.ensure("telegram:/research")`.
+Chunk G's version ran the quest with no engine inputs and sent
+`bull/bear/falsifier[:400]` from a LOCAL synthesis: comments, with the quest's
+claims thrown away. Now:
+
+* `/research <T>` is **evidence, no model, $0**: eight fields read from disk,
+  each `n/a: <why>` when its source is missing, in <= 600 characters --
+  HELD (non-twin, non-voided `llm_portfolio` books), RANK (latest
+  `pc_book/*/ranking.json`; only its top 25 is persisted, so a name outside it
+  says so), REV21d (net raises/lowers from `analyst/target_revisions.parquet`),
+  NEXT (earnings estimated from EDGAR 8-K 2.02, the freeze gate's source, else
+  UNKNOWN), STOP (63-day daily sigma, -2 sigma from the last close), CHANGED
+  (the last two thesis cards, `thesis_card.diff_cards`), FORECAST (the latest
+  row in `predictions.jsonl`), FALSIFIER (the latest card's).
+* `/research <T> --quest` first runs `scripts.thesis_cards.run` for T (engine
+  inputs loaded, prior card + open promises passed, card / claims / promises /
+  forecast rows written, synthesis on DeepSeek -- the reviewer's "delete the
+  local synthesis"), then replies with the evidence.
+
+## What /compare does (G-fix)
+
+A READ of the extraction bake-off E-G1 (`model_routing/bakeoff_E-G1_<day>.json`),
+run as a batch: `python -m scripts.bakeoff_eg1`. Direction is not asked
+(held-out direction skill is -7.9%); magnitude stays the forward test in
+`u_forecast`.
+
+## The reaper (G-fix)
+
+The idle watchdog was a thread in whichever process started the server; it died
+with that process, and the lab (which calls `start()` directly) never armed one.
+Now:
+
+* `scripts/llama_reaper.py` is a standalone process. It reads the owner note
+  (`backend/data/optimus/llama_server_owner.json`: `pid`, `started_utc`,
+  `last_used_ts` / `last_used_utc`), stops the server BY PID after
+  `MODEL_ROUTING_IDLE_MIN` (15) idle minutes unless `/slots` shows a request in
+  flight, refuses a listener the note does not name (foreign), and exits when
+  the server is gone.
+* `llama_server.ensure()` spawns it detached
+  (`CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS`) when none is alive
+  (`llama_reaper.pid.json`), and so does `start(bind=False)` -- which covers the
+  lab. With a reaper available, `ensure()` starts the server UNBOUND, so one
+  client's restart no longer kills another client's batch. The frozen .exe has
+  no python to spawn, so it keeps the job-object binding.
+* One reaper at a time, enforced twice. The first E-G1 run spawned **ten
+  reapers in four minutes**: `tasklist` timed out under memory pressure, read as
+  "dead", and every `ensure()` spawned another. Now a spawn within 60 s of the
+  last stamp is skipped, and the reaper takes an exclusive OS lock
+  (`llama_reaper.pid.lock`) and exits at once if another holds it.
+* Tested on real processes (`backend/tests/test_llama_reaper.py`): a real child
+  holding a real loopback socket, a fake owner note, the reaper as a separate
+  process.
+
+## Owed hooks (files this builder does not own)
+
+1. **The daily promise grader has no scheduled caller yet.** The Telegram
+   digest now runs `model_routing.grade_promises_daily()` once per UTC day from
+   2026-09-30 (`telegram_agent --serve` loop, `--brief`, and `--daily`), but
+   the Telegram agent is not running and `--brief` is not a Scheduled Task on
+   this machine (checked 2026-09-26). The scheduled job that DOES run daily is
+   `AegisDailyPass` -> `scripts/daily_pass.py`. Exact patch:
+
+   ```python
+   # scripts/daily_pass.py -- add to STEPS (after "grade_forecasts"):
+   ("grade_promises", "numbered promises vs the 8-K EX-99, once per UTC day (G-fix row 7)"),
+
+   # a handler beside step_grade_forecasts:
+   def step_grade_promises(ctx: dict) -> dict:
+       from backend.services import model_routing as MR
+       t0 = time.time()
+       r = MR.grade_promises_daily()
+       status = {"ran": "ok" if r.get("state") == "OK" else "refused",
+                 "skip": "nothing_to_do"}[r.get("action", "skip")]
+       return _row("grade_promises", status, elapsed_s=round(time.time() - t0, 1),
+                   detail=r.get("reason") or r.get("error") or r.get("state"))
+
+   # _HANDLERS: "grade_promises": step_grade_promises,
+   # backend/config.py DAILY_PASS_STEP_BOX_S: "grade_promises": 600,
+   ```
+
+   Until then, `python -m scripts.telegram_agent --daily` (or
+   `python -m scripts.source_reads --grade-promises`) is the manual form.
+2. **The lab should `touch()` per batch.** `start(bind=False)` now spawns the
+   reaper, but lab loops that call the server directly never `touch()` the
+   note, so a lab-started server is stopped 15 idle minutes after its LAST
+   `ensure()`/`touch()` even while the lab works between requests (a request in
+   flight is protected by `/slots`). Patch in `scripts/always_on_lab.py`: call
+   `llama_server.ensure("lab:<loop>")` before each batch instead of `start()`,
+   and `llama_server.touch("lab:<loop>")` after each request.
 
 ## Not verified
 

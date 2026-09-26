@@ -17,20 +17,19 @@ it cost and how long it took, so the phone shows the price of every answer.
 
     /nav /status /books /forecasts   deterministic   receipts, no model call
     /ask <q>                         local           llama_server.ensure, on demand
-    /research <ticker>               openclaw+local  the thesis-card quest, local synthesis
+    /research <ticker> [--quest]     evidence        nine dated fields from disk, <=600 chars;
+                                                     --quest runs the thesis-card path first
     /deep <q> [--nvidia]             deepseek|nvidia DeepSeek unless --nvidia is in the text
-    /compare <ticker>                all three       ONE packet, three frozen forecast rows
+    /compare [ticker]                bakeoff_read    the E-G1 extraction table (read-only)
 
-/compare IS A MEASUREMENT, NOT A CHAT
-=====================================
-The same evidence packet (hashed) goes to local, DeepSeek and NVIDIA. Each
-answer that states a probability becomes a `PredictionRecord` --
-`specialist = compare:<provider>`, `beats_benchmark` vs SPY at h=5, the raw
-probability unshrunk -- in the same ledger every other forecast lives in, so
-the existing resolver and grader score it like any other row. The receipt
-`model_routing/compare_<date>.json` aggregates cost, latency and (once graded)
-Brier per provider. That is rule 7 of the session order: cost per provider is
-measured, never assumed.
+G-FIX (adjudication row 7, 2026-09-26)
+======================================
+The review found `/research` threw the quest's evidence away and sent comments,
+and `/compare` measured DIRECTION (held-out skill -7.9%) on six price numbers.
+`/research` now answers with evidence (holdings, rank decile, revisions, next
+catalyst, stop in sigma, what changed, forecast id, falsifier); `/compare` reads
+the extraction bake-off E-G1, which grades four arms against the
+analyst-revisions file the same day. Magnitude stays the forward test.
 
 Nothing here places an order, sizes a position, or approves anything.
 """
@@ -57,13 +56,11 @@ ROUTES: dict[str, str] = {
     "books": "deterministic",
     "forecasts": "deterministic",
     "ask": "local",
-    "research": "openclaw+local",
+    "research": "evidence",
     "deep": "deepseek|nvidia",
-    "compare": "local+deepseek+nvidia",
+    "compare": "bakeoff_read",
 }
 DETERMINISTIC = frozenset(k for k, v in ROUTES.items() if v == "deterministic")
-COMPARE_PROVIDERS: tuple[str, ...] = ("local", "deepseek", "nvidia")
-COMPARE_MECHANISM = "model_routing_compare_v1"
 
 
 def ledger_dir() -> Path:
@@ -147,7 +144,7 @@ def status_text(root: Path | None = None, *, llama_status: Callable[[], dict] | 
                      f"pid={st.get('pid')} ({st.get('detail')})")
     except Exception as exc:                                       # noqa: BLE001
         lines.append(f"local model: probe failed `{type(exc).__name__}`")
-    lines.append("_local model starts on demand (/ask, /research, /compare) and stops "
+    lines.append("_local model starts on demand (/ask, batch typing) and the reaper stops it "
                  f"after {int(getattr(_cfg, 'MODEL_ROUTING_IDLE_SHUTDOWN_S', 900))}s idle._")
     return "\n".join(lines)
 
@@ -233,284 +230,874 @@ def deep(text: str, *, call_fn=None) -> tuple[str, dict]:
     return body + footer(r), r
 
 
-def research(ticker: str, *, quest_fn: Callable[[str, str], dict] | None = None,
-             call_fn=None, asof: date | None = None) -> tuple[str, dict]:
-    """The thesis-card quest through OpenClaw, synthesised by the LOCAL model.
+# ─────────────────────────────── /research ──────────────────────────────────
+#
+# G-fix, adjudication row 7. Chunk G's /research ran the quest with NO engine
+# inputs, parsed the twelve answers, X reads, dated claims and promises -- and
+# threw them away, sending bull/bear/falsifier[:400]: comments. The reply is now
+# EVIDENCE: nine dated fields read from files already on disk, each printing
+# `n/a: <why>` when its source is missing (never silently blank), in <= 600
+# characters. No model is called for the reply. `--quest` additionally runs the
+# full thesis-card path (`scripts.thesis_cards.run`: engine inputs loaded, prior
+# card and open promises passed, card + claims + promises + forecast rows
+# written, synthesis on DeepSeek) BEFORE the evidence is read, so "what
+# changed" then includes the card it just wrote.
 
-    The engine side is built with no inputs loaded (UNAVAILABLE, listed as such
-    by `engine_side`): a phone command must not load the 1.3M-row bars panel.
-    """
-    from backend.services import thesis_card as TC
-    t = str(ticker).upper()
-    engine = TC.engine_side(t, asof=asof or date.today())
-    prompt = TC.quest_prompt(t, engine)
-    if quest_fn is None:
-        quest_fn = _openclaw_quest
-    q = quest_fn(t, prompt)
-    web = TC.parse_reply(q.get("reply") or "")
-    synth_calls: list[dict] = []
-
-    def _local(system, user, *, purpose, validate=None):
-        r = _call("local", system, user, purpose=purpose, validate=validate,
-                  ensure_reason="telegram:/research", call_fn=call_fn)
-        synth_calls.append(r)
-        return r.get("text")
-
-    syn = TC.synthesize(engine, web, model="local", call_fn=_local)
-    r = synth_calls[-1] if synth_calls else {"provider": "local", "status": "NOT_CALLED"}
-    lines = [f"*Research* {t}",
-             f"quest: {q.get('status')} · {q.get('latency_s') or q.get('elapsed_s')}s · "
-             f"openclaw cost {q.get('openclaw_cost_usd') or q.get('cost_usd')}",
-             f"web parse: {web.get('parse')}",
-             f"verdict *{syn.get('verdict')}* · confidence {syn.get('confidence')} · "
-             f"synth {syn.get('synth_status')}"]
-    for k in ("bull", "bear", "falsifier"):
-        if syn.get(k):
-            lines.append(f"*{k}*: {str(syn[k])[:400]}")
-    return "\n".join(lines) + footer(r), {"quest": q, "web_parse": web.get("parse"),
-                                          "synth": syn, "local": r}
+RESEARCH_MAX_CHARS = 600
+STOP_SIGMAS = 2.0
+SIGMA_WINDOW = 63
+REVISION_DAYS = 21
 
 
-def _openclaw_quest(ticker: str, prompt: str) -> dict:
-    import tempfile
-    from backend.services import openclaw_client as OC
-    with tempfile.NamedTemporaryFile("w", suffix=".md", delete=False, encoding="utf-8") as fh:
-        fh.write(prompt)
-        msg = fh.name
+def _na(why: str) -> str:
+    return f"n/a: {why}"
+
+
+def _fmt_day(v: Any) -> str:
+    return str(v)[:10] if v else "?"
+
+
+def _holdings(t: str, books_path: Path | None) -> str:
     try:
-        return OC.agent(msg, purpose="telegram:research_quest")
-    finally:
-        Path(msg).unlink(missing_ok=True)
+        from backend.services import llm_portfolio as LP
+        books = LP.read_books(books_path)          # voided books are left out
+    except FileNotFoundError:
+        return _na("no llm_portfolio books.jsonl")
+    except Exception as exc:                                       # noqa: BLE001
+        return _na(f"books unreadable ({type(exc).__name__})")
+    held = []
+    n_books = 0
+    for b in books:
+        if b.get("kind") == "twin":
+            continue
+        n_books += 1
+        for p in b.get("positions") or []:
+            if str(p.get("ticker", "")).upper() == t:
+                held.append((float(p.get("weight") or 0.0), str(b.get("name"))))
+    if not n_books:
+        return _na("no frozen non-twin book")
+    if not held:
+        return f"none of {n_books} books"
+    held.sort(reverse=True)
+    s = ", ".join(f"{n[:22]} {w * 100:.1f}%" for w, n in held[:3])
+    return f"{len(held)}/{n_books} books: {s}" + (" ..." if len(held) > 3 else "")
 
 
-# ─────────────────────────────── /compare ───────────────────────────────────
-
-COMPARE_SYSTEM = (
-    "You are one of several independent forecasters given the SAME evidence packet. "
-    "Question: will this stock's total return over the next 5 trading sessions beat "
-    "SPY's? Use only the packet. Reply in at most 120 words, then exactly three final "
-    "lines:\nFOR: <one sentence>\nAGAINST: <one sentence>\nP_BEATS_SPY_5D: <a number "
-    "between 0 and 1>")
-
-_P_RE = re.compile(r"P_BEATS_SPY_5D\s*[:=]\s*\**\s*([01](?:\.\d+)?|\.\d+)", re.I)
+def _latest_ranking(root: Path) -> tuple[Path | None, dict | None]:
+    files = sorted((root / "pc_book").glob("*/ranking.json"))
+    if not files:
+        return None, None
+    return files[-1], _load(files[-1])
 
 
-def parse_probability(text: str | None) -> float | None:
-    """The stated probability, or None -- never coerced, never defaulted to 0.5."""
-    if not text:
-        return None
-    m = _P_RE.findall(text)
-    if not m:
-        return None
+def _rank(t: str, root: Path) -> str:
+    p, r = _latest_ranking(root)
+    if not r:
+        return _na("no pc_book/*/ranking.json receipt")
+    for x in r.get("top") or []:
+        if str(x.get("symbol", "")).upper() == t:
+            er = x.get("expected_relative_return_21d_net")
+            return (f"{x.get('rank')}/{r.get('n_eligible')} decile {x.get('decile')} "
+                    f"E[r21 net rel] {'unmeasured' if er is None else f'{float(er) * 100:+.2f}%'}"
+                    f" (asof {r.get('asof')})")
+    return _na(f"not in the top {len(r.get('top') or [])} the receipt persists "
+               f"(asof {r.get('asof')}, {r.get('n_eligible')} eligible)")
+
+
+def _revisions(t: str, today: date, root: Path, revisions=None) -> str:
     try:
-        p = float(m[-1])
-    except ValueError:
-        return None
-    return p if 0.0 <= p <= 1.0 else None
+        import pandas as pd
+        from backend.services import revision_flow as RF
+        if revisions is None:
+            path = root / "analyst" / "target_revisions.parquet"
+            if not path.exists():
+                return _na("no analyst/target_revisions.parquet")
+            revisions = pd.read_parquet(path, filters=[("ticker", "in", [t])])
+        rv = revisions[revisions["ticker"].astype(str).str.upper() == t]
+        if rv.empty:
+            return _na("ticker absent from the revisions file")
+        prep = RF.prepare(rv)
+        hi = pd.Timestamp(today) + pd.Timedelta(days=1)
+        lo = pd.Timestamp(today) - pd.Timedelta(days=REVISION_DAYS)
+        w = prep[(prep["t"] >= lo) & (prep["t"] < hi)]
+        if w.empty:
+            return f"0 in {REVISION_DAYS}d (last {_fmt_day(prep['t'].max())})"
+        up, dn = int((w["sign"] > 0).sum()), int((w["sign"] < 0).sum())
+        return (f"net {up - dn:+d} ({up} up/{dn} down, {w['firm'].nunique()} firms), "
+                f"last {_fmt_day(w['t'].max())}")
+    except Exception as exc:                                       # noqa: BLE001
+        return _na(f"revisions unreadable ({type(exc).__name__}: {str(exc)[:60]})")
 
 
-def _line(text: str | None, key: str) -> str | None:
-    for ln in (text or "").splitlines():
-        if ln.strip().upper().startswith(key + ":"):
-            return ln.split(":", 1)[1].strip() or None
-    return None
+EIGHTK_FILE_MAX_AGE_DAYS = 30
 
 
-def build_packet(ticker: str, *, asof: date | None = None,
-                 bars_path: Path | None = None, bars=None) -> dict:
-    """The ONE evidence packet: point-in-time price facts from the local panel.
-
-    Reads only this ticker's rows (a filtered parquet read). `bars`, when given,
-    is a DataFrame with `date`/`close` and replaces the read (tests).
-    """
-    t = str(ticker).upper()
-    a = asof or date.today()
-    pkt: dict[str, Any] = {"ticker": t, "asof": str(a), "benchmark": "SPY",
-                           "question": "P(5-session total return > SPY's)",
-                           "source": "prices_2025_26/bars.parquet (close <= asof)"}
+def _catalyst(t: str, today: date, root: Path, eightk=None) -> str:
+    """Next earnings print, ESTIMATED from EDGAR 8-K item 2.02 (the factory's
+    freeze-gate source): the year-ago 2.02 + 364d, else the last 2.02 + 91d.
+    Stale file or no 2.02 history -> UNKNOWN."""
     try:
+        import pandas as pd
+        if eightk is None:
+            path = root / "edgar_8k" / "eightk_items.parquet"
+            if not path.exists():
+                return "UNKNOWN (no edgar_8k/eightk_items.parquet)"
+            eightk = pd.read_parquet(path, columns=["ticker", "filing_date", "items_joined"])
+        ek = eightk.copy()
+        ek["filing_date"] = pd.to_datetime(ek["filing_date"], errors="coerce")
+        ek = ek[ek["filing_date"].notna() & (ek["filing_date"] <= pd.Timestamp(today))]
+        end = ek["filing_date"].max() if len(ek) else None
+        if end is None or (pd.Timestamp(today) - end).days > EIGHTK_FILE_MAX_AGE_DAYS:
+            return f"UNKNOWN (8-K file ends {_fmt_day(end)})"
+        e = ek[(ek["ticker"].astype(str).str.upper() == t)
+               & ek["items_joined"].fillna("").astype(str).str.contains("2.02", regex=False)]
+        if e.empty:
+            return "UNKNOWN (no 8-K 2.02 history)"
+        dates = sorted(e["filing_date"])
+        last = dates[-1]
+        # the NEXT print after the last one: a year-ago 2.02 + 364d that lands
+        # more than 30 days after the last print, else the last + 91d
+        yago = [d + pd.Timedelta(days=364) for d in dates
+                if d + pd.Timedelta(days=364) > last + pd.Timedelta(days=30)]
+        est, rule = ((min(yago), "year-ago 2.02 +364d") if yago
+                     else (last + pd.Timedelta(days=91), "last 2.02 +91d"))
+        late = (f", after the file's end {_fmt_day(end)}: not yet seen"
+                if est < pd.Timestamp(today) and est > end else "")
+        return (f"earnings est {_fmt_day(est)} ({rule}; last 2.02 {_fmt_day(last)}{late})")
+    except Exception as exc:                                       # noqa: BLE001
+        return f"UNKNOWN ({type(exc).__name__})"
+
+
+def _stop(t: str, today: date, root: Path, bars=None) -> str:
+    try:
+        import pandas as pd
         if bars is None:
-            import pandas as pd
-            path = bars_path or (ledger_dir() / "prices_2025_26" / "bars.parquet")
-            bars = pd.read_parquet(path, columns=["symbol", "date", "close", "volume"],
-                                   filters=[("symbol", "in", [t, "SPY"])])
-        df = bars.copy()
-        if "symbol" not in df.columns:
-            df["symbol"] = t
-        df["d"] = df["date"].astype(str).str[:10]
-        df = df[df["d"] <= str(a)].sort_values("d")
-
-        def _facts(sym: str) -> dict:
-            s = df[df["symbol"] == sym]["close"].astype(float).tolist()
-            if len(s) < 2:
-                return {"n_bars": len(s)}
-
-            def ret(n: int):
-                return round(s[-1] / s[-1 - n] - 1.0, 4) if len(s) > n else None
-            rets = [s[i] / s[i - 1] - 1.0 for i in range(max(1, len(s) - 21), len(s))]
-            mu = sum(rets) / len(rets)
-            vol = math.sqrt(sum((x - mu) ** 2 for x in rets) / max(1, len(rets) - 1))
-            return {"n_bars": len(s), "last_close": round(s[-1], 4),
-                    "ret_5d": ret(5), "ret_21d": ret(21), "ret_63d": ret(63),
-                    "vol_21d_daily": round(vol, 4)}
-        pkt["stock"] = _facts(t)
-        pkt["spy"] = _facts("SPY")
-        pkt["last_bar"] = df["d"].iloc[-1] if len(df) else None
+            path = root / "prices_2025_26" / "bars.parquet"
+            if not path.exists():
+                return _na("no prices_2025_26/bars.parquet")
+            bars = pd.read_parquet(path, columns=["symbol", "date", "close"],
+                                   filters=[("symbol", "in", [t])])
+        b = bars[bars["symbol"].astype(str).str.upper() == t].copy()
+        b["d"] = pd.to_datetime(b["date"])
+        b = b[b["d"] <= pd.Timestamp(today)].sort_values("d")
+        c = b["close"].astype(float).tolist()
+        if len(c) < SIGMA_WINDOW + 1:
+            return _na(f"{len(c)} bars < {SIGMA_WINDOW + 1}")
+        r = [c[i] / c[i - 1] - 1.0 for i in range(len(c) - SIGMA_WINDOW, len(c))]
+        mu = sum(r) / len(r)
+        sd = math.sqrt(sum((x - mu) ** 2 for x in r) / (len(r) - 1))
+        px = c[-1]
+        stop = px * (1.0 - STOP_SIGMAS * sd)
+        return (f"1σ/day {sd * 100:.2f}% ({SIGMA_WINDOW}d) -> -{STOP_SIGMAS:g}σ "
+                f"${stop:,.2f} from ${px:,.2f} ({_fmt_day(b['d'].iloc[-1])})")
     except Exception as exc:                                       # noqa: BLE001
-        pkt["price_facts"] = f"UNAVAILABLE: {type(exc).__name__}: {str(exc)[:160]}"
-    return pkt
+        return _na(f"bars unreadable ({type(exc).__name__})")
 
 
-def packet_hash(packet: dict) -> str:
-    from backend.services.belief_state import _hash
-    return _hash(packet)
-
-
-def compare(ticker: str, *, packet: dict | None = None, call_fn=None,
-            ledger_path: Path | None = None, receipt_root: Path | None = None,
-            providers: tuple[str, ...] = COMPARE_PROVIDERS,
-            asof: date | None = None) -> tuple[str, dict]:
-    """ONE packet -> local, DeepSeek, NVIDIA -> one frozen forecast row each."""
-    from backend.services import belief_state as B
-    t = str(ticker).upper()
-    a = asof or date.today()
-    pkt = packet if packet is not None else build_packet(t, asof=a)
-    h = packet_hash(pkt)
-    user = "EVIDENCE PACKET:\n" + json.dumps(pkt, sort_keys=True, default=str)
-    horizon = int(getattr(_cfg, "MODEL_ROUTING_COMPARE_HORIZON", 5))
-    bench = str(getattr(_cfg, "MODEL_ROUTING_COMPARE_BENCHMARK", "SPY"))
-    answers, rows = [], []
-    for prov in providers:
-        r = _call(prov, COMPARE_SYSTEM, user, purpose=f"compare:{prov}",
-                  ensure_reason="telegram:/compare", call_fn=call_fn,
-                  validate=lambda txt: parse_probability(txt) is not None)
-        p = parse_probability(r.get("text"))
-        ans = {"provider": prov, "model": r.get("model"), "status": r.get("status"),
-               "cost_usd": r.get("cost_usd"), "cost_status": r.get("cost_status"),
-               "latency_s": r.get("latency_s"), "p": p, "prediction_id": None,
-               "error": r.get("error")}
-        if r.get("ok") and p is not None:
-            rec = B.make_prediction(
-                ticker=t, specialist=f"compare:{prov}",
-                observable=B.Observable.BEATS_BENCHMARK, horizon_days=horizon,
-                benchmark=bench, probability=p, raw_probability=p,
-                shrink_basis="none: raw model probability, unshrunk (compare route)",
-                thesis=(_line(r["text"], "FOR") or r["text"][:400]),
-                counter_thesis=(_line(r["text"], "AGAINST") or "not stated by the model"),
-                next_observable=f"{t} total return vs {bench} over {horizon} sessions",
-                model=str(r.get("model")), model_version=str(r.get("model")),
-                prompt=COMPARE_SYSTEM + "\n" + user, input_snapshot=pkt,
-                mechanism_id=COMPARE_MECHANISM, decision_date=str(a),
-                inputs_used={"packet_hash": h, "provider": prov},
-                licence="PRODUCT_EXPERIMENT",
-                notes_text=(f"compare packet_hash={h} cost_usd={r.get('cost_usd')} "
-                            f"latency_s={r.get('latency_s')}"))
-            rows.append(rec)
-            ans["prediction_id"] = rec.prediction_id
-        elif r.get("ok"):
-            ans["status"] = "NO_PROBABILITY"
-        answers.append(ans)
-    if rows:
-        B.append(rows, ledger_path)
-    event = {"at": _now(), "ticker": t, "asof": str(a), "packet_hash": h,
-             "horizon_days": horizon, "benchmark": bench, "answers": answers}
-    receipt = write_compare_receipt(event, root=receipt_root, ledger_path=ledger_path)
-    lines = [f"*Compare* {t} · packet `{h}` · h={horizon} vs {bench}"]
-    for x in answers:
-        c = ("UNPRICED" if x["cost_usd"] is None and x.get("cost_status") == "UNPRICED"
-             else "n/a" if x["cost_usd"] is None else f"${float(x['cost_usd']):.5f}")
-        lat = "n/a" if x["latency_s"] is None else f"{float(x['latency_s']):.1f}s"
-        p_txt = "--" if x["p"] is None else f"{x['p']:.2f}"
-        lines.append(f"`{x['provider']}` p={p_txt} · {x['status']} · cost {c} · {lat}")
-    lines.append(f"_{len(rows)} row(s) frozen as `compare:<provider>`; graded when "
-                 f"{horizon} sessions have passed. Receipt `{receipt.name}`._")
-    return "\n".join(lines), {"packet_hash": h, "answers": answers,
-                              "prediction_ids": [r.prediction_id for r in rows],
-                              "receipt": str(receipt)}
-
-
-def _brier_by_provider(ledger_path: Path | None) -> dict:
-    from backend.services import belief_state as B
+def _cards(t: str, cards_root: Path | None) -> tuple[str, str]:
+    """(what changed since the previous card, the falsifier)."""
     try:
-        preds = B.read_predictions(ledger_path) if ledger_path else B.read_predictions()
+        from backend.services import thesis_card as TC
+        hist = TC.card_history(t, root=cards_root)
     except Exception as exc:                                       # noqa: BLE001
-        return {"_error": f"{type(exc).__name__}: {exc}"}
-    out: dict[str, dict] = {}
-    for r in preds:
-        sp = str(r.get("specialist") or "")
-        if not sp.startswith("compare:"):
-            continue
-        prov = sp.split(":", 1)[1]
-        b = out.setdefault(prov, {"n_rows": 0, "n_graded": 0, "brier": None, "_sq": 0.0})
-        b["n_rows"] += 1
-        o = r.get("outcome")
-        if o is None:
-            continue
-        try:
-            y = float(o)
-        except (TypeError, ValueError):
-            continue
-        b["n_graded"] += 1
-        b["_sq"] += (float(r["probability"]) - y) ** 2
-    for b in out.values():
-        b["brier"] = round(b["_sq"] / b["n_graded"], 5) if b["n_graded"] else None
-        b.pop("_sq")
+        why = _na(f"card ledger unreadable ({type(exc).__name__})")
+        return why, why
+    if not hist:
+        return _na("no thesis card for this ticker"), _na("no thesis card")
+    cur = hist[-1]
+    fal = cur.get("falsifier") or cur.get("web_what_would_falsify")
+    fal = str(fal) if fal else _na(f"card {cur.get('asof')} states none")
+    if len(hist) == 1:
+        return (f"first card {cur.get('asof')} ({cur.get('verdict')}/{cur.get('confidence')}, "
+                f"{len(cur.get('claims') or [])} dated claims)"), fal
+    d = TC.diff_cards(hist[-2], cur)
+    if d.get("schema_change"):
+        ch = f"schema {d['schema_change']}"
+    else:
+        ch = (f"{len(d.get('changed') or [])} answers changed, {len(d.get('new') or [])} new"
+              + (f", verdict {d['verdict_change']}" if d.get("verdict_change") else ", verdict same"))
+    return f"{hist[-2].get('asof')}->{cur.get('asof')}: {ch}", fal
+
+
+def _forecast(t: str, predictions_path: Path | None) -> str:
+    from backend.services import belief_state as B
+    path = Path(predictions_path or B.PREDICTIONS)
+    if not path.exists():
+        return _na("no predictions.jsonl")
+    needle = f'"ticker": "{t}"'
+    best = None
+    try:
+        with path.open(encoding="utf-8") as fh:
+            for line in fh:
+                if needle not in line:
+                    continue
+                try:
+                    r = json.loads(line)
+                except ValueError:
+                    continue
+                if str(r.get("ticker", "")).upper() != t:
+                    continue
+                if best is None or str(r.get("made_at") or "") > str(best.get("made_at") or ""):
+                    best = r
+    except OSError as exc:
+        return _na(f"predictions unreadable ({type(exc).__name__})")
+    if best is None:
+        return _na("no forecast row for this ticker")
+    p = best.get("probability")
+    return (f"{best.get('prediction_id')} {str(best.get('specialist'))[:24]} "
+            f"{best.get('observable')} h={best.get('horizon_days')} "
+            f"p={'?' if p is None else f'{float(p):.2f}'} ({_fmt_day(best.get('made_at'))})")
+
+
+EVIDENCE_FIELDS = ("HELD", "RANK", "REV21d", "NEXT", "STOP", "CHANGED", "FORECAST",
+                   "FALSIFIER")
+
+
+def evidence(ticker: str, *, root: Path | None = None, today: date | None = None,
+             bars=None, revisions=None, eightk=None, books_path: Path | None = None,
+             cards_root: Path | None = None, predictions_path: Path | None = None) -> dict:
+    """The eight evidence fields for `ticker`, each a string (value or `n/a: why`)."""
+    t = str(ticker).upper().strip()
+    root = root or ledger_dir()
+    today = today or date.today()
+    changed, falsifier = _cards(t, cards_root)
+    return {"ticker": t, "asof": str(today),
+            "HELD": _holdings(t, books_path),
+            "RANK": _rank(t, root),
+            "REV21d": _revisions(t, today, root, revisions),
+            "NEXT": _catalyst(t, today, root, eightk),
+            "STOP": _stop(t, today, root, bars),
+            "CHANGED": changed,
+            "FORECAST": _forecast(t, predictions_path),
+            "FALSIFIER": falsifier}
+
+
+def evidence_text(ev: dict, *, max_chars: int = RESEARCH_MAX_CHARS) -> str:
+    """At most `max_chars`, every field present: the longest line is trimmed
+    first, so a long falsifier never pushes the holdings off the screen."""
+    head = f"{ev['ticker']} {ev['asof']} evidence"
+    lines = {k: str(ev.get(k) or _na("missing")) for k in EVIDENCE_FIELDS}
+
+    def total() -> int:
+        return len(head) + sum(len(k) + 2 + len(v) + 1 for k, v in lines.items())
+    while total() > max_chars:
+        k = max(lines, key=lambda x: len(lines[x]))
+        over = total() - max_chars
+        v = lines[k]
+        keep = max(12, len(v) - over - 1)
+        if keep >= len(v):
+            break
+        lines[k] = v[:keep].rstrip() + "…"
+    return "\n".join([head] + [f"{k}: {v}" for k, v in lines.items()])
+
+
+def research(ticker: str, *, quest: bool = False,
+             quest_fn: Callable[[str], dict] | None = None, **ev_kw) -> tuple[str, dict]:
+    """`/research T` -> the evidence reply ($0, no model). `/research T --quest`
+    -> the full thesis-card run first (card, claims, promises, forecast rows,
+    DeepSeek synthesis), then the evidence reply."""
+    t = str(ticker).upper().strip()
+    run = None
+    if quest:
+        run = (quest_fn or _thesis_card_run)(t)
+    ev = evidence(t, **ev_kw)
+    text = evidence_text(ev)
+    if run is not None:
+        tail = (f"\n_card run: {run.get('state')} · done {len(run.get('done') or [])} · "
+                f"refused {len(run.get('refused') or [])} · "
+                f"forecast rows {run.get('forecast_rows_written')}_")
+        text += tail
+    return text, {"evidence": ev, "card_run": run, "chars": len(text)}
+
+
+def _thesis_card_run(ticker: str) -> dict:
+    from scripts import thesis_cards as TCS
+    return TCS.run(universe=[{"ticker": ticker, "kind": "personal",
+                              "source": "telegram:/research"}],
+                   max_quests=1, retry_refused=True)
+
+
+# ─────────────────────────────── /compare = bake-off E-G1 ───────────────────
+#
+# G-fix, adjudication row 7. Chunk G's /compare asked three models "P(5-day
+# return > SPY)" on six price numbers: DIRECTION, where this system's held-out
+# skill is -7.9% -- a noise contest -- at a tap rate that needs years for a
+# read-out. DeepSeek's value here is READING text into typed fields, so the
+# routing question is answered by EXTRACTION accuracy against mechanical truth:
+#
+#   240 dated news items (first_seen_utc <= 2026-09-20, archive rows excluded by
+#   `news_registry.grade_row`) -> four arms (local llama-server, deepseek-chat,
+#   the NVIDIA instruct adjudicator, a rules baseline) -> {ticker, event_type
+#   (the full vocabulary enum IS in the system prompt), direction,
+#   magnitude_bucket} -> graded against `analyst/target_revisions.parquet`.
+#
+# GOLD, declared before the run:
+#   MATCHED   (180): the item's text names an analyst action AND a tagged
+#             ticker has a raise/lower (target_action Raises/Lowers, else
+#             action up/down) dated in [published - 2d, first_seen + 5
+#             sessions]. Gold event_type = the analyst family
+#             {analyst_rating_change, analyst_target_change,
+#             analyst_initiation}; gold direction = the sign of the net
+#             revisions (ungraded when they net to zero).
+#   UNMATCHED (60):  no analyst words and NO revision of any kind for any
+#             tagged ticker in the window. Gold = "not an analyst event": an
+#             analyst_* answer is an invented fact. Direction ungraded.
+#   ticker:   correct when the answer is one of the item's tagged tickers.
+# The lower bound reaches 2 days before `published_utc` because an article
+# reports an action that already happened; "within 5 sessions after
+# first_seen" alone would miss the very revision the article is about.
+#
+# Magnitude is NOT graded here: it stays the forward test (u_forecast).
+
+BAKEOFF_ID = "E-G1"
+ANALYST_TYPES = frozenset({"analyst_rating_change", "analyst_target_change",
+                           "analyst_initiation"})
+BAKEOFF_ARMS: tuple[str, ...] = ("rules", "deepseek", "nvidia", "local")
+#: Words that name an analyst ACTION, not analysts in general: "Analysts
+#: expect AI capex..." is not a rating change (the first dry run's item 0 was
+#: exactly that, so a bare `analyst` was dropped before any arm was called).
+#: Read on the TITLE only, and verb forms only: the second dry run found
+#: "Apple Watch ... Every upgrade" and "Is AMETEK Outperforming the S&P 500?"
+#: matched on body/noun forms. Both were removed before any arm was called.
+_ANALYST_WORDS = re.compile(
+    r"price target|\bPT\b|\b(?:up|down)graded\b|\b(?:up|down)grades?\s+(?:\S+\s+){0,4}to\b|"
+    r"initiat\w* (?:coverage|at\b)|reiterat\w*|\boutperform\b|\boverweight\b|"
+    r"\bunderweight\b|(?:buy|sell|hold|neutral) rating|"
+    r"(?:raise|lift|boost|hike|cut|lower|trim|slash)(?:s|es|ed)? (?:\S+ ){0,3}targets?", re.I)
+_HTML = re.compile(r"<[^>]+>")
+
+
+def _plain(s: Any, n: int = 1500) -> str:
+    import html as _html
+    t = _html.unescape(_HTML.sub(" ", str(s or "")))
+    return re.sub(r"\s+", " ", t).strip()[:n]
+
+
+def bakeoff_system() -> str:
+    """The system prompt, WITH the enum it refers to (a prompt that names a
+    schema it never sends is the 2026-09-13 defect: 54% refusals)."""
+    from backend.services import event_vocabulary as V
+    ids = "\n".join(f"- {i}" for i in V.EVENT_TYPES)
+    return (
+        "You extract ONE structured event from one financial news document. Output "
+        "exactly one JSON object with exactly these four keys and nothing else:\n"
+        '{"ticker": "<the primary listed ticker the document is about, uppercase, no '
+        'exchange prefix; null if none>", "event_type": "<one id from the list '
+        'below>", "direction": <-1, 0 or 1 for that ticker>, "magnitude_bucket": '
+        f'"<one of {", ".join(V.MAGNITUDE_BUCKETS)}>"}}\n'
+        "Rules: event_type must be copied EXACTLY from the list; if nothing dated and "
+        "decision-relevant about the company is reported, use no_event. direction is "
+        "relative to that ticker only (an upgrade or a raised price target is +1, a "
+        "downgrade or a cut target is -1). magnitude_bucket is the typical 1-2 session "
+        "absolute move for an event of this type: NEGLIGIBLE <0.5%, SMALL 0.5-2%, "
+        "MODERATE 2-5%, LARGE 5-10%, EXTREME >=10%. Do not invent facts the document "
+        "does not state. No markdown, no prose.\n\n"
+        f"The {len(V.EVENT_TYPES)} event_type ids:\n{ids}")
+
+
+def bakeoff_user(item: dict) -> str:
+    return (f"Document date: {item['document_date']}\nSource: {item['source']}\n"
+            f"Title: {item['title']}\nBody (may be truncated): {item['body']}\n\n"
+            "Output the JSON object only.")
+
+
+def parse_extraction(text: str | None) -> tuple[dict | None, str | None]:
+    """(parsed, refusal_reason). Out-of-enum values are a refusal, never coerced."""
+    from backend.services import event_vocabulary as V
+    if not text:
+        return None, "EMPTY"
+    m = re.search(r"\{.*\}", text, re.S)
+    if not m:
+        return None, "UNPARSEABLE"
+    try:
+        d = json.loads(m.group(0))
+    except ValueError:
+        return None, "UNPARSEABLE"
+    if not isinstance(d, dict):
+        return None, "UNPARSEABLE"
+    et = str(d.get("event_type") or "").strip()
+    if et not in V.EVENT_TYPES:
+        return None, f"SCHEMA:event_type={et[:40]!r}"
+    try:
+        di = int(d.get("direction"))
+    except (TypeError, ValueError):
+        return None, "SCHEMA:direction"
+    if di not in (-1, 0, 1):
+        return None, "SCHEMA:direction"
+    mb = str(d.get("magnitude_bucket") or "").strip().upper()
+    tk = d.get("ticker")
+    return {"ticker": None if tk in (None, "", "null") else str(tk),
+            "event_type": et, "direction": di,
+            "magnitude_bucket": mb if mb in V.MAGNITUDE_BUCKETS else None}, None
+
+
+_RULE_TICKER = [
+    re.compile(r"\((?:NYSE|NASDAQ|Nasdaq|NYSE ?American|AMEX|OTC\w*|TSX|LSE)\s*[:\s]\s*"
+               r"([A-Z][A-Z0-9.]{0,6})\)"),
+    re.compile(r"\$([A-Z]{1,5})\b"),
+    re.compile(r"\(([A-Z]{1,5})\)"),
+]
+
+
+def rules_arm(item: dict) -> dict:
+    """The $0 baseline every model must beat: regexes, no reading."""
+    txt = f"{item['title']} {item['body']}"
+    tk = None
+    for rx in _RULE_TICKER:
+        m = rx.search(txt)
+        if m:
+            tk = m.group(1)
+            break
+    low = txt.lower()
+    if "price target" in low or re.search(r"\bpt\b", low):
+        et = "analyst_target_change"
+    elif "upgrad" in low or "downgrad" in low:
+        et = "analyst_rating_change"
+    elif re.search(r"initiat\w* (coverage|at)", low):
+        et = "analyst_initiation"
+    elif re.search(r"earnings|quarterly results|\bq[1-4]\b.*results|eps", low):
+        et = "earnings_report"
+    elif re.search(r"acquir|merger|to buy\b|takeover", low):
+        et = "mergers_acquisitions"
+    elif "guidance" in low or "outlook" in low:
+        et = "guidance_change"
+    elif "dividend" in low:
+        et = "regular_dividend_declaration"
+    else:
+        et = "no_event"
+    up = len(re.findall(r"upgrad|raise|boost|lift|beat|surge|jump|outperform|overweight", low))
+    dn = len(re.findall(r"downgrad|lower|cut|trim|miss|plunge|fall|underperform|underweight", low))
+    return {"ticker": tk, "event_type": et, "direction": (up > dn) - (dn > up),
+            "magnitude_bucket": "SMALL"}
+
+
+def _norm_tk(x: Any) -> str:
+    s = str(x or "").upper().strip().lstrip("$")
+    s = s.split(":")[-1].strip()
+    return s
+
+
+def grade_extraction(pred: dict | None, item: dict) -> dict:
+    """Per-field correctness (True/False/None=ungraded). A refusal is wrong on
+    every graded field -- a model that answers nothing is not accurate."""
+    gold = item["gold"]
+    tks = {_norm_tk(t) for t in item.get("tickers") or []}
+    tks |= {t.split(".")[0] for t in tks}
+    out: dict[str, Any] = {"ticker": False, "event_type": False,
+                           "direction": None if gold.get("direction") in (None, 0) else False}
+    if pred is None:
+        return out
+    ptk = _norm_tk(pred.get("ticker"))
+    out["ticker"] = bool(ptk) and (ptk in tks or ptk.split(".")[0] in tks)
+    et = pred.get("event_type")
+    out["event_type"] = (et in ANALYST_TYPES) if gold["stratum"] == "matched" \
+        else (et not in ANALYST_TYPES)
+    if out["direction"] is not None:
+        out["direction"] = int(pred.get("direction") or 0) == int(gold["direction"])
+    out["invented_analyst"] = (gold["stratum"] == "unmatched" and et in ANALYST_TYPES)
     return out
 
 
-def write_compare_receipt(event: dict, *, root: Path | None = None,
-                          ledger_path: Path | None = None,
-                          day: str | None = None) -> Path:
-    """Append the event to `compare_<day>.json` and re-derive the aggregates."""
-    d = receipt_dir(root)
-    d.mkdir(parents=True, exist_ok=True)
-    day = day or str(date.today())
-    path = d / f"compare_{day}.json"
-    cur = _load(path) or {}
-    events = list(cur.get("events") or []) + [event]
-    agg: dict[str, dict] = {}
-    for e in events:
-        for x in e.get("answers") or []:
-            a = agg.setdefault(x["provider"], {"n_calls": 0, "n_ok": 0, "n_rows": 0,
-                                               "cost_usd": 0.0, "n_unpriced": 0,
-                                               "latency_s_sum": 0.0, "n_latency": 0})
-            a["n_calls"] += 1
-            a["n_ok"] += int(x.get("status") == "OK")
-            a["n_rows"] += int(bool(x.get("prediction_id")))
-            if x.get("cost_usd") is None:
-                a["n_unpriced"] += 1
-            else:
-                a["cost_usd"] = round(a["cost_usd"] + float(x["cost_usd"]), 8)
-            if x.get("latency_s") is not None:
-                a["latency_s_sum"] += float(x["latency_s"])
-                a["n_latency"] += 1
-    for a in agg.values():
-        a["mean_latency_s"] = (round(a["latency_s_sum"] / a["n_latency"], 3)
-                               if a["n_latency"] else None)
-        a["cost_per_row_usd"] = (round(a["cost_usd"] / a["n_rows"], 8) if a["n_rows"] else None)
-        a.pop("latency_s_sum")
-        a.pop("n_latency")
-    doc = {"receipt": "model_routing_compare", "schema": "model_routing_compare/1",
-           "day": day, "licence": "PRODUCT_EXPERIMENT", "updated_utc": _now(),
-           "n_events": len(events), "by_provider": agg,
-           "graded_by_provider": _brier_by_provider(ledger_path),
-           "read_me_first": ("Every /compare sends ONE hashed packet to local, DeepSeek and "
-                             "NVIDIA; each stated probability is a frozen forecast row "
-                             "(specialist compare:<provider>, beats_benchmark vs SPY, h=5, "
-                             "raw p). cost_usd sums telemetry-priced calls; n_unpriced counts "
-                             "calls whose cost is unknown (a total with any is a LOWER BOUND). "
-                             "Brier appears once the grader has resolved rows."),
-           "events": events}
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(doc, indent=1, default=str), encoding="utf-8")
-    tmp.replace(path)
-    return path
+def bakeoff_sample(*, n: int | None = None, n_matched: int | None = None,
+                   seen_max: str | None = None, seed: int = 20260926,
+                   corpus_dir: Path | None = None, revisions=None,
+                   root: Path | None = None) -> tuple[list[dict], dict]:
+    """(items, census). Deterministic under `seed`; archive rows excluded."""
+    import random
+
+    import pandas as pd
+    from backend.services import news_registry as NR
+    n = int(n or getattr(_cfg, "MODEL_ROUTING_BAKEOFF_N", 240))
+    n_matched = int(n_matched if n_matched is not None
+                    else getattr(_cfg, "MODEL_ROUTING_BAKEOFF_N_MATCHED", 180))
+    seen_max = str(seen_max or getattr(_cfg, "MODEL_ROUTING_BAKEOFF_SEEN_MAX", "2026-09-20"))
+    after = int(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_SESSIONS_AFTER", 5))
+    before = int(getattr(_cfg, "MODEL_ROUTING_BAKEOFF_DAYS_BEFORE", 2))
+    root = root or ledger_dir()
+    corpus_dir = Path(corpus_dir or root / "news_corpus")
+    if revisions is None:
+        revisions = pd.read_parquet(root / "analyst" / "target_revisions.parquet",
+                                    columns=["ticker", "event_date", "target_action", "action"])
+    rv = revisions.copy()
+    rv["t"] = pd.to_datetime(rv["event_date"], errors="coerce").dt.normalize()
+    rv = rv[rv["t"].notna()]
+    ta = rv["target_action"].astype(str).str.lower()
+    act = rv["action"].astype(str).str.lower()
+    rv["sign"] = 0
+    rv.loc[ta.str.startswith("rais"), "sign"] = 1
+    rv.loc[ta.str.startswith("lower"), "sign"] = -1
+    rv.loc[(rv["sign"] == 0) & (act == "up"), "sign"] = 1
+    rv.loc[(rv["sign"] == 0) & (act == "down"), "sign"] = -1
+    rv["ticker"] = rv["ticker"].astype(str).str.upper()
+    by_t = {k: v for k, v in rv.groupby("ticker")}
+    census = {"rows_read": 0, "after_seen_max": 0, "archive": 0, "no_ticker": 0,
+              "matched_pool": 0, "unmatched_pool": 0, "neither": 0, "dupe_title": 0}
+    matched, unmatched, seen_titles = [], [], set()
+    for d in sorted(p for p in corpus_dir.iterdir() if p.is_dir() and not p.name.startswith("_")):
+        for f in sorted(d.glob("*.jsonl")):
+            with open(f, encoding="utf-8") as fh:
+                for line in fh:
+                    try:
+                        r = json.loads(line)
+                    except ValueError:
+                        continue
+                    census["rows_read"] += 1
+                    fs = str(r.get("first_seen_utc") or "")[:10]
+                    if not fs or fs > seen_max:
+                        census["after_seen_max"] += 1
+                        continue
+                    g = NR.grade_row(r)
+                    if g.get("pit_grade") == NR.ARCHIVE_GRADE:
+                        census["archive"] += 1
+                        continue
+                    tickers = [str(x).upper() for x in (r.get("tickers") or []) if x]
+                    if not tickers:
+                        census["no_ticker"] += 1
+                        continue
+                    title = _plain(r.get("title"), 300)
+                    if not title or title.lower() in seen_titles:
+                        census["dupe_title"] += 1
+                        continue
+                    pub = str(r.get("published_utc") or fs)[:10]
+                    lo = pd.Timestamp(pub) - pd.Timedelta(days=before)
+                    hi = pd.Timestamp(fs) + pd.offsets.BDay(after)
+                    body = _plain(r.get("body"))
+                    kw = bool(_ANALYST_WORDS.search(f"{title} {body[:400]}"))
+                    signs, anyrev = [], False
+                    for t in tickers:
+                        x = by_t.get(t)
+                        if x is None:
+                            continue
+                        w = x[(x["t"] >= lo) & (x["t"] <= hi)]
+                        anyrev = anyrev or len(w) > 0
+                        signs += [int(s) for s in w["sign"] if s != 0]
+                    item = {"source": d.name, "raw_id": r.get("raw_id") or r.get("url"),
+                            "first_seen_utc": r.get("first_seen_utc"),
+                            "published_utc": r.get("published_utc"),
+                            "document_date": pub, "title": title, "body": body,
+                            "tickers": tickers, "window": [str(lo.date()), str(hi.date())]}
+                    if kw and signs:
+                        net = sum(signs)
+                        item["gold"] = {"stratum": "matched", "n_revisions": len(signs),
+                                        "direction": (net > 0) - (net < 0)}
+                        matched.append(item)
+                    elif not kw and not anyrev:
+                        item["gold"] = {"stratum": "unmatched", "n_revisions": 0,
+                                        "direction": None}
+                        unmatched.append(item)
+                    else:
+                        census["neither"] += 1
+                        continue
+                    seen_titles.add(title.lower())
+    census["matched_pool"], census["unmatched_pool"] = len(matched), len(unmatched)
+    rng = random.Random(seed)
+    k_m = min(n_matched, len(matched))
+    k_u = min(n - k_m, len(unmatched))
+    items = rng.sample(matched, k_m) + rng.sample(unmatched, k_u)
+    for i, it in enumerate(items):
+        it["item_id"] = f"{BAKEOFF_ID}-{i:03d}"
+    census.update(seed=seed, n=len(items), n_matched=k_m, n_unmatched=k_u,
+                  by_source={s: sum(1 for x in items if x["source"] == s)
+                             for s in sorted({x["source"] for x in items})})
+    return items, census
+
+
+def _arm_call(arm: str, item: dict, system: str, call_fn) -> dict:
+    t0 = time.perf_counter()
+    if arm == "rules":
+        pred = rules_arm(item)
+        return {"arm": arm, "model": "rules:v1", "status": "OK", "cost_usd": 0.0,
+                "cost_status": "LISTED", "latency_s": round(time.perf_counter() - t0, 4),
+                "pred": pred, "refusal": None, "raw": None}
+    r = _call(arm, system, bakeoff_user(item), purpose=f"bakeoff:{BAKEOFF_ID}:{arm}",
+              call_fn=call_fn, max_tokens=150, temperature=0.0,
+              ensure_reason=f"bakeoff:{BAKEOFF_ID}",
+              validate=lambda txt: parse_extraction(txt)[0] is not None)
+    pred, why = (parse_extraction(r.get("text")) if r.get("ok")
+                 else (None, str(r.get("status"))))
+    return {"arm": arm, "model": r.get("served_model") or r.get("model"),
+            "requested_model": r.get("model"), "status": r.get("status"),
+            "cost_usd": r.get("cost_usd"), "cost_status": r.get("cost_status"),
+            "latency_s": r.get("latency_s"), "n_429": r.get("n_429"),
+            "pred": pred, "refusal": why, "raw": (r.get("text") or "")[:300] or None,
+            "error": r.get("error")}
+
+
+_NO_WIRE = frozenset({"LOCAL_UNAVAILABLE", "NOT_CONFIGURED", "BUDGET_REFUSED",
+                      "BUDGET_CAP", "UNKNOWN_PROVIDER"})
+
+
+def _summarise(rows: list[dict], arms: tuple[str, ...]) -> dict:
+    out = {}
+    for a in arms:
+        rs = [x for x in rows if x["arm"] == a]
+        if not rs:
+            continue
+        g = [x["grade"] for x in rs]
+        fields = [v for gg in g for k, v in gg.items()
+                  if k in ("ticker", "event_type", "direction") and v is not None]
+        lat = sorted(float(x["latency_s"]) for x in rs if x.get("latency_s") is not None)
+        # a row that never reached the wire (no key, no server, cap) cost $0;
+        # only a wire attempt with no usage is UNPRICED
+        costs = [0.0 if x.get("cost_usd") is None and x.get("status") in _NO_WIRE
+                 else x.get("cost_usd") for x in rs]
+        n_un = sum(1 for x in rs if x["item_stratum"] == "unmatched")
+
+        def acc(k):
+            v = [gg[k] for gg in g if gg.get(k) is not None]
+            return round(sum(v) / len(v), 4) if v else None
+        out[a] = {"n": len(rs),
+                  "models_seen": sorted({str(x.get("model")) for x in rs}),
+                  "field_accuracy": round(sum(fields) / len(fields), 4) if fields else None,
+                  "ticker_acc": acc("ticker"), "event_type_acc": acc("event_type"),
+                  "direction_acc": acc("direction"),
+                  "n_direction_graded": sum(1 for gg in g if gg.get("direction") is not None),
+                  "invented_analyst_rate": (round(sum(1 for gg in g if gg.get("invented_analyst"))
+                                                  / n_un, 4) if n_un else None),
+                  "refusal_rate": round(sum(1 for x in rs if x["pred"] is None) / len(rs), 4),
+                  "refusals_by_reason": {k: sum(1 for x in rs if x["refusal"] == k)
+                                         for k in sorted({str(x["refusal"]) for x in rs
+                                                          if x["pred"] is None})},
+                  "cost_usd": (None if any(c is None for c in costs)
+                               else round(sum(costs), 6)),
+                  "n_unpriced": sum(1 for c in costs if c is None),
+                  "latency_median_s": lat[len(lat) // 2] if lat else None,
+                  "latency_p90_s": lat[int(len(lat) * 0.9)] if lat else None,
+                  "n_429": sum(int(x.get("n_429") or 0) for x in rs)}
+    # NVIDIA as an adjudicator: on the items where it disagrees with DeepSeek's
+    # event_type, how often is NVIDIA the one that is right?
+    by_item: dict[str, dict] = {}
+    for x in rows:
+        by_item.setdefault(x["item_id"], {})[x["arm"]] = x
+    dis = [(v["deepseek"], v["nvidia"]) for v in by_item.values()
+           if "deepseek" in v and "nvidia" in v and v["deepseek"]["pred"] and v["nvidia"]["pred"]
+           and v["deepseek"]["pred"]["event_type"] != v["nvidia"]["pred"]["event_type"]]
+    both = sum(1 for v in by_item.values() if "deepseek" in v and "nvidia" in v
+               and v["deepseek"]["pred"] and v["nvidia"]["pred"])
+    out["_nvidia_vs_deepseek"] = {
+        "n_both_answered": both, "n_event_type_disagree": len(dis),
+        "nvidia_right_on_disagreements": (round(sum(1 for _, nv in dis if nv["grade"]["event_type"])
+                                                / len(dis), 4) if dis else None),
+        "rule": "NVIDIA stays adjudicator only if right on > 50% of disagreements"}
+    return out
+
+
+def run_bakeoff(items: list[dict], *, arms: tuple[str, ...] = BAKEOFF_ARMS, call_fn=None,
+                out_path: Path | None = None, cap_usd: float | None = None,
+                flush_every: int | None = None, census: dict | None = None,
+                nvidia_gap_s: float | None = None, stop_local: Callable[[], dict] | None = None,
+                ) -> dict:
+    """Four arms over the SAME items; a receipt flushed every `flush_every` rows
+    with the wire `system` captured on the FIRST flush. DeepSeek stops at the
+    cap (remaining rows say BUDGET_CAP -- a refusal, not a zero). Arms run in
+    parallel threads; the local server is stopped by PID at the end."""
+    import threading
+    system = bakeoff_system()
+    from backend.services import llm_language as _lang
+    wire_system = _lang.pin(system) if hasattr(_lang, "pin") else system
+    cap = float(cap_usd if cap_usd is not None else getattr(_cfg, "MODEL_ROUTING_BAKEOFF_CAP_USD", 0.15))
+    every = int(flush_every or getattr(_cfg, "MODEL_ROUTING_BAKEOFF_FLUSH_EVERY", 20))
+    gap = float(nvidia_gap_s if nvidia_gap_s is not None
+                else getattr(_cfg, "MODEL_ROUTING_BAKEOFF_NVIDIA_MIN_GAP_S", 2.0))
+    out_path = Path(out_path or receipt_dir() / f"bakeoff_{BAKEOFF_ID}_{date.today()}.json")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    rows: list[dict] = []
+    lock = threading.Lock()
+    spent = {"deepseek": 0.0}
+    state = {"flushes": 0, "started_utc": _now()}
+
+    def doc(final: bool) -> dict:
+        return {"receipt": "model_routing_bakeoff", "bakeoff": BAKEOFF_ID,
+                "schema": "model_routing_bakeoff/1", "licence": "PRODUCT_EXPERIMENT",
+                "state": "DONE" if final else "RUNNING", "started_utc": state["started_utc"],
+                "updated_utc": _now(), "cap_usd": cap, "spent_deepseek_usd": round(spent["deepseek"], 6),
+                "arms": list(arms), "n_items": len(items), "n_rows": len(rows),
+                "system": wire_system, "system_sha256": _sha(wire_system),
+                "user_template_example": bakeoff_user(items[0]) if items else None,
+                "gold_rule": ("matched: analyst words + a raise/lower for a tagged ticker in "
+                              "[published-2d, first_seen+5 sessions] -> analyst_* family, "
+                              "direction = sign(net); unmatched: no analyst words, no revision "
+                              "of any kind -> not analyst_*; ticker: one of the tagged tickers"),
+                "census": census, "summary": _summarise(rows, arms),
+                "rows": rows}
+
+    def flush(final: bool = False) -> None:
+        tmp = out_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(doc(final), indent=1, default=str), encoding="utf-8")
+        tmp.replace(out_path)
+        state["flushes"] += 1
+
+    def add(item: dict, res: dict) -> None:
+        res["item_id"] = item["item_id"]
+        res["item_stratum"] = item["gold"]["stratum"]
+        res["grade"] = grade_extraction(res["pred"], item)
+        with lock:
+            rows.append(res)
+            if len(rows) % every == 0:
+                flush()
+
+    def worker(arm: str) -> None:
+        last = 0.0
+        for it in items:
+            if arm == "deepseek":
+                with lock:
+                    over = spent["deepseek"] >= cap
+                if over:
+                    add(it, {"arm": arm, "model": None, "status": "BUDGET_CAP", "cost_usd": 0.0,
+                             "cost_status": "LISTED", "latency_s": None, "pred": None,
+                             "refusal": "BUDGET_CAP", "raw": None})
+                    continue
+            if arm == "nvidia" and gap > 0:
+                wait = last + gap - time.monotonic()
+                if wait > 0:
+                    time.sleep(wait)
+                last = time.monotonic()
+            try:
+                res = _arm_call(arm, it, system, call_fn)
+            except Exception as exc:                                # noqa: BLE001
+                res = {"arm": arm, "model": None, "status": "ERROR", "cost_usd": None,
+                       "cost_status": None, "latency_s": None, "pred": None,
+                       "refusal": "ERROR", "raw": None, "error": f"{type(exc).__name__}: {exc}"[:200]}
+            if arm == "deepseek" and res.get("cost_usd") is not None:
+                with lock:
+                    spent["deepseek"] += float(res["cost_usd"])
+            add(it, res)
+
+    flush()                                     # the system prompt is on disk before any call
+    threads = [threading.Thread(target=worker, args=(a,), name=f"bakeoff-{a}") for a in arms]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+    local_stop = None
+    if "local" in arms:
+        local_stop = (stop_local or _stop_local_server)()
+    d = doc(True)
+    d["local_server_after"] = local_stop
+    tmp = out_path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(d, indent=1, default=str), encoding="utf-8")
+    tmp.replace(out_path)
+    return {"path": str(out_path), "summary": d["summary"], "n_rows": len(rows),
+            "spent_deepseek_usd": d["spent_deepseek_usd"], "local_server_after": local_stop}
+
+
+def _sha(s: str) -> str:
+    import hashlib
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()
+
+
+def _stop_local_server() -> dict:
+    """Stop the server BY PID if Aegis started it, and prove it is down."""
+    from backend.services import llama_server as LS
+    before = LS.status()
+    r = LS.stop(allow_foreign=False) if before.get("started_by_aegis") else {
+        "ok": not before.get("listening"), "action": "none" if not before.get("listening")
+        else "refused_foreign", "pid": before.get("pid")}
+    pid = before.get("pid") or r.get("pid")
+    after = LS.status()
+    return {"pid": pid, "stop": {k: r.get(k) for k in ("ok", "action", "pid", "escalated_to_force")},
+            "listening_after": after.get("listening"),
+            "pid_alive_after": bool(pid) and LS.pid_alive(int(pid))}
+
+
+def bakeoff_table(receipt: dict) -> list[str]:
+    s = receipt.get("summary") or {}
+    lines = []
+    for a in receipt.get("arms") or []:
+        x = s.get(a)
+        if not x:
+            continue
+        cost = "UNPRICED" if x.get("cost_usd") is None else f"${float(x['cost_usd']):.4f}"
+        acc = x.get("field_accuracy")
+        lines.append(f"`{a}` acc {'-' if acc is None else f'{acc * 100:.1f}%'} "
+                     f"(tk {_p(x.get('ticker_acc'))} ev {_p(x.get('event_type_acc'))} "
+                     f"dir {_p(x.get('direction_acc'))}) · refuse {_p(x.get('refusal_rate'))} · "
+                     f"{cost} · p50 {x.get('latency_median_s')}s")
+    return lines
+
+
+def _p(x: Any) -> str:
+    return "-" if x is None else f"{float(x) * 100:.0f}%"
+
+
+def compare_text(ticker: str | None = None, *, root: Path | None = None) -> str:
+    """`/compare [T]`: READ-ONLY. The latest E-G1 table (and T's items in it)."""
+    rd = receipt_dir(root)
+    p = _latest(rd, f"bakeoff_{BAKEOFF_ID}_*.json") if rd.exists() else None
+    d = _load(p)
+    if not d:
+        return (f"*Compare* -- CANNOT DETERMINE: no `model_routing/bakeoff_{BAKEOFF_ID}_*.json`. "
+                f"The bake-off is a batch: `python -m scripts.bakeoff_eg1`.")
+    lines = [f"*Compare* = extraction bake-off {BAKEOFF_ID} (`{p.name}`, {d.get('state')}, "
+             f"{d.get('n_items')} items, graded vs analyst revisions)"] + bakeoff_table(d)
+    nv = (d.get("summary") or {}).get("_nvidia_vs_deepseek") or {}
+    if nv:
+        lines.append(f"NVIDIA vs DeepSeek: {nv.get('n_event_type_disagree')} event disagreements, "
+                     f"NVIDIA right on {_p(nv.get('nvidia_right_on_disagreements'))}")
+    if ticker:
+        t = str(ticker).upper()
+        ids = {it for it in {r.get("item_id") for r in d.get("rows") or []}}
+        mine = [r for r in d.get("rows") or [] if r.get("item_id") in ids
+                and t in str((r.get("pred") or {}).get("ticker") or "").upper()]
+        lines.append(f"{t}: {len(mine)} answers name it in this bake-off")
+    lines.append("_direction is not asked: held-out direction skill is -7.9%. Magnitude is "
+                 "the forward test in u_forecast._")
+    return "\n".join(lines)
+
+
+# ─────────────────────────────── the daily digest hook ──────────────────────
+
+def grade_promises_daily(*, today: date | None = None, root: Path | None = None,
+                         runner: Callable[[], dict] | None = None) -> dict:
+    """Run `source_reads --grade-promises` once per UTC day from
+    MODEL_ROUTING_GRADE_PROMISES_FROM on; one receipt line per day.
+
+    Nothing graded promises after 2026-09-30 (G-fix task 6). The stamp file
+    makes it once per UTC day however often the digest fires; a failure is a
+    receipt line, never a raise into the bot loop.
+    """
+    today = today or datetime.now(timezone.utc).date()
+    start = str(getattr(_cfg, "MODEL_ROUTING_GRADE_PROMISES_FROM", "2026-09-30"))
+    rd = receipt_dir(root)
+    rd.mkdir(parents=True, exist_ok=True)
+    log = rd / "grade_promises_daily.jsonl"
+    if str(today) < start:
+        return {"action": "skip", "reason": f"before {start}", "day": str(today)}
+    done = set()
+    if log.exists():
+        for ln in log.read_text(encoding="utf-8").splitlines():
+            try:
+                x = json.loads(ln)
+            except ValueError:
+                continue
+            if x.get("state") in ("OK", "REFUSED"):
+                done.add(x.get("day"))
+    if str(today) in done:
+        return {"action": "skip", "reason": "already ran today", "day": str(today)}
+    t0 = time.perf_counter()
+    try:
+        if runner is None:
+            from scripts import source_reads as SRD
+            res = SRD.run_grade_promises(None)
+        else:
+            res = runner()
+        row = {"day": str(today), "at": _now(), "state": "OK",
+               "elapsed_s": round(time.perf_counter() - t0, 2),
+               "result": {k: v for k, v in (res or {}).items()
+                          if isinstance(v, (int, float, str, bool)) or v is None}}
+    except Exception as exc:                                       # noqa: BLE001
+        row = {"day": str(today), "at": _now(), "state": "ERROR",
+               "elapsed_s": round(time.perf_counter() - t0, 2),
+               "error": f"{type(exc).__name__}: {str(exc)[:200]}"}
+    with log.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+    return {"action": "ran", **row, "receipt": str(log)}
 
 
 def route(cmd: str, args: list[str], *, call_fn=None, quest_fn=None,
           root: Path | None = None, llama_status=None) -> str:
     """The dispatcher the Telegram agent calls. Deterministic commands never
-    touch `call_fn`."""
+    touch `call_fn`; `/research` and `/compare` are evidence reads."""
     cmd = cmd.lower()
     if cmd == "nav":
         return nav_text(root)
@@ -526,14 +1113,18 @@ def route(cmd: str, args: list[str], *, call_fn=None, quest_fn=None,
     if cmd == "deep":
         return deep(text, call_fn=call_fn)[0] if text else "Usage: `/deep <question> [--nvidia]`"
     if cmd == "research":
-        return (research(args[0], quest_fn=quest_fn, call_fn=call_fn)[0] if args
-                else "Usage: `/research <ticker>`")
+        tick = [a for a in args if not a.startswith("--")]
+        if not tick:
+            return "Usage: `/research <ticker> [--quest]`"
+        kw = {"root": root} if root is not None else {}
+        return research(tick[0], quest="--quest" in args, quest_fn=quest_fn, **kw)[0]
     if cmd == "compare":
-        return compare(args[0], call_fn=call_fn)[0] if args else "Usage: `/compare <ticker>`"
+        return compare_text(args[0] if args else None, root=root)
     raise KeyError(f"no route for /{cmd}")
 
 
-__all__ = ["ROUTES", "DETERMINISTIC", "COMPARE_PROVIDERS", "route", "ask", "deep",
-           "research", "compare", "build_packet", "packet_hash", "parse_probability",
-           "write_compare_receipt", "nav_text", "status_text", "books_text",
-           "forecasts_text", "footer", "deep_provider"]
+__all__ = ["ROUTES", "DETERMINISTIC", "route", "ask", "deep", "research", "evidence",
+           "evidence_text", "compare_text", "bakeoff_sample", "run_bakeoff", "bakeoff_system",
+           "parse_extraction", "rules_arm", "grade_extraction", "grade_promises_daily",
+           "nav_text", "status_text", "books_text", "forecasts_text", "footer",
+           "deep_provider"]

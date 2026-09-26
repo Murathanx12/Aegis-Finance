@@ -2543,6 +2543,8 @@ LLM_PRICE_PER_MTOK: dict[str, dict[str, float]] = {
     "minimaxai/minimax-m3": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
     "moonshotai/kimi-k3": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
     "google/gemma-4-31b-it": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
+    # served this account on 2026-09-26 (the G-fix adjudicator probe); free tier.
+    "meta/llama-3.2-11b-vision-instruct": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
     "poolside/laguna-xs-2.1": {"in": 0.0, "cached_in": 0.0, "out": 0.0},
     # On-box llama.cpp. The electricity is real and is NOT metered per token;
     # the honest per-token price is zero and the real cost is WALL CLOCK, which
@@ -3459,8 +3461,17 @@ LAB_NETWORK_LOOPS: tuple[str, ...] = ("news_pull", "social_pull",
 #: READS this one). True restores the pre-2026-09-26 resident behaviour.
 MODEL_ROUTING_START_AT_BOOT = False
 
+#: Minutes without a call before the server is stopped by PID. Read by the
+#: in-process watchdog AND by `scripts/llama_reaper.py`, the standalone process
+#: `ensure()` spawns so the stop no longer dies with whichever client started
+#: the server (G-fix, adjudication row 7, 2026-09-26).
+MODEL_ROUTING_IDLE_MIN = 15
+
 #: Seconds without a call before the starting process stops the server by PID.
-MODEL_ROUTING_IDLE_SHUTDOWN_S = 900
+MODEL_ROUTING_IDLE_SHUTDOWN_S = MODEL_ROUTING_IDLE_MIN * 60
+
+#: How often the reaper reads the owner note. One file read and one socket probe.
+MODEL_ROUTING_REAPER_TICK_S = 30
 
 #: How often the idle watchdog looks. Cheap: one file read and, when due, a stop.
 MODEL_ROUTING_WATCHDOG_TICK_S = 30
@@ -3472,7 +3483,27 @@ MODEL_ROUTING_ENSURE_WAIT_S = 240.0
 #: declared: LISTED means the telemetry row carries a dollar figure (a free
 #: tier is LISTED at $0.00), UNPRICED means `cost_usd=None` and every total that
 #: includes it is a lower bound.
-MODEL_ROUTING_NVIDIA_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+#:
+#: THE NVIDIA ADJUDICATOR (G-fix, adjudication row 7, chosen 2026-09-26).
+#: `nvidia/nemotron-3-super-120b-a12b` was a rate-limited REASONING model whose
+#: empty `content` got parsed out of its chain of thought. Replaced by a
+#: NON-reasoning instruct model: `GET /v1/models` was queried once on 2026-09-26
+#: (82 ids listed), the `*instruct*` Llama/Nemotron/Qwen ids were probed in
+#: catalogue order with one 5-token call each, and the FIRST that served was
+#: kept. Served: meta/llama-3.2-11b-vision-instruct (1.0 s, content "OK", no
+#: reasoning_content). Timed out: meta/llama-3.2-90b-vision-instruct. 404 for
+#: this account: nvidia/llama-3.1-nemotron-51b-instruct, -70b-instruct,
+#: nvidia/nemotron-4-340b-instruct. Receipt:
+#: backend/data/optimus/model_routing/nvidia_models_2026-09-26.json.
+#: It is an 11B model: whether it is a GOOD second opinion is what bake-off
+#: E-G1 measures, not what this line asserts.
+NVIDIA_ADJUDICATOR_MODEL = "meta/llama-3.2-11b-vision-instruct"
+NVIDIA_ADJUDICATOR_MODEL_CHOSEN = "2026-09-26"
+MODEL_ROUTING_NVIDIA_MODEL = NVIDIA_ADJUDICATOR_MODEL
+#: 429 handling on the NVIDIA path: tries, first backoff (s), jitter (s).
+MODEL_ROUTING_NVIDIA_TRIES = 3
+MODEL_ROUTING_NVIDIA_BACKOFF_S = 4.0
+MODEL_ROUTING_NVIDIA_JITTER_S = 2.0
 MODEL_ROUTING_NVIDIA_DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
 MODEL_ROUTING_LOCAL_MODEL = "local"
 MODEL_ROUTING_MAX_TOKENS = 700
@@ -3487,11 +3518,29 @@ MODEL_ROUTING_PROVIDERS: dict[str, dict] = {
     )
 }
 
-#: `/compare` freezes one forecast row per provider at this horizon, graded by
-#: the existing resolver/grader like every other row (specialist
-#: `compare:<provider>`). 5 sessions: long enough to resolve inside a week.
+#: RETIRED by the G-fix (2026-09-26): chunk G's direction /compare froze one
+#: `beats_benchmark` row per provider at this horizon. It wrote 0 rows before it
+#: was replaced by the E-G1 read below; kept only so an old receipt still reads.
 MODEL_ROUTING_COMPARE_HORIZON = 5
 MODEL_ROUTING_COMPARE_BENCHMARK = "SPY"
+
+#: /compare was re-scoped by the G-fix (adjudication row 7): direction skill is
+#: -7.9% held out, so a direction contest picks its winner by noise. It now
+#: READS the extraction bake-off E-G1 (graded against the analyst-revisions
+#: file the same day). Magnitude stays the forward test (already in u_forecast).
+MODEL_ROUTING_BAKEOFF_N = 240
+MODEL_ROUTING_BAKEOFF_N_MATCHED = 180          # the rest are no-revision controls
+MODEL_ROUTING_BAKEOFF_SEEN_MAX = "2026-09-20"   # first_seen_utc <= this
+MODEL_ROUTING_BAKEOFF_CAP_USD = 0.15
+MODEL_ROUTING_BAKEOFF_FLUSH_EVERY = 20
+MODEL_ROUTING_BAKEOFF_SESSIONS_AFTER = 5        # revision window: sessions after first_seen
+MODEL_ROUTING_BAKEOFF_DAYS_BEFORE = 2           # ... and calendar days before published
+MODEL_ROUTING_BAKEOFF_NVIDIA_MIN_GAP_S = 2.0    # ~30 RPM, under the ~40 RPM free tier
+
+#: The Telegram daily digest grades numbered promises once per UTC day from this
+#: date on (MU's FQ4 print, 2026-09-30, is the first due promise). Nothing else
+#: in the repo called `source_reads --grade-promises` (G-fix task 6).
+MODEL_ROUTING_GRADE_PROMISES_FROM = "2026-09-30"
 
 #: MAY THE LAB START THE MODEL SERVER? (amended 2026-09-18, measured)
 #:

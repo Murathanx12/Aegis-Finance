@@ -4,11 +4,15 @@
   and the four money/state commands read receipts and make NO model call;
 * `llama_server.ensure` starts once, and the idle watchdog stops BY PID (a fake
   process: the stop goes through `taskkill /PID <n>`, never an image name);
-* NVIDIA is a NAMED provider: it parses a reply (including a reasoning model's
-  `reasoning_content`), pins the language, and writes a telemetry row priced
-  from the house table -- while DeepSeek stays the sole PRIMARY;
-* `/compare` writes three forecast rows with the SAME packet hash and a receipt
-  aggregating cost and latency per provider;
+* NVIDIA is a NAMED provider: it parses `content` ONLY (an empty content is a
+  REFUSAL counted per provider, never a chain of thought parsed as an answer),
+  retries 429 with backoff, pins the language, and writes a telemetry row
+  priced from the house table -- while DeepSeek stays the sole PRIMARY;
+* G-fix (adjudication row 7): `/research` answers with EVIDENCE (eight fields,
+  `n/a: <why>` when a source is missing, <= 600 chars); `/compare` reads the
+  extraction bake-off E-G1, whose system prompt carries the enum it names and
+  whose receipt is flushed every 20 rows with the system on the first flush;
+  the promise grader has a once-per-UTC-day caller;
 * nothing starts llama-server at boot any more.
 """
 
@@ -16,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -81,9 +86,9 @@ def _fake_call(texts: dict | None = None, log: list | None = None):
 def test_the_routing_table_is_the_one_murat_specified():
     assert MR.ROUTES == {
         "nav": "deterministic", "status": "deterministic", "books": "deterministic",
-        "forecasts": "deterministic", "ask": "local", "research": "openclaw+local",
-        "deep": "deepseek|nvidia", "compare": "local+deepseek+nvidia"}
-    assert MR.COMPARE_PROVIDERS == ("local", "deepseek", "nvidia")
+        "forecasts": "deterministic", "ask": "local", "research": "evidence",
+        "deep": "deepseek|nvidia", "compare": "bakeoff_read"}
+    assert MR.BAKEOFF_ARMS == ("rules", "deepseek", "nvidia", "local")
 
 
 @pytest.mark.parametrize("cmd", sorted(MR.DETERMINISTIC))
@@ -123,88 +128,242 @@ def test_deep_is_deepseek_unless_nvidia_is_named(text, provider):
     assert f"_{provider} · " in out
 
 
-def test_research_is_the_openclaw_quest_then_LOCAL_synthesis():
-    quests, log = [], []
+# ─────────────────────────────── /research = evidence ───────────────────────
 
-    def quest(ticker, prompt):
-        quests.append((ticker, prompt))
-        return {"status": "OK", "reply": "{}", "latency_s": 3.0, "openclaw_cost_usd": 0.01}
-
-    out = MR.route("research", ["mu"], call_fn=_fake_call(log=log), quest_fn=quest)
-    assert quests and quests[0][0] == "MU" and "ticker MU" in quests[0][1]
-    assert [x["provider"] for x in log] == ["local"]
-    assert log[0]["ensure_reason"] == "telegram:/research"
-    assert out.startswith("*Research* MU") and "_local · " in out
-
-
-# ─────────────────────────────── /compare ───────────────────────────────────
-
-def test_compare_freezes_THREE_rows_with_the_SAME_packet_hash(tmp_path):
-    from backend.services import belief_state as B
-    ledger = tmp_path / "predictions.jsonl"
-    log = []
-    texts = {p: f"reasoning.\nFOR: up\nAGAINST: down\nP_BEATS_SPY_5D: {v}"
-             for p, v in (("local", "0.55"), ("deepseek", "0.40"), ("nvidia", "0.62"))}
-    packet = {"ticker": "MU", "asof": "2026-09-26", "stock": {"ret_5d": 0.03}}
-    text, res = MR.compare("MU", packet=packet, call_fn=_fake_call(texts, log),
-                           ledger_path=ledger, receipt_root=tmp_path)
-    assert [x["provider"] for x in log] == ["local", "deepseek", "nvidia"]
-    assert len({x["user"] for x in log}) == 1           # the SAME packet to all three
-    rows = B.read_predictions(ledger)
-    assert len(rows) == 3
-    assert sorted(r["specialist"] for r in rows) == [
-        "compare:deepseek", "compare:local", "compare:nvidia"]
-    assert len({r["input_snapshot_hash"] for r in rows}) == 1
-    assert {r["inputs_used"]["packet_hash"] for r in rows} == {res["packet_hash"]}
-    for r in rows:
-        assert r["observable"] == "beats_benchmark" and r["benchmark"] == "SPY"
-        assert r["horizon_days"] == 5
-        assert r["raw_probability"] == r["probability"]
-    assert {r["specialist"]: r["probability"] for r in rows}["compare:nvidia"] == 0.62
-    rec = json.loads(open(res["receipt"], encoding="utf-8").read())
-    assert res["receipt"].startswith(str(tmp_path / "model_routing" / "compare_"))
-    assert rec["n_events"] == 1
-    assert set(rec["by_provider"]) == {"local", "deepseek", "nvidia"}
-    assert rec["by_provider"]["deepseek"]["cost_usd"] == pytest.approx(0.00042)
-    assert rec["by_provider"]["nvidia"]["n_rows"] == 1
-    assert rec["graded_by_provider"]["local"]["n_rows"] == 1
-    assert rec["graded_by_provider"]["local"]["brier"] is None     # nothing graded yet
-    assert "p=0.62" in text
-
-
-def test_compare_writes_no_row_for_an_answer_without_a_probability(tmp_path):
-    from backend.services import belief_state as B
-    ledger = tmp_path / "p.jsonl"
-    texts = {"local": "no idea", "deepseek": "P_BEATS_SPY_5D: 0.3",
-             "nvidia": "P_BEATS_SPY_5D: 7"}                        # out of range: refused
-    _, res = MR.compare("MU", packet={"t": 1}, call_fn=_fake_call(texts),
-                        ledger_path=ledger, receipt_root=tmp_path)
-    assert [r["specialist"] for r in B.read_predictions(ledger)] == ["compare:deepseek"]
-    st = {a["provider"]: a["status"] for a in res["answers"]}
-    assert st == {"local": "NO_PROBABILITY", "deepseek": "OK", "nvidia": "NO_PROBABILITY"}
-
-
-def test_the_receipt_computes_brier_by_provider_once_rows_are_graded(tmp_path):
-    ledger = tmp_path / "p.jsonl"
-    rows = [{"prediction_id": "a", "specialist": "compare:local", "probability": 0.8,
-             "outcome": 1}, {"prediction_id": "b", "specialist": "compare:local",
-                             "probability": 0.4, "outcome": 0},
-            {"prediction_id": "c", "specialist": "compare:nvidia", "probability": 0.5}]
-    ledger.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
-    g = MR._brier_by_provider(ledger)
-    assert g["local"] == {"n_rows": 2, "n_graded": 2, "brier": pytest.approx(0.1)}
-    assert g["nvidia"]["brier"] is None
-
-
-def test_packet_is_point_in_time():
+def _evidence_world(tmp_path):
+    """Every source the evidence reply reads, as a tiny on-disk world."""
     import pandas as pd
-    bars = pd.DataFrame({"symbol": ["MU"] * 3 + ["SPY"] * 3,
-                         "date": ["2026-09-23", "2026-09-24", "2026-09-29"] * 2,
-                         "close": [100.0, 110.0, 999.0, 500.0, 505.0, 1.0]})
+    root = tmp_path / "optimus"
+    (root / "pc_book" / "2026-09-26").mkdir(parents=True)
+    (root / "pc_book" / "2026-09-26" / "ranking.json").write_text(json.dumps({
+        "asof": "2026-09-21", "n_eligible": 2929,
+        "top": [{"rank": 7, "symbol": "MU", "decile": 9,
+                 "expected_relative_return_21d_net": 0.012}]}), encoding="utf-8")
+    books = tmp_path / "books.jsonl"
+    rows = [{"schema": "llm_portfolio/1", "kind": "personal", "name": "human_ai_v1",
+             "book_id": "b1", "positions": [{"ticker": "MU", "weight": 0.06}]},
+            {"schema": "llm_portfolio/1", "kind": "personal", "name": "voided_book",
+             "book_id": "b2", "positions": [{"ticker": "MU", "weight": 0.6}]},
+            {"schema": "llm_portfolio/void", "kind": "void", "book_id": "b2",
+             "reason": "VOID_BEFORE_ENTRY"},
+            {"schema": "llm_portfolio/1", "kind": "twin", "name": "human_ai_v1__random",
+             "book_id": "b3", "positions": [{"ticker": "MU", "weight": 0.05}]}]
+    books.write_text("\n".join(json.dumps(r) for r in rows) + "\n", encoding="utf-8")
+    cards = tmp_path / "cards"
+    for day, verdict in (("2026-09-19", "neutral"), ("2026-09-26", "supports")):
+        (cards / day).mkdir(parents=True)
+        (cards / day / "MU.json").write_text(json.dumps({
+            "ticker": "MU", "asof": day, "verdict": verdict, "confidence": "med",
+            "schema": "thesis_card/v2", "web_what_changed_30_90d": f"text {day}",
+            "falsifier": "FQ4 revenue below $49.0B on 2026-09-30"}), encoding="utf-8")
+    preds = tmp_path / "predictions.jsonl"
+    preds.write_text("\n".join(json.dumps(r) for r in [
+        {"prediction_id": "old1", "ticker": "MU", "specialist": "investigator:v3",
+         "observable": "abs_move_exceeds", "horizon_days": 1, "probability": 0.4,
+         "made_at": "2026-09-20T00:00:00+00:00"},
+        {"prediction_id": "new2", "ticker": "MU", "specialist": "investigator:v3",
+         "observable": "abs_move_exceeds", "horizon_days": 5, "probability": 0.41,
+         "made_at": "2026-09-25T00:00:00+00:00"},
+        {"prediction_id": "zz", "ticker": "MUX", "specialist": "x", "made_at": "2026-09-26"}]
+    ) + "\n", encoding="utf-8")
+    days = pd.bdate_range("2026-05-01", "2026-09-21")
+    closes = [100.0 * (1.01 if i % 2 else 0.99) ** (i % 7) for i in range(len(days))]
+    bars = pd.DataFrame({"symbol": "MU", "date": days, "close": closes})
+    revisions = pd.DataFrame({
+        "ticker": ["MU"] * 4, "event_date": ["2026-09-24", "2026-09-22", "2026-09-10",
+                                             "2026-08-01"],
+        "firm": ["BMO", "Citi", "UBS", "MS"], "target_action": ["Raises", "Raises",
+                                                                 "Lowers", "Raises"],
+        "prior_target": [100.0, 100.0, 100.0, 100.0],
+        "current_target": [120.0, 110.0, 90.0, 110.0], "pit_safe": True})
+    eightk = pd.DataFrame({"ticker": ["MU", "MU", "ZZ"],
+                           "filing_date": ["2025-09-23", "2026-06-24", "2026-09-10"],
+                           "items_joined": ["2.02,9.01", "2.02,9.01", "8.01"]})
+    return dict(root=root, books_path=books, cards_root=cards, predictions_path=preds,
+                bars=bars, revisions=revisions, eightk=eightk)
+
+
+def test_research_is_EVIDENCE_every_field_from_disk_under_600_chars(tmp_path):
     from datetime import date
-    pkt = MR.build_packet("mu", asof=date(2026, 9, 25), bars=bars)
-    assert pkt["stock"]["last_close"] == 110.0         # the 09-29 bar is not knowable
-    assert pkt["last_bar"] == "2026-09-24"
+    w = _evidence_world(tmp_path)
+    text, res = MR.research("mu", today=date(2026, 9, 26), **w)
+    ev = res["evidence"]
+    assert len(text) <= MR.RESEARCH_MAX_CHARS
+    for k in MR.EVIDENCE_FIELDS:
+        assert f"{k}: " in text, k
+    assert ev["HELD"] == "1/1 books: human_ai_v1 6.0%"     # the void and the twin are not books held
+    assert "7/2929 decile 9" in ev["RANK"] and "+1.20%" in ev["RANK"]
+    assert ev["REV21d"].startswith("net +1 (2 up/1 down, 3 firms)")  # 08-01 is outside 21d
+    assert ev["NEXT"].startswith("earnings est 2026-09-22") and "year-ago" in ev["NEXT"]
+    assert "σ/day" in ev["STOP"] and "-2σ" in ev["STOP"]
+    assert ev["CHANGED"].startswith("2026-09-19->2026-09-26") and "neutral/med -> supports/med" in ev["CHANGED"]
+    assert ev["FORECAST"].startswith("new2 ")
+    assert ev["FALSIFIER"].startswith("FQ4 revenue below")
+    assert "*Research*" not in text and "bull" not in text.lower()   # not comments
+
+
+def test_research_prints_n_a_WHY_for_every_missing_source_never_blank(tmp_path):
+    from datetime import date
+    empty = tmp_path / "nothing"
+    empty.mkdir()
+    ev = MR.evidence("ZZZZ", today=date(2026, 9, 26), root=empty,
+                     books_path=empty / "books.jsonl", cards_root=empty / "cards",
+                     predictions_path=empty / "p.jsonl")
+    for k in ("HELD", "RANK", "REV21d", "STOP", "CHANGED", "FORECAST", "FALSIFIER"):
+        assert ev[k].startswith("n/a: ") and len(ev[k]) > len("n/a: "), (k, ev[k])
+    assert ev["NEXT"].startswith("UNKNOWN (")
+    assert len(MR.evidence_text(ev)) <= 600
+
+
+def test_research_text_trims_the_longest_field_first_never_drops_one():
+    ev = {"ticker": "MU", "asof": "2026-09-26", **{k: "x" * 40 for k in MR.EVIDENCE_FIELDS}}
+    ev["FALSIFIER"] = "f" * 900
+    t = MR.evidence_text(ev)
+    assert len(t) <= 600 and all(f"{k}: " in t for k in MR.EVIDENCE_FIELDS)
+    assert ("x" * 40) in t                                    # the short fields survive
+
+
+def test_research_quest_flag_runs_the_card_path_first_and_calls_no_model_otherwise(tmp_path):
+    w = _evidence_world(tmp_path)
+    runs = []
+    out = MR.route("research", ["MU", "--quest"], call_fn=_no_model, root=w["root"],
+                   quest_fn=lambda t: runs.append(t) or {"state": "DONE", "done": ["MU"],
+                                                         "refused": [], "forecast_rows_written": 3})
+    assert runs == ["MU"] and "forecast rows 3" in out
+    out2 = MR.route("research", ["MU"], call_fn=_no_model, quest_fn=_no_model, root=w["root"])
+    assert out2.startswith("MU ") and "HELD: " in out2
+
+
+# ─────────────────────────────── /compare = bake-off E-G1 ───────────────────
+
+def test_the_bakeoff_system_prompt_SENDS_the_enum_it_names():
+    from backend.services import event_vocabulary as V
+    sysp = MR.bakeoff_system()
+    for eid in V.EVENT_TYPES:
+        assert f"- {eid}\n" in sysp + "\n", eid
+    for key in ("ticker", "event_type", "direction", "magnitude_bucket"):
+        assert f'"{key}"' in sysp
+
+
+def test_parse_extraction_refuses_out_of_enum_never_coerces():
+    ok, why = MR.parse_extraction('{"ticker":"MU","event_type":"analyst_target_change",'
+                                  '"direction":1,"magnitude_bucket":"small"}')
+    assert why is None and ok["event_type"] == "analyst_target_change" and ok["magnitude_bucket"] == "SMALL"
+    assert MR.parse_extraction('{"ticker":"MU","event_type":"acquisition","direction":1}')[1] \
+        .startswith("SCHEMA:event_type")
+    assert MR.parse_extraction('{"event_type":"no_event","direction":2}')[1] == "SCHEMA:direction"
+    assert MR.parse_extraction("sure! here you go")[1] == "UNPARSEABLE"
+    assert MR.parse_extraction(None)[1] == "EMPTY"
+
+
+def _item(i, stratum="matched", direction=1, tickers=("MU",), title="Citi raises MU price target"):
+    return {"item_id": f"E-G1-{i:03d}", "source": "yfinance_ticker_news",
+            "document_date": "2026-09-15", "title": title, "body": "(NASDAQ: MU) body",
+            "tickers": list(tickers), "window": ["2026-09-13", "2026-09-22"],
+            "gold": {"stratum": stratum, "direction": direction if stratum == "matched" else None}}
+
+
+def test_grading_counts_invented_analyst_facts_and_a_refusal_as_wrong():
+    g = MR.grade_extraction({"ticker": "NASDAQ:MU", "event_type": "analyst_target_change",
+                             "direction": 1}, _item(0))
+    assert g["ticker"] and g["event_type"] and g["direction"]
+    g = MR.grade_extraction({"ticker": "MU", "event_type": "analyst_rating_change",
+                             "direction": 1}, _item(1, stratum="unmatched"))
+    assert g["event_type"] is False and g["invented_analyst"] and g["direction"] is None
+    g = MR.grade_extraction(None, _item(2))
+    assert g["ticker"] is False and g["event_type"] is False and g["direction"] is False
+
+
+def test_rules_arm_is_a_real_baseline():
+    r = MR.rules_arm(_item(0))
+    assert r["ticker"] == "MU" and r["event_type"] == "analyst_target_change" and r["direction"] == 1
+
+
+def test_run_bakeoff_flushes_every_20_rows_with_the_SYSTEM_on_the_first_flush(tmp_path):
+    items = [_item(i) for i in range(12)] + [_item(12 + i, stratum="unmatched",
+                                                   title="MU opens a fab") for i in range(3)]
+    flushed = []
+    out = tmp_path / "bakeoff.json"
+    import backend.services.model_routing as M
+    real_replace = Path.replace
+
+    def spy_replace(self, target):
+        if Path(target) == out:
+            flushed.append(json.loads(Path(self).read_text(encoding="utf-8")))
+        return real_replace(self, target)
+
+    def call(provider, system, user, *, purpose, **kw):
+        assert "- analyst_target_change" in system        # the enum rides on EVERY call
+        assert kw["temperature"] == 0.0
+        et = "analyst_target_change" if provider != "nvidia" else "no_event"
+        return {"provider": provider, "model": f"{provider}-req", "served_model": f"{provider}-served",
+                "ok": True, "status": "OK", "latency_s": 0.1, "error": None,
+                "cost_usd": 0.001 if provider == "deepseek" else 0.0, "cost_status": "LISTED",
+                "text": json.dumps({"ticker": "MU", "event_type": et, "direction": 1,
+                                    "magnitude_bucket": "SMALL"})}
+    stops = []
+    import pytest as _pt
+    mp = _pt.MonkeyPatch()
+    mp.setattr(Path, "replace", spy_replace)
+    try:
+        res = M.run_bakeoff(items, call_fn=call, out_path=out, cap_usd=0.005, flush_every=20,
+                            nvidia_gap_s=0, stop_local=lambda: stops.append(1) or {"pid": 1})
+    finally:
+        mp.undo()
+    assert flushed[0]["n_rows"] == 0 and "- analyst_target_change" in flushed[0]["system"]
+    assert [f["n_rows"] for f in flushed[1:-1]] == [20, 40, 60]
+    d = json.loads(out.read_text(encoding="utf-8"))
+    assert d["state"] == "DONE" and d["n_rows"] == 60 and stops == [1]
+    assert {r["model"] for r in d["rows"] if r["arm"] == "local"} == {"local-served"}
+    ds = [r for r in d["rows"] if r["arm"] == "deepseek"]
+    assert sum(1 for r in ds if r["status"] == "BUDGET_CAP") == 10     # the $0.005 cap binds
+    s = d["summary"]
+    assert s["deepseek"]["cost_usd"] == pytest.approx(0.005)
+    assert s["deepseek"]["refusal_rate"] == pytest.approx(10 / 15, abs=1e-3)
+    assert s["nvidia"]["event_type_acc"] == pytest.approx(3 / 15, abs=1e-3)  # right only on unmatched
+    assert s["_nvidia_vs_deepseek"]["n_event_type_disagree"] == 5
+    assert res["local_server_after"] == {"pid": 1}
+
+
+def test_compare_is_a_READ_of_the_bakeoff_receipt_and_calls_no_model(tmp_path):
+    assert "CANNOT DETERMINE" in MR.route("compare", [], call_fn=_no_model, root=tmp_path)
+    (tmp_path / "model_routing").mkdir()
+    (tmp_path / "model_routing" / "bakeoff_E-G1_2026-09-26.json").write_text(json.dumps({
+        "state": "DONE", "n_items": 240, "arms": ["rules", "deepseek"],
+        "summary": {"rules": {"field_accuracy": 0.5, "refusal_rate": 0.0, "cost_usd": 0.0,
+                              "latency_median_s": 0.0},
+                    "deepseek": {"field_accuracy": 0.8, "refusal_rate": 0.01,
+                                 "cost_usd": 0.06, "latency_median_s": 1.2}},
+        "rows": []}), encoding="utf-8")
+    out = MR.route("compare", ["MU"], call_fn=_no_model, root=tmp_path)
+    assert "`deepseek` acc 80.0%" in out and "$0.0600" in out and "direction is not asked" in out
+
+
+# ─────────────────────────────── the promise grader's daily caller ──────────
+
+def test_promises_are_graded_once_per_UTC_day_from_the_first_due_date(tmp_path):
+    from datetime import date
+    calls = []
+    run = lambda: calls.append(1) or {"graded": 2}                          # noqa: E731
+    assert MR.grade_promises_daily(today=date(2026, 9, 29), root=tmp_path,
+                                   runner=run)["action"] == "skip"
+    a = MR.grade_promises_daily(today=date(2026, 9, 30), root=tmp_path, runner=run)
+    b = MR.grade_promises_daily(today=date(2026, 9, 30), root=tmp_path, runner=run)
+    c = MR.grade_promises_daily(today=date(2026, 10, 1), root=tmp_path, runner=run)
+    assert (a["action"], b["action"], c["action"]) == ("ran", "skip", "ran") and calls == [1, 1]
+    lines = (tmp_path / "model_routing" / "grade_promises_daily.jsonl").read_text().splitlines()
+    assert [json.loads(x)["day"] for x in lines] == ["2026-09-30", "2026-10-01"]
+
+
+def test_a_failed_grade_is_a_receipt_line_not_a_raise_and_is_retried(tmp_path):
+    from datetime import date
+
+    def boom():
+        raise RuntimeError("sec.gov 503")
+    a = MR.grade_promises_daily(today=date(2026, 10, 2), root=tmp_path, runner=boom)
+    assert a["state"] == "ERROR" and "503" in a["error"]
+    b = MR.grade_promises_daily(today=date(2026, 10, 2), root=tmp_path, runner=lambda: {})
+    assert b["action"] == "ran" and b["state"] == "OK"
 
 
 # ─────────────────────────────── ensure / idle ──────────────────────────────
@@ -280,6 +439,17 @@ def test_only_the_STARTING_process_may_idle_stop(fake_server):
     assert fake_server["listening"]
 
 
+def test_a_reused_ORPHAN_is_re_owned_by_the_process_using_it(fake_server):
+    LS.ensure("bakeoff", wait_s=0)
+    owner = LS._read_owner()
+    owner["owner_pid"] = 999_999_999                 # the starter died (pid_alive -> False)
+    LS._write_owner(owner)
+    LS.ensure("bakeoff", wait_s=0)
+    after = LS._read_owner()
+    assert after["owner_pid"] == os.getpid() and after["owner_adopted_from"] == 999_999_999
+    assert fake_server["starts"] == 1
+
+
 def test_ensure_honours_the_operator_hold(fake_server):
     LS.hold_path().write_text("suite", encoding="utf-8")
     out = LS.ensure("telegram:/ask", wait_s=0)
@@ -328,9 +498,80 @@ def test_nvidia_is_a_named_provider_that_parses_and_records_telemetry(tmp_path, 
     assert rows[0]["purpose"] == "compare:nvidia" and rows[0]["cost_usd"] == 0.0
 
 
-def test_a_reasoning_models_answer_in_reasoning_content_is_not_lost(monkeypatch):
-    monkeypatch.setattr(LA, "_get_nvidia_client", lambda: _FakeClient(None, "the answer"))
-    assert LA.call_named("nvidia", "s", "u", purpose="t")["text"] == "the answer"
+def test_an_empty_content_is_a_REFUSAL_never_the_reasoning_parsed_as_an_answer(monkeypatch):
+    monkeypatch.setattr(LA, "_get_nvidia_client",
+                        lambda: _FakeClient(None, "if momentum holds, P_BEATS_SPY_5D: 0.6 ... but"))
+    before = LA.EMPTY_CONTENT_REFUSALS.get("nvidia", 0)
+    r = LA.call_named("nvidia", "s", "u", purpose="t")
+    assert r["ok"] is False and r["text"] is None and r["status"] == "REFUSED_EMPTY_CONTENT"
+    assert "reasoning_content present" in r["error"]
+    assert LA.EMPTY_CONTENT_REFUSALS["nvidia"] == before + 1
+    assert LA.llm_usage()["empty_content_refusals"]["nvidia"] == before + 1
+
+
+class _RateLimited(Exception):
+    status_code = 429
+
+
+def test_nvidia_retries_429_with_backoff_then_answers(monkeypatch):
+    fake = _FakeClient("answer")
+    calls = {"n": 0}
+
+    def create(**kw):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise _RateLimited("Too Many Requests")
+        return fake.resp
+    fake.chat.completions.create = create
+    sleeps = []
+    monkeypatch.setattr(LA.time, "sleep", lambda s: sleeps.append(s))
+    monkeypatch.setattr(LA, "_get_nvidia_client", lambda: fake)
+    r = LA.call_named("nvidia", "s", "u", purpose="t")
+    assert r["ok"] and r["text"] == "answer" and r["n_429"] == 2 and calls["n"] == 3
+    assert len(sleeps) == 2 and sleeps[1] > sleeps[0] - C.MODEL_ROUTING_NVIDIA_JITTER_S
+    assert all(s >= C.MODEL_ROUTING_NVIDIA_BACKOFF_S for s in sleeps)
+
+
+def test_nvidia_gives_up_after_three_429s_as_RATE_LIMITED(monkeypatch):
+    fake = _FakeClient("never")
+
+    def create(**kw):
+        raise _RateLimited("Too Many Requests")
+    fake.chat.completions.create = create
+    monkeypatch.setattr(LA.time, "sleep", lambda s: None)
+    monkeypatch.setattr(LA, "_get_nvidia_client", lambda: fake)
+    r = LA.call_named("nvidia", "s", "u", purpose="t")
+    assert r["ok"] is False and r["status"] == "RATE_LIMITED" and r["n_429"] == 3
+
+
+def test_a_non_429_error_is_not_retried(monkeypatch):
+    fake = _FakeClient("never")
+    calls = {"n": 0}
+
+    def create(**kw):
+        calls["n"] += 1
+        raise ValueError("400 bad request")
+    fake.chat.completions.create = create
+    monkeypatch.setattr(LA, "_get_nvidia_client", lambda: fake)
+    r = LA.call_named("nvidia", "s", "u", purpose="t")
+    assert r["status"] == "ERROR" and calls["n"] == 1
+
+
+def test_the_adjudicator_is_a_non_reasoning_INSTRUCT_model_recorded_with_its_date():
+    assert C.MODEL_ROUTING_NVIDIA_MODEL == C.NVIDIA_ADJUDICATOR_MODEL
+    assert "instruct" in C.NVIDIA_ADJUDICATOR_MODEL and "nemotron-3-super" not in C.NVIDIA_ADJUDICATOR_MODEL
+    assert C.NVIDIA_ADJUDICATOR_MODEL_CHOSEN == "2026-09-26"
+    assert LA._nvidia_model() == C.NVIDIA_ADJUDICATOR_MODEL
+    assert LA.cost_status(C.NVIDIA_ADJUDICATOR_MODEL) == "LISTED"      # free tier, a LINE
+    assert LA.cost_status("local") == "LISTED"                           # no permanent LOWER BOUND
+
+
+def test_the_row_records_the_model_the_PROVIDER_says_answered(monkeypatch):
+    fake = _FakeClient("hi")
+    fake.resp.model = "deepseek-flash"
+    monkeypatch.setattr(LA, "_get_nvidia_client", lambda: fake)
+    r = LA.call_named("nvidia", "s", "u", purpose="t")
+    assert r["served_model"] == "deepseek-flash" and r["model"] == C.NVIDIA_ADJUDICATOR_MODEL
 
 
 def test_nvidia_without_a_key_is_a_REFUSAL_not_a_fallback(monkeypatch):
@@ -382,3 +623,67 @@ def test_the_telegram_agent_routes_through_the_table():
     from scripts import telegram_agent as TA
     for cmd in MR.ROUTES:
         assert TA.HANDLERS[cmd].__name__ == f"routed_{cmd}", cmd
+
+
+# ─────────────────────────────── Telegram redaction ─────────────────────────
+
+def test_error_text_is_REDACTED_before_it_reaches_telegram(monkeypatch):
+    from pathlib import Path as _P
+
+    from backend.services import telegram_bridge as TG
+    home = str(_P.home())
+    fake = "sk-" + "A1b2C3d4E5f6G7h8I9j0K1l2M3"            # a FAKE key, never a real one
+    nv = "nvapi-" + "Z" * 30
+    SEP = chr(92)                                            # a Windows path separator
+    tb = ("Traceback (most recent call last):\n"
+          f'  File "{home}{SEP}aegis-finance{SEP}backend{SEP}services{SEP}llm_analyzer.py", line 540\n'
+          f"openai.AuthenticationError: 401 Incorrect API key provided: {fake}\n"
+          f"{{'api_key': '{fake}', 'token': 'abcdefghijklmnopqrstuvwxyz0123'}}\n"
+          f"NVIDIA_API_KEY={nv}\n"
+          "Authorization: Bearer abcdefghijklmnopqrstuvwxyz123\n"
+          f"loaded {home.replace(chr(92), '/')}/aegis-finance/.env")
+    out = TG.redact(tb)
+    for secret in (fake, nv, "abcdefghijklmnopqrstuvwxyz0123", "abcdefghijklmnopqrstuvwxyz123",
+                   home, home.replace("\\", "/")):
+        assert secret not in out, secret
+    assert f"~{SEP}aegis-finance{SEP}backend" in out and "llm_analyzer.py" in out   # still readable
+    assert "NVIDIA_API_KEY=<redacted>" in out
+    sent = []
+    monkeypatch.setattr(TG, "owner_chat_id", lambda: "1")
+    monkeypatch.setattr(TG, "_call", lambda method, payload=None, **k: sent.append(payload) or {})
+    monkeypatch.setattr(TG, "_append", lambda *a, **k: None)
+    TG.send(tb)
+    assert sent and all(fake not in p["text"] and nv not in p["text"] for p in sent)
+
+
+def test_a_handler_exception_reaches_the_phone_redacted(monkeypatch):
+    from backend.services import telegram_bridge as TG
+    fake = "token=" + "q" * 32
+    monkeypatch.setattr(TG, "owner_chat_id", lambda: "1")
+    monkeypatch.setattr(TG, "updates", lambda **k: [{"message": {"chat": {"id": 1},
+                                                                 "text": "/boom"}}])
+    monkeypatch.setattr(TG, "_append", lambda *a, **k: None)
+    sent = []
+    monkeypatch.setattr(TG, "_call", lambda method, payload=None, **k: sent.append(payload) or {})
+
+    def boom(args, msg):
+        raise RuntimeError(f"failed with {fake}")
+    TG.poll({"boom": boom})
+    assert sent and "q" * 32 not in sent[0]["text"] and "<redacted>" in sent[0]["text"]
+
+
+def test_the_telegram_digest_runs_the_promise_grader_once_per_day(monkeypatch, tmp_path):
+    from datetime import date
+
+    from scripts import telegram_agent as TA
+    calls = []
+    monkeypatch.setattr(MR, "grade_promises_daily",
+                        lambda today=None: calls.append(today) or
+                        {"action": "ran", "day": "2026-10-01", "state": "OK", "elapsed_s": 1.0})
+    TA._DAILY_DONE.clear()
+    first = TA.daily_jobs(today=date(2026, 10, 1))
+    second = TA.daily_jobs(today=date(2026, 10, 1))
+    assert first and "promises graded (2026-10-01): OK" in first[0]
+    assert second == [] and len(calls) == 1
+    import inspect
+    assert "daily_jobs()" in inspect.getsource(TA.main)          # the serve loop + --brief call it

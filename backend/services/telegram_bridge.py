@@ -56,6 +56,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -119,6 +120,61 @@ def me() -> dict:
     return _call("getMe")
 
 
+# ─────────────────────────────── redaction ──────────────────────────────────
+#
+# G-fix, adjudication row 7 (reviewer G, SAFETY): `call_named` put `str(e)[:300]`
+# into `error`, `/ask` `/deep` `/compare` sent it to Telegram, and `poll` sent any
+# handler exception's text. A provider that echoes a key in a 401 body, or a
+# traceback that prints a path or a `.env` line, would leave the machine. Every
+# outbound text now passes `redact()` inside `send()` -- one choke point, so no
+# handler can forget -- and `poll` redacts the exception text before building
+# the reply as well.
+
+REDACTED = "<redacted>"
+
+_SECRET_AFTER_WORD = re.compile(
+    r"(?i)((?:api[_-]?)?(?:key|token|secret)\w*[\s\"':=]{0,6}(?:bearer\s+)?)"
+    r"[A-Za-z0-9_\-]{20,}")
+_BEARER = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9_\-\.=]{12,}")
+_PREFIXED = re.compile(r"\b(?:sk|nvapi|pk|rk|ghp|xox[abpr]|APCA|PK)[-_][A-Za-z0-9_\-]{12,}")
+_ENV_LINE = re.compile(r"(?m)^(\s*(?:export\s+)?[A-Z][A-Z0-9_]{2,}\s*=\s*)\S.*$")
+_ENV_INLINE = re.compile(
+    r"\b([A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|PASS|PWD)[A-Z0-9_]*\s*=\s*)[^\s,;'\"]+")
+
+
+def _home_pattern() -> "re.Pattern[str] | None":
+    try:
+        parts = [x for x in re.split(r"[\\/]+", str(Path.home())) if x]
+    except (RuntimeError, OSError):
+        return None
+    if not parts:
+        return None
+    # C:\Users\name, C:/Users/name, C:\\Users\\name (a repr) all match
+    return re.compile(r"[\\/]*".join(re.escape(x) for x in parts) + r"(?=[\\/]|\b)",
+                      re.IGNORECASE)
+
+
+def redact(text: Any) -> str:
+    """Strip what must never reach a third party from outbound text.
+
+    * paths under the user's home -> `~`
+    * a run of 20+ `[A-Za-z0-9_-]` after `key` / `token` / `secret`
+      (case-insensitive, e.g. `api_key='...'`, `NVIDIA_API_KEY=...`)
+    * `Bearer ...`, and the house key prefixes (`sk-`, `nvapi-`, `APCA...`)
+    * `.env`-shaped lines (`NAME=value`) -> `NAME=<redacted>`
+    """
+    t = "" if text is None else str(text)
+    hp = _home_pattern()
+    if hp is not None:
+        t = hp.sub("~", t)
+    t = _ENV_LINE.sub(lambda m: m.group(1) + REDACTED, t)
+    t = _ENV_INLINE.sub(lambda m: m.group(1) + REDACTED, t)
+    t = _BEARER.sub(lambda m: m.group(1) + REDACTED, t)
+    t = _SECRET_AFTER_WORD.sub(lambda m: m.group(1) + REDACTED, t)
+    t = _PREFIXED.sub(REDACTED, t)
+    return t
+
+
 # ──────────────────────────────── outbound ──────────────────────────────────
 
 def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
@@ -136,6 +192,7 @@ def send(text: str, *, chat_id: str | None = None, markdown: bool = True,
             f"to the bot once and `claim_owner()` will capture it. This bridge "
             f"does not reply to whoever spoke last — the destination is "
             f"configuration, not message-derived.")
+    text = redact(text)
     out = []
     for chunk in _split(text):
         payload = {"chat_id": target, "text": chunk,
@@ -283,7 +340,7 @@ def poll(handlers: dict[str, Callable[[list[str], dict], str]] | None = None) ->
         try:
             reply = fn(parts[1:], msg)
         except Exception as exc:                                   # noqa: BLE001
-            reply = f"`/{cmd}` failed: `{type(exc).__name__}: {exc}`"
+            reply = f"`/{cmd}` failed: `{type(exc).__name__}: {redact(exc)}`"
             logger.exception("telegram command %s failed", cmd)
         if reply:
             send(reply, tag=f"cmd:{cmd}")
