@@ -2,10 +2,188 @@
  "schema": "bridge/1",
  "date": "2026-09-26",
  "licence": "PRODUCT_EXPERIMENT",
- "generated_utc": "2026-09-26T09:00:12+00:00",
- "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26.json",
+ "generated_utc": "2026-09-26T09:41:03+00:00",
+ "git_head": "625407d2",
+ "leaderboard": "backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json",
  "receipt_json": "backend/data/optimus/bridge/bridge_2026-09-26.json",
- "replication": "backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26.json",
+ "replication": "backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26T093458Z.json",
+ "library_facts": {
+  "n_rules": 277,
+  "n_beat": 104,
+  "median_sealed_vs_spy": -0.039232,
+  "best_dsr": 0.2015,
+  "best_dsr_id": "mom_12_1_q",
+  "n_cells": 834,
+  "n_families": 31,
+  "n_sealed": 32,
+  "ctrl_lo": -0.106085,
+  "ctrl_hi": -0.018463,
+  "both": [
+   "mom_12_1_q",
+   "skill_mom",
+   "qc395_sharpe252_above_trend_large",
+   "qc470_mom252_quarterly_riskparity"
+  ]
+ },
+ "dev_selected": {
+  "label": "2024-26 selection window (split declared, data seen)",
+  "n_rules": 277,
+  "selection": "top-n by dev_vs_spy (dev net CAGR - SPY CAGR, entry <= 2023-12-31); evaluated on sealed_vs_spy (entry >= 2024-01-01)",
+  "top_10": {
+   "n": 10,
+   "ids": [
+    "insider_mom",
+    "mom_no_downgrades",
+    "mom_no_rating_downgrade",
+    "mom_12_1",
+    "px_vs_ma200_large",
+    "mom_no_downgrades_small",
+    "mom_6_1_large",
+    "mom_12_1_small",
+    "mom_12_1_q",
+    "px_vs_ma200"
+   ],
+   "mean_selection_window_vs_spy": 0.045315,
+   "median_selection_window_vs_spy": -0.016186,
+   "n_beat_spy": 5,
+   "mean_dev_vs_spy": 0.23872
+  },
+  "top_20": {
+   "n": 20,
+   "ids": [
+    "insider_mom",
+    "mom_no_downgrades",
+    "mom_no_rating_downgrade",
+    "mom_12_1",
+    "px_vs_ma200_large",
+    "mom_no_downgrades_small",
+    "mom_6_1_large",
+    "mom_12_1_small",
+    "mom_12_1_q",
+    "px_vs_ma200",
+    "qc536_secneutral_multimom_large",
+    "resid_mom_12_1",
+    "eap_avoid_mom",
+    "div_mom_insider_flow",
+    "mom_in_top_sectors",
+    "mom_resid_to_sector",
+    "gp_low_ag",
+    "qc597_secneutral_multimom_calm",
+    "trend_quality_large",
+    "trend_ma50_200"
+   ],
+   "mean_selection_window_vs_spy": 0.016611,
+   "median_selection_window_vs_spy": -0.015568,
+   "n_beat_spy": 10,
+   "mean_dev_vs_spy": 0.206281
+  },
+  "top_50": {
+   "n": 50,
+   "ids": [
+    "insider_mom",
+    "mom_no_downgrades",
+    "mom_no_rating_downgrade",
+    "mom_12_1",
+    "px_vs_ma200_large",
+    "mom_no_downgrades_small",
+    "mom_6_1_large",
+    "mom_12_1_small",
+    "mom_12_1_q",
+    "px_vs_ma200",
+    "qc536_secneutral_multimom_large",
+    "resid_mom_12_1",
+    "eap_avoid_mom",
+    "div_mom_insider_flow",
+    "mom_in_top_sectors",
+    "mom_resid_to_sector",
+    "gp_low_ag",
+    "qc597_secneutral_multimom_calm",
+    "trend_quality_large",
+    "trend_ma50_200",
+    "low_asset_growth_large",
+    "mom_12_1_ivw",
+    "mom_gp",
+    "mom_low_ag",
+    "qc395_sharpe252_above_trend_large",
+    "qc629_multimom_above_trend_gated",
+    "mom_12m",
+    "small_gp_mom",
+    "eap_mom",
+    "mom_no_exec_change",
+    "qc470_mom252_quarterly_riskparity",
+    "gp_at_large",
+    "trend_quality",
+    "mom_6m",
+    "frog_in_pan",
+    "mom_6_1",
+    "mom_12_1_q_trend",
+    "mom_no_downgrades_trend",
+    "net_raises",
+    "mom_in_raised",
+    "mom_12_1_trend",
+    "rev_1m",
+    "div_mom_shorts_quality",
+    "mom_12_1_small_trend",
+    "inflection_flow",
+    "mom_no_insider_selling",
+    "net_raises_180d",
+    "gh11_skip_month_composite_q",
+    "ibes_skill_net_raises",
+    "low_dtc_gp"
+   ],
+   "mean_selection_window_vs_spy": 0.008807,
+   "median_selection_window_vs_spy": -0.014759,
+   "n_beat_spy": 22,
+   "mean_dev_vs_spy": 0.149098
+  },
+  "spearman_dev_vs_selection_window": {
+   "rho": 0.170452,
+   "p_value": 0.004442,
+   "n": 277
+  },
+  "n_beat_spy_in_both_windows": 62,
+  "n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40": 35,
+  "mde": {
+   "active_sigma_monthly_median": 0.053613,
+   "n_blocks": 32,
+   "se_monthly": 0.009478,
+   "mde_monthly_80pct_power": 0.026537,
+   "mde_annualised_simple": 0.318448,
+   "basis": "median across rules of |mean_active_monthly * sqrt(12) / IR_annual| (the full-window monthly active sigma); SE = sigma / sqrt(blocks); MDE = 2.8 SE (two-sided 5%, 80% power)"
+  },
+  "sentence": "Choosing the top 10 rules by dev (pre-2024) results alone gave +4.5 pp/yr mean vs SPY in the 2024-26 selection window (split declared, data seen) (median -1.6 pp; 5 of 10 beat SPY); dev-to-2024-26 rank Spearman 0.17 over 277 rules; 62 rules beat SPY in both windows; the MDE of a 32-block window at 80% power is 2.7%/month."
+ },
+ "n_forward_graded": 0,
+ "voided_before_entry": [
+  {
+   "book_id": "76ea751d6ef35ab5",
+   "name": "lib_mom_12_1_liqw_sealed_2026-09-26",
+   "reason": "VOID_BEFORE_ENTRY: concentration (effN 2.0, MU 60.3% + SNDK 37.2% = 97.5%, rho 0.90, MU prints 09-30 inside the first 5 sessions)",
+   "voided_utc": "2026-09-26T09:27:03+00:00",
+   "who": "opus-builder (D+E post-review fixes, adjudicated by Fable 2026-09-26)"
+  }
+ ],
+ "gate_summary": {
+  "n_books": 20,
+  "n_pass": 0,
+  "pass_but_timing": [
+   "lib_mom_12_1_q_2026-09-26",
+   "lib_net_raises_2026-09-26",
+   "lib_mom_12_1_2026-09-26",
+   "lib_mom_flow_2026-09-26",
+   "lib_frog_in_pan_2026-09-26",
+   "lib_inflection_flow_2026-09-26",
+   "lib_skill_mom_sealed_2026-09-26",
+   "lib_low_asset_growth_sealed_2026-09-26"
+  ],
+  "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date",
+  "log": "backend/data/optimus/bridge/freeze_gate_2026-09-26.json",
+  "todo": "TODO (review item 14, not tonight): re-freeze each library book as a chained immutable version at every one of its rule's own rebalance dates (month-end decision, next-open entry) under one rule fingerprint, so a monthly rule is graded as the rule and not as a stale September basket."
+ },
+ "semis_umd_regression": {
+  "status": "SMH_NOT_IN_PANEL",
+  "why": "SMH has no bars in the survivorship-free panel or the global_prices cache; the regression is not run rather than run without the sector leg"
+ },
  "regime": {
   "status": "OK",
   "asof": "2026-09-21",
@@ -56,7 +234,7 @@
    "sealed_cagr": 0.588691,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.378698,
-   "sealed_dsr": 0.0602,
+   "sealed_dsr": 0.0572,
    "max_dd": -0.359042,
    "turnover_annual": 2.446957,
    "sigma_active_monthly": 0.09836951717113122,
@@ -79,7 +257,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_mom_no_downgrades_2026-09-26",
@@ -94,7 +276,7 @@
    "sealed_cagr": 0.213837,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.003844,
-   "sealed_dsr": 0.0028,
+   "sealed_dsr": 0.0026,
    "max_dd": -0.423046,
    "turnover_annual": 4.184348,
    "sigma_active_monthly": 0.1032716387705758,
@@ -117,7 +299,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_net_raises_2026-09-26",
@@ -132,7 +318,7 @@
    "sealed_cagr": 0.268494,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.058501,
-   "sealed_dsr": 0.0057,
+   "sealed_dsr": 0.0053,
    "max_dd": -0.239801,
    "turnover_annual": 5.363478,
    "sigma_active_monthly": 0.03847135757882462,
@@ -155,7 +341,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_big_dv_2026-09-26",
@@ -170,10 +360,10 @@
    "sealed_cagr": 0.345336,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.135343,
-   "sealed_dsr": 0.0178,
+   "sealed_dsr": 0.0166,
    "max_dd": -0.407504,
    "turnover_annual": 0.845217,
-   "sigma_active_monthly": 0.041938997684505416,
+   "sigma_active_monthly": 0.041939067058138976,
    "forward_return": "PENDING (entry 2026-09-28)",
    "forward_spy": "PENDING (entry 2026-09-28)",
    "forward_relative": "PENDING (entry 2026-09-28)",
@@ -193,7 +383,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_mom_12_1_2026-09-26",
@@ -207,8 +401,8 @@
    "dev_spy_cagr": 0.131815,
    "sealed_cagr": 0.258398,
    "sealed_spy_cagr": 0.209993,
-   "sealed_vs_spy": 0.048406,
-   "sealed_dsr": 0.0039,
+   "sealed_vs_spy": 0.048405,
+   "sealed_dsr": 0.0036,
    "max_dd": -0.363856,
    "turnover_annual": 4.106087,
    "sigma_active_monthly": 0.10418745666973847,
@@ -231,7 +425,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_mom_12_1_small_2026-09-26",
@@ -269,7 +467,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_mom_flow_2026-09-26",
@@ -284,7 +486,7 @@
    "sealed_cagr": 0.438999,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.229006,
-   "sealed_dsr": 0.0441,
+   "sealed_dsr": 0.0419,
    "max_dd": -0.271746,
    "turnover_annual": 5.113043,
    "sigma_active_monthly": 0.06344053554252561,
@@ -307,7 +509,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_trend_quality_2026-09-26",
@@ -322,7 +528,7 @@
    "sealed_cagr": 0.206793,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": -0.0032,
-   "sealed_dsr": 0.0009,
+   "sealed_dsr": 0.0008,
    "max_dd": -0.255279,
    "turnover_annual": 3.735652,
    "sigma_active_monthly": 0.04361263927248946,
@@ -345,7 +551,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(2024_26_NOT_ABOVE_SPY, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_frog_in_pan_2026-09-26",
@@ -360,7 +570,7 @@
    "sealed_cagr": 0.352675,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.142682,
-   "sealed_dsr": 0.0082,
+   "sealed_dsr": 0.0076,
    "max_dd": -0.29253,
    "turnover_annual": 4.94087,
    "sigma_active_monthly": 0.06706126571249986,
@@ -383,7 +593,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_inflection_flow_2026-09-26",
@@ -398,7 +612,7 @@
    "sealed_cagr": 0.272014,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.062021,
-   "sealed_dsr": 0.0064,
+   "sealed_dsr": 0.0059,
    "max_dd": -0.259791,
    "turnover_annual": 4.408696,
    "sigma_active_monthly": 0.04650842635653686,
@@ -421,7 +635,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_forecast_dispersion_v1_2026-09-26",
@@ -459,7 +677,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "FORWARD-ONLY (no backtest row); PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NO_BACKTEST_ROW, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_book_f_seasonality_11_20_v0_2026-09-26",
@@ -497,22 +719,26 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "FORWARD-ONLY (no backtest row); PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(NO_BACKTEST_ROW, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
-   "book": "lib_mom_12_1_liqw_sealed_2026-09-26",
-   "book_id": "76ea751d6ef35ab5",
+   "book": "lib_mom_12_1_liqw_sealed_2026-09-26__ew",
+   "book_id": "2cc265ad037fae46",
    "rule": "mom_12_1_liqw",
    "asof": "2026-09-26",
    "entry": "2026-09-28",
-   "n_positions": 21,
+   "n_positions": 20,
    "receipt_row": true,
    "dev_cagr": 0.069783,
    "dev_spy_cagr": 0.131815,
    "sealed_cagr": 0.893997,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.684004,
-   "sealed_dsr": 0.0749,
+   "sealed_dsr": 0.0714,
    "max_dd": -0.706311,
    "turnover_annual": 5.790746,
    "sigma_active_monthly": 0.15485800146095732,
@@ -534,8 +760,12 @@
    },
    "days_since_inception": 0,
    "sessions_since_entry": 0,
-   "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "status": "STRATEGY TEST (ew twin of the voided parent); PENDING (entry 2026-09-28)",
+   "investigation": null,
+   "kind": "twin",
+   "strategy_test_for_voided": true,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_rev_5d_sealed_2026-09-26",
@@ -550,7 +780,7 @@
    "sealed_cagr": 0.694423,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.48443,
-   "sealed_dsr": 0.1628,
+   "sealed_dsr": 0.1562,
    "max_dd": -0.665092,
    "turnover_annual": 11.64,
    "sigma_active_monthly": 0.11903385096027858,
@@ -573,7 +803,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_skill_mom_sealed_2026-09-26",
@@ -588,7 +822,7 @@
    "sealed_cagr": 0.579619,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.369626,
-   "sealed_dsr": 0.106,
+   "sealed_dsr": 0.1016,
    "max_dd": -0.2727,
    "turnover_annual": 5.222609,
    "sigma_active_monthly": 0.06526666229711195,
@@ -611,7 +845,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_margin_mom_sealed_2026-09-26",
@@ -626,7 +864,7 @@
    "sealed_cagr": 0.578904,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.368911,
-   "sealed_dsr": 0.0618,
+   "sealed_dsr": 0.0589,
    "max_dd": -0.509609,
    "turnover_annual": 5.107826,
    "sigma_active_monthly": 0.08263946187367352,
@@ -649,7 +887,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_illiquid_sealed_2026-09-26",
@@ -663,8 +905,8 @@
    "dev_spy_cagr": 0.131815,
    "sealed_cagr": 0.558678,
    "sealed_spy_cagr": 0.209993,
-   "sealed_vs_spy": 0.348686,
-   "sealed_dsr": 0.0121,
+   "sealed_vs_spy": 0.348685,
+   "sealed_dsr": 0.0111,
    "max_dd": -0.807065,
    "turnover_annual": 7.966957,
    "sigma_active_monthly": 0.1010037372044475,
@@ -687,7 +929,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, TOP5_MONTH_SHARE, MAX_DD, LOO_WORST, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_low_dtc_mom_sealed_2026-09-26",
@@ -702,7 +948,7 @@
    "sealed_cagr": 0.472292,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.262299,
-   "sealed_dsr": 0.0695,
+   "sealed_dsr": 0.0664,
    "max_dd": -0.383824,
    "turnover_annual": 6.297391,
    "sigma_active_monthly": 0.05765391684583345,
@@ -725,7 +971,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(DEV_NOT_ABOVE_SPY, LOO_WORST, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_low_asset_growth_sealed_2026-09-26",
@@ -740,7 +990,7 @@
    "sealed_cagr": 0.469751,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.259758,
-   "sealed_dsr": 0.0207,
+   "sealed_dsr": 0.0193,
    "max_dd": -0.34426,
    "turnover_annual": 2.593043,
    "sigma_active_monthly": 0.07465546199143282,
@@ -763,7 +1013,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_resid_mom_12_1_large_sealed_2026-09-26",
@@ -778,7 +1032,7 @@
    "sealed_cagr": 0.45475,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.244757,
-   "sealed_dsr": 0.0194,
+   "sealed_dsr": 0.0182,
    "max_dd": -0.453334,
    "turnover_annual": 3.667826,
    "sigma_active_monthly": 0.10321885612025548,
@@ -801,7 +1055,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(TOP5_MONTH_SHARE, MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   },
   {
    "book": "lib_mom_12_1_secrel_sealed_2026-09-26",
@@ -816,7 +1074,7 @@
    "sealed_cagr": 0.451369,
    "sealed_spy_cagr": 0.209993,
    "sealed_vs_spy": 0.241376,
-   "sealed_dsr": 0.0228,
+   "sealed_dsr": 0.0214,
    "max_dd": -0.4809,
    "turnover_annual": 4.904348,
    "sigma_active_monthly": 0.08722072645919295,
@@ -839,7 +1097,11 @@
    "days_since_inception": 0,
    "sessions_since_entry": 0,
    "status": "PENDING (entry 2026-09-28)",
-   "investigation": null
+   "investigation": null,
+   "kind": "personal",
+   "strategy_test_for_voided": false,
+   "gate": "CONTROL(TOP5_MONTH_SHARE, MAX_DD, STALE_BARS)",
+   "gate_verdict": "CONTROL"
   }
  ],
  "carried_investigations": [],

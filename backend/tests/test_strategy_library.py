@@ -273,7 +273,7 @@ def test_the_library_seeds_at_least_one_hundred_rules_with_unique_ids():
 
 
 def test_every_rule_carries_its_registration_date_and_a_fingerprint():
-    stamps = {SL.REGISTERED_2026_09_26, SL.REGISTERED_2026_09_26_PM}
+    stamps = {SL.REGISTERED_2026_09_26, SL.REGISTERED_2026_09_26_PM, SL.REGISTERED_2026_09_26_REVIEW}
     for r in SL._rules():                   # the library's own rules (not the sibling module's)
         assert r.first_registered_utc in stamps, r.id
     for r in SL.RULES:
@@ -542,3 +542,88 @@ def test_the_sibling_module_rules_are_registered_or_refused_by_name(monkeypatch)
     finally:
         SL.RULES[:] = saved
         SL.EXTRA_REFUSED.clear()
+
+
+# ── review 2026-09-26 (chunks D+E), adjudicated ──────────────────────────────
+
+def _lb_row(i: str, dev: float, sel: float, **kw) -> dict:
+    r = {"id": i, "control": False, "dev_vs_spy": dev, "sealed_vs_spy": sel,
+         "n_sealed_months": 32, "mean_active_monthly": 0.01, "information_ratio_annual": 0.5,
+         "top5_months_share_of_log_return": 0.4, "max_dd": -0.3}
+    r.update(kw)
+    return r
+
+
+def test_dev_selected_sealed_evaluated_ranks_on_dev_and_reads_2024_26():
+    rows = [_lb_row(f"r{i:02d}", dev=0.01 * (30 - i), sel=(0.05 if i % 2 else -0.02))
+            for i in range(30)]
+    rows.append(_lb_row("ctl", 9.0, 9.0, control=True))           # never selected
+    rows.append(_lb_row("gap", None, 0.3))                         # no dev number
+    b = SL.dev_selected_sealed_evaluated(rows)
+    t10 = b["top_10"]
+    assert t10["ids"] == [f"r{i:02d}" for i in range(10)]           # by DEV, not by 2024-26
+    assert t10["n_beat_spy"] == 5
+    assert t10["mean_selection_window_vs_spy"] == pytest.approx((5 * 0.05 - 5 * 0.02) / 10)
+    assert t10["median_selection_window_vs_spy"] == pytest.approx(0.015)
+    assert b["n_rules"] == 30 and b["top_20"]["n"] == 20 and b["top_50"]["n"] == 30
+    assert b["n_beat_spy_in_both_windows"] == 15
+    assert -1.0 <= b["spearman_dev_vs_selection_window"]["rho"] <= 1.0
+    md = b["mde"]
+    sig = 0.01 * np.sqrt(12) / 0.5
+    assert md["n_blocks"] == 32 and md["active_sigma_monthly_median"] == pytest.approx(sig)
+    assert md["mde_monthly_80pct_power"] == pytest.approx(2.8 * sig / np.sqrt(32))
+    assert SL.SELECTION_WINDOW_LABEL in b["sentence"] and "5 of 10 beat SPY" in b["sentence"]
+
+
+def test_dev_selected_refuses_when_no_row_has_both_windows():
+    b = SL.dev_selected_sealed_evaluated([_lb_row("a", None, 0.1)])
+    assert b["status"] == "REFUSED"
+
+
+def test_the_window_label_never_says_sealed_alone():
+    assert SL.SELECTION_WINDOW_LABEL == "2024-26 selection window (split declared, data seen)"
+
+
+def test_the_three_review_controls_are_registered_as_controls():
+    ids = {r.id: r for r in SL.RULES}
+    for cid in ("skill_mom_ranks_21_40", "unskilled_mom", "mom_12_1_q_jajo",
+                "mom_12_1_q_fman", "mom_12_1_q_mjsd"):
+        r = ids[cid]
+        assert r.control and r.kind == "control" and r.meta()["kind"] == "control"
+        assert r.family == "diagnostic_control"
+        assert not SL.is_random_control(r)
+    assert SL.is_random_control(ids["random_1"])
+    assert "unskilled_net_raises_90" in ids["unskilled_mom"].requires
+    assert ids["mom_12_1_q_fman"].rebalance_months == (2, 5, 8, 11)
+    # the offsets change the fingerprint; an unset field leaves the old ones alone
+    assert ids["mom_12_1_q_jajo"].fingerprint() != ids["mom_12_1_q_fman"].fingerprint()
+    assert "rm" not in ids["mom_12_1"].meta() or ids["mom_12_1"].meta()["rebalance_months"] is None
+
+
+def test_rank_band_selects_exactly_the_base_rules_picks_21_to_40():
+    p = planted_panel(24, 80)
+    base = SL.Strategy("b", "x", "alpha", SL.col("alpha"), k=40)
+    band = SL.Strategy("band", "x", "alpha ranks 21-40", SL.rank_band(SL.col("alpha"), 21, 40),
+                       k=20, control=True)
+    hb, hr = [], []
+    SL.run_strategy(p, base, holdings=hb)
+    SL.run_strategy(p, band, holdings=hr)
+    for a, b_ in zip(hb, hr):
+        assert set(b_["symbols"]) == set(a["symbols"][20:40])
+
+
+def test_rebalance_months_pins_the_quarterly_calendar():
+    p = planted_panel(36, 60)
+    hold: list = []
+    SL.run_strategy(p, SL.Strategy("q", "x", "alpha q", SL.col("alpha"), hold_months=3,
+                                   rebalance_months=(2, 5, 8, 11), control=True), holdings=hold)
+    months = {pd.Timestamp(h["date"]).month for h in hold}
+    assert months <= {2, 5, 8, 11} and len(hold) >= 10
+
+
+def test_by_year_gap_excludes_the_named_year():
+    a = {"id": "a", "by_year": {"2024": {"excess": 0.3}, "2025": {"excess": 0.5}}}
+    b = {"id": "b", "by_year": {"2024": {"excess": 0.1}, "2025": {"excess": 0.0}}}
+    g = SL.by_year_gap(a, b, exclude=("2025",))
+    assert g["gap_by_year"] == pytest.approx({"2024": 0.2, "2025": 0.5})
+    assert g["sum_excluding"] == pytest.approx(0.2) and g["n_years_excluding"] == 1

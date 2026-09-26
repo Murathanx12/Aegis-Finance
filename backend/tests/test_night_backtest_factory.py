@@ -18,6 +18,7 @@ Everything here is offline and writes only under tmp_path.
 from __future__ import annotations
 
 from datetime import date, timedelta
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -99,11 +100,16 @@ def test_the_md_prints_multiplicity_before_the_first_table(ledger):
     md = F.render_md(board)
     assert md.index("## Multiplicity") < md.index("## Top 10 by deflated Sharpe")
     assert "HINDSIGHT" in md.splitlines()[2]
-    assert md.index("## Multiplicity") < md.index("## Top 10 by SEALED net return vs SPY")
-    # the FIRST table is the objective's, and its first number is sealed-vs-SPY
+    top_hd = "## Top 10 by net return vs SPY in the " + SL.SELECTION_WINDOW_LABEL
+    assert md.index("## Multiplicity") < md.index(top_hd)
+    # review 2026-09-26: the dev-selected read is printed BEFORE the 2024-26 sort
+    assert md.index("## Dev-selected, 2024-26-evaluated") < md.index(top_hd)
+    # never "sealed" without the qualifier
+    assert "SEALED" not in md and "sealed vs SPY" not in md
+    # the FIRST id table is the 2024-26 sort's, and its first number is 2024-26-vs-SPY
     head = [ln for ln in md.splitlines() if ln.startswith("| id |")][0]
-    assert head.index("sealed vs SPY") < head.index("dev CAGR")
-    assert head.index("sealed DSR") < head.index("dev CAGR")
+    assert head.index("2024-26 vs SPY") < head.index("dev CAGR")
+    assert head.index("2024-26 DSR") < head.index("dev CAGR")
     for col in ("LOO-worst", "top-5-mo share", "turnover/yr", "cost bps/yr", "max DD",
                 "recent-126", "DSR full"):
         assert col in head
@@ -172,22 +178,34 @@ def test_a_resume_under_a_changed_library_is_refused(ledger):
 
 
 def test_the_leaderboard_is_idempotent_per_day(ledger):
+    """Same panel -> same board. Each RUN writes its own receipt (run id in the
+    name, never overwritten); the date-named file and LEADERBOARD.md are the
+    refreshed 'latest' copies (review 2026-09-26 finding 0)."""
+    import json
     p = planted_panel(40, 60)
     spy = planted_spy(p)
     out = ledger / "lib"
     b1 = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=_library(20), out=out,
                        log=lambda *_: None)
-    F.write_outputs(b1, out=out, today=TODAY)
-    one = (out / f"leaderboard_{TODAY}.json").read_bytes()
-    md1 = (out / "LEADERBOARD.md").read_bytes()
+    w1 = F.write_outputs(b1, out=out, today=TODAY, run_id=f"{TODAY}T010000Z")
     b2 = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=_library(20), out=out,
                        log=lambda *_: None)
     b2.pop("n_computed_this_run")
     b1.pop("n_computed_this_run")
-    F.write_outputs(b2, out=out, today=TODAY)
+    w2 = F.write_outputs(b2, out=out, today=TODAY, run_id=f"{TODAY}T020000Z")
     assert b1 == b2
-    assert (out / "LEADERBOARD.md").read_bytes() == md1
-    assert (out / f"leaderboard_{TODAY}.json").read_bytes() != b"" and one
+    r1, r2 = Path(w1["leaderboard"]), Path(w2["leaderboard"])
+    assert r1.name == f"leaderboard_{TODAY}T010000Z.json" and r1.exists()
+    assert r2.name == f"leaderboard_{TODAY}T020000Z.json" and r2.exists()
+    d1, d2 = (json.loads(x.read_text(encoding="utf-8")) for x in (r1, r2))
+    assert d1["run_id"] != d2["run_id"] and d1["receipt"].endswith(r1.name)
+    assert {k: v for k, v in d1.items() if k not in ("run_id", "receipt", "n_computed_this_run")} ==         {k: v for k, v in d2.items() if k not in ("run_id", "receipt", "n_computed_this_run")}
+    latest = json.loads((out / f"leaderboard_{TODAY}.json").read_text(encoding="utf-8"))
+    assert latest["run_id"] == d2["run_id"]
+    assert r2.name in (out / "LEADERBOARD.md").read_text(encoding="utf-8")
+    with pytest.raises(FileExistsError):
+        F.write_outputs(b1, out=out, today=TODAY, run_id=f"{TODAY}T010000Z")
+    assert F.new_run_id().startswith(str(date.today())[:4]) and F.new_run_id().endswith("Z")
 
 
 def test_the_dsr_leader_gets_a_frozen_forward_book_with_four_twins(ledger, capsys):
@@ -287,7 +305,8 @@ def test_every_row_carries_the_sealed_columns(ledger):
     assert ob["dev_end"] == "2023-12-31" and ob["sealed_start"] == "2024-01-01"
     assert board["multiplicity"]["cells_looked_at"] == 63        # 21 rules x k 10/20/50
     assert ob["noise_sharpe_ceiling_monthly_sealed"] > ob["noise_sharpe_ceiling_monthly_full"] > 0
-    assert "not that nobody has seen" in ob["honest_note"].replace("NOT", "not")
+    assert SL.SELECTION_WINDOW_LABEL in ob["honest_note"]
+    assert "nobody's eyes were closed" in ob["honest_note"]
 
 
 def test_the_primary_sort_is_sealed_net_return_vs_spy(ledger):
@@ -315,8 +334,10 @@ def test_the_replication_file_round_trips(ledger):
     out = ledger / "lib"
     board = F.run_factory(p, spy, _spy_meta(spy), today=TODAY, rules=rules, out=out,
                           log=lambda *_: None)
-    path = F.write_replication(board, p, spy, rules, out=out, today=TODAY)
-    assert path.name == f"top10_for_replication_{TODAY}.json"
+    path = F.write_replication(board, p, spy, rules, out=out, today=TODAY,
+                               run_id=f"{TODAY}T030405Z")
+    assert path.name == f"top10_for_replication_{TODAY}T030405Z.json"
+    assert (out / f"top10_for_replication_{TODAY}.json").read_bytes() == path.read_bytes()
     doc = json.loads(path.read_text(encoding="utf-8"))
     assert len(doc["rows"]) == 10
     assert set(doc["cost_model"]["bands_bps_round_trip"]) == {"mega", "large", "mid", "small"}
@@ -343,3 +364,102 @@ def test_a_forward_only_rule_is_refused_not_backtested(ledger):
                           out=ledger / "lib", log=lambda *_: None)
     assert "FORWARD_ONLY" in board["refused"]["fwd"]
     assert board["multiplicity"]["cells_looked_at"] == 6 * 2     # 40 names: k=50 never fills
+
+
+# ── the freeze gate (review 2026-09-26 chunks D+E, adjudicated) ─────────────
+
+_GOOD_ROW = {"id": "g", "family": "momentum", "dev_vs_spy": 0.05, "sealed_vs_spy": 0.08,
+             "top5_months_share_of_log_return": 0.4, "max_dd": -0.30,
+             "loo_worst_mean_active": 0.004}
+
+
+def _gate_bars(names, end, *, corr_pair=None, n=90, seed=5):
+    """Daily closes; `corr_pair` names share one return stream (rho ~ 1)."""
+    rng = np.random.default_rng(seed)
+    days = pd.bdate_range(end=end, periods=n)
+    common = rng.normal(0, 0.02, n)
+    rows = []
+    for s in list(names) + ["SPY"]:
+        r = common if corr_pair and s in corr_pair else rng.normal(0, 0.02, n)
+        px = 100 * np.cumprod(1 + r)
+        rows += [{"symbol": s, "date": d, "open": c, "high": c, "low": c, "close": c,
+                  "volume": 1e6} for d, c in zip(days, px)]
+    return pd.DataFrame(rows), pd.DatetimeIndex(days)
+
+
+def test_a_concentrated_book_is_frozen_as_a_control_with_every_reason():
+    """The liqw case: two correlated names at 60/40 with one printing in week one."""
+    end = pd.Timestamp("2026-09-25")
+    bars, cal = _gate_bars(["MU", "SNDK"], end, corr_pair=("MU", "SNDK"))
+    g = F.freeze_gate(dict(_GOOD_ROW, dev_vs_spy=-0.06, top5_months_share_of_log_return=0.91,
+                           max_dd=-0.706), {"MU": 0.603, "SNDK": 0.372, "AXTI": 0.025},
+                      bars, cal, decision_date="2026-09-26",
+                      earnings={"MU": {"status": "DUE"}, "SNDK": {"status": "NOT_DUE"}})
+    assert g["verdict"] == "CONTROL" and g["label"].startswith("CONTROL(")
+    d = g["detail"]
+    assert d["effective_n"] == pytest.approx(1 / (0.603**2 + 0.372**2 + 0.025**2), abs=1e-3)
+    assert d["effective_n"] < 2.1
+    for reason in ("DEV_NOT_ABOVE_SPY", "TOP5_MONTH_SHARE", "MAX_DD", "NAME_WEIGHT",
+                   "EFFECTIVE_N", "CORRELATED_CLUSTER", "EARNINGS", "WORST_CASE_NAME"):
+        assert reason in g["reasons"], reason
+    assert set(d["max_cluster"]) == {"MU", "SNDK"} and d["max_cluster_share"] > 0.9
+    assert d["largest_name_to_zero_usd"] == pytest.approx(603_000)
+    # every boolean is printed, grouped
+    assert g["selection"]["dev_vs_spy_gt_0"] is False
+    assert g["construction"]["effective_n_ge_8"] is False
+    assert g["timing"]["bars_le_1_session_old"] is True        # Friday bars, Saturday decision
+    assert d["bar_date"] == "2026-09-25" and d["staleness_sessions"] == 0
+    assert "chained" in g["todo"]
+
+
+def test_a_diversified_fresh_book_on_a_good_row_passes():
+    end = pd.Timestamp("2026-09-25")
+    names = [f"N{i:02d}" for i in range(20)]
+    bars, cal = _gate_bars(names, end)
+    g = F.freeze_gate(_GOOD_ROW, {t: 0.05 for t in names}, bars, cal,
+                      decision_date="2026-09-25")
+    assert g["verdict"] == "PASS" and g["label"] == "PASS", g["reasons"]
+    assert g["detail"]["effective_n"] == pytest.approx(20.0)
+
+
+def test_stale_bars_family_cap_and_unknown_earnings_never_pass():
+    names = [f"N{i:02d}" for i in range(20)]
+    bars, cal = _gate_bars(names, pd.Timestamp("2026-09-21"))      # Monday bars
+    g = F.freeze_gate(_GOOD_ROW, {t: 0.05 for t in names}, bars, cal,
+                      decision_date="2026-09-26", family_books_before=2)
+    assert "STALE_BARS" in g["reasons"] and "FAMILY_CAP" in g["reasons"]
+    assert g["detail"]["staleness_sessions"] == 4
+    ten = [f"N{i:02d}" for i in range(8)]
+    g2 = F.freeze_gate(_GOOD_ROW, {t: 0.125 for t in ten}, *_gate_bars(ten, "2026-09-25"),
+                       decision_date="2026-09-25", earnings={})
+    assert "EARNINGS_UNKNOWN" in g2["reasons"]                     # unknown is not a pass
+    assert g2["construction"]["no_name_gt_10pct_printing_in_first_5_sessions"] is None
+    g3 = F.freeze_gate(None, {t: 0.05 for t in names}, bars, cal, decision_date="2026-09-21")
+    assert "NO_BACKTEST_ROW" in g3["reasons"]
+
+
+def test_earnings_due_reads_the_8k_calendar_point_in_time(tmp_path):
+    p = tmp_path / "ek.parquet"
+    pd.DataFrame({"ticker": ["MU", "SNDK", "OLD"],
+                  "filing_date": ["2026-06-24", "2026-08-05", "2026-09-01"],
+                  "items_joined": ["2.02,9.01", "2.02", "8.01"]}).to_parquet(p)
+    e = F.earnings_due(["MU", "SNDK", "OLD"], "2026-09-26", path=p)
+    assert e["MU"]["status"] == "DUE" and e["SNDK"]["status"] == "NOT_DUE"
+    assert e["OLD"]["status"] == "UNKNOWN"                          # no 2.02 history
+    stale = F.earnings_due(["MU"], "2026-12-26", path=p)             # file 3 months old
+    assert stale["MU"]["status"] == "UNKNOWN"
+
+
+def test_a_gate_failure_freezes_a_control_book_not_a_headline(ledger):
+    from backend.services import llm_portfolio as LP
+    p = planted_panel()
+    rules = _library(3)
+    bars = _bars_for(p)
+    gate = {"verdict": "CONTROL", "label": "CONTROL(EFFECTIVE_N)", "reasons": ["EFFECTIVE_N"]}
+    picks = SL.latest_selection(p, rules[0])
+    out = F.freeze_book("planted", "x", picks, today=TODAY, bars=bars, note="n",
+                        log=lambda *_: None, gate=gate)
+    assert out["name"] == f"lib_planted_{TODAY}__control" and out["kind"] == "control"
+    rec = next(r for r in LP.read_books() if r["name"] == out["name"])
+    assert rec["kind"] == "control" and rec["freeze_gate"]["label"] == "CONTROL(EFFECTIVE_N)"
+    assert "planted" in F._existing_lib_ids(LP.read_books())

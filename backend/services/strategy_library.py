@@ -625,6 +625,16 @@ SEALED_START = "2024-01-01"
 RECENT_SESSIONS = 126
 RECENT_PERIODS = 6
 
+#: What the 2024-> window IS (review 2026-09-26 chunks D+E, adjudicated): the
+#: split was declared in code before the ranking, but every rule was written in
+#: 2026 by people who lived 2024-26 and the board RANKS on it. It is a selection
+#: window, not a holdout. Every board, README and BRIDGE line uses this label;
+#: "sealed"/"OOS" never appears without it. (Field names stay `sealed_*` for
+#: receipt compatibility -- the label is what a reader sees.)
+SELECTION_WINDOW_LABEL = "2024-26 selection window (split declared, data seen)"
+#: z for a two-sided 5% test at 80% power (1.96 + 0.84): the MDE multiplier.
+MDE_Z = 2.8
+
 #: Construction rules the engine knows. Equal weight is the default; the other
 #: two are the SIZ-04 / risk-parity construction variants.
 WEIGHT_RULES = ("equal", "inv_vol", "inv_amihud")
@@ -733,6 +743,10 @@ class Strategy:
     #: p, live snapshots): it is registered and gets a forward book, and the
     #: factory REFUSES to backtest it rather than scoring an empty past.
     forward_only: bool = False
+    #: calendar months (1-12) of the DECISION date on which the book rebalances.
+    #: None = every `hold_months` periods from the first selectable date (the
+    #: original engine). Set only on the rebalance-offset controls.
+    rebalance_months: tuple | None = None
 
     def __post_init__(self) -> None:
         check_costs(self.cost_scale, self.zero_cost_diagnostic)
@@ -759,8 +773,16 @@ class Strategy:
         """What makes a rule DIFFERENT: signal structure, universe, holding,
         weighting, regime gate. Deliberately NOT k and NOT any threshold -- two
         rules with the same signature are one rule at two settings."""
-        return "|".join([self.shape, f"u={self.universe_rule}", f"h={self.hold_months}",
-                         f"w={self.weight_rule}", f"g={self.regime_gate or '-'}"])
+        sig = [self.shape, f"u={self.universe_rule}", f"h={self.hold_months}",
+               f"w={self.weight_rule}", f"g={self.regime_gate or '-'}"]
+        if self.rebalance_months:
+            sig.append("rm=" + ",".join(str(m) for m in self.rebalance_months))
+        return "|".join(sig)
+
+    @property
+    def kind(self) -> str:
+        """`control` (printed, never ranked, never a trial) or `rule`."""
+        return "control" if self.control else "rule"
 
     def fingerprint(self) -> str:
         body = {"id": self.id, "family": self.family, "d": self.description,
@@ -770,6 +792,8 @@ class Strategy:
                 "reg": self.first_registered_utc}
         if self.regime_gate:
             body["g"] = self.regime_gate
+        if self.rebalance_months:
+            body["rm"] = list(self.rebalance_months)
         return _hashlib.sha256(_json.dumps(body, sort_keys=True).encode()).hexdigest()[:16]
 
     def meta(self) -> dict:
@@ -785,7 +809,9 @@ class Strategy:
                 "regime_gate": self.regime_gate, "shape": self.shape,
                 "forward_only": self.forward_only,
                 "signature": self.signature(),
-                "control": self.control, "fingerprint": self.fingerprint()}
+                "control": self.control, "kind": self.kind,
+                "rebalance_months": list(self.rebalance_months) if self.rebalance_months else None,
+                "fingerprint": self.fingerprint()}
 
 
 # ── signal helpers: every rule is one line over these ───────────────────────
@@ -889,6 +915,29 @@ def seeded_noise(seed: int):
         return _pd.Series((h % 1_000_003).astype(float), index=p.index)
     f.requires = ()
     f.shape = f"noise({seed})"
+    return f
+
+
+def rank_band(base, lo: int, hi: int, universe: str = "all"):
+    """`base` scores only for names ranked lo..hi (1 = best) on its own date.
+
+    Ranks are taken among the rule's universe with the engine's own order
+    (score descending, then the per-(date, symbol) tiebreak hash), so a top-k
+    over the result is exactly the base rule's picks lo..hi. The control for
+    "is the ORDERING inside the top informative, or is the edge the universe
+    the sort is drawn from?" (review 2026-09-26 Q5).
+    """
+    def f(p):
+        s = base(p).astype(float)
+        m = UNIVERSES[universe](p).fillna(False).astype(bool) & _np.isfinite(s)
+        df = _pd.DataFrame({"d": p["date"].to_numpy(), "s": -s.to_numpy(),
+                            "tb": _tiebreak(p)}, index=p.index)[m.to_numpy()]
+        df = df.sort_values(["d", "s", "tb"], kind="mergesort")
+        r = df.groupby("d", sort=False).cumcount() + 1
+        keep = r.index[((r >= lo) & (r <= hi)).to_numpy()]
+        return s.where(s.index.isin(keep))
+    f.requires = tuple(getattr(base, "requires", ()))
+    f.shape = f"rank_band({getattr(base, 'shape', '?')},{lo}-{hi})"
     return f
 
 
@@ -1264,7 +1313,151 @@ def _rules() -> list:
               seeded_noise(sd), control=True))
     add(S("random_large", "control", "random k names each month, large+mega",
           seeded_noise(7), "large", control=True))
+    _diagnostic_controls(add)
     return R
+
+
+#: Registered 2026-09-26 evening from the adjudicated review of chunks D+E.
+REGISTERED_2026_09_26_REVIEW = "2026-09-26T09:20:00+00:00"
+#: The quarterly offsets of `mom_12_1_q` (decision-date months).
+QUARTER_OFFSETS = {"jajo": (1, 4, 7, 10), "fman": (2, 5, 8, 11), "mjsd": (3, 6, 9, 12)}
+
+
+def _diagnostic_controls(add) -> None:
+    """Three $0 controls (kind: control -- printed beside the rules, never
+    ranked, never counted as trials). Each answers one question the review
+    asked of a row the board would otherwise be read on:
+
+    * `skill_mom_ranks_21_40` -- `skill_mom`'s picks ranked 21-40. If they earn
+      what 1-20 earn, the ordering is uninformative and the edge is the
+      covered-momentum universe.
+    * `unskilled_mom` -- `skill_mom` built from raises by the NON-skilled firms
+      only. The direct skill test: `skill_mom - unskilled_mom` by year, with
+      2025 excluded (CLAUDE.md rule 11).
+    * `mom_12_1_q_{jajo,fman,mjsd}` -- the board's best-DSR row at each of its
+      three quarterly offsets. If the advantage over monthly `mom_12_1` lives
+      in one offset, it is calendar timing plus free rebalancing.
+    """
+    S = Strategy
+    MOM = "mom_252_21"
+    reg = REGISTERED_2026_09_26_REVIEW
+    add(S("skill_mom_ranks_21_40", "diagnostic_control",
+          "skill_mom's picks ranked 21-40 (the same rank-avg of skilled-firm net raises and 12-1 momentum)",
+          rank_band(combo(("skill_net_raises_90", 1), (MOM, 1)), 21, 40),
+          control=True, first_registered_utc=reg, caveat=_FLOW_CAVEAT,
+          economic_reason="control: is the ordering inside the top informative"))
+    add(S("unskilled_mom", "diagnostic_control",
+          "rank-avg: net raises by the NON-skilled firms only, 12-1 momentum",
+          combo(("unskilled_net_raises_90", 1), (MOM, 1)),
+          control=True, first_registered_utc=reg, caveat=_FLOW_CAVEAT,
+          economic_reason="control: skill_mom without the skill filter's firms"))
+    for tag, months in QUARTER_OFFSETS.items():
+        add(S(f"mom_12_1_q_{tag}", "diagnostic_control",
+              f"12-1 momentum, quarterly, rebalanced at decision months {list(months)}",
+              col(MOM), hold_months=3, rebalance_months=months, control=True,
+              first_registered_utc=reg,
+              economic_reason="control: is mom_12_1_q's edge one calendar offset"))
+
+
+def is_random_control(row_or_rule) -> bool:
+    """The LUCK BAR: the random-k controls only (family `control`), never the
+    diagnostic controls, whose returns are a rule's returns."""
+    fam = (row_or_rule.get("family") if isinstance(row_or_rule, dict)
+           else getattr(row_or_rule, "family", None))
+    return fam == "control"
+
+
+def dev_selected_sealed_evaluated(rows: list, *, n_blocks: int | None = None,
+                                  tops: tuple = (10, 20, 50)) -> dict:
+    """The one honest out-of-sample number a backtest board already contains.
+
+    Pick the top-n rules on the DEV window only (dev net CAGR minus SPY), then
+    read those same rules on the 2024-26 selection window. The dev rank never
+    saw 2024-26 (it is still hindsight -- every rule was written in 2026 -- but
+    it is not selected ON the window it is evaluated on). Plus the Spearman
+    correlation of dev rank vs 2024-26 rank across every rule, the count good
+    in both windows, and the MDE of a `n_blocks`-month window.
+
+    Controls are excluded. Ties sort by id, so the block is deterministic.
+    """
+    cand = [r for r in rows if not r.get("control")
+            and r.get("dev_vs_spy") is not None and r.get("sealed_vs_spy") is not None]
+    out: dict = {"label": SELECTION_WINDOW_LABEL, "n_rules": len(cand),
+                 "selection": ("top-n by dev_vs_spy (dev net CAGR - SPY CAGR, entry <= "
+                               f"{DEV_END}); evaluated on sealed_vs_spy (entry >= {SEALED_START})")}
+    if not cand:
+        return {**out, "status": "REFUSED", "why": "no rule carries both dev and 2024-26 numbers"}
+    ranked = sorted(cand, key=lambda r: (-r["dev_vs_spy"], r["id"]))
+    for n in tops:
+        sel = ranked[:n]
+        v = _np.array([r["sealed_vs_spy"] for r in sel], dtype=float)
+        out[f"top_{n}"] = {"n": len(sel), "ids": [r["id"] for r in sel],
+                           "mean_selection_window_vs_spy": float(v.mean()),
+                           "median_selection_window_vs_spy": float(_np.median(v)),
+                           "n_beat_spy": int((v > 0).sum()),
+                           "mean_dev_vs_spy": float(_np.mean([r["dev_vs_spy"] for r in sel]))}
+    dv = _np.array([r["dev_vs_spy"] for r in cand], dtype=float)
+    sv = _np.array([r["sealed_vs_spy"] for r in cand], dtype=float)
+    if len(cand) >= 3:
+        from scipy.stats import spearmanr
+        rho, pv = spearmanr(dv, sv)
+        rho, pv = float(rho), float(pv)
+    else:
+        rho, pv = float("nan"), None
+    out["spearman_dev_vs_selection_window"] = {"rho": rho, "p_value": pv, "n": len(cand)}
+    both = [r for r in cand if r["dev_vs_spy"] > 0 and r["sealed_vs_spy"] > 0]
+    strict = [r for r in both
+              if (r.get("top5_months_share_of_log_return") is not None
+                  and r["top5_months_share_of_log_return"] < 0.6)
+              and (r.get("max_dd") is not None and r["max_dd"] > -0.40)]
+    out["n_beat_spy_in_both_windows"] = len(both)
+    out["n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40"] = len(strict)
+    sig = []
+    for r in cand:
+        m, ir = r.get("mean_active_monthly"), r.get("information_ratio_annual")
+        if m is not None and ir is not None and _np.isfinite(ir) and abs(ir) > 1e-9:
+            s_ = abs(m * _np.sqrt(12.0) / ir)
+            if _np.isfinite(s_) and s_ > 0:
+                sig.append(s_)
+    nb = int(n_blocks or max((r.get("n_sealed_months") or 0) for r in cand) or 0)
+    if sig and nb >= 2:
+        s_med = float(_np.median(sig))
+        se = s_med / _np.sqrt(nb)
+        out["mde"] = {"active_sigma_monthly_median": s_med, "n_blocks": nb,
+                      "se_monthly": float(se), "mde_monthly_80pct_power": float(MDE_Z * se),
+                      "mde_annualised_simple": float(MDE_Z * se * 12),
+                      "basis": ("median across rules of |mean_active_monthly * sqrt(12) / IR_annual| "
+                                "(the full-window monthly active sigma); SE = sigma / sqrt(blocks); "
+                                "MDE = 2.8 SE (two-sided 5%, 80% power)")}
+    else:
+        out["mde"] = {"status": "UNKNOWN", "why": f"{len(sig)} sigmas, {nb} blocks"}
+    t10 = out.get("top_10") or {}
+    md = out["mde"]
+    out["sentence"] = (
+        f"Choosing the top {t10.get('n')} rules by dev (pre-2024) results alone gave "
+        f"{t10.get('mean_selection_window_vs_spy', 0)*100:+.1f} pp/yr mean vs SPY in the "
+        f"{SELECTION_WINDOW_LABEL} (median {t10.get('median_selection_window_vs_spy', 0)*100:+.1f} pp; "
+        f"{t10.get('n_beat_spy')} of {t10.get('n')} beat SPY); dev-to-2024-26 rank Spearman "
+        f"{rho:.2f} over {len(cand)} rules; {len(both)} rules beat SPY in both windows"
+        + (f"; the MDE of a {md['n_blocks']}-block window at 80% power is "
+           f"{md['mde_monthly_80pct_power']*100:.1f}%/month" if "mde_monthly_80pct_power" in md else "")
+        + ".")
+    return out
+
+
+def by_year_gap(a: dict, b: dict, *, exclude: tuple = ("2025",)) -> dict:
+    """Excess-by-year of row `a` minus row `b` (`by_year[y].excess`), with the
+    years in `exclude` left out of the sum and printed beside it."""
+    ya, yb = a.get("by_year") or {}, b.get("by_year") or {}
+    years = sorted(set(ya) & set(yb))
+    gap = {y: (ya[y]["excess"] - yb[y]["excess"]) for y in years
+           if ya[y].get("excess") is not None and yb[y].get("excess") is not None}
+    kept = {y: v for y, v in gap.items() if y not in exclude}
+    return {"a": a.get("id"), "b": b.get("id"), "gap_by_year": gap, "excluded": list(exclude),
+            "sum_excluding": float(sum(kept.values())) if kept else None,
+            "mean_excluding": float(_np.mean(list(kept.values()))) if kept else None,
+            "n_years_positive_excluding": int(sum(1 for v in kept.values() if v > 0)),
+            "n_years_excluding": len(kept)}
 
 
 _INS_CAVEAT = ("SEC Form 4 bulk (sec_insider/insider_events_v1), keyed on observed_at_utc = "
@@ -1936,6 +2129,7 @@ def run_strategy(panel, strategy: Strategy, *, k: int | None = None,
     held: dict = {}
     held_rt: dict = {}
     start = None
+    rmonths = set(strategy.rebalance_months or ())
     for j, d in enumerate(dates):
         idx = order[bounds[j]:bounds[j + 1]]
         if not len(idx) or not _np.isfinite(fwd[idx]).any():
@@ -1947,11 +2141,12 @@ def run_strategy(panel, strategy: Strategy, *, k: int | None = None,
             gv = gv[_np.isfinite(gv)]
             risk_off = bool(len(gv) and gv[0] <= 0)
         rebalance = False
+        on_cal = (_pd.Timestamp(d).month in rmonths) if rmonths else None
         if start is None:
-            if len(cand) < k:
+            if len(cand) < k or on_cal is False:
                 continue
             start, rebalance = j, True
-        elif (j - start) % strategy.hold_months == 0 and len(cand) >= k:
+        elif (on_cal if rmonths else (j - start) % strategy.hold_months == 0) and len(cand) >= k:
             rebalance = True
         elif gate is not None and ((risk_off and held) or (not risk_off and not held
                                                              and len(cand) >= k)):

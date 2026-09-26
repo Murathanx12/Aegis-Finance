@@ -356,30 +356,31 @@ of what might happen."
 
 ## Historical backtests: what worked, what didn't
 
-> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written down on 2026-09-26, after every month it is scored on. The quotable record starts at registration. Receipt for every number in this section: `backend/data/optimus/strategy_library/leaderboard_2026-09-26.json` (rendered as `backend/data/optimus/strategy_library/LEADERBOARD.md`); forward results: `docs/BRIDGE.md`.
+> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written down on 2026-09-26, after every month it is scored on. The quotable record starts at registration. Receipt for every number in this section: `backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json` at commit `625407d2` (run `2026-09-26T093458Z`; rendered as `backend/data/optimus/strategy_library/LEADERBOARD.md`, which the next run refreshes -- the receipt it cites is never overwritten); forward results: `docs/BRIDGE.md`.
 
-The strategy library (254 rules in 26 families, 762 cells at k = 10/20/50 plus each rule's own k) was run on survivorship-free bars net of a band round-trip cost, with a split declared in code before the ranking: **dev** = monthly periods entered through 2023-12-31, **sealed** = entered from 2024-01-01 (32 monthly blocks). Sorted by sealed net return vs SPY (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `top_by_sealed_vs_spy`):
+The strategy library (277 rules in 31 families, 834 cells at k = 10/20/50 plus each rule's own k) was run on survivorship-free bars net of a band round-trip cost, with a split declared in code before the ranking: **dev** = monthly periods entered through 2023-12-31, and the **2024-26 selection window (split declared, data seen)** = entered from 2024-01-01 (32 monthly blocks). Every rule was written in 2026, so the second window is where the board SORTS, not a holdout. Sorted by net return vs SPY in that window (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json`, `top_by_sealed_vs_spy`):
 
-| rule (k=20) | dev CAGR | SPY dev | sealed CAGR | SPY sealed | sealed − SPY | DSR (762 cells) | LOO-worst mean active/mo | top-5-month share | max DD |
+| rule (k=20) | dev CAGR | SPY dev | 2024-26 CAGR | SPY 2024-26 | 2024-26 − SPY | DSR (834 cells) | LOO-worst mean active/mo | top-5-month share | max DD |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| `mom_12_1_liqw` | +7.0% | +13.2% | +89.4% | +21.0% | **+68.4%** | 0.036 | +0.67% | 0.91 | -70.6% |
-| `rev_5d` | +2.8% | +13.2% | +69.4% | +21.0% | **+48.4%** | 0.006 | +0.10% | 1.08 | -66.5% |
-| `mom_12_1_q` | +34.2% | +13.2% | +58.9% | +21.0% | **+37.9%** | 0.209 | +1.52% | 0.44 | -35.9% |
-| `skill_mom` | +17.9% | +13.2% | +58.0% | +21.0% | **+37.0%** | 0.105 | +0.69% | 0.40 | -27.3% |
-| `margin_mom` | +14.0% | +13.2% | +57.9% | +21.0% | **+36.9%** | 0.039 | +0.33% | 0.58 | -51.0% |
+| `mom_12_1_liqw` | +7.0% | +13.2% | +89.4% | +21.0% | **+68.4%** | 0.034 | +0.67% | 0.91 | -70.6% |
+| `qc372_oversold_snapback_mega` | +12.2% | +13.2% | +80.4% | +21.0% | **+59.4%** | 0.072 | +0.96% | 0.52 | -68.7% |
+| `rev_5d` | +2.8% | +13.2% | +69.4% | +21.0% | **+48.4%** | 0.005 | +0.10% | 1.08 | -66.5% |
+| `qc623_mom63_liquidity_weighted` | +12.2% | +13.2% | +67.3% | +21.0% | **+46.3%** | 0.026 | +0.92% | 0.74 | -58.9% |
+| `mom_12_1_q` | +34.2% | +13.2% | +58.9% | +21.0% | **+37.9%** | 0.202 | +1.52% | 0.44 | -35.9% |
+| `skill_mom` | +17.9% | +13.2% | +58.0% | +21.0% | **+37.0%** | 0.101 | +0.69% | 0.40 | -27.3% |
+| `margin_mom` | +14.0% | +13.2% | +57.9% | +21.0% | **+36.9%** | 0.037 | +0.33% | 0.58 | -51.0% |
+| `qc395_sharpe252_above_trend_large` | +26.8% | +13.2% | +56.2% | +21.0% | **+35.2%** | 0.116 | +1.10% | 0.48 | -32.6% |
 | `illiquid` | -2.0% | +13.2% | +55.9% | +21.0% | **+34.9%** | 0.002 | -0.25% | 1.44 | -80.7% |
-| `low_dtc_mom` | +6.0% | +13.2% | +47.2% | +21.0% | **+26.2%** | 0.004 | -0.04% | 0.59 | -38.4% |
-| `low_asset_growth` | +16.7% | +13.2% | +47.0% | +21.0% | **+26.0%** | 0.031 | +0.62% | 0.58 | -34.4% |
-| `resid_mom_12_1_large` | +17.3% | +13.2% | +45.5% | +21.0% | **+24.5%** | 0.032 | +0.33% | 0.70 | -45.3% |
-| `mom_12_1_secrel` | +17.1% | +13.2% | +45.1% | +21.0% | **+24.1%** | 0.025 | +0.32% | 0.64 | -48.1% |
+| `qc470_mom252_quarterly_riskparity` | +25.9% | +13.2% | +52.1% | +21.0% | **+31.1%** | 0.090 | +1.03% | 0.51 | -47.7% |
 
-Random controls (k=20 names drawn at random each month, never ranked) land at -10.6% to -1.8% vs SPY sealed: that is the luck bar (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `controls`).
+Random controls (k=20 names drawn at random each month, never ranked) land at -10.6% to -1.8% vs SPY in the 2024-26 window: that is the luck bar (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json`, `controls`, family `control`).
 
-- **Nothing passes the multiplicity bar (best DSR 0.21 at 762 cells, `mom_12_1_q`, vs 0.95).** Ranking 762 cells on 32 sealed months selects luck as readily as skill (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `multiplicity`).
-- **88 of 254 rules beat SPY sealed, median -4.5%** (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `all_rows[].sealed_vs_spy`).
-- **The only rows good in both windows are `mom_12_1_q` and `skill_mom`**: the only rules in both the sealed top-10 and the full-window DSR top-10. The sealed top rows with a top-5-month share near or above 1 made their sealed return in a handful of months, and several were flat or negative in dev (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`).
-- **Each of these is a $1M forward paper book since 2026-09-28; `docs/BRIDGE.md` shows expectation vs result** (receipt `backend/data/optimus/bridge/bridge_<date>.json`; books in `backend/data/optimus/llm_portfolio/books.jsonl`, `lib_<id>_sealed_2026-09-26` with ew / sector-ETF / SPY / random-same-band twins; `mom_12_1_q`'s is the 02:00 factory's `lib_mom_12_1_q_2026-09-26`, same names; freeze log `backend/data/optimus/bridge/freeze_2026-09-26.json`).
-- The ten sealed series were recomputed by a second engine from their holdings and the raw bars: `backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26.json`.
+- **The one out-of-sample number the backtest holds:** choosing the top 10 rules by dev (pre-2024) results alone gave **+4.5 pp/yr** mean vs SPY in the 2024-26 selection window (split declared, data seen) (median **-1.6 pp**; 5 of 10 beat SPY); dev-to-2024-26 rank Spearman **0.17** over 277 rules; at a median active sigma of 5.4%/month, 32 blocks give an MDE of 2.7%/month at 80% power -- the window can kill a rule, not certify one (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json`, `dev_selected_sealed_evaluated`). No forward day graded yet; the first 21-session reading is the 2026-10-26 close.
+- **Nothing passes the multiplicity bar (best DSR 0.20 at 834 cells, `mom_12_1_q`, vs 0.95).** Ranking 834 cells on 32 months of the 2024-26 window selects luck as readily as skill (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json`, `multiplicity`).
+- **104 of 277 rules beat SPY in the 2024-26 window, median -3.9%** (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json`, `all_rows[].sealed_vs_spy`).
+- **62 of 277 rules beat SPY in both windows** (dev and 2024-26); 35 of them also have a top-5-month share < 0.6 and max DD better than -40%. Only `mom_12_1_q`, `skill_mom`, `qc395_sharpe252_above_trend_large`, `qc470_mom252_quarterly_riskparity` are in both the 2024-26 top-10 and the full-window DSR top-10. The 2024-26 top rows with a top-5-month share near or above 1 made their return in a handful of months, and several were flat or negative in dev (`backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json`).
+- **6 of these 10 rows have a $1M forward paper book frozen 2026-09-26; entry is the 2026-09-28 open** (`qc372_oversold_snapback_mega`, `qc623_mom63_liquidity_weighted`, `qc395_sharpe252_above_trend_large`, `qc470_mom252_quarterly_riskparity` entered this top-10 after the freeze and have none) (books in `backend/data/optimus/llm_portfolio/books.jsonl`, `lib_<id>_sealed_2026-09-26` with ew / sector-ETF / SPY / random-same-band twins; `mom_12_1_q`'s is the 02:00 factory's `lib_mom_12_1_q_2026-09-26`, same names; freeze log `backend/data/optimus/bridge/freeze_2026-09-26.json`). `docs/BRIDGE.md` shows expectation vs result. The freeze gate (selection, construction and timing booleans, `backend/data/optimus/bridge/freeze_gate_2026-09-26.json`) passes 0 of 20 library books (bridge receipt `backend/data/optimus/bridge/bridge_2026-09-26.json`); the rest are CONTROLs, not headlines. `lib_mom_12_1_liqw_sealed_2026-09-26` was **voided before entry** (VOID_BEFORE_ENTRY: concentration (effN 2.0, MU 60.3% + SNDK 37.2% = 97.5%, rho 0.90, MU prints 09-30 inside the first 5 sessions)); its `__ew` twin is the strategy test.
+- The 2024-26 top-10 monthly series were recomputed from their holdings and the raw bars -- a re-implementation of the arithmetic from raw bars, not an independent engine (shares holdings, fills, cost formula): `backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26T093458Z.json`.
 
 ### History: the timing strategy (not the library)
 

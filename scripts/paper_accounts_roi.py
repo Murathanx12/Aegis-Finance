@@ -53,7 +53,10 @@ DECISIONS_DIR = REPO / "backend" / "data" / "optimus" / "decisions"
 MURAT_BOOK = REPO / "backend" / "data" / "murat_book.yaml"
 
 SCHEMA = "paper_accounts_roi/1"
-STATUSES = ("LIVE", "PENDING", "RETIRED", "UNPRICED", "CREDENTIAL_INVALID", "UNGRADED")
+STATUSES = ("LIVE", "PENDING", "RETIRED", "UNPRICED", "CREDENTIAL_INVALID", "UNGRADED",
+            "VOIDED")
+#: `llm_portfolio.VOID_SCHEMA`, repeated so this reader never imports the service.
+VOID_SCHEMA = "llm_portfolio/void"
 
 #: account-number -> role, from docs/ACCOUNTS_2026-09-22_THE_PAPER_FLEET.md
 FLEET = ("hack1", "hack2", "hack3", "hack4", "hack5", "hack6")
@@ -352,7 +355,13 @@ def collect_llm_books(books_path: Path = LLM_DIR / "books.jsonl",
                       leaderboard_name: Optional[str] = None) -> list[dict]:
     if not books_path.exists():
         return []
-    recs = [json.loads(l) for l in books_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    lines = [json.loads(l) for l in books_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+    # A void row is not a book (llm_portfolio.void appends one; nothing is edited).
+    voids: dict = {}
+    for x in lines:
+        if x.get("schema") == VOID_SCHEMA and x.get("book_id") not in voids:
+            voids[x.get("book_id")] = x
+    recs = [x for x in lines if x.get("schema") != VOID_SCHEMA]
     if leaderboard is None:
         leaderboard, leaderboard_name = _newest_leaderboard(books_path.parent)
     graded = {b["book_id"]: b for b in (leaderboard or {}).get("books", [])}
@@ -377,6 +386,12 @@ def collect_llm_books(books_path: Path = LLM_DIR / "books.jsonl",
         kw = dict(source=src, inception=entry, start_capital=r.get("start_capital_usd"),
                   n_positions=r.get("n_positions"), graded_against=against,
                   book_id=r["book_id"], frozen_utc=r.get("frozen_utc"), entry=entry)
+        v = voids.get(r["book_id"])
+        if v is not None:
+            rows.append(_row(r["name"], f"llm_portfolio:{group}", status="VOIDED",
+                             note=f"voided before entry ({str(v.get('voided_utc'))[:10]}, "
+                                  f"{v.get('who')}): {v.get('reason')}", **kw))
+            continue
         if g.get("status") not in (None, "PENDING") and g.get("nav_usd") is not None:
             rows.append(_row(r["name"], f"llm_portfolio:{group}", equity=g["nav_usd"],
                              last_mark=leaderboard.get("bars_through"), **kw))
@@ -514,7 +529,7 @@ def aggregate(rows: list[dict]) -> dict:
                 f"{sum(1 for r in ne if r['vs_spy_pp'] <= 0)} behind); "
                 f"{counts['PENDING']} are PENDING (not yet entered), "
                 f"{counts['UNGRADED']} UNGRADED, {counts['CREDENTIAL_INVALID']} CREDENTIAL_INVALID, "
-                f"{counts['UNPRICED']} UNPRICED.")
+                f"{counts['UNPRICED']} UNPRICED, {counts['VOIDED']} VOIDED before entry (never graded).")
     return {"all_priced": agg(priced) if priced else None,
             "priced_excluding_control_twins": agg(non_ctrl) if non_ctrl else None,
             "n_ahead_of_spy": len(ahead), "n_behind_spy": len(behind),
@@ -645,8 +660,14 @@ def render_markdown(rc: dict, png_name: Optional[str]) -> str:
         L += [f"### {fam.split(':')[1]} ({len(rs)})", "",
               "| book | start capital | positions | status | graded against |", "|---|---:|---:|---|---|"]
         for r in rs:
-            st = r["note"] if r["status"] == "PENDING" else f"{r['status']} {_f(r['roi_pct'], pct=True)}"
+            st = (r["note"] if r["status"] in ("PENDING", "VOIDED")
+                  else f"{r['status']} {_f(r['roi_pct'], pct=True)}")
             L.append(f"| {r['account']} | {_f(r['start_capital'], money=True)} | {_f(r['n_positions'])} | {st} | {r.get('graded_against', '')} |")
+        L.append("")
+    vd = [r for r in rows if r["status"] == "VOIDED"]
+    if vd:
+        L += [f"### Voided before entry ({len(vd)}) — never graded, never counted", ""]
+        L += [f"- `{r['account']}`: {r['note']}" for r in vd]
         L.append("")
     return "\n".join(L) + "\n"
 

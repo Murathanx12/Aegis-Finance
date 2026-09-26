@@ -1,6 +1,12 @@
-"""A SECOND ENGINE for the library's top-10: rebuild each monthly series from its holdings.
+"""A RE-IMPLEMENTATION OF THE ARITHMETIC for the library's top-10 -- NOT an independent engine.
 
-    python -m scripts.replicate_vectorbt                       # latest top10_for_replication_*.json
+Review 2026-09-26 (chunks D+E), adjudicated: this shares the factory's holdings,
+weights, fill convention, no-drift assumption and cost formula; it recomputes
+the period returns from raw bars. Agreement to 1e-8 is the signature of shared
+conventions, not evidence of realism. An independent check re-selects from raw
+closes with drifting weights (clean-room `mom_12_1`), a second vendor, or LEAN.
+
+    python -m scripts.replicate_vectorbt                       # latest top10_for_replication_<run_id>.json
     python -m scripts.replicate_vectorbt --file <path> --date 2026-09-26
 
 Design: `docs/research_notes/2026-09-26/research_library_expansion_and_lean.md`
@@ -33,7 +39,8 @@ needs corr >= 0.98 AND mean |diff| <= 15 bps/month; anything else is a
 DISAGREEMENT, classified into exactly one of REBALANCE_TIMING /
 COST_MODEL_MISMATCH / UNIVERSE_MISMATCH / DATA_MISALIGNMENT /
 IMPLEMENTATION_BUG by the declared rules in `classify`, printed, never averaged
-away. Output: `strategy_library/replication_vectorbt_<date>.json`.
+away. Output: `strategy_library/replication_vectorbt_<run_id>.json` (the input's
+run id; `<date>` for a pre-run-id input).
 
 What this is NOT: independent of pandas/numpy (the weaker form of
 independence the design names), nor a re-run of the selection -- the holdings
@@ -359,11 +366,26 @@ def replicate_row(row: dict, W: dict, cost_model: dict, *, delist_return: float,
     return out
 
 
+WHAT_THIS_IS = ("re-implementation of the arithmetic from raw bars, not an independent engine "
+                "(shares holdings, fills, cost formula)")
+
+
+def latest_input(lib_dir: Path = LIB_DIR) -> Path:
+    """The newest run-id'd top-10 file; a date-named file only when no run id exists."""
+    ps = sorted(lib_dir.glob("top10_for_replication_*T*Z.json"))
+    if not ps:
+        ps = sorted(lib_dir.glob("top10_for_replication_*.json"))
+    if not ps:
+        raise FileNotFoundError(f"no top10_for_replication_*.json under {lib_dir}")
+    return ps[-1]
+
+
 def run(doc: dict, W: dict, *, use_vectorbt: bool = True) -> dict:
     dr = _delist_return(doc)
     rows = [replicate_row(r, W, doc["cost_model"], delist_return=dr, use_vectorbt=use_vectorbt)
             for r in doc["rows"]]
     return {"schema": "strategy_library.replication_vectorbt/1", "date": doc.get("date"),
+            "run_id": doc.get("run_id"), "what_this_is": WHAT_THIS_IS,
             "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "input": doc.get("_path"), "tolerance": {"corr_net_monthly_min": AGREE_CORR,
                                                      "mean_abs_diff_net_monthly_max": AGREE_MAD},
@@ -388,7 +410,7 @@ def main(argv=None) -> int:
     ap.add_argument("--date", default=None)
     ap.add_argument("--no-vectorbt", action="store_true")
     a = ap.parse_args(argv)
-    p = Path(a.file) if a.file else sorted(LIB_DIR.glob("top10_for_replication_*.json"))[-1]
+    p = Path(a.file) if a.file else latest_input()
     doc = json.loads(p.read_text(encoding="utf-8"))
     doc["_path"] = str(p.resolve().relative_to(REPO)).replace("\\", "/") if p.resolve().is_relative_to(REPO) else str(p)
     syms = {s for r in doc["rows"] for v in r["held_symbols_by_date"].values() for s in v}
@@ -396,7 +418,7 @@ def main(argv=None) -> int:
     W = wide(load_long(syms))
     print(f"bars: {W['close'].shape} (sessions x symbols), through {W['dates'][-1].date()}", flush=True)
     res = run(doc, W, use_vectorbt=not a.no_vectorbt)
-    day = a.date or doc.get("date") or str(datetime.now().date())
+    day = a.date or doc.get("run_id") or doc.get("date") or str(datetime.now().date())
     out = LIB_DIR / f"replication_vectorbt_{day}.json"
     out.write_text(json.dumps(res, indent=1, default=str), encoding="utf-8")
     print(f"{'id':<24} {'n':>4} {'corr':>8} {'MAD bps':>8} {'max bps':>8}  verdict / bucket")
@@ -405,7 +427,7 @@ def main(argv=None) -> int:
               f"{r['mean_abs_diff_net_monthly']*1e4:>8.2f} {(r['max_abs_diff_net_monthly'] or 0)*1e4:>8.1f}  "
               f"{r['verdict']}" + (f" / {r['disagreement']['bucket']}" if r.get('disagreement') else ""))
     print(f"gross engine: {res['rows'][0]['engine_gross']}")
-    print(f"-> {out}  ({res['n_agree']}/{res['n_rows']} AGREE)")
+    print(f"-> {out}  ({res['n_agree']}/{res['n_rows']} AGREE -- {WHAT_THIS_IS})")
     return 0
 
 

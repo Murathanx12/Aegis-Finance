@@ -2,25 +2,42 @@
 
 > HINDSIGHT BACKTEST. Every rule was registered 2026-09-26, after every month in these tables; 'since 2020' is what the rule WOULD have done, not what Aegis did. The quotable record starts at registration and accrues in the lib_ forward books. Read by_year_signs, LOO-worst and the worst breadth cell BEFORE the CAGR column; read DSR before Sharpe.
 
+Run `2026-09-26T093458Z`; receipt `backend/data/optimus/strategy_library/leaderboard_2026-09-26T093458Z.json` (this file is the 'latest' copy and is refreshed by every run; the receipt is not).
+
 ## Multiplicity (read before any row)
 
 - cells looked at: **834** (277 rules x breadth k=10/20/50 + own k); DSR computed at n=834 and, beside it, at the 31 families (n=31).
 - expected best monthly active Sharpe of pure noise at n=834: 0.300 monthly (x3.46 annualised) on the analytic null; 0.491 if the null sd is the dispersion across these cells (printed as `dsr_null_from_library`, never ranked on: structurally negative rules inflate it).
 - Harvey-Liu-Zhu bar: t >= 3.0 on horizon-wide blocks before a row is anything but a PRODUCT_EXPERIMENT observation.
 - refused rules: 3; catalogue rows not reachable on this panel: 50 (named in `strategy_library.NOT_REACHABLE`).
-- controls (never ranked, never trials): random_1, random_2, random_3, random_large
+- controls (never ranked, never trials): random_1, random_2, random_3, random_large, skill_mom_ranks_21_40, unskilled_mom, mom_12_1_q_jajo, mom_12_1_q_fman, mom_12_1_q_mjsd
 
-## The objective: sealed net return vs SPY (split declared in code)
+## The sort: net return vs SPY in the 2024-26 selection window (split declared, data seen)
 
-- dev: entry <= 2023-12-31; SEALED: entry >= 2024-01-01 (32 monthly blocks); recent: last 6 completed monthly periods (~126 sessions). a period belongs to the window its ENTRY session (decision + 1 business day) is in.
-- The sealed window is 32 monthly blocks (the brief assumed 21). 'Sealed' means the split was declared in code before this run, NOT that nobody has seen 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 834 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=834) and the dev column beside every sealed number.
-- noise ceiling at n=834: best monthly active Sharpe of pure noise 0.300 over the full window, 0.575 over the sealed window (= 1.99 annual IR).
-- expected pure-noise cells with an annual IR > 0.5: 51.4 on the full window, 175.8 on the sealed window.
+- dev: entry <= 2023-12-31; 2024-26 selection window: entry >= 2024-01-01 (32 monthly blocks); recent: last 6 completed monthly periods (~126 sessions). a period belongs to the window its ENTRY session (decision + 1 business day) is in.
+- The 2024-26 selection window (split declared, data seen) is 32 monthly blocks. The split was declared in code before this run; nobody's eyes were closed to 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 834 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=834), the dev column, and `dev_selected_sealed_evaluated` (rules picked on dev only, read on 2024-26).
+- noise ceiling at n=834: best monthly active Sharpe of pure noise 0.300 over the full window, 0.575 over the 2024-26 window (= 1.99 annual IR).
+- expected pure-noise cells with an annual IR > 0.5: 51.4 on the full window, 175.8 on the 2024-26 window.
 - rules from strategy_library_ext: backend.services.strategy_library_ext (26 entries)
 
-## Top 10 by SEALED net return vs SPY (the objective)
+## Dev-selected, 2024-26-evaluated (the one out-of-sample read on this board)
 
-| id | family | k | sealed vs SPY | sealed CAGR (months) | SPY sealed | sealed DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
+Rules picked on DEV only (dev net CAGR - SPY), read on the 2024-26 selection window (split declared, data seen):
+
+| top-n by dev | mean 2024-26 vs SPY | median | beat SPY | mean dev vs SPY |
+|---|---:|---:|---:|---:|
+| 10 | +4.5% | -1.6% | 5/10 | +23.9% |
+| 20 | +1.7% | -1.6% | 10/20 | +20.6% |
+| 50 | +0.9% | -1.5% | 22/50 | +14.9% |
+
+- Spearman(dev rank, 2024-26 rank) over 277 rules: **0.17** (p 0.004).
+- rules beating SPY in BOTH windows: 62 of 277 (35 also with top-5-month share < 0.6 and max DD > -40%).
+- MDE: median active sigma +5.36%/month -> SE +0.95% over 32 blocks -> MDE **+2.65%/month** at 80% power. A window this long can kill a rule; it cannot certify a realistic 0.5%/month edge.
+
+
+## Top 10 by net return vs SPY in the 2024-26 selection window (split declared, data seen) (a sort on data seen, not a holdout)
+
+| id | family | k | 2024-26 vs SPY | 2024-26 CAGR (months) | SPY 2024-26 | 2024-26 DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | mom_12_1_liqw | weighted | 20 | **+68.4%** | +89.4% (32) | +21.0% | 0.071 | +7.0% | -6.2% | 0.034 (834) | +0.67% | 0.91 | 5.8x | 73 | -70.6% | +85.6% (+12.4%) | `+--+---+++` |
 | qc372_oversold_snapback_mega | reversal | 5 | **+59.4%** | +80.4% (32) | +21.0% | 0.172 | +12.2% | -1.0% | 0.072 (834) | +0.96% | 0.52 | 9.4x | 56 | -68.7% | +92.7% (+12.4%) | `+-++--++++` |
@@ -33,9 +50,9 @@
 | illiquid | size_liquidity | 20 | **+34.9%** | +55.9% (32) | +21.0% | 0.011 | -2.0% | -15.2% | 0.002 (834) | -0.25% | 1.44 | 8.0x | 277 | -80.7% | +59.0% (+12.4%) | `++-+---+++` |
 | qc470_mom252_quarterly_riskparity | weighted | 20 | **+31.1%** | +52.1% (32) | +21.0% | 0.051 | +25.9% | +12.7% | 0.090 (834) | +1.03% | 0.51 | 2.7x | 62 | -47.7% | +6.6% (+12.4%) | `-+++--++++` |
 
-## Bottom 10 by sealed net return vs SPY
+## Bottom 10 by net return vs SPY in the 2024-26 selection window
 
-| id | family | k | sealed vs SPY | sealed CAGR (months) | SPY sealed | sealed DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
+| id | family | k | 2024-26 vs SPY | 2024-26 CAGR (months) | SPY 2024-26 | 2024-26 DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | mom_in_laggard_sectors | sector_relative | 20 | **-29.3%** | -8.3% (32) | +21.0% | 0.000 | +2.0% | -11.2% | 0.000 (834) | -1.24% | n/a | 9.4x | 216 | -59.4% | -30.8% (+12.4%) | `---+------` |
 | mom_6_1 | momentum | 20 | **-28.1%** | -7.1% (32) | +21.0% | 0.000 | +23.7% | +10.5% | 0.002 (834) | -1.11% | 1.29 | 5.9x | 145 | -66.1% | -8.5% (+12.4%) | `---+-+--+-` |
@@ -48,14 +65,27 @@
 | low_dtc_gp | short_interest | 20 | **-21.9%** | -0.9% (32) | +21.0% | 0.000 | +21.1% | +8.0% | 0.001 (834) | -0.26% | 0.56 | 4.6x | 85 | -28.3% | +8.7% (+12.4%) | `+++++-----` |
 | lead_raises_in_losers | lead_chase | 20 | **-21.5%** | -0.5% (32) | +21.0% | 0.000 | +14.5% | +1.3% | 0.000 (834) | -0.44% | 0.85 | 8.2x | 108 | -27.6% | +13.6% (+12.4%) | `++++------` |
 
-## Controls on the sealed window (random k: the luck bar)
+## Controls on the 2024-26 selection window (random_*: the luck bar; diagnostic_control: one question each, never ranked)
 
-| id | family | k | sealed vs SPY | sealed CAGR (months) | SPY sealed | sealed DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
+| id | family | k | 2024-26 vs SPY | 2024-26 CAGR (months) | SPY 2024-26 | 2024-26 DSR | dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | random_1 | control | 20 | **-10.6%** | +10.4% (32) | +21.0% | 0.000 | +13.9% | +0.8% | 0.000 (834) | -0.36% | 0.69 | 11.9x | 274 | -29.9% | +25.4% (+12.4%) | `-+-+++---+` |
 | random_2 | control | 20 | **-10.5%** | +10.5% (32) | +21.0% | 0.000 | +5.4% | -7.8% | 0.000 (834) | -0.70% | 1.01 | 11.9x | 269 | -38.1% | +4.7% (+12.4%) | `++-+-+----` |
 | random_3 | control | 20 | **-2.1%** | +18.9% (32) | +21.0% | 0.001 | +5.9% | -7.3% | 0.000 (834) | -0.50% | 0.88 | 11.9x | 271 | -36.6% | +15.1% (+12.4%) | `---+-+--+-` |
 | random_large | control | 20 | **-1.8%** | +19.2% (32) | +21.0% | 0.001 | +12.3% | -0.8% | 0.001 (834) | -0.19% | 0.53 | 11.6x | 112 | -27.4% | +20.6% (+12.4%) | `-+-+++--+-` |
+| skill_mom_ranks_21_40 | diagnostic_control | 20 | **+6.6%** | +27.6% (32) | +21.0% | 0.006 | +16.8% | +3.6% | 0.015 (834) | +0.28% | 0.47 | 9.0x | 140 | -28.1% | +12.8% (+12.4%) | `++-+-+-+++` |
+| unskilled_mom | diagnostic_control | 20 | **+23.9%** | +44.9% (32) | +21.0% | 0.050 | +21.7% | +8.5% | 0.109 (834) | +0.62% | 0.38 | 5.6x | 87 | -27.9% | +12.2% (+12.4%) | `++-+-+-+++` |
+| mom_12_1_q_jajo | diagnostic_control | 20 | **+37.9%** | +58.9% (32) | +21.0% | 0.057 | +34.2% | +21.1% | 0.202 (834) | +1.52% | 0.44 | 2.4x | 56 | -35.9% | +9.9% (+12.4%) | `-+++-+++++` |
+| mom_12_1_q_fman | diagnostic_control | 20 | **-5.0%** | +16.0% (32) | +21.0% | 0.001 | +26.4% | +13.6% | 0.022 (834) | +0.18% | 0.68 | 2.4x | 54 | -32.0% | +11.5% (+12.4%) | `--++-++-+-` |
+| mom_12_1_q_mjsd | diagnostic_control | 20 | **+8.4%** | +29.4% (32) | +21.0% | 0.007 | +25.3% | +12.4% | 0.033 (834) | +0.59% | 0.63 | 2.4x | 56 | -33.7% | +13.2% (+12.4%) | `-+++-+-+++` |
+
+## Control gaps by year (excess of A minus excess of B)
+
+- `skill_mom_minus_unskilled_mom`: 2017 -5.8, 2018 -10.7, 2019 +20.1, 2020 -7.3, 2021 -16.1, 2022 +0.6, 2023 -6.5, 2024 +16.8, 2025 +32.7, 2026 -9.2 pp; excluding ['2025']: sum -18.1%, 3 of 9 years positive.
+- `skill_mom_minus_ranks_21_40`: 2017 -12.7, 2018 -10.6, 2019 +16.8, 2020 +50.0, 2021 -22.0, 2022 +13.9, 2023 -7.0, 2024 +33.2, 2025 +46.9, 2026 +2.1 pp; excluding ['2025']: sum +63.6%, 5 of 9 years positive.
+- `mom_12_1_q_jajo_minus_mom_12_1`: 2017 -6.3, 2018 -0.8, 2019 +1.3, 2020 -42.8, 2021 -0.4, 2022 +1.5, 2023 +45.2, 2024 +42.0, 2025 +17.6, 2026 -3.6 pp; excluding nothing: sum +53.7%, 5 of 10 years positive.
+- `mom_12_1_q_fman_minus_mom_12_1`: 2017 -18.3, 2018 -24.0, 2019 +14.5, 2020 -18.7, 2021 -4.8, 2022 +3.9, 2023 +7.5, 2024 -8.8, 2025 -5.7, 2026 -31.8 pp; excluding nothing: sum -86.2%, 3 of 10 years positive.
+- `mom_12_1_q_mjsd_minus_mom_12_1`: 2017 -2.9, 2018 -9.1, 2019 +2.4, 2020 -56.8, 2021 -9.9, 2022 -7.2, 2023 -9.7, 2024 +21.0, 2025 -2.0, 2026 -10.2 pp; excluding nothing: sum -84.4%, 2 of 10 years positive.
 
 ## SPY
 
@@ -114,6 +144,11 @@ SPY since 2020-01-01: CAGR +15.7%, cumulative +162%, max DD -23.9% (79 months). 
 | random_2 | control | 20 | `++-+-+----` | -0.70% (drop 2020) | 10: +3.3% | 1.01 / -0.1% (+15.3%) | -1.81 (115) | 0.42 (115) | 0.000 (834) | +5.7% | +15.7% | +44% |
 | random_3 | control | 20 | `---+-+--+-` | -0.50% (drop 2020) | 50: +8.1% | 0.88 / +1.1% (+15.3%) | -0.80 (115) | 0.50 (115) | 0.000 (834) | +12.1% | +15.7% | +113% |
 | random_large | control | 20 | `-+-+++--+-` | -0.19% (drop 2025) | 50: +13.5% | 0.53 / +6.8% (+15.3%) | -0.04 (115) | 0.76 (115) | 0.001 (834) | +15.0% | +15.7% | +151% |
+| skill_mom_ranks_21_40 | diagnostic_control | 20 | `++-+-+-+++` | +0.28% (drop 2020) | 10: +14.7% | 0.47 / +10.5% (+15.3%) | 0.96 (115) | 0.81 (115) | 0.015 (834) | +19.5% | +15.7% | +223% |
+| unskilled_mom | diagnostic_control | 20 | `++-+-+-+++` | +0.62% (drop 2020) | 50: +22.1% | 0.38 / +17.2% (+15.3%) | 1.94 (115) | 0.99 (115) | 0.109 (834) | +33.0% | +15.7% | +553% |
+| mom_12_1_q_jajo | diagnostic_control | 20 | `-+++-+++++` | +1.52% (drop 2020) | 50: +32.8% | 0.44 / +22.0% (+15.3%) | 2.21 (39) | 1.04 (115) | 0.202 (834) | +49.7% | +15.7% | +1323% |
+| mom_12_1_q_fman | diagnostic_control | 20 | `--++-++-+-` | +0.18% (drop 2020) | 50: +23.8% | 0.68 / +7.3% (+15.0%) | 1.26 (38) | 0.72 (114) | 0.022 (834) | +28.6% | +15.7% | +424% |
+| mom_12_1_q_mjsd | diagnostic_control | 20 | `-+++-+-+++` | +0.59% (drop 2020) | 10: +21.2% | 0.63 / +9.4% (+15.1%) | 1.55 (38) | 0.76 (113) | 0.033 (834) | +28.9% | +15.7% | +433% |
 
 ## Refused
 

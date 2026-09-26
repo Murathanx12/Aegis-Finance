@@ -1,21 +1,20 @@
 {
  "job": "B_backtest_factory",
  "date": "2026-09-26",
- "run_id": "2026-09-26T093458Z",
  "licence": "PRODUCT_EXPERIMENT",
  "llm_spend_usd": 0.0,
- "written_utc": "2026-09-26T09:39:42+00:00",
- "elapsed_s": 284.1,
+ "written_utc": "2026-09-26T09:04:10+00:00",
+ "elapsed_s": 287.8,
  "partial": null,
- "n_rules_done": 289,
- "n_computed_this_run": 289,
+ "n_rules_done": 284,
+ "n_computed_this_run": 284,
  "panel": {
   "rows": 372753,
   "dates": 117,
   "symbols": 4787,
   "first": "2017-01-31",
   "last": "2026-09-21",
-  "fingerprint": "b43294960039c8ea"
+  "fingerprint": "d02b35ad43618dd4"
  },
  "survivorship_audit": {
   "n_symbols": 4793,
@@ -51,14 +50,7 @@
    "lead_share_of_raises": 0.2435,
    "chase_share_of_raises": 0.2822,
    "strictly_before_decision_date": true,
-   "skill_rule": ">= 20 resolved raises, mean 63-session excess vs SPY > 0, resolved before the decision date",
-   "skilled_share_of_active_firms": {
-    "median": 0.272727,
-    "min": 0.126866,
-    "max": 0.429825,
-    "share_of_dates_above_0_70": 0.0,
-    "n_dates": 117
-   }
+   "skill_rule": ">= 20 resolved raises, mean 63-session excess vs SPY > 0, resolved before the decision date"
   },
   "insider": {
    "status": "OK",
@@ -112,15 +104,14 @@
   }
  },
  "objective": {
-  "primary_sort": "sealed_vs_spy = the 2024-26 selection window (split declared, data seen): net CAGR minus SPY CAGR, same months. A SORT, not a holdout -- the out-of-sample read is `dev_selected_sealed_evaluated`",
-  "window_label": "2024-26 selection window (split declared, data seen)",
+  "primary_sort": "sealed_vs_spy (sealed net CAGR minus SPY CAGR, same months)",
   "dev_end": "2023-12-31",
   "sealed_start": "2024-01-01",
   "recent": "last 6 completed monthly periods (~126 sessions)",
   "split_rule": "a period belongs to the window its ENTRY session (decision + 1 business day) is in",
   "n_sealed_months": 32,
   "n_dev_months_max": 83,
-  "honest_note": "The 2024-26 selection window (split declared, data seen) is 32 monthly blocks. The split was declared in code before this run; nobody's eyes were closed to 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 834 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=834), the dev column, and `dev_selected_sealed_evaluated` (rules picked on dev only, read on 2024-26).",
+  "honest_note": "The sealed window is 32 monthly blocks (the brief assumed 21). 'Sealed' means the split was declared in code before this run, NOT that nobody has seen 2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample numbers including it. Ranking 834 cells on 32 months selects luck as readily as skill -- read sealed_dsr (at n=834) and the dev column beside every sealed number.",
   "noise_sharpe_ceiling_monthly_full": 0.300002,
   "noise_sharpe_ceiling_monthly_sealed": 0.575301,
   "noise_sharpe_ceiling_annual_sealed": 1.992901,
@@ -143,9 +134,9 @@
    "construction": "pct_change of auto_adjust=True Close (total return)",
    "dividends_included": true,
    "network": true,
-   "fetched_utc": "2026-09-26T09:38:22.188698+00:00"
+   "fetched_utc": "2026-09-26T09:02:47.180067+00:00"
   },
-  "provenance_sha256": "c863bcc9566f13910bbcd04e3f7a5bbf6c95f2d70a2cb97b9babd69e909e8c68",
+  "provenance_sha256": "348e583390de40b057d880f7479ed24ac02e15a0309b9b96d361360c8d8014a8",
   "span": [
    "2017-01-24",
    "2026-09-25"
@@ -154,8 +145,7 @@
  },
  "books": null,
  "backtest_vs_forward": null,
- "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26T093458Z.json",
- "leaderboard_latest": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26.json",
+ "leaderboard": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\leaderboard_2026-09-26.json",
  "markdown": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\LEADERBOARD.md",
- "replication": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-09-26T093458Z.json"
+ "replication": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\strategy_library\\top10_for_replication_2026-09-26.json"
 }

@@ -166,3 +166,22 @@ def test_route_serves_newest_receipt_and_404s_when_absent(tmp_path, monkeypatch)
     r = c.get("/api/pi/paper-accounts")
     assert r.status_code == 200
     assert r.json()["v"] == 2 and r.json()["receipt_file"] == "roi_2026-09-26.json"
+
+
+def test_a_voided_book_is_listed_not_graded(tmp_path):
+    """Review 2026-09-26: `llm_portfolio.void` appends a row; this reader must not
+    crash on it, must not count the book, and must say why."""
+    p = _llm_books(tmp_path)
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"schema": "llm_portfolio/void", "kind": "void", "book_id": "p1",
+                             "name": "pers_x", "reason": "VOID_BEFORE_ENTRY: concentration",
+                             "voided_utc": "2026-09-26T09:00:00+00:00", "who": "t"}) + "\n")
+    rows = PA.collect_llm_books(p, leaderboard={"books": []}, leaderboard_name="t")
+    assert len(rows) == 2                                    # parent + twin, never the void row
+    par = next(r for r in rows if r["account"] == "pers_x")
+    assert par["status"] == "VOIDED" and "concentration" in par["note"]
+    assert par["roi_pct"] is None
+    tw = next(r for r in rows if r["account"] == "pers_x__ew")
+    assert tw["status"] == "PENDING"
+    ag = PA.aggregate(rows)
+    assert ag["status_counts"]["VOIDED"] == 1 and "1 VOIDED" in ag["honest_sentence"]

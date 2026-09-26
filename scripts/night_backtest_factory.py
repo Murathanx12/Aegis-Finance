@@ -27,8 +27,13 @@ WHAT ONE NIGHT DOES
    worst, the worst breadth cell, the t on horizon-wide blocks, Sharpe with its
    block count, and the deflated Sharpe at the number of cells LOOKED AT (and
    at the number of families, beside it).
-4. Writes `leaderboard_<date>.json` + `LEADERBOARD.md` (idempotent per day: the
-   same panel gives the same bytes; run metadata lives in `run_<date>.json`).
+4. Writes `leaderboard_<date>T<HHMMSS>Z.json` (the RUN's receipt, never
+   overwritten: a second run the same day gets its own run id) and refreshes
+   `leaderboard_<date>.json` + `LEADERBOARD.md` as the "latest" copies; the same
+   suffix goes on `top10_for_replication_*` and `run_*`. A date-named receipt a
+   second run could overwrite is the mtime family of protocol item 7 (review
+   2026-09-26 finding 0). `checkpoint_<date>.json` stays date-named: it is crash
+   state that `--resume` must find, not a receipt.
 5. Freezes a forward twin book (`lib_<id>_<date>`, kind personal, twins ew /
    sector_etf / spy / random_same_band) for every DSR top-10 rule that has no
    forward book yet, plus the forward-only rules the 2026-09-26 audit named,
@@ -517,6 +522,7 @@ def attach_ratings(panel: pd.DataFrame, W: dict, *, market: str = "SPY") -> tupl
     didx = {d: i for i, d in enumerate(dates)}
     ds, _nxt = _decision_frame(panel)
     rows = []
+    skilled_share: list = []
     for d in ds:
         dv = np.datetime64(d)
         lo90 = np.searchsorted(tt, np.datetime64(d - pd.Timedelta(days=90)), "left")
@@ -541,7 +547,10 @@ def attach_ratings(panel: pd.DataFrame, W: dict, *, market: str = "SPY") -> tupl
             "fm": (w["first_mover"] & w["raise"]).astype(float),
             "sfm": (w["first_mover"] & w["raise"] & wf).astype(float),
             "skill": ((w["raise"] & wf).astype(float) - (w["lower"] & wf).astype(float)),
+            "unskill": ((w["raise"] & ~wf).astype(float) - (w["lower"] & ~wf).astype(float)),
         }).groupby("ticker").sum()
+        active = set(w["firm"].dropna())
+        skilled_share.append(len(active & skilled) / len(active) if active else np.nan)
         w180 = rev.iloc[lo180:hi]
         w180 = w180[w180["current_target"] > 0]
         last = w180.drop_duplicates(["ticker", "firm"], keep="last")
@@ -555,19 +564,27 @@ def attach_ratings(panel: pd.DataFrame, W: dict, *, market: str = "SPY") -> tupl
                          "lead_raises_90": r_["lead"], "chase_raises_90": r_["chase"],
                          "lead_minus_chase_90": r_["lead"] - r_["chase"],
                          "first_mover_raises_90": r_["fm"], "skill_net_raises_90": r_["skill"],
+                         "unskilled_net_raises_90": r_["unskill"],
                          "skill_first_mover_90": r_["sfm"],
                          "target_cv_180": r_["cv"]})
     cols = ["rating_net_90", "rating_downgrades_90", "initiations_90", "lead_raises_90",
             "chase_raises_90", "lead_minus_chase_90", "first_mover_raises_90",
-            "skill_net_raises_90", "skill_first_mover_90", "target_cv_180"]
+            "skill_net_raises_90", "unskilled_net_raises_90", "skill_first_mover_90",
+            "target_cv_180"]
     out = _merge_feats(panel, rows, cols, covered, zero_fill=cols[:-1])
     n_r = int(is_raise.sum())
+    ss = np.array([x for x in skilled_share if np.isfinite(x)])
     return out, {"status": "OK", "n_events": int(len(rev)), "n_raises": n_r,
                  "lead_share_of_raises": round(float(rev["lead"].sum()) / max(n_r, 1), 4),
                  "chase_share_of_raises": round(float(rev["chase"].sum()) / max(n_r, 1), 4),
                  "strictly_before_decision_date": True,
                  "skill_rule": ">= 20 resolved raises, mean 63-session excess vs SPY > 0, "
-                               "resolved before the decision date"}
+                               "resolved before the decision date",
+                 # review 2026-09-26 Q5: if most active firms are 'skilled', skill ~ all raises
+                 "skilled_share_of_active_firms": (
+                     {"median": float(np.median(ss)), "min": float(ss.min()), "max": float(ss.max()),
+                      "share_of_dates_above_0_70": float((ss > 0.7).mean()), "n_dates": int(len(ss))}
+                     if len(ss) else None)}
 
 
 def attach_insider(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
@@ -1098,6 +1115,21 @@ def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
             spy_row = {"cagr_since_2020": h["cagr_spy"], "cum_since_2020": h["cum_spy"],
                        "max_dd_since_2020": h.get("max_dd_spy"), "n_months": h.get("n_months")}
             break
+    ctl_rows = {x["id"]: x for x in (_row(r) for r in controls)}
+    row_by_id = {x["id"]: x for x in rows}
+    gaps = {}
+    if "skill_mom" in row_by_id and "unskilled_mom" in ctl_rows:
+        gaps["skill_mom_minus_unskilled_mom"] = SL.by_year_gap(
+            row_by_id["skill_mom"], ctl_rows["unskilled_mom"], exclude=("2025",))
+    if "skill_mom" in row_by_id and "skill_mom_ranks_21_40" in ctl_rows:
+        gaps["skill_mom_minus_ranks_21_40"] = SL.by_year_gap(
+            row_by_id["skill_mom"], ctl_rows["skill_mom_ranks_21_40"], exclude=("2025",))
+    if "mom_12_1" in row_by_id:
+        for tag in SL.QUARTER_OFFSETS:
+            cid = f"mom_12_1_q_{tag}"
+            if cid in ctl_rows:
+                gaps[f"{cid}_minus_mom_12_1"] = SL.by_year_gap(
+                    ctl_rows[cid], row_by_id["mom_12_1"], exclude=())
     sr0 = cells[0].get("dsr_sr0_monthly") if cells else None
     sr0_lib = cells[0].get("dsr_sr0_monthly_library") if cells else None
     board = {
@@ -1113,18 +1145,21 @@ def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
         "n_refused": sum(1 for r in res if r.get("status") != "OK"),
         "refused": {r["id"]: r.get("why") for r in res if r.get("status") != "OK"},
         "objective": {
-            "primary_sort": "sealed_vs_spy (sealed net CAGR minus SPY CAGR, same months)",
+            "primary_sort": (f"sealed_vs_spy = the {SL.SELECTION_WINDOW_LABEL}: net CAGR minus "
+                             "SPY CAGR, same months. A SORT, not a holdout -- the out-of-sample "
+                             "read is `dev_selected_sealed_evaluated`"),
+            "window_label": SL.SELECTION_WINDOW_LABEL,
             "dev_end": SL.DEV_END, "sealed_start": SL.SEALED_START,
             "recent": f"last {SL.RECENT_PERIODS} completed monthly periods (~{SL.RECENT_SESSIONS} sessions)",
             "split_rule": "a period belongs to the window its ENTRY session (decision + 1 business day) is in",
             "n_sealed_months": T_sealed, "n_dev_months_max": T_full - T_sealed if T_full else None,
             "honest_note": (
-                f"The sealed window is {T_sealed} monthly blocks (the brief assumed 21). 'Sealed' "
-                f"means the split was declared in code before this run, NOT that nobody has seen "
-                f"2024-2026: every rule was written in 2026, and the 02:00 board printed full-sample "
-                f"numbers including it. Ranking {len(cells)} cells on {T_sealed} months selects luck "
-                f"as readily as skill -- read sealed_dsr (at n={len(cells)}) and the dev column "
-                f"beside every sealed number."),
+                f"The {SL.SELECTION_WINDOW_LABEL} is {T_sealed} monthly blocks. The split was "
+                f"declared in code before this run; nobody's eyes were closed to 2024-2026: every "
+                f"rule was written in 2026, and the 02:00 board printed full-sample numbers "
+                f"including it. Ranking {len(cells)} cells on {T_sealed} months selects luck as "
+                f"readily as skill -- read sealed_dsr (at n={len(cells)}), the dev column, and "
+                f"`dev_selected_sealed_evaluated` (rules picked on dev only, read on 2024-26)."),
             "noise_sharpe_ceiling_monthly_full": _sr0(len(cells), T_full),
             "noise_sharpe_ceiling_monthly_sealed": _sr0(len(cells), T_sealed),
             "noise_sharpe_ceiling_annual_sealed": (_sr0(len(cells), T_sealed) or 0) * math.sqrt(12),
@@ -1148,6 +1183,8 @@ def leaderboard(done: dict, rules: list, *, spy_meta: dict, today: date,
         "market_benchmark": spy_meta.get("market_benchmark"),
         "since": since,
         "extra_rules_source": SL.EXTRA_SOURCE, "extra_rules_refused": SL.EXTRA_REFUSED,
+        "dev_selected_sealed_evaluated": SL.dev_selected_sealed_evaluated(rows, n_blocks=T_sealed),
+        "control_gaps": gaps,
         "top_by_sealed_vs_spy": by_sealed[:top_n],
         "bottom_by_sealed_vs_spy": by_sealed[-top_n:][::-1],
         "top_by_dsr": by_dsr[:top_n],
@@ -1190,7 +1227,7 @@ def _table(rows: list) -> list[str]:
 
 
 def _sealed_table(rows: list) -> list[str]:
-    head = ("| id | family | k | sealed vs SPY | sealed CAGR (months) | SPY sealed | sealed DSR | "
+    head = ("| id | family | k | 2024-26 vs SPY | 2024-26 CAGR (months) | SPY 2024-26 | 2024-26 DSR | "
             "dev CAGR | dev vs SPY | DSR full (n) | LOO-worst (mo) | top-5-mo share | "
             "turnover/yr | cost bps/yr | max DD | recent-126 (SPY) | by-year |")
     lines = [head, "|" + "---|" * 17]
@@ -1207,11 +1244,54 @@ def _sealed_table(rows: list) -> list[str]:
     return lines
 
 
+def _dev_selected_md(b: dict) -> list[str]:
+    if not b or b.get("status") == "REFUSED":
+        return ["## Dev-selected, 2024-26-evaluated", "", f"REFUSED: {b.get('why')}", ""]
+    sp = b.get("spearman_dev_vs_selection_window") or {}
+    md = b.get("mde") or {}
+    L = ["## Dev-selected, 2024-26-evaluated (the one out-of-sample read on this board)", "",
+         f"Rules picked on DEV only (dev net CAGR - SPY), read on the {b['label']}:", "",
+         "| top-n by dev | mean 2024-26 vs SPY | median | beat SPY | mean dev vs SPY |",
+         "|---|---:|---:|---:|---:|"]
+    for k in ("top_10", "top_20", "top_50"):
+        t = b.get(k)
+        if t:
+            L.append(f"| {t['n']} | {_pct(t['mean_selection_window_vs_spy'])} | "
+                     f"{_pct(t['median_selection_window_vs_spy'])} | {t['n_beat_spy']}/{t['n']} | "
+                     f"{_pct(t['mean_dev_vs_spy'])} |")
+    L += ["", f"- Spearman(dev rank, 2024-26 rank) over {sp.get('n')} rules: "
+              f"**{_num(sp.get('rho'), 2)}** (p {_num(sp.get('p_value'), 3)}).",
+          f"- rules beating SPY in BOTH windows: {b.get('n_beat_spy_in_both_windows')} of "
+          f"{b.get('n_rules')} ({b.get('n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40')} also "
+          f"with top-5-month share < 0.6 and max DD > -40%)."]
+    if "mde_monthly_80pct_power" in md:
+        L.append(f"- MDE: median active sigma {_pct(md['active_sigma_monthly_median'], 2)}/month -> "
+                 f"SE {_pct(md['se_monthly'], 2)} over {md['n_blocks']} blocks -> MDE "
+                 f"**{_pct(md['mde_monthly_80pct_power'], 2)}/month** at 80% power. A window this "
+                 "long can kill a rule; it cannot certify a realistic 0.5%/month edge.")
+    return L + [""]
+
+
+def _gaps_md(gaps: dict) -> list[str]:
+    if not gaps:
+        return []
+    L = ["## Control gaps by year (excess of A minus excess of B)", ""]
+    for k, g in gaps.items():
+        yrs = ", ".join(f"{y} {v*100:+.1f}" for y, v in sorted(g["gap_by_year"].items()))
+        L.append(f"- `{k}`: {yrs} pp; excluding {g['excluded'] or 'nothing'}: sum "
+                 f"{_pct(g['sum_excluding'])}, {g['n_years_positive_excluding']} of "
+                 f"{g['n_years_excluding']} years positive.")
+    return L + [""]
+
+
 def render_md(board: dict, books: dict | None = None, forward: list | None = None) -> str:
     mp = board["multiplicity"]
     spy = board["spy"]
     L = [f"# Strategy library leaderboard — {board['date']}", "",
          f"> {board['read_me_first']}", ""]
+    if board.get("run_id"):
+        L += [f"Run `{board['run_id']}`; receipt `{board.get('receipt')}` (this file is the "
+              f"'latest' copy and is refreshed by every run; the receipt is not).", ""]
     if board.get("partial"):
         L += [f"**PARTIAL:** {board['partial']} — {board['n_rules_done']} of "
               f"{board['n_rules_in_library']} rules evaluated.", ""]
@@ -1231,26 +1311,30 @@ def render_md(board: dict, books: dict | None = None, forward: list | None = Non
           f"- controls (never ranked, never trials): {', '.join(mp['controls_excluded_from_trials'])}", ""]
     ob = board.get("objective") or {}
     if ob:
-        L += ["## The objective: sealed net return vs SPY (split declared in code)", "",
-              f"- dev: entry <= {ob['dev_end']}; SEALED: entry >= {ob['sealed_start']} "
+        L += [f"## The sort: net return vs SPY in the {SL.SELECTION_WINDOW_LABEL}", "",
+              f"- dev: entry <= {ob['dev_end']}; 2024-26 selection window: entry >= {ob['sealed_start']} "
               f"({ob['n_sealed_months']} monthly blocks); recent: {ob['recent']}. {ob['split_rule']}.",
               f"- {ob['honest_note']}",
               f"- noise ceiling at n={mp['n_cells_looked_at']}: best monthly active Sharpe of pure noise "
               f"{_num(ob.get('noise_sharpe_ceiling_monthly_full'), 3)} over the full window, "
-              f"{_num(ob.get('noise_sharpe_ceiling_monthly_sealed'), 3)} over the sealed window "
+              f"{_num(ob.get('noise_sharpe_ceiling_monthly_sealed'), 3)} over the 2024-26 window "
               f"(= {_num(ob.get('noise_sharpe_ceiling_annual_sealed'), 2)} annual IR).",
               f"- expected pure-noise cells with an annual IR > 0.5: "
               f"{_num(ob.get('expected_noise_cells_ir_above_0_5_annual_full'), 1)} on the full window, "
-              f"{_num(ob.get('expected_noise_cells_ir_above_0_5_annual_sealed'), 1)} on the sealed window.",
+              f"{_num(ob.get('expected_noise_cells_ir_above_0_5_annual_sealed'), 1)} on the 2024-26 window.",
               f"- rules from strategy_library_ext: {board.get('extra_rules_source')}"
               + (f"; refused: {board.get('extra_rules_refused')}" if board.get("extra_rules_refused") else ""),
-              "", "## Top 10 by SEALED net return vs SPY (the objective)", ""]
+              ""]
+        L += _dev_selected_md(board.get("dev_selected_sealed_evaluated") or {})
+        L += ["", f"## Top 10 by net return vs SPY in the {SL.SELECTION_WINDOW_LABEL} "
+                  "(a sort on data seen, not a holdout)", ""]
         L += _sealed_table(board.get("top_by_sealed_vs_spy") or [])
-        L += ["", "## Bottom 10 by sealed net return vs SPY", ""]
+        L += ["", "## Bottom 10 by net return vs SPY in the 2024-26 selection window", ""]
         L += _sealed_table(board.get("bottom_by_sealed_vs_spy") or [])
-        L += ["", "## Controls on the sealed window (random k: the luck bar)", ""]
+        L += ["", "## Controls on the 2024-26 selection window (random_*: the luck bar; "
+                  "diagnostic_control: one question each, never ranked)", ""]
         L += _sealed_table(board.get("controls") or [])
-        L += [""]
+        L += [""] + _gaps_md(board.get("control_gaps") or {})
     L += [
           "## SPY", "",
           f"SPY since {board['since']}: CAGR {_pct(spy.get('cagr_since_2020'))}, cumulative "
@@ -1299,23 +1383,255 @@ def worst_case_line(name: str, n: int, capital: float) -> str:
             f"-${capital*w:,.0f}; the whole book to zero = -${capital:,.0f}")
 
 
+# ═════════════════════════════════ the freeze gate ══════════════════════════
+#
+# Review 2026-09-26 (chunks D+E), adjudicated: a leaderboard row gets a $1M
+# HEADLINE forward book only if every boolean below is True. A row that fails
+# is still frozen -- as a CONTROL (`__control`, `kind: control`) -- because a
+# forward record of what the gate refused is how the gate itself gets graded.
+# Every boolean is printed on the freeze log and in docs/BRIDGE.md.
+
+GATE_MAX_WEIGHT = 0.10          # per name; GATE_MAX_WEIGHT_SMALL_K when k <= 10
+GATE_MAX_WEIGHT_SMALL_K = 0.15
+GATE_MIN_EFFECTIVE_N = 8.0      # 1 / sum(w^2)
+GATE_CLUSTER_RHO = 0.80         # pairwise 63-session daily-return correlation
+GATE_CLUSTER_MAX_SHARE = 0.40
+GATE_CLUSTER_WINDOW = 63
+GATE_EARNINGS_WEIGHT = 0.10     # a name above this may not print in the first sessions
+GATE_EARNINGS_SESSIONS = 5
+GATE_EARNINGS_DUE_DAYS = 75     # last 8-K 2.02 + this <= the 5th session => a print is due
+GATE_EARNINGS_FILE_MAX_AGE_DAYS = 30
+GATE_WORST_NAME_USD = 150_000.0
+GATE_MAX_STALE_SESSIONS = 1
+GATE_FAMILY_MAX = 2
+GATE_TOP5_SHARE_MAX = 0.6
+GATE_MAX_DD_MIN = -0.40
+GATE_TODO = ("TODO (review item 14, not tonight): re-freeze each library book as a chained "
+             "immutable version at every one of its rule's own rebalance dates (month-end "
+             "decision, next-open entry) under one rule fingerprint, so a monthly rule is "
+             "graded as the rule and not as a stale September basket.")
+
+
+def _sessions_between(a: pd.Timestamp, b: pd.Timestamp) -> int:
+    """Business days in (a, b]: how many sessions a bar dated `a` is behind `b`
+    (US holidays are counted as sessions -- conservative)."""
+    a, b = pd.Timestamp(a).normalize(), pd.Timestamp(b).normalize()
+    if b <= a:
+        return 0
+    return int(len(pd.bdate_range(a + pd.Timedelta(days=1), b)))
+
+
+def first_sessions(decision: pd.Timestamp, calendar, n: int) -> list:
+    """The first `n` sessions after the decision date: the calendar where it
+    reaches, business days beyond it."""
+    decision = pd.Timestamp(decision).normalize()
+    cal = pd.DatetimeIndex(calendar) if calendar is not None else pd.DatetimeIndex([])
+    out = [d for d in cal if d > decision][:n]
+    d = out[-1] if out else decision
+    while len(out) < n:
+        d = d + pd.offsets.BDay(1)
+        out.append(pd.Timestamp(d))
+    return out
+
+
+def earnings_due(tickers, decision_date, calendar=None, *, path: Path | None = None,
+                 n_sessions: int = GATE_EARNINGS_SESSIONS) -> dict:
+    """ticker -> {"status": DUE / NOT_DUE / UNKNOWN, ...} for a print inside the
+    first `n_sessions` sessions after `decision_date`.
+
+    Point-in-time from EDGAR 8-K item 2.02 (the factory's own earnings source):
+    a print is DUE when the name's last 2.02 filed on or before the decision
+    date + GATE_EARNINGS_DUE_DAYS lands on or before the n-th session. No 2.02
+    history, or an 8-K file more than GATE_EARNINGS_FILE_MAX_AGE_DAYS older than
+    the decision, is UNKNOWN -- never a pass.
+    """
+    decision = pd.Timestamp(decision_date).normalize()
+    path = Path(path or Path(_cfg.OPTIMUS_LEDGER_DIR) / "edgar_8k" / "eightk_items.parquet")
+    tickers = [str(t).upper() for t in tickers]
+    if not path.exists():
+        return {t: {"status": "UNKNOWN", "why": f"no 8-K items at {path}"} for t in tickers}
+    ek = pd.read_parquet(path, columns=["ticker", "filing_date", "items_joined"])
+    ek["filing_date"] = pd.to_datetime(ek["filing_date"], errors="coerce")
+    ek = ek[ek["filing_date"].notna() & (ek["filing_date"] <= decision)]
+    file_end = ek["filing_date"].max() if len(ek) else None
+    if file_end is None or (decision - file_end).days > GATE_EARNINGS_FILE_MAX_AGE_DAYS:
+        return {t: {"status": "UNKNOWN", "why": f"8-K file ends {file_end}"} for t in tickers}
+    ek = ek[ek["ticker"].astype(str).str.upper().isin(tickers)
+            & ek["items_joined"].fillna("").astype(str).str.contains("2.02", regex=False)]
+    last = ek.assign(t=ek["ticker"].astype(str).str.upper()).groupby("t")["filing_date"].max()
+    window_end = first_sessions(decision, calendar, n_sessions)[-1]
+    out = {}
+    for t in tickers:
+        if t not in last.index:
+            out[t] = {"status": "UNKNOWN", "why": "no 8-K 2.02 history"}
+            continue
+        due = last[t] + pd.Timedelta(days=GATE_EARNINGS_DUE_DAYS)
+        out[t] = {"status": "DUE" if due <= window_end else "NOT_DUE",
+                  "last_202": str(last[t].date()), "due_from": str(due.date()),
+                  "window_end": str(pd.Timestamp(window_end).date()),
+                  "file_ends": str(file_end.date())}
+    return out
+
+
+def correlated_clusters(weights: dict, bars: pd.DataFrame, asof, *,
+                        window: int = GATE_CLUSTER_WINDOW, rho: float = GATE_CLUSTER_RHO) -> dict:
+    """Connected components of names whose `window`-session daily returns
+    (bars at or before `asof`) correlate above `rho`; the heaviest one's share."""
+    names = [t for t in weights if weights[t] > 0]
+    b = bars[(bars["symbol"].isin(names)) & (bars["date"] <= pd.Timestamp(asof))]
+    wide = b.pivot_table(index="date", columns="symbol", values="close").sort_index()
+    ret = wide.pct_change(fill_method=None).iloc[-window:]
+    ret = ret.loc[:, ret.notna().sum() >= 40]
+    C = ret.corr(min_periods=40) if ret.shape[1] >= 2 else pd.DataFrame()
+    parent = {t: t for t in names}
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+    pairs = []
+    cols = list(C.columns)
+    for i, a in enumerate(cols):
+        for bb in cols[i + 1:]:
+            v = C.loc[a, bb]
+            if np.isfinite(v) and v > rho:
+                pairs.append((a, bb, round(float(v), 3)))
+                parent[find(a)] = find(bb)
+    comp: dict = {}
+    for t in names:
+        comp.setdefault(find(t), []).append(t)
+    clusters = [sorted(v) for v in comp.values() if len(v) >= 2]
+    shares = [sum(weights[t] for t in c) for c in clusters]
+    j = int(np.argmax(shares)) if shares else None
+    return {"pairs_above_rho": pairs, "clusters": clusters,
+            "max_cluster": clusters[j] if j is not None else [],
+            "max_cluster_share": float(shares[j]) if j is not None else 0.0,
+            "n_names_with_returns": int(ret.shape[1]), "window": window, "rho": rho}
+
+
+def freeze_gate(row: dict | None, weights: dict, bars: pd.DataFrame, calendar, *,
+                decision_date=None, family_books_before: int = 0,
+                earnings: dict | None = None, capital: float | None = None) -> dict:
+    """Every boolean of the freeze rule and the verdict: PASS or CONTROL(reasons).
+
+    `row`: the rule's leaderboard row (None for a forward-only rule: SELECTION
+    cannot pass). `weights`: ticker -> weight as the book would be frozen.
+    `bars`: daily bars (symbol, date, close) through at least the decision date.
+    `calendar`: the session dates. `family_books_before`: headline books this
+    rule's family already has. `earnings`: `earnings_due()`'s output (computed
+    when None). A boolean that cannot be computed is None, and None never
+    passes: the reason is printed as UNKNOWN.
+    """
+    from backend.services import llm_portfolio as LP
+    capital = float(capital or LP.START_CAPITAL)
+    decision = pd.Timestamp(decision_date or date.today()).normalize()
+    w = {str(t).upper(): float(v) for t, v in weights.items() if str(t).upper() != "CASH" and v > 0}
+    k = len(w)
+    r = row or {}
+
+    def gt(v, x):
+        return None if v is None else bool(v > x)
+    sel = {
+        "dev_vs_spy_gt_0": gt(r.get("dev_vs_spy"), 0.0),
+        "selection_window_vs_spy_gt_0": gt(r.get("sealed_vs_spy"), 0.0),
+        "top5_month_share_lt_0_6": (None if r.get("top5_months_share_of_log_return") is None
+                                    else bool(r["top5_months_share_of_log_return"] < GATE_TOP5_SHARE_MAX)),
+        "max_dd_gt_m40": gt(r.get("max_dd"), GATE_MAX_DD_MIN),
+        "loo_worst_mean_active_gt_0": gt(r.get("loo_worst_mean_active"), 0.0),
+        "family_books_le_2": bool(family_books_before + 1 <= GATE_FAMILY_MAX),
+    }
+    cap = GATE_MAX_WEIGHT_SMALL_K if k <= 10 else GATE_MAX_WEIGHT
+    wmax_t = max(w, key=w.get) if w else None
+    wmax = w[wmax_t] if w else None
+    eff_n = (1.0 / sum(v * v for v in w.values())) if w else 0.0
+    cl = correlated_clusters(w, bars, decision) if w else {"max_cluster_share": 0.0, "max_cluster": []}
+    big = [t for t, v in w.items() if v > GATE_EARNINGS_WEIGHT]
+    if big and earnings is None:
+        earnings = earnings_due(big, decision, calendar)
+    earn = {t: (earnings or {}).get(t, {"status": "UNKNOWN", "why": "not looked up"}) for t in big}
+    due = [t for t in big if earn[t].get("status") == "DUE"]
+    unknown = [t for t in big if earn[t].get("status") not in ("DUE", "NOT_DUE")]
+    earn_ok = False if due else (None if unknown else True)
+    worst_name_usd = capital * (wmax or 0.0)
+    con = {
+        f"max_name_weight_le_{cap:.2f}": (None if wmax is None else bool(wmax <= cap + 1e-9)),
+        "effective_n_ge_8": bool(eff_n >= GATE_MIN_EFFECTIVE_N),
+        "no_rho_0_8_cluster_above_40pct": bool(cl["max_cluster_share"] <= GATE_CLUSTER_MAX_SHARE),
+        "no_name_gt_10pct_printing_in_first_5_sessions": earn_ok,
+        "largest_name_to_zero_le_150k": bool(worst_name_usd <= GATE_WORST_NAME_USD),
+    }
+    b = bars[bars["date"] <= decision]
+    held = b[b["symbol"].isin(list(w))]
+    bar_date = pd.Timestamp(held["date"].max()) if len(held) else None
+    stale = _sessions_between(bar_date, decision) if bar_date is not None else None
+    tim = {"bars_le_1_session_old": (None if stale is None
+                                     else bool(stale <= GATE_MAX_STALE_SESSIONS))}
+    reasons = []
+    names = {"dev_vs_spy_gt_0": "DEV_NOT_ABOVE_SPY",
+             "selection_window_vs_spy_gt_0": "2024_26_NOT_ABOVE_SPY",
+             "top5_month_share_lt_0_6": "TOP5_MONTH_SHARE",
+             "max_dd_gt_m40": "MAX_DD", "loo_worst_mean_active_gt_0": "LOO_WORST",
+             "family_books_le_2": "FAMILY_CAP",
+             f"max_name_weight_le_{cap:.2f}": "NAME_WEIGHT", "effective_n_ge_8": "EFFECTIVE_N",
+             "no_rho_0_8_cluster_above_40pct": "CORRELATED_CLUSTER",
+             "no_name_gt_10pct_printing_in_first_5_sessions": "EARNINGS",
+             "largest_name_to_zero_le_150k": "WORST_CASE_NAME",
+             "bars_le_1_session_old": "STALE_BARS"}
+    for grp in (sel, con, tim):
+        for key, v in grp.items():
+            if v is None:
+                reasons.append(("NO_BACKTEST_ROW" if grp is sel and not row
+                                else "EARNINGS_UNKNOWN" if key.startswith("no_name_gt")
+                                else names[key] + "_UNKNOWN"))
+            elif v is False:
+                reasons.append(names[key])
+    reasons = list(dict.fromkeys(reasons))
+    verdict = "PASS" if not reasons else "CONTROL"
+    return {
+        "verdict": verdict, "reasons": reasons,
+        "label": "PASS" if not reasons else f"CONTROL({', '.join(reasons)})",
+        "selection": sel, "construction": con, "timing": tim,
+        "detail": {"k": k, "max_name": wmax_t, "max_weight": wmax, "weight_cap": cap,
+                   "effective_n": round(eff_n, 3),
+                   "max_cluster": cl.get("max_cluster"),
+                   "max_cluster_share": round(float(cl["max_cluster_share"]), 4),
+                   "pairs_above_rho": cl.get("pairs_above_rho", []),
+                   "earnings_names_over_10pct": earn,
+                   "largest_name_to_zero_usd": round(worst_name_usd, 0),
+                   "decision_date": str(decision.date()),
+                   "bar_date": str(bar_date.date()) if bar_date is not None else None,
+                   "staleness_sessions": stale,
+                   "family": r.get("family"), "family_books_before": family_books_before},
+        "rule": ("SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, "
+                 "<=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no "
+                 "rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest "
+                 "name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date"),
+        "todo": GATE_TODO,
+    }
+
+
 def _existing_lib_ids(books: list) -> set:
     out = set()
     for b in books:
         nm = str(b.get("name") or "")
         if nm.startswith("lib_") and b.get("kind") != "twin":
+            nm = nm[: -len("__control")] if nm.endswith("__control") else nm
             out.add(nm[4:].rsplit("_", 1)[0])
     return out
 
 
 def freeze_book(rule_id: str, description: str, picks: list, *, today: date,
-                bars: pd.DataFrame, note: str, log=print) -> dict:
+                bars: pd.DataFrame, note: str, log=print, gate: dict | None = None) -> dict:
     from backend.services import llm_portfolio as LP
     k = len(picks)
-    name = f"lib_{rule_id}_{today}"
+    control = bool(gate) and gate.get("verdict") != "PASS"
+    name = f"lib_{rule_id}_{today}" + ("__control" if control else "")
     w = 1.0 / k
+    if gate:
+        note = f"{note} Freeze gate: {gate['label']}."
     book = {
-        "name": name, "kind": "personal",
+        "name": name, "kind": "control" if control else "personal",
         "objective": ("Relative P&L vs SPY over 21 sessions, long-only equal weight, net of "
                       "band round-trip cost (strategy-library forward twin)"),
         "model": f"rule:strategy_library:{rule_id}",
@@ -1331,6 +1647,8 @@ def freeze_book(rule_id: str, description: str, picks: list, *, today: date,
             {"ticker": "CASH", "weight": 0.0, "thesis": "declared: fully invested",
              "falsifier": "n/a"}],
     }
+    if gate:
+        book["freeze_gate"] = gate
     rec = LP.freeze(book, today=today)
     seed = int(hashlib.sha256(name.encode()).hexdigest()[:8], 16)
     tw = LP.twins(rec, asof=today, seed=seed, bars=bars)
@@ -1339,7 +1657,10 @@ def freeze_book(rule_id: str, description: str, picks: list, *, today: date,
         LP.append_book(t)
     wc = worst_case_line(name, k, LP.START_CAPITAL)
     log(wc)
+    if gate:
+        log(f"FREEZE GATE {name}: {gate['label']}")
     return {"status": "FROZEN", "book_id": rec["book_id"], "name": name,
+            "kind": rec.get("kind"), "gate": gate,
             "tickers": [p["ticker"] for p in rec["positions"] if p["ticker"] != "CASH"],
             "twins": sorted(tw), "twin_seed": seed, "worst_case": wc}
 
@@ -1378,10 +1699,13 @@ def forward_only_picks(entry: dict, panel: pd.DataFrame, *, today: date) -> list
 def freeze_forward(board: dict, panel: pd.DataFrame, bars: pd.DataFrame, *,
                    today: date, rules: list, log=print) -> dict:
     from backend.services import llm_portfolio as LP
-    existing = _existing_lib_ids(LP.read_books())
+    existing = _existing_lib_ids(LP.read_books(include_voided=True))
     by_id = {r.id: r for r in rules}
     out: dict = {}
     n_top = int(_cfg.STRATEGY_LIB_FREEZE_TOP)
+    cal = pd.DatetimeIndex(sorted(bars.loc[bars["symbol"] == "SPY", "date"].unique())
+                           if (bars["symbol"] == "SPY").any() else sorted(bars["date"].unique()))
+    fam_n: dict = {}
     for row in board["top_by_dsr"][:n_top]:
         rid = row["id"]
         if rid in existing:
@@ -1394,8 +1718,13 @@ def freeze_forward(board: dict, panel: pd.DataFrame, bars: pd.DataFrame, *,
                     f"{_pct(row['hindsight_spy_cagr_since_2020'])}, DSR {row['dsr']} at "
                     f"n={row['dsr_n_trials']}, LOO-worst {_pct(row['loo_worst_mean_active'], 2)}/mo, "
                     f"by-year {row['by_year_signs']}; bars asof {panel['date'].max().date()}.")
+            gate = freeze_gate(row, {p_["symbol"]: 1.0 / len(picks) for p_ in picks}, bars, cal,
+                               decision_date=today,
+                               family_books_before=fam_n.get(row.get("family"), 0))
             out[rid] = freeze_book(rid, by_id[rid].description, picks, today=today,
-                                   bars=bars, note=note, log=log)
+                                   bars=bars, note=note, log=log, gate=gate)
+            if gate["verdict"] == "PASS":
+                fam_n[row.get("family")] = fam_n.get(row.get("family"), 0) + 1
         except (SL.RuleInputMissing, LP.Refusal) as e:
             out[rid] = {"status": "REFUSED", "why": str(e)}
     for entry in SL.FORWARD_ONLY:
@@ -1405,9 +1734,11 @@ def freeze_forward(board: dict, panel: pd.DataFrame, bars: pd.DataFrame, *,
             continue
         try:
             picks = forward_only_picks(entry, panel, today=today)
+            gate = freeze_gate(None, {p_["symbol"]: 1.0 / len(picks) for p_ in picks}, bars, cal,
+                               decision_date=today)
             out[rid] = freeze_book(rid, entry["description"], picks, today=today, bars=bars,
                                    note=f"FORWARD-ONLY on this panel. {entry['replay_reported']}",
-                                   log=log)
+                                   log=log, gate=gate)
             out[rid]["green_replay_never_forward"] = entry["green_replay_never_forward"]
         except (SL.RuleInputMissing, LP.Refusal) as e:
             out[rid] = {"status": "REFUSED", "why": str(e)}
@@ -1441,17 +1772,43 @@ def backtest_vs_forward(board: dict, bars: pd.DataFrame, *, today: date) -> list
     return lines
 
 
-def write_outputs(board: dict, *, out: Path, today: date, books=None, forward=None) -> dict:
+def new_run_id(now: datetime | None = None) -> str:
+    """`<date>T<HHMMSS>Z` in UTC: the suffix every receipt of one run carries."""
+    return (now or datetime.now(timezone.utc)).astimezone(timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
+
+
+def receipt_paths(out: Path, stem: str, today: date, run_id: str) -> tuple[Path, Path]:
+    """(the run's own receipt, the date-named 'latest' copy)."""
+    return out / f"{stem}_{run_id}.json", out / f"{stem}_{today}.json"
+
+
+def write_outputs(board: dict, *, out: Path, today: date, books=None, forward=None,
+                  run_id: str | None = None) -> dict:
+    """The run's receipt `leaderboard_<run_id>.json` (never overwritten), then
+    the date-named latest copy and `LEADERBOARD.md`, both naming the receipt."""
     out.mkdir(parents=True, exist_ok=True)
-    lb = out / f"leaderboard_{today}.json"
+    run_id = run_id or new_run_id()
+    lb, latest = receipt_paths(out, "leaderboard", today, run_id)
+    if lb.exists():
+        raise FileExistsError(f"REFUSED: {lb} exists; a receipt is never overwritten")
+    board = {**board, "run_id": run_id, "receipt": _rel(lb)}
     atomic_write_json(lb, board, indent=1)
+    atomic_write_json(latest, board, indent=1)
     md = render_md(board, books, forward)
     (out / "LEADERBOARD.md").write_text(md, encoding="utf-8")
-    return {"leaderboard": str(lb), "markdown": str(out / "LEADERBOARD.md")}
+    return {"leaderboard": str(lb), "leaderboard_latest": str(latest),
+            "markdown": str(out / "LEADERBOARD.md"), "run_id": run_id}
+
+
+def _rel(p: Path) -> str:
+    try:
+        return str(Path(p).resolve().relative_to(REPO)).replace("\\", "/")
+    except ValueError:
+        return str(p).replace("\\", "/")
 
 
 def write_replication(board: dict, panel: pd.DataFrame, spy: pd.Series, rules: list, *,
-                      out: Path, today: date, n: int = 10) -> Path:
+                      out: Path, today: date, n: int = 10, run_id: str | None = None) -> Path:
     """`top10_for_replication_<date>.json`: what a second engine needs, nothing it must infer.
 
     Schema per `research_library_expansion_and_lean.md` 2.5: each top-n rule by
@@ -1501,9 +1858,18 @@ def write_replication(board: dict, panel: pd.DataFrame, spy: pd.Series, rules: l
                                                "turnover_annual", "cost_bps_paid", "max_dd",
                                                "recent_126_return")},
         })
-    doc = {"schema": "strategy_library.replication/1", "date": str(today),
+    run_id = run_id or board.get("run_id") or new_run_id()
+    # the library's own 12-1 momentum (k=20, equal weight) on the same months: the
+    # UMD leg of the semis/momentum regression in bridge_report (review idea 1)
+    reference = {}
+    if "mom_12_1" in by_id:
+        mm = SL.run_strategy(panel, by_id["mom_12_1"], k=20)
+        reference["mom_12_1"] = [{"date": str(x.date.date()), "net": float(x.net)}
+                                 for x in mm.itertuples(index=False)]
+    doc = {"schema": "strategy_library.replication/1", "date": str(today), "run_id": run_id,
+           "reference_series": reference,
            "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-           "source": f"backend/services/strategy_library.py + leaderboard_{today}.json",
+           "source": f"backend/services/strategy_library.py + leaderboard_{run_id}.json",
            "selection": "top by sealed_vs_spy (the board's primary sort)",
            "split": {"dev_end": SL.DEV_END, "sealed_start": SL.SEALED_START,
                      "recent_periods": SL.RECENT_PERIODS,
@@ -1521,8 +1887,9 @@ def write_replication(board: dict, panel: pd.DataFrame, spy: pd.Series, rules: l
                                "name whose bars stop inside the period is filled at its last close "
                                f"x (1 + {_cfg.STRATEGY_LIB_DELIST_RETURN}); cash (regime gate off) earns 0"),
            "rows": rows}
-    path = out / f"top10_for_replication_{today}.json"
+    path, latest = receipt_paths(out, "top10_for_replication", today, run_id)
     atomic_write_json(path, _round(doc, 10), indent=1)
+    atomic_write_json(latest, _round(doc, 10), indent=1)
     return path
 
 
@@ -1543,7 +1910,7 @@ def print_top(board: dict, log=print) -> None:
     mp = board["multiplicity"]
     ob = board.get("objective") or {}
     if ob:
-        log(f"\nOBJECTIVE: sealed net vs SPY; sealed = entry >= {ob['sealed_start']} "
+        log(f"\nSORT: net vs SPY in the {SL.SELECTION_WINDOW_LABEL}; entry >= {ob['sealed_start']} "
             f"({ob['n_sealed_months']} months); cells looked at {mp['n_cells_looked_at']}; noise "
             f"ceiling sealed {_num(ob.get('noise_sharpe_ceiling_monthly_sealed'), 3)}/mo "
             f"({_num(ob.get('noise_sharpe_ceiling_annual_sealed'), 2)} annual IR)")
@@ -1593,6 +1960,7 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
     t0 = time.time()
     today = date.today()
+    run_id = new_run_id()
     out = Path(a.out) if a.out else (out_dir() / "smoke" if a.smoke else out_dir())
     paths = XR.survivorship_free_paths()
     start = "2018-01-01" if a.smoke else _cfg.STRATEGY_LIB_START
@@ -1642,13 +2010,23 @@ def main(argv=None) -> int:
         forward = backtest_vs_forward(board, bars, today=today)
         for x in forward:
             print("  " + x)
-    paths_out = write_outputs(board, out=out, today=today, books=books, forward=forward)
+    dse = board.get("dev_selected_sealed_evaluated") or {}
+    if dse.get("sentence"):
+        print("DEV-SELECTED, 2024-26-EVALUATED: " + dse["sentence"], flush=True)
+    for k_, g_ in (board.get("control_gaps") or {}).items():
+        print(f"CONTROL GAP {k_}: by year {g_['gap_by_year']}; excluding {g_['excluded']}: "
+              f"sum {g_['sum_excluding']}", flush=True)
+    paths_out = write_outputs(board, out=out, today=today, books=books, forward=forward,
+                              run_id=run_id)
+    board = {**board, "run_id": run_id}
     try:
-        paths_out["replication"] = str(write_replication(board, panel, spy, rules, out=out, today=today))
+        paths_out["replication"] = str(write_replication(board, panel, spy, rules, out=out,
+                                                         today=today, run_id=run_id))
     except Exception as e:                                # noqa: BLE001 -- printed, never silent
         paths_out["replication"] = f"REFUSED: {type(e).__name__}: {e}"
     print(f"  replication file: {paths_out['replication']}", flush=True)
-    run = {"job": JOB, "date": str(today), "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+    run = {"job": JOB, "date": str(today), "run_id": run_id, "licence": "PRODUCT_EXPERIMENT",
+           "llm_spend_usd": 0.0,
            "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "elapsed_s": round(time.time() - t0, 1), "partial": board.get("partial"),
            "n_rules_done": board["n_rules_done"], "n_computed_this_run": board["n_computed_this_run"],
@@ -1661,7 +2039,9 @@ def main(argv=None) -> int:
            "spy": {k: v for k, v in spy_meta.items() if k != "market_benchmark"},
            "market_benchmark": spy_meta.get("market_benchmark"),
            "books": books, "backtest_vs_forward": forward, **paths_out}
-    atomic_write_json(out / f"run_{today}.json", _round(run), indent=1)
+    rp, rl = receipt_paths(out, "run", today, run_id)
+    atomic_write_json(rp, _round(run), indent=1)
+    atomic_write_json(rl, _round(run), indent=1)
     print(f"-> {paths_out['leaderboard']}  ({time.time()-t0:.0f}s)")
     return 0
 

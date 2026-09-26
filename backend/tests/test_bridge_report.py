@@ -44,7 +44,8 @@ def _book(name: str = "lib_toy_rule_sealed_2026-09-26", asof: str = "2026-09-26"
 def test_bridge_renders_with_every_forward_pending(tmp_path):
     board = {"all_rows": [ROW]}
     doc = BR.report(today=date(2026, 9, 26), out_md=tmp_path / "BRIDGE.md", out_dir=tmp_path,
-                    books=[_book()], bars=_bars(), board=board, board_path="lb.json")
+                    books=[_book()], bars=_bars(), board=board, board_path="lb.json",
+                    earnings={}, semis={"status": "SKIPPED", "why": "test"})
     md = (tmp_path / "BRIDGE.md").read_text(encoding="utf-8")
     assert "PENDING (entry 2026-09-28)" in md
     assert "`lib_toy_rule_sealed_2026-09-26`" in md
@@ -61,7 +62,8 @@ def test_bridge_renders_with_every_forward_pending(tmp_path):
 def test_a_book_the_receipt_does_not_know_still_renders(tmp_path):
     doc = BR.report(today=date(2026, 9, 26), out_md=tmp_path / "B.md", out_dir=tmp_path,
                     books=[_book("lib_forecast_dispersion_v1_2026-09-26")] , bars=_bars(),
-                    board={"all_rows": []}, board_path="lb.json")
+                    board={"all_rows": []}, board_path="lb.json", earnings={},
+                    semis={"status": "SKIPPED", "why": "test"})
     assert doc["rows"][0]["status"].startswith("FORWARD-ONLY")
 
 
@@ -121,23 +123,40 @@ def _readme_section() -> str:
 def _cited_board() -> tuple[str, dict]:
     """The leaderboard the README section CITES (not the newest one on disk, so
     a later night's leaderboard does not turn this red before the README is
-    re-rendered on purpose)."""
+    re-rendered on purpose). Since 2026-09-26 the cite is a RUN receipt."""
     import json
-    m = re.search(r"backend/data/optimus/strategy_library/leaderboard_\d{4}-\d{2}-\d{2}\.json",
+    m = re.search(r"backend/data/optimus/strategy_library/leaderboard_\d{4}-\d{2}-\d{2}T\d{6}Z\.json",
                   _readme_section())
-    assert m, "the README backtest section cites no leaderboard receipt"
+    assert m, "the README backtest section cites no run-id'd leaderboard receipt"
     return m.group(0), json.loads((REPO / m.group(0)).read_text(encoding="utf-8"))
 
 
+def _cited(pattern: str):
+    m = re.search(pattern, _readme_section())
+    return m.group(1) if m else None
+
+
 def test_readme_section_has_the_required_sentences():
+    from backend.services import strategy_library as SL
     s = _readme_section()
     _bp, board = _cited_board()
     f = BR.library_facts(board)
+    dse = board["dev_selected_sealed_evaluated"]
+    t10 = dse["top_10"]
     assert "Nothing passes the multiplicity bar" in s and "vs 0.95" in s
     assert f"best DSR {f['best_dsr']:.2f}" in s
-    assert f"{f['n_beat']} of {f['n_rules']} rules beat SPY sealed, median" in s
-    assert "The only rows good in both windows are `mom_12_1_q` and `skill_mom`" in s
-    assert "$1M forward paper book since 2026-09-28" in s and "docs/BRIDGE.md" in s
+    assert f"{f['n_beat']} of {f['n_rules']} rules beat SPY in the 2024-26 window, median" in s
+    assert f"{dse['n_beat_spy_in_both_windows']} of {f['n_rules']} rules beat SPY in both windows" in s
+    assert SL.SELECTION_WINDOW_LABEL in s
+    assert f"**{t10['mean_selection_window_vs_spy']*100:+.1f} pp/yr**" in s
+    assert f"{t10['n_beat_spy']} of {t10['n']} beat SPY" in s
+    assert "no forward day graded yet; the first 21-session reading is the 2026-10-26 close" in s.lower()
+    assert "entry is the 2026-09-28 open" in s and "since 2026-09-28" not in s
+    assert "not an independent engine (shares holdings, fills, cost formula)" in s
+    assert "second engine" not in s
+    # "sealed" survives only inside field names (`sealed_vs_spy`, `lib_*_sealed_*`)
+    assert "sealed" not in s.replace("_sealed", "").replace("sealed_vs_spy", "").lower()
+    assert re.search(r"at commit `[0-9a-f]{7,}`", s)
     assert "+28.3%" in s and "+114.8%" in s                         # kept as history
     for r in board["top_by_sealed_vs_spy"][:10]:
         assert f"`{r['id']}`" in s
@@ -145,8 +164,14 @@ def test_readme_section_has_the_required_sentences():
 
 
 def test_readme_section_is_the_render_of_the_receipt():
+    import json
     bp, board = _cited_board()
-    assert _readme_section().strip() == BR.readme_section(board, bp).strip()
+    gh = _cited(r"at commit `([0-9a-f]{7,}|UNKNOWN)`")
+    rp = _cited(r"`(backend/data/optimus/strategy_library/replication_vectorbt_[^`]+\.json)`")
+    brp = _cited(r"bridge receipt `(backend/data/optimus/bridge/bridge_[^`]+\.json)`")
+    bridge = json.loads((REPO / brp).read_text(encoding="utf-8")) if brp else None
+    assert _readme_section().strip() == BR.readme_section(
+        board, bp, git_hash=gh, bridge=bridge, replication=rp, bridge_path=brp).strip()
 
 
 def test_readme_section_has_no_unreceipted_number():
@@ -165,3 +190,56 @@ def test_readme_section_has_no_unreceipted_number():
             if re.search(r"\d", line) and line.startswith("- "):
                 assert receipt.search(line), line[:120]
         assert receipt.search(b), b[:120]
+
+
+# ───────────────────── review 2026-09-26: void, gate, regression ─────────────
+
+def test_a_voided_book_is_listed_and_its_ew_twin_is_the_strategy_test(tmp_path):
+    parent = dict(_book(), book_id="p1",
+                  void={"reason": "VOID_BEFORE_ENTRY: concentration", "who": "t",
+                        "voided_utc": "2026-09-26T09:00:00+00:00"})
+    ew = dict(_book("lib_toy_rule_sealed_2026-09-26__ew"), kind="twin", twin="ew",
+              parent_book_id="p1", book_id="t1",
+              positions=[{"ticker": "AAA", "weight": 0.5}, {"ticker": "BBB", "weight": 0.5}])
+    other = dict(_book("lib_other_2026-09-26"), book_id="p2")
+    doc = BR.report(today=date(2026, 9, 26), out_md=tmp_path / "B.md", out_dir=tmp_path,
+                    books=[parent, ew, other], bars=_bars(), board={"all_rows": [ROW]},
+                    board_path="lb.json", earnings={},
+                    semis={"status": "SMH_NOT_IN_PANEL", "why": "t"})
+    md = (tmp_path / "B.md").read_text(encoding="utf-8")
+    names = [r["book"] for r in doc["rows"]]
+    assert "lib_toy_rule_sealed_2026-09-26" not in names             # never graded
+    st = next(r for r in doc["rows"] if r["book"].endswith("__ew"))
+    assert st["strategy_test_for_voided"] and st["status"].startswith("STRATEGY TEST")
+    assert doc["voided_before_entry"][0]["reason"].startswith("VOID_BEFORE_ENTRY")
+    assert "## Voided before entry" in md and "VOID_BEFORE_ENTRY: concentration" in md
+    # the gate column: 50/50 books fail construction and say why
+    assert "| gate |" in md
+    assert all(r["gate"].startswith("CONTROL(") for r in doc["rows"])
+    assert "EFFECTIVE_N" in doc["rows"][0]["gate"]
+    assert (tmp_path / "freeze_gate_2026-09-26.json").exists()
+    assert "`SMH_NOT_IN_PANEL`" in md
+    assert "no forward day graded yet" in md.lower()
+
+
+def test_semis_regression_says_smh_not_in_panel_or_recovers_a_planted_alpha():
+    rng = np.random.default_rng(3)
+    ents = pd.bdate_range("2024-01-02", periods=40, freq="21B")
+    spy_r, smh_r, mom_r = (rng.normal(0.01, 0.04, 40) for _ in range(3))
+    net = 0.02 + 1.0 * spy_r + 0.5 * smh_r + 0.3 * mom_r + rng.normal(0, 0.001, 40)
+    ser = [{"date": str((e - pd.Timedelta(days=1)).date()), "entry": str(e.date()),
+            "net": float(n), "spy": float(s), "window": "sealed"}
+           for e, n, s in zip(ents, net, spy_r)]
+    doc = {"rows": [{"id": "toy", "monthly_return_series": ser}],
+           "reference_series": {"mom_12_1": [{"date": x["date"], "net": float(m)}
+                                             for x, m in zip(ser, mom_r)]}}
+    assert BR.semis_umd_regression({}, None, rep_doc=doc,
+                                   smh=pd.DataFrame())["status"] == "SMH_NOT_IN_PANEL"
+    opens = np.r_[100.0, 100.0 * np.cumprod(1 + smh_r)]
+    days = list(ents) + [ents[-1] + pd.offsets.BDay(21)]
+    smh = pd.DataFrame({"symbol": "SMH", "date": days, "open": opens})
+    out = BR.semis_umd_regression({}, None, rep_doc=doc, smh=smh)
+    assert out["status"] == "OK"
+    x = out["rows"][0]
+    assert x["n"] == 39 and x["alpha"] == pytest.approx(0.02, abs=0.002)
+    assert x["beta_smh"] == pytest.approx(0.5, abs=0.02) and x["t_alpha"] > 5

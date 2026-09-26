@@ -77,10 +77,37 @@ PROBE_BOOKS = ("probe_equal", "probe_inverse_vol", "probe_bigmove_tilt")
 # ─────────────────────────────── receipts ───────────────────────────────────
 
 def latest_leaderboard(lib_dir: Path = LIB_DIR) -> tuple[Path, dict]:
-    ps = sorted(lib_dir.glob("leaderboard_*.json"))
+    """The newest RUN receipt (`leaderboard_<date>T<HHMMSS>Z.json`). The
+    date-named file is a 'latest' copy a second run overwrites (review
+    2026-09-26 finding 0), so it is read only when no run receipt exists."""
+    ps = sorted(lib_dir.glob("leaderboard_*T*Z.json"))
+    if not ps:
+        ps = sorted(lib_dir.glob("leaderboard_*.json"))
     if not ps:
         raise FileNotFoundError(f"no leaderboard_*.json under {lib_dir}")
     return ps[-1], json.loads(ps[-1].read_text(encoding="utf-8"))
+
+
+def latest_replication(lib_dir: Path = LIB_DIR, run_id: Optional[str] = None) -> Optional[Path]:
+    """The re-implementation receipt for `run_id` if it exists, else the newest."""
+    if run_id:
+        p = lib_dir / f"replication_vectorbt_{run_id}.json"
+        if p.exists():
+            return p
+    ps = sorted(lib_dir.glob("replication_vectorbt_*.json"))
+    return ps[-1] if ps else None
+
+
+def git_head(repo: Path = REPO) -> str:
+    """HEAD's short hash at render time (the commit a reader checks the receipt at)."""
+    import subprocess
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=str(repo),
+                             capture_output=True, text=True, timeout=20)
+        h = out.stdout.strip()
+        return h if out.returncode == 0 and h else "UNKNOWN"
+    except (OSError, subprocess.SubprocessError):
+        return "UNKNOWN"
 
 
 def rule_id_of(book: dict) -> Optional[str]:
@@ -238,8 +265,48 @@ def _path(book: dict, bars: pd.DataFrame, cal: pd.DatetimeIndex, row: dict) -> l
     return out
 
 
+def book_weights(book: dict) -> dict:
+    return {p["ticker"]: float(p["weight"]) for p in book.get("positions", [])
+            if p["ticker"] != "CASH" and float(p["weight"]) > 0}
+
+
+def gates_for(books: list[dict], board: dict, bars: pd.DataFrame, *,
+              earnings: Optional[dict] = None) -> dict:
+    """book name -> freeze-gate result, for every lib_ parent (and the ew twin of
+    a voided parent). A book frozen WITH a gate carries it (`freeze_gate`); a
+    book frozen before the gate existed is evaluated now on bars at or before
+    its own as-of date, with the family cap counted in ledger order."""
+    from scripts import night_backtest_factory as F
+    by_id = {r["id"]: r for r in board.get("all_rows", [])}
+    cal = pd.DatetimeIndex(sorted(bars.loc[bars["symbol"] == "SPY", "date"].unique()))
+    fam_n: dict = {}
+    out: dict = {}
+    parents = [b for b in books if str(b.get("name") or "").startswith("lib_")
+               and b.get("kind") != "twin"]
+    voided = {b["book_id"] for b in parents if b.get("void")}
+    ew_of_voided = [b for b in books if b.get("kind") == "twin" and b.get("twin") == "ew"
+                    and b.get("parent_book_id") in voided]
+    for b in parents + ew_of_voided:
+        nm = b["name"]
+        if b.get("freeze_gate"):
+            out[nm] = {**b["freeze_gate"], "evaluated": "at freeze"}
+            continue
+        rid = rule_id_of(b) if b.get("kind") != "twin" else rule_id_of(
+            {"name": nm.split("__")[0]})
+        row = by_id.get(rid)
+        fam = (row or {}).get("family")
+        g = F.freeze_gate(row, book_weights(b), bars, cal, decision_date=b["asof"],
+                          family_books_before=fam_n.get(fam, 0), earnings=earnings)
+        g["evaluated"] = "retroactively (frozen before the gate existed)"
+        out[nm] = g
+        if g["verdict"] == "PASS" and not b.get("void") and b.get("kind") != "twin":
+            fam_n[fam] = fam_n.get(fam, 0) + 1
+    return out
+
+
 def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
-               today: date, regime_now: dict, prior: Optional[dict] = None) -> list[dict]:
+               today: date, regime_now: dict, prior: Optional[dict] = None,
+               gates: Optional[dict] = None) -> list[dict]:
     from backend.services import llm_portfolio as LP
     by_id = {r["id"]: r for r in board.get("all_rows", [])}
     cal = pd.DatetimeIndex(sorted(bars.loc[bars["symbol"] == "SPY", "date"].unique()))
@@ -250,12 +317,17 @@ def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
     for b in books:
         if b.get("kind") == "twin":
             twins_of.setdefault(b.get("parent_book_id"), []).append(b)
+    voided_ids = {b["book_id"] for b in books if b.get("void")}
     rows = []
     for b in books:
         nm = str(b.get("name") or "")
-        if not nm.startswith("lib_") or b.get("kind") == "twin":
+        if not nm.startswith("lib_") or b.get("void"):
             continue
-        rid = rule_id_of(b)
+        strategy_test = (b.get("kind") == "twin" and b.get("twin") == "ew"
+                         and b.get("parent_book_id") in voided_ids)
+        if b.get("kind") == "twin" and not strategy_test:
+            continue
+        rid = rule_id_of(b) if not strategy_test else rule_id_of({"name": nm.split("__")[0]})
         r = by_id.get(rid) or {}
         entry = next_session(b["asof"], cal)
         g = LP.grade(b, bars, today=today)
@@ -281,6 +353,9 @@ def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
         status = ("FORWARD" if started else pend)
         if not r:
             status = f"FORWARD-ONLY (no backtest row); {status}"
+        if strategy_test:
+            status = f"STRATEGY TEST (ew twin of the voided parent); {status}"
+        g_ = (gates or {}).get(nm) or {}
         rows.append({
             "book": nm, "book_id": b.get("book_id"), "rule": rid, "asof": b.get("asof"),
             "entry": entry, "n_positions": b.get("n_positions"), "receipt_row": bool(r),
@@ -297,6 +372,8 @@ def build_rows(books: list[dict], board: dict, bars: pd.DataFrame, *,
             "regime_now": regime_now.get("label"), "regime_at_entry": reg_entry,
             "days_since_inception": max((pd.Timestamp(today) - pd.Timestamp(b["asof"])).days, 0),
             "sessions_since_entry": sessions, "status": status, "investigation": inv,
+            "kind": b.get("kind"), "strategy_test_for_voided": strategy_test,
+            "gate": g_.get("label"), "gate_verdict": g_.get("verdict"),
         })
     return rows
 
@@ -330,32 +407,74 @@ def _p(v: Any, nd: int = 1) -> str:
     return f"{v*100:+.{nd}f}%"
 
 
+FIRST_READING = ("No forward day graded yet; the first 21-session reading is the "
+                 "2026-10-26 close.")
+
+
 def render_md(doc: dict) -> str:
+    from backend.services import strategy_library as SL
     reg = doc.get("regime") or {}
+    lab = SL.SELECTION_WINDOW_LABEL
+    fx = doc.get("library_facts") or {}
+    dse = doc.get("dev_selected") or {}
+    t10 = dse.get("top_10") or {}
+    sp = dse.get("spearman_dev_vs_selection_window") or {}
+    n_rules = fx.get("n_rules", "the library's")
     L = [f"# The backtest -> forward bridge — {doc['date']}", "",
-         "> Every historical number below is HINDSIGHT: the library's 254 rules were written "
-         "on 2026-09-26, after every month they are scored on. The forward columns are the only "
-         "quotable record; each row is a $1M long-only paper book frozen once and never "
-         "re-weighted. Generated by `python -m scripts.bridge_report`; receipt "
-         f"`{doc['receipt_json']}`; historical columns from `{doc['leaderboard']}`.", "",
-         f"Current regime ({reg.get('asof', '?')}): **{reg.get('label', 'UNKNOWN')}** "
-         "(SPY vs its 200-session mean; 21-session realised-vol tercile since 2017).", "",
-         "| book | rule | dev CAGR | sealed CAGR (SPY) | hist max DD | turnover/yr | forward return "
-         "| forward SPY | forward relative | expected rel. to date | regime | days | status |",
-         "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+         f"> Every historical number below is HINDSIGHT: the library's {n_rules} rules were "
+         "written on 2026-09-26, after every month they are scored on. The forward columns are the "
+         "only quotable record; each row is a $1M long-only paper book frozen once and never "
+         "re-weighted. Generated by `python -m scripts.bridge_report report` at commit "
+         f"`{doc.get('git_head', 'UNKNOWN')}`; receipt `{doc['receipt_json']}`; historical "
+         f"columns from `{doc['leaderboard']}`.", ""]
+    ng = doc.get("n_forward_graded", 0)
+    if not ng:
+        L += [f"**{FIRST_READING}**", ""]
+    if t10:
+        L += [f"The one out-of-sample read the backtest holds: choosing the top 10 rules by dev "
+              f"(pre-2024) results alone gave **{t10['mean_selection_window_vs_spy']*100:+.1f} pp/yr** "
+              f"mean vs SPY in the {lab} (median {t10['median_selection_window_vs_spy']*100:+.1f} pp; "
+              f"{t10['n_beat_spy']} of {t10['n']} beat SPY); dev-to-2024-26 rank Spearman "
+              f"**{sp.get('rho', float('nan')):.2f}** over {sp.get('n')} rules "
+              f"(`{doc['leaderboard']}`, `dev_selected_sealed_evaluated`).", ""]
+    L += [f"Current regime ({reg.get('asof', '?')}): **{reg.get('label', 'UNKNOWN')}** "
+          "(SPY vs its 200-session mean; 21-session realised-vol tercile since 2017).", "",
+          "| book | rule | gate | dev CAGR | 2024-26 CAGR (SPY) | hist max DD | turnover/yr | "
+          "forward return | forward SPY | forward relative | expected rel. to date (2024-26 window) "
+          "| regime | days | status |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in doc["rows"]:
         tv = r.get("turnover_annual")
         L.append(
-            f"| `{r['book']}` | `{r['rule']}` | {_p(r['dev_cagr'])} | {_p(r['sealed_cagr'])} "
-            f"({_p(r['sealed_spy_cagr'])}) | {_p(r['max_dd'])} | "
+            f"| `{r['book']}` | `{r['rule']}` | {r.get('gate') or 'n/a'} | {_p(r['dev_cagr'])} | "
+            f"{_p(r['sealed_cagr'])} ({_p(r['sealed_spy_cagr'])}) | {_p(r['max_dd'])} | "
             f"{(f'{tv:.1f}x' if isinstance(tv, (int, float)) else 'n/a')} | "
             f"{_p(r['forward_return'], 2)} | {_p(r['forward_spy'], 2)} | "
             f"{_p(r['forward_relative'], 2)} | {_p(r['expected_relative_to_date'], 2)} | "
             f"{r['regime_now']} | {r['days_since_inception']} | {r['status']} |")
+    gl = doc.get("gate_summary") or {}
+    if gl:
+        L += ["", f"**The freeze gate** (`scripts/night_backtest_factory.py::freeze_gate`): "
+                  f"{gl.get('n_pass', 0)} of {gl.get('n_books', 0)} books PASS; the rest are "
+                  "CONTROLs -- they accrue forward, and they are not headline books. "
+                  + (f"Failing ONLY on timing (picks on bars older than 1 session at the decision): "
+                     f"{', '.join('`' + b + '`' for b in gl.get('pass_but_timing') or [])}. "
+                     if gl.get("pass_but_timing") else "")
+                  + 
+                  f"Rule: {gl.get('rule')}. Booleans per book: `{gl.get('log')}`. "
+                  f"{gl.get('todo', '')}"]
+    vd = doc.get("voided_before_entry") or []
+    L += ["", "## Voided before entry (never graded, never deleted)", ""]
+    if not vd:
+        L.append("None.")
+    for v in vd:
+        L.append(f"- `{v.get('name')}` (`{v.get('book_id')}`), voided {v.get('voided_utc')} by "
+                 f"{v.get('who')}: {v.get('reason')}. Its `__ew` twin stays as the strategy test "
+                 "(the row marked STRATEGY TEST above).")
     L += ["", "## Investigations (never deleted)", ""]
     inv = ([{"book": r["book"], **r["investigation"]} for r in doc["rows"] if r.get("investigation")]
            + list(doc.get("carried_investigations", [])))
-    L.append(f"The rule: a book whose forward relative return trails its sealed expectation by "
+    L.append(f"The rule: a book whose forward relative return trails its 2024-26-window expectation by "
              f"more than {TRAIL_SIGMAS:g} historical monthly active sigma on each of the last "
              f"{TRAIL_SESSIONS} sessions is investigated; the cause is the first true test in "
              f"{', '.join(INVESTIGATION_ORDER)} (`scripts/bridge_report.py::investigate`). "
@@ -375,20 +494,136 @@ def render_md(doc: dict) -> str:
         w = ", ".join(f"{k} {v:.1%}" for k, v in r["weights"].items())
         L.append(f"| `{r['book']}` | {_p(r['forward_return'], 2)} | {_p(r['forward_spy'], 2)} | "
                  f"{_p(r['forward_relative'], 2)} | {w} |")
+    reg_tab = doc.get("semis_umd_regression") or {}
+    L += ["", "## Semis and momentum decomposition of the 2024-26 top-10", ""]
+    if reg_tab.get("status") != "OK":
+        L.append(f"`{reg_tab.get('status', 'NOT_RUN')}`: {reg_tab.get('why', '')}")
+    else:
+        L += [reg_tab["note"], "", "| rule | n | alpha/mo | t(alpha) | beta SPY | beta SMH | beta MOM | R2 |",
+              "|---|---:|---:|---:|---:|---:|---:|---:|"]
+        for x in reg_tab["rows"]:
+            L.append(f"| `{x['id']}` | {x['n']} | {_p(x['alpha'], 2)} | {x['t_alpha']:.2f} | "
+                     f"{x['beta_spy']:.2f} | {x['beta_smh']:.2f} | {x['beta_mom']:.2f} | {x['r2']:.2f} |")
     L += ["", "## How to read it", "",
-          "- **dev** = monthly periods entered 2017-02 → 2023-12; **sealed** = entered from "
-          "2024-01-01 (32 monthly blocks), a split declared in `strategy_library.py` before the "
-          "ranking. Ranking 762 cells on 32 months selects luck as readily as skill; no rule "
+          f"- **dev** = monthly periods entered 2017-02 → 2023-12; the **{lab}** = entered from "
+          f"2024-01-01 ({fx.get('n_sealed', 32)} monthly blocks). The split was declared in "
+          "`strategy_library.py` before the ranking, but every rule was written in 2026 and the "
+          f"board sorts on this window, so it is not a holdout. Ranking {fx.get('n_cells', 'n')} "
+          f"cells on {fx.get('n_sealed', 32)} months selects luck as readily as skill; no rule "
           "reaches DSR 0.95.",
-          "- **expected rel. to date** = ((1 + sealed CAGR) / (1 + SPY sealed CAGR))^(sessions/252) − 1: "
-          "what the sealed window says the book should be ahead of SPY by now.",
+          "- **expected rel. to date** = ((1 + 2024-26 CAGR) / (1 + SPY 2024-26 CAGR))^(sessions/252) − 1: "
+          "what the selection window says the book should be ahead of SPY by now -- the window the "
+          "row was selected on, so it is an optimistic expectation.",
+          "- **gate** = the freeze rule as code: PASS, or CONTROL(the failed booleans). A CONTROL "
+          "row accrues forward like any book and is never a headline.",
           "- A forward number is net of the entry half of the band round trip "
           "(`llm_portfolio.grade`), priced from the open of the session after the freeze.",
           "- `lib_*_2026-09-26` books without `_sealed` were frozen by the 02:00 factory from its "
-          "DSR top-10; `FORWARD-ONLY` rows have no backtest on this panel.",
-          f"- Independent (vectorbt) recomputation of the sealed top-10 series: "
-          f"`{doc.get('replication') or 'not yet run'}`.", ""]
+          "DSR top-10; `_sealed` books were frozen from the 2024-26 sort (the suffix is the "
+          "2026-09-26 name, kept because a book's name is part of its id); `FORWARD-ONLY` rows "
+          "have no backtest on this panel.",
+          "- The 2024-26 top-10 series were recomputed from raw bars "
+          f"(`{doc.get('replication') or 'not yet run'}`): a re-implementation of the arithmetic "
+          "from raw bars, not an independent engine (shares holdings, fills, cost formula).", ""]
     return "\n".join(L)
+
+
+def _facts_or_none(board: dict) -> Optional[dict]:
+    try:
+        return library_facts(board)
+    except (KeyError, ValueError, TypeError):
+        return None
+
+
+def _ols(y: np.ndarray, X: np.ndarray) -> dict:
+    """OLS with an intercept; the intercept's classical t."""
+    n = len(y)
+    A = np.column_stack([np.ones(n), X])
+    beta, *_ = np.linalg.lstsq(A, y, rcond=None)
+    resid = y - A @ beta
+    dof = n - A.shape[1]
+    s2 = float(resid @ resid) / dof if dof > 0 else float("nan")
+    cov = s2 * np.linalg.pinv(A.T @ A)
+    se = np.sqrt(np.diag(cov))
+    ss_tot = float(((y - y.mean()) ** 2).sum())
+    return {"beta": beta, "t": beta / se, "r2": 1.0 - float(resid @ resid) / ss_tot if ss_tot else float("nan")}
+
+
+def semis_umd_regression(board: dict, bars: Optional[pd.DataFrame] = None, *,
+                         rep_doc: Optional[dict] = None, smh: Optional[pd.DataFrame] = None,
+                         etf: str = "SMH") -> dict:
+    """Review idea 1: regress each 2024-26 top-10 monthly net series (the
+    selection-window blocks) on SPY, SMH and the library's own `mom_12_1`
+    equal-weight series; print the intercept and its t. SMH is looked up in the
+    bars panel and the `global_prices` cache; absent -> `SMH_NOT_IN_PANEL`."""
+    if rep_doc is None:
+        rid = board.get("run_id")
+        cand = ([LIB_DIR / f"top10_for_replication_{rid}.json"] if rid else []) + \
+            sorted(LIB_DIR.glob("top10_for_replication_*.json"))[-1:]
+        path = next((c for c in cand if c.exists()), None)
+        if path is None:
+            return {"status": "NO_REPLICATION_FILE", "why": "no top10_for_replication_*.json"}
+        rep_doc = json.loads(path.read_text(encoding="utf-8"))
+    mom = (rep_doc.get("reference_series") or {}).get("mom_12_1")
+    if not mom:
+        return {"status": "NO_MOM_REFERENCE",
+                "why": "the top-10 file predates `reference_series.mom_12_1` (factory run id >= this build)"}
+    if smh is None:
+        frames = []
+        if bars is not None and len(bars):
+            frames.append(bars[bars["symbol"] == etf])
+        try:
+            from backend.services import global_prices as GP
+            g = GP.read_cache()
+            if len(g):
+                frames.append(g[g["symbol"] == etf])
+        except Exception:                                  # noqa: BLE001 -- absence is the answer
+            pass
+        smh = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    if smh is None or not len(smh):
+        return {"status": "SMH_NOT_IN_PANEL",
+                "why": (f"{etf} has no bars in the survivorship-free panel or the global_prices "
+                        "cache; the regression is not run rather than run without the sector leg")}
+    smh = smh.assign(date=pd.to_datetime(smh["date"])).sort_values("date").drop_duplicates("date")
+    sd = smh["date"].to_numpy()
+    so = smh["open"].astype(float).to_numpy()
+
+    def period(entry: str, nxt: Optional[str]) -> Optional[float]:
+        if nxt is None:
+            return None
+        a = int(np.searchsorted(sd, np.datetime64(pd.Timestamp(entry)), "left"))
+        b = int(np.searchsorted(sd, np.datetime64(pd.Timestamp(nxt)), "left"))
+        if a >= len(sd) or b >= len(sd) or b <= a:
+            return None
+        return float(so[b] / so[a] - 1.0)
+    mom_by = {x["date"]: x["net"] for x in mom}
+    out = []
+    for r in rep_doc["rows"]:
+        ser = r["monthly_return_series"]
+        ys, xs = [], []
+        for j, x in enumerate(ser):
+            if not x["window"].startswith("sealed") or x.get("spy") is None:
+                continue
+            nxt = ser[j + 1]["entry"] if j + 1 < len(ser) else None
+            sm = period(x["entry"], nxt)
+            mm = mom_by.get(x["date"])
+            if sm is None or mm is None:
+                continue
+            ys.append(x["net"])
+            xs.append([x["spy"], sm, mm])
+        if len(ys) < 12:
+            out.append({"id": r["id"], "n": len(ys), "status": "TOO_FEW_BLOCKS"})
+            continue
+        f = _ols(np.array(ys), np.array(xs))
+        out.append({"id": r["id"], "n": len(ys), "alpha": float(f["beta"][0]),
+                    "t_alpha": float(f["t"][0]), "beta_spy": float(f["beta"][1]),
+                    "beta_smh": float(f["beta"][2]), "beta_mom": float(f["beta"][3]),
+                    "r2": float(f["r2"])})
+    ok = [x for x in out if "alpha" in x]
+    return {"status": "OK" if ok else "TOO_FEW_BLOCKS", "rows": ok, "etf": etf,
+            "note": (f"net monthly return ~ a + b1 SPY + b2 {etf} + b3 mom_12_1 (library, k=20 ew), "
+                     "over the 2024-26 selection-window blocks. An intercept that dies after "
+                     f"{etf} and momentum means the window rewarded a sector, not a mechanism.")}
 
 
 def load_investigations(out_dir: Path = BRIDGE_DIR) -> dict:
@@ -412,13 +647,14 @@ def _relpath(p: Path) -> str:
 def report(*, today: Optional[date] = None, out_md: Path = DOC,
            out_dir: Path = BRIDGE_DIR, books: Optional[list] = None,
            bars: Optional[pd.DataFrame] = None, board: Optional[dict] = None,
-           board_path: Optional[str] = None) -> dict:
+           board_path: Optional[str] = None, earnings: Optional[dict] = None,
+           semis: Optional[dict] = None) -> dict:
     from backend.services import llm_portfolio as LP
     today = today or date.today()
     if board is None:
         bp, board = latest_leaderboard()
         board_path = _relpath(bp)
-    books = LP.read_books() if books is None else books
+    books = LP.read_books(include_voided=True) if books is None else books
     lib = [b for b in books if str(b.get("name") or "").startswith(("lib_",) + PROBE_BOOKS)]
     if bars is None:
         syms = {p["ticker"] for b in lib for p in b["positions"]} | {"SPY"}
@@ -433,16 +669,40 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
             prior = {r["book"]: r for r in json.loads(prev[-1].read_text(encoding="utf-8"))["rows"]}
         except (ValueError, KeyError):
             prior = {}
-    rows = build_rows(lib, board, bars, today=today, regime_now=reg, prior=prior)
+    gates = gates_for(lib, board, bars, earnings=earnings)
+    rows = build_rows(lib, board, bars, today=today, regime_now=reg, prior=prior, gates=gates)
     open_now = {r["book"] for r in rows if r.get("investigation")}
     carried = [v for k, v in load_investigations(out_dir).items() if k not in open_now]
     out_dir.mkdir(parents=True, exist_ok=True)
     receipt = out_dir / f"bridge_{today}.json"
-    rep = sorted(LIB_DIR.glob("replication_vectorbt_*.json"))
+    rep = latest_replication(LIB_DIR, board.get("run_id"))
+    from scripts import night_backtest_factory as F
+    voided = [{"book_id": b["book_id"], "name": b.get("name"), **{
+        k: b["void"].get(k) for k in ("reason", "voided_utc", "who")}}
+        for b in lib if b.get("void")]
+    heads = [r for r in rows if not r.get("strategy_test_for_voided")]
+    gate_log = out_dir / f"freeze_gate_{today}.json"
+    gate_doc = {"schema": "bridge/freeze_gate/1", "date": str(today),
+                "leaderboard": board_path, "rule": F.freeze_gate.__doc__.split("\n")[0],
+                "notes": [F.GATE_TODO], "gates": gates}
     doc = {"schema": "bridge/1", "date": str(today), "licence": "PRODUCT_EXPERIMENT",
            "generated_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+           "git_head": git_head(),
            "leaderboard": board_path or "(in-memory board)", "receipt_json": _relpath(receipt),
-           "replication": _relpath(rep[-1]) if rep else None,
+           "replication": _relpath(rep) if rep else None,
+           "library_facts": _facts_or_none(board),
+           "dev_selected": board.get("dev_selected_sealed_evaluated"),
+           "n_forward_graded": sum(1 for r in rows if r.get("sessions_since_entry")),
+           "voided_before_entry": voided,
+           "gate_summary": {"n_books": len(heads),
+                            "n_pass": sum(1 for r in heads if r.get("gate_verdict") == "PASS"),
+                            "pass_but_timing": [r["book"] for r in heads
+                                                if r.get("gate_verdict") == "CONTROL"
+                                                and (gates.get(r["book"]) or {}).get("reasons") == ["STALE_BARS"]],
+                            "rule": gates and next(iter(gates.values())).get("rule"),
+                            "log": _relpath(gate_log), "todo": F.GATE_TODO},
+           "semis_umd_regression": (semis if semis is not None
+                                    else semis_umd_regression(board, bars)),
            "regime": reg,
            "rule": {"trail_sessions": TRAIL_SESSIONS, "trail_sigmas": TRAIL_SIGMAS,
                     "order": list(INVESTIGATION_ORDER), "taxonomy": list(TAXONOMY)},
@@ -458,6 +718,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
             with (out_dir / "investigations.jsonl").open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps({"book": r["book"], **r["investigation"]}, default=str) + "\n")
     receipt.write_text(json.dumps(doc, indent=1, default=str), encoding="utf-8")
+    gate_log.write_text(json.dumps(gate_doc, indent=1, default=str), encoding="utf-8")
     out_md.parent.mkdir(parents=True, exist_ok=True)
     out_md.write_text(render_md(doc), encoding="utf-8")
     return doc
@@ -480,7 +741,9 @@ def library_facts(board: dict) -> dict:
     rows = [r for r in board["all_rows"] if not r.get("control")]
     sv = [r["sealed_vs_spy"] for r in rows if r.get("sealed_vs_spy") is not None]
     best = max(rows, key=lambda r: r.get("dsr") or -1)
-    ctrl = board.get("controls") or []
+    # the LUCK BAR is the random-k controls only; a diagnostic control is a rule's returns
+    ctrl = [c for c in (board.get("controls") or [])
+            if c.get("family") == "control" and c.get("sealed_vs_spy") is not None]
     return {"n_rules": len(rows), "n_beat": sum(1 for x in sv if x > 0),
             "median_sealed_vs_spy": float(np.median(sv)),
             "best_dsr": best["dsr"], "best_dsr_id": best["id"],
@@ -492,23 +755,32 @@ def library_facts(board: dict) -> dict:
             "both": both_windows(board)}
 
 
-def readme_section(board: dict, board_path: str) -> str:
-    """The README section, rendered from the leaderboard receipt only."""
+def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = None,
+                   bridge: Optional[dict] = None, replication: Optional[str] = None,
+                   bridge_path: Optional[str] = None) -> str:
+    """The README section, rendered from the leaderboard receipt (plus the
+    bridge receipt for the gate/void lines and the re-implementation path)."""
+    from backend.services import strategy_library as SL
     f = library_facts(board)
+    lab = SL.SELECTION_WINDOW_LABEL
     lbmd = "backend/data/optimus/strategy_library/LEADERBOARD.md"
     top = board["top_by_sealed_vs_spy"][:10]
+    gh = git_hash or git_head()
+    dse = board.get("dev_selected_sealed_evaluated") or {}
     L = [README_HEADING, "",
          "> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written "
          "down on 2026-09-26, after every month it is scored on. The quotable record starts at "
-         f"registration. Receipt for every number in this section: `{board_path}` "
-         f"(rendered as `{lbmd}`); forward results: `docs/BRIDGE.md`.", "",
+         f"registration. Receipt for every number in this section: `{board_path}` at commit "
+         f"`{gh}` (run `{board.get('run_id', 'n/a')}`; rendered as `{lbmd}`, which the next run "
+         "refreshes -- the receipt it cites is never overwritten); forward results: `docs/BRIDGE.md`.", "",
          f"The strategy library ({f['n_rules']} rules in {f['n_families']} families, "
          f"{f['n_cells']} cells at k = 10/20/50 plus each rule's own k) was run on survivorship-free "
          "bars net of a band round-trip cost, with a split declared in code before the ranking: "
-         f"**dev** = monthly periods entered through 2023-12-31, **sealed** = entered from "
-         f"2024-01-01 ({f['n_sealed']} monthly blocks). Sorted by sealed net return vs SPY "
-         f"(`{board_path}`, `top_by_sealed_vs_spy`):", "",
-         "| rule (k=20) | dev CAGR | SPY dev | sealed CAGR | SPY sealed | sealed − SPY | DSR (762 cells) "
+         f"**dev** = monthly periods entered through 2023-12-31, and the **{lab}** = entered from "
+         f"2024-01-01 ({f['n_sealed']} monthly blocks). Every rule was written in 2026, so the "
+         "second window is where the board SORTS, not a holdout. Sorted by net return vs SPY in "
+         f"that window (`{board_path}`, `top_by_sealed_vs_spy`):", "",
+         f"| rule (k=20) | dev CAGR | SPY dev | 2024-26 CAGR | SPY 2024-26 | 2024-26 − SPY | DSR ({f['n_cells']} cells) "
          "| LOO-worst mean active/mo | top-5-month share | max DD |",
          "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for r in top:
@@ -520,29 +792,67 @@ def readme_section(board: dict, board_path: str) -> str:
     ctrl = ""
     if f["ctrl_lo"] is not None:
         ctrl = (f"Random controls (k=20 names drawn at random each month, never ranked) land at "
-                f"{_p(f['ctrl_lo'])} to {_p(f['ctrl_hi'])} vs SPY sealed: that is the luck bar "
-                f"(`{board_path}`, `controls`).")
-    L += ["", ctrl, "",
-          f"- **Nothing passes the multiplicity bar (best DSR {f['best_dsr']:.2f} at {f['n_cells']} "
+                f"{_p(f['ctrl_lo'])} to {_p(f['ctrl_hi'])} vs SPY in the 2024-26 window: that is "
+                f"the luck bar (`{board_path}`, `controls`, family `control`).")
+    L += ["", ctrl, ""]
+    t10 = dse.get("top_10") or {}
+    sp = dse.get("spearman_dev_vs_selection_window") or {}
+    md = dse.get("mde") or {}
+    if t10:
+        L.append(
+            f"- **The one out-of-sample number the backtest holds:** choosing the top 10 rules by "
+            f"dev (pre-2024) results alone gave **{t10['mean_selection_window_vs_spy']*100:+.1f} pp/yr** "
+            f"mean vs SPY in the {lab} (median **{t10['median_selection_window_vs_spy']*100:+.1f} pp**; "
+            f"{t10['n_beat_spy']} of {t10['n']} beat SPY); dev-to-2024-26 rank Spearman "
+            f"**{sp.get('rho', float('nan')):.2f}** over {sp.get('n')} rules"
+            + (f"; at a median active sigma of {md['active_sigma_monthly_median']*100:.1f}%/month, "
+               f"{md['n_blocks']} blocks give an MDE of {md['mde_monthly_80pct_power']*100:.1f}%/month "
+               "at 80% power -- the window can kill a rule, not certify one"
+               if "mde_monthly_80pct_power" in md else "")
+            + f" (`{board_path}`, `dev_selected_sealed_evaluated`). {FIRST_READING}")
+    both_n = dse.get("n_beat_spy_in_both_windows")
+    strict_n = dse.get("n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40")
+    L += [f"- **Nothing passes the multiplicity bar (best DSR {f['best_dsr']:.2f} at {f['n_cells']} "
           f"cells, `{f['best_dsr_id']}`, vs 0.95).** Ranking {f['n_cells']} cells on "
-          f"{f['n_sealed']} sealed months selects luck as readily as skill (`{board_path}`, "
-          "`multiplicity`).",
-          f"- **{f['n_beat']} of {f['n_rules']} rules beat SPY sealed, median "
+          f"{f['n_sealed']} months of the 2024-26 window selects luck as readily as skill "
+          f"(`{board_path}`, `multiplicity`).",
+          f"- **{f['n_beat']} of {f['n_rules']} rules beat SPY in the 2024-26 window, median "
           f"{f['median_sealed_vs_spy']*100:+.1f}%** (`{board_path}`, `all_rows[].sealed_vs_spy`).",
-          f"- **The only rows good in both windows are "
-          f"{' and '.join(f'`{i}`' for i in f['both'])}**: the only rules in both the sealed "
-          "top-10 and the full-window DSR top-10. The sealed top rows with a top-5-month share "
-          "near or above 1 made their sealed return in a handful of months, and several were "
-          f"flat or negative in dev (`{board_path}`).",
-          "- **Each of these is a $1M forward paper book since 2026-09-28; `docs/BRIDGE.md` shows "
-          "expectation vs result** (receipt `backend/data/optimus/bridge/bridge_<date>.json`; books "
-          "in `backend/data/optimus/llm_portfolio/books.jsonl`, `lib_<id>_sealed_2026-09-26` with "
-          "ew / sector-ETF / SPY / random-same-band twins; `mom_12_1_q`'s is the 02:00 factory's "
-          "`lib_mom_12_1_q_2026-09-26`, same names; freeze log "
-          "`backend/data/optimus/bridge/freeze_2026-09-26.json`).",
-          "- The ten sealed series were recomputed by a second engine from their holdings and the "
-          "raw bars: `backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26.json`.",
-          "", "### History: the timing strategy (not the library)", "",
+          (f"- **{both_n} of {f['n_rules']} rules beat SPY in both windows** (dev and 2024-26); "
+           f"{strict_n} of them also have a top-5-month share < 0.6 and max DD better than -40%. "
+           if both_n is not None else "- ")
+          + f"Only {', '.join(f'`{i}`' for i in f['both'])} are in both the 2024-26 top-10 and "
+          "the full-window DSR top-10. The 2024-26 top rows with a top-5-month share near or above "
+          f"1 made their return in a handful of months, and several were flat or negative in dev "
+          f"(`{board_path}`)."]
+    gs = (bridge or {}).get("gate_summary") or {}
+    vd = (bridge or {}).get("voided_before_entry") or []
+    booked = {r.get("rule") for r in (bridge or {}).get("rows", [])} | {
+        rule_id_of({"name": v.get("name")}) for v in vd}
+    top_ids = [r["id"] for r in top]
+    have = [i for i in top_ids if i in booked] if bridge else top_ids
+    lack = [i for i in top_ids if i not in have]
+    fwd = (f"- **{len(have)} of these {len(top_ids)} rows have a $1M forward paper book frozen "
+           "2026-09-26; entry is the 2026-09-28 open**"
+           + (f" ({', '.join(f'`{i}`' for i in lack)} entered this top-10 after the freeze and "
+              "have none)" if lack else "")
+           + " (books in `backend/data/optimus/llm_portfolio/books.jsonl`, "
+           "`lib_<id>_sealed_2026-09-26` with ew / sector-ETF / SPY / random-same-band twins; "
+           "`mom_12_1_q`'s is the 02:00 factory's `lib_mom_12_1_q_2026-09-26`, same names; freeze "
+           "log `backend/data/optimus/bridge/freeze_2026-09-26.json`). `docs/BRIDGE.md` shows "
+           "expectation vs result.")
+    if gs:
+        fwd += (f" The freeze gate (selection, construction and timing booleans, "
+                f"`{gs.get('log')}`) passes {gs.get('n_pass')} of {gs.get('n_books')} library "
+                f"books (bridge receipt `{bridge_path}`); the rest are CONTROLs, not headlines.")
+    for v in vd:
+        fwd += (f" `{v.get('name')}` was **voided before entry** ({v.get('reason')}); its `__ew` "
+                "twin is the strategy test.")
+    L.append(fwd)
+    L.append("- The 2024-26 top-10 monthly series were recomputed from their holdings and the raw "
+             "bars -- a re-implementation of the arithmetic from raw bars, not an independent "
+             f"engine (shares holdings, fills, cost formula): `{replication or 'not yet run'}`.")
+    L += ["", "### History: the timing strategy (not the library)", "",
           f"The row this section used to lead with measured the 2020-01 → 2025-06 signal-engine "
           f"TIMING strategy, not any library rule (receipt `{OLD_RECEIPT}`, re-measured "
           "2026-09-04):", "",
@@ -733,10 +1043,11 @@ def library_books(board: dict, panel: pd.DataFrame, *, today: date, ids: list[st
         top = np.array([pos[p["symbol"]] for p in picks])
         w = SL._weights(rule, dpan, top)
         r = by_row[rid]
+        n_cells = (board.get("multiplicity") or {}).get("n_cells_looked_at")
         note = (f"Backtest (HINDSIGHT, registered {r['first_registered_utc'][:10]}): dev CAGR "
-                f"{_p(r['dev_cagr'])} (SPY {_p(r['dev_spy_cagr'])}), SEALED CAGR "
+                f"{_p(r['dev_cagr'])} (SPY {_p(r['dev_spy_cagr'])}), 2024-26 selection-window CAGR "
                 f"{_p(r['sealed_cagr'])} (SPY {_p(r['sealed_spy_cagr'])}) over "
-                f"{r['n_sealed_months']} months, sealed DSR {r['sealed_dsr']} at n=762, "
+                f"{r['n_sealed_months']} months, 2024-26 DSR {r['sealed_dsr']} at n={n_cells}, "
                 f"top-5-month share {r['top5_months_share_of_log_return']}, max DD "
                 f"{_p(r['max_dd'])}; bars asof {pd.Timestamp(last).date()}. Weight rule "
                 f"{rule.weight_rule}, hold {rule.hold_months} month(s).")
@@ -773,15 +1084,41 @@ def _same_names(a: dict, b: dict) -> bool:
             == {p["ticker"] for p in b["positions"] if p["ticker"] != "CASH"})
 
 
+def gate_book(bk: dict, board: dict, bars: pd.DataFrame, *, today: date,
+              books: list[dict]) -> dict:
+    """Run the freeze gate on a library book; a failure becomes a CONTROL
+    (`__control`, `kind: control`) carrying every boolean in `freeze_gate`."""
+    from scripts import night_backtest_factory as F
+    by_id = {r["id"]: r for r in board.get("all_rows", [])}
+    rid = bk["model"].split(":")[-1]
+    row = by_id.get(rid)
+    fam = (row or {}).get("family")
+    fam_n = sum(1 for b in books if b.get("kind") == "personal" and not b.get("void")
+                and str(b.get("name", "")).startswith("lib_") and str(b.get("asof")) == str(today)
+                and (by_id.get(rule_id_of(b)) or {}).get("family") == fam
+                and (b.get("freeze_gate") or {}).get("verdict", "PASS") == "PASS")
+    cal = pd.DatetimeIndex(sorted(bars.loc[bars["symbol"] == "SPY", "date"].unique()))
+    g = F.freeze_gate(row, book_weights(bk), bars, cal, decision_date=today,
+                      family_books_before=fam_n)
+    out = {**bk, "freeze_gate": g}
+    out["strategy"] = (out["strategy"] + f" Freeze gate: {g['label']}.")[:2000]
+    if g["verdict"] != "PASS":
+        out["name"] = bk["name"] + "__control"
+        out["kind"] = "control"
+    return out
+
+
 def cmd_freeze(a) -> int:
     from backend.services import llm_portfolio as LP
     from scripts.llm_portfolio import freeze_with_twins
     today = date.fromisoformat(a.today) if a.today else date.today()
     _bp, board = latest_leaderboard()
-    books = LP.read_books()
+    books = LP.read_books(include_voided=True)          # a voided book is never re-frozen
     names = {b.get("name") for b in books}
-    ids = [i for i in library_targets(board) if f"lib_{i}_sealed_{today}" not in names]
-    log: dict = {"date": str(today), "library": {}, "probe": {}}
+    ids = [i for i in library_targets(board) if f"lib_{i}_sealed_{today}" not in names
+           and f"lib_{i}_sealed_{today}__control" not in names]
+    from scripts import night_backtest_factory as F
+    log: dict = {"date": str(today), "library": {}, "probe": {}, "notes": [F.GATE_TODO]}
     to_freeze: list[dict] = []
     bars = None
     if ids and not a.skip_library:
@@ -790,12 +1127,16 @@ def cmd_freeze(a) -> int:
         for bk in library_books(board, panel, today=today, ids=ids):
             rid = bk["model"].split(":")[-1]
             dup = [b for b in books if b.get("kind") != "twin" and rule_id_of(b) == rid
-                   and str(b.get("name", "")).endswith(str(today)) and _same_names(b, bk)]
+                   and str(b.get("name", "")).replace("__control", "").endswith(str(today))
+                   and _same_names(b, bk)]
             if dup:
                 log["library"][rid] = {"status": "ALREADY_FROZEN_TODAY_SAME_POSITIONS",
                                        "book": dup[0]["name"]}
                 print(f"  {rid}: already frozen today as {dup[0]['name']} with the same names; skipped")
                 continue
+            bk = gate_book(bk, board, bars, today=today, books=books + to_freeze)
+            log["library"][bk["name"]] = {"gate": bk["freeze_gate"]}
+            print(f"  FREEZE GATE {bk['name']}: {bk['freeze_gate']['label']}")
             to_freeze.append(bk)
         del panel
     plan = PLAN_DIR / f"{a.plan}.json"
@@ -814,8 +1155,9 @@ def cmd_freeze(a) -> int:
         ds = meta["sigma_63"] if bk["name"].startswith(PROBE_BOOKS) else None
         wc = worst_case_weighted(bk["name"], w, LP.START_CAPITAL, ds)
         print(wc)
-        (log["probe"] if bk["name"].startswith(PROBE_BOOKS) else log["library"])[bk["name"]] = {
-            "worst_case": wc, "weights": {k: round(v, 6) for k, v in w.items()}}
+        tgt_ = log["probe"] if bk["name"].startswith(PROBE_BOOKS) else log["library"]
+        tgt_.setdefault(bk["name"], {}).update(
+            {"worst_case": wc, "weights": {k: round(v, 6) for k, v in w.items()}})
     if a.dry_run:
         print(f"DRY RUN: {len(to_freeze)} books would be frozen: {[b['name'] for b in to_freeze]}")
         return 0
@@ -865,8 +1207,15 @@ def main(argv=None) -> int:
         bp, board = latest_leaderboard()
         p = REPO / "README.md"
         txt = p.read_text(encoding="utf-8")
-        p.write_text(splice_readme(txt, readme_section(board, _relpath(bp))), encoding="utf-8")
-        print(f"-> {p} section '{README_HEADING}' rewritten from {_relpath(bp)}")
+        brs = sorted(BRIDGE_DIR.glob("bridge_*.json"))
+        bridge = json.loads(brs[-1].read_text(encoding="utf-8")) if brs else None
+        rp = latest_replication(LIB_DIR, board.get("run_id"))
+        gh = git_head()
+        p.write_text(splice_readme(txt, readme_section(
+            board, _relpath(bp), git_hash=gh, bridge=bridge,
+            replication=_relpath(rp) if rp else None,
+            bridge_path=_relpath(brs[-1]) if brs else None)), encoding="utf-8")
+        print(f"-> {p} section '{README_HEADING}' rewritten from {_relpath(bp)} at {gh}")
         return 0
     return cmd_report(a)
 

@@ -229,7 +229,15 @@ class Refusal(Exception):
 
 
 #: The kinds a book may declare. `twin` is minted by `twins()` only.
-KINDS = ("personal", "competition", "twin")
+#: `control` (2026-09-26 review of chunks D+E): a book frozen because its rule
+#: FAILED the freeze gate -- it accrues forward like any book, under a personal
+#: book's constraints, but it is never a headline (name suffix `__control`).
+KINDS = ("personal", "competition", "twin", "control")
+
+#: An APPEND-ONLY void row (never an edit or a deletion of a book line). A
+#: voided book is skipped by `grade`, the leaderboard, `paper_accounts_roi` and
+#: `bridge_report`, and listed under "voided before entry" with its reason.
+VOID_SCHEMA = "llm_portfolio/void"
 
 #: A book whose `state` starts with this is a draft awaiting the human edit.
 DRAFT_PREFIX = "DRAFT"
@@ -291,7 +299,7 @@ def constraints_for(kind: str) -> dict:
                 "objective_must_name": _config.BOOK_COMPETITION_OBJECTIVE_MUST_NAME,
                 "falsifier_required": True,
                 "wls_membership_checked": False}
-    if kind == "personal":
+    if kind in ("personal", "control"):
         return {"long_only": True, "max_weight": None, "cash_declared": True,
                 "falsifier_required": True}
     return {"long_only": True}
@@ -421,7 +429,7 @@ def freeze(book: dict, *, briefing: Optional[dict] = None,
         if cons["objective_must_name"].lower() not in objective.lower():
             raise Refusal(f"REFUSED: a competition objective must name "
                           f"{cons['objective_must_name']!r}; got {objective!r}.")
-    if kind == "personal" and declared and not any(
+    if kind in ("personal", "control") and declared and not any(
             c["ticker"] == "CASH" for c in clean):
         raise Refusal("REFUSED: a personal book declares its cash as a CASH row "
                       "(weight 0 is a declaration; absence is not).")
@@ -467,7 +475,7 @@ def freeze(book: dict, *, briefing: Optional[dict] = None,
         "positions": clean,
     }
     for k in ("parent_book_id", "parent_kind", "twin", "source", "parse",
-              "evidence_hash", "prompt_hash") + PROVENANCE_KEYS:
+              "evidence_hash", "prompt_hash", "freeze_gate") + PROVENANCE_KEYS:
         if book.get(k) is not None:
             rec[k] = book[k]
     if state:
@@ -612,7 +620,7 @@ def append_book(rec: dict) -> Path:
     return p
 
 
-def read_books(path: Optional[Path] = None) -> list[dict]:
+def _read_lines(path: Optional[Path] = None) -> list[dict]:
     p = Path(path) if path else books_path()
     if not p.exists():
         return []
@@ -621,10 +629,90 @@ def read_books(path: Optional[Path] = None) -> list[dict]:
         line = line.strip()
         if line:
             try:
-                out.append(json.loads(line))
+                x = json.loads(line)
             except ValueError:
                 continue
+            if isinstance(x, dict):
+                out.append(x)
     return out
+
+
+def void_rows(path: Optional[Path] = None) -> dict[str, dict]:
+    """book_id -> its (first) void row. A book is voided once; later rows for
+    the same id are ignored (and `void` refuses to write them)."""
+    out: dict[str, dict] = {}
+    for x in _read_lines(path):
+        if x.get("schema") == VOID_SCHEMA and x.get("book_id") and x["book_id"] not in out:
+            out[x["book_id"]] = x
+    return out
+
+
+def read_books(path: Optional[Path] = None, *, include_voided: bool = False) -> list[dict]:
+    """Every frozen book record, in ledger order. Void rows are never books.
+
+    A VOIDED book is left out unless `include_voided`, in which case it comes
+    back carrying `void` = its void row. `grade` refuses to grade such a record
+    and the leaderboard lists it under `voided_before_entry`.
+    """
+    lines = _read_lines(path)
+    voids: dict[str, dict] = {}
+    for x in lines:
+        if x.get("schema") == VOID_SCHEMA and x.get("book_id") and x["book_id"] not in voids:
+            voids[x["book_id"]] = x
+    out = []
+    for x in lines:
+        if x.get("schema") == VOID_SCHEMA:
+            continue
+        v = voids.get(x.get("book_id"))
+        if v is not None:
+            if not include_voided:
+                continue
+            x = {**x, "void": v}
+        out.append(x)
+    return out
+
+
+def voided_before_entry(path: Optional[Path] = None) -> list[dict]:
+    """The voided books, one line each: what a report lists instead of grading."""
+    return [{"book_id": v["book_id"], "name": v.get("name"), "reason": v.get("reason"),
+             "voided_utc": v.get("voided_utc"), "who": v.get("who")}
+            for v in void_rows(path).values()]
+
+
+def void(book_id: str, reason: str, *, who: str, path: Optional[Path] = None,
+         now: Optional[datetime] = None, allow_after_entry: bool = False) -> dict:
+    """APPEND a void row for `book_id`. Never edits or deletes a line.
+
+    Refuses: an unknown id, a twin (void the parent; its twins stay as the
+    controls they are), an id already voided, an empty reason or `who`, and --
+    unless `allow_after_entry` -- a book whose entry session (the first weekday
+    after `asof`) has already opened: CLAUDE.md rule 5 protects forward
+    FAILURES, and voiding a book after it traded would delete one.
+    """
+    if not str(reason or "").strip() or not str(who or "").strip():
+        raise Refusal("REFUSED: a void names its reason and who voided it.")
+    lines = _read_lines(path)
+    rec = next((x for x in lines if x.get("schema") != VOID_SCHEMA
+                and x.get("book_id") == book_id), None)
+    if rec is None:
+        raise Refusal(f"REFUSED: no book {book_id!r} in the ledger.")
+    if rec.get("kind") == "twin" or rec.get("parent_book_id"):
+        raise Refusal(f"REFUSED: {rec.get('name')} is a twin; void its parent.")
+    if book_id in void_rows(path):
+        raise Refusal(f"REFUSED: {rec.get('name')} is already voided.")
+    now = now or datetime.now(timezone.utc)
+    entry = pd.Timestamp(rec["asof"]) + pd.offsets.BDay(1)
+    if not allow_after_entry and pd.Timestamp(now.date()) >= entry:
+        raise Refusal(f"REFUSED: {rec.get('name')} entered on {entry.date()}; a book that "
+                      f"has traded is graded, not voided.")
+    row = {"schema": VOID_SCHEMA, "kind": "void", "book_id": book_id,
+           "name": rec.get("name"), "reason": str(reason),
+           "voided_utc": now.isoformat(timespec="seconds"), "who": str(who),
+           "entry_session": str(entry.date())}
+    p = Path(path) if path else books_path()
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, default=str) + "\n")
+    return row
 
 
 # ──────────────────────────────── grading ───────────────────────────────────
@@ -668,6 +756,12 @@ def grade(rec: dict, bars: pd.DataFrame, *, today: Optional[Any] = None) -> dict
     from backend.services import xs_ranker as XR
 
     bench_sym = benchmark_of(rec)
+    if rec.get("void"):
+        v = rec["void"]
+        return {"book_id": rec["book_id"], "name": rec["name"], "kind": rec.get("kind"),
+                "twin": rec.get("twin"), "parent_book_id": rec.get("parent_book_id"),
+                "benchmark": bench_sym, "status": "VOIDED",
+                "why": f"voided before entry {v.get('voided_utc')}: {v.get('reason')}"}
     start = pd.Timestamp(rec["asof"])
     px = {s: g.sort_values("date").reset_index(drop=True)
           for s, g in bars.groupby("symbol", sort=False)}
@@ -808,12 +902,26 @@ TWIN_TYPES = ("ew", "sector_etf", "random_same_band", "ai_only")
 
 
 def leaderboard(books: list[dict], bars: pd.DataFrame, *,
-                today: Optional[Any] = None) -> dict:
+                today: Optional[Any] = None,
+                voided: Optional[list[dict]] = None) -> dict:
     """Grade every book and twin; compare each parent to its own twins.
 
     `vs_<twin>` = parent's to-date net minus that twin's to-date net over the
     same window. Positive means the parent beat the twin.
+
+    A voided book (a record carrying `void`) is not graded; it is listed under
+    `voided_before_entry`. `voided` defaults to the ledger's void rows, so a
+    caller that read the books without them still gets the list.
     """
+    vb = [b for b in books if b.get("void")]
+    books = [b for b in books if not b.get("void")]
+    if voided is None:
+        voided = voided_before_entry()
+    seen = {v["book_id"] for v in voided}
+    voided = list(voided) + [
+        {"book_id": b["book_id"], "name": b.get("name"), "reason": b["void"].get("reason"),
+         "voided_utc": b["void"].get("voided_utc"), "who": b["void"].get("who")}
+        for b in vb if b["book_id"] not in seen]
     grades = [grade(b, bars, today=today) for b in books]
     twins_of: dict[str, dict] = {}
     for g in grades:
@@ -870,4 +978,5 @@ def leaderboard(books: list[dict], bars: pd.DataFrame, *,
             "n_books": sum(1 for r in rows if not r["parent_book_id"]),
             "n_twins": sum(1 for r in rows if r["parent_book_id"]),
             "by_kind": by_kind, "books": rows, "grades": grades,
+            "voided_before_entry": voided,
             "wls_caveat": _config.BOOK_WLS_PROXY_CAVEAT}
