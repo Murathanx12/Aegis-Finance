@@ -1392,6 +1392,22 @@ def _case_web_reader():
             WR.ReaderRefused, "an article read that returned no text")
 
 
+def _case_signal_structure():
+    """Signal structure (2026-09-27): a regression on too little history is not run.
+
+    The missing input is THE MONTHS. `ols` refuses below `MIN_MONTHS` (12) or
+    with fewer than three residual degrees of freedom, because an alpha t
+    computed on six blocks reads like a finding and is a coin flip -- the
+    decomposition that showed the 2024-26 momentum win to be SMH beta rests on
+    every t having its n printed beside it.
+    """
+    import pandas as pd
+    from backend.services.signal_structure import InsufficientHistory, ols
+    y = pd.Series([0.01, -0.02, 0.03, 0.0, 0.01])
+    X = pd.DataFrame({"smh": [0.02, -0.01, 0.01, 0.0, 0.03]})
+    return (lambda: ols(y, X), InsufficientHistory, "five months of returns for a six-factor regression")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1489,6 +1505,7 @@ CASES = {
     "router_capital_gate": _case_router_capital_gate,
     "aegis_panel2_spec": _case_aegis_panel2_spec,
     "source_registry": _case_source_registry,
+    "signal_structure": _case_signal_structure,
 }
 
 
