@@ -1,0 +1,198 @@
+{
+ "receipt": "dowjones_pull.reads",
+ "source": "wsj",
+ "section": "heard_on_the_street",
+ "column": "wsj_heard_on_the_street",
+ "profile": "user",
+ "parent_tab": "t20",
+ "started_utc": "2026-09-26T14:50:59+00:00",
+ "tou": "Dow Jones ToU 9.4.1: no access/scrape/store of the Services 'using any automated means, ... browser automation tool, ... AI agent or assistant ... without our prior written consent'; 9.3: stored articles may not be used 'to develop or operate an automated trading system, or for text or data mining'. Run only because Murat's HANDOFF_PC file exists; personal research, nothing republished.",
+ "cost_usd": 0.0,
+ "articles": [
+  {
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "title": "The Peptide Boom That Isn’t About Your Muscles - WSJ",
+   "byline": null,
+   "published_utc": "2026-09-25T09:30:00+00:00",
+   "first_seen_utc": "2026-09-26T14:56:37+00:00",
+   "chars": 5753,
+   "raw_chars": 8076,
+   "column": "wsj_heard_on_the_street",
+   "sha": "eca767625b5e0f0ce6a0",
+   "paywall_suspected": false,
+   "read_s": 171.17,
+   "ticker": null,
+   "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\eca767625b5e0f0ce6a0.json",
+   "duplicate": false
+  },
+  {
+   "url": "https://www.wsj.com/finance/investing/in-the-age-of-ai-cash-is-still-king-d527ee2d",
+   "title": "In the Age of AI, Cash Is Still King - WSJ",
+   "byline": null,
+   "published_utc": "2026-09-24T09:30:00+00:00",
+   "first_seen_utc": "2026-09-26T14:59:54+00:00",
+   "chars": 4912,
+   "raw_chars": 7946,
+   "column": "wsj_heard_on_the_street",
+   "sha": "8e7cc343a2eb0d31b3c7",
+   "paywall_suspected": false,
+   "read_s": 196.39,
+   "ticker": null,
+   "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\8e7cc343a2eb0d31b3c7.json",
+   "duplicate": false
+  },
+  {
+   "url": "https://www.wsj.com/tech/gadgets-are-going-premiumand-manufacturers-are-raking-it-in-2fa1130e",
+   "title": "Gadgets Are Going Premium—and Manufacturers Are Raking It In - WSJ",
+   "byline": null,
+   "published_utc": "2026-09-23T09:30:00+00:00",
+   "first_seen_utc": "2026-09-26T15:03:17+00:00",
+   "chars": 5332,
+   "raw_chars": 7870,
+   "column": "wsj_heard_on_the_street",
+   "sha": "ebfc9280f8271c707652",
+   "paywall_suspected": false,
+   "read_s": 203.06,
+   "ticker": null,
+   "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\ebfc9280f8271c707652.json",
+   "duplicate": false
+  },
+  {
+   "url": "https://www.wsj.com/real-estate/looking-for-real-estate-bargains-watch-these-apartment-loans-cc49fa8e",
+   "title": "Looking for Real-Estate Bargains? Watch These Apartment Loans - WSJ",
+   "byline": null,
+   "published_utc": "2026-09-22T09:30:00+00:00",
+   "first_seen_utc": "2026-09-26T15:06:16+00:00",
+   "chars": 4494,
+   "raw_chars": 6037,
+   "column": "wsj_heard_on_the_street",
+   "sha": "d52775d7675e5cbf030b",
+   "paywall_suspected": false,
+   "read_s": 179.72,
+   "ticker": null,
+   "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\d52775d7675e5cbf030b.json",
+   "duplicate": false
+  },
+  {
+   "url": "https://www.wsj.com/finance/investing/a-safer-way-to-bet-on-nuclear-2d9064f6",
+   "title": "A Safer Way to Bet on Nuclear - WSJ",
+   "byline": null,
+   "published_utc": "2026-09-21T09:30:00+00:00",
+   "first_seen_utc": "2026-09-26T15:09:05+00:00",
+   "chars": 6402,
+   "raw_chars": 8186,
+   "column": "wsj_heard_on_the_street",
+   "sha": "6f5f6860df154b1ed84f",
+   "paywall_suspected": false,
+   "read_s": 169.17,
+   "ticker": null,
+   "stored": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\news_corpus\\dowjones\\wsj\\2026-09-26\\6f5f6860df154b1ed84f.json",
+   "duplicate": false
+  }
+ ],
+ "refusals": [],
+ "tab_opened": "t38",
+ "attached_to": {
+  "profile": "user",
+  "parsed": true,
+  "driver": "existing-session",
+  "transport": "chrome-mcp",
+  "running": true,
+  "pid": 46568,
+  "cdpUrl": null,
+  "cdpPort": null,
+  "executablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "attachOnly": true
+ },
+ "links_found": [
+  {
+   "text": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "has_ref": false
+  },
+  {
+   "text": "https://www.wsj.com/finance/investing/in-the-age-of-ai-cash-is-still-king-d527ee2d",
+   "url": "https://www.wsj.com/finance/investing/in-the-age-of-ai-cash-is-still-king-d527ee2d",
+   "has_ref": false
+  },
+  {
+   "text": "https://www.wsj.com/tech/gadgets-are-going-premiumand-manufacturers-are-raking-it-in-2fa1130e",
+   "url": "https://www.wsj.com/tech/gadgets-are-going-premiumand-manufacturers-are-raking-it-in-2fa1130e",
+   "has_ref": false
+  },
+  {
+   "text": "https://www.wsj.com/real-estate/looking-for-real-estate-bargains-watch-these-apartment-loans-cc49fa8e",
+   "url": "https://www.wsj.com/real-estate/looking-for-real-estate-bargains-watch-these-apartment-loans-cc49fa8e",
+   "has_ref": false
+  },
+  {
+   "text": "https://www.wsj.com/finance/investing/a-safer-way-to-bet-on-nuclear-2d9064f6",
+   "url": "https://www.wsj.com/finance/investing/a-safer-way-to-bet-on-nuclear-2d9064f6",
+   "has_ref": false
+  }
+ ],
+ "pages": [
+  {
+   "page": 1,
+   "what": "open_from_tab",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "waited_s": 0.0,
+   "at": "2026-09-26T14:52:15+00:00"
+  },
+  {
+   "page": 2,
+   "what": "navigate",
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "waited_s": 0.0,
+   "at": "2026-09-26T14:53:46+00:00"
+  },
+  {
+   "page": 3,
+   "what": "navigate",
+   "url": "https://www.wsj.com/finance/investing/in-the-age-of-ai-cash-is-still-king-d527ee2d",
+   "waited_s": 0.0,
+   "at": "2026-09-26T14:56:37+00:00"
+  },
+  {
+   "page": 4,
+   "what": "navigate",
+   "url": "https://www.wsj.com/tech/gadgets-are-going-premiumand-manufacturers-are-raking-it-in-2fa1130e",
+   "waited_s": 0.0,
+   "at": "2026-09-26T14:59:54+00:00"
+  },
+  {
+   "page": 5,
+   "what": "navigate",
+   "url": "https://www.wsj.com/real-estate/looking-for-real-estate-bargains-watch-these-apartment-loans-cc49fa8e",
+   "waited_s": 0.0,
+   "at": "2026-09-26T15:03:17+00:00"
+  },
+  {
+   "page": 6,
+   "what": "navigate",
+   "url": "https://www.wsj.com/finance/investing/a-safer-way-to-bet-on-nuclear-2d9064f6",
+   "waited_s": 0.0,
+   "at": "2026-09-26T15:06:16+00:00"
+  }
+ ],
+ "in_progress": false,
+ "tab_closed": true,
+ "seconds_between_page_loads": [
+  91.0,
+  171.0,
+  197.0,
+  203.0,
+  179.0
+ ],
+ "throttle_waits_s": [
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0
+ ],
+ "n_articles": 5,
+ "chars_total": 26893,
+ "finished_utc": "2026-09-26T15:10:09+00:00"
+}

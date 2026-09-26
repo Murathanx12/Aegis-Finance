@@ -1,0 +1,123 @@
+{
+ "receipt": "dowjones_feeds",
+ "generated_utc": "2026-09-26T14:30:10+00:00",
+ "llm_spend_usd": 0.0,
+ "browser_calls": 0,
+ "licence": "Dow Jones ToU 9.1 personal non-commercial; metadata only in git",
+ "n_feeds": 10,
+ "items_received": 162,
+ "items_new": 162,
+ "refused_or_red": [],
+ "per_feed": [
+  {
+   "source": "wsj_markets",
+   "status": "OK",
+   "received": 20,
+   "new": 20,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-01-27T19:26:00+00:00",
+   "newest_age_h": 14563.07,
+   "resolution_rate": 0.35
+  },
+  {
+   "source": "wsj_business",
+   "status": "OK",
+   "received": 20,
+   "new": 20,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-01-24T20:37:00+00:00",
+   "newest_age_h": 14633.89,
+   "resolution_rate": 0.4
+  },
+  {
+   "source": "wsj_world",
+   "status": "OK",
+   "received": 20,
+   "new": 20,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-01-27T19:23:00+00:00",
+   "newest_age_h": 14563.12,
+   "resolution_rate": 0.2
+  },
+  {
+   "source": "wsj_opinion",
+   "status": "OK",
+   "received": 13,
+   "new": 13,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-01-27T18:47:00+00:00",
+   "newest_age_h": 14563.72,
+   "resolution_rate": 0.0
+  },
+  {
+   "source": "wsj_tech",
+   "status": "OK",
+   "received": 20,
+   "new": 20,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-01-27T18:17:00+00:00",
+   "newest_age_h": 14564.22,
+   "resolution_rate": 0.3
+  },
+  {
+   "source": "mw_topstories",
+   "status": "OK",
+   "received": 10,
+   "new": 10,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2026-09-26T14:19:00+00:00",
+   "newest_age_h": 0.19,
+   "resolution_rate": 0.1
+  },
+  {
+   "source": "mw_marketpulse",
+   "status": "OK",
+   "received": 30,
+   "new": 30,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-07-03T12:36:00+00:00",
+   "newest_age_h": 10801.9,
+   "resolution_rate": 0.3
+  },
+  {
+   "source": "mw_realtimeheadlines",
+   "status": "OK",
+   "received": 10,
+   "new": 10,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2025-06-11T07:09:00+00:00",
+   "newest_age_h": 11335.35,
+   "resolution_rate": 0.1
+  },
+  {
+   "source": "mw_bulletins",
+   "status": "OK",
+   "received": 10,
+   "new": 10,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2026-09-26T14:26:27+00:00",
+   "newest_age_h": 0.06,
+   "resolution_rate": 0.3
+  },
+  {
+   "source": "barrons_magazine",
+   "status": "OK",
+   "received": 9,
+   "new": 9,
+   "dupes": 0,
+   "failures": [],
+   "newest_published_utc": "2026-09-25T19:58:00+00:00",
+   "newest_age_h": 18.54,
+   "resolution_rate": 0.2222
+  }
+ ]
+}

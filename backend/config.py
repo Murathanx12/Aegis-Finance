@@ -3214,6 +3214,12 @@ IIF1_LAUNCHER_LOCAL_START_TIME = "16:00"
 #: -- half a day is still a day. The analyst sweep's number is the measured
 #: 2.62 h (2,362 names at 4.0 s) with room, not a guess.
 DAILY_PASS_STEP_BOX_S: dict = {
+    # Review 2026-09-26 §5 item 1: the bar panels ended 2026-09-21 and nothing
+    # refreshed them. An incremental tail pull (~5k symbols, ~10 days) plus a
+    # full re-pull of the symbols whose adjustment base moved; measured
+    # 2026-09-26 at a few minutes. The subprocess is given this box minus 60 s
+    # so it is killed by its own handle, never orphaned.
+    "bars_refresh": 1800,
     "news_pull": 2400,
     # ONE HOUR, down from four (2026-09-20). Four hours was the whole of a
     # working morning spent on a sweep that no other step of the pass reads:
@@ -3243,7 +3249,30 @@ DAILY_PASS_STEP_BOX_S: dict = {
     # that takes five minutes is a scoreboard doing work it was specified not
     # to do, and the pass must never wait on the block it prints first.
     "scoreboard": 300,
+    # G-fix owed hook 1 (docs/OPENCLAW_2026-09-26_LOCAL_SERVICE.md): numbered
+    # promises vs the 8-K EX-99, no LLM, once per UTC day (the stamp is shared
+    # with the Telegram digest, so the two callers never grade twice).
+    "grade_promises": 600,
 }
+
+# ── SYSTEMS FIXES (review 2026-09-26) ────────────────────────────────────────
+#: `sim_run.u_plan` REFUSES to act -- PROBE included -- when the ranker's bar
+#: panel (or the ranking built on it) is older than this many CLOSED XNYS
+#: sessions. Read from the parquet's own `date` column, never an mtime. 2 =
+#: one missed daily refresh is tolerated, a second is a finding.
+BARS_MAX_AGE_SESSIONS = 2
+#: `forecast_grader` voids a due forecast as UNRESOLVABLE when its ticker's bars
+#: STOPPED at least this many sessions before the panel's newest bar (the name
+#: delisted: AVB and EA on 2026-09-26, both `inactive` at the venue) and its
+#: window can no longer fill.
+FORECAST_VOID_DELISTED_MIN_SESSIONS = 10
+#: ...or when no local panel has ANY bar for its ticker and its resolution date
+#: is this many calendar days in the past while the panel covers that date.
+FORECAST_VOID_NO_BAR_GRACE_DAYS = 21
+#: The Telegram agent is DEAD when its own heartbeat line is older than this
+#: (it polls every `--interval` s, default 60). Read by `stack_health`-style
+#: probes from `telegram/heartbeat.json`, never from the bot token.
+TELEGRAM_AGENT_HEARTBEAT_MAX_AGE_S = 600
 
 #: How long the analyst sweep is allowed to run INSIDE its box, in seconds.
 #:
@@ -4035,3 +4064,49 @@ LEARN_LOCAL_MAX_TOKENS = 700
 #: A percentage quoted in a rule must match a number of the fact it cites within
 #: this many percentage points, or the rule is REFUSED (invented numbers).
 LEARN_NUMBER_TOL_PP = 0.15
+
+
+# ── CHUNK J: DOW JONES BUNDLE THROUGH MURAT'S OWN CHROME (2026-09-26) ─────────
+#: Browser profiles Aegis may NAME. `muratclaw` is OpenClaw's managed, never
+#: signed-in automation Chrome (the default for every existing caller);
+#: `user` is Murat's own running Chrome attached over chrome-mcp
+#: (existing-session); `chrome` is the extension relay. A name outside this
+#: tuple refuses with REFUSED_BROWSER_PROFILE_NOT_ALLOWED.
+OPENCLAW_ALLOWED_PROFILES = ("muratclaw", "user", "chrome")
+#: Profiles that are Murat's REAL browser. On these, `open` is refused (a new
+#: tab lands in his MAIN Chrome profile -- it did, 2026-09-26 22:xx, a SEC page),
+#: every action names a tab, and the tab's current host must be one of
+#: `OPENCLAW_USER_TAB_HOSTS` before and after the action.
+OPENCLAW_OPERATOR_PROFILES = ("user", "chrome")
+#: The ONLY hosts the operator-profile browser may touch (Murat, 2026-09-26:
+#: "wsj/barrons/marketwatch only"). sec.gov, reddit, x.com and Yahoo go through
+#: their HTTP APIs / the managed profile, never through his Chrome.
+OPENCLAW_USER_TAB_HOSTS = ("wsj.com", "barrons.com", "marketwatch.com")
+#: Human-pace throttle for `web_reader.read_article` (persisted across runs).
+#: The gap between page loads is DRAWN from [MIN, MAX] (lognormal, clipped;
+#: never the same interval twice) -- a constant interval is the machine tell.
+WEB_READER_MIN_DELAY_S = 20.0
+WEB_READER_MAX_DELAY_S = 90.0
+WEB_READER_MAX_PER_HOUR = 30
+WEB_READER_MAX_PER_DAY = 120
+#: Per-site daily cap (wsj / barrons / marketwatch each), inside the global one.
+WEB_READER_MAX_PER_DAY_PER_HOST = 40
+#: `dowjones_pull --archive` reads at most this many articles per archive day.
+DOWJONES_ARCHIVE_MAX_PER_DAY = 20
+#: `dowjones_pull --handoff` refuses unless this file exists. Murat creates it
+#: when he steps away from the PC; nothing in the repo ever creates it.
+DOWJONES_HANDOFF_FILE = OPTIMUS_LEDGER_DIR / "HANDOFF_PC"
+#: Claim extraction (DeepSeek, `llm_analyzer._call_llm`) -- hard cap per run.
+DOWJONES_CLAIMS_CAP_USD = 0.30
+DOWJONES_CLAIMS_EST_USD_PER_ARTICLE = 0.004
+DOWJONES_CLAIMS_PURPOSE = "dowjones_claims"
+#: The operator's paste inbox (primary path from 2026-09-26: Murat copies the
+#: text himself; nothing automated touches his subscription).
+DIGEST_INBOX_DIR = OPTIMUS_LEDGER_DIR / "digest_inbox"
+#: The dated-archive crawl (`dowjones_pull --archive`). OFF (Murat, 2026-09-26:
+#: "the archive-by-date crawl stays OFF"); the paste inbox's reading list
+#: carries the archive days as links for a human instead.
+DOWJONES_ARCHIVE_ENABLED = False
+#: Lines shorter than 60 chars containing one of these are the signed-in
+#: account's name in the page chrome and are stripped from stored text.
+DOWJONES_ACCOUNT_NAME_PATTERNS = ("murat", "murathan", "abdullaev")

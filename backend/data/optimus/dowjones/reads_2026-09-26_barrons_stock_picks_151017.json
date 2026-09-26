@@ -1,0 +1,29 @@
+{
+ "receipt": "dowjones_pull.reads",
+ "source": "barrons",
+ "section": "stock_picks",
+ "column": "barrons_stock_picks",
+ "profile": "user",
+ "parent_tab": "t33",
+ "reconstructed": "from _throttle.log and the run's stdout; the run refused before its first progress write",
+ "started_utc": "2026-09-26T15:10:17+00:00",
+ "pages": [
+  {
+   "page": 1,
+   "what": "open_from_tab",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "at": "2026-09-26T15:10:17+00:00",
+   "throttle_target_s": 28.3
+  }
+ ],
+ "tab_opened": "t39",
+ "n_articles": 0,
+ "chars_total": 0,
+ "cost_usd": 0.0,
+ "refusals": [
+  {
+   "why": "REFUSED_OPERATOR_TAB_MISSING: no tab 't39' on 'user' -- the new tab was gone by the first wait"
+  }
+ ],
+ "after": "`openclaw browser profiles` then showed `user: stopped`, pageReady false, pid null; `--json tabs` timed out at the gateway (45 s) while `gateway status` stayed ok. The attachment to Murat's Chrome was lost; re-attaching needs a human at the consent prompt, so no further browser reads were attempted. Whether t39 is still open in his Chrome could not be checked."
+}

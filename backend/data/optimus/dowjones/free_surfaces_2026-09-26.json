@@ -1,0 +1,143 @@
+{
+ "receipt": "dowjones_free_surfaces",
+ "generated_utc": "2026-09-26T14:31:02+00:00",
+ "method": "plain HTTP GET, no cookies, no browser",
+ "answer_200": [
+  "dj_terms_of_use"
+ ],
+ "walled_401_403": [
+  "wsj_archive_day",
+  "wsj_heard_on_the_street",
+  "wsj_research_ratings",
+  "wsj_rss_index",
+  "mw_analyst_estimates",
+  "mw_rss_index",
+  "barrons_stock_picks",
+  "barrons_picks_topic",
+  "barrons_rss_thisweek",
+  "barrons_rss_mostviewed"
+ ],
+ "other": [
+  "dj_feed_barrons",
+  "dj_feed_mw_personalfinance"
+ ],
+ "rows": [
+  {
+   "surface": "dj_terms_of_use",
+   "url": "https://www.dowjones.com/terms-of-use/",
+   "status": 200,
+   "bytes": 220264,
+   "xml": false,
+   "bot_check": false,
+   "wall_s": 0.49
+  },
+  {
+   "surface": "wsj_archive_day",
+   "url": "https://www.wsj.com/news/archive/2026/09/26",
+   "status": 401,
+   "bytes": 767,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.38
+  },
+  {
+   "surface": "wsj_heard_on_the_street",
+   "url": "https://www.wsj.com/news/heard-on-the-street",
+   "status": 401,
+   "bytes": 767,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.18
+  },
+  {
+   "surface": "wsj_research_ratings",
+   "url": "https://www.wsj.com/market-data/quotes/MU/research-ratings",
+   "status": 401,
+   "bytes": 767,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.18
+  },
+  {
+   "surface": "wsj_rss_index",
+   "url": "https://www.wsj.com/rss",
+   "status": 401,
+   "bytes": 767,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.39
+  },
+  {
+   "surface": "mw_analyst_estimates",
+   "url": "https://www.marketwatch.com/investing/stock/mu/analystestimates",
+   "status": 401,
+   "bytes": 775,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.36
+  },
+  {
+   "surface": "mw_rss_index",
+   "url": "https://www.marketwatch.com/rss",
+   "status": 401,
+   "bytes": 775,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.35
+  },
+  {
+   "surface": "barrons_stock_picks",
+   "url": "https://www.barrons.com/market-data/stocks/stock-picks",
+   "status": 401,
+   "bytes": 771,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.41
+  },
+  {
+   "surface": "barrons_picks_topic",
+   "url": "https://www.barrons.com/topics/barrons-picks",
+   "status": 401,
+   "bytes": 771,
+   "xml": false,
+   "bot_check": true,
+   "wall_s": 0.16
+  },
+  {
+   "surface": "barrons_rss_thisweek",
+   "url": "https://feeds.a.dj.com/rss/RSSBarronsThisWeekMagazine.xml",
+   "status": 403,
+   "bytes": 111,
+   "xml": true,
+   "bot_check": false,
+   "wall_s": 0.89
+  },
+  {
+   "surface": "barrons_rss_mostviewed",
+   "url": "https://feeds.a.dj.com/rss/RSSBarronsMostViewed.xml",
+   "status": 403,
+   "bytes": 111,
+   "xml": true,
+   "bot_check": false,
+   "wall_s": 0.89
+  },
+  {
+   "surface": "dj_feed_barrons",
+   "url": "https://feeds.content.dowjones.io/public/rss/barrons",
+   "status": 404,
+   "bytes": 66,
+   "xml": false,
+   "bot_check": false,
+   "wall_s": 0.96
+  },
+  {
+   "surface": "dj_feed_mw_personalfinance",
+   "url": "https://feeds.content.dowjones.io/public/rss/mw_personalfinance",
+   "status": 404,
+   "bytes": 66,
+   "xml": false,
+   "bot_check": false,
+   "wall_s": 0.99
+  }
+ ]
+}

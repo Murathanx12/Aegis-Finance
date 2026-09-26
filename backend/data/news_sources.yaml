@@ -809,3 +809,307 @@ sources:
       (HOOD is `robinhood`, not `robinhoodmarkets` — measured) is
       indistinguishable from an absent board at that budget. Coverage is quoted
       as hits / names PROBED, never hits alone.
+
+  # =====================================================================
+  # CHUNK J (2026-09-26): THE DOW JONES BUNDLE. Ten free RSS feeds that
+  # answered 200 over plain HTTP on 2026-09-26 (research note
+  # docs/research_notes/2026-09-26/research_dowjones_bundle_wsj_barrons_marketwatch.md
+  # §2), plus the four ids the browser reader and the paste inbox write
+  # their corpus rows under. Headline + one-sentence summary + guid +
+  # pubDate only; never a body. `backend/services/dowjones_feeds.py`
+  # refuses a non-XML reply before the parser sees it.
+  # =====================================================================
+  - id: wsj_markets
+    provider: "Dow Jones - WSJ"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSMarketsMain.xml"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "WSJ Markets main feed, ~20 items. Dedupe by guid (raw_id)."
+  - id: wsj_business
+    provider: "Dow Jones - WSJ"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "WSJ US Business, ~20 items. Dedupe by guid (raw_id)."
+  - id: wsj_world
+    provider: "Dow Jones - WSJ"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSWorldNews.xml"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "WSJ World News, ~20 items. Dedupe by guid (raw_id)."
+  - id: wsj_opinion
+    provider: "Dow Jones - WSJ"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSOpinion.xml"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "WSJ Opinion, ~13 items. Opinion, not reporting: never a label for a directional study without saying so. Dedupe by guid (raw_id)."
+  - id: wsj_tech
+    provider: "Dow Jones - WSJ"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.a.dj.com/rss/RSSWSJD.xml"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "WSJ Tech (WSJD), ~20 items. Dedupe by guid (raw_id)."
+  - id: mw_topstories
+    provider: "Dow Jones - MarketWatch"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/mw_topstories"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "MarketWatch Top Stories, ~10 items, dc:creator + media:content. Dedupe by guid (raw_id)."
+  - id: mw_marketpulse
+    provider: "Dow Jones - MarketWatch"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/mw_marketpulse"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "MarketWatch MarketPulse, ~30 items, the fastest-moving DJ feed. Dedupe by guid (raw_id)."
+  - id: mw_realtimeheadlines
+    provider: "Dow Jones - MarketWatch"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/mw_realtimeheadlines"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "MarketWatch real-time headlines, ~10 items. Dedupe by guid (raw_id)."
+  - id: mw_bulletins
+    provider: "Dow Jones - MarketWatch"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/mw_bulletins"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "MarketWatch bulletins, ~10 items. Dedupe by guid (raw_id)."
+  - id: barrons_magazine
+    provider: "Dow Jones - Barron's"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones ToU 9.1: personal, non-commercial use only, INCLUDING RSS content; headline+summary metadata stored, never republished"
+    method: rss
+    parser: rss2
+    endpoint_or_feed: "https://feeds.content.dowjones.io/public/rss/barronsmagazine"
+    auth: none
+    rate_limit: "feed declares ttl 60; polled at most every 15 min"
+    min_interval_s: 2.0
+    pit_grade: native_stamp
+    stamp_field: pubDate
+    stamp_tz: "RFC 822 (GMT)"
+    ticker_tags: false
+    body_available: false
+    label_source: true
+    implemented: true
+    implemented_note: ""
+    notes: "The only Barron's feed id that answers (13 others 404/403, research note 2026-09-26 §2). Dedupe by guid (raw_id)."
+  - id: dj_reader_wsj
+    provider: "Dow Jones - WSJ (operator browser)"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones subscriber, personal research; not republished (ToU 9.1/9.3). Full text local and gitignored."
+    method: lib
+    parser: none
+    endpoint_or_feed: "backend/services/web_reader.py (scripts/dowjones_pull.py, --handoff nights only)"
+    auth: none
+    rate_limit: "human pace: >= 20 s between page loads, <= 30/h, <= 120/day (config WEB_READER_*)"
+    min_interval_s: 20.0
+    pit_grade: first_seen_only
+    stamp_field: none
+    stamp_tz: UTC
+    ticker_tags: false
+    body_available: true
+    label_source: true
+    implemented: false
+    implemented_note: "Not pulled by news_pull: rows are written by backend/services/web_reader.py (scripts/dowjones_pull.py, --handoff nights only). first_seen_utc is OUR read/ingest time; the article's own dateline is published_utc and a gap > 30 days grades the row `archive` at read time."
+    notes: "One corpus row per stored article (metadata + 280-char lead); the full text is news_corpus/dowjones/<publisher>/<date>/<sha>.json."
+  - id: dj_reader_barrons
+    provider: "Dow Jones - Barron's (operator browser)"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones subscriber, personal research; not republished (ToU 9.1/9.3). Full text local and gitignored."
+    method: lib
+    parser: none
+    endpoint_or_feed: "backend/services/web_reader.py (scripts/dowjones_pull.py, --handoff nights only)"
+    auth: none
+    rate_limit: "human pace: >= 20 s between page loads, <= 30/h, <= 120/day (config WEB_READER_*)"
+    min_interval_s: 20.0
+    pit_grade: first_seen_only
+    stamp_field: none
+    stamp_tz: UTC
+    ticker_tags: false
+    body_available: true
+    label_source: true
+    implemented: false
+    implemented_note: "Not pulled by news_pull: rows are written by backend/services/web_reader.py (scripts/dowjones_pull.py, --handoff nights only). first_seen_utc is OUR read/ingest time; the article's own dateline is published_utc and a gap > 30 days grades the row `archive` at read time."
+    notes: "One corpus row per stored article (metadata + 280-char lead); the full text is news_corpus/dowjones/<publisher>/<date>/<sha>.json."
+  - id: dj_reader_marketwatch
+    provider: "Dow Jones - MarketWatch (operator browser)"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones subscriber, personal research; not republished (ToU 9.1/9.3). Full text local and gitignored."
+    method: lib
+    parser: none
+    endpoint_or_feed: "backend/services/web_reader.py (scripts/dowjones_pull.py, --handoff nights only)"
+    auth: none
+    rate_limit: "human pace: >= 20 s between page loads, <= 30/h, <= 120/day (config WEB_READER_*)"
+    min_interval_s: 20.0
+    pit_grade: first_seen_only
+    stamp_field: none
+    stamp_tz: UTC
+    ticker_tags: false
+    body_available: true
+    label_source: true
+    implemented: false
+    implemented_note: "Not pulled by news_pull: rows are written by backend/services/web_reader.py (scripts/dowjones_pull.py, --handoff nights only). first_seen_utc is OUR read/ingest time; the article's own dateline is published_utc and a gap > 30 days grades the row `archive` at read time."
+    notes: "One corpus row per stored article (metadata + 280-char lead); the full text is news_corpus/dowjones/<publisher>/<date>/<sha>.json."
+  - id: dj_digest_inbox
+    provider: "Dow Jones (pasted by the operator)"
+    region: US
+    language: en
+    tier: "1"
+    licence: "Dow Jones subscriber, personal research; not republished (ToU 9.1/9.3). Full text local and gitignored."
+    method: lib
+    parser: none
+    endpoint_or_feed: "backend/services/digest_inbox.py (scripts/digest_ingest.py)"
+    auth: none
+    rate_limit: "human pace: >= 20 s between page loads, <= 30/h, <= 120/day (config WEB_READER_*)"
+    min_interval_s: 20.0
+    pit_grade: first_seen_only
+    stamp_field: none
+    stamp_tz: UTC
+    ticker_tags: false
+    body_available: true
+    label_source: true
+    implemented: false
+    implemented_note: "Not pulled by news_pull: rows are written by backend/services/digest_inbox.py (scripts/digest_ingest.py). first_seen_utc is OUR read/ingest time; the article's own dateline is published_utc and a gap > 30 days grades the row `archive` at read time."
+    notes: "One corpus row per stored article (metadata + 280-char lead); the full text is news_corpus/dowjones/<publisher>/<date>/<sha>.json."

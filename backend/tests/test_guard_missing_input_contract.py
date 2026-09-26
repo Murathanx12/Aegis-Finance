@@ -1367,11 +1367,37 @@ def _case_source_registry():
             RegistryRefused, "a source registry path that does not exist")
 
 
+def _case_web_reader():
+    """Chunk J: the Dow Jones reader. The missing input is the PAGE TEXT: a
+    read that comes back empty (the 2026-09-26 cp1252 decode failure returned
+    stdout=None) must refuse by name, never be stored as a page with no text."""
+    import tempfile
+    from datetime import datetime, timezone
+    from pathlib import Path as _P
+
+    from backend.services import web_reader as WR
+
+    class _Drv:
+        def browser(self, verb, *a, **k):
+            return {"rc": 0, "verb": verb}
+
+        def read_text(self, tab, profile_name=None):
+            return {"url": "https://www.wsj.com/a", "text": ""}
+
+    d = _P(tempfile.mkdtemp())
+    th = WR.Throttle(d / "t.log", min_delay_s=0, max_delay_s=0,
+                     now_fn=lambda: datetime.now(timezone.utc), sleep_fn=lambda s: None)
+    r = WR.Reader(profile="user", tab="t1", driver=_Drv(), throttle=th, lock=False)
+    return (lambda: r.read_article("https://www.wsj.com/finance/x-1a2b3c4d", store=False),
+            WR.ReaderRefused, "an article read that returned no text")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
     "web_events": _case_web_events,
     "openclaw_client": _case_openclaw_client,
+    "web_reader": _case_web_reader,
     "sim_session": _case_sim_session,
     "telegram_bridge": _case_telegram_bridge,
     "xs_ranker": _case_xs_ranker,

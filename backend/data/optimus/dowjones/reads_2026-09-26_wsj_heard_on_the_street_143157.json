@@ -1,0 +1,18 @@
+{
+ "receipt": "dowjones_pull.reads",
+ "source": "wsj",
+ "section": "heard_on_the_street",
+ "reconstructed": "run stopped by PID (136120/82888) before any receipt existed",
+ "started_utc": "2026-09-26T14:31:57+00:00",
+ "tab_opened": "t37",
+ "page_loads_utc": [
+  "2026-09-26T14:31:57+00:00",
+  "2026-09-26T14:35:02+00:00",
+  "2026-09-26T14:38:28+00:00",
+  "2026-09-26T14:40:50+00:00",
+  "2026-09-26T14:43:15+00:00"
+ ],
+ "why_stopped": "the stored article was the parent tab's page text in cp1252 mojibake and every later read came back EMPTY: openclaw_client._run decoded CLI stdout as cp1252 and a curly quote (0x9D) killed the reader thread. Fixed (UTF-8 decode, REFUSED_EMPTY_READ).",
+ "stored_then_deleted": 1,
+ "tab_closed": "t37 closed by hand (openclaw browser close t37) after the stop"
+}

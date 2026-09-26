@@ -1,0 +1,32 @@
+{
+ "receipt": "web_reader.footprint",
+ "written_utc": "2026-09-26T15:10:24+00:00",
+ "pages": 6,
+ "gaps_s": [
+  91.0,
+  171.0,
+  197.0,
+  203.0,
+  179.0
+ ],
+ "gap_histogram": {
+  "0-20s": 0,
+  "20-30s": 0,
+  "30-45s": 0,
+  "45-60s": 0,
+  "60-90s": 0,
+  "90-180s": 3,
+  "180-600s": 2,
+  "600-infs": 0
+ },
+ "gap_mean_s": 168.2,
+ "gap_min_s": 91.0,
+ "gap_max_s": 203.0,
+ "cv_of_gaps": 0.24,
+ "pages_per_hour": 25.68,
+ "reads": 5,
+ "reads_with_scroll": 0,
+ "scroll_share": 0.0,
+ "cv_alarm_threshold": 0.15,
+ "verdict": "HUMAN_PACE_OK"
+}

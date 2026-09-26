@@ -54,6 +54,36 @@ Murat. The chain is
     OpenClaw -> Aegis -> Telegram          never        OpenClaw -> human
 
 which is the structural fix for the WhatsApp incident, not a policy about it.
+
+THREE NAMED PROFILES, AND WHICH ONE IS MURAT'S (chunk J, 2026-09-26)
+=====================================================================
+`muratclaw` is OpenClaw's managed automation Chrome -- its own cookie jar,
+never signed in to Google or Dow Jones. `user` is Murat's OWN running Chrome,
+attached over chrome-mcp (existing-session); `chrome` is the extension relay
+into the same browser. Callers name one with `profile_name=`; the env default
+stays `muratclaw` so no existing caller changes behaviour.
+
+The operator profiles (`config.OPENCLAW_OPERATOR_PROFILES`) are held to a much
+narrower contract, because they ARE Murat's browser:
+
+* `open` is refused -- on 2026-09-26 an `open` from the chunk-J builder landed
+  a SEC page as a new tab in his MAIN Chrome profile, in front of him;
+* every action names a tab (`target_id`), and that tab's CURRENT host must be
+  in `config.OPENCLAW_USER_TAB_HOSTS` (wsj/barrons/marketwatch) before the
+  action, and is re-read after a navigate/click/press;
+* `type`, `fill`, `download`, `upload`, `batch` are refused, and `close`
+  runs only on a tab this process itself opened (`open_from_tab`).
+
+A NEW TAB comes only from `open_from_tab()`: it runs `window.open(<url>)` from
+inside an already-open MuratClaw (Work) tab, so the new tab inherits THAT
+Chrome profile (Murat, 2026-09-26: the CDP `open` verb lands in his MAIN
+profile). The URL is host-checked and JSON-encoded into a fixed template; the
+new tab is found by diffing `tabs` before/after and its host is re-checked
+before anything else touches it.
+
+`evaluate` stays out of `ALLOWED_VERBS`. Reading article text uses
+`read_text()`, which runs ONE fixed, module-constant function (innerText of the
+page) -- no caller-supplied JavaScript ever reaches a page.
 """
 
 from __future__ import annotations
@@ -68,6 +98,9 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import urlsplit
+
+from backend import config as _config
 
 logger = logging.getLogger(__name__)
 
@@ -83,20 +116,80 @@ DENIED_DOMAINS: tuple[str, ...] = (
     "bankofamerica.", "citibank.", "amazon.com/gp/buy", "checkout.",
 )
 
-#: Verbs Aegis is allowed to drive. `evaluate` is deliberately absent.
+#: Verbs Aegis is allowed to drive. `evaluate` is deliberately absent: the
+#: only JavaScript that reaches a page is `read_text()`'s fixed function.
 ALLOWED_VERBS: frozenset[str] = frozenset({
     "open", "navigate", "snapshot", "click", "type", "fill", "press", "hover",
     "tabs", "close", "focus", "download", "pdf", "console", "errors", "status",
-    "profiles", "start", "stop",
+    "profiles", "start", "stop", "tab", "scrollintoview", "wait", "screenshot",
 })
+
+#: On an operator profile (Murat's own Chrome) ONLY these verbs run.
+OPERATOR_VERBS: frozenset[str] = frozenset({
+    "tabs", "status", "profiles", "focus", "navigate", "snapshot", "click",
+    "scrollintoview", "press", "wait", "screenshot",
+})
+#: Of those, the ones that act on a tab and therefore need `target_id` plus
+#: the host check.
+OPERATOR_TAB_VERBS: frozenset[str] = frozenset({
+    "focus", "navigate", "snapshot", "click", "scrollintoview", "press",
+    "wait", "screenshot",
+})
+
+#: Tabs THIS process opened with `open_from_tab`; the only ones `close` may
+#: touch on an operator profile.
+_OPENED_TABS: set[str] = set()
+
+#: The ONE function `read_text()` evaluates. A constant, so no caller -- and no
+#: page -- can change what runs.
+READ_TEXT_FN = ("() => ({url: location.href, title: document.title, "
+                "text: document.body ? document.body.innerText : ''})")
 
 
 class OpenClawRefused(RuntimeError):
     """The browser will not be driven. Never swallowed into a no-op."""
 
 
-def profile() -> str:
-    return (os.environ.get(PROFILE_ENV) or DEFAULT_PROFILE).strip()
+def allowed_profiles() -> tuple[str, ...]:
+    return tuple(getattr(_config, "OPENCLAW_ALLOWED_PROFILES",
+                         ("muratclaw", "user", "chrome")))
+
+
+def operator_profiles() -> tuple[str, ...]:
+    return tuple(getattr(_config, "OPENCLAW_OPERATOR_PROFILES", ("user", "chrome")))
+
+
+def operator_hosts() -> tuple[str, ...]:
+    return tuple(getattr(_config, "OPENCLAW_USER_TAB_HOSTS",
+                         ("wsj.com", "barrons.com", "marketwatch.com")))
+
+
+def profile(name: str | None = None) -> str:
+    """The profile a call will use: `name` if given, else the env default.
+
+    Never substitutes one profile for another. An explicit name outside
+    `config.OPENCLAW_ALLOWED_PROFILES` refuses.
+    """
+    want = (name or os.environ.get(PROFILE_ENV) or DEFAULT_PROFILE).strip()
+    if name is not None and want not in allowed_profiles():
+        raise OpenClawRefused(
+            f"REFUSED_BROWSER_PROFILE_NOT_ALLOWED: {want!r} is not one of "
+            f"{allowed_profiles()} (config.OPENCLAW_ALLOWED_PROFILES).")
+    return want
+
+
+def is_operator_profile(name: str) -> bool:
+    return name in operator_profiles()
+
+
+def host_allowed(url: str, hosts: tuple[str, ...] | None = None) -> bool:
+    """True when `url`'s host is one of `hosts` or a subdomain of one."""
+    hosts = hosts if hosts is not None else operator_hosts()
+    try:
+        h = (urlsplit(url or "").hostname or "").lower()
+    except ValueError:
+        return False
+    return bool(h) and any(h == d or h.endswith("." + d) for d in hosts)
 
 
 def _bin() -> str:
@@ -124,7 +217,12 @@ def _strip(text: str | None) -> str:
 
 
 def _run(args: list[str], *, timeout: float = 180.0) -> subprocess.CompletedProcess:
+    # UTF-8, not the console code page: on Windows `text=True` alone decodes
+    # with cp1252, and a page's curly quote (UTF-8 E2 80 9D -> byte 0x9D, which
+    # cp1252 does not map) killed the reader thread and returned stdout=None --
+    # an EMPTY read that looked like a page with no text (chunk J, 2026-09-26).
     r = subprocess.run([_bin(), *args], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace",
                        timeout=timeout, shell=(os.name == "nt"))
     # Strip centrally. Every parser downstream matches on plain text, and a
     # receipt full of escape codes is unreadable besides.
@@ -160,17 +258,28 @@ def profiles() -> list[dict]:
                 if p:
                     cur["port"] = int(p.group(1))
             continue
-        m = re.match(r"^(\S+):\s*(\w+)(\s*\[(.+)\])?", line.strip())
+        # `user: running (33 tabs) [existing-session]` -- the tab count sits
+        # BETWEEN the state and the tag, so the tag is searched, not anchored.
+        m = re.match(r"^(\S+):\s*(\w+)", line.strip())
         if m:
+            tag = re.search(r"\[([^\]]+)\]", line)
+            ntabs = re.search(r"\((\d+) tabs?\)", line)
             cur = {"name": m.group(1), "state": m.group(2),
-                   "tag": (m.group(4) or "").strip()}
+                   "tag": (tag.group(1) if tag else "").strip()}
+            if ntabs:
+                cur["tabs"] = int(ntabs.group(1))
             out.append(cur)
     return out
 
 
-def assert_profile(strict: bool = True) -> dict:
-    """The profile Aegis is pinned to must EXIST. No fallback, ever."""
-    want = profile()
+def assert_profile(strict: bool = True, *, name: str | None = None) -> dict:
+    """The named (or pinned) profile must EXIST. No fallback, ever.
+
+    An operator profile must also be RUNNING: `user` attaches to a Chrome that
+    is already open, and a stopped one means Murat's browser is not there to
+    attach to -- OpenClaw must not start one of its own in its place.
+    """
+    want = profile(name)
     found = next((p for p in profiles() if p["name"] == want), None)
     if found is None:
         msg = (f"REFUSED_BROWSER_PROFILE_UNAVAILABLE: no OpenClaw browser "
@@ -182,15 +291,100 @@ def assert_profile(strict: bool = True) -> dict:
         if strict:
             raise OpenClawRefused(msg)
         return {"ok": False, "profile": want, "detail": msg}
+    if is_operator_profile(want) and found.get("state") != "running":
+        msg = (f"REFUSED_BROWSER_PROFILE_UNAVAILABLE: operator profile {want!r} "
+               f"is {found.get('state')!r}, not running. It attaches to Murat's "
+               f"own open Chrome (chrome://inspect/#remote-debugging toggle on); "
+               f"Aegis never launches a browser in its place.")
+        if strict:
+            raise OpenClawRefused(msg)
+        return {"ok": False, "profile": want, "detail": msg, **found}
     return {"ok": True, "profile": want, **found}
 
 
+def _json_of(stdout: str) -> Any:
+    txt = stdout or ""
+    return json.loads(txt[txt.index("{"):txt.rindex("}") + 1])
+
+
+def tabs(*, profile_name: str | None = None) -> list[dict]:
+    """`[{tabId, targetId, url, title, ...}]` from `browser --json tabs`. Read-only."""
+    want = profile(profile_name)
+    r = _run(["browser", "--browser-profile", want, "--json", "tabs"], timeout=90)
+    try:
+        d = _json_of(r.stdout)
+    except ValueError:
+        raise OpenClawRefused(
+            f"REFUSED_TABS_UNREADABLE: `browser --json tabs` on {want!r} returned "
+            f"no JSON (rc {r.returncode}): {(r.stderr or r.stdout or '')[:200]!r}")
+    return [t for t in (d.get("tabs") or []) if isinstance(t, dict)]
+
+
+def tab_url(target_id: str, *, profile_name: str | None = None) -> str | None:
+    for t in tabs(profile_name=profile_name):
+        if target_id in (t.get("tabId"), t.get("suggestedTargetId"),
+                         t.get("targetId"), t.get("label")):
+            return str(t.get("url") or "")
+    return None
+
+
+def assert_operator_tab(target_id: str | None, *, profile_name: str) -> str:
+    """The tab exists and its CURRENT host is wsj/barrons/marketwatch."""
+    if not target_id:
+        raise OpenClawRefused(
+            f"REFUSED_OPERATOR_TAB_UNNAMED: on {profile_name!r} (Murat's own "
+            f"Chrome) every action names its tab; an unnamed action lands on "
+            f"whatever tab happens to be focused.")
+    u = tab_url(target_id, profile_name=profile_name)
+    if u is None:
+        raise OpenClawRefused(
+            f"REFUSED_OPERATOR_TAB_MISSING: no tab {target_id!r} on {profile_name!r}.")
+    if not host_allowed(u):
+        raise OpenClawRefused(
+            f"REFUSED_OPERATOR_TAB_HOST: tab {target_id!r} is on "
+            f"{(urlsplit(u).hostname or u)!r}; the operator profile may touch "
+            f"only {operator_hosts()} (Murat, 2026-09-26).")
+    return u
+
+
+_ATTACHED_CACHE: dict[str, tuple[float, dict]] = {}
+
+
+def attached_to(*, profile_name: str | None = None, max_age_s: float = 60.0) -> dict:
+    """Which browser a profile is attached to, from `browser --json status`.
+
+    Records `driver`, `transport`, `running`, `pid`, `cdpUrl` and, when the
+    status exposes it, `webSocketDebuggerUrl`. Cached `max_age_s` so a receipt
+    on every call does not double the call count.
+    """
+    want = profile(profile_name)
+    hit = _ATTACHED_CACHE.get(want)
+    if hit and time.time() - hit[0] < max_age_s:
+        return dict(hit[1])
+    r = _run(["browser", "--browser-profile", want, "--json", "status"], timeout=90)
+    out: dict[str, Any] = {"profile": want, "parsed": False}
+    try:
+        d = _json_of(r.stdout)
+        for k in ("driver", "transport", "running", "pid", "cdpUrl", "cdpPort",
+                  "webSocketDebuggerUrl", "executablePath", "attachOnly"):
+            if k in d:
+                out[k] = d[k]
+        out["parsed"] = True
+    except ValueError:
+        out["error"] = (r.stderr or r.stdout or "")[:200]
+    _ATTACHED_CACHE[want] = (time.time(), dict(out))
+    return out
+
+
 def browser(verb: str, *args: str, url: str | None = None,
-            timeout: float = 180.0) -> dict:
+            timeout: float = 180.0, profile_name: str | None = None,
+            target_id: str | None = None) -> dict:
     """Drive the browser. The profile is named on EVERY call.
 
     `verb` must be in `ALLOWED_VERBS`; `evaluate` is not, so a page cannot be
-    handed arbitrary JavaScript from here.
+    handed arbitrary JavaScript from here. On an operator profile the verb must
+    also be in `OPERATOR_VERBS`, every URL must be on an allowed host, the tab
+    must be named and currently on an allowed host, and `open` is refused.
     """
     if verb not in ALLOWED_VERBS:
         raise OpenClawRefused(
@@ -198,20 +392,137 @@ def browser(verb: str, *args: str, url: str | None = None,
             f"`evaluate` in particular is refused: running arbitrary JavaScript "
             f"in a page the agent did not write turns that page into a place to "
             f"put instructions for the agent.")
-    if url:
-        check_url(url)
-    for a in args:
-        if isinstance(a, str) and a.lower().startswith(("http://", "https://")):
-            check_url(a)
+    want = profile(profile_name)
+    operator = is_operator_profile(want)
+    urls = [url] if url else []
+    urls += [a for a in args if isinstance(a, str)
+             and a.lower().startswith(("http://", "https://"))]
+    for u in urls:
+        check_url(u)
+    if operator:
+        if verb == "close":
+            if not target_id or target_id not in _OPENED_TABS:
+                raise OpenClawRefused(
+                    f"REFUSED_OPERATOR_CLOSE: {target_id!r} was not opened by this "
+                    f"process; Aegis closes only its own tabs in Murat's Chrome.")
+        elif verb not in OPERATOR_VERBS:
+            raise OpenClawRefused(
+                f"REFUSED_OPERATOR_VERB: {verb!r} does not run on {want!r}, "
+                f"Murat's own Chrome. `open` in particular puts a new tab in his "
+                f"MAIN profile; only {sorted(OPERATOR_VERBS)} run there.")
+        for u in urls:
+            if not host_allowed(u):
+                raise OpenClawRefused(
+                    f"REFUSED_OPERATOR_HOST: {u!r} is not on {operator_hosts()}.")
 
-    assert_profile()
-    argv = ["browser", "--browser-profile", profile(), verb, *args]
+    if profile_name is not None:
+        assert_profile(name=want)
+    else:
+        assert_profile()
+    before = None
+    if operator and (verb in OPERATOR_TAB_VERBS or verb == "close"):
+        before = assert_operator_tab(target_id, profile_name=want)
+    argv = ["browser", "--browser-profile", want, verb, *args]
+    if target_id and verb not in ("tabs", "status", "profiles"):
+        argv += ([target_id] if verb in ("focus", "close") else ["--target-id", target_id])
     if url:
         argv.append(url)
     r = _run(argv, timeout=timeout)
-    return {"verb": verb, "profile": profile(), "rc": r.returncode,
-            "stdout": (r.stdout or "").strip(),
-            "stderr": (r.stderr or "").strip()[:600]}
+    out: dict[str, Any] = {"verb": verb, "profile": want, "rc": r.returncode,
+                           "stdout": (r.stdout or "").strip(),
+                           "stderr": (r.stderr or "").strip()[:600]}
+    if operator and verb == "close" and r.returncode == 0:
+        _OPENED_TABS.discard(str(target_id))
+    if operator:
+        out["target_id"] = target_id
+        out["tab_url_before"] = before
+        out["attached_to"] = attached_to(profile_name=want)
+        if verb in ("navigate", "click", "press") and target_id:
+            after = tab_url(target_id, profile_name=want)
+            out["tab_url_after"] = after
+            out["left_allowed_hosts"] = bool(after) and not host_allowed(after)
+    return out
+
+
+OPEN_FROM_TAB_TEMPLATE = "() => {{ window.open({url}, '_blank'); return 1; }}"
+
+
+def open_from_tab(parent_id: str, url: str, *, profile_name: str = "user",
+                  settle_s: float = 2.0, sleep_fn: Any = None) -> dict:
+    """Open `url` in a NEW tab of the same Chrome profile window as `parent_id`.
+
+    `parent_id` must be an operator tab already on an allowed host; `url` must
+    be on an allowed host. The JavaScript is a fixed template with the URL
+    JSON-encoded into it -- nothing else from the caller reaches the page.
+    Returns `{new_tab, url, parent}`; refuses if no new tab appeared or the new
+    tab is on a host outside the allowlist.
+    """
+    want = profile(profile_name)
+    if not is_operator_profile(want):
+        raise OpenClawRefused("open_from_tab is for operator profiles only")
+    check_url(url)
+    if not host_allowed(url):
+        raise OpenClawRefused(f"REFUSED_OPERATOR_HOST: {url!r} is not on {operator_hosts()}.")
+    assert_profile(name=want)
+    assert_operator_tab(parent_id, profile_name=want)
+    before_ids = {str(t.get("tabId")) for t in tabs(profile_name=want)}
+    fn = OPEN_FROM_TAB_TEMPLATE.format(url=json.dumps(url))
+    r = _run(["browser", "--browser-profile", want, "--json", "evaluate",
+              "--target-id", parent_id, "--fn", fn], timeout=60)
+    (sleep_fn or time.sleep)(settle_s)
+    new = [t for t in tabs(profile_name=want) if str(t.get("tabId")) not in before_ids]
+    if r.returncode != 0 or len(new) != 1:
+        raise OpenClawRefused(
+            f"REFUSED_OPEN_FROM_TAB: rc {r.returncode}, {len(new)} new tab(s) "
+            f"after window.open from {parent_id!r}: {(r.stderr or '')[:160]!r}")
+    tid, turl = str(new[0].get("tabId")), str(new[0].get("url") or "")
+    _OPENED_TABS.add(tid)
+    if turl and turl != "about:blank" and not host_allowed(turl):
+        raise OpenClawRefused(
+            f"REFUSED_OPERATOR_TAB_HOST: the new tab {tid!r} is on {turl!r}; it is "
+            f"recorded as ours so `close` may remove it.")
+    return {"new_tab": tid, "url": turl, "parent": parent_id, "profile": want,
+            "attached_to": attached_to(profile_name=want)}
+
+
+def read_text(target_id: str, *, profile_name: str | None = None,
+              timeout: float = 60.0) -> dict:
+    """`{url, title, text}` of one tab via the FIXED `READ_TEXT_FN`.
+
+    The only JavaScript this module ever sends to a page, and it is a module
+    constant: no argument of this function reaches the page. On an operator
+    profile the tab host check applies exactly as in `browser()`.
+    """
+    want = profile(profile_name)
+    assert_profile(name=want)
+    expected = None
+    if is_operator_profile(want):
+        assert_operator_tab(target_id, profile_name=want)
+        expected = next((str(t.get("targetId")) for t in tabs(profile_name=want)
+                         if target_id in (t.get("tabId"), t.get("targetId"))), None)
+    r = _run(["browser", "--browser-profile", want, "--json", "evaluate",
+              "--target-id", target_id, "--fn", READ_TEXT_FN], timeout=timeout)
+    out: dict[str, Any] = {"rc": r.returncode, "profile": want, "target_id": target_id,
+                           "url": None, "title": None, "text": ""}
+    try:
+        d = _json_of(r.stdout)
+    except ValueError:
+        out["error"] = (r.stderr or r.stdout or "")[:300]
+        return out
+    got_target = d.get("targetId") if isinstance(d, dict) else None
+    if expected and got_target and str(got_target) != expected:
+        out["error"] = (f"REFUSED_READ_WRONG_TAB: evaluated on {got_target!r}, "
+                        f"expected {expected!r}")
+        return out
+    val: Any = d.get("result", d) if isinstance(d, dict) else {}
+    if isinstance(val, dict) and isinstance(val.get("value"), dict):
+        val = val["value"]
+    if isinstance(val, dict):
+        out.update({"url": val.get("url"), "title": val.get("title"),
+                    "text": str(val.get("text") or "")})
+    if is_operator_profile(want):
+        out["attached_to"] = attached_to(profile_name=want)
+    return out
 
 
 def agent(message_file: str, *, model: str = "deepseek/deepseek-v4-pro",
@@ -389,6 +700,16 @@ def health(*, probe_web: bool = False) -> Health:
     rows["profile_pinned"] = bool(p.get("ok"))
     rows["profile_detail"] = p.get("detail") or p.get("state")
     rows["profile_is_default_too"] = _default_profile_matches()
+
+    # Every NAMED profile's state, so a caller sees which browser is actually
+    # there before a run (informative; the verdict still keys on the pinned one).
+    try:
+        known = {p["name"]: p for p in profiles()}
+        rows["profiles"] = {n: (known.get(n) or {}).get("state", "absent")
+                            for n in allowed_profiles()}
+    except Exception as exc:                                      # noqa: BLE001
+        rows["profiles"] = {"error": str(exc)[:120]}
+    rows["operator_hosts"] = list(operator_hosts())
 
     rows["denied_domains"] = len(DENIED_DOMAINS)
     rows["evaluate_allowed"] = "evaluate" in ALLOWED_VERBS   # must be False

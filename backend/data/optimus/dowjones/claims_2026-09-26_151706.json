@@ -1,0 +1,104 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-26",
+ "started_utc": "2026-09-26T15:16:48+00:00",
+ "purpose": "dowjones_claims",
+ "cap_usd": 0.3,
+ "spent_usd": 0.003429,
+ "n_llm_calls": 5,
+ "stopped": null,
+ "n_articles": 5,
+ "n_claims": 8,
+ "forecast_rows_by_source_id": {
+  "wsj_heard_on_the_street": 24
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "6f5f6860df154b1ed84f",
+   "url": "https://www.wsj.com/finance/investing/a-safer-way-to-bet-on-nuclear-2d9064f6",
+   "column": "wsj_heard_on_the_street",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "LEU",
+    "LEU",
+    "LEU",
+    "LEU"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 12,
+   "write_status": "OK"
+  },
+  {
+   "sha": "8e7cc343a2eb0d31b3c7",
+   "url": "https://www.wsj.com/finance/investing/in-the-age-of-ai-cash-is-still-king-d527ee2d",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "d52775d7675e5cbf030b",
+   "url": "https://www.wsj.com/real-estate/looking-for-real-estate-bargains-watch-these-apartment-loans-cc49fa8e",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ebfc9280f8271c707652",
+   "url": "https://www.wsj.com/tech/gadgets-are-going-premiumand-manufacturers-are-raking-it-in-2fa1130e",
+   "column": "wsj_heard_on_the_street",
+   "status": "OK",
+   "n_claims": 4,
+   "refused": [],
+   "tickers": [
+    "AAPL",
+    "HP",
+    "DELL",
+    "AAPL"
+   ],
+   "directions": [
+    "up",
+    "up",
+    "up",
+    "up"
+   ],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 12,
+   "write_status": "OK"
+  },
+  {
+   "sha": "eca767625b5e0f0ce6a0",
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ],
+ "post_run_note": "SUPERSEDED: first extraction. Its 24 rows / 8 claims were REMOVED before commit -- one article's view counted up to 4x (LEU x4), 'HP' for HP Inc (HPQ), and a past-move 'claim' (DELL). Fixed: one view per ticker, ticker must be named in the article, backward-looking refused."
+}

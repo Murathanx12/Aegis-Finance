@@ -1,0 +1,133 @@
+{
+ "receipt": "dowjones_pull.claims",
+ "day": "2026-09-26",
+ "started_utc": "2026-09-26T15:20:43+00:00",
+ "purpose": "dowjones_claims",
+ "cap_usd": 0.3,
+ "spent_usd": 0.001845,
+ "n_llm_calls": 5,
+ "stopped": null,
+ "n_articles": 5,
+ "n_claims": 4,
+ "forecast_rows_by_source_id": {
+  "wsj_heard_on_the_street": 9
+ },
+ "public_safety": "claim_text in git is the model's paraphrase; verbatim quotes stay in the gitignored news_corpus/dowjones/_claims/",
+ "per_article": [
+  {
+   "sha": "6f5f6860df154b1ed84f",
+   "url": "https://www.wsj.com/finance/investing/a-safer-way-to-bet-on-nuclear-2d9064f6",
+   "column": "wsj_heard_on_the_street",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [],
+   "tickers": [
+    "LEU"
+   ],
+   "directions": [
+    "up"
+   ],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 3,
+   "write_status": "OK"
+  },
+  {
+   "sha": "8e7cc343a2eb0d31b3c7",
+   "url": "https://www.wsj.com/finance/investing/in-the-age-of-ai-cash-is-still-king-d527ee2d",
+   "column": "wsj_heard_on_the_street",
+   "status": "OK",
+   "n_claims": 1,
+   "refused": [
+    {
+     "ticker": "META",
+     "why": "REFUSED_BACKWARD_LOOKING: 'META'"
+    },
+    {
+     "ticker": "SCHW",
+     "why": "REFUSED_BACKWARD_LOOKING: 'SCHW'"
+    },
+    {
+     "ticker": "LPLA",
+     "why": "REFUSED_BACKWARD_LOOKING: 'LPLA'"
+    }
+   ],
+   "tickers": [
+    "HOOD"
+   ],
+   "directions": [
+    "none"
+   ],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": "OK"
+  },
+  {
+   "sha": "d52775d7675e5cbf030b",
+   "url": "https://www.wsj.com/real-estate/looking-for-real-estate-bargains-watch-these-apartment-loans-cc49fa8e",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  },
+  {
+   "sha": "ebfc9280f8271c707652",
+   "url": "https://www.wsj.com/tech/gadgets-are-going-premiumand-manufacturers-are-raking-it-in-2fa1130e",
+   "column": "wsj_heard_on_the_street",
+   "status": "OK",
+   "n_claims": 2,
+   "refused": [
+    {
+     "ticker": "HPQ",
+     "why": "REFUSED_TICKER_NOT_IN_ARTICLE: 'HPQ'"
+    }
+   ],
+   "tickers": [
+    "AAPL",
+    "DELL"
+   ],
+   "directions": [
+    "up",
+    "up"
+   ],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 6,
+   "write_status": "OK"
+  },
+  {
+   "sha": "eca767625b5e0f0ce6a0",
+   "url": "https://www.wsj.com/health/pharma/the-peptide-boom-that-isnt-about-your-muscles-4aa63e38",
+   "column": "wsj_heard_on_the_street",
+   "status": "NO_CLAIMS",
+   "n_claims": 0,
+   "refused": [],
+   "tickers": [],
+   "directions": [],
+   "source_id": "wsj_heard_on_the_street",
+   "forecast_rows": 0,
+   "write_status": null
+  }
+ ],
+ "post_run_note": "FINAL for 2026-09-26. After this run the DELL claim (paraphrase 'Dell's stock has risen sharply this year') was refused under the tightened paraphrase-only backward-looking rule and its 3 forecast rows + 1 claim line were removed before commit. Committed: LEU up (3 rows), AAPL up (3 rows), HOOD no-direction (claim only) = 6 forecast rows, source:wsj_heard_on_the_street.",
+ "committed_forecast_rows_by_source_id": {
+  "wsj_heard_on_the_street": 6
+ },
+ "committed_claims": [
+  [
+   "LEU",
+   "up"
+  ],
+  [
+   "AAPL",
+   "up"
+  ],
+  [
+   "HOOD",
+   "none"
+  ]
+ ]
+}
