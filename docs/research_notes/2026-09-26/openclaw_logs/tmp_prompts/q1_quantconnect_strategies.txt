@@ -1,0 +1,32 @@
+Your browser is open on QuantConnect's community Strategies page (or nearby).
+This is a research task for an internal quant research library, read-only, no
+logins created, no forms submitted, no purchases.
+
+GOAL: find the highest-performing LONG-ONLY EQUITY community-shared algorithms
+on QuantConnect (the "Strategies" leaderboard, or if that requires a login you
+cannot complete, the "Strategy Library" tutorials page, or the community forum
+threads under Strategy Library / Quant League / Alpha Streams that show
+concrete performance numbers). You may navigate to nearby pages on
+quantconnect.com if useful (e.g. quantconnect.com/community/strategies,
+quantconnect.com/docs/v2/writing-algorithms/strategy-library,
+quantconnect.com/forum). Do NOT log in, sign up, or click anything that starts
+an account/payment flow. If a page requires login to see data, say so plainly
+instead of guessing numbers.
+
+For each strategy/algorithm you can actually see data for, extract:
+- name/title
+- one-line rule (what it trades and how it selects/rebalances)
+- reported CAGR / return, Sharpe, max drawdown if shown
+- backtest period and universe if shown
+- the page URL you saw it on
+
+Return STRICT JSON only, no prose, no markdown fence:
+{"n":0,
+ "items":[{"name":"","rule":"","cagr":"","sharpe":"","max_dd":"","period":"","universe":"","url":""}],
+ "login_wall_hit":false,
+ "pages_visited":[""],
+ "observed":"one or two sentences on what you actually saw and whether the data was dated/dynamic or generic marketing text",
+ "blocked":false}
+
+Do NOT invent numbers or names. Leave a field empty string if not visible.
+At most 20 items. Accuracy matters far more than count.

@@ -1,0 +1,28 @@
+This is a research task for an internal quant research library, read-only, no
+logins, no account actions.
+
+CONTEXT: a direct attempt to browse x.com/twitter search hit a logged-out
+onboarding wall on this browser profile, so this quest tries an INDIRECT route:
+a search engine's results page, which sometimes indexes individual X/Twitter
+post snippets (title + short text + date) without needing to load x.com itself.
+
+GOAL: on the search engine results page that is currently open (a search for
+X/Twitter posts about quant backtests, Sharpe ratios, and factor results from
+2026), read the results and extract any post snippets that clearly come from
+x.com or twitter.com URLs.
+
+For each such result, extract:
+- the handle if visible in the URL or snippet (e.g. x.com/<handle>/status/...)
+- the date if shown
+- the claim/text snippet as shown
+- the URL
+- "looks_promotional": true if it reads like a course/signal-service/product ad
+
+Return STRICT JSON only, no prose, no markdown fence:
+{"n":0,
+ "posts":[{"handle":"","date":"","claim":"","url":"","looks_promotional":false}],
+ "observed":"one or two sentences on what you actually saw -- how many x.com/twitter.com results appeared in the search results, and whether opening any of them redirected to a login wall",
+ "blocked":false}
+
+Do NOT invent handles or content. If zero x.com/twitter.com results appear on
+the search page, say so with n:0 rather than guessing. At most 15 items.

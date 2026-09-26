@@ -1,0 +1,27 @@
+This is a research task for an internal quant research library, read-only, no
+logins, no posting/commenting/voting, no account actions.
+
+GOAL: browse reddit.com/r/algotrading. Find 2026 threads discussing which
+trading strategies/factors "still work after costs" (or similar: "what
+actually works", "backtested and it survived slippage", "edge that isn't dead
+yet", post-cost live results). Prefer threads from 2026 with real discussion,
+not one-line shitposts.
+
+For each relevant thread you can actually read, extract:
+- thread title
+- post date (as shown, e.g. "3mo ago" -- convert to an approximate calendar
+  date using today = 2026-09-26 if you can, else report the relative string)
+- the specific strategy/rule named by the OP or top comments (one line each)
+- the strongest counter-argument raised in the comments (if any)
+- permalink URL
+
+Return STRICT JSON only, no prose, no markdown fence:
+{"n":0,
+ "threads":[{"title":"","date":"","rules_named":[""],"counter_arguments":[""],"url":""}],
+ "login_wall_hit":false,
+ "observed":"one or two sentences on what you actually saw, and whether Reddit's old/new UI or an interstitial blocked full reading",
+ "blocked":false}
+
+Do NOT invent thread titles, dates, or content. If you can only see thread
+titles without opening them, say so in "observed" and still list what you saw.
+At most 12 threads. Accuracy matters far more than count.

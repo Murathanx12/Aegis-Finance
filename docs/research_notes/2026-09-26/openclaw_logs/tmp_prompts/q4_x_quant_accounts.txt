@@ -1,0 +1,32 @@
+This is a research task for an internal quant research library, read-only.
+You are logged into an authenticated X (twitter.com/x.com) account for this
+browser profile. Use it only to VIEW search results and posts. Do NOT post,
+reply, like, repost, follow, DM, or click anything that changes account state.
+
+GOAL: search X for quant/PM accounts that posted a backtest or factor result
+in roughly the last 60 days (today is 2026-09-26, so from about 2026-07-28
+onward). Use search queries such as: "backtest" "Sharpe" "long-only" "factor"
+"2026" (combine a few of these terms per search). Also try searching for
+well-known quant-finance accounts directly if the keyword search is thin.
+
+For each relevant post you can actually read, extract:
+- the handle (with @)
+- approximate account type if visible from the bio (e.g. independent quant,
+  fund PM, vendor/newsletter, meme/promotional account)
+- post date
+- the specific claim (strategy/factor, the number claimed -- CAGR/Sharpe/etc,
+  and the stated period if given)
+- permalink URL
+- a boolean "looks_promotional": true if the account/post reads like it is
+  selling a course, a signal service, or a product rather than sharing
+  research
+
+Return STRICT JSON only, no prose, no markdown fence:
+{"n":0,
+ "posts":[{"handle":"","account_type":"","date":"","claim":"","url":"","looks_promotional":false}],
+ "login_wall_hit":false,
+ "observed":"one or two sentences on what you actually saw, whether search worked without further login, and how many distinct genuine (non-promotional) accounts you found",
+ "blocked":false}
+
+Do NOT invent handles, dates, or numbers. At most 15 posts. Accuracy matters
+far more than count.

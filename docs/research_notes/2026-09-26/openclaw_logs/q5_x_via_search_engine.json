@@ -1,0 +1,18 @@
+{
+  "rc": 0,
+  "reply": "{\"n\":0,\n \"posts\":[],\n \"observed\":\"The open Bing search results page for site:x.com OR site:twitter.com backtest Sharpe \\\"long-only\\\" factor 2026 returned zero organic results: the page rendered only a Cloudflare security interstitial ('One last step / Please solve the challenge below to continue') with no x.com or twitter.com snippets, titles, or dates anywhere in the DOM. Because no result links were listed, none could be opened, so no individual post redirect to an X login wall was observed.\",\n \"blocked\":true}",
+  "stderr": "",
+  "model": "deepseek/deepseek-flash",
+  "status": "OK",
+  "session_id": "aegis-research_openclaw_strategy_discovery-q5_x_via_search_engine-5053bc3b17d4",
+  "usage": {
+    "input": 3985,
+    "output": 982,
+    "cache_read": 148096,
+    "reasoning": 646
+  },
+  "call_id": "2d7793ddfbe8bdfd",
+  "openclaw_cost_usd": 0.003262476,
+  "latency_s": 15.79,
+  "elapsed_wall_s": 47.0
+}

@@ -1,0 +1,27 @@
+This is a research task for an internal quant research library, read-only, no
+logins, no posting/commenting/voting, no account actions.
+
+GOAL: browse reddit.com/r/quant. Find 2026 threads discussing factor/strategy
+performance, "what still has edge after costs", live vs backtest decay,
+crowding, or specific factor debates (momentum, value, quality, low-vol,
+insider trading signals). Prefer real discussion threads with substantive
+comments, not memes.
+
+For each relevant thread you can actually read, extract:
+- thread title
+- post date (as shown; convert relative strings to an approximate calendar
+  date using today = 2026-09-26 if you can, else report the relative string)
+- the specific strategy/rule/factor named by the OP or top comments (one line
+  each)
+- the strongest counter-argument or skepticism raised in the comments
+- permalink URL
+
+Return STRICT JSON only, no prose, no markdown fence:
+{"n":0,
+ "threads":[{"title":"","date":"","rules_named":[""],"counter_arguments":[""],"url":""}],
+ "login_wall_hit":false,
+ "observed":"one or two sentences on what you actually saw, and whether Reddit's UI or an interstitial blocked full reading",
+ "blocked":false}
+
+Do NOT invent thread titles, dates, or content. At most 12 threads. Accuracy
+matters far more than count.
