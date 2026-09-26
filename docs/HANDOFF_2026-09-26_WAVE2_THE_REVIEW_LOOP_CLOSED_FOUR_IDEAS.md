@@ -133,3 +133,20 @@ Commits: chunk J `3ae60413` · paper rules `d51d0050` · systems fixes `85d96044
 | **OpenClaw best practice** (`research_openclaw_best_practice_and_human_pace.md`) | what flags a session; verb sequences per task shape; footprint plan (CV of gaps < 0.15 = ALARM). Evasion tooling declared out of scope. | jittered pacing, scroll-through and `footprint_receipt` in `web_reader`. |
 
 **Attended items for Murat (none executable from here):** Railway website backend "sleep when idle" OFF; remove the start command pointing at `scripts/arena_paper_repair_once.py` (not in the image); relink this repo's Railway CLI (`railway unlink` / `link`); confirm ONE mandate (capital base, per-name cap, gross cap); decide whether committee-negative names count in `n_considered`; delete `HANDOFF_PC` when back; the weekend paste inbox.
+
+## 9. 00:20 HKT 09-27 — signal structure (`03376f6a`, `docs/SIGNAL_STRUCTURE_2026-09-26.md`)
+- **282 rules ≈ 180 distinct bets** at ρ 0.8 (dev 178 / 2024-26 181); the largest cluster is momentum
+  (17 rules from 10 nominal families). Of 19 frozen forward books with a backtest row, 15 distinct
+  bets: `lib_mom_12_1` / `lib_mom_12_1_q` / `lib_mom_no_downgrades` / `lib_mom_12_1_secrel_sealed`
+  are ONE bet (ρ 0.83–0.97); `lib_mom_flow` / `lib_skill_mom_sealed` are one (ρ 0.92).
+- **DSR at the honest denominator** (n = clusters, not cells): best cell 0.441 → 0.577; `mom_12_1_q`
+  0.20 → 0.31. Nothing reaches 0.95 either way — the null is not over-counting.
+- **Decomposition on SMH/IWM/MTUM/USMV/QUAL/VLUE spreads, 32 blocks:** of the 2024-26 top-30, 21 have
+  alpha t < 1 after the ETFs and 17 are mostly SMH or MTUM beta; SMH − SPY averaged +2.47%/mo in
+  2024-26; the unnamed loading is **IWM β ≈ 1.0** (a small-cap tilt that lost money). **Survivors with
+  alpha t ≥ 2 in BOTH windows: none.** 15 rules clear it in dev only (momentum, t 2.0–3.4) and none
+  of them carry it into 2024-26. The recent momentum win is ETF beta.
+- Lead-lag: 1,496 tests, 2 hits at |ρ| ≥ 0.3 (`mom_12_1` → `gp_low_ag`, `mom_gp` at +2 months) — both
+  die when 2020 is dropped (COVID). HYPOTHESIS closed.
+- 61 rules `DEPRIORITIZED` as cluster duplicates. **Owed:** the bridge grades each cluster as one
+  observation and compares momentum books against SMH/MTUM before SPY; a HAC t for quarterly books.
