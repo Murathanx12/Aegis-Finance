@@ -1186,7 +1186,7 @@ async def refresh_replay(
 # never calls a broker; the script does the GETs and this only hands its
 # receipt to the site. Absent receipt -> 404 WITH the remedy, never an empty 200.
 
-def _paper_accounts_dir() -> Path:
+def _paper_accounts_dir():
     """Where the newest all-accounts receipt lives.
 
     On the laptop the script writes under OPTIMUS_LEDGER_DIR. On Railway that
