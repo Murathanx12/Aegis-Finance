@@ -30,3 +30,20 @@ control that trades is information).
 each got a $1M book" but "ranked on a window we had seen, 5 of the 10 rules chosen blind on
 pre-2024 beat SPY afterwards by a median of −1.6 pp; nothing clears multiplicity; the forward books
 are the only quotable record and the first one lands 2026-10-26."
+
+## Addendum 21:10 HKT — wave 2 landed (`625407d2`, `8ab4a1ff`, `dd38e2b4`), what the numbers said
+
+| # | builder | measured | reading |
+|---|---|---|---|
+| A | D+E fixes | **Freeze gate on today's 20 library books: none pass.** All fail TIMING (picks from 09-21 bars for a 09-26 decision); 8 fail timing only (`mom_12_1_q`, `net_raises`, `mom_12_1`, `mom_flow`, `frog_in_pan`, `inflection_flow`, `skill_mom`, `low_asset_growth`); 9 also fail selection. `mom_12_1_liqw` voided (effN 1.99, MU+SNDK 97.5%). | The books trade Monday as declared — voiding all of them would destroy the only forward record — but BRIDGE labels every one CONTROL until re-frozen on fresh bars at each rule's own rebalance date (item 14, next factory night). |
+| B | D+E fixes | `dev_selected_sealed_evaluated`: top-10 on pre-2024 → **+4.5 pp mean, −1.6 pp median, 5/10** in 2024-26; Spearman 0.17 (n=277); MDE 2.7%/mo at 32 blocks; 62 rules beat SPY in both windows, 35 also pass share/DD. | This is the README's headline now. "62 good in both" replaces "2". |
+| C | D+E controls | **`skill_mom − unskilled_mom` excluding 2025 = −18.1 pp**; the unskilled version earns +23.9 pp vs SPY 2024-26; the whole skill gap is 2025 (+32.7 pp). `skill_mom` vs its own ranks 21-40: +63.6 pp ex-2025 (ordering carries information; the *skill* filter does not). | ANALYST-SKILL-1's ADOPT_AT_TRIVIAL_EFFECT stands; the analyst-skill branch is not funded. `mom_flow` (all raises) is the honest parent. |
+| D | D+E controls | **`mom_12_1_q` is one calendar offset**: Jan/Apr/Jul/Oct +37.9 pp, Feb/May/Aug/Nov −5.0 pp, Mar/Jun/Sep/Dec +8.4 pp vs SPY 2024-26. | The board's best-DSR row is calendar luck plus free rebalancing. Its forward book stays (it is the offset that was frozen), its DSR is not quotable without the other two offsets beside it. |
+| E | PRF2 (row 13) | **456 brokerages, 320,809 directional claims: hit rate 50.1% at 5d, 50.2% at 21d; first-half vs second-half firm skill ρ −0.11 (62 firms).** First-mover minus follower raise: −0.06% at 21d (t −0.26) point-in-time; the +1.34% (t 8.7) "cluster" version is look-ahead (a cluster is known only when its followers arrive). | Broker identity is not a signal; the registry weights (max 0.07) are noise and are printed as such. The reviewer's "first-mover weighting" idea is closed by evidence, not opinion. |
+| F | PRF2 (row 10) | 37 X handles seeded, 15 timelines read ($0.53): 11 OK, 14 EMPTY_READ, 3 NOT_FOUND, 2 login-walled (@unusual_whales, @muddywatersre), 7 unread (cap); 24 dated claims → 21 forecast rows. | X is a live source now, at the handle level, for a dollar a day. Search still needs Murat to log in inside the `muratclaw` profile. |
+| G | PRF2 (row 14) | Promise grading by 8-K parser (MU FQ4: rev 50±1B, EPS 31±1, GM 86±0.5pp); parser read all five FQ3 metrics correctly; p=0.50 rows retired (graders exclude `promise:v1`). **Nothing calls `--grade-promises` after 09-30** → G-fix task 6. | |
+| H | PRF3 (rows 11+12) | **39,768 of 81,085 news rows are `archive`** (all 36,720 Benzinga; 3,043 yfinance); 1,008 archive rows + 4,687 expired forecasts dropped from entry states; visible-at-entry cases 57 → 53. SELECTABLE_BY_RULE 82 of 318 (20 on random-null twins = the base rate); credited still 0. Book moves in book σ: +12.4% at h=6 = **0.85σ**; +4.9% = 0.52σ. | The "+10% books" were sub-1σ draws of books whose names were selectable by rules we already own. Other corpus readers (`night_e1_news_return_panel`, `night_l2_typed_events`, `n5_event_compression`, `morning.py`) still read archive rows — owed. |
+
+**RESULT IMPROVEMENT: NONE.** Terminal wealth did not move today; three claims got cheaper to
+make and four ideas were closed by measurement (broker identity, first-mover, analyst-skill
+filter, quarterly-offset luck).
