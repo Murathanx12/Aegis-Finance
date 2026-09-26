@@ -1353,6 +1353,20 @@ def _case_fundamental_features():
             "load_history() with no SEC filing panel on disk")
 
 
+def _case_source_registry():
+    """Chunk B (2026-09-26): a source whose registry file does not exist is not scored.
+
+    The missing input is THE REGISTRY. `scripts/source_reads.py` and the
+    reputation layer resolve every `source_id` through `load_registry`, so a
+    path with no YAML behind it must refuse rather than hand back an empty
+    dict -- an empty registry reads as "every source scored zero", which is
+    the same silent shape as the funnel file nobody regenerated.
+    """
+    from backend.services.source_registry import RegistryRefused, load_registry
+    return (lambda: load_registry("a_registry_nobody_wrote.yaml"),
+            RegistryRefused, "a source registry path that does not exist")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1448,6 +1462,7 @@ CASES = {
     "detectability_gate": _case_detectability_gate,
     "router_capital_gate": _case_router_capital_gate,
     "aegis_panel2_spec": _case_aegis_panel2_spec,
+    "source_registry": _case_source_registry,
 }
 
 
