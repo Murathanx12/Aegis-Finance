@@ -1408,6 +1408,19 @@ def _case_signal_structure():
     return (lambda: ols(y, X), InsufficientHistory, "five months of returns for a six-factor regression")
 
 
+def _case_matched_twins():
+    """Matched twins (2026-09-27): a rule with no holdings has no twin.
+
+    The missing input is THE HOLDINGS. A matched random twin is drawn per
+    rebalance from the cells the rule's own names occupy; a rule that arrives
+    without holdings or without its monthly series cannot be matched, and a
+    twin drawn from nothing would read as "the rule beat its twin".
+    """
+    from backend.services.matched_twins import TwinInputMissing, twin_series
+    return (lambda: twin_series({"id": "a_rule_with_no_holdings"}, None, seed=0),
+            TwinInputMissing, "a rule record with no holdings and no series")
+
+
 CASES = {
     "investment_committee": _case_investment_committee,
     "fundamental_features": _case_fundamental_features,
@@ -1506,6 +1519,7 @@ CASES = {
     "aegis_panel2_spec": _case_aegis_panel2_spec,
     "source_registry": _case_source_registry,
     "signal_structure": _case_signal_structure,
+    "matched_twins": _case_matched_twins,
 }
 
 
