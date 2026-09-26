@@ -275,6 +275,27 @@ def pid_alive(pid: int) -> bool:
     return llama_server.pid_alive(int(pid))
 
 
+def _lab_llama(verb: str, reason: str) -> dict:
+    """`llama_server.ensure(reason, wait_s=0)` or `.touch(reason)`, GUARDED.
+
+    Called only on the local-reader path after the server answered READY, so
+    `ensure` finds it listening and reuses it (it starts nothing). A failure is
+    logged and returned, never raised: a bookkeeping call must not cost a batch.
+    """
+    try:
+        from backend.services import llama_server
+        if verb == "ensure":
+            # never a START: if nothing is listening (it died since the READY
+            # probe, or a test faked READY) there is nothing to ensure
+            if not llama_server.status().get("listening"):
+                return {"ok": False, "skipped": "nothing listening; ensure() would start one"}
+            return llama_server.ensure(reason, wait_s=0.0)
+        return llama_server.touch(reason)
+    except Exception as exc:                                       # noqa: BLE001
+        logger.warning("llama_server.%s(%s) failed: %s", verb, reason, _trunc(exc))
+        return {"ok": False, "error": _trunc(exc)}
+
+
 def pid_names_lab(pid: int) -> bool:
     """Does PID `pid`'s command line still name this supervisor?
 
@@ -1409,12 +1430,20 @@ def loop_l2_typing(state: LabState) -> dict:
             # stop. It IS ours to read from.
             server = {**server, "used_read_only": True}
 
+    # G-fix owed hook 2 (docs/OPENCLAW_2026-09-26_LOCAL_SERVICE.md): ensure()
+    # before the batch -- the server is already READY here, so this never starts
+    # one; it touches the owner note and keeps the idle reaper alive -- and
+    # touch() after it, so a lab-started server is not reaped mid-work.
+    if backend == "local":
+        _lab_llama("ensure", "lab:l2_typing")
     with state.model_lock:
         try:
             out = type_rows(backend=backend, max_rows=max_rows)
         except Exception as exc:                                   # noqa: BLE001
             return {"status": "error", "n": 0, "rows_typed_this_tick": 0,
                     "reader": choice["reader"], "detail": _trunc(exc)}
+    if backend == "local":
+        _lab_llama("touch", "lab:l2_typing")
 
     corpus = out.get("corpus") or {}
     typed = int(out.get("rows_typed") or (out.get("counts") or {}).get("typed") or 0)

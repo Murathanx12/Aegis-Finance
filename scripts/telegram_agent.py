@@ -41,6 +41,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -319,16 +320,217 @@ def daily_jobs(*, today=None) -> list[str]:
             + (f" `{TG.redact(r.get('error'))}`" if r.get("error") else "")]
 
 
+# ===========================================================================
+# LIVENESS — a heartbeat, a lock, and a supervisor (review 2026-09-26 §5 item 3)
+#
+# The agent died at 2026-09-23 01:07Z with no exit record, no supervisor and
+# `agent.pid` holding a BOM and a dead pid, while `stack_health` reported the
+# bot TOKEN as READY for days. Liveness is now the agent's OWN evidence: a
+# timestamped log line on start, and a heartbeat row every loop. The
+# supervisor (`--supervise`, run by the `AegisTelegramAgent` scheduled task at
+# logon) restarts `--serve` when it exits OR when its heartbeat goes stale,
+# killing only the child it started, by its own handle.
+# ===========================================================================
+
+TG_DIR = Path(_cfg.OPTIMUS_LEDGER_DIR) / "telegram"
+HEARTBEAT = TG_DIR / "heartbeat.json"
+AGENT_LOG = TG_DIR / "agent.log"
+SUPERVISOR_LOG = TG_DIR / "supervisor.jsonl"
+STOP_FILE = TG_DIR / "STOP"
+LOCK = Path(_cfg.OPTIMUS_LEDGER_DIR) / "telegram_agent_lock.json"
+TASK_NAME = "AegisTelegramAgent"
+#: Supervisor restart backoff: first retry after MIN, doubling to MAX; a child
+#: that lived longer than HEALTHY_S resets it.
+BACKOFF_MIN_S, BACKOFF_MAX_S, HEALTHY_S = 5.0, 300.0, 600.0
+
+
+def _utc() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _write_json(path: Path, obj: dict) -> None:
+    """Atomic, UTF-8 WITHOUT a BOM (F17: `agent.pid` began with EF BB BF)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + f".{os.getpid()}.tmp")
+    tmp.write_text(json.dumps(obj, indent=1, default=str), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def setup_logging(path: Path = AGENT_LOG) -> None:
+    """Timestamped file log always; a stream only when one exists (pythonw)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    fmt = logging.Formatter("%(asctime)s %(process)d %(name)s %(levelname)s %(message)s")
+    fh = logging.FileHandler(path, encoding="utf-8")
+    fh.setFormatter(fmt)
+    root.addHandler(fh)
+    if sys.stderr is not None:
+        sh = logging.StreamHandler()
+        sh.setFormatter(fmt)
+        root.addHandler(sh)
+
+
+def beat(*, loops: int, last_poll: str, error: str | None = None,
+         path: Path = HEARTBEAT) -> dict:
+    row = {"utc": _utc(), "pid": os.getpid(), "loops": int(loops),
+           "last_poll": last_poll, "error": (error or None)}
+    _write_json(path, row)
+    return row
+
+
+def heartbeat_age_s(path: Path = HEARTBEAT, *, now: datetime | None = None) -> float | None:
+    """Seconds since the agent's own last heartbeat; None when there is none."""
+    try:
+        row = json.loads(path.read_text(encoding="utf-8"))
+        t = datetime.fromisoformat(str(row["utc"]))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return ((now or datetime.now(timezone.utc)) - t).total_seconds()
+
+
+def _pid_is_agent(pid: int) -> bool:
+    """Alive AND its command line names this module (PID reuse is real)."""
+    try:
+        from backend.services import llama_server
+        if not llama_server.pid_alive(int(pid)):
+            return False
+    except Exception:                                              # noqa: BLE001
+        return False
+    if sys.platform != "win32":
+        return True
+    try:
+        from backend.services import quiet_subprocess as qsp
+        r = qsp.run(["powershell", "-NoProfile", "-Command",
+                     f"(Get-CimInstance Win32_Process -Filter 'ProcessId={int(pid)}')"
+                     ".CommandLine"], capture_output=True, text=True, timeout=30)
+        out = (r.stdout or "").strip()
+    except Exception:                                              # noqa: BLE001
+        return True
+    return (not out) or "telegram_agent" in out
+
+
+def next_backoff(prev: float, lived_s: float) -> float:
+    if lived_s >= HEALTHY_S:
+        return BACKOFF_MIN_S
+    return min(BACKOFF_MAX_S, max(BACKOFF_MIN_S, prev * 2.0))
+
+
+def _sup_log(row: dict) -> None:
+    SUPERVISOR_LOG.parent.mkdir(parents=True, exist_ok=True)
+    with SUPERVISOR_LOG.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps({"utc": _utc(), **row}, default=str) + "\n")
+
+
+def _kill_tree(child) -> None:
+    """Kill the child WE started and its descendants, by ITS pid (never by name).
+
+    The venv's `pythonw.exe` is a redirector that starts the real interpreter
+    as ITS child (measured 2026-09-26: 53272 -> 91476), so killing the handle
+    alone would orphan the process that actually polls. `/T` walks the tree
+    from the pid this supervisor wrote down.
+    """
+    import subprocess
+    if sys.platform == "win32":
+        try:
+            subprocess.run(["taskkill", "/PID", str(int(child.pid)), "/T", "/F"],
+                           capture_output=True, timeout=30)
+        except Exception:                                          # noqa: BLE001
+            pass
+    try:
+        child.kill()
+    except Exception:                                              # noqa: BLE001
+        pass
+
+
+def supervise(*, interval: float = 3.0) -> int:
+    """Run `--serve` as a child for ever; restart on exit or on a stale heartbeat.
+
+    One supervisor per machine: a live lock whose pid still names this module
+    refuses a second one. `telegram/STOP` stops the supervisor and its child
+    (by the child's handle, never by image name).
+    """
+    import subprocess
+
+    try:
+        old = json.loads(LOCK.read_text(encoding="utf-8-sig"))
+        if (old.get("role") == "supervisor" and int(old.get("pid") or 0) != os.getpid()
+                and _pid_is_agent(int(old["pid"]))):
+            logger.error("REFUSED: supervisor pid %s is alive", old["pid"])
+            return 3
+    except (OSError, ValueError, TypeError, KeyError):
+        pass
+    lock = {"pid": os.getpid(), "role": "supervisor", "started_utc": _utc(),
+            "hostname": os.environ.get("COMPUTERNAME"), "started_by": TASK_NAME,
+            "child_pid": None, "restarts": 0}
+    _write_json(LOCK, lock)
+    logger.info("telegram supervisor up, pid %s", os.getpid())
+    _sup_log({"event": "supervisor_start", "pid": os.getpid()})
+    backoff = BACKOFF_MIN_S
+    max_age = float(getattr(_cfg, "TELEGRAM_AGENT_HEARTBEAT_MAX_AGE_S", 600))
+    while True:
+        if STOP_FILE.exists():
+            _sup_log({"event": "supervisor_stop", "why": "STOP file"})
+            return 0
+        err = (TG_DIR / "agent.log.err").open("a", encoding="utf-8")
+        child = subprocess.Popen(
+            [sys.executable, "-m", "scripts.telegram_agent", "--serve",
+             "--interval", str(interval)],
+            cwd=str(REPO), stdin=subprocess.DEVNULL, stdout=err, stderr=err)
+        started = time.time()
+        lock.update({"child_pid": child.pid, "child_started_utc": _utc()})
+        _write_json(LOCK, lock)
+        # the legacy pid file, now without a BOM and naming the LIVE child
+        (TG_DIR / "agent.pid").write_text(f"{child.pid}\n", encoding="ascii")
+        _sup_log({"event": "child_start", "child_pid": child.pid})
+        why = None
+        while child.poll() is None:
+            time.sleep(15)
+            if STOP_FILE.exists():
+                _kill_tree(child)
+                why = "STOP file"
+                break
+            age = heartbeat_age_s()
+            if time.time() - started > max_age and (age is None or age > max_age):
+                _kill_tree(child)                                 # by its own pid
+                why = f"heartbeat stale ({age if age is None else round(age)}s > {max_age:g}s)"
+                break
+        try:
+            rc = child.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            _kill_tree(child)
+            rc = child.wait()
+        err.close()
+        lived = time.time() - started
+        _sup_log({"event": "child_exit", "child_pid": child.pid, "rc": rc,
+                  "lived_s": round(lived, 1), "why": why or "exited"})
+        logger.warning("telegram agent child %s exited rc=%s after %.0fs (%s)",
+                       child.pid, rc, lived, why or "exited")
+        if why == "STOP file":
+            return 0
+        backoff = next_backoff(backoff, lived)
+        lock["restarts"] = int(lock.get("restarts") or 0) + 1
+        _write_json(LOCK, lock)
+        time.sleep(backoff)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--serve", action="store_true", help="long-poll and run commands")
+    ap.add_argument("--supervise", action="store_true",
+                    help="run --serve as a child for ever; restart on exit or a stale heartbeat")
     ap.add_argument("--brief", action="store_true", help="send the brief and exit")
     ap.add_argument("--claim", action="store_true", help="capture the owner chat id")
     ap.add_argument("--once", action="store_true", help="one poll pass and exit")
     ap.add_argument("--daily", action="store_true", help="run the daily digest jobs and exit")
     ap.add_argument("--interval", type=float, default=3.0)
     a = ap.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    if a.supervise or a.serve:
+        setup_logging()
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    if a.supervise:
+        return supervise(interval=a.interval)
 
     if a.claim:
         print(json.dumps(TG.claim_owner(), indent=1))
@@ -353,21 +555,36 @@ def main(argv=None) -> int:
         print(json.dumps(TG.poll(HANDLERS), indent=1))
         return 0
 
-    logger.info("telegram agent serving as %s", TG.me().get("username"))
+    try:
+        who = TG.me().get("username")
+    except Exception as exc:                                       # noqa: BLE001
+        who = f"UNKNOWN ({type(exc).__name__})"
+    # THE FIRST LOG LINE IS THE LIVENESS PROOF (review 2026-09-26 §5 item 3)
+    logger.info("telegram agent serving as %s, pid %s", who, os.getpid())
+    beat(loops=0, last_poll="starting")
+    loops = 0
     while True:
         try:
             for line in daily_jobs():
                 TG.send(line, tag="daily")
         except Exception:                                          # noqa: BLE001
             logger.exception("daily jobs failed")
+        state, err = "ok", None
         try:
             TG.poll(HANDLERS)
         except TG.TelegramRefused as exc:
             logger.warning("poll refused: %s", exc)
+            state, err = "refused", str(exc)[:200]
             time.sleep(10)
-        except Exception:                                          # noqa: BLE001
+        except Exception as exc:                                   # noqa: BLE001
             logger.exception("poll failed")
+            state, err = "failed", f"{type(exc).__name__}: {str(exc)[:200]}"
             time.sleep(10)
+        loops += 1
+        try:
+            beat(loops=loops, last_poll=state, error=err)
+        except OSError:
+            logger.exception("heartbeat write failed")
         time.sleep(a.interval)
 
 

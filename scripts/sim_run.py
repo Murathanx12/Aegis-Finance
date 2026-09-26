@@ -377,7 +377,16 @@ def u_rank(out: Path) -> dict:
         try:
             old = json.loads(prior.read_text(encoding="utf-8"))
             if old.get("bars_fingerprint") == fp:
+                # The AGE goes on the skip (review 2026-09-26 F4): "unchanged"
+                # printed as a normal outcome for five days while the panel
+                # sat at 09-21. A skip over a stale panel says BARS_STALE.
+                try:
+                    from scripts import pull_bars_refresh as BR
+                    age_line = BR.bars_age([XR.survivorship_free_paths()[0]])["line"]
+                except Exception as exc:                           # noqa: BLE001
+                    age_line = f"BARS_AGE CANNOT DETERMINE: {type(exc).__name__}"
                 return {"skipped": "bars unchanged since the last rank",
+                        "bars_line": age_line,
                         "asof": old.get("asof"),
                         "n_eligible": old.get("n_eligible"),
                         "top1": (old.get("top") or [{}])[0].get("symbol")}
@@ -876,10 +885,67 @@ def _er_summary(view: dict | None, red: str | None) -> dict:
             "calibration_vintage": view.get("calibration_vintage")}
 
 
+def bars_gate(ranking_asof: Any, *, bars_paths: list[Path] | None = None,
+              sandbox: bool = False, now_utc: datetime | None = None) -> dict:
+    """Is the data the plan acts on current? Review 2026-09-26 R1 / §5 item 1.
+
+    Two ages, both in CLOSED XNYS sessions and both read from the evidence
+    itself (the parquet's `date` column, the ranking's own `asof`), never from
+    an mtime:
+
+    * the ranker's base panel (`xs_ranker.survivorship_free_paths()[0]`, or
+      `bars_paths`) -- the delisted panel is excluded because its names stop
+      trading by construction;
+    * the ranking built on it (`ranking.json.asof`): a refreshed panel whose
+      re-rank failed is still a stale ranking.
+
+    Either older than `config.BARS_MAX_AGE_SESSIONS` -> `stale: True` and a
+    `BARS_STALE: newest=<date> sessions_old=<n>` line. An unreadable panel is
+    UNKNOWN and counts as stale. A sandbox caller (an injected ledger) that
+    names no `bars_paths` is not checked against this machine's panel -- its
+    ranking's asof still is.
+    """
+    from scripts import pull_bars_refresh as BR
+    limit = int(_config.BARS_MAX_AGE_SESSIONS)
+    last, cal = BR.last_closed_session(now_utc)
+    gate: dict = {"max_age_sessions": limit, "last_closed_session": last.isoformat(),
+                  "calendar": cal, "stale": False, "lines": []}
+    if bars_paths is None and sandbox:
+        gate["bars"] = {"skipped": "sandbox caller named no bars_paths"}
+    else:
+        if bars_paths is None:
+            from backend.services import xs_ranker as XR
+            bars_paths = [XR.survivorship_free_paths()[0]]
+        age = BR.bars_age(list(bars_paths), now_utc=now_utc)
+        gate["bars"] = age
+        if age["stale"]:
+            gate["stale"] = True
+            gate["lines"].append(
+                f"BARS_STALE: newest={age['newest']} sessions_old="
+                f"{age['sessions_old'] if age['sessions_old'] is not None else 'UNKNOWN'}")
+    if ranking_asof:
+        try:
+            ra = date.fromisoformat(str(ranking_asof)[:10])
+            n = BR.sessions_behind(ra, last)
+        except ValueError:
+            ra, n = None, None
+        gate["ranking"] = {"asof": str(ranking_asof)[:10], "sessions_old": n}
+        if n is None or n > limit:
+            gate["stale"] = True
+            gate["lines"].append(f"BARS_STALE: ranking asof={str(ranking_asof)[:10]} "
+                                 f"sessions_old={n if n is not None else 'UNKNOWN'}")
+    gate["line"] = ("; ".join(gate["lines"]) + f" (limit {limit}, last closed session "
+                    f"{last.isoformat()})") if gate["stale"] else (
+        f"BARS_FRESH (limit {limit}, last closed session {last.isoformat()})")
+    return gate
+
+
 def u_plan(out: Path, mode: str, *, asof: str | None = None,
            funnel_path: Path | None = None, ledger_path: Path | None = None,
            contracts_dir: Path | None = None, er_sources: Any = None,
-           er_dir: Path | None = None, contract_file: Path | None = None) -> dict:
+           er_dir: Path | None = None, contract_file: Path | None = None,
+           bars_paths: list[Path] | None = None,
+           now_utc: datetime | None = None) -> dict:
     """Ranking + committee shortlist -> a book, under EXPLOIT and PROBE.
 
     THE UNIT THAT DID NOT EXIST (2026-09-23), and then the unit that could not
@@ -944,6 +1010,33 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
             r = json.loads(rank_path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             r = {}
+    # ---- THE AGE GATE (review 2026-09-26 R1) ---------------------------------
+    # BEFORE any broker call, shortlist or ledger write. A plan on a stale panel
+    # is REFUSED -- EXPLOIT and PROBE alike -- and the refusal is the receipt,
+    # not a skip: on 09-26 this unit acted on a 09-21 ranking because nothing
+    # anywhere compared the ranking's age to anything.
+    gate = bars_gate(r.get("asof"), bars_paths=bars_paths,
+                     sandbox=(ledger_path is not None or er_sources is not None),
+                     now_utc=now_utc)
+    if gate["stale"]:
+        logger.warning("u_plan REFUSED: %s", gate["line"])
+        record = {"t": _now(), "asof": asof, "mode": mode,
+                  "verdict": "REFUSED_BARS_STALE", "acting": False,
+                  "exploit_acting": False, "probe_acting": False,
+                  "bars_gate": gate, "bars_line": gate["line"],
+                  "why_not": gate["line"], "n_to_send": 0, "sent": [],
+                  "finding": ("a stale-bar refusal is a FINDING: refresh the panel "
+                              "(python -m scripts.pull_bars_refresh) and re-rank")}
+        out.mkdir(parents=True, exist_ok=True)
+        (out / "intended_book.json").write_text(
+            json.dumps(record, indent=1, default=str), encoding="utf-8")
+        with (out / "decisions.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, default=str) + "\n")
+        return {"planned": False, "refused": "BARS_STALE", "verdict": "REFUSED_BARS_STALE",
+                "acting": False, "exploit_acting": False, "probe_acting": False,
+                "bars_line": gate["line"], "n_orders": 0, "n_sent": 0,
+                "n_probe_orders": 0, "n_exploit_orders": 0}
+
     pool = list(r.get("top") or [])
     top = pool[:BOOK_SIZE]
     net = r.get("top20_net_rel_21d")
@@ -1184,6 +1277,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
     acting = exploit_acting or probe_acting
     record = {"t": _now(), "asof": asof, "mode": mode,
               "verdict": verdict, "acting": acting,
+              "bars_line": gate["line"], "bars_gate": gate,
               "exploit_acting": exploit_acting,
               "probe_verdict": grade["verdict"], "probe_acting": probe_acting,
               "probe_grade": grade,
@@ -1244,6 +1338,7 @@ def u_plan(out: Path, mode: str, *, asof: str | None = None,
         fh.write(json.dumps(record, default=str) + "\n")
 
     return {"planned": True, "verdict": verdict, "acting": acting,
+            "bars_line": gate["line"],
             "exploit_acting": exploit_acting,
             "blend_verdict": blend_grade["verdict"],
             "er_present": er_view is not None, "er_red": er_red,

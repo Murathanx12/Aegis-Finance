@@ -549,16 +549,21 @@ def worst_case_no_stop(*, n_names: int, notional_pct: float,
     }
 
 
-def largest_admissible_book() -> dict:
+def largest_admissible_book(capital: float | None = None) -> dict:
     """CLAUDE.md session protocol 4, computed rather than remembered.
 
     `n names x notional% x stop%` and `sum|notional| / equity` for the biggest
     book this module can ever emit: `IC_MAX_TILT_NAMES` at
-    `IC_SINGLE_NAME_TILT_CAP`, capped by `IC_TOTAL_TILT_BUDGET`, at the largest
-    configured capital level. It goes on the file, not in a comment, because
-    the number that mattered on 28 Aug was the one nobody printed.
+    `IC_SINGLE_NAME_TILT_CAP`, capped by `IC_TOTAL_TILT_BUDGET`. It goes on the
+    file, not in a comment, because the number that mattered on 28 Aug was the
+    one nobody printed.
+
+    `capital` is the contract's ONE capital base (review 2026-09-26 R4: the
+    file said `capital_usd: 40000` and priced this block on $1,000,000). With
+    no capital named it falls back to the largest configured level, as before.
     """
-    capital = max(float(c) for c in config.IC_CAPITAL_LEVELS)
+    capital = (float(capital) if capital is not None
+               else max(float(c) for c in config.IC_CAPITAL_LEVELS))
     n = int(config.IC_MAX_TILT_NAMES)
     per_name = float(config.IC_SINGLE_NAME_TILT_CAP)
     uncapped = n * per_name
@@ -576,6 +581,249 @@ def largest_admissible_book() -> dict:
         "the core funds the tilts (core_scale = 1 - tilt_total), so total gross "
         "is 1.00x equity and no path here levers the book")
     return row
+
+
+# ===========================================================================
+# THE MANDATE — one capital base, one per-name cap, one worst case
+# (review 2026-09-26 R4). Surfaces and reconciles; changes no limit.
+# ===========================================================================
+
+
+def pc_paper_equity() -> dict | None:
+    """The PC-PAPER account's last broker-truth equity, from its own NAV rows.
+
+    `pc_book/<YYYY-MM-DD>/nav.jsonl`, newest folder, last row with an
+    `equity`. Read from the rows' own stamps, never a file time. None when no
+    NAV row exists (CI, a fresh checkout). An indirection so a test replaces it.
+    """
+    root = Path(config.OPTIMUS_LEDGER_DIR) / "pc_book"
+    if not root.is_dir():
+        return None
+    for d in sorted((p for p in root.iterdir() if p.is_dir()
+                     and len(p.name) == 10 and p.name[4] == "-"), reverse=True):
+        f = d / "nav.jsonl"
+        if not f.is_file():
+            continue
+        try:
+            lines = f.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for ln in reversed(lines):
+            try:
+                row = json.loads(ln)
+            except ValueError:
+                continue
+            eq = row.get("equity")
+            if isinstance(eq, (int, float)) and eq > 0:
+                return {"equity_usd": float(eq), "as_of": row.get("t") or row.get("utc")
+                        or d.name, "source": str(f)}
+    return None
+
+
+def per_name_caps() -> dict[str, float]:
+    """Every per-name cap that can bind a name on the PC-PAPER account, by source."""
+    caps = {
+        "config.IC_SINGLE_NAME_TILT_CAP (committee tilt)": float(config.IC_SINGLE_NAME_TILT_CAP),
+        "config.PROBE_MAX_WEIGHT (u_plan PROBE)": float(config.PROBE_MAX_WEIGHT),
+        "config.ER_EXPLOIT_MAX_WEIGHT (u_plan EXPLOIT)": float(config.ER_EXPLOIT_MAX_WEIGHT),
+    }
+    try:
+        from backend.services import pc_broker as _PB               # noqa: PLC0415
+        caps["pc_broker.MAX_NAME_FRAC (broker hard limit)"] = float(_PB.MAX_NAME_FRAC)
+    except Exception:                                              # noqa: BLE001
+        pass
+    return caps
+
+
+def gross_caps() -> dict[str, float]:
+    """Every gross cap that can bind the PC-PAPER account, by source."""
+    probe = float(config.PROBE_GROSS_CAP)
+    caps = {
+        "config.IC_TOTAL_TILT_BUDGET (committee tilts)": float(config.IC_TOTAL_TILT_BUDGET),
+        "config.PROBE_GROSS_CAP (u_plan PROBE)": probe,
+        "1 - PROBE_GROSS_CAP (u_plan EXPLOIT room)": 1.0 - probe,
+    }
+    try:
+        from backend.services import pc_broker as _PB               # noqa: PLC0415
+        caps["pc_broker.MAX_INVESTED_FRAC (broker hard limit)"] = float(_PB.MAX_INVESTED_FRAC)
+    except Exception:                                              # noqa: BLE001
+        pass
+    return caps
+
+
+def _exploit_book_size() -> int:
+    try:
+        from scripts import sim_run as _S                           # noqa: PLC0415
+        return int(_S.BOOK_SIZE)
+    except Exception:                                              # noqa: BLE001
+        return int(config.IC_MAX_TILT_NAMES)
+
+
+def account_mandate(capital: float | None, *, equity: Any = "derive") -> dict:
+    """ONE capital base, ONE per-name cap, and the worst case in dollars.
+
+    Session protocol item 4 on every receipt: `n x notional% x stop%` and
+    `sum|notional| / equity` for the LARGEST book any path can emit on the
+    account (as configured), beside the book the TIGHTEST caps would allow.
+
+    It REFUSES -- `status: REFUSED`, a named reason per disagreement -- when
+    the capital bases or the caps disagree, instead of picking one silently.
+    That is today's state (the contract sizes on the IPS's $40,000, the account
+    holds ~$1,000,000; per-name caps are 2% / 3% / 10% / 12%), and it stays
+    red until Murat confirms ONE mandate. No limit is changed here.
+    """
+    if equity == "derive":
+        try:
+            equity = pc_paper_equity()
+        except Exception:                                          # noqa: BLE001
+            equity = None
+    base = float(capital) if capital is not None else max(
+        float(c) for c in config.IC_CAPITAL_LEVELS)
+    bases = {"contract capital (the rows are sized on it)": base,
+             "max(config.IC_CAPITAL_LEVELS)": max(float(c) for c in config.IC_CAPITAL_LEVELS)}
+    if equity:
+        bases[f"PC-PAPER broker equity ({equity.get('as_of')})"] = float(equity["equity_usd"])
+    pn = per_name_caps()
+    gc = gross_caps()
+    tight_name_src, tight_name = min(pn.items(), key=lambda kv: kv[1])
+    tight_gross_src, tight_gross = min(gc.items(), key=lambda kv: kv[1])
+
+    # the largest book any path can emit, AS CONFIGURED: EXPLOIT's names at its
+    # own cap (never above the broker's) inside 1 - PROBE gross, plus PROBE's
+    # full cap, all under the broker's invested ceiling.
+    probe_w = float(config.PROBE_MAX_WEIGHT)
+    probe_gross = float(config.PROBE_GROSS_CAP)
+    n_probe = int(config.PROBE_MAX_NAMES)
+    ex_w = min(float(config.ER_EXPLOIT_MAX_WEIGHT), pn.get(
+        "pc_broker.MAX_NAME_FRAC (broker hard limit)", 1.0))
+    n_ex = _exploit_book_size()
+    ex_gross = min(n_ex * ex_w, 1.0 - probe_gross)
+    ceiling = gc.get("pc_broker.MAX_INVESTED_FRAC (broker hard limit)", 1.0)
+    gross = min(ex_gross + probe_gross, ceiling)
+    k = float(config.PROBE_WORST_CASE_SIGMA)
+    sig = float(config.PROBE_REF_DAILY_SIGMA)
+    stop_pct = k * sig
+    n_all = n_ex + n_probe
+    loosest_w = max(ex_w, probe_w)
+    configured = {
+        "n_names": n_all, "per_name_pct_max": loosest_w,
+        "gross_over_equity": gross, "stop_declared": False,
+        "stop_pct_used": stop_pct,
+        "stop_basis": (f"no stop is declared; the k-sigma session "
+                       f"({k:g} x {sig:.2%}/day) stands in for stop%"),
+        "worst_case_k_sigma_usd": -gross * stop_pct * base,
+        "worst_case_no_stop_usd": -gross * base,
+        "line": (f"as configured: {n_ex} EXPLOIT x {ex_w:.0%} (gross <= {1 - probe_gross:.0%}) "
+                 f"+ {n_probe} PROBE x {probe_w:.0%} (<= {probe_gross:.0%}) = "
+                 f"sum|notional|/equity {gross:.2f}; x stop {stop_pct:.2%} = "
+                 f"-${gross * stop_pct * base:,.0f}; no stop, so the ceiling is "
+                 f"-${gross * base:,.0f} on ${base:,.0f}"),
+    }
+    n_tight = int(tight_gross / tight_name) if tight_name > 0 else 0
+    tight = {
+        "n_names": n_tight, "per_name_pct": tight_name, "gross_over_equity": tight_gross,
+        "worst_case_k_sigma_usd": -tight_gross * stop_pct * base,
+        "worst_case_no_stop_usd": -tight_gross * base,
+        "line": (f"if the tightest caps bound: {n_tight} x {tight_name:.0%} = "
+                 f"{tight_gross:.2f} gross; x stop {stop_pct:.2%} = "
+                 f"-${tight_gross * stop_pct * base:,.0f}; ceiling "
+                 f"-${tight_gross * base:,.0f} on ${base:,.0f}"),
+    }
+    refusals: list[str] = []
+    distinct_bases = sorted({round(v, 0) for v in bases.values()})
+    if len(distinct_bases) > 1 and max(distinct_bases) > 1.05 * min(distinct_bases):
+        refusals.append("CAPITAL_BASES_DISAGREE: " + "; ".join(
+            f"{k_} ${v:,.0f}" for k_, v in bases.items()))
+    if len(set(pn.values())) > 1:
+        refusals.append("PER_NAME_CAPS_DISAGREE: " + "; ".join(
+            f"{k_} {v:.0%}" for k_, v in sorted(pn.items(), key=lambda kv: kv[1])))
+    if gross > tight_gross + 1e-12:
+        refusals.append(f"GROSS_CAPS_DISAGREE: the largest book any path can emit is "
+                        f"{gross:.2f}x equity, the tightest gross cap is "
+                        f"{tight_gross:.2f} ({tight_gross_src})")
+    status = "REFUSED" if refusals else "OK"
+    big = max(bases.values())
+    configured["on_largest_base_seen"] = {
+        "equity_usd": big, "worst_case_k_sigma_usd": -gross * stop_pct * big,
+        "worst_case_no_stop_usd": -gross * big}
+    line = (f"MANDATE {status}: capital ${base:,.0f}; per-name cap {tight_name:.0%} "
+            f"(tightest: {tight_name_src}); {configured['line']}"
+            + (f" [on the largest base seen, ${big:,.0f}: -${gross * stop_pct * big:,.0f} "
+               f"k-sigma, ceiling -${gross * big:,.0f}]" if big > base * 1.05 else "")
+            + (f" -- {len(refusals)} disagreement(s); Murat must confirm ONE mandate"
+               if refusals else ""))
+    return {
+        "status": status,
+        "capital_usd": base,
+        "capital_basis": "the contract's own capital -- every dollar on this file is sized on it",
+        "capital_bases_seen": bases,
+        "per_name_cap": tight_name, "per_name_cap_source": tight_name_src,
+        "per_name_caps_seen": pn,
+        "gross_cap": tight_gross, "gross_cap_source": tight_gross_src,
+        "gross_caps_seen": gc,
+        "largest_admissible_book_as_configured": configured,
+        "largest_admissible_book_under_tightest_caps": tight,
+        "refusals": refusals,
+        "line": line,
+        "note": ("surfaces and reconciles the limits; changes none of them. A REFUSED "
+                 "mandate is a finding printed on every contract until one capital "
+                 "base and one cap are confirmed (docs/RUNBOOK_2026-09-26_SYSTEMS_FIXES.md)."),
+    }
+
+
+def candidate_set(state: dict, book: dict | None, *,
+                  funnel_path: Path | None = None) -> dict:
+    """The size AND age of the candidate set at each hop (review 2026-09-26 R5).
+
+    `roi_ranking.n_considered` is the count AFTER the committee's eligibility
+    gate (BUY/WATCH verdict, licensed evidence, ranking score > 0), not the
+    candidate set. Printed alone it read as "the ranker saw 2 names" for seven
+    days beside a 25-name funnel. Every hop is on the receipt now.
+    """
+    from collections import Counter
+
+    src = Path(funnel_path or config.IC_FUNNEL_PATH)
+    gen = state.get("funnel_generated_at")
+    age = None
+    try:
+        from backend.services import investment_committee as _IC  # noqa: PLC0415
+        age = _IC._funnel_age_days(gen)
+    except Exception:                                              # noqa: BLE001
+        age = None
+    recs = list(state.get("recs") or [])
+    by_verdict = Counter(str(getattr(r, "recommendation", "?")) for r in recs)
+    verdicts = set(getattr(config, "IC_TILT_VERDICT_SCALE", {}) or {})
+    excluded: Counter = Counter()
+    for r in recs:
+        v = str(getattr(r, "recommendation", ""))
+        if getattr(r, "evidence_grade", "NO_EVIDENCE") == "NO_EVIDENCE":
+            excluded["no licensed evidence (NO_EVIDENCE)"] += 1
+        elif not getattr(r, "ranking_score", 0.0) > 0:
+            excluded["ranking score <= 0"] += 1
+        elif v not in verdicts:
+            excluded[f"verdict {v} not in {sorted(verdicts)}"] += 1
+    n_cands = len(state.get("candidates") or {})
+    n_cons = ((book or {}).get("roi_ranking") or {}).get("n_considered")
+    age_s = f"{age:.1f} d old" if isinstance(age, (int, float)) else "age UNKNOWN"
+    line = (f"candidates {n_cands} ({src.name}, generated {gen or 'UNKNOWN'}, {age_s}) "
+            f"-> {len(recs)} scored {dict(by_verdict)} -> "
+            f"{n_cons if n_cons is not None else '?'} eligible for the ROI ranking "
+            f"(= n_considered); excluded: "
+            + (", ".join(f"{n} {why}" for why, n in excluded.most_common()) or "none"))
+    return {
+        "candidates_source": str(src),
+        "n_candidates": n_cands,
+        "candidates_generated_at": gen,
+        "candidates_age_days": age,
+        "n_scored": len(recs),
+        "scored_by_verdict": dict(by_verdict),
+        "eligibility_gate": ("recommendation in config.IC_TILT_VERDICT_SCALE, "
+                             "evidence_grade != NO_EVIDENCE, ranking_score > 0 "
+                             "(investment_committee.compose_book step 1)"),
+        "excluded_by_gate": dict(excluded),
+        "n_considered": n_cons,
+        "line": line,
+    }
 
 
 # ===========================================================================
@@ -1470,6 +1718,10 @@ def build_daily_contracts(asof: date | str | None = None, *,
                      f"({type(exc).__name__}: {exc})")
 
     rows = _ic_rows(state, book, asof=day, capital=capital)
+    try:
+        cset = candidate_set(state, book, funnel_path=funnel_path)
+    except Exception as exc:                                       # noqa: BLE001
+        cset = {"line": f"CANNOT DETERMINE the candidate set: {type(exc).__name__}: {exc}"}
 
     if agency_note:
         notes.append(agency_note)
@@ -1481,7 +1733,7 @@ def build_daily_contracts(asof: date | str | None = None, *,
 
     if write:
         write_contracts(rows, asof=day, out_dir=out_dir, notes=notes,
-                        capital=capital, book=book)
+                        capital=capital, book=book, candidates=cset)
     return rows
 
 
@@ -1734,12 +1986,14 @@ def revise(parent_decision_id: str, *, asof: date | str | None = None,
         rows: list[dict] = []
         notes: list[str] = []
         capital_on_file = capital
+        cset_on_file = None
         if path.is_file():
             try:
                 blob = json.loads(path.read_text(encoding="utf-8"))
                 rows = list(blob.get("rows") or [])
                 notes = list(blob.get("notes") or [])
                 capital_on_file = blob.get("capital_usd") or capital
+                cset_on_file = blob.get("candidate_set")
             except (OSError, ValueError):
                 rows, notes = [], []
         rows = [r for r in rows
@@ -1751,7 +2005,7 @@ def revise(parent_decision_id: str, *, asof: date | str | None = None,
                      f"the parent row is untouched")
         written_to = str(write_contracts(rows, asof=day, out_dir=out_dir,
                                          notes=notes, capital=capital_on_file,
-                                         book=book))
+                                         book=book, candidates=cset_on_file))
 
     detail = {"child_decision_id": child["decision_id"], "ticker": ticker,
               "reason": str(reason or ""), "comparison": changed,
@@ -1786,7 +2040,8 @@ def _as_date(asof: date | str | None) -> date:
 
 
 def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
-            capital: float | None = None, book: dict | None = None) -> dict:
+            capital: float | None = None, book: dict | None = None,
+            candidates: dict | None = None) -> dict:
     counts = {d: sum(1 for r in rows if r.get("direction") == d)
               for d in DIRECTIONS}
     by_class: dict[str, int] = {}
@@ -1807,6 +2062,22 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
                       or "CANNOT DETERMINE: the row carries no class basis")
             unclassified_basis[key] = unclassified_basis.get(key, 0) + 1
     produced = {r.get("direction") for r in rows}
+    cset = candidates or {
+        "candidates_source": None, "n_candidates": None,
+        "candidates_generated_at": None,
+        "line": ("CANNOT DETERMINE: this writer passed no candidate set, so the "
+                 "size and age of what was ranked are unknown")}
+    roi_block = _roi_payload_block(rows, book)
+    if roi_block.get("roi_ranking") is not None:
+        # n_considered is POST-gate; the pre-gate set travels beside it so the
+        # number can never again be read as "the ranker saw 2 names".
+        for k in ("candidates_source", "n_candidates", "candidates_generated_at"):
+            roi_block["roi_ranking"][k] = cset.get(k)
+    try:
+        mandate = account_mandate(capital)
+    except Exception as exc:                                       # noqa: BLE001
+        mandate = {"status": "CANNOT DETERMINE",
+                   "line": f"MANDATE CANNOT DETERMINE: {type(exc).__name__}: {exc}"}
     return {
         "receipt": "decision_contract",
         "roadmap_item": "chunk 18",
@@ -1823,11 +2094,13 @@ def payload(rows: list[dict], *, asof: date, notes: list[str] | None = None,
         "capital_usd": capital,
         "directions_not_produced_today": sorted(d for d in DIRECTIONS
                                                 if d not in produced),
+        "mandate": mandate,
+        "candidate_set": cset,
         "probe": probe_census_over_rows(rows),
-        **_roi_payload_block(rows, book),
+        **roi_block,
         **_authority_payload_block(rows, book),
         "capital_resolution": capital_resolution(rows, capital=capital),
-        "worst_case_largest_admissible_book": largest_admissible_book(),
+        "worst_case_largest_admissible_book": largest_admissible_book(capital),
         "notes": list(notes or []),
         "degradation_reasons": list((book or {}).get("degradation_reasons") or []),
         "rows": rows,
@@ -2092,13 +2365,14 @@ def _authority_payload_block(rows: list[dict], book: dict | None) -> dict:
 
 def write_contracts(rows: list[dict], *, asof: date, out_dir: Path | None = None,
                     notes: list[str] | None = None, capital: float | None = None,
-                    book: dict | None = None) -> Path:
+                    book: dict | None = None, candidates: dict | None = None) -> Path:
     """Atomic write. A half-written receipt is worse than none: a reader cannot
     tell a truncated file from a day on which the engine found two names."""
     path = contracts_path(asof, out_dir)
     path.parent.mkdir(parents=True, exist_ok=True)
     blob = json.dumps(payload(rows, asof=asof, notes=notes, capital=capital,
-                              book=book), ensure_ascii=False, indent=1)
+                              book=book, candidates=candidates),
+                      ensure_ascii=False, indent=1)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(blob, encoding="utf-8")
     os.replace(tmp, path)

@@ -330,6 +330,170 @@ def bucket_of(rec: dict, *, today: date,
 
 
 # ===========================================================================
+# THE UNRESOLVABLE — voided, never "nothing to do" (review 2026-09-26 R9)
+# ===========================================================================
+
+#: Ticker notations no equity bar source can ever serve (futures, indices, the
+#: dollar index in Yahoo notation). Same list `pull_forecast_bars` reports as
+#: PERMANENTLY_UNPRICEABLE.
+NON_EQUITY_SUFFIXES: tuple[str, ...] = ("=F",)
+NON_EQUITY_PREFIXES: tuple[str, ...] = ("^",)
+NON_EQUITY_EXACT: frozenset = frozenset({"DX-Y.NYB"})
+
+#: The closed set of reasons a due record is voided as unresolvable.
+VOID_REASONS: tuple[str, ...] = (
+    "UNRESOLVABLE_NO_EQUITY_BAR",
+    "UNRESOLVABLE_DELISTED",
+    "UNRESOLVABLE_NO_BAR_PAST_HORIZON",
+)
+
+
+def _non_equity(t: str) -> bool:
+    return (t.endswith(NON_EQUITY_SUFFIXES) or t.startswith(NON_EQUITY_PREFIXES)
+            or t in NON_EQUITY_EXACT)
+
+
+def unresolvable_reason(rec: dict, *, today: date, panel_dates, last_bar: dict,
+                        bars_from: Any) -> tuple[str, str] | None:
+    """(code, sentence) when this due record can NEVER resolve, else None.
+
+    Three cases, each derived from the local panel itself, never a vendor call:
+
+    * NO_EQUITY_BAR -- the ticker (or a named benchmark) is a futures/index
+      notation no equity bar source serves, and the panel has no bar for it;
+    * DELISTED -- the ticker's bars STOPPED at least
+      `config.FORECAST_VOID_DELISTED_MIN_SESSIONS` panel sessions before the
+      panel's newest bar, and fewer than `horizon_days + 1` bars exist from
+      `made_at` (AVB stopped 2026-08-14, EA 2026-08-04; both `inactive` at the
+      venue on 2026-09-26);
+    * NO_BAR_PAST_HORIZON -- no panel has ANY bar for the ticker, its
+      resolution date is `config.FORECAST_VOID_NO_BAR_GRACE_DAYS` behind
+      today, and the panel covers that date.
+
+    A record that might still resolve (a bar that may yet arrive) is None.
+    """
+    from backend import config as _cfg
+
+    t = str(rec.get("ticker") or "").strip()
+    if not t:
+        return None
+    try:
+        ra = date.fromisoformat(str(rec["resolves_after"])[:10])
+        h = int(rec.get("horizon_days") or 0)
+    except (KeyError, ValueError, TypeError):
+        return None
+    if today < ra:
+        return None
+    bench = str(rec.get("benchmark") or "").strip()
+    needs = [t] + ([bench] if rec.get("observable") == "beats_benchmark" and bench else [])
+    for sym in needs:
+        if sym not in last_bar and _non_equity(sym):
+            return ("UNRESOLVABLE_NO_EQUITY_BAR",
+                    f"{sym} is a futures/index notation; no equity bar source can "
+                    f"serve it and the local panel has none")
+    if not len(panel_dates):
+        return None
+    newest = panel_dates[-1]
+    if t in last_bar:
+        lb = last_bar[t]
+        stopped = int((panel_dates > lb).sum())
+        have = int(bars_from(t, str(rec.get("made_at", ""))[:10]))
+        if (stopped >= int(_cfg.FORECAST_VOID_DELISTED_MIN_SESSIONS)
+                and have < h + 1):
+            return ("UNRESOLVABLE_DELISTED",
+                    f"{t}'s bars stop at {str(lb)[:10]} while the panel runs to "
+                    f"{str(newest)[:10]} ({stopped} sessions later); the window needs "
+                    f"{h + 1} bars from {str(rec.get('made_at'))[:10]} and {have} exist")
+        return None
+    grace = int(_cfg.FORECAST_VOID_NO_BAR_GRACE_DAYS)
+    import pandas as pd
+    if (today - ra).days >= grace and pd.Timestamp(newest) >= pd.Timestamp(ra):
+        return ("UNRESOLVABLE_NO_BAR_PAST_HORIZON",
+                f"no local panel has any bar for {t}; its resolution date {ra} is "
+                f"{(today - ra).days} days past (grace {grace}) and the panel runs to "
+                f"{str(newest)[:10]}")
+    return None
+
+
+def void_unresolvable(*, path: Path, today: date, bars=None,
+                      skip_ids: set[str] | None = None, write: bool = True) -> dict:
+    """Void every due, ungraded record that can never resolve. Returns the census.
+
+    The record STAYS in the ledger (`belief_state.resolve_one` already treats a
+    `void_reason` as terminal and out of every score): voiding is additive --
+    `void_reason`, `voided_at`, `voided_by` -- and reversible by removing those
+    three fields. Quarantined records are never touched (their disposition is
+    attended). The rewrite is atomic and re-reads the ledger immediately before
+    it, so a row appended meanwhile is kept.
+    """
+    import pandas as pd
+
+    from backend.services import belief_state as B
+
+    if bars is None:
+        from backend.services import paper_books as PB
+        bars = _with_forecast_only(PB.load_bars())
+    skip_ids = skip_ids or set()
+    panel_dates = pd.DatetimeIndex(sorted(pd.to_datetime(bars["date"]).unique()))
+    last_bar = bars.groupby("symbol")["date"].max().to_dict()
+    by_sym = {s: g.sort_values() for s, g in
+              pd.to_datetime(bars["date"]).groupby(bars["symbol"])}
+
+    def _bars_from(sym: str, d: str) -> int:
+        s = by_sym.get(sym)
+        if s is None or not d:
+            return 0
+        return int((s >= pd.Timestamp(d)).sum())
+
+    rows = B.read_predictions(path)
+    plan: dict[str, tuple[str, str]] = {}
+    for r in rows:
+        if r.get("outcome") is not None or r.get("void_reason"):
+            continue
+        pid = str(r.get("prediction_id"))
+        if pid in skip_ids:
+            continue
+        why = unresolvable_reason(r, today=today, panel_dates=panel_dates,
+                                  last_bar=last_bar, bars_from=_bars_from)
+        if why:
+            plan[pid] = why
+    by_reason: dict[str, int] = {k: 0 for k in VOID_REASONS}
+    by_ticker: dict[str, int] = {}
+    sample: list[dict] = []
+    written = 0
+    if plan and write:
+        fresh = B.read_predictions(path)                  # re-read: keep late appends
+        stamp = _now()
+        out_rows = []
+        for r in fresh:
+            pid = str(r.get("prediction_id"))
+            if (pid in plan and r.get("outcome") is None and not r.get("void_reason")):
+                code, sentence = plan[pid]
+                r = dict(r)
+                r["void_reason"] = f"{code}: {sentence}"
+                r["voided_at"] = stamp
+                r["voided_by"] = "forecast_grader.void_unresolvable"
+                written += 1
+            out_rows.append(r)
+        tmp = Path(path).with_name(Path(path).name + f".void.{os.getpid()}.tmp")
+        tmp.write_text("\n".join(json.dumps(x, ensure_ascii=False) for x in out_rows)
+                       + "\n", encoding="utf-8")
+        os.replace(tmp, path)
+    for pid, (code, sentence) in plan.items():
+        by_reason[code] = by_reason.get(code, 0) + 1
+    for r in rows:
+        pid = str(r.get("prediction_id"))
+        if pid in plan:
+            by_ticker[str(r.get("ticker"))] = by_ticker.get(str(r.get("ticker")), 0) + 1
+            if len(sample) < 10:
+                sample.append({"prediction_id": pid, "ticker": r.get("ticker"),
+                               "void_reason": f"{plan[pid][0]}: {plan[pid][1]}"})
+    return {"voided_unresolvable": written if write else 0,
+            "would_void": len(plan), "by_reason": by_reason,
+            "by_ticker": by_ticker, "sample": sample}
+
+
+# ===========================================================================
 # THE RUN
 # ===========================================================================
 
@@ -337,7 +501,7 @@ def bucket_of(rec: dict, *, today: date,
 def grade_due(*, path: Path | None = None, today: date | None = None,
               population: str | None = None,
               price_fetch=None, write: bool = True,
-              out: Path | None = None) -> dict:
+              out: Path | None = None, void_bars=None) -> dict:
     """Grade every due record off local bars; return the receipt.
 
     Never raises for a record's sake. The resolver's own refusals (an
@@ -366,6 +530,25 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
         report = {"status": "ERROR",
                   "reason": f"{type(exc).__name__}: {exc}",
                   "due": 0, "newly_resolved": 0}
+
+    # THE UNRESOLVABLE ARE VOIDED, NEVER "NOTHING TO DO" (review 2026-09-26
+    # R9: 130 records printed as a refusal every day since August). Only on the
+    # production price path (local bars) or with bars named by the caller: a
+    # test that injects a price fetch must not be voided against this
+    # machine's panel.
+    void_census: dict = {"voided_unresolvable": 0, "skipped": None}
+    if price_fetch is None or void_bars is not None:
+        try:
+            pre_q, _ = quarantined_ids(B.read_predictions(path), report, path=path)
+            void_census = void_unresolvable(path=path, today=today, bars=void_bars,
+                                            skip_ids=pre_q, write=write)
+        except Exception as exc:                                   # noqa: BLE001
+            logger.exception("forecast grader: void pass failed")
+            void_census = {"voided_unresolvable": 0,
+                           "error": f"{type(exc).__name__}: {exc}"[:300]}
+    else:
+        void_census["skipped"] = ("an injected price fetch and no void_bars: the "
+                                  "void pass reads only the panel it is given")
 
     after = B.read_predictions(path)
     n_graded_after = sum(1 for r in after if r.get("outcome") is not None)
@@ -418,6 +601,8 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
         "counts_by_mechanism": counts,
         "totals": totals,
         "n_still_refused": sum(totals.get(b, 0) for b in REFUSAL_BUCKETS),
+        "voided_unresolvable": int(void_census.get("voided_unresolvable") or 0),
+        "void": void_census,
         "buckets": list(BUCKETS),
         "read_me_first": (
             "Every record in the ledger is in exactly one bucket of the closed "
@@ -432,6 +617,8 @@ def grade_due(*, path: Path | None = None, today: date | None = None,
         "headline": (
             f"{newly:,} newly resolved; {totals.get('graded', 0):,} of "
             f"{len(after):,} records now carry an outcome; "
+            f"{int(void_census.get('voided_unresolvable') or 0):,} voided as "
+            f"unresolvable this run; "
             f"{totals.get('NO_BAR_FOR_RESOLUTION_DATE', 0):,} wait on a bar, "
             f"{totals.get('not_yet_due', 0):,} are not yet due"),
     }
@@ -503,7 +690,8 @@ def declared_mechanisms(rows: list[dict] | None = None) -> list[str]:
     return names
 
 
-__all__ = ["BUCKETS", "LICENCE", "REFUSAL_BUCKETS", "bars_source",
+__all__ = ["BUCKETS", "LICENCE", "REFUSAL_BUCKETS", "VOID_REASONS", "bars_source",
+           "unresolvable_reason", "void_unresolvable",
            "bucket_of", "declared_mechanisms", "grade_due",
            "local_price_fetch", "mechanism_of", "out_dir", "quarantined_ids",
            "receipt_path", "refusal_for", "run_date"]

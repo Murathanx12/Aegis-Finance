@@ -102,6 +102,23 @@ def calls(monkeypatch) -> list[str]:
     """Replace every seam; record the order in which the steps reach them."""
     seen: list[str] = []
 
+    # 2026-09-26. The real seam runs `scripts.pull_bars_refresh` as a child that
+    # pulls from the venue and REWRITES the ranker's 7M-row panel; the real
+    # promise grader appends to a live receipt log. Neither belongs in a unit
+    # test of the driver.
+    def _bars(**kw):
+        seen.append("bars_refresh")
+        return {"status": "ok", "rc": 0,
+                "line": "BARS_FRESH: newest=2026-01-02 sessions_old=0 (fixture)",
+                "panels": {"ranker_deep": {"status": "ok", "rows_added": 12}}}
+
+    def _promises(**kw):
+        seen.append("grade_promises")
+        return {"action": "skip", "reason": "before the start date (fixture)"}
+
+    monkeypatch.setattr(DP, "run_bars_refresh", _bars)
+    monkeypatch.setattr(DP, "run_grade_promises", _promises)
+
     def _news(**kw):
         seen.append("news_pull")
         return {"rows_new": 7, "sources": 3, "red": [], "refused": [],
@@ -236,9 +253,10 @@ def test_every_declared_step_runs_in_order(out, calls, rth_open) -> None:
     assert [r["step"] for r in rec["steps"]] == [s for s, _ in DP.STEPS]
     # the cadence step fans out inside itself; the OUTER order is the declared one
     outer = [c.split(":")[0] for c in calls]
-    assert outer == ["news_pull", "decision_contract", "analyst_snapshot",
-                     "e1_append", "book_cadence", "book_cadence", "book_cadence",
-                     "grade_forecasts", "coverage", "scoreboard"]
+    assert outer == ["bars_refresh", "news_pull", "decision_contract",
+                     "analyst_snapshot", "e1_append", "book_cadence",
+                     "book_cadence", "book_cadence", "grade_forecasts",
+                     "grade_promises", "coverage", "scoreboard"]
 
 
 def test_the_handler_table_covers_the_declared_steps() -> None:
@@ -702,3 +720,53 @@ def test_it_never_kills_by_image_name() -> None:
         upper = [p.upper() for p in parts]
         assert "/IM" not in upper, f"kill by image name: {parts}"
         assert "/PID" in upper, f"a taskkill with no /PID: {parts}"
+
+
+# --------------------------------------------------------------------------
+# THE BARS REFRESH (systems review 2026-09-26 §5 item 1)
+
+
+def test_bars_refresh_runs_first_and_its_age_line_is_on_the_receipt(
+        out, calls, rth_open) -> None:
+    rec = DP.run_daily_pass(day=_today())
+    assert calls[0] == "bars_refresh"
+    assert rec["bars"].startswith("BARS_FRESH")
+    row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
+    assert row["status"] == "ok" and row["rows"] == 12
+
+
+def test_a_failed_bars_pull_is_a_refused_row_that_names_the_stale_panel(
+        out, calls, rth_open, monkeypatch) -> None:
+    monkeypatch.setattr(DP, "run_bars_refresh", lambda **kw: {
+        "status": "refused", "rc": 2,
+        "reason": "pull failed, nothing overwritten: HTTPError 401",
+        "line": "BARS_STALE: newest=2026-01-02 sessions_old=4 (limit 2)",
+        "panels": {}})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
+    assert row["status"] == "refused"
+    assert any("nothing overwritten" in r for r in row["refusals"])
+    assert any(r.startswith("BARS_STALE") for r in row["refusals"])
+    assert rec["bars"].startswith("BARS_STALE")
+    # the pass went on: a refused refresh never costs the day's other steps
+    assert [r["step"] for r in rec["steps"]] == [s for s, _ in DP.STEPS]
+
+
+def test_an_unchanged_panel_is_nothing_to_do_not_ok(out, calls, rth_open,
+                                                    monkeypatch) -> None:
+    monkeypatch.setattr(DP, "run_bars_refresh", lambda **kw: {
+        "status": "unchanged", "rc": 0, "line": "BARS_FRESH: newest=x sessions_old=0",
+        "panels": {"ranker_deep": {"status": "unchanged", "rows_added": 0}}})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "bars_refresh")
+    assert row["status"] == "nothing_to_do"
+
+
+def test_grade_promises_is_a_declared_step_with_a_receipt_line(
+        out, calls, rth_open, monkeypatch) -> None:
+    monkeypatch.setattr(DP, "run_grade_promises", lambda **kw: {
+        "action": "ran", "state": "OK", "day": _today(),
+        "receipt": "grade_promises_daily.jsonl"})
+    rec = DP.run_daily_pass(day=_today())
+    row = next(r for r in rec["steps"] if r["step"] == "grade_promises")
+    assert row["status"] == "ok" and row["receipt"] == "grade_promises_daily.jsonl"

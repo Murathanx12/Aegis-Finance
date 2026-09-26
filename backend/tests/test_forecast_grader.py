@@ -322,3 +322,90 @@ def test_a_graded_run_is_an_ok_row_carrying_the_count(monkeypatch):
 
     row = DP.step_grade_forecasts({})
     assert row["status"] == "ok" and row["rows"] == 341
+
+
+# ── (R9, review 2026-09-26) the unresolvable are VOID, never "nothing to do" ──
+
+
+def _stopped_bars(stop_sessions_ago: int = 30) -> pd.DataFrame:
+    """SPY runs to today; DEAD's bars stop `stop_sessions_ago` sessions earlier."""
+    b = _bars(symbols=("SPY", "DEAD"))
+    last = sorted(b["date"].unique())[-1 - stop_sessions_ago]
+    return b[~((b["symbol"] == "DEAD") & (b["date"] > last))].reset_index(drop=True)
+
+
+def test_a_forecast_on_a_delisted_name_is_voided_with_its_reason(tmp_path):
+    led = tmp_path / "predictions.jsonl"
+    # made AFTER the bars stopped, due long ago: its window can never fill
+    append([_pred(ticker="DEAD", made_at=_made_at(25), horizon_days=5)], led)
+    bars = _stopped_bars(30)
+    rec = FG.grade_due(path=led, today=_today(), void_bars=bars,
+                       price_fetch=lambda t, s, e: FG.local_price_fetch(t, s, e, bars=bars),
+                       out=tmp_path / "receipt.json")
+    assert rec["voided_unresolvable"] == 1
+    assert rec["void"]["by_reason"]["UNRESOLVABLE_DELISTED"] == 1
+    assert rec["totals"]["VOID"] == 1 and rec["totals"]["NO_BAR_FOR_RESOLUTION_DATE"] == 0
+    row = read_predictions(led)[0]
+    assert row["void_reason"].startswith("UNRESOLVABLE_DELISTED: DEAD's bars stop at")
+    assert row["voided_by"] == "forecast_grader.void_unresolvable"
+    assert row["outcome"] is None, "voided, never graded"
+    assert "voided as unresolvable" in rec["headline"]
+
+
+def test_a_futures_ticker_is_voided_as_no_equity_bar(tmp_path):
+    led = tmp_path / "predictions.jsonl"
+    append([_pred(ticker="CL=F", made_at=_made_at(10), horizon_days=1)], led)
+    bars = _bars()
+    rec = FG.grade_due(path=led, today=_today(), void_bars=bars,
+                       price_fetch=lambda t, s, e: FG.local_price_fetch(t, s, e, bars=bars),
+                       out=tmp_path / "receipt.json")
+    assert rec["void"]["by_reason"]["UNRESOLVABLE_NO_EQUITY_BAR"] == 1
+    assert read_predictions(led)[0]["void_reason"].startswith("UNRESOLVABLE_NO_EQUITY_BAR")
+
+
+def test_an_absent_ticker_waits_inside_the_grace_and_voids_after_it(tmp_path):
+    from backend import config
+    g = config.FORECAST_VOID_NO_BAR_GRACE_DAYS
+    led = tmp_path / "predictions.jsonl"
+    append([_pred(ticker="NOPE", made_at=_made_at(g + 40), horizon_days=5),
+            _pred(ticker="SOON", made_at=_made_at(10), horizon_days=5)], led)
+    bars = _bars()
+    rec = FG.grade_due(path=led, today=_today(), void_bars=bars,
+                       price_fetch=lambda t, s, e: FG.local_price_fetch(t, s, e, bars=bars),
+                       out=tmp_path / "receipt.json")
+    rows = {r["ticker"]: r for r in read_predictions(led)}
+    assert rows["NOPE"]["void_reason"].startswith("UNRESOLVABLE_NO_BAR_PAST_HORIZON")
+    assert rows["SOON"].get("void_reason") is None, "a bar may still arrive"
+    assert rec["totals"]["NO_BAR_FOR_RESOLUTION_DATE"] == 1
+
+
+def test_a_live_name_whose_window_is_not_yet_full_is_never_voided(tmp_path):
+    led = tmp_path / "predictions.jsonl"
+    append([_pred(ticker="AAA", made_at=_made_at(1), horizon_days=20)], led)
+    bars = _bars()
+    rec = FG.grade_due(path=led, today=_today(), void_bars=bars,
+                       price_fetch=lambda t, s, e: FG.local_price_fetch(t, s, e, bars=bars),
+                       out=tmp_path / "receipt.json")
+    assert rec["voided_unresolvable"] == 0
+
+
+def test_an_injected_fetch_without_void_bars_never_voids_against_this_machine(tmp_path,
+                                                                             local_fetch):
+    led = tmp_path / "predictions.jsonl"
+    append([_pred(ticker="CL=F", made_at=_made_at(10), horizon_days=1)], led)
+    rec = FG.grade_due(path=led, today=_today(), price_fetch=local_fetch,
+                       out=tmp_path / "receipt.json")
+    assert rec["voided_unresolvable"] == 0 and rec["void"]["skipped"]
+
+
+def test_the_daily_pass_row_is_ok_when_it_voided(monkeypatch):
+    from scripts import daily_pass as DP
+
+    monkeypatch.setattr(DP, "grade_forecasts", lambda **kw: {
+        "newly_resolved": 0, "resolver_status": "ok", "voided_unresolvable": 130,
+        "void": {"by_reason": {"UNRESOLVABLE_DELISTED": 124}},
+        "totals": {b: 0 for b in FG.BUCKETS} | {"VOID": 130},
+        "n_records": 130, "bars": {"available": True},
+        "licence": "PRODUCT_EXPERIMENT", "headline": "h"})
+    row = DP.step_grade_forecasts({})
+    assert row["status"] == "ok" and row["voided_unresolvable"] == 130

@@ -119,10 +119,17 @@ from backend import config as _config  # noqa: E402
 #: It may move because it does not depend on anything the snapshot writes. The
 #: builder reads `config.IC_FUNNEL_PATH` (a committed artefact), the agency's IPS
 #: store and `paper_books.load_bars()` (a static parquet); it never opens
-#: `backend/data/analyst_snapshot/<date>.parquet`, and no step of this pass
-#: refreshes the bars it does read. Twelve seconds of work was standing behind
+#: `backend/data/analyst_snapshot/<date>.parquet`; the bars it reads are
+#: refreshed by `bars_refresh`, which runs FIRST (2026-09-26). Twelve seconds of work was standing behind
 #: 2.5 hours of network for no reason at all.
 STEPS: tuple[tuple[str, str], ...] = (
+    # 2026-09-26 (systems review §5 item 1). FIRST, before anything reads or
+    # ranks a bar: the panels ended 2026-09-21 for five days because no
+    # scheduled step refreshed them, and every reader printed the gap as a
+    # normal skip. Out of process, incremental, and it REFUSES without
+    # overwriting on a failed pull; the row carries the newest bar date.
+    ("bars_refresh", "the daily bar panels, incremental tail pull -- before "
+                     "anything ranks or grades on them"),
     ("news_pull", "every registered news source, into the corpus"),
     ("decision_contract", "what the engine would buy today, at what size, and "
                           "what would make it wrong — plus a REFUSED row per "
@@ -136,6 +143,11 @@ STEPS: tuple[tuple[str, str], ...] = (
     ("grade_forecasts", "every forecast whose window has closed, resolved from "
                         "the local bars — with a NAMED reason per record that "
                         "did not"),
+    # G-fix owed hook 1 (docs/OPENCLAW_2026-09-26_LOCAL_SERVICE.md). The only
+    # other caller is the Telegram agent, dead from 09-23 to 09-26; the
+    # once-per-UTC-day stamp is shared, so the two never grade the same day.
+    ("grade_promises", "numbered promises vs the 8-K EX-99, once per UTC day, "
+                       "no LLM"),
     ("coverage", "the per-source coverage card, derived from disk"),
     # 2026-09-20, chunk 21. It runs LAST and is PRINTED FIRST: it reads the
     # receipts the steps above have just written, and the economics is what the
@@ -311,6 +323,54 @@ def record_decided(rows: list[dict], day: str) -> dict:
     return decision_ledger.record_many(
         [r["decision_id"] for r in rows], "DECIDED", by="daily_pass",
         asof=day, detail={"step": "decision_contract"})
+
+
+def run_bars_refresh(timeout_s: float = 1740.0) -> dict:
+    """`python -m scripts.pull_bars_refresh --json`, OUT of process.
+
+    Out of process for the reason `sim_run` ranks out of process: the merge
+    holds a ~7M-row table and pandas keeps those pages for the life of the
+    interpreter. The child is killed by its own handle at `timeout_s` (below
+    the step's box), never orphaned and never by image name. Returns the
+    child's summary, or `{"status": "refused", ...}` naming why.
+    """
+    r = subprocess.run([sys.executable, "-m", "scripts.pull_bars_refresh", "--json"],
+                       cwd=str(REPO), capture_output=True, text=True,
+                       timeout=timeout_s)
+    out = r.stdout or ""
+    if "<<<" in out and ">>>" in out:
+        try:
+            res = json.loads(out.split("<<<", 1)[1].split(">>>", 1)[0])
+        except ValueError:
+            res = {"status": "refused", "reason": "unparseable summary"}
+    else:
+        res = {"status": "refused",
+               "reason": f"no summary (rc {r.returncode}): {(r.stderr or out)[-300:]}"}
+    res["rc"] = r.returncode
+    return res
+
+
+def run_grade_promises(timeout_s: float = 540.0) -> dict:
+    """`python -m scripts.source_reads --grade-promises` ONCE per UTC day.
+
+    Through `model_routing.grade_promises_daily`, whose stamp file is the one
+    the Telegram digest reads, so this pass and the bot never grade the same
+    day twice. The grading runs out of process; `source_reads` grades
+    promises against the 8-K EX-99 with no model call.
+    """
+    from backend.services import model_routing as MR
+
+    def _runner() -> dict:
+        r = subprocess.run([sys.executable, "-m", "scripts.source_reads",
+                            "--grade-promises"], cwd=str(REPO),
+                           capture_output=True, text=True, timeout=timeout_s)
+        if r.returncode != 0:
+            raise RuntimeError(f"rc {r.returncode}: {(r.stderr or r.stdout)[-240:]}")
+        try:
+            return json.loads(r.stdout)
+        except ValueError:
+            return {"stdout_tail": (r.stdout or "")[-240:]}
+    return MR.grade_promises_daily(runner=_runner)
 
 
 def grade_forecasts(**kw) -> dict:
@@ -574,6 +634,54 @@ def step_book_cadence(ctx: dict) -> dict:
                 per_cadence=per, us_rth=rth)
 
 
+def step_bars_refresh(ctx: dict) -> dict:
+    """Refresh the bar panels before anything ranks or grades on them.
+
+    `ok` when rows were added, `nothing_to_do` when the panels were already
+    current (idempotent: nothing is rewritten, so no fingerprint moves), and
+    `refused` when the pull failed -- the old panel is untouched and the row
+    carries the age line, because a stale panel is a finding, not a skip.
+    """
+    t0 = time.time()
+    res = run_bars_refresh(
+        timeout_s=max(60.0, float(_STEP_BOXES["bars_refresh"]) - 60.0))
+    st = str(res.get("status") or "refused")
+    panels = res.get("panels") or {}
+    added = sum(int((v or {}).get("rows_added") or 0) for v in panels.values()
+                if isinstance(v, dict))
+    status = ("refused" if st == "refused" else
+              "ok" if st == "ok" and added else "nothing_to_do")
+    refusals = [str(res.get("reason"))] if res.get("reason") else []
+    if str(res.get("line") or "").startswith("BARS_STALE"):
+        refusals.append(str(res["line"]))
+    ctx["bars_line"] = res.get("line")
+    return _row("bars_refresh", status, rows=added,
+                seconds=round(time.time() - t0, 2), refusals=refusals,
+                bars_line=res.get("line"), receipt=res.get("path"),
+                panels={k: {kk: (v or {}).get(kk) for kk in
+                            ("status", "rows_added", "newest_before",
+                             "newest_after", "symbols_after", "readjusted")}
+                        for k, v in panels.items() if isinstance(v, dict)},
+                rc=res.get("rc"), headline=res.get("headline"))
+
+
+def step_grade_promises(ctx: dict) -> dict:
+    """G-fix owed hook 1: the promise grader's scheduled caller (receipt line)."""
+    t0 = time.time()
+    r = run_grade_promises()
+    action = r.get("action", "skip")
+    if action == "skip":
+        status = "nothing_to_do"
+    else:
+        status = "ok" if r.get("state") == "OK" else "refused"
+    return _row("grade_promises", status, rows=(1 if action == "ran" else 0),
+                seconds=round(time.time() - t0, 1),
+                refusals=([str(r.get("error") or r.get("state"))]
+                          if status == "refused" else []),
+                detail=r.get("reason") or r.get("error") or r.get("state"),
+                receipt=r.get("receipt"))
+
+
 def step_decision_contract(ctx: dict) -> dict:
     """The decision contract, on the UNATTENDED path (chunk 18).
 
@@ -614,6 +722,10 @@ def step_decision_contract(ctx: dict) -> dict:
                 count_by_terminal_state=blob.get("count_by_terminal_state"),
                 worst_case_largest_admissible_book=blob.get(
                     "worst_case_largest_admissible_book"),
+                # review 2026-09-26 R4/R5: the ONE mandate line and the size +
+                # age of the candidate set, on the row a reader actually sees
+                mandate_line=(blob.get("mandate") or {}).get("line"),
+                candidate_set_line=(blob.get("candidate_set") or {}).get("line"),
                 licence=DC.LICENCE, ledger=ledger, receipt=blob.get("path"))
 
 
@@ -645,14 +757,19 @@ def step_grade_forecasts(ctx: dict) -> dict:
         n = int(totals.get(bucket) or 0)
         if n:
             refusals.append(f"{bucket}: {n:,} record(s)")
+    voided = int(rec.get("voided_unresolvable") or 0)
     if status_word in ("REFUSED", "ERROR"):
         status = "refused"
-    elif newly:
+    elif newly or voided:
+        # a VOID is work done: 130 unresolvable records sat under
+        # `nothing_to_do` for a month (review 2026-09-26 R9)
         status = "ok"
     else:
         status = "nothing_to_do"
     return _row("grade_forecasts", status, rows=newly,
                 seconds=round(time.time() - t0, 2), refusals=refusals,
+                voided_unresolvable=voided,
+                void_by_reason=(rec.get("void") or {}).get("by_reason"),
                 totals=totals, bars=rec.get("bars"),
                 n_records=rec.get("n_records"),
                 graded_after_this_run=rec.get("graded_after_this_run"),
@@ -712,6 +829,8 @@ def step_scoreboard(ctx: dict) -> dict:
 
 
 _HANDLERS: dict[str, Callable[[dict], dict]] = {
+    "bars_refresh": step_bars_refresh,
+    "grade_promises": step_grade_promises,
     "news_pull": step_news_pull,
     "analyst_snapshot": step_analyst_snapshot,
     "e1_append": step_e1_append,
@@ -910,7 +1029,8 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         # `grade_forecasts` is `pnl` and could not be anything else: an outcome
         # written onto a forecast is the thing that makes it evidence, and
         # nothing upstream may read it.
-        "step_stages": {"news_pull": "raw", "analyst_snapshot": "raw",
+        "step_stages": {"bars_refresh": "raw", "grade_promises": "pnl",
+                        "news_pull": "raw", "analyst_snapshot": "raw",
                         "e1_append": "normalized", "book_cadence": "pnl",
                         "decision_contract": "pnl", "grade_forecasts": "pnl",
                         "coverage": "raw", "scoreboard": "pnl"},
@@ -923,6 +1043,12 @@ def run_daily_pass(*, day: str | None = None, force: bool = False,
         "step_boxes_s": dict(_STEP_BOXES),
         "stale_sibling_killed": (sibling_block.get("killed") or None),
         "siblings": sibling_block,
+        # The panels' age in sessions, from the bars_refresh step's own read of
+        # the parquet's `date` column -- the line that was missing for five
+        # days while every reader printed "bars unchanged" as a skip.
+        "bars": ctx.get("bars_line") or (
+            "CANNOT DETERMINE: the bars_refresh step returned no age line "
+            "(its row in `steps` carries the reason)"),
         "steps": rows,
         "step_status_counts": counts,
         "steps_that_did_not_run": [r["step"] for r in rows
