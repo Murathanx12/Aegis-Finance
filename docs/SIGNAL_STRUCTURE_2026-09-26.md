@@ -255,3 +255,203 @@ wipe a hand-written section. The tables live here and in the receipt.
   extraction is still running.
 - **HAC / Newey-West standard errors for hold > 1 books:** not done. Their t is optimistic, and the
   "no survivors" conclusion does not depend on them.
+
+---
+
+## Corrected 2026-09-27
+
+Review: `docs/reviews/REVIEW_2026-09-27_SIGNAL_STRUCTURE_ROUND2_BRIDGE.md` (items 2-5 and 8-10
+accepted). Every number below comes from the stored monthly series, not a factory rerun:
+
+- `backend/data/optimus/signal_structure/signal_structure_2026-09-26T150811Z.json` (this document's
+  run, re-derived; `stored_series_check` shows the parquet kept at a gap of 0.0);
+- the hold-keyed sidecars `backend/data/optimus/signal_structure/leaderboard_<run>.rekeyed.json`
+  for `T150811Z`, `T164302Z` (the receipt of record) and `T182110Z`.
+
+### The overclaim, plainly
+
+§2 said *"the 2024-26 momentum win is SMH/MTUM beta; the pre-2024 momentum alpha did not carry into
+it"*, and it labelled 17 of the top 30 **MOSTLY SMH/MTUM BETA**. That read **no power** as **no
+alpha**.
+
+- With 32 monthly blocks and 7 parameters, the median SE of a 2024-26 alpha is **0.88%/month**. The
+  median MDE at 80% power (2.8 × SE) is **2.46%/month**, about 29%/yr. A rule would need that much
+  alpha to show t ≥ 2 four times in five.
+- `mom_12_1_q`'s 2024-26 alpha point estimate is **+2.11%/month, the same as dev**. Only the SE
+  changed. Its 2024-26 MDE is 5.2%/month.
+- The "SMH+MTUM share" was a ratio of in-sample contributions on regressors correlated at 0.69. It
+  printed +97% and −21%, and it could not tell beta from no power.
+
+**The label and the share column are deleted** from `scripts/signal_structure.py`. Every alpha
+now carries its SE and MDE beside t.
+
+The replacement is **the alpha left after an ex-ante hedge**: the 2024-26 active return minus the
+**dev (pre-2024) betas** × the 2024-26 spreads. It has an SE, and it gets a verdict:
+
+| verdict | rule |
+|---|---|
+| `ALPHA_DETECTED` | abs(t) ≥ 2 (sign printed) |
+| `BETA_EXPLAINS` | abs(t) < 1 **and** MDE < the observed mean excess |
+| `CANNOT_DISTINGUISH` | everything else |
+
+### The sentence that replaces §2's conclusion
+
+> In 2024-26 the momentum cluster's return (17 members, mean +0.85%/month vs SPY) is fully
+> accounted for by the ETF spreads: in-window alpha −0.04%/month, t −0.02. After the ex-ante hedge,
+> its point estimate is **−1.83%/month** (t −1.02, SE 1.79%, MDE 5.0%/month). Thirty-two blocks
+> cannot distinguish "the pre-2024 alpha died" from "it is intact at 2%/month". Verdict:
+> **CANNOT_DISTINGUISH**. It is not "is beta".
+
+### The numbers, over all 282 primary cells
+
+§2 decomposed only the 52 cells of the two top-30s. Over all 282:
+
+| | this document said | corrected |
+|---|---|---|
+| alpha t ≥ 2 in dev | 15 | **25** |
+| alpha t ≥ 2 in 2024-26 | 1 | **3** |
+| alpha t ≥ 2 on the full 115 months | — | **19** |
+| alpha t ≥ 2 in both windows | NONE | **1** (see below) |
+
+- **The one both-window survivor is `quality_composite_large`:** t 2.19 in dev and 2.07 in 2024-26.
+  After the ex-ante hedge it is +0.08%/month (t 0.20), and it lost to SPY in 2024-26 by 4.1 pp/yr.
+  It was never in the top-30s, so the old search could not see it.
+- **Verdicts, all primary:** `ALPHA_DETECTED` 14, of which **12 are negative**. The two positive
+  ones are `small_dv` (+1.67%/month, t 2.49) and `insider_cluster_small` (+1.39%/month, t 2.12).
+  `CANNOT_DISTINGUISH` 268; `BETA_EXPLAINS` **0**.
+- **Verdicts, 2024-26 top-30: CANNOT_DISTINGUISH 30 of 30.** The same holds for the dev top-30.
+  Round 2 (`T182110Z`) is also 30 of 30.
+- **Beta stability.** The correlation across cells of each rule's dev beta with its 2024-26 beta is:
+
+  | spread | dev vs 2024-26 correlation |
+  |---|---|
+  | IWM | 0.62 |
+  | SMH | 0.40 |
+  | MTUM | 0.31 |
+  | USMV | 0.33 |
+  | QUAL | 0.16 |
+  | VLUE | −0.20 |
+
+  The momentum loadings are a regime, not a style: momentum bought semis because semis were
+  trending.
+
+### IWM β ≈ 1 is the panel's tilt, not the rules'
+
+§2 said *"the loading nobody named is IWM (median +1.03)"*. That median was the 2024-26 top-30.
+
+The random controls load **0.65-0.92** on IWM − SPY (1-factor, full window). The survivorship-free
+panel is small-cap before any rule acts, so "vs SPY" charges every rule the panel's own tilt.
+
+**The benchmark statement:** the survivorship-free panel itself tilts small (random controls' IWM β
+0.65-0.92), so "vs SPY" understates every rule by the panel's own tilt.
+
+Every receipt row now carries `vs_iwm` and `vs_random_panel` beside `vs_spy`. The random panel is
+the mean net series of `random_1/2/3` at k = 50.
+
+Rules beating the benchmark in **both** windows:
+
+| run | vs SPY | vs IWM | vs random panel |
+|---|---|---|---|
+| `T150811Z` (282 rules) | 65 | 112 | 135 |
+| `T164302Z`, of record (284) | 68 | 117 | 137 |
+| `T182110Z`, round 2 (288) | 69 | 119 | 140 |
+
+The reviewer's 66 for `T150811Z` is 65 on the board's own `dev_selected_sealed_evaluated`, and 65
+here.
+
+### "282 rules ≈ 180 bets" becomes a curve
+
+Clusters over the 282 primary cells, full window, from `bet_count_curve`:
+
+| series clustered | ρ 0.5 | ρ 0.6 | ρ 0.7 | ρ 0.8 | ρ 0.9 |
+|---|---|---|---|---|---|
+| raw net | 8 | 15 | 31 | 83 | 197 |
+| active (the old count) | 35 | 79 | 131 | **187** | 238 |
+| residual after SMH/IWM/MTUM | 93 | 135 | 171 | 212 | 249 |
+| residual after all 6 ETFs | 99 | 147 | 183 | **216** | 250 |
+
+- **Residual clustering RAISES the count.** The shared factor had merged bets.
+- **For ALPHA multiplicity, the denominator is the residual count, ~216.** At n = 216:
+
+  | cell | DSR at n = 216 | DSR at n = 849 cells |
+  |---|---|---|
+  | `mom_12_1_q@k20` | 0.347 | 0.200 |
+  | the board-best `eap_mom@k10` | 0.617 | 0.441 |
+
+  Neither reaches 0.95.
+- **For RISK** (what loses together), the active or raw counts are the right ones.
+
+### A factory-wide defect: by-year was keyed on the decision date
+
+`strategy_library.evaluate` keyed these on the **decision** date, one month early:
+
+- `by_year`;
+- `by_year_signs`;
+- `positive_excess_years_2020_2025`;
+- `leave_one_year_out_mean_active`;
+- `loo_worst_*`.
+
+The window split was already entry-keyed. Every statistic is now keyed on the month the money was
+**held**.
+
+For one release, `by_year_decision` and its companions ride along, marked `DEPRECATED`, and
+`top5_months_hold` names the best months.
+
+**The distance-to-default example** (`T182110Z` sidecar), compounded excess vs SPY:
+
+| year | decision-keyed | hold-keyed |
+|---|---|---|
+| 2020 | +61.0% | **−3.2%** |
+| 2021 | −7.3% | **+75.5%** |
+
+Its best hold month is **2021-01**, the squeeze.
+
+**What changes in the receipt of record** (`leaderboard_2026-09-26T164302Z.rekeyed.json`, 284 rules
++ 11 controls):
+
+- **29 rules change their LOO-worst > 0 verdict.**
+  - 28 fail under the decision key and pass under the hold key: `agreements_mom`, `cash_rich`,
+    `deleveraging`, `eap_avoid_mom`, `ear_flow`, `ear_mom`, `gp_at_large`, `gp_at_q`, `gp_at_small`,
+    `insider_buy_dip`, `mom_12_1_mid`, `mom_12_1_trend`, `mom_6_1_q`, `mom_6m`, `mom_flow_secrel`,
+    `mom_gp_large`, `mom_no_downgrades_trend`, `mom_no_insider_selling`, `overnight_mom`,
+    `px_vs_ma200`, `qc629_multimom_above_trend_gated`, `resid_mom_63`, `rev_1m`, `rev_1m_small`,
+    `rev_5d_large`, `rev_in_winners`, `roe`, `trend_ma50_200`.
+  - 1 passes under the decision key and fails under the hold key: `lowvol_252_mega`.
+  - None is in the 2024-26 top-10.
+- **78 rules change their LOO-worst dropped year** (the "drop 2025" family), and 145 change their
+  2020-2025 positive-year count.
+- **0 top-5 verdicts change, by construction.** The share is a sum over the five best months, so
+  the key cannot move it. Which months it names is now printed.
+
+### Construction inside a cluster (the bridge's Level 2)
+
+The cluster mean hid the within-cluster spread:
+
+- **Momentum cluster 122:** members span **−18.6% to +37.9%** vs SPY in 2024-26, and member rank
+  persistence from dev to 2024-26 is **0.06**.
+- **Clusters 107 and 105:** rank persistence is **0.86** and **0.82**. They hold universe and k
+  variants of one signal (the `_large` pairs).
+- **Pair by pair:** the dev ordering held in 2024-26 for:
+  - **83% of 12 universe-only pairs**;
+  - **67% of all 30 construction-only pairs**;
+  - **55% of 257 signal/filter pairs**.
+
+  A coin is 50%.
+
+`docs/BRIDGE.md` now carries both levels: the cluster mean vs its twins, and each member minus the
+cluster mean, tagged by axis.
+
+### Not done (owed)
+
+- **The factory's row builder does not copy the new fields to leaderboard rows.**
+  `night_backtest_factory._row` copies `by_year` (now hold-keyed), `loo_worst_*` and the top-5
+  share. It does not copy:
+  - `by_year_decision`;
+  - `top5_months_hold`;
+  - `vs_iwm` / `vs_random_panel`.
+
+  The panel-relative columns need the random controls' series, so they are computed after the
+  factory. A one-line hook is owed in `night_backtest_factory.py`: call `SL.panel_benchmarks` per
+  cell once the controls are done, then copy the columns in `_row`. Until then the sidecar carries
+  them.
+- **HAC / Newey-West SEs for hold > 1 books:** still not done. Their MDE is optimistic.

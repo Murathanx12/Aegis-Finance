@@ -53,37 +53,92 @@ Clusters and decomposition from `backend/data/optimus/signal_structure/signal_st
 | 179 | `lib_mom_flow_2026-09-26`, `lib_skill_mom_sealed_2026-09-26`, `lib_skill_mom_2026-09-27`, `lib_mom_flow_ivw_2026-09-27` | PENDING (entry 2026-09-28) |
 | 167 | `lib_resid_mom_12_1_large_sealed_2026-09-26`, `lib_qc395_sharpe252_above_trend_large_2026-09-27` | PENDING (entry 2026-09-28) |
 
-Per book, the 2024-26 monthly active return regressed on the SMH, MTUM and IWM spreads (each minus SPY): alpha is what is left once the betas are paid for. **expected rel. to SPY** is the selection-window expectation above; **expected alpha after SMH/MTUM/IWM** = (1 + alpha/mo)^(sessions/21) - 1 is the same expectation with the factor betas removed. The **dominant ETF** is the largest positive factor t in the FULL-window fit (t >= 2; SMH = semis-loaded, IWM = small-cap-loaded, MTUM = momentum-loaded); the forward twin grades the book against it beside SPY, and a missing ETF series refuses by name. A forward shortfall the dominant ETF's own move explains is investigated as `FACTOR_BETA`, not as a failed mechanism.
+Per book, the 2024-26 monthly active return regressed on the SMH, MTUM and IWM spreads (each minus SPY): alpha is what is left once the betas are paid for; its **MDE** (2.8 x SE, 80% power) sits beside it -- at 32 blocks a t below 1 is mostly no power, not no alpha. **hedged** = the 2024-26 active return minus the DEV (pre-2024) betas x the 2024-26 spreads, with its verdict (`ALPHA_DETECTED` |t| >= 2, `BETA_EXPLAINS` |t| < 1 and MDE < the observed excess, else `CANNOT_DISTINGUISH`). **expected rel. to SPY** is the selection-window expectation above; **expected alpha after SMH/MTUM/IWM** = (1 + alpha/mo)^(sessions/21) - 1 is the same expectation with the factor betas removed. The **dominant ETF** is the largest positive factor t in the FULL-window fit (t >= 2; SMH = semis-loaded, IWM = small-cap-loaded, MTUM = momentum-loaded); the forward twin grades the book against it beside SPY, and a missing ETF series refuses by name. A forward shortfall the dominant ETF's own move explains is investigated as `FACTOR_BETA`, not as a failed mechanism.
 
-| book | cluster full / 2024-26 | alpha/mo (t) | beta SMH | beta MTUM | beta IWM | R2 | dominant ETF (full t) | expected rel. to SPY | expected alpha after SMH/MTUM/IWM | forward vs SPY | forward vs dominant ETF |
-|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|
-| `lib_mom_12_1_q_2026-09-26` | 170 / 94 | +1.95% (1.09) | 0.46 | -0.04 | 0.82 | 0.19 | IWM (6.0) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_no_downgrades_2026-09-26` | 170 / 94 | -0.61% (-0.34) | 0.73 | -0.13 | 1.32 | 0.36 | IWM (6.4) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_net_raises_2026-09-26` | 103 / 54 | -0.40% (-0.52) | 0.36 | 0.21 | 0.06 | 0.41 | MTUM (4.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_big_dv_2026-09-26` | 95 / 58 | -0.17% (-0.21) | 0.48 | 0.18 | -0.04 | 0.50 | SMH (7.7) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_12_1_2026-09-26` | 170 / 94 | -0.28% (-0.15) | 0.72 | -0.27 | 1.21 | 0.31 | IWM (6.1) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_12_1_small_2026-09-26` | 186 / 41 | +0.41% (0.31) | -0.16 | 0.78 | 1.67 | 0.46 | IWM (7.7) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_flow_2026-09-26` | 179 / 53 | +0.69% (0.70) | 0.34 | 0.73 | 0.63 | 0.56 | MTUM (6.1) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_trend_quality_2026-09-26` | 190 / 165 | +0.42% (0.66) | -0.19 | 0.30 | 0.61 | 0.33 | IWM (7.2) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_frog_in_pan_2026-09-26` | 138 / 8 | +0.90% (0.61) | 0.03 | 0.90 | 0.65 | 0.26 | IWM (4.8) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_inflection_flow_2026-09-26` | 148 / 71 | -0.08% (-0.10) | 0.21 | 0.40 | 0.33 | 0.37 | IWM (5.3) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_forecast_dispersion_v1_2026-09-26` | none / none | NO_CELL (no backtest row) | n/a | n/a | n/a | n/a | none: NO_CELL (no backtest row) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | NO_DOMINANT_FACTOR |
-| `lib_book_f_seasonality_11_20_v0_2026-09-26` | none / none | NO_CELL (no backtest row) | n/a | n/a | n/a | n/a | none: NO_CELL (no backtest row) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | NO_DOMINANT_FACTOR |
-| `lib_mom_12_1_liqw_sealed_2026-09-26__ew` | 169 / 96 | +1.92% (0.75) | 1.70 | 0.37 | 1.53 | 0.56 | SMH (5.2) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_rev_5d_sealed_2026-09-26` | 129 / 110 | +2.36% (1.89) | 0.58 | -0.47 | 1.13 | 0.39 | IWM (6.6) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_skill_mom_sealed_2026-09-26` | 179 / 96 | +1.24% (1.10) | 0.56 | 0.46 | 0.71 | 0.54 | MTUM (5.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_margin_mom_sealed_2026-09-26` | 149 / 99 | +1.96% (1.18) | 0.46 | 0.37 | 1.34 | 0.38 | IWM (7.2) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_illiquid_sealed_2026-09-26` | 120 / 158 | +1.25% (0.69) | 0.71 | 0.31 | 1.20 | 0.40 | IWM (7.5) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_low_dtc_mom_sealed_2026-09-26` | 181 / 88 | +1.19% (1.05) | 0.24 | 0.63 | 0.67 | 0.40 | MTUM (5.4) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_low_asset_growth_sealed_2026-09-26` | 153 / 84 | +1.59% (0.95) | 0.38 | -0.33 | 0.98 | 0.17 | IWM (7.0) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_resid_mom_12_1_large_sealed_2026-09-26` | 167 / 96 | +0.12% (0.06) | 0.97 | 0.44 | 0.55 | 0.43 | SMH (5.6) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_12_1_secrel_sealed_2026-09-26` | 170 / 94 | +1.37% (0.82) | 0.28 | 0.53 | 1.10 | 0.30 | IWM (6.3) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_disp_short_avoid_2026-09-27` | 170 / 94 (by rule) | +1.41% (0.90) | 0.41 | -0.02 | 0.59 | 0.18 | IWM (5.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_qc395_sharpe252_above_trend_large_2026-09-27` | 167 / 96 (by rule) | +0.71% (0.37) | 0.92 | 0.49 | 0.43 | 0.42 | SMH (4.5) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_skill_mom_2026-09-27` | 179 / 96 (by rule) | +1.24% (1.10) | 0.56 | 0.46 | 0.71 | 0.54 | MTUM (5.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_flow_ivw_2026-09-27` | 179 / 53 (by rule) | +0.73% (0.78) | 0.29 | 0.76 | 0.50 | 0.54 | MTUM (6.3) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_qc470_mom252_quarterly_riskparity_2026-09-27__control` | 170 / 94 (by rule) | +1.05% (0.70) | 0.54 | 0.23 | 0.47 | 0.30 | IWM (5.8) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
-| `lib_mom_no_downgrades_small_2026-09-27__control` | 186 / 41 (by rule) | +0.22% (0.16) | -0.07 | 0.70 | 1.71 | 0.46 | IWM (8.1) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| book | cluster full / 2024-26 | alpha/mo (t; MDE) | hedged alpha/mo (t): verdict | beta SMH | beta MTUM | beta IWM | R2 | dominant ETF (full t) | expected rel. to SPY | expected alpha after SMH/MTUM/IWM | forward vs SPY | forward vs dominant ETF |
+|---|---|---:|---|---:|---:|---:|---:|---|---:|---:|---:|---:|
+| `lib_mom_12_1_q_2026-09-26` | 170 / 94 | +1.95% (1.09; +4.99%) | +1.40% (0.74): CANNOT_DISTINGUISH | 0.46 | -0.04 | 0.82 | 0.19 | IWM (6.0) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_no_downgrades_2026-09-26` | 170 / 94 | -0.61% (-0.34; +5.00%) | -1.00% (-0.55): CANNOT_DISTINGUISH | 0.73 | -0.13 | 1.32 | 0.36 | IWM (6.4) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_net_raises_2026-09-26` | 103 / 54 | -0.40% (-0.52; +2.16%) | -0.49% (-0.65): CANNOT_DISTINGUISH | 0.36 | 0.21 | 0.06 | 0.41 | MTUM (4.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_big_dv_2026-09-26` | 95 / 58 | -0.17% (-0.21; +2.25%) | -0.03% (-0.04): CANNOT_DISTINGUISH | 0.48 | 0.18 | -0.04 | 0.50 | SMH (7.7) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_12_1_2026-09-26` | 170 / 94 | -0.28% (-0.15; +5.15%) | -0.51% (-0.27): CANNOT_DISTINGUISH | 0.72 | -0.27 | 1.21 | 0.31 | IWM (6.1) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_12_1_small_2026-09-26` | 186 / 41 | +0.41% (0.31; +3.74%) | -0.52% (-0.41): CANNOT_DISTINGUISH | -0.16 | 0.78 | 1.67 | 0.46 | IWM (7.7) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_flow_2026-09-26` | 179 / 53 | +0.69% (0.70; +2.75%) | +0.61% (0.67): CANNOT_DISTINGUISH | 0.34 | 0.73 | 0.63 | 0.56 | MTUM (6.1) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_trend_quality_2026-09-26` | 190 / 165 | +0.42% (0.66; +1.79%) | -0.62% (-0.74): CANNOT_DISTINGUISH | -0.19 | 0.30 | 0.61 | 0.33 | IWM (7.2) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_frog_in_pan_2026-09-26` | 138 / 8 | +0.90% (0.61; +4.14%) | +0.15% (0.11): CANNOT_DISTINGUISH | 0.03 | 0.90 | 0.65 | 0.26 | IWM (4.8) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_inflection_flow_2026-09-26` | 148 / 71 | -0.08% (-0.10; +2.28%) | +0.01% (0.01): CANNOT_DISTINGUISH | 0.21 | 0.40 | 0.33 | 0.37 | IWM (5.3) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_forecast_dispersion_v1_2026-09-26` | none / none | NO_CELL (no backtest row) | n/a | n/a | n/a | n/a | n/a | none: NO_CELL (no backtest row) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | NO_DOMINANT_FACTOR |
+| `lib_book_f_seasonality_11_20_v0_2026-09-26` | none / none | NO_CELL (no backtest row) | n/a | n/a | n/a | n/a | n/a | none: NO_CELL (no backtest row) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | NO_DOMINANT_FACTOR |
+| `lib_mom_12_1_liqw_sealed_2026-09-26__ew` | 169 / 96 | +1.92% (0.75; +7.18%) | +2.54% (1.04): CANNOT_DISTINGUISH | 1.70 | 0.37 | 1.53 | 0.56 | SMH (5.2) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_rev_5d_sealed_2026-09-26` | 129 / 110 | +2.36% (1.89; +3.49%) | +2.26% (1.60): CANNOT_DISTINGUISH | 0.58 | -0.47 | 1.13 | 0.39 | IWM (6.6) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_skill_mom_sealed_2026-09-26` | 179 / 96 | +1.24% (1.10; +3.15%) | +1.25% (1.17): CANNOT_DISTINGUISH | 0.56 | 0.46 | 0.71 | 0.54 | MTUM (5.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_margin_mom_sealed_2026-09-26` | 149 / 99 | +1.96% (1.18; +4.64%) | +1.97% (1.31): CANNOT_DISTINGUISH | 0.46 | 0.37 | 1.34 | 0.38 | IWM (7.2) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_illiquid_sealed_2026-09-26` | 120 / 158 | +1.25% (0.69; +5.08%) | +3.20% (1.66): CANNOT_DISTINGUISH | 0.71 | 0.31 | 1.20 | 0.40 | IWM (7.5) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_low_dtc_mom_sealed_2026-09-26` | 181 / 88 | +1.19% (1.05; +3.19%) | +1.37% (1.33): CANNOT_DISTINGUISH | 0.24 | 0.63 | 0.67 | 0.40 | MTUM (5.4) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_low_asset_growth_sealed_2026-09-26` | 153 / 84 | +1.59% (0.95; +4.68%) | +2.13% (1.39): CANNOT_DISTINGUISH | 0.38 | -0.33 | 0.98 | 0.17 | IWM (7.0) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_resid_mom_12_1_large_sealed_2026-09-26` | 167 / 96 | +0.12% (0.06; +5.58%) | +0.18% (0.10): CANNOT_DISTINGUISH | 0.97 | 0.44 | 0.55 | 0.43 | SMH (5.6) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_12_1_secrel_sealed_2026-09-26` | 170 / 94 | +1.37% (0.82; +4.70%) | +0.98% (0.63): CANNOT_DISTINGUISH | 0.28 | 0.53 | 1.10 | 0.30 | IWM (6.3) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_disp_short_avoid_2026-09-27` | 170 / 94 (by rule) | +1.41% (0.90; +4.35%) | +0.91% (0.52): CANNOT_DISTINGUISH | 0.41 | -0.02 | 0.59 | 0.18 | IWM (5.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_qc395_sharpe252_above_trend_large_2026-09-27` | 167 / 96 (by rule) | +0.71% (0.37; +5.45%) | +1.45% (0.81): CANNOT_DISTINGUISH | 0.92 | 0.49 | 0.43 | 0.42 | SMH (4.5) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_skill_mom_2026-09-27` | 179 / 96 (by rule) | +1.24% (1.10; +3.15%) | +1.25% (1.17): CANNOT_DISTINGUISH | 0.56 | 0.46 | 0.71 | 0.54 | MTUM (5.9) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_flow_ivw_2026-09-27` | 179 / 53 (by rule) | +0.73% (0.78; +2.60%) | +0.77% (0.90): CANNOT_DISTINGUISH | 0.29 | 0.76 | 0.50 | 0.54 | MTUM (6.3) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_qc470_mom252_quarterly_riskparity_2026-09-27__control` | 170 / 94 (by rule) | +1.05% (0.70; +4.18%) | +1.25% (0.79): CANNOT_DISTINGUISH | 0.54 | 0.23 | 0.47 | 0.30 | IWM (5.8) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| `lib_mom_no_downgrades_small_2026-09-27__control` | 186 / 41 (by rule) | +0.22% (0.16; +3.83%) | -0.63% (-0.48): CANNOT_DISTINGUISH | -0.07 | 0.70 | 1.71 | 0.46 | IWM (8.1) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+
+## Two-level read: does the mechanism work, and does construction matter?
+
+**Level 1 -- mechanism.** One observation per cluster: the members' mean forward return relative to SPY, the same mean minus the members' random-same-band twins ("the signal selects"), and vs each member's dominant factor ETF ("it is not the factor"). n is clusters, not books.
+
+| cluster | books | forward rel. SPY | minus random twin | vs dominant ETF |
+|---|---|---:|---:|---:|
+| 170 | 6 | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| 186 | 2 | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| 179 | 4 | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+| 167 | 2 | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) | PENDING (entry 2026-09-28) |
+
+**Level 2 -- construction.** Each member minus its cluster mean, a PAIRED series (the shared factor cancels), tagged by how its rule differs from the cluster's first book (universe / k / weighting / hold-offset, or `signal/filter` when the selection rule itself differs). A construction effect smaller than the 12-month MDE (2.8 x the cluster's historical tracking error of member - cluster mean) is invisible for a year; the row says so.
+
+| cluster | book | axis vs anchor | forward minus cluster mean | hist. TE/yr | MDE after 12 months |
+|---|---|---|---:|---:|---:|
+| 170 | `lib_mom_12_1_q_2026-09-26` | anchor | PENDING (entry 2026-09-28) | +12.6% | +35.2% |
+| 170 | `lib_mom_no_downgrades_2026-09-26` | signal/filter+hold/offset | PENDING (entry 2026-09-28) | +12.6% | +35.2% |
+| 170 | `lib_mom_12_1_2026-09-26` | hold/offset | PENDING (entry 2026-09-28) | +12.6% | +35.2% |
+| 170 | `lib_mom_12_1_secrel_sealed_2026-09-26` | hold/offset | PENDING (entry 2026-09-28) | +12.6% | +35.2% |
+| 170 | `lib_disp_short_avoid_2026-09-27` | signal/filter | PENDING (entry 2026-09-28) | +12.6% | +35.2% |
+| 170 | `lib_qc470_mom252_quarterly_riskparity_2026-09-27__control` | signal/filter+weighting | PENDING (entry 2026-09-28) | +12.6% | +35.2% |
+| 186 | `lib_mom_12_1_small_2026-09-26` | anchor | PENDING (entry 2026-09-28) | n/a | n/a |
+| 186 | `lib_mom_no_downgrades_small_2026-09-27__control` | signal/filter | PENDING (entry 2026-09-28) | n/a | n/a |
+| 179 | `lib_mom_flow_2026-09-26` | anchor | PENDING (entry 2026-09-28) | +5.8% | +16.3% |
+| 179 | `lib_skill_mom_sealed_2026-09-26` | signal/filter | PENDING (entry 2026-09-28) | +5.8% | +16.3% |
+| 179 | `lib_skill_mom_2026-09-27` | signal/filter | PENDING (entry 2026-09-28) | +5.8% | +16.3% |
+| 179 | `lib_mom_flow_ivw_2026-09-27` | weighting | PENDING (entry 2026-09-28) | +5.8% | +16.3% |
+| 167 | `lib_resid_mom_12_1_large_sealed_2026-09-26` | anchor | PENDING (entry 2026-09-28) | +7.2% | +20.2% |
+| 167 | `lib_qc395_sharpe252_above_trend_large_2026-09-27` | signal/filter+k | PENDING (entry 2026-09-28) | +7.2% | +20.2% |
+
+**Historically** (`backend/data/optimus/signal_structure/signal_structure_2026-09-26T182110Z.json`, `within_cluster`; rule-level full-window clusters with >= 3 members). Level 1 = the cluster's equal-weight mean hedged ex ante (dev betas over 2024-26). Level 2 = the members' spread of 2024-26 excess vs SPY, the median tracking error of member - cluster mean, and the Spearman rank correlation of member dev excess vs 2024-26 excess (does the construction that won before 2024 still win).
+
+| cluster | members | frozen books | axes (member vs anchor) | 2024-26 vs SPY min .. max | median TE | rank corr dev->24-26 | L1 hedged a/mo (t; MDE): verdict |
+|---|---|---|---|---|---|---|---|
+| 170 | 17 | 6 | signal/filter 12, signal/filter+hold/offset 2, signal/filter+weighting 1, signal/filter+hold/offset+weighting 1 | -18.6% .. +37.9% | +12.6% | 0.06 | -1.83% (-1.02; +5.02%): CANNOT_DISTINGUISH |
+| 112 | 10 | 0 | signal/filter 3, signal/filter+universe 3, signal/filter+universe+k 3 | -9.3% .. +22.2% | +19.5% | 0.43 | -3.22% (-1.54; +5.85%): CANNOT_DISTINGUISH |
+| 103 | 10 | 1 | signal/filter 4, signal/filter+universe 2, signal/filter+hold/offset 1, weighting 1, universe 1 | -3.9% .. +17.4% | +3.8% | -0.01 | -0.29% (-0.40; +2.02%): CANNOT_DISTINGUISH |
+| 114 | 7 | 0 | signal/filter+k 4, signal/filter+universe+k 2 | -28.1% .. +19.9% | +15.3% | 0.86 | -3.90% (-2.11; +5.17%): ALPHA_DETECTED (-) |
+| 26 | 5 | 0 | signal/filter+hold/offset 3, hold/offset 1 | -18.6% .. -7.7% | +5.2% | 0.60 | -0.97% (-1.87; +1.46%): CANNOT_DISTINGUISH |
+| 10 | 4 | 0 | signal/filter+universe 2, universe 1 | -16.9% .. -12.9% | +3.0% | -0.20 | -0.63% (-1.24; +1.42%): CANNOT_DISTINGUISH |
+| 151 | 4 | 0 | universe 2, signal/filter+universe 1 | -9.1% .. +3.8% | +7.6% | 0.80 | -0.75% (-0.72; +2.91%): CANNOT_DISTINGUISH |
+| 179 | 4 | 4 | weighting 2, signal/filter+weighting 1 | +8.9% .. +37.0% | +5.8% | 0.40 | +0.56% (0.62; +2.53%): CANNOT_DISTINGUISH |
+| 167 | 4 | 2 | signal/filter+k 3 | +17.9% .. +35.2% | +7.2% | 0.40 | +0.19% (0.12; +4.39%): CANNOT_DISTINGUISH |
+| 131 | 4 | 0 | signal/filter 2, universe 1 | -13.1% .. +5.8% | +12.1% | 0.00 | -1.03% (-0.84; +3.45%): CANNOT_DISTINGUISH |
+| 95 | 3 | 1 | signal/filter+universe 1, signal/filter+universe+k 1 | +11.5% .. +13.5% | +5.7% | 0.50 | +0.10% (0.13; +2.19%): CANNOT_DISTINGUISH |
+| 60 | 3 | 0 | hold/offset 1, hold/offset+weighting 1 | -12.1% .. -5.7% | +3.1% | -0.50 | -0.28% (-0.36; +2.14%): CANNOT_DISTINGUISH |
+| 111 | 3 | 0 | signal/filter+universe 2 | -9.3% .. +4.8% | +10.3% | 0.50 | -2.44% (-1.56; +4.39%): CANNOT_DISTINGUISH |
+| 77 | 3 | 0 | signal/filter 2 | -12.5% .. -6.0% | +5.8% | -1.00 | +0.07% (0.10; +1.92%): CANNOT_DISTINGUISH |
+| 50 | 3 | 0 | signal/filter+universe 1, universe 1 | -13.8% .. -6.3% | +3.1% | 1.00 | -0.88% (-1.26; +1.95%): CANNOT_DISTINGUISH |
+| 84 | 3 | 0 | signal/filter+hold/offset 2 | -12.5% .. +20.8% | +6.0% | 0.50 | -1.50% (-0.71; +5.90%): CANNOT_DISTINGUISH |
+| 11 | 3 | 0 | same construction 1, weighting 1 | -13.0% .. -9.6% | +2.2% | 1.00 | -0.55% (-0.99; +1.56%): CANNOT_DISTINGUISH |
+| 20 | 3 | 0 | signal/filter 2 | -5.6% .. +0.7% | +4.6% | -0.50 | -0.11% (-0.20; +1.51%): CANNOT_DISTINGUISH |
+
+**Rank persistence, reproduced from the receipt.** Across every member pair in those clusters, the dev ordering (a beat b before 2024) held in 2024-26 for 70% of 33 construction only pairs; 55% of 278 signal/filter pairs (universe-only pairs: 83% of 12); 50% is a coin. Clusters of >= 5 members whose order persisted (rank corr >= 0.8: 114 0.86) hold universe / k variants of one signal; the ones where it did not (|rank corr| <= 0.1: 170 0.06, 103 -0.01) are dominated by label-filter variants. A cluster mean deletes that; Level 2 keeps it.
 
 ## Voided before entry (never graded, never deleted)
 

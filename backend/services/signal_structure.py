@@ -33,6 +33,12 @@ import numpy as np
 import pandas as pd
 
 RHO_CUT = 0.8
+#: The cluster count is set by the cut as much as by the data (review
+#: 2026-09-27 §3: 79 to 216 on the same library), so it is printed as a curve.
+RHO_CURVE = (0.5, 0.6, 0.7, 0.8, 0.9)
+MDE_Z = 2.8                      # two-sided 5%, 80% power: MDE = 2.8 x SE
+#: verdicts on the ex-ante-hedged alpha (review 2026-09-27 §1, §7)
+VERDICTS = ("ALPHA_DETECTED", "CANNOT_DISTINGUISH", "BETA_EXPLAINS")
 MIN_MONTHS = 12                  # the receipt refuses below this
 MIN_PAIR_MONTHS = 24             # pairwise-complete correlation floor per window
 ETF_TICKERS = ("SPY", "QQQ", "IWM", "SMH", "USMV", "MTUM", "VLUE", "QUAL")
@@ -107,7 +113,9 @@ def cells_from_checkpoint(done: dict) -> tuple[dict, list]:
                           "primary": str(k) == str(res.get("primary_k", meta.get("k"))),
                           "hold_months": int(meta.get("hold_months") or 1),
                           "span": list(c.get("span") or []), "active": a,
-                          "by_year": c.get("by_year") or {}}
+                          # the reconstruction check groups by DECISION year: a
+                          # hold-keyed checkpoint carries the old table beside it
+                          "by_year": c.get("by_year_decision") or c.get("by_year") or {}}
     return cells, refused
 
 
@@ -208,6 +216,7 @@ def ols(y: pd.Series, X: pd.DataFrame) -> dict:
     means = df[X.columns].mean()
     contrib = {c: float(coef[i + 1] * means[c]) for i, c in enumerate(X.columns)}
     return {"n": int(n), "alpha_monthly": float(coef[0]), "t_alpha": float(t[0]),
+            "se_alpha": float(se[0]), "mde_alpha_80": float(MDE_Z * se[0]),
             "betas": {c: float(coef[i + 1]) for i, c in enumerate(X.columns)},
             "t_betas": {c: float(t[i + 1]) for i, c in enumerate(X.columns)},
             "r2": float(r2), "mean_active_monthly": float(Y.mean()),
@@ -238,3 +247,71 @@ def dsr_at(active: Iterable[float], n_trials: int) -> Optional[float]:
     d = deflated_sharpe(list(active), n_trials=int(n_trials))
     v = d.get("dsr")
     return None if v is None or (isinstance(v, float) and math.isnan(v)) else float(v)
+
+
+# ── ex-ante hedge, verdict, residuals (review 2026-09-27) ────────────────────
+
+def exante_hedge(y: pd.Series, X: pd.DataFrame, betas: dict) -> dict:
+    """The alpha left after betas you could have known: y - X @ betas_fitted_
+    elsewhere (no intercept), over the months of `y`. Mean, SE (plain,
+    sd / sqrt n), t and MDE at 80% power. Refuses below MIN_MONTHS."""
+    cols = [c for c in X.columns if c in betas]
+    df = pd.concat([y.rename("__y"), X[cols]], axis=1).dropna()
+    n = len(df)
+    require_months(n, "ex-ante hedged series")
+    b = np.array([float(betas[c]) for c in cols])
+    h = df["__y"].to_numpy(dtype=float) - df[cols].to_numpy(dtype=float) @ b
+    sd = float(np.std(h, ddof=1)) if n > 1 else float("nan")
+    se = sd / math.sqrt(n) if np.isfinite(sd) else float("nan")
+    m = float(h.mean())
+    return {"n": int(n), "alpha_monthly": m, "se": se,
+            "t": (m / se) if se and np.isfinite(se) and se > 0 else float("nan"),
+            "mde_80": MDE_Z * se, "betas_used": {c: float(betas[c]) for c in cols}}
+
+
+def verdict(hedge: dict, observed_excess: float) -> str:
+    """ALPHA_DETECTED: |t| >= 2 on the ex-ante-hedged alpha (the sign is printed
+    beside it). BETA_EXPLAINS: |t| < 1 AND the MDE is below the observed mean
+    excess -- the test could have seen an alpha that size and did not.
+    Everything else is CANNOT_DISTINGUISH: no power is not no alpha."""
+    t, mde = hedge.get("t"), hedge.get("mde_80")
+    if t is None or not np.isfinite(t):
+        return "CANNOT_DISTINGUISH"
+    if abs(t) >= 2.0:
+        return "ALPHA_DETECTED"
+    if (abs(t) < 1.0 and mde is not None and np.isfinite(mde)
+            and observed_excess is not None and np.isfinite(observed_excess)
+            and mde < abs(observed_excess)):
+        return "BETA_EXPLAINS"
+    return "CANNOT_DISTINGUISH"
+
+
+def residualise(active: pd.DataFrame, X: pd.DataFrame, *,
+                min_months: int = MIN_PAIR_MONTHS) -> pd.DataFrame:
+    """Each column's residual after its own in-window OLS on X (with
+    intercept), on its own months; a column with < min_months is dropped."""
+    out = {}
+    for c in active.columns:
+        df = pd.concat([active[c].rename("__y"), X], axis=1).dropna()
+        if len(df) < max(min_months, X.shape[1] + 4):
+            continue
+        A = np.column_stack([np.ones(len(df)), df[X.columns].to_numpy(dtype=float)])
+        Y = df["__y"].to_numpy(dtype=float)
+        coef, *_ = np.linalg.lstsq(A, Y, rcond=None)
+        out[c] = pd.Series(Y - A @ coef, index=df.index)
+    return pd.DataFrame(out).reindex(active.index)
+
+
+def cluster_curve(corr: pd.DataFrame, cuts: Iterable[float] = RHO_CURVE) -> dict:
+    """{rho cut: number of clusters} on one correlation matrix."""
+    return {f"{c:.1f}": int(cluster(corr, rho_cut=c).nunique()) if len(corr) else 0 for c in cuts}
+
+
+def pair_rho_summary(corr: pd.DataFrame, cut: float = RHO_CUT) -> dict:
+    a = corr.to_numpy(dtype=float)
+    iu = np.triu_indices(len(a), 1)
+    v = a[iu]
+    v = v[np.isfinite(v)]
+    return {"median_pair_rho": float(np.median(v)) if len(v) else None,
+            "share_pairs_ge_cut": float((v >= cut).mean()) if len(v) else None,
+            "n_pairs": int(len(v))}

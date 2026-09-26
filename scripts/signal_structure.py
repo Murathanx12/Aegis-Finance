@@ -2,6 +2,7 @@
 
     python -m scripts.signal_structure                          # run 2026-09-26T150811Z
     python -m scripts.signal_structure --run-id <id> --refresh-etf
+    python -m scripts.signal_structure --rekey --run-id 2026-09-26T164302Z   # hold-month sidecar
 
 $0, no LLM. Network: one yfinance pull of eight ETFs (adjusted close), cached
 under `backend/data/optimus/signal_structure/etf_monthly.parquet` with its fetch
@@ -42,7 +43,6 @@ BRIDGE = REPO / "backend" / "data" / "optimus" / "bridge"
 CKPT_REL = "backend/data/optimus/strategy_library/checkpoint_{date}.json"
 DEFAULT_RUN = "2026-09-26T150811Z"
 TOP_N = 30
-SHARE_FLOOR = 0.002    # 20 bps/month: below this there is no 2024-26 excess to attribute
 
 
 # ── inputs ──────────────────────────────────────────────────────────────────
@@ -143,12 +143,517 @@ def cluster_block(active: pd.DataFrame, mask: np.ndarray, cells: dict, dev_dsr: 
             "clusters": clusters, "min_pair_months": SS.MIN_PAIR_MONTHS}
 
 
+def stored_series_check(pq: Path, net: pd.DataFrame) -> dict:
+    """The stored monthly series is the input of record: if the parquet exists
+    it is compared with this reconstruction and KEPT (never rewritten); a
+    disagreement above 1e-9 refuses the run by name."""
+    if not pq.exists():
+        return {"status": "WRITTEN", "path": str(pq.relative_to(REPO))}
+    old = pd.read_parquet(pq)
+    cols = sorted(set(old.columns) & set(net.columns))
+    extra = sorted(set(net.columns) ^ set(old.columns))
+    a = old[cols].reindex(net.index).to_numpy(dtype=float)
+    b = net[cols].to_numpy(dtype=float)
+    both = np.isfinite(a) & np.isfinite(b)
+    gap = float(np.max(np.abs(a[both] - b[both]))) if both.any() else 0.0
+    nan_mismatch = int((np.isfinite(a) ^ np.isfinite(b)).sum())
+    if gap > 1e-9 or nan_mismatch or extra:
+        raise SystemExit(f"REFUSED: stored {pq.name} disagrees with the checkpoint reconstruction "
+                         f"(max gap {gap:.2e}, {nan_mismatch} NaN mismatches, "
+                         f"{len(extra)} columns in only one)")
+    return {"status": "STORED_SERIES_MATCHES", "path": str(pq.relative_to(REPO)),
+            "max_abs_gap": gap, "n_columns": len(cols)}
+
+
+def _fit(y: pd.Series, X: pd.DataFrame) -> dict:
+    try:
+        return SS.ols(y, X)
+    except SS.InsufficientHistory as e:
+        return {"status": "REFUSED", "why": str(e)}
+
+
+def decompose(active: pd.DataFrame, X: pd.DataFrame, masks: dict, board: dict,
+              cells: dict, primary: list) -> tuple[dict, dict]:
+    """{rule: decomposition} over every primary cell, plus (dev beta, 2024-26
+    beta) pairs per spread for the beta-stability correlation."""
+    cand = [r for r in board["all_rows"] if not r.get("control")
+            and r.get("sealed_vs_spy") is not None and r.get("dev_vs_spy") is not None]
+    top_sealed = {r["id"] for r in sorted(cand, key=lambda r: (-r["sealed_vs_spy"], r["id"]))[:TOP_N]}
+    top_dev = {r["id"] for r in sorted(cand, key=lambda r: (-r["dev_vs_spy"], r["id"]))[:TOP_N]}
+    by_id = {r["id"]: r for r in board["all_rows"]}
+    decomp, pairs = {}, {c: [] for c in X.columns}
+    for cid in primary:
+        rid = cells[cid]["rule"]
+        r = by_id.get(rid) or {}
+        y = active[cid]
+        out = {"cell": cid, "family": cells[cid]["family"], "hold_months": cells[cid]["hold_months"],
+               "sealed_vs_spy": r.get("sealed_vs_spy", cells[cid].get("sealed_vs_spy")),
+               "dev_vs_spy": r.get("dev_vs_spy", cells[cid].get("dev_vs_spy")),
+               "in_sealed_top30": rid in top_sealed, "in_dev_top30": rid in top_dev}
+        for w in ("sealed", "dev"):
+            out[w] = _fit(y[masks[w]], X[masks[w]])
+            out[f"{w}_smh_mtum"] = _fit(y[masks[w]], X.loc[masks[w], ["SMH-SPY", "MTUM-SPY"]])
+        out["full"] = _fit(y, X)
+        s, d = out["sealed"], out["dev"]
+        if "t_alpha" in s and "t_alpha" in d:
+            try:
+                h = SS.exante_hedge(y[masks["sealed"]], X[masks["sealed"]], d["betas"])
+            except SS.InsufficientHistory as e:
+                h = {"status": "REFUSED", "why": str(e)}
+            out["alpha_after_pre2024_hedge"] = h
+            if "t" in h:
+                out["verdict"] = SS.verdict(h, s["mean_active_monthly"])
+                out["alpha_sign"] = "+" if h["alpha_monthly"] > 0 else "-"
+            else:
+                out["verdict"] = "REFUSED"
+            out["beta_stability"] = {c.split("-")[0]: {"dev": d["betas"][c], "2024_26": s["betas"][c]}
+                                     for c in X.columns}
+            for c in X.columns:
+                pairs[c].append((d["betas"][c], s["betas"][c]))
+        else:
+            out["verdict"] = "REFUSED"
+        out["survives_both"] = bool(s.get("t_alpha", -9) >= 2 and d.get("t_alpha", -9) >= 2)
+        decomp[rid] = out
+    return decomp, pairs
+
+
+def summarise_decomposition(decomp: dict, pairs: dict) -> dict:
+    ok = [v for v in decomp.values() if "t_alpha" in (v.get("sealed") or {})]
+
+    def med(xs):
+        xs = [x for x in xs if x is not None and np.isfinite(x)]
+        return float(np.median(xs)) if xs else None
+
+    def dist(vs):
+        return dict(sorted(Counter(v.get("verdict") for v in vs).items()))
+    st = {}
+    for c, pr in pairs.items():
+        a = np.array(pr, dtype=float)
+        st[c.split("-")[0]] = (float(np.corrcoef(a[:, 0], a[:, 1])[0, 1]) if len(a) > 2 else None)
+    return {
+        "n_primary_cells": len(decomp), "n_decomposed": len(ok),
+        "median_se_alpha_2024_26": med([v["sealed"]["se_alpha"] for v in ok]),
+        "median_mde_alpha_2024_26": med([v["sealed"]["mde_alpha_80"] for v in ok]),
+        "median_se_alpha_dev": med([v["dev"].get("se_alpha") for v in ok if "se_alpha" in v["dev"]]),
+        "n_t_ge_2_dev": sum(1 for v in ok if v["dev"].get("t_alpha", -9) >= 2),
+        "n_t_ge_2_2024_26": sum(1 for v in ok if v["sealed"]["t_alpha"] >= 2),
+        "n_t_ge_2_full": sum(1 for v in ok if (v.get("full") or {}).get("t_alpha", -9) >= 2),
+        "n_t_ge_2_both": sum(1 for v in ok if v["survives_both"]),
+        "verdicts_all_primary": dist(decomp.values()),
+        "verdicts_2024_26_top30": dist([v for v in decomp.values() if v["in_sealed_top30"]]),
+        "verdicts_dev_top30": dist([v for v in decomp.values() if v["in_dev_top30"]]),
+        "alpha_detected_negative": sorted(k for k, v in decomp.items()
+                                          if v.get("verdict") == "ALPHA_DETECTED"
+                                          and v.get("alpha_sign") == "-"),
+        "beta_stability_corr_dev_vs_2024_26": st,
+        "note": ("beta stability = correlation across primary cells of each spread's dev beta with "
+                 "its 2024-26 beta; a low number means the loading is a regime, not a style"),
+    }
+
+
+def bet_count_curve(active_p: pd.DataFrame, net_p: pd.DataFrame, X: pd.DataFrame) -> dict:
+    """Clusters over the primary cells, full window, at each rho cut, on the
+    raw net, the active and the residual (after SMH/IWM/MTUM, after all six
+    spreads) returns. The residual count is the multiplicity denominator for
+    ALPHA claims; the active/raw counts are the ones for RISK."""
+    series = {"raw_net": net_p, "active": active_p,
+              "residual_smh_iwm_mtum": SS.residualise(active_p, X[["SMH-SPY", "IWM-SPY", "MTUM-SPY"]]),
+              "residual_6_etf": SS.residualise(active_p, X)}
+    out = {}
+    for name, df in series.items():
+        corr = SS.corr_matrix(df)
+        out[name] = {"n_series": int(len(corr)), "clusters_by_rho": SS.cluster_curve(corr),
+                     **SS.pair_rho_summary(corr)}
+    return out
+
+
+AXES = (("universe", "universe_rule"), ("weighting", "weight_rule"),
+        ("hold/offset", "hold_months"), ("hold/offset", "rebalance_months"))
+#: construction suffixes: a rule id minus these is its SIGNAL (mom_6_1_large -> mom_6_1)
+CONSTRUCTION_SUFFIXES = ("_mid_plus", "_large", "_small", "_mid", "_mega", "_q", "_ivw",
+                         "_secrel", "_calm")
+
+
+def base_signal(rule_id: str) -> str:
+    b, changed = rule_id, True
+    while changed:
+        changed = False
+        for suf in CONSTRUCTION_SUFFIXES:
+            if b.endswith(suf) and len(b) > len(suf):
+                b, changed = b[: -len(suf)], True
+    return b
+
+
+def member_axis(meta: dict, anchor: dict, k: int, k_anchor: int,
+                rule: str = "", rule_anchor: str = "") -> str:
+    """The axes on which two cluster members differ: construction (universe /
+    k / weighting / hold-offset) and, when their base signals differ,
+    "signal/filter"."""
+    diff = sorted({ax for ax, key in AXES if str(meta.get(key)) != str(anchor.get(key))})
+    if k != k_anchor:
+        diff.append("k")
+    if rule and rule_anchor and base_signal(rule) != base_signal(rule_anchor):
+        diff = ["signal/filter"] + diff
+    return "+".join(diff) if diff else "same construction"
+
+
+def pair_persistence(rows: list, metas: dict, cells: dict) -> list:
+    """Every member pair: the axes it differs on, and whether its dev ordering
+    (a beat b before 2024) held in 2024-26."""
+    out = []
+    for i, a in enumerate(rows):
+        for b in rows[i + 1:]:
+            if None in (a["dev_vs_spy"], b["dev_vs_spy"], a["sealed_vs_spy"], b["sealed_vs_spy"]):
+                continue
+            ra, rb = cells[a["cell"]]["rule"], cells[b["cell"]]["rule"]
+            ax = member_axis(metas[a["cell"]], metas[b["cell"]], cells[a["cell"]]["k"],
+                             cells[b["cell"]]["k"], ra, rb)
+            out.append({"a": a["cell"], "b": b["cell"], "axis": ax,
+                        "persists": bool((a["dev_vs_spy"] - b["dev_vs_spy"])
+                                         * (a["sealed_vs_spy"] - b["sealed_vs_spy"]) > 0)})
+    return out
+
+
+def pair_axis_class(axis: str) -> str:
+    """signal/filter if the base signal differs; else construction only."""
+    return "signal/filter" if axis.startswith("signal/filter") else "construction only"
+
+
+def within_cluster(block: dict, active: pd.DataFrame, net: pd.DataFrame, spy: pd.Series,
+                   masks: dict, done: dict, cells: dict, X: pd.DataFrame, *,
+                   min_members: int = 3) -> list:
+    """Level 2 of the bridge, historically: inside each full-window cluster of
+    >= `min_members` primary cells, the member spread of 2024-26 excess, the
+    tracking error of member - cluster mean, the dev -> 2024-26 rank
+    persistence, and the axis the members differ on. Level 1 beside it: the
+    cluster's EW mean, hedged ex ante (dev betas) over 2024-26."""
+    from scipy.stats import spearmanr
+
+    from backend.services import strategy_library as SL
+    out = []
+    for cl in block["clusters"]:
+        mem = [m for m in cl["members"] if m in active.columns]
+        if len(mem) < min_members:
+            continue
+        anchor = cl["representative"]
+        am = (done[cells[anchor]["rule"]].get("meta") or {})
+        rows, metas = [], {}
+        for m in mem:
+            b = SL.panel_benchmarks(net[m], {"dev": masks["dev"], "sealed": masks["sealed"]},
+                                    {"spy": spy})
+            metas[m] = done[cells[m]["rule"]].get("meta") or {}
+            rows.append({"cell": m, "dev_vs_spy": b.get("dev_vs_spy"),
+                         "sealed_vs_spy": b.get("sealed_vs_spy"),
+                         "axis": "anchor" if m == anchor else member_axis(
+                             metas[m], am, cells[m]["k"], cells[anchor]["k"],
+                             cells[m]["rule"], cells[anchor]["rule"])})
+        pairs = pair_persistence(rows, metas, cells)
+        cm = active[mem].mean(axis=1)
+        te = [float((active[m] - cm).dropna().std(ddof=1) * np.sqrt(12)) for m in mem]
+        sv = [r["sealed_vs_spy"] for r in rows if r["sealed_vs_spy"] is not None]
+        both = [(r["dev_vs_spy"], r["sealed_vs_spy"]) for r in rows
+                if r["dev_vs_spy"] is not None and r["sealed_vs_spy"] is not None]
+        rho = float(spearmanr([a for a, _ in both], [b for _, b in both])[0]) if len(both) >= 3 else None
+        axes = Counter(r["axis"] for r in rows if r["axis"] != "anchor")
+        lvl1: dict = {}
+        d = _fit(cm[masks["dev"]], X[masks["dev"]])
+        s_ = _fit(cm[masks["sealed"]], X[masks["sealed"]])
+        if "betas" in d and "mean_active_monthly" in s_:
+            try:
+                h = SS.exante_hedge(cm[masks["sealed"]], X[masks["sealed"]], d["betas"])
+                lvl1 = {"mean_active_2024_26": s_["mean_active_monthly"],
+                        "alpha_in_window": s_["alpha_monthly"], "t_in_window": s_["t_alpha"],
+                        "mde_in_window": s_["mde_alpha_80"],
+                        "alpha_after_pre2024_hedge": h["alpha_monthly"], "se_hedged": h["se"],
+                        "t_hedged": h["t"], "mde_hedged": h["mde_80"],
+                        "verdict": SS.verdict(h, s_["mean_active_monthly"]),
+                        "alpha_sign": "+" if h["alpha_monthly"] > 0 else "-"}
+            except SS.InsufficientHistory as e:
+                lvl1 = {"status": "REFUSED", "why": str(e)}
+        out.append({"cluster": cl["cluster"], "n": len(mem), "anchor": anchor,
+                    "family_mix": cl["family_mix"], "mean_inner_rho": cl["mean_inner_rho"],
+                    "sealed_vs_spy_min": min(sv) if sv else None,
+                    "sealed_vs_spy_max": max(sv) if sv else None,
+                    "sealed_vs_spy_sd": float(np.std(sv, ddof=1)) if len(sv) > 1 else None,
+                    "median_te_vs_cluster_mean_annual": float(np.median(te)),
+                    "rank_corr_dev_vs_2024_26": rho, "axes": dict(axes.most_common()),
+                    "dominant_axis": axes.most_common(1)[0][0] if axes else None,
+                    "pairs_by_class": {k: {"n": len(v), "share_order_persists":
+                                           float(np.mean([x["persists"] for x in v]))}
+                                       for k, v in _group(pairs).items()},
+                    "level1_cluster_mean": lvl1, "members": rows, "pairs": pairs})
+    return out
+
+
+def _group(pairs: list) -> dict:
+    g: dict = {}
+    for x in pairs:
+        g.setdefault(pair_axis_class(x["axis"]), []).append(x)
+    return g
+
+
+def persistence_summary(within: list) -> dict:
+    """Across every cluster: does a member's dev ordering persist into 2024-26,
+    for pairs that differ only in construction vs pairs whose signal differs?"""
+    allp = [x for c in within for x in c.get("pairs") or []]
+    by = {k: {"n_pairs": len(v), "share_order_persists": float(np.mean([x["persists"] for x in v]))}
+          for k, v in sorted(_group(allp).items())}
+    fine: dict = {}
+    for x in allp:
+        if pair_axis_class(x["axis"]) == "construction only":
+            fine.setdefault(x["axis"], []).append(x["persists"])
+    by_axis = {k: {"n_pairs": len(v), "share_order_persists": float(np.mean(v))}
+               for k, v in sorted(fine.items())}
+    return {"pairs": by, "construction_pairs_by_axis": by_axis,
+            "note": ("a pair's order persists when (dev_a - dev_b) and (2024-26_a - 2024-26_b) "
+                     "have the same sign; 50% is a coin")}
+
+
+# ── REKEY: hold-month keying + panel-relative benchmarks, from stored series ──
+#
+# Review 2026-09-27 §4b: the factory keyed `by_year`, `leave_one_year_out` and
+# `loo_worst_*` on the DECISION date, one month early. This recomputes them for a
+# past run of record from its own stored monthly series (no factory rerun), prints
+# both keys, and lists the rules whose verdict moves. §2: every row also gets
+# vs_iwm and vs_random_panel beside vs_spy.
+
+LOO_GATE = 0.0            # night_backtest_factory.freeze_gate: loo_worst_mean_active > 0
+TOP5_GATE = 0.6           # night_backtest_factory.GATE_TOP5_SHARE_MAX
+
+
+def _sha256(p: Path) -> str:
+    import hashlib
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def _match_board(done: dict, rows: list) -> dict:
+    """How well a checkpoint reproduces a board's rows (exact mean active,
+    dev_vs_spy within 1e-5: the SPY leg is re-pulled between runs)."""
+    n = exact = 0
+    worst = 0.0
+    for r in rows:
+        c = ((done.get(r["id"]) or {}).get("cells") or {}).get(str(r["k"])) or {}
+        if c.get("status") != "OK":
+            continue
+        n += 1
+        if abs((c.get("mean_active_monthly") or 0) - (r.get("mean_active_monthly") or 0)) < 1e-9:
+            exact += 1
+        if c.get("dev_vs_spy") is not None and r.get("dev_vs_spy") is not None:
+            worst = max(worst, abs(c["dev_vs_spy"] - r["dev_vs_spy"]))
+    return {"n_rows": len(rows), "n_cells_found": n, "n_mean_active_exact": exact,
+            "max_abs_dev_vs_spy_gap": worst}
+
+
+def find_series_source(run: dict, rows: list) -> tuple[dict, dict]:
+    """The checkpoint whose panel is the run's AND whose cells reproduce every
+    board row. Working tree, then git HEAD, then every checkpoint file on disk
+    (a later run on the same date overwrites the date-named one; its `.bak`
+    keeps the earlier). Refuses when none reproduces the board."""
+    fp = run["panel"]["fingerprint"]
+    cands: list = []
+    rel = CKPT_REL.format(date=run["date"])
+    for p in [REPO / rel] + sorted(p for p in LIB.glob("checkpoint_*.json") if p != REPO / rel):
+        cands.append(("file", p))
+    cands.insert(1, ("head", rel))
+    tried = []
+    for kind, p in cands:
+        try:
+            if kind == "file":
+                raw = p.read_bytes()
+                src = {"path": str(p.relative_to(REPO)).replace("\\", "/"), "sha256": _sha256(p)}
+            else:
+                raw = subprocess.run(["git", "show", f"HEAD:{p}"], cwd=REPO, capture_output=True,
+                                     check=True).stdout
+                src = {"path": f"git HEAD:{p}"}
+            d = json.loads(raw.decode("utf-8"))
+        except Exception as e:  # noqa: BLE001 -- recorded in the refusal
+            tried.append(f"{p}: {e}")
+            continue
+        if (d.get("config") or {}).get("panel") != fp:
+            tried.append(f"{src['path']}: panel {(d.get('config') or {}).get('panel')} != {fp}")
+            continue
+        m = _match_board(d["state"]["done"], rows)
+        if m["n_cells_found"] == len(rows) and m["n_mean_active_exact"] == len(rows) \
+                and m["max_abs_dev_vs_spy_gap"] < 1e-5:
+            return d, {**src, "written_utc": d.get("written_utc"), "board_match": m,
+                       "config": d.get("config")}
+        tried.append(f"{src['path']}: panel matches but reproduces {m['n_mean_active_exact']} of "
+                     f"{len(rows)} rows")
+    raise SystemExit(f"REFUSED: no checkpoint reproduces the board of run {run.get('run_id')}: {tried}")
+
+
+def rekey_row(net: pd.Series, spy: pd.Series) -> dict:
+    """Both keys for one cell's monthly net series (indexed by decision date)."""
+    from backend.services import strategy_library as SL
+    s = net.dropna()
+    sp = spy.reindex(s.index)
+    act = s - sp
+    dec_y, hold_y = s.index.year, SL.hold_years(s.index)
+    out = {}
+    for key, ys in (("decision", dec_y), ("hold", hold_y)):
+        by = SL.by_year_table(s, sp, ys)
+        loo = SL.leave_one_year_out(act, ys)
+        out[key] = {"by_year": by, "by_year_signs": SL._signs(by),
+                    "positive_excess_years_2020_2025": SL._positive_years(by),
+                    "leave_one_year_out_mean_active": loo,
+                    "loo_worst_mean_active": min(loo.values()) if loo else None,
+                    "loo_worst_dropped_year": min(loo, key=loo.get) if loo else None}
+    lr = np.log1p(s.to_numpy(dtype=float))
+    tot = float(lr.sum())
+    out["top5_months_share_of_log_return"] = float(np.sort(lr)[::-1][:5].sum() / tot) if tot > 0 else None
+    out["top5_months_hold"] = SL.top_months(s, 5)
+    return out
+
+
+def rekey(run_id: str) -> dict:
+    from backend.services import strategy_library as SL
+    run = json.loads((LIB / f"run_{run_id}.json").read_text(encoding="utf-8"))
+    bp = LIB / f"leaderboard_{run_id}.json"
+    board = json.loads(bp.read_text(encoding="utf-8"))
+    rows = list(board["all_rows"]) + [dict(c, control=True) for c in board.get("controls") or []]
+    ck, src = find_series_source(run, rows)
+    done = ck["state"]["done"]
+    cells, refused = SS.cells_from_checkpoint(done)
+    etf, _meta = etf_monthly(False)
+    active, ref2 = SS.active_frame(cells, pd.DatetimeIndex(etf.index))
+    refused += ref2
+    active = active.loc[active.notna().any(axis=1)]
+    spy = etf["SPY"].reindex(active.index)
+    net = active.add(spy, axis=0)
+    gap = SS.reconstruction_gap(cells, net)
+    iwm = etf["IWM"].reindex(active.index) if "IWM" in etf.columns else None
+    try:
+        panel = SL.random_panel(net)
+        panel_status = {"status": "OK", "cells": [c for c in net.columns
+                                                  if c in {f"{r}@k{SL.RANDOM_PANEL_K}"
+                                                           for r in SL.RANDOM_PANEL_RULES}]}
+    except SL.BenchmarkMissing as e:
+        panel, panel_status = None, {"status": "REFUSED", "why": str(e)}
+    masks = SS.window_masks(active.index)
+    wm = {"dev": masks["dev"], "sealed": masks["sealed"]}
+    out_rows, changed, check = [], {"loo_verdict": [], "loo_dropped_year": [], "top5_verdict": [],
+                                    "positive_years_2020_2025": []}, []
+    for r in rows:
+        cid = SS.cell_id(r["id"], r["k"])
+        if cid not in net.columns:
+            out_rows.append({"id": r["id"], "k": r["k"], "status": "NO_SERIES"})
+            continue
+        rk = rekey_row(net[cid], spy)
+        bm = SL.panel_benchmarks(net[cid], wm, {"spy": spy, "iwm": iwm, "random_panel": panel})
+        d, h = rk["decision"], rk["hold"]
+        v_dec = None if d["loo_worst_mean_active"] is None else d["loo_worst_mean_active"] > LOO_GATE
+        v_hold = None if h["loo_worst_mean_active"] is None else h["loo_worst_mean_active"] > LOO_GATE
+        t5 = rk["top5_months_share_of_log_return"]
+        row = {"id": r["id"], "k": r["k"], "family": r.get("family"), "control": bool(r.get("control")),
+               "by_year_hold": h["by_year"], "by_year_decision": d["by_year"],
+               "by_year_decision_status": SL.DECISION_KEY_DEPRECATED,
+               "by_year_signs_hold": h["by_year_signs"], "by_year_signs_decision": d["by_year_signs"],
+               "positive_excess_years_2020_2025_hold": h["positive_excess_years_2020_2025"],
+               "positive_excess_years_2020_2025_decision": d["positive_excess_years_2020_2025"],
+               "loo_worst_mean_active_hold": h["loo_worst_mean_active"],
+               "loo_worst_dropped_year_hold": h["loo_worst_dropped_year"],
+               "loo_worst_mean_active_decision": d["loo_worst_mean_active"],
+               "loo_worst_dropped_year_decision": d["loo_worst_dropped_year"],
+               "leave_one_year_out_mean_active_hold": h["leave_one_year_out_mean_active"],
+               "leave_one_year_out_mean_active_decision": d["leave_one_year_out_mean_active"],
+               "top5_months_share_of_log_return": t5, "top5_months_hold": rk["top5_months_hold"],
+               "loo_gt_0_decision": v_dec, "loo_gt_0_hold": v_hold,
+               "top5_lt_0_6": None if t5 is None else t5 < TOP5_GATE,
+               "board_loo_worst_mean_active": r.get("loo_worst_mean_active"),
+               "board_dev_vs_spy": r.get("dev_vs_spy"), "board_sealed_vs_spy": r.get("sealed_vs_spy"),
+               **bm}
+        if r.get("loo_worst_mean_active") is not None and d["loo_worst_mean_active"] is not None:
+            check.append(abs(r["loo_worst_mean_active"] - d["loo_worst_mean_active"]))
+        if v_dec != v_hold:
+            changed["loo_verdict"].append({"id": r["id"], "control": row["control"],
+                                           "decision": d["loo_worst_mean_active"],
+                                           "hold": h["loo_worst_mean_active"],
+                                           "gate_decision": v_dec, "gate_hold": v_hold})
+        if d["loo_worst_dropped_year"] != h["loo_worst_dropped_year"]:
+            changed["loo_dropped_year"].append({"id": r["id"], "decision": d["loo_worst_dropped_year"],
+                                                "hold": h["loo_worst_dropped_year"]})
+        if d["positive_excess_years_2020_2025"] != h["positive_excess_years_2020_2025"]:
+            changed["positive_years_2020_2025"].append({
+                "id": r["id"], "decision": d["positive_excess_years_2020_2025"],
+                "hold": h["positive_excess_years_2020_2025"]})
+        out_rows.append(row)
+    ok = [x for x in out_rows if x.get("status") != "NO_SERIES"]
+    prim = [x for x in ok if not x["control"]]
+
+    def both(bn):
+        have = [x for x in prim if x.get(f"dev_vs_{bn}") is not None and x.get(f"sealed_vs_{bn}") is not None]
+        return {"n_beat_both": sum(1 for x in have if x[f"dev_vs_{bn}"] > 0 and x[f"sealed_vs_{bn}"] > 0),
+                "n_rules": len(have)}
+    counts = {bn: both(bn) for bn in ("spy",) + SL.PANEL_BENCHMARKS}
+    # the random controls' own IWM tilt: the panel is small-cap before any rule acts
+    X1 = (etf["IWM"] - etf["SPY"]).reindex(active.index).rename("IWM-SPY").to_frame()
+    tilt = {}
+    for c in sorted(c for c in net.columns if cells.get(c, {}).get("family") == "control"):
+        try:
+            tilt[c] = SS.ols(active[c], X1)["betas"]["IWM-SPY"]
+        except SS.InsufficientHistory:
+            tilt[c] = None
+    brow = [dict(r, **{k: x.get(k) for k in ("dev_vs_iwm", "sealed_vs_iwm", "dev_vs_random_panel",
+                                                "sealed_vs_random_panel")})
+            for r, x in zip(rows, out_rows) if not r.get("control")]
+    dse = SL.dev_selected_sealed_evaluated(brow)
+    shifts = []
+    for x in ok:
+        for y in sorted(set(x["by_year_hold"]) | set(x["by_year_decision"])):
+            a = (x["by_year_decision"].get(y) or {}).get("excess")
+            b = (x["by_year_hold"].get(y) or {}).get("excess")
+            if a is not None and b is not None:
+                shifts.append({"id": x["id"], "year": y, "excess_decision": a, "excess_hold": b,
+                               "shift": b - a})
+    shifts.sort(key=lambda z: -abs(z["shift"]))
+    doc = {
+        "schema": "strategy_library/rekeyed/1", "job": "signal_structure --rekey", "run_id": run_id,
+        "licence": "PRODUCT_EXPERIMENT", "llm_spend_usd": 0.0,
+        "written_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "board": str(bp.relative_to(REPO)).replace("\\", "/"),
+        "why": ("review 2026-09-27 §4b + §2: per-period statistics re-keyed on the month the money "
+                "was HELD, and vs_iwm / vs_random_panel beside vs_spy; recomputed from the run's own "
+                "stored monthly series, no factory rerun"),
+        "year_key": SL.YEAR_KEY_NOTE, "decision_key": SL.DECISION_KEY_DEPRECATED,
+        "series_source": src, "reconstruction_check": {
+            **gap, "what": "net = active + SPY (cached ETF series) vs the checkpoint's decision-keyed by_year net"},
+        "recompute_check_loo_worst_decision_vs_board": {
+            "n": len(check), "max_abs_gap": max(check) if check else None},
+        "benchmarks": {"note": SL.PANEL_BENCHMARK_NOTE, "random_panel": panel_status,
+                       "iwm": "OK" if iwm is not None else "IWM_SERIES_MISSING",
+                       "random_controls_iwm_beta_full": tilt,
+                       "beat_in_both_windows": counts},
+        "dev_selected_sealed_evaluated": dse,
+        "gates": {"loo": f"loo_worst_mean_active > {LOO_GATE}", "top5": f"top5 share < {TOP5_GATE}"},
+        "changed": {**changed,
+                    "top5_note": ("the top-5-month share is a sum over the five best months; the key "
+                                  "does not change it, so no top-5 verdict can move -- WHICH months "
+                                  "it names is now printed as hold months (`top5_months_hold`)")},
+        "n_changed": {k: len(v) for k, v in changed.items()},
+        "largest_year_shifts": shifts[:25],
+        "rows": out_rows, "refused": refused,
+    }
+    OUT.mkdir(parents=True, exist_ok=True)
+    p = OUT / f"leaderboard_{run_id}.rekeyed.json"
+    p.write_text(json.dumps(doc, indent=1, default=lambda o: None if isinstance(o, float)
+                            and not np.isfinite(o) else str(o)), encoding="utf-8")
+    print(f"rekeyed -> {p}")
+    print(json.dumps({"n_changed": doc["n_changed"], "beat_in_both_windows": counts,
+                      "series_source": {k: src[k] for k in ("path", "board_match")}}, indent=1))
+    return doc
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--run-id", default=DEFAULT_RUN)
     ap.add_argument("--refresh-etf", action="store_true")
+    ap.add_argument("--rekey", action="store_true",
+                    help="hold-month re-key + panel benchmarks of --run-id's board, from stored series")
     a = ap.parse_args(argv)
     run_id = a.run_id
+    if a.rekey:
+        rekey(run_id)
+        return 0
     if (LIB / f"leaderboard_{run_id}.INVALID.md").exists():
         raise SystemExit(f"REFUSED: run {run_id} is marked INVALID")
     run = json.loads((LIB / f"run_{run_id}.json").read_text(encoding="utf-8"))
@@ -178,7 +683,9 @@ def main(argv=None) -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     pq = OUT / f"monthly_returns_{run_id}.parquet"
     net.index.name = "decision_date"
-    net.to_parquet(pq)
+    parquet_check = stored_series_check(pq, net)
+    if parquet_check["status"] == "WRITTEN":
+        net.to_parquet(pq)
 
     masks = SS.window_masks(active.index)
     trial_cells = [c for c in active.columns if not cells[c]["control"]]
@@ -230,46 +737,29 @@ def main(argv=None) -> int:
         "dsr_at_n_clusters_full": SS.dsr_at(active[best_board].dropna(), blocks["cells_full"]["n_clusters"]),
         "n_clusters_full": blocks["cells_full"]["n_clusters"]}
 
-    # ── decomposition ─────────────────────────────────────────────────────
+    # ── decomposition (review 2026-09-27 §1, §7) ──────────────────────────
+    # Every PRIMARY cell (not only the two top-30s), each alpha with its SE and
+    # MDE, and the verdict on the alpha left after the EX-ANTE hedge: the dev
+    # (pre-2024) betas applied to the 2024-26 spreads. The in-sample "SMH+MTUM
+    # share" label is deleted: it could not tell beta from no power.
     X = SS.factor_spreads(etf).reindex(active.index)
-    cand = [r for r in board["all_rows"] if not r.get("control")
-            and r.get("sealed_vs_spy") is not None and r.get("dev_vs_spy") is not None]
-    top_sealed = sorted(cand, key=lambda r: (-r["sealed_vs_spy"], r["id"]))[:TOP_N]
-    top_dev = sorted(cand, key=lambda r: (-r["dev_vs_spy"], r["id"]))[:TOP_N]
-    decomp = {}
-    for r in {x["id"]: x for x in top_sealed + top_dev}.values():
-        cid = SS.cell_id(r["id"], r["k"])
-        if cid not in active.columns:
-            decomp[r["id"]] = {"status": "REFUSED", "why": f"{cid} has no series"}
-            continue
-        y = active[cid]
-        out = {"cell": cid, "family": r["family"], "hold_months": r.get("hold_months"),
-               "sealed_vs_spy": r["sealed_vs_spy"], "dev_vs_spy": r["dev_vs_spy"],
-               "in_sealed_top30": r in top_sealed, "in_dev_top30": r in top_dev}
-        for wname in ("sealed", "dev"):
-            try:
-                out[wname] = SS.ols(y[masks[wname]], X[masks[wname]])
-            except SS.InsufficientHistory as e:
-                out[wname] = {"status": "REFUSED", "why": str(e)}
-        for wname in ("sealed", "dev"):
-            try:
-                out[f"{wname}_smh_mtum"] = SS.ols(y[masks[wname]], X.loc[masks[wname], ["SMH-SPY", "MTUM-SPY"]])
-            except SS.InsufficientHistory as e:
-                out[f"{wname}_smh_mtum"] = {"status": "REFUSED", "why": str(e)}
-        s = out.get("sealed") or {}
-        if "t_alpha" in s:
-            ma = s["mean_active_monthly"]
-            semis_mom = s["contribution_monthly"]["SMH-SPY"] + s["contribution_monthly"]["MTUM-SPY"]
-            has_excess = bool(r["sealed_vs_spy"] > 0 and ma >= SHARE_FLOOR)
-            out["smh_mtum_share_of_sealed_active"] = (semis_mom / ma) if has_excess else None
-            out["mostly_smh_or_mtum_beta"] = bool(has_excess and s["t_alpha"] < 1 and semis_mom / ma >= 0.5)
-            out["alpha_t_below_1_after_etfs"] = bool(s["t_alpha"] < 1)
-        d = out.get("dev") or {}
-        out["survives_both"] = bool(s.get("t_alpha", -9) >= 2 and d.get("t_alpha", -9) >= 2)
-        decomp[r["id"]] = out
+    decomp, beta_pairs = decompose(active, X, masks, board, cells, primary)
+    decomp_summary = summarise_decomposition(decomp, beta_pairs)
     # the ETF spreads' own collinearity in the sealed window (a 32-block regression on 6 of them)
     xs = X[masks["sealed"]].dropna()
     xcorr = xs.corr().round(2).to_dict()
+
+    # ── the bet count as a CURVE, on active AND residual returns (§3) ──────
+    curve = bet_count_curve(active[primary], net[primary], X)
+    res6 = SS.residualise(active[primary], X)
+    ncl_res = int(SS.cluster(SS.corr_matrix(res6), rho_cut=SS.RHO_CUT).nunique())
+    dsr_resid = {c: {"n_residual_clusters": ncl_res,
+                     "dsr_at_n_residual_clusters": SS.dsr_at(active[c].dropna(), ncl_res),
+                     "dsr_at_n_cells": full_dsr.get(c), "n_cells": n_cells}
+                 for c in sorted({best_board, SS.cell_id("mom_12_1_q", 20)}) if c in active.columns}
+
+    # ── within-cluster spread and rank persistence (§5): the construction test
+    within = within_cluster(blocks["rules_full"], active, net, spy, masks, done, cells, X)
 
     # ── lead-lag (full window, rule-level representatives) ────────────────
     mom_cell = SS.cell_id("mom_12_1", 20)
@@ -371,7 +861,13 @@ def main(argv=None) -> int:
         "clusters": {k: v["clusters"] for k, v in blocks.items()},
         "dsr_compare": dsr_cmp,
         "decomposition": decomp,
+        "decomposition_summary": decomp_summary,
         "etf_spread_corr_sealed": xcorr,
+        "bet_count_curve": curve,
+        "dsr_at_residual_clusters": dsr_resid,
+        "within_cluster": within,
+        "within_cluster_persistence": persistence_summary(within),
+        "stored_series_check": parquet_check,
         "lead_lag": lead_lag,
         "frozen_books": books, "frozen_book_pairs_rho_ge_0_8_full": pairs,
         "frozen_books_same_full_cluster": same_bet_groups,
@@ -384,6 +880,11 @@ def main(argv=None) -> int:
             "OLS standard errors are plain; hold>1 rules (quarterly books) have serially dependent "
             "monthly active returns, so their t is optimistic",
             "32 sealed blocks and 7 parameters: a t of 2 on alpha is one-in-twenty by noise per rule",
+            "MDE = 2.8 x SE (two-sided 5%, 80% power); at ~32 blocks the MDE is ~2.5%/month, so "
+            "t < 1 is mostly NO POWER, not no alpha (review 2026-09-27 §1)",
+            "verdict (on the ex-ante hedged alpha = 2024-26 active - dev betas x 2024-26 spreads): "
+            "ALPHA_DETECTED |t| >= 2 (sign printed); BETA_EXPLAINS |t| < 1 AND MDE < |mean "
+            "2024-26 active|; else CANNOT_DISTINGUISH",
         ],
     }
     rp = OUT / f"signal_structure_{run_id}.json"
@@ -433,28 +934,106 @@ def render_tables(r: dict, cells: dict) -> str:
                      f"{fam} | {mem} |")
         n1 = sum(1 for c in cl if c["n"] == 1)
         L += ["", f"Singletons: {n1}.", ""]
+    ds = r.get("decomposition_summary") or {}
     L += ["## Decomposition: monthly active return on ETF spreads (each minus SPY)", "",
-          "Sorted by 2024-26 vs SPY. alpha is monthly; t plain OLS. `SMH+MTUM share` = (beta_SMH x mean(SMH-SPY) + "
-          "beta_MTUM x mean(MTUM-SPY)) / mean active, 2024-26, printed only when the rule beat SPY and its mean "
-          "active is >= 20 bps/month. [S] = 2024-26 top-30, [D] = dev top-30.", "",
-          "| rule | 2024-26 vs SPY | a 24-26 | t | b SMH | b IWM | b MTUM | b USMV | b QUAL | b VLUE | R2 | SMH+MTUM share | t a (SMH,MTUM only) | a dev | t dev | R2 dev | verdict |",
-          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    dec = sorted(((k, v) for k, v in r["decomposition"].items() if "sealed" in v),
-                 key=lambda kv: -(kv[1]["sealed_vs_spy"] or -9))
+          "Every primary cell is decomposed; the table prints the 2024-26 top-30 [S] and the dev "
+          "top-30 [D], sorted by 2024-26 vs SPY. alpha is monthly; SE plain OLS; **MDE = 2.8 x SE** "
+          "(the alpha a 32-block window detects 80% of the time). **hedged** = mean 2024-26 active "
+          "return minus the DEV (pre-2024) betas x the 2024-26 spreads: the alpha left after betas "
+          "you could have known. **verdict** on the hedged alpha: ALPHA_DETECTED |t| >= 2 (sign "
+          "shown); BETA_EXPLAINS |t| < 1 AND MDE < |mean 2024-26 active|; else CANNOT_DISTINGUISH. "
+          "The in-sample `SMH+MTUM share` column and its `MOSTLY SMH/MTUM BETA` label are deleted "
+          "(review 2026-09-27 §7): a ratio of contributions on regressors correlated at 0.69 cannot "
+          "tell beta from no power.", ""]
+    if ds:
+        vs = ds["verdicts_2024_26_top30"]
+        L += [f"Over all {ds['n_decomposed']} primary cells: median SE(alpha) 2024-26 "
+              f"{_pct(ds['median_se_alpha_2024_26'], 2)}/mo, median MDE "
+              f"**{_pct(ds['median_mde_alpha_2024_26'], 2)}/mo** (dev SE {_pct(ds['median_se_alpha_dev'], 2)}); "
+              f"t >= 2 in dev {ds['n_t_ge_2_dev']}, in 2024-26 {ds['n_t_ge_2_2024_26']}, full "
+              f"{ds['n_t_ge_2_full']}, both windows {ds['n_t_ge_2_both']}. Verdicts, all primary: "
+              + ", ".join(f"{k} {v}" for k, v in ds["verdicts_all_primary"].items())
+              + "; 2024-26 top-30: " + ", ".join(f"{k} {v}" for k, v in vs.items())
+              + (f" (negative ALPHA_DETECTED: {', '.join(ds['alpha_detected_negative'])})"
+                 if ds.get("alpha_detected_negative") else "") + ".", "",
+              "Beta stability (correlation across primary cells of dev beta vs 2024-26 beta): "
+              + ", ".join(f"{k} {_f(v, 2)}" for k, v in ds["beta_stability_corr_dev_vs_2024_26"].items())
+              + ". Low = the loading is a regime, not a style.", ""]
+    L += ["| rule | 2024-26 vs SPY | a 24-26 (t) | SE | MDE | b SMH dev->24-26 | b IWM dev->24-26 | "
+          "b MTUM dev->24-26 | R2 | a dev (t) | **hedged a 24-26** | SE | t | MDE | verdict |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+    dec = sorted(((k, v) for k, v in r["decomposition"].items()
+                  if v.get("in_sealed_top30") or v.get("in_dev_top30")),
+                 key=lambda kv: -(kv[1]["sealed_vs_spy"] if kv[1]["sealed_vs_spy"] is not None else -9))
     for rid, v in dec:
         s, d = v.get("sealed") or {}, v.get("dev") or {}
         if "t_alpha" not in s:
             continue
-        bt = s["betas"]
-        verdict = ("SURVIVES (t>=2 both)" if v["survives_both"] else
-                   "MOSTLY SMH/MTUM BETA" if v.get("mostly_smh_or_mtum_beta") else
-                   "alpha t<1 after ETFs" if v.get("alpha_t_below_1_after_etfs") else "")
+        h = v.get("alpha_after_pre2024_hedge") or {}
+        bs = v.get("beta_stability") or {}
+
+        def bb(e):
+            x = bs.get(e) or {}
+            return f"{_f(x.get('dev'), 2)} -> {_f(x.get('2024_26'), 2)}"
         tag = ("S" if v["in_sealed_top30"] else "") + ("D" if v["in_dev_top30"] else "")
-        L.append(f"| `{rid}` [{tag}] | {_pct(v['sealed_vs_spy'])} | {_pct(s['alpha_monthly'], 2)} | {_f(s['t_alpha'], 2)} | "
-                 + " | ".join(_f(bt[f'{e}-SPY'], 2) for e in ("SMH", "IWM", "MTUM", "USMV", "QUAL", "VLUE"))
-                 + f" | {_f(s['r2'], 2)} | {_pct(v.get('smh_mtum_share_of_sealed_active'), 0)} | "
-                 f"{_f((v.get('sealed_smh_mtum') or {}).get('t_alpha'), 2)} | "
-                 f"{_pct(d.get('alpha_monthly'), 2)} | {_f(d.get('t_alpha'), 2)} | {_f(d.get('r2'), 2)} | {verdict} |")
+        vd = v.get("verdict", "")
+        if vd == "ALPHA_DETECTED":
+            vd += f" ({v.get('alpha_sign')})"
+        L.append(f"| `{rid}` [{tag}] | {_pct(v['sealed_vs_spy'])} | {_pct(s['alpha_monthly'], 2)} "
+                 f"({_f(s['t_alpha'], 2)}) | {_pct(s.get('se_alpha'), 2)} | {_pct(s.get('mde_alpha_80'), 2)} | "
+                 f"{bb('SMH')} | {bb('IWM')} | {bb('MTUM')} | {_f(s['r2'], 2)} | "
+                 f"{_pct(d.get('alpha_monthly'), 2)} ({_f(d.get('t_alpha'), 2)}) | "
+                 f"**{_pct(h.get('alpha_monthly'), 2)}** | {_pct(h.get('se'), 2)} | {_f(h.get('t'), 2)} | "
+                 f"{_pct(h.get('mde_80'), 2)} | {vd} |")
+    cv = r.get("bet_count_curve") or {}
+    if cv:
+        cuts = list(next(iter(cv.values()))["clusters_by_rho"])
+        L += ["", "## Distinct bets as a CURVE (primary cells, full window)", "",
+              "The count is set by the cut as much as by the data. Residual clustering RAISES it "
+              "(the shared factor inflated the correlations): the residual count is the multiplicity "
+              "denominator for ALPHA claims, the active/raw counts are the ones for RISK (what "
+              "loses together).", "",
+              "| series clustered | " + " | ".join(f"rho {c}" for c in cuts)
+              + " | median pair rho | share of pairs >= 0.8 |",
+              "|---|" + "---|" * (len(cuts) + 2)]
+        for name, v in cv.items():
+            L.append(f"| {name} | " + " | ".join(str(v["clusters_by_rho"][c]) for c in cuts)
+                     + f" | {_f(v['median_pair_rho'], 2)} | {_pct(v['share_pairs_ge_cut'], 1)} |")
+        for c, v in (r.get("dsr_at_residual_clusters") or {}).items():
+            L.append(f"\nDSR of `{c}`: {_f(v['dsr_at_n_cells'])} at n = {v['n_cells']} cells, "
+                     f"{_f(v['dsr_at_n_residual_clusters'])} at n = {v['n_residual_clusters']} "
+                     "residual clusters (rho 0.8).")
+    wc = r.get("within_cluster") or []
+    if wc:
+        L += ["", "## Within-cluster spread: does construction matter? (rule-level full clusters, n >= 3)", "",
+              "Level 1 = the cluster's equal-weight mean, hedged ex ante (dev betas over 2024-26). "
+              "Level 2 = the members around it: range and sd of 2024-26 excess vs SPY, median "
+              "annualised tracking error of member - cluster mean, and the Spearman rank "
+              "correlation of member dev excess vs 2024-26 excess. `axis` = how members differ "
+              "from the cluster's anchor (universe / k / weighting / hold-offset; "
+              "`signal/filter` when only the selection rule differs).", "",
+              "| cluster | n | mean rho | dominant axis | 2024-26 vs SPY min .. max | sd | median TE | "
+              "rank corr dev->24-26 | L1 hedged a/mo (t; MDE) | L1 verdict |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        for c in wc:
+            l1 = c.get("level1_cluster_mean") or {}
+            L.append(f"| {c['cluster']} | {c['n']} | {_f(c['mean_inner_rho'], 2)} | "
+                     f"{c['dominant_axis']} ({', '.join(f'{k} {v}' for k, v in c['axes'].items())}) | "
+                     f"{_pct(c['sealed_vs_spy_min'])} .. {_pct(c['sealed_vs_spy_max'])} | "
+                     f"{_pct(c['sealed_vs_spy_sd'])} | {_pct(c['median_te_vs_cluster_mean_annual'])} | "
+                     f"{_f(c['rank_corr_dev_vs_2024_26'], 2)} | "
+                     f"{_pct(l1.get('alpha_after_pre2024_hedge'), 2)} ({_f(l1.get('t_hedged'), 2)}; "
+                     f"{_pct(l1.get('mde_hedged'), 2)}) | {l1.get('verdict', l1.get('status', 'n/a'))}"
+                     + (f" ({l1['alpha_sign']})" if l1.get("verdict") == "ALPHA_DETECTED" else "") + " |")
+        ps = r.get("within_cluster_persistence") or {}
+        if ps:
+            L += ["", "Pairwise order persistence (dev -> 2024-26) across every cluster above: "
+                  + "; ".join(f"{k}: {v['share_order_persists']*100:.0f}% of {v['n_pairs']} pairs"
+                              for k, v in ps["pairs"].items())
+                  + ". Construction-only pairs by axis: "
+                  + "; ".join(f"{k} {v['share_order_persists']*100:.0f}% of {v['n_pairs']}"
+                              for k, v in ps["construction_pairs_by_axis"].items())
+                  + ". 50% is a coin."]
     ll = r["lead_lag"]
     L += ["", "## Lead-lag (HYPOTHESIS, never finding)", "",
           f"{ll['n_tests_positive_lag']} tests at lag +1/+2, typical n {ll['typical_n']}; under the null "

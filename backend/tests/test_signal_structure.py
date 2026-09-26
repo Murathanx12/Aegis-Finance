@@ -86,3 +86,86 @@ def test_lagged_corr_detects_a_planted_lead():
     rho0, _ = SS.lagged_corr(y, x, 0)
     assert rho1 > 0.9 and n1 == 99
     assert abs(rho0) < 0.3
+
+
+# ───────────── review 2026-09-27: MDE beside every alpha, the ex-ante hedge ─────────────
+
+def _spreads(n, seed=5):
+    rng = np.random.default_rng(seed)
+    return pd.DataFrame({f"{t}-SPY": rng.normal(0, 0.04, n) for t in SS.FACTOR_SPREADS},
+                        index=_dates(n))
+
+
+def test_every_alpha_carries_its_se_and_mde():
+    X = _spreads(32)
+    y = pd.Series(np.random.default_rng(1).normal(0.01, 0.05, 32), index=X.index)
+    out = SS.ols(y, X)
+    assert out["se_alpha"] > 0
+    assert out["mde_alpha_80"] == pytest.approx(SS.MDE_Z * out["se_alpha"])
+    assert out["t_alpha"] == pytest.approx(out["alpha_monthly"] / out["se_alpha"])
+
+
+def test_exante_hedge_removes_a_known_beta_and_keeps_the_alpha():
+    X = _spreads(60)
+    rng = np.random.default_rng(2)
+    y = pd.Series(0.01 + 1.2 * X["SMH-SPY"] + rng.normal(0, 0.002, 60), index=X.index)
+    h = SS.exante_hedge(y, X, {"SMH-SPY": 1.2})
+    assert h["alpha_monthly"] == pytest.approx(0.01, abs=0.001)
+    assert h["t"] > 10 and SS.verdict(h, 0.01) == "ALPHA_DETECTED"
+    # the WRONG (stale) beta leaves the factor in the "alpha": its SE balloons
+    stale = SS.exante_hedge(y, X, {"SMH-SPY": 0.0})
+    assert stale["se"] > 5 * h["se"]
+    with pytest.raises(SS.InsufficientHistory):
+        SS.exante_hedge(y.iloc[:11], X, {"SMH-SPY": 1.2})
+
+
+def test_the_verdict_separates_beta_from_no_power():
+    # |t| < 1 with an MDE ABOVE the observed excess: the test could not have seen it
+    assert SS.verdict({"t": 0.3, "mde_80": 0.025}, 0.01) == "CANNOT_DISTINGUISH"
+    # |t| < 1 with an MDE BELOW the observed excess: an alpha that size would show
+    assert SS.verdict({"t": 0.3, "mde_80": 0.004}, 0.01) == "BETA_EXPLAINS"
+    # 1 <= |t| < 2 is never "beta"
+    assert SS.verdict({"t": -1.5, "mde_80": 0.001}, 0.01) == "CANNOT_DISTINGUISH"
+    assert SS.verdict({"t": -2.5, "mde_80": 0.01}, 0.01) == "ALPHA_DETECTED"
+    assert SS.verdict({"t": float("nan"), "mde_80": 0.01}, 0.01) == "CANNOT_DISTINGUISH"
+    assert set(SS.VERDICTS) == {"ALPHA_DETECTED", "CANNOT_DISTINGUISH", "BETA_EXPLAINS"}
+
+
+def test_residual_clustering_splits_what_a_shared_factor_merged():
+    """Four series = one factor + independent noise: on active returns they are
+    one bet at rho 0.8; after the factor is removed they are four."""
+    n = 120
+    X = _spreads(n, seed=9)
+    rng = np.random.default_rng(4)
+    act = pd.DataFrame({f"s{i}": 1.5 * X["IWM-SPY"] + rng.normal(0, 0.01, n) for i in range(4)},
+                       index=X.index)
+    raw = SS.cluster_curve(SS.corr_matrix(act))
+    res = SS.cluster_curve(SS.corr_matrix(SS.residualise(act, X)))
+    assert raw["0.8"] == 1 and res["0.8"] == 4
+    assert list(raw) == [f"{c:.1f}" for c in SS.RHO_CURVE]
+    assert SS.pair_rho_summary(SS.corr_matrix(act))["share_pairs_ge_cut"] == 1.0
+
+
+def test_the_beta_label_is_gone_from_the_receipt_builder():
+    """Review 2026-09-27 §7: "MOSTLY SMH/MTUM BETA" and the SMH+MTUM share read
+    no power as no alpha. The builder must not compute them any more."""
+    import ast
+    import inspect
+
+    from scripts import signal_structure as SX
+    tree = ast.parse(inspect.getsource(SX))
+    consts = {n.value for n in ast.walk(tree) if isinstance(n, ast.Constant) and isinstance(n.value, str)}
+    assert "mostly_smh_or_mtum_beta" not in consts
+    assert "smh_mtum_share_of_sealed_active" not in consts
+    assert not hasattr(SX, "SHARE_FLOOR")
+
+
+def test_base_signal_and_member_axis():
+    from scripts import signal_structure as SX
+    assert SX.base_signal("mom_6_1_large") == "mom_6_1"
+    assert SX.base_signal("inflection_mid_plus") == "inflection"
+    assert SX.base_signal("mom_12_1_q") == "mom_12_1"
+    m = {"universe_rule": "all", "weight_rule": "equal", "hold_months": 1, "rebalance_months": None}
+    assert SX.member_axis(dict(m, universe_rule="large"), m, 20, 20, "x_large", "x") == "universe"
+    assert SX.member_axis(m, m, 20, 20, "mom_no_downgrades", "mom_12_1") == "signal/filter"
+    assert SX.member_axis(dict(m, hold_months=3), m, 20, 20, "mom_12_1_q", "mom_12_1") == "hold/offset"

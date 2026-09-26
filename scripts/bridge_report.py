@@ -207,7 +207,12 @@ def load_structure(struct_dir: Path = STRUCT_DIR) -> dict:
     out = {"status": "OK", "receipt": _relpath(p), "rho_cut": SS.RHO_CUT,
            "series_source": doc.get("series_source"), "label": doc.get("label"),
            "monthly_returns": _relpath(net_p), "etf_monthly": _relpath(etf_p),
-           "decomposition_status": "OK", "books": {}}
+           "decomposition_status": "OK", "books": {},
+           # review 2026-09-27: the two-level read's historical half, from the receipt
+           "within_cluster": [{k: v for k, v in c.items() if k != "pairs"}
+                              for c in doc.get("within_cluster") or []],
+           "within_cluster_persistence": doc.get("within_cluster_persistence"),
+           "bet_count_curve": doc.get("bet_count_curve")}
     decomp_ok = net_p.exists() and etf_p.exists()
     if not decomp_ok:
         out["decomposition_status"] = ("NO_MONTHLY_SERIES: " + ", ".join(
@@ -261,11 +266,26 @@ def book_decomposition(net: pd.Series, etf: pd.DataFrame) -> dict:
         try:
             f = SS.ols(sub, X.loc[sub.index])
             out[w] = {"status": "OK", "n": f["n"], "alpha_monthly": f["alpha_monthly"],
-                      "t_alpha": f["t_alpha"], "r2": f["r2"],
+                      "t_alpha": f["t_alpha"], "se_alpha": f["se_alpha"],
+                      "mde_alpha_80": f["mde_alpha_80"], "r2": f["r2"],
+                      "mean_active_monthly": f["mean_active_monthly"],
                       "betas": {k.split("-")[0]: b for k, b in f["betas"].items()},
                       "t_betas": {k.split("-")[0]: t for k, t in f["t_betas"].items()}}
         except SS.InsufficientHistory as ex:
             out[w] = {"status": "INSUFFICIENT_HISTORY", "why": str(ex)}
+    # the alpha left after betas you could have KNOWN: dev (pre-2024) betas on
+    # the 2024-26 spreads (review 2026-09-27 §1) -- "cannot distinguish" is a verdict
+    if out["sealed"].get("status") == "OK":
+        try:
+            dv = y[masks["dev"]]
+            fd = SS.ols(dv, X.loc[dv.index])
+            sv = y[masks["sealed"]]
+            h = SS.exante_hedge(sv, X.loc[sv.index], fd["betas"])
+            out["sealed"]["hedged"] = {
+                "status": "OK", "alpha_monthly": h["alpha_monthly"], "se": h["se"], "t": h["t"],
+                "mde_80": h["mde_80"], "verdict": SS.verdict(h, out["sealed"]["mean_active_monthly"])}
+        except SS.InsufficientHistory as ex:
+            out["sealed"]["hedged"] = {"status": "INSUFFICIENT_HISTORY", "why": str(ex)}
     return {"decomposition": out["sealed"], "decomposition_full": out["full"],
             **dominant_etf(out["full"])}
 
@@ -301,18 +321,88 @@ def distinct_bets(rows: list[dict], key: str = "cluster_full") -> dict:
             "unclustered": loose}
 
 
+def _mean_or_status(xs: list) -> Any:
+    """The mean when every value is a number, else the first status string."""
+    if xs and all(isinstance(x, (int, float)) and not isinstance(x, bool) for x in xs):
+        return float(np.mean(xs))
+    return next((x for x in xs if isinstance(x, str)), "n/a")
+
+
+def _twin_rel(r: dict, twin: str = "random_same_band") -> Any:
+    tw = r.get("twins_relative")
+    if isinstance(tw, dict):
+        v = tw.get(twin)
+        return v if v is not None else f"NO_{twin.upper()}_TWIN"
+    return tw if isinstance(tw, str) else "n/a"
+
+
 def cluster_observations(rows: list[dict]) -> list[dict]:
-    """One forward observation per multi-book cluster: the members' mean
-    forward relative (PENDING until every member has one)."""
+    """LEVEL 1, "does the mechanism work": one forward observation per
+    multi-book cluster -- the members' mean forward relative to SPY, the same
+    mean minus the members' random-same-band twins (the signal-selects claim),
+    and the mean vs each member's dominant factor ETF. PENDING until every
+    member has one."""
     out = []
     for cid, members in distinct_bets(rows)["multi_book_clusters"].items():
         rs = [r for r in rows if r["book"] in members]
-        fr = [r.get("forward_relative") for r in rs]
-        ok = all(isinstance(x, (int, float)) for x in fr)
+        fr = _mean_or_status([r.get("forward_relative") for r in rs])
+        tw = _mean_or_status([_twin_rel(r) for r in rs])
         out.append({"cluster": cid, "books": members, "n_books": len(members),
-                    "forward_relative_one_observation": (float(np.mean(fr)) if ok else
-                                                         next((x for x in fr if isinstance(x, str)),
-                                                              "n/a"))})
+                    "forward_relative_one_observation": fr,
+                    "forward_minus_random_twin_one_observation": (
+                        fr - tw if isinstance(fr, float) and isinstance(tw, float)
+                        else (fr if isinstance(fr, str) else tw)),
+                    "forward_vs_factor_etf_one_observation": _mean_or_status(
+                        [r.get("forward_vs_factor_etf") for r in rs])})
+    return out
+
+
+def _rule_meta(rule: Optional[str]) -> dict:
+    """k / universe / weighting / hold of a library rule ({} when unknown)."""
+    from backend.services import strategy_library as SL
+    try:
+        m = SL.rule_by_id(rule).meta()
+    except Exception:  # noqa: BLE001 -- an unknown rule is tagged, not fatal
+        return {}
+    return {k: m.get(k) for k in ("k", "universe_rule", "weight_rule", "hold_months",
+                                  "rebalance_months")}
+
+
+def construction_axis(rule: Optional[str], anchor: Optional[str]) -> str:
+    """How a book's rule differs from its cluster anchor's rule."""
+    from scripts import signal_structure as SSX
+    if rule == anchor:
+        return "same rule (frozen twice)"
+    a, b = _rule_meta(rule), _rule_meta(anchor)
+    if not a or not b:
+        return "unknown (rule not in the library)"
+    return SSX.member_axis(a, b, int(a.get("k") or 0), int(b.get("k") or 0), rule or "", anchor or "")
+
+
+def level2_pairs(rows: list[dict], structure: Optional[dict] = None) -> list[dict]:
+    """LEVEL 2, "does construction matter": inside each multi-book cluster,
+    every member's forward relative minus the cluster mean, a PAIRED series
+    (the shared factor cancels), tagged by the axis on which the member's rule
+    differs from the anchor's. The detectable size after 12 months is 2.8 x the
+    cluster's historical tracking error of member - cluster mean."""
+    hist = {str(c["cluster"]): c for c in (structure or {}).get("within_cluster") or []}
+    out = []
+    for cid, members in distinct_bets(rows)["multi_book_clusters"].items():
+        rs = [r for r in rows if r["book"] in members]
+        anchor = rs[0].get("rule")
+        fr = [r.get("forward_relative") for r in rs]
+        mean = _mean_or_status(fr)
+        te = (hist.get(str(cid)) or {}).get("median_te_vs_cluster_mean_annual")
+        for r in rs:
+            f = r.get("forward_relative")
+            out.append({"cluster": cid, "book": r["book"], "rule": r.get("rule"),
+                        "anchor_rule": anchor,
+                        "axis": "anchor" if r is rs[0] else construction_axis(r.get("rule"), anchor),
+                        "forward_minus_cluster_mean": (f - mean if isinstance(f, (int, float))
+                                                       and isinstance(mean, float) else
+                                                       (f if isinstance(f, str) else mean)),
+                        "hist_te_annual": te,
+                        "mde_after_12_months": (2.8 * te) if te is not None else None})
     return out
 
 
@@ -845,7 +935,11 @@ def render_structure(doc: dict) -> list[str]:
     if not obs:
         L.append("| none | every book is its own cluster | n/a |")
     L += ["", "Per book, the 2024-26 monthly active return regressed on the SMH, MTUM and IWM "
-          "spreads (each minus SPY): alpha is what is left once the betas are paid for. "
+          "spreads (each minus SPY): alpha is what is left once the betas are paid for; its **MDE** "
+          "(2.8 x SE, 80% power) sits beside it -- at 32 blocks a t below 1 is mostly no power, "
+          "not no alpha. **hedged** = the 2024-26 active return minus the DEV (pre-2024) betas x "
+          "the 2024-26 spreads, with its verdict (`ALPHA_DETECTED` |t| >= 2, `BETA_EXPLAINS` |t| "
+          "< 1 and MDE < the observed excess, else `CANNOT_DISTINGUISH`). "
           "**expected rel. to SPY** is the selection-window expectation above; **expected alpha "
           "after SMH/MTUM/IWM** = (1 + alpha/mo)^(sessions/21) - 1 is the same expectation with "
           "the factor betas removed. The **dominant ETF** is the largest positive factor t in "
@@ -853,10 +947,11 @@ def render_structure(doc: dict) -> list[str]:
           "MTUM = momentum-loaded); the forward twin grades the book against it beside SPY, and "
           "a missing ETF series refuses by name. A forward shortfall the dominant ETF's own "
           "move explains is investigated as `FACTOR_BETA`, not as a failed mechanism.", "",
-          "| book | cluster full / 2024-26 | alpha/mo (t) | beta SMH | beta MTUM | beta IWM | R2 | "
+          "| book | cluster full / 2024-26 | alpha/mo (t; MDE) | hedged alpha/mo (t): verdict | "
+          "beta SMH | beta MTUM | beta IWM | R2 | "
           "dominant ETF (full t) | expected rel. to SPY | expected alpha after SMH/MTUM/IWM | "
           "forward vs SPY | forward vs dominant ETF |",
-          "|---|---|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|"]
+          "|---|---|---:|---|---:|---:|---:|---:|---|---:|---:|---:|---:|"]
     for r in doc["rows"]:
         d = r.get("decomposition") or {}
         ok = d.get("status") == "OK"
@@ -867,9 +962,10 @@ def render_structure(doc: dict) -> list[str]:
         L.append(f"| `{r['book']}` | {r.get('cluster_full') if r.get('cluster_full') is not None else 'none'}"
                  f" / {r.get('cluster_sealed') if r.get('cluster_sealed') is not None else 'none'}"
                  + (" (by rule)" if "placed by rule" in str(r.get("structure_status")) else "") + " | "
-                 + (f"{_p(d['alpha_monthly'], 2)} ({_f(d['t_alpha'])}) | {_f(be.get('SMH'))} | "
+                 + (f"{_p(d['alpha_monthly'], 2)} ({_f(d['t_alpha'])}; {_p(d.get('mde_alpha_80'), 2)}) | "
+                    f"{_hedged(d)} | {_f(be.get('SMH'))} | "
                     f"{_f(be.get('MTUM'))} | {_f(be.get('IWM'))} | {_f(d.get('r2'))} | "
-                    if ok else f"{d.get('status') or r.get('structure_status')} | n/a | n/a | n/a | n/a | ")
+                    if ok else f"{d.get('status') or r.get('structure_status')} | n/a | n/a | n/a | n/a | n/a | ")
                  + f"{dom} | {_p(r['expected_relative_to_date'], 2)} | "
                  f"{_p(r.get('expected_alpha_to_date'), 2)} | {_p(r['forward_relative'], 2)} | "
                  f"{_p(fvs, 2)} |")
@@ -878,6 +974,95 @@ def render_structure(doc: dict) -> list[str]:
                   and r["forward_vs_factor_etf"].endswith("_SERIES_MISSING")})
     if why:
         L += [""] + [f"- {w}" for w in why]
+    return L + render_two_level(doc)
+
+
+def _hedged(d: dict) -> str:
+    h = d.get("hedged") or {}
+    if h.get("status") != "OK":
+        return h.get("status", "n/a")
+    return f"{_p(h['alpha_monthly'], 2)} ({_f(h['t'])}): {h['verdict']}"
+
+
+def render_two_level(doc: dict) -> list[str]:
+    """Level 1 (mechanism: cluster mean vs its twins) and Level 2 (construction:
+    member - cluster mean, paired), forward and historical."""
+    stc = doc.get("structure") or {}
+    L = ["", "## Two-level read: does the mechanism work, and does construction matter?", "",
+         "**Level 1 -- mechanism.** One observation per cluster: the members' mean forward "
+         "return relative to SPY, the same mean minus the members' random-same-band twins (\"the "
+         "signal selects\"), and vs each member's dominant factor ETF (\"it is not the factor\"). "
+         "n is clusters, not books.", "",
+         "| cluster | books | forward rel. SPY | minus random twin | vs dominant ETF |",
+         "|---|---|---:|---:|---:|"]
+    obs = doc.get("cluster_observations") or []
+    for o in obs:
+        L.append(f"| {o['cluster']} | {o['n_books']} | {_p(o['forward_relative_one_observation'], 2)} | "
+                 f"{_p(o.get('forward_minus_random_twin_one_observation'), 2)} | "
+                 f"{_p(o.get('forward_vs_factor_etf_one_observation'), 2)} |")
+    if not obs:
+        L.append("| none | every book is its own cluster | n/a | n/a | n/a |")
+    L += ["", "**Level 2 -- construction.** Each member minus its cluster mean, a PAIRED series (the "
+          "shared factor cancels), tagged by how its rule differs from the cluster's first book "
+          "(universe / k / weighting / hold-offset, or `signal/filter` when the selection rule "
+          "itself differs). A construction effect smaller than the 12-month MDE (2.8 x the "
+          "cluster's historical tracking error of member - cluster mean) is invisible for a year; "
+          "the row says so.", "",
+          "| cluster | book | axis vs anchor | forward minus cluster mean | hist. TE/yr | MDE after 12 months |",
+          "|---|---|---|---:|---:|---:|"]
+    for x in doc.get("level2_pairs") or []:
+        L.append(f"| {x['cluster']} | `{x['book']}` | {x['axis']} | "
+                 f"{_p(x['forward_minus_cluster_mean'], 2)} | {_p(x.get('hist_te_annual'))} | "
+                 f"{_p(x.get('mde_after_12_months'))} |")
+    wc = stc.get("within_cluster") or []
+    if wc:
+        booked: dict = {}
+        for r in doc.get("rows") or []:
+            if r.get("cluster_full") is not None:
+                booked.setdefault(str(r["cluster_full"]), []).append(r["book"])
+        L += ["", f"**Historically** (`{stc.get('receipt')}`, `within_cluster`; rule-level full-window "
+              "clusters with >= 3 members). Level 1 = the cluster's equal-weight mean hedged ex ante "
+              "(dev betas over 2024-26). Level 2 = the members' spread of 2024-26 excess vs SPY, the "
+              "median tracking error of member - cluster mean, and the Spearman rank correlation of "
+              "member dev excess vs 2024-26 excess (does the construction that won before 2024 "
+              "still win).", "",
+              "| cluster | members | frozen books | axes (member vs anchor) | 2024-26 vs SPY min .. max | "
+              "median TE | rank corr dev->24-26 | L1 hedged a/mo (t; MDE): verdict |",
+              "|---|---|---|---|---|---|---|---|"]
+        for c in wc:
+            l1 = c.get("level1_cluster_mean") or {}
+            vd = l1.get("verdict", l1.get("status", "n/a"))
+            if vd == "ALPHA_DETECTED":
+                vd += f" ({l1.get('alpha_sign')})"
+            L.append(f"| {c['cluster']} | {c['n']} | {len(booked.get(str(c['cluster']), []))} | "
+                     f"{', '.join(f'{k} {v}' for k, v in (c.get('axes') or {}).items())} | "
+                     f"{_p(c.get('sealed_vs_spy_min'))} .. {_p(c.get('sealed_vs_spy_max'))} | "
+                     f"{_p(c.get('median_te_vs_cluster_mean_annual'))} | "
+                     f"{_f(c.get('rank_corr_dev_vs_2024_26'))} | "
+                     f"{_p(l1.get('alpha_after_pre2024_hedge'), 2)} ({_f(l1.get('t_hedged'))}; "
+                     f"{_p(l1.get('mde_hedged'), 2)}): {vd} |")
+        ps = stc.get("within_cluster_persistence") or {}
+        if ps:
+            pr = ps.get("pairs") or {}
+            ax = ps.get("construction_pairs_by_axis") or {}
+            L += ["", "**Rank persistence, reproduced from the receipt.** Across every member pair in "
+                  "those clusters, the dev ordering (a beat b before 2024) held in 2024-26 for "
+                  + "; ".join(f"{v['share_order_persists']*100:.0f}% of {v['n_pairs']} {k} pairs"
+                              for k, v in pr.items())
+                  + (f" (universe-only pairs: {ax['universe']['share_order_persists']*100:.0f}% of "
+                     f"{ax['universe']['n_pairs']})" if "universe" in ax else "")
+                  + "; 50% is a coin. Clusters of >= 5 members whose order persisted (rank corr "
+                  ">= 0.8: "
+                  + (", ".join(f"{c['cluster']} {_f(c.get('rank_corr_dev_vs_2024_26'))}" for c in wc
+                               if (c.get("rank_corr_dev_vs_2024_26") or 0) >= 0.8 and c["n"] >= 5)
+                     or "none")
+                  + ") hold universe / k variants of one signal; the ones where it did not "
+                  "(|rank corr| <= 0.1: "
+                  + (", ".join(f"{c['cluster']} {_f(c.get('rank_corr_dev_vs_2024_26'))}" for c in wc
+                               if abs(c.get("rank_corr_dev_vs_2024_26") or 1) <= 0.1 and c["n"] >= 5)
+                     or "none")
+                  + ") are dominated by label-filter variants"
+                  + ". A cluster mean deletes that; Level 2 keeps it."]
     return L
 
 
@@ -1065,6 +1250,7 @@ def report(*, today: Optional[date] = None, out_md: Path = DOC,
            "distinct_bets": {"full": distinct_bets(rows, "cluster_full"),
                              "sealed": distinct_bets(rows, "cluster_sealed")},
            "cluster_observations": cluster_observations(rows),
+           "level2_pairs": level2_pairs(rows, structure),
            "rule": {"trail_sessions": TRAIL_SESSIONS, "trail_sigmas": TRAIL_SIGMAS,
                     "order": list(INVESTIGATION_ORDER), "taxonomy": list(TAXONOMY)},
            "rows": rows, "carried_investigations": carried,
@@ -1116,6 +1302,15 @@ def library_facts(board: dict) -> dict:
             "both": both_windows(board)}
 
 
+def panel_sidecar(board: dict, struct_dir: Optional[Path] = None) -> tuple[Optional[dict], Optional[str]]:
+    """The hold-keyed / panel-relative sidecar of a leaderboard run
+    (`signal_structure --rekey`), or (None, None) when it was never written."""
+    p = (struct_dir or STRUCT_DIR) / f"leaderboard_{board.get('run_id')}.rekeyed.json"
+    if not p.exists():
+        return None, None
+    return json.loads(p.read_text(encoding="utf-8")), _relpath(p)
+
+
 def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = None,
                    bridge: Optional[dict] = None, replication: Optional[str] = None,
                    bridge_path: Optional[str] = None) -> str:
@@ -1128,6 +1323,9 @@ def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = No
     top = board["top_by_sealed_vs_spy"][:10]
     gh = git_hash or git_head()
     dse = board.get("dev_selected_sealed_evaluated") or {}
+    sc, scp = panel_sidecar(board)
+    sc_loo = {x["id"]: x.get("loo_worst_mean_active_hold") for x in (sc or {}).get("rows") or []
+              if not x.get("control") and "loo_worst_mean_active_hold" in x}
     L = [README_HEADING, "",
          "> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written "
          "down on 2026-09-26, after every month it is scored on. The quotable record starts at "
@@ -1142,19 +1340,43 @@ def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = No
          "second window is where the board SORTS, not a holdout. Sorted by net return vs SPY in "
          f"that window (`{board_path}`, `top_by_sealed_vs_spy`):", "",
          f"| rule (k=20) | dev CAGR | SPY dev | 2024-26 CAGR | SPY 2024-26 | 2024-26 − SPY | DSR ({f['n_cells']} cells) "
-         "| LOO-worst mean active/mo | top-5-month share | max DD |",
+         f"| LOO-worst mean active/mo{' (hold-month key)' if sc_loo else ''} | top-5-month share | max DD |",
          "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for r in top:
         t5 = r.get("top5_months_share_of_log_return")
+        loo = sc_loo.get(r["id"], r["loo_worst_mean_active"]) if sc_loo else r["loo_worst_mean_active"]
         L.append(f"| `{r['id']}` | {_p(r['dev_cagr'])} | {_p(r['dev_spy_cagr'])} | "
                  f"{_p(r['sealed_cagr'])} | {_p(r['sealed_spy_cagr'])} | **{_p(r['sealed_vs_spy'])}** | "
-                 f"{r['dsr']:.3f} | {_p(r['loo_worst_mean_active'], 2)} | "
+                 f"{r['dsr']:.3f} | {_p(loo, 2)} | "
                  f"{('n/a' if t5 is None else f'{t5:.2f}')} | {_p(r['max_dd'])} |")
+    if sc_loo:
+        L += ["", "LOO-worst is keyed on the month the money was HELD (review 2026-09-27 §4b: the "
+              "factory keyed it on the decision date, one month early); "
+              f"{sc['n_changed']['loo_verdict']} rules change their LOO-worst > 0 verdict under the "
+              f"correct key (`{scp}`, `changed.loo_verdict`)."]
     ctrl = ""
-    if f["ctrl_lo"] is not None:
+    bw = ((sc or {}).get("benchmarks") or {}).get("beat_in_both_windows") or {}
+    if sc:
+        from backend.services import strategy_library as SL_
+        tilt = [v for k, v in (sc["benchmarks"].get("random_controls_iwm_beta_full") or {}).items()
+                if v is not None and any(k.startswith(r_ + "@") for r_ in SL_.RANDOM_PANEL_RULES)]
+        ctrl = ("**The benchmark.** The survivorship-free panel itself tilts small (random controls' "
+                f"IWM beta {min(tilt):.2f}-{max(tilt):.2f}, full window), so \"vs SPY\" understates "
+                "every rule by the panel's own tilt: SPY is the hurdle for \"should Murat own it\", "
+                "the random panel the one for \"does the signal select\". "
+                f"**{bw['spy']['n_beat_both']} / {bw['iwm']['n_beat_both']} / "
+                f"{bw['random_panel']['n_beat_both']} of {bw['spy']['n_rules']} rules beat SPY / IWM / "
+                "the random panel in both windows** (`" + str(scp) + "`, "
+                "`benchmarks.beat_in_both_windows`; random panel = mean of "
+                f"{', '.join(SL_.RANDOM_PANEL_RULES)} at k={SL_.RANDOM_PANEL_K})"
+                + (f". Random controls land at {_p(f['ctrl_lo'])} to {_p(f['ctrl_hi'])} vs SPY in the "
+                   f"2024-26 window (`{board_path}`, `controls`, family `control`)."
+                   if f["ctrl_lo"] is not None else "."))
+    elif f["ctrl_lo"] is not None:
         ctrl = (f"Random controls (k=20 names drawn at random each month, never ranked) land at "
-                f"{_p(f['ctrl_lo'])} to {_p(f['ctrl_hi'])} vs SPY in the 2024-26 window: that is "
-                f"the luck bar (`{board_path}`, `controls`, family `control`).")
+                f"{_p(f['ctrl_lo'])} to {_p(f['ctrl_hi'])} vs SPY in the 2024-26 window (`{board_path}`, "
+                "`controls`, family `control`). vs IWM / vs the random panel: NOT COMPUTED (no "
+                "`signal_structure/leaderboard_<run>.rekeyed.json` for this run).")
     L += ["", ctrl, ""]
     t10 = dse.get("top_10") or {}
     sp = dse.get("spearman_dev_vs_selection_window") or {}
@@ -1180,7 +1402,10 @@ def readme_section(board: dict, board_path: str, *, git_hash: Optional[str] = No
           f"- **{f['n_beat']} of {f['n_rules']} rules beat SPY in the 2024-26 window, median "
           f"{f['median_sealed_vs_spy']*100:+.1f}%** (`{board_path}`, `all_rows[].sealed_vs_spy`).",
           (f"- **{both_n} of {f['n_rules']} rules beat SPY in both windows** (dev and 2024-26); "
-           f"{strict_n} of them also have a top-5-month share < 0.6 and max DD better than -40%. "
+           f"{strict_n} of them also have a top-5-month share < 0.6 and max DD better than -40%"
+           + (f"; against the panel's own hurdles {bw['iwm']['n_beat_both']} beat IWM and "
+              f"{bw['random_panel']['n_beat_both']} beat the random panel in both windows "
+              f"(`{scp}`)" if bw else "") + ". "
            if both_n is not None else "- ")
           + f"Only {', '.join(f'`{i}`' for i in f['both'])} are in both the 2024-26 top-10 and "
           "the full-window DSR top-10. The 2024-26 top rows with a top-5-month share near or above "
@@ -1547,6 +1772,30 @@ def cmd_freeze(a) -> int:
     return rc
 
 
+def rerender(receipt: Path, *, out_md: Path = DOC, structure: Optional[dict] = None,
+             receipt_label: Optional[str] = None) -> dict:
+    """Re-render docs/BRIDGE.md from a STORED bridge receipt plus the current
+    signal-structure receipt: no bars, no grading, no JSON rewritten. The rows'
+    structure columns (cluster, decomposition, hedged verdict) and the two-level
+    blocks are recomputed from the structure receipt; every forward column is
+    the receipt's own."""
+    doc = json.loads(Path(receipt).read_text(encoding="utf-8"))
+    if receipt_label:
+        doc["receipt_json"] = receipt_label
+    st = load_structure() if structure is None else structure
+    for r in doc["rows"]:
+        attach_structure(r, st, r.get("rule"))
+    doc["structure"] = {k: v for k, v in st.items()
+                        if k not in ("books", "rule_cells") and not k.startswith("_")}
+    doc["distinct_bets"] = {"full": distinct_bets(doc["rows"], "cluster_full"),
+                            "sealed": distinct_bets(doc["rows"], "cluster_sealed")}
+    doc["cluster_observations"] = cluster_observations(doc["rows"])
+    doc["level2_pairs"] = level2_pairs(doc["rows"], st)
+    out_md.parent.mkdir(parents=True, exist_ok=True)
+    out_md.write_text(render_md(doc), encoding="utf-8")
+    return doc
+
+
 def cmd_report(a) -> int:
     today = date.fromisoformat(a.today) if getattr(a, "today", None) else date.today()
     doc = report(today=today)
@@ -1569,9 +1818,27 @@ def main(argv=None) -> int:
     r = sub.add_parser("report")
     r.add_argument("--today", default=None)
     sub.add_parser("readme", help="rewrite the README backtest section from the leaderboard receipt")
+    rr = sub.add_parser("render", help="re-render docs/BRIDGE.md from a stored bridge receipt (no bars)")
+    rr.add_argument("--receipt", default=None, help="bridge_<date>.json (default: the newest)")
+    rr.add_argument("--from-head", action="store_true",
+                    help="read the receipt as committed at git HEAD, not the working tree")
     a = ap.parse_args(argv)
     if a.cmd == "freeze":
         return cmd_freeze(a)
+    if a.cmd == "render":
+        rp = Path(a.receipt) if a.receipt else sorted(BRIDGE_DIR.glob("bridge_*.json"))[-1]
+        label = _relpath(rp)
+        if a.from_head:
+            import subprocess
+            import tempfile
+            raw = subprocess.run(["git", "show", f"HEAD:{label}"], cwd=str(REPO),
+                                 capture_output=True, check=True).stdout
+            tmp = Path(tempfile.mkdtemp()) / rp.name
+            tmp.write_bytes(raw)
+            rp = tmp
+        rerender(rp, receipt_label=label)
+        print(f"-> {DOC} re-rendered from {label}{' (git HEAD)' if a.from_head else ''}")
+        return 0
     if a.cmd == "readme":
         bp, board = latest_leaderboard()
         p = REPO / "README.md"

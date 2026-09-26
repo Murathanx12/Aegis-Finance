@@ -258,7 +258,11 @@ def _dec(alpha: float = 0.01) -> dict:
             "t_betas": {"SMH": 1.0, "MTUM": 0.5, "IWM": 3.0}}
 
 
-def test_two_books_in_one_cluster_are_one_distinct_bet(tmp_path):
+def test_two_books_in_one_cluster_are_one_distinct_bet(tmp_path, monkeypatch):
+    # pin the factor bars to the toy panel: the live global_prices cache has
+    # carried SMH since f485e9ec, so reading it made this a gate on the machine
+    monkeypatch.setattr(BR, "factor_bars",
+                        lambda bars: bars[bars["symbol"].isin(BR.FACTOR_ETFS + ("SPY",))])
     a = dict(_book("lib_toy_rule_2026-09-26"), book_id="a")
     b = dict(_book("lib_toy_rule_sealed_2026-09-26"), book_id="b")
     c = dict(_book("lib_other_2026-09-26"), book_id="c")
@@ -338,3 +342,77 @@ def test_a_synthetic_forward_month_where_the_book_is_its_factor_is_factor_beta(t
     assert r["expected_alpha_to_date"] == pytest.approx(0.0)
     md = (tmp_path / "B.md").read_text(encoding="utf-8")
     assert "**FACTOR_BETA**" in md
+
+
+# ───────────── review 2026-09-27: the two-level read, the panel benchmark ─────────────
+
+def _fwd_row(book, rule, cluster, fr, twin, fve):
+    return {"book": book, "rule": rule, "cluster_full": cluster, "cluster_sealed": None,
+            "forward_relative": fr, "twins_relative": {"random_same_band": twin},
+            "forward_vs_factor_etf": fve}
+
+
+def test_level1_is_one_observation_per_cluster_against_its_twin_and_factor():
+    rows = [_fwd_row("a", "mom_12_1", 7, 0.04, 0.01, 0.02),
+            _fwd_row("b", "mom_12_1_q", 7, 0.02, 0.03, 0.00),
+            _fwd_row("c", "other", 9, 0.10, 0.0, 0.0)]
+    obs = BR.cluster_observations(rows)
+    assert len(obs) == 1 and obs[0]["cluster"] == "7"
+    o = obs[0]
+    assert o["forward_relative_one_observation"] == pytest.approx(0.03)
+    assert o["forward_minus_random_twin_one_observation"] == pytest.approx(0.03 - 0.02)
+    assert o["forward_vs_factor_etf_one_observation"] == pytest.approx(0.01)
+    # one member still pending: the cluster observation is PENDING, never a partial mean
+    rows[1]["forward_relative"] = "PENDING (entry 2026-09-28)"
+    assert BR.cluster_observations(rows)[0]["forward_relative_one_observation"].startswith("PENDING")
+
+
+def test_level2_pairs_are_member_minus_cluster_mean_tagged_by_axis():
+    rows = [_fwd_row("a", "mom_12_1", 7, 0.04, 0.0, 0.0),
+            _fwd_row("b", "mom_12_1_q", 7, 0.02, 0.0, 0.0),
+            _fwd_row("c", "mom_12_1", 7, 0.00, 0.0, 0.0)]
+    st = {"within_cluster": [{"cluster": 7, "median_te_vs_cluster_mean_annual": 0.10}]}
+    L2 = {x["book"]: x for x in BR.level2_pairs(rows, st)}
+    assert L2["a"]["axis"] == "anchor"
+    assert L2["b"]["axis"] == "hold/offset"                  # quarterly vs monthly 12-1
+    assert L2["c"]["axis"] == "same rule (frozen twice)"
+    assert L2["a"]["forward_minus_cluster_mean"] == pytest.approx(0.02)
+    assert L2["c"]["forward_minus_cluster_mean"] == pytest.approx(-0.02)
+    assert L2["b"]["mde_after_12_months"] == pytest.approx(0.28)
+    assert BR.construction_axis("no_such_rule", "mom_12_1").startswith("unknown")
+
+
+def test_readme_benchmark_statement_reads_the_sidecar(tmp_path, monkeypatch):
+    import json
+    sc = {"benchmarks": {"beat_in_both_windows": {"spy": {"n_beat_both": 66, "n_rules": 282},
+                                                  "iwm": {"n_beat_both": 112, "n_rules": 282},
+                                                  "random_panel": {"n_beat_both": 135, "n_rules": 282}},
+                         "random_controls_iwm_beta_full": {"random_1@k50": 0.7, "random_3@k20": 0.85,
+                                                           "random_large@k50": 0.4}},
+          "n_changed": {"loo_verdict": 3}, "rows": []}
+    (tmp_path / "leaderboard_RUN.rekeyed.json").write_text(json.dumps(sc), encoding="utf-8")
+    monkeypatch.setattr(BR, "STRUCT_DIR", tmp_path)
+    got, path = BR.panel_sidecar({"run_id": "RUN"}, struct_dir=tmp_path)
+    assert got["benchmarks"]["beat_in_both_windows"]["iwm"]["n_beat_both"] == 112
+    assert BR.panel_sidecar({"run_id": "NONE"}, struct_dir=tmp_path) == (None, None)
+    _bp, board = _cited_board()
+    s = BR.readme_section(dict(board, run_id="RUN"), "lb.json", git_hash="abc1234")
+    assert "tilts small (random controls' IWM beta 0.70-0.85" in s          # random_large excluded
+    assert "**66 / 112 / 135 of 282 rules beat SPY / IWM / the random panel in both windows**" in s
+    assert "understates every rule by the panel's own tilt" in s
+    s0 = BR.readme_section(dict(board, run_id="NONE"), "lb.json", git_hash="abc1234")
+    assert "vs IWM / vs the random panel: NOT COMPUTED" in s0
+
+
+def test_readme_cites_the_committed_sidecar_for_its_run():
+    """The rendered README states all three counts, from the sidecar of the
+    run it cites (so a reader can check them)."""
+    import json
+    _bp, board = _cited_board()
+    p = REPO / "backend" / "data" / "optimus" / "signal_structure" / f"leaderboard_{board['run_id']}.rekeyed.json"
+    assert p.exists(), f"no hold-keyed sidecar for the cited run: {p}"
+    bw = json.loads(p.read_text(encoding="utf-8"))["benchmarks"]["beat_in_both_windows"]
+    s = _readme_section()
+    assert (f"**{bw['spy']['n_beat_both']} / {bw['iwm']['n_beat_both']} / "
+            f"{bw['random_panel']['n_beat_both']} of {bw['spy']['n_rules']} rules") in s
+    assert "LOO-worst mean active/mo (hold-month key)" in s

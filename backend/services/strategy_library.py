@@ -1412,6 +1412,20 @@ def dev_selected_sealed_evaluated(rows: list, *, n_blocks: int | None = None,
               and (r.get("max_dd") is not None and r["max_dd"] > -0.40)]
     out["n_beat_spy_in_both_windows"] = len(both)
     out["n_beat_spy_in_both_windows_top5_lt_0_6_dd_gt_m40"] = len(strict)
+    # PANEL-RELATIVE (review 2026-09-27 §2): SPY answers "should Murat own it";
+    # the random panel answers "does the signal select". Counted only when the
+    # rows carry the columns (`panel_benchmarks`); otherwise refused by name.
+    for bn in PANEL_BENCHMARKS:
+        have = [r for r in cand if r.get(f"dev_vs_{bn}") is not None
+                and r.get(f"sealed_vs_{bn}") is not None]
+        if have:
+            out[f"n_beat_{bn}_in_both_windows"] = int(sum(
+                1 for r in have if r[f"dev_vs_{bn}"] > 0 and r[f"sealed_vs_{bn}"] > 0))
+            out[f"n_rules_with_{bn}"] = len(have)
+        else:
+            out[f"n_beat_{bn}_in_both_windows"] = None
+            out[f"{bn}_status"] = (f"NOT_ON_ROWS: no row carries dev_vs_{bn} and sealed_vs_{bn} "
+                                   "(see `panel_benchmarks`)")
     sig = []
     for r in cand:
         m, ir = r.get("mean_active_monthly"), r.get("information_ratio_annual")
@@ -1439,9 +1453,66 @@ def dev_selected_sealed_evaluated(rows: list, *, n_blocks: int | None = None,
         f"{SELECTION_WINDOW_LABEL} (median {t10.get('median_selection_window_vs_spy', 0)*100:+.1f} pp; "
         f"{t10.get('n_beat_spy')} of {t10.get('n')} beat SPY); dev-to-2024-26 rank Spearman "
         f"{rho:.2f} over {len(cand)} rules; {len(both)} rules beat SPY in both windows"
+        + "".join(f", {out[f'n_beat_{bn}_in_both_windows']} beat {PANEL_BENCHMARK_LABEL[bn]}"
+                  for bn in PANEL_BENCHMARKS if out.get(f"n_beat_{bn}_in_both_windows") is not None)
         + (f"; the MDE of a {md['n_blocks']}-block window at 80% power is "
            f"{md['mde_monthly_80pct_power']*100:.1f}%/month" if "mde_monthly_80pct_power" in md else "")
         + ".")
+    return out
+
+
+#: The panel-relative hurdles beside SPY (review 2026-09-27 §2). The random
+#: controls' IWM beta is 0.7-0.85: the survivorship-free panel itself tilts
+#: small, so "vs SPY" charges every rule the panel's own tilt.
+PANEL_BENCHMARKS = ("iwm", "random_panel")
+PANEL_BENCHMARK_LABEL = {"spy": "SPY", "iwm": "IWM",
+                         "random_panel": "the random panel"}
+#: The random panel = the mean monthly NET series of the all-universe random
+#: controls at the widest k (random_large draws from a different universe).
+RANDOM_PANEL_RULES = ("random_1", "random_2", "random_3")
+RANDOM_PANEL_K = 50
+PANEL_BENCHMARK_NOTE = (
+    "vs_X = the rule's net CAGR minus X's CAGR over the SAME monthly periods of the window; "
+    f"random_panel = mean monthly net series of {', '.join(RANDOM_PANEL_RULES)} at "
+    f"k={RANDOM_PANEL_K}; IWM = total return from the cached ETF series on the factory's "
+    "month-end grid")
+
+
+class BenchmarkMissing(RuntimeError):
+    """A benchmark series the receipt needs is absent: refused by name."""
+
+
+def random_panel(net) -> "_pd.Series":
+    """The random panel's monthly net series (mean of the random controls)."""
+    cols = [f"{r}@k{RANDOM_PANEL_K}" for r in RANDOM_PANEL_RULES]
+    have = [c for c in cols if c in net.columns]
+    if not have:
+        raise BenchmarkMissing(f"RANDOM_PANEL_MISSING: none of {cols} in the series")
+    return net[have].mean(axis=1)
+
+
+def panel_benchmarks(net, masks: dict, benches: dict) -> dict:
+    """{f"{window}_vs_{name}": rule CAGR - benchmark CAGR} over the rule's own
+    months in each window. A benchmark that is None, or has a hole inside the
+    rule's months, gives None plus a `_why` naming it (never a partial CAGR)."""
+    out: dict = {}
+    for w, mk in masks.items():
+        y = net[_np.asarray(mk)].dropna()
+        c = _cagr(y) if len(y) else None
+        for name, b in benches.items():
+            key = f"{w}_vs_{name}"
+            if c is None:
+                out[key] = None
+                continue
+            if b is None:
+                out[key], out[f"{key}_why"] = None, f"{name.upper()}_SERIES_MISSING"
+                continue
+            bb = b.reindex(y.index)
+            if bb.isna().any():
+                out[key] = None
+                out[f"{key}_why"] = f"{name.upper()}_SERIES_MISSING: {int(bb.isna().sum())} months"
+                continue
+            out[key] = c - _cagr(bb)
     return out
 
 
@@ -2249,6 +2320,70 @@ def entry_dates(index) -> "_pd.DatetimeIndex":
     return _pd.DatetimeIndex(index) + _pd.offsets.BDay(1)
 
 
+YEAR_KEY_NOTE = ("hold: each monthly period is keyed on the month its money was HELD "
+                 "(the entry session = decision date + 1 business day), the same key "
+                 "`split_windows` uses; a 2020-12-31 decision is January 2021")
+DECISION_KEY_DEPRECATED = ("DEPRECATED (review 2026-09-27 §4b): keyed on the DECISION date, "
+                           "one month early; printed for one release beside the hold-keyed "
+                           "table, then removed")
+
+
+def hold_periods(index) -> "_pd.PeriodIndex":
+    """The calendar month each monthly period's money was HELD: the entry
+    session's month. For a month-end decision grid this is the month the
+    period's return is earned in (and ends in)."""
+    return entry_dates(index).to_period("M")
+
+
+def hold_years(index) -> "_np.ndarray":
+    return _np.asarray(entry_dates(index).year)
+
+
+def by_year_table(net, spy, years) -> dict:
+    """{year: {net, spy, excess, n_months}}, compounded within each key year."""
+    net = _pd.Series(_np.asarray(net, dtype=float), index=_pd.RangeIndex(len(net)))
+    sp = _pd.Series(_np.asarray(spy, dtype=float), index=net.index)
+    ys = _np.asarray(years)
+    out = {}
+    for y in sorted(set(ys.tolist())):
+        mk = ys == y
+        g, s = net[mk], sp[mk]
+        net_y = float(_np.prod(1.0 + g) - 1.0)
+        spy_y = float(_np.prod(1.0 + s.dropna()) - 1.0) if s.notna().any() else None
+        out[str(int(y))] = {"net": net_y, "spy": spy_y,
+                            "excess": (net_y - spy_y) if spy_y is not None else None,
+                            "n_months": int(mk.sum())}
+    return out
+
+
+def leave_one_year_out(active, years) -> dict:
+    """{dropped year: mean monthly active of every other year}."""
+    a = _pd.Series(_np.asarray(active, dtype=float))
+    ys = _np.asarray(years)
+    loo = {}
+    for y in sorted(set(ys.tolist())):
+        a_ = a[ys != y].dropna()
+        if len(a_) > 1:
+            loo[str(int(y))] = float(a_.mean())
+    return loo
+
+
+def top_months(net, n: int = 5) -> list:
+    """The hold months ("YYYY-MM") of the `n` largest monthly log returns."""
+    s = _pd.Series(_np.log1p(_np.asarray(net, dtype=float)), index=hold_periods(net.index))
+    return [str(p) for p in s.sort_values(ascending=False, kind="mergesort").index[:n]]
+
+
+def _signs(by_year: dict) -> str:
+    return "".join("+" if (v["excess"] or 0) > 0 else "-" for v in by_year.values())
+
+
+def _positive_years(by_year: dict) -> int:
+    return int(sum(1 for y in (str(y) for y in range(2020, 2026))
+                   if (by_year.get(y) or {}).get("excess") is not None
+                   and by_year[y]["excess"] > 0))
+
+
 def split_windows(index) -> dict:
     """Boolean masks over monthly periods: dev / sealed / recent. Constants only."""
     ent = entry_dates(index)
@@ -2294,31 +2429,32 @@ def evaluate(monthly, spy, *, hold_months: int = 1,
                  "span": [str(m.index.min().date()), str(m.index.max().date())],
                  "n_months_without_spy": int(sp.isna().sum())}
 
-    by_year = {}
-    for y, g in m.groupby(m.index.year):
-        s = sp.reindex(g.index)
-        net_y = float(_np.prod(1.0 + g["net"]) - 1.0)
-        spy_y = float(_np.prod(1.0 + s.dropna()) - 1.0) if s.notna().any() else None
-        by_year[str(y)] = {"net": net_y, "spy": spy_y,
-                           "excess": (net_y - spy_y) if spy_y is not None else None,
-                           "n_months": int(len(g))}
+    # HOLD-MONTH KEYING (review 2026-09-27 §4b): every per-period statistic is
+    # keyed on the period the money was HELD (the entry session's month), not on
+    # the decision date. Decision-keyed, a 2020-12-31 decision held through the
+    # January 2021 squeeze printed as "2020". The decision-keyed tables ride
+    # along for ONE release under `*_decision`, marked deprecated.
+    hy = hold_years(m.index)
+    by_year = by_year_table(m["net"], sp, hy)
+    by_year_dec = by_year_table(m["net"], sp, m.index.year)
+    out["year_key"] = YEAR_KEY_NOTE
     out["by_year"] = by_year
-    out["by_year_signs"] = "".join(
-        "+" if (v["excess"] or 0) > 0 else "-" for v in by_year.values())
-    yrs = [str(y) for y in range(2020, 2026)]
-    out["positive_excess_years_2020_2025"] = int(sum(
-        1 for y in yrs if (by_year.get(y) or {}).get("excess") is not None
-        and by_year[y]["excess"] > 0))
+    out["by_year_hold"] = by_year
+    out["by_year_decision"] = by_year_dec
+    out["by_year_decision_status"] = DECISION_KEY_DEPRECATED
+    out["by_year_signs"] = _signs(by_year)
+    out["by_year_signs_decision"] = _signs(by_year_dec)
+    out["positive_excess_years_2020_2025"] = _positive_years(by_year)
+    out["positive_excess_years_2020_2025_decision"] = _positive_years(by_year_dec)
 
-    years = m.index.year
-    loo = {}
-    for y in sorted(set(years)):
-        a_ = act[years != y].dropna()
-        if len(a_) > 1:
-            loo[str(y)] = float(a_.mean())
+    loo = leave_one_year_out(act, hy)
+    loo_dec = leave_one_year_out(act, m.index.year)
     out["leave_one_year_out_mean_active"] = loo
     out["loo_worst_mean_active"] = min(loo.values()) if loo else None
     out["loo_worst_dropped_year"] = min(loo, key=loo.get) if loo else None
+    out["leave_one_year_out_mean_active_decision"] = loo_dec
+    out["loo_worst_mean_active_decision"] = min(loo_dec.values()) if loo_dec else None
+    out["loo_worst_dropped_year_decision"] = min(loo_dec, key=loo_dec.get) if loo_dec else None
 
     a = act.dropna()
     out["active_returns"] = [float(x) for x in a.values]
@@ -2344,6 +2480,8 @@ def evaluate(monthly, spy, *, hold_months: int = 1,
     tot = float(lr.sum())
     best = _np.sort(lr)[::-1][:5]
     out["top5_months_share_of_log_return"] = float(best.sum() / tot) if tot > 0 else None
+    # the share itself does not depend on the key; WHICH months it names does
+    out["top5_months_hold"] = top_months(m["net"], 5)
     rest = _np.sort(lr)[:-5] if len(lr) > 5 else _np.array([])
     out["cagr_without_best_5_months"] = (float(_np.exp(rest.sum() * 12.0 / len(rest)) - 1.0)
                                          if len(rest) else None)

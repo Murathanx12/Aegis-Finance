@@ -627,3 +627,81 @@ def test_by_year_gap_excludes_the_named_year():
     g = SL.by_year_gap(a, b, exclude=("2025",))
     assert g["gap_by_year"] == pytest.approx({"2024": 0.2, "2025": 0.5})
     assert g["sum_excluding"] == pytest.approx(0.2) and g["n_years_excluding"] == 1
+
+
+# ───────────── review 2026-09-27: hold-month keying, panel-relative benchmark ─────────────
+
+def _monthly(dates, net):
+    n = len(dates)
+    return pd.DataFrame({"date": pd.DatetimeIndex(dates), "gross": net, "cost": [0.0] * n,
+                         "net": net, "turnover": [0.0] * n, "n_held": [20] * n,
+                         "n_delisted": [0] * n, "rebalanced": [True] * n})
+
+
+def test_a_return_held_after_a_year_boundary_lands_in_the_later_year():
+    """Review 2026-09-27 §4b: the only return sits in the period DECIDED on
+    2020-12-31 and HELD through January 2021 (the distance-to-default squeeze
+    month). Hold-keyed it is 2021; the deprecated decision key said 2020."""
+    dates = pd.date_range("2019-01-31", "2021-12-31", freq="ME")
+    net = [0.5 if d == pd.Timestamp("2020-12-31") else 0.0 for d in dates]
+    ev = SL.evaluate(_monthly(dates, net), pd.Series(0.0, index=dates))
+    assert ev["by_year"]["2021"]["net"] == pytest.approx(0.5)
+    assert ev["by_year"]["2020"]["net"] == pytest.approx(0.0)
+    assert ev["by_year_hold"] is ev["by_year"]
+    assert ev["by_year_decision"]["2020"]["net"] == pytest.approx(0.5)
+    assert ev["by_year_decision_status"].startswith("DEPRECATED")
+    # the LOO year that removes the return is the HELD year
+    assert ev["loo_worst_dropped_year"] == "2021"
+    assert ev["loo_worst_dropped_year_decision"] == "2020"
+    assert ev["top5_months_hold"][0] == "2021-01"
+    # 2019-01-31 is held in February: 2019 has 11 hold months and the last
+    # decision (2021-12-31) is held in 2022
+    assert ev["by_year"]["2019"]["n_months"] == 11 and ev["by_year"]["2022"]["n_months"] == 1
+    assert sum(v["n_months"] for v in ev["by_year"].values()) == len(dates)
+
+
+def test_the_top5_share_does_not_depend_on_the_key():
+    dates = pd.date_range("2019-01-31", "2021-12-31", freq="ME")
+    net = list(np.random.default_rng(3).normal(0.01, 0.05, len(dates)))
+    ev = SL.evaluate(_monthly(dates, net), pd.Series(0.0, index=dates))
+    lr = np.log1p(np.array(net))
+    assert ev["top5_months_share_of_log_return"] == pytest.approx(np.sort(lr)[::-1][:5].sum() / lr.sum())
+    best = SL.hold_periods(dates)[int(np.argmax(lr))]
+    assert ev["top5_months_hold"][0] == str(best)
+
+
+def test_panel_benchmarks_are_same_months_and_refuse_by_name():
+    dates = pd.date_range("2022-01-31", "2025-12-31", freq="ME")
+    rule = pd.Series(0.02, index=dates)
+    iwm = pd.Series(0.01, index=dates)
+    net = pd.DataFrame({f"random_{i}@k50": 0.015 for i in (1, 2, 3)}, index=dates)
+    net["random_large@k50"] = 0.5                      # a different universe: never in the panel
+    panel = SL.random_panel(net)
+    assert panel.iloc[0] == pytest.approx(0.015)
+    w = SL.split_windows(dates)
+    out = SL.panel_benchmarks(rule, {"dev": w["dev"], "sealed": w["sealed"]},
+                              {"spy": pd.Series(0.0, index=dates), "iwm": iwm, "random_panel": panel})
+    c = (1.02 ** 12) - 1
+    assert out["sealed_vs_iwm"] == pytest.approx(c - ((1.01 ** 12) - 1))
+    assert out["dev_vs_random_panel"] == pytest.approx(c - ((1.015 ** 12) - 1))
+    miss = SL.panel_benchmarks(rule, {"sealed": w["sealed"]}, {"iwm": None})
+    assert miss["sealed_vs_iwm"] is None and miss["sealed_vs_iwm_why"] == "IWM_SERIES_MISSING"
+    hole = SL.panel_benchmarks(rule, {"sealed": w["sealed"]}, {"iwm": iwm.iloc[:-3]})
+    assert hole["sealed_vs_iwm"] is None and "3 months" in hole["sealed_vs_iwm_why"]
+    with pytest.raises(SL.BenchmarkMissing, match="RANDOM_PANEL_MISSING"):
+        SL.random_panel(net[["random_large@k50"]])
+
+
+def test_dev_selected_counts_all_three_benchmarks_when_rows_carry_them():
+    rows = [dict(_lb_row(f"r{i}", 0.1 - 0.02 * i, 0.05 - 0.02 * i),
+                 dev_vs_iwm=0.1, sealed_vs_iwm=0.1 - 0.05 * i,
+                 dev_vs_random_panel=0.2, sealed_vs_random_panel=0.2)
+            for i in range(6)]
+    b = SL.dev_selected_sealed_evaluated(rows)
+    assert b["n_beat_spy_in_both_windows"] == 3
+    assert b["n_beat_iwm_in_both_windows"] == 2
+    assert b["n_beat_random_panel_in_both_windows"] == 6
+    assert "2 beat IWM, 6 beat the random panel" in b["sentence"]
+    bare = SL.dev_selected_sealed_evaluated([_lb_row(f"r{i}", 0.1, 0.1) for i in range(3)])
+    assert bare["n_beat_iwm_in_both_windows"] is None
+    assert bare["iwm_status"].startswith("NOT_ON_ROWS")
