@@ -283,7 +283,11 @@ def panel(tmp_path):
                      "pit_anchor_utc": anchor, "pit_anchor_field":
                          ("published_utc" if anchor else None),
                      "pit_grade": "native_stamp" if anchor else None,
-                     "first_seen_utc": "2026-09-11T00:00:00Z"})
+                     # 2026-09-27: first seen WHEN published. The old literal
+                     # (first seen 2026-09-11, published 2025-01) is exactly the
+                     # archive shape `exclude_archive_panel` now drops, and these
+                     # tests are about typing and resume, not PIT grading.
+                     "first_seen_utc": pub})
 
     shared = "Sector wide recall announced by regulator"
     row("u1", "AAA", "2025-01-10T21:00:00Z", "2025-01-13", shared)
