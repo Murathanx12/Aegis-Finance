@@ -1011,7 +1011,10 @@ def first_hour_headlines(rows, session: date) -> dict:
 
 
 def load_news_rows(session: date, *, corpus_dir=None) -> list[dict]:
-    """The corpus file for one day, or an empty list when the day is absent."""
+    """The corpus file for one day, or an empty list when the day is absent.
+
+    Each row is PIT-graded at read time (`news_registry.grade_row`).
+    """
     import json
 
     d = Path(corpus_dir) if corpus_dir is not None else news_corpus_dir()
@@ -1027,7 +1030,11 @@ def load_news_rows(session: date, *, corpus_dir=None) -> list[dict]:
             rows.append(json.loads(line))
         except ValueError:
             continue
-    return rows
+    # Graded at READ time (wave-1 row 12): a row published > 30 days before we
+    # first saw it is `pit_grade: archive`, so the `native_stamp` gate below
+    # can never read a 2015 headline stamped with its 2026 ingest time.
+    from backend.services.news_registry import grade_row
+    return [grade_row(r) for r in rows]
 
 
 # --------------------------------------------------------------------------

@@ -122,3 +122,72 @@ def test_state_at_entry_drops_post_entry_revisions_and_forecasts():
     assert st["forecasts"]["n"] == 0
     ex = F.ex_post_catalyst(case, ctx)
     assert "LateCo" in ex["revisions_in_window"]["firms"]
+
+
+def test_case_held_by_two_rules_is_selectable_by_rule_with_both_ids():
+    closes, sector, S = _panel({"POS": 0.08})
+    pos = _position(S, closes)
+    R = str(S.date())
+    before = str((S - pd.Timedelta(days=20)).date())
+    after = str((S + pd.Timedelta(days=3)).date())       # post-R: must not count
+    ctx = F.Context(closes=closes, sector=sector, rule_holdings={
+        "rule_a": {before: ["POS", "T1"]},
+        "rule_b": {"2020-01-31": ["T2"], before: ["POS"]},
+        "rule_c": {before: ["T3"], after: ["POS"]},       # bought POS only after R
+        "rule_d": {"2020-01-31": ["POS"], before: ["T4"]},  # sold POS before R
+    }, rule_meta={"rule_a": {"sealed_rank": 7}, "rule_b": {"sealed_rank": 2}})
+    case = _one_case(ctx, pos)
+    assert case.R == R
+    sel = F.selectable_by_rules("POS", case.R, ctx)
+    assert sel["selectable_by_rules"] == ["rule_b", "rule_a"]     # sealed-rank order
+    assert sel["n_rules_selecting"] == 2
+    r = F.analyse([case], ctx)[0]
+    assert r["class"] == "SELECTABLE_BY_RULE", r["class_rule"]
+    assert set(r["selectable_by_rules"]) == {"rule_a", "rule_b"}
+    assert r["n_rules_selecting"] == 2
+    assert r["class_before_rule_join"] in F.CLASSES
+    assert r["class_before_rule_join"] != "SELECTABLE_BY_RULE"
+    assert r["credit"] != "credited"                  # it credits no book
+
+
+def test_adverse_move_on_a_held_name_is_not_selectable():
+    closes, sector, S = _panel({"POS": -0.08})
+    pos = _position(S, closes)
+    before = str((S - pd.Timedelta(days=20)).date())
+    ctx = F.Context(closes=closes, sector=sector, rule_holdings={"rule_a": {before: ["POS"]}})
+    r = F.analyse([_one_case(ctx, pos)], ctx)[0]
+    assert r["class"] != "SELECTABLE_BY_RULE" and r["n_rules_selecting"] == 1
+
+
+def test_book_sigma_from_a_synthetic_correlation_matrix():
+    sig = [0.02, 0.04, 0.03]
+    C = np.array([[1.0, 0.5, 0.2], [0.5, 1.0, 0.0], [0.2, 0.0, 1.0]])
+    w = [2.0, 1.0, 1.0]                                  # normalised to 0.5/0.25/0.25
+    wn = np.array([0.5, 0.25, 0.25])
+    cov = np.outer(sig, sig) * C
+    expect = float(np.sqrt(wn @ cov @ wn))
+    assert abs(F.book_sigma(sig, C, w) - expect) < 1e-12
+    # rho = 1 collapses to the weighted mean sigma; rho = 0 to the root sum of squares
+    assert abs(F.book_sigma(sig, np.ones((3, 3)), [1, 1, 1]) - np.mean(sig)) < 1e-12
+    assert abs(F.book_sigma(sig, np.eye(3), [1, 1, 1])
+               - np.sqrt(sum((s / 3) ** 2 for s in sig))) < 1e-12
+
+
+def test_book_move_is_printed_in_book_sigma_from_realised_correlation():
+    closes, sector, S = _panel({"POS": 0.08, "T0": 0.08})
+    ps = []
+    for tk in ("POS", "T0"):
+        p = _position(S, closes)
+        p.ticker, p.book = tk, "book:bk"
+        ps.append(p)
+    ctx = F.Context(closes=closes, sector=sector)
+    bm = F.book_moves(ps, ctx, horizons=(1, 5))
+    assert len(bm) == 1
+    b = bm[0]
+    i = ctx.sessions.get_loc(S)
+    ret = closes[["POS", "T0"]].iloc[i - 63: i + 1].pct_change().iloc[1:]
+    expect = F.book_sigma(ret.std(ddof=1).to_numpy(), ret.corr().to_numpy(), [1, 1])
+    assert abs(b["sigma_1_book"] - round(expect, 6)) < 1e-6
+    m5 = b["moves"]["5"]
+    assert abs(m5["z_book"] - m5["move"] / (expect * np.sqrt(5))) < 1e-3
+    assert "book-sigma" in F.book_sigma_line(b)

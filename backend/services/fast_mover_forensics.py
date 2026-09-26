@@ -18,6 +18,20 @@ Every FORWARD position that moved >= 5% absolute, or >= 2 sigma_63, within 1 or
   sigma_h AND the mechanism was visible at entry AND the book selected it for
   that mechanism. Everything else is ``credit: none``.
 
+* ``selectable_by_rules`` -- (wave-1 row 11) which strategy-library rules HELD
+  the name at their last rebalance <= R. A favourable case on such a name is
+  ``SELECTABLE_BY_RULE`` (the ex-post label kept in ``class_before_rule_join``):
+  it credits no book, it says the machine could have had it.
+* ``book_moves``      -- every book's move printed in its OWN sigma at entry
+  (names' sigma_63 + realised 63-session correlation, not an assumed rho).
+* archive quarantine  -- (wave-1 row 12) corpus rows published > 30 days before
+  first seen are ``pit_grade: archive`` at read time and never enter the state
+  at entry; a forecast past ``resolves_after`` is never visible.
+
+"N favourable moves beat their controls" is NOT printed: cases are selected on
+the size of the move, so beating a 3-name median by 1 sigma_h is close to
+guaranteed (HONEST_CONTROLS_SENTENCE says so on every receipt).
+
 Nothing here places an order, and nothing here writes under ``sim/``.
 
 Move conventions (printed on the receipt):
@@ -63,7 +77,13 @@ CRSP_PIT = LEDGER / "crsp_pit" / "crsp_pit_monthly_v1.parquet"
 
 CLASSES = ("PREDICTED_MECHANISM", "RIGHT_STOCK_WRONG_REASON", "SECTOR_BETA",
            "UNFORESEEABLE_NEWS", "ATTENTION_REFLEXIVITY", "ANALYST_CASCADE",
-           "PRODUCT_DEMAND", "SUPPLY_CONSTRAINT", "POLICY", "OTHER")
+           "PRODUCT_DEMAND", "SUPPLY_CONSTRAINT", "POLICY", "OTHER",
+           "SELECTABLE_BY_RULE")
+#: A favourable move on a name >= 1 strategy-library rule HELD at its last
+#: rebalance on or before R (wave-1 adjudication row 11). It credits no book:
+#: it says the machine could have had it. The ex-post label is kept beside it
+#: in `class_before_rule_join`.
+SELECTABLE = "SELECTABLE_BY_RULE"
 #: Ex-post mechanisms specific enough to be their own label.
 SPECIFIC = ("POLICY", "SUPPLY_CONSTRAINT", "PRODUCT_DEMAND", "ANALYST_CASCADE",
             "ATTENTION_REFLEXIVITY")
@@ -181,6 +201,12 @@ class Context:
     pit_rows: list = field(default_factory=list)        # {key, observed_at, ...}
     x_posts: dict = field(default_factory=dict)         # case_id -> quest result
     spy: str = "SPY"
+    #: {rule_id: {rebalance_date 'YYYY-MM-DD': [symbols held]}} -- the
+    #: strategy library's own holdings (non-control rules), see
+    #: scripts/fast_mover_forensics.py --build-rule-holdings
+    rule_holdings: dict = field(default_factory=dict)
+    #: {rule_id: {"sealed_rank": int, "sealed_vs_spy": float, "k": int}}
+    rule_meta: dict = field(default_factory=dict)
 
     @property
     def sessions(self) -> pd.DatetimeIndex:
@@ -357,6 +383,37 @@ def _news_for(ctx: Context, ticker: str) -> list[dict]:
     return [r for r in ctx.news if ticker in (r.get("_tickers") or ())]
 
 
+def _is_archive(row: dict) -> bool:
+    """Graded at read time by the ONE grader (news_registry), whatever the
+    row declares: a stale `pit_grade` on a synthetic or cached row cannot
+    let an archive through."""
+    from backend.services.news_registry import ARCHIVE_GRADE, effective_pit_grade
+    return (str(row.get("pit_grade") or "") == ARCHIVE_GRADE
+            or effective_pit_grade(row) == ARCHIVE_GRADE)
+
+
+def forecast_live_at(p: dict, t: datetime) -> bool:
+    """A forecast is visible at `t` only while it is live: `resolves_after`
+    (else made_at + horizon_days) on or after t's date. Undateable = not live."""
+    ra = p.get("resolves_after")
+    end: date | None = None
+    if ra:
+        try:
+            end = pd.Timestamp(str(ra)).date()
+        except (ValueError, TypeError):
+            end = None
+    if end is None:
+        m = _dt_or_none(p.get("made_at"))
+        try:
+            hd = int(p.get("horizon_days"))
+        except (TypeError, ValueError):
+            return False
+        if m is None:
+            return False
+        end = (m + timedelta(days=hd)).date()
+    return end >= t.date()
+
+
 def _dt_or_none(v: Any) -> datetime | None:
     try:
         return _utc(v)
@@ -413,11 +470,14 @@ def state_at_entry(case: Case, ctx: Context) -> dict:
     else:
         out["revision_flow_90d"] = "unavailable"
 
-    # forecasts made <= t
-    fc = [p for p in ctx.predictions if p.get("ticker") == tk
-          and (_dt_or_none(p.get("made_at")) or t + timedelta(1)) <= t]
+    # forecasts made <= t AND still live at t: an expired forecast
+    # (resolves_after < entry date) is never "visible" (wave-1 row 12)
+    made = [p for p in ctx.predictions if p.get("ticker") == tk
+            and (_dt_or_none(p.get("made_at")) or t + timedelta(1)) <= t]
+    fc = [p for p in made if forecast_live_at(p, t)]
     out["forecasts"] = {
-        "pit_column": "made_at", "n": len(fc),
+        "pit_column": "made_at", "live_rule": "resolves_after >= entry date",
+        "n": len(fc), "expired_at_entry": len(made) - len(fc),
         "latest": [{k: p.get(k) for k in ("made_at", "observable", "probability",
                                           "threshold", "horizon_days",
                                           "specialist", "thesis")}
@@ -428,12 +488,15 @@ def state_at_entry(case: Case, ctx: Context) -> dict:
     out["thesis_card"] = ({"date": cards[-1][0], "path": cards[-1][1]}
                           if cards else "none_at_entry")
 
-    # news first_seen <= t
-    pre = [r for r in _news_for(ctx, tk)
-           if (_dt_or_none(r.get("first_seen_utc")) or t + timedelta(1)) <= t]
+    # news first_seen <= t, archive rows quarantined (wave-1 row 12): a row
+    # published > 30d before we first saw it is not news at first_seen
+    seen_pre = [r for r in _news_for(ctx, tk)
+                if (_dt_or_none(r.get("first_seen_utc")) or t + timedelta(1)) <= t]
+    pre = [r for r in seen_pre if not _is_archive(r)]
     pre.sort(key=lambda r: r.get("first_seen_utc") or "", reverse=True)
     out["news_pre_entry"] = {
         "pit_column": "first_seen_utc", "count": len(pre),
+        "excluded_archive": len(seen_pre) - len(pre),
         "lexicon": lexicon_hits(r.get("title", "") for r in pre),
         "top5": [{"first_seen_utc": r.get("first_seen_utc"),
                   "source": r.get("source"), "title": (r.get("title") or "")[:160]}
@@ -676,10 +739,152 @@ def credit(case: Case, cls: str, predicted: bool, selected_for: bool,
         return {"credit": "credited",
                 "why": f"beat controls by {edge:+.2%} >= {case.sigma_h:.2%}, and "
                        f"the mechanism was visible at entry AND was why it was held"}
+    ws = case.position.why_selected or {}
+    recorded = bool(ws.get("signal") or ws.get("thesis") or ws.get("rationale")
+                    or ws.get("is_twin"))
+    reason = ("was" if selected_for else "was not" if recorded else
+              "could not be checked against (why_selected UNRECORDED)")
     return {"credit": "none",
             "why": f"accidental: beat controls by {edge:+.2%} but the mechanism "
                    f"was {'visible' if predicted else 'not visible'} at entry and "
-                   f"{'was' if selected_for else 'was not'} the reason it was held"}
+                   f"{reason} the reason it was held"}
+
+
+# ─────────────────────── 5b. selectable by rule ─────────────────────────────
+
+def selectable_by_rules(ticker: str, R: str, ctx: Context) -> dict:
+    """Which strategy-library rules HELD `ticker` at their last rebalance on
+    or before R (the last close knowable at entry). A rebalance decided at a
+    close is knowable after that close, so date <= R is the PIT cut."""
+    ids, used = [], {}
+    for rid, by_date in (ctx.rule_holdings or {}).items():
+        ds = [d for d in by_date if d <= str(R)]
+        if not ds:
+            continue
+        d = max(ds)
+        if ticker in (by_date.get(d) or ()):
+            ids.append(rid)
+            used[rid] = d
+    meta = ctx.rule_meta or {}
+    ids.sort(key=lambda r: (meta.get(r, {}).get("sealed_rank") or 10**6, r))
+    return {"selectable_by_rules": ids, "n_rules_selecting": len(ids),
+            "rebalance_date_by_rule": used,
+            "sealed_rank_by_rule": {r: meta.get(r, {}).get("sealed_rank") for r in ids},
+            "n_rules_joined": len(ctx.rule_holdings or {})}
+
+
+# ─────────────────────── 5c. book volatility at entry ───────────────────────
+
+def book_sigma(sigmas: Sequence[float], corr: Any, weights: Sequence[float]) -> float:
+    """sqrt(w' D C D w): the book's one-session sigma from per-name sigmas, a
+    correlation matrix and weights (normalised to sum 1 in absolute value)."""
+    sg = np.asarray(sigmas, dtype=float)
+    C = np.asarray(corr, dtype=float)
+    w = np.asarray(weights, dtype=float)
+    w = w / np.abs(w).sum()
+    cov = np.outer(sg, sg) * C
+    return float(math.sqrt(max(float(w @ cov @ w), 0.0)))
+
+
+def book_risk_at_entry(names: Sequence[str], weights: Sequence[float] | None,
+                       R: str, ctx: Context, window: int = SIGMA_WINDOW) -> dict:
+    """The book's realised one-session sigma at entry: each name's sigma over
+    the `window` daily returns ending at R and their realised pairwise
+    correlation over the same sessions (pairwise-complete), NOT an assumed
+    rho. Names without >= 20 returns are dropped and counted."""
+    i = _idx(ctx.sessions, R)
+    cols = [n for n in names if n in ctx.closes.columns]
+    w_all = dict(zip(names, weights if weights is not None else [1.0] * len(names)))
+    win = ctx.closes[cols].iloc[max(0, i - window): i + 1].astype(float)
+    ret = win.pct_change(fill_method=None).iloc[1:]
+    ok = [c for c in cols if ret[c].notna().sum() >= 20]
+    if not ok:
+        return {"sigma_1": None, "n_names": 0, "dropped": list(names)}
+    ret = ret[ok]
+    sg = ret.std(ddof=1).to_numpy()
+    C = ret.corr(min_periods=20).fillna(0.0).to_numpy()
+    np.fill_diagonal(C, 1.0)
+    w = [float(w_all.get(n) or 0.0) for n in ok]
+    if not any(w):
+        w = [1.0] * len(ok)
+    s1 = book_sigma(sg, C, w)
+    iu = np.triu_indices(len(ok), 1)
+    return {"sigma_1": s1, "n_names": len(ok),
+            "dropped": [n for n in names if n not in ok],
+            "mean_pair_corr": float(np.mean(C[iu])) if len(ok) > 1 else None,
+            "median_name_sigma_1": float(np.median(sg)),
+            "window_sessions": int(len(ret)), "R": str(R)}
+
+
+def book_moves(positions: Iterable[Position], ctx: Context,
+               horizons: Sequence[Any] = (1, 5, 6, "to_date")) -> list[dict]:
+    """One row per (book, entry session): the book's move over each horizon
+    (weighted close-to-close from R, weights as decided, else equal) printed
+    beside its realised sigma_h at entry and the move in book-sigma. The book
+    is judged as a PORTFOLIO before any per-name story."""
+    groups: dict[tuple, list[Position]] = {}
+    for p in positions:
+        if not p.book.startswith("book:"):
+            continue
+        sr = sessions_for(p, ctx.sessions)
+        if sr is None:
+            continue
+        groups.setdefault((p.book, sr[0], sr[1]), []).append(p)
+    sess = ctx.sessions
+    out = []
+    for (book, S, R), ps in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1])):
+        names = [p.ticker for p in ps]
+        wts = [float((p.why_selected or {}).get("weight") or 0.0) for p in ps]
+        if not any(wts):
+            wts = [1.0] * len(ps)
+        risk = book_risk_at_entry(names, wts, str(sess[R].date()), ctx)
+        ws0 = ps[0].why_selected or {}
+        row = {"book": book, "title": ws0.get("book_title"),
+               "is_twin": bool(ws0.get("is_twin")),
+               "priority": any(p.priority for p in ps), "S": str(sess[S].date()),
+               "R": str(sess[R].date()), "n_names": len(names),
+               "sigma_1_book": _num(risk["sigma_1"]), "risk": risk, "moves": {}}
+        for h in horizons:
+            j = (len(sess) - 1) if h == "to_date" else S + int(h)
+            if j >= len(sess) or j <= R:
+                continue
+            num = den = 0.0
+            for p, w in zip(ps, wts):
+                n = p.ticker
+                if n not in ctx.closes.columns:
+                    continue
+                a, b = ctx.closes[n].iloc[R], ctx.closes[n].iloc[j]
+                if pd.isna(a) or pd.isna(b) or a <= 0:
+                    continue
+                num += w * p.direction * (float(b) / float(a) - 1.0)
+                den += abs(w)
+            if den <= 0:
+                continue
+            mv = num / den
+            n_sess = j - R
+            sh = risk["sigma_1"] * math.sqrt(n_sess) if risk["sigma_1"] else None
+            row["moves"][str(h)] = {"end": str(sess[j].date()), "sessions": n_sess,
+                                    "move": round(mv, 5), "sigma_h": _num(sh),
+                                    "z_book": _num(mv / sh) if sh else None}
+        out.append(row)
+    return out
+
+
+def book_sigma_line(r: dict) -> str:
+    """'h=6: +10.2% = +0.90 book-sigma (sigma_h 11.3%)' per horizon, then the
+    book's sigma_1, names and realised mean pair correlation."""
+    parts = []
+    for h, m in r["moves"].items():
+        z = m.get("z_book")
+        parts.append(f"h={h}: {m['move']:+.1%} = "
+                     + (f"{z:+.2f} book-sigma (sigma_h {m['sigma_h']:.1%})" if z is not None
+                        else "no sigma"))
+    rk = r["risk"]
+    rho = rk.get("mean_pair_corr")
+    rho_s = "--" if rho is None else f"{rho:.2f}"
+    return ("; ".join(parts) + f"  [sigma_1 {(r['sigma_1_book'] or 0):.2%}, "
+            f"{rk.get('n_names')} names, realised mean pair corr {rho_s} over "
+            f"{rk.get('window_sessions')} sessions]")
 
 
 # ─────────────────────────── 4. classify ────────────────────────────────────
@@ -1102,6 +1307,10 @@ _COMMON = {"american", "first", "global", "united", "general", "national", "appl
 
 
 def load_news(tickers: set[str]) -> list[dict]:
+    """Corpus rows naming `tickers`, each PIT-graded at read time
+    (`news_registry.effective_pit_grade`: `archive` when published > 30d
+    before first seen). The corpus files are never rewritten."""
+    from backend.services import news_registry as _NR
     names: dict[str, list[re.Pattern]] = {}
     cik2t: dict[str, str] = {}
     try:
@@ -1150,7 +1359,9 @@ def load_news(tickers: set[str]) -> list[dict]:
                 if hit:
                     out.append({k: r.get(k) for k in ("source", "first_seen_utc",
                                                       "published_utc", "title", "url")}
-                               | {"_tickers": sorted(hit)})
+                               | {"_tickers": sorted(hit),
+                                  "declared_pit_grade": r.get("pit_grade"),
+                                  "pit_grade": _NR.effective_pit_grade(r)})
     return out
 
 
@@ -1260,6 +1471,17 @@ def analyse(cases: list[Case], ctx: Context, *, adjudicate: Any = None) -> list[
         hit = cr["credit"] in ("credited",) or (
             c.position.direction * c.move > 0 and "accidental" in cr["why"])
         feat = candidate_feature(c, cl, st) if hit else None
+        sel = selectable_by_rules(c.position.ticker, c.R, ctx)
+        label_before = cl["label"]
+        fav = c.position.direction * c.move > 0
+        if fav and sel["n_rules_selecting"] >= 1 and cr["credit"] != "credited":
+            ids = sel["selectable_by_rules"]
+            cl = {**cl, "label": SELECTABLE,
+                  "rule": (f"R5: favourable, and {len(ids)} library rule(s) held "
+                           f"{c.position.ticker} at their last rebalance <= {c.R} "
+                           f"({', '.join(ids[:5])}{'...' if len(ids) > 5 else ''}); "
+                           f"no book is credited. Ex-post label: {label_before} -- "
+                           f"{cl['rule']}")}
         p = c.position
         rows.append({
             "case_id": c.case_id, "book": p.book, "family": p.family,
@@ -1271,6 +1493,11 @@ def analyse(cases: list[Case], ctx: Context, *, adjudicate: Any = None) -> list[
             "entry_px_gap": c.entry_px_gap,
             "state_at_entry": st, "ex_post_catalyst": ex, "controls": ctl,
             "class": cl["label"], "class_rule": cl["rule"], "mechanism": cl.get("mechanism"),
+            "class_before_rule_join": label_before,
+            "selectable_by_rules": sel["selectable_by_rules"],
+            "n_rules_selecting": sel["n_rules_selecting"],
+            "rule_join": {k: sel[k] for k in ("rebalance_date_by_rule", "sealed_rank_by_rule",
+                                              "n_rules_joined")},
             "predicted": cl["predicted"], "selected_for": cl["selected_for"],
             "adjudicated_by": cl["adjudicated_by"],
             "credit": cr["credit"], "credit_why": cr["why"],
@@ -1279,18 +1506,33 @@ def analyse(cases: list[Case], ctx: Context, *, adjudicate: Any = None) -> list[
 
 
 def _table(rows: list[dict]) -> list[str]:
-    lines = ["| ticker | book | entry | h | move | move h1 / h5 | sigma_h | class | credited | control median | candidate feature |",
-             "|---|---|---|---:|---:|---|---:|---|---|---:|---|"]
+    lines = ["| ticker | book | entry | h | move | move h1 / h5 | sigma_h | z | class | ex-post label | rules holding | credited | candidate feature |",
+             "|---|---|---|---:|---:|---|---:|---:|---|---|---:|---|---|"]
     for r in sorted(rows, key=lambda r: (not r["priority"], -abs(r["move"]))):
-        cm = r["controls"].get("median")
+        z = r.get("z")
+        z_s = "" if z is None else f"{z:+.1f}"
         lines.append(
             f"| {r['ticker']} | {r['book']}{' *' if r['priority'] else ''} | {r['S']} | "
             f"{r['horizon']} | {r['move']:+.1%} | "
             f"{_hp(r, '1')} / {_hp(r, '5')} | "
-            f"{(r['sigma_h'] or 0):.1%} | {r['class']} | {r['credit']} | "
-            f"{'' if cm is None else f'{cm:+.1%}'} | "
-            f"{(r['candidate_feature'] or {}).get('name', '')} |")
+            f"{(r['sigma_h'] or 0):.1%} | {z_s} | {r['class']} | "
+            f"{r.get('class_before_rule_join', '')} | {r.get('n_rules_selecting', 0)} | "
+            f"{r['credit']} | {(r['candidate_feature'] or {}).get('name', '')} |")
     return lines
+
+
+HONEST_CONTROLS_SENTENCE = (
+    "Cases were selected on the size of the move (|move| >= 5% or >= 2 sigma), so "
+    "beating a 3-name control median by 1 sigma_h is close to guaranteed by that "
+    "selection; the earlier count of favourable cases that 'beat their controls' is "
+    "withdrawn as uninformative. No book is credited: the credit rule needs a "
+    "selection reason mapped to a mechanism, which momentum/abstention books and "
+    "twins do not record. What the receipt can say is narrower -- on {n_sel} "
+    "favourable cases ({n_sel_u} ticker-entries) at least one strategy-library rule "
+    "held the name at its last rebalance before entry (SELECTABLE_BY_RULE): the "
+    "machine could have had them, which is factor selection, not a stock call. The "
+    "informative denominator is all {n_priced} priced positions, and a book's move "
+    "is read in its own ex-ante sigma (below) before any per-name story.")
 
 
 def write_receipts(rows: list[dict], meta: dict, *, out_dir: Path = OUT_DIR,
@@ -1306,9 +1548,51 @@ def write_receipts(rows: list[dict], meta: dict, *, out_dir: Path = OUT_DIR,
              "State at entry uses only rows stamped <= entry; the ex-post catalyst is a "
              "separate column. Credit requires beating the median of 3 matched controls "
              "by >= 1 sigma_h AND the mechanism visible at entry AND the reason it was held.",
+             "", "## What the counts can and cannot say", "",
+             HONEST_CONTROLS_SENTENCE.format(
+                 n_sel=meta.get("summary", {}).get("favourable_selectable_by_rule", 0),
+                 n_sel_u=meta.get("summary", {}).get(
+                     "favourable_unique_ticker_entries_selectable", 0),
+                 n_priced=meta.get("summary", {}).get("n_positions_priced", 0)),
              "", "## Counts", "",
-             "```", json.dumps(meta.get("summary", {}), indent=1), "```", "",
-             "## Cases", ""]
+             "```", json.dumps(meta.get("summary", {}), indent=1), "```", ""]
+    aq = meta.get("archive_quarantine")
+    if aq:
+        lines += ["## Corpus archive quarantine (graded at read time)", "",
+                  f"Rule: {aq.get('rule')}. Receipt: `{aq.get('receipt', '')}`. Excluded "
+                  "from every state-at-entry and 'visible at entry' count; an expired "
+                  "forecast (resolves_after < entry) is never visible.", "",
+                  "| source | rows | archive | share |", "|---|---:|---:|---:|"]
+        for src, v in sorted((aq.get("by_source") or {}).items(),
+                             key=lambda kv: -kv[1].get("archive", 0)):
+            if v.get("archive"):
+                lines.append(f"| {src} | {v['rows']:,} | {v['archive']:,} | "
+                             f"{(v.get('archive_share') or 0):.1%} |")
+        lines.append("")
+    bm = meta.get("book_moves") or []
+    if bm:
+        lines += ["## Book moves in book-sigma (realised sigma_63 and correlation at entry)",
+                  "", "Every 'N%' book move is printed beside the book's own sigma over the "
+                  "same sessions, from the names' 63-session sigmas and their realised "
+                  "pairwise correlation (not an assumed rho).", "",
+                  "| book | title | twin | entry S | line |", "|---|---|---|---|---|"]
+        for b in sorted(bm, key=lambda b: (not b.get("priority"), b["book"])):
+            lines.append(f"| {b['book']}{' *' if b.get('priority') else ''} | "
+                         f"{b.get('title') or ''} | {'yes' if b.get('is_twin') else ''} | "
+                         f"{b['S']} | {book_sigma_line(b)} |")
+        lines.append("")
+    nj = meta.get("named_rule_join") or {}
+    if nj:
+        lines += ["## Which library rules held the +10% books' names at entry", "",
+                  "Last rebalance on or before R, non-control rules; sealed rank = "
+                  "position on the leaderboard's primary sort (sealed vs SPY).", ""]
+        for tk, v in nj.items():
+            lines.append(f"- **{tk}** (R {v.get('R')}): {v.get('n_rules_selecting', 0)} rule(s) -- "
+                         + (", ".join(f"`{rid}` (sealed #{rk})" for rid, rk in
+                                      (v.get("rules_with_sealed_rank") or []))
+                            or "none"))
+        lines.append("")
+    lines += ["## Cases", ""]
     lines += _table(rows)
     sup = (meta.get("priority_books_h6_supplement") or {}).get("cases")
     if sup:
@@ -1336,9 +1620,22 @@ def summarise(rows: list[dict], coverage: dict) -> dict:
         "class_counts": dict(Counter(r["class"] for r in rows)),
         "credit_counts": dict(Counter(r["credit"] for r in rows)),
         "favourable": len(fav), "adverse": len(rows) - len(fav),
-        "favourable_beating_controls": sum(1 for r in fav if "accidental" in r["credit_why"]
-                                           or r["credit"] == "credited"),
+        # "N favourable moves beat their controls" is WITHDRAWN (wave-1 row 11):
+        # cases are selected on |move| >= 5% or >= 2 sigma, so beating a
+        # 3-name control median by 1 sigma_h is close to guaranteed by the
+        # selection. The count is not printed; HONEST_CONTROLS_SENTENCE is.
+        "favourable_selectable_by_rule": sum(1 for r in fav if r.get("class") == SELECTABLE),
+        "favourable_unique_ticker_entries_selectable": len(
+            {(r["ticker"], r["S"]) for r in fav if r.get("class") == SELECTABLE}),
         "credited": sum(r["credit"] == "credited" for r in rows),
+        "n_positions_priced": sum(int(v.get("priced", 0)) for v in (coverage or {}).values()),
+        "news_pre_entry_archive_rows_excluded": sum(
+            int((r["state_at_entry"].get("news_pre_entry") or {}).get("excluded_archive", 0))
+            for r in rows),
+        "forecasts_expired_at_entry_excluded": sum(
+            int((r["state_at_entry"].get("forecasts") or {}).get("expired_at_entry", 0))
+            for r in rows),
+        "predicted": sum(bool(r["predicted"]) for r in rows),
         "coverage_by_family": coverage,
         "candidate_features": sorted({r["candidate_feature"]["name"] for r in rows
                                       if r["candidate_feature"]}),
@@ -1348,4 +1645,6 @@ def summarise(rows: list[dict], coverage: dict) -> dict:
 __all__ = ["CLASSES", "Position", "Case", "Context", "find_fast_movers",
            "state_at_entry", "ex_post_catalyst", "classify", "matched_controls",
            "credit", "candidate_feature", "analyse", "write_receipts", "summarise",
-           "x_quest", "Adjudicator", "build_real_inputs", "enrich_context"]
+           "x_quest", "Adjudicator", "build_real_inputs", "enrich_context",
+           "selectable_by_rules", "book_sigma", "book_risk_at_entry", "book_moves",
+           "book_sigma_line", "forecast_live_at", "SELECTABLE", "HONEST_CONTROLS_SENTENCE"]

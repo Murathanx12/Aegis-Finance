@@ -362,3 +362,106 @@ def pullable(path: Path | str | None = None) -> list[NewsSource]:
 def label_sources(path: Path | str | None = None) -> list[str]:
     """Ids whose rows may label a return (N-C reads only these)."""
     return [s.id for s in load(path) if s.label_source]
+
+
+# --------------------------------------------------------------------------
+# ROW-LEVEL PIT GRADE AT READ TIME: the archive quarantine (2026-09-26, wave-1
+# adjudication row 12)
+#
+# `pit_grade` above is a SOURCE's declaration. A source can be honest and a
+# ROW can still be an archive: `alpaca_benzinga_news` served 36,720 headlines
+# published on or before 2015-02-20, and each was stamped `first_seen_utc` =
+# its 2026 ingest time. Filtered on `first_seen_utc` alone, a 2015 headline is
+# "pre-entry evidence" for a 2026 decision (fast-mover forensics read
+# "Facebook acquiring QuickFire Networks" as state at entry). The corpus files
+# are NOT rewritten -- the grade is applied here, at read time, so every
+# reader that goes through `grade_row` sees the same answer and the raw row
+# keeps its declared grade in `declared_pit_grade`.
+
+#: A row grade, never a source grade (so it is deliberately NOT in PIT_GRADES,
+#: which validates the registry file).
+ARCHIVE_GRADE = "archive"
+#: `published_utc` earlier than `first_seen_utc` by more than this is an
+#: archive row: we first saw it long after the world did, so it is not news at
+#: first_seen and must never enter a state-at-entry.
+ARCHIVE_LAG_DAYS = 30
+
+
+def _row_ts(v: Any):
+    from datetime import datetime, timezone
+    if v is None or v == "":
+        return None
+    try:
+        t = datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
+
+
+def effective_pit_grade(row: dict, *, lag_days: int = ARCHIVE_LAG_DAYS) -> str:
+    """The grade a reader must act on: `archive` when the row was published
+    more than `lag_days` before we first saw it, else the row's declared grade
+    (empty string when it declares none). A row missing either stamp keeps its
+    declared grade -- it cannot be proven an archive, and every PIT reader
+    already refuses a row with no `first_seen_utc`."""
+    pub, seen = _row_ts(row.get("published_utc")), _row_ts(row.get("first_seen_utc"))
+    if pub is not None and seen is not None and (seen - pub).total_seconds() > lag_days * 86400:
+        return ARCHIVE_GRADE
+    return str(row.get("pit_grade") or "")
+
+
+def grade_row(row: dict, *, lag_days: int = ARCHIVE_LAG_DAYS) -> dict:
+    """A copy of `row` with `pit_grade` set to the effective grade and the
+    source's own grade kept in `declared_pit_grade`. Never mutates the input."""
+    out = dict(row)
+    out.setdefault("declared_pit_grade", row.get("pit_grade"))
+    out["pit_grade"] = effective_pit_grade(row, lag_days=lag_days)
+    return out
+
+
+def is_archive(row: dict, *, lag_days: int = ARCHIVE_LAG_DAYS) -> bool:
+    return effective_pit_grade(row, lag_days=lag_days) == ARCHIVE_GRADE
+
+
+def archive_census(corpus_dir: Path | str | None = None, *,
+                   lag_days: int = ARCHIVE_LAG_DAYS) -> dict:
+    """Per-source counts of rows the read-time grade quarantines. Reads every
+    `news_corpus/<source>/*.jsonl`; writes nothing."""
+    import json as _json
+    base = Path(corpus_dir) if corpus_dir is not None else (
+        Path(_config.OPTIMUS_LEDGER_DIR) / "news_corpus")
+    by_source: dict[str, dict] = {}
+    for d in sorted(p for p in base.iterdir() if p.is_dir() and not p.name.startswith("_")):
+        n = n_arch = n_unstamped = 0
+        oldest_pub = newest_arch_pub = None
+        for f in sorted(d.glob("*.jsonl")):
+            with open(f, encoding="utf-8") as fh:
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        r = _json.loads(line)
+                    except ValueError:
+                        continue
+                    n += 1
+                    if _row_ts(r.get("published_utc")) is None or _row_ts(r.get("first_seen_utc")) is None:
+                        n_unstamped += 1
+                    if is_archive(r, lag_days=lag_days):
+                        n_arch += 1
+                        p = str(r.get("published_utc"))
+                        oldest_pub = p if oldest_pub is None or p < oldest_pub else oldest_pub
+                        newest_arch_pub = (p if newest_arch_pub is None or p > newest_arch_pub
+                                           else newest_arch_pub)
+        by_source[d.name] = {"rows": n, "archive": n_arch,
+                             "archive_share": round(n_arch / n, 4) if n else None,
+                             "missing_a_stamp": n_unstamped,
+                             "archive_published_min": oldest_pub,
+                             "archive_published_max": newest_arch_pub}
+    return {"rule": (f"pit_grade = '{ARCHIVE_GRADE}' when first_seen_utc - published_utc > "
+                     f"{lag_days} days; graded at read time "
+                     "(backend.services.news_registry.grade_row), corpus files untouched"),
+            "lag_days": lag_days,
+            "total_rows": sum(v["rows"] for v in by_source.values()),
+            "total_archive": sum(v["archive"] for v in by_source.values()),
+            "by_source": by_source}
