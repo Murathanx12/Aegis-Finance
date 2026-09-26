@@ -602,3 +602,402 @@ def test_a_description_of_a_past_move_is_not_a_forecast():
           "paraphrase": "Dell shares have risen sharply this year."}],
         "Dell stock has risen sharply this year.", allowed_tickers={"DELL"})
     assert not kept and refused[0]["why"].startswith("REFUSED_BACKWARD_LOOKING")
+
+
+# ═══════════════ Chunk J2: rotation, the archive, the queue ═════════════════
+
+def _listing(title: str, items: list[tuple[str, str]]) -> str:
+    """A `snapshot --format ai --urls` page with a Sign Out decoy and links."""
+    tree = [f'- rootwebarea "{title}"', '  - link "Sign Out" [ref=s0]']
+    urls = ["1. Sign Out -> https://accounts.wsj.com/logout"]
+    for i, (text, url) in enumerate(items, 1):
+        tree.append(f'  - link "{text}" [ref=e{i}]')
+        urls.append(f"{i + 1}. {text} -> {url}")
+    return "\n".join(tree) + "\nLinks:\n" + "\n".join(urls) + "\n"
+
+
+def _body(title: str) -> str:
+    return (f"{title}\nBy A Writer\nSept. 24, 2026 5:30 am ET\n"
+            + f"{title} -- a paragraph about the company and what may come next. " * 8)
+
+
+BARRONS_ITEMS = [(f"Barron's pick number {i} looks cheap now",
+                  f"https://www.barrons.com/articles/pick-number-{i}-{i}a2b3c4d") for i in (1, 2, 3)]
+WSJ_ITEMS = [("Heard on the Street: memory boom has further to run",
+              "https://www.wsj.com/finance/stocks/memory-boom-1a2b3c4d")]
+LISTINGS = {
+    "https://www.barrons.com/market-data/stocks/stock-picks": _listing("Picks", BARRONS_ITEMS),
+    "https://www.wsj.com/news/heard-on-the-street": _listing("HOTS", WSJ_ITEMS),
+}
+MW_PAGE = """MU Analyst Estimates
+Micron Technology Inc.
+Stock Price Target MU
+High\t$250.00
+Median\t$195.00
+Low\t$120.00
+Average\t$198.37
+Current Price\t$161.22
+Average Recommendation
+Overweight
+Average Target Price
+198.37
+Number Of Ratings
+38
+Next Earnings Date
+Dec. 17, 2026
+52 Week High 205.10
+"""
+
+
+class MultiStub:
+    """openclaw_client with several tabs: each tab has its own current URL;
+    listings snapshot from LISTINGS; clicks follow the ref to its URL."""
+
+    def __init__(self, tabs=None, listings=None, pages=None):
+        self.calls, self.closed, self.cur, self.n = [], [], {}, 50
+        self.listings = listings if listings is not None else LISTINGS
+        self.pages = pages or {}
+        self._tabs = tabs if tabs is not None else [
+            {"tabId": "t13", "url": "https://www.barrons.com/market-data/bonds/x"},
+            {"tabId": "t20", "url": "https://www.wsj.com/health/some-story-4aa63e38"},
+            {"tabId": "t24", "url": "https://mail.google.com/mail/u/0"},
+            {"tabId": "t32", "url": "https://www.marketwatch.com/investing/stock/mu/analystestimates"}]
+
+    def tabs(self, profile_name=None):
+        return self._tabs
+
+    def open_from_tab(self, parent, url, profile_name="user"):
+        self.n += 1
+        tid = f"t{self.n}"
+        self.cur[tid] = url
+        self.calls.append(("open_from_tab", parent, url, tid))
+        return {"new_tab": tid, "url": url, "attached_to": {"pid": 7}}
+
+    def browser(self, verb, *args, profile_name=None, target_id=None, url=None):
+        self.calls.append((verb, target_id, args))
+        if verb == "navigate":
+            self.cur[target_id] = args[0]
+        if verb == "snapshot":
+            return {"rc": 0, "stdout": self.listings.get(self.cur.get(target_id), "")}
+        if verb == "click":
+            snap = self.listings.get(self.cur.get(target_id), "")
+            parsed = WR.parse_snapshot(snap)
+            name = next(n["name"] for n in parsed["nodes"] if n["ref"] == args[0])
+            self.cur[target_id] = next(lk["url"] for lk in parsed["links"] if lk["text"] == name)
+        if verb == "close":
+            self.closed.append(target_id)
+        return {"rc": 0, "verb": verb, "stdout": ""}
+
+    def read_text(self, tab, profile_name=None):
+        u = self.cur.get(tab)
+        self.calls.append(("read_text", tab, u))
+        if u in self.pages:
+            return {"url": u, "title": "page", "text": self.pages[u]}
+        if "analystestimates" in (u or ""):
+            t = u.split("/stock/")[1].split("/")[0].upper()
+            return {"url": u, "title": f"{t} Analyst Estimates",
+                    "text": MW_PAGE.replace("MU", t) + f"\nsalt {t}\n"}
+        title = next((x for x, y in BARRONS_ITEMS + WSJ_ITEMS if y == u), f"Story at {u}")
+        return {"url": u, "title": title, "text": _body(title)}
+
+
+def _clock_throttle(path, seed=5, **kw):
+    ck = Clock()
+    return ck, WR.Throttle(path, now_fn=ck.now, sleep_fn=ck.sleep, seed=seed, **kw)
+
+
+def test_round_robin_is_one_item_per_lane_per_turn_and_exhausted_lanes_drop():
+    from scripts import dowjones_pull as DP
+    order = DP.round_robin({"b": [1, 2, 3], "w": [1], "m": ["MU", "DKNG"]})
+    assert order == [("b", 1), ("w", 1), ("m", "MU"), ("b", 2), ("m", "DKNG"), ("b", 3)]
+
+
+def test_run_plan_rotates_sources_under_one_throttle_and_closes_every_tab(ledger):
+    from scripts import dowjones_pull as DP
+    drv = MultiStub()
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("barrons:stock_picks:3,wsj:heard_on_the_street:5,"
+                          "marketwatch:analyst_estimates:MU|DKNG")
+    parents = DP.resolve_parent_tabs(["barrons", "wsj", "marketwatch"], drv.tabs())
+    rc = DP.run_plan(lanes, parents=parents, driver=drv, throttle=th, stored={})
+    reads = [(o["lane"].split(":")[0], o.get("ticker") or o["url"])
+             for o in rc["order"] if o["turn"] > 0 and o["ok"]]
+    assert [r[0] for r in reads] == ["barrons", "wsj", "marketwatch", "barrons",
+                                     "marketwatch", "barrons"]
+    assert reads[2][1] == "MU" and reads[4][1] == "DKNG"
+    # one tab per lane, each opened from its OWN host's parent, all closed
+    opens = [c for c in drv.calls if c[0] == "open_from_tab"]
+    assert [c[1] for c in opens] == ["t13", "t20", "t32"]
+    assert sorted(drv.closed) == sorted(c[3] for c in opens)
+    assert all(rc["tabs_closed"].values()) and len(rc["tabs_closed"]) == 3
+    assert rc["per_source"] == {"barrons": {"articles": 3, "refusals": 0,
+                                            "chars": rc["per_source"]["barrons"]["chars"]},
+                                "wsj": {"articles": 1, "refusals": 0,
+                                        "chars": rc["per_source"]["wsj"]["chars"]},
+                                "marketwatch": {"articles": 2, "refusals": 0,
+                                                "chars": rc["per_source"]["marketwatch"]["chars"]}}
+    # every page load in the run -- listings included -- is 20-90 s from the last
+    assert all(20 <= g <= 90 for g in rc["seconds_between_page_loads"])
+    assert rc["footprint"]["verdict"] == "HUMAN_PACE_OK" and rc["footprint"]["scroll_share"] == 1.0
+    assert rc["stopped"] is None and not WR.lock_path().exists()
+    # the MU page was already loaded by open_from_tab: read in place, not loaded twice
+    mw_tab = opens[2][3]
+    assert sum(1 for c in drv.calls if c[0] == "navigate" and c[1] == mw_tab) == 1
+
+
+def test_run_plan_skips_stored_urls_and_a_failed_tab_drops_only_its_lane(ledger):
+    from scripts import dowjones_pull as DP
+    drv = MultiStub()
+    orig = drv.browser
+
+    def flaky(verb, *args, profile_name=None, target_id=None, url=None):
+        if verb == "press" and drv.cur.get(target_id, "").startswith("https://www.wsj.com/"):
+            return {"rc": 0, "left_allowed_hosts": True, "tab_url_after": "https://evil.example"}
+        return orig(verb, *args, profile_name=profile_name, target_id=target_id, url=url)
+    drv.browser = flaky
+    _, th = _clock_throttle(ledger / "thr.log")
+    lanes = DP.parse_plan("barrons:stock_picks:3,wsj:heard_on_the_street:5")
+    stored = {WR.norm_url(BARRONS_ITEMS[0][1]): {"2026-01-01"}}
+    rc = DP.run_plan(lanes, parents=DP.resolve_parent_tabs(["barrons", "wsj"], drv.tabs()),
+                     driver=drv, throttle=th, stored=stored)
+    assert rc["lanes"]["barrons:stock_picks"]["skipped_already_stored"] == 1
+    assert len(rc["lanes"]["barrons:stock_picks"]["articles"]) == 2
+    assert rc["lanes"]["wsj:heard_on_the_street"]["dropped"].startswith("ReaderRefused: REFUSED_LEFT_HOSTS")
+    assert len(drv.closed) == 2
+
+
+def test_parent_tabs_are_resolved_by_host_never_hardcoded():
+    from scripts import dowjones_pull as DP
+    tabs = [{"tabId": "t38", "url": "https://www.marketwatch.com/x"},
+            {"tabId": "t32", "url": "https://www.marketwatch.com/investing/stock/mu"},
+            {"tabId": "t20", "url": "https://www.wsj.com/a-1a2b3c4d"},
+            {"tabId": "t5", "url": "https://railway.com/dashboard"}]
+    got = DP.resolve_parent_tabs(["marketwatch", "wsj", "barrons"], tabs)
+    assert got["marketwatch"]["tab"] == "t32"          # the OLDEST MarketWatch tab
+    assert got["wsj"]["how"] == "by_host:wsj.com"
+    assert got["barrons"]["how"].startswith("borrowed") and got["barrons"]["tab"] == "t20"
+    assert DP.resolve_parent_tabs(["wsj"], tabs, explicit={"wsj": "t20"})["wsj"]["how"] == "explicit"
+    with pytest.raises(WR.ReaderRefused, match="PARENT_TAB"):
+        DP.resolve_parent_tabs(["wsj"], tabs, explicit={"wsj": "t5"})
+    with pytest.raises(WR.ReaderRefused, match="NO_PARENT_TAB"):
+        DP.resolve_parent_tabs(["wsj"], [tabs[3]])
+    # a tab this process opened is never a parent
+    assert DP.resolve_parent_tabs(["marketwatch"], tabs,
+                                  exclude={"t32"})["marketwatch"]["tab"] == "t38"
+
+
+def test_plan_parsing_refuses_unknown_sections_and_duplicates():
+    from scripts import dowjones_pull as DP
+    lanes = DP.parse_plan("wsj:heard_on_the_street:4,marketwatch:analyst_estimates:mu|dkng")
+    assert lanes[0]["max"] == 4 and lanes[1]["tickers"] == ["MU", "DKNG"]
+    for bad in ("wsj:opinion:3", "wsj:heard_on_the_street:3,wsj:heard_on_the_street:2",
+                "barrons:stock_picks:many", ""):
+        with pytest.raises(WR.ReaderRefused):
+            DP.parse_plan(bad)
+
+
+def test_archive_days_skip_weekends_and_holidays_newest_first():
+    from scripts import dowjones_pull as DP
+    today = date.today()
+    start = today - timedelta(days=30)
+    days = DP.archive_days(f"{start.isoformat()}..{(today - timedelta(days=1)).isoformat()}",
+                           today=today)
+    assert days == sorted(days, reverse=True)
+    assert all(d.weekday() < 5 for d in days) and 18 <= len(days) <= 23
+    # a Saturday alone is no trading day
+    sat = today - timedelta(days=(today.weekday() - 5) % 7 or 7)
+    assert DP.archive_days(sat.isoformat(), today=today) == []
+    # Labor Day of this year is skipped (derived, not a literal)
+    from backend.services import digest_inbox as DI
+    ld = DI._nth_weekday(today.year, 9, 0, 1)
+    if ld < today:
+        assert DP.archive_days(ld.isoformat(), today=today) == []
+    assert DP.archive_url("wsj", date(2026, 9, 2)) == "https://www.wsj.com/news/archive/2026/09/02"
+    with pytest.raises(WR.ReaderRefused, match="FUTURE"):
+        DP.archive_days(today.isoformat(), today=today)
+    with pytest.raises(WR.ReaderRefused, match="RANGE"):
+        DP.archive_days(f"{today - timedelta(days=2)}..{today - timedelta(days=5)}", today=today)
+
+
+def test_run_archive_reads_newest_day_first_caps_per_day_and_resumes(ledger):
+    from scripts import dowjones_pull as DP
+    d1, d0 = date(2026, 9, 25), date(2026, 9, 24)
+    items = {d: [(f"Story {d.day} number {i} about a company",
+                  f"https://www.wsj.com/business/story-{d.day}-{i}-{i}{d.day:02d}c3d4e")
+                 for i in range(1, 5)] for d in (d0, d1)}
+    listings = {DP.archive_url("wsj", d): _listing(f"Archive {d}", items[d]) for d in (d0, d1)}
+    drv = MultiStub(listings=listings)
+    _, th = _clock_throttle(ledger / "thr.log")
+    stored = {WR.norm_url(items[d1][0][1]): {"2026-09-26"}}
+    rc = DP.run_archive([d1, d0], parent_tab="t20", max_per_day=2, driver=drv, throttle=th,
+                        stored=stored)
+    assert rc["per_day"]["2026-09-25"] == {"url": DP.archive_url("wsj", d1), "links_found": 4,
+                                           "already_stored": 1, "read": 1, "refusals": []}
+    assert rc["per_day"]["2026-09-24"]["read"] == 2 and rc["complete"]
+    days_in_order = [o["day"] for o in rc["order"]]
+    assert days_in_order == sorted(days_in_order, reverse=True)
+    assert rc["tab_closed"] and rc["sources"] == ["wsj"] and "barrons" in rc["not_built"]
+    # resume: what was read is now on disk (plus the one pre-stored URL) -> the
+    # same run loads only the day pages
+    on_disk = WR.stored_urls()
+    assert len(on_disk) == 3
+    drv2 = MultiStub(listings=listings)
+    rc2 = DP.run_archive([d1, d0], parent_tab="t20", max_per_day=2, driver=drv2, throttle=th,
+                         stored={**on_disk, WR.norm_url(items[d1][0][1]): {"2026-09-26"}})
+    assert rc2["n_articles"] == 0 and rc2["complete"]
+    assert not [c for c in drv2.calls if c[0] == "read_text"]
+
+
+def test_queue_resume_skips_done_lines_and_reruns_failed_or_edited_ones(tmp_path):
+    from scripts import dowjones_pull as DP
+    q = tmp_path / "QUEUE.txt"
+    q.write_text("# a comment\n--plan \"wsj:heard_on_the_street:2\"\n\n--archive 2026-09-22\n"
+                 "--claims\n", encoding="utf-8")
+    calls, fail = [], {"--archive"}
+
+    def fake_main(argv):
+        calls.append(argv)
+        return 2 if argv[0] in fail else 0
+    r1 = DP.run_queue(q, inherit=["--handoff"], main_fn=fake_main)
+    assert [ln["status"] for ln in r1["lines"]] == ["DONE", "FAILED_WILL_RETRY", "DONE"]
+    assert calls[0] == ["--plan", "wsj:heard_on_the_street:2", "--handoff"]
+    assert len(list(DP.queue_done_dir(q).glob("*.done"))) == 2
+    calls.clear()
+    fail.clear()
+    r2 = DP.run_queue(q, inherit=["--handoff"], main_fn=fake_main)
+    assert [ln["status"] for ln in r2["lines"]] == ["SKIPPED_DONE", "DONE", "SKIPPED_DONE"]
+    assert calls == [["--archive", "2026-09-22", "--handoff"]]
+    # an EDITED line is a new line: it runs again
+    q.write_text(q.read_text(encoding="utf-8").replace("--claims", "--claims --claims-day 2026-09-25"),
+                 encoding="utf-8")
+    calls.clear()
+    DP.run_queue(q, main_fn=fake_main)
+    assert calls == [["--claims", "--claims-day", "2026-09-25"]]
+
+
+def test_build_queue_text_carries_the_books_and_the_archive():
+    from scripts import dowjones_pull as DP
+    names = {"personal": ["QUBT", "DKNG"], "competition": ["MU", "DKNG"],
+             "probe": [f"P{i:02d}" for i in range(60)]}
+    txt = DP.build_queue_text(date(2026, 9, 26), names=names, cap=40)
+    plan = next(ln for ln in txt.splitlines() if ln.startswith("--plan"))
+    ticks = plan.split("analyst_estimates:")[1].rstrip('"').split("|")
+    assert ticks[:3] == ["QUBT", "DKNG", "MU"] and len(ticks) == 40
+    assert "barrons:stock_picks:10" in plan and "barrons:big_money_poll:3" in plan
+    assert "wsj:heard_on_the_street:10" in plan
+    assert "--archive 2026-09-22..2026-09-25" in txt
+    assert txt.rstrip().splitlines()[-1] == "--claims --claims-since 2026-09-26"
+    import shlex
+    assert DP.parse_plan(shlex.split(plan)[1])[3]["tickers"] == ticks
+
+
+def test_the_hourly_cap_is_waited_out_on_a_long_run_but_the_day_cap_refuses(tmp_path):
+    ck, th = _clock_throttle(tmp_path / "t.log", min_delay_s=20, max_delay_s=20,
+                             max_per_hour=3, max_per_day=5, wait_on_hour_cap=True)
+    for _ in range(4):
+        th.acquire(host="wsj.com")
+    assert len(th.hour_cap_waits) == 1 and th.hour_cap_waits[0] > 3000
+    th.acquire(host="wsj.com")
+    with pytest.raises(WR.ReaderRefused, match="THROTTLE_DAY"):
+        th.acquire(host="wsj.com")
+
+
+# ────────────────── structured rows: MarketWatch, Big Money ─────────────────
+
+def test_mw_analyst_snapshot_parses_the_consensus_fields():
+    row = DC.parse_mw_analyst(MW_PAGE)
+    assert row["consensus_rating"] == "Overweight"
+    assert (row["target_mean"], row["target_high"], row["target_low"],
+            row["target_median"]) == (198.37, 250.0, 120.0, 195.0)
+    assert row["n_analysts"] == 38 and row["next_earnings_date"] == "Dec. 17, 2026"
+    assert row["current_price"] == 161.22 and row["fields_found"] == 8
+    # the LIVE layout (MarketWatch, 2026-09-26): tab-separated, "STOCK PRICE
+    # TARGETS", and the earnings date as a sentence
+    live = ("SNAPSHOT\nAverage Recommendation\tBuy\nAverage Target Price\t1,575.88\n"
+            "Number Of Ratings\t57\nFY Report Date\t8/2026\nLast Quarter's Earnings\t25.11\n"
+            "Current Quarter's Estimate\t31.52\nCurrent Year's Estimate\t73.77\n"
+            "STOCK PRICE TARGETS\nHigh\t$2,200.00\nMedian\t$1,600.00\nLow\t$361.00\n"
+            "Average\t$1,575.88\nCurrent Price\t$1,080.53\nYEARLY NUMBERS\n"
+            "MU WILL REPORT 2026 EARNINGS ON 09/30/2026\n2025\t2026\nHigh\t8.29\t77.38\n")
+    lr = DC.parse_mw_analyst(live)
+    assert (lr["consensus_rating"], lr["target_mean"], lr["target_high"], lr["target_low"],
+            lr["n_analysts"], lr["next_earnings_date"]) == ("Buy", 1575.88, 2200.0, 361.0, 57,
+                                                            "09/30/2026")
+    assert lr["eps_current_quarter_est"] == 31.52 and lr["fy_report_date"] == "8/2026"
+    # the 52-week High is not a target; a page with nothing is THIN, never zeros
+    assert DC.parse_mw_analyst("52 Week High 205.10\nnothing else")["target_high"] is None
+    assert DC.parse_mw_analyst("")["fields_found"] == 0
+
+
+def test_mw_snapshot_row_is_written_once_with_first_seen_and_no_llm(ledger):
+    from scripts import dowjones_pull as DP
+    day = datetime.now(timezone.utc).date().isoformat()
+    art = {"url": "https://www.marketwatch.com/investing/stock/mu/analystestimates",
+           "text": MW_PAGE, "first_seen_utc": f"{day}T01:02:03+00:00", "sha": "abc123",
+           "column": "mw_analyst_estimates", "publisher": "marketwatch"}
+    WR.store_article(dict(art), root=ledger / "news_corpus" / "dowjones")
+
+    def no_llm(system, user):
+        raise AssertionError("an analyst estimates page must not reach the LLM")
+    r = DP.run_claims(day, llm_fn=no_llm, spend_fn=lambda: 0.0,
+                      ledger_path=ledger / "p.jsonl", claims_path=ledger / "c.jsonl",
+                      done_path=ledger / "done.txt")
+    assert r["mw_analyst_snapshot"]["tickers"] == ["MU"] and r["n_llm_calls"] == 0
+    rows = [json.loads(x) for x in DC.structured_path("mw_analyst_snapshot")
+            .read_text(encoding="utf-8").splitlines()]
+    assert len(rows) == 1 and rows[0]["kind"] == "mw_analyst_snapshot"
+    assert rows[0]["first_seen_utc"] == art["first_seen_utc"] and rows[0]["target_mean"] == 198.37
+    assert DC.write_mw_snapshot(art)["n_rows_written"] == 0          # idempotent
+    # the structured file is under the gitignored corpus
+    assert "news_corpus" in str(DC.structured_path("mw_analyst_snapshot"))
+
+
+BIG_MONEY = """Barron's Big Money Poll: The Bulls Are Back
+By A Writer
+Oct. 24, 2026 5:00 am ET
+Some 58% of the managers are bullish on the stock market, while 14% are bearish and the rest neutral.
+The S&P 500 closed at 6,641 on Friday.
+On average, the bulls expect the S&P 500 to finish the year at 6,900 and to reach 7,250 by the middle of 2027.
+The bears see the index at 5,800 by the end of 2027.
+Nvidia (ticker: NVDA) is the managers' favorite stock, and Micron (ticker: MU) is second.
+"""
+
+
+def test_big_money_poll_becomes_index_level_rows():
+    p = DC.parse_big_money(BIG_MONEY, seen_day="2026-10-24")
+    assert (p["bullish_pct"], p["bearish_pct"], p["majority_direction"]) == (58, 14, "up")
+    got = {(f["level"], f["horizon_label"], f["horizon_end"]) for f in p["spx_forecasts"]}
+    assert got == {(6900.0, "end-2026", "2026-12-31"), (7250.0, "mid-2027", "2027-06-30")}
+    # "closed at 6,641" is a level, not a forecast; the bears' sentence names no S&P
+
+
+def test_big_money_rows_are_written_locally_and_barrons_tickers_are_read(ledger):
+    art = {"url": "https://www.barrons.com/articles/big-money-poll-bulls-a54d307f",
+           "text": BIG_MONEY, "first_seen_utc": "2026-10-24T12:00:00+00:00", "sha": "bm1",
+           "published_utc": "2026-10-24T09:00:00+00:00", "column": "barrons_big_money_poll"}
+    r = DC.write_big_money_rows(art)
+    assert r["status"] == "OK" and r["n_rows_written"] == 3 and r["n_spx_levels"] == 2
+    rows = [json.loads(x) for x in DC.structured_path("barrons_big_money_poll")
+            .read_text(encoding="utf-8").splitlines()]
+    d = next(x for x in rows if x["forecast"] == "direction")
+    assert d["direction"] == "up" and d["horizon_label"] == "end-2026" and d["index"] == "SPX"
+    assert DC.write_big_money_rows(art)["n_rows_written"] == 0
+    assert DC.barrons_named_tickers(BIG_MONEY) == ["NVDA", "MU"]
+    assert DC.barrons_named_tickers("Brookfield (ticker: BN) and (tickers: GOOGL, GOOG)") == [
+        "BN", "GOOGL", "GOOG"]
+    assert "BN" in DC.article_tickers("Brookfield (ticker: BN) looks cheap.")
+
+
+def test_a_url_with_a_shell_metacharacter_loses_only_its_tracking_query(tmp_path):
+    # 2026-09-26: "&mod=" ended the openclaw .cmd command line; both Big Money reads failed
+    u = ("https://www.barrons.com/articles/big-money-poll-bulls-a54d307f"
+         "?refsec=big-money-poll&mod=topics_big-money-poll")
+    assert WR.shell_safe_url(u) == "https://www.barrons.com/articles/big-money-poll-bulls-a54d307f"
+    assert WR.shell_safe_url("https://www.wsj.com/a-1a2b3c4d?mod=hots") == \
+        "https://www.wsj.com/a-1a2b3c4d?mod=hots"
+    drv = MultiStub()
+    ck, th = _clock_throttle(tmp_path / "t.log")
+    rd = WR.Reader(profile="user", tab="t99", driver=drv, lock=False, throttle=th)
+    rd.navigate(u)
+    nav = [c for c in drv.calls if c[0] == "navigate"][0]
+    assert "&" not in nav[2][0] and rd.log[-1]["url_shown"] == u

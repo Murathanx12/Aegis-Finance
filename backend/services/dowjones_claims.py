@@ -159,6 +159,7 @@ def article_tickers(text: str, title: str = "") -> set[str] | None:
     resolver cannot run (the check is then skipped and says so)."""
     found = set(re.findall(r"\(([A-Z]{1,5}(?:\.[A-Z])?)\)", text or ""))
     found |= set(re.findall(r"\$([A-Z]{1,5})\b", text or ""))
+    found |= set(barrons_named_tickers(text or ""))
     try:
         from backend.services import news_entities as E
         found |= set(E.resolve(title + "\n" + (text or ""), tbl=E.tables(), limit=200).tickers)
@@ -263,6 +264,253 @@ def validate_claims(raw: list[dict], article_text: str, *,
     return kept, refused
 
 
+#: Barron's writes a named stock as "Brookfield (ticker: BN)".
+_BARRONS_TICKER = re.compile(r"\(\s*tickers?\s*:\s*([A-Z]{1,5}(?:\.[A-Z])?)"
+                             r"(?:\s*(?:,|and)\s*([A-Z]{1,5}(?:\.[A-Z])?))?\s*\)")
+
+
+def barrons_named_tickers(text: str) -> list[str]:
+    """Tickers in Barron's own `(ticker: XX)` form, in order of first mention."""
+    out: list[str] = []
+    for m in _BARRONS_TICKER.finditer(text or ""):
+        for g in m.groups():
+            if g and g not in out:
+                out.append(g)
+    return out
+
+
+#: A column-specific note appended to the USER message (the system prompt is
+#: the same for every column, so a grade means the same thing across columns).
+COLUMN_HINTS: dict[str, str] = {
+    "barrons_stock_picks": (
+        "this is a Barron's stock pick. Emit ONE claim for EACH stock the article "
+        "names with a (ticker: XX) tag and takes a view on (a pick to buy is 'up', a "
+        "call to sell or avoid is 'down'); skip tickers only mentioned in passing."),
+    "barrons_big_money_poll": (
+        "this is Barron's Big Money poll of money managers. Emit claims only for "
+        "individual stocks the managers name as bullish or bearish picks; the index "
+        "forecast is recorded separately."),
+}
+
+
+# ─────────────────────── structured rows (no LLM) ───────────────────────────
+
+MW_RATINGS = ("Strong Buy", "Buy", "Overweight", "Hold", "Underweight", "Sell", "Strong Sell")
+_NUM = r"\$?\s*([0-9][0-9,]*(?:\.[0-9]+)?)"
+_DATE_TXT = (r"((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2},?"
+             r"\s+\d{4}|\d{1,2}/\d{1,2}/\d{2,4})")
+
+
+def _f(x: Any) -> float | None:
+    try:
+        return float(str(x).replace(",", "")) if x not in (None, "") else None
+    except ValueError:
+        return None
+
+
+def mw_ticker_of(url: str) -> str | None:
+    m = re.search(r"/investing/stock/([a-z0-9.\-]+)/analystestimates", (url or "").lower())
+    return m.group(1).upper() if m else None
+
+
+def parse_mw_analyst(text: str) -> dict:
+    """MarketWatch `/investing/stock/<t>/analystestimates` innerText -> the
+    consensus fields. Labels and values may be split by a tab, spaces, a colon
+    or a line break (the innerText of a table). A field the page does not show
+    is None, never 0; `fields_found` counts the ones that parsed."""
+    t = re.sub(r"[ \t ]+", " ", text or "")
+    t = re.sub(r" ?\n ?", "\n", t)
+    sep = r"[\s:]*"
+
+    def grab(pattern: str, hay: str = t) -> str | None:
+        m = re.search(pattern, hay, re.I)
+        return m.group(1) if m else None
+
+    rating = grab(r"Average Recommendation" + sep + r"(" + "|".join(MW_RATINGS) + r")\b")
+    n = grab(r"Number of Ratings" + sep + r"(\d{1,3})\b") or grab(r"\b(\d{1,3}) analysts?\b")
+    mean = grab(r"Average Target Price" + sep + _NUM)
+    # The price-target table (High / Median / Low / Average) is read only
+    # AFTER its heading, so a 52-week "High" elsewhere is never a target.
+    i = re.search(r"(?:Stock )?Price Target", t, re.I)
+    block = t[i.start():i.start() + 600] if i else ""
+    high = grab(r"\bHigh" + sep + _NUM, block) if block else None
+    low = grab(r"\bLow" + sep + _NUM, block) if block else None
+    median = grab(r"\bMedian" + sep + _NUM, block) if block else None
+    if mean is None and block:
+        mean = grab(r"\bAverage" + sep + _NUM, block)
+    current = grab(r"Current Price" + sep + _NUM, block or t)
+    # the live page (2026-09-26) says "MU WILL REPORT Q4 2026 EARNINGS ON 09/30/2026"
+    earn = (grab(r"WILL REPORT [^\n]{0,40}?EARNINGS ON\s+" + _DATE_TXT)
+            or grab(r"(?:Next )?Earnings Date" + sep + _DATE_TXT))
+    row: dict[str, Any] = {
+        "consensus_rating": rating.title() if rating else None,
+        "target_mean": _f(mean), "target_high": _f(high), "target_low": _f(low),
+        "target_median": _f(median), "n_analysts": int(n) if n else None,
+        "next_earnings_date": earn, "current_price": _f(current),
+        "fy_report_date": grab(r"FY Report Date" + sep + r"(\d{1,2}/\d{4})"),
+        "eps_current_quarter_est": _f(grab(r"Current Quarter's Estimate" + sep + _NUM)),
+        "eps_current_year_est": _f(grab(r"Current Year's Estimate" + sep + _NUM))}
+    row["fields_found"] = sum(v is not None for v in row.values())
+    return row
+
+
+_HORIZON_PATTERNS: tuple[tuple[str, str], ...] = (
+    (r"\b(?:by|at|for)\s+(?:the\s+)?(?:middle|mid)[- ](?:of\s+)?(20\d\d)", "mid"),
+    (r"\bmid[- ](20\d\d)", "mid"),
+    (r"\b(?:by|at)\s+(?:the\s+)?end\s+of\s+(20\d\d)", "end"),
+    (r"\b(?:year[- ]end|end of (?:the|this) year|(?:finish|end|close) (?:the|this) year)\b",
+     "year_end"),
+    (r"\b(?:next|coming)\s+12\s+months\b", "12m"),
+)
+_SPX = re.compile(r"S&P\s*500|\bS&P\b")
+_LEVEL = re.compile(r"\b(\d{1,2},\d{3}(?:\.\d+)?)\b")
+_FWD = re.compile(r"\b(expect\w*|forecast\w*|predict\w*|see|sees|target\w*|will|finish|"
+                  r"end\s+(?:20\d\d|the\s+year)|by\s+(?:the\s+)?(?:end|mid|middle)|"
+                  r"reach|hit|climb\w*|rise|rising|fall|falling)\b", re.I)
+
+
+def poll_horizon(sentence: str, seen_day: str) -> tuple[str | None, str | None]:
+    """(label, end date ISO) of a poll sentence's horizon; (None, None) when
+    unstated. `year_end` means the year of `seen_day`."""
+    from datetime import date, timedelta
+    y0 = int(seen_day[:4])
+    for pat, kind in _HORIZON_PATTERNS:
+        m = re.search(pat, sentence, re.I)
+        if not m:
+            continue
+        if kind == "mid":
+            return f"mid-{m.group(1)}", f"{m.group(1)}-06-30"
+        if kind == "end":
+            return f"end-{m.group(1)}", f"{m.group(1)}-12-31"
+        if kind == "year_end":
+            return f"end-{y0}", f"{y0}-12-31"
+        return "12m", (date.fromisoformat(seen_day[:10]) + timedelta(days=365)).isoformat()
+    return None, None
+
+
+_PCT_RE = re.compile(
+    r"(\d{1,3})%\s+(?:of\s+(?:the\s+)?(?:respondents|managers|money\s+managers|investors|"
+    r"those\s+surveyed|participants)\s+)?(?:(?:are|were|say\s+they\s+are|call\s+themselves|"
+    r"describe\s+themselves\s+as|consider\s+themselves)\s+)?(bullish|bearish|neutral)", re.I)
+_BULLS_RE = re.compile(r"\b(bulls|bears)\b[^.]{0,40}?(\d{1,3})%", re.I)
+
+
+def parse_big_money(text: str, *, seen_day: str) -> dict:
+    """Barron's Big Money poll -> `{bullish_pct, bearish_pct, neutral_pct,
+    majority_direction, spx_forecasts: [{level, horizon_label, horizon_end,
+    sentence}]}`. An S&P 500 number counts as a FORECAST only when its sentence
+    carries a forward cue: "the S&P 500 closed at 6,600" is a level, not a
+    view. `sentence` is verbatim and stays in the gitignored local file."""
+    body = re.sub(r"\s+", " ", text or "")
+    sents = re.split(r"(?<=[.!?])\s+(?=[A-Z\"'])", body)
+    pct: dict[str, int] = {}
+    for m in _PCT_RE.finditer(body):
+        pct.setdefault(m.group(2).lower(), int(m.group(1)))
+    for m in _BULLS_RE.finditer(body):
+        pct.setdefault("bullish" if m.group(1).lower() == "bulls" else "bearish",
+                       int(m.group(2)))
+    fc: list[dict] = []
+    seen: set[tuple] = set()
+    for s_ in sents:
+        if not _SPX.search(s_) or not _FWD.search(s_):
+            continue
+        levels = [lm for lm in _LEVEL.finditer(s_)
+                  if 1000 <= (_f(lm.group(1)) or 0) <= 30000]
+        for j, lm in enumerate(levels):
+            lvl = _f(lm.group(1))
+            # Each level owns the text between its neighbours: "finish the year at
+            # 6,900 and reach 7,250 by the middle of 2027" gives 6,900 the year
+            # end and 7,250 mid-2027. The phrase after the number first, then before.
+            lo = levels[j - 1].end() if j else 0
+            hi = levels[j + 1].start() if j + 1 < len(levels) else len(s_)
+            label, end = poll_horizon(s_[lm.end():hi], seen_day)
+            if label is None:
+                label, end = poll_horizon(s_[lo:lm.start()], seen_day)
+            if (lvl, label) in seen:
+                continue
+            seen.add((lvl, label))
+            fc.append({"level": lvl, "horizon_label": label, "horizon_end": end,
+                       "sentence": s_[:QUOTE_MAX]})
+    bull, bear = pct.get("bullish"), pct.get("bearish")
+    maj = None
+    if bull is not None and bear is not None and bull != bear:
+        maj = "up" if bull > bear else "down"
+    return {"bullish_pct": bull, "bearish_pct": bear, "neutral_pct": pct.get("neutral"),
+            "majority_direction": maj, "spx_forecasts": fc}
+
+
+def structured_path(kind: str) -> Path:
+    """Local and GITIGNORED (`news_corpus/dowjones/_structured/<kind>.jsonl`):
+    consensus targets and poll levels are Dow Jones / FactSet content; the
+    public repo gets counts in a receipt, never the rows."""
+    return (Path(_config.OPTIMUS_LEDGER_DIR) / "news_corpus" / "dowjones" / "_structured"
+            / f"{kind}.jsonl")
+
+
+def _append_unique(path: Path, rows: list[dict], key: Callable[[dict], Any]) -> int:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    have = set()
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                have.add(key(json.loads(line)))
+            except (ValueError, KeyError, TypeError):
+                continue
+    new = [r for r in rows if key(r) not in have]
+    if new:
+        with path.open("a", encoding="utf-8") as fh:
+            for r in new:
+                fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+    return len(new)
+
+
+def write_mw_snapshot(article: dict, *, path: Path | None = None) -> dict:
+    """One `mw_analyst_snapshot` row per stored MarketWatch estimates page,
+    stamped `first_seen_utc` (when Aegis held it), idempotent by (ticker,
+    article sha). No LLM. A THIN parse (< 2 fields) is reported, never written."""
+    tk = (article.get("ticker") or mw_ticker_of(str(article.get("url") or ""))
+          or (list(article.get("tickers") or []) or [None])[0])
+    parsed = parse_mw_analyst(str(article.get("text") or ""))
+    if not tk or parsed["fields_found"] < 2:
+        return {"status": "PARSE_THIN", "ticker": tk, "fields_found": parsed["fields_found"],
+                "n_rows_written": 0}
+    row = {"kind": "mw_analyst_snapshot", "source_id": "mw_analyst_estimates",
+           "ticker": str(tk).upper(), "first_seen_utc": article.get("first_seen_utc"),
+           "url": article.get("url"), "article_sha": article.get("sha"), **parsed}
+    n = _append_unique(Path(path) if path else structured_path("mw_analyst_snapshot"), [row],
+                       key=lambda r: (r["ticker"], r["article_sha"]))
+    return {"status": "OK", "ticker": row["ticker"], "fields_found": parsed["fields_found"],
+            "n_rows_written": n}
+
+
+def write_big_money_rows(article: dict, *, path: Path | None = None) -> dict:
+    """Index-level rows (`barrons_big_money_poll`, SPX): one per stated S&P
+    500 level x horizon, plus one direction row (bulls vs bears) at the poll's
+    horizon. The relative-to-SPY claim grader cannot grade these (an index
+    does not beat itself), so they are NOT forecast-ledger rows; the level
+    grader is owed."""
+    seen = str(article.get("first_seen_utc") or now_iso())
+    p = parse_big_money(str(article.get("text") or ""), seen_day=seen[:10])
+    base = {"kind": "index_forecast", "source_id": "barrons_big_money_poll", "index": "SPX",
+            "first_seen_utc": seen, "published_utc": article.get("published_utc"),
+            "url": article.get("url"), "article_sha": article.get("sha")}
+    rows = [{**base, "forecast": "level", "level": f["level"],
+             "horizon_label": f["horizon_label"], "horizon_end": f["horizon_end"],
+             "sentence": f["sentence"]} for f in p["spx_forecasts"]]
+    if p["majority_direction"]:
+        lab = next((f["horizon_label"] for f in p["spx_forecasts"] if f["horizon_label"]), None)
+        end = next((f["horizon_end"] for f in p["spx_forecasts"] if f["horizon_end"]), None)
+        rows.append({**base, "forecast": "direction", "direction": p["majority_direction"],
+                     "bullish_pct": p["bullish_pct"], "bearish_pct": p["bearish_pct"],
+                     "neutral_pct": p["neutral_pct"], "horizon_label": lab, "horizon_end": end})
+    n = _append_unique(Path(path) if path else structured_path("barrons_big_money_poll"), rows,
+                       key=lambda r: (r["article_sha"], r["forecast"], r.get("level"),
+                                      r.get("horizon_label")))
+    return {"status": "OK" if rows else "NO_INDEX_FORECAST", "n_rows": len(rows),
+            "n_rows_written": n, "bullish_pct": p["bullish_pct"],
+            "bearish_pct": p["bearish_pct"], "n_spx_levels": len(p["spx_forecasts"])}
+
+
 def default_llm(system: str, user: str) -> str | None:
     from backend.services import llm_analyzer as LA
     return LA._call_llm(system, user, purpose=str(
@@ -275,8 +523,10 @@ def extract_claims(article: dict, *, llm_fn: Callable[[str, str], str | None] | 
     text = str(article.get("text") or "")
     if len(text) < 300:
         return {"claims": [], "refused": [], "status": "SKIPPED_TOO_SHORT"}
+    hint = COLUMN_HINTS.get(str(article.get("column") or ""), "")
     user = (f"Title: {article.get('title') or ''}\nURL: {article.get('url') or ''}\n"
-            f"Published: {article.get('published') or 'unknown'}\n\n{text[:12000]}")
+            f"Published: {article.get('published') or 'unknown'}\n"
+            + (f"Column note: {hint}\n" if hint else "") + f"\n{text[:12000]}")
     reply = (llm_fn or default_llm)(SYSTEM_PROMPT, user)
     if reply is None:
         return {"claims": [], "refused": [], "status": "LLM_NO_REPLY"}

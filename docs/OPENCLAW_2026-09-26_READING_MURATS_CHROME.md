@@ -256,3 +256,104 @@ added.
 | MarketWatch analyst estimates | not run | -- |
 | claims -> forecast rows | 3 claims -> 6 rows, `source:wsj_heard_on_the_street` (LEU up, AAPL up; HOOD no direction) | `dowjones/claims_2026-09-26_152059.json` |
 | LLM spend | $0.0082 claims (three passes) + $0.0124 Optimus MCP check | `llm_calls` ledger |
+
+## 12. Chunk J2 (2026-09-26 night): rotation, the archive, the queue
+
+Murat asked: "is it only reading Barron's? it can also read WSJ and MarketWatch while it's
+waiting on delays", and then "let openclaw loose". Tabs loading in parallel are the bot
+signature. So the answer is **rotation**: one page at a time, cycling through the sources, so
+all three make progress and no single host sees a burst.
+
+**`--plan`** (`scripts/dowjones_pull.py::run_plan`)
+
+```
+python -m scripts.dowjones_pull --handoff --plan \
+  "barrons:stock_picks:5,wsj:heard_on_the_street:5,marketwatch:analyst_estimates:MU|DKNG|QUBT"
+```
+
+* **Parent tabs are resolved on every run and never hardcoded.** Tab ids change whenever the
+  gateway restarts. `resolve_parent_tabs` reads `tabs` and picks the **oldest** tab (lowest
+  id) on each source's host. The oldest tab is Murat's own; a newer one was probably opened
+  by a run. A tab this process opened is never used as a parent. A source with no open tab
+  borrows the oldest allowed tab, and the receipt says `borrowed`. `--parent-tabs
+  "barrons=t13,wsj=t20"` overrides; the named tab must exist and be on an allowed host. The
+  chosen tabs are printed and written to the receipt. `tabs` does not expose the Chrome
+  profile, so "oldest tab on the host" is the proxy for "the MuratClaw (Work) tab".
+* Each lane gets one tab, opened from its parent, and its listing is loaded once. Links come
+  from that snapshot. Then **one item per lane per turn**, in plan order, all under the one
+  shared `Throttle`: the 20-90 s jittered gap holds across sources, not just within one.
+  A lane that runs out of items drops out.
+* When something fails, the damage is contained at the right level. A dead tab, or a tab
+  that left the allowed hosts, drops only its own lane. The per-host daily cap drops every
+  lane on that host. The day cap, the session cap or a busy reader lock stops the whole run.
+  Every tab the run opened is closed in `finally`.
+* A URL already in the corpus (`web_reader.stored_urls`) is **not loaded again**. The text
+  hash already deduplicated storage, but this also skips the page load, which is what the
+  site sees. A MarketWatch ticker already stored today is skipped the same way.
+* Receipt: `dowjones/plan_<date>_<hhmmss>.json`, rewritten after every page. It holds
+  per-lane and per-source counts, the interleaved `order` with timestamps (`page_load:
+  false` marks the first MarketWatch ticker, which is read in place because `open_from_tab`
+  already loaded it), `seconds_between_page_loads` taken from every reader's log, the tabs
+  closed, one merged footprint and `hour_cap_waits_s`.
+* Long runs wait out the **hourly** cap instead of stopping (`Throttle.wait_on_hour_cap`).
+  The wait lasts until the oldest load in the window is an hour old, plus a jittered 5-60 s.
+  The day and per-host caps still refuse.
+
+**`--archive A..B`** (`run_archive`): runs on WSJ `https://www.wsj.com/news/archive/YYYY/MM/DD`
+for each NYSE trading day in the range, newest first (`archive_days` skips weekends and
+`digest_inbox.nyse_holidays`, and refuses any day that has not finished). The whole run uses
+**one** tab: the day page loads, links are chosen from its snapshot (the HOTS article pattern,
+which excludes `news/`), and each day reads up to `DOWJONES_ARCHIVE_MAX_PER_DAY` articles.
+It can resume: a stored URL is skipped **and counts toward that day's cap**. **Barron's and
+MarketWatch are not archived**, because this code has never seen a dated archive URL on a live
+page of either site, and the rule is "no URL the page did not show". The receipt carries this
+as `not_built`. Budget: 4 days × 40 articles is more than WSJ's 120/day per-host cap, so a
+four-day archive runs across two nights. Resuming picks it up.
+
+**`--queue FILE`** (`run_queue`): each line is one `dowjones_pull` command, and the lines run
+in order. A line that returns 0 gets a marker in `<stem>.done/line<NNN>_<sha>.done`. The key
+includes the line's text hash, so an **edited** line runs again. A failed line is recorded
+and the queue moves on. `--handoff` and `--profile` are inherited by every line.
+`--queue-first-only` runs one line. `--write-queue PATH` regenerates the night's file from
+the books (`digest_inbox.book_names`: personal, then competition from `llm_portfolio/books.jsonl`,
+then PROBE; 56 distinct today, capped at 40, so the last 16 PROBE names are cut). Tonight's
+file is `backend/data/optimus/dowjones/QUEUE_2026-09-26.txt`:
+
+```
+--plan "barrons:stock_picks:10,wsj:heard_on_the_street:10,barrons:big_money_poll:3,marketwatch:analyst_estimates:<40 names>"
+--archive 2026-09-22..2026-09-25
+--claims --claims-since 2026-09-26
+```
+
+**Claims for every column** (`dowjones_claims`):
+
+* `mw_analyst_estimates` pages produce **no LLM call**. `parse_mw_analyst` writes one
+  `mw_analyst_snapshot` row: consensus rating, mean/high/low/median target, number of analysts,
+  next earnings date, current price, FY report date, current-quarter and current-year EPS
+  estimate. It is stamped with `first_seen_utc` and is idempotent by (ticker, sha). The parser
+  was checked against the live MU page stored tonight: 7 of 8 fields on that page. The
+  earnings date appears on the live page as "MU WILL REPORT ... EARNINGS ON 09/30/2026", and
+  the parser reads that form now. A THIN parse (fewer than 2 fields) is reported and never
+  written.
+* `barrons_stock_picks`: the user message now carries a column note asking for one claim per
+  `(ticker: XX)` name. `article_tickers` also accepts Barron's `(ticker: XX)` form, so these
+  names pass the "named in the article" check.
+* `barrons_big_money_poll`: `parse_big_money` gives bullish/bearish/neutral %, a majority
+  direction, and every S&P 500 level in a sentence with a forward cue. Each level owns the
+  text between itself and its neighbouring levels, so "finish the year at 6,900 and reach
+  7,250 by the middle of 2027" becomes two rows. These are **index-level rows**, not
+  `source:` forecast rows, because the relative-to-SPY grader cannot grade an index against
+  itself. **The level grader is still owed.** The article still gets its LLM pass for any
+  named stock picks.
+* Both structured files live in the **gitignored** `news_corpus/dowjones/_structured/`,
+  because consensus targets and poll levels are Dow Jones/FactSet content. A receipt carries
+  only counts and tickers.
+
+**A defect found tonight, with the fix owed in `openclaw_client`.** Both Big Money reads at
+15:52 failed with `'mod' is not recognized as an internal or external command`. The cause:
+`_run` calls the `openclaw` .cmd shim with `shell=True`, so an unquoted `&` in the
+snapshot's `?refsec=big-money-poll&mod=...` ended cmd.exe's command line. `web_reader.Reader.
+navigate` now removes a query that contains a cmd metacharacter (Dow Jones article paths are
+complete without their referral tags) and records the original as `url_shown`. **The root fix
+(quote the arguments or avoid the shell in `_run`) belongs in `openclaw_client`, which is not
+this chunk's file.**

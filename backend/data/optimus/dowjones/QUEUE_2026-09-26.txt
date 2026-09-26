@@ -1,0 +1,6 @@
+# dowjones_pull queue -- generated 2026-09-26 from the books (personal, competition, PROBE; 56 distinct, first 40 kept)
+# run: python -m scripts.dowjones_pull --queue <this file> --handoff --profile user
+# one line = one command; a line that returns 0 gets a marker in <stem>.done/ and is skipped on re-run
+--plan "barrons:stock_picks:10,wsj:heard_on_the_street:10,barrons:big_money_poll:3,marketwatch:analyst_estimates:AARD|ABSI|AMSC|BHVN|DKNG|HUBS|KYTX|NTLA|PRCH|QUBT|SLDP|SOC|VRT|GEV|MU|TSM|HOOD|NVT|AVGO|CLS|BE|MP|LEU|CCJ|NOVT|IONQ|VRTX|WST|COGT|VKTX|AGIO|RGEN|BBIO|PRAX|AAPL|ADUS|ALG|AMZN|ARCO|AVPT"
+--archive 2026-09-22..2026-09-25
+--claims --claims-since 2026-09-26

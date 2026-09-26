@@ -106,6 +106,30 @@ def host_ok(url: str) -> bool:
     return any(h == d or h.endswith("." + d) for d in hosts())
 
 
+#: Characters cmd.exe acts on. `openclaw_client._run` calls the `openclaw`
+#: .cmd shim with `shell=True` on Windows, so an UNQUOTED `&` in an argument
+#: ends the command: on 2026-09-26 both Big Money poll reads failed with
+#: "'mod' is not recognized as an internal or external command" because the
+#: snapshot's URLs carried `?refsec=big-money-poll&mod=...`. The root fix
+#: (quote or avoid the shell in `_run`) is owed in openclaw_client.
+_SHELL_META = re.compile(r"[&|^<>%\"]")
+
+
+def shell_safe_url(url: str) -> str:
+    """The same page without its tracking query when the query carries a
+    cmd.exe metacharacter: `scheme://host/path`. Dow Jones article paths are
+    complete on their own (`?mod=`, `&refsec=` are referral tags). A URL with
+    no such character is returned unchanged."""
+    if not url or not _SHELL_META.search(url):
+        return url
+    sp = urlsplit(url)
+    bare = f"{sp.scheme}://{sp.netloc}{sp.path}"
+    if _SHELL_META.search(bare):
+        raise ReaderRefused(f"REFUSED_SHELL_UNSAFE_URL: {url!r} has a cmd metacharacter in "
+                            f"its PATH; not passed to the shell")
+    return bare
+
+
 class ReaderRefused(RuntimeError):
     """The reader will not take this step. Never swallowed into a no-op."""
 
@@ -200,6 +224,14 @@ class Throttle:
     now_fn: Callable[[], datetime] = field(default=lambda: datetime.now(timezone.utc))
     sleep_fn: Callable[[float], None] = field(default=time.sleep)
     seed: int | None = None
+    #: A long unattended run (`dowjones_pull --plan/--archive/--queue`) WAITS
+    #: out the hourly cap instead of stopping: it sleeps until the oldest load
+    #: in the window is an hour old, plus a jittered 5-60 s. The daily and
+    #: per-host daily caps still refuse. A wait longer than
+    #: `max_hour_wait_s` refuses rather than sleeping indefinitely.
+    wait_on_hour_cap: bool = False
+    max_hour_wait_s: float = 3900.0
+    hour_cap_waits: list[float] = field(default_factory=list)
     waits: list[float] = field(default_factory=list)
     targets: list[float] = field(default_factory=list)
     _rng: Any = field(default=None, repr=False)
@@ -253,9 +285,21 @@ class Throttle:
         if host and sum(1 for r in rows if r[1] == host) >= self.max_per_day_per_host:
             raise ReaderRefused(f"REFUSED_THROTTLE_HOST_DAY: >= {self.max_per_day_per_host} "
                                 f"page loads on {host} in 24 h")
-        if sum(1 for r in rows if now - r[0] < timedelta(hours=1)) >= self.max_per_hour:
-            raise ReaderRefused(f"REFUSED_THROTTLE_HOUR: >= {self.max_per_hour} page loads "
-                                f"in the last hour")
+        while sum(1 for r in rows if now - r[0] < timedelta(hours=1)) >= self.max_per_hour:
+            if not self.wait_on_hour_cap:
+                raise ReaderRefused(f"REFUSED_THROTTLE_HOUR: >= {self.max_per_hour} page loads "
+                                    f"in the last hour")
+            in_hour = sorted(r[0] for r in rows if now - r[0] < timedelta(hours=1))
+            k = len(in_hour) - self.max_per_hour      # this many must age out first
+            free_at = in_hour[k] + timedelta(hours=1)
+            pause = (free_at - now).total_seconds() + float(self._rng.uniform(5.0, 60.0))
+            if pause > self.max_hour_wait_s:
+                raise ReaderRefused(f"REFUSED_THROTTLE_HOUR: the hourly cap would need a "
+                                    f"{pause:.0f} s wait > {self.max_hour_wait_s:.0f} s")
+            self.sleep_fn(pause)
+            self.hour_cap_waits.append(round(pause, 1))
+            now = self.now_fn()
+            rows = [r for r in self._rows() if now - r[0] < timedelta(days=1)]
         prev = next((r[2] for r in reversed(rows) if r[2] is not None), None)
         target = self.draw_target(self.targets[-1] if self.targets else prev)
         wait = 0.0
@@ -475,6 +519,33 @@ def corpus_root() -> Path:
     return Path(_config.OPTIMUS_LEDGER_DIR) / "news_corpus" / "dowjones"
 
 
+def norm_url(url: str) -> str:
+    """Scheme-less, query- and fragment-free, lowercase: the key a stored
+    article is found by when a rotating or archive run resumes."""
+    try:
+        sp = urlsplit(url or "")
+    except ValueError:
+        return (url or "").lower()
+    return f"{(sp.hostname or '').lower().removeprefix('www.')}{sp.path.rstrip('/')}".lower()
+
+
+def stored_urls(root: Path | None = None) -> dict[str, set[str]]:
+    """`{norm_url: {first_seen day, ...}}` over every stored article, so a
+    resumed run skips what it already holds (the text sha dedupes as well;
+    this skips the PAGE LOAD, which is what the site sees)."""
+    root = Path(root) if root else corpus_root()
+    out: dict[str, set[str]] = {}
+    for p in root.glob("*/*/*.json"):
+        try:
+            rec = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        u = rec.get("url")
+        if u:
+            out.setdefault(norm_url(u), set()).add(str(rec.get("first_seen_utc") or "")[:10])
+    return out
+
+
 def registry_source_id(publisher: str, origin: str) -> str:
     """The `news_sources.yaml` id a stored article's corpus row carries."""
     return "dj_digest_inbox" if origin == "pasted_by_operator" else f"dj_reader_{publisher}"
@@ -603,7 +674,11 @@ class Reader:
                                 f"{(r.get('stderr') or '')[:160]}")
 
     def navigate(self, url: str) -> None:
+        shown = url
+        url = shell_safe_url(url)
         self._page("navigate", url)
+        if url != shown:
+            self.log[-1]["url_shown"] = shown
         r = self.driver.browser("navigate", url, profile_name=self.profile, target_id=self.tab)
         self._check_still_on_host(r)
         self.driver.browser("wait", "--time", str(self.wait_ms),
