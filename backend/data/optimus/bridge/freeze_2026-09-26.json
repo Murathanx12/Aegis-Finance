@@ -1,0 +1,423 @@
+{
+ "date": "2026-09-26",
+ "library": {
+  "mom_12_1_q": {
+   "status": "ALREADY_FROZEN_TODAY_SAME_POSITIONS",
+   "book": "lib_mom_12_1_q_2026-09-26"
+  },
+  "lib_mom_12_1_liqw_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_mom_12_1_liqw_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (MU 60.3%) to zero = -$602,874; whole book to zero = -$1,000,000",
+   "weights": {
+    "AKTS": 0.000253,
+    "AXTI": 0.005874,
+    "LIFE": 0.000874,
+    "SNDK": 0.372094,
+    "JAN": 0.001959,
+    "NUAI": 0.00042,
+    "WOLF": 0.001027,
+    "DMRA": 0.000246,
+    "ERAS": 0.001735,
+    "QTTB": 0.000143,
+    "ANRO": 0.000434,
+    "SLS": 0.001508,
+    "PRAX": 0.003174,
+    "CLYM": 0.000314,
+    "SYRE": 0.003914,
+    "MBX": 0.000797,
+    "ORKA": 0.001875,
+    "IMMX": 0.000451,
+    "MU": 0.602874,
+    "CHRN": 3.4e-05
+   },
+   "book_ids": {
+    "lib_mom_12_1_liqw_sealed_2026-09-26": "76ea751d6ef35ab5",
+    "lib_mom_12_1_liqw_sealed_2026-09-26__ew": "2cc265ad037fae46",
+    "lib_mom_12_1_liqw_sealed_2026-09-26__sector_etf": "455e2719b1d6c9fa",
+    "lib_mom_12_1_liqw_sealed_2026-09-26__spy": "177bf819792061fd",
+    "lib_mom_12_1_liqw_sealed_2026-09-26__random_same_band": "42f7d77ad128605a"
+   }
+  },
+  "lib_rev_5d_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_rev_5d_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (ALHC 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "ALHC": 0.05,
+    "XENE": 0.05,
+    "SION": 0.05,
+    "SWMR": 0.05,
+    "ENVA": 0.05,
+    "ARTV": 0.05,
+    "FLNC": 0.05,
+    "PLAY": 0.05,
+    "DMRA": 0.05,
+    "AN": 0.05,
+    "RSI": 0.05,
+    "CBIO": 0.05,
+    "MPLT": 0.05,
+    "OPFI": 0.05,
+    "PAR": 0.05,
+    "RXST": 0.05,
+    "GENI": 0.05,
+    "ASTH": 0.05,
+    "ABX": 0.05,
+    "TPB": 0.05
+   },
+   "book_ids": {
+    "lib_rev_5d_sealed_2026-09-26": "f94720b48278bf55",
+    "lib_rev_5d_sealed_2026-09-26__ew": "4ca4bbb5197f833a",
+    "lib_rev_5d_sealed_2026-09-26__sector_etf": "353399cb2909002b",
+    "lib_rev_5d_sealed_2026-09-26__spy": "6f3f463057f10912",
+    "lib_rev_5d_sealed_2026-09-26__random_same_band": "f6f26ea9b31d1a36"
+   }
+  },
+  "lib_skill_mom_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_skill_mom_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (RVMD 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "RVMD": 0.05,
+    "MU": 0.05,
+    "DFTX": 0.05,
+    "STX": 0.05,
+    "MRVL": 0.05,
+    "AMD": 0.05,
+    "ERAS": 0.05,
+    "CLYM": 0.05,
+    "GH": 0.05,
+    "TXG": 0.05,
+    "MXL": 0.05,
+    "INTC": 0.05,
+    "DELL": 0.05,
+    "AMAT": 0.05,
+    "ETON": 0.05,
+    "REPL": 0.05,
+    "ARWR": 0.05,
+    "ABSI": 0.05,
+    "KYMR": 0.05,
+    "COHR": 0.05
+   },
+   "book_ids": {
+    "lib_skill_mom_sealed_2026-09-26": "775b9951e0b67e4b",
+    "lib_skill_mom_sealed_2026-09-26__ew": "b04e6935c59d6bd3",
+    "lib_skill_mom_sealed_2026-09-26__sector_etf": "87b3eecb8ebf5a34",
+    "lib_skill_mom_sealed_2026-09-26__spy": "c087e0b77dbfc452",
+    "lib_skill_mom_sealed_2026-09-26__random_same_band": "405a92db91018647"
+   }
+  },
+  "lib_margin_mom_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_margin_mom_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (KOPN 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "KOPN": 0.05,
+    "SNDK": 0.05,
+    "MU": 0.05,
+    "SLN": 0.05,
+    "MRVL": 0.05,
+    "BB": 0.05,
+    "APPS": 0.05,
+    "STX": 0.05,
+    "PAYS": 0.05,
+    "SILC": 0.05,
+    "GENI": 0.05,
+    "COHU": 0.05,
+    "TEAM": 0.05,
+    "HUT": 0.05,
+    "NUVB": 0.05,
+    "RUM": 0.05,
+    "UMAC": 0.05,
+    "HAE": 0.05,
+    "AZTA": 0.05,
+    "INTC": 0.05
+   },
+   "book_ids": {
+    "lib_margin_mom_sealed_2026-09-26": "139145a5269b8fd9",
+    "lib_margin_mom_sealed_2026-09-26__ew": "22487760e4643428",
+    "lib_margin_mom_sealed_2026-09-26__sector_etf": "46673df00e2ee2e8",
+    "lib_margin_mom_sealed_2026-09-26__spy": "b05db687b6ad07dd",
+    "lib_margin_mom_sealed_2026-09-26__random_same_band": "df42cb95e50c9a01"
+   }
+  },
+  "lib_illiquid_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_illiquid_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (SDOT 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "SDOT": 0.05,
+    "CHRN": 0.05,
+    "BKCH": 0.05,
+    "ITG": 0.05,
+    "DBVT": 0.05,
+    "RFIL": 0.05,
+    "CUE": 0.05,
+    "OCC": 0.05,
+    "DFNS": 0.05,
+    "GSIT": 0.05,
+    "XPOF": 0.05,
+    "HQ": 0.05,
+    "ELVA": 0.05,
+    "TCAI": 0.05,
+    "CABO": 0.05,
+    "MCHPP": 0.05,
+    "MNTS": 0.05,
+    "NEOV": 0.05,
+    "ADV": 0.05,
+    "TOYO": 0.05
+   },
+   "book_ids": {
+    "lib_illiquid_sealed_2026-09-26": "8f989a4bf3f759cf",
+    "lib_illiquid_sealed_2026-09-26__ew": "4223fb9ab8e5fc70",
+    "lib_illiquid_sealed_2026-09-26__sector_etf": "e46e808f841c8bbc",
+    "lib_illiquid_sealed_2026-09-26__spy": "899c3904d42e0c56",
+    "lib_illiquid_sealed_2026-09-26__random_same_band": "581eba63e2b5cec3"
+   }
+  },
+  "lib_low_dtc_mom_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_low_dtc_mom_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (SNDK 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "SNDK": 0.05,
+    "MLPI": 0.05,
+    "MU": 0.05,
+    "NEXA": 0.05,
+    "INTC": 0.05,
+    "TGB": 0.05,
+    "AMAT": 0.05,
+    "OILU": 0.05,
+    "MRVL": 0.05,
+    "AIP": 0.05,
+    "BE": 0.05,
+    "SILC": 0.05,
+    "HELP": 0.05,
+    "CIEN": 0.05,
+    "TTMI": 0.05,
+    "ATI": 0.05,
+    "ICHR": 0.05,
+    "BTE": 0.05,
+    "STX": 0.05,
+    "AMD": 0.05
+   },
+   "book_ids": {
+    "lib_low_dtc_mom_sealed_2026-09-26": "58440bc63a0cbcb1",
+    "lib_low_dtc_mom_sealed_2026-09-26__ew": "1c23d7242e2402ff",
+    "lib_low_dtc_mom_sealed_2026-09-26__sector_etf": "0e47b9b86a8bcdb8",
+    "lib_low_dtc_mom_sealed_2026-09-26__spy": "471e46e44a3091d8",
+    "lib_low_dtc_mom_sealed_2026-09-26__random_same_band": "bb04fa6fe9d9700a"
+   }
+  },
+  "lib_low_asset_growth_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_low_asset_growth_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (ARI 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "ARI": 0.05,
+    "BZ": 0.05,
+    "FUTU": 0.05,
+    "KDK": 0.05,
+    "TK": 0.05,
+    "CALY": 0.05,
+    "VISN": 0.05,
+    "WOLF": 0.05,
+    "MARA": 0.05,
+    "DD": 0.05,
+    "CPRI": 0.05,
+    "NVCR": 0.05,
+    "DJT": 0.05,
+    "AB": 0.05,
+    "ALIT": 0.05,
+    "VKTX": 0.05,
+    "FTV": 0.05,
+    "FLR": 0.05,
+    "SPRY": 0.05,
+    "BHVN": 0.05
+   },
+   "book_ids": {
+    "lib_low_asset_growth_sealed_2026-09-26": "6d36d70c4ae56556",
+    "lib_low_asset_growth_sealed_2026-09-26__ew": "59ea08099cb25312",
+    "lib_low_asset_growth_sealed_2026-09-26__sector_etf": "c58dcb42036b6692",
+    "lib_low_asset_growth_sealed_2026-09-26__spy": "31ac0945aaa89657",
+    "lib_low_asset_growth_sealed_2026-09-26__random_same_band": "a60c51733eabeb03"
+   }
+  },
+  "lib_resid_mom_12_1_large_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_resid_mom_12_1_large_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (WOLF 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "WOLF": 0.05,
+    "AXTI": 0.05,
+    "PRAX": 0.05,
+    "SNDK": 0.05,
+    "MRNA": 0.05,
+    "SYRE": 0.05,
+    "AAOI": 0.05,
+    "LITE": 0.05,
+    "RVMD": 0.05,
+    "MU": 0.05,
+    "TXG": 0.05,
+    "MXL": 0.05,
+    "TWST": 0.05,
+    "FSLY": 0.05,
+    "WDC": 0.05,
+    "STX": 0.05,
+    "VICR": 0.05,
+    "VSXY": 0.05,
+    "PBF": 0.05,
+    "AEHR": 0.05
+   },
+   "book_ids": {
+    "lib_resid_mom_12_1_large_sealed_2026-09-26": "485a857d5b45847c",
+    "lib_resid_mom_12_1_large_sealed_2026-09-26__ew": "bd9b977b6241b11b",
+    "lib_resid_mom_12_1_large_sealed_2026-09-26__sector_etf": "3b5556592dab8125",
+    "lib_resid_mom_12_1_large_sealed_2026-09-26__spy": "cdb9fa520daf9328",
+    "lib_resid_mom_12_1_large_sealed_2026-09-26__random_same_band": "a0f1cb6920144501"
+   }
+  },
+  "lib_mom_12_1_secrel_sealed_2026-09-26": {
+   "worst_case": "WORST CASE lib_mom_12_1_secrel_sealed_2026-09-26: 20 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (AKTS 5.0%) to zero = -$50,000; whole book to zero = -$1,000,000",
+   "weights": {
+    "AKTS": 0.05,
+    "ALM": 0.05,
+    "ATEX": 0.05,
+    "AXTI": 0.05,
+    "DAR": 0.05,
+    "ENLT": 0.05,
+    "FET": 0.05,
+    "JAN": 0.05,
+    "LIFE": 0.05,
+    "VELO": 0.05,
+    "VSXY": 0.05,
+    "PAYS": 0.05,
+    "DMRA": 0.05,
+    "VICR": 0.05,
+    "SNDK": 0.05,
+    "LIND": 0.05,
+    "ECPG": 0.05,
+    "ERAS": 0.05,
+    "VSTS": 0.05,
+    "MU": 0.05
+   },
+   "book_ids": {
+    "lib_mom_12_1_secrel_sealed_2026-09-26": "132c0abc5b9f366f",
+    "lib_mom_12_1_secrel_sealed_2026-09-26__ew": "8eb4f35f5d0352c3",
+    "lib_mom_12_1_secrel_sealed_2026-09-26__sector_etf": "bdc91e819e6b8d43",
+    "lib_mom_12_1_secrel_sealed_2026-09-26__spy": "751a81aa6d1548a6",
+    "lib_mom_12_1_secrel_sealed_2026-09-26__random_same_band": "0dd5ef3b39a9f0f1"
+   }
+  }
+ },
+ "probe": {
+  "meta": {
+   "names": [
+    "NVDA",
+    "INCY",
+    "AAPL",
+    "SNDR",
+    "META",
+    "AVPT",
+    "AMZN",
+    "GOOGL",
+    "GOOG",
+    "ALLE",
+    "JAZZ"
+   ],
+   "sigma_63": {
+    "NVDA": 0.02520269151766916,
+    "INCY": 0.021046513511697406,
+    "AAPL": 0.019828028692214547,
+    "SNDR": 0.020028713818222275,
+    "META": 0.03145864151378039,
+    "AVPT": 0.026600229331928998,
+    "AMZN": 0.026397767162759492,
+    "GOOGL": 0.021833787223850803,
+    "GOOG": 0.02154711982881916,
+    "ALLE": 0.019847710845865375,
+    "JAZZ": 0.017649953102992375
+   },
+   "tilt_basis": "sigma_63 -- investigator magnitude rows cover 4 of 11 names (AAPL, AMZN, META, NVDA); a partial tilt would mix two scales, so the declared fallback is used for all",
+   "magnitude_rows": {
+    "NVDA": {
+     "p": 0.43,
+     "threshold": 0.05,
+     "made_at": "2026-09-25T10:32:55+00:00",
+     "specialist": "investigator:B_anon"
+    },
+    "META": {
+     "p": 0.55,
+     "threshold": 0.05,
+     "made_at": "2026-09-25T10:32:55+00:00",
+     "specialist": "investigator:B_anon"
+    },
+    "AMZN": {
+     "p": 0.62,
+     "threshold": 0.05,
+     "made_at": "2026-08-25T10:58:29+00:00",
+     "specialist": "investigator:B_anon"
+    },
+    "AAPL": {
+     "p": 0.16,
+     "threshold": 0.05,
+     "made_at": "2026-09-25T10:32:55+00:00",
+     "specialist": "investigator:B_anon"
+    }
+   }
+  },
+  "probe_equal_2026-09-26": {
+   "worst_case": "WORST CASE probe_equal_2026-09-26: 11 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (NVDA 9.1%) to zero = -$90,909; whole book to zero = -$1,000,000; every name down 3 daily sigma at once = -$68,575",
+   "weights": {
+    "NVDA": 0.090909,
+    "INCY": 0.090909,
+    "AAPL": 0.090909,
+    "SNDR": 0.090909,
+    "META": 0.090909,
+    "AVPT": 0.090909,
+    "AMZN": 0.090909,
+    "GOOGL": 0.090909,
+    "GOOG": 0.090909,
+    "ALLE": 0.090909,
+    "JAZZ": 0.090909
+   },
+   "book_ids": {
+    "probe_equal_2026-09-26": "132d0d6c0d445bbb",
+    "probe_equal_2026-09-26__ew": "412ef852862efa6b",
+    "probe_equal_2026-09-26__sector_etf": "c04909d702257aa4",
+    "probe_equal_2026-09-26__spy": "9a6cfc0d97c6ca62",
+    "probe_equal_2026-09-26__random_same_band": "4cc06b99879645f5"
+   }
+  },
+  "probe_inverse_vol_2026-09-26": {
+   "worst_case": "WORST CASE probe_inverse_vol_2026-09-26: 11 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (JAZZ 11.5%) to zero = -$114,675; whole book to zero = -$1,000,000; every name down 3 daily sigma at once = -$66,792",
+   "weights": {
+    "NVDA": 0.080309,
+    "INCY": 0.096168,
+    "AAPL": 0.102078,
+    "SNDR": 0.101055,
+    "META": 0.064339,
+    "AVPT": 0.07609,
+    "AMZN": 0.076673,
+    "GOOGL": 0.092701,
+    "GOOG": 0.093934,
+    "ALLE": 0.101977,
+    "JAZZ": 0.114675
+   },
+   "book_ids": {
+    "probe_inverse_vol_2026-09-26": "61fa183ee45aa10a",
+    "probe_inverse_vol_2026-09-26__ew": "e0d215dd8d1aaab7",
+    "probe_inverse_vol_2026-09-26__sector_etf": "90fc7ad47bb314af",
+    "probe_inverse_vol_2026-09-26__spy": "a9a75bb2392217c0",
+    "probe_inverse_vol_2026-09-26__random_same_band": "5d578a72cd528f21"
+   }
+  },
+  "probe_bigmove_tilt_2026-09-26": {
+   "worst_case": "WORST CASE probe_bigmove_tilt_2026-09-26: 11 names, sum|notional|/equity 1.00 of $1,000,000, no stop (monthly rebalance): every name at the 30% delisting fill = -$300,000; largest name (META 12.5%) to zero = -$125,113; whole book to zero = -$1,000,000; every name down 3 daily sigma at once = -$70,549",
+   "weights": {
+    "NVDA": 0.100233,
+    "INCY": 0.083704,
+    "AAPL": 0.078858,
+    "SNDR": 0.079656,
+    "META": 0.125113,
+    "AVPT": 0.105791,
+    "AMZN": 0.104986,
+    "GOOGL": 0.086835,
+    "GOOG": 0.085694,
+    "ALLE": 0.078936,
+    "JAZZ": 0.070195
+   },
+   "book_ids": {
+    "probe_bigmove_tilt_2026-09-26": "23ac8d562416f388",
+    "probe_bigmove_tilt_2026-09-26__ew": "ad20bf36dde9f3ee",
+    "probe_bigmove_tilt_2026-09-26__sector_etf": "e59aa8d7600190ba",
+    "probe_bigmove_tilt_2026-09-26__spy": "c861800417411e5c",
+    "probe_bigmove_tilt_2026-09-26__random_same_band": "582d7a0ce0ce08a8"
+   }
+  }
+ }
+}

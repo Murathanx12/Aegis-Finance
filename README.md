@@ -356,44 +356,40 @@ of what might happen."
 
 ## Historical backtests: what worked, what didn't
 
-> 🔵 **HISTORICAL BACKTEST — NOT FORWARD PERFORMANCE.** Shown because the
-> failure taught the project more than a win would have. Full numbers:
-> [`backend/BACKTEST_RESULTS.md`](backend/BACKTEST_RESULTS.md) ·
-> [`NEGATIVE_RESULTS.md §1`](NEGATIVE_RESULTS.md)
+> 🔵 **HINDSIGHT BACKTEST — NOT FORWARD PERFORMANCE.** Every rule below was written down on 2026-09-26, after every month it is scored on. The quotable record starts at registration. Receipt for every number in this section: `backend/data/optimus/strategy_library/leaderboard_2026-09-26.json` (rendered as `backend/data/optimus/strategy_library/LEADERBOARD.md`); forward results: `docs/BRIDGE.md`.
+
+The strategy library (254 rules in 26 families, 762 cells at k = 10/20/50 plus each rule's own k) was run on survivorship-free bars net of a band round-trip cost, with a split declared in code before the ranking: **dev** = monthly periods entered through 2023-12-31, **sealed** = entered from 2024-01-01 (32 monthly blocks). Sorted by sealed net return vs SPY (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `top_by_sealed_vs_spy`):
+
+| rule (k=20) | dev CAGR | SPY dev | sealed CAGR | SPY sealed | sealed − SPY | DSR (762 cells) | LOO-worst mean active/mo | top-5-month share | max DD |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| `mom_12_1_liqw` | +7.0% | +13.2% | +89.4% | +21.0% | **+68.4%** | 0.036 | +0.67% | 0.91 | -70.6% |
+| `rev_5d` | +2.8% | +13.2% | +69.4% | +21.0% | **+48.4%** | 0.006 | +0.10% | 1.08 | -66.5% |
+| `mom_12_1_q` | +34.2% | +13.2% | +58.9% | +21.0% | **+37.9%** | 0.209 | +1.52% | 0.44 | -35.9% |
+| `skill_mom` | +17.9% | +13.2% | +58.0% | +21.0% | **+37.0%** | 0.105 | +0.69% | 0.40 | -27.3% |
+| `margin_mom` | +14.0% | +13.2% | +57.9% | +21.0% | **+36.9%** | 0.039 | +0.33% | 0.58 | -51.0% |
+| `illiquid` | -2.0% | +13.2% | +55.9% | +21.0% | **+34.9%** | 0.002 | -0.25% | 1.44 | -80.7% |
+| `low_dtc_mom` | +6.0% | +13.2% | +47.2% | +21.0% | **+26.2%** | 0.004 | -0.04% | 0.59 | -38.4% |
+| `low_asset_growth` | +16.7% | +13.2% | +47.0% | +21.0% | **+26.0%** | 0.031 | +0.62% | 0.58 | -34.4% |
+| `resid_mom_12_1_large` | +17.3% | +13.2% | +45.5% | +21.0% | **+24.5%** | 0.032 | +0.33% | 0.70 | -45.3% |
+| `mom_12_1_secrel` | +17.1% | +13.2% | +45.1% | +21.0% | **+24.1%** | 0.025 | +0.32% | 0.64 | -48.1% |
+
+Random controls (k=20 names drawn at random each month, never ranked) land at -10.6% to -1.8% vs SPY sealed: that is the luck bar (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `controls`).
+
+- **Nothing passes the multiplicity bar (best DSR 0.21 at 762 cells, `mom_12_1_q`, vs 0.95).** Ranking 762 cells on 32 sealed months selects luck as readily as skill (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `multiplicity`).
+- **88 of 254 rules beat SPY sealed, median -4.5%** (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`, `all_rows[].sealed_vs_spy`).
+- **The only rows good in both windows are `mom_12_1_q` and `skill_mom`**: the only rules in both the sealed top-10 and the full-window DSR top-10. The sealed top rows with a top-5-month share near or above 1 made their sealed return in a handful of months, and several were flat or negative in dev (`backend/data/optimus/strategy_library/leaderboard_2026-09-26.json`).
+- **Each of these is a $1M forward paper book since 2026-09-28; `docs/BRIDGE.md` shows expectation vs result** (receipt `backend/data/optimus/bridge/bridge_<date>.json`; books in `backend/data/optimus/llm_portfolio/books.jsonl`, `lib_<id>_sealed_2026-09-26` with ew / sector-ETF / SPY / random-same-band twins; `mom_12_1_q`'s is the 02:00 factory's `lib_mom_12_1_q_2026-09-26`, same names; freeze log `backend/data/optimus/bridge/freeze_2026-09-26.json`).
+- The ten sealed series were recomputed by a second engine from their holdings and the raw bars: `backend/data/optimus/strategy_library/replication_vectorbt_2026-09-26.json`.
+
+### History: the timing strategy (not the library)
+
+The row this section used to lead with measured the 2020-01 → 2025-06 signal-engine TIMING strategy, not any library rule (receipt `backend/BACKTEST_RESULTS.md`, re-measured 2026-09-04):
 
 | Historical experiment (2020-01 → 2025-06) | Aegis | Benchmark | What we learned |
 |---|---:|---:|---|
-| Signal-engine timing strategy, total return | **+28.3%** net | **+114.8%** (SPY total return) | Stress detection ≠ market timing — the strategy keeps a quarter of the market |
-| Sharpe ratio | **0.432** | **0.837** | Sitting out rebounds costs more than dodging drawdowns saved |
-| Buy-signal 3-month hit rate | **76.5%** | target >60% ✓ | Some real directional information on entries — and accuracy is not the objective |
-| Sell-signal 3-month hit rate | **0.0%** of 5 | target >55% ✗ | Sell signals fired at VIX>25 — historically the *best buying opportunities* |
+| Signal-engine timing strategy, total return (`backend/BACKTEST_RESULTS.md`) | **+28.3%** net | **+114.8%** (SPY total return) | Stress detection ≠ market timing — the strategy keeps a quarter of the market |
 
-*Re-measured 2026-09-04.* The figures published between 2026-03-30 and
-2026-09-04 (**+250.9% vs +740.0%**, Sharpe 0.675 vs 0.921) were void twice over:
-the benchmark was `^GSPC`, the S&P 500 **price** index — no dividends, not
-tradeable — and all 66 overlapping 3-month windows were compounded as if
-sequential (~3.12× log inflation). The arithmetic was fixed on 2026-04-15
-(`726c7bf`) but the document was never regenerated. The correction made the
-finding **stronger**, not weaker. Ruler: [`learner/benchmark.py`](learner/benchmark.py).
-
-The mechanism of the failure is the interesting part. The engine was
-genuinely good at detecting that the market was under stress — and then made
-the classic mistake of translating *"the market is dangerous right now"*
-into *"therefore sell."* Those are different predictions. April 2020: the
-engine issued SELL at VIX 57; the next three months returned **+26.1%**. By
-the time stress is extreme enough to scream, expected forward returns are
-often improving, not deteriorating.
-
-That failure split one question into two, and the split now organizes the
-whole project:
-
-1. **Can Aegis recognize danger?** — yes, measurably.
-2. **Can Aegis make money *because* it recognized danger?** — that is a
-   different claim, it failed here, and nothing on this page asserts it.
-
-The engine survives as a **risk-awareness system**, not a timing system —
-and the research program went hunting for where information actually lives
-instead (see the scoreboard above).
+The engine was good at detecting that the market was under stress and then translated *"the market is dangerous"* into *"therefore sell"* — two different predictions. It survives as a **risk-awareness system**, not a timing system (`backend/BACKTEST_RESULTS.md`, [`NEGATIVE_RESULTS.md §1`](NEGATIVE_RESULTS.md)).
 
 ## What it does
 
