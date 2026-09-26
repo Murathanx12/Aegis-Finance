@@ -1178,3 +1178,34 @@ async def refresh_replay(
     except Exception as e:
         logger.error("Refresh failed for %s: %s", lane_id, e, exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── Every paper account, one table (scripts/paper_accounts_roi.py) ───────────
+#
+# Serves the newest `roi_<date>.json` receipt as written. Read-only: this route
+# never calls a broker; the script does the GETs and this only hands its
+# receipt to the site. Absent receipt -> 404 WITH the remedy, never an empty 200.
+
+def _paper_accounts_dir():
+    from backend import config as _cfg
+    return _cfg.OPTIMUS_LEDGER_DIR / "paper_accounts"
+
+
+@router.get("/paper-accounts")
+async def get_paper_accounts():
+    """ROI of every paper account vs SPY over its own window (newest receipt)."""
+    d = _paper_accounts_dir()
+    files = sorted(d.glob("roi_*.json")) if d.exists() else []
+    if not files:
+        raise HTTPException(
+            status_code=404,
+            detail=(f"no paper-accounts receipt under {d.name}/ -- run "
+                    "`python -m scripts.paper_accounts_roi` and commit the receipt"))
+    newest = files[-1]
+    try:
+        body = json.loads(newest.read_text(encoding="utf-8"))
+    except Exception as e:
+        logger.error("paper-accounts receipt unreadable: %s", e)
+        raise HTTPException(status_code=500, detail=f"{newest.name} unreadable: {e}")
+    body["receipt_file"] = newest.name
+    return body

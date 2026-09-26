@@ -1,0 +1,7250 @@
+{
+ "schema": "paper_accounts_roi/1",
+ "receipt": "paper_accounts_roi",
+ "licence": "PRODUCT_EXPERIMENT",
+ "generated_utc": "2026-09-26T03:57:21+00:00",
+ "sources": {
+  "website_lanes": {
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "fresh": false,
+   "reachable": true,
+   "expected_nav_date": "2026-09-25",
+   "all_fresh": false
+  },
+  "spy_leg": "learner.benchmark.spy_total_return (yfinance adj close, total return)"
+ },
+ "rows": [
+  {
+   "account": "conservative-atr",
+   "family": "website_lane",
+   "inception": "2026-06-17",
+   "start_capital": 100000.0,
+   "equity": 104850.61,
+   "roi_pct": 4.851,
+   "spy_same_window_pct": 3.318,
+   "vs_spy_pp": 1.533,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "5196232381dd4a7e"
+  },
+  {
+   "account": "aggressive",
+   "family": "website_lane",
+   "inception": "2026-06-08",
+   "start_capital": 100000.0,
+   "equity": 102759.99,
+   "roi_pct": 2.76,
+   "spy_same_window_pct": 3.562,
+   "vs_spy_pp": -0.802,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "628456e40c2de26e"
+  },
+  {
+   "account": "tsmom-overlay",
+   "family": "website_lane",
+   "inception": "2026-07-27",
+   "start_capital": 100000.0,
+   "equity": 102401.04,
+   "roi_pct": 2.401,
+   "spy_same_window_pct": 3.314,
+   "vs_spy_pp": -0.913,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "a244d7ab7374b49c"
+  },
+  {
+   "account": "conservative",
+   "family": "website_lane",
+   "inception": "2026-06-08",
+   "start_capital": 100000.0,
+   "equity": 101867.26,
+   "roi_pct": 1.867,
+   "spy_same_window_pct": 3.562,
+   "vs_spy_pp": -1.695,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "628456e40c2de26e"
+  },
+  {
+   "account": "balanced",
+   "family": "website_lane",
+   "inception": "2026-06-08",
+   "start_capital": 100000.0,
+   "equity": 101755.11,
+   "roi_pct": 1.755,
+   "spy_same_window_pct": 3.562,
+   "vs_spy_pp": -1.807,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "628456e40c2de26e"
+  },
+  {
+   "account": "tsmom-6040-control",
+   "family": "website_lane",
+   "inception": "2026-07-27",
+   "start_capital": 100000.0,
+   "equity": 100964.19,
+   "roi_pct": 0.964,
+   "spy_same_window_pct": 3.314,
+   "vs_spy_pp": -2.35,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "a244d7ab7374b49c"
+  },
+  {
+   "account": "balanced-ew-control",
+   "family": "website_lane",
+   "inception": "2026-06-10",
+   "start_capital": 100000.0,
+   "equity": 100555.18,
+   "roi_pct": 0.555,
+   "spy_same_window_pct": 5.53,
+   "vs_spy_pp": -4.975,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "628456e40c2de26e"
+  },
+  {
+   "account": "smallmid-quality",
+   "family": "website_lane",
+   "inception": "2026-07-22",
+   "start_capital": 100000.0,
+   "equity": 94022.5,
+   "roi_pct": -5.978,
+   "spy_same_window_pct": 2.164,
+   "vs_spy_pp": -8.142,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "7347b69af584b7b8"
+  },
+  {
+   "account": "conviction",
+   "family": "website_lane",
+   "inception": "2026-06-16",
+   "start_capital": 100000.0,
+   "equity": 91745.3,
+   "roi_pct": -8.255,
+   "spy_same_window_pct": 2.028,
+   "vs_spy_pp": -10.283,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "d0d0eaf42936bde5"
+  },
+  {
+   "account": "mirror",
+   "family": "website_lane",
+   "inception": "2026-06-16",
+   "start_capital": 100000.0,
+   "equity": 77842.4,
+   "roi_pct": -22.158,
+   "spy_same_window_pct": 2.028,
+   "vs_spy_pp": -24.186,
+   "n_positions": null,
+   "last_mark": "2026-09-18",
+   "status": "LIVE",
+   "source": "https://aegis-finance-production.up.railway.app/api/pi/track-record",
+   "note": "NAV last marked 2026-09-18; the deploy expected 2026-09-25 (all_fresh=False)",
+   "spy_base": "inception_close",
+   "fresh": false,
+   "config_version": "d0d0eaf42936bde5"
+  },
+  {
+   "account": "hack2",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "start_capital": 100000.0,
+   "equity": 98820.5,
+   "roi_pct": -1.179,
+   "spy_same_window_pct": 0.281,
+   "vs_spy_pp": -1.46,
+   "n_positions": 0,
+   "last_mark": "2026-09-25",
+   "status": "LIVE",
+   "source": "GET https://paper-api.alpaca.markets/v2/account + /v2/positions (AAT_HACK2_* in aegis-alpha-terminal/.env)",
+   "note": "",
+   "spy_base": "prior_close",
+   "account_number": "PA33ON4NRJAX",
+   "cash": 98820.5,
+   "last_equity": 98820.5,
+   "broker_now": true
+  },
+  {
+   "account": "hack5",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "start_capital": 100000.0,
+   "equity": 95053.47,
+   "roi_pct": -4.947,
+   "spy_same_window_pct": 0.281,
+   "vs_spy_pp": -5.228,
+   "n_positions": 2,
+   "last_mark": "2026-09-25",
+   "status": "LIVE",
+   "source": "GET https://paper-api.alpaca.markets/v2/account + /v2/positions (AAT_HACK5_* in aegis-alpha-terminal/.env)",
+   "note": "",
+   "spy_base": "prior_close",
+   "account_number": "PA3T8OTGULCD",
+   "cash": 88053.47,
+   "last_equity": 92183.47,
+   "broker_now": true
+  },
+  {
+   "account": "hack1",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "start_capital": 100000.0,
+   "equity": 91526.79,
+   "roi_pct": -8.473,
+   "spy_same_window_pct": 0.281,
+   "vs_spy_pp": -8.754,
+   "n_positions": 1,
+   "last_mark": "2026-09-25",
+   "status": "LIVE",
+   "source": "GET https://paper-api.alpaca.markets/v2/account + /v2/positions (AAT_HACK1_* in aegis-alpha-terminal/.env)",
+   "note": "",
+   "spy_base": "prior_close",
+   "account_number": "PA3WXDS3MJ53",
+   "cash": 66575.01,
+   "last_equity": 91853.97,
+   "broker_now": true
+  },
+  {
+   "account": "hack6",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "start_capital": 100000.0,
+   "equity": 82297.61,
+   "roi_pct": -17.702,
+   "spy_same_window_pct": 0.281,
+   "vs_spy_pp": -17.983,
+   "n_positions": 12,
+   "last_mark": "2026-09-25",
+   "status": "LIVE",
+   "source": "GET https://paper-api.alpaca.markets/v2/account + /v2/positions (AAT_HACK6_* in aegis-alpha-terminal/.env)",
+   "note": "",
+   "spy_base": "prior_close",
+   "account_number": "PA3I816FLXE9",
+   "cash": 15381.01,
+   "last_equity": 82910.75,
+   "broker_now": true
+  },
+  {
+   "account": "hack4",
+   "family": "alpaca_fleet",
+   "inception": "2026-08-28",
+   "start_capital": 100000.0,
+   "equity": 79828.49,
+   "roi_pct": -20.172,
+   "spy_same_window_pct": 0.281,
+   "vs_spy_pp": -20.453,
+   "n_positions": 2,
+   "last_mark": "2026-09-25",
+   "status": "LIVE",
+   "source": "GET https://paper-api.alpaca.markets/v2/account + /v2/positions (AAT_HACK4_* in aegis-alpha-terminal/.env)",
+   "note": "",
+   "spy_base": "prior_close",
+   "account_number": "PA3R9XHMCVDA",
+   "cash": 45031.44,
+   "last_equity": 80622.75,
+   "broker_now": true
+  },
+  {
+   "account": "hack3",
+   "family": "alpaca_fleet",
+   "inception": null,
+   "start_capital": 100000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "CREDENTIAL_INVALID",
+   "source": "GET https://paper-api.alpaca.markets/v2/account + /v2/positions (AAT_HACK3_* in aegis-alpha-terminal/.env)",
+   "note": "HTTP 401 on /v2/account -- the key is revoked or wrong, NOT a $0 account. retired 2026-09-22 (Railway loop removed); the Alpaca account was still open with 9 positions on 09-22",
+   "spy_base": "inception_close"
+  },
+  {
+   "account": "PC-PAPER",
+   "family": "pc_paper",
+   "inception": "2026-09-22",
+   "start_capital": 1000000.0,
+   "equity": 999054.41,
+   "roi_pct": -0.095,
+   "spy_same_window_pct": -0.278,
+   "vs_spy_pp": 0.183,
+   "n_positions": 11,
+   "last_mark": "2026-09-25",
+   "status": "LIVE",
+   "source": "backend.services.pc_broker.snapshot() (GET /v2/account + /v2/positions)",
+   "note": "first trades 2026-09-25",
+   "spy_base": "prior_close",
+   "account_number": "PA37CSAUFCQR",
+   "cash": 780857.77,
+   "broker_now": true
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [b109c886]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 110099.2,
+   "roi_pct": 10.099,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": 8.643,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "2 twins",
+   "book_id": "book:b109c8861c43e3c6"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [3b3e7049]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 110099.2,
+   "roi_pct": 10.099,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": 8.643,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "2 twins",
+   "book_id": "book:3b3e7049e693c3e4"
+  },
+  {
+   "account": "12-1 momentum, k=12, equal weight, monthly [8dbbb73b]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 103977.96,
+   "roi_pct": 3.978,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": 2.522,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "2 twins",
+   "book_id": "book:8dbbb73b6159d61d"
+  },
+  {
+   "account": "Low short interest, high turnover, long-only [1934ec97]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100000.0,
+   "roi_pct": 0.0,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.456,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "2 twins",
+   "book_id": "book:1934ec97aa4b1620"
+  },
+  {
+   "account": "Insider SAME-DAY clusters - the falsifier ar [4359eba8]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100000.0,
+   "roi_pct": 0.0,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.456,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "1 twins",
+   "book_id": "book:4359eba886a8a505"
+  },
+  {
+   "account": "Insider cluster buys, 4-5 day clusters, long [625c3919]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100000.0,
+   "roi_pct": 0.0,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.456,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "1 twins",
+   "book_id": "book:625c391913d9718c"
+  },
+  {
+   "account": "Good-news names in the top overhang tercile, [a82e6e45]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100000.0,
+   "roi_pct": 0.0,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.456,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "2 twins",
+   "book_id": "book:a82e6e453c14c241"
+  },
+  {
+   "account": "The UNCONDITIONED reaction book - Book C's p [c3adfbc0]",
+   "family": "night_books",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100000.0,
+   "roi_pct": 0.0,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.456,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "2 twins",
+   "book_id": "book:c3adfbc0192576c0"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [f64e8d99]",
+   "family": "night_books",
+   "inception": "2026-09-12",
+   "start_capital": 100000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "no paper_nav rows: the book has never been marked",
+   "spy_base": "inception_close",
+   "graded_against": "3 twins",
+   "book_id": "book:f64e8d9912412124"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [0b403924]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 104389.56,
+   "roi_pct": 4.39,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": 2.934,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Always invested \u2014 Book D's primary comparato",
+   "book_id": "book:0b4039242299f2e0"
+  },
+  {
+   "account": "Always invested - Book D's primary comparato [1ece648f]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 102119.99,
+   "roi_pct": 2.12,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": 0.664,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Always invested \u2014 Book D's primary comparato",
+   "book_id": "book:1ece648f7410da8e"
+  },
+  {
+   "account": "12-1 momentum, k=12, equal weight, monthly - [57c7af9f]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100740.68,
+   "roi_pct": 0.741,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -0.715,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "12-1 momentum, k=12, equal weight, monthly",
+   "book_id": "book:57c7af9fb85e59e8"
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [2c0eb59f]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100456.96,
+   "roi_pct": 0.457,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -0.999,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Cash/index by default; deviate only above a ",
+   "book_id": "book:2c0eb59f611b009c"
+  },
+  {
+   "account": "Cash/index by default; deviate only above a  [364486e1]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 100456.96,
+   "roi_pct": 0.457,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -0.999,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Cash/index by default; deviate only above a ",
+   "book_id": "book:364486e140074b55"
+  },
+  {
+   "account": "Good-news names in the top overhang tercile, [6310ca12]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 99795.06,
+   "roi_pct": -0.205,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.661,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Good-news names in the top overhang tercile,",
+   "book_id": "book:6310ca122657f8b1"
+  },
+  {
+   "account": "The UNCONDITIONED reaction book - Book C's p [668a4e27]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 99795.06,
+   "roi_pct": -0.205,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.661,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "The UNCONDITIONED reaction book \u2014 Book C's p",
+   "book_id": "book:668a4e273abf21ff"
+  },
+  {
+   "account": "Low short interest, high turnover, long-only [33418f0e]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 99544.57,
+   "roi_pct": -0.455,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -1.911,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Low short interest, high turnover, long-only",
+   "book_id": "book:33418f0ea53a2f1a"
+  },
+  {
+   "account": "Insider SAME-DAY clusters - the falsifier ar [32adc8a0]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 98753.76,
+   "roi_pct": -1.246,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -2.702,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Insider SAME-DAY clusters \u2014 the falsifier ar",
+   "book_id": "book:32adc8a0ec8ca0fe"
+  },
+  {
+   "account": "The UNCONDITIONED reaction book - Book C's p [60c4658f]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 98689.32,
+   "roi_pct": -1.311,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -2.767,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "The UNCONDITIONED reaction book \u2014 Book C's p",
+   "book_id": "book:60c4658f92c49e48"
+  },
+  {
+   "account": "12-1 momentum, k=12, equal weight, monthly - [f46aaaa4]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 98681.21,
+   "roi_pct": -1.319,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -2.775,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "12-1 momentum, k=12, equal weight, monthly",
+   "book_id": "book:f46aaaa40b8c039a"
+  },
+  {
+   "account": "Insider cluster buys, 4-5 day clusters, long [1dc24480]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 98597.71,
+   "roi_pct": -1.402,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -2.858,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Insider cluster buys, 4-5 day clusters, long",
+   "book_id": "book:1dc244805b119552"
+  },
+  {
+   "account": "Low short interest, high turnover, long-only [9d62cc74]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 98426.31,
+   "roi_pct": -1.574,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -3.03,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Low short interest, high turnover, long-only",
+   "book_id": "book:9d62cc74239b435d"
+  },
+  {
+   "account": "Good-news names in the top overhang tercile, [000b263c]",
+   "family": "night_books_twin",
+   "inception": "2026-09-11",
+   "start_capital": 100000.0,
+   "equity": 97514.02,
+   "roi_pct": -2.486,
+   "spy_same_window_pct": 1.456,
+   "vs_spy_pp": -3.942,
+   "n_positions": null,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "2 marks",
+   "spy_base": "inception_close",
+   "graded_against": "Good-news names in the top overhang tercile,",
+   "book_id": "book:000b263cf7ec2286"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [02a03ee6]",
+   "family": "night_books_twin",
+   "inception": "2026-09-12",
+   "start_capital": 100000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "no paper_nav rows: the book has never been marked",
+   "spy_base": "inception_close",
+   "graded_against": "First hour after a natively-stamped headline",
+   "book_id": "book:02a03ee6cce2cda1"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [d122db71]",
+   "family": "night_books_twin",
+   "inception": "2026-09-12",
+   "start_capital": 100000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "no paper_nav rows: the book has never been marked",
+   "spy_base": "inception_close",
+   "graded_against": "First hour after a natively-stamped headline",
+   "book_id": "book:d122db7122f748f5"
+  },
+  {
+   "account": "First hour after a natively-stamped headline [e3d1553b]",
+   "family": "night_books_twin",
+   "inception": "2026-09-12",
+   "start_capital": 100000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend.services.paper_books (paper_books store + paper_nav book: rows)",
+   "note": "no paper_nav rows: the book has never been marked",
+   "spy_base": "inception_close",
+   "graded_against": "First hour after a natively-stamped headline",
+   "book_id": "book:e3d1553ba7483930"
+  },
+  {
+   "account": "murat_live",
+   "family": "murat_book",
+   "inception": "2026-08-11",
+   "start_capital": 33153.6,
+   "equity": 32476.8,
+   "roi_pct": -2.041,
+   "spy_same_window_pct": 0.631,
+   "vs_spy_pp": -2.672,
+   "n_positions": 12,
+   "last_mark": "2026-09-21",
+   "status": "LIVE",
+   "source": "backend/data/murat_book.yaml x bars panel (prices_2025_26/bars.parquet) closes",
+   "note": "window return of the recorded share counts since as_of 2026-08-11 (confirmed: False; cash unknown); NOT a P&L since purchase. Priced 11/12; absent from the panel: AARD",
+   "spy_base": "inception_close",
+   "priced": [
+    "ABSI",
+    "AMSC",
+    "BHVN",
+    "DKNG",
+    "HUBS",
+    "KYTX",
+    "NTLA",
+    "PRCH",
+    "QUBT",
+    "SLDP",
+    "SOC"
+   ],
+   "unpriced": [
+    "AARD"
+   ]
+  },
+  {
+   "account": "AGENCY_BOOK:aggressive",
+   "family": "agency",
+   "inception": null,
+   "start_capital": null,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend/data/optimus/decisions/2026-09-26.json (AGENCY_BOOK:aggressive)",
+   "note": "a PROPOSAL (authority EXPLORE, expected_payoff NOT CALIBRATED); no paper_books entry holds it, so there is no NAV path to grade",
+   "spy_base": "inception_close",
+   "policy_id": "AGENCY_AGGRESSIVE"
+  },
+  {
+   "account": "AGENCY_BOOK:balanced",
+   "family": "agency",
+   "inception": null,
+   "start_capital": null,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend/data/optimus/decisions/2026-09-26.json (AGENCY_BOOK:balanced)",
+   "note": "a PROPOSAL (authority EXPLORE, expected_payoff NOT CALIBRATED); no paper_books entry holds it, so there is no NAV path to grade",
+   "spy_base": "inception_close",
+   "policy_id": "AGENCY_BALANCED"
+  },
+  {
+   "account": "AGENCY_BOOK:extreme_growth",
+   "family": "agency",
+   "inception": null,
+   "start_capital": null,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": null,
+   "last_mark": null,
+   "status": "UNGRADED",
+   "source": "backend/data/optimus/decisions/2026-09-26.json (AGENCY_BOOK:extreme_growth)",
+   "note": "a PROPOSAL (authority EXPLORE, expected_payoff NOT CALIBRATED); no paper_books entry holds it, so there is no NAV path to grade",
+   "spy_base": "inception_close",
+   "policy_id": "AGENCY_EXTREME_GROWTH"
+  },
+  {
+   "account": "revision_flow_v0",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: none",
+   "book_id": "cb8d492bb8bf9ade",
+   "frozen_utc": "2026-09-25T05:54:13+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "revision_flow_v0_random_twin",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: none",
+   "book_id": "e74c9063d451e316",
+   "frozen_utc": "2026-09-25T05:54:13+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v1",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 29,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "a20a2b972988eec6",
+   "frozen_utc": "2026-09-25T07:19:10+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "9ed2fedf51df1bbc",
+   "frozen_utc": "2026-09-25T07:20:46+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "66433be8ce92d0f8",
+   "frozen_utc": "2026-09-25T07:21:06+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "f97957221662a8b9",
+   "frozen_utc": "2026-09-25T07:22:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "994aa4afda4fa2d1",
+   "frozen_utc": "2026-09-25T07:26:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 22,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "56daa7269d142603",
+   "frozen_utc": "2026-09-25T07:27:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 15,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "784d2831c530f113",
+   "frozen_utc": "2026-09-25T07:27:14+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "4a07e3bfc1fa7d7c",
+   "frozen_utc": "2026-09-25T07:27:26+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 16,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "101b75d7f1f78dd5",
+   "frozen_utc": "2026-09-25T07:27:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 15,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "a5e835dd553d7071",
+   "frozen_utc": "2026-09-25T07:28:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "4fe78b33214899cc",
+   "frozen_utc": "2026-09-25T07:28:23+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v2",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 24,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "5d137b013692a737",
+   "frozen_utc": "2026-09-25T09:58:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "cards_supports_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "89761b53e2cd82ba",
+   "frozen_utc": "2026-09-25T10:07:43+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25",
+   "family": "llm_portfolio:personal",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 11,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "919892d54f6e3190",
+   "frozen_utc": "2026-09-25T10:08:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_retail_attention_contrarian_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "986780f4fa0f0119",
+   "frozen_utc": "2026-09-25T07:23:37+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_pharma_binary_basket_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 19,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "e781e41e79e56323",
+   "frozen_utc": "2026-09-25T07:23:48+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_asia_supply_chain_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 13,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "2c606bb5b74479c4",
+   "frozen_utc": "2026-09-25T07:24:31+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ai_power_global_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "b23cf2a9aee04289",
+   "frozen_utc": "2026-09-25T07:28:55+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_catalyst_calendar_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 26,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "4a3864b2140550ce",
+   "frozen_utc": "2026-09-25T07:29:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_revision_flow_leaders_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "308c1895b710fa8d",
+   "frozen_utc": "2026-09-25T07:29:32+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_policy_geopolitics_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 18,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "ae32ba0af99ce972",
+   "frozen_utc": "2026-09-25T07:29:52+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_quality_momentum_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "a0ab004a8709c745",
+   "frozen_utc": "2026-09-25T07:30:13+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ensemble_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "f1365ea29aeb1be2",
+   "frozen_utc": "2026-09-25T07:30:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_small_cap_catalyst_2026-09-25",
+   "family": "llm_portfolio:competition",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 25,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "URTH; twins: ew, sector_etf, urth, random_same_band",
+   "book_id": "a978a7d6c8b1a962",
+   "frozen_utc": "2026-09-25T07:31:40+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "e41dbb1e06a12088",
+   "frozen_utc": "2026-09-25T18:53:07+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "f0517a9aa6ab0bce",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "a92c21d829544aa7",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "5c21859739b26b6f",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "5d01fa2898e2cb72",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "eb6fa721a4c5f995",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "40c6ffdf6c238d60",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "46762e2bf28c238c",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "50e6cb3b0657464d",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "bec77d696dfa91e0",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "5ab343d6b1bc62a4",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "family": "llm_portfolio:lib",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 31,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "SPY; twins: ew, sector_etf, spy, random_same_band",
+   "book_id": "974d5067e835c006",
+   "frozen_utc": "2026-09-25T18:53:11+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "human_ai_thematic_v1__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 28,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of human_ai_thematic_v1",
+   "book_id": "4ed704b8349cfebb",
+   "frozen_utc": "2026-09-25T07:19:10+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v1__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 9,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of human_ai_thematic_v1",
+   "book_id": "36e15745ede143bc",
+   "frozen_utc": "2026-09-25T07:19:10+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v1__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of human_ai_thematic_v1",
+   "book_id": "d1aaf40c7abfa3fe",
+   "frozen_utc": "2026-09-25T07:19:10+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v1__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 29,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of human_ai_thematic_v1",
+   "book_id": "5e8df95b9c56a050",
+   "frozen_utc": "2026-09-25T07:19:18+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 13,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_policy_geopolitics_2026-09-25",
+   "book_id": "86a554a0e5fe831d",
+   "frozen_utc": "2026-09-25T07:20:46+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_policy_geopolitics_2026-09-25",
+   "book_id": "b5aacf796655ccd8",
+   "frozen_utc": "2026-09-25T07:20:46+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_policy_geopolitics_2026-09-25",
+   "book_id": "9fff7c59373e051b",
+   "frozen_utc": "2026-09-25T07:20:46+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_policy_geopolitics_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_policy_geopolitics_2026-09-25",
+   "book_id": "73f66d85121d11c3",
+   "frozen_utc": "2026-09-25T07:20:51+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 13,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_retail_attention_contrarian_2026-09-25",
+   "book_id": "f6999533e4c54095",
+   "frozen_utc": "2026-09-25T07:21:06+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 4,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_retail_attention_contrarian_2026-09-25",
+   "book_id": "5e2fe305edff9f20",
+   "frozen_utc": "2026-09-25T07:21:06+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_retail_attention_contrarian_2026-09-25",
+   "book_id": "fb2d1fd5a8063978",
+   "frozen_utc": "2026-09-25T07:21:06+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_retail_attention_contrarian_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_retail_attention_contrarian_2026-09-25",
+   "book_id": "544d0238e87dac03",
+   "frozen_utc": "2026-09-25T07:21:10+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 13,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_asia_supply_chain_2026-09-25",
+   "book_id": "821c63529e1a2d71",
+   "frozen_utc": "2026-09-25T07:22:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_asia_supply_chain_2026-09-25",
+   "book_id": "a149e04fe725bbb5",
+   "frozen_utc": "2026-09-25T07:22:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_asia_supply_chain_2026-09-25",
+   "book_id": "267d9ad20b61f91c",
+   "frozen_utc": "2026-09-25T07:22:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_asia_supply_chain_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_asia_supply_chain_2026-09-25",
+   "book_id": "59e27610c2d62acf",
+   "frozen_utc": "2026-09-25T07:22:07+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_retail_attention_contrarian_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 19,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_retail_attention_contrarian_2026-09-25",
+   "book_id": "97d387d45f77af1a",
+   "frozen_utc": "2026-09-25T07:23:37+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_retail_attention_contrarian_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 4,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_retail_attention_contrarian_2026-09-25",
+   "book_id": "1e77c2249af1ae69",
+   "frozen_utc": "2026-09-25T07:23:37+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_retail_attention_contrarian_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_retail_attention_contrarian_2026-09-25",
+   "book_id": "7e819abc640d84c1",
+   "frozen_utc": "2026-09-25T07:23:37+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_retail_attention_contrarian_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_retail_attention_contrarian_2026-09-25",
+   "book_id": "3e20e18ffd2b6542",
+   "frozen_utc": "2026-09-25T07:23:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_pharma_binary_basket_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 18,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_pharma_binary_basket_2026-09-25",
+   "book_id": "606a43c59f7151af",
+   "frozen_utc": "2026-09-25T07:23:48+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_pharma_binary_basket_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_pharma_binary_basket_2026-09-25",
+   "book_id": "eef7d810e7ced2e1",
+   "frozen_utc": "2026-09-25T07:23:48+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_pharma_binary_basket_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_pharma_binary_basket_2026-09-25",
+   "book_id": "5e6b39da70825425",
+   "frozen_utc": "2026-09-25T07:23:48+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_pharma_binary_basket_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 19,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_pharma_binary_basket_2026-09-25",
+   "book_id": "c1dbd1174d315100",
+   "frozen_utc": "2026-09-25T07:23:52+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_asia_supply_chain_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 12,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_asia_supply_chain_2026-09-25",
+   "book_id": "0deb1afb064f8829",
+   "frozen_utc": "2026-09-25T07:24:31+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_asia_supply_chain_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_asia_supply_chain_2026-09-25",
+   "book_id": "e510af748f049fd8",
+   "frozen_utc": "2026-09-25T07:24:31+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_asia_supply_chain_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_asia_supply_chain_2026-09-25",
+   "book_id": "787b7fc1deb90685",
+   "frozen_utc": "2026-09-25T07:24:31+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_asia_supply_chain_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 13,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_asia_supply_chain_2026-09-25",
+   "book_id": "4fcc3d57059b3f68",
+   "frozen_utc": "2026-09-25T07:24:35+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 13,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_ai_power_global_2026-09-25",
+   "book_id": "da2342d34ad260fc",
+   "frozen_utc": "2026-09-25T07:26:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_ai_power_global_2026-09-25",
+   "book_id": "526e9502baa910e7",
+   "frozen_utc": "2026-09-25T07:26:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_ai_power_global_2026-09-25",
+   "book_id": "09a884b64a330dfb",
+   "frozen_utc": "2026-09-25T07:26:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ai_power_global_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_ai_power_global_2026-09-25",
+   "book_id": "5153f0f266819a50",
+   "frozen_utc": "2026-09-25T07:26:49+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_catalyst_calendar_2026-09-25",
+   "book_id": "e699b392cfeb544a",
+   "frozen_utc": "2026-09-25T07:27:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 5,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_catalyst_calendar_2026-09-25",
+   "book_id": "30e35a85ccbc0bb2",
+   "frozen_utc": "2026-09-25T07:27:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_catalyst_calendar_2026-09-25",
+   "book_id": "1143cf878630da6c",
+   "frozen_utc": "2026-09-25T07:27:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_catalyst_calendar_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 22,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_catalyst_calendar_2026-09-25",
+   "book_id": "6d45b02054b259a2",
+   "frozen_utc": "2026-09-25T07:27:08+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_revision_flow_leaders_2026-09-25",
+   "book_id": "c268c92f44aad27d",
+   "frozen_utc": "2026-09-25T07:27:14+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 3,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_revision_flow_leaders_2026-09-25",
+   "book_id": "d526a3b19b0993bc",
+   "frozen_utc": "2026-09-25T07:27:14+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_revision_flow_leaders_2026-09-25",
+   "book_id": "afa7545f4ea2436f",
+   "frozen_utc": "2026-09-25T07:27:14+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_revision_flow_leaders_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 15,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_revision_flow_leaders_2026-09-25",
+   "book_id": "bae0b39e7cff6e4a",
+   "frozen_utc": "2026-09-25T07:27:18+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 19,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_pharma_binary_basket_2026-09-25",
+   "book_id": "6d1e4a9eed1db26e",
+   "frozen_utc": "2026-09-25T07:27:26+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_pharma_binary_basket_2026-09-25",
+   "book_id": "3dcc8289009e6100",
+   "frozen_utc": "2026-09-25T07:27:26+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_pharma_binary_basket_2026-09-25",
+   "book_id": "e75ebac20ddbaa1c",
+   "frozen_utc": "2026-09-25T07:27:26+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_pharma_binary_basket_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_pharma_binary_basket_2026-09-25",
+   "book_id": "b2e31bad2f0f8b4c",
+   "frozen_utc": "2026-09-25T07:27:30+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 15,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_quality_momentum_2026-09-25",
+   "book_id": "c6dec94f1f0b404c",
+   "frozen_utc": "2026-09-25T07:27:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 4,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_quality_momentum_2026-09-25",
+   "book_id": "a05e7d18b66639ea",
+   "frozen_utc": "2026-09-25T07:27:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_quality_momentum_2026-09-25",
+   "book_id": "79ea7f3ad6200150",
+   "frozen_utc": "2026-09-25T07:27:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_quality_momentum_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 16,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_quality_momentum_2026-09-25",
+   "book_id": "44c7a5aca92cc52d",
+   "frozen_utc": "2026-09-25T07:27:48+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 14,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_small_cap_catalyst_2026-09-25",
+   "book_id": "20e8fce4a65578a4",
+   "frozen_utc": "2026-09-25T07:28:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_small_cap_catalyst_2026-09-25",
+   "book_id": "748533e19c95d365",
+   "frozen_utc": "2026-09-25T07:28:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_small_cap_catalyst_2026-09-25",
+   "book_id": "2b705386d5683895",
+   "frozen_utc": "2026-09-25T07:28:03+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_small_cap_catalyst_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 15,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_small_cap_catalyst_2026-09-25",
+   "book_id": "9c6a594552e6c1c7",
+   "frozen_utc": "2026-09-25T07:28:07+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 19,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of pers_ensemble_2026-09-25",
+   "book_id": "39a8b93233013aad",
+   "frozen_utc": "2026-09-25T07:28:23+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of pers_ensemble_2026-09-25",
+   "book_id": "8419288a2b749229",
+   "frozen_utc": "2026-09-25T07:28:23+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of pers_ensemble_2026-09-25",
+   "book_id": "52b5a384a7885981",
+   "frozen_utc": "2026-09-25T07:28:23+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "pers_ensemble_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of pers_ensemble_2026-09-25",
+   "book_id": "6e3000573debaee1",
+   "frozen_utc": "2026-09-25T07:28:26+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ai_power_global_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_ai_power_global_2026-09-25",
+   "book_id": "499250dc0092a142",
+   "frozen_utc": "2026-09-25T07:28:55+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ai_power_global_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_ai_power_global_2026-09-25",
+   "book_id": "e05a43c3745596fd",
+   "frozen_utc": "2026-09-25T07:28:55+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ai_power_global_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_ai_power_global_2026-09-25",
+   "book_id": "64a48ff02d938f26",
+   "frozen_utc": "2026-09-25T07:28:55+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ai_power_global_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_ai_power_global_2026-09-25",
+   "book_id": "0f439ecdc4d7bedd",
+   "frozen_utc": "2026-09-25T07:28:59+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_catalyst_calendar_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 25,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_catalyst_calendar_2026-09-25",
+   "book_id": "1d9f9d9414dd0d99",
+   "frozen_utc": "2026-09-25T07:29:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_catalyst_calendar_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 5,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_catalyst_calendar_2026-09-25",
+   "book_id": "f70a676c0c8300ad",
+   "frozen_utc": "2026-09-25T07:29:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_catalyst_calendar_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_catalyst_calendar_2026-09-25",
+   "book_id": "ccaaf8413edc7d63",
+   "frozen_utc": "2026-09-25T07:29:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_catalyst_calendar_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 26,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_catalyst_calendar_2026-09-25",
+   "book_id": "d4445756a3ce4679",
+   "frozen_utc": "2026-09-25T07:29:19+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_revision_flow_leaders_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 22,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_revision_flow_leaders_2026-09-25",
+   "book_id": "8a1791d971e441cc",
+   "frozen_utc": "2026-09-25T07:29:32+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_revision_flow_leaders_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 4,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_revision_flow_leaders_2026-09-25",
+   "book_id": "48f12e555eb64f6b",
+   "frozen_utc": "2026-09-25T07:29:32+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_revision_flow_leaders_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_revision_flow_leaders_2026-09-25",
+   "book_id": "1ce52728928e9975",
+   "frozen_utc": "2026-09-25T07:29:32+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_revision_flow_leaders_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_revision_flow_leaders_2026-09-25",
+   "book_id": "5b8fdbb2d2db0111",
+   "frozen_utc": "2026-09-25T07:29:37+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_policy_geopolitics_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 17,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_policy_geopolitics_2026-09-25",
+   "book_id": "aaa936abc8658a7e",
+   "frozen_utc": "2026-09-25T07:29:52+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_policy_geopolitics_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_policy_geopolitics_2026-09-25",
+   "book_id": "0d15e8dfa27ef974",
+   "frozen_utc": "2026-09-25T07:29:52+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_policy_geopolitics_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_policy_geopolitics_2026-09-25",
+   "book_id": "9aa316fa0f39b2ef",
+   "frozen_utc": "2026-09-25T07:29:52+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_policy_geopolitics_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 18,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_policy_geopolitics_2026-09-25",
+   "book_id": "7a64b3bb9e33c4d7",
+   "frozen_utc": "2026-09-25T07:29:56+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_quality_momentum_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 22,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_quality_momentum_2026-09-25",
+   "book_id": "218b0ad62977854f",
+   "frozen_utc": "2026-09-25T07:30:13+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_quality_momentum_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_quality_momentum_2026-09-25",
+   "book_id": "82b9eae80c446234",
+   "frozen_utc": "2026-09-25T07:30:13+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_quality_momentum_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_quality_momentum_2026-09-25",
+   "book_id": "d81361dfeec4e988",
+   "frozen_utc": "2026-09-25T07:30:13+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_quality_momentum_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_quality_momentum_2026-09-25",
+   "book_id": "2ff9f3a0d5da191b",
+   "frozen_utc": "2026-09-25T07:30:17+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ensemble_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 22,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_ensemble_2026-09-25",
+   "book_id": "bf80100427283170",
+   "frozen_utc": "2026-09-25T07:30:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ensemble_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 7,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_ensemble_2026-09-25",
+   "book_id": "49dc81068716e0d2",
+   "frozen_utc": "2026-09-25T07:30:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ensemble_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_ensemble_2026-09-25",
+   "book_id": "ab82bfdd903fe728",
+   "frozen_utc": "2026-09-25T07:30:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_ensemble_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_ensemble_2026-09-25",
+   "book_id": "afea0c3edab8d2d9",
+   "frozen_utc": "2026-09-25T07:30:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_small_cap_catalyst_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 24,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of comp_small_cap_catalyst_2026-09-25",
+   "book_id": "fafc1f60d5ce38e9",
+   "frozen_utc": "2026-09-25T07:31:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_small_cap_catalyst_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 6,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of comp_small_cap_catalyst_2026-09-25",
+   "book_id": "6103abe0f2ffa4e3",
+   "frozen_utc": "2026-09-25T07:31:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_small_cap_catalyst_2026-09-25__urth",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (urth) of comp_small_cap_catalyst_2026-09-25",
+   "book_id": "38444ca62468a269",
+   "frozen_utc": "2026-09-25T07:31:41+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "comp_small_cap_catalyst_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 25,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of comp_small_cap_catalyst_2026-09-25",
+   "book_id": "1e3bada0f3d8f655",
+   "frozen_utc": "2026-09-25T07:31:45+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v2__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 23,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of human_ai_thematic_v2",
+   "book_id": "e02b91c77e5f51c4",
+   "frozen_utc": "2026-09-25T09:58:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v2__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 9,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of human_ai_thematic_v2",
+   "book_id": "ac85112e5328973d",
+   "frozen_utc": "2026-09-25T09:58:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v2__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of human_ai_thematic_v2",
+   "book_id": "2846d8d12db2346e",
+   "frozen_utc": "2026-09-25T09:58:15+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "human_ai_thematic_v2__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 24,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of human_ai_thematic_v2",
+   "book_id": "4204177563615b9a",
+   "frozen_utc": "2026-09-25T09:58:19+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "cards_supports_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of cards_supports_2026-09-25",
+   "book_id": "3355b6c8ed3a69f1",
+   "frozen_utc": "2026-09-25T10:07:43+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "cards_supports_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 8,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of cards_supports_2026-09-25",
+   "book_id": "6122fde7397415da",
+   "frozen_utc": "2026-09-25T10:07:43+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "cards_supports_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of cards_supports_2026-09-25",
+   "book_id": "6c3747cd512b3b29",
+   "frozen_utc": "2026-09-25T10:07:43+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "cards_supports_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of cards_supports_2026-09-25",
+   "book_id": "df55d0a76fdd48fd",
+   "frozen_utc": "2026-09-25T10:07:47+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 10,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of reviewer_opus_2026-09-25",
+   "book_id": "246554898399f66a",
+   "frozen_utc": "2026-09-25T10:08:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 5,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of reviewer_opus_2026-09-25",
+   "book_id": "87b34e493fb2c2e7",
+   "frozen_utc": "2026-09-25T10:08:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of reviewer_opus_2026-09-25",
+   "book_id": "2a89263475691f0d",
+   "frozen_utc": "2026-09-25T10:08:04+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "reviewer_opus_2026-09-25__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-28",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 11,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-28)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of reviewer_opus_2026-09-25",
+   "book_id": "054f40d663ae49a6",
+   "frozen_utc": "2026-09-25T10:08:08+00:00",
+   "entry": "2026-09-28"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_mom_12_1_q_2026-09-26",
+   "book_id": "f16d01a11ab3ccc4",
+   "frozen_utc": "2026-09-25T18:53:07+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_mom_12_1_q_2026-09-26",
+   "book_id": "245d949a9b68bc58",
+   "frozen_utc": "2026-09-25T18:53:07+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_mom_12_1_q_2026-09-26",
+   "book_id": "6bed98b03d8e365f",
+   "frozen_utc": "2026-09-25T18:53:07+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_q_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_mom_12_1_q_2026-09-26",
+   "book_id": "528f037d9b63085d",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_mom_no_downgrades_2026-09-26",
+   "book_id": "10a4e908bcb91820",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_mom_no_downgrades_2026-09-26",
+   "book_id": "fb50c7765a76b11b",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_mom_no_downgrades_2026-09-26",
+   "book_id": "58af9947b61243c7",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_no_downgrades_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_mom_no_downgrades_2026-09-26",
+   "book_id": "b14ab4120e15e056",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_net_raises_2026-09-26",
+   "book_id": "84f0b40e17cf05e0",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_net_raises_2026-09-26",
+   "book_id": "3c9794ecd31f0f1e",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_net_raises_2026-09-26",
+   "book_id": "8b90680b60255165",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_net_raises_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_net_raises_2026-09-26",
+   "book_id": "84f42ec6249cc5b2",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_big_dv_2026-09-26",
+   "book_id": "da855c29124f0605",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_big_dv_2026-09-26",
+   "book_id": "096769c1739fd968",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_big_dv_2026-09-26",
+   "book_id": "b38b5ee423c60e4e",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_big_dv_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_big_dv_2026-09-26",
+   "book_id": "e3c835d4b629a1a8",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_mom_12_1_2026-09-26",
+   "book_id": "a313813bc4f6f741",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_mom_12_1_2026-09-26",
+   "book_id": "05c10884ad2a735a",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_mom_12_1_2026-09-26",
+   "book_id": "46dcf35c9f9daf68",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_mom_12_1_2026-09-26",
+   "book_id": "21b78eebdc2f42ef",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_mom_12_1_small_2026-09-26",
+   "book_id": "bd18058f14ded23c",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_mom_12_1_small_2026-09-26",
+   "book_id": "dc54c5c41314b379",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_mom_12_1_small_2026-09-26",
+   "book_id": "b22899a9f5048f50",
+   "frozen_utc": "2026-09-25T18:53:08+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_12_1_small_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_mom_12_1_small_2026-09-26",
+   "book_id": "10abfff23d140d85",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_mom_flow_2026-09-26",
+   "book_id": "32979a3fd6eb06b8",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_mom_flow_2026-09-26",
+   "book_id": "1f8d1089c8a71f34",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_mom_flow_2026-09-26",
+   "book_id": "5070789ebb5e7a78",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_mom_flow_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_mom_flow_2026-09-26",
+   "book_id": "aa3bdf0013215ca4",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_trend_quality_2026-09-26",
+   "book_id": "84ebef40d990f5d3",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_trend_quality_2026-09-26",
+   "book_id": "588c049dc6f44fc6",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_trend_quality_2026-09-26",
+   "book_id": "9e22bab074383596",
+   "frozen_utc": "2026-09-25T18:53:09+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_trend_quality_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_trend_quality_2026-09-26",
+   "book_id": "a9e6e25f06fefb1d",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_frog_in_pan_2026-09-26",
+   "book_id": "01f9ce2f98eb6b50",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_frog_in_pan_2026-09-26",
+   "book_id": "ad82b987e7f74c0a",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_frog_in_pan_2026-09-26",
+   "book_id": "fbcc68650e62b9f7",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_frog_in_pan_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_frog_in_pan_2026-09-26",
+   "book_id": "95d576dee301ef6a",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_inflection_flow_2026-09-26",
+   "book_id": "b272b78577a6687f",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 2,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_inflection_flow_2026-09-26",
+   "book_id": "a3d92992c058ab3b",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_inflection_flow_2026-09-26",
+   "book_id": "ff04c949aea3d17a",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_inflection_flow_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_inflection_flow_2026-09-26",
+   "book_id": "6951436a3fbbdf7e",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 20,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_forecast_dispersion_v1_2026-09-26",
+   "book_id": "19c6af663cc3033f",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_forecast_dispersion_v1_2026-09-26",
+   "book_id": "410bfa9ff8e9064d",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_forecast_dispersion_v1_2026-09-26",
+   "book_id": "bf81cdc1ab12f48d",
+   "frozen_utc": "2026-09-25T18:53:10+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_forecast_dispersion_v1_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 21,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_forecast_dispersion_v1_2026-09-26",
+   "book_id": "482d567ade18c071",
+   "frozen_utc": "2026-09-25T18:53:11+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__ew",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 30,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (ew) of lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "book_id": "0fe8c4069b5dfe3b",
+   "frozen_utc": "2026-09-25T18:53:11+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__sector_etf",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (sector_etf) of lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "book_id": "f178d9457d2a6da6",
+   "frozen_utc": "2026-09-25T18:53:11+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__spy",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 1,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (spy) of lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "book_id": "f731af670e1e0088",
+   "frozen_utc": "2026-09-25T18:53:11+00:00",
+   "entry": "2026-09-29"
+  },
+  {
+   "account": "lib_book_f_seasonality_11_20_v0_2026-09-26__random_same_band",
+   "family": "llm_portfolio:twin",
+   "inception": "2026-09-29",
+   "start_capital": 1000000.0,
+   "equity": null,
+   "roi_pct": null,
+   "spy_same_window_pct": null,
+   "vs_spy_pp": null,
+   "n_positions": 31,
+   "last_mark": null,
+   "status": "PENDING",
+   "source": "backend/data/optimus/llm_portfolio/books.jsonl + leaderboard_2026-09-26.json (python -m scripts.llm_portfolio grade --no-pull)",
+   "note": "PENDING (entry 2026-09-29)",
+   "spy_base": "inception_close",
+   "graded_against": "twin (random_same_band) of lib_book_f_seasonality_11_20_v0_2026-09-26",
+   "book_id": "c3bd3f4870287e75",
+   "frozen_utc": "2026-09-25T18:53:11+00:00",
+   "entry": "2026-09-29"
+  }
+ ],
+ "aggregate": {
+  "all_priced": {
+   "n": 39,
+   "sum_equity": 4679959.18,
+   "sum_start_capital": 4733153.6,
+   "pnl": -53194.42,
+   "roi_pct": -1.124
+  },
+  "priced_excluding_control_twins": {
+   "n": 25,
+   "sum_equity": 3281998.01,
+   "sum_start_capital": 3333153.6,
+   "pnl": -51155.59,
+   "roi_pct": -1.535
+  },
+  "n_ahead_of_spy": 7,
+  "n_behind_spy": 32,
+  "n_pending": 182,
+  "status_counts": {
+   "LIVE": 39,
+   "PENDING": 182,
+   "RETIRED": 0,
+   "UNPRICED": 0,
+   "CREDENTIAL_INVALID": 1,
+   "UNGRADED": 7
+  },
+  "by_family": {
+   "website_lane": {
+    "n": 10,
+    "n_priced": 10,
+    "sum_equity": 978763.58,
+    "sum_start_capital": 1000000.0,
+    "pnl": -21236.42,
+    "roi_pct": -2.124
+   },
+   "alpaca_fleet": {
+    "n": 6,
+    "n_priced": 5,
+    "sum_equity": 447526.86,
+    "sum_start_capital": 500000.0,
+    "pnl": -52473.14,
+    "roi_pct": -10.495
+   },
+   "pc_paper": {
+    "n": 1,
+    "n_priced": 1,
+    "sum_equity": 999054.41,
+    "sum_start_capital": 1000000.0,
+    "pnl": -945.59,
+    "roi_pct": -0.095
+   },
+   "night_books": {
+    "n": 9,
+    "n_priced": 8,
+    "sum_equity": 824176.36,
+    "sum_start_capital": 800000.0,
+    "pnl": 24176.36,
+    "roi_pct": 3.022
+   },
+   "night_books_twin": {
+    "n": 17,
+    "n_priced": 14,
+    "sum_equity": 1397961.17,
+    "sum_start_capital": 1400000.0,
+    "pnl": -2038.83,
+    "roi_pct": -0.146
+   },
+   "murat_book": {
+    "n": 1,
+    "n_priced": 1,
+    "sum_equity": 32476.8,
+    "sum_start_capital": 33153.6,
+    "pnl": -676.8,
+    "roi_pct": -2.041
+   },
+   "agency": {
+    "n": 3,
+    "n_priced": 0
+   },
+   "llm_portfolio:personal": {
+    "n": 16,
+    "n_priced": 0
+   },
+   "llm_portfolio:competition": {
+    "n": 10,
+    "n_priced": 0
+   },
+   "llm_portfolio:lib": {
+    "n": 12,
+    "n_priced": 0
+   },
+   "llm_portfolio:twin": {
+    "n": 144,
+    "n_priced": 0
+   }
+  },
+  "honest_sentence": "Of 39 priced accounts with an own-window SPY leg, 7 are ahead of SPY and 32 behind (excluding control twins: 5 ahead, 20 behind); 182 are PENDING (not yet entered), 7 UNGRADED, 1 CREDENTIAL_INVALID, 0 UNPRICED."
+ },
+ "lane_nav_series": {
+  "lanes": {
+   "conservative": [
+    [
+     "2026-06-08",
+     100000.0
+    ],
+    [
+     "2026-06-09",
+     100607.56
+    ],
+    [
+     "2026-06-10",
+     100581.18
+    ],
+    [
+     "2026-06-11",
+     100049.15
+    ],
+    [
+     "2026-06-12",
+     100741.26
+    ],
+    [
+     "2026-06-15",
+     100861.54
+    ],
+    [
+     "2026-06-16",
+     101053.66
+    ],
+    [
+     "2026-06-17",
+     101021.24
+    ],
+    [
+     "2026-06-18",
+     99749.14
+    ],
+    [
+     "2026-06-19",
+     99616.36
+    ],
+    [
+     "2026-06-22",
+     99650.18
+    ],
+    [
+     "2026-06-23",
+     99286.02
+    ],
+    [
+     "2026-06-24",
+     99319.6
+    ],
+    [
+     "2026-06-25",
+     99011.25
+    ],
+    [
+     "2026-06-26",
+     99158.94
+    ],
+    [
+     "2026-06-29",
+     100879.22
+    ],
+    [
+     "2026-06-30",
+     100098.48
+    ],
+    [
+     "2026-07-01",
+     99603.54
+    ],
+    [
+     "2026-07-02",
+     99569.93
+    ],
+    [
+     "2026-07-03",
+     100933.22
+    ],
+    [
+     "2026-07-06",
+     100933.22
+    ],
+    [
+     "2026-07-07",
+     100740.64
+    ],
+    [
+     "2026-07-08",
+     101118.48
+    ],
+    [
+     "2026-07-09",
+     100119.04
+    ],
+    [
+     "2026-07-10",
+     99917.59
+    ],
+    [
+     "2026-07-13",
+     100055.55
+    ],
+    [
+     "2026-07-14",
+     100254.81
+    ],
+    [
+     "2026-07-15",
+     100141.05
+    ],
+    [
+     "2026-07-16",
+     100319.87
+    ],
+    [
+     "2026-07-17",
+     100681.1
+    ],
+    [
+     "2026-07-20",
+     100354.86
+    ],
+    [
+     "2026-07-21",
+     100061.81
+    ],
+    [
+     "2026-07-22",
+     100323.14
+    ],
+    [
+     "2026-07-23",
+     100412.85
+    ],
+    [
+     "2026-07-24",
+     100477.74
+    ],
+    [
+     "2026-07-27",
+     100430.67
+    ],
+    [
+     "2026-07-28",
+     101095.15
+    ],
+    [
+     "2026-07-29",
+     101580.71
+    ],
+    [
+     "2026-07-30",
+     101322.18
+    ],
+    [
+     "2026-07-31",
+     101373.02
+    ],
+    [
+     "2026-08-03",
+     101305.86
+    ],
+    [
+     "2026-08-04",
+     101524.16
+    ],
+    [
+     "2026-08-07",
+     102029.34
+    ],
+    [
+     "2026-08-10",
+     102664.52
+    ],
+    [
+     "2026-08-11",
+     103258.77
+    ],
+    [
+     "2026-08-12",
+     103073.65
+    ],
+    [
+     "2026-08-13",
+     103186.21
+    ],
+    [
+     "2026-08-14",
+     103544.42
+    ],
+    [
+     "2026-08-17",
+     103647.32
+    ],
+    [
+     "2026-08-18",
+     103223.03
+    ],
+    [
+     "2026-08-20",
+     104208.4
+    ],
+    [
+     "2026-08-21",
+     103499.5
+    ],
+    [
+     "2026-08-24",
+     104223.55
+    ],
+    [
+     "2026-08-26",
+     103891.19
+    ],
+    [
+     "2026-08-27",
+     103684.1
+    ],
+    [
+     "2026-08-31",
+     103225.39
+    ],
+    [
+     "2026-09-01",
+     102893.32
+    ],
+    [
+     "2026-09-02",
+     103239.6
+    ],
+    [
+     "2026-09-03",
+     103900.84
+    ],
+    [
+     "2026-09-04",
+     103273.48
+    ],
+    [
+     "2026-09-08",
+     102843.92
+    ],
+    [
+     "2026-09-09",
+     102391.13
+    ],
+    [
+     "2026-09-10",
+     102084.17
+    ],
+    [
+     "2026-09-11",
+     102426.51
+    ],
+    [
+     "2026-09-14",
+     102617.55
+    ],
+    [
+     "2026-09-15",
+     102401.14
+    ],
+    [
+     "2026-09-16",
+     101765.95
+    ],
+    [
+     "2026-09-17",
+     102289.18
+    ],
+    [
+     "2026-09-18",
+     101867.26
+    ]
+   ],
+   "balanced": [
+    [
+     "2026-06-08",
+     100000.0
+    ],
+    [
+     "2026-06-09",
+     100618.85
+    ],
+    [
+     "2026-06-10",
+     100590.25
+    ],
+    [
+     "2026-06-11",
+     100168.87
+    ],
+    [
+     "2026-06-12",
+     100891.57
+    ],
+    [
+     "2026-06-15",
+     101038.57
+    ],
+    [
+     "2026-06-16",
+     101187.56
+    ],
+    [
+     "2026-06-17",
+     101237.68
+    ],
+    [
+     "2026-06-18",
+     100046.81
+    ],
+    [
+     "2026-06-19",
+     99895.72
+    ],
+    [
+     "2026-06-22",
+     99929.33
+    ],
+    [
+     "2026-06-23",
+     99546.55
+    ],
+    [
+     "2026-06-24",
+     99688.9
+    ],
+    [
+     "2026-06-25",
+     99578.69
+    ],
+    [
+     "2026-06-26",
+     99673.48
+    ],
+    [
+     "2026-06-29",
+     101414.56
+    ],
+    [
+     "2026-06-30",
+     100652.6
+    ],
+    [
+     "2026-07-01",
+     100157.14
+    ],
+    [
+     "2026-07-02",
+     100129.45
+    ],
+    [
+     "2026-07-03",
+     101480.07
+    ],
+    [
+     "2026-07-06",
+     101480.07
+    ],
+    [
+     "2026-07-07",
+     101229.19
+    ],
+    [
+     "2026-07-08",
+     101430.99
+    ],
+    [
+     "2026-07-09",
+     100770.26
+    ],
+    [
+     "2026-07-10",
+     100556.41
+    ],
+    [
+     "2026-07-13",
+     100720.88
+    ],
+    [
+     "2026-07-14",
+     100851.97
+    ],
+    [
+     "2026-07-15",
+     100629.63
+    ],
+    [
+     "2026-07-16",
+     100788.27
+    ],
+    [
+     "2026-07-17",
+     101262.42
+    ],
+    [
+     "2026-07-20",
+     100808.06
+    ],
+    [
+     "2026-07-21",
+     100482.23
+    ],
+    [
+     "2026-07-22",
+     100606.53
+    ],
+    [
+     "2026-07-23",
+     100626.34
+    ],
+    [
+     "2026-07-24",
+     100694.0
+    ],
+    [
+     "2026-07-27",
+     100646.51
+    ],
+    [
+     "2026-07-28",
+     101558.48
+    ],
+    [
+     "2026-07-29",
+     102211.71
+    ],
+    [
+     "2026-07-30",
+     101760.11
+    ],
+    [
+     "2026-07-31",
+     101776.67
+    ],
+    [
+     "2026-08-03",
+     101733.85
+    ],
+    [
+     "2026-08-04",
+     102058.03
+    ],
+    [
+     "2026-08-07",
+     102474.43
+    ],
+    [
+     "2026-08-10",
+     103061.45
+    ],
+    [
+     "2026-08-11",
+     103519.04
+    ],
+    [
+     "2026-08-12",
+     103322.99
+    ],
+    [
+     "2026-08-13",
+     103399.46
+    ],
+    [
+     "2026-08-14",
+     103852.42
+    ],
+    [
+     "2026-08-17",
+     103885.63
+    ],
+    [
+     "2026-08-18",
+     103372.41
+    ],
+    [
+     "2026-08-20",
+     104382.98
+    ],
+    [
+     "2026-08-21",
+     103538.35
+    ],
+    [
+     "2026-08-24",
+     104244.11
+    ],
+    [
+     "2026-08-26",
+     104025.19
+    ],
+    [
+     "2026-08-27",
+     103745.87
+    ],
+    [
+     "2026-08-31",
+     103362.44
+    ],
+    [
+     "2026-09-01",
+     103038.38
+    ],
+    [
+     "2026-09-02",
+     103372.99
+    ],
+    [
+     "2026-09-03",
+     103968.55
+    ],
+    [
+     "2026-09-04",
+     103353.06
+    ],
+    [
+     "2026-09-08",
+     102878.78
+    ],
+    [
+     "2026-09-09",
+     102325.4
+    ],
+    [
+     "2026-09-10",
+     101956.66
+    ],
+    [
+     "2026-09-11",
+     102318.71
+    ],
+    [
+     "2026-09-14",
+     102561.08
+    ],
+    [
+     "2026-09-15",
+     102251.7
+    ],
+    [
+     "2026-09-16",
+     101700.62
+    ],
+    [
+     "2026-09-17",
+     102202.59
+    ],
+    [
+     "2026-09-18",
+     101755.11
+    ]
+   ],
+   "aggressive": [
+    [
+     "2026-06-08",
+     100000.0
+    ],
+    [
+     "2026-06-09",
+     100854.87
+    ],
+    [
+     "2026-06-10",
+     100816.05
+    ],
+    [
+     "2026-06-11",
+     100384.55
+    ],
+    [
+     "2026-06-12",
+     101149.36
+    ],
+    [
+     "2026-06-15",
+     101401.4
+    ],
+    [
+     "2026-06-16",
+     101565.05
+    ],
+    [
+     "2026-06-17",
+     101649.69
+    ],
+    [
+     "2026-06-18",
+     100249.06
+    ],
+    [
+     "2026-06-19",
+     99960.95
+    ],
+    [
+     "2026-06-22",
+     99977.85
+    ],
+    [
+     "2026-06-23",
+     99576.88
+    ],
+    [
+     "2026-06-24",
+     99847.1
+    ],
+    [
+     "2026-06-25",
+     99710.73
+    ],
+    [
+     "2026-06-26",
+     99692.68
+    ],
+    [
+     "2026-06-29",
+     101978.07
+    ],
+    [
+     "2026-06-30",
+     101018.78
+    ],
+    [
+     "2026-07-01",
+     100484.32
+    ],
+    [
+     "2026-07-02",
+     100717.86
+    ],
+    [
+     "2026-07-03",
+     102481.19
+    ],
+    [
+     "2026-07-06",
+     102481.19
+    ],
+    [
+     "2026-07-07",
+     102083.22
+    ],
+    [
+     "2026-07-08",
+     102510.84
+    ],
+    [
+     "2026-07-09",
+     101657.02
+    ],
+    [
+     "2026-07-10",
+     101340.86
+    ],
+    [
+     "2026-07-13",
+     101600.38
+    ],
+    [
+     "2026-07-14",
+     101816.13
+    ],
+    [
+     "2026-07-15",
+     101372.46
+    ],
+    [
+     "2026-07-16",
+     101512.29
+    ],
+    [
+     "2026-07-17",
+     102234.62
+    ],
+    [
+     "2026-07-20",
+     101475.44
+    ],
+    [
+     "2026-07-21",
+     101090.21
+    ],
+    [
+     "2026-07-22",
+     101074.36
+    ],
+    [
+     "2026-07-23",
+     101238.97
+    ],
+    [
+     "2026-07-24",
+     101347.47
+    ],
+    [
+     "2026-07-27",
+     101287.66
+    ],
+    [
+     "2026-07-28",
+     102571.79
+    ],
+    [
+     "2026-07-29",
+     103355.83
+    ],
+    [
+     "2026-07-30",
+     102660.31
+    ],
+    [
+     "2026-07-31",
+     102712.75
+    ],
+    [
+     "2026-08-03",
+     102726.54
+    ],
+    [
+     "2026-08-04",
+     103437.69
+    ],
+    [
+     "2026-08-07",
+     103916.73
+    ],
+    [
+     "2026-08-10",
+     104626.9
+    ],
+    [
+     "2026-08-11",
+     105178.42
+    ],
+    [
+     "2026-08-12",
+     104891.46
+    ],
+    [
+     "2026-08-13",
+     104929.79
+    ],
+    [
+     "2026-08-14",
+     105519.5
+    ],
+    [
+     "2026-08-17",
+     105597.7
+    ],
+    [
+     "2026-08-18",
+     104905.48
+    ],
+    [
+     "2026-08-20",
+     105970.78
+    ],
+    [
+     "2026-08-21",
+     104915.4
+    ],
+    [
+     "2026-08-24",
+     105752.79
+    ],
+    [
+     "2026-08-26",
+     105504.06
+    ],
+    [
+     "2026-08-27",
+     105159.0
+    ],
+    [
+     "2026-08-31",
+     104841.42
+    ],
+    [
+     "2026-09-01",
+     104491.46
+    ],
+    [
+     "2026-09-02",
+     104842.78
+    ],
+    [
+     "2026-09-03",
+     105513.84
+    ],
+    [
+     "2026-09-04",
+     104704.97
+    ],
+    [
+     "2026-09-08",
+     104118.51
+    ],
+    [
+     "2026-09-09",
+     103369.73
+    ],
+    [
+     "2026-09-10",
+     102969.95
+    ],
+    [
+     "2026-09-11",
+     103513.05
+    ],
+    [
+     "2026-09-14",
+     103747.28
+    ],
+    [
+     "2026-09-15",
+     103274.98
+    ],
+    [
+     "2026-09-16",
+     102700.02
+    ],
+    [
+     "2026-09-17",
+     103223.65
+    ],
+    [
+     "2026-09-18",
+     102759.99
+    ]
+   ],
+   "balanced-ew-control": [
+    [
+     "2026-06-10",
+     100000.0
+    ],
+    [
+     "2026-06-11",
+     98913.59
+    ],
+    [
+     "2026-06-12",
+     100421.33
+    ],
+    [
+     "2026-06-15",
+     100457.75
+    ],
+    [
+     "2026-06-16",
+     101774.01
+    ],
+    [
+     "2026-06-17",
+     100965.49
+    ],
+    [
+     "2026-06-18",
+     99952.76
+    ],
+    [
+     "2026-06-19",
+     100609.81
+    ],
+    [
+     "2026-06-22",
+     100664.08
+    ],
+    [
+     "2026-06-23",
+     100302.07
+    ],
+    [
+     "2026-06-24",
+     99272.7
+    ],
+    [
+     "2026-06-25",
+     98719.84
+    ],
+    [
+     "2026-06-26",
+     98570.52
+    ],
+    [
+     "2026-06-29",
+     100008.82
+    ],
+    [
+     "2026-06-30",
+     99748.26
+    ],
+    [
+     "2026-07-01",
+     99776.21
+    ],
+    [
+     "2026-07-02",
+     99357.45
+    ],
+    [
+     "2026-07-03",
+     99813.03
+    ],
+    [
+     "2026-07-06",
+     99813.03
+    ],
+    [
+     "2026-07-07",
+     100126.41
+    ],
+    [
+     "2026-07-08",
+     99387.99
+    ],
+    [
+     "2026-07-09",
+     98880.17
+    ],
+    [
+     "2026-07-10",
+     99152.9
+    ],
+    [
+     "2026-07-13",
+     99119.22
+    ],
+    [
+     "2026-07-14",
+     98436.28
+    ],
+    [
+     "2026-07-15",
+     98860.15
+    ],
+    [
+     "2026-07-16",
+     98895.15
+    ],
+    [
+     "2026-07-17",
+     98183.21
+    ],
+    [
+     "2026-07-20",
+     97739.11
+    ],
+    [
+     "2026-07-21",
+     97547.82
+    ],
+    [
+     "2026-07-22",
+     98388.57
+    ],
+    [
+     "2026-07-23",
+     98131.62
+    ],
+    [
+     "2026-07-24",
+     97593.41
+    ],
+    [
+     "2026-07-27",
+     97565.0
+    ],
+    [
+     "2026-07-28",
+     97951.6
+    ],
+    [
+     "2026-07-29",
+     97845.55
+    ],
+    [
+     "2026-07-30",
+     96744.75
+    ],
+    [
+     "2026-07-31",
+     97886.14
+    ],
+    [
+     "2026-08-03",
+     97868.28
+    ],
+    [
+     "2026-08-04",
+     98800.32
+    ],
+    [
+     "2026-08-07",
+     99975.99
+    ],
+    [
+     "2026-08-10",
+     101124.84
+    ],
+    [
+     "2026-08-11",
+     101196.64
+    ],
+    [
+     "2026-08-12",
+     101083.83
+    ],
+    [
+     "2026-08-13",
+     101258.32
+    ],
+    [
+     "2026-08-14",
+     101857.34
+    ],
+    [
+     "2026-08-17",
+     101770.72
+    ],
+    [
+     "2026-08-18",
+     101463.04
+    ],
+    [
+     "2026-08-20",
+     101535.39
+    ],
+    [
+     "2026-08-21",
+     101021.51
+    ],
+    [
+     "2026-08-24",
+     101271.49
+    ],
+    [
+     "2026-08-26",
+     101399.07
+    ],
+    [
+     "2026-08-27",
+     102000.95
+    ],
+    [
+     "2026-08-31",
+     101130.76
+    ],
+    [
+     "2026-09-01",
+     100257.12
+    ],
+    [
+     "2026-09-02",
+     100597.42
+    ],
+    [
+     "2026-09-03",
+     101733.27
+    ],
+    [
+     "2026-09-04",
+     101473.53
+    ],
+    [
+     "2026-09-08",
+     101282.04
+    ],
+    [
+     "2026-09-09",
+     100709.84
+    ],
+    [
+     "2026-09-10",
+     99980.42
+    ],
+    [
+     "2026-09-11",
+     100525.65
+    ],
+    [
+     "2026-09-14",
+     100435.66
+    ],
+    [
+     "2026-09-15",
+     99945.9
+    ],
+    [
+     "2026-09-16",
+     99445.02
+    ],
+    [
+     "2026-09-17",
+     100657.65
+    ],
+    [
+     "2026-09-18",
+     100555.18
+    ]
+   ],
+   "mirror": [
+    [
+     "2026-06-16",
+     100041.38
+    ],
+    [
+     "2026-06-17",
+     97653.83
+    ],
+    [
+     "2026-06-18",
+     93150.78
+    ],
+    [
+     "2026-06-19",
+     96262.14
+    ],
+    [
+     "2026-06-22",
+     96262.14
+    ],
+    [
+     "2026-06-23",
+     93747.14
+    ],
+    [
+     "2026-06-24",
+     91648.52
+    ],
+    [
+     "2026-06-25",
+     88989.96
+    ],
+    [
+     "2026-06-26",
+     85805.47
+    ],
+    [
+     "2026-06-29",
+     90140.46
+    ],
+    [
+     "2026-06-30",
+     90489.83
+    ],
+    [
+     "2026-07-01",
+     89377.08
+    ],
+    [
+     "2026-07-02",
+     90261.91
+    ],
+    [
+     "2026-07-03",
+     89238.96
+    ],
+    [
+     "2026-07-06",
+     89238.96
+    ],
+    [
+     "2026-07-07",
+     91552.91
+    ],
+    [
+     "2026-07-08",
+     89073.96
+    ],
+    [
+     "2026-07-09",
+     88997.41
+    ],
+    [
+     "2026-07-10",
+     87822.41
+    ],
+    [
+     "2026-07-13",
+     86736.35
+    ],
+    [
+     "2026-07-14",
+     85110.09
+    ],
+    [
+     "2026-07-15",
+     85782.65
+    ],
+    [
+     "2026-07-16",
+     86801.11
+    ],
+    [
+     "2026-07-17",
+     84805.75
+    ],
+    [
+     "2026-07-20",
+     84203.35
+    ],
+    [
+     "2026-07-21",
+     83205.88
+    ],
+    [
+     "2026-07-22",
+     83403.85
+    ],
+    [
+     "2026-07-23",
+     81190.4
+    ],
+    [
+     "2026-07-24",
+     77723.45
+    ],
+    [
+     "2026-07-27",
+     77723.45
+    ],
+    [
+     "2026-07-28",
+     79624.08
+    ],
+    [
+     "2026-07-29",
+     79872.11
+    ],
+    [
+     "2026-07-30",
+     77660.46
+    ],
+    [
+     "2026-07-31",
+     77565.49
+    ],
+    [
+     "2026-08-03",
+     77015.96
+    ],
+    [
+     "2026-08-04",
+     78862.98
+    ],
+    [
+     "2026-08-07",
+     77811.73
+    ],
+    [
+     "2026-08-10",
+     81375.2
+    ],
+    [
+     "2026-08-11",
+     81118.63
+    ],
+    [
+     "2026-08-12",
+     82250.19
+    ],
+    [
+     "2026-08-13",
+     81683.2
+    ],
+    [
+     "2026-08-14",
+     83213.58
+    ],
+    [
+     "2026-08-17",
+     83202.94
+    ],
+    [
+     "2026-08-18",
+     82553.21
+    ],
+    [
+     "2026-08-20",
+     84503.24
+    ],
+    [
+     "2026-08-21",
+     81734.18
+    ],
+    [
+     "2026-08-24",
+     82764.96
+    ],
+    [
+     "2026-08-26",
+     84424.93
+    ],
+    [
+     "2026-08-27",
+     84944.84
+    ],
+    [
+     "2026-08-31",
+     83337.13
+    ],
+    [
+     "2026-09-01",
+     82097.87
+    ],
+    [
+     "2026-09-02",
+     82913.29
+    ],
+    [
+     "2026-09-03",
+     83440.86
+    ],
+    [
+     "2026-09-04",
+     82795.36
+    ],
+    [
+     "2026-09-08",
+     82051.74
+    ],
+    [
+     "2026-09-09",
+     79842.75
+    ],
+    [
+     "2026-09-10",
+     78133.97
+    ],
+    [
+     "2026-09-11",
+     79648.65
+    ],
+    [
+     "2026-09-14",
+     80452.26
+    ],
+    [
+     "2026-09-15",
+     78712.78
+    ],
+    [
+     "2026-09-16",
+     77895.15
+    ],
+    [
+     "2026-09-17",
+     78739.98
+    ],
+    [
+     "2026-09-18",
+     77842.4
+    ]
+   ],
+   "conviction": [
+    [
+     "2026-06-16",
+     100041.38
+    ],
+    [
+     "2026-06-17",
+     97355.99
+    ],
+    [
+     "2026-06-18",
+     99166.7
+    ],
+    [
+     "2026-06-19",
+     100822.34
+    ],
+    [
+     "2026-06-22",
+     101102.44
+    ],
+    [
+     "2026-06-23",
+     102932.51
+    ],
+    [
+     "2026-06-24",
+     99793.87
+    ],
+    [
+     "2026-06-25",
+     103782.48
+    ],
+    [
+     "2026-06-26",
+     102628.98
+    ],
+    [
+     "2026-06-29",
+     105340.59
+    ],
+    [
+     "2026-06-30",
+     106620.13
+    ],
+    [
+     "2026-07-01",
+     101811.09
+    ],
+    [
+     "2026-07-02",
+     104117.07
+    ],
+    [
+     "2026-07-03",
+     104572.87
+    ],
+    [
+     "2026-07-06",
+     104572.87
+    ],
+    [
+     "2026-07-07",
+     105526.98
+    ],
+    [
+     "2026-07-08",
+     103451.96
+    ],
+    [
+     "2026-07-09",
+     103140.54
+    ],
+    [
+     "2026-07-10",
+     102595.11
+    ],
+    [
+     "2026-07-13",
+     102593.88
+    ],
+    [
+     "2026-07-14",
+     96135.42
+    ],
+    [
+     "2026-07-15",
+     97023.25
+    ],
+    [
+     "2026-07-16",
+     96655.39
+    ],
+    [
+     "2026-07-17",
+     91528.54
+    ],
+    [
+     "2026-07-20",
+     91476.9
+    ],
+    [
+     "2026-07-21",
+     88903.69
+    ],
+    [
+     "2026-07-22",
+     91624.91
+    ],
+    [
+     "2026-07-23",
+     90429.41
+    ],
+    [
+     "2026-07-24",
+     89276.51
+    ],
+    [
+     "2026-07-27",
+     89276.51
+    ],
+    [
+     "2026-07-28",
+     90407.36
+    ],
+    [
+     "2026-07-29",
+     88077.29
+    ],
+    [
+     "2026-07-30",
+     84302.52
+    ],
+    [
+     "2026-07-31",
+     90132.14
+    ],
+    [
+     "2026-08-03",
+     91733.91
+    ],
+    [
+     "2026-08-04",
+     93994.61
+    ],
+    [
+     "2026-08-07",
+     94869.93
+    ],
+    [
+     "2026-08-10",
+     99500.96
+    ],
+    [
+     "2026-08-11",
+     98954.98
+    ],
+    [
+     "2026-08-12",
+     99426.89
+    ],
+    [
+     "2026-08-13",
+     96863.22
+    ],
+    [
+     "2026-08-14",
+     97069.82
+    ],
+    [
+     "2026-08-17",
+     97364.12
+    ],
+    [
+     "2026-08-18",
+     97289.3
+    ],
+    [
+     "2026-08-20",
+     100439.82
+    ],
+    [
+     "2026-08-21",
+     95818.83
+    ],
+    [
+     "2026-08-24",
+     97929.66
+    ],
+    [
+     "2026-08-26",
+     100633.79
+    ],
+    [
+     "2026-08-27",
+     100491.35
+    ],
+    [
+     "2026-08-31",
+     97437.07
+    ],
+    [
+     "2026-09-01",
+     96222.0
+    ],
+    [
+     "2026-09-02",
+     96861.12
+    ],
+    [
+     "2026-09-03",
+     96734.41
+    ],
+    [
+     "2026-09-04",
+     95617.93
+    ],
+    [
+     "2026-09-08",
+     94478.91
+    ],
+    [
+     "2026-09-09",
+     91862.23
+    ],
+    [
+     "2026-09-10",
+     89117.72
+    ],
+    [
+     "2026-09-11",
+     90379.37
+    ],
+    [
+     "2026-09-14",
+     91056.39
+    ],
+    [
+     "2026-09-15",
+     88338.89
+    ],
+    [
+     "2026-09-16",
+     87693.57
+    ],
+    [
+     "2026-09-17",
+     91869.41
+    ],
+    [
+     "2026-09-18",
+     91745.3
+    ]
+   ],
+   "conservative-atr": [
+    [
+     "2026-06-17",
+     100000.0
+    ],
+    [
+     "2026-06-18",
+     98732.24
+    ],
+    [
+     "2026-06-19",
+     98735.13
+    ],
+    [
+     "2026-06-22",
+     98770.63
+    ],
+    [
+     "2026-06-23",
+     98498.36
+    ],
+    [
+     "2026-06-24",
+     98870.22
+    ],
+    [
+     "2026-06-25",
+     98653.73
+    ],
+    [
+     "2026-06-26",
+     99048.18
+    ],
+    [
+     "2026-06-29",
+     100659.75
+    ],
+    [
+     "2026-06-30",
+     100860.43
+    ],
+    [
+     "2026-07-01",
+     100657.79
+    ],
+    [
+     "2026-07-02",
+     100764.43
+    ],
+    [
+     "2026-07-03",
+     102036.86
+    ],
+    [
+     "2026-07-06",
+     102036.86
+    ],
+    [
+     "2026-07-07",
+     101855.77
+    ],
+    [
+     "2026-07-08",
+     102158.38
+    ],
+    [
+     "2026-07-09",
+     101829.58
+    ],
+    [
+     "2026-07-10",
+     101795.0
+    ],
+    [
+     "2026-07-13",
+     101964.86
+    ],
+    [
+     "2026-07-14",
+     102173.25
+    ],
+    [
+     "2026-07-15",
+     102048.09
+    ],
+    [
+     "2026-07-16",
+     102037.31
+    ],
+    [
+     "2026-07-17",
+     102032.65
+    ],
+    [
+     "2026-07-20",
+     101840.32
+    ],
+    [
+     "2026-07-21",
+     101832.28
+    ],
+    [
+     "2026-07-22",
+     102212.7
+    ],
+    [
+     "2026-07-23",
+     102203.19
+    ],
+    [
+     "2026-07-24",
+     102466.77
+    ],
+    [
+     "2026-07-27",
+     102417.3
+    ],
+    [
+     "2026-07-28",
+     103144.27
+    ],
+    [
+     "2026-07-29",
+     103599.93
+    ],
+    [
+     "2026-07-30",
+     103396.94
+    ],
+    [
+     "2026-07-31",
+     103593.7
+    ],
+    [
+     "2026-08-03",
+     103661.18
+    ],
+    [
+     "2026-08-04",
+     103986.34
+    ],
+    [
+     "2026-08-07",
+     104534.98
+    ],
+    [
+     "2026-08-10",
+     105145.36
+    ],
+    [
+     "2026-08-11",
+     105733.09
+    ],
+    [
+     "2026-08-12",
+     105531.28
+    ],
+    [
+     "2026-08-13",
+     105629.69
+    ],
+    [
+     "2026-08-14",
+     105999.16
+    ],
+    [
+     "2026-08-17",
+     106115.38
+    ],
+    [
+     "2026-08-18",
+     105681.28
+    ],
+    [
+     "2026-08-20",
+     106740.11
+    ],
+    [
+     "2026-08-21",
+     106382.15
+    ],
+    [
+     "2026-08-24",
+     107169.64
+    ],
+    [
+     "2026-08-26",
+     106964.41
+    ],
+    [
+     "2026-08-27",
+     106820.15
+    ],
+    [
+     "2026-08-31",
+     106321.75
+    ],
+    [
+     "2026-09-01",
+     105924.15
+    ],
+    [
+     "2026-09-02",
+     106272.75
+    ],
+    [
+     "2026-09-03",
+     106961.57
+    ],
+    [
+     "2026-09-04",
+     106307.32
+    ],
+    [
+     "2026-09-08",
+     105899.57
+    ],
+    [
+     "2026-09-09",
+     105441.85
+    ],
+    [
+     "2026-09-10",
+     105116.35
+    ],
+    [
+     "2026-09-11",
+     105406.61
+    ],
+    [
+     "2026-09-14",
+     105499.14
+    ],
+    [
+     "2026-09-15",
+     105288.07
+    ],
+    [
+     "2026-09-16",
+     104671.51
+    ],
+    [
+     "2026-09-17",
+     105254.03
+    ],
+    [
+     "2026-09-18",
+     104850.61
+    ]
+   ],
+   "smallmid-quality": [
+    [
+     "2026-07-22",
+     100000.0
+    ],
+    [
+     "2026-07-23",
+     98977.94
+    ],
+    [
+     "2026-07-24",
+     97866.61
+    ],
+    [
+     "2026-07-27",
+     97866.61
+    ],
+    [
+     "2026-07-28",
+     98690.17
+    ],
+    [
+     "2026-07-29",
+     99362.9
+    ],
+    [
+     "2026-07-30",
+     98703.99
+    ],
+    [
+     "2026-07-31",
+     97203.0
+    ],
+    [
+     "2026-08-03",
+     97147.91
+    ],
+    [
+     "2026-08-04",
+     99195.88
+    ],
+    [
+     "2026-08-07",
+     97146.83
+    ],
+    [
+     "2026-08-10",
+     99074.18
+    ],
+    [
+     "2026-08-11",
+     98603.25
+    ],
+    [
+     "2026-08-12",
+     98536.96
+    ],
+    [
+     "2026-08-13",
+     99197.1
+    ],
+    [
+     "2026-08-14",
+     99703.45
+    ],
+    [
+     "2026-08-17",
+     100241.44
+    ],
+    [
+     "2026-08-18",
+     99300.31
+    ],
+    [
+     "2026-08-20",
+     99014.86
+    ],
+    [
+     "2026-08-21",
+     97522.76
+    ],
+    [
+     "2026-08-24",
+     98268.09
+    ],
+    [
+     "2026-08-26",
+     98712.67
+    ],
+    [
+     "2026-08-27",
+     99167.76
+    ],
+    [
+     "2026-08-31",
+     98063.72
+    ],
+    [
+     "2026-09-01",
+     96746.03
+    ],
+    [
+     "2026-09-02",
+     97721.04
+    ],
+    [
+     "2026-09-03",
+     97811.29
+    ],
+    [
+     "2026-09-04",
+     97530.09
+    ],
+    [
+     "2026-09-08",
+     96318.25
+    ],
+    [
+     "2026-09-09",
+     94551.72
+    ],
+    [
+     "2026-09-10",
+     93612.51
+    ],
+    [
+     "2026-09-11",
+     94252.78
+    ],
+    [
+     "2026-09-14",
+     94435.45
+    ],
+    [
+     "2026-09-15",
+     94287.35
+    ],
+    [
+     "2026-09-16",
+     94327.06
+    ],
+    [
+     "2026-09-17",
+     94822.98
+    ],
+    [
+     "2026-09-18",
+     94022.5
+    ]
+   ],
+   "tsmom-overlay": [
+    [
+     "2026-07-27",
+     100000.0
+    ],
+    [
+     "2026-07-28",
+     99975.02
+    ],
+    [
+     "2026-07-29",
+     100055.1
+    ],
+    [
+     "2026-07-30",
+     99077.94
+    ],
+    [
+     "2026-07-31",
+     100102.01
+    ],
+    [
+     "2026-08-03",
+     100382.26
+    ],
+    [
+     "2026-08-04",
+     101091.36
+    ],
+    [
+     "2026-08-07",
+     102198.86
+    ],
+    [
+     "2026-08-10",
+     102716.43
+    ],
+    [
+     "2026-08-11",
+     102784.96
+    ],
+    [
+     "2026-08-12",
+     102618.68
+    ],
+    [
+     "2026-08-13",
+     102808.17
+    ],
+    [
+     "2026-08-14",
+     103189.46
+    ],
+    [
+     "2026-08-17",
+     103041.79
+    ],
+    [
+     "2026-08-18",
+     102761.53
+    ],
+    [
+     "2026-08-20",
+     102872.23
+    ],
+    [
+     "2026-08-21",
+     102335.31
+    ],
+    [
+     "2026-08-24",
+     102556.41
+    ],
+    [
+     "2026-08-26",
+     102720.68
+    ],
+    [
+     "2026-08-27",
+     103157.1
+    ],
+    [
+     "2026-08-31",
+     102607.19
+    ],
+    [
+     "2026-09-01",
+     102037.72
+    ],
+    [
+     "2026-09-02",
+     102365.48
+    ],
+    [
+     "2026-09-03",
+     103082.8
+    ],
+    [
+     "2026-09-04",
+     102782.67
+    ],
+    [
+     "2026-09-08",
+     102437.54
+    ],
+    [
+     "2026-09-09",
+     102340.85
+    ],
+    [
+     "2026-09-10",
+     102192.24
+    ],
+    [
+     "2026-09-11",
+     102656.58
+    ],
+    [
+     "2026-09-14",
+     102338.53
+    ],
+    [
+     "2026-09-15",
+     102202.53
+    ],
+    [
+     "2026-09-16",
+     101785.61
+    ],
+    [
+     "2026-09-17",
+     102382.24
+    ],
+    [
+     "2026-09-18",
+     102401.04
+    ]
+   ],
+   "tsmom-6040-control": [
+    [
+     "2026-07-27",
+     100000.0
+    ],
+    [
+     "2026-07-28",
+     100352.92
+    ],
+    [
+     "2026-07-29",
+     100732.44
+    ],
+    [
+     "2026-07-30",
+     99137.33
+    ],
+    [
+     "2026-07-31",
+     100107.35
+    ],
+    [
+     "2026-08-03",
+     100276.21
+    ],
+    [
+     "2026-08-04",
+     101103.9
+    ],
+    [
+     "2026-08-07",
+     102141.9
+    ],
+    [
+     "2026-08-10",
+     102637.48
+    ],
+    [
+     "2026-08-11",
+     102277.59
+    ],
+    [
+     "2026-08-12",
+     102142.06
+    ],
+    [
+     "2026-08-13",
+     102258.48
+    ],
+    [
+     "2026-08-14",
+     102926.67
+    ],
+    [
+     "2026-08-17",
+     102534.43
+    ],
+    [
+     "2026-08-18",
+     101902.35
+    ],
+    [
+     "2026-08-20",
+     102426.01
+    ],
+    [
+     "2026-08-21",
+     101574.1
+    ],
+    [
+     "2026-08-24",
+     101751.46
+    ],
+    [
+     "2026-08-26",
+     102322.55
+    ],
+    [
+     "2026-08-27",
+     102643.95
+    ],
+    [
+     "2026-08-31",
+     102020.29
+    ],
+    [
+     "2026-09-01",
+     101278.17
+    ],
+    [
+     "2026-09-02",
+     101587.37
+    ],
+    [
+     "2026-09-03",
+     102285.7
+    ],
+    [
+     "2026-09-04",
+     102117.26
+    ],
+    [
+     "2026-09-08",
+     101774.89
+    ],
+    [
+     "2026-09-09",
+     101258.35
+    ],
+    [
+     "2026-09-10",
+     100423.71
+    ],
+    [
+     "2026-09-11",
+     100983.56
+    ],
+    [
+     "2026-09-14",
+     100741.23
+    ],
+    [
+     "2026-09-15",
+     100353.98
+    ],
+    [
+     "2026-09-16",
+     100171.66
+    ],
+    [
+     "2026-09-17",
+     101299.04
+    ],
+    [
+     "2026-09-18",
+     100964.19
+    ]
+   ]
+  },
+  "spy_rebased_100k_at_2026_06_08": [
+   [
+    "2026-06-08",
+    100000.0
+   ],
+   [
+    "2026-06-09",
+    99706.46
+   ],
+   [
+    "2026-06-10",
+    98134.52
+   ],
+   [
+    "2026-06-11",
+    99802.5
+   ],
+   [
+    "2026-06-12",
+    100342.26
+   ],
+   [
+    "2026-06-15",
+    102111.69
+   ],
+   [
+    "2026-06-16",
+    101502.95
+   ],
+   [
+    "2026-06-17",
+    100235.39
+   ],
+   [
+    "2026-06-18",
+    101277.53
+   ],
+   [
+    "2026-06-22",
+    100958.82
+   ],
+   [
+    "2026-06-23",
+    99492.69
+   ],
+   [
+    "2026-06-24",
+    99446.58
+   ],
+   [
+    "2026-06-25",
+    99590.34
+   ],
+   [
+    "2026-06-26",
+    98870.17
+   ],
+   [
+    "2026-06-29",
+    100499.04
+   ],
+   [
+    "2026-06-30",
+    101281.61
+   ],
+   [
+    "2026-07-01",
+    101144.62
+   ],
+   [
+    "2026-07-02",
+    101011.71
+   ],
+   [
+    "2026-07-06",
+    101893.28
+   ],
+   [
+    "2026-07-07",
+    101409.1
+   ],
+   [
+    "2026-07-08",
+    101095.8
+   ],
+   [
+    "2026-07-09",
+    101951.61
+   ],
+   [
+    "2026-07-10",
+    102391.03
+   ],
+   [
+    "2026-07-13",
+    101607.11
+   ],
+   [
+    "2026-07-14",
+    101967.88
+   ],
+   [
+    "2026-07-15",
+    102372.04
+   ],
+   [
+    "2026-07-16",
+    101817.33
+   ],
+   [
+    "2026-07-17",
+    100809.62
+   ],
+   [
+    "2026-07-20",
+    100646.88
+   ],
+   [
+    "2026-07-21",
+    101486.41
+   ],
+   [
+    "2026-07-22",
+    101368.4
+   ],
+   [
+    "2026-07-23",
+    100116.58
+   ],
+   [
+    "2026-07-24",
+    100218.29
+   ],
+   [
+    "2026-07-27",
+    100240.0
+   ],
+   [
+    "2026-07-28",
+    100480.05
+   ],
+   [
+    "2026-07-29",
+    98933.92
+   ],
+   [
+    "2026-07-30",
+    100592.62
+   ],
+   [
+    "2026-07-31",
+    101316.88
+   ],
+   [
+    "2026-08-03",
+    102759.93
+   ],
+   [
+    "2026-08-04",
+    104612.59
+   ],
+   [
+    "2026-08-05",
+    104403.72
+   ],
+   [
+    "2026-08-06",
+    104236.9
+   ],
+   [
+    "2026-08-07",
+    104874.35
+   ],
+   [
+    "2026-08-10",
+    104843.15
+   ],
+   [
+    "2026-08-11",
+    104508.16
+   ],
+   [
+    "2026-08-12",
+    104769.91
+   ],
+   [
+    "2026-08-13",
+    105500.94
+   ],
+   [
+    "2026-08-14",
+    105292.08
+   ],
+   [
+    "2026-08-17",
+    104794.32
+   ],
+   [
+    "2026-08-18",
+    104086.36
+   ],
+   [
+    "2026-08-19",
+    104304.71
+   ],
+   [
+    "2026-08-20",
+    103428.57
+   ],
+   [
+    "2026-08-21",
+    103851.72
+   ],
+   [
+    "2026-08-24",
+    103546.56
+   ],
+   [
+    "2026-08-25",
+    103877.49
+   ],
+   [
+    "2026-08-26",
+    103900.55
+   ],
+   [
+    "2026-08-27",
+    104581.39
+   ],
+   [
+    "2026-08-28",
+    104344.05
+   ],
+   [
+    "2026-08-31",
+    104032.1
+   ],
+   [
+    "2026-09-01",
+    103317.36
+   ],
+   [
+    "2026-09-02",
+    103775.77
+   ],
+   [
+    "2026-09-03",
+    104862.14
+   ],
+   [
+    "2026-09-04",
+    104457.98
+   ],
+   [
+    "2026-09-08",
+    103884.27
+   ],
+   [
+    "2026-09-09",
+    103401.45
+   ],
+   [
+    "2026-09-10",
+    102781.63
+   ],
+   [
+    "2026-09-11",
+    103657.77
+   ],
+   [
+    "2026-09-14",
+    103195.29
+   ],
+   [
+    "2026-09-15",
+    102721.96
+   ],
+   [
+    "2026-09-16",
+    102268.97
+   ],
+   [
+    "2026-09-17",
+    103428.57
+   ],
+   [
+    "2026-09-18",
+    103561.68
+   ],
+   [
+    "2026-09-21",
+    105167.4
+   ],
+   [
+    "2026-09-22",
+    105151.09
+   ],
+   [
+    "2026-09-23",
+    104393.77
+   ],
+   [
+    "2026-09-24",
+    104308.11
+   ],
+   [
+    "2026-09-25",
+    104875.08
+   ]
+  ]
+ },
+ "read_me_first": "ROI is equity / start capital - 1 over each account's OWN window; SPY is compounded over that same window. Nothing here is a claim: every book runs under PRODUCT_EXPERIMENT. A window of weeks cannot separate skill from noise. PENDING books have not entered yet.",
+ "market_benchmark": {
+  "schema": 1,
+  "module": "learner.benchmark",
+  "benchmark_id": "spy_tr_yf_adjclose",
+  "freq": "D",
+  "overlapping": false,
+  "provenance": {
+   "source": "yfinance",
+   "ticker": "SPY",
+   "construction": "pct_change of auto_adjust=True Close (total return)",
+   "dividends_included": true,
+   "network": true,
+   "fetched_utc": "2026-09-26T03:57:06.827259+00:00"
+  },
+  "provenance_sha256": "f9021d08b64823f398fff5fc7fad3356ddd67bf3544313a5127c43319cce8ed7",
+  "span": [
+   "2026-05-18",
+   "2026-09-25"
+  ],
+  "n_periods": 91
+ },
+ "chart": {
+  "png": "docs/assets/paper_accounts_roi_2026-09-26.png",
+  "latest": "docs/assets/paper_accounts_roi_latest.png"
+ }
+}
