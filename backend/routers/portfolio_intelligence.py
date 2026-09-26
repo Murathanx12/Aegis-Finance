@@ -1186,9 +1186,23 @@ async def refresh_replay(
 # never calls a broker; the script does the GETs and this only hands its
 # receipt to the site. Absent receipt -> 404 WITH the remedy, never an empty 200.
 
-def _paper_accounts_dir():
+def _paper_accounts_dir() -> Path:
+    """Where the newest all-accounts receipt lives.
+
+    On the laptop the script writes under OPTIMUS_LEDGER_DIR. On Railway that
+    directory is the persistent volume, which never receives the receipt (the
+    script needs broker keys the server does not hold) -- the deploy's first
+    live read on 2026-09-26 was a 404 while the receipt sat, committed, in the
+    checkout. So: the ledger dir when it has receipts, else the checkout copy
+    (`backend/data/optimus/paper_accounts/`), and the body says which.
+    """
+    from pathlib import Path
     from backend import config as _cfg
-    return _cfg.OPTIMUS_LEDGER_DIR / "paper_accounts"
+    ledger = Path(_cfg.OPTIMUS_LEDGER_DIR) / "paper_accounts"
+    if ledger.exists() and any(ledger.glob("roi_*.json")):
+        return ledger
+    checkout = Path(__file__).resolve().parents[1] / "data" / "optimus" / "paper_accounts"
+    return checkout if checkout.exists() else ledger
 
 
 @router.get("/paper-accounts")
@@ -1208,4 +1222,5 @@ async def get_paper_accounts():
         logger.error("paper-accounts receipt unreadable: %s", e)
         raise HTTPException(status_code=500, detail=f"{newest.name} unreadable: {e}")
     body["receipt_file"] = newest.name
+    body["source_dir"] = str(d)
     return body
