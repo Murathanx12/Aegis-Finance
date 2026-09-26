@@ -1938,10 +1938,10 @@ NOTE_BACKLOG: dict = {
     "LOT-01": "covered by low_max", "LOT-03": "daily hold", "LOT-04": "daily attention surge",
     "LOT-05": "exclusion screen; covered by mom_ex_lottery",
     "LOT-06": "three stacked conditions (DSR bait)",
-    "MISC-01": "no 13F join", "MISC-02": "congress: TRIAL-CONGRESS-IC first",
+    "MISC-01": "13F join exists: strategy_library_ext.inst_breadth_up (corrected 2026-09-26)", "MISC-02": "congress: TRIAL-CONGRESS-IC first",
     "MISC-03": "news corpus ~20 months, not panel-wide", "MISC-04": "FORWARD (thesis cards)",
     "MISC-05": "news corpus + catalyst join", "MISC-06": "covered by skill_raises",
-    "MISC-08": "cascade timing not built", "MISC-09": "no guidance events",
+    "MISC-08": "built: strategy_library_ext.cascade_entry_timing (falsifier fired 2026-09-26)", "MISC-09": "no guidance events",
     "MISC-10": "FORWARD (thesis cards)", "MISC-14": "LOW-confidence proxy; not registered",
 }
 
@@ -2006,7 +2006,7 @@ NOT_REACHABLE: dict = {
     "RET-02": "duplicate of REV-02 (`rev_5d`)", "RET-04": "duplicate of MOM-04 (`hi52`)",
     "RET-05": "needs VAL", "RET-06": "ETF allocation, not stock selection",
     "RET-08": "duplicate of MOM-04 (`hi52`)",
-    "RET-09": "options", "RET-10": "no 13F feed", "RET-11": "pair construction",
+    "RET-09": "options", "RET-10": "reachable via strategy_library_ext.inst_breadth_up (13F breadth, rdate+45d; corrected 2026-09-26)", "RET-11": "pair construction",
     "RET-12": "market timing", "RET-13": "market timing",
     "RET-14": "market timing (10 observations)",
 }
