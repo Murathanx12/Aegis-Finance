@@ -22,3 +22,13 @@ B `54a0735e`, D `c4f46332`, F `2140ba87`, G `cbe19f70`, I `2b06a390`, H (doc).
 - **Post-review fixes**: learning report (direction/magnitude split in the sentences; the vol prior beside the LLM; EV list from measured spreads; `backend/tests` excluded from reachability); `web_events` `claim` + `source_id`; trigger (a) scope.
 - **G-fix** (after one of the above finishes): item 7.
 - **Reviewer A+B+F** now; **reviewer D+E** after E.
+
+## Addendum 18:40 HKT — reviewer A+B+F (`REVIEW_2026-09-26_CHUNKS_A_B_F.md`), adjudicated
+| # | point | verdict → action |
+|---|---|---|
+| 10 | Fact #1 was overbroad: X **handle timelines** read fine logged out (F read four dated @MicronTech posts); only X **search** is walled | accepted — B/F quests are rebuilt around handle timelines tonight; the 15 specialist handles the reviewer lists are seeded `verified: false` and read |
+| 11 | Fact #2 reopened: "0 credited" is the rule's construction (credit needs a mechanism mapping the books never had; 169 cases record no reason); **the names were selectable by rules we own** (AXTI held by 5 of the 10 top-sealed rules on 07-31, NUAI by 2, MU by `skill_mom` with 29 net raises at entry) | accepted — new class `SELECTABLE_BY_RULE` with the rule ids; the book's realised volatility at entry printed before any "10%" claim (AXTI's +21.9% was 0.85σ); the 62 "beat controls" line is withdrawn as uninformative |
+| 12 | A's entry state is contaminated: 36,720 `alpaca_benzinga_news` rows are a pre-2015 archive stamped with their 2026 ingest time; expired forecasts were read as live | accepted — corpus rows whose `published_utc` predates `first_seen_utc` by > 30 days get `pit_grade: archive` and are excluded from any state-at-entry; forecasts past `resolves_after` are never "visible" |
+| 13 | B is a list: the 456 brokerages already have 393,581 dated directional claims in the parquet (75 firms ≥ 20 rows in the last year) scored n=0 | accepted — score them from the parquet tonight (lead time, hit rate, 5/21d return after a raise/lower, first-mover vs follower) |
+| 14 | F's promise rows at p=0.50 dilute the one skilled population; the FQ4 promise needs a numeric grade | accepted — delete the p=0.50 rows (they are 5, written today); grade promises by parsing the 8-K numbers (MU 09-30: revenue $49–51B, non-GAAP EPS $30–32, GM 86 ± 0.5pp) |
+| 15 | ideas: each rule's picks vs its own next-ranked names (k+1…2k); first-mover vs follower brokers; DRAM spot as a PIT column for memory names | accepted for the next factory night (k+1…2k twins are the better control than random-same-band) |
