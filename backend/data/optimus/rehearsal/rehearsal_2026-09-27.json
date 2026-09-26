@@ -1,0 +1,802 @@
+{
+ "receipt": "bloomberg_rehearsal",
+ "licence": "PRODUCT_EXPERIMENT",
+ "sentence": "PRODUCT_EXPERIMENT; nothing here is a claim.",
+ "asof": "2026-09-27",
+ "generated_utc": "2026-09-26T19:59:48+00:00",
+ "llm_spend_usd": 0.0,
+ "review": "docs/reviews/REVIEW_2026-09-27_SIGNAL_STRUCTURE_ROUND2_BRIDGE.md \u00a79",
+ "bars": {
+  "path": "prices_2025_26/bars.parquet (+ SMH/MTUM from global_prices)",
+  "last_date": "2026-09-25",
+  "n_symbols": 3062
+ },
+ "filter_counts": {
+  "universe": 2890,
+  "with_sigma63": 2890,
+  "small_mid_mcap_3e+08_1e+10": 1568,
+  "fund_score_median": 0.4934,
+  "fund_score_ge_median": 683,
+  "earnings_in_window": 114
+ },
+ "earnings_status_counts": {
+  "OUTSIDE_WINDOW": 1954,
+  "EARNINGS_UNKNOWN": 590,
+  "IN_WINDOW": 346
+ },
+ "skipped_book": [],
+ "skipped_twin": [],
+ "freeze_gate": {
+  "verdict_construction_timing": "PASS",
+  "construction": {
+   "max_name_weight_le_0.15": true,
+   "effective_n_ge_8": true,
+   "no_rho_0_8_cluster_above_40pct": true,
+   "no_name_gt_10pct_printing_in_first_5_sessions": true,
+   "largest_name_to_zero_le_150k": true
+  },
+  "timing": {
+   "bars_le_1_session_old": true
+  },
+  "detail": {
+   "k": 10,
+   "max_weight": 0.1,
+   "weight_cap": 0.15,
+   "effective_n": 10.0,
+   "max_cluster": [],
+   "max_cluster_share": 0.0,
+   "largest_name_to_zero_usd": 100000.0,
+   "bar_date": "2026-09-25",
+   "staleness_sessions": 0
+  },
+  "selection_not_applied": "SELECTION needs a leaderboard row; this book is not a library rule (NO_BACKTEST_ROW by construction)",
+  "rule": "SELECTION dev>SPY, 2024-26>SPY, top-5-month share<0.6, max DD>-40%, LOO-worst>0, <=2 books/family; CONSTRUCTION max name <=10% (15% if k<=10), effN>=8, no rho>0.8 cluster >40%, no name >10% printing in the first 5 sessions, largest name to zero <=$150k at $1M; TIMING bars <=1 session old at the decision date"
+ },
+ "book_a_names": [
+  {
+   "rank": 1,
+   "symbol": "NVEC",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.06542,
+   "sigma_21": 0.2998,
+   "pred_abs_move_21": 0.2392,
+   "two_sigma_21": 0.5996,
+   "fund_score": 0.7631,
+   "n_legs": 4,
+   "mcap_usd": 527879925.58,
+   "band": "small",
+   "mdv63": 18138314.919999998,
+   "is_semi": true,
+   "sector_source": "gics_gind:453010",
+   "last_202": "2026-07-22",
+   "earnings_estimate": "2026-10-21",
+   "earnings_session": 18,
+   "yoy_cross_check": "2026-10-21",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 2,
+   "symbol": "MAN",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.04524,
+   "sigma_21": 0.2073,
+   "pred_abs_move_21": 0.1654,
+   "two_sigma_21": 0.4146,
+   "fund_score": 0.7025,
+   "n_legs": 5,
+   "mcap_usd": 2669884773.7,
+   "band": "mid",
+   "mdv63": 48417466.650000006,
+   "is_semi": false,
+   "sector_source": "gics_gind:202020",
+   "last_202": "2026-07-16",
+   "earnings_estimate": "2026-10-15",
+   "earnings_session": 14,
+   "yoy_cross_check": "2026-10-15",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 3,
+   "symbol": "RHI",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03899,
+   "sigma_21": 0.1787,
+   "pred_abs_move_21": 0.1426,
+   "two_sigma_21": 0.3574,
+   "fund_score": 0.8376,
+   "n_legs": 5,
+   "mcap_usd": 3776127834.92,
+   "band": "mid",
+   "mdv63": 78036178.22,
+   "is_semi": false,
+   "sector_source": "gics_gind:202020",
+   "last_202": "2026-07-23",
+   "earnings_estimate": "2026-10-22",
+   "earnings_session": 19,
+   "yoy_cross_check": "2026-10-21",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 4,
+   "symbol": "ACI",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03707,
+   "sigma_21": 0.1699,
+   "pred_abs_move_21": 0.1356,
+   "two_sigma_21": 0.3398,
+   "fund_score": 0.7092,
+   "n_legs": 5,
+   "mcap_usd": 5663750720.61,
+   "band": "mid",
+   "mdv63": 85219593.99000001,
+   "is_semi": false,
+   "sector_source": "gics_gind:301010",
+   "last_202": "2026-07-23",
+   "earnings_estimate": "2026-10-22",
+   "earnings_session": 19,
+   "yoy_cross_check": "2026-10-13",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 5,
+   "symbol": "PEGA",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03568,
+   "sigma_21": 0.1635,
+   "pred_abs_move_21": 0.1305,
+   "two_sigma_21": 0.327,
+   "fund_score": 0.7345,
+   "n_legs": 4,
+   "mcap_usd": 5547844869.025,
+   "band": "mid",
+   "mdv63": 71451746.73,
+   "is_semi": false,
+   "sector_source": "gics_gind:451030",
+   "last_202": "2026-07-21",
+   "earnings_estimate": "2026-10-20",
+   "earnings_session": 17,
+   "yoy_cross_check": "2026-10-20",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 6,
+   "symbol": "IRDM",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03452,
+   "sigma_21": 0.1582,
+   "pred_abs_move_21": 0.1262,
+   "two_sigma_21": 0.3164,
+   "fund_score": 0.6368,
+   "n_legs": 5,
+   "mcap_usd": 5165568671.25,
+   "band": "mid",
+   "mdv63": 54455317.300000004,
+   "is_semi": false,
+   "sector_source": "gics_gind:501010",
+   "last_202": "2026-07-22",
+   "earnings_estimate": "2026-10-21",
+   "earnings_session": 18,
+   "yoy_cross_check": "2026-10-22",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 7,
+   "symbol": "HELE",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03376,
+   "sigma_21": 0.1547,
+   "pred_abs_move_21": 0.1234,
+   "two_sigma_21": 0.3094,
+   "fund_score": 0.5748,
+   "n_legs": 5,
+   "mcap_usd": 666851706.43,
+   "band": "small",
+   "mdv63": 10842873.69,
+   "is_semi": false,
+   "sector_source": "gics_gind:252010",
+   "last_202": "2026-07-08",
+   "earnings_estimate": "2026-10-07",
+   "earnings_session": 8,
+   "yoy_cross_check": "2026-10-08",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 8,
+   "symbol": "SMPL",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03284,
+   "sigma_21": 0.1505,
+   "pred_abs_move_21": 0.1201,
+   "two_sigma_21": 0.301,
+   "fund_score": 0.6392,
+   "n_legs": 5,
+   "mcap_usd": 849221232.0,
+   "band": "mid",
+   "mdv63": 23908199.01,
+   "is_semi": false,
+   "sector_source": "gics_gind:302020",
+   "last_202": "2026-07-09",
+   "earnings_estimate": "2026-10-08",
+   "earnings_session": 9,
+   "yoy_cross_check": "2026-10-22",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 9,
+   "symbol": "PRGS",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.03255,
+   "sigma_21": 0.1492,
+   "pred_abs_move_21": 0.119,
+   "two_sigma_21": 0.2984,
+   "fund_score": 0.5902,
+   "n_legs": 5,
+   "mcap_usd": 1613449138.2800002,
+   "band": "small",
+   "mdv63": 19520751.08,
+   "is_semi": false,
+   "sector_source": "gics_gind:451030",
+   "last_202": "2026-07-22",
+   "earnings_estimate": "2026-10-21",
+   "earnings_session": 18,
+   "yoy_cross_check": null,
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 10,
+   "symbol": "AGYS",
+   "in_book": true,
+   "weight": 0.1,
+   "sigma63_daily": 0.02909,
+   "sigma_21": 0.1333,
+   "pred_abs_move_21": 0.1064,
+   "two_sigma_21": 0.2666,
+   "fund_score": 0.704,
+   "n_legs": 5,
+   "mcap_usd": 2810424716.32,
+   "band": "mid",
+   "mdv63": 26397811.439999998,
+   "is_semi": false,
+   "sector_source": "gics_gind:451030",
+   "last_202": "2026-07-27",
+   "earnings_estimate": "2026-10-26",
+   "earnings_session": 21,
+   "yoy_cross_check": "2026-10-26",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 11,
+   "symbol": "BMI",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02824,
+   "sigma_21": 0.1294,
+   "pred_abs_move_21": 0.1032,
+   "two_sigma_21": 0.2588,
+   "fund_score": 0.6737,
+   "n_legs": 4,
+   "mcap_usd": 3753216949.5599995,
+   "band": "mid",
+   "mdv63": 46222816.68,
+   "is_semi": false,
+   "sector_source": "gics_gind:452030",
+   "last_202": "2026-07-22",
+   "earnings_estimate": "2026-10-21",
+   "earnings_session": 18,
+   "yoy_cross_check": "2026-10-20",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 12,
+   "symbol": "IMAX",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02793,
+   "sigma_21": 0.128,
+   "pred_abs_move_21": 0.1021,
+   "two_sigma_21": 0.256,
+   "fund_score": 0.5636,
+   "n_legs": 5,
+   "mcap_usd": 3073900489.7,
+   "band": "mid",
+   "mdv63": 49994437.73,
+   "is_semi": false,
+   "sector_source": "gics_gind:502020",
+   "last_202": "2026-07-23",
+   "earnings_estimate": "2026-10-22",
+   "earnings_session": 19,
+   "yoy_cross_check": "2026-10-22",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 13,
+   "symbol": "WRLD",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02778,
+   "sigma_21": 0.1273,
+   "pred_abs_move_21": 0.1016,
+   "two_sigma_21": 0.2546,
+   "fund_score": 0.6056,
+   "n_legs": 3,
+   "mcap_usd": 802020328.2,
+   "band": "small",
+   "mdv63": 17229127.9,
+   "is_semi": false,
+   "sector_source": "gics_gind:402020",
+   "last_202": "2026-07-24",
+   "earnings_estimate": "2026-10-23",
+   "earnings_session": 20,
+   "yoy_cross_check": "2026-10-22",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 14,
+   "symbol": "ALK",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.0274,
+   "sigma_21": 0.1256,
+   "pred_abs_move_21": 0.1002,
+   "two_sigma_21": 0.2511,
+   "fund_score": 0.5154,
+   "n_legs": 4,
+   "mcap_usd": 4569031732.8,
+   "band": "large",
+   "mdv63": 114682297.5,
+   "is_semi": false,
+   "sector_source": "gics_gind:203020",
+   "last_202": "2026-07-21",
+   "earnings_estimate": "2026-10-20",
+   "earnings_session": 17,
+   "yoy_cross_check": "2026-10-23",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 15,
+   "symbol": "NE",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02658,
+   "sigma_21": 0.1218,
+   "pred_abs_move_21": 0.0972,
+   "two_sigma_21": 0.2436,
+   "fund_score": 0.6173,
+   "n_legs": 4,
+   "mcap_usd": 6835879774.76,
+   "band": "mid",
+   "mdv63": 53841724.3,
+   "is_semi": false,
+   "sector_source": "unclassified; rho(SMH,63)=0.01",
+   "last_202": "2026-07-27",
+   "earnings_estimate": "2026-10-26",
+   "earnings_session": 21,
+   "yoy_cross_check": "2026-10-26",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 16,
+   "symbol": "LAZ",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02556,
+   "sigma_21": 0.1171,
+   "pred_abs_move_21": 0.0935,
+   "two_sigma_21": 0.2342,
+   "fund_score": 0.73,
+   "n_legs": 4,
+   "mcap_usd": 4101156003.6,
+   "band": "mid",
+   "mdv63": 63068543.449999996,
+   "is_semi": false,
+   "sector_source": "gics_gind:402030",
+   "last_202": "2026-07-23",
+   "earnings_estimate": "2026-10-22",
+   "earnings_session": 19,
+   "yoy_cross_check": "2026-10-22",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 17,
+   "symbol": "WFRD",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02515,
+   "sigma_21": 0.1153,
+   "pred_abs_move_21": 0.092,
+   "two_sigma_21": 0.2305,
+   "fund_score": 0.7927,
+   "n_legs": 5,
+   "mcap_usd": 6098997490.44,
+   "band": "mid",
+   "mdv63": 84584242.30000001,
+   "is_semi": false,
+   "sector_source": "unclassified; rho(SMH,63)=0.29",
+   "last_202": "2026-07-21",
+   "earnings_estimate": "2026-10-20",
+   "earnings_session": 17,
+   "yoy_cross_check": "2026-10-20",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 18,
+   "symbol": "HAPN",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02477,
+   "sigma_21": 0.1135,
+   "pred_abs_move_21": 0.0906,
+   "two_sigma_21": 0.227,
+   "fund_score": 0.5681,
+   "n_legs": 3,
+   "mcap_usd": 1734574183.9199998,
+   "band": "mid",
+   "mdv63": 23762099.46,
+   "is_semi": false,
+   "sector_source": "gics_gind:402020",
+   "last_202": "2026-07-27",
+   "earnings_estimate": "2026-10-26",
+   "earnings_session": 21,
+   "yoy_cross_check": "2026-10-21",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 19,
+   "symbol": "MOH",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02422,
+   "sigma_21": 0.111,
+   "pred_abs_move_21": 0.0886,
+   "two_sigma_21": 0.222,
+   "fund_score": 0.7553,
+   "n_legs": 5,
+   "mcap_usd": 9962892000.0,
+   "band": "large",
+   "mdv63": 138979733.1,
+   "is_semi": false,
+   "sector_source": "gics_gind:351020",
+   "last_202": "2026-07-22",
+   "earnings_estimate": "2026-10-21",
+   "earnings_session": 18,
+   "yoy_cross_check": "2026-10-21",
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  },
+  {
+   "rank": 20,
+   "symbol": "SCHL",
+   "in_book": false,
+   "weight": 0.0,
+   "sigma63_daily": 0.02412,
+   "sigma_21": 0.1106,
+   "pred_abs_move_21": 0.0882,
+   "two_sigma_21": 0.2211,
+   "fund_score": 0.6227,
+   "n_legs": 5,
+   "mcap_usd": 569360000.0,
+   "band": "small",
+   "mdv63": 13190376.16,
+   "is_semi": false,
+   "sector_source": "gics_gind:502010",
+   "last_202": "2026-07-23",
+   "earnings_estimate": "2026-10-22",
+   "earnings_session": 19,
+   "yoy_cross_check": null,
+   "earnings_source": "EDGAR 8-K item 2.02 (edgar_8k/eightk_items.parquet); last 2.02 + 91d"
+  }
+ ],
+ "book_a_declared": {
+  "expected_sigma_21_abs": 0.08313747047043933,
+  "expected_sigma_daily": 0.018142083405616388,
+  "expected_rel_sigma_21_vs_spy": 0.08385770978042327,
+  "expected_relative_return": "0 +/- 0.0839 over 21 sessions (no directional edge is claimed)",
+  "avg_pairwise_rho_63": 0.1837257342998524,
+  "factor_exposure": {
+   "window_sessions": 126,
+   "multi": {
+    "alpha_daily": {
+     "beta": 0.0025473902784178544,
+     "se": 0.0013632195265755613
+    },
+    "SPY": {
+     "beta": 0.8891326035822971,
+     "se": 0.20738314919620873
+    },
+    "IWM-SPY": {
+     "beta": 0.935072558659496,
+     "se": 0.22034027423116143
+    },
+    "SMH-SPY": {
+     "beta": -0.028934591555878852,
+     "se": 0.16836426373812458
+    },
+    "MTUM-SPY": {
+     "beta": -0.7258044883611181,
+     "se": 0.23630243095466524
+    }
+   },
+   "univariate": {
+    "SPY": 0.39233992777574117,
+    "IWM": 0.4071891166770042,
+    "SMH": -0.10583094895122354
+   }
+  },
+  "benchmark_note": "contest benchmark is WLS (proxy URTH, graded by llm_portfolio); the relative sigma and betas are vs SPY/IWM/SMH/MTUM, which the bars carry",
+  "stop": {
+   "rule": "z(t) = cumulative relative P&L vs the benchmark at session t / (rel_sigma_daily x sqrt(t)); ACT only if z < -2 (2 sigma, not a percent)",
+   "rel_sigma_daily": 0.01829925250830611,
+   "z": -2.0,
+   "threshold_as_return_by_session": {
+    "1": -0.0366,
+    "5": -0.0818,
+    "10": -0.1157,
+    "21": -0.1677
+   },
+   "no_per_name_stop": "no per-name stop inside the window: the print is the bet, and a -2% stop is ~0.5 daily sigma on these names (review \u00a79)"
+  },
+  "checks_2026_10_26": [
+   "move-size rank correlation >= 0.3",
+   "realised factor exposure within +/-0.3 of declared",
+   "fills vs plan"
+  ],
+  "checks_detail": [
+   "1. Magnitude calibration: Spearman(sigma63-predicted |21-session move|, realised |move|) over the book's and its rank-11-20 twin's names is >= 0.3.",
+   "2. Declared = realised exposure: realised betas to SPY, IWM-SPY and SMH-SPY over the 21 sessions are each within +/-0.3 of the declared values.",
+   "3. Implementation: holdings and fills match the plan (names, weights at entry, entry at the 2026-09-28 open)."
+  ],
+  "check_date": "2026-10-26",
+  "check_thresholds": {
+   "move_rank_spearman_min": 0.3,
+   "exposure_tolerance": 0.3
+  },
+  "fundamentals_score": "PROXY: percentile-rank average of gp_at+, ope_be+, ni_be+, at_gr1-, debt_at- (fundamental_features, filed+2d), >= 3 legs; NOT the LightGBM that measured +39 bps/month (panel ends 2024-12)",
+  "worst_case": "10 x 10% = 100% gross of $1,000,000, gross/equity 1.00, long only: one name to zero = -$100,000; a 3-sigma book day = -5.44% = -$54,426",
+  "rotation": "DECLARED, NOT AUTOMATED: once a name has printed, the contest book rotates it into the next un-printed name; the frozen rehearsal record does not rotate",
+  "licence": "PRODUCT_EXPERIMENT; nothing here is a claim."
+ },
+ "twin_next_k_stats": {
+  "n_names": 10,
+  "gross": 1.0,
+  "sigma_daily": 0.01006590908796746,
+  "sigma_21": 0.04612779033415478,
+  "avg_pairwise_rho_63": 0.05327669762778963,
+  "construction": "sqrt(w'DRD): D = sigma63 (daily log), R = realised 63-session daily-return correlation",
+  "rel_sigma_daily_vs_spy": 0.007711146061826133,
+  "rel_sigma_21_vs_spy": 0.03533691052317888,
+  "spy_sigma_daily": 0.007206273275595634,
+  "factor_exposure": {
+   "window_sessions": 126,
+   "multi": {
+    "alpha_daily": {
+     "beta": -0.00026158105409933877,
+     "se": 0.0007576104252024177
+    },
+    "SPY": {
+     "beta": 0.9771499907803569,
+     "se": 0.11525336365818806
+    },
+    "IWM-SPY": {
+     "beta": 0.664871480478905,
+     "se": 0.12245429704841798
+    },
+    "SMH-SPY": {
+     "beta": -0.06150725686811831,
+     "se": 0.09356858448173232
+    },
+    "MTUM-SPY": {
+     "beta": -0.057285652657942776,
+     "se": 0.13132527938595792
+    }
+   },
+   "univariate": {
+    "SPY": 0.8965001405584212,
+    "IWM": 0.747525364433959,
+    "SMH": 0.17194834369165143
+   }
+  }
+ },
+ "book_b_sleeve": [
+  {
+   "symbol": "PDD",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9913,
+   "n_legs": 3,
+   "fund_filed": "2026-04-29",
+   "band": "large"
+  },
+  {
+   "symbol": "FIZZ",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9613,
+   "n_legs": 5,
+   "fund_filed": "2026-09-10",
+   "band": "small"
+  },
+  {
+   "symbol": "MANH",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9539,
+   "n_legs": 4,
+   "fund_filed": "2026-07-31",
+   "band": "large"
+  },
+  {
+   "symbol": "BZ",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9514,
+   "n_legs": 3,
+   "fund_filed": "2026-04-29",
+   "band": "mid"
+  },
+  {
+   "symbol": "CMG",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9405,
+   "n_legs": 4,
+   "fund_filed": "2026-07-31",
+   "band": "large"
+  },
+  {
+   "symbol": "EXPO",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9316,
+   "n_legs": 3,
+   "fund_filed": "2026-08-07",
+   "band": "mid"
+  },
+  {
+   "symbol": "EXEL",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.926,
+   "n_legs": 5,
+   "fund_filed": "2026-08-05",
+   "band": "large"
+  },
+  {
+   "symbol": "LZ",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.918,
+   "n_legs": 5,
+   "fund_filed": "2026-08-05",
+   "band": "small"
+  },
+  {
+   "symbol": "REAL",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.917,
+   "n_legs": 3,
+   "fund_filed": "2026-08-06",
+   "band": "mid"
+  },
+  {
+   "symbol": "BBW",
+   "weight": 0.019999999999999997,
+   "fund_score": 0.9057,
+   "n_legs": 3,
+   "fund_filed": "2026-09-10",
+   "band": "small"
+  }
+ ],
+ "book_b_declared": {
+  "core": "SPY 80% as one position; it never stops",
+  "satellite": "xs fundamentals proxy top-10 equal weight (2% each), small caps allowed, no cap",
+  "tracking_error": {
+   "window_sessions": 252,
+   "sleeve_sigma_ann": 0.22450159995270375,
+   "spy_sigma_ann": 0.12967673895104836,
+   "sleeve_corr_spy": 0.4377033516883149,
+   "sleeve_beta_spy": 0.7577696937288171,
+   "sleeve_minus_spy_sigma_ann": 0.20428320745824816,
+   "tracking_error_ann": 0.04085664149164962,
+   "book_sigma_ann": 0.12983057559888853,
+   "book_beta_spy": 0.9515539387457634,
+   "formula": "TE = satellite x sigma_ann(sleeve - SPY); sigma(sleeve-SPY)^2 = s_s^2 + s_m^2 - 2 rho s_s s_m"
+  },
+  "tracking_error_target_ann": 0.04,
+  "stop": {
+   "rule": "satellite minus its random-sleeve twin, z = cumulative difference / (sigma_ann(sleeve - SPY) x satellite x sqrt(t/252)); at the 126-session check ACT (drop the satellite to SPY) only if z < -2 (2 sigma, not a percent); the core never stops; never on 21 days",
+   "z": -2.0,
+   "threshold_at_126_as_book_return": -0.0578
+  },
+  "horizon": "126 sessions, graded beside the 21-session read",
+  "checks_2026_10_26": [
+   "realised factor exposure within +/-0.3 of declared",
+   "fills vs plan"
+  ],
+  "worst_case": "largest single name to zero = -2% of equity = -$20,000; the sleeve to zero = -$200,000; the core is the market",
+  "note_vs_review": "the review sized the satellite at k=25 and <= 1% of equity per name; Murat's instruction for this book is top-10 at 2% each, no cap",
+  "fundamentals_score": "PROXY: percentile-rank average of gp_at+, ope_be+, ni_be+, at_gr1-, debt_at- (fundamental_features, filed+2d), >= 3 legs; NOT the LightGBM that measured +39 bps/month (panel ends 2024-12)",
+  "licence": "PRODUCT_EXPERIMENT; nothing here is a claim."
+ },
+ "book_a": {
+  "name": "bloomberg_rehearsal_2026-09-27",
+  "book_id": "4d0cebfeb8867fb8",
+  "kind": "competition",
+  "benchmark": "URTH",
+  "twins": {
+   "random_same_band": {
+    "book_id": "672d2b4cdcdb76a0",
+    "tickers": [
+     "FSS",
+     "EMN",
+     "PCRX",
+     "BLSH",
+     "CNR",
+     "ESQ",
+     "UEC",
+     "HIMX",
+     "NAT",
+     "CBT"
+    ]
+   },
+   "next_k": {
+    "book_id": "d1b5b566e58b9b39",
+    "tickers": [
+     "BMI",
+     "IMAX",
+     "WRLD",
+     "ALK",
+     "NE",
+     "LAZ",
+     "WFRD",
+     "HAPN",
+     "MOH",
+     "SCHL"
+    ]
+   },
+   "iwm": {
+    "book_id": "e1211de4cbd952c0",
+    "tickers": [
+     "IWM"
+    ]
+   },
+   "spy": {
+    "book_id": "dbc218ccb553a6ba",
+    "tickers": [
+     "SPY"
+    ]
+   }
+  }
+ },
+ "book_b": {
+  "name": "murat_core_satellite_2026-09-27",
+  "book_id": "5517aa50a29bc95b",
+  "kind": "personal",
+  "twins": {
+   "spy": {
+    "book_id": "923e79dbd12a963a",
+    "tickers": [
+     "SPY"
+    ]
+   },
+   "random_sleeve": {
+    "book_id": "c05861aebd4361c0",
+    "tickers": [
+     "SPY",
+     "AVR",
+     "GSAT",
+     "PSX",
+     "CW",
+     "WAY",
+     "AMRC",
+     "MATV",
+     "CORZ",
+     "GWW",
+     "SLDE",
+     "CASH"
+    ]
+   }
+  }
+ },
+ "status": "FROZEN",
+ "ledger": "C:\\Users\\mrthn\\aegis-finance\\backend\\data\\optimus\\llm_portfolio\\books.jsonl"
+}

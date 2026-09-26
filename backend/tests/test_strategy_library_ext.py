@@ -403,3 +403,107 @@ def test_attach_news_tone_refuses_without_a_cache():
     p = pd.DataFrame({"symbol": ["A"], "date": [pd.Timestamp("2026-09-25")], "is_month_end": [True]})
     out, info = ext.attach_news_tone(p, None, tone_rows=[])
     assert "news_tone_z" not in out.columns and info["news_tone_z"].startswith("AWAITING SCORING")
+
+
+# ── VAL-01 identity by the dated CCM link (review 2026-09-27 §4a) ─────────────
+
+def _renamed_world():
+    """gvkey 100 / permno 1 traded as OLD until 2020-03-01, then NEW (still NEW
+    when CRSP was cut 2024-12-31). gvkey 200 / permno 2 took the ticker OLD in
+    2022. Compustat's CURRENT tic for gvkey 100 is NEW."""
+    lnk = pd.DataFrame({"gvkey": ["100", "200"], "linkprim": ["P", "P"], "linktype": ["LC", "LU"],
+                        "lpermno": [1.0, 2.0], "linkdt": ["2010-01-01", "2021-06-01"],
+                        "linkenddt": [None, None]})
+    names = pd.DataFrame({"permno": [1, 1, 2, 2],
+                          "namedt": ["2010-01-01", "2020-03-02", "2021-06-01", "2022-01-03"],
+                          "nameenddt": ["2020-03-01", "2024-12-31", "2022-01-02", "2024-12-31"],
+                          "ticker": ["OLD", "NEW", "ZZZ", "OLD"]})
+    return ext.ccm_dated_link(lnk, names)
+
+
+def test_a_renamed_security_maps_to_its_old_ticker_for_2019_decisions():
+    link = _renamed_world()
+    gv, how = ext.pit_gvkeys(["OLD", "NEW", "OLD", "NEW"],
+                             ["2019-06-28", "2021-06-30", "2023-06-30", "2026-06-30"], link)
+    assert list(gv) == ["100", "100", "200", "100"]
+    assert list(how) == ["pit", "pit", "pit", "pit"]          # 2026: the open CRSP name
+    # the old current-tic map cannot place the 2019 row at all
+    sec = pd.DataFrame({"tic": ["NEW", "OLD"], "gvkey": ["100", "200"], "iid": ["01", "01"],
+                        "excntry": ["USA", "USA"]})
+    assert ext.compustat_ticker_map(sec).get("OLD") == "200"   # ...and would give it gvkey 200
+
+
+def test_one_symbol_per_series_falls_back_to_the_last_ticker():
+    link = _renamed_world()
+    # the price panel carries NEW back to 2016 (Alpaca's convention): no PIT
+    # match in 2018, so the security's last CRSP ticker places it
+    gv, how = ext.pit_gvkeys(["NEW"], ["2018-01-31"], link)
+    assert gv[0] == "100" and how[0] == "last_ticker"
+    # a symbol no interval and no map knows stays unplaced; the current tic
+    # places a post-CRSP rename only when asked to
+    gv, how = ext.pit_gvkeys(["BRANDNEW"], ["2026-01-30"], link)
+    assert gv[0] is None and how[0] is None
+    gv, how = ext.pit_gvkeys(["BRANDNEW"], ["2026-01-30"], link, current_map={"BRANDNEW": "100"})
+    assert gv[0] == "100" and how[0] == "current_tic"
+
+
+def test_a_row_two_gvkeys_claim_is_dropped():
+    lnk = pd.DataFrame({"gvkey": ["1", "2"], "linkprim": ["P", "P"], "linktype": ["LC", "LC"],
+                        "lpermno": [1.0, 2.0], "linkdt": ["2010-01-01"] * 2, "linkenddt": [None] * 2})
+    names = pd.DataFrame({"permno": [1, 2], "namedt": ["2010-01-01"] * 2,
+                          "nameenddt": ["2024-12-31"] * 2, "ticker": ["DUP", "DUP"]})
+    gv, how = ext.pit_gvkeys(["DUP"], ["2020-01-31"], ext.ccm_dated_link(lnk, names))
+    assert gv[0] is None and how[0] == "ambiguous"
+
+
+def test_linked_market_value_rolls_the_rows_own_series_across_a_rename():
+    link = _renamed_world()
+    fundq = pd.DataFrame({"gvkey": ["100"], "datadate": ["2019-03-31"], "rdq": ["2019-04-25"],
+                          "cshoq": [10.0], "prccq": [50.0]})
+    px = pd.DataFrame({"symbol": ["OLD", "OLD"], "date": pd.to_datetime(["2019-03-29", "2019-06-28"]),
+                       "close": [25.0, 30.0]})           # adjusted: a later 2:1 split halves both
+    panel = pd.DataFrame({"symbol": ["OLD"], "date": pd.to_datetime(["2019-06-28"])})
+    gv, _ = ext.pit_gvkeys(panel["symbol"], panel["date"], link)
+    mv = ext.market_value_column_linked(panel, ext.market_value_anchors_by_gvkey(fundq), px, gv)
+    assert mv[0] == pytest.approx(10.0 * 50.0 * 1e6 * 30.0 / 25.0)
+
+
+def test_val01_counts_the_renamed_dead_population():
+    sec = pd.DataFrame({"tic": ["AXTC.1", "LIVE", "GONE"], "gvkey": ["100", "300", "400"],
+                        "iid": ["01", "01", "01"], "excntry": ["USA"] * 3,
+                        "secstat": ["I", "A", "I"], "dldtei": ["2018-05-01", None, "2019-01-01"]})
+    lnk = pd.DataFrame({"gvkey": ["100"], "linkprim": ["P"], "linktype": ["LC"], "lpermno": [1.0],
+                        "linkdt": ["2010-01-01"], "linkenddt": ["2018-05-01"]})
+    names = pd.DataFrame({"permno": [1], "namedt": ["2010-01-01"], "nameenddt": ["2018-05-01"],
+                          "ticker": ["AXTC"]})
+    c = ext.val01_mapping_counts(sec, ext.ccm_dated_link(lnk, names, data_end="2024-12-31"),
+                                 panel_symbols={"AXTC"})
+    assert c["inactive_since"] == 2 and c["renamed_suffixed_tic"] == 1
+    assert c["now_map"] == 1 and c["now_map_unsuffixed_ticker"] == 1 and c["in_panel"] == 1
+
+
+def _value_panel():
+    d1, d2 = pd.Timestamp("2026-02-27"), pd.Timestamp("2026-04-30")
+    rows = []
+    for d, bm in ((d1, [0.9, 0.5, 0.2]), (d2, [np.nan, np.nan, np.nan])):
+        for s, v in zip(["A", "B", "C"], bm):
+            rows.append({"date": d, "symbol": s, "book_to_market": v, "eligible": True,
+                         "median_dollar_vol": 5e7, "fwd_ret": 0.01, "is_month_end": True})
+    return pd.DataFrame(rows)
+
+
+def test_a_date_with_zero_eligible_names_refuses():
+    rule = sl.Strategy("t_bm", "value", "b/m", sl.col("book_to_market"), k=2)
+    p = _value_panel()
+    el = ext.eligible_names_by_date(p, rule)
+    assert el["by_date"] == {"2026-02-27": 3, "2026-04-30": 0}
+    assert el["refused_dates"] == ["2026-04-30"]
+    # the engine alone keeps the February book and prints an April return ...
+    raw = sl.run_strategy(p, rule, k=2)
+    assert pd.Timestamp("2026-04-30") in set(raw["date"])
+    # ... the value runner refuses that period instead
+    m = ext.run_value_rule(p, rule)
+    assert pd.Timestamp("2026-04-30") not in set(m["date"])
+    assert m.attrs["eligibility"]["n_periods_refused"] == 1
+    rec = ext.value_rule_receipts(p, [rule])
+    assert rec["t_bm"]["n_refused"] == 1

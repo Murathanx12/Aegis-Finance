@@ -903,8 +903,11 @@ EXTRA_FAMILIES["value"] = ("cheap stocks are cheap because they are unloved or r
 
 _MV_CAVEAT = ("mkt_value = Compustat cshoq x prccq (raw, at datadate) x adj_close(t) / "
               "adj_close(datadate), anchor available at rdq + 2d, NaN when the anchor's "
-              "datadate is > 460 days old; gvkey -> ticker by comp.security (USA, primary iid, "
-              "a ticker claimed by two gvkeys is dropped); Compustat fundq ends datadate "
+              "datadate is > 460 days old; company -> row by the DATED CCM link (gvkey<->permno "
+              "by link dates, permno -> the ticker AS OF the row's date, the last CRSP ticker "
+              "as fallback, a row two gvkeys claim is dropped; 2026-09-27, review 4a -- was "
+              "comp.security's current tic, which never placed a renamed dead security); "
+              "a value rule REFUSES a date with fewer than k eligible names; Compustat fundq ends datadate "
               "2024-12-31, so every market-value column is NaN from 2026-04-06")
 _D2D_CAVEAT = ("naive Merton DD (Bharath-Shumway): E = mkt_value, F = SEC 'debt' "
                "(LongTermDebtNoncurrent/LongTermDebt, filed + 2d, strictly before the date; "
@@ -1203,6 +1206,12 @@ def attach(panel, W: dict | None = None):
         panel, info0["round2"] = attach_round2_columns(panel, W)
     except Exception as e:                           # noqa: BLE001 -- named in info
         info0["round2"] = f"REFUSED: {type(e).__name__}: {e}"
+    # VAL-01 review: n_eligible_names per decision date for every value rule,
+    # and the dates on which it cannot fill k names (see `run_value_rule`).
+    try:
+        info0["value_rule_eligibility"] = value_rule_receipts(panel)
+    except Exception as e:                           # noqa: BLE001 -- named in info
+        info0["value_rule_eligibility"] = f"REFUSED: {type(e).__name__}: {e}"
     try:
         out, info = _attach_pit(panel, W)
     except Exception as e:                           # noqa: BLE001 -- named in info
@@ -1539,6 +1548,299 @@ def market_value_column(panel, anchors, px):
     return mv
 
 
+# ── VAL-01 identity: the DATED CRSP-Compustat link (review 2026-09-27 §4a) ──
+#
+# `compustat_ticker_map` joins on comp.security's CURRENT `tic`. Compustat
+# renames a dead security's ticker when the ticker is reused (AXTC.1, NCI.3,
+# ...), so a dead name's own panel rows could never reach their gvkey: 983 of
+# 10,474 USA primary issues inactive since 2016 carry a suffixed tic. The guard
+# "a ticker two gvkeys claim is dropped" never fired, because the current tic is
+# unique by construction -- the defect was silent. The fix: gvkey <-> permno by
+# the link's date range (crsp.ccmxpf_lnkhist), then permno -> the ticker AS OF
+# the decision date (crsp.stocknames). The price panel carries ONE symbol per
+# series (Alpaca's: META back to 2016), so a row the PIT ticker cannot place
+# falls back to the security's LAST CRSP ticker while its link is alive -- PIT
+# first, last-ticker second, and a (symbol, date) two gvkeys claim is dropped.
+
+#: CCM link types/primacy a market-value join may use (the WRDS standard pair).
+CCM_LINKTYPES = ("LC", "LU")
+CCM_LINKPRIM = ("P", "C")
+#: an open link / name interval ends here
+_OPEN_END = "2262-04-01"
+
+
+def ccm_dated_link(lnkhist, stocknames, *, data_end=None):
+    """(gvkey, permno, ticker, start, end, last_ticker): one row per interval on
+    which a gvkey's linked permno carried `ticker`.
+
+    The link's [linkdt, linkenddt] is intersected with each stocknames
+    [namedt, nameenddt] of the same permno. A missing linkenddt is open. A name
+    row ending on the stocknames file's own last date (`data_end`, default its
+    max) is the name the security still had when the file was cut, and is
+    treated as open: CRSP on disk ends 2024-12-31 and a 2026 decision must
+    still find a live company.
+    """
+    import pandas as pd
+    lk = lnkhist.copy()
+    lk = lk[lk["linktype"].astype(str).isin(CCM_LINKTYPES)
+            & lk["linkprim"].astype(str).isin(CCM_LINKPRIM) & lk["lpermno"].notna()]
+    lk = pd.DataFrame({"gvkey": lk["gvkey"].astype(str), "permno": lk["lpermno"].astype("int64"),
+                       "l0": pd.to_datetime(lk["linkdt"], errors="coerce"),
+                       "l1": pd.to_datetime(lk["linkenddt"], errors="coerce")
+                       .fillna(pd.Timestamp(_OPEN_END))})
+    nm = stocknames[["permno", "namedt", "nameenddt", "ticker"]].dropna(subset=["ticker"]).copy()
+    nm["permno"] = nm["permno"].astype("int64")
+    nm["ticker"] = nm["ticker"].astype(str).str.upper().str.strip()
+    nm["n0"] = pd.to_datetime(nm["namedt"], errors="coerce")
+    nm["n1"] = pd.to_datetime(nm["nameenddt"], errors="coerce")
+    end = pd.Timestamp(data_end) if data_end is not None else nm["n1"].max()
+    nm.loc[nm["n1"].isna() | (nm["n1"] >= end), "n1"] = pd.Timestamp(_OPEN_END)
+    m = lk.merge(nm[["permno", "ticker", "n0", "n1"]], on="permno", how="inner")
+    m["start"] = m[["l0", "n0"]].max(axis=1)
+    m["end"] = m[["l1", "n1"]].min(axis=1)
+    m = m[m["start"].notna() & (m["start"] <= m["end"])]
+    m = m.sort_values(["gvkey", "end", "start"], kind="mergesort")
+    last = m.groupby("gvkey")["ticker"].last()
+    m["last_ticker"] = m["gvkey"].map(last)
+    return m[["gvkey", "permno", "ticker", "start", "end", "last_ticker"]].reset_index(drop=True)
+
+
+def pit_gvkeys(symbols, dates, link, current_map: dict | None = None):
+    """(gvkey per row or None, how per row: 'pit' / 'last_ticker' / 'current_tic' /
+    'ambiguous' / None).
+
+    'pit' = the security's ticker AS OF the row's date equals the row's symbol.
+    'last_ticker' = no PIT match, and the row's symbol is the LAST CRSP ticker
+    of exactly one gvkey whose link is alive on the date (the panel's one-
+    symbol-per-series convention). 'current_tic' (only with `current_map`, the
+    old comp.security map) = still unplaced, and the current tic names a gvkey
+    whose link is alive on the date or that has no link at all: the renames
+    AFTER CRSP's 2024-12-31 cut (BK -> BNY, JBT -> JBTM) that no CRSP ticker
+    can know. A dead renamed security's suffixed tic never matches a symbol, so
+    this tier cannot reintroduce the defect it replaces. A row two gvkeys claim
+    at the same tier is 'ambiguous' and gets None -- never guessed.
+    """
+    import numpy as np
+    import pandas as pd
+    left = pd.DataFrame({"_i": np.arange(len(symbols)),
+                         "symbol": pd.Series(list(symbols)).astype(str).str.upper().to_numpy(),
+                         "date": pd.to_datetime(pd.Series(list(dates))).dt.normalize().to_numpy()})
+    gv = np.full(len(left), None, dtype=object)
+    how = np.full(len(left), None, dtype=object)
+    if not len(left) or link is None or not len(link):
+        return gv, how
+
+    def _tier(sub, lk):
+        m = sub.merge(lk, on="symbol", how="inner")
+        m = m[(m["date"] >= m["start"]) & (m["date"] <= m["end"])]
+        n = m.groupby("_i")["gvkey"].nunique()
+        one = m.drop_duplicates("_i").set_index("_i")["gvkey"]
+        return one[n[n == 1].index], np.asarray(n[n > 1].index, dtype=int)
+
+    pit = link[["ticker", "gvkey", "start", "end"]].rename(columns={"ticker": "symbol"})
+    one, amb = _tier(left, pit)
+    gv[one.index.to_numpy(dtype=int)] = one.to_numpy()
+    how[one.index.to_numpy(dtype=int)] = "pit"
+    how[amb] = "ambiguous"
+    rest = np.array([i for i in range(len(left)) if how[i] is None], dtype=int)
+    if len(rest):
+        span = (link.groupby(["gvkey", "last_ticker"])
+                .agg(start=("start", "min"), end=("end", "max")).reset_index()
+                .rename(columns={"last_ticker": "symbol"}))
+        one, amb = _tier(left.iloc[rest], span)
+        gv[one.index.to_numpy(dtype=int)] = one.to_numpy()
+        how[one.index.to_numpy(dtype=int)] = "last_ticker"
+        how[amb] = "ambiguous"
+    rest = np.array([i for i in range(len(left)) if how[i] is None], dtype=int)
+    if current_map and len(rest):
+        sub = left.iloc[rest].copy()
+        sub["gvkey"] = sub["symbol"].map(current_map)
+        sub = sub[sub["gvkey"].notna()]
+        alive = (link.groupby("gvkey").agg(start=("start", "min"), end=("end", "max")))
+        sub = sub.join(alive, on="gvkey")
+        ok = sub["start"].isna() | ((sub["date"] >= sub["start"]) & (sub["date"] <= sub["end"]))
+        sub = sub[ok]
+        gv[sub["_i"].to_numpy(dtype=int)] = sub["gvkey"].astype(str).to_numpy()
+        how[sub["_i"].to_numpy(dtype=int)] = "current_tic"
+    return gv, how
+
+
+def market_value_anchors_by_gvkey(fundq):
+    """(gvkey, datadate, available, mv_q) -- `market_value_anchors` keyed on the
+    company, not on a ticker (the dated link places the company on a row)."""
+    import numpy as np
+    import pandas as pd
+    q = fundq[["gvkey", "datadate", "rdq", "cshoq", "prccq"]].copy()
+    q["gvkey"] = q["gvkey"].astype(str)
+    q = q.dropna(subset=["cshoq", "prccq", "datadate"])
+    q["datadate"] = pd.to_datetime(q["datadate"])
+    rdq = pd.to_datetime(q["rdq"], errors="coerce")
+    avail = rdq.where(rdq.notna() & (rdq >= q["datadate"]),
+                      q["datadate"] + pd.Timedelta(days=MV_NO_RDQ_DAYS))
+    q["available"] = avail + pd.Timedelta(days=SEC_LAG_DAYS)
+    q["mv_q"] = q["cshoq"].astype(float) * q["prccq"].astype(float) * 1e6
+    q = q[np.isfinite(q["mv_q"]) & (q["mv_q"] > 0)]
+    q = q.sort_values(["gvkey", "datadate", "available"], kind="mergesort")
+    q = q.drop_duplicates(["gvkey", "datadate"], keep="first")
+    return q[["gvkey", "datadate", "available", "mv_q"]].reset_index(drop=True)
+
+
+def market_value_column_linked(panel, anchors_g, px, row_gvkeys):
+    """`market_value_column` with the company placed by the DATED link.
+
+    Each row takes its gvkey's latest anchor available strictly before the date
+    and rolls it by adj_close(row symbol, date) / adj_close(row symbol, the
+    anchor's datadate): the row's own price series carries the security across
+    a rename, so the ratio stays on one adjustment basis. NaN when the row has
+    no gvkey, the anchor's datadate is > MV_STALE_DAYS old, or a close is absent.
+    """
+    import numpy as np
+    import pandas as pd
+    n = len(panel)
+    mv = np.full(n, np.nan)
+    g = pd.Series(list(row_gvkeys), dtype=object)
+    have = g.notna().to_numpy()
+    if not have.any() or anchors_g is None or not len(anchors_g):
+        return mv
+    left = pd.DataFrame({"_i": np.nonzero(have)[0], "gvkey": g[have].astype(str).to_numpy(),
+                         "date": pd.to_datetime(panel["date"]).dt.normalize()
+                         .astype("datetime64[ns]").to_numpy()[have]})
+    right = anchors_g[["gvkey", "available", "datadate", "mv_q"]].copy()
+    right["gvkey"] = right["gvkey"].astype(str)
+    right["available"] = pd.to_datetime(right["available"]).astype("datetime64[ns]")
+    right["datadate"] = pd.to_datetime(right["datadate"]).astype("datetime64[ns]")
+    m = pd.merge_asof(left.sort_values("date", kind="mergesort"),
+                      right.sort_values("available", kind="mergesort"),
+                      left_on="date", right_on="available", by="gvkey", direction="backward",
+                      allow_exact_matches=False)
+    m = m[m["mv_q"].notna()]
+    if not len(m):
+        return mv
+    idx = m["_i"].to_numpy(dtype=int)
+    sym = panel["symbol"].astype(str).to_numpy()[idx]
+    px_a = closes_at(px, sym, m["datadate"].to_numpy())
+    px_t = closes_at(px, sym, m["date"].to_numpy())
+    age = (m["date"] - m["datadate"]).dt.days.to_numpy(dtype=float)
+    v = m["mv_q"].to_numpy(dtype=float) * px_t / px_a
+    v[~(age <= MV_STALE_DAYS)] = np.nan
+    v[~np.isfinite(v) | (v <= 0)] = np.nan
+    mv[idx] = v
+    return mv
+
+
+def val01_mapping_counts(security, link, *, since: str = "2016-01-01", panel_symbols=None) -> dict:
+    """How many of the renamed dead securities the dated link now places.
+
+    The reviewer's population: USA primary issues (one per gvkey, iid '01'
+    first -- `compustat_ticker_map`'s rule), inactive (secstat I), deleted on
+    or after `since`, whose CURRENT tic carries a Compustat reuse suffix
+    (`.<digits>` at the end: AXTC.1, NCI.3). `now_map` = those whose gvkey has a dated
+    link interval with a ticker; `now_map_unsuffixed_ticker` = with the ticker
+    the security actually traded under; `in_panel` (when `panel_symbols` is
+    given) = those whose linked ticker is a symbol on the price panel. The old
+    current-tic map placed none of them: a suffixed tic equals no panel symbol.
+    """
+    import pandas as pd
+    s = security[(security["excntry"].astype(str) == "USA") & security["tic"].notna()].copy()
+    s["gvkey"] = s["gvkey"].astype(str)
+    s["_pri"] = (s["iid"].astype(str) != "01").astype(int)
+    s = s.sort_values(["gvkey", "_pri"], kind="mergesort").drop_duplicates("gvkey")
+    if "secstat" in s.columns:
+        s = s[s["secstat"].astype(str) == "I"]
+    if "dldtei" in s.columns:
+        s = s[pd.to_datetime(s["dldtei"], errors="coerce") >= pd.Timestamp(since)]
+    out = {"population": f"USA primary issue per gvkey (iid 01 first), secstat I, dldtei >= {since}",
+           "inactive_since": int(len(s))}
+    ren = s[s["tic"].astype(str).str.contains(r"\.\d+$", regex=True)]
+    out["renamed_suffixed_tic"] = int(len(ren))
+    lk = link[link["gvkey"].isin(set(ren["gvkey"]))]
+    out["now_map"] = int(lk["gvkey"].nunique())
+    out["now_map_unsuffixed_ticker"] = int(
+        lk.loc[~lk["ticker"].astype(str).str.contains(r"\.\d+$", regex=True), "gvkey"].nunique())
+    out["no_ccm_link"] = out["renamed_suffixed_tic"] - out["now_map"]
+    if panel_symbols is not None:
+        ps = {str(x).upper() for x in panel_symbols}
+        out["in_panel"] = int(lk.loc[lk["ticker"].isin(ps), "gvkey"].nunique())
+    out["old_map_places"] = 0
+    return out
+
+
+def load_ccm_link(opt=None):
+    """The dated link from the two WRDS bulk files on disk, or None (the caller names it)."""
+    from pathlib import Path
+
+    import pandas as pd
+
+    from backend import config as _cfg
+    base = Path(opt or _cfg.OPTIMUS_LEDGER_DIR) / "wrds" / "bulk"
+    pl, pn = base / "crsp__ccmxpf_lnkhist.parquet", base / "crsp__stocknames.parquet"
+    if not (pl.exists() and pn.exists()):
+        return None
+    lk = pd.read_parquet(pl, columns=["gvkey", "linkprim", "linktype", "lpermno", "linkdt", "linkenddt"])
+    nm = pd.read_parquet(pn, columns=["permno", "namedt", "nameenddt", "ticker"])
+    return ccm_dated_link(lk, nm)
+
+
+# ── the value rules refuse a date they cannot fill (review 2026-09-27 §4a) ──
+
+def eligible_names_by_date(panel, rule, *, k: int | None = None, scores=None) -> dict:
+    """{rule, k, by_date: {date: n selectable}, refused_dates, n_refused, n_dates}.
+
+    `n` counts the rule's finite selection scores on each decision date (the
+    month-end rows when the panel marks them). A date with n < k is REFUSED:
+    the rule cannot fill its book there, and reading a return from it reads a
+    stale book (the reviewer saw qc409 trading April-July 2026 while every
+    market-value column was NaN).
+    """
+    import numpy as np
+    import pandas as pd
+
+    from backend.services import strategy_library as SL
+    k = int(k or rule.k)
+    sc = scores if scores is not None else SL.selection_scores(panel, rule)
+    me = (panel["is_month_end"].astype(bool).to_numpy() if "is_month_end" in panel.columns
+          else np.ones(len(panel), dtype=bool))
+    d = pd.to_datetime(panel["date"]).to_numpy()
+    fin = np.isfinite(np.asarray(sc, dtype=float))
+    n = pd.Series(fin[me]).groupby(d[me]).sum()
+    by = {str(pd.Timestamp(x).date()): int(v) for x, v in n.items()}
+    ref = [x for x, v in by.items() if v < k]
+    return {"rule": rule.id, "k": k, "by_date": by, "refused_dates": ref,
+            "n_refused": len(ref), "n_dates": len(by)}
+
+
+def run_value_rule(panel, rule, *, k: int | None = None, scores=None, holdings=None):
+    """`strategy_library.run_strategy` with every period whose decision date has
+    fewer than k selectable names REFUSED: dropped from the monthly record --
+    not carried at a stale book's return and not credited as cash.
+    `attrs["eligibility"]` carries `eligible_names_by_date`'s receipt plus
+    `n_periods_refused`."""
+    import pandas as pd
+
+    from backend.services import strategy_library as SL
+    k = int(k or rule.k)
+    sc = scores if scores is not None else SL.selection_scores(panel, rule)
+    m = SL.run_strategy(panel, rule, k=k, scores=sc, holdings=holdings)
+    el = eligible_names_by_date(panel, rule, k=k, scores=sc)
+    bad = {pd.Timestamp(x) for x in el["refused_dates"]}
+    out = m[~pd.to_datetime(m["date"]).isin(bad)].reset_index(drop=True) if len(m) else m
+    el["n_periods_refused"] = int(len(m) - len(out))
+    out.attrs["eligibility"] = el
+    return out
+
+
+def value_rule_receipts(panel, rules=None) -> dict:
+    """Per value rule: n_eligible_names per decision date and its refused dates."""
+    rules = VALUE_UNLOCK_STRATEGIES if rules is None else rules
+    out = {}
+    for r in rules:
+        try:
+            out[r.id] = eligible_names_by_date(panel, r)
+        except Exception as e:                      # noqa: BLE001 -- named
+            out[r.id] = f"REFUSED: {type(e).__name__}: {e}"
+    return out
+
+
 def sec_latest_frame(facts, fact: str, *, annual: bool = False):
     """(symbol, filed, available, val) for one SEC fact at its FIRST filing per period end."""
     import pandas as pd
@@ -1620,8 +1922,15 @@ def attach_news_tone(panel, W: dict | None = None, tone_rows: list | None = None
                                  "toned_items": int(len(tf))}}
 
 
-def attach_round2_columns(panel, W: dict | None = None, *, fundq=None, security=None, facts=None):
-    """(panel + ROUND2_COLUMNS, info). Each source under its own try; a refusal is named."""
+def attach_round2_columns(panel, W: dict | None = None, *, fundq=None, security=None, facts=None,
+                          link=None):
+    """(panel + ROUND2_COLUMNS, info). Each source under its own try; a refusal is named.
+
+    Identity (VAL-01, 2026-09-27): with a dated CCM `link` (`ccm_dated_link`;
+    loaded from disk when `fundq` is), a row's company is placed by the ticker
+    it carried AS OF the row's date (`pit_gvkeys`); without one the old
+    current-tic map is used and `info["mkt_value"]["identity"]` says so.
+    """
     import numpy as np
     import pandas as pd
 
@@ -1644,12 +1953,30 @@ def attach_round2_columns(panel, W: dict | None = None, *, fundq=None, security=
                 raise FileNotFoundError(f"missing {[x.name for x in (fp, sp) if not x.exists()]}")
             fundq = pd.read_parquet(fp, columns=["gvkey", "datadate", "rdq", "cshoq", "prccq"])
             security = pd.read_parquet(sp, columns=["tic", "gvkey", "iid", "excntry"])
+            if link is None:
+                link = load_ccm_link(opt)
         tmap = compustat_ticker_map(security)
         anchors = market_value_anchors(fundq, tmap)
         px = W if W is not None else out[["symbol", "date", "close"]]
-        out["mkt_value"] = market_value_column(out, anchors, px)
+        ident: dict = {"identity": "CURRENT_TICKER (comp.security tic; no dated link on disk)"}
+        if link is not None and len(link):
+            gv, how = pit_gvkeys(out["symbol"], out["date"], link, current_map=tmap)
+            old_gv = out["symbol"].astype(str).str.upper().map(tmap).to_numpy(dtype=object)
+            out["mkt_value"] = market_value_column_linked(out, market_value_anchors_by_gvkey(fundq), px, gv)
+            h = pd.Series(how, dtype=object)
+            changed = [(a is not None or b is not None) and a != b
+                       for a, b in zip(gv, [x if isinstance(x, str) else None for x in old_gv])]
+            ident = {"identity": "DATED_CCM_LINK (lnkhist gvkey<->permno by date, stocknames "
+                                 "permno->ticker as of the row's date; then the last CRSP ticker; then "
+                                 "the current tic for post-2024 renames)",
+                     "rows_by_how": {str(k): int(v) for k, v in h.fillna("unplaced").value_counts().items()},
+                     "rows_whose_gvkey_changed_vs_current_tic": int(sum(changed)),
+                     "old_map_mkt_value_non_nan": int(np.isfinite(market_value_column(out, anchors, px)).sum())}
+        else:
+            out["mkt_value"] = market_value_column(out, anchors, px)
         yrs = pd.to_datetime(out["date"]).dt.year
         info["mkt_value"] = {
+            **ident,
             "non_nan": int(out["mkt_value"].notna().sum()),
             "by_year_non_nan": {int(y): int(v) for y, v in out["mkt_value"].notna().groupby(yrs).sum().items()},
             "anchors": int(len(anchors)), "tickers_mapped": len(tmap),
