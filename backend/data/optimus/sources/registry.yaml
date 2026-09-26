@@ -1,0 +1,6211 @@
+schema: source_registry/v1
+read_me_first: 'Every source is a forecaster that has not earned a weight yet. Social sources are an ATTENTION layer, never
+  a truth layer and never an order. A handle a quest proposed is verified: false until a dated post from it has been read.'
+counts_by_kind:
+  filing: 4
+  industry_specialist: 1
+  newswire: 14
+  reddit_community: 2
+  sell_side: 456
+sources:
+- source_id: filing:sec_edgar_8k
+  kind: filing
+  handle: 8-K
+  url: https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: sec
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: SEC EDGAR current 8-K filings (primary)
+- source_id: filing:sec_form4
+  kind: filing
+  handle: '4'
+  url: https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: sec
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: SEC EDGAR Form 4 insider transactions (primary)
+- source_id: news:sec_edgar_8k_current_atom
+  kind: filing
+  handle: sec_edgar_8k_current_atom
+  url: news_corpus/sec_edgar_8k_current_atom
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: sec
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:sec_edgar_8k_ex99_body
+  kind: filing
+  handle: sec_edgar_8k_ex99_body
+  url: news_corpus/sec_edgar_8k_ex99_body
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: sec
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:quantocracy_rss
+  kind: industry_specialist
+  handle: quantocracy_rss
+  url: news_corpus/quantocracy_rss
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:alpaca_benzinga_news
+  kind: newswire
+  handle: alpaca_benzinga_news
+  url: news_corpus/alpaca_benzinga_news
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:gdelt_doc_v2
+  kind: newswire
+  handle: gdelt_doc_v2
+  url: news_corpus/gdelt_doc_v2
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_en_au
+  kind: newswire
+  handle: google_news_rss_en_au
+  url: news_corpus/google_news_rss_en_au
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_en_gb
+  kind: newswire
+  handle: google_news_rss_en_gb
+  url: news_corpus/google_news_rss_en_gb
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_en_hk
+  kind: newswire
+  handle: google_news_rss_en_hk
+  url: news_corpus/google_news_rss_en_hk
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_en_in
+  kind: newswire
+  handle: google_news_rss_en_in
+  url: news_corpus/google_news_rss_en_in
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_en_sg
+  kind: newswire
+  handle: google_news_rss_en_sg
+  url: news_corpus/google_news_rss_en_sg
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_en_us
+  kind: newswire
+  handle: google_news_rss_en_us
+  url: news_corpus/google_news_rss_en_us
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_ja_jp
+  kind: newswire
+  handle: google_news_rss_ja_jp
+  url: news_corpus/google_news_rss_ja_jp
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_ko_kr
+  kind: newswire
+  handle: google_news_rss_ko_kr
+  url: news_corpus/google_news_rss_ko_kr
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_zh_cn
+  kind: newswire
+  handle: google_news_rss_zh_cn
+  url: news_corpus/google_news_rss_zh_cn
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:google_news_rss_zh_tw
+  kind: newswire
+  handle: google_news_rss_zh_tw
+  url: news_corpus/google_news_rss_zh_tw
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:nikkei_asia_rss
+  kind: newswire
+  handle: nikkei_asia_rss
+  url: news_corpus/nikkei_asia_rss
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:yfinance_ticker_news
+  kind: newswire
+  handle: yfinance_ticker_news
+  url: news_corpus/yfinance_ticker_news
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: rss_api
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:reddit_algotrading_rss
+  kind: reddit_community
+  handle: reddit_algotrading_rss
+  url: news_corpus/reddit_algotrading_rss
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: reddit_rss
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: news:reddit_securityanalysis_rss
+  kind: reddit_community
+  handle: reddit_securityanalysis_rss
+  url: news_corpus/reddit_securityanalysis_rss
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: reddit_rss
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: news corpus source (first_seen_utc per row)
+- source_id: sell_side:86_research
+  kind: sell_side
+  handle: 86 Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:abg_sundal_collier
+  kind: sell_side
+  handle: ABG Sundal Collier
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:abn_amro
+  kind: sell_side
+  handle: ABN Amro
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 14 dated revisions in target_revisions.parquet
+- source_id: sell_side:aci_research
+  kind: sell_side
+  handle: ACI Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:aegis_capital
+  kind: sell_side
+  handle: Aegis Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 61 dated revisions in target_revisions.parquet
+- source_id: sell_side:ahorro_corporacion
+  kind: sell_side
+  handle: Ahorro Corporacion
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:albert_fried
+  kind: sell_side
+  handle: Albert Fried
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:albert_fried_co
+  kind: sell_side
+  handle: Albert Fried & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 18 dated revisions in target_revisions.parquet
+- source_id: sell_side:alden_securities
+  kind: sell_side
+  handle: Alden Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:alembic_global
+  kind: sell_side
+  handle: Alembic Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 53 dated revisions in target_revisions.parquet
+- source_id: sell_side:alere_financial
+  kind: sell_side
+  handle: Alere Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:aletheia_capital
+  kind: sell_side
+  handle: Aletheia Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:allaria_ledesma
+  kind: sell_side
+  handle: Allaria Ledesma
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:alliance_global_partners
+  kind: sell_side
+  handle: Alliance Global Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 78 dated revisions in target_revisions.parquet
+- source_id: sell_side:altacorp_capital
+  kind: sell_side
+  handle: AltaCorp Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:ambit_capital
+  kind: sell_side
+  handle: Ambit Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:american_capital_partners
+  kind: sell_side
+  handle: American Capital Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:ameriprise_financial
+  kind: sell_side
+  handle: Ameriprise Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:amerx
+  kind: sell_side
+  handle: Amerx
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:anand_rathi
+  kind: sell_side
+  handle: Anand Rathi
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:andrew_buscaglia
+  kind: sell_side
+  handle: Andrew Buscaglia
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:apb_financial
+  kind: sell_side
+  handle: APB Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:arctic_securities
+  kind: sell_side
+  handle: Arctic Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:ardour_capital
+  kind: sell_side
+  handle: Ardour Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:arete_research
+  kind: sell_side
+  handle: Arete Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 23 dated revisions in target_revisions.parquet
+- source_id: sell_side:argus
+  kind: sell_side
+  handle: Argus
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:argus_research
+  kind: sell_side
+  handle: Argus Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2185 dated revisions in target_revisions.parquet
+- source_id: sell_side:arihant_capital_markets
+  kind: sell_side
+  handle: Arihant Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:ascendiant_capital
+  kind: sell_side
+  handle: Ascendiant Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 116 dated revisions in target_revisions.parquet
+- source_id: sell_side:ata_invest
+  kind: sell_side
+  handle: ATA Invest
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:atb_capital
+  kind: sell_side
+  handle: ATB Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:atlantic_equities
+  kind: sell_side
+  handle: Atlantic Equities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 497 dated revisions in target_revisions.parquet
+- source_id: sell_side:auriga
+  kind: sell_side
+  handle: Auriga
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:autonomous_research
+  kind: sell_side
+  handle: Autonomous Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:avian_securities
+  kind: sell_side
+  handle: Avian Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:avondale_partners
+  kind: sell_side
+  handle: Avondale Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 154 dated revisions in target_revisions.parquet
+- source_id: sell_side:axiom_capital
+  kind: sell_side
+  handle: Axiom Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 32 dated revisions in target_revisions.parquet
+- source_id: sell_side:axis_capital
+  kind: sell_side
+  handle: Axis Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:b_of_a_securities
+  kind: sell_side
+  handle: B of A Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 12162 dated revisions in target_revisions.parquet
+- source_id: sell_side:b_riley
+  kind: sell_side
+  handle: B. Riley
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:b_riley_fbr
+  kind: sell_side
+  handle: B. Riley FBR
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:b_riley_securities
+  kind: sell_side
+  handle: B. Riley Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3300 dated revisions in target_revisions.parquet
+- source_id: sell_side:baader_bank
+  kind: sell_side
+  handle: Baader Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:baader_helvea
+  kind: sell_side
+  handle: Baader Helvea
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:baird
+  kind: sell_side
+  handle: Baird
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7166 dated revisions in target_revisions.parquet
+- source_id: sell_side:banca_akros
+  kind: sell_side
+  handle: Banca Akros
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:banco_bradesco_bbi_s_a
+  kind: sell_side
+  handle: Banco Bradesco BBI S.A
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:banco_btg_pactual
+  kind: sell_side
+  handle: Banco BTG Pactual
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:banco_sabadell
+  kind: sell_side
+  handle: Banco Sabadell
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:bank_of_america
+  kind: sell_side
+  handle: Bank of America
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 38 dated revisions in target_revisions.parquet
+- source_id: sell_side:bankhaus_lampe
+  kind: sell_side
+  handle: Bankhaus Lampe
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:barclays
+  kind: sell_side
+  handle: Barclays
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 22573 dated revisions in target_revisions.parquet
+- source_id: sell_side:barrington_research
+  kind: sell_side
+  handle: Barrington Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1366 dated revisions in target_revisions.parquet
+- source_id: sell_side:batlivala_karani
+  kind: sell_side
+  handle: Batlivala & Karani
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:bb_t_capital
+  kind: sell_side
+  handle: BB&T Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 271 dated revisions in target_revisions.parquet
+- source_id: sell_side:bba_securities
+  kind: sell_side
+  handle: BBA Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:bbva
+  kind: sell_side
+  handle: BBVA
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:bby
+  kind: sell_side
+  handle: BBY
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:beacon_securities
+  kind: sell_side
+  handle: Beacon Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:beaufort_securities
+  kind: sell_side
+  handle: Beaufort Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:belus_capital
+  kind: sell_side
+  handle: Belus Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:benchmark
+  kind: sell_side
+  handle: Benchmark
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3325 dated revisions in target_revisions.parquet
+- source_id: sell_side:berenberg
+  kind: sell_side
+  handle: Berenberg
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 675 dated revisions in target_revisions.parquet
+- source_id: sell_side:bernstein
+  kind: sell_side
+  handle: Bernstein
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1968 dated revisions in target_revisions.parquet
+- source_id: sell_side:bgb_securities
+  kind: sell_side
+  handle: BGB Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 19 dated revisions in target_revisions.parquet
+- source_id: sell_side:bgc_financial
+  kind: sell_side
+  handle: BGC FInancial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 38 dated revisions in target_revisions.parquet
+- source_id: sell_side:blaylock_robert_van
+  kind: sell_side
+  handle: Blaylock Robert Van
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:bluefin
+  kind: sell_side
+  handle: BlueFin
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:bmo_capital
+  kind: sell_side
+  handle: BMO Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7929 dated revisions in target_revisions.parquet
+- source_id: sell_side:bnp_paribas
+  kind: sell_side
+  handle: BNP Paribas
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 142 dated revisions in target_revisions.parquet
+- source_id: sell_side:bnp_paribas_exane
+  kind: sell_side
+  handle: BNP Paribas Exane
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:boc_int_l
+  kind: sell_side
+  handle: BOC Int'l
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:bocom_international
+  kind: sell_side
+  handle: BOCOM International
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:boenning_scattergood
+  kind: sell_side
+  handle: Boenning & Scattergood
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 95 dated revisions in target_revisions.parquet
+- source_id: sell_side:bradesco
+  kind: sell_side
+  handle: Bradesco
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:bradesco_corretora
+  kind: sell_side
+  handle: Bradesco Corretora
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 17 dated revisions in target_revisions.parquet
+- source_id: sell_side:brasil_plural
+  kind: sell_side
+  handle: Brasil Plural
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:brean_capital
+  kind: sell_side
+  handle: Brean Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 310 dated revisions in target_revisions.parquet
+- source_id: sell_side:brigantine
+  kind: sell_side
+  handle: Brigantine
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:brinson_patrick
+  kind: sell_side
+  handle: Brinson Patrick
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:brookline_capital
+  kind: sell_side
+  handle: Brookline Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:bryan_garnier
+  kind: sell_side
+  handle: Bryan Garnier
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 12 dated revisions in target_revisions.parquet
+- source_id: sell_side:btg_pactual
+  kind: sell_side
+  handle: BTG Pactual
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:btig
+  kind: sell_side
+  handle: BTIG
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3195 dated revisions in target_revisions.parquet
+- source_id: sell_side:btig_research
+  kind: sell_side
+  handle: BTIG Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:buckingham
+  kind: sell_side
+  handle: Buckingham
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:buckingham_research
+  kind: sell_side
+  handle: Buckingham Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 932 dated revisions in target_revisions.parquet
+- source_id: sell_side:burgan_securities
+  kind: sell_side
+  handle: Burgan Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:burrill_company
+  kind: sell_side
+  handle: Burrill & Company
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:bwg_global
+  kind: sell_side
+  handle: BWG Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 20 dated revisions in target_revisions.parquet
+- source_id: sell_side:bws_financial
+  kind: sell_side
+  handle: BWS Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 332 dated revisions in target_revisions.parquet
+- source_id: sell_side:byron_capital_markets
+  kind: sell_side
+  handle: Byron Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:cabrera_capital_markets
+  kind: sell_side
+  handle: Cabrera Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:canaccord_genuity
+  kind: sell_side
+  handle: Canaccord Genuity
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4328 dated revisions in target_revisions.parquet
+- source_id: sell_side:cannonball_research
+  kind: sell_side
+  handle: Cannonball Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:cantor_fitzgerald
+  kind: sell_side
+  handle: Cantor Fitzgerald
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3976 dated revisions in target_revisions.parquet
+- source_id: sell_side:capital_one
+  kind: sell_side
+  handle: Capital One
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 148 dated revisions in target_revisions.parquet
+- source_id: sell_side:capital_one_financial
+  kind: sell_side
+  handle: Capital One Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:capitalone_southecoast
+  kind: sell_side
+  handle: CapitalOne Southecoast
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:capstone
+  kind: sell_side
+  handle: Capstone
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:caris_co
+  kind: sell_side
+  handle: Caris & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 16 dated revisions in target_revisions.parquet
+- source_id: sell_side:carnegie
+  kind: sell_side
+  handle: Carnegie
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:cascend
+  kind: sell_side
+  handle: Cascend
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 45 dated revisions in target_revisions.parquet
+- source_id: sell_side:cba
+  kind: sell_side
+  handle: CBA
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:cbre
+  kind: sell_side
+  handle: CBRE
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 13 dated revisions in target_revisions.parquet
+- source_id: sell_side:ccb_international
+  kind: sell_side
+  handle: CCB International
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:ccic
+  kind: sell_side
+  handle: CCIC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:cfra
+  kind: sell_side
+  handle: CFRA
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 522 dated revisions in target_revisions.parquet
+- source_id: sell_side:chardan_capital
+  kind: sell_side
+  handle: Chardan Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 623 dated revisions in target_revisions.parquet
+- source_id: sell_side:charles_stanley
+  kind: sell_side
+  handle: Charles Stanley
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:charter_equity
+  kind: sell_side
+  handle: Charter Equity
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:china_international_capital
+  kind: sell_side
+  handle: China International Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:china_renaissance
+  kind: sell_side
+  handle: China Renaissance
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 69 dated revisions in target_revisions.parquet
+- source_id: sell_side:cibc
+  kind: sell_side
+  handle: CIBC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 394 dated revisions in target_revisions.parquet
+- source_id: sell_side:cicc
+  kind: sell_side
+  handle: CICC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 58 dated revisions in target_revisions.parquet
+- source_id: sell_side:cimb
+  kind: sell_side
+  handle: CIMB
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:citi
+  kind: sell_side
+  handle: Citi
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:citic_securities
+  kind: sell_side
+  handle: Citic Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:citigroup
+  kind: sell_side
+  handle: Citigroup
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 19281 dated revisions in target_revisions.parquet
+- source_id: sell_side:citizens
+  kind: sell_side
+  handle: Citizens
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 698 dated revisions in target_revisions.parquet
+- source_id: sell_side:citizens_capital_markets
+  kind: sell_side
+  handle: Citizens Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 149 dated revisions in target_revisions.parquet
+- source_id: sell_side:cjs_securities
+  kind: sell_side
+  handle: CJS Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 67 dated revisions in target_revisions.parquet
+- source_id: sell_side:ck_cooper
+  kind: sell_side
+  handle: CK Cooper
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:cl_king
+  kind: sell_side
+  handle: CL King
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 177 dated revisions in target_revisions.parquet
+- source_id: sell_side:clal_finance
+  kind: sell_side
+  handle: Clal Finance
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:clarkson_capital_markets
+  kind: sell_side
+  handle: Clarkson Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 63 dated revisions in target_revisions.parquet
+- source_id: sell_side:clarksons_platou
+  kind: sell_side
+  handle: Clarksons Platou
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:clarus_securities
+  kind: sell_side
+  handle: Clarus Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:clear_street
+  kind: sell_side
+  handle: Clear Street
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 66 dated revisions in target_revisions.parquet
+- source_id: sell_side:cleveland_research
+  kind: sell_side
+  handle: Cleveland Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 74 dated revisions in target_revisions.parquet
+- source_id: sell_side:clsa
+  kind: sell_side
+  handle: CLSA
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 385 dated revisions in target_revisions.parquet
+- source_id: sell_side:cmb_international
+  kind: sell_side
+  handle: CMB International
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:colliers_securities
+  kind: sell_side
+  handle: Colliers Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 18 dated revisions in target_revisions.parquet
+- source_id: sell_side:collins_stewart
+  kind: sell_side
+  handle: Collins Stewart
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:commerzbank
+  kind: sell_side
+  handle: Commerzbank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:compass_point
+  kind: sell_side
+  handle: Compass Point
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 819 dated revisions in target_revisions.parquet
+- source_id: sell_side:consumer_edge_research
+  kind: sell_side
+  handle: Consumer Edge Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 31 dated revisions in target_revisions.parquet
+- source_id: sell_side:cormark_securities
+  kind: sell_side
+  handle: Cormark Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 19 dated revisions in target_revisions.parquet
+- source_id: sell_side:cowen_co
+  kind: sell_side
+  handle: Cowen & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1859 dated revisions in target_revisions.parquet
+- source_id: sell_side:craig_hallum
+  kind: sell_side
+  handle: Craig-Hallum
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1159 dated revisions in target_revisions.parquet
+- source_id: sell_side:credit_agricole
+  kind: sell_side
+  handle: Credit Agricole
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 40 dated revisions in target_revisions.parquet
+- source_id: sell_side:credit_suisse
+  kind: sell_side
+  handle: Credit Suisse
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9168 dated revisions in target_revisions.parquet
+- source_id: sell_side:cross_research
+  kind: sell_side
+  handle: Cross Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 40 dated revisions in target_revisions.parquet
+- source_id: sell_side:crowell_weedon_co
+  kind: sell_side
+  handle: Crowell, Weedon & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:crt_capital
+  kind: sell_side
+  handle: CRT Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 125 dated revisions in target_revisions.parquet
+- source_id: sell_side:d_boral_capital
+  kind: sell_side
+  handle: D. Boral Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 190 dated revisions in target_revisions.parquet
+- source_id: sell_side:da_davidson
+  kind: sell_side
+  handle: DA Davidson
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4885 dated revisions in target_revisions.parquet
+- source_id: sell_side:dahlman_rose
+  kind: sell_side
+  handle: Dahlman Rose
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 88 dated revisions in target_revisions.parquet
+- source_id: sell_side:daiwa_capital
+  kind: sell_side
+  handle: Daiwa Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 172 dated revisions in target_revisions.parquet
+- source_id: sell_side:danske_bank
+  kind: sell_side
+  handle: Danske Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 19 dated revisions in target_revisions.parquet
+- source_id: sell_side:davenport
+  kind: sell_side
+  handle: Davenport
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 30 dated revisions in target_revisions.parquet
+- source_id: sell_side:dawson_james
+  kind: sell_side
+  handle: Dawson James
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:dbn_markets
+  kind: sell_side
+  handle: DBN Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:dbs_bank
+  kind: sell_side
+  handle: DBS Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:desjardins
+  kind: sell_side
+  handle: Desjardins
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 49 dated revisions in target_revisions.parquet
+- source_id: sell_side:deutsche_bank
+  kind: sell_side
+  handle: Deutsche Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 11347 dated revisions in target_revisions.parquet
+- source_id: sell_side:dnb_markets
+  kind: sell_side
+  handle: DNB Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 55 dated revisions in target_revisions.parquet
+- source_id: sell_side:dominick_dominick
+  kind: sell_side
+  handle: Dominick & Dominick
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:dougherty
+  kind: sell_side
+  handle: Dougherty
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:dougherty_co
+  kind: sell_side
+  handle: Dougherty & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 109 dated revisions in target_revisions.parquet
+- source_id: sell_side:drexel_hamilton
+  kind: sell_side
+  handle: Drexel Hamilton
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 157 dated revisions in target_revisions.parquet
+- source_id: sell_side:dundee
+  kind: sell_side
+  handle: Dundee
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 33 dated revisions in target_revisions.parquet
+- source_id: sell_side:dz_bank
+  kind: sell_side
+  handle: DZ Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 141 dated revisions in target_revisions.parquet
+- source_id: sell_side:early_bird_capital
+  kind: sell_side
+  handle: Early Bird Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:edelweiss
+  kind: sell_side
+  handle: Edelweiss
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:edward_jones
+  kind: sell_side
+  handle: Edward Jones
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 130 dated revisions in target_revisions.parquet
+- source_id: sell_side:ef_hutton
+  kind: sell_side
+  handle: EF Hutton
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 203 dated revisions in target_revisions.parquet
+- source_id: sell_side:eight_capital
+  kind: sell_side
+  handle: Eight Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:emkay_global
+  kind: sell_side
+  handle: Emkay Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:empire_asset_management
+  kind: sell_side
+  handle: Empire Asset Management
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:equinet
+  kind: sell_side
+  handle: Equinet
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:equita
+  kind: sell_side
+  handle: Equita
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:erste_group
+  kind: sell_side
+  handle: Erste Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 48 dated revisions in target_revisions.parquet
+- source_id: sell_side:espirito_santo
+  kind: sell_side
+  handle: Espirito Santo
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:euro_pacific_capital
+  kind: sell_side
+  handle: Euro Pacific Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:evercore_isi_group
+  kind: sell_side
+  handle: Evercore ISI Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6305 dated revisions in target_revisions.parquet
+- source_id: sell_side:evercore_partners
+  kind: sell_side
+  handle: Evercore Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:evli_bank
+  kind: sell_side
+  handle: Evli Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:exane_bnp_paribas
+  kind: sell_side
+  handle: Exane BNP Paribas
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 453 dated revisions in target_revisions.parquet
+- source_id: sell_side:express_securities
+  kind: sell_side
+  handle: Express Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:fbn_securities
+  kind: sell_side
+  handle: FBN Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 117 dated revisions in target_revisions.parquet
+- source_id: sell_side:fbr_capital
+  kind: sell_side
+  handle: FBR Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 543 dated revisions in target_revisions.parquet
+- source_id: sell_side:fearnleys
+  kind: sell_side
+  handle: Fearnleys
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 13 dated revisions in target_revisions.parquet
+- source_id: sell_side:feltl_co
+  kind: sell_side
+  handle: Feltl & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 76 dated revisions in target_revisions.parquet
+- source_id: sell_side:fermium_research
+  kind: sell_side
+  handle: Fermium Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 27 dated revisions in target_revisions.parquet
+- source_id: sell_side:fidentiis
+  kind: sell_side
+  handle: Fidentiis
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:fig_partners
+  kind: sell_side
+  handle: FIG Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 73 dated revisions in target_revisions.parquet
+- source_id: sell_side:first_analysis
+  kind: sell_side
+  handle: First Analysis
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 93 dated revisions in target_revisions.parquet
+- source_id: sell_side:first_global
+  kind: sell_side
+  handle: First Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:first_shanghai
+  kind: sell_side
+  handle: First Shanghai
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:firstenergy_capital
+  kind: sell_side
+  handle: FirstEnergy Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 25 dated revisions in target_revisions.parquet
+- source_id: sell_side:fondsfinans
+  kind: sell_side
+  handle: Fondsfinans
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:fox_advisors
+  kind: sell_side
+  handle: Fox Advisors
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 16 dated revisions in target_revisions.parquet
+- source_id: sell_side:freedom_broker
+  kind: sell_side
+  handle: Freedom Broker
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 372 dated revisions in target_revisions.parquet
+- source_id: sell_side:freedom_capital_markets
+  kind: sell_side
+  handle: Freedom Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 92 dated revisions in target_revisions.parquet
+- source_id: sell_side:furey_research
+  kind: sell_side
+  handle: Furey Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:gabelli_co
+  kind: sell_side
+  handle: Gabelli & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 197 dated revisions in target_revisions.parquet
+- source_id: sell_side:garp_research
+  kind: sell_side
+  handle: GARP Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:gbm
+  kind: sell_side
+  handle: GBM
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:gf_securities
+  kind: sell_side
+  handle: GF Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:gilford_securities
+  kind: sell_side
+  handle: Gilford Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 40 dated revisions in target_revisions.parquet
+- source_id: sell_side:glj_research
+  kind: sell_side
+  handle: GLJ Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 127 dated revisions in target_revisions.parquet
+- source_id: sell_side:global_equities_research
+  kind: sell_side
+  handle: Global Equities Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:global_hunter_securities
+  kind: sell_side
+  handle: Global Hunter Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 76 dated revisions in target_revisions.parquet
+- source_id: sell_side:gmp_securities
+  kind: sell_side
+  handle: GMP Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 53 dated revisions in target_revisions.parquet
+- source_id: sell_side:goldman_sachs
+  kind: sell_side
+  handle: Goldman Sachs
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 11276 dated revisions in target_revisions.parquet
+- source_id: sell_side:gordon_haskett
+  kind: sell_side
+  handle: Gordon Haskett
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 250 dated revisions in target_revisions.parquet
+- source_id: sell_side:great_lakes
+  kind: sell_side
+  handle: Great Lakes
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:green_street_advistors
+  kind: sell_side
+  handle: Green Street Advistors
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:griffin_securities
+  kind: sell_side
+  handle: Griffin Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:guggenheim
+  kind: sell_side
+  handle: Guggenheim
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3185 dated revisions in target_revisions.parquet
+- source_id: sell_side:guzman_company
+  kind: sell_side
+  handle: Guzman & Company
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:hamburger_sparkasse
+  kind: sell_side
+  handle: Hamburger Sparkasse
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:handelsbanken
+  kind: sell_side
+  handle: Handelsbanken
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:hbsc
+  kind: sell_side
+  handle: HBSC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:hc_wainwright_co
+  kind: sell_side
+  handle: HC Wainwright & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5285 dated revisions in target_revisions.parquet
+- source_id: sell_side:hilliard_lyons
+  kind: sell_side
+  handle: Hilliard Lyons
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 137 dated revisions in target_revisions.parquet
+- source_id: sell_side:hovde_group
+  kind: sell_side
+  handle: Hovde Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 99 dated revisions in target_revisions.parquet
+- source_id: sell_side:hsbc
+  kind: sell_side
+  handle: HSBC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1152 dated revisions in target_revisions.parquet
+- source_id: sell_side:huber_research
+  kind: sell_side
+  handle: Huber Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:hudson_square
+  kind: sell_side
+  handle: Hudson Square
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:iberia_capital_partners
+  kind: sell_side
+  handle: IBERIA Capital Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 35 dated revisions in target_revisions.parquet
+- source_id: sell_side:icbc_research
+  kind: sell_side
+  handle: ICBC Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:icici_securities
+  kind: sell_side
+  handle: ICICI Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:idbi_capital
+  kind: sell_side
+  handle: IDBI Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:ifs_securities
+  kind: sell_side
+  handle: IFS Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:imperial_capital
+  kind: sell_side
+  handle: Imperial Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 625 dated revisions in target_revisions.parquet
+- source_id: sell_side:indaba_global_research
+  kind: sell_side
+  handle: Indaba Global Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:independent_research
+  kind: sell_side
+  handle: Independent Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:industrial_alliance
+  kind: sell_side
+  handle: Industrial Alliance
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:ingalls_snyder_llc
+  kind: sell_side
+  handle: Ingalls & Snyder, LLC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:investec
+  kind: sell_side
+  handle: Investec
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 39 dated revisions in target_revisions.parquet
+- source_id: sell_side:isi_group
+  kind: sell_side
+  handle: ISI Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 419 dated revisions in target_revisions.parquet
+- source_id: sell_side:israel_brokerage_investments
+  kind: sell_side
+  handle: Israel Brokerage & Investments
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:itau_bba
+  kind: sell_side
+  handle: Itau BBA
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 65 dated revisions in target_revisions.parquet
+- source_id: sell_side:j_safra_sarasin
+  kind: sell_side
+  handle: J. Safra Sarasin
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:jacob_securities
+  kind: sell_side
+  handle: Jacob Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:janco_partners
+  kind: sell_side
+  handle: Janco Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:janney_capital
+  kind: sell_side
+  handle: Janney Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:janney_montgomery_scott
+  kind: sell_side
+  handle: Janney Montgomery Scott
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 534 dated revisions in target_revisions.parquet
+- source_id: sell_side:jbl_advisors
+  kind: sell_side
+  handle: JBL Advisors
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:jefferies
+  kind: sell_side
+  handle: Jefferies
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10200 dated revisions in target_revisions.parquet
+- source_id: sell_side:jennings_capital
+  kind: sell_side
+  handle: Jennings Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:jg_capital
+  kind: sell_side
+  handle: JG Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:ji_asia_research
+  kind: sell_side
+  handle: Ji-Asia Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:jmp_securities
+  kind: sell_side
+  handle: JMP Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3842 dated revisions in target_revisions.parquet
+- source_id: sell_side:johnson_rice
+  kind: sell_side
+  handle: Johnson Rice
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 82 dated revisions in target_revisions.parquet
+- source_id: sell_side:jones_trading
+  kind: sell_side
+  handle: Jones Trading
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 178 dated revisions in target_revisions.parquet
+- source_id: sell_side:jonestrading
+  kind: sell_side
+  handle: JonesTrading
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 53 dated revisions in target_revisions.parquet
+- source_id: sell_side:jp_morgan
+  kind: sell_side
+  handle: JP Morgan
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 18336 dated revisions in target_revisions.parquet
+- source_id: sell_side:jyske_bank
+  kind: sell_side
+  handle: Jyske Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:kalinowski_research
+  kind: sell_side
+  handle: Kalinowski Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:kansas_city_capital
+  kind: sell_side
+  handle: Kansas City Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:kbc_partners
+  kind: sell_side
+  handle: KBC Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:keefe_bruyette_woods
+  kind: sell_side
+  handle: Keefe, Bruyette & Woods
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4520 dated revisions in target_revisions.parquet
+- source_id: sell_side:kepler_cheuvreux
+  kind: sell_side
+  handle: Kepler Cheuvreux
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 25 dated revisions in target_revisions.parquet
+- source_id: sell_side:keybanc
+  kind: sell_side
+  handle: Keybanc
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7409 dated revisions in target_revisions.parquet
+- source_id: sell_side:kgi_securities
+  kind: sell_side
+  handle: KGI Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 35 dated revisions in target_revisions.parquet
+- source_id: sell_side:klr_group
+  kind: sell_side
+  handle: KLR Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 69 dated revisions in target_revisions.parquet
+- source_id: sell_side:kotak_securities
+  kind: sell_side
+  handle: Kotak Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:ladenburg_thalmann
+  kind: sell_side
+  handle: Ladenburg Thalmann
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 335 dated revisions in target_revisions.parquet
+- source_id: sell_side:laidlaw_co
+  kind: sell_side
+  handle: Laidlaw & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:lake_street
+  kind: sell_side
+  handle: Lake Street
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 441 dated revisions in target_revisions.parquet
+- source_id: sell_side:langenberg_company
+  kind: sell_side
+  handle: Langenberg & Company
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:lazard
+  kind: sell_side
+  handle: Lazard
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 64 dated revisions in target_revisions.parquet
+- source_id: sell_side:lbbw_research
+  kind: sell_side
+  handle: LBBW Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:leerink_partners
+  kind: sell_side
+  handle: Leerink Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 376 dated revisions in target_revisions.parquet
+- source_id: sell_side:leerink_swann
+  kind: sell_side
+  handle: Leerink Swann
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 331 dated revisions in target_revisions.parquet
+- source_id: sell_side:liberum
+  kind: sell_side
+  handle: Liberum
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:lifesci_capital
+  kind: sell_side
+  handle: LifeSci Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 24 dated revisions in target_revisions.parquet
+- source_id: sell_side:lightshed_partners
+  kind: sell_side
+  handle: LightShed Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 17 dated revisions in target_revisions.parquet
+- source_id: sell_side:litchfield_hills
+  kind: sell_side
+  handle: Litchfield Hills
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:longbow_research
+  kind: sell_side
+  handle: Longbow Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 460 dated revisions in target_revisions.parquet
+- source_id: sell_side:loop_capital
+  kind: sell_side
+  handle: Loop Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1702 dated revisions in target_revisions.parquet
+- source_id: sell_side:lucid_capital_markets
+  kind: sell_side
+  handle: LUCID CAPITAL MARKETS
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 16 dated revisions in target_revisions.parquet
+- source_id: sell_side:lynx_global
+  kind: sell_side
+  handle: Lynx Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:m_partners
+  kind: sell_side
+  handle: M Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:mackie_research
+  kind: sell_side
+  handle: Mackie Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 25 dated revisions in target_revisions.parquet
+- source_id: sell_side:macquarie
+  kind: sell_side
+  handle: Macquarie
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1989 dated revisions in target_revisions.parquet
+- source_id: sell_side:mainfirst_bank_ag
+  kind: sell_side
+  handle: MainFirst Bank AG
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:makor_capital
+  kind: sell_side
+  handle: Makor Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:maxim_group
+  kind: sell_side
+  handle: Maxim Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 411 dated revisions in target_revisions.parquet
+- source_id: sell_side:mcadams_wright_ragen
+  kind: sell_side
+  handle: McAdams Wright Ragen
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 22 dated revisions in target_revisions.parquet
+- source_id: sell_side:mcnicoll_lewis_vlak
+  kind: sell_side
+  handle: McNicoll Lewis Vlak
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 40 dated revisions in target_revisions.parquet
+- source_id: sell_side:mediobanca_securities
+  kind: sell_side
+  handle: Mediobanca Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 11 dated revisions in target_revisions.parquet
+- source_id: sell_side:melius_research
+  kind: sell_side
+  handle: Melius Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 108 dated revisions in target_revisions.parquet
+- source_id: sell_side:meredith_whitney_advisory_group
+  kind: sell_side
+  handle: Meredith Whitney Advisory Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:merion_capital
+  kind: sell_side
+  handle: Merion Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:merriman_capital
+  kind: sell_side
+  handle: Merriman Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:midtown_partners
+  kind: sell_side
+  handle: Midtown Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:miller_tabak
+  kind: sell_side
+  handle: Miller Tabak
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 113 dated revisions in target_revisions.parquet
+- source_id: sell_side:millman_research
+  kind: sell_side
+  handle: Millman Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:mirabaud_securities
+  kind: sell_side
+  handle: Mirabaud Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:mirae_asset
+  kind: sell_side
+  handle: Mirae Asset
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:mito_securities
+  kind: sell_side
+  handle: Mito Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:mitsubishi_ufj
+  kind: sell_side
+  handle: Mitsubishi UFJ
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 39 dated revisions in target_revisions.parquet
+- source_id: sell_side:mizuho
+  kind: sell_side
+  handle: Mizuho
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6894 dated revisions in target_revisions.parquet
+- source_id: sell_side:mkm_partners
+  kind: sell_side
+  handle: MKM Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 675 dated revisions in target_revisions.parquet
+- source_id: sell_side:mlv_co
+  kind: sell_side
+  handle: MLV & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 27 dated revisions in target_revisions.parquet
+- source_id: sell_side:moelis_company_llc
+  kind: sell_side
+  handle: Moelis & Company LLC
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:moffett_nathanson
+  kind: sell_side
+  handle: Moffett Nathanson
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:moffettnathanson
+  kind: sell_side
+  handle: MoffettNathanson
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 197 dated revisions in target_revisions.parquet
+- source_id: sell_side:monness_crespi_hardt
+  kind: sell_side
+  handle: Monness, Crespi, Hardt
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 248 dated revisions in target_revisions.parquet
+- source_id: sell_side:morgan_keegan
+  kind: sell_side
+  handle: Morgan Keegan
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 22 dated revisions in target_revisions.parquet
+- source_id: sell_side:morgan_stanley
+  kind: sell_side
+  handle: Morgan Stanley
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 27671 dated revisions in target_revisions.parquet
+- source_id: sell_side:morningstar
+  kind: sell_side
+  handle: Morningstar
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:national_alliance_securities
+  kind: sell_side
+  handle: National Alliance Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 13 dated revisions in target_revisions.parquet
+- source_id: sell_side:national_bank_financial_inc
+  kind: sell_side
+  handle: National Bank Financial Inc
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 98 dated revisions in target_revisions.parquet
+- source_id: sell_side:national_bank_of_canada
+  kind: sell_side
+  handle: National Bank Of Canada
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:national_securities_corporation
+  kind: sell_side
+  handle: National Securities Corporation
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 23 dated revisions in target_revisions.parquet
+- source_id: sell_side:natixis
+  kind: sell_side
+  handle: Natixis
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 26 dated revisions in target_revisions.parquet
+- source_id: sell_side:needham
+  kind: sell_side
+  handle: Needham
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8900 dated revisions in target_revisions.parquet
+- source_id: sell_side:new_street_research
+  kind: sell_side
+  handle: New Street Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 98 dated revisions in target_revisions.parquet
+- source_id: sell_side:noble_capital_markets
+  kind: sell_side
+  handle: Noble Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 69 dated revisions in target_revisions.parquet
+- source_id: sell_side:noble_financial
+  kind: sell_side
+  handle: Noble Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:nomura
+  kind: sell_side
+  handle: Nomura
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1765 dated revisions in target_revisions.parquet
+- source_id: sell_side:nomura_instinet
+  kind: sell_side
+  handle: Nomura Instinet
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 57 dated revisions in target_revisions.parquet
+- source_id: sell_side:nord_lb
+  kind: sell_side
+  handle: Nord/LB
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:nordea_equity
+  kind: sell_side
+  handle: Nordea Equity
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:norne_securities
+  kind: sell_side
+  handle: Norne Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:northcoast_research
+  kind: sell_side
+  handle: Northcoast Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 309 dated revisions in target_revisions.parquet
+- source_id: sell_side:northern_securities
+  kind: sell_side
+  handle: Northern Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:northland_capital_markets
+  kind: sell_side
+  handle: Northland Capital Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 832 dated revisions in target_revisions.parquet
+- source_id: sell_side:northland_securities
+  kind: sell_side
+  handle: Northland Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:numis_securities
+  kind: sell_side
+  handle: Numis Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 18 dated revisions in target_revisions.parquet
+- source_id: sell_side:oddo_securities
+  kind: sell_side
+  handle: Oddo Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 11 dated revisions in target_revisions.parquet
+- source_id: sell_side:odeon_capital
+  kind: sell_side
+  handle: Odeon Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 64 dated revisions in target_revisions.parquet
+- source_id: sell_side:off_wall_street
+  kind: sell_side
+  handle: Off Wall Street
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:oppenheimer
+  kind: sell_side
+  handle: Oppenheimer
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5847 dated revisions in target_revisions.parquet
+- source_id: sell_side:oracle_investment_research
+  kind: sell_side
+  handle: Oracle Investment Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:oriel
+  kind: sell_side
+  handle: Oriel
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:otr_global
+  kind: sell_side
+  handle: OTR Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 162 dated revisions in target_revisions.parquet
+- source_id: sell_side:oxen_group
+  kind: sell_side
+  handle: Oxen Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 14 dated revisions in target_revisions.parquet
+- source_id: sell_side:pacific_crest
+  kind: sell_side
+  handle: Pacific Crest
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 296 dated revisions in target_revisions.parquet
+- source_id: sell_side:panmure_gordon
+  kind: sell_side
+  handle: Panmure Gordon
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:paradigm_capital
+  kind: sell_side
+  handle: Paradigm Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:pareto_securities
+  kind: sell_side
+  handle: Pareto Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 24 dated revisions in target_revisions.parquet
+- source_id: sell_side:pentair
+  kind: sell_side
+  handle: Pentair
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:petercam
+  kind: sell_side
+  handle: Petercam
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:peters_co
+  kind: sell_side
+  handle: Peters & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:phillip_securities
+  kind: sell_side
+  handle: Phillip Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 11 dated revisions in target_revisions.parquet
+- source_id: sell_side:phoenix_partners_group
+  kind: sell_side
+  handle: Phoenix Partners Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:pi_financial
+  kind: sell_side
+  handle: PI Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8 dated revisions in target_revisions.parquet
+- source_id: sell_side:pickering_energy_partners
+  kind: sell_side
+  handle: Pickering Energy Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 13 dated revisions in target_revisions.parquet
+- source_id: sell_side:piper_jaffray
+  kind: sell_side
+  handle: Piper Jaffray
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:piper_sandler
+  kind: sell_side
+  handle: Piper Sandler
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 11036 dated revisions in target_revisions.parquet
+- source_id: sell_side:piperjaffray
+  kind: sell_side
+  handle: PiperJaffray
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:pivotal_research
+  kind: sell_side
+  handle: Pivotal Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 192 dated revisions in target_revisions.parquet
+- source_id: sell_side:portales_partners
+  kind: sell_side
+  handle: Portales Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:princeton_securities
+  kind: sell_side
+  handle: Princeton Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:pritchard_capital_partners
+  kind: sell_side
+  handle: Pritchard Capital Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:r5_capital
+  kind: sell_side
+  handle: R5 Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:rabobank
+  kind: sell_side
+  handle: Rabobank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:rafferty_capital
+  kind: sell_side
+  handle: Rafferty Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 34 dated revisions in target_revisions.parquet
+- source_id: sell_side:raymond_james
+  kind: sell_side
+  handle: Raymond James
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9379 dated revisions in target_revisions.parquet
+- source_id: sell_side:rbc_capital
+  kind: sell_side
+  handle: RBC Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 12903 dated revisions in target_revisions.parquet
+- source_id: sell_side:redburn
+  kind: sell_side
+  handle: Redburn
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:redburn_atlantic
+  kind: sell_side
+  handle: Redburn Atlantic
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 160 dated revisions in target_revisions.parquet
+- source_id: sell_side:redburn_partners
+  kind: sell_side
+  handle: Redburn Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 135 dated revisions in target_revisions.parquet
+- source_id: sell_side:redstone_technology
+  kind: sell_side
+  handle: Redstone Technology
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:renaissance_capital
+  kind: sell_side
+  handle: Renaissance Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:rf_lafferty
+  kind: sell_side
+  handle: RF Lafferty
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 19 dated revisions in target_revisions.parquet
+- source_id: sell_side:rhino_trading
+  kind: sell_side
+  handle: Rhino Trading
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:rochdale_securities
+  kind: sell_side
+  handle: Rochdale Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:rodman_renshaw
+  kind: sell_side
+  handle: Rodman & Renshaw
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 25 dated revisions in target_revisions.parquet
+- source_id: sell_side:rosenblatt
+  kind: sell_side
+  handle: Rosenblatt
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2800 dated revisions in target_revisions.parquet
+- source_id: sell_side:roth_capital
+  kind: sell_side
+  handle: Roth Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 957 dated revisions in target_revisions.parquet
+- source_id: sell_side:roth_mkm
+  kind: sell_side
+  handle: Roth MKM
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 839 dated revisions in target_revisions.parquet
+- source_id: sell_side:rothschild_co
+  kind: sell_side
+  handle: Rothschild & Co
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 111 dated revisions in target_revisions.parquet
+- source_id: sell_side:rs_platou_markets
+  kind: sell_side
+  handle: RS Platou Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 18 dated revisions in target_revisions.parquet
+- source_id: sell_side:s_p_capital_iq
+  kind: sell_side
+  handle: S&P Capital IQ
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 61 dated revisions in target_revisions.parquet
+- source_id: sell_side:salman_partners
+  kind: sell_side
+  handle: Salman Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 10 dated revisions in target_revisions.parquet
+- source_id: sell_side:sandler_o_neill
+  kind: sell_side
+  handle: Sandler O'Neill
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:santander
+  kind: sell_side
+  handle: Santander
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 33 dated revisions in target_revisions.parquet
+- source_id: sell_side:sbg_securities
+  kind: sell_side
+  handle: SBG Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:scotia_howard_weil
+  kind: sell_side
+  handle: Scotia Howard Weil
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:scotiabank
+  kind: sell_side
+  handle: Scotiabank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2524 dated revisions in target_revisions.parquet
+- source_id: sell_side:seaport_global
+  kind: sell_side
+  handle: Seaport Global
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1042 dated revisions in target_revisions.parquet
+- source_id: sell_side:seb_enskilda
+  kind: sell_side
+  handle: SEB Enskilda
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:seibert_williams
+  kind: sell_side
+  handle: Seibert Williams
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:shaw_stockbroking
+  kind: sell_side
+  handle: Shaw Stockbroking
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:shore_capital
+  kind: sell_side
+  handle: Shore Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:sidoti_co
+  kind: sell_side
+  handle: Sidoti & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 544 dated revisions in target_revisions.parquet
+- source_id: sell_side:simmons_co
+  kind: sell_side
+  handle: Simmons & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 26 dated revisions in target_revisions.parquet
+- source_id: sell_side:singular_research
+  kind: sell_side
+  handle: Singular Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 12 dated revisions in target_revisions.parquet
+- source_id: sell_side:small_cap_consumer_research
+  kind: sell_side
+  handle: Small Cap Consumer Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 65 dated revisions in target_revisions.parquet
+- source_id: sell_side:smbc_nikko
+  kind: sell_side
+  handle: SMBC Nikko
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 60 dated revisions in target_revisions.parquet
+- source_id: sell_side:sns_securities
+  kind: sell_side
+  handle: SNS Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:societe_generale
+  kind: sell_side
+  handle: Societe Generale
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 337 dated revisions in target_revisions.parquet
+- source_id: sell_side:sparebank_1_markets
+  kind: sell_side
+  handle: SpareBank 1 Markets
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:spark_capital
+  kind: sell_side
+  handle: Spark Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:standpoint
+  kind: sell_side
+  handle: Standpoint
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:standpoint_research
+  kind: sell_side
+  handle: Standpoint Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 373 dated revisions in target_revisions.parquet
+- source_id: sell_side:stephens_co
+  kind: sell_side
+  handle: Stephens & Co.
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3757 dated revisions in target_revisions.parquet
+- source_id: sell_side:sterne_agee
+  kind: sell_side
+  handle: Sterne Agee
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 682 dated revisions in target_revisions.parquet
+- source_id: sell_side:sterne_agee_crt
+  kind: sell_side
+  handle: Sterne Agee CRT
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 7 dated revisions in target_revisions.parquet
+- source_id: sell_side:stifel
+  kind: sell_side
+  handle: Stifel
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9898 dated revisions in target_revisions.parquet
+- source_id: sell_side:stifel_nicolaus
+  kind: sell_side
+  handle: Stifel Nicolaus
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 44 dated revisions in target_revisions.parquet
+- source_id: sell_side:stonecap_securities
+  kind: sell_side
+  handle: Stonecap Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:stonex
+  kind: sell_side
+  handle: StoneX
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 34 dated revisions in target_revisions.parquet
+- source_id: sell_side:summer_street
+  kind: sell_side
+  handle: Summer Street
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:summit_insights_group
+  kind: sell_side
+  handle: Summit Insights Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 113 dated revisions in target_revisions.parquet
+- source_id: sell_side:suntrust_robinson_humphrey
+  kind: sell_side
+  handle: SunTrust Robinson Humphrey
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2039 dated revisions in target_revisions.parquet
+- source_id: sell_side:susquehanna
+  kind: sell_side
+  handle: Susquehanna
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3689 dated revisions in target_revisions.parquet
+- source_id: sell_side:svb_leerink
+  kind: sell_side
+  handle: SVB Leerink
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1077 dated revisions in target_revisions.parquet
+- source_id: sell_side:svb_securities
+  kind: sell_side
+  handle: SVB Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 19 dated revisions in target_revisions.parquet
+- source_id: sell_side:swedbank
+  kind: sell_side
+  handle: Swedbank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 24 dated revisions in target_revisions.parquet
+- source_id: sell_side:sws_research
+  kind: sell_side
+  handle: SWS Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:taglich_brothers
+  kind: sell_side
+  handle: Taglich Brothers
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:td_cowen
+  kind: sell_side
+  handle: TD Cowen
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4027 dated revisions in target_revisions.parquet
+- source_id: sell_side:td_securities
+  kind: sell_side
+  handle: TD Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 411 dated revisions in target_revisions.parquet
+- source_id: sell_side:telsey_advisory_group
+  kind: sell_side
+  handle: Telsey Advisory Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2533 dated revisions in target_revisions.parquet
+- source_id: sell_side:texas_capital_securities
+  kind: sell_side
+  handle: Texas Capital Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 16 dated revisions in target_revisions.parquet
+- source_id: sell_side:th_capital
+  kind: sell_side
+  handle: TH Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 6 dated revisions in target_revisions.parquet
+- source_id: sell_side:the_oxen_group
+  kind: sell_side
+  handle: The Oxen Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:thinkequity
+  kind: sell_side
+  handle: ThinkEquity
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 14 dated revisions in target_revisions.parquet
+- source_id: sell_side:tigress_financial
+  kind: sell_side
+  handle: Tigress Financial
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 438 dated revisions in target_revisions.parquet
+- source_id: sell_side:topeka
+  kind: sell_side
+  handle: Topeka
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:topeka_capital
+  kind: sell_side
+  handle: Topeka Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 169 dated revisions in target_revisions.parquet
+- source_id: sell_side:tph_energy_research
+  kind: sell_side
+  handle: TPH Energy Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:truist_securities
+  kind: sell_side
+  handle: Truist Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 8747 dated revisions in target_revisions.parquet
+- source_id: sell_side:tudor_pickering
+  kind: sell_side
+  handle: Tudor Pickering
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 146 dated revisions in target_revisions.parquet
+- source_id: sell_side:u_s_capital_advisors
+  kind: sell_side
+  handle: U.S. Capital Advisors
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:ubs
+  kind: sell_side
+  handle: UBS
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15251 dated revisions in target_revisions.parquet
+- source_id: sell_side:union_gaming
+  kind: sell_side
+  handle: Union Gaming
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 18 dated revisions in target_revisions.parquet
+- source_id: sell_side:univest_securities
+  kind: sell_side
+  handle: Univest Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:uob_kay_hian
+  kind: sell_side
+  handle: UOB Kay Hian
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:us_capital_advisors
+  kind: sell_side
+  handle: US Capital Advisors
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:us_tiger_securities_inc
+  kind: sell_side
+  handle: US Tiger Securities, Inc
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:valuengine
+  kind: sell_side
+  handle: ValuEngine
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 3 dated revisions in target_revisions.parquet
+- source_id: sell_side:veritas_research
+  kind: sell_side
+  handle: Veritas Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5 dated revisions in target_revisions.parquet
+- source_id: sell_side:versant_partners
+  kind: sell_side
+  handle: Versant Partners
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 4 dated revisions in target_revisions.parquet
+- source_id: sell_side:vertical_group
+  kind: sell_side
+  handle: Vertical Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:vertical_research
+  kind: sell_side
+  handle: Vertical Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 295 dated revisions in target_revisions.parquet
+- source_id: sell_side:vtb_capital
+  kind: sell_side
+  handle: VTB Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:wallachbeth_capital
+  kind: sell_side
+  handle: WallachBeth Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:warburg_research
+  kind: sell_side
+  handle: Warburg Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:wbb_securities
+  kind: sell_side
+  handle: WBB Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 9 dated revisions in target_revisions.parquet
+- source_id: sell_side:wedbush
+  kind: sell_side
+  handle: Wedbush
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 5122 dated revisions in target_revisions.parquet
+- source_id: sell_side:wellington_shields
+  kind: sell_side
+  handle: Wellington Shields
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 39 dated revisions in target_revisions.parquet
+- source_id: sell_side:wells_fargo
+  kind: sell_side
+  handle: Wells Fargo
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 17756 dated revisions in target_revisions.parquet
+- source_id: sell_side:westpark_capital
+  kind: sell_side
+  handle: WestPark Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 98 dated revisions in target_revisions.parquet
+- source_id: sell_side:wgz_bank
+  kind: sell_side
+  handle: WGZ Bank
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 2 dated revisions in target_revisions.parquet
+- source_id: sell_side:william_blair
+  kind: sell_side
+  handle: William Blair
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 959 dated revisions in target_revisions.parquet
+- source_id: sell_side:william_o_neil
+  kind: sell_side
+  handle: William O'Neil
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:williams_capital
+  kind: sell_side
+  handle: Williams Capital
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 81 dated revisions in target_revisions.parquet
+- source_id: sell_side:williams_trading
+  kind: sell_side
+  handle: Williams Trading
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 40 dated revisions in target_revisions.parquet
+- source_id: sell_side:wolfe_research
+  kind: sell_side
+  handle: Wolfe Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1919 dated revisions in target_revisions.parquet
+- source_id: sell_side:wunderlich
+  kind: sell_side
+  handle: Wunderlich
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 15 dated revisions in target_revisions.parquet
+- source_id: sell_side:wunderlich_securities
+  kind: sell_side
+  handle: Wunderlich Securities
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 646 dated revisions in target_revisions.parquet
+- source_id: sell_side:zacks_investment_research
+  kind: sell_side
+  handle: Zacks Investment Research
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:zelman
+  kind: sell_side
+  handle: Zelman
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 39 dated revisions in target_revisions.parquet
+- source_id: sell_side:zelman_assoc
+  kind: sell_side
+  handle: Zelman & Assoc
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 50 dated revisions in target_revisions.parquet
+- source_id: sell_side:zephrin_group
+  kind: sell_side
+  handle: Zephrin Group
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:zero_one
+  kind: sell_side
+  handle: Zero One
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet
+- source_id: sell_side:zuanic_associates
+  kind: sell_side
+  handle: Zuanic & Associates
+  url: analyst/target_revisions.parquet
+  tickers_covered: []
+  added_utc: '2026-09-26T08:20:16+00:00'
+  added_by: chunk_b_seed
+  platform: yfinance_revisions
+  theme: ''
+  verified: true
+  verified_by: ''
+  found_by_quest: ''
+  notes: 1 dated revisions in target_revisions.parquet

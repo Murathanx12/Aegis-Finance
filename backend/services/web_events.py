@@ -99,6 +99,14 @@ SOURCE_REGISTRY: dict[str, dict] = {
                              "supplier_constraint", "management_language_change")},
     "reddit": {"domains": ("reddit.com",), "login": False,
                "types": ("attention_spike", "forum_disagreement")},
+    # chunk B (2026-09-26): an X post read by OpenClaw under the logged-in
+    # account. Attention, never truth: a company/CEO post may carry a company
+    # event type, and every row is graded later via `source_registry`.
+    "x": {"domains": ("x.com", "twitter.com"), "login": True,
+          "types": ("attention_spike", "forum_disagreement", "product_launch",
+                    "guidance_change", "contract_win", "customer_announcement",
+                    "management_language_change", "analyst_revision",
+                    "regulatory_decision")},
     "news": {"domains": (), "login": False,
              "types": ("analyst_revision", "regulatory_decision", "litigation",
                        "index_change", "mna", "buyback", "dividend_change")},
