@@ -4087,17 +4087,17 @@ OPENCLAW_USER_TAB_HOSTS = ("wsj.com", "barrons.com", "marketwatch.com")
 #: never the same interval twice) -- a constant interval is the machine tell.
 WEB_READER_MIN_DELAY_S = 20.0
 WEB_READER_MAX_DELAY_S = 90.0
-WEB_READER_MAX_PER_HOUR = 30
-WEB_READER_MAX_PER_DAY = 120
+WEB_READER_MAX_PER_HOUR = 45          # 2026-09-26 23:55 Murat: 'let openclaw loose' -- pace unchanged (20-90 s), caps raised
+WEB_READER_MAX_PER_DAY = 300
 #: Per-site daily cap (wsj / barrons / marketwatch each), inside the global one.
-WEB_READER_MAX_PER_DAY_PER_HOST = 40
+WEB_READER_MAX_PER_DAY_PER_HOST = 120
 #: `dowjones_pull --archive` reads at most this many articles per archive day.
-DOWJONES_ARCHIVE_MAX_PER_DAY = 20
+DOWJONES_ARCHIVE_MAX_PER_DAY = 40
 #: `dowjones_pull --handoff` refuses unless this file exists. Murat creates it
 #: when he steps away from the PC; nothing in the repo ever creates it.
 DOWJONES_HANDOFF_FILE = OPTIMUS_LEDGER_DIR / "HANDOFF_PC"
 #: Claim extraction (DeepSeek, `llm_analyzer._call_llm`) -- hard cap per run.
-DOWJONES_CLAIMS_CAP_USD = 0.30
+DOWJONES_CLAIMS_CAP_USD = 1.00
 DOWJONES_CLAIMS_EST_USD_PER_ARTICLE = 0.004
 DOWJONES_CLAIMS_PURPOSE = "dowjones_claims"
 #: The operator's paste inbox (primary path from 2026-09-26: Murat copies the
@@ -4106,7 +4106,7 @@ DIGEST_INBOX_DIR = OPTIMUS_LEDGER_DIR / "digest_inbox"
 #: The dated-archive crawl (`dowjones_pull --archive`). OFF (Murat, 2026-09-26:
 #: "the archive-by-date crawl stays OFF"); the paste inbox's reading list
 #: carries the archive days as links for a human instead.
-DOWJONES_ARCHIVE_ENABLED = False
+DOWJONES_ARCHIVE_ENABLED = True       # 2026-09-26 23:55 Murat's call (handoff-gated, human pace, ToU quoted on every run)
 #: Lines shorter than 60 chars containing one of these are the signed-in
 #: account's name in the page chrome and are stripped from stored text.
 DOWJONES_ACCOUNT_NAME_PATTERNS = ("murat", "murathan", "abdullaev")
